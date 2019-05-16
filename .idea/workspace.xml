@@ -201,8 +201,8 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="8" weight="0.358581" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="9" visible="true" weight="0.3279003" />
-      <window_info anchor="bottom" id="Version Control" order="10" />
+      <window_info anchor="bottom" id="Terminal" order="9" weight="0.3279003" />
+      <window_info active="true" anchor="bottom" id="Version Control" order="10" visible="true" weight="0.32981783" />
       <window_info anchor="bottom" id="Database Changes" order="11" />
       <window_info anchor="bottom" id="Event Log" order="12" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
