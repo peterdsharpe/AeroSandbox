@@ -1,14 +1,15 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Airplane:
     def __init__(self,
                  name="Untitled",
-                 XYZle=[0, 0, 0],
+                 XYZref=[0, 0, 0],
                  wings=[]
                  ):
         self.name = name
-        self.XYZle = np.array(XYZle)
+        self.XYZref = np.array(XYZref)
         self.wings = wings
 
 
