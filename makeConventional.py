@@ -29,7 +29,7 @@ p = Airplane(
             ]
         ),
         Wing(
-            name="Tail",
+            name="Horizontal Stabilizer",
             XYZle=[1, 0, 0.2],
             sections=[
                 Wingsection(  # root
@@ -48,3 +48,4 @@ p = Airplane(
         )
     ]
 )
+

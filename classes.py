@@ -6,11 +6,31 @@ class Airplane:
     def __init__(self,
                  name="Untitled",
                  XYZref=[0, 0, 0],
-                 wings=[]
+                 wings=[],
+                 Sref=1,
+                 Cref=1,
+                 Bref=1
                  ):
         self.name = name
         self.XYZref = np.array(XYZref)
         self.wings = wings
+        self.Sref=Sref
+        self.Cref=Cref
+        self.Bref=Bref
+
+    def plotGeometry(self,
+                     newfigure=true
+                     ):
+        self.newfigure=newfigure
+
+        # plot bodies
+
+        # plot wings
+
+        # format
+
+    def setRefDimsFromWing(self,
+
 
 
 class Wing:
@@ -42,5 +62,5 @@ class Airfoil:
                  name="naca0012",
                  REref=1e6
                  ):
-        self.name=name
-        self.REref=REref
+        self.name = name
+        self.REref = REref
