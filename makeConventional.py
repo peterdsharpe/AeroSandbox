@@ -48,7 +48,3 @@ p = Airplane(
         )
     ]
 )
-
-p.plot_geometry()
-
-print("done now")

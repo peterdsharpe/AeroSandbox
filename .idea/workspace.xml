@@ -34,10 +34,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/classes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="16">
-              <caret line="1" column="31" lean-forward="true" selection-start-line="1" selection-start-column="31" selection-end-line="1" selection-end-column="31" />
+            <state relative-caret-position="326">
+              <caret line="246" column="22" lean-forward="true" selection-start-line="246" selection-start-column="22" selection-end-line="246" selection-end-column="22" />
               <folding>
-                <element signature="e#1778#4743#0" />
+                <element signature="e#0#11#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -46,8 +46,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/makeConventional.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="22" column="21" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
+            <state relative-caret-position="470">
+              <caret line="50" selection-start-line="50" selection-end-line="50" />
             </state>
           </provider>
         </entry>
@@ -74,6 +74,10 @@
       <find>CURVE</find>
       <find>radius</find>
       <find>scene</find>
+      <find>self</find>
+      <find>todo</find>
+      <find>set</find>
+      <find>np.array</find>
     </findStrings>
     <replaceStrings>
       <replace>wings</replace>
@@ -82,6 +86,7 @@
       <replace>xyz_ref</replace>
       <replace>WingSection</replace>
       <replace>end</replace>
+      <replace>wing</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -96,9 +101,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-8" />
-    <option name="width" value="976" />
-    <option name="height" value="1050" />
+    <option name="x" value="-10" />
+    <option name="y" value="-10" />
+    <option name="width" value="977" />
+    <option name="height" value="1052" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -199,7 +205,8 @@
       <updated>1557974716304</updated>
       <workItem from="1557974721860" duration="7953000" />
       <workItem from="1558154642249" duration="12165000" />
-      <workItem from="1558231988340" duration="5559000" />
+      <workItem from="1558231988340" duration="9826000" />
+      <workItem from="1558245208320" duration="2549000" />
     </task>
     <task id="LOCAL-00001" summary="updates">
       <created>1558192798821</created>
@@ -212,34 +219,33 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="25677000" />
+    <option name="totallyTimeSpent" value="32493000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1563" height="855" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49850747" weight="0.30864197" />
       <window_info id="Structure" order="1" sideWeight="0.50149256" side_tool="true" weight="0.18338871" />
       <window_info id="Favorites" order="2" sideWeight="0.50149256" side_tool="true" weight="0.18338871" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.39640883" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.400838" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39502764" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Python Console" order="8" weight="0.35614526" />
-      <window_info anchor="bottom" id="Terminal" order="9" weight="0.32596686" />
-      <window_info anchor="bottom" id="Version Control" order="10" weight="0.32981783" />
-      <window_info anchor="bottom" id="Database Changes" order="11" />
-      <window_info anchor="bottom" id="Event Log" order="12" side_tool="true" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32981783" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="SciView" order="3" weight="0.4677741" />
-      <window_info anchor="right" x="0" y="0" width="146" height="647" id="Documentation" order="4" side_tool="true" weight="0.67901236" />
-      <window_info anchor="right" id="Database" order="5" weight="0.32956812" />
+      <window_info anchor="right" id="Terminal" order="4" side_tool="true" weight="0.3255814" />
+      <window_info active="true" anchor="right" id="Python Console" order="5" side_tool="true" visible="true" weight="0.49368772" />
+      <window_info anchor="right" x="0" y="0" width="146" height="647" id="Documentation" order="6" side_tool="true" weight="0.67840534" />
+      <window_info anchor="right" id="Database" order="7" weight="0.32956812" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -251,7 +257,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/FastFlow3D$Run.coverage" NAME="makeConventional Coverage Results" MODIFIED="1557981174084" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/FastFlow3D$makeConventional.coverage" NAME="makeConventional Coverage Results" MODIFIED="1558238680911" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/FastFlow3D$makeConventional.coverage" NAME="makeConventional Coverage Results" MODIFIED="1558241324763" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateExpression">
@@ -308,17 +314,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/makeConventional.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="22" column="21" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
+        <state relative-caret-position="470">
+          <caret line="50" selection-start-line="50" selection-end-line="50" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/classes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16">
-          <caret line="1" column="31" lean-forward="true" selection-start-line="1" selection-start-column="31" selection-end-line="1" selection-end-column="31" />
+        <state relative-caret-position="326">
+          <caret line="246" column="22" lean-forward="true" selection-start-line="246" selection-start-column="22" selection-end-line="246" selection-end-column="22" />
           <folding>
-            <element signature="e#1778#4743#0" />
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
