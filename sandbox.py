@@ -1,5 +1,6 @@
 import Classes
 import examples
 
-a=examples.conventional()
+a = examples.conventional()
 print(vars(a))
+a.draw()
