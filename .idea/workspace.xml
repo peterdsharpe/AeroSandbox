@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8ae0a1cf-d007-4718-9e9a-f654d8b2df48" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/FastFlow3D.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/classes.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/makeConventional.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Classes/Aerodynamics.py" beforeDir="false" afterPath="$PROJECT_DIR$/Classes/Aerodynamics.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -54,8 +50,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Classes/Aerodynamics.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="176">
-              <caret line="11" column="30" lean-forward="true" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
+            <state relative-caret-position="80">
+              <caret line="5" column="6" lean-forward="true" selection-start-line="5" selection-start-column="6" selection-end-line="5" selection-end-column="6" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -385,7 +381,7 @@
       <workItem from="1558154642249" duration="12165000" />
       <workItem from="1558231988340" duration="9826000" />
       <workItem from="1558245208320" duration="2549000" />
-      <workItem from="1558393581188" duration="4634000" />
+      <workItem from="1558393581188" duration="7266000" />
     </task>
     <task id="LOCAL-00001" summary="updates">
       <created>1558192798821</created>
@@ -398,7 +394,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="37127000" />
+    <option name="totallyTimeSpent" value="39759000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1563" height="855" extended-state="6" />
@@ -423,7 +419,7 @@
       <window_info anchor="right" id="SciView" order="3" sideWeight="0.49861878" weight="0.4677741" />
       <window_info anchor="right" id="Run" order="4" sideWeight="0.5013812" side_tool="true" weight="0.4358804" />
       <window_info anchor="right" id="Terminal" order="5" side_tool="true" weight="0.3255814" />
-      <window_info active="true" anchor="right" id="Python Console" order="6" side_tool="true" visible="true" weight="0.6053156" />
+      <window_info active="true" anchor="right" id="Python Console" order="6" side_tool="true" visible="true" weight="0.47508305" />
       <window_info anchor="right" x="0" y="0" width="146" height="647" id="Documentation" order="7" side_tool="true" weight="0.67840534" />
       <window_info anchor="right" id="Database" order="8" weight="0.32956812" />
     </layout>
@@ -563,8 +559,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Classes/Aerodynamics.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="11" column="30" lean-forward="true" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
+        <state relative-caret-position="80">
+          <caret line="5" column="6" lean-forward="true" selection-start-line="5" selection-start-column="6" selection-end-line="5" selection-end-column="6" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
