@@ -5,18 +5,32 @@ import matplotlib.pyplot as plt
 
 class Panel:
     def __init__(self,
-                 vertices,  #
-                 colocation_point,
+                 vertices=np.zeros([4, 3]),  # Nx3 np array, each row is a vector
+                 colocation_point=np.zeros([1, 3]),
+                 normal_direction=np.zeros([1, 3]),
+                 influencing_objects=[],
                  ):
         self.vertices = np.array(vertices)
+        self.colocation_point = np.array(colocation_point)
+        self.normal_direction = np.array(normal_direction)
+        self.influencing_objects=influencing_objects
+
         assert (np.shape(self.vertices)[0] >= 3)
+        assert (np.shape(self.vertices)[1] == 3)
 
-        self.colocation_point = colocation_point
-        self.normal_direction = self.compute_normal_direction()
+    def add_ring_vortex(self):
+        pass
 
-    def compute_normal_direction(self):
+    def calculate_influence(self, point):
+        pass
+
+    def draw(self):
+        pass
+
+
 #
-# class QuadPanel(Panel):
+class QuadPanel(Panel):
+    pass
 #
 #
 # class Vortex:

@@ -1,12 +1,12 @@
-import math
 import numpy as np
 import matplotlib.pyplot as plt
-import vpython as vp
+from Classes.Plotting import *
+from mpl_toolkits.mplot3d import Axes3D
 
 
 class Airplane:
     def __init__(self,
-                 name="Untitled",
+                 name="Untitled Airplane",
                  xyz_ref=[0, 0, 0],
                  wings=[],
                  s_ref=1,
@@ -20,113 +20,44 @@ class Airplane:
         self.c_ref = c_ref
         self.b_ref = b_ref
 
-    def plot_geometry(self):
+    def draw(self,
+             show=True
+             ):
 
-        # TODO format
-        myscene = vp.canvas(
-            title="Airplane Geometry (ctrl + mouse to rotate, shift + mouse to pan)",
-            width=800,
-            height=800
-        )
-        myscene.forward = vp.vec(1, 1, -1)
-        myscene.up = vp.vec(0, 0, 1)
-        myscene.center = vp.vec(
-            self.xyz_ref[0],
-            self.xyz_ref[1],
-            self.xyz_ref[2],
-        )
+        # Format
+        fig, ax = fig3d()
 
         # TODO plot bodies
 
         # Plot wings
         for wing in self.wings:
-            print("Drawing wing: " + wing.name)
 
-            # TODO plot wing surfaces
             for i in range(len(wing.sections) - 1):
                 le_start = wing.sections[i].xyz_le + wing.xyz_le
                 le_end = wing.sections[i + 1].xyz_le + wing.xyz_le
                 te_start = wing.sections[i].xyz_te() + wing.xyz_le
                 te_end = wing.sections[i + 1].xyz_te() + wing.xyz_le
 
-                # format for VPython
-                le_start_vec = vp.vec(
-                    le_start[0],
-                    le_start[1],
-                    le_start[2]
-                )
-                le_end_vec = vp.vec(
-                    le_end[0],
-                    le_end[1],
-                    le_end[2]
-                )
-                te_start_vec = vp.vec(
-                    te_start[0],
-                    te_start[1],
-                    te_start[2]
-                )
-                te_end_vec = vp.vec(
-                    te_end[0],
-                    te_end[1],
-                    te_end[2]
-                )
+                points = np.vstack((le_start, le_end, te_end, te_start, le_start))
+                x = points[:, 0]
+                y = points[:, 1]
+                z = points[:, 2]
 
-                curve = vp.curve(le_start_vec, le_end_vec, te_end_vec, te_start_vec, le_start_vec)
-
-                le_start_vert = vp.vertex(pos=le_start_vec)
-                le_end_vert = vp.vertex(pos=le_end_vec)
-                te_start_vert = vp.vertex(pos=te_start_vec)
-                te_end_vert = vp.vertex(pos=te_end_vec)
-
-                T1 = vp.triangle(vs=[
-                    le_start_vert,
-                    le_end_vert,
-                    te_start_vert,
-                ])
-                T2 = vp.triangle(vs=[
-                    te_start_vert,
-                    te_end_vert,
-                    le_end_vert,
-                ])
+                ax.plot(x, y, z)
 
                 if wing.symmetric:
-                    le_start_vec = vp.vec(
-                        le_start[0],
-                        -le_start[1],
-                        le_start[2]
-                    )
-                    le_end_vec = vp.vec(
-                        le_end[0],
-                        -le_end[1],
-                        le_end[2]
-                    )
-                    te_start_vec = vp.vec(
-                        te_start[0],
-                        -te_start[1],
-                        te_start[2]
-                    )
-                    te_end_vec = vp.vec(
-                        te_end[0],
-                        -te_end[1],
-                        te_end[2]
-                    )
-                    curve_sym = vp.curve(le_start_vec, le_end_vec, te_end_vec, te_start_vec, le_start_vec)
+                    ax.plot(x, -1 * y, z)
 
-                    le_start_vert = vp.vertex(pos=le_start_vec)
-                    le_end_vert = vp.vertex(pos=le_end_vec)
-                    te_start_vert = vp.vertex(pos=te_start_vec)
-                    te_end_vert = vp.vertex(pos=te_end_vec)
+        # Plot reference point
+        x=self.xyz_ref[0]
+        y=self.xyz_ref[1]
+        z=self.xyz_ref[2]
+        ax.scatter(x,y,z)
 
-                    T1 = vp.triangle(vs=[
-                        le_start_vert,
-                        le_end_vert,
-                        te_start_vert,
-                    ])
-                    T2 = vp.triangle(vs=[
-                        te_start_vert,
-                        te_end_vert,
-                        le_end_vert,
-                    ])
+        set_axes_equal(ax)
+        plt.tight_layout()
+        if show:
+            plt.show()
 
     def set_ref_dims_from_wing(self):
         pass
@@ -135,7 +66,7 @@ class Airplane:
 
 class Wing:
     def __init__(self,
-                 name="Untitled",
+                 name="Untitled Wing",
                  xyz_le=[0, 0, 0],
                  sections=[],
                  symmetric=True,
