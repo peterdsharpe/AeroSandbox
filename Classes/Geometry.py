@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Classes.Plotting import *
+from .Plotting import *
 from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -21,11 +21,18 @@ class Airplane:
         self.b_ref = b_ref
 
     def draw(self,
-             show=True
+             show=True,
+             fig_to_plot_on=None,
+             ax_to_plot_on=None
              ):
 
-        # Format
-        fig, ax = fig3d()
+        # Setup
+        if fig_to_plot_on == None or ax_to_plot_on == None:
+            fig, ax = fig3d()
+            fig.set_size_inches(12, 9)
+        else:
+            fig = fig_to_plot_on
+            ax = ax_to_plot_on
 
         # TODO plot bodies
 
@@ -43,16 +50,16 @@ class Airplane:
                 y = points[:, 1]
                 z = points[:, 2]
 
-                ax.plot(x, y, z)
+                ax.plot(x, y, z, color='#cc0039')
 
                 if wing.symmetric:
-                    ax.plot(x, -1 * y, z)
+                    ax.plot(x, -1 * y, z, color='#cc0039')
 
         # Plot reference point
-        x=self.xyz_ref[0]
-        y=self.xyz_ref[1]
-        z=self.xyz_ref[2]
-        ax.scatter(x,y,z)
+        x = self.xyz_ref[0]
+        y = self.xyz_ref[1]
+        z = self.xyz_ref[2]
+        ax.scatter(x, y, z)
 
         set_axes_equal(ax)
         plt.tight_layout()
@@ -78,7 +85,8 @@ class Wing:
         self.symmetric = symmetric
         self.incidence_angle = incidence_angle
 
-    def area(self):
+    def area_wetted(self):
+        # Returns the wetted area of a wing.
         area = 0
         for i in range(len(self.sections) - 1):
             chord_eff = (self.sections[i].chord
@@ -100,6 +108,7 @@ class Wing:
         return area
 
     def area_projected(self):
+        # Returns the area of the wing as projected onto the XY plane.
         area = 0
         for i in range(len(self.sections) - 1):
             chord_eff = (self.sections[i].chord
@@ -119,20 +128,11 @@ class Wing:
         return area
 
     def span(self):
-        span = 0
+        # Returns the span (y-distance between the root of the wing and the tip). If symmetric, this is doubled to obtain the full span.
+        spans = []
         for i in range(len(self.sections)):
-            span = np.maximum(np.hypot(self.sections[i].xyz_le[1] - self.sections[0].xyz_le[1],
-                                       self.sections[i].xyz_le[2] - self.sections[0].xyz_le[2]),
-                              span)
-        if self.symmetric:
-            span *= 2
-        return span
-
-    def span_projected(self):
-        span = 0
-        for i in range(len(self.sections)):
-            span = np.maximum(self.sections[i].xyz_le[1],
-                              span)
+            spans.append(np.abs(self.sections[i].xyz_le[1] - self.sections[0].xyz_le[1]))
+        span = np.max(spans)
         if self.symmetric:
             span *= 2
         return span
