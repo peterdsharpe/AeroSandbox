@@ -4,8 +4,11 @@ import matplotlib.pyplot as plt
 from .Plotting import *
 
 class AeroProblem:
-    def __init__(self):
-        pass
+    def __init__(self,
+                 aircraft=None,
+                 panels=[]):
+        self.aircraft=aircraft,
+        self.panels=panels
     pass
     #TODO make this object
 
@@ -70,7 +73,8 @@ class Panel:
 
 
 class HorseshoeVortex:
-    # Wake assumed to trail to infinity, aligned with x_hat.
+    # As coded, can only have two points not at infinity (3-leg horseshoe vortex)
+    # Wake assumed to trail to infinity in the x-direction.
     def __init__(self,
                  vertices=None, # 2x3 np array, left point first, then right.
                  strength=0,
@@ -100,4 +104,20 @@ class HorseshoeVortex:
 
 
 class Source:
-    pass
+    # A (3D) point source/sink.
+    def __init__(self,
+                 vertex=None,
+                 strength=0,
+                 ):
+        self.vertex=np.array(vertex)
+        self.strength=np.array(strength)
+
+        assert (self.vertices.shape == (3))
+
+    def calculate_unit_influence(self,point):
+        r = self.vertices-point
+        norm_r=np.linalg.norm(r)
+
+        influence = 1/(4*np.pi*norm_r**2)
+
+        return influence

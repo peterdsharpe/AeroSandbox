@@ -21,9 +21,12 @@ tripanel = Panel(vertices=np.array([
 ]))
 tripanel.colocation_point=np.array([0,1,2])
 tripanel.set_colocation_point_at_centroid()
-#tripanel.draw()
+tripanel.draw()
 
 v=HorseshoeVortex(vertices=np.array([[1,1,1],[1,1.5,1]]))
 print(vars(v))
 
 print(v.calculate_unit_influence(np.array([0,0,0])))
+
+test=AeroProblem(aircraft=a)
+print(vars(test))
