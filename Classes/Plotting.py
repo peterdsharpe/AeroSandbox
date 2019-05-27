@@ -6,6 +6,9 @@ import numpy as np
 def fig3d():
     fig = plt.figure()
     ax=fig.add_subplot(111, projection='3d')
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
     return fig, ax
 
 def set_axes_equal(ax):
@@ -35,3 +38,5 @@ def set_axes_equal(ax):
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+
+    plt.tight_layout()

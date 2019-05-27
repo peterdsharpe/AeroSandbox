@@ -2,6 +2,8 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from .Plotting import *
+from .Geometry import *
+
 
 
 class AeroProblem:
@@ -146,7 +148,10 @@ class AeroProblem:
                         )
 
                         vortex = HorseshoeVortex(
-                            vertices=np.vstack((inboard_vortex_point,outboard_vortex_point))
+                            vertices=np.vstack((
+                                inboard_vortex_point,
+                                outboard_vortex_point
+                            ))
                         )
 
                         new_panel = Panel(
@@ -155,19 +160,39 @@ class AeroProblem:
                             normal_direction=normal_direction,
                             influencing_objects=[vortex]
                         )
-
                         self.panels.append(new_panel)
 
+                        if wing.symmetric:
+                            vortex_sym = HorseshoeVortex(
+                                vertices = np.vstack((
+                                    reflect_over_XZ_plane(outboard_vortex_point),
+                                    reflect_over_XZ_plane(inboard_vortex_point)
+                                ))
+                            )
+
+                            new_panel_sym = Panel(
+                                vertices = reflect_over_XZ_plane(vertices),
+                                colocation_point = reflect_over_XZ_plane(colocation_point),
+                                normal_direction = reflect_over_XZ_plane(normal_direction),
+                                influencing_objects=[vortex_sym]
+                            )
+                            self.panels.append(new_panel_sym)
         # TODO make this object
 
     def draw_panels(self):
+        # self.panels=self.panels[0:300]
+
         fig, ax = fig3d()
-        for panel in self.panels:
+        for panel_num in range(len(self.panels)):
+            print("Drawing panel ",panel_num)
+            panel=self.panels[panel_num]
             panel.draw(
                 show = False,
                 fig_to_plot_on=fig,
                 ax_to_plot_on=ax,
+                draw_colocation_points=True,
             )
+        set_axes_equal(ax)
         plt.show()
 
 class Panel:
@@ -198,7 +223,8 @@ class Panel:
     def draw(self,
              show=True,
              fig_to_plot_on=None,
-             ax_to_plot_on=None
+             ax_to_plot_on=None,
+             draw_colocation_points=True,
              ):
 
         # Setup
@@ -215,17 +241,15 @@ class Panel:
             x = verts_to_draw[:, 0]
             y = verts_to_draw[:, 1]
             z = verts_to_draw[:, 2]
-            ax.plot(x, y, z, color='#be00cc', linestyle='--')
+            ax.plot(x, y, z, color='#be00cc', linestyle='-', linewidth=0.4)
 
         # Plot colocation point
-        if not (self.colocation_point == None).all():
+        if draw_colocation_points and not (self.colocation_point == None).all():
             x = self.colocation_point[0]
             y = self.colocation_point[1]
             z = self.colocation_point[2]
-            ax.scatter(x, y, z, color='#be00cc', marker='*')
+            ax.scatter(x, y, z, color=(0,0,0), marker='.', s = 0.5)
 
-        set_axes_equal(ax)
-        plt.tight_layout()
         if show:
             plt.show()
 

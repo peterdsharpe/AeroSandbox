@@ -148,9 +148,9 @@ class WingSection:
                  chord=0,
                  twist=0,
                  airfoil=[],
-                 chordwise_panels=30,
+                 chordwise_panels=12,
                  chordwise_spacing="cosine",
-                 spanwise_panels=30,
+                 spanwise_panels=12,
                  spanwise_spacing="cosine"
                  ):
         self.xyz_le = np.array(xyz_le)
@@ -225,3 +225,15 @@ class Airfoil:
 
     def get_point_on_camber_line(self, chordfraction):
         pass
+
+def reflect_over_XZ_plane(input_vector):
+    # Takes in a vector or an array and flips the y-coordinates.
+    shape=np.shape(input_vector)
+    if len(shape)==1 and shape[0]==3:
+        input_vector[1]*=-1
+    elif len(shape)==2 and shape[1]==3:
+        input_vector[:,1]*=-1
+    else:
+        raise Exception("Invalid input for reflect_over_XZ_plane!")
+
+    return input_vector

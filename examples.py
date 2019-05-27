@@ -59,7 +59,7 @@ def conventional():
                         airfoil=Airfoil(name="naca0012")
                     ),
                     WingSection(
-                        xyz_le=[0.04, 0, 0.12],
+                        xyz_le=[0.04, 0, 0.15],
                         chord=0.06,
                         twist=0,
                         airfoil=Airfoil(name="naca0012")
