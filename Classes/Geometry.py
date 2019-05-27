@@ -179,14 +179,49 @@ class Airfoil:
                  name="naca0012"
                  ):
         self.name = name
+        # TODO UNCOMMENT ME
+        #  self.read_coordinates() # populates self.coordinates
 
-        self.read_coordinates()
-        self.get_2D_aero_data()
+        self.get_2D_aero_data() # populates self.aerodata
 
     def read_coordinates(self):
-        pass
-        # TODO do this
+        # Try to read from file
+        import importlib.resources
+        from . import airfoils
+
+        raw_text = importlib.resources.read_text(airfoils, self.name + '.dat')
+        trimmed_text = raw_text[raw_text.find('\n'):]
+
+        coordinates1D = np.fromstring(trimmed_text, sep='\n')  # returns the coordinates in a 1D array
+        assert len(coordinates1D) % 2 == 0, 'File could not be read correctly!'  # Should be even
+
+        coordinates = np.reshape(coordinates1D, (len(coordinates1D) // 2, 2))
+
+        self.coordinates = coordinates
+
+    def draw(self):
+        # Get coordinates if they don't already exist
+        try:
+            self.coordinates
+        except NameError:
+            print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
+            self.read_coordinates()
+
+        plt.plot(self.coordinates[:,0],self.coordinates[:,1])
+        plt.xlim((-0.05, 1.05))
+        plt.ylim((-0.5, 0.5))
+        plt.axis('equal')
 
     def get_2D_aero_data(self):
         pass
         # TODO do this
+
+    def compute_mean_camber_line(self):
+        pass
+    #TODO do this
+
+    def get_point_on_chord_line(self, chordfraction):
+        return np.array([chordfraction,0])
+
+    def get_point_on_camber_line(self, chordfraction):
+        pass

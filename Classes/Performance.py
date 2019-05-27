@@ -7,7 +7,7 @@ from .Plotting import *
 class OperatingPoint:
     def __init__(self,
                  velocity=10,
-                 alpha=0,
+                 alpha=5,
                  beta=0,
                  p=0,
                  q=0,
