@@ -6,7 +6,7 @@ A sandbox for playing around with aerodynamics ideas related to vortex lattice m
 ![AeroSandbox Illustration](AeroSandbox.png)
 
 ## Purpose
-The primary purpose of this repository is so that I can teach myself methods for aerodynamic analysis and explore them within a unified code base. As such, the current focus of this library is not at all on documentation. It's also very possible that this 
+The primary purpose of this repository is so that I can teach myself current methods for aerodynamic analysis, develop new methods, and explore these principles within a unified code base. As such, the current focus of this library is not at all on documentation. That may change at some point in the future. It's also very possible that this repository will never reach a release-ready state and will remain no more than a sandbox.
 
 ## Future Goals
 In descending order of priority/feasibility:
@@ -18,9 +18,10 @@ In descending order of priority/feasibility:
 * Implement an inviscid 3D panel method for simulating multiple objects of arbitrary thickness.
 * Make the aforementioned 3D panel method able to use triangular panels, add VTK or .stl compatibility for panel handling.
 * Implement a 2.5D coupled viscous/inviscid method directly using the viscous methods described in Drela's paper "Viscous-Inviscid Analysis of Transonic and Low Reynolds Number Airfoils". Inviscid flow would be fully 3D, while viscous flow would make the assumption of negligible spanwise flow.
-* Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels (a la Drela's IBL3 approach detailed in his paper "Three-Dimensional Integral Boundary Layer Formulation for General Configurations"). Ideally, the trailing edge stagnation point will be automatically identified.
+* Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels (a la Drela's IBL3 approach detailed in his paper "Three-Dimensional Integral Boundary Layer Formulation for General Configurations"). Ideally, the trailing edge stagnation points will be automatically identified, and nothing more than a surface triangulation along with freestream conditions will be required to compute forces and moments.
 
 
+## Usefulness
 AeroSandbox attempts to improve over existing conceptual-level aerodynamics tools. The following strengths and weaknesses are identified with existing tools, based purely off the author's experience:
 
 Strengths:
@@ -37,7 +38,7 @@ Weaknesses:
 
 With any luck, the list of strengths and weaknesses here will help to drive AeroSandbox development to retain positive qualities and eliminate negative ones.
 
-### License
+## License
 
 MIT License
 
