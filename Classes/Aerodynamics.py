@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import sys
 from .Plotting import *
 from .Geometry import *
 
@@ -53,12 +54,13 @@ class AeroProblem:
                 next_section_xyz_le = next_section.xyz_le + wing.xyz_le
                 next_section_xyz_te = next_section.xyz_te() + wing.xyz_le
 
-                print("")
-                print(wing.name, ", Section ", section_num)
-                print("section_xyz_le ", section_xyz_le)
-                print("section_xyz_te ", section_xyz_te)
-                print("next_section_xyz_le ", next_section_xyz_le)
-                print("next_section_xyz_te ", next_section_xyz_te)
+                # # For debugging
+                # print("")
+                # print(wing.name, ", Section ", section_num)
+                # print("section_xyz_le ", section_xyz_le)
+                # print("section_xyz_te ", section_xyz_te)
+                # print("next_section_xyz_le ", next_section_xyz_le)
+                # print("next_section_xyz_te ", next_section_xyz_te)
 
                 # Initialize an array of coordinates. Indices:
                 #   Index 1: chordwise location
@@ -177,20 +179,40 @@ class AeroProblem:
                                 influencing_objects=[vortex_sym]
                             )
                             self.panels.append(new_panel_sym)
+
+        print("Calculating the influence matrix...")
+        # Initialize AIC matrix
+        n_panels = len(self.panels)
+        AIC = np.zeros([n_panels,n_panels])
+
+        for colocation_num in range(n_panels):
+            colocation_point = self.panels[colocation_num].colocation_point
+            normal_direction = self.panels[colocation_num].normal_direction
+            print(colocation_num)
+            for vortex_num in range(n_panels):
+                AIC[colocation_num,vortex_num]=self.panels[vortex_num].influencing_objects[0].calculate_unit_influence(colocation_point)@normal_direction
+
+
+
+
         # TODO make this object
 
     def draw_panels(self):
         # self.panels=self.panels[0:300]
 
         fig, ax = fig3d()
-        for panel_num in range(len(self.panels)):
-            print("Drawing panel ",panel_num)
+        n_panels=len(self.panels)
+        for panel_num in range(n_panels):
+            sys.stdout.write('\r')
+            sys.stdout.write("Drawing panel %i of %i" % (panel_num+1, n_panels))
+            sys.stdout.flush()
+
             panel=self.panels[panel_num]
             panel.draw(
                 show = False,
                 fig_to_plot_on=fig,
                 ax_to_plot_on=ax,
-                draw_colocation_points=True,
+                draw_colocation_points=False,
             )
         set_axes_equal(ax)
         plt.show()
@@ -218,7 +240,10 @@ class Panel:
         pass
 
     def calculate_influence(self, point):
-        pass
+        influence = np.zeros([3])
+        for object in self.influencing_objects:
+            influence += object.calculate_unit_influence()
+        return influence
 
     def draw(self,
              show=True,

@@ -13,7 +13,7 @@ def conventional():
                     WingSection(  # Root
                         xyz_le=[0, 0, 0],
                         chord=0.18,
-                        twist=0,
+                        twist=2,
                         airfoil=Airfoil(name="naca4412")
                     ),
                     WingSection(  # Mid
@@ -25,7 +25,7 @@ def conventional():
                     WingSection(  # Tip
                         xyz_le=[0.08, 1, 0.1],
                         chord=0.08,
-                        twist=0,
+                        twist=-2,
                         airfoil=Airfoil(name="naca4412")
                     )
                 ]
@@ -37,20 +37,20 @@ def conventional():
                     WingSection(  # root
                         xyz_le=[0, 0, 0],
                         chord=0.1,
-                        twist=0,
+                        twist=-10,
                         airfoil=Airfoil(name="naca0012")
                     ),
                     WingSection(  # tip
                         xyz_le=[0.02, 0.17, 0],
                         chord=0.08,
-                        twist=0,
+                        twist=-10,
                         airfoil=Airfoil(name="naca0012")
                     )
                 ]
             ),
             Wing(
                 name="Vertical Stabilizer",
-                xyz_le=[0.6, 0, 0.1],
+                xyz_le=[0.6, 0, 0.15],
                 sections=[
                     WingSection(
                         xyz_le=[0, 0, 0],
