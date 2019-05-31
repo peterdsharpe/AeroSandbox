@@ -3,7 +3,7 @@ by Peter Sharpe
 
 A sandbox for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, aircraft design optimization, and the like.
 
-![AeroSandbox VLM](AeroSandbox1.png)
+![AeroSandbox VLM](AeroSandbox2.png)
 
 ![AeroSandbox Illustration](AeroSandbox.png)
 
