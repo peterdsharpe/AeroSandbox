@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import sys
 from .Plotting import *
 from .Geometry import *
@@ -21,6 +22,7 @@ class AeroProblem:
     def make_vlm1_problem(self):
         # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
         self.problem_type = 'vlm1'
+        print("Setting up VLM1 problem:")
 
         # # Make panels
         # -------------
@@ -272,37 +274,86 @@ class AeroProblem:
             axis=2
         )
 
-        # Run checks
-        if np.linalg.det(AIC) == 0:
+        # # Calculate AIC Inverse
+        # -----------------------
+        print("Inverting the influence matrix...")
+        try:
+            AIC_inv = np.linalg.inv(AIC)
+        except np.linalg.LinAlgError:
             raise Exception(
-                "AIC matrix is singular and therefore cannot be inverted. Are you sure that you don't have multiple panels stacked on top of each other?")
+                "AIC matrix is singular and therefore cannot be inverted. Are you sure that you don't have multiple wings/panels stacked on top of each other? (Check the ""symmetry"" property of vertical stabilizers on the centerline, that's a common culprit.)")
 
         # # Calculate RHS
         # ---------------
-        print("invtest")
-        np.linalg.inv(AIC)
-        print("done")
+        print("Calculating the freestream influence...")
+        velocity = self.op_point.compute_freestream_velocity()
+
+        local_velocity = np.tile(
+            np.expand_dims(velocity, 0),
+            [n_panels, 1]
+        )  # this is a Nx3 vector representing the local velocity of the unperturbed flow. The first index refers to the colocation point number, the second refers to xyz.
+
+        # # Compute dot products for steady flow
+        # n_dot_x = np.zeros([n_panels, 3])
+        # n_dot_x[:, 0] = n[:, 0]
+        # n_dot_y = np.zeros([n_panels, 3])
+        # n_dot_y[:, 1] = n[:, 1]
+        # n_dot_z = np.zeros([n_panels, 3])
+        # n_dot_z[:, 2] = n[:, 2]
+
+        steady_influence = np.sum(local_velocity * n, axis=1)
+
+        # TODO add rotations / control deflections to freestream_influence
+        freestream_influence = steady_influence
+
+        # # Calculate Vortex Strengths
+        # ----------------------------
+        print("Calculating vortex strengths...")
+        vortex_strengths = np.matmul(AIC_inv, steady_influence)
+        for panel_num in range(len(self.panels)):
+            panel = self.panels[panel_num]
+            panel.influencing_objects[0].strength = vortex_strengths[panel_num]
+
+        print("VLM1 calculation complete!")
 
         # TODO make this object
 
     def draw_panels(self,
                     draw_colocation_points=False,
-                    draw_panel_numbers=False):
-        # self.panels=self.panels[0:300] # For debug
+                    draw_panel_numbers=False,
+                    ):
 
         fig, ax = fig3d()
         n_panels = len(self.panels)
+
+        # Calculate color bounds
+        min_strength = 0
+        max_strength = 0
+        for panel in self.panels:
+            min_strength = min(min_strength, panel.influencing_objects[0].strength)
+            max_strength = max(max_strength, panel.influencing_objects[0].strength)
+        print("Colorbar min: ", min_strength)
+        print("Colorbar max: ", max_strength)
+
+        # Draw
         for panel_num in range(n_panels):
             sys.stdout.write('\r')
             sys.stdout.write("Drawing panel %i of %i" % (panel_num + 1, n_panels))
             sys.stdout.flush()
-
             panel = self.panels[panel_num]
+            strength = panel.influencing_objects[0].strength
+
+            # Calculate colors
+            normalized_strength = (strength - min_strength) / (max_strength - min_strength)
+            colormap = mpl.cm.get_cmap('viridis')
+            color = colormap(normalized_strength)
+
             panel.draw(
                 show=False,
                 fig_to_plot_on=fig,
                 ax_to_plot_on=ax,
                 draw_colocation_point=draw_colocation_points,
+                shading_color=color  # TODO FILL IN
             )
             if draw_panel_numbers:
                 ax.text(
@@ -349,6 +400,7 @@ class Panel:
              fig_to_plot_on=None,
              ax_to_plot_on=None,
              draw_colocation_point=True,
+             shading_color=None,
              ):
 
         # Setup
@@ -361,11 +413,18 @@ class Panel:
 
         # Plot vertices
         if not (self.vertices == None).all():
-            verts_to_draw = np.vstack((self.vertices, self.vertices[0, :]))
-            x = verts_to_draw[:, 0]
-            y = verts_to_draw[:, 1]
-            z = verts_to_draw[:, 2]
-            ax.plot(x, y, z, color='#be00cc', linestyle='-', linewidth=0.4)
+            quad = Poly3DCollection([self.vertices],
+                                    cmap=mpl.cm.get_cmap('viridis'),
+                                    )
+            quad.set_edgecolor('k')
+            quad.set_facecolor(shading_color)
+            ax.add_collection3d(quad)
+
+            # verts_to_draw = np.vstack((self.vertices, self.vertices[0, :]))
+            # x = verts_to_draw[:, 0]
+            # y = verts_to_draw[:, 1]
+            # z = verts_to_draw[:, 2]
+            # ax.plot(x, y, z, color='#be00cc', linestyle='-', linewidth=0.4)
 
         # Plot colocation point
         if draw_colocation_point and not (self.colocation_point == None).all():
