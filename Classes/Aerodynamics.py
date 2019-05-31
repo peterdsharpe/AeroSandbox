@@ -416,7 +416,7 @@ class Panel:
             quad = Poly3DCollection([self.vertices],
                                     cmap=mpl.cm.get_cmap('viridis'),
                                     )
-            quad.set_edgecolor('k')
+            quad.set_edgecolor(None)
             quad.set_facecolor(shading_color)
             ax.add_collection3d(quad)
 
