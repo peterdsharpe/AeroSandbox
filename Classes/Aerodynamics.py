@@ -4,15 +4,17 @@ import matplotlib.pyplot as plt
 import sys
 from .Plotting import *
 from .Geometry import *
-
+from .Performance import *
 
 
 class AeroProblem:
     def __init__(self,
-                 aircraft=None,
+                 airplane=Airplane(),
+                 op_point=OperatingPoint(),
                  panels=[]
                  ):
-        self.aircraft = aircraft
+        self.airplane = airplane
+        self.op_point = op_point
         self.panels = panels
         self.problem_type = None
 
@@ -20,8 +22,11 @@ class AeroProblem:
         # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
         self.problem_type = 'vlm1'
 
+        # # Make panels
+        # -------------
+
         print("Making panels...")
-        for wing in self.aircraft.wings:
+        for wing in self.airplane.wings:
             for section_num in range(0, len(wing.sections) - 1):
 
                 # Define the relevant sections
@@ -85,10 +90,6 @@ class AeroProblem:
 
                         coordinates[chordwise_coordinate_num, spanwise_coordinate_num, :] = local_coordinate
 
-                        # x[chordwise_coordinate_num,spanwise_coordinate_num] = local_coordinate[0]
-                        # y[chordwise_coordinate_num,spanwise_coordinate_num] = local_coordinate[1]
-                        # z[chordwise_coordinate_num,spanwise_coordinate_num] = local_coordinate[2]
-
                 x = coordinates[:, :, 0]
                 y = coordinates[:, :, 1]
                 z = coordinates[:, :, 2]
@@ -126,27 +127,27 @@ class AeroProblem:
                         # Compute normal vector by normalizing the cross product of two diagonals
                         diag1 = back_outboard - front_inboard
                         diag2 = back_inboard - front_outboard
-                        cross = np.cross(diag1,diag2)
+                        cross = np.cross(diag1, diag2)
                         normal_direction = cross / np.linalg.norm(cross)
 
                         # Establish some sign conventions
-                        if normal_direction[2]<0:
-                            normal_direction=-normal_direction
-                        elif normal_direction[2]==0:
-                            if normal_direction[1]<0:
-                                normal_direction=-normal_direction
-                            elif normal_direction[1]==0:
-                                if normal_direction[0]<0:
-                                    normal_direction=-normal_direction
+                        if normal_direction[2] < 0:
+                            normal_direction = -normal_direction
+                        elif normal_direction[2] == 0:
+                            if normal_direction[1] < 0:
+                                normal_direction = -normal_direction
+                            elif normal_direction[1] == 0:
+                                if normal_direction[0] < 0:
+                                    normal_direction = -normal_direction
 
                         # Make the horseshoe vortex
                         inboard_vortex_point = (
-                            0.75 * front_inboard +
-                            0.25 * back_inboard
+                                0.75 * front_inboard +
+                                0.25 * back_inboard
                         )
                         outboard_vortex_point = (
-                            0.75 * front_outboard +
-                            0.25 * back_inboard
+                                0.75 * front_outboard +
+                                0.25 * back_inboard
                         )
 
                         vortex = HorseshoeVortex(
@@ -157,8 +158,8 @@ class AeroProblem:
                         )
 
                         new_panel = Panel(
-                            vertices= vertices,
-                            colocation_point = colocation_point,
+                            vertices=vertices,
+                            colocation_point=colocation_point,
                             normal_direction=normal_direction,
                             influencing_objects=[vortex]
                         )
@@ -166,56 +167,154 @@ class AeroProblem:
 
                         if wing.symmetric:
                             vortex_sym = HorseshoeVortex(
-                                vertices = np.vstack((
+                                vertices=np.vstack((
                                     reflect_over_XZ_plane(outboard_vortex_point),
                                     reflect_over_XZ_plane(inboard_vortex_point)
                                 ))
                             )
 
                             new_panel_sym = Panel(
-                                vertices = reflect_over_XZ_plane(vertices),
-                                colocation_point = reflect_over_XZ_plane(colocation_point),
-                                normal_direction = reflect_over_XZ_plane(normal_direction),
+                                vertices=reflect_over_XZ_plane(vertices),
+                                colocation_point=reflect_over_XZ_plane(colocation_point),
+                                normal_direction=reflect_over_XZ_plane(normal_direction),
                                 influencing_objects=[vortex_sym]
                             )
                             self.panels.append(new_panel_sym)
 
+        # # Calculate AIC matrix
+        # ----------------------
+
         print("Calculating the influence matrix...")
         # Initialize AIC matrix
         n_panels = len(self.panels)
-        AIC = np.zeros([n_panels,n_panels])
+        AIC = np.zeros([n_panels, n_panels])
 
-        for colocation_num in range(n_panels):
-            colocation_point = self.panels[colocation_num].colocation_point
-            normal_direction = self.panels[colocation_num].normal_direction
-            print(colocation_num)
-            for vortex_num in range(n_panels):
-                AIC[colocation_num,vortex_num]=self.panels[vortex_num].influencing_objects[0].calculate_unit_influence(colocation_point)@normal_direction
+        # Naive approach to AIC calculation, takes a dummy long amount of time
+        # AIC_naive = AIC
+        # for colocation_num in range(n_panels):
+        #     colocation_point = self.panels[colocation_num].colocation_point
+        #     normal_direction = self.panels[colocation_num].normal_direction
+        #
+        #     sys.stdout.write('\r')
+        #     sys.stdout.write("Calculating influence on colocation point %i of %i" % (colocation_num + 1, n_panels))
+        #     sys.stdout.flush()
+        #
+        #     for vortex_num in range(n_panels):
+        #         AIC_naive[colocation_num,vortex_num]=self.panels[vortex_num].influencing_objects[0].calculate_unit_influence(colocation_point)@normal_direction
 
+        # Vectorized approach to AIC calculation, less human-readable but much faster
+        # Make some vectorized variables
+        c = np.zeros([n_panels, 3])  # Location of all colocation points
+        n = np.zeros([n_panels, 3])  # Unit normals of all colocation points
+        lv = np.zeros([n_panels, 3])  # Left vertex of all horseshoe vortices
+        rv = np.zeros([n_panels, 3])  # Right vertex of all horseshoe vortices
 
+        for panel_num in range(n_panels):
+            c[panel_num, :] = self.panels[panel_num].colocation_point
+            n[panel_num, :] = self.panels[panel_num].normal_direction
+            lv[panel_num, :] = self.panels[panel_num].influencing_objects[0].vertices[0, :]
+            rv[panel_num, :] = self.panels[panel_num].influencing_objects[0].vertices[1, :]
 
+        # Make a and b vectors.
+        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz.
+        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz.
+        # a[i,j,:] = lv[j,:] - c[i,:]
+        # b[i,j,:] = rv[j,:] - c[i,:]
+
+        lvtiled = np.tile(np.expand_dims(lv, 0), [n_panels, 1, 1])
+        rvtiled = np.tile(np.expand_dims(rv, 0), [n_panels, 1, 1])
+        ctiled = np.tile(np.expand_dims(c, 1), [1, n_panels, 1])
+
+        a = ctiled - lvtiled
+        b = ctiled - rvtiled
+        x = np.zeros([n_panels, n_panels, 3])
+        x[:, :, 0] = 1
+
+        # Do some useful arithmetic
+        a_cross_b = np.cross(a, b, axis=2)
+        a_dot_b = np.sum(
+            a * b,
+            axis=2
+        )
+        a_cross_x = np.cross(a, x, axis=2)
+        a_dot_x = np.sum(
+            a * x,
+            axis=2
+        )
+        b_cross_x = np.cross(b, x, axis=2)
+        b_dot_x = np.sum(
+            b * x,
+            axis=2
+        )
+        norm_a = np.linalg.norm(a, axis=2)
+        norm_b = np.linalg.norm(b, axis=2)
+        norm_a_inv = 1 / norm_a
+        norm_b_inv = 1 / norm_b
+
+        # Calculate Vij
+        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
+        term2 = (norm_a_inv) / (norm_a - a_dot_x)
+        term3 = (norm_b_inv) / (norm_b - b_dot_x)
+        term1 = np.tile(np.expand_dims(term1, 2), [1, 1, 3])
+        term2 = np.tile(np.expand_dims(term2, 2), [1, 1, 3])
+        term3 = np.tile(np.expand_dims(term3, 2), [1, 1, 3])
+
+        Vij = 1 / (4 * np.pi) * (
+                a_cross_b * term1 +
+                a_cross_x * term2 -
+                b_cross_x * term3
+        )
+
+        # Calculate AIC matrix
+        ntiled = np.tile(np.expand_dims(n, 1), [1, n_panels, 1])
+        AIC = np.sum(
+            Vij * ntiled,
+            axis=2
+        )
+
+        # Run checks
+        if np.linalg.det(AIC) == 0:
+            raise Exception(
+                "AIC matrix is singular and therefore cannot be inverted. Are you sure that you don't have multiple panels stacked on top of each other?")
+
+        # # Calculate RHS
+        # ---------------
+        print("invtest")
+        np.linalg.inv(AIC)
+        print("done")
 
         # TODO make this object
 
-    def draw_panels(self):
-        # self.panels=self.panels[0:300]
+    def draw_panels(self,
+                    draw_colocation_points=False,
+                    draw_panel_numbers=False):
+        # self.panels=self.panels[0:300] # For debug
 
         fig, ax = fig3d()
-        n_panels=len(self.panels)
+        n_panels = len(self.panels)
         for panel_num in range(n_panels):
             sys.stdout.write('\r')
-            sys.stdout.write("Drawing panel %i of %i" % (panel_num+1, n_panels))
+            sys.stdout.write("Drawing panel %i of %i" % (panel_num + 1, n_panels))
             sys.stdout.flush()
 
-            panel=self.panels[panel_num]
+            panel = self.panels[panel_num]
             panel.draw(
-                show = False,
+                show=False,
                 fig_to_plot_on=fig,
                 ax_to_plot_on=ax,
-                draw_colocation_points=False,
+                draw_colocation_point=draw_colocation_points,
             )
+            if draw_panel_numbers:
+                ax.text(
+                    panel.colocation_point[0],
+                    panel.colocation_point[1],
+                    panel.colocation_point[2],
+                    str(panel_num),
+                )
+
         set_axes_equal(ax)
         plt.show()
+
 
 class Panel:
     def __init__(self,
@@ -242,14 +341,14 @@ class Panel:
     def calculate_influence(self, point):
         influence = np.zeros([3])
         for object in self.influencing_objects:
-            influence += object.calculate_unit_influence()
+            influence += object.calculate_unit_influence(point)
         return influence
 
     def draw(self,
              show=True,
              fig_to_plot_on=None,
              ax_to_plot_on=None,
-             draw_colocation_points=True,
+             draw_colocation_point=True,
              ):
 
         # Setup
@@ -269,14 +368,15 @@ class Panel:
             ax.plot(x, y, z, color='#be00cc', linestyle='-', linewidth=0.4)
 
         # Plot colocation point
-        if draw_colocation_points and not (self.colocation_point == None).all():
+        if draw_colocation_point and not (self.colocation_point == None).all():
             x = self.colocation_point[0]
             y = self.colocation_point[1]
             z = self.colocation_point[2]
-            ax.scatter(x, y, z, color=(0,0,0), marker='.', s = 0.5)
+            ax.scatter(x, y, z, color=(0, 0, 0), marker='.', s=0.5)
 
         if show:
             plt.show()
+
 
 class HorseshoeVortex:
     # As coded, can only have two points not at infinity (3-leg horseshoe vortex)
@@ -294,8 +394,8 @@ class HorseshoeVortex:
         # Calculates the velocity induced at a point per unit vortex strength
         # Taken from Drela's Flight Vehicle Aerodynamics, pg. 132
 
-        a = self.vertices[0, :] - point
-        b = self.vertices[1, :] - point
+        a = point - self.vertices[0, :]
+        b = point - self.vertices[1, :]
         norm_a = np.linalg.norm(a)
         norm_b = np.linalg.norm(b)
         x_hat = np.array([1, 0, 0])
@@ -307,6 +407,7 @@ class HorseshoeVortex:
         )
 
         return influence
+
 
 class Source:
     # A (3D) point source/sink.

@@ -70,6 +70,11 @@ class Airplane:
         pass
         # TODO set dims
 
+    def set_paneling_everywhere(self,n_chordwise_panels,n_spanwise_panels):
+        for wing in self.wings:
+            for wingsection in wing.sections:
+                wingsection.chordwise_panels = n_chordwise_panels
+                wingsection.spanwise_panels = n_spanwise_panels
 
 class Wing:
     def __init__(self,

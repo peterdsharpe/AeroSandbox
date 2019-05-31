@@ -9,6 +9,7 @@ def conventional():
             Wing(
                 name="Main Wing",
                 xyz_le=[0, 0, 0],
+                symmetric=True,
                 sections=[
                     WingSection(  # Root
                         xyz_le=[0, 0, 0],
@@ -33,6 +34,7 @@ def conventional():
             Wing(
                 name="Horizontal Stabilizer",
                 xyz_le=[0.6, 0, 0.1],
+                symmetric=True,
                 sections=[
                     WingSection(  # root
                         xyz_le=[0, 0, 0],
@@ -51,6 +53,7 @@ def conventional():
             Wing(
                 name="Vertical Stabilizer",
                 xyz_le=[0.6, 0, 0.15],
+                symmetric=False,
                 sections=[
                     WingSection(
                         xyz_le=[0, 0, 0],
