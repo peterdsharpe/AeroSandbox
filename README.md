@@ -8,7 +8,7 @@ A sandbox for playing around with aerodynamics ideas related to vortex lattice m
 ![AeroSandbox Illustration](AeroSandbox.png)
 
 ## Purpose
-The primary purpose of this repository is so that I can teach myself current methods for aerodynamic analysis, develop new methods, and explore these principles within a unified code base. As such, the current focus of this library is not at all on documentation. That may change at some point in the future. It's also very possible that this repository will never reach a release-ready state and will remain no more than a sandbox.
+My primary purpose for this repository is to teach myself methods for aerodynamic analysis, develop new methods, and explore these principles within a unified code base. As such, the current focus of this library is not at all on documentation. That may change at some point in the future. It's also very possible that this repository will never reach a release-ready state and will remain no more than a sandbox.
 
 ## Future Goals
 In descending order of priority/feasibility:
