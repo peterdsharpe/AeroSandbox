@@ -1,7 +1,9 @@
 # AeroSandbox
 by Peter Sharpe
 
-A sandbox for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, aircraft design optimization, and the like.
+# # Current Features
+* User-friendly, consise, high-level, object-oriented structure for airplane geometry definition and analysis.
+* Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
 
 ![AeroSandbox VLM](AeroSandbox2.png)
 
@@ -12,7 +14,7 @@ My primary purpose for this repository is to teach myself methods for aerodynami
 
 ## Future Goals
 In descending order of priority/feasibility:
-* Implement a traditional VLM (a la XFLR5's VLM1) for simulating multiple thin lifting surfaces.
+* Finish implementing a traditional VLM (a la XFLR5's VLM1) for simulating multiple thin lifting surfaces.
 * Implement a viscous drag buildup on wings from interpolated 2D XFOIL data (a la XFLR5's method for approximation of viscous drag).
 * Implement a hybrid ring/horseshoe vortex VLM (a la XFLR5's VLM2) for simulating multiple thin lifting surfaces (hopefully with improved speed and robustness over the VLM1 approach).
 * Implement a viscous drag buildup on nearly-axisymmetric bodies (using the method detailed in Drela's TASOPT v2.00 documentation, Appendix E)
