@@ -4,7 +4,7 @@ by Peter Sharpe
 Source code at: https://github.com/peterdsharpe/AeroSandbox/
 
 ## Current Features
-* User-friendly, consise, high-level, object-oriented structure for airplane geometry definition and analysis.
+* User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
 
 Vortex lattice results, colored by pressure difference across the wing:
