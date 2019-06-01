@@ -1,7 +1,9 @@
 # AeroSandbox
 by Peter Sharpe
 
-Source code at: https://github.com/peterdsharpe/AeroSandbox/
+Hosted at [https://peterdsharpe.github.io/AeroSandbox/](https://peterdsharpe.github.io/AeroSandbox/)
+
+Source code at: [https://github.com/peterdsharpe/AeroSandbox/](https://github.com/peterdsharpe/AeroSandbox/)
 
 ## Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
