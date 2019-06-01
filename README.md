@@ -42,7 +42,7 @@ Strengths:
 
 Weaknesses:
 * XFLR5: Lack of scriptability, limited geometric flexibility
-* AVL: Lack of object-oriented structure
+* AVL: Lack of object-oriented structure, bottlenecking due to I/O
 * Tornado: Speed, user-friendliness
 * VSPAero: Robustness, speed, accuracy, and reliability
 
