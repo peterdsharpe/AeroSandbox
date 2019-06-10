@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg as sp_linalg
 import math
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -309,8 +310,13 @@ class AeroProblem:
 
         # # Calculate Vortex Strengths
         # ----------------------------
+        print("LU factorizing the influence matrix...")
+        lu, piv = sp_linalg.lu_factor(AIC)
+
         print("Calculating vortex strengths...")
-        vortex_strengths = np.linalg.solve(AIC,freestream_influence)
+        vortex_strengths = sp_linalg.lu_solve((lu, piv),freestream_influence)
+
+        # Perform assignments to panels
         for panel_num in range(len(self.panels)):
             panel = self.panels[panel_num]
             panel.influencing_objects[0].strength = vortex_strengths[panel_num]
