@@ -127,7 +127,7 @@ class AeroProblem:
                                 0.75 * np.mean(np.vstack((back_inboard, back_outboard)), axis=0)
                         )
 
-                        # Compute normal vector by normalizing the cross product of two diagonals
+                        # Compute normal vector by normalizing the cross product of two diagonals # TODO add in proper normal direction handling
                         diag1 = back_outboard - front_inboard
                         diag2 = back_inboard - front_outboard
                         cross = np.cross(diag1, diag2)
@@ -275,14 +275,14 @@ class AeroProblem:
             axis=2
         )
 
-        # # Calculate AIC Inverse
-        # -----------------------
-        print("Inverting the influence matrix...")
-        try:
-            AIC_inv = np.linalg.inv(AIC)
-        except np.linalg.LinAlgError:
-            raise Exception(
-                "AIC matrix is singular and therefore cannot be inverted. Are you sure that you don't have multiple wings/panels stacked on top of each other? (Check the ""symmetry"" property of vertical stabilizers on the centerline, that's a common culprit.)")
+        # # # Calculate AIC Inverse
+        # # -----------------------
+        # print("Inverting the influence matrix...")
+        # try:
+        #     AIC_inv = np.linalg.inv(AIC)
+        # except np.linalg.LinAlgError:
+        #     raise Exception(
+        #         "AIC matrix is singular and therefore cannot be inverted. Are you sure that you don't have multiple wings/panels stacked on top of each other? (Check the ""symmetry"" property of vertical stabilizers on the centerline, that's a common culprit.)")
 
         # # Calculate RHS
         # ---------------
@@ -310,7 +310,7 @@ class AeroProblem:
         # # Calculate Vortex Strengths
         # ----------------------------
         print("Calculating vortex strengths...")
-        vortex_strengths = AIC_inv @ freestream_influence
+        vortex_strengths = np.linalg.solve(AIC,freestream_influence)
         for panel_num in range(len(self.panels)):
             panel = self.panels[panel_num]
             panel.influencing_objects[0].strength = vortex_strengths[panel_num]
