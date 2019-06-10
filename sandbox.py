@@ -1,8 +1,8 @@
 import numpy as np
 from Classes import *
-import examples
+import ExampleAirplanes
 
-a = examples.conventional()
+a = ExampleAirplanes.conventional()
 #a.draw()
 
 ringpanel = Panel(vertices=np.array([

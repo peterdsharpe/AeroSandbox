@@ -21,8 +21,8 @@ class AeroProblem:
 
     def make_vlm1_problem(self):
         # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
-        self.problem_type = 'vlm1'
-        print("Setting up VLM1 problem:")
+        self.problem_type = 'VLM1'
+        print("Running the VLM1 calculation:")
 
         # # Make panels
         # -------------
@@ -229,8 +229,8 @@ class AeroProblem:
 
         a = ctiled - lvtiled
         b = ctiled - rvtiled
-        x = np.zeros([n_panels, n_panels, 3])
-        x[:, :, 0] = 1
+        x_hat = np.zeros([n_panels, n_panels, 3])
+        x_hat[:, :, 0] = 1
 
         # Do some useful arithmetic
         a_cross_b = np.cross(a, b, axis=2)
@@ -238,14 +238,14 @@ class AeroProblem:
             a * b,
             axis=2
         )
-        a_cross_x = np.cross(a, x, axis=2)
+        a_cross_x = np.cross(a, x_hat, axis=2)
         a_dot_x = np.sum(
-            a * x,
+            a * x_hat,
             axis=2
         )
-        b_cross_x = np.cross(b, x, axis=2)
+        b_cross_x = np.cross(b, x_hat, axis=2)
         b_dot_x = np.sum(
-            b * x,
+            b * x_hat,
             axis=2
         )
         norm_a = np.linalg.norm(a, axis=2)
@@ -304,15 +304,92 @@ class AeroProblem:
         steady_influence = np.sum(local_velocity * n, axis=1)
 
         # TODO add rotations / control deflections to freestream_influence
-        freestream_influence = steady_influence
+        freestream_influence = steady_influence  # + blah blah blah
 
         # # Calculate Vortex Strengths
         # ----------------------------
         print("Calculating vortex strengths...")
-        vortex_strengths = np.matmul(AIC_inv, steady_influence)
+        vortex_strengths = np.matmul(AIC_inv, freestream_influence)  # TODO consider using np.linalg.solve?
         for panel_num in range(len(self.panels)):
             panel = self.panels[panel_num]
             panel.influencing_objects[0].strength = vortex_strengths[panel_num]
+
+        # # Calculate Near-Field Forces and Moments
+        # -----------------------------------------
+        print("Calculating near-field surface velocities...")
+        vortex_centers = (lv + rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
+        vortex_centers_tiled = np.tile(
+            np.expand_dims(
+                vortex_centers,
+                axis=1
+            ),
+            reps=[1, n_panels, 1]
+        )  # First index is vortex center point #, second is vortex #, and third is xyz.
+
+        # Basically from here on out, we're just redoing the AIC calculation, but using vortex center points instead of colocation points
+        a = vortex_centers_tiled - lvtiled
+        b = vortex_centers_tiled - rvtiled
+        # We have x_hat from before, it's identical
+
+        # Do some useful arithmetic
+        # a_cross_b = np.cross(a, b, axis=2) # Omit the contribution of the vortex on itself, since this is a singularity.
+        # a_dot_b = np.sum(
+        #     a * b,
+        #     axis=2
+        # ) # Omit the contribution of the vortex on itself, since this is a singularity.
+        a_cross_x = np.cross(a, x_hat, axis=2)
+        a_dot_x = np.sum(
+            a * x_hat,
+            axis=2
+        )
+        b_cross_x = np.cross(b, x_hat, axis=2)
+        b_dot_x = np.sum(
+            b * x_hat,
+            axis=2
+        )
+        norm_a = np.linalg.norm(a, axis=2)
+        norm_b = np.linalg.norm(b, axis=2)
+        norm_a_inv = 1 / norm_a
+        norm_b_inv = 1 / norm_b
+
+        # Calculate Vij (velocity influence matrix onto vortex center points)
+        # term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b) # Omit the contribution of the vortex on itself, since this is a singularity.
+        term2 = (norm_a_inv) / (norm_a - a_dot_x)
+        term3 = (norm_b_inv) / (norm_b - b_dot_x)
+        # term1 = np.tile(np.expand_dims(term1, 2), [1, 1, 3]) # Omit the contribution of the vortex on itself, since this is a singularity.
+        term2 = np.tile(np.expand_dims(term2, 2), [1, 1, 3])
+        term3 = np.tile(np.expand_dims(term3, 2), [1, 1, 3])
+
+        Vij = 1 / (4 * np.pi) * (
+            # a_cross_b * term1 + # Omit the contribution of the vortex on itself, since this is a singularity.
+                a_cross_x * term2 -
+                b_cross_x * term3
+        )
+
+        # Calculate Vi (local velocity at the ith vortex center point)
+        velocity_magnitude = np.linalg.norm(velocity)
+        Vi = (
+                np.matmul(vortex_strengths, Vij)
+                - local_velocity
+        )
+
+        # Calculate li, the length of the bound segment of the horseshoe vortex filament
+        li = rv - lv
+
+        # Calculate Fi, the force on the ith panel. Note that this is in BODY AXES, not WIND AXES.
+        Fi_body = (1 *  # density
+              np.cross(Vi, li, axis=1) *  # Vi cross li
+              np.tile(
+                  np.expand_dims(
+                      vortex_strengths, axis=1
+                  ),
+                  reps=[1, 3]
+              )
+              )  # gamma
+
+        # Calculate total forces
+        Ftotal_body = np.sum(Fi_body,axis=0) # Remember, this is in BODY AXES, not WIND AXES
+        print("Total aerodynamic forces (body axes): ",Ftotal_body)
 
         print("VLM1 calculation complete!")
 
@@ -326,7 +403,7 @@ class AeroProblem:
         fig, ax = fig3d()
         n_panels = len(self.panels)
 
-        # Calculate color bounds
+        # Calculate color bounds and box bounds
         min_strength = 0
         max_strength = 0
         for panel in self.panels:
@@ -344,7 +421,7 @@ class AeroProblem:
             strength = panel.influencing_objects[0].strength
 
             # Calculate colors
-            normalized_strength = (strength - min_strength) / (max_strength - min_strength)
+            normalized_strength = 1 * (strength - min_strength) / (max_strength - min_strength)
             colormap = mpl.cm.get_cmap('viridis')
             color = colormap(normalized_strength)
 
@@ -363,7 +440,11 @@ class AeroProblem:
                     str(panel_num),
                 )
 
-        set_axes_equal(ax)
+        x, y, z, s = self.airplane.get_bounding_cube()
+        ax.set_xlim3d((x - s, x + s))
+        ax.set_ylim3d((y - s, y + s))
+        ax.set_zlim3d((z - s, z + s))
+        plt.tight_layout()
         plt.show()
 
 

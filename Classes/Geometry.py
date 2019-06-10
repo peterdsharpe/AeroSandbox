@@ -70,11 +70,62 @@ class Airplane:
         pass
         # TODO set dims
 
-    def set_paneling_everywhere(self,n_chordwise_panels,n_spanwise_panels):
+    def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
+        # Sets the chordwise and spanwise paneling everywhere to a specified value. Useful for quickly changing the fidelity of your simulation.
         for wing in self.wings:
             for wingsection in wing.sections:
                 wingsection.chordwise_panels = n_chordwise_panels
                 wingsection.spanwise_panels = n_spanwise_panels
+
+    def get_bounding_cube(self):
+        # Finds the axis-aligned cube that encloses the airplane with the smallest size.
+        # Returns x, y, z, and s, where x, y, and z are the coordinates of the cube center, and s is half of the side length.
+
+        # Get vertices to enclose
+        vertices = None
+        for wing in self.wings:
+            for wingsection in wing.sections:
+                if vertices is None:
+                    vertices = wingsection.xyz_le + wing.xyz_le
+                else:
+                    vertices = np.vstack((
+                        vertices,
+                        wingsection.xyz_le + wing.xyz_le
+                    ))
+                vertices = np.vstack((
+                    vertices,
+                    wingsection.xyz_te() + wing.xyz_le
+                ))
+
+                if wing.symmetric:
+                    vertices = np.vstack((
+                        vertices,
+                        reflect_over_XZ_plane(wingsection.xyz_le + wing.xyz_le)
+                    ))
+                    vertices = np.vstack((
+                        vertices,
+                        reflect_over_XZ_plane(wingsection.xyz_te() + wing.xyz_le)
+                    ))
+
+        # Enclose them
+        x_max = np.max(vertices[:, 0])
+        y_max = np.max(vertices[:, 1])
+        z_max = np.max(vertices[:, 2])
+        x_min = np.min(vertices[:, 0])
+        y_min = np.min(vertices[:, 1])
+        z_min = np.min(vertices[:, 2])
+
+        x = np.mean((x_max, x_min))
+        y = np.mean((y_max, y_min))
+        z = np.mean((z_max, z_min))
+        s = 0.5 * np.max((
+            x_max - x_min,
+            y_max - y_min,
+            z_max - z_min
+        ))
+
+        return x, y, z, s
+
 
 class Wing:
     def __init__(self,
@@ -187,7 +238,7 @@ class Airfoil:
         # TODO UNCOMMENT ME
         #  self.read_coordinates() # populates self.coordinates
 
-        self.get_2D_aero_data() # populates self.aerodata
+        self.get_2D_aero_data()  # populates self.aerodata
 
     def read_coordinates(self):
         # Try to read from file
@@ -212,7 +263,7 @@ class Airfoil:
             print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
             self.read_coordinates()
 
-        plt.plot(self.coordinates[:,0],self.coordinates[:,1])
+        plt.plot(self.coordinates[:, 0], self.coordinates[:, 1])
         plt.xlim((-0.05, 1.05))
         plt.ylim((-0.5, 0.5))
         plt.axis('equal')
@@ -223,21 +274,23 @@ class Airfoil:
 
     def compute_mean_camber_line(self):
         pass
-    #TODO do this
+
+    # TODO do this
 
     def get_point_on_chord_line(self, chordfraction):
-        return np.array([chordfraction,0])
+        return np.array([chordfraction, 0])
 
     def get_point_on_camber_line(self, chordfraction):
         pass
 
+
 def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
-    shape=np.shape(input_vector)
-    if len(shape)==1 and shape[0]==3:
-        input_vector[1]*=-1
-    elif len(shape)==2 and shape[1]==3:
-        input_vector[:,1]*=-1
+    shape = np.shape(input_vector)
+    if len(shape) == 1 and shape[0] == 3:
+        input_vector[1] *= -1
+    elif len(shape) == 2 and shape[1] == 3:
+        input_vector[:, 1] *= -1
     else:
         raise Exception("Invalid input for reflect_over_XZ_plane!")
 
