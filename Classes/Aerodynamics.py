@@ -21,6 +21,7 @@ class AeroProblem:
 
     def make_vlm1_problem(self):
         # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
+        # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
         self.problem_type = 'VLM1'
         print("Running the VLM1 calculation:")
 
@@ -204,7 +205,7 @@ class AeroProblem:
         #     for vortex_num in range(n_panels):
         #         AIC_naive[colocation_num,vortex_num]=self.panels[vortex_num].influencing_objects[0].calculate_unit_influence(colocation_point)@normal_direction
 
-        # Vectorized approach to AIC calculation, less human-readable but much faster
+        # Vectorized approach to AIC calculation, less human-readable but much, much faster
         # Make some vectorized variables
         c = np.zeros([n_panels, 3])  # Location of all colocation points
         n = np.zeros([n_panels, 3])  # Unit normals of all colocation points
@@ -218,8 +219,8 @@ class AeroProblem:
             rv[panel_num, :] = self.panels[panel_num].influencing_objects[0].vertices[1, :]
 
         # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz.
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz.
+        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
         # a[i,j,:] = lv[j,:] - c[i,:]
         # b[i,j,:] = rv[j,:] - c[i,:]
 
@@ -286,7 +287,7 @@ class AeroProblem:
         # # Calculate RHS
         # ---------------
         print("Calculating the freestream influence...")
-        velocity = self.op_point.compute_freestream_velocity()
+        velocity = self.op_point.compute_freestream_velocity_geometry_axes() # Direction the wind is GOING TO, in geometry axes coordinates
 
         local_velocity = np.tile(
             np.expand_dims(velocity, 0),
@@ -303,20 +304,20 @@ class AeroProblem:
 
         steady_influence = np.sum(local_velocity * n, axis=1)
 
-        # TODO add rotations / control deflections to freestream_influence
+        # TODO add rotation rates / control deflections to freestream_influence
         freestream_influence = steady_influence  # + blah blah blah
 
         # # Calculate Vortex Strengths
         # ----------------------------
         print("Calculating vortex strengths...")
-        vortex_strengths = np.matmul(AIC_inv, freestream_influence)  # TODO consider using np.linalg.solve?
+        vortex_strengths = AIC_inv @ freestream_influence
         for panel_num in range(len(self.panels)):
             panel = self.panels[panel_num]
             panel.influencing_objects[0].strength = vortex_strengths[panel_num]
 
         # # Calculate Near-Field Forces and Moments
         # -----------------------------------------
-        print("Calculating near-field surface velocities...")
+        print("Calculating near-field velocities...")
         vortex_centers = (lv + rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
         vortex_centers_tiled = np.tile(
             np.expand_dims(
@@ -326,7 +327,7 @@ class AeroProblem:
             reps=[1, n_panels, 1]
         )  # First index is vortex center point #, second is vortex #, and third is xyz.
 
-        # Basically from here on out, we're just redoing the AIC calculation, but using vortex center points instead of colocation points
+        # Basically from here until the "Vij = " line, we're just redoing the AIC calculation, but using vortex center points instead of colocation points
         a = vortex_centers_tiled - lvtiled
         b = vortex_centers_tiled - rvtiled
         # We have x_hat from before, it's identical
@@ -369,27 +370,33 @@ class AeroProblem:
         # Calculate Vi (local velocity at the ith vortex center point)
         velocity_magnitude = np.linalg.norm(velocity)
         Vi = (
-                np.matmul(vortex_strengths, Vij)
+                vortex_strengths @ Vij
                 - local_velocity
         )
 
+        print("Calculating forces on each panel...")
         # Calculate li, the length of the bound segment of the horseshoe vortex filament
         li = rv - lv
 
-        # Calculate Fi, the force on the ith panel. Note that this is in BODY AXES, not WIND AXES.
-        Fi_body = (1 *  # density
-              np.cross(Vi, li, axis=1) *  # Vi cross li
-              np.tile(
-                  np.expand_dims(
-                      vortex_strengths, axis=1
-                  ),
-                  reps=[1, 3]
-              )
-              )  # gamma
+        # Calculate Fi, the force on the ith panel. Note that this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
+        Fi_geometry = (self.op_point.density *  # density
+                       np.cross(Vi, li, axis=1) *  # Vi cross li
+                       np.tile(
+                           np.expand_dims(
+                               vortex_strengths, axis=1
+                           ),
+                           reps=[1, 3]
+                       )
+                       )  # gamma
 
         # Calculate total forces
-        Ftotal_body = np.sum(Fi_body,axis=0) # Remember, this is in BODY AXES, not WIND AXES
-        print("Total aerodynamic forces (body axes): ",Ftotal_body)
+        print("Calculating total forces and moments...")
+
+        Ftotal_geometry = np.sum(Fi_geometry, axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
+        print("Total aerodynamic forces (geometry axes): ", Ftotal_geometry)
+
+        Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ Ftotal_geometry
+        print("Total aerodynamic forces (wind axes):", Ftotal_wind)
 
         print("VLM1 calculation complete!")
 
