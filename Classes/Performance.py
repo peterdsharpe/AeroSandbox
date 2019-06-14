@@ -59,9 +59,12 @@ class OperatingPoint:
 
         return r
 
+    def compute_freestream_direction_geometry_axes(self):
+        # Computes the freestream direction (direction the wind is GOING TO) in the geometry axes
+        vel_dir_wind = np.array([-1, 0, 0])
+        vel_dir_geometry = self.compute_rotation_matrix_wind_to_geometry() @ vel_dir_wind
+        return vel_dir_geometry
+
     def compute_freestream_velocity_geometry_axes(self):
         # Computes the freestream velocity vector (direction the wind is GOING TO) in geometry axes
-
-        vel_vec_wind = np.array([-self.velocity, 0, 0])
-        vel_vec_geometry = self.compute_rotation_matrix_wind_to_geometry() @ vel_vec_wind
-        return vel_vec_geometry
+        return self.compute_freestream_direction_geometry_axes() * self.velocity

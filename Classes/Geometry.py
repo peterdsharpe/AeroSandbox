@@ -7,11 +7,11 @@ from mpl_toolkits.mplot3d import Axes3D
 class Airplane:
     def __init__(self,
                  name="Untitled Airplane",
-                 xyz_ref=[0, 0, 0],
+                 xyz_ref=[0.0, 0.0, 0.0],
                  wings=[],
-                 s_ref=1,
-                 c_ref=1,
-                 b_ref=1
+                 s_ref=1.0,
+                 c_ref=1.0,
+                 b_ref=1.0,
                  ):
         self.name = name
         self.xyz_ref = np.array(xyz_ref)
@@ -66,7 +66,15 @@ class Airplane:
         if show:
             plt.show()
 
-    def set_ref_dims_from_wing(self):
+    def set_ref_dims_from_wing(self,
+                               main_wing_index = 0
+                               ):
+        main_wing = self.wings[main_wing_index]
+
+        self.s_ref = main_wing.area_wetted()
+        self.b_ref = main_wing.span()
+        self.c_ref = main_wing.area_wetted()/main_wing.span()
+
         pass
         # TODO set dims
 

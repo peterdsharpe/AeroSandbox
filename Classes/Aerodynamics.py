@@ -460,7 +460,6 @@ class AeroProblem:
         plt.tight_layout()
         plt.show()
 
-
 class Panel:
     def __init__(self,
                  vertices=None,  # Nx3 np array, each row is a vector. Just used for drawing panel

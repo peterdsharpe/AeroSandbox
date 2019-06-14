@@ -71,5 +71,35 @@ def conventional():
             )
         ]
     )
+    p.set_ref_dims_from_wing()
 
+    return p
+
+def simple_airplane():
+    # Reurns an airplane with a single, untwisted, untapered wing.
+    p = Airplane(
+        name="Single Wing",
+        xyz_ref=[0,0,0],
+        wings=[
+            Wing(
+                name="Wing",
+                xyz_le=[0,0,0],
+                symmetric=True,
+                sections=[
+                    WingSection(
+                        xyz_le=[0,0,0],
+                        chord=0.5,
+                        twist=0,
+                        airfoil=Airfoil(name="naca0012")
+                    ),
+                    WingSection(
+                        xyz_le=[0,1,0],
+                        chord=0.5,
+                        twist=0,
+                        airfoil=Airfoil(name="naca0012")
+                    )
+                ]
+            )
+        ]
+    )
     return p
