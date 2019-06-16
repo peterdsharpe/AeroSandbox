@@ -13,7 +13,7 @@ ap = AeroProblem(
 ap.make_vlm1_problem()
 
 # a.draw()
-# ap.draw_panels()
+ap.draw_panels()
 
 # Answer you should get:
 # CL = 0.316
