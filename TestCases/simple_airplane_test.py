@@ -2,6 +2,7 @@ from Classes import *
 import ExampleAirplanes
 
 a = ExampleAirplanes.simple_airplane()
+# a.set_paneling_everywhere(4,4)
 #a.draw()
 
 ap = AeroProblem(
@@ -13,7 +14,7 @@ ap = AeroProblem(
 ap.make_vlm1_problem()
 
 # a.draw()
-ap.draw_panels()
+# ap.draw_panels()
 
 # Answer you should get:
 # CL = 0.316

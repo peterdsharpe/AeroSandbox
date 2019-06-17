@@ -225,12 +225,12 @@ class AeroProblem:
         # a[i,j,:] = lv[j,:] - c[i,:]
         # b[i,j,:] = rv[j,:] - c[i,:]
 
-        lvtiled = np.tile(np.expand_dims(lv, 0), [n_panels, 1, 1])
-        rvtiled = np.tile(np.expand_dims(rv, 0), [n_panels, 1, 1])
-        ctiled = np.tile(np.expand_dims(c, 1), [1, n_panels, 1])
+        lv_tiled = np.tile(np.expand_dims(lv, 0), [n_panels, 1, 1])
+        rv_tiled = np.tile(np.expand_dims(rv, 0), [n_panels, 1, 1])
+        c_tiled = np.tile(np.expand_dims(c, 1), [1, n_panels, 1])
 
-        a = ctiled - lvtiled
-        b = ctiled - rvtiled
+        a = c_tiled - lv_tiled
+        b = c_tiled - rv_tiled
         x_hat = np.zeros([n_panels, n_panels, 3])
         x_hat[:, :, 0] = 1
 
@@ -270,9 +270,12 @@ class AeroProblem:
         )
 
         # Calculate AIC matrix
-        ntiled = np.tile(np.expand_dims(n, 1), [1, n_panels, 1])
+        n_tiled = np.tile(
+            np.expand_dims(n, 1),
+            [1, n_panels, 1]
+        )
         AIC = np.sum(
-            Vij * ntiled,
+            Vij * n_tiled,
             axis=2
         )
 
@@ -288,7 +291,7 @@ class AeroProblem:
         # # Calculate RHS
         # ---------------
         print("Calculating the freestream influence...")
-        velocity = self.op_point.compute_freestream_velocity_geometry_axes() # Direction the wind is GOING TO, in geometry axes coordinates
+        velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
 
         local_velocity = np.tile(
             np.expand_dims(velocity, 0),
@@ -310,16 +313,21 @@ class AeroProblem:
 
         # # Calculate Vortex Strengths
         # ----------------------------
+        # Governing Equation: AIC @ Gamma + freestream_influence = 0
         print("LU factorizing the influence matrix...")
         lu, piv = sp_linalg.lu_factor(AIC)
 
         print("Calculating vortex strengths...")
-        vortex_strengths = sp_linalg.lu_solve((lu, piv),freestream_influence)
+        vortex_strengths = sp_linalg.lu_solve((lu, piv), -freestream_influence)
 
         # Perform assignments to panels
         for panel_num in range(len(self.panels)):
             panel = self.panels[panel_num]
             panel.influencing_objects[0].strength = vortex_strengths[panel_num]
+
+        # # DEBUG only: Check your work
+        # print("DEBUG ONLY: Checking work...")
+        # check = AIC @ vortex_strengths + freestream_influence
 
         # # Calculate Near-Field Forces and Moments
         # -----------------------------------------
@@ -334,8 +342,8 @@ class AeroProblem:
         )  # First index is vortex center point #, second is vortex #, and third is xyz.
 
         # Basically from here until the "Vij = " line, we're just redoing the AIC calculation, but using vortex center points instead of colocation points
-        a = vortex_centers_tiled - lvtiled
-        b = vortex_centers_tiled - rvtiled
+        a = vortex_centers_tiled - lv_tiled
+        b = vortex_centers_tiled - rv_tiled
         # We have x_hat from before, it's identical
 
         # Do some useful arithmetic
@@ -374,11 +382,13 @@ class AeroProblem:
         )
 
         # Calculate Vi (local velocity at the ith vortex center point)
-        velocity_magnitude = np.linalg.norm(velocity)
-        Vi = (
-                vortex_strengths @ Vij
-                - local_velocity
-        )
+        Vi_x = vortex_strengths @ Vij[:, :, 0] + local_velocity[:, 0]
+        Vi_y = vortex_strengths @ Vij[:, :, 1] + local_velocity[:, 1]
+        Vi_z = vortex_strengths @ Vij[:, :, 2] + local_velocity[:, 2]
+        Vi_x = np.expand_dims(Vi_x, axis=1)
+        Vi_y = np.expand_dims(Vi_y, axis=1)
+        Vi_z = np.expand_dims(Vi_z, axis=1)
+        Vi = np.hstack((Vi_x, Vi_y, Vi_z))
 
         print("Calculating forces on each panel...")
         # Calculate li, the length of the bound segment of the horseshoe vortex filament
@@ -395,6 +405,11 @@ class AeroProblem:
                        )
                        )  # gamma
 
+        # Perform assignments to panels
+        for panel_num in range(len(self.panels)):
+            panel = self.panels[panel_num]
+            panel.force_geometry_axes = Fi_geometry[panel_num, :]
+
         # Calculate total forces
         print("Calculating total forces and moments...")
 
@@ -404,6 +419,14 @@ class AeroProblem:
         Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ Ftotal_geometry
         print("Total aerodynamic forces (wind axes):", Ftotal_wind)
 
+        # Calculate nondimensional forces
+        CL = -Ftotal_wind[2] / (0.5 * self.op_point.density * self.op_point.velocity ** 2 * self.airplane.s_ref)
+        CDi = -Ftotal_wind[0] / (0.5 * self.op_point.density * self.op_point.velocity ** 2 * self.airplane.s_ref)
+        CY = Ftotal_wind[1] / (0.5 * self.op_point.density * self.op_point.velocity ** 2 * self.airplane.s_ref)
+        print("CL: ", CL)
+        print("CDi: ", CDi)
+        print("CY: ", CY)
+
         print("VLM1 calculation complete!")
 
         # TODO make this object
@@ -411,19 +434,23 @@ class AeroProblem:
     def draw_panels(self,
                     draw_colocation_points=False,
                     draw_panel_numbers=False,
+                    draw_vortex_strengths=False,
+                    draw_forces=False,
+                    draw_pressures_approx=False,
                     ):
 
         fig, ax = fig3d()
         n_panels = len(self.panels)
 
-        # Calculate color bounds and box bounds
-        min_strength = 0
-        max_strength = 0
-        for panel in self.panels:
-            min_strength = min(min_strength, panel.influencing_objects[0].strength)
-            max_strength = max(max_strength, panel.influencing_objects[0].strength)
-        print("Colorbar min: ", min_strength)
-        print("Colorbar max: ", max_strength)
+        if draw_vortex_strengths:
+            # Calculate color bounds and box bounds
+            min_strength = 0
+            max_strength = 0
+            for panel in self.panels:
+                min_strength = min(min_strength, panel.influencing_objects[0].strength)
+                max_strength = max(max_strength, panel.influencing_objects[0].strength)
+            print("Colorbar min: ", min_strength)
+            print("Colorbar max: ", max_strength)
 
         # Draw
         for panel_num in range(n_panels):
@@ -431,20 +458,54 @@ class AeroProblem:
             sys.stdout.write("Drawing panel %i of %i" % (panel_num + 1, n_panels))
             sys.stdout.flush()
             panel = self.panels[panel_num]
-            strength = panel.influencing_objects[0].strength
+            if draw_vortex_strengths:
+                # Calculate colors and draw
+                strength = panel.influencing_objects[0].strength
+                normalized_strength = 1 * (strength - min_strength) / (max_strength - min_strength)
+                colormap = mpl.cm.get_cmap('viridis')
+                color = colormap(normalized_strength)
+                panel.draw(
+                    show=False,
+                    fig_to_plot_on=fig,
+                    ax_to_plot_on=ax,
+                    draw_colocation_point=draw_colocation_points,
+                    shading_color=color  # TODO FILL IN
+                )
+            else:
+                panel.draw(
+                    show=False,
+                    fig_to_plot_on=fig,
+                    ax_to_plot_on=ax,
+                    draw_colocation_point=draw_colocation_points,
+                    shading_color=(0.5, 0.5, 0.5)
+                )
 
-            # Calculate colors
-            normalized_strength = 1 * (strength - min_strength) / (max_strength - min_strength)
-            colormap = mpl.cm.get_cmap('viridis')
-            color = colormap(normalized_strength)
+            if draw_forces:
+                force_scale = 10
+                centroid = panel.centroid()
 
-            panel.draw(
-                show=False,
-                fig_to_plot_on=fig,
-                ax_to_plot_on=ax,
-                draw_colocation_point=draw_colocation_points,
-                shading_color=color  # TODO FILL IN
-            )
+                tail = centroid
+                head = centroid + force_scale * panel.force_geometry_axes
+
+                x = np.array([tail[0], head[0]])
+                y = np.array([tail[1], head[1]])
+                z = np.array([tail[2], head[2]])
+
+                ax.plot(x, y, z, color='#0A5E08')
+
+            if draw_pressures_approx:
+                force_scale = 1 / panel.area() / 100
+                centroid = panel.centroid()
+
+                tail = centroid
+                head = centroid + force_scale * panel.force_geometry_axes
+
+                x = np.array([tail[0], head[0]])
+                y = np.array([tail[1], head[1]])
+                z = np.array([tail[2], head[2]])
+
+                ax.plot(x, y, z, color='#0A5E08')
+
             if draw_panel_numbers:
                 ax.text(
                     panel.colocation_point[0],
@@ -460,6 +521,7 @@ class AeroProblem:
         plt.tight_layout()
         plt.show()
 
+
 class Panel:
     def __init__(self,
                  vertices=None,  # Nx3 np array, each row is a vector. Just used for drawing panel
@@ -474,6 +536,21 @@ class Panel:
 
         assert (np.shape(self.vertices)[0] >= 3)
         assert (np.shape(self.vertices)[1] == 3)
+
+    def centroid(self):
+        return np.mean(self.vertices, axis=0)
+
+    def area(self):
+        centroid = self.centroid()
+        area = 0
+        for i in range(len(self.vertices) - 1):
+            area += 0.5 * np.linalg.norm(
+                np.cross(
+                    self.vertices[i, :] - centroid,
+                    self.vertices[i + 1, :] - centroid
+                )
+            )
+        return area
 
     def set_colocation_point_at_centroid(self):
         centroid = np.mean(self.vertices, axis=0)
