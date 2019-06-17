@@ -50,9 +50,9 @@ class AeroProblem:
                     raise Exception("Bad value of section.chordwise_spacing!")
 
                 # Get the spanwise coordinates
-                if section.chordwise_spacing == 'uniform':
+                if section.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif section.chordwise_spacing == 'cosine':
+                elif section.spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_spanwise_coordinates))
                 else:
                     raise Exception("Bad value of section.spanwise_spacing!")
@@ -269,7 +269,7 @@ class AeroProblem:
                 b_cross_x * term3
         )
 
-        # Calculate AIC matrix
+        # Calculate AIC matrix (Vij * normal vectors)
         n_tiled = np.tile(
             np.expand_dims(n, 1),
             [1, n_panels, 1]
@@ -297,14 +297,6 @@ class AeroProblem:
             np.expand_dims(velocity, 0),
             [n_panels, 1]
         )  # this is a Nx3 vector representing the local velocity of the unperturbed flow. The first index refers to the colocation point number, the second refers to xyz.
-
-        # # Compute dot products for steady flow
-        # n_dot_x = np.zeros([n_panels, 3])
-        # n_dot_x[:, 0] = n[:, 0]
-        # n_dot_y = np.zeros([n_panels, 3])
-        # n_dot_y[:, 1] = n[:, 1]
-        # n_dot_z = np.zeros([n_panels, 3])
-        # n_dot_z[:, 2] = n[:, 2]
 
         steady_influence = np.sum(local_velocity * n, axis=1)
 
