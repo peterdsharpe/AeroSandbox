@@ -426,6 +426,7 @@ class AeroProblem:
         print("CL: ", CL)
         print("CDi: ", CDi)
         print("CY: ", CY)
+        print("CL/CDi: ", CL/CDi)
 
         print("VLM1 calculation complete!")
 

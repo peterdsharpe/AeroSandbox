@@ -2,7 +2,7 @@ from Classes import *
 import ExampleAirplanes
 
 a = ExampleAirplanes.simple_airplane()
-# a.set_paneling_everywhere(4,4)
+a.set_paneling_everywhere(12,40)
 #a.draw()
 
 ap = AeroProblem(
