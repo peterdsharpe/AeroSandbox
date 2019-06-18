@@ -1,5 +1,5 @@
 # AeroSandbox
-by [https://peterdsharpe.github.io](Peter Sharpe)
+by [Peter Sharpe](https://peterdsharpe.github.io)
 
 Hosted at [https://peterdsharpe.github.io/AeroSandbox/](https://peterdsharpe.github.io/AeroSandbox/)
 
