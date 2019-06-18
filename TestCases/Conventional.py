@@ -9,7 +9,7 @@ ap = AeroProblem(
                             alpha=5,
                             beta=0),
 )
-ap.make_vlm1_problem()
+ap.vlm1()
 
 # a.draw()
 # ap.draw_panels(draw_forces= True, draw_vortex_strengths=True)
