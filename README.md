@@ -56,7 +56,7 @@ With any luck, the list of strengths and weaknesses here will help to drive Aero
 Specifically, the following desirable qualities (and associated quantitative metrics) have been identified:
 * Fast (for point analysis, VLM1 should yield a solution (CL, CDi) within 5% of the "Richardson-extrapolated" solution in less than 1 second for the ExampleAirplanes.conventional() airplane on a typical desktop computer)
 * Accurate (in the limit of high panel density, the solution (CL, CDi) given by VLM1 must match AVL or XFLR5 to within 1%)
-* Reliable/Robust (gradients of the outputs w.r.t. inputs are always finite and sensible)
+* Reliable/Robust (gradients of the outputs w.r.t. inputs are always finite and sensible - specifically, this implies that all vortex kernels must be artificially made to have no singularities)
 * User-friendly (a GUI will be created)
 * Scriptable (the code will be object-oriented; the GUI will contain a CLI)
 * Readable (every class and function will be documented; code will be PEP-8-compatible where reasonable)
