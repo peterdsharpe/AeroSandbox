@@ -21,7 +21,7 @@ Visualization of computational grid:
 ![AeroSandbox Illustration](AeroSandbox.png)
 
 ## Purpose
-My primary purpose for this repository is to teach myself methods for aerodynamic analysis, develop new methods, and explore these principles within a unified code base. As such, the current focus of this library is not at all on documentation. That may change at some point in the future. It's also very possible that this repository will never reach a release-ready state and will remain no more than a sandbox.
+The primary purpose for this repository is so the author can explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
 
 ## Future Goals
 In descending order of priority/feasibility:
