@@ -3,8 +3,8 @@ import ExampleAirplanes
 
 a = ExampleAirplanes.simple_airplane()
 # a.wings[0].sections[0].chordwise_spacing = 'uniform'
-a.wings[0].sections[0].spanwise_spacing = 'uniform'
-a.set_paneling_everywhere(24,40)
+# a.wings[0].sections[0].spanwise_spacing = 'uniform'
+a.set_paneling_everywhere(40,40)
 #a.draw()
 
 ap = AeroProblem(

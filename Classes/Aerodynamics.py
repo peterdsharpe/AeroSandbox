@@ -134,7 +134,7 @@ class AeroProblem:
                         cross = np.cross(diag1, diag2)
                         normal_direction = cross / np.linalg.norm(cross)
 
-                        # Establish some sign conventions
+                        # Establish some sign conventions (positive z, then positive y, then positive x)
                         if normal_direction[2] < 0:
                             normal_direction = -normal_direction
                         elif normal_direction[2] == 0:
@@ -343,7 +343,7 @@ class AeroProblem:
         # a_dot_b = np.sum(
         #     a * b,
         #     axis=2
-        # ) # Omit the contribution of the vortex on itself, since this is a singularity.
+        # ) # Omit the contribution of the vortex on itself, since this is a singularity. # TODO Rewrite this Vij calculation section so that you only ignore the bound leg of the vortex you're on, not all bound vortex legs (i.e. only omit the current leg's term, as well as any other vortices that pierce it (i.e. left and right). Will require some clever vectorization... perhaps set dot product a@b to nonzero if it's zero?)
         a_cross_x = np.cross(a, x_hat, axis=2)
         a_dot_x = np.sum(
             a * x_hat,
@@ -374,9 +374,9 @@ class AeroProblem:
         )
 
         # Calculate Vi (local velocity at the ith vortex center point)
-        Vi_x = vortex_strengths @ Vij[:, :, 0] + local_velocity[:, 0]
-        Vi_y = vortex_strengths @ Vij[:, :, 1] + local_velocity[:, 1]
-        Vi_z = vortex_strengths @ Vij[:, :, 2] + local_velocity[:, 2]
+        Vi_x = Vij[:, :, 0] @ vortex_strengths + local_velocity[:, 0]
+        Vi_y = Vij[:, :, 1] @ vortex_strengths + local_velocity[:, 1]
+        Vi_z = Vij[:, :, 2] @ vortex_strengths + local_velocity[:, 2]
         Vi_x = np.expand_dims(Vi_x, axis=1)
         Vi_y = np.expand_dims(Vi_y, axis=1)
         Vi_z = np.expand_dims(Vi_z, axis=1)
@@ -387,15 +387,24 @@ class AeroProblem:
         li = rv - lv
 
         # Calculate Fi, the force on the ith panel. Note that this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        Fi_geometry = (self.op_point.density *  # density
-                       np.cross(Vi, li, axis=1) *  # Vi cross li
-                       np.tile(
-                           np.expand_dims(
-                               vortex_strengths, axis=1
-                           ),
-                           reps=[1, 3]
-                       )
-                       )  # gamma
+        density = self.op_point.density
+        Vi_cross_li = np.cross(Vi, li, axis=1)
+        vortex_strengths_tiled = np.tile(np.expand_dims(vortex_strengths, axis=1), reps=[1, 3])
+
+        # TODO DEBUG ONLY
+        li_norm = np.tile(np.expand_dims(np.linalg.norm(li,axis = 1),axis=1),reps=[1,3])
+
+        Fi_geometry = density * Vi_cross_li * vortex_strengths_tiled / li_norm / 2 # TODO is the "/ li_norm / 2" right??? Why does this work?
+
+        # Fi_geometry = (self.op_point.density *  # density
+        #                np.cross(Vi, li, axis=1) *  # Vi cross li
+        #                np.tile(
+        #                    np.expand_dims(
+        #                        vortex_strengths, axis=1
+        #                    ),
+        #                    reps=[1, 3]
+        #                )
+        #                )  # gamma
 
         # Perform assignments to panels
         for panel_num in range(len(self.panels)):
@@ -406,6 +415,7 @@ class AeroProblem:
         print("Calculating total forces and moments...")
 
         Ftotal_geometry = np.sum(Fi_geometry, axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
+        Faverage_geometry = np.mean(Fi_geometry, axis=0)
         print("Total aerodynamic forces (geometry axes): ", Ftotal_geometry)
 
         Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ Ftotal_geometry
@@ -418,7 +428,15 @@ class AeroProblem:
         print("CL: ", CL)
         print("CDi: ", CDi)
         print("CY: ", CY)
-        print("CL/CDi: ", CL/CDi)
+        print("CL/CDi: ", CL / CDi)
+
+        # Calculate delta-cp
+        for panel_num in range(len(self.panels)):
+            panel = self.panels[panel_num]
+            panel.force_normal = panel.force_geometry_axes @ panel.normal_direction
+            panel.pressure_normal = panel.force_normal / panel.area()
+            panel.delta_cp = panel.pressure_normal / (0.5 * self.op_point.density * self.op_point.velocity ** 2)
+        
 
         print("VLM1 calculation complete!")
 
@@ -429,7 +447,7 @@ class AeroProblem:
                     draw_panel_numbers=False,
                     draw_vortex_strengths=False,
                     draw_forces=False,
-                    draw_pressures_approx=False,
+                    draw_pressures=False,
                     ):
 
         fig, ax = fig3d()
@@ -444,6 +462,14 @@ class AeroProblem:
                 max_strength = max(max_strength, panel.influencing_objects[0].strength)
             print("Colorbar min: ", min_strength)
             print("Colorbar max: ", max_strength)
+        elif draw_pressures:
+            min_delta_cp = 0
+            max_delta_cp = 0
+            for panel in self.panels:
+                min_delta_cp = min(min_delta_cp, panel.delta_cp)
+                max_delta_cp = max(max_delta_cp, panel.delta_cp)
+            print("Colorbar min: ", min_delta_cp)
+            print("Colorbar max: ", max_delta_cp)
 
         # Draw
         for panel_num in range(n_panels):
@@ -462,7 +488,23 @@ class AeroProblem:
                     fig_to_plot_on=fig,
                     ax_to_plot_on=ax,
                     draw_colocation_point=draw_colocation_points,
-                    shading_color=color  # TODO FILL IN
+                    shading_color=color
+                )
+            elif draw_pressures:
+                # Calculate colors and draw
+                delta_cp = panel.delta_cp
+                min_delta_cp = -8
+                max_delta_cp = 2
+
+                normalized_delta_cp = 1 * (delta_cp - min_delta_cp) / (max_delta_cp - min_delta_cp)
+                colormap = mpl.cm.get_cmap('viridis')
+                color = colormap(normalized_delta_cp)
+                panel.draw(
+                    show=False,
+                    fig_to_plot_on=fig,
+                    ax_to_plot_on=ax,
+                    draw_colocation_point=draw_colocation_points,
+                    shading_color=color
                 )
             else:
                 panel.draw(
@@ -475,19 +517,6 @@ class AeroProblem:
 
             if draw_forces:
                 force_scale = 10
-                centroid = panel.centroid()
-
-                tail = centroid
-                head = centroid + force_scale * panel.force_geometry_axes
-
-                x = np.array([tail[0], head[0]])
-                y = np.array([tail[1], head[1]])
-                z = np.array([tail[2], head[2]])
-
-                ax.plot(x, y, z, color='#0A5E08')
-
-            if draw_pressures_approx:
-                force_scale = 1 / panel.area() / 100
                 centroid = panel.centroid()
 
                 tail = centroid
