@@ -202,7 +202,7 @@ class Wing:
         return span
 
     def aspect_ratio(self):
-        return self.span() ** 2 / self.area()
+        return self.span() ** 2 / self.area_wetted()
 
 
 class WingSection:

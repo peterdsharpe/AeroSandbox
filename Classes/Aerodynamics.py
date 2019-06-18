@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.linalg as sp_linalg
+import scipy.sparse as sp_sparse
 import math
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -198,11 +199,6 @@ class AeroProblem:
         # for colocation_num in range(n_panels):
         #     colocation_point = self.panels[colocation_num].colocation_point
         #     normal_direction = self.panels[colocation_num].normal_direction
-        #
-        #     sys.stdout.write('\r')
-        #     sys.stdout.write("Calculating influence on colocation point %i of %i" % (colocation_num + 1, n_panels))
-        #     sys.stdout.flush()
-        #
         #     for vortex_num in range(n_panels):
         #         AIC_naive[colocation_num,vortex_num]=self.panels[vortex_num].influencing_objects[0].calculate_unit_influence(colocation_point)@normal_direction
 
@@ -219,55 +215,7 @@ class AeroProblem:
             lv[panel_num, :] = self.panels[panel_num].influencing_objects[0].vertices[0, :]
             rv[panel_num, :] = self.panels[panel_num].influencing_objects[0].vertices[1, :]
 
-        # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # a[i,j,:] = lv[j,:] - c[i,:]
-        # b[i,j,:] = rv[j,:] - c[i,:]
-
-        lv_tiled = np.tile(np.expand_dims(lv, 0), [n_panels, 1, 1])
-        rv_tiled = np.tile(np.expand_dims(rv, 0), [n_panels, 1, 1])
-        c_tiled = np.tile(np.expand_dims(c, 1), [1, n_panels, 1])
-
-        a = c_tiled - lv_tiled
-        b = c_tiled - rv_tiled
-        x_hat = np.zeros([n_panels, n_panels, 3])
-        x_hat[:, :, 0] = 1
-
-        # Do some useful arithmetic
-        a_cross_b = np.cross(a, b, axis=2)
-        a_dot_b = np.sum(
-            a * b,
-            axis=2
-        )
-        a_cross_x = np.cross(a, x_hat, axis=2)
-        a_dot_x = np.sum(
-            a * x_hat,
-            axis=2
-        )
-        b_cross_x = np.cross(b, x_hat, axis=2)
-        b_dot_x = np.sum(
-            b * x_hat,
-            axis=2
-        )
-        norm_a = np.linalg.norm(a, axis=2)
-        norm_b = np.linalg.norm(b, axis=2)
-        norm_a_inv = 1 / norm_a
-        norm_b_inv = 1 / norm_b
-
-        # Calculate Vij
-        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
-        term2 = (norm_a_inv) / (norm_a - a_dot_x)
-        term3 = (norm_b_inv) / (norm_b - b_dot_x)
-        term1 = np.tile(np.expand_dims(term1, 2), [1, 1, 3])
-        term2 = np.tile(np.expand_dims(term2, 2), [1, 1, 3])
-        term3 = np.tile(np.expand_dims(term3, 2), [1, 1, 3])
-
-        Vij = 1 / (4 * np.pi) * (
-                a_cross_b * term1 +
-                a_cross_x * term2 -
-                b_cross_x * term3
-        )
+        Vij = self.calculate_Vij(c, lv, rv)
 
         # Calculate AIC matrix (Vij * normal vectors)
         n_tiled = np.tile(
@@ -334,44 +282,7 @@ class AeroProblem:
         )  # First index is vortex center point #, second is vortex #, and third is xyz.
 
         # Basically from here until the "Vij = " line, we're just redoing the AIC calculation, but using vortex center points instead of colocation points
-        a = vortex_centers_tiled - lv_tiled
-        b = vortex_centers_tiled - rv_tiled
-        # We have x_hat from before, it's identical
-
-        # Do some useful arithmetic
-        # a_cross_b = np.cross(a, b, axis=2) # Omit the contribution of the vortex on itself, since this is a singularity.
-        # a_dot_b = np.sum(
-        #     a * b,
-        #     axis=2
-        # ) # Omit the contribution of the vortex on itself, since this is a singularity. # TODO Rewrite this Vij calculation section so that you only ignore the bound leg of the vortex you're on, not all bound vortex legs (i.e. only omit the current leg's term, as well as any other vortices that pierce it (i.e. left and right). Will require some clever vectorization... perhaps set dot product a@b to nonzero if it's zero?)
-        a_cross_x = np.cross(a, x_hat, axis=2)
-        a_dot_x = np.sum(
-            a * x_hat,
-            axis=2
-        )
-        b_cross_x = np.cross(b, x_hat, axis=2)
-        b_dot_x = np.sum(
-            b * x_hat,
-            axis=2
-        )
-        norm_a = np.linalg.norm(a, axis=2)
-        norm_b = np.linalg.norm(b, axis=2)
-        norm_a_inv = 1 / norm_a
-        norm_b_inv = 1 / norm_b
-
-        # Calculate Vij (velocity influence matrix onto vortex center points)
-        # term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b) # Omit the contribution of the vortex on itself, since this is a singularity.
-        term2 = (norm_a_inv) / (norm_a - a_dot_x)
-        term3 = (norm_b_inv) / (norm_b - b_dot_x)
-        # term1 = np.tile(np.expand_dims(term1, 2), [1, 1, 3]) # Omit the contribution of the vortex on itself, since this is a singularity.
-        term2 = np.tile(np.expand_dims(term2, 2), [1, 1, 3])
-        term3 = np.tile(np.expand_dims(term3, 2), [1, 1, 3])
-
-        Vij = 1 / (4 * np.pi) * (
-            # a_cross_b * term1 + # Omit the contribution of the vortex on itself, since this is a singularity.
-                a_cross_x * term2 -
-                b_cross_x * term3
-        )
+        Vij = self.calculate_Vij(vortex_centers, lv, rv)
 
         # Calculate Vi (local velocity at the ith vortex center point)
         Vi_x = Vij[:, :, 0] @ vortex_strengths + local_velocity[:, 0]
@@ -388,13 +299,11 @@ class AeroProblem:
 
         # Calculate Fi, the force on the ith panel. Note that this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         density = self.op_point.density
-        Vi_cross_li = np.cross(Vi, li, axis=1)
+        li_norm = np.tile(np.expand_dims(np.linalg.norm(li, axis=1), axis=1), reps=[1, 3])
+        Vi_cross_li_unit = np.cross(Vi, li / li_norm, axis=1)
         vortex_strengths_tiled = np.tile(np.expand_dims(vortex_strengths, axis=1), reps=[1, 3])
 
-        # TODO DEBUG ONLY
-        li_norm = np.tile(np.expand_dims(np.linalg.norm(li,axis = 1),axis=1),reps=[1,3])
-
-        Fi_geometry = density * Vi_cross_li * vortex_strengths_tiled / li_norm / 2 # TODO is the "/ li_norm / 2" right??? Why does this work?
+        Fi_geometry = density * Vi_cross_li_unit * vortex_strengths_tiled / 2  # TODO Figure out why the 2 is needed
 
         # Fi_geometry = (self.op_point.density *  # density
         #                np.cross(Vi, li, axis=1) *  # Vi cross li
@@ -436,11 +345,86 @@ class AeroProblem:
             panel.force_normal = panel.force_geometry_axes @ panel.normal_direction
             panel.pressure_normal = panel.force_normal / panel.area()
             panel.delta_cp = panel.pressure_normal / (0.5 * self.op_point.density * self.op_point.velocity ** 2)
-        
 
         print("VLM1 calculation complete!")
 
         # TODO make this object
+
+    def calculate_Vij(self,
+                      points,
+                      left_vertices,
+                      right_vertices,
+                      ):
+        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # points: the list of points (Nx3) to calculate the velocity influence at.
+        # left_vertices: list of left vertex points of the horseshoe vertices
+        # right_vertices: list of right vertex points of the horseshoe vertices
+
+        n_points = np.shape(points)[0]
+        n_vortices = np.shape(left_vertices)[0]
+
+        lv_tiled = np.tile(np.expand_dims(left_vertices, 0), [n_points, 1, 1])
+        rv_tiled = np.tile(np.expand_dims(right_vertices, 0), [n_points, 1, 1])
+        c_tiled = np.tile(np.expand_dims(points, 1), [1, n_vortices, 1])
+
+        # Make a and b vectors.
+        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a[i,j,:] = lv[j,:] - c[i,:]
+        # b[i,j,:] = rv[j,:] - c[i,:]
+        a = c_tiled - lv_tiled
+        b = c_tiled - rv_tiled
+        x_hat = np.zeros([n_points, n_vortices, 3])
+        x_hat[:, :, 0] = 1
+
+        # Do some useful arithmetic
+        a_cross_b = np.cross(a, b, axis=2)
+        a_dot_b = np.sum(
+            a * b,
+            axis=2
+        )
+        a_cross_x = np.cross(a, x_hat, axis=2)
+        a_dot_x = np.sum(
+            a * x_hat,
+            axis=2
+        )
+        b_cross_x = np.cross(b, x_hat, axis=2)
+        b_dot_x = np.sum(
+            b * x_hat,
+            axis=2
+        )
+        norm_a = np.linalg.norm(a, axis=2)
+        norm_b = np.linalg.norm(b, axis=2)
+        norm_a_inv = 1 / norm_a
+        norm_b_inv = 1 / norm_b
+
+        # Check for the special case where the colocation point is along the bound vortex leg
+        # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
+        singularity_indices = (
+                np.abs(
+                    np.linalg.norm(
+                        a_cross_b, axis=2
+                    )
+                ) <= np.finfo(float).eps
+        )
+        a_dot_b[singularity_indices] = np.Inf
+
+        # Calculate Vij
+        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
+        term2 = (norm_a_inv) / (norm_a - a_dot_x)
+        term3 = (norm_b_inv) / (norm_b - b_dot_x)
+        term1 = np.tile(np.expand_dims(term1, 2), [1, 1, 3])
+        term2 = np.tile(np.expand_dims(term2, 2), [1, 1, 3])
+        term3 = np.tile(np.expand_dims(term3, 2), [1, 1, 3])
+
+        Vij = 1 / (4 * np.pi) * (
+                a_cross_b * term1 +
+                a_cross_x * term2 -
+                b_cross_x * term3
+        )
+
+        return Vij
+
 
     def draw_panels(self,
                     draw_colocation_points=False,
@@ -448,8 +432,8 @@ class AeroProblem:
                     draw_vortex_strengths=False,
                     draw_forces=False,
                     draw_pressures=False,
+                    draw_pressures_as_vectors=False,
                     ):
-
         fig, ax = fig3d()
         n_panels = len(self.panels)
 
@@ -527,6 +511,19 @@ class AeroProblem:
                 z = np.array([tail[2], head[2]])
 
                 ax.plot(x, y, z, color='#0A5E08')
+            elif draw_pressures_as_vectors:
+                pressure_scale = 10/10000
+                centroid = panel.centroid()
+
+                tail = centroid
+                head = centroid + pressure_scale * panel.force_geometry_axes / panel.area()
+
+                x = np.array([tail[0], head[0]])
+                y = np.array([tail[1], head[1]])
+                z = np.array([tail[2], head[2]])
+
+                ax.plot(x, y, z, color='#0A5E08')
+
 
             if draw_panel_numbers:
                 ax.text(
