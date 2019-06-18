@@ -152,7 +152,7 @@ class AeroProblem:
                         )
                         outboard_vortex_point = (
                                 0.75 * front_outboard +
-                                0.25 * back_inboard
+                                0.25 * back_outboard
                         )
 
                         vortex = HorseshoeVortex(
@@ -299,11 +299,10 @@ class AeroProblem:
 
         # Calculate Fi, the force on the ith panel. Note that this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         density = self.op_point.density
-        li_norm = np.tile(np.expand_dims(np.linalg.norm(li, axis=1), axis=1), reps=[1, 3])
-        Vi_cross_li_unit = np.cross(Vi, li / li_norm, axis=1)
+        Vi_cross_li = np.cross(Vi, li, axis=1)
         vortex_strengths_tiled = np.tile(np.expand_dims(vortex_strengths, axis=1), reps=[1, 3])
 
-        Fi_geometry = density * Vi_cross_li_unit * vortex_strengths_tiled / 2  # TODO Figure out why the 2 is needed
+        Fi_geometry = density * Vi_cross_li * vortex_strengths_tiled
 
         # Fi_geometry = (self.op_point.density *  # density
         #                np.cross(Vi, li, axis=1) *  # Vi cross li
@@ -481,7 +480,7 @@ class AeroProblem:
                         )
                         outboard_vortex_point = (
                                 0.75 * front_outboard +
-                                0.25 * back_inboard
+                                0.25 * back_outboard
                         )
 
                         vortex = HorseshoeVortex(
@@ -568,17 +567,17 @@ class AeroProblem:
         # # Calculate RHS
         # ---------------
         print("Calculating the freestream influence...")
-        velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
+        velocity_nondimensional = self.op_point.compute_freestream_direction_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
 
-        local_velocity = np.tile(
-            np.expand_dims(velocity, 0),
+        local_velocity_nondimensional = np.tile(
+            np.expand_dims(velocity_nondimensional, 0),
             [n_panels, 1]
         )  # this is a Nx3 vector representing the local velocity of the unperturbed flow. The first index refers to the colocation point number, the second refers to xyz.
 
-        steady_influence = np.sum(local_velocity * n, axis=1)
+        steady_influence_nondimensional = np.sum(local_velocity_nondimensional * n, axis=1)
 
         # TODO add rotation rates / control deflections to freestream_influence
-        freestream_influence = steady_influence  # + blah blah blah
+        freestream_influence_nondimensional = steady_influence_nondimensional  # + blah blah blah
 
         # # Calculate Vortex Strengths
         # ----------------------------
@@ -587,12 +586,12 @@ class AeroProblem:
         lu, piv = sp_linalg.lu_factor(AIC)
 
         print("Calculating vortex strengths...")
-        vortex_strengths = sp_linalg.lu_solve((lu, piv), -freestream_influence)
+        vortex_strengths_nondimensional = sp_linalg.lu_solve((lu, piv), -freestream_influence_nondimensional)
 
         # Perform assignments to panels
         for panel_num in range(len(self.panels)):
             panel = self.panels[panel_num]
-            panel.influencing_objects[0].strength = vortex_strengths[panel_num]
+            panel.influencing_objects[0].strength = vortex_strengths_nondimensional[panel_num]
 
         # # DEBUG only: Check your work
         # print("DEBUG ONLY: Checking work...")
@@ -614,13 +613,13 @@ class AeroProblem:
         Vij = self.calculate_Vij(vortex_centers, lv, rv)
 
         # Calculate Vi (local velocity at the ith vortex center point)
-        Vi_x = Vij[:, :, 0] @ vortex_strengths + local_velocity[:, 0]
-        Vi_y = Vij[:, :, 1] @ vortex_strengths + local_velocity[:, 1]
-        Vi_z = Vij[:, :, 2] @ vortex_strengths + local_velocity[:, 2]
+        Vi_x = Vij[:, :, 0] @ vortex_strengths_nondimensional + local_velocity_nondimensional[:, 0]
+        Vi_y = Vij[:, :, 1] @ vortex_strengths_nondimensional + local_velocity_nondimensional[:, 1]
+        Vi_z = Vij[:, :, 2] @ vortex_strengths_nondimensional + local_velocity_nondimensional[:, 2]
         Vi_x = np.expand_dims(Vi_x, axis=1)
         Vi_y = np.expand_dims(Vi_y, axis=1)
         Vi_z = np.expand_dims(Vi_z, axis=1)
-        Vi = np.hstack((Vi_x, Vi_y, Vi_z))
+        Vi_nondimensional = np.hstack((Vi_x, Vi_y, Vi_z))
 
         print("Calculating forces on each panel...")
         # Calculate li, the length of the bound segment of the horseshoe vortex filament
@@ -629,10 +628,10 @@ class AeroProblem:
         # Calculate Fi, the force on the ith panel. Note that this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         density = self.op_point.density
         li_norm = np.tile(np.expand_dims(np.linalg.norm(li, axis=1), axis=1), reps=[1, 3])
-        Vi_cross_li_unit = np.cross(Vi, li / li_norm, axis=1)
-        vortex_strengths_tiled = np.tile(np.expand_dims(vortex_strengths, axis=1), reps=[1, 3])
+        Vi_cross_li_unit = np.cross(Vi_nondimensional, li / li_norm, axis=1)
+        vortex_strengths_nondimensional_tiled = np.tile(np.expand_dims(vortex_strengths_nondimensional, axis=1), reps=[1, 3])
 
-        Fi_geometry = density * Vi_cross_li_unit * vortex_strengths_tiled / 2  # TODO Figure out why the 2 is needed
+        Fi_geometry_nondimensional = 2 / self.airplane.s_ref * np.cross(Vi_nondimensional, li) * vortex_strengths_nondimensional_tiled
 
         # Fi_geometry = (self.op_point.density *  # density
         #                np.cross(Vi, li, axis=1) *  # Vi cross li
@@ -647,33 +646,32 @@ class AeroProblem:
         # Perform assignments to panels
         for panel_num in range(len(self.panels)):
             panel = self.panels[panel_num]
-            panel.force_geometry_axes = Fi_geometry[panel_num, :]
+            panel.force_nondimensional_geometry_axes = Fi_geometry_nondimensional[panel_num, :]
 
         # Calculate total forces
         print("Calculating total forces and moments...")
 
-        Ftotal_geometry = np.sum(Fi_geometry, axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        Faverage_geometry = np.mean(Fi_geometry, axis=0)
-        print("Total aerodynamic forces (geometry axes): ", Ftotal_geometry)
+        F_total_nondimensional_geometry_axes = np.sum(Fi_geometry_nondimensional, axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
+        print("Total nondimensional aerodynamic forces (geometry axes): ", F_total_nondimensional_geometry_axes)
 
-        Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ Ftotal_geometry
-        print("Total aerodynamic forces (wind axes):", Ftotal_wind)
+        F_total_nondimensional_wind_axes = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ F_total_nondimensional_geometry_axes
+        print("Total nondimensional aerodynamic forces (wind axes):", F_total_nondimensional_wind_axes)
 
         # Calculate nondimensional forces
-        CL = -Ftotal_wind[2] / (0.5 * self.op_point.density * self.op_point.velocity ** 2 * self.airplane.s_ref)
-        CDi = -Ftotal_wind[0] / (0.5 * self.op_point.density * self.op_point.velocity ** 2 * self.airplane.s_ref)
-        CY = Ftotal_wind[1] / (0.5 * self.op_point.density * self.op_point.velocity ** 2 * self.airplane.s_ref)
+        CL = -F_total_nondimensional_wind_axes[2]
+        CDi = -F_total_nondimensional_wind_axes[0]
+        CY = F_total_nondimensional_wind_axes[1]
         print("CL: ", CL)
         print("CDi: ", CDi)
         print("CY: ", CY)
         print("CL/CDi: ", CL / CDi)
 
         # Calculate delta-cp
-        for panel_num in range(len(self.panels)):
-            panel = self.panels[panel_num]
-            panel.force_normal = panel.force_geometry_axes @ panel.normal_direction
-            panel.pressure_normal = panel.force_normal / panel.area()
-            panel.delta_cp = panel.pressure_normal / (0.5 * self.op_point.density * self.op_point.velocity ** 2)
+        # for panel_num in range(len(self.panels)):
+        #     panel = self.panels[panel_num]
+        #     panel.force_normal = panel.force_geometry_axes @ panel.normal_direction
+        #     panel.pressure_normal = panel.force_normal / panel.area()
+        #     panel.delta_cp = panel.pressure_normal / (0.5 * self.op_point.density * self.op_point.velocity ** 2)
 
         print("VLM1 calculation complete!")
 
