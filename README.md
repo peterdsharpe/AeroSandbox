@@ -12,7 +12,7 @@ AeroSandbox is a Python 3 package for playing around with aerodynamics ideas rel
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
 
-Vortex lattice results, colored by vortex strength:
+Vortex lattice results, colored by pressure difference:
 
 ![AeroSandbox VLM](Media/Illustrations/Pressures.png)
 
