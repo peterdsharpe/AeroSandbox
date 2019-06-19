@@ -805,7 +805,7 @@ class AeroProblem:
             elif draw_pressures:
                 # Calculate colors and draw
                 delta_cp = panel.delta_cp
-                min_delta_cp = -8
+                min_delta_cp = -2
                 max_delta_cp = 2
 
                 normalized_delta_cp = 1 * (delta_cp - min_delta_cp) / (max_delta_cp - min_delta_cp)
