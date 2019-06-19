@@ -14,11 +14,11 @@ AeroSandbox is a Python 3 package for playing around with aerodynamics ideas rel
 
 Vortex lattice results, colored by vortex strength:
 
-![AeroSandbox VLM](AeroSandbox2.png)
+![AeroSandbox VLM](Media/Illustrations/Pressures.png)
 
 Visualization of computational grid:
 
-![AeroSandbox Illustration](AeroSandbox.png)
+![AeroSandbox Illustration](Media/Illustrations/Grid.png)
 
 ## Purpose
 The primary purpose for this repository is so the author can explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
