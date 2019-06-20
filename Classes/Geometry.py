@@ -294,12 +294,13 @@ class Airfoil:
 
 def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
-    shape = np.shape(input_vector)
+    output_vector = input_vector
+    shape = np.shape(output_vector)
     if len(shape) == 1 and shape[0] == 3:
-        input_vector[1] *= -1
+        output_vector[1] *= -1
     elif len(shape) == 2 and shape[1] == 3:
-        input_vector[:, 1] *= -1
+        output_vector[:, 1] *= -1
     else:
         raise Exception("Invalid input for reflect_over_XZ_plane!")
 
-    return input_vector
+    return output_vector

@@ -22,6 +22,9 @@ class OperatingPoint:
         self.q = q
         self.r = r
 
+    def dynamic_pressure(self):
+        return 0.5*self.density*self.velocity**2
+
     def compute_rotation_matrix_wind_to_geometry(self):
         # Computes the 3x3 rotation matrix required to go from wind axes to geometry axes.
         sinalpha = np.sin(np.radians(self.alpha))
