@@ -2,6 +2,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib import cm
 import matplotlib.pyplot as plt
+import pyvista as pv
 import numpy as np
 
 def fig3d():
