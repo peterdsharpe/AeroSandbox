@@ -677,8 +677,82 @@ class AeroProblem:
 
         # TODO make this object
 
-
     def calculate_Vij(self,
+                      points,
+                      left_vertices,
+                      right_vertices,
+                      ):
+        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # points: the list of points (Nx3) to calculate the velocity influence at.
+        # left_vertices: list of left vertex points of the horseshoe vertices
+        # right_vertices: list of right vertex points of the horseshoe vertices
+
+        n_points = np.shape(points)[0]
+        n_vortices = np.shape(left_vertices)[0]
+
+        lv_tiled = np.tile(np.expand_dims(left_vertices, 0), [n_points, 1, 1])
+        rv_tiled = np.tile(np.expand_dims(right_vertices, 0), [n_points, 1, 1])
+        c_tiled = np.tile(np.expand_dims(points, 1), [1, n_vortices, 1])
+
+        # Make a and b vectors.
+        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a[i,j,:] = lv[j,:] - c[i,:]
+        # b[i,j,:] = rv[j,:] - c[i,:]
+        a = c_tiled - lv_tiled
+        b = c_tiled - rv_tiled
+        x_hat = np.zeros([n_points, n_vortices, 3])
+        x_hat[:, :, 0] = 1
+
+        # Do some useful arithmetic
+        a_cross_b = np.cross(a, b, axis=2)
+        a_dot_b = np.sum(
+            a * b,
+            axis=2
+        )
+        a_cross_x = np.cross(a, x_hat, axis=2)
+        a_dot_x = np.sum(
+            a * x_hat,
+            axis=2
+        )
+        b_cross_x = np.cross(b, x_hat, axis=2)
+        b_dot_x = np.sum(
+            b * x_hat,
+            axis=2
+        )
+        norm_a = np.linalg.norm(a, axis=2)
+        norm_b = np.linalg.norm(b, axis=2)
+        norm_a_inv = 1 / norm_a
+        norm_b_inv = 1 / norm_b
+
+        # Check for the special case where the colocation point is along the bound vortex leg
+        # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
+        singularity_indices = (
+                np.abs(
+                    np.linalg.norm(
+                        a_cross_b, axis=2
+                    )
+                ) <= np.finfo(float).eps
+        )
+        a_dot_b[singularity_indices] = np.Inf
+
+        # Calculate Vij
+        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
+        term2 = (norm_a_inv) / (norm_a - a_dot_x)
+        term3 = (norm_b_inv) / (norm_b - b_dot_x)
+        term1 = np.tile(np.expand_dims(term1, 2), [1, 1, 3])
+        term2 = np.tile(np.expand_dims(term2, 2), [1, 1, 3])
+        term3 = np.tile(np.expand_dims(term3, 2), [1, 1, 3])
+
+        Vij = 1 / (4 * np.pi) * (
+                a_cross_b * term1 +
+                a_cross_x * term2 -
+                b_cross_x * term3
+        )
+
+        return Vij
+
+    def calculate_Vij_fast(self,
                       points,
                       left_vertices,
                       right_vertices,
