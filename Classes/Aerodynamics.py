@@ -47,7 +47,7 @@ class AeroProblem:
         # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
         # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
         self.problem_type = 'VLM1'
-        print("Running the VLM1 calculation:")
+        print("Running VLM1 calculation:")
 
         # # Make panels
         # -------------
