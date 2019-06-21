@@ -60,8 +60,8 @@ Specifically, the following desirable qualities (and associated quantitative met
 * User-friendly (a GUI will be created)
 * Scriptable (the code will be object-oriented; the GUI will contain a CLI)
 * Readable (every class and function will be documented; code will be PEP-8-compatible where reasonable)
-* Optimizer-friendly (design gradients will be computed through automatic differentiation - perhaps with the autograd library?)
-* Visualization (visualzation will be provided through an OpenGL-compatible library - perhaps PyVista?)
+* Optimizer-friendly (design gradients and stability derivatives will be computed through automatic differentiation - perhaps with the autograd library?)
+* Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
 
 ## License
 
