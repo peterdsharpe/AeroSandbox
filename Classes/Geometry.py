@@ -212,9 +212,9 @@ class WingSection:
                  chord=0,
                  twist=0,
                  airfoil=[],
-                 chordwise_panels=12,
+                 chordwise_panels=10,
                  chordwise_spacing="cosine",
-                 spanwise_panels=12,
+                 spanwise_panels=10,
                  spanwise_spacing="cosine"
                  ):
         self.xyz_le = np.array(xyz_le)
