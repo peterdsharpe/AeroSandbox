@@ -2,7 +2,9 @@ from Classes import *
 import ExampleAirplanes
 
 a = ExampleAirplanes.conventional()
-# a.set_paneling_everywhere(50,50)
+
+a.wings=[a.wings[0],a.wings[1],a.wings[2]]
+
 ap = AeroProblem(
     airplane=a,
     op_point=OperatingPoint(velocity=10,

@@ -130,29 +130,30 @@ class AeroProblem:
                 # set_axes_equal(ax)
                 # plt.show()
 
-                front_inboard = coordinates[:-1, :-1, :]
-                front_outboard = coordinates[:-1, 1:, :]
-                back_inboard = coordinates[1:, :-1, :]
-                back_outboard = coordinates[1:, 1:, :]
+
+                front_inboard_vertices = coordinates[:-1, :-1, :]
+                front_outboard_vertices = coordinates[:-1, 1:, :]
+                back_inboard_vertices = coordinates[1:, :-1, :]
+                back_outboard_vertices = coordinates[1:, 1:, :]
 
                 colocation_points = (
-                        0.25 * (front_inboard + front_outboard) / 2 +
-                        0.75 * (back_inboard + back_outboard) / 2
+                        0.25 * (front_inboard_vertices + front_outboard_vertices) / 2 +
+                        0.75 * (back_inboard_vertices + back_outboard_vertices) / 2
                 )
 
-                diag1 = back_outboard - front_inboard
-                diag2 = back_inboard - front_outboard
+                diag1 = back_outboard_vertices - front_inboard_vertices
+                diag2 = back_inboard_vertices - front_outboard_vertices
                 cross = np.cross(diag1, diag2, axis=2)
                 normal_directions = cross / np.expand_dims(np.linalg.norm(cross,axis=2),axis=2) # TODO add in proper normal direction handling
 
                 # Make the horseshoe vortex
                 inboard_vortex_points = (
-                        0.75 * front_inboard +
-                        0.25 * back_inboard
+                        0.75 * front_inboard_vertices +
+                        0.25 * back_inboard_vertices
                 )
                 outboard_vortex_points = (
-                        0.75 * front_outboard +
-                        0.25 * back_outboard
+                        0.75 * front_outboard_vertices +
+                        0.25 * back_outboard_vertices
                 )
 
                 colocation_points=np.reshape(colocation_points,(-1,3))
@@ -161,21 +162,22 @@ class AeroProblem:
                 outboard_vortex_points=np.reshape(outboard_vortex_points,(-1,3))
 
 
+
                 c = np.vstack((c, colocation_points))
                 n = np.vstack((n, normal_directions))
                 lv = np.vstack((lv, inboard_vortex_points))
                 rv = np.vstack((rv, outboard_vortex_points))
 
                 if wing.symmetric:
-                    reflect_over_XZ_plane(inboard_vortex_points)
-                    reflect_over_XZ_plane(outboard_vortex_points)
-                    reflect_over_XZ_plane(colocation_points)
-                    reflect_over_XZ_plane(normal_directions)
+                    inboard_vortex_points=reflect_over_XZ_plane(inboard_vortex_points)
+                    outboard_vortex_points=reflect_over_XZ_plane(outboard_vortex_points)
+                    colocation_points=reflect_over_XZ_plane(colocation_points)
+                    normal_directions=reflect_over_XZ_plane(normal_directions)
 
                     c = np.vstack((c, colocation_points))
                     n = np.vstack((n, normal_directions))
-                    lv = np.vstack((lv, inboard_vortex_points))
-                    rv = np.vstack((rv, outboard_vortex_points))
+                    lv = np.vstack((lv, outboard_vortex_points))
+                    rv = np.vstack((rv, inboard_vortex_points))
 
                 # # Make the panels
                 # for spanwise_coordinate_num in range(len(nondim_spanwise_coordinates) - 1):
@@ -273,7 +275,7 @@ class AeroProblem:
         # ----------------------
 
         print("Calculating the influence matrix...")
-        n_panels = np.shape(c)[0]
+        n_panels = len(c)
 
         # Naive approach to AIC calculation, takes a dummy long amount of time
         # AIC_naive = np.zeros([n_panels, n_panels])
@@ -318,10 +320,7 @@ class AeroProblem:
         print("Calculating the freestream influence...")
         velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
 
-        local_velocity = np.tile(
-            np.expand_dims(velocity, 0),
-            [n_panels, 1]
-        )  # this is a Nx3 vector representing the local velocity of the unperturbed flow. The first index refers to the colocation point number, the second refers to xyz.
+        local_velocity = np.expand_dims(velocity,0) * np.ones((n_panels,1))  # this is a Nx3 vector representing the local velocity of the unperturbed flow. The first index refers to the colocation point number, the second refers to xyz.
 
         steady_influence = np.sum(velocity * n, axis=1)
 
@@ -396,8 +395,6 @@ class AeroProblem:
         # for panel_num in range(n_panels):
         #     panel = self.panels[panel_num]
         #     panel.force_geometry_axes = Fi_geometry[panel_num, :]
-
-            # Calculate delta-cp
         #     panel.force_normal = panel.force_geometry_axes @ panel.normal_direction
         #     panel.pressure_normal = panel.force_normal / panel.area()
         #     panel.delta_cp = panel.pressure_normal / self.op_point.dynamic_pressure()
@@ -405,6 +402,10 @@ class AeroProblem:
         print("VLM1 calculation complete!")
 
         # TODO make this object
+
+    def get_velocity_at_point(self, point, lv, rv, vortex_strengths):
+        return np.transpose(calculate_Vij(np.reshape(point, (-1, 3)), lv, rv)[0, :, :]) @ (
+            np.expand_dims(vortex_strengths, 1))
 
     def draw_panels(self,
                     draw_colocation_points=False,
@@ -518,7 +519,6 @@ class AeroProblem:
         ax.set_zlim3d((z - s, z + s))
         plt.tight_layout()
         plt.show()
-
 
 def calculate_Vij(
         points,
