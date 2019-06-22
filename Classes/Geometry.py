@@ -67,13 +67,13 @@ class Airplane:
             plt.show()
 
     def set_ref_dims_from_wing(self,
-                               main_wing_index = 0
+                               main_wing_index=0
                                ):
         main_wing = self.wings[main_wing_index]
 
         self.s_ref = main_wing.area_wetted()
         self.b_ref = main_wing.span()
-        self.c_ref = main_wing.area_wetted()/main_wing.span()
+        self.c_ref = main_wing.area_wetted() / main_wing.span()
 
         pass
         # TODO set dims
@@ -81,8 +81,8 @@ class Airplane:
     def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
         # Sets the chordwise and spanwise paneling everywhere to a specified value. Useful for quickly changing the fidelity of your simulation.
         for wing in self.wings:
+            wing.chordwise_panels = n_chordwise_panels
             for wingsection in wing.sections:
-                wingsection.chordwise_panels = n_chordwise_panels
                 wingsection.spanwise_panels = n_spanwise_panels
 
     def get_bounding_cube(self):
@@ -141,13 +141,17 @@ class Wing:
                  xyz_le=[0, 0, 0],
                  sections=[],
                  symmetric=True,
-                 incidence_angle=0
+                 incidence_angle=0,
+                 chordwise_panels=10,
+                 chordwise_spacing="cosine",
                  ):
         self.name = name
         self.xyz_le = np.array(xyz_le)
         self.sections = sections
         self.symmetric = symmetric
         self.incidence_angle = incidence_angle
+        self.chordwise_panels=chordwise_panels
+        self.chordwise_spacing=chordwise_spacing
 
     def area_wetted(self):
         # Returns the wetted area of a wing.
@@ -212,8 +216,6 @@ class WingSection:
                  chord=0,
                  twist=0,
                  airfoil=[],
-                 chordwise_panels=10,
-                 chordwise_spacing="cosine",
                  spanwise_panels=10,
                  spanwise_spacing="cosine"
                  ):
@@ -221,8 +223,6 @@ class WingSection:
         self.chord = chord
         self.twist = twist
         self.airfoil = airfoil
-        self.chordwise_panels = chordwise_panels
-        self.chordwise_spacing = chordwise_spacing
         self.spanwise_panels = spanwise_panels
         self.spanwise_spacing = spanwise_spacing
 

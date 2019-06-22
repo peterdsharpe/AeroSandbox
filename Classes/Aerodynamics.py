@@ -58,23 +58,32 @@ class AeroProblem:
         lv = np.empty((0, 3))
         rv = np.empty((0, 3))
         for wing in self.airplane.wings:
-            for section_num in range(0, len(wing.sections) - 1):
+            
+            # Define number of chordwise points
+            n_chordwise_coordinates = wing.chordwise_panels + 1
+
+            # Get the chordwise coordinates
+            if wing.chordwise_spacing == 'uniform':
+                nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
+            elif wing.chordwise_spacing == 'cosine':
+                nondim_chordwise_coordinates = 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_chordwise_coordinates))
+            else:
+                raise Exception("Bad value of wing.chordwise_spacing!")
+
+            # Initialize an array of coordinates. Indices:
+            #   Index 1: chordwise location
+            #   Index 2: spanwise location
+            #   Index 3: X, Y, or Z.
+            wing_coordinates = np.empty((n_chordwise_coordinates,0,3))
+            
+            for section_num in range(len(wing.sections) - 1):
 
                 # Define the relevant sections
                 section = wing.sections[section_num]
                 next_section = wing.sections[section_num + 1]
 
-                # Define number of chordwise and spanwise points
-                n_chordwise_coordinates = section.chordwise_panels + 1
+                # Define number of spanwise points
                 n_spanwise_coordinates = section.spanwise_panels + 1
-
-                # Get the chordwise coordinates
-                if section.chordwise_spacing == 'uniform':
-                    nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
-                elif section.chordwise_spacing == 'cosine':
-                    nondim_chordwise_coordinates = 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_chordwise_coordinates))
-                else:
-                    raise Exception("Bad value of section.chordwise_spacing!")
 
                 # Get the spanwise coordinates
                 if section.spanwise_spacing == 'uniform':
@@ -90,19 +99,7 @@ class AeroProblem:
                 next_section_xyz_le = next_section.xyz_le + wing.xyz_le
                 next_section_xyz_te = next_section.xyz_te() + wing.xyz_le
 
-                # # For debugging
-                # print("")
-                # print(wing.name, ", Section ", section_num)
-                # print("section_xyz_le ", section_xyz_le)
-                # print("section_xyz_te ", section_xyz_te)
-                # print("next_section_xyz_le ", next_section_xyz_le)
-                # print("next_section_xyz_te ", next_section_xyz_te)
-
-                # Initialize an array of coordinates. Indices:
-                #   Index 1: chordwise location
-                #   Index 2: spanwise location
-                #   Index 3: X, Y, or Z.
-                coordinates = np.zeros(shape=(n_chordwise_coordinates, n_spanwise_coordinates, 3))
+                section_coordinates = np.zeros(shape=(n_chordwise_coordinates, n_spanwise_coordinates, 3))
 
                 # Dimensionalize the chordwise and spanwise coordinates
                 for spanwise_coordinate_num in range(len(nondim_spanwise_coordinates)):
@@ -119,65 +116,62 @@ class AeroProblem:
                         local_coordinate = ((1 - nondim_chordwise_coordinate) * local_xyz_le +
                                             (nondim_chordwise_coordinate) * local_xyz_te)
 
-                        coordinates[chordwise_coordinate_num, spanwise_coordinate_num, :] = local_coordinate
+                        section_coordinates[chordwise_coordinate_num, spanwise_coordinate_num, :] = local_coordinate
 
-                # # For debugging: view the coordinates of each WingSection
-                # fig,ax = fig3d()
-                # ax.scatter(x,y,z,c='b',marker='.')
-                # ax.set_xlabel("X")
-                # ax.set_ylabel("Y")
-                # ax.set_zlabel("Z")
-                # set_axes_equal(ax)
-                # plt.show()
+                is_last_section = section_num == len(wing.sections) - 2
+                if not is_last_section:
+                    section_coordinates=section_coordinates[:,:-1,:]
+                    
+                wing_coordinates=np.hstack((wing_coordinates,section_coordinates))
 
 
-                front_inboard_vertices = coordinates[:-1, :-1, :]
-                front_outboard_vertices = coordinates[:-1, 1:, :]
-                back_inboard_vertices = coordinates[1:, :-1, :]
-                back_outboard_vertices = coordinates[1:, 1:, :]
+            front_inboard_vertices = wing_coordinates[:-1, :-1, :]
+            front_outboard_vertices = wing_coordinates[:-1, 1:, :]
+            back_inboard_vertices = wing_coordinates[1:, :-1, :]
+            back_outboard_vertices = wing_coordinates[1:, 1:, :]
 
-                colocation_points = (
-                        0.25 * (front_inboard_vertices + front_outboard_vertices) / 2 +
-                        0.75 * (back_inboard_vertices + back_outboard_vertices) / 2
-                )
+            colocation_points = (
+                    0.25 * (front_inboard_vertices + front_outboard_vertices) / 2 +
+                    0.75 * (back_inboard_vertices + back_outboard_vertices) / 2
+            )
 
-                diag1 = back_outboard_vertices - front_inboard_vertices
-                diag2 = back_inboard_vertices - front_outboard_vertices
-                cross = np.cross(diag1, diag2, axis=2)
-                normal_directions = cross / np.expand_dims(np.linalg.norm(cross,axis=2),axis=2) # TODO add in proper normal direction handling
+            diag1 = back_outboard_vertices - front_inboard_vertices
+            diag2 = back_inboard_vertices - front_outboard_vertices
+            cross = np.cross(diag1, diag2, axis=2)
+            normal_directions = cross / np.expand_dims(np.linalg.norm(cross,axis=2),axis=2) # TODO add in proper normal direction handling
 
-                # Make the horseshoe vortex
-                inboard_vortex_points = (
-                        0.75 * front_inboard_vertices +
-                        0.25 * back_inboard_vertices
-                )
-                outboard_vortex_points = (
-                        0.75 * front_outboard_vertices +
-                        0.25 * back_outboard_vertices
-                )
+            # Make the horseshoe vortex
+            inboard_vortex_points = (
+                    0.75 * front_inboard_vertices +
+                    0.25 * back_inboard_vertices
+            )
+            outboard_vortex_points = (
+                    0.75 * front_outboard_vertices +
+                    0.25 * back_outboard_vertices
+            )
 
-                colocation_points=np.reshape(colocation_points,(-1,3))
-                normal_directions=np.reshape(normal_directions,(-1,3))
-                inboard_vortex_points=np.reshape(inboard_vortex_points,(-1,3))
-                outboard_vortex_points=np.reshape(outboard_vortex_points,(-1,3))
+            colocation_points=np.reshape(colocation_points,(-1,3))
+            normal_directions=np.reshape(normal_directions,(-1,3))
+            inboard_vortex_points=np.reshape(inboard_vortex_points,(-1,3))
+            outboard_vortex_points=np.reshape(outboard_vortex_points,(-1,3))
 
 
+
+            c = np.vstack((c, colocation_points))
+            n = np.vstack((n, normal_directions))
+            lv = np.vstack((lv, inboard_vortex_points))
+            rv = np.vstack((rv, outboard_vortex_points))
+
+            if wing.symmetric:
+                inboard_vortex_points=reflect_over_XZ_plane(inboard_vortex_points)
+                outboard_vortex_points=reflect_over_XZ_plane(outboard_vortex_points)
+                colocation_points=reflect_over_XZ_plane(colocation_points)
+                normal_directions=reflect_over_XZ_plane(normal_directions)
 
                 c = np.vstack((c, colocation_points))
                 n = np.vstack((n, normal_directions))
-                lv = np.vstack((lv, inboard_vortex_points))
-                rv = np.vstack((rv, outboard_vortex_points))
-
-                if wing.symmetric:
-                    inboard_vortex_points=reflect_over_XZ_plane(inboard_vortex_points)
-                    outboard_vortex_points=reflect_over_XZ_plane(outboard_vortex_points)
-                    colocation_points=reflect_over_XZ_plane(colocation_points)
-                    normal_directions=reflect_over_XZ_plane(normal_directions)
-
-                    c = np.vstack((c, colocation_points))
-                    n = np.vstack((n, normal_directions))
-                    lv = np.vstack((lv, outboard_vortex_points))
-                    rv = np.vstack((rv, inboard_vortex_points))
+                lv = np.vstack((lv, outboard_vortex_points))
+                rv = np.vstack((rv, inboard_vortex_points))
 
                 # # Make the panels
                 # for spanwise_coordinate_num in range(len(nondim_spanwise_coordinates) - 1):
