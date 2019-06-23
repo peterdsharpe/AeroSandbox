@@ -15,4 +15,4 @@ ap = vlm1(
 ap.run()
 
 # a.draw()
-# ap.draw_panels(draw_forces= True, draw_vortex_strengths=True)
+# ap.draw(draw_forces= True, draw_vortex_strengths=True)

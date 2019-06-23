@@ -45,7 +45,6 @@ class vlm1(AeroProblem):
     # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
 
-    @profile
     def run(self):
         print("Running VLM1 calculation...")
         self.make_panels()
@@ -350,6 +349,7 @@ class vlm1(AeroProblem):
         V = Vi + freestream
         return V
 
+    @profile
     def calculate_Vij(self, points):
         # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
@@ -541,14 +541,14 @@ class vlm1(AeroProblem):
 
         return Vij
 
-    def draw_panels(self,
-                    draw_colocation_points=False,
-                    draw_panel_numbers=False,
-                    draw_vortex_strengths=False,
-                    draw_forces=False,
-                    draw_pressures=False,
-                    draw_pressures_as_vectors=False,
-                    ):
+    def draw(self,
+             draw_colocation_points=False,
+             draw_panel_numbers=False,
+             draw_vortex_strengths=False,
+             draw_forces=False,
+             draw_pressures=False,
+             draw_pressures_as_vectors=False,
+             ):
         fig, ax = fig3d()
         n_panels = len(self.panels)
 
