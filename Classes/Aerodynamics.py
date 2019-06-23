@@ -39,9 +39,11 @@ class AeroProblem:
         self.airplane = airplane
         self.op_point = op_point
 
+
 class vlm1(AeroProblem):
     # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
+
     @profile
     def run(self):
         print("Running VLM1 calculation...")
@@ -62,8 +64,12 @@ class vlm1(AeroProblem):
         n = np.empty((0, 3))
         lv = np.empty((0, 3))
         rv = np.empty((0, 3))
+        front_left_vertices = np.empty((0,3))
+        front_right_vertices = np.empty((0,3))
+        back_left_vertices = np.empty((0,3))
+        back_right_vertices = np.empty((0,3))
         for wing in self.airplane.wings:
-            
+
             # Define number of chordwise points
             n_chordwise_coordinates = wing.chordwise_panels + 1
 
@@ -79,8 +85,8 @@ class vlm1(AeroProblem):
             #   Index 1: chordwise location
             #   Index 2: spanwise location
             #   Index 3: X, Y, or Z.
-            wing_coordinates = np.empty((n_chordwise_coordinates,0,3))
-            
+            wing_coordinates = np.empty((n_chordwise_coordinates, 0, 3))
+
             for section_num in range(len(wing.sections) - 1):
 
                 # Define the relevant sections
@@ -125,10 +131,9 @@ class vlm1(AeroProblem):
 
                 is_last_section = section_num == len(wing.sections) - 2
                 if not is_last_section:
-                    section_coordinates=section_coordinates[:,:-1,:]
-                    
-                wing_coordinates=np.hstack((wing_coordinates,section_coordinates))
+                    section_coordinates = section_coordinates[:, :-1, :]
 
+                wing_coordinates = np.hstack((wing_coordinates, section_coordinates))
 
             front_inboard_vertices = wing_coordinates[:-1, :-1, :]
             front_outboard_vertices = wing_coordinates[:-1, 1:, :]
@@ -143,7 +148,8 @@ class vlm1(AeroProblem):
             diag1 = back_outboard_vertices - front_inboard_vertices
             diag2 = back_inboard_vertices - front_outboard_vertices
             cross = np.cross(diag1, diag2, axis=2)
-            normal_directions = cross / np.expand_dims(np.linalg.norm(cross,axis=2),axis=2) # TODO add in proper normal direction handling
+            normal_directions = cross / np.expand_dims(np.linalg.norm(cross, axis=2),
+                                                       axis=2)  # TODO add in proper normal direction handling
 
             # Make the horseshoe vortex
             inboard_vortex_points = (
@@ -155,34 +161,52 @@ class vlm1(AeroProblem):
                     0.25 * back_outboard_vertices
             )
 
-            colocation_points=np.reshape(colocation_points,(-1,3))
-            normal_directions=np.reshape(normal_directions,(-1,3))
-            inboard_vortex_points=np.reshape(inboard_vortex_points,(-1,3))
-            outboard_vortex_points=np.reshape(outboard_vortex_points,(-1,3))
-
-
+            colocation_points = np.reshape(colocation_points, (-1, 3), order = 'F')
+            normal_directions = np.reshape(normal_directions, (-1, 3), order = 'F')
+            inboard_vortex_points = np.reshape(inboard_vortex_points, (-1, 3), order = 'F')
+            outboard_vortex_points = np.reshape(outboard_vortex_points, (-1, 3), order = 'F')
+            front_inboard_vertices = np.reshape(front_inboard_vertices, (-1, 3), order = 'F')
+            front_outboard_vertices = np.reshape(front_outboard_vertices, (-1, 3), order = 'F')
+            back_inboard_vertices = np.reshape(back_inboard_vertices, (-1, 3), order = 'F')
+            back_outboard_vertices = np.reshape(back_outboard_vertices, (-1, 3), order = 'F')
 
             c = np.vstack((c, colocation_points))
             n = np.vstack((n, normal_directions))
             lv = np.vstack((lv, inboard_vortex_points))
             rv = np.vstack((rv, outboard_vortex_points))
+            front_left_vertices = np.vstack((front_left_vertices, front_inboard_vertices))
+            front_right_vertices = np.vstack((front_right_vertices, front_outboard_vertices))
+            back_left_vertices = np.vstack((back_left_vertices, back_inboard_vertices))
+            back_right_vertices = np.vstack((back_right_vertices, back_outboard_vertices))
 
             if wing.symmetric:
-                inboard_vortex_points=reflect_over_XZ_plane(inboard_vortex_points)
-                outboard_vortex_points=reflect_over_XZ_plane(outboard_vortex_points)
-                colocation_points=reflect_over_XZ_plane(colocation_points)
-                normal_directions=reflect_over_XZ_plane(normal_directions)
+                reflect_over_XZ_plane(inboard_vortex_points)
+                reflect_over_XZ_plane(outboard_vortex_points)
+                reflect_over_XZ_plane(colocation_points)
+                reflect_over_XZ_plane(normal_directions)
+                reflect_over_XZ_plane(front_inboard_vertices)
+                reflect_over_XZ_plane(front_outboard_vertices)
+                reflect_over_XZ_plane(back_inboard_vertices)
+                reflect_over_XZ_plane(back_outboard_vertices)
 
                 c = np.vstack((c, colocation_points))
                 n = np.vstack((n, normal_directions))
                 lv = np.vstack((lv, outboard_vortex_points))
                 rv = np.vstack((rv, inboard_vortex_points))
+                front_left_vertices = np.vstack((front_left_vertices, front_outboard_vertices))
+                front_right_vertices = np.vstack((front_right_vertices, front_inboard_vertices))
+                back_left_vertices = np.vstack((back_left_vertices, back_outboard_vertices))
+                back_right_vertices = np.vstack((back_right_vertices, back_inboard_vertices))
 
         self.c = c
         self.n = n
         self.lv = lv
         self.rv = rv
-        self.n_panels=len(c)
+        self.front_left_vertices = front_left_vertices
+        self.front_right_vertices = front_right_vertices
+        self.back_left_vertices = back_left_vertices
+        self.back_right_vertices = back_right_vertices
+        self.n_panels = len(c)
 
     def setup_geometry(self):
         # # Calculate AIC matrix
@@ -200,7 +224,8 @@ class vlm1(AeroProblem):
         # # Calculate Vij at vortex centers for force calculation
         # -------------------------------------------------------
         print("Calculating the vortex center influence matrix...")
-        self.vortex_centers = (self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
+        self.vortex_centers = (
+                                          self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
 
         # Redoing the AIC calculation, but using vortex center points instead of colocation points
         self.Vij_centers = self.calculate_Vij(self.vortex_centers)
@@ -213,19 +238,22 @@ class vlm1(AeroProblem):
     def setup_operating_point(self):
 
         print("Calculating the freestream influence...")
-        self.steady_freestream_velocity = np.expand_dims(self.op_point.compute_freestream_velocity_geometry_axes(),0) * np.ones((self.n_panels,1))  # Direction the wind is GOING TO, in geometry axes coordinates
-        self.rotation_freestream_velocity = np.zeros((self.n_panels,3)) # TODO Make this actually be the rotational velocity
+        self.steady_freestream_velocity = np.expand_dims(self.op_point.compute_freestream_velocity_geometry_axes(),
+                                                         0) * np.ones(
+            (self.n_panels, 1))  # Direction the wind is GOING TO, in geometry axes coordinates
+        self.rotation_freestream_velocities = np.zeros(
+            (self.n_panels, 3))  # TODO Make this actually be the rotational velocity
 
-        self.freestream_velocity = self.steady_freestream_velocity + self.rotation_freestream_velocity # Nx3, represents the freestream velocity at each panel colocation point (c)
+        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel colocation point (c)
 
-        self.freestream_influence = np.sum(self.freestream_velocity * self.n, axis=1)
+        self.freestream_influences = np.sum(self.freestream_velocities * self.n, axis=1)
 
     def calculate_vortex_strengths(self):
         # # Calculate Vortex Strengths
         # ----------------------------
         # Governing Equation: AIC @ Gamma + freestream_influence = 0
         print("Calculating vortex strengths...")
-        self.vortex_strengths = sp_linalg.lu_solve((self.lu, self.piv), -self.freestream_influence)
+        self.vortex_strengths = sp_linalg.lu_solve((self.lu, self.piv), -self.freestream_influences)
 
     def calculate_forces(self):
         # # Calculate Near-Field Forces and Moments
@@ -234,9 +262,9 @@ class vlm1(AeroProblem):
 
         print("Calculating forces on each panel...")
         # Calculate Vi (local velocity at the ith vortex center point)
-        Vi_x = self.Vij_centers[:, :, 0] @ self.vortex_strengths + self.freestream_velocity[:, 0]
-        Vi_y = self.Vij_centers[:, :, 1] @ self.vortex_strengths + self.freestream_velocity[:, 1]
-        Vi_z = self.Vij_centers[:, :, 2] @ self.vortex_strengths + self.freestream_velocity[:, 2]
+        Vi_x = self.Vij_centers[:, :, 0] @ self.vortex_strengths + self.freestream_velocities[:, 0]
+        Vi_y = self.Vij_centers[:, :, 1] @ self.vortex_strengths + self.freestream_velocities[:, 1]
+        Vi_z = self.Vij_centers[:, :, 2] @ self.vortex_strengths + self.freestream_velocities[:, 2]
         Vi_x = np.expand_dims(Vi_x, axis=1)
         Vi_y = np.expand_dims(Vi_y, axis=1)
         Vi_z = np.expand_dims(Vi_z, axis=1)
@@ -253,7 +281,8 @@ class vlm1(AeroProblem):
 
         # Calculate total forces
         print("Calculating total forces and moments...")
-        self.Ftotal_geometry = np.sum(self.Fi_geometry, axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
+        self.Ftotal_geometry = np.sum(self.Fi_geometry,
+                                      axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         print("Total aerodynamic forces (geometry axes): ", self.Ftotal_geometry)
 
         self.Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Ftotal_geometry
@@ -277,13 +306,44 @@ class vlm1(AeroProblem):
         #     panel.pressure_normal = panel.force_normal / panel.area()
         #     panel.delta_cp = panel.pressure_normal / self.op_point.dynamic_pressure()
 
+    def get_induced_velocity_at_point(self, point):
+        # Input: a Nx3 numpy array of points that you would like to know the induced velocities at.
+        # Output: a Nx3 numpy array of the induced velocities at those points.
+        point = np.reshape(point, (-1, 3))
 
-    def get_velocity_at_point(self, point):
+        Vij=self.calculate_Vij(point)
+
+        vortex_strengths_expanded = np.expand_dims(self.vortex_strengths,1)
+
+        # freestream = self.op_point.compute_freestream_velocity_geometry_axes()
+        # V_x = Vij[:, :, 0] @ vortex_strengths_expanded + freestream[0]
+        # V_y = Vij[:, :, 1] @ vortex_strengths_expanded + freestream[1]
+        # V_z = Vij[:, :, 2] @ vortex_strengths_expanded + freestream[2]
+
+        Vi_x = Vij[:, :, 0] @ vortex_strengths_expanded
+        Vi_y = Vij[:, :, 1] @ vortex_strengths_expanded
+        Vi_z = Vij[:, :, 2] @ vortex_strengths_expanded
+
+        Vi = np.hstack((Vi_x, Vi_y, Vi_z))
+
+        return Vi
+
+    def get_velocity_at_point(self,point):
         # Input: a Nx3 numpy array of points that you would like to know the velocities at.
         # Output: a Nx3 numpy array of the velocities at those points.
-        return np.transpose(self.calculate_Vij(np.reshape(point, (-1, 3)), self.lv, self.rv)[0, :, :]) @ (
-            np.expand_dims(self.vortex_strengths, 1))
+        point = np.reshape(point, (-1, 3))
 
+        Vi = self.get_induced_velocity_at_point(point)
+
+        freestream=self.op_point.compute_freestream_velocity_geometry_axes()
+        freestream=np.expand_dims(freestream,0)
+
+        V = Vi + freestream
+        return V
+
+
+
+    @profile
     def calculate_Vij(self, points):
         # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
@@ -467,8 +527,6 @@ class vlm1(AeroProblem):
         ax.set_zlim3d((z - s, z + s))
         plt.tight_layout()
         plt.show()
-
-
 
 
 class Panel:
