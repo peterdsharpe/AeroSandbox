@@ -192,11 +192,11 @@ def inverted_T_test():
                 sections=[
                     WingSection(
                         xyz_le=[0, 0, 0],
-                        chord=0.1,
+                        chord=1,
                     ),
                     WingSection(
-                        xyz_le=[0,0.5,0],
-                        chord=0.1,
+                        xyz_le=[0,1,0],
+                        chord=1,
                     )
                 ]
             ),
@@ -207,11 +207,11 @@ def inverted_T_test():
                 sections=[
                     WingSection(
                         xyz_le=[0,0,0],
-                        chord=0.1,
+                        chord=1,
                     ),
                     WingSection(
-                        xyz_le=[0,0.5,0],
-                        chord=0.1,
+                        xyz_le=[0,0,1],
+                        chord=1,
                     )
                 ]
             )
