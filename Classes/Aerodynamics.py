@@ -46,7 +46,6 @@ class vlm1(AeroProblem):
     # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
 
-    @profile
     def run(self):
         print("Running VLM1 calculation...")
         self.make_panels()
@@ -55,6 +54,10 @@ class vlm1(AeroProblem):
         self.calculate_vortex_strengths()
         self.calculate_forces()
         print("VLM1 calculation complete!")
+
+        print("Post-processing...")
+        self.calculate_delta_cp()
+        self.calculate_streamlines()
 
     def make_panels(self):
 
@@ -70,6 +73,7 @@ class vlm1(AeroProblem):
         front_right_vertices = np.empty((0, 3))
         back_left_vertices = np.empty((0, 3))
         back_right_vertices = np.empty((0, 3))
+        is_trailing_edge = np.empty((0), dtype=bool)
         for wing in self.airplane.wings:
 
             # Define number of chordwise points
@@ -141,6 +145,10 @@ class vlm1(AeroProblem):
             front_outboard_vertices = wing_coordinates[:-1, 1:, :]
             back_inboard_vertices = wing_coordinates[1:, :-1, :]
             back_outboard_vertices = wing_coordinates[1:, 1:, :]
+            is_trailing_edge_this_wing = np.vstack((
+                np.zeros((wing_coordinates.shape[0] - 2, wing_coordinates.shape[1] - 1), dtype=bool),
+                np.ones((1, wing_coordinates.shape[1] - 1), dtype=bool)
+            ))
 
             colocation_points = (
                     0.25 * (front_inboard_vertices + front_outboard_vertices) / 2 +
@@ -171,6 +179,7 @@ class vlm1(AeroProblem):
             front_outboard_vertices = np.reshape(front_outboard_vertices, (-1, 3), order='F')
             back_inboard_vertices = np.reshape(back_inboard_vertices, (-1, 3), order='F')
             back_outboard_vertices = np.reshape(back_outboard_vertices, (-1, 3), order='F')
+            is_trailing_edge_this_wing = np.reshape(is_trailing_edge_this_wing, (-1), order='F')
 
             c = np.vstack((c, colocation_points))
             n = np.vstack((n, normal_directions))
@@ -180,6 +189,7 @@ class vlm1(AeroProblem):
             front_right_vertices = np.vstack((front_right_vertices, front_outboard_vertices))
             back_left_vertices = np.vstack((back_left_vertices, back_inboard_vertices))
             back_right_vertices = np.vstack((back_right_vertices, back_outboard_vertices))
+            is_trailing_edge = np.hstack((is_trailing_edge, is_trailing_edge_this_wing))
 
             if wing.symmetric:
                 reflect_over_XZ_plane(inboard_vortex_points)
@@ -199,6 +209,7 @@ class vlm1(AeroProblem):
                 front_right_vertices = np.vstack((front_right_vertices, front_inboard_vertices))
                 back_left_vertices = np.vstack((back_left_vertices, back_outboard_vertices))
                 back_right_vertices = np.vstack((back_right_vertices, back_inboard_vertices))
+                is_trailing_edge = np.hstack((is_trailing_edge, is_trailing_edge_this_wing))
 
         # Put normals in the "right" direction
         # Algorithm: First, try to make z positive. Then y, then x.
@@ -215,6 +226,7 @@ class vlm1(AeroProblem):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.n_panels = len(c)
+        self.is_trailing_edge = is_trailing_edge
 
     def setup_geometry(self):
         # # Calculate AIC matrix
@@ -288,11 +300,11 @@ class vlm1(AeroProblem):
         Vi = np.hstack((Vi_x, Vi_y, Vi_z))
 
         # Calculate li, the length of the bound segment of the horseshoe vortex filament
-        li = self.rv - self.lv
+        self.li = self.rv - self.lv
 
         # Calculate Fi_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         density = self.op_point.density
-        Vi_cross_li = np.cross(Vi, li, axis=1)
+        Vi_cross_li = np.cross(Vi, self.li, axis=1)
         vortex_strengths_expanded = np.expand_dims(self.vortex_strengths, axis=1)
         self.Fi_geometry = density * Vi_cross_li * vortex_strengths_expanded
 
@@ -315,10 +327,11 @@ class vlm1(AeroProblem):
         print("CY: ", self.CY)
         print("CL/CDi: ", self.CL / self.CDi)
 
+    def calculate_delta_cp(self):
         # Find the area of each panel ()
         front_to_back = 0.5 * (
                 self.front_left_vertices + self.front_right_vertices - self.back_left_vertices - self.back_right_vertices)
-        self.areas_approx = np.linalg.norm(li, axis=1) * np.linalg.norm(front_to_back, axis=1)
+        self.areas_approx = np.linalg.norm(self.li, axis=1) * np.linalg.norm(front_to_back, axis=1)
 
         # Calculate panel data
         self.Fi_normal = np.einsum('ij,ij->i', self.Fi_geometry, self.n)
@@ -359,7 +372,6 @@ class vlm1(AeroProblem):
         V = Vi + freestream
         return V
 
-    @profile
     def calculate_Vij(self, points):
         # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
@@ -551,16 +563,44 @@ class vlm1(AeroProblem):
 
         return Vij
 
+    def calculate_streamlines(self):
+        # Calculates streamlines eminating from the trailing edges of all surfaces.
+        # "streamlines" is a MxNx3 array, where M is the index of the streamline number, N is the index of the timestep, and the last index is xyz
+
+        # Constants
+        n_timesteps = 100 # minimum of 2
+        length_approx = 1  # meter
+
+        # Timestepping
+        dt = length_approx / self.op_point.velocity / n_timesteps
+
+        # Seed points
+        seed_points = (0.5 * (self.back_left_vertices + self.back_right_vertices))[self.is_trailing_edge]
+        n_streamlines = len(seed_points)
+
+        # Initialize
+        streamlines = np.zeros((n_streamlines, n_timesteps, 3))
+        streamlines[:, 0, :] = seed_points
+
+        # Iterate
+        for timestep_num in range(1, n_timesteps):
+            streamlines[:, timestep_num, :] = streamlines[:, timestep_num - 1, :] + \
+                                              self.get_velocity_at_point(streamlines[:, timestep_num - 1, :]) * dt
+
+        self.streamlines = streamlines
+
     def draw(self,
+             draw_delta_cp=True,
+             draw_streamlines=True,
              ):
 
+        # Make airplane geometry
         vertices = np.vstack((
             self.front_left_vertices,
             self.front_right_vertices,
             self.back_right_vertices,
             self.back_left_vertices
         ))
-
         faces = np.transpose(np.vstack((
             4 * np.ones(self.n_panels),
             np.arange(self.n_panels),
@@ -569,19 +609,26 @@ class vlm1(AeroProblem):
             np.arange(self.n_panels) + 3 * self.n_panels,
         )))
         faces = np.reshape(faces, (-1), order='C')
+        wing_surfaces = pv.PolyData(vertices, faces)
 
+        # Initialize Plotter
         plotter = pv.Plotter()
 
+        if draw_delta_cp:
+            scalars = np.minimum(np.maximum(self.delta_cp, -1), 1)
+            cmap = plt.cm.get_cmap('viridis')
+            plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
+                             smooth_shading=True)
+            plotter.add_scalar_bar(title="Pressure Coefficient", n_labels=5, shadow=True, font_family='arial')
 
-        wing_surfaces = pv.PolyData(vertices, faces)
-        scalars = np.minimum(np.maximum(self.delta_cp,-1),1)
-        cmap = plt.cm.get_cmap('viridis')
-        plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True, smooth_shading=True)
-        plotter.add_scalar_bar(title="Pressure Coefficient", n_labels = 5, shadow=True, font_family='arial')
+        if draw_streamlines:
+            for streamline_num in range(len(self.streamlines)):
+                plotter.add_lines(self.streamlines[streamline_num,:,:], width = 1.5, color='#50C7C7')
 
-        plotter.show_grid()
+        # Do the plotting
+        plotter.show_grid(color = '#444444')
         plotter.set_background(color="black")
-        plotter.show(cpos=(-1,-1,1), full_screen=True)
+        plotter.show(cpos=(-1, -1, 1), full_screen=True)
 
     def draw_legacy(self,
                     draw_colocation_points=False,
