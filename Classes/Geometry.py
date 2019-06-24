@@ -74,7 +74,7 @@ class Airplane:
 
         plotter.show_grid(color='#444444')
         plotter.set_background(color="black")
-        plotter.show(cpos=(-1, -1, 1), full_screen=True)
+        plotter.show(cpos=(-1, -1, 1), full_screen=False)
 
     def draw_legacy(self,
                     show=True,
