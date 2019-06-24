@@ -67,13 +67,14 @@ class Airplane:
         plotter = pv.Plotter()
 
         wing_surfaces = pv.PolyData(vertices, faces)
-        plotter.add_mesh(wing_surfaces, color='tan', show_edges=True, smooth_shading=True)
+        plotter.add_mesh(wing_surfaces, color='#7EFC8F', show_edges=True, smooth_shading=True)
 
         xyz_ref = pv.PolyData(self.xyz_ref)
-        plotter.add_points(xyz_ref, color='blue', point_size=10)
+        plotter.add_points(xyz_ref, color='#50C7C7', point_size=10)
 
-        plotter.show_grid()
-        plotter.show(cpos='xy', full_screen=True)
+        plotter.show_grid(color='#444444')
+        plotter.set_background(color="black")
+        plotter.show(cpos=(-1, -1, 1), full_screen=True)
 
     def draw_legacy(self,
                     show=True,

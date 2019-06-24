@@ -55,10 +55,6 @@ class vlm1(AeroProblem):
         self.calculate_forces()
         print("VLM1 calculation complete!")
 
-        print("Post-processing...")
-        self.calculate_delta_cp()
-        self.calculate_streamlines()
-
     def make_panels(self):
 
         # # Make panels
@@ -615,6 +611,9 @@ class vlm1(AeroProblem):
         plotter = pv.Plotter()
 
         if draw_delta_cp:
+            if not 'self.delta_cp' in locals():
+                self.calculate_delta_cp()
+
             scalars = np.minimum(np.maximum(self.delta_cp, -1), 1)
             cmap = plt.cm.get_cmap('viridis')
             plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
@@ -622,6 +621,9 @@ class vlm1(AeroProblem):
             plotter.add_scalar_bar(title="Pressure Coefficient", n_labels=5, shadow=True, font_family='arial')
 
         if draw_streamlines:
+            if not 'self.streamlines' in locals():
+                self.calculate_streamlines()
+
             for streamline_num in range(len(self.streamlines)):
                 plotter.add_lines(self.streamlines[streamline_num,:,:], width = 1.5, color='#50C7C7')
 
