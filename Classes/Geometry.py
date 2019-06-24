@@ -1,7 +1,9 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from .Plotting import *
 from mpl_toolkits.mplot3d import Axes3D
+import pyvista as pv
 
 
 class Airplane:
@@ -20,11 +22,64 @@ class Airplane:
         self.c_ref = c_ref
         self.b_ref = b_ref
 
-    def draw(self,
-             show=True,
-             fig_to_plot_on=None,
-             ax_to_plot_on=None
-             ):
+    def draw(self):
+        # Using PyVista Polydata format
+        vertices = np.empty((0, 3))
+        faces = np.empty((0))
+
+        for wing in self.wings:
+            wing_vertices = np.empty((0, 3))
+            wing_tri_faces = np.empty((0, 4))
+            wing_quad_faces = np.empty((0, 5))
+            for i in range(len(wing.sections) - 1):
+                is_last_section = i == len(wing.sections) - 2
+
+                le_start = wing.sections[i].xyz_le + wing.xyz_le
+                te_start = wing.sections[i].xyz_te() + wing.xyz_le
+                wing_vertices = np.vstack((wing_vertices, le_start, te_start))
+
+                wing_quad_faces = np.vstack((
+                    wing_quad_faces,
+                    np.expand_dims(np.array([4, 2 * i + 0, 2 * i + 1, 2 * i + 3, 2 * i + 2]), 0)
+                ))
+
+                if is_last_section:
+                    le_end = wing.sections[i + 1].xyz_le + wing.xyz_le
+                    te_end = wing.sections[i + 1].xyz_te() + wing.xyz_le
+                    wing_vertices = np.vstack((wing_vertices, le_end, te_end))
+
+            vertices_starting_index = len(vertices)
+            wing_quad_faces_reformatted = np.ndarray.copy(wing_quad_faces)
+            wing_quad_faces_reformatted[:, 1:] = wing_quad_faces[:, 1:] + vertices_starting_index
+            wing_quad_faces_reformatted = np.reshape(wing_quad_faces_reformatted, (-1), order='C')
+            vertices = np.vstack((vertices, wing_vertices))
+            faces = np.hstack((faces, wing_quad_faces_reformatted))
+
+            if wing.symmetric:
+                vertices_starting_index = len(vertices)
+                reflect_over_XZ_plane(wing_vertices)
+                wing_quad_faces_reformatted = np.ndarray.copy(wing_quad_faces)
+                wing_quad_faces_reformatted[:, 1:] = wing_quad_faces[:, 1:] + vertices_starting_index
+                wing_quad_faces_reformatted = np.reshape(wing_quad_faces_reformatted, (-1), order='C')
+                vertices = np.vstack((vertices, wing_vertices))
+                faces = np.hstack((faces, wing_quad_faces_reformatted))
+
+        plotter = pv.Plotter()
+
+        wing_surfaces = pv.PolyData(vertices, faces)
+        plotter.add_mesh(wing_surfaces, color='tan', show_edges=True, smooth_shading=True)
+
+        xyz_ref = pv.PolyData(self.xyz_ref)
+        plotter.add_points(xyz_ref, color='blue', point_size=10)
+
+        plotter.show_grid()
+        plotter.show(cpos='xy', full_screen=True)
+
+    def draw_legacy(self,
+                    show=True,
+                    fig_to_plot_on=None,
+                    ax_to_plot_on=None
+                    ):
 
         # Setup
         if fig_to_plot_on == None or ax_to_plot_on == None:
@@ -150,8 +205,8 @@ class Wing:
         self.sections = sections
         self.symmetric = symmetric
         self.incidence_angle = incidence_angle
-        self.chordwise_panels=chordwise_panels
-        self.chordwise_spacing=chordwise_spacing
+        self.chordwise_panels = chordwise_panels
+        self.chordwise_spacing = chordwise_spacing
 
     def area_wetted(self):
         # Returns the wetted area of a wing.

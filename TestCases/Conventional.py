@@ -14,5 +14,7 @@ ap = vlm1(
 )
 ap.run()
 
+ap.draw()
+
 # a.draw()
 # ap.draw(draw_forces= True, draw_vortex_strengths=True)

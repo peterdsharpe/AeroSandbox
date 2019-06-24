@@ -21,7 +21,7 @@ tripanel = Panel(vertices=np.array([
 ]))
 tripanel.colocation_point=np.array([0,1,2])
 tripanel.set_colocation_point_at_centroid()
-tripanel.draw()
+tripanel.draw_legacy()
 
 v=HorseshoeVortex(vertices=np.array([[1,1,1],[1,1.5,1]]))
 print(vars(v))

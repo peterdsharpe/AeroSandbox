@@ -1,6 +1,7 @@
-import numpy as np
+import autograd as np
+from autograd import grad
 import scipy.linalg as sp_linalg
-from numba import jit, float64
+from numba import jit
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import sys
@@ -45,6 +46,7 @@ class vlm1(AeroProblem):
     # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
 
+    @profile
     def run(self):
         print("Running VLM1 calculation...")
         self.make_panels()
@@ -198,6 +200,12 @@ class vlm1(AeroProblem):
                 back_left_vertices = np.vstack((back_left_vertices, back_outboard_vertices))
                 back_right_vertices = np.vstack((back_right_vertices, back_inboard_vertices))
 
+        # Put normals in the "right" direction
+        # Algorithm: First, try to make z positive. Then y, then x.
+        n[n[:, 0] < 0] *= -1
+        n[n[:, 1] < 0] *= -1
+        n[n[:, 2] < 0] *= -1
+
         self.c = c
         self.n = n
         self.lv = lv
@@ -307,13 +315,15 @@ class vlm1(AeroProblem):
         print("CY: ", self.CY)
         print("CL/CDi: ", self.CL / self.CDi)
 
-        # Perform assignments to panels
-        # for panel_num in range(n_panels):
-        #     panel = self.panels[panel_num]
-        #     panel.force_geometry_axes = Fi_geometry[panel_num, :]
-        #     panel.force_normal = panel.force_geometry_axes @ panel.normal_direction
-        #     panel.pressure_normal = panel.force_normal / panel.area()
-        #     panel.delta_cp = panel.pressure_normal / self.op_point.dynamic_pressure()
+        # Find the area of each panel ()
+        front_to_back = 0.5 * (
+                self.front_left_vertices + self.front_right_vertices - self.back_left_vertices - self.back_right_vertices)
+        self.areas_approx = np.linalg.norm(li, axis=1) * np.linalg.norm(front_to_back, axis=1)
+
+        # Calculate panel data
+        self.Fi_normal = np.einsum('ij,ij->i', self.Fi_geometry, self.n)
+        self.pressure_normal = self.Fi_normal / self.areas_approx
+        self.delta_cp = self.pressure_normal / self.op_point.dynamic_pressure()
 
     def get_induced_velocity_at_point(self, point):
         # Input: a Nx3 numpy array of points that you would like to know the induced velocities at.
@@ -378,29 +388,29 @@ class vlm1(AeroProblem):
         #     ax * by - ay * bx
         # ))  # np.cross(a, b, axis=2)
 
-        a_dot_b = np.einsum('ijk,ijk->ij',a,b) #np.sum(a * b, axis=2)
+        a_dot_b = np.einsum('ijk,ijk->ij', a, b)  # np.sum(a * b, axis=2)
 
         a_cross_x = np.zeros((n_points, n_vortices, 3))
-        a_cross_x[:,:,1]=a[:,:,2]
-        a_cross_x[:,:,2]=-a[:,:,1]
+        a_cross_x[:, :, 1] = a[:, :, 2]
+        a_cross_x[:, :, 2] = -a[:, :, 1]
         # a_cross_x = np.dstack((
         #     np.zeros((n_points, n_vortices)),
         #     a[:,:,2],
         #     -a[:,:,1]
         # ))  # np.cross(a, x_hat, axis=2)
 
-        a_dot_x = a[:,:,0]  # np.sum(a * x_hat,axis=2)
+        a_dot_x = a[:, :, 0]  # np.sum(a * x_hat,axis=2)
 
-        b_cross_x=np.zeros((n_points,n_vortices,3))
-        b_cross_x[:,:,1]=b[:,:,2]
-        b_cross_x[:,:,2]=-b[:,:,1]
+        b_cross_x = np.zeros((n_points, n_vortices, 3))
+        b_cross_x[:, :, 1] = b[:, :, 2]
+        b_cross_x[:, :, 2] = -b[:, :, 1]
         # b_cross_x = np.dstack((
         #     np.zeros((n_points, n_vortices)),
         #     b[:,:,2],
         #     -b[:,:,1]
         # ))  # np.cross(b, x_hat, axis=2)
 
-        b_dot_x = b[:,:,0]  # np.sum(b * x_hat,axis=2)
+        b_dot_x = b[:, :, 0]  # np.sum(b * x_hat,axis=2)
 
         norm_a = np.linalg.norm(a, axis=2)
         # np.power(
@@ -422,7 +432,7 @@ class vlm1(AeroProblem):
         # Check for the special case where the colocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
         singularity_indices = (
-                np.einsum('ijk,ijk->ij',a_cross_b,a_cross_b)
+                np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)
                 < 3.0e-16  # Approximately eps
             # np.abs(
             #     np.linalg.norm(a_cross_b, axis=2)
@@ -542,13 +552,45 @@ class vlm1(AeroProblem):
         return Vij
 
     def draw(self,
-             draw_colocation_points=False,
-             draw_panel_numbers=False,
-             draw_vortex_strengths=False,
-             draw_forces=False,
-             draw_pressures=False,
-             draw_pressures_as_vectors=False,
              ):
+
+        vertices = np.vstack((
+            self.front_left_vertices,
+            self.front_right_vertices,
+            self.back_right_vertices,
+            self.back_left_vertices
+        ))
+
+        faces = np.transpose(np.vstack((
+            4 * np.ones(self.n_panels),
+            np.arange(self.n_panels),
+            np.arange(self.n_panels) + self.n_panels,
+            np.arange(self.n_panels) + 2 * self.n_panels,
+            np.arange(self.n_panels) + 3 * self.n_panels,
+        )))
+        faces = np.reshape(faces, (-1), order='C')
+
+        plotter = pv.Plotter()
+
+
+        wing_surfaces = pv.PolyData(vertices, faces)
+        scalars = np.minimum(np.maximum(self.delta_cp,-1),1)
+        cmap = plt.cm.get_cmap('viridis')
+        plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True, smooth_shading=True)
+        plotter.add_scalar_bar(title="Pressure Coefficient", n_labels = 5, shadow=True, font_family='arial')
+
+        plotter.show_grid()
+        plotter.set_background(color="black")
+        plotter.show(cpos=(-1,-1,1), full_screen=True)
+
+    def draw_legacy(self,
+                    draw_colocation_points=False,
+                    draw_panel_numbers=False,
+                    draw_vortex_strengths=False,
+                    draw_forces=False,
+                    draw_pressures=False,
+                    draw_pressures_as_vectors=False,
+                    ):
         fig, ax = fig3d()
         n_panels = len(self.panels)
 
@@ -582,7 +624,7 @@ class vlm1(AeroProblem):
                 normalized_strength = 1 * (strength - min_strength) / (max_strength - min_strength)
                 colormap = mpl.cm.get_cmap('viridis')
                 color = colormap(normalized_strength)
-                panel.draw(
+                panel.draw_legacy(
                     show=False,
                     fig_to_plot_on=fig,
                     ax_to_plot_on=ax,
@@ -598,7 +640,7 @@ class vlm1(AeroProblem):
                 normalized_delta_cp = 1 * (delta_cp - min_delta_cp) / (max_delta_cp - min_delta_cp)
                 colormap = mpl.cm.get_cmap('viridis')
                 color = colormap(normalized_delta_cp)
-                panel.draw(
+                panel.draw_legacy(
                     show=False,
                     fig_to_plot_on=fig,
                     ax_to_plot_on=ax,
@@ -606,7 +648,7 @@ class vlm1(AeroProblem):
                     shading_color=color
                 )
             else:
-                panel.draw(
+                panel.draw_legacy(
                     show=False,
                     fig_to_plot_on=fig,
                     ax_to_plot_on=ax,
