@@ -621,7 +621,7 @@ class vlm1(AeroProblem):
         plotter = pv.Plotter()
 
         if draw_delta_cp:
-            if not 'self.delta_cp' in locals():
+            if not hasattr(self, 'delta_cp'):
                 self.calculate_delta_cp()
 
             scalars = np.minimum(np.maximum(self.delta_cp, -1), 1)
@@ -631,7 +631,7 @@ class vlm1(AeroProblem):
             plotter.add_scalar_bar(title="Pressure Coefficient", n_labels=5, shadow=True, font_family='arial')
 
         if draw_streamlines:
-            if not 'self.streamlines' in locals():
+            if not hasattr(self, 'streamlines'):
                 self.calculate_streamlines()
 
             for streamline_num in range(len(self.streamlines)):

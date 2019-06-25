@@ -401,19 +401,16 @@ class Airfoil:
         # Alters the airfoil's coordinates so that x_min is exactly 0 and x_max is exactly 1.
         pass # TODO do this function
 
-    def get_mean_camber_line(self):
-        # Populates self.mean_camber_line, an Nx2 array that contains the mean camber line coordinates ordered front to back
+    def get_camber_line(self):
+        # Populates self.camber_line, an Nx2 array that contains the mean camber line coordinates ordered front to back
         n_points = 150
 
         x = 0.5 + 0.5 * np.cos(
             np.linspace(np.pi, 0, n_points))  # Generate some cosine-spaced points
 
-
-
-
     def draw(self):
         # Get coordinates if they don't already exist
-        if not 'self.coordinates' in locals():
+        if not hasattr(self, 'coordinates'):
             print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
             self.get_coordinates()
 
@@ -424,18 +421,13 @@ class Airfoil:
 
     def get_2D_aero_data(self):
         pass
-        # TODO do this
-
-    def compute_mean_camber_line(self):
-        pass
-
-    # TODO do this
+        # TODO xfoil?
 
     def get_point_on_chord_line(self, chordfraction):
         return np.array([chordfraction, 0])
 
     def get_point_on_camber_line(self, chordfraction):
-        pass
+        pass # TODO
 
 
 def reflect_over_XZ_plane(input_vector):
