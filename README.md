@@ -1,17 +1,13 @@
 # [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/)
 by Peter Sharpe [(website)](https://peterdsharpe.github.io)
 
-Hosted at [https://peterdsharpe.github.io/AeroSandbox/](https://peterdsharpe.github.io/AeroSandbox/)
-
-Source code at: [https://github.com/peterdsharpe/AeroSandbox/](https://github.com/peterdsharpe/AeroSandbox/)
-
 ## About
 AeroSandbox is a Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, aircraft design optimization, and the like. 
 
-## Current Features
-* User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
-* Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
+Install with "pip install AeroSandbox"!
+Source code at: [https://github.com/peterdsharpe/AeroSandbox/](https://github.com/peterdsharpe/AeroSandbox/)
 
+# Illustrations
 Vortex lattice results, colored by pressure difference and including streamlines:
 
 ![AeroSandbox VLM](Media/Illustrations/Pressures.png)
@@ -20,7 +16,13 @@ Visualization of computational grid:
 
 ![AeroSandbox Illustration](Media/Illustrations/Grid.png)
 
-## Purpose
+# Current Features
+* User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
+* Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
+
+
+
+# Purpose
 The primary purpose for this repository is so the author can explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
 
 ## Future Goals
