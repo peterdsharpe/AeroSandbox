@@ -65,6 +65,19 @@ Specifically, the following desirable qualities (and associated quantitative met
 * Optimizer-friendly (design gradients and stability derivatives will be computed through automatic differentiation - perhaps with the autograd library?)
 * Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
 
+# Bugs
+Please report all bugs at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
+
+# Contributing
+
+Thanks for your interest in helping with the development of AeroSandbox - contributions are always so welcome! 
+
+If you have a change you'd like to make, the easiest way to do that is by submitting a pull request. However, please let me know before you do this (pds at mit dot edu), because:
+
+Right now, branching is basically nonexistent. This is because there's currently only one contributor - me. As soon as this changes, we'll need to implement [proper branching](https://nvie.com/posts/a-successful-git-branching-model/). 
+
+If you've made several additions and would like to be involved in a more long-term capacity, please message me at (pds at mit dot edu) and we can add you as a collaborator here on Github!
+
 # License
 
 MIT License
@@ -88,13 +101,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-# Contributing
-
-Thanks for your interest in helping with the development of AeroSandbox - contributions are always so welcome! 
-
-If you have a change you'd like to make, the easiest way to do that is by submitting a pull request. However, please let me know before you do this (pds at mit dot edu), because:
-
-Right now, branching is basically nonexistent. This is because there's currently only one contributor - me. As soon as this changes, we'll need to implement [proper branching](https://nvie.com/posts/a-successful-git-branching-model/). 
-
-If you've made several additions and would like to be involved in a more long-term capacity, please message me at (pds at mit dot edu) and we can add you as a collaborator here on Github!
