@@ -141,8 +141,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['pyvista, autograd, numpy, numba, matplotlib, scipy, '
-                      'cProfile, functools, os, mpl_toolkits'],
+    install_requires=['pyvista', 'autograd', 'numpy', 'numba', 'matplotlib', 'scipy'],
     # Optional
 
     # List additional groups of dependencies here (e.g. development

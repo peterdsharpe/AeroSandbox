@@ -1,0 +1,14 @@
+README.md
+setup.cfg
+setup.py
+AeroSandbox/Aerodynamics.py
+AeroSandbox/Geometry.py
+AeroSandbox/Performance.py
+AeroSandbox/Plotting.py
+AeroSandbox/__init__.py
+AeroSandbox.egg-info/PKG-INFO
+AeroSandbox.egg-info/SOURCES.txt
+AeroSandbox.egg-info/dependency_links.txt
+AeroSandbox.egg-info/requires.txt
+AeroSandbox.egg-info/top_level.txt
+AeroSandbox/airfoils/__init__.py
