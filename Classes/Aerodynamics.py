@@ -564,7 +564,7 @@ class vlm1(AeroProblem):
         # "streamlines" is a MxNx3 array, where M is the index of the streamline number, N is the index of the timestep, and the last index is xyz
 
         # Constants
-        n_timesteps = 100 # minimum of 2
+        n_timesteps = 200 # minimum of 2
         length_approx = 1  # meter
 
         # Timestepping
