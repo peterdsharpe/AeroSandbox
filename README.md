@@ -1,13 +1,13 @@
 # [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/)
 by Peter Sharpe [(website)](https://peterdsharpe.github.io)
 
-## About
+# About
 AeroSandbox is a Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, aircraft design optimization, and the like. 
 
 Install with "pip install AeroSandbox"!
 Source code at: [https://github.com/peterdsharpe/AeroSandbox/](https://github.com/peterdsharpe/AeroSandbox/)
 
-# Illustrations
+## Illustrations
 Vortex lattice results, colored by pressure difference and including streamlines:
 
 ![AeroSandbox VLM](Media/Illustrations/Pressures.png)
@@ -16,16 +16,16 @@ Visualization of computational grid:
 
 ![AeroSandbox Illustration](Media/Illustrations/Grid.png)
 
-# Current Features
+## Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
 
 
 
-# Purpose
+## Purpose
 The primary purpose for this repository is so the author can explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
 
-## Future Goals
+# Future Goals
 In descending order of priority/feasibility:
 * (DONE) Finish implementing a traditional VLM (a la XFLR5's VLM1) for simulating multiple thin lifting surfaces.
 * Implement a viscous drag buildup on wings from interpolated 2D XFOIL data (a la XFLR5's method for approximation of viscous drag).
@@ -38,7 +38,7 @@ In descending order of priority/feasibility:
 * Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels (a la Drela's IBL3 approach detailed in his paper "Three-Dimensional Integral Boundary Layer Formulation for General Configurations"). Ideally, the trailing edge stagnation points will be automatically identified, and nothing more than a surface triangulation along with freestream conditions will be required to compute forces and moments.
 
 
-## Usefulness
+# Usefulness
 AeroSandbox attempts to improve over existing conceptual-level aerodynamics tools. The following strengths and weaknesses are identified with existing tools, based purely off the author's experience:
 
 Strengths:
@@ -65,7 +65,7 @@ Specifically, the following desirable qualities (and associated quantitative met
 * Optimizer-friendly (design gradients and stability derivatives will be computed through automatic differentiation - perhaps with the autograd library?)
 * Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
 
-## License
+# License
 
 MIT License
 
@@ -89,7 +89,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## Contributing, Forking, Branching, and Versioning
+# Contributing, Forking, Branching, and Versioning
 
 Thanks for your interest in helping with the development of AeroSandbox - contributions are always so welcome! 
 
