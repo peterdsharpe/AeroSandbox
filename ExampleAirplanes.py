@@ -115,14 +115,14 @@ def XFLR_default():
                 name="Main Wing",
                 xyz_le=[0, 0, 0],
                 symmetric=True,
-                chordwise_panels=13,
+                vlm_chordwise_panels=13,
                 sections=[
                     WingSection(  # Root
                         xyz_le=[0, 0, 0],
                         chord=0.18,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
-                        spanwise_panels=19,
+                        vlm_spanwise_panels=19,
                     ),
                     WingSection(  # Tip
                         xyz_le=[0.07, 1, 0],
@@ -136,14 +136,14 @@ def XFLR_default():
                 name="Horizontal Stabilizer",
                 xyz_le=[0.6, 0, 0.1],
                 symmetric=True,
-                chordwise_panels=7,
+                vlm_chordwise_panels=7,
                 sections=[
                     WingSection(  # root
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
-                        spanwise_panels=7,
+                        vlm_spanwise_panels=7,
                     ),
                     WingSection(  # tip
                         xyz_le=[0.02, 0.17, 0],
@@ -157,14 +157,14 @@ def XFLR_default():
                 name="Vertical Stabilizer",
                 xyz_le=[0.65, 0, 0.1],
                 symmetric=False,
-                chordwise_panels=7,
+                vlm_chordwise_panels=7,
                 sections=[
                     WingSection(
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
-                        spanwise_panels=7,
+                        vlm_spanwise_panels=7,
                     ),
                     WingSection(
                         xyz_le=[0.04, 0, 0.12],

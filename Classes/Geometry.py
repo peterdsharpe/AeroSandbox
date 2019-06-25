@@ -198,16 +198,16 @@ class Wing:
                  sections=[],
                  symmetric=True,
                  incidence_angle=0,
-                 chordwise_panels=10,
-                 chordwise_spacing="cosine",
+                 vlm_chordwise_panels=10,
+                 vlm_chordwise_spacing="cosine",
                  ):
         self.name = name
         self.xyz_le = np.array(xyz_le)
         self.sections = sections
         self.symmetric = symmetric
         self.incidence_angle = incidence_angle
-        self.chordwise_panels = chordwise_panels
-        self.chordwise_spacing = chordwise_spacing
+        self.chordwise_panels = vlm_chordwise_panels
+        self.chordwise_spacing = vlm_chordwise_spacing
 
     def area_wetted(self):
         # Returns the wetted area of a wing.
@@ -272,15 +272,15 @@ class WingSection:
                  chord=0,
                  twist=0,
                  airfoil=[],
-                 spanwise_panels=10,
-                 spanwise_spacing="cosine"
+                 vlm_spanwise_panels=10,
+                 vlm_spanwise_spacing="cosine"
                  ):
         self.xyz_le = np.array(xyz_le)
         self.chord = chord
         self.twist = twist
         self.airfoil = airfoil
-        self.spanwise_panels = spanwise_panels
-        self.spanwise_spacing = spanwise_spacing
+        self.spanwise_panels = vlm_spanwise_panels
+        self.spanwise_spacing = vlm_spanwise_spacing
 
     def xyz_te(self):
         xyz_te = self.xyz_le + self.chord * np.array(
@@ -299,33 +299,122 @@ class Airfoil:
                  name="naca0012"
                  ):
         self.name = name
-        # TODO UNCOMMENT ME
-        #  self.read_coordinates() # populates self.coordinates
+        self.get_coordinates()  # populates self.coordinates
 
-        self.get_2D_aero_data()  # populates self.aerodata
+    def get_coordinates(self):
+        # Populates a variable called self.coordinates with the coordinates of the airfoil.
+        name = self.name.lower().strip()
 
-    def read_coordinates(self):
-        # Try to read from file
-        import importlib.resources
-        from . import airfoils
+        # If it's a NACA 4-series airfoil, try to generate it
+        if "naca" in name:
+            nacanumber = name.split("naca")[1]
+            if nacanumber.isdigit():
+                if len(nacanumber) == 4:
 
-        raw_text = importlib.resources.read_text(airfoils, self.name + '.dat')
-        trimmed_text = raw_text[raw_text.find('\n'):]
+                    # Parse
+                    max_camber = int(nacanumber[0]) * 0.01
+                    camber_loc = int(nacanumber[1]) * 0.1
+                    thickness = int(nacanumber[2:]) * 0.01
 
-        coordinates1D = np.fromstring(trimmed_text, sep='\n')  # returns the coordinates in a 1D array
-        assert len(coordinates1D) % 2 == 0, 'File could not be read correctly!'  # Should be even
+                    # Set number of points per side
+                    n_points_per_side = 100
 
-        coordinates = np.reshape(coordinates1D, (len(coordinates1D) // 2, 2))
+                    # Referencing https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_cambered_4-digit_NACA_airfoil from here on out
 
-        self.coordinates = coordinates
+                    # Make uncambered coordinates
+                    x_t = 0.5 + 0.5 * np.cos(
+                        np.linspace(np.pi, 0, n_points_per_side))  # Generate some cosine-spaced points
+                    y_t = 5 * thickness * (
+                            + 0.2969 * np.power(x_t, 0.5)
+                            - 0.1260 * x_t
+                            - 0.3516 * np.power(x_t, 2)
+                            + 0.2843 * np.power(x_t, 3)
+                            - 0.1015 * np.power(x_t, 4)
+                    )
+
+                    if camber_loc == 0:
+                        camber_loc = 0.5  # prevents divide by zero errors for things like naca0012's.
+
+                    # Get camber
+                    y_c_piece1 = max_camber / camber_loc ** 2 * (
+                            2 * camber_loc * x_t[x_t <= camber_loc]
+                            - x_t[x_t <= camber_loc] ** 2
+                    )
+                    y_c_piece2 = max_camber / (1 - camber_loc) ** 2 * (
+                            (1 - 2 * camber_loc) +
+                            2 * camber_loc * x_t[x_t > camber_loc]
+                            - x_t[x_t > camber_loc] ** 2
+                    )
+                    y_c = np.hstack((y_c_piece1, y_c_piece2))
+
+                    # Get camber slope
+                    dycdx_piece1 = 2 * max_camber / camber_loc ** 2 * (
+                        camber_loc - x_t[x_t <=camber_loc]
+                    )
+                    dycdx_piece2 = 2 * max_camber / (1-camber_loc)**2 *(
+                        camber_loc - x_t[x_t > camber_loc]
+                    )
+                    dycdx = np.hstack((dycdx_piece1,dycdx_piece2))
+                    theta = np.arctan(dycdx)
+
+                    # Combine everything
+                    x_U = x_t - y_t*np.sin(theta)
+                    x_L = x_t + y_t*np.sin(theta)
+                    y_U = y_c + y_t*np.cos(theta)
+                    y_L = y_c - y_t*np.cos(theta)
+
+                    # Flip upper surface so it's back to front
+                    x_U, y_U = np.flip(x_U), np.flip(y_U)
+
+                    # Trim 1 point from lower surface so there's no overlap
+                    x_L, y_L = x_L[1:], y_L[1:]
+
+                    x = np.hstack((x_U, x_L))
+                    y = np.hstack((y_U, y_L))
+
+                    coordinates = np.column_stack((x,y))
+
+                    self.coordinates = coordinates
+                    return
+                else:
+                    print("Unfortunately, only 4-series NACA airfoils can be generated at this time.")
+
+        # Try to read from airfoil database
+        try:
+            import importlib.resources
+            from . import airfoils
+            raw_text = importlib.resources.read_text(airfoils, name + '.dat')
+            trimmed_text = raw_text[raw_text.find('\n'):]
+
+            coordinates1D = np.fromstring(trimmed_text, sep='\n')  # returns the coordinates in a 1D array
+            assert len(
+                coordinates1D) % 2 == 0, 'File was found in airfoil database, but it could not be read correctly!'  # Should be even
+
+            coordinates = np.reshape(coordinates1D, (-1, 2))
+            self.coordinates = coordinates
+            return
+
+        except FileNotFoundError:
+            print("File was not found in airfoil database!")
+
+    def normalize(self):
+        # Alters the airfoil's coordinates so that x_min is exactly 0 and x_max is exactly 1.
+
+    def get_mean_camber_line(self):
+        # Populates self.mean_camber_line, an Nx2 array that contains the mean camber line coordinates ordered front to back
+        n_points = 150
+
+        x = 0.5 + 0.5 * np.cos(
+            np.linspace(np.pi, 0, n_points))  # Generate some cosine-spaced points
+
+
+
 
     def draw(self):
         # Get coordinates if they don't already exist
-        try:
-            self.coordinates
-        except NameError:
+        if not 'self.coordinates' in locals():
             print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
-            self.read_coordinates()
+            self.get_coordinates()
 
         plt.plot(self.coordinates[:, 0], self.coordinates[:, 1])
         plt.xlim((-0.05, 1.05))
