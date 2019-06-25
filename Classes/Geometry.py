@@ -399,6 +399,7 @@ class Airfoil:
 
     def normalize(self):
         # Alters the airfoil's coordinates so that x_min is exactly 0 and x_max is exactly 1.
+        pass # TODO do this function
 
     def get_mean_camber_line(self):
         # Populates self.mean_camber_line, an Nx2 array that contains the mean camber line coordinates ordered front to back

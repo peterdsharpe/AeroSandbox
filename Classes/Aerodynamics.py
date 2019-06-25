@@ -439,14 +439,20 @@ class vlm1(AeroProblem):
 
         # Check for the special case where the colocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
-        singularity_indices = (
-                np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)
-                < 3.0e-16  # Approximately eps
-            # np.abs(
-            #     np.linalg.norm(a_cross_b, axis=2)
-            # ) <= np.finfo(float).eps
+        bound_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
+                < 3.0e-16)
+        a_dot_b[bound_vortex_singularity_indices] = np.inf  # something non-infinitesimal
+        left_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', a_cross_x, a_cross_x)
+                < 3.0e-16
         )
-        a_dot_b[singularity_indices] = 1  # something non-infinitesimal
+        a_dot_x[left_vortex_singularity_indices] = np.inf
+        right_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', b_cross_x, b_cross_x)
+                < 3.0e-16
+        )
+        b_dot_x[right_vortex_singularity_indices] = np.inf
 
         # Calculate Vij
         term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
@@ -564,24 +570,28 @@ class vlm1(AeroProblem):
         # "streamlines" is a MxNx3 array, where M is the index of the streamline number, N is the index of the timestep, and the last index is xyz
 
         # Constants
-        n_timesteps = 200 # minimum of 2
-        length_approx = 1  # meter
+        n_steps = 100  # minimum of 2
+        length = 1  # meter
 
-        # Timestepping
-        dt = length_approx / self.op_point.velocity / n_timesteps
+        # Resolution
+        length_per_step = length / n_steps
+        # dt = length / self.op_point.velocity / n_steps
 
         # Seed points
         seed_points = (0.5 * (self.back_left_vertices + self.back_right_vertices))[self.is_trailing_edge]
         n_streamlines = len(seed_points)
 
         # Initialize
-        streamlines = np.zeros((n_streamlines, n_timesteps, 3))
+        streamlines = np.zeros((n_streamlines, n_steps, 3))
         streamlines[:, 0, :] = seed_points
 
         # Iterate
-        for timestep_num in range(1, n_timesteps):
-            streamlines[:, timestep_num, :] = streamlines[:, timestep_num - 1, :] + \
-                                              self.get_velocity_at_point(streamlines[:, timestep_num - 1, :]) * dt
+        for step_num in range(1, n_steps):
+            update_amount = self.get_velocity_at_point(streamlines[:, step_num - 1, :])
+            update_amount = update_amount / np.expand_dims(np.linalg.norm(update_amount, axis = 1), axis = 1)
+            update_amount *= length_per_step
+            streamlines[:, step_num, :] = streamlines[:, step_num - 1, :] + update_amount
+
 
         self.streamlines = streamlines
 
@@ -625,10 +635,10 @@ class vlm1(AeroProblem):
                 self.calculate_streamlines()
 
             for streamline_num in range(len(self.streamlines)):
-                plotter.add_lines(self.streamlines[streamline_num,:,:], width = 1.5, color='#50C7C7')
+                plotter.add_lines(self.streamlines[streamline_num, :, :], width=1.5, color='#50C7C7')
 
         # Do the plotting
-        plotter.show_grid(color = '#444444')
+        plotter.show_grid(color='#444444')
         plotter.set_background(color="black")
         plotter.show(cpos=(-1, -1, 1), full_screen=False)
 

@@ -8,5 +8,6 @@ foil4 = Airfoil("clarky")
 foil5 = Airfoil("goe803h")
 foil6 = Airfoil("e423")
 foil7 = Airfoil("ag12")
+foil8 = Airfoil("mh80")
 
-foil3.draw()
+foil8.draw()
