@@ -66,7 +66,7 @@ Specifically, the following desirable qualities (and associated quantitative met
 * Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
 
 # Bugs
-Please report all bugs at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
+Please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
 
 # Contributing
 
