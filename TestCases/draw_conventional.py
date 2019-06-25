@@ -1,5 +1,5 @@
-from Classes import *
-import ExampleAirplanes
+from AeroSandbox import *
+from .ExampleAirplanes import conventional
 
-a = ExampleAirplanes.conventional()
+a = conventional()
 a.draw()

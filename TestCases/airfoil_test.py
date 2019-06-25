@@ -1,4 +1,4 @@
-from Classes import *
+from AeroSandbox import *
 
 # Test on some of my favorite airfoils
 foil1 = Airfoil("NACA0012")

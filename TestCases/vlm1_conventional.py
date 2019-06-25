@@ -1,4 +1,4 @@
-from Classes import *
+from AeroSandbox import *
 import ExampleAirplanes
 
 a = ExampleAirplanes.conventional()
