@@ -1,6 +1,0 @@
-pyvista
-autograd
-numpy
-numba
-matplotlib
-scipy
