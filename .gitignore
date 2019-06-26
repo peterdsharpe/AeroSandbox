@@ -2,3 +2,7 @@
 *.cpython-37.pyc
 *.cpython-37
 *.pyc
+dist/
+AeroSandbox.egg-info/
+.idea/
+__pycache__/
