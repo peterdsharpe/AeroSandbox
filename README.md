@@ -10,7 +10,7 @@ There are several easy ways to get started with AeroSandbox!
 
 1. Download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases)
 
-2. If you just want the raw package (and no test cases or examples), install by typing "pip install AeroSandbox" into your terminal! (assuming you already have Python >=3.7 and PyPI installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section))
+2. If you just want the raw package (and no test cases or examples), install by simply typing "pip install AeroSandbox" into your terminal. (assuming you already have Python >=3.7 and PyPI installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section))
 
 3. Both of the above options will download released versions of AeroSandbox. If you'd rather get a nightly/dev version, clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
