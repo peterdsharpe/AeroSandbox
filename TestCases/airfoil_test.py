@@ -9,5 +9,3 @@ goe803h = Airfoil("goe803h")
 e423 = Airfoil("e423")
 ag12 = Airfoil("ag12")
 mh80 = Airfoil("mh80")
-
-naca0012.draw()

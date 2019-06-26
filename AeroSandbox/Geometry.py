@@ -399,31 +399,39 @@ class Airfoil:
             print("File was not found in airfoil database!")
 
     def normalize(self):
-        # Alters the airfoil's coordinates so that x_min is exactly 0 and x_max is exactly 1.
+        # Alters the airfoil's coordinates to exactly achieve several goals:
+        #   # x_le == 0
+        #   # y_le == 0
+        #   # average( y_te_upper, y_te_lower ) == 0
+        #   # x_te == 1
+        # The first two goals are achieved by translating in x and y. The third goal is achieved by rotating about (0,0). The fourth goal is achieved by uniform scaling.
 
-        # Check if it needs to be normalized
+        # Goals 1 and 2
+        LE_point_original = self.coordinates[self.LE_index(), :]
+        assert abs(LE_point_original[
+                       0]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! Are you sure this isn't bad airfoil geometry?"
+        assert abs(LE_point_original[
+                       1]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! Are you sure this isn't bad airfoil geometry?"
+        self.coordinates -= LE_point_original
+
+        # Goal 3
+        TE_point_pre_rotation = (self.coordinates[0, :] + self.coordinates[-1, :]) / 2
+        rotation_angle = -np.arctan(TE_point_pre_rotation[1] / TE_point_pre_rotation[
+            0])  # You need to rotate this many radians counterclockwise
+        assert abs(np.degrees(
+            rotation_angle)) < 0.5, "The foil appears to be really weirdly rotated! Are you sure this isn't bad airfoil geometry?"
+        cos_theta = np.cos(rotation_angle)
+        sin_theta = np.sin(rotation_angle)
+        rotation_matrix = np.array([[cos_theta, -sin_theta], [sin_theta, cos_theta]])
+        self.coordinates = np.transpose(rotation_matrix @ np.transpose(self.coordinates))
+
+        # Goal 4
         x_max = np.max(self.coordinates[:, 0])
-        x_min = np.min(self.coordinates[:, 0])
+        assert x_max <= 1.02 and x_max >= 0.98, "x_max is really weird! Are you sure this isn't bad airfoil geometry?"
+        scale_factor = 1 / x_max
+        self.coordinates *= scale_factor
 
-        # Do some sanity checks and warn the user if they fail
-        assert x_max <= 1.02, "x_max is really high! Are you sure this isn't bad airfoil geometry?"
-        assert x_min >= -0.02, "x_min is really low! Are you sure this isn't bad airfoil geometry?"
-
-        # Do the normalization
-        scale_factor = 1 / (x_max - x_min)
-        new_x_coors = (self.coordinates[:, 0] - x_min) * scale_factor
-        new_y_coors = self.coordinates[:, 1] * scale_factor
-
-        self.coordinates = np.column_stack((new_x_coors, new_y_coors))
-
-    # def calculate_camber_line(self):
-    #     # Populates self.camber_line, an Nx2 array that contains the mean camber line coordinates ordered front to back
-    #     n_points = 150
-    #
-    #     x = 0.5 + 0.5 * np.cos(
-    #         np.linspace(np.pi, 0, n_points))  # Generate some cosine-spaced points
-
-    def draw(self, new_figure = True):
+    def draw(self, new_figure=True):
         # Get coordinates if they don't already exist
         if not hasattr(self, 'coordinates'):
             print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
@@ -431,7 +439,7 @@ class Airfoil:
 
         if new_figure:
             plt.figure()
-            plt.title(self.name+" Coordinates")
+            plt.title(self.name + " Coordinates")
         plt.plot(self.coordinates[:, 0], self.coordinates[:, 1])
         plt.xlim((-0.05, 1.05))
         plt.ylim((-0.5, 0.5))
@@ -443,7 +451,7 @@ class Airfoil:
 
     def LE_index(self):
         # Returns the index of the leading-edge point.
-        return np.argmin(self.coordinates[:,0])
+        return np.argmin(self.coordinates[:, 0])
 
     def lower_coordinates(self):
         # Returns a matrix (N by 2) of [x y] coordinates that describe the lower surface of the airfoil. Order is from leading edge to trailing edge. Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
@@ -451,10 +459,10 @@ class Airfoil:
 
     def upper_coordinates(self):
         # Returns a matrix (N by 2) of [x y] coordinates that describe the upper surface of the airfoil. Order is from trailing edge to leading edge. Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
-        return self.coordinates[:self.LE_index(), :]
+        return self.coordinates[:self.LE_index() + 1, :]
 
     def get_thickness_at_chord_fraction(self, chord_fraction):
-        # Returns the (interpolated) camber at a given location. The location is specified by the chord fraction, as measured from the leading edge. Thickness is nondimensionalized by chord (i.e. this function returns t/c at a given x/c).
+        # Returns the (interpolated) camber at a given location(s). The location is specified by the chord fraction, as measured from the leading edge. Thickness is nondimensionalized by chord (i.e. this function returns t/c at a given x/c).
         chord = np.max(self.coordinates[:, 0]) - np.min(
             self.coordinates[:, 0])  # This should always be 1, but this is just coded for robustness.
 
@@ -469,12 +477,12 @@ class Airfoil:
         y_upper = y_upper_func(x)
         y_lower = y_lower_func(x)
 
-        thickness = np.abs(y_upper - y_lower)
+        thickness = np.maximum(y_upper - y_lower, 0)
 
         return thickness
 
     def get_camber_at_chord_fraction(self, chord_fraction):
-        # Returns the (interpolated) camber at a given location. The location is specified by the chord fraction, as measured from the leading edge. Camber is nondimensionalized by chord (i.e. this function returns camber/c at a given x/c).
+        # Returns the (interpolated) camber at a given location(s). The location is specified by the chord fraction, as measured from the leading edge. Camber is nondimensionalized by chord (i.e. this function returns camber/c at a given x/c).
         chord = np.max(self.coordinates[:, 0]) - np.min(
             self.coordinates[:, 0])  # This should always be 1, but this is just coded for robustness.
 
@@ -493,6 +501,138 @@ class Airfoil:
 
         return camber
 
+    def TE_thickness(self):
+        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (y/c) units.
+        return np.abs(self.coordinates[0, 1] - self.coordinates[-1, 1])
+
+    def TE_angle(self):
+        # Returns the trailing edge angle of the airfoil, in degrees
+        upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
+        lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
+
+        return np.degrees(np.arctan2(
+            upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
+            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
+        ))
+
+    def area(self):
+        # Returns the area of the airfoil, in nondimensional (chord-normalized) units.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        return A
+
+    def centroid(self):
+        # Returns the centroid of the airfoil, in nondimensional (chord-normalized) units.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        return centroid
+
+    def Ixx(self):
+        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Ixx = 1 / 12 * np.sum(a * (np.power(y, 2) + y * y_n + np.power(y_n, 2)))
+
+        Iuu = Ixx - A * centroid[1] ** 2
+
+        return Iuu
+
+    def Iyy(self):
+        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Iyy = 1 / 12 * np.sum(a * (np.power(x, 2) + x * x_n + np.power(x_n, 2)))
+
+        Ivv = Iyy - A * centroid[0] ** 2
+
+        return Ivv
+
+    def Ixy(self):
+        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Ixy = 1 / 24 * np.sum(a * (x * y_n + 2 * x * y + 2 * x_n * y_n + x_n * y))
+
+        Iuv = Ixy - A * centroid[0] * centroid[1]
+
+        return Iuv
+
+    def J(self):
+        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Ixx = 1 / 12 * np.sum(a * (np.power(y, 2) + y * y_n + np.power(y_n, 2)))
+
+        Iyy = 1 / 12 * np.sum(a * (np.power(x, 2) + x * x_n + np.power(x_n, 2)))
+
+        J = Ixx + Iyy
+
+        return J
+
+    def repanel(self, n_points_per_side = 100):
+        pass
 
 def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
