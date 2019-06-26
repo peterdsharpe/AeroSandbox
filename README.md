@@ -14,8 +14,6 @@ There are several easy ways to get started with AeroSandbox!
 
 3. Both of the above options will download released versions of AeroSandbox. If you'd rather get a nightly/dev version, clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
-Source code at: [https://github.com/peterdsharpe/AeroSandbox/](https://github.com/peterdsharpe/AeroSandbox/)
-
 ## Illustrations
 Vortex lattice results, colored by pressure difference and including streamlines:
 
