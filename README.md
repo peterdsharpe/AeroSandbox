@@ -30,7 +30,12 @@ Visualization of computational grid:
 
 
 ### Purpose
-The primary purpose for this repository is so the author can explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
+The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
+
+The "holy grail" of aerodynamics that this package seeks to develop is:
+An aerodynamics tool that models flow around any general triangulated 3D shape (with non-separated flow) using strongly-coupled viscous/inviscid methods. If successful, this could be orders of magnitude faster than volume-mesh-based CFD while retaining high accuracy (XFoil is a 2D example of this). This is very difficult and likely years away, and it's likely that AeroSandbox won't be the toolbox to develop this - but there's no harm in taking a stab at it, if only to understand the problem space better!
+
+This code is made open-source in hopes that the aerodynamics community can benefit from this work. I've benefitted so much from open-source aerodynamics tools that came before me (XFOIL, AVL, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
 
 ## Future Goals
 In descending order of priority/feasibility:
@@ -57,7 +62,7 @@ Strengths:
 
 Weaknesses:
 * XFLR5: Lack of scriptability, limited geometric flexibility
-* AVL: Single-precision (low gradient accuracy), bottlenecking due to I/O
+* AVL: Single-precision calculation (low gradient accuracy), bottlenecking due to file I/O
 * Tornado: Speed, user-friendliness
 * VSPAero: Robustness, speed, accuracy, and reliability
 
@@ -67,10 +72,10 @@ Specifically, the following desirable qualities (and associated quantitative met
 * Fast (for point analysis, VLM1 should yield a solution (CL, CDi) within 5% of the "Richardson-extrapolated" solution in less than 1 second for the ExampleAirplanes.conventional() airplane on a typical desktop computer)
 * Accurate (in the limit of high panel density, the solution (CL, CDi) given by VLM1 must match AVL or XFLR5 to within 1%)
 * Reliable/Robust (gradients of the outputs w.r.t. inputs are always finite and sensible - specifically, this implies that all vortex kernels must be artificially made to have no singularities)
-* User-friendly (a GUI will be created)
+* User-friendly (eventually, a GUI will be created, and AeroSandbox will optionally ship as a packaged executable)
 * Scriptable (the code will be object-oriented; the GUI will contain a CLI)
 * Readable (every class and function will be documented; code will be PEP-8-compatible where reasonable)
-* Optimizer-friendly (design gradients and stability derivatives will be computed through automatic differentiation - perhaps with the autograd library?)
+* Optimizer-friendly (design gradients and stability derivatives will be efficiently computed through automatic differentiation, not finite differencing - perhaps with the autograd library?)
 * Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
 
 ## Bugs
