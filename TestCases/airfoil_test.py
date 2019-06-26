@@ -1,13 +1,13 @@
 from AeroSandbox import *
 
 # Test on some of my favorite airfoils
-foil1 = Airfoil("NACA0012")
-foil2 = Airfoil("naca4410")
-foil3 = Airfoil("s1223")
-foil4 = Airfoil("clarky")
-foil5 = Airfoil("goe803h")
-foil6 = Airfoil("e423")
-foil7 = Airfoil("ag12")
-foil8 = Airfoil("mh80")
+naca0012 = Airfoil("NACA0012")
+naca4410 = Airfoil("naca4410")
+s1223 = Airfoil("s1223")
+clarky = Airfoil("clarky")
+goe803h = Airfoil("goe803h")
+e423 = Airfoil("e423")
+ag12 = Airfoil("ag12")
+mh80 = Airfoil("mh80")
 
-foil8.draw()
+naca0012.draw()

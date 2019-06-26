@@ -318,10 +318,17 @@ class vlm1(AeroProblem):
         self.CL = -self.Ftotal_wind[2] / qS
         self.CDi = -self.Ftotal_wind[0] / qS
         self.CY = self.Ftotal_wind[1] / qS
+
+        # Solves divide by zero error
+        if self.CDi==0:
+            self.CLoverCDi=0
+        else:
+            self.CLoverCDi=self.CL/self.CDi
+
         print("CL: ", self.CL)
         print("CDi: ", self.CDi)
         print("CY: ", self.CY)
-        print("CL/CDi: ", self.CL / self.CDi)
+        print("CL/CDi: ", self.CLoverCDi)
 
     def calculate_delta_cp(self):
         # Find the area of each panel ()

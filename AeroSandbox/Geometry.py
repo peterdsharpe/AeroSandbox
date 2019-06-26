@@ -1,8 +1,8 @@
 import numpy as np
+import scipy.interpolate as sp_interp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from .Plotting import *
-from mpl_toolkits.mplot3d import Axes3D
 import pyvista as pv
 
 
@@ -300,6 +300,7 @@ class Airfoil:
                  ):
         self.name = name
         self.calculate_coordinates()  # populates self.coordinates
+        self.normalize()
 
     def calculate_coordinates(self):
         # Populates a variable called self.coordinates with the coordinates of the airfoil.
@@ -349,19 +350,19 @@ class Airfoil:
 
                     # Get camber slope
                     dycdx_piece1 = 2 * max_camber / camber_loc ** 2 * (
-                        camber_loc - x_t[x_t <=camber_loc]
+                            camber_loc - x_t[x_t <= camber_loc]
                     )
-                    dycdx_piece2 = 2 * max_camber / (1-camber_loc)**2 *(
-                        camber_loc - x_t[x_t > camber_loc]
+                    dycdx_piece2 = 2 * max_camber / (1 - camber_loc) ** 2 * (
+                            camber_loc - x_t[x_t > camber_loc]
                     )
-                    dycdx = np.hstack((dycdx_piece1,dycdx_piece2))
+                    dycdx = np.hstack((dycdx_piece1, dycdx_piece2))
                     theta = np.arctan(dycdx)
 
                     # Combine everything
-                    x_U = x_t - y_t*np.sin(theta)
-                    x_L = x_t + y_t*np.sin(theta)
-                    y_U = y_c + y_t*np.cos(theta)
-                    y_L = y_c - y_t*np.cos(theta)
+                    x_U = x_t - y_t * np.sin(theta)
+                    x_L = x_t + y_t * np.sin(theta)
+                    y_U = y_c + y_t * np.cos(theta)
+                    y_L = y_c - y_t * np.cos(theta)
 
                     # Flip upper surface so it's back to front
                     x_U, y_U = np.flip(x_U), np.flip(y_U)
@@ -372,7 +373,7 @@ class Airfoil:
                     x = np.hstack((x_U, x_L))
                     y = np.hstack((y_U, y_L))
 
-                    coordinates = np.column_stack((x,y))
+                    coordinates = np.column_stack((x, y))
 
                     self.coordinates = coordinates
                     return
@@ -399,21 +400,38 @@ class Airfoil:
 
     def normalize(self):
         # Alters the airfoil's coordinates so that x_min is exactly 0 and x_max is exactly 1.
-        pass # TODO do this function
 
-    def calculate_camber_line(self):
-        # Populates self.camber_line, an Nx2 array that contains the mean camber line coordinates ordered front to back
-        n_points = 150
+        # Check if it needs to be normalized
+        x_max = np.max(self.coordinates[:, 0])
+        x_min = np.min(self.coordinates[:, 0])
 
-        x = 0.5 + 0.5 * np.cos(
-            np.linspace(np.pi, 0, n_points))  # Generate some cosine-spaced points
+        # Do some sanity checks and warn the user if they fail
+        assert x_max <= 1.02, "x_max is really high! Are you sure this isn't bad airfoil geometry?"
+        assert x_min >= -0.02, "x_min is really low! Are you sure this isn't bad airfoil geometry?"
 
-    def draw(self):
+        # Do the normalization
+        scale_factor = 1 / (x_max - x_min)
+        new_x_coors = (self.coordinates[:, 0] - x_min) * scale_factor
+        new_y_coors = self.coordinates[:, 1] * scale_factor
+
+        self.coordinates = np.column_stack((new_x_coors, new_y_coors))
+
+    # def calculate_camber_line(self):
+    #     # Populates self.camber_line, an Nx2 array that contains the mean camber line coordinates ordered front to back
+    #     n_points = 150
+    #
+    #     x = 0.5 + 0.5 * np.cos(
+    #         np.linspace(np.pi, 0, n_points))  # Generate some cosine-spaced points
+
+    def draw(self, new_figure = True):
         # Get coordinates if they don't already exist
         if not hasattr(self, 'coordinates'):
             print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
             self.calculate_coordinates()
 
+        if new_figure:
+            plt.figure()
+            plt.title(self.name+" Coordinates")
         plt.plot(self.coordinates[:, 0], self.coordinates[:, 1])
         plt.xlim((-0.05, 1.05))
         plt.ylim((-0.5, 0.5))
@@ -423,11 +441,57 @@ class Airfoil:
         pass
         # TODO xfoil?
 
-    def get_point_on_chord_line(self, chordfraction):
-        return np.array([chordfraction, 0])
+    def LE_index(self):
+        # Returns the index of the leading-edge point.
+        return np.argmin(self.coordinates[:,0])
 
-    def get_point_on_camber_line(self, chordfraction):
-        pass # TODO
+    def lower_coordinates(self):
+        # Returns a matrix (N by 2) of [x y] coordinates that describe the lower surface of the airfoil. Order is from leading edge to trailing edge. Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
+        return self.coordinates[self.LE_index():, :]
+
+    def upper_coordinates(self):
+        # Returns a matrix (N by 2) of [x y] coordinates that describe the upper surface of the airfoil. Order is from trailing edge to leading edge. Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
+        return self.coordinates[:self.LE_index(), :]
+
+    def get_thickness_at_chord_fraction(self, chord_fraction):
+        # Returns the (interpolated) camber at a given location. The location is specified by the chord fraction, as measured from the leading edge. Thickness is nondimensionalized by chord (i.e. this function returns t/c at a given x/c).
+        chord = np.max(self.coordinates[:, 0]) - np.min(
+            self.coordinates[:, 0])  # This should always be 1, but this is just coded for robustness.
+
+        x = chord_fraction * chord + min(self.coordinates[:, 0])
+
+        upperCoors = self.upper_coordinates()
+        lowerCoors = self.lower_coordinates()
+
+        y_upper_func = sp_interp.interp1d(x=upperCoors[:, 0], y=upperCoors[:, 1], copy=False, fill_value='extrapolate')
+        y_lower_func = sp_interp.interp1d(x=lowerCoors[:, 0], y=lowerCoors[:, 1], copy=False, fill_value='extrapolate')
+
+        y_upper = y_upper_func(x)
+        y_lower = y_lower_func(x)
+
+        thickness = np.abs(y_upper - y_lower)
+
+        return thickness
+
+    def get_camber_at_chord_fraction(self, chord_fraction):
+        # Returns the (interpolated) camber at a given location. The location is specified by the chord fraction, as measured from the leading edge. Camber is nondimensionalized by chord (i.e. this function returns camber/c at a given x/c).
+        chord = np.max(self.coordinates[:, 0]) - np.min(
+            self.coordinates[:, 0])  # This should always be 1, but this is just coded for robustness.
+
+        x = chord_fraction * chord + min(self.coordinates[:, 0])
+
+        upperCoors = self.upper_coordinates()
+        lowerCoors = self.lower_coordinates()
+
+        y_upper_func = sp_interp.interp1d(x=upperCoors[:, 0], y=upperCoors[:, 1], copy=False, fill_value='extrapolate')
+        y_lower_func = sp_interp.interp1d(x=lowerCoors[:, 0], y=lowerCoors[:, 1], copy=False, fill_value='extrapolate')
+
+        y_upper = y_upper_func(x)
+        y_lower = y_lower_func(x)
+
+        camber = (y_upper + y_lower) / 2
+
+        return camber
 
 
 def reflect_over_XZ_plane(input_vector):
