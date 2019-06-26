@@ -79,7 +79,7 @@ class vlm1(AeroProblem):
             if wing.chordwise_spacing == 'uniform':
                 nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
             elif wing.chordwise_spacing == 'cosine':
-                nondim_chordwise_coordinates = 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_chordwise_coordinates))
+                nondim_chordwise_coordinates = cosspace(n_points=n_chordwise_coordinates)
             else:
                 raise Exception("Bad value of wing.chordwise_spacing!")
 
@@ -102,7 +102,7 @@ class vlm1(AeroProblem):
                 if section.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
                 elif section.spanwise_spacing == 'cosine':
-                    nondim_spanwise_coordinates = 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_spanwise_coordinates))
+                    nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
                 else:
                     raise Exception("Bad value of section.spanwise_spacing!")
 
@@ -248,7 +248,7 @@ class vlm1(AeroProblem):
         # -------------------------------------------------------
         print("Calculating the vortex center influence matrix...")
         self.vortex_centers = (
-                                      self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
+                                          self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
 
         # Redoing the AIC calculation, but using vortex center points instead of colocation points
         # Python Mode
@@ -283,7 +283,9 @@ class vlm1(AeroProblem):
     def calculate_forces(self):
         # # Calculate Near-Field Forces and Moments
         # -----------------------------------------
-        # Governing Equation: The force on a straight, small vortex filament is F = rho * V x l * gamma, where rho is density, V is the velocity vector, x is the cross product operator, l is the vector of the filament itself, and gamma is the circulation.
+        # Governing Equation: The force on a straight, small vortex filament is F = rho * V x l * gamma,
+        # where rho is density, V is the velocity vector, x is the cross product operator,
+        # l is the vector of the filament itself, and gamma is the circulation.
 
         print("Calculating forces on each panel...")
         # Calculate Vi (local velocity at the ith vortex center point)
@@ -298,7 +300,8 @@ class vlm1(AeroProblem):
         # Calculate li, the length of the bound segment of the horseshoe vortex filament
         self.li = self.rv - self.lv
 
-        # Calculate Fi_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
+        # Calculate Fi_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES,
+        # not WIND AXES or BODY AXES.
         density = self.op_point.density
         Vi_cross_li = np.cross(Vi, self.li, axis=1)
         vortex_strengths_expanded = np.expand_dims(self.vortex_strengths, axis=1)
@@ -320,10 +323,10 @@ class vlm1(AeroProblem):
         self.CY = self.Ftotal_wind[1] / qS
 
         # Solves divide by zero error
-        if self.CDi==0:
-            self.CL_over_CDi=0
+        if self.CDi == 0:
+            self.CL_over_CDi = 0
         else:
-            self.CL_over_CDi= self.CL / self.CDi
+            self.CL_over_CDi = self.CL / self.CDi
 
         print("CL: ", self.CL)
         print("CDi: ", self.CDi)
@@ -386,8 +389,10 @@ class vlm1(AeroProblem):
         c_tiled = np.expand_dims(points, 1)
 
         # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
         # a[i,j,:] = c[i,:] - lv[j,:]
         # b[i,j,:] = c[i,:] - rv[j,:]
         a = c_tiled - self.lv
@@ -490,8 +495,10 @@ class vlm1(AeroProblem):
         c_tiled = np.expand_dims(points, 1)
 
         # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3. First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
         # a[i,j,:] = c[i,:] - lv[j,:]
         # b[i,j,:] = c[i,:] - rv[j,:]
         a = c_tiled - lv
@@ -574,7 +581,8 @@ class vlm1(AeroProblem):
 
     def calculate_streamlines(self):
         # Calculates streamlines eminating from the trailing edges of all surfaces.
-        # "streamlines" is a MxNx3 array, where M is the index of the streamline number, N is the index of the timestep, and the last index is xyz
+        # "streamlines" is a MxNx3 array, where M is the index of the streamline number,
+        # N is the index of the timestep, and the last index is xyz
 
         # Constants
         n_steps = 100  # minimum of 2
@@ -595,10 +603,9 @@ class vlm1(AeroProblem):
         # Iterate
         for step_num in range(1, n_steps):
             update_amount = self.get_velocity_at_point(streamlines[:, step_num - 1, :])
-            update_amount = update_amount / np.expand_dims(np.linalg.norm(update_amount, axis = 1), axis = 1)
+            update_amount = update_amount / np.expand_dims(np.linalg.norm(update_amount, axis=1), axis=1)
             update_amount *= length_per_step
             streamlines[:, step_num, :] = streamlines[:, step_num - 1, :] + update_amount
-
 
         self.streamlines = streamlines
 

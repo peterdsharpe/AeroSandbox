@@ -9,3 +9,13 @@ goe803h = Airfoil("goe803h")
 e423 = Airfoil("e423")
 ag12 = Airfoil("ag12")
 mh80 = Airfoil("mh80")
+e625 = Airfoil("e625")
+
+# And some that are not my favorite, but I suppose we need to stress-test this...
+diamond = Airfoil(name = "Diamond", coordinates = np.array([
+    [1, 0],
+    [0.5, 0.15],
+    [0, 0],
+    [0.5, -0.15],
+    [1, 0]
+]))

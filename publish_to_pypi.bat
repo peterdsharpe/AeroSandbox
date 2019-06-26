@@ -1,7 +1,7 @@
 @echo off
 cls
 echo .
-echo Did you update the version number in setup.py?
+echo Did you update the version number in setup.py? Also, don't forget to release on GitHub as well!
 echo .
 pause
 echo.

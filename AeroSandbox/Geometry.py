@@ -4,6 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from .Plotting import *
 import pyvista as pv
+import copy
 
 
 class Airplane:
@@ -135,7 +136,8 @@ class Airplane:
         # TODO set dims
 
     def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
-        # Sets the chordwise and spanwise paneling everywhere to a specified value. Useful for quickly changing the fidelity of your simulation.
+        # Sets the chordwise and spanwise paneling everywhere to a specified value.
+        # Useful for quickly changing the fidelity of your simulation.
         for wing in self.wings:
             wing.chordwise_panels = n_chordwise_panels
             for wingsection in wing.sections:
@@ -143,7 +145,8 @@ class Airplane:
 
     def get_bounding_cube(self):
         # Finds the axis-aligned cube that encloses the airplane with the smallest size.
-        # Returns x, y, z, and s, where x, y, and z are the coordinates of the cube center, and s is half of the side length.
+        # Returns x, y, z, and s, where x, y, and z are the coordinates of the cube center,
+        # and s is half of the side length.
 
         # Get vertices to enclose
         vertices = None
@@ -252,7 +255,8 @@ class Wing:
         return area
 
     def span(self):
-        # Returns the span (y-distance between the root of the wing and the tip). If symmetric, this is doubled to obtain the full span.
+        # Returns the span (y-distance between the root of the wing and the tip).
+        # If symmetric, this is doubled to obtain the full span.
         spans = []
         for i in range(len(self.sections)):
             spans.append(np.abs(self.sections[i].xyz_le[1] - self.sections[0].xyz_le[1]))
@@ -296,13 +300,23 @@ class Airfoil:
     cached_airfoils = []
 
     def __init__(self,
-                 name="naca0012"
+                 name="naca0012",
+                 coordinates=None,
                  ):
+
         self.name = name
-        self.calculate_coordinates()  # populates self.coordinates
+
+        if coordinates is not None:
+            self.coordinates = coordinates
+        else:
+            self.populate_coordinates()  # populates self.coordinates
+        assert hasattr(self,'coordinates'), "Couldn't figure out the coordinates of this airfoil! You need to either \
+        a) use a name corresponding to an airfoil in the UIUC Airfoil Database or \
+        b) provide your own coordinates in the constructor, such as Airfoil(""MyFoilName"", <Nx2 array of coordinates>)."
+
         self.normalize()
 
-    def calculate_coordinates(self):
+    def populate_coordinates(self):
         # Populates a variable called self.coordinates with the coordinates of the airfoil.
         name = self.name.lower().strip()
 
@@ -320,11 +334,11 @@ class Airfoil:
                     # Set number of points per side
                     n_points_per_side = 100
 
-                    # Referencing https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_cambered_4-digit_NACA_airfoil from here on out
+                    # Referencing https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_cambered_4-digit_NACA_airfoil
+                    # from here on out
 
                     # Make uncambered coordinates
-                    x_t = 0.5 + 0.5 * np.cos(
-                        np.linspace(np.pi, 0, n_points_per_side))  # Generate some cosine-spaced points
+                    x_t = cosspace(n_points=n_points_per_side)  # Generate some cosine-spaced points
                     y_t = 5 * thickness * (
                             + 0.2969 * np.power(x_t, 0.5)
                             - 0.1260 * x_t
@@ -404,14 +418,17 @@ class Airfoil:
         #   # y_le == 0
         #   # average( y_te_upper, y_te_lower ) == 0
         #   # x_te == 1
-        # The first two goals are achieved by translating in x and y. The third goal is achieved by rotating about (0,0). The fourth goal is achieved by uniform scaling.
+        # The first two goals are achieved by translating in x and y. The third goal is achieved by rotating about (0,0).
+        # The fourth goal is achieved by uniform scaling.
 
         # Goals 1 and 2
         LE_point_original = self.coordinates[self.LE_index(), :]
         assert abs(LE_point_original[
-                       0]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! Are you sure this isn't bad airfoil geometry?"
+                       0]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
+                       Are you sure this isn't bad airfoil geometry?"
         assert abs(LE_point_original[
-                       1]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! Are you sure this isn't bad airfoil geometry?"
+                       1]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
+                       Are you sure this isn't bad airfoil geometry?"
         self.coordinates -= LE_point_original
 
         # Goal 3
@@ -419,7 +436,8 @@ class Airfoil:
         rotation_angle = -np.arctan(TE_point_pre_rotation[1] / TE_point_pre_rotation[
             0])  # You need to rotate this many radians counterclockwise
         assert abs(np.degrees(
-            rotation_angle)) < 0.5, "The foil appears to be really weirdly rotated! Are you sure this isn't bad airfoil geometry?"
+            rotation_angle)) < 0.5, "The foil appears to be really weirdly rotated! \
+            Are you sure this isn't bad airfoil geometry?"
         cos_theta = np.cos(rotation_angle)
         sin_theta = np.sin(rotation_angle)
         rotation_matrix = np.array([[cos_theta, -sin_theta], [sin_theta, cos_theta]])
@@ -435,7 +453,7 @@ class Airfoil:
         # Get coordinates if they don't already exist
         if not hasattr(self, 'coordinates'):
             print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
-            self.calculate_coordinates()
+            self.populate_coordinates()
 
         if new_figure:
             plt.figure()
@@ -454,11 +472,15 @@ class Airfoil:
         return np.argmin(self.coordinates[:, 0])
 
     def lower_coordinates(self):
-        # Returns a matrix (N by 2) of [x y] coordinates that describe the lower surface of the airfoil. Order is from leading edge to trailing edge. Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
+        # Returns a matrix (N by 2) of [x y] coordinates that describe the lower surface of the airfoil.
+        # Order is from leading edge to trailing edge.
+        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
         return self.coordinates[self.LE_index():, :]
 
     def upper_coordinates(self):
-        # Returns a matrix (N by 2) of [x y] coordinates that describe the upper surface of the airfoil. Order is from trailing edge to leading edge. Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
+        # Returns a matrix (N by 2) of [x y] coordinates that describe the upper surface of the airfoil.
+        # Order is from trailing edge to leading edge.
+        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
         return self.coordinates[:self.LE_index() + 1, :]
 
     def get_thickness_at_chord_fraction(self, chord_fraction):
@@ -631,8 +653,79 @@ class Airfoil:
 
         return J
 
-    def repanel(self, n_points_per_side = 100):
-        pass
+    def repanel(self, n_points_per_side=100):
+        # Repanels an airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+        # Inputs:
+        #   # n_points_per_side is the number of points PER SIDE (upper and lower) of the airfoil. 100 is a good number.
+        # Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
+        # since one point (the leading edge point) is shared by both the upper and lower surfaces.
+
+        upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
+        lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
+
+        # Find distances between coordinates, assuming linear interpolation
+        upper_distances_between_points = np.sqrt(
+            np.power(upper_original_coors[:-1, 0] - upper_original_coors[1:, 0], 2) +
+            np.power(upper_original_coors[:-1, 1] - upper_original_coors[1:, 1], 2)
+        )
+        lower_distances_between_points = np.sqrt(
+            np.power(lower_original_coors[:-1, 0] - lower_original_coors[1:, 0], 2) +
+            np.power(lower_original_coors[:-1, 1] - lower_original_coors[1:, 1], 2)
+        )
+        upper_distances_from_TE = np.hstack((0, np.cumsum(upper_distances_between_points)))
+        lower_distances_from_LE = np.hstack((0, np.cumsum(lower_distances_between_points)))
+        upper_distances_from_TE_normalized = upper_distances_from_TE / upper_distances_from_TE[-1]
+        lower_distances_from_LE_normalized = lower_distances_from_LE / lower_distances_from_LE[-1]
+
+        # Generate a cosine-spaced list of points from 0 to 1
+        s = cosspace(n_points=n_points_per_side)
+
+        x_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 0])
+        y_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 1])
+        x_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 0])
+        y_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 1])
+
+        x_coors = np.hstack((x_upper_func(s), x_lower_func(s)[1:]))
+        y_coors = np.hstack((y_upper_func(s), y_lower_func(s)[1:]))
+
+        coordinates = np.column_stack((x_coors, y_coors))
+
+        self.coordinates = coordinates
+
+        self.normalize()
+
+
+def blend_airfoils(
+        airfoil1,
+        airfoil2,
+        blend_fraction
+):
+    # Returns a new airfoil that is a blend of the two airfoils.
+    # Inputs:
+    #   # airfoil1: The first airfoil to use
+    #   # airfoil2: The second airfoil to use
+    #   # blend_fraction: a fraction (between 0 and 1) that specifies how much of the second airfoil to blend in.
+    #   #   # 0 will give airfoil1, 1 will give airfoil2, 0.5 will give exactly in between.
+
+    foil1 = copy.deepcopy(airfoil1)
+    foil2 = copy.deepcopy(airfoil2)
+
+    if blend_fraction==0:
+        return foil1
+    if blend_fraction==1:
+        return foil2
+    assert blend_fraction>=0 and blend_fraction<=1, "blend_fraction is out of the valid range of 0 to 1!"
+
+    # Repanel to ensure the same number of points and the same point distribution on both airfoils.
+    foil1.repanel(n_points_per_side=200)
+    foil2.repanel(n_points_per_side=200)
+
+    blended_coordinates = (1-blend_fraction)*foil1.coordinates + blend_fraction * foil2.coordinates
+
+    new_airfoil = Airfoil(name="Blended Airfoils", coordinates = blended_coordinates)
+
+    return new_airfoil
+
 
 def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
@@ -646,3 +739,7 @@ def reflect_over_XZ_plane(input_vector):
         raise Exception("Invalid input for reflect_over_XZ_plane!")
 
     return output_vector
+
+
+def cosspace(min=0, max=1, n_points=50):
+    return 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_points))
