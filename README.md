@@ -6,7 +6,7 @@ AeroSandbox is a Python 3 package for playing around with aerodynamics ideas rel
 
 ## Getting Started
 
-There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 and PyPI installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).)
+There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).)
 
 1. (Recommended) Download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases). Then, run "pip install AeroSandbox" in your command prompt to ensure that all dependencies are satisfied.
 
