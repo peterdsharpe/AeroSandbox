@@ -15,7 +15,7 @@ There are several easy ways to get started with AeroSandbox!
 3. Both of the above options will download released versions of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
 ### Illustrations
-Vortex lattice results, colored by pressure difference and including streamlines. Calculation timed at 0.35 s on an Intel i7-8750H.
+Vortex lattice results, colored by pressure difference and including streamlines. Calculation timed at 350 ms on an Intel i7-8750H.
 
 ![AeroSandbox VLM](Media/Illustrations/Pressures.png)
 
