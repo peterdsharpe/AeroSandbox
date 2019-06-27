@@ -1,1 +1,4 @@
 theme: jekyll-theme-cayman
+
+github:
+  zip_url: https://github.com/peterdsharpe/AeroSandbox/releases
