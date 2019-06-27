@@ -13,7 +13,7 @@ p = Airplane(
                     xyz_le=[0, 0, 0],
                     chord=0.5,
                     twist=0,
-                    airfoil=Airfoil(name="naca9412")
+                    airfoil=Airfoil(name="naca0412")
                 ),
                 WingSection(
                     xyz_le=[0, 1, 0],

@@ -89,39 +89,45 @@ class vlm1(AeroProblem):
             #   Index 3: X, Y, or Z.
             wing_coordinates = np.empty((n_chordwise_coordinates, 0, 3))
 
+            # Initialize an array of normal vectors. Indices:
+            #   Index 1: chordwise location
+            #   Index 2: spanwise location
+            #   Index 3: X, Y, or Z.
+            wing_normals = np.empty((wing.chordwise_panels, 0, 3))
+
             for section_num in range(len(wing.sections) - 1):
 
-                # Define the relevant sections
-                section = wing.sections[section_num]
-                next_section = wing.sections[section_num + 1]
+                # Define the relevant cross sections (XSecs)
+                xsec = wing.sections[section_num]
+                next_xsec = wing.sections[section_num + 1]
 
                 # Define number of spanwise points
-                n_spanwise_coordinates = section.spanwise_panels + 1
+                n_spanwise_coordinates = xsec.spanwise_panels + 1
 
                 # Get the spanwise coordinates
-                if section.spanwise_spacing == 'uniform':
+                if xsec.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif section.spanwise_spacing == 'cosine':
+                elif xsec.spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
                 else:
                     raise Exception("Bad value of section.spanwise_spacing!")
 
-                # Get edges of WingSection (needed for the next step)
-                section_xyz_le = section.xyz_le + wing.xyz_le
-                section_xyz_te = section.xyz_te() + wing.xyz_le
-                next_section_xyz_le = next_section.xyz_le + wing.xyz_le
-                next_section_xyz_te = next_section.xyz_te() + wing.xyz_le
+                # Get the corners of the WingSection
+                xsec_xyz_le = xsec.xyz_le + wing.xyz_le
+                xsec_xyz_te = xsec.xyz_te() + wing.xyz_le
+                next_xsec_xyz_le = next_xsec.xyz_le + wing.xyz_le
+                next_xsec_xyz_te = next_xsec.xyz_te() + wing.xyz_le
 
                 section_coordinates = np.zeros(shape=(n_chordwise_coordinates, n_spanwise_coordinates, 3))
 
-                # Dimensionalize the chordwise and spanwise coordinates
+                # Dimensionalize the chordwise and spanwise coordinates using the corners
                 for spanwise_coordinate_num in range(len(nondim_spanwise_coordinates)):
                     nondim_spanwise_coordinate = nondim_spanwise_coordinates[spanwise_coordinate_num]
 
-                    local_xyz_le = ((1 - nondim_spanwise_coordinate) * section_xyz_le +
-                                    (nondim_spanwise_coordinate) * next_section_xyz_le)
-                    local_xyz_te = ((1 - nondim_spanwise_coordinate) * section_xyz_te +
-                                    (nondim_spanwise_coordinate) * next_section_xyz_te)
+                    local_xyz_le = ((1 - nondim_spanwise_coordinate) * xsec_xyz_le +
+                                    (nondim_spanwise_coordinate) * next_xsec_xyz_le)
+                    local_xyz_te = ((1 - nondim_spanwise_coordinate) * xsec_xyz_te +
+                                    (nondim_spanwise_coordinate) * next_xsec_xyz_te)
 
                     for chordwise_coordinate_num in range(len(nondim_chordwise_coordinates)):
                         nondim_chordwise_coordinate = nondim_chordwise_coordinates[chordwise_coordinate_num]
@@ -135,9 +141,59 @@ class vlm1(AeroProblem):
                 if not is_last_section:
                     section_coordinates = section_coordinates[:, :-1, :]
 
-                wing_coordinates = np.hstack((wing_coordinates, section_coordinates))
+                wing_coordinates = np.concatenate((wing_coordinates, section_coordinates), axis = 1)
 
-            # Get the corners of each panel
+                # diag1 = back_outboard_vertices - front_inboard_vertices
+                # diag2 = back_inboard_vertices - front_outboard_vertices
+                # cross = np.cross(diag1, diag2, axis=2)
+                # normal_directions = cross / np.expand_dims(np.linalg.norm(cross, axis=2),
+                #                                            axis=2)  # TODO add in proper normal direction handling
+
+                # Calculate the WingSection's normal directions
+                xsec_chord_vector = xsec_xyz_te - xsec_xyz_le  # vector of the chordline of this section
+                next_xsec_chord_vector = next_xsec_xyz_te - next_xsec_xyz_le  # vector of the chordline of the next section
+                quarter_chord_vector = (
+                        (0.75 * next_xsec_xyz_le + 0.25 * next_xsec_xyz_te) -
+                        (0.75 * xsec_xyz_le + 0.25 * xsec_xyz_te)
+                )  # vector from the quarter-chord of the current section to the quarter-chord of the next section
+
+                xsec_up = np.cross(xsec_chord_vector, quarter_chord_vector)
+                xsec_up /= np.linalg.norm(xsec_up)
+                xsec_back = xsec_chord_vector / np.linalg.norm(xsec_chord_vector)
+
+                next_xsec_up = np.cross(next_xsec_chord_vector, quarter_chord_vector)
+                next_xsec_up /= np.linalg.norm(next_xsec_up)
+                next_xsec_back = next_xsec_chord_vector / np.linalg.norm(next_xsec_chord_vector)
+
+                nondim_chordwise_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[:-1] + 0.75 * nondim_chordwise_coordinates[1:]
+
+                xsec_normals_2d = xsec.airfoil.get_normal_direction_at_chord_fraction(
+                    nondim_chordwise_colocation_coordinates)  # Nx2 array of normal directions
+                next_xsec_normals_2d = next_xsec.airfoil.get_normal_direction_at_chord_fraction(
+                    nondim_chordwise_colocation_coordinates)
+
+                xsec_normals = (
+                        xsec_up * np.expand_dims(xsec_normals_2d[:, 1], axis=1) +
+                        xsec_back * np.expand_dims(xsec_normals_2d[:, 0], axis=1)
+                )
+                next_xsec_normals = (
+                        next_xsec_up * np.expand_dims(next_xsec_normals_2d[:, 1], axis=1) +
+                        next_xsec_back * np.expand_dims(next_xsec_normals_2d[:, 0], axis=1)
+                )
+
+                nondim_spanwise_colocation_coordinates = 0.5 * nondim_spanwise_coordinates[:-1] + 0.5 * nondim_spanwise_coordinates[1:]
+
+                # Index 0: chordwise_coordinates
+                # Index 1: spanwise_coordinates
+                # Index 2: xyz
+                section_normals = (
+                    np.expand_dims(xsec_normals, axis = 1) * (1-np.reshape(nondim_spanwise_colocation_coordinates, (1, -1, 1)))
+                    + np.expand_dims(next_xsec_normals, axis = 1) * np.reshape(nondim_spanwise_colocation_coordinates, (1, -1, 1))
+                )
+
+                wing_normals = np.concatenate((wing_normals, section_normals), axis = 1)
+
+                # Get the corners of each panel
             front_inboard_vertices = wing_coordinates[:-1, :-1, :]
             front_outboard_vertices = wing_coordinates[:-1, 1:, :]
             back_inboard_vertices = wing_coordinates[1:, :-1, :]
@@ -155,16 +211,6 @@ class vlm1(AeroProblem):
                     0.75 * (back_inboard_vertices + back_outboard_vertices) / 2
             )
 
-            # diag1 = back_outboard_vertices - front_inboard_vertices
-            # diag2 = back_inboard_vertices - front_outboard_vertices
-            # cross = np.cross(diag1, diag2, axis=2)
-            # normal_directions = cross / np.expand_dims(np.linalg.norm(cross, axis=2),
-            #                                            axis=2)  # TODO add in proper normal direction handling
-            # Calculate the normal directions
-
-            nondim_section_normals = section.airfoil.get_normal_direction_at_chord_fraction([])
-
-
             # Make the horseshoe vortex
             inboard_vortex_points = (
                     0.75 * front_inboard_vertices +
@@ -176,7 +222,7 @@ class vlm1(AeroProblem):
             )
 
             colocation_points = np.reshape(colocation_points, (-1, 3), order='F')
-            normal_directions = np.reshape(normal_directions, (-1, 3), order='F')
+            wing_normals = np.reshape(wing_normals, (-1, 3), order='F')
             inboard_vortex_points = np.reshape(inboard_vortex_points, (-1, 3), order='F')
             outboard_vortex_points = np.reshape(outboard_vortex_points, (-1, 3), order='F')
             front_inboard_vertices = np.reshape(front_inboard_vertices, (-1, 3), order='F')
@@ -186,7 +232,7 @@ class vlm1(AeroProblem):
             is_trailing_edge_this_wing = np.reshape(is_trailing_edge_this_wing, (-1), order='F')
 
             c = np.vstack((c, colocation_points))
-            n = np.vstack((n, normal_directions))
+            n = np.vstack((n, wing_normals))
             lv = np.vstack((lv, inboard_vortex_points))
             rv = np.vstack((rv, outboard_vortex_points))
             front_left_vertices = np.vstack((front_left_vertices, front_inboard_vertices))
@@ -199,14 +245,14 @@ class vlm1(AeroProblem):
                 reflect_over_XZ_plane(inboard_vortex_points)
                 reflect_over_XZ_plane(outboard_vortex_points)
                 reflect_over_XZ_plane(colocation_points)
-                reflect_over_XZ_plane(normal_directions)
+                reflect_over_XZ_plane(wing_normals)
                 reflect_over_XZ_plane(front_inboard_vertices)
                 reflect_over_XZ_plane(front_outboard_vertices)
                 reflect_over_XZ_plane(back_inboard_vertices)
                 reflect_over_XZ_plane(back_outboard_vertices)
 
                 c = np.vstack((c, colocation_points))
-                n = np.vstack((n, normal_directions))
+                n = np.vstack((n, wing_normals))
                 lv = np.vstack((lv, outboard_vortex_points))
                 rv = np.vstack((rv, inboard_vortex_points))
                 front_left_vertices = np.vstack((front_left_vertices, front_outboard_vertices))
@@ -256,7 +302,7 @@ class vlm1(AeroProblem):
         # -------------------------------------------------------
         print("Calculating the vortex center influence matrix...")
         self.vortex_centers = (
-                                          self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
+                                      self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
 
         # Redoing the AIC calculation, but using vortex center points instead of colocation points
         # Python Mode
