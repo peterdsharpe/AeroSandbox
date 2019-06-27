@@ -35,7 +35,7 @@ The primary purpose for this repository is to explore existing methods for aerod
 The "holy grail" of aerodynamics that this package seeks to develop is:
 An aerodynamics tool that models flow around any general triangulated 3D shape (with non-separated flow) using strongly-coupled viscous/inviscid methods. If successful, this could be orders of magnitude faster than volume-mesh-based CFD while retaining high accuracy (XFoil is a 2D example of this). This is very difficult and likely years away, and it's likely that AeroSandbox won't be the toolbox to develop this - but there's no harm in taking a stab at it, if only to understand the problem space better!
 
-This code is made open-source in hopes that the aerodynamics community can benefit from this work. I've benefitted so much from open-source aerodynamics tools that came before me (XFOIL, AVL, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
+This code is made open-source in hopes that the aerodynamics community can benefit from this work. I've benefitted so much from open-source aerodynamics tools that came before me (Xfoil, AVL, QProp, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
 
 ## Future Goals
 In descending order of priority/feasibility:
