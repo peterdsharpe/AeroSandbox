@@ -1,4 +1,4 @@
-import numpy as np
+import autograd.numpy as np
 import scipy.interpolate as sp_interp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -230,13 +230,13 @@ class Wing:
                          + self.sections[i + 1].chord) / 2
             this_xyz_te = self.sections[i].xyz_te()
             that_xyz_te = self.sections[i + 1].xyz_te()
-            span_le_eff = np.hypot(
-                self.sections[i].xyz_le[1] - self.sections[i + 1].xyz_le[1],
-                self.sections[i].xyz_le[2] - self.sections[i + 1].xyz_le[2]
+            span_le_eff = np.sqrt(
+                np.square(self.sections[i].xyz_le[1] - self.sections[i + 1].xyz_le[1]) +
+                np.square(self.sections[i].xyz_le[2] - self.sections[i + 1].xyz_le[2])
             )
-            span_te_eff = np.hypot(
-                this_xyz_te[1] - that_xyz_te[1],
-                this_xyz_te[2] - that_xyz_te[2]
+            span_te_eff = np.sqrt(
+                np.square(this_xyz_te[1] - that_xyz_te[1]) +
+                np.square(this_xyz_te[2] - that_xyz_te[2])
             )
             span_eff = (span_le_eff + span_te_eff) / 2
             area += chord_eff * span_eff

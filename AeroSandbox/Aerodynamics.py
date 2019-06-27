@@ -1,4 +1,4 @@
-import autograd as np
+import autograd.numpy as np
 from autograd import grad
 import scipy.linalg as sp_linalg
 from numba import jit
@@ -118,7 +118,7 @@ class vlm1(AeroProblem):
                 next_xsec_xyz_le = next_xsec.xyz_le + wing.xyz_le
                 next_xsec_xyz_te = next_xsec.xyz_te() + wing.xyz_le
 
-                section_coordinates = np.zeros(shape=(n_chordwise_coordinates, n_spanwise_coordinates, 3))
+                section_coordinates = np.empty(shape=(n_chordwise_coordinates, n_spanwise_coordinates, 3))
 
                 # Dimensionalize the chordwise and spanwise coordinates using the corners
                 for spanwise_coordinate_num in range(len(nondim_spanwise_coordinates)):
