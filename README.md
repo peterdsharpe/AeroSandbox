@@ -4,15 +4,17 @@ by [Peter Sharpe](https://peterdsharpe.github.io)
 ## About
 AeroSandbox is a Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, and aircraft design optimization. 
 
-## Installation
+## Getting Started
 
-There are several easy ways to get started with AeroSandbox!
+There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 and PyPI installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).)
 
-1. Download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases)
+1. (Recommended) Download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases). Then, run "pip install AeroSandbox" in your command prompt to ensure that all dependencies are satisfied.
 
-2. If you just want the raw package (and no test cases or examples), install by simply typing "pip install AeroSandbox" into your terminal. (assuming you already have Python >=3.7 and PyPI installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section))
+2. If you just want the raw package (and no test cases or examples), install by simply typing "pip install AeroSandbox" into your terminal. 
 
 3. Both of the above options will download released versions of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
+
+There are many example cases you can try out in the /TestCases/ directory! Specifically, try running "/TestCases/vlm1_conventional.py".
 
 ### Illustrations
 Vortex lattice results, colored by pressure difference and including streamlines. Calculation timed at 350 ms on an Intel i7-8750H.
