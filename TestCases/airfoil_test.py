@@ -19,3 +19,10 @@ diamond = Airfoil(name = "Diamond", coordinates = np.array([
     [0.5, -0.15],
     [1, 0]
 ]))
+
+# Some operations
+s1223.draw()
+x= np.linspace(0,1,1000)
+c = s1223.get_camber_at_chord_fraction(x)
+plt.plot(x,c)
+n = s1223.get_normal_direction_at_chord_fraction(x)

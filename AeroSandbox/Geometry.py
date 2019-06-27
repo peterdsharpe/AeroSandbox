@@ -8,13 +8,14 @@ import copy
 
 
 class Airplane:
+    # Definition for an airplane.
     def __init__(self,
-                 name="Untitled Airplane",
-                 xyz_ref=[0.0, 0.0, 0.0],
-                 wings=[],
-                 s_ref=1.0,
-                 c_ref=1.0,
-                 b_ref=1.0,
+                 name="Untitled Airplane", # A sensible name for your airplane.
+                 xyz_ref=[0.0, 0.0, 0.0], # Location about which moments and stability derivatives are calculated; should be the center of gravity.
+                 wings=[], # A list of Wing objects.
+                 s_ref=1.0, # You can set these manually, or you can call Airplane.set_ref_dims_from_wing() after setting up the Aircraft object to populate these fields.
+                 c_ref=1.0, # See above
+                 b_ref=1.0, # See above
                  ):
         self.name = name
         self.xyz_ref = np.array(xyz_ref)
@@ -24,6 +25,8 @@ class Airplane:
         self.b_ref = b_ref
 
     def draw(self):
+        # Draw the airplane in a new window.
+
         # Using PyVista Polydata format
         vertices = np.empty((0, 3))
         faces = np.empty((0))
@@ -82,6 +85,8 @@ class Airplane:
                     fig_to_plot_on=None,
                     ax_to_plot_on=None
                     ):
+        # Draws the airplane using matplotlib.
+        # This method is deprecated (superseded by draw() ) and will be removed in a future release.
 
         # Setup
         if fig_to_plot_on == None or ax_to_plot_on == None:
@@ -126,6 +131,8 @@ class Airplane:
     def set_ref_dims_from_wing(self,
                                main_wing_index=0
                                ):
+        # Sets the reference dimensions of the airplane from measurements obtained from a specific wing.
+
         main_wing = self.wings[main_wing_index]
 
         self.s_ref = main_wing.area_wetted()
@@ -135,9 +142,10 @@ class Airplane:
         pass
         # TODO set dims
 
-    def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
+    def set_vlm_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
         # Sets the chordwise and spanwise paneling everywhere to a specified value.
-        # Useful for quickly changing the fidelity of your simulation.
+        # Useful for quickly changing the fidelity of your VLM simulation.
+
         for wing in self.wings:
             wing.chordwise_panels = n_chordwise_panels
             for wingsection in wing.sections:
@@ -147,6 +155,7 @@ class Airplane:
         # Finds the axis-aligned cube that encloses the airplane with the smallest size.
         # Returns x, y, z, and s, where x, y, and z are the coordinates of the cube center,
         # and s is half of the side length.
+        # Useful for plotting and getting a sense for the scale of a problem.
 
         # Get vertices to enclose
         vertices = None
@@ -195,20 +204,21 @@ class Airplane:
 
 
 class Wing:
+    # Definition for a wing.
+    # If the wing is symmetric across the XZ plane, just define the right half, and be sure to supply "symmetric = True" in the constructor.
+    # If the wing is not symmetric across the XZ plane, just define the wing.
     def __init__(self,
-                 name="Untitled Wing",
-                 xyz_le=[0, 0, 0],
-                 sections=[],
-                 symmetric=True,
-                 incidence_angle=0,
-                 vlm_chordwise_panels=10,
-                 vlm_chordwise_spacing="cosine",
+                 name="Untitled Wing", # It can help when debugging to give each wing a sensible name.
+                 xyz_le=[0, 0, 0], # Will translate all of the sections of the wing. Useful for moving the wing around.
+                 sections=[], # This should be a list of WingSection objects.
+                 symmetric=False, # Is the wing symmetric across the XZ plane?
+                 vlm_chordwise_panels=10, # Number of chordwise panels used in VLM analysis. Turn this up if you have control surfaces or airfoils with high camberline curvature.
+                 vlm_chordwise_spacing="cosine", # Can be 'cosine' or 'uniform'.
                  ):
         self.name = name
         self.xyz_le = np.array(xyz_le)
         self.sections = sections
         self.symmetric = symmetric
-        self.incidence_angle = incidence_angle
         self.chordwise_panels = vlm_chordwise_panels
         self.chordwise_spacing = vlm_chordwise_spacing
 
@@ -294,6 +304,7 @@ class WingSection:
              ])
 
         return xyz_te
+
 
 
 class Airfoil:
@@ -522,6 +533,29 @@ class Airfoil:
         camber = (y_upper + y_lower) / 2
 
         return camber
+        # TODO consider improving this function by caching the interpolation
+
+    def get_normal_direction_at_chord_fraction(self, chord_fraction):
+        # Returns the normal direction at a specified chord fraction.
+        # If you input a single value, returns a 1D numpy array with 2 elements (x,y).
+        # If you input a vector of values, returns a 2D numpy array. First index is the point number, second index is (x,y)
+
+        # Right now, does it by finite differencing camber values :(
+        # When I'm less lazy I'll make it do it in a proper, more efficient way
+        epsilon = np.sqrt(np.finfo(float).eps)
+
+        cambers = self.get_camber_at_chord_fraction(chord_fraction)
+        cambers_incremented = self.get_camber_at_chord_fraction(chord_fraction + epsilon)
+        dydx = (cambers_incremented - cambers) / epsilon
+
+        if dydx.shape==1: # single point
+            normal = np.hstack((-dydx, 1))
+            normal /= np.linalg.norm(normal)
+            return normal
+        else: # multiple points vectorized
+            normal = np.column_stack((-dydx, np.ones(dydx.shape)))
+            normal /= np.expand_dims(np.linalg.norm(normal, axis=1), axis=1) # normalize
+            return normal
 
     def TE_thickness(self):
         # Returns the thickness of the trailing edge of the airfoil, in nondimensional (y/c) units.

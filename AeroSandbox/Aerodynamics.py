@@ -137,25 +137,33 @@ class vlm1(AeroProblem):
 
                 wing_coordinates = np.hstack((wing_coordinates, section_coordinates))
 
+            # Get the corners of each panel
             front_inboard_vertices = wing_coordinates[:-1, :-1, :]
             front_outboard_vertices = wing_coordinates[:-1, 1:, :]
             back_inboard_vertices = wing_coordinates[1:, :-1, :]
             back_outboard_vertices = wing_coordinates[1:, 1:, :]
+
+            # Create a boolean array of whether or not each point is a trailing edge
             is_trailing_edge_this_wing = np.vstack((
                 np.zeros((wing_coordinates.shape[0] - 2, wing_coordinates.shape[1] - 1), dtype=bool),
                 np.ones((1, wing_coordinates.shape[1] - 1), dtype=bool)
             ))
 
+            # Calculate the colocation points
             colocation_points = (
                     0.25 * (front_inboard_vertices + front_outboard_vertices) / 2 +
                     0.75 * (back_inboard_vertices + back_outboard_vertices) / 2
             )
 
-            diag1 = back_outboard_vertices - front_inboard_vertices
-            diag2 = back_inboard_vertices - front_outboard_vertices
-            cross = np.cross(diag1, diag2, axis=2)
-            normal_directions = cross / np.expand_dims(np.linalg.norm(cross, axis=2),
-                                                       axis=2)  # TODO add in proper normal direction handling
+            # diag1 = back_outboard_vertices - front_inboard_vertices
+            # diag2 = back_inboard_vertices - front_outboard_vertices
+            # cross = np.cross(diag1, diag2, axis=2)
+            # normal_directions = cross / np.expand_dims(np.linalg.norm(cross, axis=2),
+            #                                            axis=2)  # TODO add in proper normal direction handling
+            # Calculate the normal directions
+
+            nondim_section_normals = section.airfoil.get_normal_direction_at_chord_fraction([])
+
 
             # Make the horseshoe vortex
             inboard_vortex_points = (
