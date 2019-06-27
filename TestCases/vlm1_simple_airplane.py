@@ -1,7 +1,31 @@
 from AeroSandbox import *
-import ExampleAirplanes
 
-a = ExampleAirplanes.simple_airplane()
+a = Airplane(
+        name="Single Wing",
+        xyz_ref=[0, 0, 0],
+        wings=[
+            Wing(
+                name="Wing",
+                xyz_le=[0, 0, 0],
+                symmetric=True,
+                sections=[
+                    WingSection(
+                        xyz_le=[0, 0, 0],
+                        chord=0.5,
+                        twist=0,
+                        airfoil=Airfoil(name="naca0012")
+                    ),
+                    WingSection(
+                        xyz_le=[0, 1, 0],
+                        chord=0.5,
+                        twist=0,
+                        airfoil=Airfoil(name="naca0012")
+                    )
+                ]
+            )
+        ]
+    )
+a.set_ref_dims_from_wing()
 
 ap = vlm1(
     airplane=a,
@@ -13,16 +37,7 @@ ap.run()
 ap.draw()
 
 # Answer you should get: (XFLR5)
-# CL = 0.316
-# CD = 0.008
-# CL/CD = 39.892
-# Cm = -0.073
-
-# Dimensionalized:
-# L = 19.355 N
-# D = 0.49 N
-
-# From Oswald
-# AR = 4
-# CDi = 0.316 ^ 2 / (pi * 4 * 0.7)
-# CDi = 0.011351
+# CL = 0.320
+# CDi = 0.008
+# CL/CDi = 40.157
+# Cm = -0.074
