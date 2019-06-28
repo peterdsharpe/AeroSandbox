@@ -46,21 +46,24 @@ class vlm1(AeroProblem):
     # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
 
-    def run(self):
-        print("Running VLM1 calculation...")
+    def run(self, verbose = True):
+        self.verbose = verbose
+
+
+        if self.verbose: print("Running VLM1 calculation...")
         self.make_panels()
         self.setup_geometry()
         self.setup_operating_point()
         self.calculate_vortex_strengths()
         self.calculate_forces()
-        print("VLM1 calculation complete!")
+        if self.verbose: print("VLM1 calculation complete!")
 
     def make_panels(self):
 
         # # Make panels
         # -------------
 
-        print("Making panels...")
+        if self.verbose: print("Making panels...")
         c = np.empty((0, 3))
         n = np.empty((0, 3))
         lv = np.empty((0, 3))
@@ -281,7 +284,7 @@ class vlm1(AeroProblem):
     def setup_geometry(self):
         # # Calculate AIC matrix
         # ----------------------
-        print("Calculating the colocation influence matrix...")
+        if self.verbose: print("Calculating the colocation influence matrix...")
 
         # Python Mode
         self.Vij_colocations = self.calculate_Vij(self.c)
@@ -300,7 +303,7 @@ class vlm1(AeroProblem):
 
         # # Calculate Vij at vortex centers for force calculation
         # -------------------------------------------------------
-        print("Calculating the vortex center influence matrix...")
+        if self.verbose: print("Calculating the vortex center influence matrix...")
         self.vortex_centers = (
                                       self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
 
@@ -312,12 +315,12 @@ class vlm1(AeroProblem):
 
         # # LU Decomposition on AIC
         # -------------------------
-        print("LU factorizing the AIC matrix...")
+        if self.verbose: print("LU factorizing the AIC matrix...")
         self.lu, self.piv = sp_linalg.lu_factor(self.AIC)
 
     def setup_operating_point(self):
 
-        print("Calculating the freestream influence...")
+        if self.verbose: print("Calculating the freestream influence...")
         self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes() * np.ones(
             (self.n_panels, 1))  # Direction the wind is GOING TO, in geometry axes coordinates
         self.rotation_freestream_velocities = np.zeros(
@@ -331,7 +334,7 @@ class vlm1(AeroProblem):
         # # Calculate Vortex Strengths
         # ----------------------------
         # Governing Equation: AIC @ Gamma + freestream_influence = 0
-        print("Calculating vortex strengths...")
+        if self.verbose: print("Calculating vortex strengths...")
         self.vortex_strengths = sp_linalg.lu_solve((self.lu, self.piv), -self.freestream_influences)
 
     def calculate_forces(self):
@@ -341,7 +344,7 @@ class vlm1(AeroProblem):
         # where rho is density, V is the velocity vector, x is the cross product operator,
         # l is the vector of the filament itself, and gamma is the circulation.
 
-        print("Calculating forces on each panel...")
+        if self.verbose: print("Calculating forces on each panel...")
         # Calculate Vi (local velocity at the ith vortex center point)
         Vi_x = self.Vij_centers[:, :, 0] @ self.vortex_strengths + self.freestream_velocities[:, 0]
         Vi_y = self.Vij_centers[:, :, 1] @ self.vortex_strengths + self.freestream_velocities[:, 1]
@@ -362,13 +365,13 @@ class vlm1(AeroProblem):
         self.Fi_geometry = density * Vi_cross_li * vortex_strengths_expanded
 
         # Calculate total forces
-        print("Calculating total forces and moments...")
+        if self.verbose: print("Calculating total forces and moments...")
         self.Ftotal_geometry = np.sum(self.Fi_geometry,
                                       axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        print("Total aerodynamic forces (geometry axes): ", self.Ftotal_geometry)
+        if self.verbose: print("Total aerodynamic forces (geometry axes): ", self.Ftotal_geometry)
 
         self.Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Ftotal_geometry
-        print("Total aerodynamic forces (wind axes):", self.Ftotal_wind)
+        if self.verbose: print("Total aerodynamic forces (wind axes):", self.Ftotal_wind)
 
         # Calculate nondimensional forces
         qS = self.op_point.dynamic_pressure() * self.airplane.s_ref
@@ -382,10 +385,10 @@ class vlm1(AeroProblem):
         else:
             self.CL_over_CDi = self.CL / self.CDi
 
-        print("CL: ", self.CL)
-        print("CDi: ", self.CDi)
-        print("CY: ", self.CY)
-        print("CL/CDi: ", self.CL_over_CDi)
+        if self.verbose: print("CL: ", self.CL)
+        if self.verbose: print("CDi: ", self.CDi)
+        if self.verbose: print("CY: ", self.CY)
+        if self.verbose: print("CL/CDi: ", self.CL_over_CDi)
 
     def calculate_delta_cp(self):
         # Find the area of each panel ()
