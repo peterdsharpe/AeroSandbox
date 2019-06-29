@@ -43,7 +43,7 @@ class AeroProblem:
 
 
 class vlm1(AeroProblem):
-    # Traditional Vortex Lattice Method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
+    # Traditional vortex-lattice-method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
 
     def run(self, verbose=True):
@@ -643,6 +643,7 @@ class vlm1(AeroProblem):
                     draw_pressures=False,
                     draw_pressures_as_vectors=False,
                     ):
+        # Old drawing routine, will be deprecated at some point. Use draw() instead.
         fig, ax = fig3d()
         n_panels = len(self.panels)
 
@@ -750,8 +751,20 @@ class vlm1(AeroProblem):
 
 
 class vlm2(AeroProblem):
-    # Vortex
-    pass
+    # Vortex lattice method written from the ground up with lessons learned from writing vlm1.
+    # Should eventually eclipse VLM1 in performance and render it obsolete.
+    # Notable improvements over VLM1:
+    #   # Specifically written to be autograd-compatible at every step
+    #   # Takes advantage of the connectivity of the vortex lattice to speed up calculate_Vij() by almost exactly 2x
+    #   # Vortex lattice follows the mean camber line (control deflections are still done by rotating normals)
+    def run(self, verbose = True):
+        self.verbose = verbose
+
+        if self.verbose: print("Running VLM2 calculation...")
+        self.setup_geometry()
+
+    # def test(self): # TODO delete once VLM2 is working
+    #     self.test_var = self.op_point.alpha * 2 + self.airplane.xyz_ref[1] * 2
 
 #
 # class Panel:
