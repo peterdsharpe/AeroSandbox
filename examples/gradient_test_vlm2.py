@@ -15,7 +15,7 @@ def f(x):
                 xsecs=[
                     WingXSec(
                         xyz_le=[0, 0, 0],
-                        chord=0.5,
+                        chord=x,
                         twist=0,
                         airfoil=Airfoil(name="naca0012")
                     ),
@@ -34,20 +34,20 @@ def f(x):
     ap = vlm2(
         airplane=a,
         op_point=OperatingPoint(velocity=10,
-                                alpha=x,
+                                alpha=5,
                                 beta=0),
     )
-    ap.test()
+    ap.run()
 
-    return ap.test_var
+    return ap.testvar
 
 
-val = 5.0  # nominal value of parameter
+val = 1.0  # nominal value of parameter
 
 # # Finite Difference
-# h = 1e-8  # step size
-# dfdx_fd = (f(val + h) - f(val)) / h
-# print('dfdx_fd = ', dfdx_fd)
+h = 1e-8  # step size
+dfdx_fd = (f(val + h) - f(val)) / h
+print('dfdx_fd = ', dfdx_fd)
 
 # Autograd
 dfdx_ag = grad(f)(val)

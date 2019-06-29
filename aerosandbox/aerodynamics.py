@@ -186,7 +186,7 @@ class vlm1(AeroProblem):
                 # Index 2: xyz
                 section_normals = (
                         np.expand_dims(xsec_normals, axis=1) * (
-                            1 - np.reshape(nondim_spanwise_colocation_coordinates, (1, -1, 1)))
+                        1 - np.reshape(nondim_spanwise_colocation_coordinates, (1, -1, 1)))
                         + np.expand_dims(next_xsec_normals, axis=1) * np.reshape(nondim_spanwise_colocation_coordinates,
                                                                                  (1, -1, 1))
                 )
@@ -370,7 +370,7 @@ class vlm1(AeroProblem):
         self.Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Ftotal_geometry
         # if self.verbose: print("Total aerodynamic forces (wind axes):", self.Ftotal_wind)
 
-        self.Mtotal_geometry = np.sum(np.cross(self.vortex_centers - self.airplane.xyz_ref, self.Fi_geometry),axis=0)
+        self.Mtotal_geometry = np.sum(np.cross(self.vortex_centers - self.airplane.xyz_ref, self.Fi_geometry), axis=0)
         self.Mtotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Mtotal_geometry
 
         # Calculate nondimensional forces
@@ -753,11 +753,16 @@ class vlm2(AeroProblem):
     #   # calculate_Vij() is parallelized
     #   # Vortex lattice follows the mean camber line for higher accuracy (control deflections are still done by rotating normals)
 
-    def run(self, verbose = True):
+    def run(self, verbose=True):
         self.verbose = verbose
 
         if self.verbose: print("Running VLM2 calculation...")
+        self.check_geometry()
         self.setup_geometry()
+
+    def check_geometry(self):
+        # Make sure things are sensible
+        pass  # TODO make this function
 
     def setup_geometry(self):
 
@@ -771,28 +776,90 @@ class vlm2(AeroProblem):
             # # wing_normal_directions: M x N x 3; normal direction of each panel
 
             # Define number of chordwise points
-            n_chordwise_coordinates = wing.chordwise_panels + 1
+            n_chordwise_coordinates = wing.vlm_chordwise_panels + 1
 
             # Get the chordwise coordinates
-            if wing.chordwise_spacing == 'uniform':
+            if wing.vlm_chordwise_spacing == 'uniform':
                 nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
-            elif wing.chordwise_spacing == 'cosine':
+            elif wing.vlm_chordwise_spacing == 'cosine':
                 nondim_chordwise_coordinates = cosspace(0, 1, n_chordwise_coordinates)
             else:
                 raise Exception("Bad value of wing.chordwise_spacing!")
 
-            # Go throu
+            # Get corners of xsecs
+            xsec_xyz_le = np.empty((0, 3))  # Nx3 array of leading edge points
+            xsec_xyz_te = np.empty((0, 3))  # Nx3 array of trailing edge points
+            for xsec in wing.xsecs:
+                xsec_xyz_le = np.vstack((xsec_xyz_le, xsec.xyz_le + wing.xyz_le))
+                xsec_xyz_te = np.vstack((xsec_xyz_te, xsec.xyz_te() + wing.xyz_le))
 
+            # Get quarter-chord vector
+            xsec_xyz_quarter_chords = 0.75 * xsec_xyz_le + 0.25 * xsec_xyz_te  # Nx3 array of quarter-chord points
+            section_quarter_chords = (
+                    xsec_xyz_quarter_chords[1:, :] -
+                    xsec_xyz_quarter_chords[:-1, :]
+            )  # Nx3 array of vectors connecting quarter-chords
 
+            # -----------------------------------------------------
+            ## Get directions for transforming 2D airfoil data to 3D
+            # First, project quarter chords onto YZ plane and normalize.
+            section_quarter_chords_proj = (section_quarter_chords[:, 1:] /
+                                           np.expand_dims(np.linalg.norm(section_quarter_chords[:, 1:], axis=1), axis=1)
+                                           )  # Nx2 array of quarter-chord vectors projected onto YZ plane
+            section_quarter_chords_proj = np.hstack(
+                (np.zeros((section_quarter_chords_proj.shape[0], 1)), section_quarter_chords_proj)
+            )  # Convert back to a Nx3 array, since that's what we'll need later.
+            # Then, construct the normal directions for each xsec.
+            if len(wing.xsecs) > 2:  # Make normals for the inner xsecs, where we need to merge directions
+                xsec_local_normal_inners = section_quarter_chords_proj[:-1, :] + section_quarter_chords_proj[1:, :]
+                xsec_local_normal_inners = (xsec_local_normal_inners /
+                                            np.expand_dims(np.linalg.norm(xsec_local_normal_inners, axis=1), axis=1)
+                                            )
+                xsec_local_normal = np.vstack((
+                    section_quarter_chords_proj[0, :],
+                    xsec_local_normal_inners,
+                    section_quarter_chords_proj[-1, :]
+                ))
+            else:
+                xsec_local_normal = np.vstack((
+                    section_quarter_chords_proj[0, :],
+                    section_quarter_chords_proj[-1, :]
+                ))
+            # xsec_local_normal is now a Nx3 vector that represents the normal direction at each xsec.
+            # Then, construct the back directions for each xsec.
+            xsec_local_back = np.tile(np.array([1, 0, 0]), reps=[xsec_local_normal.shape[0], 1])
+            # Then, construct the up direction for each xsec.
+            xsec_local_up = np.cross(xsec_local_back, xsec_local_normal, axis=1)
 
+            # # Direction debugging
+            # print(xsec_local_normal)
+            # print(xsec_local_up)
+            # print(xsec_local_back)
+            # print("-----------")
 
-
-
-
-
+            # -----------------------------------------------------
+            # Get the coordinates of each xsec
 
     # def test(self): # TODO delete once VLM2 is working
     #     self.test_var = self.op_point.alpha * 2 + self.airplane.xyz_ref[1] * 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #
 # class Panel:

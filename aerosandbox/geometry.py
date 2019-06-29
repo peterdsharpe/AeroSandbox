@@ -287,7 +287,7 @@ class WingXSec:
     def __init__(self,
                  xyz_le=[0, 0, 0],
                  chord=0,
-                 twist=0,
+                 twist=0, # Twist is defined as about the leading edge!
                  airfoil=None,
                  control_surface_type=None,
                  control_surface_deflection=0,
