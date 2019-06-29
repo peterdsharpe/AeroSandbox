@@ -18,7 +18,7 @@ There are several easy ways to get started with AeroSandbox! (Assuming you alrea
 
 There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm1_conventional.py".
 
-## Dependencies
+### Dependencies
 
 The fastest way to ensure that all dependencies are satisfied is by simply running "pip install AeroSandbox" in your command prompt. However, you can also install dependencies on your own if you'd like. You'll need the following libraries:
 * numpy
