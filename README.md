@@ -4,6 +4,8 @@ by [Peter Sharpe](https://peterdsharpe.github.io)
 ## About
 AeroSandbox is a Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, and aircraft design optimization. 
 
+![VLM1 Image](media/images/vlm1.png)
+
 ## Getting Started
 
 There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).)
@@ -16,20 +18,19 @@ There are several easy ways to get started with AeroSandbox! (Assuming you alrea
 
 There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm1_conventional.py".
 
-### Illustrations
-Vortex lattice results, colored by pressure difference and including streamlines. Calculation timed at 350 ms on an Intel i7-8750H.
+## Dependencies
 
-![VLM1 Image](media/images/vlm1.png)
-
-Visualization of computational grid:
-
-![VLM1 Grid Image](media/images/vlm1_grid.png)
+The fastest way to ensure that all dependencies are satisfied is by simply running "pip install AeroSandbox" in your command prompt. However, you can also install dependencies on your own if you'd like. You'll need the following libraries:
+* numpy
+* scipy
+* matplotlib
+* numba
+* autograd
+* pyvista
 
 ### Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
-
-
 
 ### Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
