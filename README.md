@@ -1,4 +1,4 @@
-![AeroSandbox by Peter Sharpe](media/images/asb-logo-light.png)
+<img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="500"/>
 
 ## About
 AeroSandbox is a Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, and aircraft design optimization. 
