@@ -222,8 +222,8 @@ class Wing:
         self.xyz_le = np.array(xyz_le)
         self.sections = sections
         self.symmetric = symmetric
-        self.chordwise_panels = vlm_chordwise_panels
-        self.chordwise_spacing = vlm_chordwise_spacing
+        self.vlm_chordwise_panels = vlm_chordwise_panels
+        self.vlm_chordwise_spacing = vlm_chordwise_spacing
 
     def area_wetted(self):
         # Returns the wetted area of a wing.
@@ -300,8 +300,8 @@ class WingSection:
         self.airfoil = airfoil
         self.control_surface_type = control_surface_type
         self.control_surface_deflection = control_surface_deflection
-        self.spanwise_panels = vlm_spanwise_panels
-        self.spanwise_spacing = vlm_spanwise_spacing
+        self.vlm_spanwise_panels = vlm_spanwise_panels
+        self.vlm_spanwise_spacing = vlm_spanwise_spacing
 
     def xyz_te(self):
         xyz_te = self.xyz_le + self.chord * np.array(

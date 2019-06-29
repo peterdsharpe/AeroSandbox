@@ -75,15 +75,15 @@ class vlm1(AeroProblem):
         for wing in self.airplane.wings:
 
             # Define number of chordwise points
-            n_chordwise_coordinates = wing.chordwise_panels + 1
+            n_chordwise_coordinates = wing.vlm_chordwise_panels + 1
 
             # Get the chordwise coordinates
-            if wing.chordwise_spacing == 'uniform':
+            if wing.vlm_chordwise_spacing == 'uniform':
                 nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
-            elif wing.chordwise_spacing == 'cosine':
+            elif wing.vlm_chordwise_spacing == 'cosine':
                 nondim_chordwise_coordinates = cosspace(n_points=n_chordwise_coordinates)
             else:
-                raise Exception("Bad value of wing.chordwise_spacing!")
+                raise Exception("Bad value of wing.vlm_chordwise_spacing!")
 
             # Initialize an array of coordinates. Indices:
             #   Index 1: chordwise location
@@ -95,7 +95,7 @@ class vlm1(AeroProblem):
             #   Index 1: chordwise location
             #   Index 2: spanwise location
             #   Index 3: X, Y, or Z.
-            wing_normals = np.empty((wing.chordwise_panels, 0, 3))
+            wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
 
             for section_num in range(len(wing.sections) - 1):
 
@@ -104,15 +104,15 @@ class vlm1(AeroProblem):
                 next_xsec = wing.sections[section_num + 1]
 
                 # Define number of spanwise points
-                n_spanwise_coordinates = xsec.spanwise_panels + 1
+                n_spanwise_coordinates = xsec.vlm_spanwise_panels + 1
 
                 # Get the spanwise coordinates
-                if xsec.spanwise_spacing == 'uniform':
+                if xsec.vlm_spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif xsec.spanwise_spacing == 'cosine':
+                elif xsec.vlm_spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad value of section.spanwise_spacing!")
+                    raise Exception("Bad value of section.vlm_spanwise_spacing!")
 
                 # Get the corners of the WingSection
                 xsec_xyz_le = xsec.xyz_le + wing.xyz_le
@@ -756,12 +756,43 @@ class vlm2(AeroProblem):
     # Notable improvements over VLM1:
     #   # Specifically written to be autograd-compatible at every step
     #   # Takes advantage of the connectivity of the vortex lattice to speed up calculate_Vij() by almost exactly 2x
-    #   # Vortex lattice follows the mean camber line (control deflections are still done by rotating normals)
+    #   # Vortex lattice follows the mean camber line for higher accuracy (control deflections are still done by rotating normals)
     def run(self, verbose = True):
         self.verbose = verbose
 
         if self.verbose: print("Running VLM2 calculation...")
         self.setup_geometry()
+
+    def setup_geometry(self):
+
+        if self.verbose: print("Making panels...")
+
+        for wing in self.airplane.wings:
+            # Things we want for each wing (where M is the number of chordwise panels, N is the number of spanwise panels)
+            # # wing_coordinates: M+1 x N+1 x 3; corners of every panel.
+            # # wing_vortex_vertices: M x N+1 x 3; endpoints of every bound vortex.
+            # # wing_colocation_points: M x N x 3; every colocation point.
+            # # wing_normal_directions: M x N x 3; normal direction of each panel
+
+            # Define number of chordwise points
+            n_chordwise_coordinates = wing.chordwise_panels + 1
+
+            # Get the chordwise coordinates
+            if wing.chordwise_spacing == 'uniform':
+                nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
+            elif wing.chordwise_spacing == 'cosine':
+                nondim_chordwise_coordinates = cosspace(n_points=n_chordwise_coordinates)
+            else:
+                raise Exception("Bad value of wing.chordwise_spacing!")
+
+
+
+
+
+
+
+
+
 
     # def test(self): # TODO delete once VLM2 is working
     #     self.test_var = self.op_point.alpha * 2 + self.airplane.xyz_ref[1] * 2
