@@ -11,15 +11,15 @@ a = Airplane(
                 xyz_le=[0, 0, 0],
                 symmetric=True,
                 vlm_chordwise_panels=13,
-                sections=[
-                    WingSection(  # Root
+                xsecs=[
+                    WingXSec(  # Root
                         xyz_le=[0, 0, 0],
                         chord=0.18,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
                         vlm_spanwise_panels=19,
                     ),
-                    WingSection(  # Tip
+                    WingXSec(  # Tip
                         xyz_le=[0.07, 1, 0],
                         chord=0.11,
                         twist=0,
@@ -32,15 +32,15 @@ a = Airplane(
                 xyz_le=[0.6, 0, 0.1],
                 symmetric=True,
                 vlm_chordwise_panels=7,
-                sections=[
-                    WingSection(  # root
+                xsecs=[
+                    WingXSec(  # root
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
                         vlm_spanwise_panels=7,
                     ),
-                    WingSection(  # tip
+                    WingXSec(  # tip
                         xyz_le=[0.02, 0.17, 0],
                         chord=0.08,
                         twist=0,
@@ -53,15 +53,15 @@ a = Airplane(
                 xyz_le=[0.65, 0, 0.1],
                 symmetric=False,
                 vlm_chordwise_panels=7,
-                sections=[
-                    WingSection(
+                xsecs=[
+                    WingXSec(
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
                         vlm_spanwise_panels=7,
                     ),
-                    WingSection(
+                    WingXSec(
                         xyz_le=[0.04, 0, 0.12],
                         chord=0.06,
                         twist=0,

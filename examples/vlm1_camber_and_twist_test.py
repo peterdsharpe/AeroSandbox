@@ -8,14 +8,14 @@ p = Airplane(
             name="Wing",
             xyz_le=[0, 0, 0],
             symmetric=True,
-            sections=[
-                WingSection(
+            xsecs=[
+                WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=0.5,
                     twist=0,
                     airfoil=Airfoil(name="naca9412")
                 ),
-                WingSection(
+                WingXSec(
                     xyz_le=[0, 1, 0],
                     chord=0.5,
                     twist=-5,

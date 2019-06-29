@@ -97,11 +97,11 @@ class vlm1(AeroProblem):
             #   Index 3: X, Y, or Z.
             wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
 
-            for section_num in range(len(wing.sections) - 1):
+            for XSec_number in range(len(wing.xsecs) - 1):
 
-                # Define the relevant cross sections (XSecs)
-                xsec = wing.sections[section_num]
-                next_xsec = wing.sections[section_num + 1]
+                # Define the relevant cross sections (xsecs)
+                xsec = wing.xsecs[XSec_number]
+                next_xsec = wing.xsecs[XSec_number + 1]
 
                 # Define number of spanwise points
                 n_spanwise_coordinates = xsec.vlm_spanwise_panels + 1
@@ -114,7 +114,7 @@ class vlm1(AeroProblem):
                 else:
                     raise Exception("Bad value of section.vlm_spanwise_spacing!")
 
-                # Get the corners of the WingSection
+                # Get the corners of the WingXSec
                 xsec_xyz_le = xsec.xyz_le + wing.xyz_le
                 xsec_xyz_te = xsec.xyz_te() + wing.xyz_le
                 next_xsec_xyz_le = next_xsec.xyz_le + wing.xyz_le
@@ -139,19 +139,13 @@ class vlm1(AeroProblem):
 
                         section_coordinates[chordwise_coordinate_num, spanwise_coordinate_num, :] = local_coordinate
 
-                is_last_section = section_num == len(wing.sections) - 2
+                is_last_section = XSec_number == len(wing.xsecs) - 2
                 if not is_last_section:
                     section_coordinates = section_coordinates[:, :-1, :]
 
                 wing_coordinates = np.concatenate((wing_coordinates, section_coordinates), axis=1)
 
-                # diag1 = back_outboard_vertices - front_inboard_vertices
-                # diag2 = back_inboard_vertices - front_outboard_vertices
-                # cross = np.cross(diag1, diag2, axis=2)
-                # normal_directions = cross / np.expand_dims(np.linalg.norm(cross, axis=2),
-                #                                            axis=2)  # TODO add in proper normal direction handling
-
-                # Calculate the WingSection's normal directions
+                # Calculate the WingXSec's normal directions
                 xsec_chord_vector = xsec_xyz_te - xsec_xyz_le  # vector of the chordline of this section
                 next_xsec_chord_vector = next_xsec_xyz_te - next_xsec_xyz_le  # vector of the chordline of the next section
                 quarter_chord_vector = (
@@ -751,12 +745,14 @@ class vlm1(AeroProblem):
 
 
 class vlm2(AeroProblem):
-    # Vortex lattice method written from the ground up with lessons learned from writing vlm1.
+    # Vortex lattice method written from the ground up with lessons learned from writing VLM1.
     # Should eventually eclipse VLM1 in performance and render it obsolete.
     # Notable improvements over VLM1:
     #   # Specifically written to be autograd-compatible at every step
     #   # Takes advantage of the connectivity of the vortex lattice to speed up calculate_Vij() by almost exactly 2x
+    #   # calculate_Vij() is parallelized
     #   # Vortex lattice follows the mean camber line for higher accuracy (control deflections are still done by rotating normals)
+
     def run(self, verbose = True):
         self.verbose = verbose
 
@@ -781,10 +777,11 @@ class vlm2(AeroProblem):
             if wing.chordwise_spacing == 'uniform':
                 nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
             elif wing.chordwise_spacing == 'cosine':
-                nondim_chordwise_coordinates = cosspace(n_points=n_chordwise_coordinates)
+                nondim_chordwise_coordinates = cosspace(0, 1, n_chordwise_coordinates)
             else:
                 raise Exception("Bad value of wing.chordwise_spacing!")
 
+            # Go throu
 
 
 

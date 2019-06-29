@@ -8,20 +8,20 @@ a = Airplane(
                 name="Main Wing",
                 xyz_le=[0, 0, 0],
                 symmetric=True,
-                sections=[
-                    WingSection(  # Root
+                xsecs=[
+                    WingXSec(  # Root
                         xyz_le=[0, 0, 0],
                         chord=0.18,
                         twist=2,
                         airfoil=Airfoil(name="naca4412")
                     ),
-                    WingSection(  # Mid
+                    WingXSec(  # Mid
                         xyz_le=[0.01, 0.5, 0],
                         chord=0.16,
                         twist=0,
                         airfoil=Airfoil(name="naca4412")
                     ),
-                    WingSection(  # Tip
+                    WingXSec(  # Tip
                         xyz_le=[0.08, 1, 0.1],
                         chord=0.08,
                         twist=-2,
@@ -33,14 +33,14 @@ a = Airplane(
                 name="Horizontal Stabilizer",
                 xyz_le=[0.6, 0, 0.1],
                 symmetric=True,
-                sections=[
-                    WingSection(  # root
+                xsecs=[
+                    WingXSec(  # root
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=-10,
                         airfoil=Airfoil(name="naca0012")
                     ),
-                    WingSection(  # tip
+                    WingXSec(  # tip
                         xyz_le=[0.02, 0.17, 0],
                         chord=0.08,
                         twist=-10,
@@ -52,14 +52,14 @@ a = Airplane(
                 name="Vertical Stabilizer",
                 xyz_le=[0.6, 0, 0.15],
                 symmetric=False,
-                sections=[
-                    WingSection(
+                xsecs=[
+                    WingXSec(
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
                         airfoil=Airfoil(name="naca0012")
                     ),
-                    WingSection(
+                    WingXSec(
                         xyz_le=[0.04, 0, 0.15],
                         chord=0.06,
                         twist=0,

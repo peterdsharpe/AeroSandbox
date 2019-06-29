@@ -211,8 +211,8 @@ class Wing:
     # If the wing is not symmetric across the XZ plane, just define the wing.
     def __init__(self,
                  name="Untitled Wing",  # It can help when debugging to give each wing a sensible name.
-                 xyz_le=[0, 0, 0],  # Will translate all of the sections of the wing. Useful for moving the wing around.
-                 sections=[],  # This should be a list of WingSection objects.
+                 xyz_le=[0, 0, 0],  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
+                 xsecs=[],  # This should be a list of WingXSec objects.
                  symmetric=False,  # Is the wing symmetric across the XZ plane?
                  vlm_chordwise_panels=10,
                  # Number of chordwise panels used in VLM analysis. Turn this up if you have control surfaces or airfoils with high camberline curvature.
@@ -220,7 +220,7 @@ class Wing:
                  ):
         self.name = name
         self.xyz_le = np.array(xyz_le)
-        self.sections = sections
+        self.xsecs = xsecs
         self.symmetric = symmetric
         self.vlm_chordwise_panels = vlm_chordwise_panels
         self.vlm_chordwise_spacing = vlm_chordwise_spacing
@@ -228,14 +228,14 @@ class Wing:
     def area_wetted(self):
         # Returns the wetted area of a wing.
         area = 0
-        for i in range(len(self.sections) - 1):
-            chord_eff = (self.sections[i].chord
-                         + self.sections[i + 1].chord) / 2
-            this_xyz_te = self.sections[i].xyz_te()
-            that_xyz_te = self.sections[i + 1].xyz_te()
+        for i in range(len(self.xsecs) - 1):
+            chord_eff = (self.xsecs[i].chord
+                         + self.xsecs[i + 1].chord) / 2
+            this_xyz_te = self.xsecs[i].xyz_te()
+            that_xyz_te = self.xsecs[i + 1].xyz_te()
             span_le_eff = np.sqrt(
-                np.square(self.sections[i].xyz_le[1] - self.sections[i + 1].xyz_le[1]) +
-                np.square(self.sections[i].xyz_le[2] - self.sections[i + 1].xyz_le[2])
+                np.square(self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) +
+                np.square(self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2])
             )
             span_te_eff = np.sqrt(
                 np.square(this_xyz_te[1] - that_xyz_te[1]) +
@@ -250,13 +250,13 @@ class Wing:
     def area_projected(self):
         # Returns the area of the wing as projected onto the XY plane.
         area = 0
-        for i in range(len(self.sections) - 1):
-            chord_eff = (self.sections[i].chord
-                         + self.sections[i + 1].chord) / 2
-            this_xyz_te = self.sections[i].xyz_te()
-            that_xyz_te = self.sections[i + 1].xyz_te()
+        for i in range(len(self.xsecs) - 1):
+            chord_eff = (self.xsecs[i].chord
+                         + self.xsecs[i + 1].chord) / 2
+            this_xyz_te = self.xsecs[i].xyz_te()
+            that_xyz_te = self.xsecs[i + 1].xyz_te()
             span_le_eff = np.abs(
-                self.sections[i].xyz_le[1] - self.sections[i + 1].xyz_le[1]
+                self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]
             )
             span_te_eff = np.abs(
                 this_xyz_te[1] - that_xyz_te[1]
@@ -271,8 +271,8 @@ class Wing:
         # Returns the span (y-distance between the root of the wing and the tip).
         # If symmetric, this is doubled to obtain the full span.
         spans = []
-        for i in range(len(self.sections)):
-            spans.append(np.abs(self.sections[i].xyz_le[1] - self.sections[0].xyz_le[1]))
+        for i in range(len(self.xsecs)):
+            spans.append(np.abs(self.xsecs[i].xyz_le[1] - self.xsecs[0].xyz_le[1]))
         span = np.max(spans)
         if self.symmetric:
             span *= 2
@@ -282,7 +282,7 @@ class Wing:
         return self.span() ** 2 / self.area_wetted()
 
 
-class WingSection:
+class WingXSec:
 
     def __init__(self,
                  xyz_le=[0, 0, 0],
