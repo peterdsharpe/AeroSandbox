@@ -19,11 +19,11 @@ There are many example cases you can try out in the /TestCases/ directory! Speci
 ### Illustrations
 Vortex lattice results, colored by pressure difference and including streamlines. Calculation timed at 350 ms on an Intel i7-8750H.
 
-![AeroSandbox VLM](Media/Illustrations/Pressures.png)
+![AeroSandbox VLM](media/images/vlm1.png)
 
 Visualization of computational grid:
 
-![AeroSandbox Illustration](Media/Illustrations/Grid.png)
+![AeroSandbox Illustration](media/images/vlm1_grid.png)
 
 ### Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
