@@ -2,7 +2,7 @@ from aerosandbox import *
 
 a = Airplane(
         name="Conventional",
-        xyz_ref=[0.05, 0, 0],
+        xyz_ref=[0.0, 0, 0],
         wings=[
             Wing(
                 name="Main Wing",
