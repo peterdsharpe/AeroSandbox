@@ -245,14 +245,14 @@ class vlm1(AeroProblem):
             is_trailing_edge = np.hstack((is_trailing_edge, is_trailing_edge_this_wing))
 
             if wing.symmetric:
-                reflect_over_XZ_plane(inboard_vortex_points)
-                reflect_over_XZ_plane(outboard_vortex_points)
-                reflect_over_XZ_plane(colocation_points)
-                reflect_over_XZ_plane(wing_normals)
-                reflect_over_XZ_plane(front_inboard_vertices)
-                reflect_over_XZ_plane(front_outboard_vertices)
-                reflect_over_XZ_plane(back_inboard_vertices)
-                reflect_over_XZ_plane(back_outboard_vertices)
+                inboard_vortex_points = reflect_over_XZ_plane(inboard_vortex_points)
+                outboard_vortex_points = reflect_over_XZ_plane(outboard_vortex_points)
+                colocation_points = reflect_over_XZ_plane(colocation_points)
+                wing_normals = reflect_over_XZ_plane(wing_normals)
+                front_inboard_vertices = reflect_over_XZ_plane(front_inboard_vertices)
+                front_outboard_vertices = reflect_over_XZ_plane(front_outboard_vertices)
+                back_inboard_vertices = reflect_over_XZ_plane(back_inboard_vertices)
+                back_outboard_vertices = reflect_over_XZ_plane(back_outboard_vertices)
 
                 c = np.vstack((c, colocation_points))
                 n = np.vstack((n, wing_normals))
