@@ -1,4 +1,4 @@
-from AeroSandbox import *
+from aerosandbox import *
 
 o = OperatingPoint(
     density = 1.225,

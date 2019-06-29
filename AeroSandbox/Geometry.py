@@ -2,7 +2,7 @@ import autograd.numpy as np
 import scipy.interpolate as sp_interp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from .Plotting import *
+from .plotting import *
 import pyvista as pv
 import copy
 
@@ -10,12 +10,14 @@ import copy
 class Airplane:
     # Definition for an airplane.
     def __init__(self,
-                 name="Untitled Airplane", # A sensible name for your airplane.
-                 xyz_ref=[0.0, 0.0, 0.0], # Location about which moments and stability derivatives are calculated; should be the center of gravity.
-                 wings=[], # A list of Wing objects.
-                 s_ref=1.0, # You can set these manually, or you can call Airplane.set_ref_dims_from_wing() after setting up the Aircraft object to populate these fields.
-                 c_ref=1.0, # See above
-                 b_ref=1.0, # See above
+                 name="Untitled Airplane",  # A sensible name for your airplane.
+                 xyz_ref=[0.0, 0.0, 0.0],
+                 # Location about which moments and stability derivatives are calculated; should be the center of gravity.
+                 wings=[],  # A list of Wing objects.
+                 s_ref=1.0,
+                 # You can set these manually, or you can call Airplane.set_ref_dims_from_wing() after setting up the Aircraft object to populate these fields.
+                 c_ref=1.0,  # See above
+                 b_ref=1.0,  # See above
                  ):
         self.name = name
         self.xyz_ref = np.array(xyz_ref)
@@ -208,12 +210,13 @@ class Wing:
     # If the wing is symmetric across the XZ plane, just define the right half, and be sure to supply "symmetric = True" in the constructor.
     # If the wing is not symmetric across the XZ plane, just define the wing.
     def __init__(self,
-                 name="Untitled Wing", # It can help when debugging to give each wing a sensible name.
-                 xyz_le=[0, 0, 0], # Will translate all of the sections of the wing. Useful for moving the wing around.
-                 sections=[], # This should be a list of WingSection objects.
-                 symmetric=False, # Is the wing symmetric across the XZ plane?
-                 vlm_chordwise_panels=10, # Number of chordwise panels used in VLM analysis. Turn this up if you have control surfaces or airfoils with high camberline curvature.
-                 vlm_chordwise_spacing="cosine", # Can be 'cosine' or 'uniform'.
+                 name="Untitled Wing",  # It can help when debugging to give each wing a sensible name.
+                 xyz_le=[0, 0, 0],  # Will translate all of the sections of the wing. Useful for moving the wing around.
+                 sections=[],  # This should be a list of WingSection objects.
+                 symmetric=False,  # Is the wing symmetric across the XZ plane?
+                 vlm_chordwise_panels=10,
+                 # Number of chordwise panels used in VLM analysis. Turn this up if you have control surfaces or airfoils with high camberline curvature.
+                 vlm_chordwise_spacing="cosine",  # Can be 'cosine' or 'uniform'.
                  ):
         self.name = name
         self.xyz_le = np.array(xyz_le)
@@ -285,7 +288,9 @@ class WingSection:
                  xyz_le=[0, 0, 0],
                  chord=0,
                  twist=0,
-                 airfoil=[],
+                 airfoil=None,
+                 control_surface_type=None,
+                 control_surface_deflection=0,
                  vlm_spanwise_panels=10,
                  vlm_spanwise_spacing="cosine"
                  ):
@@ -293,6 +298,8 @@ class WingSection:
         self.chord = chord
         self.twist = twist
         self.airfoil = airfoil
+        self.control_surface_type = control_surface_type
+        self.control_surface_deflection = control_surface_deflection
         self.spanwise_panels = vlm_spanwise_panels
         self.spanwise_spacing = vlm_spanwise_spacing
 
@@ -304,7 +311,6 @@ class WingSection:
              ])
 
         return xyz_te
-
 
 
 class Airfoil:
@@ -321,7 +327,7 @@ class Airfoil:
             self.coordinates = coordinates
         else:
             self.populate_coordinates()  # populates self.coordinates
-        assert hasattr(self,'coordinates'), "Couldn't figure out the coordinates of this airfoil! You need to either \
+        assert hasattr(self, 'coordinates'), "Couldn't figure out the coordinates of this airfoil! You need to either \
         a) use a name corresponding to an airfoil in the UIUC Airfoil Database or \
         b) provide your own coordinates in the constructor, such as Airfoil(""MyFoilName"", <Nx2 array of coordinates>)."
 
@@ -548,13 +554,13 @@ class Airfoil:
         cambers_incremented = self.get_camber_at_chord_fraction(chord_fraction + epsilon)
         dydx = (cambers_incremented - cambers) / epsilon
 
-        if dydx.shape==1: # single point
+        if dydx.shape == 1:  # single point
             normal = np.hstack((-dydx, 1))
             normal /= np.linalg.norm(normal)
             return normal
-        else: # multiple points vectorized
+        else:  # multiple points vectorized
             normal = np.column_stack((-dydx, np.ones(dydx.shape)))
-            normal /= np.expand_dims(np.linalg.norm(normal, axis=1), axis=1) # normalize
+            normal /= np.expand_dims(np.linalg.norm(normal, axis=1), axis=1)  # normalize
             return normal
 
     def TE_thickness(self):
@@ -744,19 +750,19 @@ def blend_airfoils(
     foil1 = copy.deepcopy(airfoil1)
     foil2 = copy.deepcopy(airfoil2)
 
-    if blend_fraction==0:
+    if blend_fraction == 0:
         return foil1
-    if blend_fraction==1:
+    if blend_fraction == 1:
         return foil2
-    assert blend_fraction>=0 and blend_fraction<=1, "blend_fraction is out of the valid range of 0 to 1!"
+    assert blend_fraction >= 0 and blend_fraction <= 1, "blend_fraction is out of the valid range of 0 to 1!"
 
     # Repanel to ensure the same number of points and the same point distribution on both airfoils.
     foil1.repanel(n_points_per_side=200)
     foil2.repanel(n_points_per_side=200)
 
-    blended_coordinates = (1-blend_fraction)*foil1.coordinates + blend_fraction * foil2.coordinates
+    blended_coordinates = (1 - blend_fraction) * foil1.coordinates + blend_fraction * foil2.coordinates
 
-    new_airfoil = Airfoil(name="Blended Airfoils", coordinates = blended_coordinates)
+    new_airfoil = Airfoil(name="Blended Airfoils", coordinates=blended_coordinates)
 
     return new_airfoil
 
@@ -765,10 +771,12 @@ def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
     output_vector = input_vector
     shape = np.shape(output_vector)
-    if len(shape) == 1 and shape[0] == 3:
-        output_vector[1] *= -1
-    elif len(shape) == 2 and shape[1] == 3:
-        output_vector[:, 1] *= -1
+    if len(shape) == 1 and shape[0] == 3: # Vector of 3 items
+        output_vector = output_vector * np.array([1, -1, 1])
+    elif len(shape) == 2 and shape[1] == 3: # 2D Nx3 vector
+        output_vector = output_vector * np.array([1, -1, 1])
+    elif len(shape) == 3 and shape[2] == 3: # 3D MxNx3 vector
+        output_vector = output_vector * np.array([1, -1, 1])
     else:
         raise Exception("Invalid input for reflect_over_XZ_plane!")
 

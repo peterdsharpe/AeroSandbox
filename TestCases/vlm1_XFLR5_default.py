@@ -1,4 +1,4 @@
-from AeroSandbox import *
+from aerosandbox import *
 
 # Slightly modified from original geometry by moving both the horizontal tail and vertical stabilizer up 0.1m. This was to ensure that there was no wake interference from the main wing. This has been reflected in the associated .xfl file.
 

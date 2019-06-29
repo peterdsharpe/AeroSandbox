@@ -5,9 +5,9 @@ from numba import jit
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import sys
-from .Plotting import *
-from .Geometry import *
-from .Performance import *
+from .plotting import *
+from .geometry import *
+from .performance import *
 
 import cProfile
 import functools
@@ -373,11 +373,15 @@ class vlm1(AeroProblem):
         self.Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Ftotal_geometry
         if self.verbose: print("Total aerodynamic forces (wind axes):", self.Ftotal_wind)
 
+        # Calculate total moments
+
         # Calculate nondimensional forces
         qS = self.op_point.dynamic_pressure() * self.airplane.s_ref
         self.CL = -self.Ftotal_wind[2] / qS
         self.CDi = -self.Ftotal_wind[0] / qS
         self.CY = self.Ftotal_wind[1] / qS
+
+        # Calculate nondimensional moments
 
         # Solves divide by zero error
         if self.CDi == 0:

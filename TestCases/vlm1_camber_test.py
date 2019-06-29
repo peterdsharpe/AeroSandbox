@@ -1,4 +1,4 @@
-from AeroSandbox import *
+from aerosandbox import *
 
 p = Airplane(
     name="Single Wing",

@@ -1,4 +1,4 @@
-from AeroSandbox import *
+from aerosandbox import *
 from autograd import grad, elementwise_grad
 
 
