@@ -1,5 +1,4 @@
 ![AeroSandbox by Peter Sharpe](media/images/asb-logo-light.png)
-[AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) by [Peter Sharpe](https://peterdsharpe.github.io)
 
 ## About
 AeroSandbox is a Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, and aircraft design optimization. 
@@ -119,3 +118,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+### Other Links
+[AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) 
+[Peter Sharpe](https://peterdsharpe.github.io)
