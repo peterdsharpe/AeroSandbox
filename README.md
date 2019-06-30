@@ -1,4 +1,4 @@
-<img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="500"/>
+<img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="500" align="middle">
 
 [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) by [Peter Sharpe](https://peterdsharpe.github.io)
 
