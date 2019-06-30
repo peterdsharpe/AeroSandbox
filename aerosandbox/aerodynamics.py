@@ -766,14 +766,18 @@ class vlm2(AeroProblem):
 
     def setup_geometry(self):
 
-        if self.verbose: print("Making panels...")
+        if self.verbose: print("Meshing...")
 
-        for wing in self.airplane.wings:
+        self.wing_mcl_coordinates = [] # List of numpy arrays
+        self.wing_normals = [] # List of numpy arrays
+
+        for wing_num in range(len(self.airplane.wings)):
             # Things we want for each wing (where M is the number of chordwise panels, N is the number of spanwise panels)
-            # # wing_coordinates: M+1 x N+1 x 3; corners of every panel.
-            # # wing_vortex_vertices: M x N+1 x 3; endpoints of every bound vortex.
-            # # wing_colocation_points: M x N x 3; every colocation point.
-            # # wing_normal_directions: M x N x 3; normal direction of each panel
+            # # wing_mcl_coordinates: M+1 x N+1 x 3; corners of every panel.
+            # # wing_normals: M x N x 3; normal direction of each panel
+
+            # Get the wing
+            wing = self.airplane.wings[wing_num]
 
             # Define number of chordwise points
             n_chordwise_coordinates = wing.vlm_chordwise_panels + 1
@@ -896,14 +900,18 @@ class vlm2(AeroProblem):
                     xsec_mcl_coordinates[:, section_num, :], 1) +
                         np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
                     xsec_mcl_coordinates[:, section_num + 1, :], 1)
-                )
+                )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
                 wing_mcl_coordinates = np.hstack((wing_mcl_coordinates, section_mcl_coordinates))
 
-            wing.mcl_coordinates = wing_mcl_coordinates
+            # -----------------------------------------------------
+            ## Append mean camber line data to vlm2 data list
+            self.wing_mcl_coordinates.append(wing_mcl_coordinates)
+            if wing.symmetric:
+                self.wing_mcl_coordinates.append(reflect_over_XZ_plane(wing_mcl_coordinates))
 
             # -----------------------------------------------------
-            # Get the normal directions of each xsec's airfoil in global coordinates
-            # Goal: create xsec_normals, a MxNx3 array of the normal direction of each xsec.
+            ## Get the normal directions of each xsec's airfoil in nondimensional coordinates
+            # Goal: create nondim_xsec_normals, a MxNx2 array of the normal direction of each xsec.
             # First index is chordwise point number, second index is xsec number, and third index is xyz.
 
             nondim_xsec_normals = np.empty(
@@ -916,8 +924,12 @@ class vlm2(AeroProblem):
                 nondim_normals = np.expand_dims(nondim_normals, 1)
                 nondim_xsec_normals = np.hstack((nondim_xsec_normals, nondim_normals))
 
-            # Now, go section-by-section and make the normals while dimensionalizing them.
-            xsec_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
+            # -----------------------------------------------------
+            ## Now, go section-by-section and make the normals while dimensionalizing them.
+            # Goal: make wing_normals, a MxNx2 array of the normal direction of each panel.
+            # First index is chordwise point number, second index is spanwise point number, and third index is xyz.
+
+            wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
             for section_num in range(len(wing.xsecs) - 1):
                 # Define the relevant cross section
                 xsec = wing.xsecs[section_num]
@@ -938,19 +950,51 @@ class vlm2(AeroProblem):
                 if not is_last_section:
                     nondim_spanwise_coordinates = nondim_spanwise_coordinates[:-1]
 
+                # Get local xsec directions (note: different than xsec_local_back, xsec_local_normal, and xsec_local_up, since these are unaffected by dihedral breaks)
+                inner_xsec_back = xsec_local_back[section_num]
+                outer_xsec_back = xsec_local_back[section_num + 1]
+                section_normal = section_quarter_chords_proj[section_num]
+                inner_xsec_up = np.cross(inner_xsec_back, section_normal)
+                outer_xsec_up = np.cross(outer_xsec_back, section_normal)
 
-                section_mcl_coordinates = (
-                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
-                    xsec_mcl_coordinates[:, section_num, :], 1) +
-                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
-                    xsec_mcl_coordinates[:, section_num + 1, :], 1)
-                )
-                wing_mcl_coordinates = np.hstack((wing_mcl_coordinates, section_mcl_coordinates))
+                # Get xsec normals
+                inner_xsec_normals = (
+                        np.expand_dims(nondim_xsec_normals[:, section_num, 0], 1) * inner_xsec_back +
+                        np.expand_dims(nondim_xsec_normals[:, section_num, 1], 1) * inner_xsec_up
+                )  # Nx3 array, where first index is the chordwise point number and second is xyz
+                outer_xsec_normals = (
+                        np.expand_dims(nondim_xsec_normals[:, section_num + 1, 0], 1) * outer_xsec_back +
+                        np.expand_dims(nondim_xsec_normals[:, section_num + 1, 1], 1) * outer_xsec_up
+                )  # Nx3 array, where first index is the chordwise point number and second is xyz
+
+                # Do control deflections
+                # TODO
+
+                # Interpolate between xsec normals
+                section_normals = (
+                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(inner_xsec_normals, 1) +
+                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(outer_xsec_normals, 1)
+                )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
+
+                # Normalize
+                section_normals = section_normals / np.expand_dims(np.linalg.norm(section_normals, axis=2),
+                                                                   2)  # TODO This step is not necessary if I fix the interpolate step just prior to this
+
+                # Append
+                wing_normals = np.hstack((wing_normals, section_normals))
+
+            # -----------------------------------------------------
+            # Review of the important things that have been done up to this point:
+            # * We made wing_mcl_coordinates, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
+            #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
+            # * We made wing_normals, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
+            #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
+            # TODO: make control deflections
 
 
 
 def test(self):  # TODO delete once VLM2 is working
-        self.testvar = self.op_point.alpha * 2 + self.airplane.xyz_ref[1] * 2
+    self.testvar = self.op_point.alpha * 2 + self.airplane.xyz_ref[1] * 2
 
 #
 

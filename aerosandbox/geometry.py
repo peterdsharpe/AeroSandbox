@@ -141,9 +141,6 @@ class Airplane:
         self.b_ref = main_wing.span()
         self.c_ref = main_wing.area_wetted() / main_wing.span()
 
-        pass
-        # TODO set dims
-
     def set_vlm_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
         # Sets the chordwise and spanwise paneling everywhere to a specified value.
         # Useful for quickly changing the fidelity of your VLM simulation.
@@ -289,8 +286,9 @@ class WingXSec:
                  chord=0,
                  twist=0, # Twist is defined as about the leading edge!
                  airfoil=None,
-                 control_surface_type=None,
-                 control_surface_deflection=0,
+                 control_surface_type="symmetric", # Can be "symmetric" or "asymmetric". Symmetric is like flaps, asymmetric is like an aileron.
+                 control_surface_hinge_point = 0.75, # Point at which the control surface is applied, as a fraction of chord.
+                 control_surface_deflection=0, # Control deflection, in degrees. Downwards-positive.
                  vlm_spanwise_panels=10,
                  vlm_spanwise_spacing="cosine"
                  ):
@@ -299,6 +297,7 @@ class WingXSec:
         self.twist = twist
         self.airfoil = airfoil
         self.control_surface_type = control_surface_type
+        self.control_surface_hinge_point = control_surface_hinge_point
         self.control_surface_deflection = control_surface_deflection
         self.vlm_spanwise_panels = vlm_spanwise_panels
         self.vlm_spanwise_spacing = vlm_spanwise_spacing
@@ -539,7 +538,7 @@ class Airfoil:
         camber = (y_upper + y_lower) / 2
 
         return camber
-        # TODO consider improving this function by caching the interpolation
+        # TODO consider speeding up this function by caching the interpolation
 
     def get_normal_direction_at_chord_fraction(self, chord_fraction):
         # Returns the normal direction at a specified chord fraction.
