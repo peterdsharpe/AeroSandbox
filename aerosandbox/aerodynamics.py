@@ -866,11 +866,12 @@ class vlm2(AeroProblem):
                                     )
 
             # -----------------------------------------------------
-            # Do interpolation between xsecs
-            wing_coordinates = np.empty((n_chordwise_coordinates, 0, 3))  # MxNx3 of all coordinates on the wing.
+            # Interpolate the coordinates between xsecs
+            # Goal is to make wing_mcl_coordinates
+            wing_mcl_coordinates = np.empty((n_chordwise_coordinates, 0, 3))  # MxNx3 of all coordinates on the wing.
             # First index is chordwise point #, second index is spanwise point #, third is xyz.
 
-            for section_num in range(len(wing.xsecs)-1):
+            for section_num in range(len(wing.xsecs) - 1):
                 # Define the relevant cross section
                 xsec = wing.xsecs[section_num]
 
@@ -890,29 +891,68 @@ class vlm2(AeroProblem):
                 if not is_last_section:
                     nondim_spanwise_coordinates = nondim_spanwise_coordinates[:-1]
 
-                section_coordinates = (
-                        np.expand_dims((1-nondim_spanwise_coordinates),2) * np.expand_dims(xsec_mcl_coordinates[:,section_num,:],1) +
-                        np.expand_dims(nondim_spanwise_coordinates,2) * np.expand_dims(xsec_mcl_coordinates[:,section_num+1,:],1)
+                section_mcl_coordinates = (
+                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                    xsec_mcl_coordinates[:, section_num, :], 1) +
+                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
+                    xsec_mcl_coordinates[:, section_num + 1, :], 1)
                 )
-                wing_coordinates = np.hstack((wing_coordinates, section_coordinates))
+                wing_mcl_coordinates = np.hstack((wing_mcl_coordinates, section_mcl_coordinates))
 
-            print(wing_coordinates)
+            wing.mcl_coordinates = wing_mcl_coordinates
+
+            # -----------------------------------------------------
+            # Get the normal directions of each xsec's airfoil in global coordinates
+            # Goal: create xsec_normals, a MxNx3 array of the normal direction of each xsec.
+            # First index is chordwise point number, second index is xsec number, and third index is xyz.
+
+            nondim_xsec_normals = np.empty(
+                (wing.vlm_chordwise_panels, 0, 2))  # MxNx2 of airfoil normals in local xsec coordinates.
+            # First index is chordwise point number, second index is xsec number, and third is LOCAL xy.
+            nondim_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
+                                                   :-1] + 0.75 * nondim_chordwise_coordinates[1:]
+            for xsec in wing.xsecs:
+                nondim_normals = xsec.airfoil.get_normal_direction_at_chord_fraction(nondim_colocation_coordinates)
+                nondim_normals = np.expand_dims(nondim_normals, 1)
+                nondim_xsec_normals = np.hstack((nondim_xsec_normals, nondim_normals))
+
+            # Now, go section-by-section and make the normals while dimensionalizing them.
+            xsec_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
+            for section_num in range(len(wing.xsecs) - 1):
+                # Define the relevant cross section
+                xsec = wing.xsecs[section_num]
+
+                # Define number of spanwise points
+                n_spanwise_coordinates = xsec.vlm_spanwise_panels + 1
+
+                # Get the spanwise coordinates
+                if xsec.vlm_spanwise_spacing == 'uniform':
+                    nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
+                elif xsec.vlm_spanwise_spacing == 'cosine':
+                    nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
+                else:
+                    raise Exception("Bad value of section.vlm_spanwise_spacing!")
+
+                # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
+                is_last_section = section_num == len(wing.xsecs) - 2
+                if not is_last_section:
+                    nondim_spanwise_coordinates = nondim_spanwise_coordinates[:-1]
 
 
-    def test(self): # TODO delete once VLM2 is working
+                section_mcl_coordinates = (
+                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                    xsec_mcl_coordinates[:, section_num, :], 1) +
+                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
+                    xsec_mcl_coordinates[:, section_num + 1, :], 1)
+                )
+                wing_mcl_coordinates = np.hstack((wing_mcl_coordinates, section_mcl_coordinates))
+
+
+
+def test(self):  # TODO delete once VLM2 is working
         self.testvar = self.op_point.alpha * 2 + self.airplane.xyz_ref[1] * 2
 
 #
-
-
-
-
-
-
-
-
-
-
 
 
 # class Panel:
