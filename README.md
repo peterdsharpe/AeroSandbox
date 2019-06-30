@@ -1,6 +1,6 @@
 <img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="500"/>
 
-[AeroSandbox Website](https://peterdsharpe.github.io/AeroSandbox/); [Peter Sharpe Website](https://peterdsharpe.github.io)
+[AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) by [Peter Sharpe](https://peterdsharpe.github.io)
 
 
 ## About
