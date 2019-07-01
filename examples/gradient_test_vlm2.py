@@ -37,7 +37,7 @@ def f(x):
                                 alpha=5,
                                 beta=0),
     )
-    ap.run()
+    ap.run(verbose=False)
 
     return ap.test()
 
