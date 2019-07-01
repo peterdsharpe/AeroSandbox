@@ -7,6 +7,30 @@ import pyvista as pv
 import copy
 
 
+import cProfile
+import functools
+import os
+
+
+def profile(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        profiler = cProfile.Profile()
+        try:
+            profiler.enable()
+            ret = func(*args, **kwargs)
+            profiler.disable()
+            return ret
+        finally:
+            filename = os.path.expanduser(
+                os.path.join('~', func.__name__ + '.pstat')
+            )
+            profiler.dump_stats(filename)
+            profiler.print_stats()
+
+    return wrapper
+
+
 class Airplane:
     # Definition for an airplane.
     def __init__(self,
@@ -276,7 +300,16 @@ class Wing:
         return span
 
     def aspect_ratio(self):
+        # Returns the aspect ratio (b^2/S).
+        # Uses the full span and the full area if symmetric.
         return self.span() ** 2 / self.area_wetted()
+
+    def has_symmetric_control_surfaces(self):
+        # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has control_surface_type = "symmetric".
+        for xsec in self.xsecs:
+            if not xsec.control_surface_type == "symmetric":
+                return False
+        return True
 
 
 class WingXSec:
@@ -284,11 +317,13 @@ class WingXSec:
     def __init__(self,
                  xyz_le=[0, 0, 0],
                  chord=0,
-                 twist=0, # Twist is defined as about the leading edge!
+                 twist=0,  # Twist is defined as about the leading edge!
                  airfoil=None,
-                 control_surface_type="symmetric", # Can be "symmetric" or "asymmetric". Symmetric is like flaps, asymmetric is like an aileron.
-                 control_surface_hinge_point = 0.75, # Point at which the control surface is applied, as a fraction of chord.
-                 control_surface_deflection=0, # Control deflection, in degrees. Downwards-positive.
+                 control_surface_type="symmetric",
+                 # Can be "symmetric" or "asymmetric". Symmetric is like flaps, asymmetric is like an aileron.
+                 control_surface_hinge_point=0.75,
+                 # Point at which the control surface is applied, as a fraction of chord.
+                 control_surface_deflection=0,  # Control deflection, in degrees. Downwards-positive.
                  vlm_spanwise_panels=10,
                  vlm_spanwise_spacing="cosine"
                  ):
@@ -770,11 +805,11 @@ def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
     output_vector = input_vector
     shape = np.shape(output_vector)
-    if len(shape) == 1 and shape[0] == 3: # Vector of 3 items
+    if len(shape) == 1 and shape[0] == 3:  # Vector of 3 items
         output_vector = output_vector * np.array([1, -1, 1])
-    elif len(shape) == 2 and shape[1] == 3: # 2D Nx3 vector
+    elif len(shape) == 2 and shape[1] == 3:  # 2D Nx3 vector
         output_vector = output_vector * np.array([1, -1, 1])
-    elif len(shape) == 3 and shape[2] == 3: # 3D MxNx3 vector
+    elif len(shape) == 3 and shape[2] == 3:  # 3D MxNx3 vector
         output_vector = output_vector * np.array([1, -1, 1])
     else:
         raise Exception("Invalid input for reflect_over_XZ_plane!")
@@ -784,3 +819,33 @@ def reflect_over_XZ_plane(input_vector):
 
 def cosspace(min=0, max=1, n_points=50):
     return 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_points))
+
+def angle_axis_rotation_matrix(angle, axis, axis_already_normalized=False):
+    # Gives the rotation matrix from an angle and an axis.
+    # An implmentation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+    # Inputs:
+    #   * angle: can be one angle or a vector (1d ndarray) of angles. Given in radians.
+    #   * axis: a 1d numpy array of length 3 (x,y,z). Represents the angle.
+    #   * axis_already_normalized: boolean, skips normalization for speed if you flag this true.
+    # Outputs:
+    #   * If angle is a scalar, returns a 3x3 rotation matrix.
+    #   * If angle is a vector, returns a 3x3xN rotation matrix.
+    if not axis_already_normalized:
+        axis = axis / np.linalg.norm(axis)
+
+    sintheta = np.sin(angle)
+    costheta = np.cos(angle)
+    cpm = np.array(
+        [[0, -axis[2], axis[1]],
+         [axis[2], 0, -axis[0]],
+         [-axis[1], axis[0], 0]]
+    )  # The cross product matrix of the rotation axis vector
+    outer_axis = np.outer(axis,axis)
+
+    angle = np.array(angle) # make sure angle is a ndarray
+    if len(angle.shape)==0: # is a scalar
+        rot_matrix = costheta * np.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
+        return rot_matrix
+    else: # angle is assumed to be a 1d ndarray
+        rot_matrix = costheta * np.expand_dims(np.eye(3),2) + sintheta * np.expand_dims(cpm,2) + (1-costheta)*np.expand_dims(outer_axis,2)
+        return rot_matrix

@@ -13,7 +13,10 @@ a = Airplane(
                         xyz_le=[0, 0, 0],
                         chord=0.18,
                         twist=2,
-                        airfoil=Airfoil(name="naca2412")
+                        airfoil=Airfoil(name="naca2412"),
+                        control_surface_type = "asymmetric",
+                        control_surface_hinge_point = 0.75,
+                        control_surface_deflection = 30
                     ),
                     WingXSec(  # Mid
                         xyz_le=[0.01, 0.5, 0],
