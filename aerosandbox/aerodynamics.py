@@ -907,7 +907,9 @@ class vlm2(AeroProblem):
             ## Append mean camber line data to vlm2 data list
             self.wing_mcl_coordinates.append(wing_mcl_coordinates)
             if wing.symmetric:
-                self.wing_mcl_coordinates.append(np.flip(reflect_over_XZ_plane(wing_mcl_coordinates),axis=1))
+                wing_mcl_coordinates_sym = reflect_over_XZ_plane(wing_mcl_coordinates)
+                wing_mcl_coordinates_sym = np.fliplr(wing_mcl_coordinates_sym)
+                self.wing_mcl_coordinates.append(wing_mcl_coordinates_sym)
 
             # -----------------------------------------------------
             ## Get the normal directions of each xsec's airfoil in nondimensional coordinates
@@ -1050,7 +1052,7 @@ class vlm2(AeroProblem):
             ## Symmetry for normals
             if wing.symmetric:
                 if wing.has_symmetric_control_surfaces():
-                    self.wing_normals.append(np.flip(reflect_over_XZ_plane(wing_normals),axis=1))
+                    self.wing_normals.append(np.fliplr(reflect_over_XZ_plane(wing_normals)))
                 else:
                     # Unfortunately, you kinda have to redo the last mess...
                     # -----------------------------------------------------
@@ -1197,11 +1199,17 @@ class vlm2(AeroProblem):
         #   * All symmetric wings have been split into separate halves.
         #   * All wing halves have their spanwise coordinates labeled from the left side of the airplane to the right.
         #   * Control surface deflection symmetry has been handled; this is encoded into the normal directions.
+        # * And best of all, it's all verified to be reverse-mode AD compatible!!!
 
 
+    def test(self):  # TODO delete once VLM2 is working
+        sum = 0
+        for ndarray in self.wing_mcl_coordinates:
+            sum = sum + np.sum(ndarray)
+        for ndarray in self.wing_normals:
+            sum = sum + np.sum(ndarray)
+        return sum
 
-def test(self):  # TODO delete once VLM2 is working
-    self.testvar = self.op_point.alpha * 2 + self.airplane.xyz_ref[1] * 2
 
 #
 

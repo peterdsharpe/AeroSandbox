@@ -39,7 +39,7 @@ def f(x):
     )
     ap.run()
 
-    return ap.testvar
+    return ap.test()
 
 
 val = 1.0  # nominal value of parameter
