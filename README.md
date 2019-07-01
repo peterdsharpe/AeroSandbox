@@ -4,7 +4,7 @@
 
 
 ## About
-AeroSandbox is a Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, and aircraft design optimization. 
+A Python package for aircraft design optimization, strongly-coupled viscous/inviscid aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. Work in progress!
 
 ![VLM1 Image](media/images/vlm1.png)
 
