@@ -4,7 +4,7 @@
 
 
 ## About
-A Python package for aircraft design optimization, strongly-coupled viscous/inviscid aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables.
+A Python package for aircraft design optimization, strongly-coupled viscous/inviscid aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. Work in progress!
 
 ![VLM1 Image](media/images/vlm1.png)
 
