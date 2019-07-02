@@ -758,23 +758,27 @@ class vlm2(AeroProblem):
 
         if self.verbose: print("Running VLM2 calculation...")
         self.check_geometry()
+        self.make_panels()
         self.setup_geometry()
+
+        if self.verbose: print("VLM2 complete!")
 
     def check_geometry(self):
         # Make sure things are sensible
         pass  # TODO make this function
 
-    def setup_geometry(self):
+    def make_panels(self):
+        # Creates self.mcl_coordinates_structured_list and self.wing_mcl_normals.
 
         if self.verbose: print("Meshing...")
 
-        self.wing_mcl_coordinates = [] # List of numpy arrays
-        self.wing_normals = [] # List of numpy arrays
+        self.mcl_coordinates_structured_list = []  # List of numpy arrays
+        self.normals_structured_list = []  # List of numpy arrays
 
         for wing_num in range(len(self.airplane.wings)):
             # Things we want for each wing (where M is the number of chordwise panels, N is the number of spanwise panels)
-            # # wing_mcl_coordinates: M+1 x N+1 x 3; corners of every panel.
-            # # wing_normals: M x N x 3; normal direction of each panel
+            # # mcl_coordinates_structured_list: M+1 x N+1 x 3; corners of every panel.
+            # # normals_structured_list: M x N x 3; normal direction of each panel
 
             # Get the wing
             wing = self.airplane.wings[wing_num]
@@ -871,7 +875,7 @@ class vlm2(AeroProblem):
 
             # -----------------------------------------------------
             # Interpolate the coordinates between xsecs
-            # Goal is to make wing_mcl_coordinates
+            # Goal is to make mcl_coordinates_structured_list
             wing_mcl_coordinates = np.empty((n_chordwise_coordinates, 0, 3))  # MxNx3 of all coordinates on the wing.
             # First index is chordwise point #, second index is spanwise point #, third is xyz.
 
@@ -905,11 +909,11 @@ class vlm2(AeroProblem):
 
             # -----------------------------------------------------
             ## Append mean camber line data to vlm2 data list
-            self.wing_mcl_coordinates.append(wing_mcl_coordinates)
+            self.mcl_coordinates_structured_list.append(wing_mcl_coordinates)
             if wing.symmetric:
                 wing_mcl_coordinates_sym = reflect_over_XZ_plane(wing_mcl_coordinates)
                 wing_mcl_coordinates_sym = np.fliplr(wing_mcl_coordinates_sym)
-                self.wing_mcl_coordinates.append(wing_mcl_coordinates_sym)
+                self.mcl_coordinates_structured_list.append(wing_mcl_coordinates_sym)
 
             # -----------------------------------------------------
             ## Get the normal directions of each xsec's airfoil in nondimensional coordinates
@@ -928,7 +932,7 @@ class vlm2(AeroProblem):
 
             # -----------------------------------------------------
             ## Now, go section-by-section and make the normals while dimensionalizing them.
-            # Goal: make wing_normals, a MxNx2 array of the normal direction of each panel.
+            # Goal: make normals_structured_list, a MxNx2 array of the normal direction of each panel.
             # First index is chordwise point number, second index is spanwise point number, and third index is xyz.
 
             wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
@@ -949,8 +953,7 @@ class vlm2(AeroProblem):
 
                 # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
                 is_last_section = section_num == len(wing.xsecs) - 2
-                if not is_last_section:
-                    nondim_spanwise_coordinates = nondim_spanwise_coordinates[:-1]
+                nondim_spanwise_coordinates = (nondim_spanwise_coordinates[1:] + nondim_spanwise_coordinates[:-1])/2
 
                 # Get local xsec directions
                 # (note: different than xsec_local_back, xsec_local_normal, and xsec_local_up, since these are unaffected by dihedral breaks)
@@ -969,27 +972,27 @@ class vlm2(AeroProblem):
                 )
                 deflection_angle = xsec.control_surface_deflection
                 rot_matrix = angle_axis_rotation_matrix(
-                    angle = np.radians(deflection_angle),
-                    axis = section_normal,
-                    axis_already_normalized = True
+                    angle=np.radians(deflection_angle),
+                    axis=section_normal,
+                    axis_already_normalized=True
                 )
-                inner_xsec_back_rotated = np.matmul(rot_matrix,inner_xsec_back)
-                outer_xsec_back_rotated = np.matmul(rot_matrix,outer_xsec_back)
+                inner_xsec_back_rotated = np.matmul(rot_matrix, inner_xsec_back)
+                outer_xsec_back_rotated = np.matmul(rot_matrix, outer_xsec_back)
                 inner_xsec_up_rotated = np.matmul(rot_matrix, inner_xsec_up)
                 outer_xsec_up_rotated = np.matmul(rot_matrix, outer_xsec_up)
-                if control_surface_hinge_point_index<=0: # For some weird reason, your hinge is at the leading edge
-                    inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels,3))
-                    outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels,3))
+                if control_surface_hinge_point_index <= 0:  # For some weird reason, your hinge is at the leading edge
+                    inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels, 3))
+                    outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels, 3))
                     inner_xsec_ups = inner_xsec_up_rotated * np.ones((wing.vlm_chordwise_panels, 3))
                     outer_xsec_ups = outer_xsec_up_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                elif control_surface_hinge_point_index>=wing.vlm_chordwise_panels: # For some weird reason, your hinge is at the trailing edge
+                elif control_surface_hinge_point_index >= wing.vlm_chordwise_panels:  # For some weird reason, your hinge is at the trailing edge
                     inner_xsec_backs = inner_xsec_back * np.ones((wing.vlm_chordwise_panels, 3))
                     outer_xsec_backs = outer_xsec_back * np.ones((wing.vlm_chordwise_panels, 3))
                     inner_xsec_ups = inner_xsec_up * np.ones((wing.vlm_chordwise_panels, 3))
                     outer_xsec_ups = outer_xsec_up * np.ones((wing.vlm_chordwise_panels, 3))
-                else: # Normal cases, where your hinge isn't at either the leading or trailing edges
+                else:  # Normal cases, where your hinge isn't at either the leading or trailing edges
                     last_unmodified_index = np.int(np.floor(control_surface_hinge_point_index))
-                    fraction_to_modify = 1-(control_surface_hinge_point_index - last_unmodified_index)
+                    fraction_to_modify = 1 - (control_surface_hinge_point_index - last_unmodified_index)
                     rot_matrix = angle_axis_rotation_matrix(
                         angle=np.radians(xsec.control_surface_deflection * fraction_to_modify),
                         axis=section_normal,
@@ -1001,9 +1004,10 @@ class vlm2(AeroProblem):
                     outer_xsec_up_semirotated = np.matmul(rot_matrix, outer_xsec_up)
 
                     inner_xsec_backs = np.vstack((
-                        np.tile(inner_xsec_back, reps=(last_unmodified_index,1)),
+                        np.tile(inner_xsec_back, reps=(last_unmodified_index, 1)),
                         inner_xsec_back_semirotated,
-                        np.tile(inner_xsec_back_rotated, reps=(wing.vlm_chordwise_panels-last_unmodified_index-1,1))
+                        np.tile(inner_xsec_back_rotated,
+                                reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
                     ))
                     inner_xsec_ups = np.vstack((
                         np.tile(inner_xsec_up, reps=(last_unmodified_index, 1)),
@@ -1012,9 +1016,10 @@ class vlm2(AeroProblem):
                                 reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
                     ))
                     outer_xsec_backs = np.vstack((
-                        np.tile(outer_xsec_back, reps=(last_unmodified_index,1)),
+                        np.tile(outer_xsec_back, reps=(last_unmodified_index, 1)),
                         outer_xsec_back_semirotated,
-                        np.tile(outer_xsec_back_rotated, reps=(wing.vlm_chordwise_panels-last_unmodified_index-1,1))
+                        np.tile(outer_xsec_back_rotated,
+                                reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
                     ))
                     outer_xsec_ups = np.vstack((
                         np.tile(outer_xsec_up, reps=(last_unmodified_index, 1)),
@@ -1046,18 +1051,18 @@ class vlm2(AeroProblem):
                 # Append
                 wing_normals = np.hstack((wing_normals, section_normals))
 
-            self.wing_normals.append(wing_normals)
+            self.normals_structured_list.append(wing_normals)
 
             # -----------------------------------------------------
             ## Symmetry for normals
             if wing.symmetric:
                 if wing.has_symmetric_control_surfaces():
-                    self.wing_normals.append(np.fliplr(reflect_over_XZ_plane(wing_normals)))
+                    self.normals_structured_list.append(np.fliplr(reflect_over_XZ_plane(wing_normals)))
                 else:
                     # Unfortunately, you kinda have to redo the last mess...
                     # -----------------------------------------------------
                     ## Now, go section-by-section and make the normals while dimensionalizing them.
-                    # Goal: make wing_normals, a MxNx2 array of the normal direction of each panel.
+                    # Goal: make normals_structured_list, a MxNx2 array of the normal direction of each panel.
                     # First index is chordwise point number, second index is spanwise point number, and third index is xyz.
 
                     wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
@@ -1078,8 +1083,8 @@ class vlm2(AeroProblem):
 
                         # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
                         is_last_section = section_num == len(wing.xsecs) - 2
-                        if not is_last_section:
-                            nondim_spanwise_coordinates = nondim_spanwise_coordinates[:-1]
+                        nondim_spanwise_coordinates = (nondim_spanwise_coordinates[1:] + nondim_spanwise_coordinates[
+                                                                                         :-1]) / 2
 
                         # Get local xsec directions
                         # (note: different than xsec_local_back, xsec_local_normal, and xsec_local_up, since these are unaffected by dihedral breaks)
@@ -1097,7 +1102,7 @@ class vlm2(AeroProblem):
                             fp=np.arange(wing.vlm_chordwise_panels)
                         )
                         deflection_angle = xsec.control_surface_deflection
-                        if xsec.control_surface_type=="asymmetric":
+                        if xsec.control_surface_type == "asymmetric":
                             deflection_angle = -deflection_angle
                         rot_matrix = angle_axis_rotation_matrix(
                             angle=np.radians(deflection_angle),
@@ -1180,19 +1185,18 @@ class vlm2(AeroProblem):
                         # Append
                         wing_normals = np.hstack((wing_normals, section_normals))
 
-                    self.wing_normals.append(np.flip(reflect_over_XZ_plane(wing_normals),axis=1))
-
+                    self.normals_structured_list.append(np.flip(reflect_over_XZ_plane(wing_normals), axis=1))
 
         if self.verbose: print("Meshing complete!")
         # -----------------------------------------------------
         # Review of the important things that have been done up to this point:
-        # * We made wing_mcl_coordinates, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
+        # * We made mcl_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
-        # * We made wing_normals, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
+        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
         #   * Takes into account control surface deflections
-        # * Both wing_mcl_coordinates and wing_normals have been appended to lists of ndarrays within the vlm2 class,
-        #   accessible at self.wing_mcl_coordinates and self.wing_normals, respectively.
+        # * Both mcl_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
+        #   accessible at self.mcl_coordinates_structured_list and self.normals_structured_list, respectively.
         # * Control surface handling:
         #   * Control surfaces are implemented into normal directions as intended.
         # * Symmetry handling:
@@ -1201,15 +1205,202 @@ class vlm2(AeroProblem):
         #   * Control surface deflection symmetry has been handled; this is encoded into the normal directions.
         # * And best of all, it's all verified to be reverse-mode AD compatible!!!
 
+        # -----------------------------------------------------
+        ## Now, just post-process them to get the colocation points and vortex center points.
+        self.n_wings = len(self.mcl_coordinates_structured_list)
+
+        # wing_mcl_coordinates_unrolled = []
+        self.colocations_list = []
+        self.vortex_centers_list = []
+        self.normals_list = []
+        for wing_num in range(self.n_wings):
+            # wing_mcl_coordinates_unrolled.append(
+            #     np.reshape(self.mcl_coordinates_structured_list[wing_num],(-1,3))
+            # )
+            self.colocations_list.append(
+                np.reshape((
+                        0.5 * (0.25 * self.mcl_coordinates_structured_list[wing_num][:-1, :-1, :] +  # Left front
+                               0.75 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :]) +  # Left back
+                        0.5 * (0.25 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :] +  # Right front
+                               0.75 * self.mcl_coordinates_structured_list[wing_num][1:, 1:, :]) # Right back
+                ),
+                newshape = (-1, 3)
+                )
+            )
+            self.vortex_centers_list.append(
+                np.reshape((
+                        0.5 * (0.75 * self.mcl_coordinates_structured_list[wing_num][:-1, :-1, :] +  # Left front
+                               0.25 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :]) +  # Left back
+                        0.5 * (0.75 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :] +  # Right front
+                               0.25 * self.mcl_coordinates_structured_list[wing_num][1:, 1:, :])  # Right back
+                ),
+                    newshape=(-1, 3)
+                )
+            )
+            self.normals_list.append(
+                np.reshape(self.normals_structured_list[wing_num], (-1, 3))
+            )
+
+        # self.wing_mcl_coordinates_unrolled = np.vstack(wing_mcl_coordinates_unrolled)
+        self.colocations_unrolled = np.vstack(self.colocations_list)
+        self.vortex_centers_unrolled = np.vstack(self.vortex_centers_list)
+        self.normals_unrolled = np.vstack(self.normals_list)
+
+
+    def setup_geometry(
+            self):
+        # # Calculate AIC matrix
+        # ----------------------
+        if self.verbose: print("Calculating the colocation influence matrix...")
+        self.Vij_colocations = self.calculate_Vij(self.colocations_unrolled)
+        # Vij_colocations: [points, vortices, xyz]
+        # n: [points, xyz]
+
+        normals_expanded = np.expand_dims(self.normals_unrolled, 1)
+
+        # AIC = (Vij * normal vectors)
+        self.AIC = np.sum(
+            self.Vij_colocations * normals_expanded,
+            axis=2
+        )
+
+        # # Calculate Vij at vortex centers for force calculation
+        # -------------------------------------------------------
+        if self.verbose: print("Calculating the vortex center influence matrix...")
+        self.Vij_centers = self.calculate_Vij(self.vortex_centers_unrolled)
+
+        # # LU Decomposition on AIC
+        # -------------------------
+        if self.verbose: print("LU factorizing the AIC matrix...")
+        self.lu, self.piv = sp_linalg.lu_factor(self.AIC) # TODO consider whether lu_factor is possible w autograd
+
+    def calculate_Vij(self, points):  # TODO make autograd-compatible
+        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # points: the list of points (Nx3) to calculate the velocity influence at.
+        points = np.reshape(points, (-1, 3))  # if it wasn't already, points is now a Nx3 array of
+        n_points = len(points)
+
+        # Make Vij for each wing
+        Vij = []
+        for wing_num in range(self.n_wings):
+            wing_mcl_coordinates = self.mcl_coordinates_structured_list[wing_num]
+            wing_vortex_points = (
+                    0.5 * (0.75 * wing_mcl_coordinates[:-1, :, :] +
+                            0.25 * wing_mcl_coordinates[1:, :, :]
+                )
+            )
+            wing_ab = np.expand_dims(np.expand_dims(points, 1), 2) - wing_vortex_points
+            # wing_ab is a 4D array
+            # 1st index: point #, 2nd index: chordwise point #, 3rd index: spanwise point #, 4th index: xyz.
+            wing_ab_shape = wing_ab.shape
+
+            # Find cross products
+            wing_ab_cross_x = np.stack((
+                np.zeros((n_points, wing_ab_shape[1], wing_ab_shape[2], 1)),
+                wing_ab[:, :, :, 2],
+                -wing_ab[:, :, :, 1],
+            ),
+                axis=3
+            )
+            wing_ab_dot_x = wing_ab[:, :, 0]
+            wing_a_cross_b = np.cross(
+                wing_ab[:, :-1, :],
+                wing_ab[:, 1:, :],
+                axis=2
+            )
+            # wing_a_dot_b =
+            # wing_a_cross_x =
+            # wing_b_cross_x =
+
+        # Make a and b vectors.
+        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a[i,j,:] = c[i,:] - lv[j,:]
+        # b[i,j,:] = c[i,:] - rv[j,:]
+        a = points - self.lv
+        b = points - self.rv
+        # x_hat = np.zeros([n_points, n_vortices, 3])
+        # x_hat[:, :, 0] = 1
+
+        # Do some useful arithmetic
+        a_cross_b = np.cross(a, b, axis=2)
+        #     np.dstack((
+        #     ay * bz - az * by,
+        #     az * bx - ax * bz,
+        #     ax * by - ay * bx
+        # ))  # np.cross(a, b, axis=2)
+
+        a_dot_b = np.einsum('ijk,ijk->ij', a, b)  # np.sum(a * b, axis=2)
+
+        a_cross_x = np.zeros((n_points, n_vortices, 3))
+        a_cross_x[:, :, 1] = a[:, :, 2]
+        a_cross_x[:, :, 2] = -a[:, :, 1]
+        # a_cross_x = np.dstack((
+        #     np.zeros((n_points, n_vortices)),
+        #     a[:,:,2],
+        #     -a[:,:,1]
+        # ))  # np.cross(a, x_hat, axis=2)
+
+        a_dot_x = a[:, :, 0]  # np.sum(a * x_hat,axis=2)
+
+        b_cross_x = np.zeros((n_points, n_vortices, 3))
+        b_cross_x[:, :, 1] = b[:, :, 2]
+        b_cross_x[:, :, 2] = -b[:, :, 1]
+        # b_cross_x = np.dstack((
+        #     np.zeros((n_points, n_vortices)),
+        #     b[:,:,2],
+        #     -b[:,:,1]
+        # ))  # np.cross(b, x_hat, axis=2)
+
+        b_dot_x = b[:, :, 0]  # np.sum(b * x_hat,axis=2)
+
+        norm_a = np.linalg.norm(a, axis=2)
+        norm_b = np.linalg.norm(b, axis=2)
+        norm_a_inv = 1 / norm_a
+        norm_b_inv = 1 / norm_b
+
+        # Check for the special case where the colocation point is along the bound vortex leg
+        # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
+        bound_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
+                < 3.0e-16)
+        a_dot_b[bound_vortex_singularity_indices] = np.inf  # something non-infinitesimal
+        left_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', a_cross_x, a_cross_x)
+                < 3.0e-16
+        )
+        a_dot_x[left_vortex_singularity_indices] = np.inf
+        right_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', b_cross_x, b_cross_x)
+                < 3.0e-16
+        )
+        b_dot_x[right_vortex_singularity_indices] = np.inf
+
+        # Calculate Vij
+        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
+        term2 = (norm_a_inv) / (norm_a - a_dot_x)
+        term3 = (norm_b_inv) / (norm_b - b_dot_x)
+        term1 = np.expand_dims(term1, 2)
+        term2 = np.expand_dims(term2, 2)
+        term3 = np.expand_dims(term3, 2)
+
+        Vij = 1 / (4 * np.pi) * (
+                a_cross_b * term1 +
+                a_cross_x * term2 -
+                b_cross_x * term3
+        )
+
+        return Vij
 
     def test(self):  # TODO delete once VLM2 is working
         sum = 0
-        for ndarray in self.wing_mcl_coordinates:
+        for ndarray in self.mcl_coordinates_structured_list:
             sum = sum + np.sum(ndarray)
-        for ndarray in self.wing_normals:
+        for ndarray in self.normals_structured_list:
             sum = sum + np.sum(ndarray)
         return sum
-
 
 #
 
