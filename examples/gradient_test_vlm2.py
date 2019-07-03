@@ -39,7 +39,7 @@ def f(x):
     )
     ap.run(verbose=False)
 
-    return ap.test()
+    return ap.CL_over_CDi
 
 
 val = 1.0  # nominal value of parameter

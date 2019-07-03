@@ -1215,7 +1215,7 @@ class vlm2(AeroProblem):
 
         # -----------------------------------------------------
         ## Now, just post-process them to get the colocation points and vortex center points.
-        self.n_wings = len(self.mcl_coordinates_structured_list) # Good to know
+        self.n_wings = len(self.mcl_coordinates_structured_list)  # Good to know
 
         # wing_mcl_coordinates_unrolled = []
         self.colocations_list = []
@@ -1254,7 +1254,7 @@ class vlm2(AeroProblem):
         self.vortex_centers_unrolled = np.vstack(self.vortex_centers_list)
         self.normals_unrolled = np.vstack(self.normals_list)
 
-        self.n_panels = len(self.normals_unrolled) # Also good to know
+        self.n_panels = len(self.normals_unrolled)  # Also good to know
 
         ## For debugging only # TODO delete later
 
@@ -1291,7 +1291,7 @@ class vlm2(AeroProblem):
         # if self.verbose: print("LU factorizing the AIC matrix...")
         # self.lu, self.piv = sp_linalg.lu_factor(self.AIC) # TODO consider whether lu_factor is possible w autograd
 
-    def setup_operating_point(self): # TODO hasn't been checked yet
+    def setup_operating_point(self):  # TODO hasn't been checked yet
 
         if self.verbose: print("Calculating the freestream influence...")
         self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes() * np.ones(
@@ -1336,11 +1336,10 @@ class vlm2(AeroProblem):
                     0.75 * wing_mcl_coordinates[:-1, :, :] +
                     0.25 * wing_mcl_coordinates[1:, :, :]
             )
-            li_piece = wing_vortex_points[:,1:,:] - wing_vortex_points[:,:-1,:]
-            li_piece = np.reshape(li_piece,(-1,3))
+            li_piece = wing_vortex_points[:, 1:, :] - wing_vortex_points[:, :-1, :]
+            li_piece = np.reshape(li_piece, (-1, 3))
             li_pieces.append(li_piece)
         self.li = np.vstack(li_pieces)
-
 
         # Calculate Fi_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES,
         # not WIND AXES or BODY AXES.
@@ -1358,7 +1357,8 @@ class vlm2(AeroProblem):
         self.Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Ftotal_geometry
         # if self.verbose: print("Total aerodynamic forces (wind axes):", self.Ftotal_wind)
 
-        self.Mtotal_geometry = np.sum(np.cross(self.vortex_centers_unrolled - self.airplane.xyz_ref, self.Fi_geometry), axis=0)
+        self.Mtotal_geometry = np.sum(np.cross(self.vortex_centers_unrolled - self.airplane.xyz_ref, self.Fi_geometry),
+                                      axis=0)
         self.Mtotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Mtotal_geometry
 
         # Calculate nondimensional forces
@@ -1495,7 +1495,7 @@ class vlm2(AeroProblem):
         return Vij
 
     @profile
-    def calculate_Vij_legacy(self, points): # TODO finish this or delete this
+    def calculate_Vij_legacy(self, points):  # TODO finish this or delete this
         # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
@@ -1508,12 +1508,11 @@ class vlm2(AeroProblem):
                     0.75 * wing_mcl_coordinates[:-1, :, :] +
                     0.25 * wing_mcl_coordinates[1:, :, :]
             )
-            lv_piece = wing_vortex_points[:,:-1,:]
-            rv_piece = wing_vortex_points[:,1:,:]
+            lv_piece = wing_vortex_points[:, :-1, :]
+            rv_piece = wing_vortex_points[:, 1:, :]
 
-
-            lv_piece = np.reshape(lv_piece,(-1,3))
-            rv_piece = np.reshape(rv_piece,(-1,3))
+            lv_piece = np.reshape(lv_piece, (-1, 3))
+            rv_piece = np.reshape(rv_piece, (-1, 3))
             lv_pieces.append(lv_piece)
             rv_pieces.append(rv_piece)
         lv = np.vstack(lv_pieces)
@@ -1619,12 +1618,6 @@ class vlm2(AeroProblem):
         )
 
         return Vij
-
-    def test(self):  # TODO delete once VLM2 is working
-        return self.CL_over_CDi
-
-#
-
 
 # class Panel:
 #     def __init__(self,
