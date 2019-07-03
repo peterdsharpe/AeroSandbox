@@ -1,5 +1,5 @@
 # [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) 
-by [Peter Sharpe](https://peterdsharpe.github.io)
+by [Peter Sharpe](https://peterdsharpe.github.io) (pds [at] mit [dot] edu)
 
 
 ## About
