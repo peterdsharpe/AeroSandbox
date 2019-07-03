@@ -1228,8 +1228,8 @@ class vlm2(AeroProblem):
             self.colocations_list.append(
                 np.reshape((
                         0.5 * (0.25 * self.mcl_coordinates_structured_list[wing_num][:-1, :-1, :] +  # Left front
-                               0.75 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :]) +  # Left back
-                        0.5 * (0.25 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :] +  # Right front
+                               0.75 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :]) +  # Left back
+                        0.5 * (0.25 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :] +  # Right front
                                0.75 * self.mcl_coordinates_structured_list[wing_num][1:, 1:, :])  # Right back
                 ),
                     (-1, 3)
@@ -1238,8 +1238,8 @@ class vlm2(AeroProblem):
             self.vortex_centers_list.append(
                 np.reshape((
                         0.5 * (0.75 * self.mcl_coordinates_structured_list[wing_num][:-1, :-1, :] +  # Left front
-                               0.25 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :]) +  # Left back
-                        0.5 * (0.75 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :] +  # Right front
+                               0.25 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :]) +  # Left back
+                        0.5 * (0.75 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :] +  # Right front
                                0.25 * self.mcl_coordinates_structured_list[wing_num][1:, 1:, :])  # Right back
                 ),
                     (-1, 3)
@@ -1255,6 +1255,8 @@ class vlm2(AeroProblem):
         self.normals_unrolled = np.vstack(self.normals_list)
 
         self.n_panels = len(self.normals_unrolled) # Also good to know
+
+        ## For debugging only # TODO delete later
 
     def setup_geometry(self):
         # # Calculate AIC matrix
