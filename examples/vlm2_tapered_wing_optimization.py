@@ -19,14 +19,16 @@ def get_ap(inputs):
                 symmetric=True,
                 xsecs=[
                     WingXSec(
-                        xyz_le=[0, 0, 0],
-                        chord=1 / (taper_ratio + 1), # These values are set so that the taper ratio is changed, but the aspect ratio is not.
+                        xyz_le=[-0.25 / (taper_ratio + 1), 0, 0],
+                        chord=1 / (taper_ratio + 1),
+                        # These values are set so that the taper ratio is changed, but the aspect ratio is not.
                         twist=0,
                         airfoil=Airfoil(name="naca0012")
                     ),
                     WingXSec(
-                        xyz_le=[0, 1, 0],
-                        chord=taper_ratio / (taper_ratio + 1), # These values are set so that the taper ratio is changed, but the aspect ratio is not.
+                        xyz_le=[-0.25 * taper_ratio / (taper_ratio + 1), 1, 0],
+                        chord=taper_ratio / (taper_ratio + 1),
+                        # These values are set so that the taper ratio is changed, but the aspect ratio is not.
                         twist=0,
                         airfoil=Airfoil(name="naca0012")
                     )
@@ -46,13 +48,16 @@ def get_ap(inputs):
 
     return ap
 
+
 def objective_function(inputs):
     ap = get_ap(inputs)
     return ap.CDi
 
+
 def constraint(inputs):
     ap = get_ap(inputs)
     return ap.CL - 0.5
+
 
 objective_function_derivative = grad(objective_function)
 constraint_derivative = grad(constraint)
@@ -63,17 +68,16 @@ constraint_derivative = grad(constraint)
 # plt.plot(x, y)
 
 # Optimization
-initial_guess = [0.25, 5]
+initial_guess = [0.25, 3]
 # eq_cons = {
 #     'type':'eq',
 #     'fun': lambda x: constraint(x)
 # }
 ineq_cons = {
-    'type':'ineq',
+    'type': 'ineq',
     'fun': lambda x: constraint(x),
     'jac': lambda x: constraint_derivative(x)
 }
-
 
 res = sp_opt.minimize(
     fun=objective_function,
@@ -84,7 +88,7 @@ res = sp_opt.minimize(
     options={
         'disp': True
     },
-    bounds=[(0, 1),(0, 10)]
+    bounds=[(0.001, 1), (0, 10)]
 )
 x_opt = res.x
 

@@ -61,11 +61,11 @@ class Airplane:
             wing_vertices = np.empty((0, 3))
             wing_tri_faces = np.empty((0, 4))
             wing_quad_faces = np.empty((0, 5))
-            for i in range(len(wing.sections) - 1):
-                is_last_section = i == len(wing.sections) - 2
+            for i in range(len(wing.xsecs) - 1):
+                is_last_section = i == len(wing.xsecs) - 2
 
-                le_start = wing.sections[i].xyz_le + wing.xyz_le
-                te_start = wing.sections[i].xyz_te() + wing.xyz_le
+                le_start = wing.xsecs[i].xyz_le + wing.xyz_le
+                te_start = wing.xsecs[i].xyz_te() + wing.xyz_le
                 wing_vertices = np.vstack((wing_vertices, le_start, te_start))
 
                 wing_quad_faces = np.vstack((
@@ -74,8 +74,8 @@ class Airplane:
                 ))
 
                 if is_last_section:
-                    le_end = wing.sections[i + 1].xyz_le + wing.xyz_le
-                    te_end = wing.sections[i + 1].xyz_te() + wing.xyz_le
+                    le_end = wing.xsecs[i + 1].xyz_le + wing.xyz_le
+                    te_end = wing.xsecs[i + 1].xyz_te() + wing.xyz_le
                     wing_vertices = np.vstack((wing_vertices, le_end, te_end))
 
             vertices_starting_index = len(vertices)
@@ -87,7 +87,7 @@ class Airplane:
 
             if wing.symmetric:
                 vertices_starting_index = len(vertices)
-                reflect_over_XZ_plane(wing_vertices)
+                wing_vertices = reflect_over_XZ_plane(wing_vertices)
                 wing_quad_faces_reformatted = np.ndarray.copy(wing_quad_faces)
                 wing_quad_faces_reformatted[:, 1:] = wing_quad_faces[:, 1:] + vertices_starting_index
                 wing_quad_faces_reformatted = np.reshape(wing_quad_faces_reformatted, (-1), order='C')
