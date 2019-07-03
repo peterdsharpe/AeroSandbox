@@ -47,8 +47,8 @@ val = 1.0  # nominal value of parameter
 # # Finite Difference
 h = 1e-8  # step size
 dfdx_fd = (f(val + h) - f(val)) / h
-print('d(CL/CD)/dx, finite difference = ', dfdx_fd)
+print('d(CL/CDi)/dx, finite difference = ', dfdx_fd)
 
 # Autograd
 dfdx_ag = grad(f)(val)
-print('d(CL/CD)/dx, reverse-mode AD = ', dfdx_ag)
+print('d(CL/CDi)/dx, reverse-mode AD = ', dfdx_ag)
