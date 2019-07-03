@@ -1,10 +1,11 @@
-<img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="500" align="middle">
-
-[AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) by [Peter Sharpe](https://peterdsharpe.github.io)
+# [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) 
+by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
 
 ## About
-A Python package for aircraft design optimization, strongly-coupled viscous/inviscid aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. Work in progress!
+AeroSandbox is a Python package for aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. 
+
+Work in progress!
 
 ![VLM1 Image](media/images/vlm1.png)
 
@@ -30,9 +31,12 @@ The fastest way to ensure that all dependencies are satisfied is by simply runni
 * autograd
 * pyvista
 
+OpenGL is also required for visualization, though this should already be installed on nearly every computer.
+
 ### Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
+* Fully reverse-mode AD compatible vortex-lattice method flow solver ("VLM2")! With this, you can get the gradient of a design space with arbitrary dimensionality almost instantly.
 
 ### Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
@@ -40,7 +44,7 @@ The primary purpose for this repository is to explore existing methods for aerod
 The "holy grail" of aerodynamics that this package seeks to develop is:
 An aerodynamics tool that models flow around any general triangulated 3D shape (with non-separated flow) using strongly-coupled viscous/inviscid methods. If successful, this could be orders of magnitude faster than volume-mesh-based CFD while retaining high accuracy (XFoil is a 2D example of this). This is very difficult and likely years away, and it's likely that AeroSandbox won't be the toolbox to develop this - but there's no harm in taking a stab at it, if only to understand the problem space better!
 
-This code is made open-source in hopes that the aerodynamics community can benefit from this work. I've benefitted so much from open-source aerodynamics tools that came before me (Xfoil, AVL, QProp, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
+This code is made open-source in hopes that the aerodynamics community can benefit from this work. I've benefitted so much from open-source aerodynamics tools that came before me (XFoil, AVL, QProp, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
 
 ## Future Goals
 In descending order of priority/feasibility:
