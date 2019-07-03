@@ -4,7 +4,7 @@
 
 
 ## About
-AeroSandbox is a Python package for aircraft design optimization, fully-coupled viscous/inviscid aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. 
+AeroSandbox is a Python package for aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. 
 
 Work in progress!
 
