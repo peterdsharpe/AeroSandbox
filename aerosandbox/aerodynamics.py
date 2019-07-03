@@ -1336,7 +1336,7 @@ class vlm2(AeroProblem):
                     0.75 * wing_mcl_coordinates[:-1, :, :] +
                     0.25 * wing_mcl_coordinates[1:, :, :]
             )
-            li_piece = wing_vortex_points[:,:-1,:] - wing_vortex_points[:,1:,:]
+            li_piece = wing_vortex_points[:,1:,:] - wing_vortex_points[:,:-1,:]
             li_piece = np.reshape(li_piece,(-1,3))
             li_pieces.append(li_piece)
         self.li = np.vstack(li_pieces)
