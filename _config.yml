@@ -1,7 +1,7 @@
 theme: jekyll-theme-cayman
 
 title: AeroSandbox
-description: A Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, and aircraft design optimization.
+description: A Python package for aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables.
 google_analytics: 
 show_downloads: true
 
