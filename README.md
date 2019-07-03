@@ -4,7 +4,9 @@
 
 
 ## About
-A Python package for aircraft design optimization, strongly-coupled viscous/inviscid aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. Work in progress!
+AeroSandbox is a Python package for aircraft design optimization, fully-coupled viscous/inviscid aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables. 
+
+Work in progress!
 
 ![VLM1 Image](media/images/vlm1.png)
 
@@ -30,9 +32,12 @@ The fastest way to ensure that all dependencies are satisfied is by simply runni
 * autograd
 * pyvista
 
+OpenGL is also required for visualization, though this should already be installed on nearly every computer.
+
 ### Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
+* Fully reverse-mode AD compatible vortex-lattice method flow solver ("VLM2")! With this, you can get the gradient of a design space with arbitrary dimensionality almost instantly.
 
 ### Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
