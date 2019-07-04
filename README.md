@@ -109,7 +109,7 @@ glider = Airplane(
     ]
 )
 
-ap = vlm2(
+aero_problem = vlm2(
     airplane=glider,
     op_point=OperatingPoint(
         velocity=10,
@@ -121,7 +121,7 @@ ap = vlm2(
     ),
 )
 
-ap.run()
+aero_problem.run() # Runs and prints results to console
 ```
 
 
