@@ -24,7 +24,7 @@ There are many example cases you can try out in the /examples/ directory! Specif
 ### Usage
 AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. For example, here is all the code that is needed to analyze the aerodynamics of a glider in flight (found in "/examples/vlm2_conventional.py"):
 
-```
+```python
 from aerosandbox import *
 
 glider = Airplane(
