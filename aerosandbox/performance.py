@@ -10,9 +10,9 @@ class OperatingPoint:
                  velocity=10,
                  alpha=5,
                  beta=0,
-                 p=0,
-                 q=0,
-                 r=0,
+                 p=0, # About the body x-axis
+                 q=0, # About the body y-axis
+                 r=0, # About the body z-axis
                  ):
         self.density = density
         self.velocity = velocity
@@ -71,3 +71,21 @@ class OperatingPoint:
     def compute_freestream_velocity_geometry_axes(self):
         # Computes the freestream velocity vector (direction the wind is GOING TO) in geometry axes
         return self.compute_freestream_direction_geometry_axes() * self.velocity
+
+    def compute_rotation_velocity_geometry_axes(self, points):
+        # Computes the effective velocity due to rotation at a set of points.
+        # Input: a Nx3 array of points
+        # Output: a Nx3 array of effective velocities
+        angular_velocity_vector_geometry_axes = np.array([-self.p, self.q, -self.r]) # signs convert from body axes to geometry axes
+        angular_velocity_vector_geometry_axes = np.expand_dims(angular_velocity_vector_geometry_axes, axis = 0)
+
+
+        rotation_velocity_geometry_axes = np.cross(
+            angular_velocity_vector_geometry_axes,
+            points,
+            axis=1
+        )
+
+        rotation_velocity_geometry_axes = -rotation_velocity_geometry_axes # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
+
+        return rotation_velocity_geometry_axes
