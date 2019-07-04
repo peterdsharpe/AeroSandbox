@@ -9,7 +9,7 @@ Work in progress!
 
 ![AeroSandbox Image](media/images/vlm2_with_control_surfaces.png)
 
-*VLM2 simulation of a glider with control surfaces on the outer sections of the main wing*
+*VLM2 simulation of a glider, aileron deflections of +-30°*
 
 ## Getting Started
 
