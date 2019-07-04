@@ -28,7 +28,7 @@ AeroSandbox is designed to have extremely intuitive, high-level, and human-reada
 from aerosandbox import *
 
 glider = Airplane(
-    name="Conventional",
+    name="Peter's Glider",
     xyz_ref=[0, 0, 0], # CG location
     wings=[
         Wing(
