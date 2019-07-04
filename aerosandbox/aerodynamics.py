@@ -1698,8 +1698,7 @@ class vlm2(AeroProblem):
         # Iterate
         for step_num in range(1, n_steps):
             update_amount = self.get_velocity_at_point(streamlines[:, step_num - 1, :])
-            update_amount = update_amount / np.expand_dims(np.linalg.norm(update_amount, axis=1), axis=1)
-            update_amount *= length_per_step
+            update_amount = update_amount * length_per_step / np.expand_dims(np.linalg.norm(update_amount, axis=1), axis=1)
             streamlines[:, step_num, :] = streamlines[:, step_num - 1, :] + update_amount
 
         self.streamlines = streamlines
@@ -1708,6 +1707,11 @@ class vlm2(AeroProblem):
              draw_delta_cp=True,
              draw_streamlines=True,
              ):
+
+        print("Drawing...")
+        #
+        # Note: NOT autograd-compatible!
+
 
         # Make airplane geometry
         vertices = np.vstack((
@@ -1733,7 +1737,10 @@ class vlm2(AeroProblem):
             if not hasattr(self, 'delta_cp'):
                 self.calculate_delta_cp()
 
-            scalars = np.minimum(np.maximum(self.delta_cp, -1), 1)
+            delta_cp_min = -1.5
+            delta_cp_max = 1.5
+
+            scalars = np.minimum(np.maximum(self.delta_cp, delta_cp_min), delta_cp_max)
             cmap = plt.cm.get_cmap('viridis')
             plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
                              smooth_shading=True)

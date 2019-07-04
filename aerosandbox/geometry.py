@@ -38,17 +38,20 @@ class Airplane:
                  xyz_ref=[0.0, 0.0, 0.0],
                  # Location about which moments and stability derivatives are calculated; should be the center of gravity.
                  wings=[],  # A list of Wing objects.
-                 s_ref=1.0,
+                 s_ref=None,
                  # You can set these manually, or you can call Airplane.set_ref_dims_from_wing() after setting up the Aircraft object to populate these fields.
-                 c_ref=1.0,  # See above
-                 b_ref=1.0,  # See above
+                 c_ref=None,  # See above
+                 b_ref=None,  # See above
                  ):
         self.name = name
         self.xyz_ref = np.array(xyz_ref)
         self.wings = wings
-        self.s_ref = s_ref
-        self.c_ref = c_ref
-        self.b_ref = b_ref
+
+        if len(self.wings)>1:
+            self.set_ref_dims_from_wing()
+        if s_ref is not None: self.s_ref = s_ref
+        if c_ref is not None: self.c_ref = c_ref
+        if b_ref is not None: self.b_ref = b_ref
 
     def draw(self):
         # Draw the airplane in a new window.
