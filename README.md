@@ -124,6 +124,7 @@ aero_problem = vlm2( # Analysis type: Vortex Lattice Method, version 2
 aero_problem.run() # Runs and prints results to console
 ```
 
+One other point to note: as we are all civilized human beings here, all inputs and outputs to AeroSandbox are expressed in base metric units (meters, Newtons, kilograms, etc.).
 
 ### Dependencies
 
