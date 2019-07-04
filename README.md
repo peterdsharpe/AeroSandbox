@@ -142,7 +142,7 @@ The fastest way to ensure that all dependencies are satisfied is by simply runni
 
 If you installed Python via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section), you likely have all of these except autograd and pyvista.
 
-OpenGL is also required for visualization, though this should already be installed on nearly every computer.
+OpenGL is also required for visualization, though this should already be installed on nearly every computer. (No promises if you try to run AeroSandbox on a Raspberry Pi!)
 
 ### Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
