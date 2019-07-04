@@ -19,7 +19,7 @@ There are several easy ways to get started with AeroSandbox! (Assuming you alrea
 
 3. Both of the above options will download released versions of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
-There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm1_conventional.py".
+There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm2_conventional.py".
 
 ### Dependencies
 
