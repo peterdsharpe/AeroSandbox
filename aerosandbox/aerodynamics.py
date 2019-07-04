@@ -43,6 +43,7 @@ class AeroProblem:
 
 
 class vlm1(AeroProblem):
+    # NOTE: USE VLM2 INSTEAD OF THIS; VLM1 HAS BEEN COMPLETELY SUPERSEDED IN PERFORMANCE AND FUNCTIONALITY BY VLM2.
     # Traditional vortex-lattice-method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
 
@@ -764,7 +765,7 @@ class vlm2(AeroProblem):
     #   # TODO: calculate_Vij() is parallelized, one core per wing
     #
     # Usage:
-    #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "vlm2(airplane = a, op_point = o)" for some Airplane a and OperatingPoint o)
+    #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "vlm2(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
     #   # Call vlm2.run() to run the problem.
     #   # Access results in the command line, or through properties of the vlm2 class.
     #   #   # In a future update, this will be done through a standardized AeroData class.
@@ -1744,14 +1745,14 @@ class vlm2(AeroProblem):
             cmap = plt.cm.get_cmap('viridis')
             plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
                              smooth_shading=True)
-            plotter.add_scalar_bar(title="Pressure Coefficient", n_labels=5, shadow=True, font_family='arial')
+            plotter.add_scalar_bar(title="Pressure Coefficient Differential", n_labels=5, shadow=True, font_family='arial')
 
         if draw_streamlines:
             if not hasattr(self, 'streamlines'):
                 self.calculate_streamlines()
 
             for streamline_num in range(len(self.streamlines)):
-                plotter.add_lines(self.streamlines[streamline_num, :, :], width=1.5, color='#50C7C7')
+                plotter.add_lines(self.streamlines[streamline_num, :, :], width=1, color='#50C7C7')
 
         # Do the plotting
         plotter.show_grid(color='#444444')
