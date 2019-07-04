@@ -750,16 +750,27 @@ class vlm1(AeroProblem):
 
 
 class vlm2(AeroProblem):
-    # Vortex lattice method written from the ground up with lessons learned from writing VLM1.
+    # Vortex-Lattice Method aerodynamics code written from the ground up with lessons learned from writing VLM1.
     # Should eventually eclipse VLM1 in performance and render it obsolete.
+    #
     # Notable improvements over VLM1:
-    #   # Specifically written to be autograd-compatible at every step
-    #   # Takes advantage of the connectivity of the vortex lattice to speed up calculate_Vij() by almost exactly 2x
-    #   # calculate_Vij() is parallelized, one core per wing.
-    #   # Vortex lattice follows the mean camber line for higher accuracy (control deflections are still done by rotating normals)
+    #   # Specifically written to be reverse-mode-AD-compatible at every step
+    #   # Supports control surfaces
+    #   # Supports bodies in quasi-steady rotation (nonzero p, q, and r)
+    #   # Supports calculation of stability derivatives
+    #   # Vortex lattice follows the mean camber line for higher accuracy (though control deflections are done by rotating normals)
+    #   # TODO: Takes advantage of the connectivity of the vortex lattice to speed up calculate_Vij() by almost exactly 2x
+    #   # TODO: calculate_Vij() is parallelized, one core per wing
+    #
+    # Usage:
+    #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "vlm2(airplane = a, op_point = o)" for some Airplane a and OperatingPoint o)
+    #   # Call vlm2.run() to run the problem.
+    #   # Access results in the command line, or through properties of the vlm2 class.
+    #   #   # In a future update, this will be done through a standardized AeroData class.
 
     @profile
     def run(self, verbose=True):
+        # Runs a point analysis at the specified op-point.
         self.verbose = verbose
 
         if self.verbose: print("Running VLM2 calculation...")
@@ -774,7 +785,8 @@ class vlm2(AeroProblem):
         if self.verbose: print("VLM2 complete!")
 
     def run_stability(self, verbose=True):
-        # TODO fill this in
+        # Runs a stability analysis about the specified op-point.
+        # TODO make this function
         self.verbose = verbose
 
     def check_geometry(self):
