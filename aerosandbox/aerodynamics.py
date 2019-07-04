@@ -51,6 +51,8 @@ class vlm1(AeroProblem):
         self.verbose = verbose
 
         if self.verbose: print("Running VLM1 calculation...")
+        if self.verbose: print("WARNING! VLM1 has been wholly eclipsed in performance and functionality by VLM2. The VLM1 source code has been left intact for validation purposes and backwards-compatibility, but it will not be supported going forward.")
+
 
         self.make_panels()
         self.setup_geometry()
@@ -770,6 +772,10 @@ class vlm2(AeroProblem):
         self.calculate_forces()
 
         if self.verbose: print("VLM2 complete!")
+
+    def run_stability(self, verbose=True):
+        # TODO fill this in
+        self.verbose = verbose
 
     def check_geometry(self):
         # Make sure things are sensible
