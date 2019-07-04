@@ -14,7 +14,7 @@ a = Airplane(
                         chord=0.18,
                         twist=2,
                         airfoil=Airfoil(name="naca4412"),
-                        control_surface_type='symmetric',
+                        control_surface_type='symmetric', # Flap
                         control_surface_deflection=0,
                         control_surface_hinge_point=0.75
                     ),
@@ -22,16 +22,16 @@ a = Airplane(
                         xyz_le=[0.01, 0.5, 0],
                         chord=0.16,
                         twist=0,
-                        airfoil=Airfoil(name="naca4412")
+                        airfoil=Airfoil(name="naca4412"),
+                        control_surface_type='asymmetric', # Aileron
+                        control_surface_deflection=0,
+                        control_surface_hinge_point=0.75
                     ),
                     WingXSec(  # Tip
                         xyz_le=[0.08, 1, 0.1],
                         chord=0.08,
                         twist=-2,
                         airfoil=Airfoil(name="naca4412"),
-                        control_surface_type='symmetric',
-                        control_surface_deflection=0,
-                        control_surface_hinge_point=0.75
                     )
                 ]
             ),
@@ -44,7 +44,10 @@ a = Airplane(
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=-10,
-                        airfoil=Airfoil(name="naca0012")
+                        airfoil=Airfoil(name="naca0012"),
+                        control_surface_type='symmetric', # Elevator
+                        control_surface_deflection=0,
+                        control_surface_hinge_point=0.75
                     ),
                     WingXSec(  # tip
                         xyz_le=[0.02, 0.17, 0],
@@ -63,7 +66,10 @@ a = Airplane(
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
-                        airfoil=Airfoil(name="naca0012")
+                        airfoil=Airfoil(name="naca0012"),
+                        control_surface_type='symmetric', # Rudder
+                        control_surface_deflection=0,
+                        control_surface_hinge_point=0.75
                     ),
                     WingXSec(
                         xyz_le=[0.04, 0, 0.15],
@@ -88,6 +94,7 @@ ap = vlm2(
                             ),
 )
 ap.run()
+ap.draw()
 
 # Answer you should get: (XFLR5)
 # CL = 0.797

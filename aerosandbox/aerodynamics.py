@@ -51,6 +51,7 @@ class vlm1(AeroProblem):
         self.verbose = verbose
 
         if self.verbose: print("Running VLM1 calculation...")
+        # Deprecation warning (use VLM2 instead)
         if self.verbose: print("WARNING! VLM1 has been wholly eclipsed in performance and functionality by VLM2. The VLM1 source code has been left intact for validation purposes and backwards-compatibility, but it will not be supported going forward.")
 
 
@@ -782,7 +783,7 @@ class vlm2(AeroProblem):
         self.calculate_vortex_strengths()
         self.calculate_forces()
 
-        if self.verbose: print("VLM2 complete!")
+        if self.verbose: print("VLM2 calculation complete!")
 
     def run_stability(self, verbose=True):
         # Runs a stability analysis about the specified op-point.
@@ -1235,41 +1236,60 @@ class vlm2(AeroProblem):
         ## Now, just post-process them to get the colocation points and vortex center points.
         self.n_wings = len(self.mcl_coordinates_structured_list)  # Good to know
 
+        self.front_left_vertices_list=[]
+        self.front_right_vertices_list=[]
+        self.back_left_vertices_list=[]
+        self.back_right_vertices_list=[]
+
         self.vortex_left_list = []
         self.vortex_right_list = []
+
         self.colocations_list = []
+
         self.normals_list = []
+
         for wing_num in range(self.n_wings):
-            # wing_mcl_coordinates_unrolled.append(
-            #     np.reshape(self.mcl_coordinates_structured_list[wing_num],(-1,3))
-            # )
+            wing_front_left_vertices = self.mcl_coordinates_structured_list[wing_num][:-1, :-1, :]
+            wing_front_right_vertices = self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :]
+            wing_back_left_vertices = self.mcl_coordinates_structured_list[wing_num][1:, :-1, :]
+            wing_back_right_vertices = self.mcl_coordinates_structured_list[wing_num][1:, 1:, :]
+
+            self.front_left_vertices_list.append(np.reshape(wing_front_left_vertices,(-1,3)))
+            self.front_right_vertices_list.append(np.reshape(wing_front_right_vertices,(-1,3)))
+            self.back_left_vertices_list.append(np.reshape(wing_back_left_vertices,(-1,3)))
+            self.back_right_vertices_list.append(np.reshape(wing_back_right_vertices,(-1,3)))
+
             self.colocations_list.append(
                 np.reshape((
-                        0.5 * (0.25 * self.mcl_coordinates_structured_list[wing_num][:-1, :-1, :] +  # Left front
-                               0.75 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :]) +  # Left back
-                        0.5 * (0.25 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :] +  # Right front
-                               0.75 * self.mcl_coordinates_structured_list[wing_num][1:, 1:, :])  # Right back
+                        0.5 * (0.25 * wing_front_left_vertices +  # Left front
+                               0.75 * wing_back_left_vertices) +  # Left back
+                        0.5 * (0.25 * wing_front_right_vertices +  # Right front
+                               0.75 * wing_back_right_vertices)  # Right back
                 ),
                     (-1, 3)
                 )
             )
             self.vortex_left_list.append(
                 np.reshape(
-                    0.75 * self.mcl_coordinates_structured_list[wing_num][:-1, :-1, :] +  # Left front
-                    0.25 * self.mcl_coordinates_structured_list[wing_num][1:, :-1, :],  # Left back
+                    0.75 * wing_front_left_vertices +  # Left front
+                    0.25 * wing_back_left_vertices,  # Left back
                     (-1, 3))
             )
             self.vortex_right_list.append(
                 np.reshape(
-                    0.75 * self.mcl_coordinates_structured_list[wing_num][:-1, 1:, :] +  # Right front
-                    0.25 * self.mcl_coordinates_structured_list[wing_num][1:, 1:, :],  # Right back
+                    0.75 * wing_front_right_vertices +  # Right front
+                    0.25 * wing_back_right_vertices,  # Right back
                     (-1, 3))
             )
             self.normals_list.append(
                 np.reshape(self.normals_structured_list[wing_num], (-1, 3))
             )
 
-        # self.wing_mcl_coordinates_unrolled = np.vstack(wing_mcl_coordinates_unrolled)
+        self.front_left_vertices_unrolled = np.vstack(self.front_left_vertices_list)
+        self.front_right_vertices_unrolled = np.vstack(self.front_right_vertices_list)
+        self.back_left_vertices_unrolled = np.vstack(self.back_left_vertices_list)
+        self.back_right_vertices_unrolled = np.vstack(self.back_right_vertices_list)
+        
         self.colocations_unrolled = np.vstack(self.colocations_list)
         self.vortex_left_unrolled = np.vstack(self.vortex_left_list)
         self.vortex_right_unrolled = np.vstack(self.vortex_right_list)
@@ -1599,6 +1619,138 @@ class vlm2(AeroProblem):
         )
 
         return Vij
+
+    # TODO FIX FROM HERE ON
+    def calculate_delta_cp(self):
+        # Find the area of each panel ()
+        diag1 = self.front_left_vertices_unrolled - self.back_right_vertices_unrolled
+        diag2 = self.front_right_vertices_unrolled - self.back_left_vertices_unrolled
+        self.areas = np.linalg.norm(np.cross(diag1, diag2, axis=1), axis=1) / 2
+
+        # Calculate panel data
+        self.Fi_normal = np.einsum('ij,ij->i', self.Fi_geometry, self.normals_unrolled)
+        self.pressure_normal = self.Fi_normal / self.areas
+        self.delta_cp = self.pressure_normal / self.op_point.dynamic_pressure()
+
+    def get_induced_velocity_at_point(self, point):
+        # Input: a Nx3 numpy array of points that you would like to know the induced velocities at.
+        # Output: a Nx3 numpy array of the induced velocities at those points.
+        point = np.reshape(point, (-1, 3))
+
+        Vij = self.calculate_Vij(point)
+
+        vortex_strengths_expanded = np.expand_dims(self.vortex_strengths, 1)
+
+        # freestream = self.op_point.compute_freestream_velocity_geometry_axes()
+        # V_x = Vij[:, :, 0] @ vortex_strengths_expanded + freestream[0]
+        # V_y = Vij[:, :, 1] @ vortex_strengths_expanded + freestream[1]
+        # V_z = Vij[:, :, 2] @ vortex_strengths_expanded + freestream[2]
+
+        Vi_x = Vij[:, :, 0] @ vortex_strengths_expanded
+        Vi_y = Vij[:, :, 1] @ vortex_strengths_expanded
+        Vi_z = Vij[:, :, 2] @ vortex_strengths_expanded
+
+        Vi = np.hstack((Vi_x, Vi_y, Vi_z))
+
+        return Vi
+
+    def get_velocity_at_point(self, point):
+        # Input: a Nx3 numpy array of points that you would like to know the velocities at.
+        # Output: a Nx3 numpy array of the velocities at those points.
+        point = np.reshape(point, (-1, 3))
+
+        Vi = self.get_induced_velocity_at_point(point)
+
+        freestream = self.op_point.compute_freestream_velocity_geometry_axes()
+
+        V = Vi + freestream
+        return V
+
+    def calculate_streamlines(self):
+        # Calculates streamlines eminating from the trailing edges of all surfaces.
+        # "streamlines" is a MxNx3 array, where M is the index of the streamline number,
+        # N is the index of the timestep, and the last index is xyz
+
+        # Constants
+        n_steps = 100  # minimum of 2
+        length = 1  # meter
+
+        # Resolution
+        length_per_step = length / n_steps
+        # dt = length / self.op_point.velocity / n_steps
+
+        # Seed points
+        #seed_points = (0.5 * (self.back_left_vertices_unrolled + self.back_right_vertices_unrolled))[self.is_trailing_edge]
+        seed_points_list = []
+        for wing_num in range(self.n_wings):
+            wing_mcl_coordinates = self.mcl_coordinates_structured_list[wing_num]
+            wing_te_coordinates = wing_mcl_coordinates[-1,:,:]
+            wing_seed_points = (wing_te_coordinates[:-1,:]+wing_te_coordinates[1:,:])/2
+            seed_points_list.append(wing_seed_points)
+        seed_points = np.vstack(seed_points_list)
+
+        n_streamlines = len(seed_points)
+
+        # Initialize
+        streamlines = np.zeros((n_streamlines, n_steps, 3))
+        streamlines[:, 0, :] = seed_points
+
+        # Iterate
+        for step_num in range(1, n_steps):
+            update_amount = self.get_velocity_at_point(streamlines[:, step_num - 1, :])
+            update_amount = update_amount / np.expand_dims(np.linalg.norm(update_amount, axis=1), axis=1)
+            update_amount *= length_per_step
+            streamlines[:, step_num, :] = streamlines[:, step_num - 1, :] + update_amount
+
+        self.streamlines = streamlines
+
+    def draw(self,
+             draw_delta_cp=True,
+             draw_streamlines=True,
+             ):
+
+        # Make airplane geometry
+        vertices = np.vstack((
+            self.front_left_vertices_unrolled,
+            self.front_right_vertices_unrolled,
+            self.back_right_vertices_unrolled,
+            self.back_left_vertices_unrolled
+        ))
+        faces = np.transpose(np.vstack((
+            4 * np.ones(self.n_panels),
+            np.arange(self.n_panels),
+            np.arange(self.n_panels) + self.n_panels,
+            np.arange(self.n_panels) + 2 * self.n_panels,
+            np.arange(self.n_panels) + 3 * self.n_panels,
+        )))
+        faces = np.reshape(faces, (-1), order='C')
+        wing_surfaces = pv.PolyData(vertices, faces)
+
+        # Initialize Plotter
+        plotter = pv.Plotter()
+
+        if draw_delta_cp:
+            if not hasattr(self, 'delta_cp'):
+                self.calculate_delta_cp()
+
+            scalars = np.minimum(np.maximum(self.delta_cp, -1), 1)
+            cmap = plt.cm.get_cmap('viridis')
+            plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
+                             smooth_shading=True)
+            plotter.add_scalar_bar(title="Pressure Coefficient", n_labels=5, shadow=True, font_family='arial')
+
+        if draw_streamlines:
+            if not hasattr(self, 'streamlines'):
+                self.calculate_streamlines()
+
+            for streamline_num in range(len(self.streamlines)):
+                plotter.add_lines(self.streamlines[streamline_num, :, :], width=1.5, color='#50C7C7')
+
+        # Do the plotting
+        plotter.show_grid(color='#444444')
+        plotter.set_background(color="black")
+        plotter.show(cpos=(-1, -1, 1), full_screen=False)
+
 
 # class Panel:
 #     def __init__(self,
