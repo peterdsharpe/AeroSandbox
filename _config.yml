@@ -1,6 +1,6 @@
 theme: jekyll-theme-cayman
 
-title: <img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="600" align="middle">
+title: <img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" max-width="600" align="middle">
 description: A Python package for aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables.
 google_analytics: 
 show_downloads: true
