@@ -7,7 +7,9 @@ AeroSandbox is a Python package for aircraft design optimization, fully-coupled 
 
 Work in progress!
 
-![VLM1 Image](media/images/vlm1.png)
+![AeroSandbox Image](media/images/vlm2_with_control_surfaces.png)
+
+*VLM2 simulation of a glider with control surfaces on the outer sections of the main wing*
 
 ## Getting Started
 
