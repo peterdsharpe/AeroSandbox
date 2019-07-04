@@ -170,9 +170,9 @@ class Airplane:
         # Useful for quickly changing the fidelity of your VLM simulation.
 
         for wing in self.wings:
-            wing.chordwise_panels = n_chordwise_panels
-            for wingsection in wing.sections:
-                wingsection.spanwise_panels = n_spanwise_panels
+            wing.vlm_chordwise_panels = n_chordwise_panels
+            for xsec in wing.xsecs:
+                xsec.vlm_spanwise_panels = n_spanwise_panels
 
     def get_bounding_cube(self):
         # Finds the axis-aligned cube that encloses the airplane with the smallest size.

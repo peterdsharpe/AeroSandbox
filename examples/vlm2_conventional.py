@@ -82,6 +82,7 @@ a = Airplane(
         ]
     )
 a.set_ref_dims_from_wing()
+# a.set_vlm_paneling_everywhere(20,20)
 
 ap = vlm2(
     airplane=a,
