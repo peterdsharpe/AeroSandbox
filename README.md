@@ -109,7 +109,7 @@ glider = Airplane(
     ]
 )
 
-aero_problem = vlm2(
+aero_problem = vlm2( # Analysis type: Vortex Lattice Method, version 2
     airplane=glider,
     op_point=OperatingPoint(
         velocity=10,
