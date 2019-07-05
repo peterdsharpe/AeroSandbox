@@ -81,7 +81,7 @@ def moments(alphabeta):
             )
         ]
     )
-    a.set_ref_dims_from_wing()
+
     ap = vlm2(
         airplane=a,
         op_point=OperatingPoint(velocity=10,

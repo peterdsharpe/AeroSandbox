@@ -81,7 +81,7 @@ glider = Airplane(
         )
     ]
 )
-glider.set_vlm_paneling_everywhere(20, 20)
+# glider.set_vlm_paneling_everywhere(20, 20)
 
 ap = vlm2(
     airplane=glider,
