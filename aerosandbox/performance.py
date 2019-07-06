@@ -89,3 +89,36 @@ class OperatingPoint:
         rotation_velocity_geometry_axes = -rotation_velocity_geometry_axes # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
 
         return rotation_velocity_geometry_axes
+
+class AeroData:
+    # A class where aerodynamic data is stored.
+    # There is very little structure here. Suggested attributes you could add here:
+
+    # # Forces / Moments
+    # force_wind_axes,
+    # force_geometry_axes,
+    # CL,
+    # CD,
+    # CY,
+    # Cl,
+    # Cm,
+    # Cn,
+
+    # # Stability Derivatives
+
+
+
+    def __init__(self,
+                 force_wind_axes = None,
+                 force_geometry_axes = None,
+                 CL = None,
+                 CD = None,
+                 CY = None,
+                 Cl = None,
+                 Cm = None,
+                 Cn = None,
+                 stability_jacobian = None
+
+
+                 ):
+        pass

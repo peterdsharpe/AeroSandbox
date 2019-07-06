@@ -6,7 +6,6 @@ from .plotting import *
 import pyvista as pv
 import copy
 
-
 import cProfile
 import functools
 import os
@@ -35,23 +34,39 @@ class Airplane:
     # Definition for an airplane.
     def __init__(self,
                  name="Untitled Airplane",  # A sensible name for your airplane.
-                 xyz_ref=[0.0, 0.0, 0.0],
-                 # Location about which moments and stability derivatives are calculated; should be the center of gravity.
+
+                 xyz_ref=None,  # Ref. point for moments; should be the center of gravity. Syntax: List of [x, y, z].
+                 mass_props=None,  # An object of MassProps type; only needed for dynamic analysis
+                 # If xyz_ref is not set, but mass_props is, the xyz_ref will be taken from the CG there.
+
                  wings=[],  # A list of Wing objects.
-                 s_ref=None,
-                 # You can set these manually, or you can call Airplane.set_ref_dims_from_wing() after setting up the Aircraft object to populate these fields.
+                 s_ref=None,  # If not set, populates from first wing object.
                  c_ref=None,  # See above
                  b_ref=None,  # See above
+
                  ):
         self.name = name
-        self.xyz_ref = np.array(xyz_ref)
+
+        if xyz_ref is None and mass_props is not None:
+            self.xyz_ref = mass_props.get_cg()
+        else:
+            self.xyz_ref = np.array(xyz_ref)
+
+        self.mass_props = mass_props
         self.wings = wings
 
-        if len(self.wings)>1:
+        if len(self.wings) > 1:  # If there is at least one wing
             self.set_ref_dims_from_wing()
         if s_ref is not None: self.s_ref = s_ref
         if c_ref is not None: self.c_ref = c_ref
         if b_ref is not None: self.b_ref = b_ref
+
+        # Check that everything was set right:
+        assert self.name is not None
+        assert self.xyz_ref is not None
+        assert self.s_ref is not None
+        assert self.c_ref is not None
+        assert self.b_ref is not None
 
     def draw(self):
         # Draw the airplane in a new window.
@@ -823,6 +838,7 @@ def reflect_over_XZ_plane(input_vector):
 def cosspace(min=0, max=1, n_points=50):
     return 0.5 + 0.5 * np.cos(np.linspace(np.pi, 0, n_points))
 
+
 def angle_axis_rotation_matrix(angle, axis, axis_already_normalized=False):
     # Gives the rotation matrix from an angle and an axis.
     # An implmentation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
@@ -843,12 +859,13 @@ def angle_axis_rotation_matrix(angle, axis, axis_already_normalized=False):
          [axis[2], 0, -axis[0]],
          [-axis[1], axis[0], 0]]
     )  # The cross product matrix of the rotation axis vector
-    outer_axis = np.outer(axis,axis)
+    outer_axis = np.outer(axis, axis)
 
-    angle = np.array(angle) # make sure angle is a ndarray
-    if len(angle.shape)==0: # is a scalar
+    angle = np.array(angle)  # make sure angle is a ndarray
+    if len(angle.shape) == 0:  # is a scalar
         rot_matrix = costheta * np.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
         return rot_matrix
-    else: # angle is assumed to be a 1d ndarray
-        rot_matrix = costheta * np.expand_dims(np.eye(3),2) + sintheta * np.expand_dims(cpm,2) + (1-costheta)*np.expand_dims(outer_axis,2)
+    else:  # angle is assumed to be a 1d ndarray
+        rot_matrix = costheta * np.expand_dims(np.eye(3), 2) + sintheta * np.expand_dims(cpm, 2) + (
+                    1 - costheta) * np.expand_dims(outer_axis, 2)
         return rot_matrix

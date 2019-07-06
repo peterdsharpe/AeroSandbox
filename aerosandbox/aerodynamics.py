@@ -35,8 +35,8 @@ def profile(func):
 
 class AeroProblem:
     def __init__(self,
-                 airplane=Airplane(),
-                 op_point=OperatingPoint(),
+                 airplane, # Object of Airplane class
+                 op_point, # Object of OperatingPoint class
                  ):
         self.airplane = airplane
         self.op_point = op_point
