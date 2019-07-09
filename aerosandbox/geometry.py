@@ -183,14 +183,14 @@ class Airplane:
         self.b_ref = main_wing.span()
         self.c_ref = main_wing.area_wetted() / main_wing.span()
 
-    def set_vlm_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
+    def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
         # Sets the chordwise and spanwise paneling everywhere to a specified value.
-        # Useful for quickly changing the fidelity of your VLM simulation.
+        # Useful for quickly changing the fidelity of your simulation.
 
         for wing in self.wings:
-            wing.vlm_chordwise_panels = n_chordwise_panels
+            wing.chordwise_panels = n_chordwise_panels
             for xsec in wing.xsecs:
-                xsec.vlm_spanwise_panels = n_spanwise_panels
+                xsec.spanwise_panels = n_spanwise_panels
 
     def get_bounding_cube(self):
         # Finds the axis-aligned cube that encloses the airplane with the smallest size.
@@ -253,16 +253,17 @@ class Wing:
                  xyz_le=[0, 0, 0],  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
                  xsecs=[],  # This should be a list of WingXSec objects.
                  symmetric=False,  # Is the wing symmetric across the XZ plane?
-                 vlm_chordwise_panels=10,
+                 chordwise_panels=10,
                  # Number of chordwise panels used in VLM analysis. Turn this up if you have control surfaces or airfoils with high camberline curvature.
-                 vlm_chordwise_spacing="cosine",  # Can be 'cosine' or 'uniform'.
+                 chordwise_spacing="cosine",  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
+                 panel_chordwise_panels=10,  # Number of chordwise panels used in 3D panel analysis.
                  ):
         self.name = name
         self.xyz_le = np.array(xyz_le)
         self.xsecs = xsecs
         self.symmetric = symmetric
-        self.vlm_chordwise_panels = vlm_chordwise_panels
-        self.vlm_chordwise_spacing = vlm_chordwise_spacing
+        self.chordwise_panels = chordwise_panels
+        self.chordwise_spacing = chordwise_spacing
 
     def area_wetted(self):
         # Returns the wetted area of a wing.
@@ -342,8 +343,8 @@ class WingXSec:
                  control_surface_hinge_point=0.75,
                  # Point at which the control surface is applied, as a fraction of chord.
                  control_surface_deflection=0,  # Control deflection, in degrees. Downwards-positive.
-                 vlm_spanwise_panels=10,
-                 vlm_spanwise_spacing="cosine"
+                 spanwise_panels=10,
+                 spanwise_spacing="cosine"
                  ):
         self.xyz_le = np.array(xyz_le)
         self.chord = chord
@@ -352,8 +353,8 @@ class WingXSec:
         self.control_surface_type = control_surface_type
         self.control_surface_hinge_point = control_surface_hinge_point
         self.control_surface_deflection = control_surface_deflection
-        self.vlm_spanwise_panels = vlm_spanwise_panels
-        self.vlm_spanwise_spacing = vlm_spanwise_spacing
+        self.spanwise_panels = spanwise_panels
+        self.spanwise_spacing = spanwise_spacing
 
     def xyz_te(self):
         xyz_te = self.xyz_le + self.chord * np.array(
@@ -486,7 +487,7 @@ class Airfoil:
         #   # x_le == 0
         #   # y_le == 0
         #   # average( y_te_upper, y_te_lower ) == 0
-        #   # x_te == 1
+        #   # max( x_te_upper, x_te_upper ) == 1
         # The first two goals are achieved by translating in x and y. The third goal is achieved by rotating about (0,0).
         # The fourth goal is achieved by uniform scaling.
 
@@ -518,7 +519,7 @@ class Airfoil:
         scale_factor = 1 / x_max
         self.coordinates *= scale_factor
 
-    def draw(self, new_figure=True):
+    def draw(self, new_figure=True, draw_vertices = True):
         # Get coordinates if they don't already exist
         if not hasattr(self, 'coordinates'):
             print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
@@ -526,8 +527,11 @@ class Airfoil:
 
         if new_figure:
             plt.figure()
-            plt.title(self.name + " Coordinates")
-        plt.plot(self.coordinates[:, 0], self.coordinates[:, 1])
+            plt.title("Airfoil: "+self.name)
+        if draw_vertices:
+            plt.plot(self.coordinates[:, 0], self.coordinates[:, 1],'-o')
+        else:
+            plt.plot(self.coordinates[:, 0], self.coordinates[:, 1])
         plt.xlim((-0.05, 1.05))
         plt.ylim((-0.5, 0.5))
         plt.axis('equal')
@@ -571,6 +575,7 @@ class Airfoil:
         thickness = np.maximum(y_upper - y_lower, 0)
 
         return thickness
+        # TODO consider speeding up this function by caching the interpolation
 
     def get_camber_at_chord_fraction(self, chord_fraction):
         # Returns the (interpolated) camber at a given location(s). The location is specified by the chord fraction, as measured from the leading edge. Camber is nondimensionalized by chord (i.e. this function returns camber/c at a given x/c).
@@ -746,7 +751,7 @@ class Airfoil:
         return J
 
     def repanel(self, n_points_per_side=100):
-        # Repanels an airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+        # Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
         # Inputs:
         #   # n_points_per_side is the number of points PER SIDE (upper and lower) of the airfoil. 100 is a good number.
         # Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
@@ -782,10 +787,11 @@ class Airfoil:
 
         coordinates = np.column_stack((x_coors, y_coors))
 
-        self.coordinates = coordinates
+        # Make a new airfoil with the coordinates
+        name = self.name + ", repaneled to "+str(n_points_per_side)+" pts"
+        new_airfoil = Airfoil(name=name, coordinates = coordinates)
 
-        self.normalize()
-
+        return new_airfoil
 
 def blend_airfoils(
         airfoil1,
@@ -809,8 +815,8 @@ def blend_airfoils(
     assert blend_fraction >= 0 and blend_fraction <= 1, "blend_fraction is out of the valid range of 0 to 1!"
 
     # Repanel to ensure the same number of points and the same point distribution on both airfoils.
-    foil1.repanel(n_points_per_side=200)
-    foil2.repanel(n_points_per_side=200)
+    foil1=foil1.repanel(n_points_per_side=200)
+    foil2=foil2.repanel(n_points_per_side=200)
 
     blended_coordinates = (1 - blend_fraction) * foil1.coordinates + blend_fraction * foil2.coordinates
 

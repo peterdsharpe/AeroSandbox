@@ -10,14 +10,14 @@ a = Airplane(
                 name="Main Wing",
                 xyz_le=[0, 0, 0],
                 symmetric=True,
-                vlm_chordwise_panels=13,
+                chordwise_panels=13,
                 xsecs=[
                     WingXSec(  # Root
                         xyz_le=[0, 0, 0],
                         chord=0.18,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
-                        vlm_spanwise_panels=19,
+                        spanwise_panels=19,
                     ),
                     WingXSec(  # Tip
                         xyz_le=[0.07, 1, 0],
@@ -31,14 +31,14 @@ a = Airplane(
                 name="Horizontal Stabilizer",
                 xyz_le=[0.6, 0, 0.1],
                 symmetric=True,
-                vlm_chordwise_panels=7,
+                chordwise_panels=7,
                 xsecs=[
                     WingXSec(  # root
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
-                        vlm_spanwise_panels=7,
+                        spanwise_panels=7,
                     ),
                     WingXSec(  # tip
                         xyz_le=[0.02, 0.17, 0],
@@ -52,14 +52,14 @@ a = Airplane(
                 name="Vertical Stabilizer",
                 xyz_le=[0.65, 0, 0.1],
                 symmetric=False,
-                vlm_chordwise_panels=7,
+                chordwise_panels=7,
                 xsecs=[
                     WingXSec(
                         xyz_le=[0, 0, 0],
                         chord=0.1,
                         twist=0,
                         airfoil=Airfoil(name="naca0012"),
-                        vlm_spanwise_panels=7,
+                        spanwise_panels=7,
                     ),
                     WingXSec(
                         xyz_le=[0.04, 0, 0.12],

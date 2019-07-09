@@ -26,7 +26,7 @@ p = Airplane(
     ]
 )
 p.set_ref_dims_from_wing()
-p.set_vlm_paneling_everywhere(30,30)
+p.set_paneling_everywhere(30, 30)
 ap= vlm1(airplane=p,
          op_point = OperatingPoint(
     velocity = 10, alpha=0, beta = 0

@@ -46,14 +46,19 @@ class vlm1(AeroProblem):
     # NOTE: USE VLM2 INSTEAD OF THIS; VLM1 HAS BEEN COMPLETELY SUPERSEDED IN PERFORMANCE AND FUNCTIONALITY BY VLM2.
     # Traditional vortex-lattice-method approach with quadrilateral paneling, horseshoe vortices from each one, etc.
     # Implemented exactly as The Good Book says (Drela, "Flight Vehicle Aerodynamics", p. 130-135)
+    #
+    # Notes:
+    #   # Does not support control surfaces
+    #   # Does not support quasi-steady rotations (nonzero p, q, r).
+
 
     @profile
     def run(self, verbose=True):
         self.verbose = verbose
 
         if self.verbose: print("Running VLM1 calculation...")
-        # Deprecation warning (use VLM2 instead)
-        if self.verbose: print("WARNING! VLM1 has been wholly eclipsed in performance and functionality by VLM2. The VLM1 source code has been left intact for validation purposes and backwards-compatibility, but it will not be supported going forward.")
+        # Deprecation warning (use VLM2 instead). Print regardless of verbose status
+        print("DEPRECATION WARNING: VLM1 has been wholly eclipsed in performance and functionality by VLM2. The VLM1 source code has been left intact for validation purposes and backwards-compatibility, but it will not be supported going forward.")
 
 
         self.make_panels()
@@ -82,15 +87,15 @@ class vlm1(AeroProblem):
         for wing in self.airplane.wings:
 
             # Define number of chordwise points
-            n_chordwise_coordinates = wing.vlm_chordwise_panels + 1
+            n_chordwise_coordinates = wing.chordwise_panels + 1
 
             # Get the chordwise coordinates
-            if wing.vlm_chordwise_spacing == 'uniform':
+            if wing.chordwise_spacing == 'uniform':
                 nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
-            elif wing.vlm_chordwise_spacing == 'cosine':
+            elif wing.chordwise_spacing == 'cosine':
                 nondim_chordwise_coordinates = cosspace(n_points=n_chordwise_coordinates)
             else:
-                raise Exception("Bad value of wing.vlm_chordwise_spacing!")
+                raise Exception("Bad value of wing.chordwise_spacing!")
 
             # Initialize an array of coordinates. Indices:
             #   Index 1: chordwise location
@@ -102,7 +107,7 @@ class vlm1(AeroProblem):
             #   Index 1: chordwise location
             #   Index 2: spanwise location
             #   Index 3: X, Y, or Z.
-            wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
+            wing_normals = np.empty((wing.chordwise_panels, 0, 3))
 
             for XSec_number in range(len(wing.xsecs) - 1):
 
@@ -111,15 +116,15 @@ class vlm1(AeroProblem):
                 next_xsec = wing.xsecs[XSec_number + 1]
 
                 # Define number of spanwise points
-                n_spanwise_coordinates = xsec.vlm_spanwise_panels + 1
+                n_spanwise_coordinates = xsec.spanwise_panels + 1
 
                 # Get the spanwise coordinates
-                if xsec.vlm_spanwise_spacing == 'uniform':
+                if xsec.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif xsec.vlm_spanwise_spacing == 'cosine':
+                elif xsec.spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad value of section.vlm_spanwise_spacing!")
+                    raise Exception("Bad value of section.spanwise_spacing!")
 
                 # Get the corners of the WingXSec
                 xsec_xyz_le = xsec.xyz_le + wing.xyz_le
@@ -777,7 +782,6 @@ class vlm2(AeroProblem):
 
         if self.verbose: print("Running VLM2 calculation...")
 
-        self.check_geometry()
         self.make_panels()
         self.setup_geometry()
         self.setup_operating_point()
@@ -790,10 +794,6 @@ class vlm2(AeroProblem):
         # Runs a stability analysis about the specified op-point.
         # TODO make this function
         self.verbose = verbose
-
-    def check_geometry(self):
-        # Make sure things are sensible
-        pass  # TODO make this function
 
     def make_panels(self):
         # Creates self.mcl_coordinates_structured_list and self.wing_mcl_normals.
@@ -812,12 +812,12 @@ class vlm2(AeroProblem):
             wing = self.airplane.wings[wing_num]
 
             # Define number of chordwise points
-            n_chordwise_coordinates = wing.vlm_chordwise_panels + 1
+            n_chordwise_coordinates = wing.chordwise_panels + 1
 
             # Get the chordwise coordinates
-            if wing.vlm_chordwise_spacing == 'uniform':
+            if wing.chordwise_spacing == 'uniform':
                 nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
-            elif wing.vlm_chordwise_spacing == 'cosine':
+            elif wing.chordwise_spacing == 'cosine':
                 nondim_chordwise_coordinates = cosspace(0, 1, n_chordwise_coordinates)
             else:
                 raise Exception("Bad value of wing.chordwise_spacing!")
@@ -912,15 +912,15 @@ class vlm2(AeroProblem):
                 xsec = wing.xsecs[section_num]
 
                 # Define number of spanwise points
-                n_spanwise_coordinates = xsec.vlm_spanwise_panels + 1
+                n_spanwise_coordinates = xsec.spanwise_panels + 1
 
                 # Get the spanwise coordinates
-                if xsec.vlm_spanwise_spacing == 'uniform':
+                if xsec.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif xsec.vlm_spanwise_spacing == 'cosine':
+                elif xsec.spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad value of section.vlm_spanwise_spacing!")
+                    raise Exception("Bad value of section.spanwise_spacing!")
 
                 # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
                 is_last_section = section_num == len(wing.xsecs) - 2
@@ -949,7 +949,7 @@ class vlm2(AeroProblem):
             # First index is chordwise point number, second index is xsec number, and third index is xyz.
 
             nondim_xsec_normals = np.empty(
-                (wing.vlm_chordwise_panels, 0, 2))  # MxNx2 of airfoil normals in local xsec coordinates.
+                (wing.chordwise_panels, 0, 2))  # MxNx2 of airfoil normals in local xsec coordinates.
             # First index is chordwise point number, second index is xsec number, and third is LOCAL xy.
             nondim_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
                                                    :-1] + 0.75 * nondim_chordwise_coordinates[1:]
@@ -963,21 +963,21 @@ class vlm2(AeroProblem):
             # Goal: make normals_structured_list, a MxNx2 array of the normal direction of each panel.
             # First index is chordwise point number, second index is spanwise point number, and third index is xyz.
 
-            wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
+            wing_normals = np.empty((wing.chordwise_panels, 0, 3))
             for section_num in range(len(wing.xsecs) - 1):
                 # Define the relevant cross section
                 xsec = wing.xsecs[section_num]
 
                 # Define number of spanwise points
-                n_spanwise_coordinates = xsec.vlm_spanwise_panels + 1
+                n_spanwise_coordinates = xsec.spanwise_panels + 1
 
                 # Get the spanwise coordinates
-                if xsec.vlm_spanwise_spacing == 'uniform':
+                if xsec.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif xsec.vlm_spanwise_spacing == 'cosine':
+                elif xsec.spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad value of section.vlm_spanwise_spacing!")
+                    raise Exception("Bad value of section.spanwise_spacing!")
 
                 # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
                 is_last_section = section_num == len(wing.xsecs) - 2
@@ -996,7 +996,7 @@ class vlm2(AeroProblem):
                 control_surface_hinge_point_index = np.interp(
                     x=xsec.control_surface_hinge_point,
                     xp=nondim_colocation_coordinates,
-                    fp=np.arange(wing.vlm_chordwise_panels)
+                    fp=np.arange(wing.chordwise_panels)
                 )
                 deflection_angle = xsec.control_surface_deflection
                 rot_matrix = angle_axis_rotation_matrix(
@@ -1009,15 +1009,15 @@ class vlm2(AeroProblem):
                 inner_xsec_up_rotated = np.matmul(rot_matrix, inner_xsec_up)
                 outer_xsec_up_rotated = np.matmul(rot_matrix, outer_xsec_up)
                 if control_surface_hinge_point_index <= 0:  # For some weird reason, your hinge is at the leading edge
-                    inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                    outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                    inner_xsec_ups = inner_xsec_up_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                    outer_xsec_ups = outer_xsec_up_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                elif control_surface_hinge_point_index >= wing.vlm_chordwise_panels:  # For some weird reason, your hinge is at the trailing edge
-                    inner_xsec_backs = inner_xsec_back * np.ones((wing.vlm_chordwise_panels, 3))
-                    outer_xsec_backs = outer_xsec_back * np.ones((wing.vlm_chordwise_panels, 3))
-                    inner_xsec_ups = inner_xsec_up * np.ones((wing.vlm_chordwise_panels, 3))
-                    outer_xsec_ups = outer_xsec_up * np.ones((wing.vlm_chordwise_panels, 3))
+                    inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                    inner_xsec_ups = inner_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_ups = outer_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                elif control_surface_hinge_point_index >= wing.chordwise_panels:  # For some weird reason, your hinge is at the trailing edge
+                    inner_xsec_backs = inner_xsec_back * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_backs = outer_xsec_back * np.ones((wing.chordwise_panels, 3))
+                    inner_xsec_ups = inner_xsec_up * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_ups = outer_xsec_up * np.ones((wing.chordwise_panels, 3))
                 else:  # Normal cases, where your hinge isn't at either the leading or trailing edges
                     last_unmodified_index = np.int(np.floor(control_surface_hinge_point_index))
                     fraction_to_modify = 1 - (control_surface_hinge_point_index - last_unmodified_index)
@@ -1035,25 +1035,25 @@ class vlm2(AeroProblem):
                         np.tile(inner_xsec_back, reps=(last_unmodified_index, 1)),
                         inner_xsec_back_semirotated,
                         np.tile(inner_xsec_back_rotated,
-                                reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                     ))
                     inner_xsec_ups = np.vstack((
                         np.tile(inner_xsec_up, reps=(last_unmodified_index, 1)),
                         inner_xsec_up_semirotated,
                         np.tile(inner_xsec_up_rotated,
-                                reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                     ))
                     outer_xsec_backs = np.vstack((
                         np.tile(outer_xsec_back, reps=(last_unmodified_index, 1)),
                         outer_xsec_back_semirotated,
                         np.tile(outer_xsec_back_rotated,
-                                reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                     ))
                     outer_xsec_ups = np.vstack((
                         np.tile(outer_xsec_up, reps=(last_unmodified_index, 1)),
                         outer_xsec_up_semirotated,
                         np.tile(outer_xsec_up_rotated,
-                                reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                     ))
 
                 # Get xsec normals
@@ -1093,21 +1093,21 @@ class vlm2(AeroProblem):
                     # Goal: make normals_structured_list, a MxNx2 array of the normal direction of each panel.
                     # First index is chordwise point number, second index is spanwise point number, and third index is xyz.
 
-                    wing_normals = np.empty((wing.vlm_chordwise_panels, 0, 3))
+                    wing_normals = np.empty((wing.chordwise_panels, 0, 3))
                     for section_num in range(len(wing.xsecs) - 1):
                         # Define the relevant cross section
                         xsec = wing.xsecs[section_num]
 
                         # Define number of spanwise points
-                        n_spanwise_coordinates = xsec.vlm_spanwise_panels + 1
+                        n_spanwise_coordinates = xsec.spanwise_panels + 1
 
                         # Get the spanwise coordinates
-                        if xsec.vlm_spanwise_spacing == 'uniform':
+                        if xsec.spanwise_spacing == 'uniform':
                             nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                        elif xsec.vlm_spanwise_spacing == 'cosine':
+                        elif xsec.spanwise_spacing == 'cosine':
                             nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
                         else:
-                            raise Exception("Bad value of section.vlm_spanwise_spacing!")
+                            raise Exception("Bad value of section.spanwise_spacing!")
 
                         # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
                         is_last_section = section_num == len(wing.xsecs) - 2
@@ -1127,7 +1127,7 @@ class vlm2(AeroProblem):
                         control_surface_hinge_point_index = np.interp(
                             x=xsec.control_surface_hinge_point,
                             xp=nondim_colocation_coordinates,
-                            fp=np.arange(wing.vlm_chordwise_panels)
+                            fp=np.arange(wing.chordwise_panels)
                         )
                         deflection_angle = xsec.control_surface_deflection
                         if xsec.control_surface_type == "asymmetric":
@@ -1142,15 +1142,15 @@ class vlm2(AeroProblem):
                         inner_xsec_up_rotated = np.matmul(rot_matrix, inner_xsec_up)
                         outer_xsec_up_rotated = np.matmul(rot_matrix, outer_xsec_up)
                         if control_surface_hinge_point_index <= 0:  # For some weird reason, your hinge is at the leading edge
-                            inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                            outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                            inner_xsec_ups = inner_xsec_up_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                            outer_xsec_ups = outer_xsec_up_rotated * np.ones((wing.vlm_chordwise_panels, 3))
-                        elif control_surface_hinge_point_index >= wing.vlm_chordwise_panels:  # For some weird reason, your hinge is at the trailing edge
-                            inner_xsec_backs = inner_xsec_back * np.ones((wing.vlm_chordwise_panels, 3))
-                            outer_xsec_backs = outer_xsec_back * np.ones((wing.vlm_chordwise_panels, 3))
-                            inner_xsec_ups = inner_xsec_up * np.ones((wing.vlm_chordwise_panels, 3))
-                            outer_xsec_ups = outer_xsec_up * np.ones((wing.vlm_chordwise_panels, 3))
+                            inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                            inner_xsec_ups = inner_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_ups = outer_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                        elif control_surface_hinge_point_index >= wing.chordwise_panels:  # For some weird reason, your hinge is at the trailing edge
+                            inner_xsec_backs = inner_xsec_back * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_backs = outer_xsec_back * np.ones((wing.chordwise_panels, 3))
+                            inner_xsec_ups = inner_xsec_up * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_ups = outer_xsec_up * np.ones((wing.chordwise_panels, 3))
                         else:  # Normal cases, where your hinge isn't at either the leading or trailing edges
                             last_unmodified_index = np.int(np.floor(control_surface_hinge_point_index))
                             fraction_to_modify = 1 - (control_surface_hinge_point_index - last_unmodified_index)
@@ -1168,25 +1168,25 @@ class vlm2(AeroProblem):
                                 np.tile(inner_xsec_back, reps=(last_unmodified_index, 1)),
                                 inner_xsec_back_semirotated,
                                 np.tile(inner_xsec_back_rotated,
-                                        reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                             ))
                             inner_xsec_ups = np.vstack((
                                 np.tile(inner_xsec_up, reps=(last_unmodified_index, 1)),
                                 inner_xsec_up_semirotated,
                                 np.tile(inner_xsec_up_rotated,
-                                        reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                             ))
                             outer_xsec_backs = np.vstack((
                                 np.tile(outer_xsec_back, reps=(last_unmodified_index, 1)),
                                 outer_xsec_back_semirotated,
                                 np.tile(outer_xsec_back_rotated,
-                                        reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                             ))
                             outer_xsec_ups = np.vstack((
                                 np.tile(outer_xsec_up, reps=(last_unmodified_index, 1)),
                                 outer_xsec_up_semirotated,
                                 np.tile(outer_xsec_up_rotated,
-                                        reps=(wing.vlm_chordwise_panels - last_unmodified_index - 1, 1))
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
                             ))
 
                         # Get xsec normals
@@ -1621,7 +1621,6 @@ class vlm2(AeroProblem):
 
         return Vij
 
-    # TODO FIX FROM HERE ON
     def calculate_delta_cp(self):
         # Find the area of each panel ()
         diag1 = self.front_left_vertices_unrolled - self.back_right_vertices_unrolled
@@ -1760,3 +1759,33 @@ class vlm2(AeroProblem):
         plotter.show(cpos=(-1, -1, 1), full_screen=False)
 
 
+class panel1(AeroProblem):
+    # 3D Panel Method aerodynamics code.
+    #
+    # Notes:
+    #   # Specifically written to be reverse-mode-AD-compatible at every step.
+    #
+    # Usage:
+    #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "panel1(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
+    #   # Call panel1.run() to run the problem.
+    #   # Access results in the command line, or through properties of the panel1 class.
+    #   #   # In a future update, this will be done through a standardized AeroData class.
+
+    def run(self, verbose = True):
+        self.verbose = verbose
+
+        if self.verbose: print("Running PANEL1 calculation...")
+
+        self.make_panels()
+        self.setup_geometry()
+        self.setup_operating_point()
+        self.calculate_vortex_strengths()
+        self.calculate_forces()
+
+        if self.verbose: print("PANEL1 calculation complete!")
+
+    def make_panels(self):
+        pass
+
+    def draw(self):
+        pass
