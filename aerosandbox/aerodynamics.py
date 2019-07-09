@@ -176,9 +176,9 @@ class vlm1(AeroProblem):
                 nondim_chordwise_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
                                                                  :-1] + 0.75 * nondim_chordwise_coordinates[1:]
 
-                xsec_normals_2d = xsec.airfoil.get_normal_direction_at_chord_fraction(
+                xsec_normals_2d = xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(
                     nondim_chordwise_colocation_coordinates)  # Nx2 array of normal directions
-                next_xsec_normals_2d = next_xsec.airfoil.get_normal_direction_at_chord_fraction(
+                next_xsec_normals_2d = next_xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(
                     nondim_chordwise_colocation_coordinates)
 
                 xsec_normals = (
@@ -954,7 +954,7 @@ class vlm2(AeroProblem):
             nondim_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
                                                    :-1] + 0.75 * nondim_chordwise_coordinates[1:]
             for xsec in wing.xsecs:
-                nondim_normals = xsec.airfoil.get_normal_direction_at_chord_fraction(nondim_colocation_coordinates)
+                nondim_normals = xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(nondim_colocation_coordinates)
                 nondim_normals = np.expand_dims(nondim_normals, 1)
                 nondim_xsec_normals = np.hstack((nondim_xsec_normals, nondim_normals))
 
@@ -1758,6 +1758,8 @@ class vlm2(AeroProblem):
         plotter.set_background(color="black")
         plotter.show(cpos=(-1, -1, 1), full_screen=False)
 
+class vlm3(AeroProblem):
+    pass # TODO VLM2 with better control surface handling / panel generation
 
 class panel1(AeroProblem):
     # 3D Panel Method aerodynamics code.
@@ -1880,7 +1882,7 @@ class panel1(AeroProblem):
             nondim_xsec_coordinates = np.empty((2*n_chordwise_coordinates-1, 0, 2))  # MxNx2 array of airfoil coordinates.
             # First index is chordwise point number, second index is xsec number, third index is xy.
             for xsec in wing.xsecs:
-                repaneled_airfoil = xsec.airfoil.repanel(n_points_per_side=n_chordwise_coordinates)
+                repaneled_airfoil = xsec.airfoil.get_repaneled_airfoil(n_points_per_side=n_chordwise_coordinates)
                 repaneled_airfoil_coordinates = np.expand_dims(repaneled_airfoil.coordinates, axis=1)
                 nondim_xsec_coordinates = np.hstack((nondim_xsec_coordinates, repaneled_airfoil_coordinates))
 
@@ -1941,7 +1943,7 @@ class panel1(AeroProblem):
             nondim_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
                                                    :-1] + 0.75 * nondim_chordwise_coordinates[1:]
             for xsec in wing.xsecs:
-                nondim_normals = xsec.airfoil.get_normal_direction_at_chord_fraction(nondim_colocation_coordinates)
+                nondim_normals = xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(nondim_colocation_coordinates)
                 nondim_normals = np.expand_dims(nondim_normals, 1)
                 nondim_xsec_normals = np.hstack((nondim_xsec_normals, nondim_normals))
 

@@ -370,8 +370,10 @@ class Airfoil:
     cached_airfoils = []
 
     def __init__(self,
-                 name="naca0012",
-                 coordinates=None,
+                 name="Untitled Airfoil",  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
+                 coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
+                 use_cache=True,  # Look in the airfoil cache, based on the airfoil's name. # TODO make airfoil caching
+                 n_points_per_side=200, # Number of points to use when repaneling the airfoil.
                  ):
 
         self.name = name
@@ -384,7 +386,10 @@ class Airfoil:
         a) use a name corresponding to an airfoil in the UIUC Airfoil Database or \
         b) provide your own coordinates in the constructor, such as Airfoil(""MyFoilName"", <Nx2 array of coordinates>)."
 
-        self.normalize()
+        # self.normalize()
+        self.repanel_current_airfoil(
+            n_points_per_side=n_points_per_side)  # all airfoils are automatically repaneled to ensure consistent, good paneling.
+        self.populate_mcl_coordinates()
 
     def populate_coordinates(self):
         # Populates a variable called self.coordinates with the coordinates of the airfoil.
@@ -482,56 +487,81 @@ class Airfoil:
         except FileNotFoundError:
             print("File was not found in airfoil database!")
 
-    def normalize(self):
-        # Alters the airfoil's coordinates to exactly achieve several goals:
-        #   # x_le == 0
-        #   # y_le == 0
-        #   # average( y_te_upper, y_te_lower ) == 0
-        #   # max( x_te_upper, x_te_upper ) == 1
-        # The first two goals are achieved by translating in x and y. The third goal is achieved by rotating about (0,0).
-        # The fourth goal is achieved by uniform scaling.
+    def populate_mcl_coordinates(self):
+        # Populates self.mcl_coordinates, a Nx2 list of the airfoil's mean camber line coordinates.
+        # Ordered from the leading edge to the trailing edge.
+        #
+        # Also populates self.upper_minus_mcl and self.lower_minus mcl, which are Nx2 lists of the vectors needed to
+        # go from the mcl coordinates to the upper and lower surfaces, respectively. Both listed leading-edge to trailing-edge.
+        #
+        # Also populates self.thickness, a Nx2 list of the thicknesses at the mcl_coordinates x-points.
 
-        # Goals 1 and 2
-        LE_point_original = self.coordinates[self.LE_index(), :]
-        assert abs(LE_point_original[
-                       0]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
-                       Are you sure this isn't bad airfoil geometry?"
-        assert abs(LE_point_original[
-                       1]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
-                       Are you sure this isn't bad airfoil geometry?"
-        self.coordinates -= LE_point_original
+        upper = np.flipud(self.upper_coordinates())
+        lower = self.lower_coordinates()
 
-        # Goal 3
-        TE_point_pre_rotation = (self.coordinates[0, :] + self.coordinates[-1, :]) / 2
-        rotation_angle = -np.arctan(TE_point_pre_rotation[1] / TE_point_pre_rotation[
-            0])  # You need to rotate this many radians counterclockwise
-        assert abs(np.degrees(
-            rotation_angle)) < 0.5, "The foil appears to be really weirdly rotated! \
-            Are you sure this isn't bad airfoil geometry?"
-        cos_theta = np.cos(rotation_angle)
-        sin_theta = np.sin(rotation_angle)
-        rotation_matrix = np.array([[cos_theta, -sin_theta], [sin_theta, cos_theta]])
-        self.coordinates = np.transpose(rotation_matrix @ np.transpose(self.coordinates))
+        mcl_coordinates = (upper + lower) / 2
+        self.mcl_coordinates = mcl_coordinates
 
-        # Goal 4
-        x_max = np.max(self.coordinates[:, 0])
-        assert x_max <= 1.02 and x_max >= 0.98, "x_max is really weird! Are you sure this isn't bad airfoil geometry?"
-        scale_factor = 1 / x_max
-        self.coordinates *= scale_factor
+        self.upper_minus_mcl = upper - self.mcl_coordinates
+        # self.lower_minus_mcl = -self.upper_minus_mcl
 
-    def draw(self, new_figure=True, draw_vertices = True):
-        # Get coordinates if they don't already exist
-        if not hasattr(self, 'coordinates'):
-            print("You must call read_coordinates() on an Airfoil before drawing it. Automatically doing that...")
-            self.populate_coordinates()
+        thickness = np.sqrt(
+            np.sum(
+                np.power(self.upper_minus_mcl, 2),
+                axis = 1
+            )
+        ) * 2
+        self.thickness = np.column_stack((self.mcl_coordinates[:,0],thickness))
 
+
+    # def normalize(self): # TODO make this return a new airfoil instead
+    #     # Alters the airfoil's coordinates to exactly achieve several goals:
+    #     #   # x_le == 0
+    #     #   # y_le == 0
+    #     #   # average( y_te_upper, y_te_lower ) == 0
+    #     #   # max( x_te_upper, x_te_upper ) == 1
+    #     # The first two goals are achieved by translating in x and y. The third goal is achieved by rotating about (0,0).
+    #     # The fourth goal is achieved by uniform scaling.
+    #
+    #     # Goals 1 and 2
+    #     LE_point_original = self.coordinates[self.LE_index(), :]
+    #     assert abs(LE_point_original[
+    #                    0]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
+    #                    Are you sure this isn't bad airfoil geometry?"
+    #     assert abs(LE_point_original[
+    #                    1]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
+    #                    Are you sure this isn't bad airfoil geometry?"
+    #     self.coordinates -= LE_point_original
+    #
+    #     # Goal 3
+    #     TE_point_pre_rotation = (self.coordinates[0, :] + self.coordinates[-1, :]) / 2
+    #     rotation_angle = -np.arctan(TE_point_pre_rotation[1] / TE_point_pre_rotation[
+    #         0])  # You need to rotate this many radians counterclockwise
+    #     assert abs(np.degrees(
+    #         rotation_angle)) < 0.5, "The foil appears to be really weirdly rotated! \
+    #         Are you sure this isn't bad airfoil geometry?"
+    #     cos_theta = np.cos(rotation_angle)
+    #     sin_theta = np.sin(rotation_angle)
+    #     rotation_matrix = np.array([[cos_theta, -sin_theta], [sin_theta, cos_theta]])
+    #     self.coordinates = np.transpose(rotation_matrix @ np.transpose(self.coordinates))
+    #
+    #     # Goal 4
+    #     x_max = np.max(self.coordinates[:, 0])
+    #     assert x_max <= 1.02 and x_max >= 0.98, "x_max is really weird! Are you sure this isn't bad airfoil geometry?"
+    #     scale_factor = 1 / x_max
+    #     self.coordinates *= scale_factor
+
+    def draw(self, new_figure=True, draw_vertices=True, draw_mcl = True):
         if new_figure:
             plt.figure()
-            plt.title("Airfoil: "+self.name)
+            plt.title("Airfoil: " + self.name)
         if draw_vertices:
-            plt.plot(self.coordinates[:, 0], self.coordinates[:, 1],'-o')
+            plt.plot(self.coordinates[:, 0], self.coordinates[:, 1], '.-')
         else:
             plt.plot(self.coordinates[:, 0], self.coordinates[:, 1])
+        if draw_mcl:
+            plt.plot(self.mcl_coordinates[:,0],self.mcl_coordinates[:,1],'.-')
+
         plt.xlim((-0.05, 1.05))
         plt.ylim((-0.5, 0.5))
         plt.axis('equal')
@@ -557,6 +587,15 @@ class Airfoil:
         return self.coordinates[:self.LE_index() + 1, :]
 
     def get_thickness_at_chord_fraction(self, chord_fraction):
+        thickness_func = sp_interp.interp1d(
+            x=self.thickness[:,0],
+            y=self.thickness[:,1],
+            copy = False,
+            fill_value = 'extrapolate'
+        )
+        return thickness_func(chord_fraction)
+
+    def get_thickness_at_chord_fraction_legacy(self, chord_fraction):
         # Returns the (interpolated) camber at a given location(s). The location is specified by the chord fraction, as measured from the leading edge. Thickness is nondimensionalized by chord (i.e. this function returns t/c at a given x/c).
         chord = np.max(self.coordinates[:, 0]) - np.min(
             self.coordinates[:, 0])  # This should always be 1, but this is just coded for robustness.
@@ -575,9 +614,17 @@ class Airfoil:
         thickness = np.maximum(y_upper - y_lower, 0)
 
         return thickness
-        # TODO consider speeding up this function by caching the interpolation
 
     def get_camber_at_chord_fraction(self, chord_fraction):
+        camber_func = sp_interp.interp1d(
+            x=self.mcl_coordinates[:,0],
+            y=self.mcl_coordinates[:,1],
+            copy=False,
+            fill_value='extrapolate'
+        )
+        return camber_func(chord_fraction)
+
+    def get_camber_at_chord_fraction_legacy(self, chord_fraction):
         # Returns the (interpolated) camber at a given location(s). The location is specified by the chord fraction, as measured from the leading edge. Camber is nondimensionalized by chord (i.e. this function returns camber/c at a given x/c).
         chord = np.max(self.coordinates[:, 0]) - np.min(
             self.coordinates[:, 0])  # This should always be 1, but this is just coded for robustness.
@@ -596,15 +643,15 @@ class Airfoil:
         camber = (y_upper + y_lower) / 2
 
         return camber
-        # TODO consider speeding up this function by caching the interpolation
 
-    def get_normal_direction_at_chord_fraction(self, chord_fraction):
-        # Returns the normal direction at a specified chord fraction.
+    def get_mcl_normal_direction_at_chord_fraction(self, chord_fraction):
+        # Returns the normal direction of the mean camber line at a specified chord fraction.
         # If you input a single value, returns a 1D numpy array with 2 elements (x,y).
         # If you input a vector of values, returns a 2D numpy array. First index is the point number, second index is (x,y)
 
         # Right now, does it by finite differencing camber values :(
         # When I'm less lazy I'll make it do it in a proper, more efficient way
+        # TODO make this not finite difference
         epsilon = np.sqrt(np.finfo(float).eps)
 
         cambers = self.get_camber_at_chord_fraction(chord_fraction)
@@ -621,8 +668,12 @@ class Airfoil:
             return normal
 
     def TE_thickness(self):
-        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (y/c) units.
-        return np.abs(self.coordinates[0, 1] - self.coordinates[-1, 1])
+        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
+        return self.thickness[-1,1]
+        # np.sqrt(
+        #     (self.coordinates[0, 0] - self.coordinates[-1, 0]) ** 2 +
+        #     (self.coordinates[0, 1] - self.coordinates[-1, 1]) ** 2
+        # )
 
     def TE_angle(self):
         # Returns the trailing edge angle of the airfoil, in degrees
@@ -635,7 +686,7 @@ class Airfoil:
         ))
 
     def area(self):
-        # Returns the area of the airfoil, in nondimensional (chord-normalized) units.
+        # Returns the area of the airfoil, in nondimensional (normalized to chord^2) units.
         x = self.coordinates[:, 0]
         y = self.coordinates[:, 1]
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -665,7 +716,7 @@ class Airfoil:
         return centroid
 
     def Ixx(self):
-        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
         x = self.coordinates[:, 0]
         y = self.coordinates[:, 1]
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -686,7 +737,7 @@ class Airfoil:
         return Iuu
 
     def Iyy(self):
-        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        # Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
         x = self.coordinates[:, 0]
         y = self.coordinates[:, 1]
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -707,7 +758,7 @@ class Airfoil:
         return Ivv
 
     def Ixy(self):
-        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        # Returns the nondimensionalized product of inertia, taken about the centroid.
         x = self.coordinates[:, 0]
         y = self.coordinates[:, 1]
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -728,7 +779,7 @@ class Airfoil:
         return Iuv
 
     def J(self):
-        # Returns the nondimensionalized moment of inertia, taken about the centroid.
+        # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
         x = self.coordinates[:, 0]
         y = self.coordinates[:, 1]
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -750,7 +801,7 @@ class Airfoil:
 
         return J
 
-    def repanel(self, n_points_per_side=100):
+    def get_repaneled_airfoil(self, n_points_per_side=100):
         # Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
         # Inputs:
         #   # n_points_per_side is the number of points PER SIDE (upper and lower) of the airfoil. 100 is a good number.
@@ -788,14 +839,90 @@ class Airfoil:
         coordinates = np.column_stack((x_coors, y_coors))
 
         # Make a new airfoil with the coordinates
-        name = self.name + ", repaneled to "+str(n_points_per_side)+" pts"
-        new_airfoil = Airfoil(name=name, coordinates = coordinates)
+        name = self.name + ", repaneled to " + str(n_points_per_side) + " pts"
+        new_airfoil = Airfoil(name=name, coordinates=coordinates)
 
         return new_airfoil
 
-    def add_control_surface(self, deflection=0, hinge_point = 0.75):
+    def repanel_current_airfoil(self, n_points_per_side=100):
+        # Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+        # Inputs:
+        #   # n_points_per_side is the number of points PER SIDE (upper and lower) of the airfoil. 100 is a good number.
+        # Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
+        # since one point (the leading edge point) is shared by both the upper and lower surfaces.
+
+        upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
+        lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
+
+        # Find distances between coordinates, assuming linear interpolation
+        upper_distances_between_points = np.sqrt(
+            np.power(upper_original_coors[:-1, 0] - upper_original_coors[1:, 0], 2) +
+            np.power(upper_original_coors[:-1, 1] - upper_original_coors[1:, 1], 2)
+        )
+        lower_distances_between_points = np.sqrt(
+            np.power(lower_original_coors[:-1, 0] - lower_original_coors[1:, 0], 2) +
+            np.power(lower_original_coors[:-1, 1] - lower_original_coors[1:, 1], 2)
+        )
+        upper_distances_from_TE = np.hstack((0, np.cumsum(upper_distances_between_points)))
+        lower_distances_from_LE = np.hstack((0, np.cumsum(lower_distances_between_points)))
+        upper_distances_from_TE_normalized = upper_distances_from_TE / upper_distances_from_TE[-1]
+        lower_distances_from_LE_normalized = lower_distances_from_LE / lower_distances_from_LE[-1]
+
+        # Generate a cosine-spaced list of points from 0 to 1
+        s = cosspace(n_points=n_points_per_side)
+
+        x_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 0])
+        y_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 1])
+        x_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 0])
+        y_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 1])
+
+        x_coors = np.hstack((x_upper_func(s), x_lower_func(s)[1:]))
+        y_coors = np.hstack((y_upper_func(s), y_lower_func(s)[1:]))
+
+        coordinates = np.column_stack((x_coors, y_coors))
+        self.coordinates = coordinates
+
+    def add_control_surface(self, deflection=0., hinge_point=0.75):
         # Returns a version of the airfoil with a control surface added at a given point.
-        pass # TODO make me
+        # Inputs:
+        #   # deflection: the deflection angle, in degrees. Downwards-positive.
+        #   # hinge_point: the location of the hinge, as a fraction of chord.
+
+        # Make the rotation matrix for the given angle.
+        sintheta = np.sin(np.radians(-deflection))
+        costheta = np.cos(np.radians(-deflection))
+        rotation_matrix = np.array(
+            [[costheta, -sintheta],
+             [sintheta, costheta]]
+        )
+
+        # Find the hinge point
+        hinge_point = np.array((hinge_point, self.get_camber_at_chord_fraction(hinge_point))) # Make hinge_point a vector.
+
+        # Split the airfoil into the sections before and after the hinge
+        split_index = np.where(self.mcl_coordinates[:,0]>hinge_point[0])[0][0]
+        mcl_coordinates_before = self.mcl_coordinates[:split_index,:]
+        mcl_coordinates_after = self.mcl_coordinates[split_index:,:]
+        upper_minus_mcl_before = self.upper_minus_mcl[:split_index,:]
+        upper_minus_mcl_after = self.upper_minus_mcl[split_index:,:]
+
+
+        # Rotate the mean camber line (MCL) and "upper minus mcl"
+        new_mcl_coordinates_after = np.transpose(rotation_matrix @ np.transpose(mcl_coordinates_after - hinge_point)) + hinge_point
+        new_upper_minus_mcl_after = np.transpose(rotation_matrix @ np.transpose(upper_minus_mcl_after))
+
+        # Do blending
+
+        # Assemble airfoil
+        new_mcl_coordinates = np.vstack((mcl_coordinates_before, new_mcl_coordinates_after))
+        new_upper_minus_mcl = np.vstack((upper_minus_mcl_before, new_upper_minus_mcl_after))
+        upper_coordinates = np.flipud(new_mcl_coordinates + new_upper_minus_mcl)
+        lower_coordinates = new_mcl_coordinates - new_upper_minus_mcl
+        coordinates = np.vstack((upper_coordinates, lower_coordinates[1:,:]))
+
+        new_airfoil = Airfoil(name = self.name + " flapped", coordinates = coordinates)
+        return new_airfoil # TODO fix self-intersecting airfoils at high deflections
+
 
 def blend_airfoils(
         airfoil1,
@@ -819,8 +946,8 @@ def blend_airfoils(
     assert blend_fraction >= 0 and blend_fraction <= 1, "blend_fraction is out of the valid range of 0 to 1!"
 
     # Repanel to ensure the same number of points and the same point distribution on both airfoils.
-    foil1=foil1.repanel(n_points_per_side=200)
-    foil2=foil2.repanel(n_points_per_side=200)
+    foil1 = foil1.get_repaneled_airfoil(n_points_per_side=200)
+    foil2 = foil2.get_repaneled_airfoil(n_points_per_side=200)
 
     blended_coordinates = (1 - blend_fraction) * foil1.coordinates + blend_fraction * foil2.coordinates
 
@@ -877,5 +1004,5 @@ def angle_axis_rotation_matrix(angle, axis, axis_already_normalized=False):
         return rot_matrix
     else:  # angle is assumed to be a 1d ndarray
         rot_matrix = costheta * np.expand_dims(np.eye(3), 2) + sintheta * np.expand_dims(cpm, 2) + (
-                    1 - costheta) * np.expand_dims(outer_axis, 2)
+                1 - costheta) * np.expand_dims(outer_axis, 2)
         return rot_matrix
