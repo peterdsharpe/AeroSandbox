@@ -796,7 +796,7 @@ class vlm2(AeroProblem):
         self.verbose = verbose
 
     def make_panels(self):
-        # Creates self.mcl_coordinates_structured_list and self.wing_mcl_normals.
+        # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
 
         if self.verbose: print("Meshing...")
 
@@ -805,7 +805,7 @@ class vlm2(AeroProblem):
 
         for wing_num in range(len(self.airplane.wings)):
             # Things we want for each wing (where M is the number of chordwise panels, N is the number of spanwise panels)
-            # # mcl_coordinates_structured_list: M+1 x N+1 x 3; corners of every panel.
+            # # panel_coordinates_structured_list: M+1 x N+1 x 3; corners of every panel.
             # # normals_structured_list: M x N x 3; normal direction of each panel
 
             # Get the wing
@@ -903,7 +903,7 @@ class vlm2(AeroProblem):
 
             # -----------------------------------------------------
             # Interpolate the coordinates between xsecs
-            # Goal is to make mcl_coordinates_structured_list
+            # Goal is to make panel_coordinates_structured_list
             wing_mcl_coordinates = np.empty((n_chordwise_coordinates, 0, 3))  # MxNx3 of all coordinates on the wing.
             # First index is chordwise point #, second index is spanwise point #, third is xyz.
 
@@ -1218,13 +1218,13 @@ class vlm2(AeroProblem):
         if self.verbose: print("Meshing complete!")
         # -----------------------------------------------------
         # Review of the important things that have been done up to this point:
-        # * We made mcl_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
+        # * We made panel_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
         # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
         #   * Takes into account control surface deflections
-        # * Both mcl_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
-        #   accessible at self.mcl_coordinates_structured_list and self.normals_structured_list, respectively.
+        # * Both panel_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
+        #   accessible at self.panel_coordinates_structured_list and self.normals_structured_list, respectively.
         # * Control surface handling:
         #   * Control surfaces are implemented into normal directions as intended.
         # * Symmetry handling:
@@ -1785,7 +1785,508 @@ class panel1(AeroProblem):
         if self.verbose: print("PANEL1 calculation complete!")
 
     def make_panels(self):
-        pass
+        # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
+
+        if self.verbose: print("Meshing...")
+
+        self.panel_coordinates_structured_list = []  # List of numpy arrays
+        self.normals_structured_list = []  # List of numpy arrays
+
+        for wing_num in range(len(self.airplane.wings)):
+            # Things we want for each wing (where M is the number of chordwise panels, N is the number of spanwise panels)
+            # # panel_coordinates_structured_list: M+1 x N+1 x 3; corners of every panel.
+            # # normals_structured_list: M x N x 3; normal direction of each panel
+
+            # Get the wing
+            wing = self.airplane.wings[wing_num]
+
+            # Define number of chordwise points
+            n_chordwise_coordinates = wing.chordwise_panels + 1
+
+            # # Get the chordwise coordinates
+            # if wing.chordwise_spacing == 'uniform':
+            #     nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
+            # elif wing.chordwise_spacing == 'cosine':
+            #     nondim_chordwise_coordinates = cosspace(0, 1, n_chordwise_coordinates)
+            # else:
+            #     raise Exception("Bad value of wing.chordwise_spacing!")
+            assert wing.chordwise_spacing == 'cosine', "Only cosine spacing is allowed for PANEL1!"
+
+            # Get corners of xsecs
+            xsec_xyz_le = np.empty((0, 3))  # Nx3 array of leading edge points
+            xsec_xyz_te = np.empty((0, 3))  # Nx3 array of trailing edge points
+            for xsec in wing.xsecs:
+                xsec_xyz_le = np.vstack((xsec_xyz_le, xsec.xyz_le + wing.xyz_le))
+                xsec_xyz_te = np.vstack((xsec_xyz_te, xsec.xyz_te() + wing.xyz_le))
+
+            # Get quarter-chord vector
+            xsec_xyz_quarter_chords = 0.75 * xsec_xyz_le + 0.25 * xsec_xyz_te  # Nx3 array of quarter-chord points
+            section_quarter_chords = (
+                    xsec_xyz_quarter_chords[1:, :] -
+                    xsec_xyz_quarter_chords[:-1, :]
+            )  # Nx3 array of vectors connecting quarter-chords
+
+            # -----------------------------------------------------
+            ## Get directions for transforming 2D airfoil data to 3D
+            # First, project quarter chords onto YZ plane and normalize.
+            section_quarter_chords_proj = (section_quarter_chords[:, 1:] /
+                                           np.expand_dims(np.linalg.norm(section_quarter_chords[:, 1:], axis=1), axis=1)
+                                           )  # Nx2 array of quarter-chord vectors projected onto YZ plane
+            section_quarter_chords_proj = np.hstack(
+                (np.zeros((section_quarter_chords_proj.shape[0], 1)), section_quarter_chords_proj)
+            )  # Convert back to a Nx3 array, since that's what we'll need later.
+            # Then, construct the normal directions for each xsec.
+            if len(wing.xsecs) > 2:  # Make normals for the inner xsecs, where we need to merge directions
+                xsec_local_normal_inners = section_quarter_chords_proj[:-1, :] + section_quarter_chords_proj[1:, :]
+                xsec_local_normal_inners = (xsec_local_normal_inners /
+                                            np.expand_dims(np.linalg.norm(xsec_local_normal_inners, axis=1), axis=1)
+                                            )
+                xsec_local_normal = np.vstack((
+                    section_quarter_chords_proj[0, :],
+                    xsec_local_normal_inners,
+                    section_quarter_chords_proj[-1, :]
+                ))
+            else:
+                xsec_local_normal = np.vstack((
+                    section_quarter_chords_proj[0, :],
+                    section_quarter_chords_proj[-1, :]
+                ))
+            # xsec_local_normal is now a Nx3 array that represents the normal direction at each xsec.
+            # Then, construct the back directions for each xsec.
+            xsec_local_back = xsec_xyz_te - xsec_xyz_le  # aligned with chord
+            xsec_chord = np.linalg.norm(xsec_local_back, axis=1)  # 1D vector, one per xsec
+            xsec_local_back = (xsec_local_back /
+                               np.expand_dims(xsec_chord, axis=1)
+                               )
+            # Then, construct the up direction for each xsec.
+            xsec_local_up = np.cross(xsec_local_back, xsec_local_normal,
+                                     axis=1)  # Nx3 array that represents the upwards direction at each xsec.
+
+            # -----------------------------------------------------
+            ## Get the coordinates of each xsec's airfoil in global coordinates
+            # Goal: create xsec_coordinates, a MxNx3 array of the airfoil coordinates of each xsec.
+            # First index is chordwise point number, second index is xsec number, and third index is xyz.
+
+            # Get the scaling factor (airfoils at dihedral breaks need to be "taller" to compensate)
+            xsec_scaling_factor = 1 / np.sqrt((
+                                                      1 + np.sum(
+                                                  section_quarter_chords_proj[1:, :] * section_quarter_chords_proj[:-1,
+                                                                                       :], axis=1
+                                              )
+                                              ) / 2
+                                              )
+            xsec_scaling_factor = np.hstack((1, xsec_scaling_factor, 1))
+
+            nondim_xsec_coordinates = np.empty((2*n_chordwise_coordinates-1, 0, 2))  # MxNx2 array of airfoil coordinates.
+            # First index is chordwise point number, second index is xsec number, third index is xy.
+            for xsec in wing.xsecs:
+                repaneled_airfoil = xsec.airfoil.repanel(n_points_per_side=n_chordwise_coordinates)
+                repaneled_airfoil_coordinates = np.expand_dims(repaneled_airfoil.coordinates, axis=1)
+                nondim_xsec_coordinates = np.hstack((nondim_xsec_coordinates, repaneled_airfoil_coordinates))
+
+            xsec_coordinates = (xsec_xyz_le +
+                                    xsec_local_back * np.expand_dims(xsec_chord, axis=2) * np.expand_dims(nondim_xsec_coordinates[:,:,0], 2) +
+                                    xsec_local_up * np.expand_dims(xsec_chord * xsec_scaling_factor,axis=2) * np.expand_dims(nondim_xsec_coordinates[:,:,1], 2)
+                                    )
+
+            # -----------------------------------------------------
+            # Interpolate the coordinates between xsecs
+            wing_coordinates = np.empty((2*n_chordwise_coordinates-1, 0, 3))  # MxNx3 of all coordinates on the wing.
+            # First index is chordwise point #, second index is spanwise point #, third is xyz.
+
+            for section_num in range(len(wing.xsecs) - 1):
+                # Define the relevant cross section
+                xsec = wing.xsecs[section_num]
+
+                # Define number of spanwise points
+                n_spanwise_coordinates = xsec.spanwise_panels + 1
+
+                # Get the spanwise coordinates
+                if xsec.spanwise_spacing == 'uniform':
+                    nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
+                elif xsec.spanwise_spacing == 'cosine':
+                    nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
+                else:
+                    raise Exception("Bad value of section.spanwise_spacing!")
+
+                # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
+                is_last_section = section_num == len(wing.xsecs) - 2
+                if not is_last_section:
+                    nondim_spanwise_coordinates = nondim_spanwise_coordinates[:-1]
+
+                section_coordinates = (
+                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                    xsec_coordinates[:, section_num, :], 1) +
+                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
+                    xsec_coordinates[:, section_num + 1, :], 1)
+                )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
+                wing_coordinates = np.hstack((wing_coordinates, section_coordinates))
+
+            # -----------------------------------------------------
+            ## Append mean camber line data to vlm2 data list
+            self.panel_coordinates_structured_list.append(wing_coordinates)
+            if wing.symmetric:
+                wing_coordinates_sym = reflect_over_XZ_plane(wing_coordinates)
+                wing_coordinates_sym = np.fliplr(wing_coordinates_sym)
+                self.panel_coordinates_structured_list.append(wing_coordinates_sym)
+
+            # -----------------------------------------------------
+            ## Get the normal directions of each xsec's airfoil in nondimensional coordinates
+            # Goal: create nondim_xsec_normals, a MxNx2 array of the normal direction of each xsec.
+            # First index is chordwise point number, second index is xsec number, and third index is xyz.
+
+            nondim_xsec_normals = np.empty(
+                (wing.chordwise_panels, 0, 2))  # MxNx2 of airfoil normals in local xsec coordinates.
+            # First index is chordwise point number, second index is xsec number, and third is LOCAL xy.
+            nondim_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
+                                                   :-1] + 0.75 * nondim_chordwise_coordinates[1:]
+            for xsec in wing.xsecs:
+                nondim_normals = xsec.airfoil.get_normal_direction_at_chord_fraction(nondim_colocation_coordinates)
+                nondim_normals = np.expand_dims(nondim_normals, 1)
+                nondim_xsec_normals = np.hstack((nondim_xsec_normals, nondim_normals))
+
+            # -----------------------------------------------------
+            ## Now, go section-by-section and make the normals while dimensionalizing them.
+            # Goal: make normals_structured_list, a MxNx2 array of the normal direction of each panel.
+            # First index is chordwise point number, second index is spanwise point number, and third index is xyz.
+
+            wing_normals = np.empty((wing.chordwise_panels, 0, 3))
+            for section_num in range(len(wing.xsecs) - 1):
+                # Define the relevant cross section
+                xsec = wing.xsecs[section_num]
+
+                # Define number of spanwise points
+                n_spanwise_coordinates = xsec.spanwise_panels + 1
+
+                # Get the spanwise coordinates
+                if xsec.spanwise_spacing == 'uniform':
+                    nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
+                elif xsec.spanwise_spacing == 'cosine':
+                    nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
+                else:
+                    raise Exception("Bad value of section.spanwise_spacing!")
+
+                # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
+                is_last_section = section_num == len(wing.xsecs) - 2
+                nondim_spanwise_coordinates = (nondim_spanwise_coordinates[1:] + nondim_spanwise_coordinates[:-1]) / 2
+
+                # Get local xsec directions
+                # (note: different than xsec_local_back, xsec_local_normal, and xsec_local_up, since these are unaffected by dihedral breaks)
+                # Also, these have control surface deflections baked in.
+                inner_xsec_back = xsec_local_back[section_num]
+                outer_xsec_back = xsec_local_back[section_num + 1]
+                section_normal = section_quarter_chords_proj[section_num]
+                inner_xsec_up = np.cross(inner_xsec_back, section_normal)
+                outer_xsec_up = np.cross(outer_xsec_back, section_normal)
+
+                # Do control surface deflections by rotating the local xsec direction
+                control_surface_hinge_point_index = np.interp(
+                    x=xsec.control_surface_hinge_point,
+                    xp=nondim_colocation_coordinates,
+                    fp=np.arange(wing.chordwise_panels)
+                )
+                deflection_angle = xsec.control_surface_deflection
+                rot_matrix = angle_axis_rotation_matrix(
+                    angle=np.radians(deflection_angle),
+                    axis=section_normal,
+                    axis_already_normalized=True
+                )
+                inner_xsec_back_rotated = np.matmul(rot_matrix, inner_xsec_back)
+                outer_xsec_back_rotated = np.matmul(rot_matrix, outer_xsec_back)
+                inner_xsec_up_rotated = np.matmul(rot_matrix, inner_xsec_up)
+                outer_xsec_up_rotated = np.matmul(rot_matrix, outer_xsec_up)
+                if control_surface_hinge_point_index <= 0:  # For some weird reason, your hinge is at the leading edge
+                    inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                    inner_xsec_ups = inner_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_ups = outer_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                elif control_surface_hinge_point_index >= wing.chordwise_panels:  # For some weird reason, your hinge is at the trailing edge
+                    inner_xsec_backs = inner_xsec_back * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_backs = outer_xsec_back * np.ones((wing.chordwise_panels, 3))
+                    inner_xsec_ups = inner_xsec_up * np.ones((wing.chordwise_panels, 3))
+                    outer_xsec_ups = outer_xsec_up * np.ones((wing.chordwise_panels, 3))
+                else:  # Normal cases, where your hinge isn't at either the leading or trailing edges
+                    last_unmodified_index = np.int(np.floor(control_surface_hinge_point_index))
+                    fraction_to_modify = 1 - (control_surface_hinge_point_index - last_unmodified_index)
+                    rot_matrix = angle_axis_rotation_matrix(
+                        angle=np.radians(xsec.control_surface_deflection * fraction_to_modify),
+                        axis=section_normal,
+                        axis_already_normalized=True
+                    )
+                    inner_xsec_back_semirotated = np.matmul(rot_matrix, inner_xsec_back)
+                    outer_xsec_back_semirotated = np.matmul(rot_matrix, outer_xsec_back)
+                    inner_xsec_up_semirotated = np.matmul(rot_matrix, inner_xsec_up)
+                    outer_xsec_up_semirotated = np.matmul(rot_matrix, outer_xsec_up)
+
+                    inner_xsec_backs = np.vstack((
+                        np.tile(inner_xsec_back, reps=(last_unmodified_index, 1)),
+                        inner_xsec_back_semirotated,
+                        np.tile(inner_xsec_back_rotated,
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                    ))
+                    inner_xsec_ups = np.vstack((
+                        np.tile(inner_xsec_up, reps=(last_unmodified_index, 1)),
+                        inner_xsec_up_semirotated,
+                        np.tile(inner_xsec_up_rotated,
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                    ))
+                    outer_xsec_backs = np.vstack((
+                        np.tile(outer_xsec_back, reps=(last_unmodified_index, 1)),
+                        outer_xsec_back_semirotated,
+                        np.tile(outer_xsec_back_rotated,
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                    ))
+                    outer_xsec_ups = np.vstack((
+                        np.tile(outer_xsec_up, reps=(last_unmodified_index, 1)),
+                        outer_xsec_up_semirotated,
+                        np.tile(outer_xsec_up_rotated,
+                                reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                    ))
+
+                # Get xsec normals
+                inner_xsec_normals = (
+                        np.expand_dims(nondim_xsec_normals[:, section_num, 0], 1) * inner_xsec_backs +
+                        np.expand_dims(nondim_xsec_normals[:, section_num, 1], 1) * inner_xsec_ups
+                )  # Nx3 array, where first index is the chordwise point number and second is xyz
+                outer_xsec_normals = (
+                        np.expand_dims(nondim_xsec_normals[:, section_num + 1, 0], 1) * outer_xsec_backs +
+                        np.expand_dims(nondim_xsec_normals[:, section_num + 1, 1], 1) * outer_xsec_ups
+                )  # Nx3 array, where first index is the chordwise point number and second is xyz
+
+                # Interpolate between xsec normals
+                section_normals = (
+                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(inner_xsec_normals, 1) +
+                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(outer_xsec_normals, 1)
+                )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
+
+                # Normalize
+                section_normals = section_normals / np.expand_dims(np.linalg.norm(section_normals, axis=2),
+                                                                   2)  # TODO This step is not necessary if I fix the interpolate step just prior to this
+
+                # Append
+                wing_normals = np.hstack((wing_normals, section_normals))
+
+            self.normals_structured_list.append(wing_normals)
+
+            # -----------------------------------------------------
+            ## Symmetry for normals
+            if wing.symmetric:
+                if wing.has_symmetric_control_surfaces():
+                    self.normals_structured_list.append(np.fliplr(reflect_over_XZ_plane(wing_normals)))
+                else:
+                    # Unfortunately, you kinda have to redo the last mess...
+                    # -----------------------------------------------------
+                    ## Now, go section-by-section and make the normals while dimensionalizing them.
+                    # Goal: make normals_structured_list, a MxNx2 array of the normal direction of each panel.
+                    # First index is chordwise point number, second index is spanwise point number, and third index is xyz.
+
+                    wing_normals = np.empty((wing.chordwise_panels, 0, 3))
+                    for section_num in range(len(wing.xsecs) - 1):
+                        # Define the relevant cross section
+                        xsec = wing.xsecs[section_num]
+
+                        # Define number of spanwise points
+                        n_spanwise_coordinates = xsec.spanwise_panels + 1
+
+                        # Get the spanwise coordinates
+                        if xsec.spanwise_spacing == 'uniform':
+                            nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
+                        elif xsec.spanwise_spacing == 'cosine':
+                            nondim_spanwise_coordinates = cosspace(n_points=n_spanwise_coordinates)
+                        else:
+                            raise Exception("Bad value of section.spanwise_spacing!")
+
+                        # If it's not the last xsec, eliminate the last nondim spanwise coordinate to prevent duplicates
+                        is_last_section = section_num == len(wing.xsecs) - 2
+                        nondim_spanwise_coordinates = (nondim_spanwise_coordinates[1:] + nondim_spanwise_coordinates[
+                                                                                         :-1]) / 2
+
+                        # Get local xsec directions
+                        # (note: different than xsec_local_back, xsec_local_normal, and xsec_local_up, since these are unaffected by dihedral breaks)
+                        # Also, these have control surface deflections baked in.
+                        inner_xsec_back = xsec_local_back[section_num]
+                        outer_xsec_back = xsec_local_back[section_num + 1]
+                        section_normal = section_quarter_chords_proj[section_num]
+                        inner_xsec_up = np.cross(inner_xsec_back, section_normal)
+                        outer_xsec_up = np.cross(outer_xsec_back, section_normal)
+
+                        # Do control surface deflections by rotating the local xsec direction
+                        control_surface_hinge_point_index = np.interp(
+                            x=xsec.control_surface_hinge_point,
+                            xp=nondim_colocation_coordinates,
+                            fp=np.arange(wing.chordwise_panels)
+                        )
+                        deflection_angle = xsec.control_surface_deflection
+                        if xsec.control_surface_type == "asymmetric":
+                            deflection_angle = -deflection_angle
+                        rot_matrix = angle_axis_rotation_matrix(
+                            angle=np.radians(deflection_angle),
+                            axis=section_normal,
+                            axis_already_normalized=True
+                        )
+                        inner_xsec_back_rotated = np.matmul(rot_matrix, inner_xsec_back)
+                        outer_xsec_back_rotated = np.matmul(rot_matrix, outer_xsec_back)
+                        inner_xsec_up_rotated = np.matmul(rot_matrix, inner_xsec_up)
+                        outer_xsec_up_rotated = np.matmul(rot_matrix, outer_xsec_up)
+                        if control_surface_hinge_point_index <= 0:  # For some weird reason, your hinge is at the leading edge
+                            inner_xsec_backs = inner_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_backs = outer_xsec_back_rotated * np.ones((wing.chordwise_panels, 3))
+                            inner_xsec_ups = inner_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_ups = outer_xsec_up_rotated * np.ones((wing.chordwise_panels, 3))
+                        elif control_surface_hinge_point_index >= wing.chordwise_panels:  # For some weird reason, your hinge is at the trailing edge
+                            inner_xsec_backs = inner_xsec_back * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_backs = outer_xsec_back * np.ones((wing.chordwise_panels, 3))
+                            inner_xsec_ups = inner_xsec_up * np.ones((wing.chordwise_panels, 3))
+                            outer_xsec_ups = outer_xsec_up * np.ones((wing.chordwise_panels, 3))
+                        else:  # Normal cases, where your hinge isn't at either the leading or trailing edges
+                            last_unmodified_index = np.int(np.floor(control_surface_hinge_point_index))
+                            fraction_to_modify = 1 - (control_surface_hinge_point_index - last_unmodified_index)
+                            rot_matrix = angle_axis_rotation_matrix(
+                                angle=np.radians(xsec.control_surface_deflection * fraction_to_modify),
+                                axis=section_normal,
+                                axis_already_normalized=True
+                            )
+                            inner_xsec_back_semirotated = np.matmul(rot_matrix, inner_xsec_back)
+                            outer_xsec_back_semirotated = np.matmul(rot_matrix, outer_xsec_back)
+                            inner_xsec_up_semirotated = np.matmul(rot_matrix, inner_xsec_up)
+                            outer_xsec_up_semirotated = np.matmul(rot_matrix, outer_xsec_up)
+
+                            inner_xsec_backs = np.vstack((
+                                np.tile(inner_xsec_back, reps=(last_unmodified_index, 1)),
+                                inner_xsec_back_semirotated,
+                                np.tile(inner_xsec_back_rotated,
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                            ))
+                            inner_xsec_ups = np.vstack((
+                                np.tile(inner_xsec_up, reps=(last_unmodified_index, 1)),
+                                inner_xsec_up_semirotated,
+                                np.tile(inner_xsec_up_rotated,
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                            ))
+                            outer_xsec_backs = np.vstack((
+                                np.tile(outer_xsec_back, reps=(last_unmodified_index, 1)),
+                                outer_xsec_back_semirotated,
+                                np.tile(outer_xsec_back_rotated,
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                            ))
+                            outer_xsec_ups = np.vstack((
+                                np.tile(outer_xsec_up, reps=(last_unmodified_index, 1)),
+                                outer_xsec_up_semirotated,
+                                np.tile(outer_xsec_up_rotated,
+                                        reps=(wing.chordwise_panels - last_unmodified_index - 1, 1))
+                            ))
+
+                        # Get xsec normals
+                        inner_xsec_normals = (
+                                np.expand_dims(nondim_xsec_normals[:, section_num, 0], 1) * inner_xsec_backs +
+                                np.expand_dims(nondim_xsec_normals[:, section_num, 1], 1) * inner_xsec_ups
+                        )  # Nx3 array, where first index is the chordwise point number and second is xyz
+                        outer_xsec_normals = (
+                                np.expand_dims(nondim_xsec_normals[:, section_num + 1, 0], 1) * outer_xsec_backs +
+                                np.expand_dims(nondim_xsec_normals[:, section_num + 1, 1], 1) * outer_xsec_ups
+                        )  # Nx3 array, where first index is the chordwise point number and second is xyz
+
+                        # Interpolate between xsec normals
+                        section_normals = (
+                                np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                            inner_xsec_normals, 1) +
+                                np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(outer_xsec_normals, 1)
+                        )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
+
+                        # Normalize
+                        section_normals = section_normals / np.expand_dims(np.linalg.norm(section_normals, axis=2),
+                                                                           2)  # TODO This step is not necessary if I fix the interpolate step just prior to this
+
+                        # Append
+                        wing_normals = np.hstack((wing_normals, section_normals))
+
+                    self.normals_structured_list.append(np.flip(reflect_over_XZ_plane(wing_normals), axis=1))
+
+        if self.verbose: print("Meshing complete!")
+        # -----------------------------------------------------
+        # Review of the important things that have been done up to this point:
+        # * We made panel_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
+        #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
+        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
+        #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
+        #   * Takes into account control surface deflections
+        # * Both panel_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
+        #   accessible at self.panel_coordinates_structured_list and self.normals_structured_list, respectively.
+        # * Control surface handling:
+        #   * Control surfaces are implemented into normal directions as intended.
+        # * Symmetry handling:
+        #   * All symmetric wings have been split into separate halves.
+        #   * All wing halves have their spanwise coordinates labeled from the left side of the airplane to the right.
+        #   * Control surface deflection symmetry has been handled; this is encoded into the normal directions.
+        # * And best of all, it's all verified to be reverse-mode AD compatible!!!
+
+        # -----------------------------------------------------
+        ## Now, just post-process them to get the colocation points and vortex center points.
+        self.n_wings = len(self.panel_coordinates_structured_list)  # Good to know
+
+        self.front_left_vertices_list = []
+        self.front_right_vertices_list = []
+        self.back_left_vertices_list = []
+        self.back_right_vertices_list = []
+
+        self.vortex_left_list = []
+        self.vortex_right_list = []
+
+        self.colocations_list = []
+
+        self.normals_list = []
+
+        for wing_num in range(self.n_wings):
+            wing_front_left_vertices = self.panel_coordinates_structured_list[wing_num][:-1, :-1, :]
+            wing_front_right_vertices = self.panel_coordinates_structured_list[wing_num][:-1, 1:, :]
+            wing_back_left_vertices = self.panel_coordinates_structured_list[wing_num][1:, :-1, :]
+            wing_back_right_vertices = self.panel_coordinates_structured_list[wing_num][1:, 1:, :]
+
+            self.front_left_vertices_list.append(np.reshape(wing_front_left_vertices, (-1, 3)))
+            self.front_right_vertices_list.append(np.reshape(wing_front_right_vertices, (-1, 3)))
+            self.back_left_vertices_list.append(np.reshape(wing_back_left_vertices, (-1, 3)))
+            self.back_right_vertices_list.append(np.reshape(wing_back_right_vertices, (-1, 3)))
+
+            self.colocations_list.append(
+                np.reshape((
+                        0.5 * (0.25 * wing_front_left_vertices +  # Left front
+                               0.75 * wing_back_left_vertices) +  # Left back
+                        0.5 * (0.25 * wing_front_right_vertices +  # Right front
+                               0.75 * wing_back_right_vertices)  # Right back
+                ),
+                    (-1, 3)
+                )
+            )
+            self.vortex_left_list.append(
+                np.reshape(
+                    0.75 * wing_front_left_vertices +  # Left front
+                    0.25 * wing_back_left_vertices,  # Left back
+                    (-1, 3))
+            )
+            self.vortex_right_list.append(
+                np.reshape(
+                    0.75 * wing_front_right_vertices +  # Right front
+                    0.25 * wing_back_right_vertices,  # Right back
+                    (-1, 3))
+            )
+            self.normals_list.append(
+                np.reshape(self.normals_structured_list[wing_num], (-1, 3))
+            )
+
+        self.front_left_vertices_unrolled = np.vstack(self.front_left_vertices_list)
+        self.front_right_vertices_unrolled = np.vstack(self.front_right_vertices_list)
+        self.back_left_vertices_unrolled = np.vstack(self.back_left_vertices_list)
+        self.back_right_vertices_unrolled = np.vstack(self.back_right_vertices_list)
+
+        self.colocations_unrolled = np.vstack(self.colocations_list)
+        self.vortex_left_unrolled = np.vstack(self.vortex_left_list)
+        self.vortex_right_unrolled = np.vstack(self.vortex_right_list)
+        self.vortex_centers_unrolled = (self.vortex_left_unrolled + self.vortex_right_unrolled) / 2
+        self.normals_unrolled = np.vstack(self.normals_list)
+
+        self.n_panels = len(self.normals_unrolled)  # Also good to know
+
+        ## For debugging only # TODO delete later
 
     def draw(self):
         pass

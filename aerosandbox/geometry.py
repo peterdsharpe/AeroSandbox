@@ -793,6 +793,10 @@ class Airfoil:
 
         return new_airfoil
 
+    def add_control_surface(self, deflection=0, hinge_point = 0.75):
+        # Returns a version of the airfoil with a control surface added at a given point.
+        pass # TODO make me
+
 def blend_airfoils(
         airfoil1,
         airfoil2,
