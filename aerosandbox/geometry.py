@@ -373,7 +373,8 @@ class Airfoil:
                  name="Untitled Airfoil",  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
                  use_cache=True,  # Look in the airfoil cache, based on the airfoil's name. # TODO make airfoil caching
-                 n_points_per_side=200, # Number of points to use when repaneling the airfoil.
+                 repanel=True, # Should we repanel the airfoil? Highly recommend to leave this as True.
+                 n_points_per_side=200, # Number of points to use when repaneling the airfoil (if repanel is True)
                  ):
 
         self.name = name
@@ -387,8 +388,9 @@ class Airfoil:
         b) provide your own coordinates in the constructor, such as Airfoil(""MyFoilName"", <Nx2 array of coordinates>)."
 
         # self.normalize()
-        self.repanel_current_airfoil(
-            n_points_per_side=n_points_per_side)  # all airfoils are automatically repaneled to ensure consistent, good paneling.
+        if repanel:
+            self.repanel_current_airfoil(n_points_per_side=n_points_per_side)  # all airfoils are automatically repaneled to ensure consistent, good paneling.
+
         self.populate_mcl_coordinates()
 
     def populate_coordinates(self):
@@ -615,6 +617,34 @@ class Airfoil:
 
         return thickness
 
+    def get_downsampled_mcl(self, mcl_fractions):
+        # Returns the mean camber line in downsampled form
+
+
+        mcl = self.mcl_coordinates
+        # Find distances along mcl, assuming linear interpolation
+        mcl_distances_between_points = np.sqrt(
+            np.power(mcl[:-1, 0] - mcl[1:, 0], 2) +
+            np.power(mcl[:-1, 1] - mcl[1:, 1], 2)
+        )
+        mcl_distances_cumulative = np.hstack((0, np.cumsum(mcl_distances_between_points)))
+        mcl_distances_cumulative_normalized = mcl_distances_cumulative / mcl_distances_cumulative[-1]
+
+        mcl_downsampled_x=np.interp(
+            x=mcl_fractions,
+            xp=mcl_distances_cumulative_normalized,
+            fp=mcl[:,0]
+        )
+        mcl_downsampled_y = np.interp(
+            x=mcl_fractions,
+            xp=mcl_distances_cumulative_normalized,
+            fp=mcl[:, 1]
+        )
+
+        mcl_downsampled = np.column_stack((mcl_downsampled_x, mcl_downsampled_y))
+
+        return mcl_downsampled
+
     def get_camber_at_chord_fraction(self, chord_fraction):
         camber_func = sp_interp.interp1d(
             x=self.mcl_coordinates[:,0],
@@ -828,10 +858,10 @@ class Airfoil:
         # Generate a cosine-spaced list of points from 0 to 1
         s = cosspace(n_points=n_points_per_side)
 
-        x_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 0])
-        y_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 1])
-        x_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 0])
-        y_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 1])
+        x_upper_func = sp_interp.PchipInterpolator(x = upper_distances_from_TE_normalized, y = upper_original_coors[:, 0])
+        y_upper_func = sp_interp.PchipInterpolator(x = upper_distances_from_TE_normalized, y = upper_original_coors[:, 1])
+        x_lower_func = sp_interp.PchipInterpolator(x = lower_distances_from_LE_normalized, y = lower_original_coors[:, 0])
+        y_lower_func = sp_interp.PchipInterpolator(x = lower_distances_from_LE_normalized, y = lower_original_coors[:, 1])
 
         x_coors = np.hstack((x_upper_func(s), x_lower_func(s)[1:]))
         y_coors = np.hstack((y_upper_func(s), y_lower_func(s)[1:]))
@@ -840,7 +870,7 @@ class Airfoil:
 
         # Make a new airfoil with the coordinates
         name = self.name + ", repaneled to " + str(n_points_per_side) + " pts"
-        new_airfoil = Airfoil(name=name, coordinates=coordinates)
+        new_airfoil = Airfoil(name=name, coordinates=coordinates, repanel=False)
 
         return new_airfoil
 
@@ -871,10 +901,10 @@ class Airfoil:
         # Generate a cosine-spaced list of points from 0 to 1
         s = cosspace(n_points=n_points_per_side)
 
-        x_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 0])
-        y_upper_func = sp_interp.PchipInterpolator(upper_distances_from_TE_normalized, upper_original_coors[:, 1])
-        x_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 0])
-        y_lower_func = sp_interp.PchipInterpolator(lower_distances_from_LE_normalized, lower_original_coors[:, 1])
+        x_upper_func = sp_interp.PchipInterpolator(x = upper_distances_from_TE_normalized, y = upper_original_coors[:, 0])
+        y_upper_func = sp_interp.PchipInterpolator(x = upper_distances_from_TE_normalized, y = upper_original_coors[:, 1])
+        x_lower_func = sp_interp.PchipInterpolator(x = lower_distances_from_LE_normalized, y = lower_original_coors[:, 0])
+        y_lower_func = sp_interp.PchipInterpolator(x = lower_distances_from_LE_normalized, y = lower_original_coors[:, 1])
 
         x_coors = np.hstack((x_upper_func(s), x_lower_func(s)[1:]))
         y_coors = np.hstack((y_upper_func(s), y_lower_func(s)[1:]))
@@ -920,7 +950,7 @@ class Airfoil:
         lower_coordinates = new_mcl_coordinates - new_upper_minus_mcl
         coordinates = np.vstack((upper_coordinates, lower_coordinates[1:,:]))
 
-        new_airfoil = Airfoil(name = self.name + " flapped", coordinates = coordinates)
+        new_airfoil = Airfoil(name = self.name + " flapped", coordinates = coordinates, repanel=False)
         return new_airfoil # TODO fix self-intersecting airfoils at high deflections
 
 

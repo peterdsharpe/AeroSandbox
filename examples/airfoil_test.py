@@ -1,4 +1,5 @@
 from aerosandbox import *
+from autograd import grad
 
 # Test on some of my favorite airfoils
 naca0012 = Airfoil("NACA0012")
@@ -23,5 +24,13 @@ diamond = Airfoil(name = "Diamond", coordinates = np.array([
 # Some operations
 s1223.draw()
 
-s1223_flapped = s1223.add_control_surface(deflection = 80)
+s1223_flapped = s1223.add_control_surface(deflection = 20)
 s1223_flapped.draw()
+
+# Reverse-mode AD test
+def flapped_Iyy(deflection):
+    e625_flapped = e625.add_control_surface(deflection=deflection)
+    return e625_flapped.Iyy()
+
+grad_flapped_Iyy = grad(flapped_Iyy)
+dIyyddeflection = grad_flapped_Iyy(0.)
