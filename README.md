@@ -182,10 +182,11 @@ Strengths:
 * VSPAero: Rapid CAD/geometry integration, geometric flexibility
 
 Weaknesses:
-* XFLR5: Lack of scriptability, limited geometric flexibility
-* AVL: Single-precision calculation (low gradient accuracy), bottlenecking due to file I/O
-* Tornado: Speed, user-friendliness
-* VSPAero: Robustness, speed, accuracy, and reliability
+* XFLR5: Lack of scriptability, limited geometric flexibility, one-way-coupled viscous analysis
+* AVL: Single-precision calculation (low gradient accuracy), bottlenecking due to file I/O, no viscous analysis
+* Tornado: Speed, user-friendliness, no viscous analysis
+* VSPAero: Robustness, speed, accuracy, and reliability, decoupled viscous analysis
+* All tools: None of these tools are capable of reverse-mode automatic differentiation for gradient computations.
 
 With any luck, the list of strengths and weaknesses here will help to drive AeroSandbox development to retain positive qualities and eliminate negative ones. 
 
