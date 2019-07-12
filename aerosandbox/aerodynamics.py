@@ -1882,11 +1882,6 @@ class vlm3(AeroProblem):
             xsec_local_up = np.cross(xsec_local_back, xsec_local_normal,
                                      axis=1)  # Nx3 array that represents the upwards direction at each xsec.
 
-            # -----------------------------------------------------
-            ## Get the coordinates of each xsec's airfoil's mean camber line in global coordinates
-            # Goal: create xsec_mcl_coordinates, a MxNx3 array of the mean camber line points of each xsec.
-            # First index is chordwise point number, second index is xsec number, and third index is xyz.
-
             # Get the scaling factor (airfoils at dihedral breaks need to be "taller" to compensate)
             xsec_scaling_factor = 1 / np.sqrt((
                                                       1 + np.sum(
@@ -1896,30 +1891,16 @@ class vlm3(AeroProblem):
                                               ) / 2
                                               )
             xsec_scaling_factor = np.hstack((1, xsec_scaling_factor, 1))
-            xsec_camber = np.empty((n_chordwise_coordinates, 0))  # MxN array of camber amounts.
-            # First index is chordwise point number, second index is xsec number.
-            for xsec in wing.xsecs:
-                camber = xsec.airfoil.get_camber_at_chord_fraction(
-                    nondim_chordwise_coordinates)  # 1D array of normal directions
-                camber = np.expand_dims(camber, axis=1)
-                xsec_camber = np.hstack((xsec_camber, camber))
-
-            xsec_mcl_coordinates = (xsec_xyz_le +
-                                    xsec_local_back * np.expand_dims(xsec_chord, axis=2) * np.expand_dims(
-                        np.expand_dims(nondim_chordwise_coordinates, 1), 2) +
-                                    xsec_local_up * np.expand_dims(xsec_chord * xsec_scaling_factor,
-                                                                   axis=2) * np.expand_dims(xsec_camber, 2)
-                                    )
 
             # -----------------------------------------------------
-            # Interpolate the coordinates between xsecs
-            # Goal is to make panel_coordinates_structured_list
-            wing_mcl_coordinates = np.empty((n_chordwise_coordinates, 0, 3))  # MxNx3 of all coordinates on the wing.
-            # First index is chordwise point #, second index is spanwise point #, third is xyz.
+            ## Make the panels for each section.
 
             for section_num in range(len(wing.xsecs) - 1):
-                # Define the relevant cross section
-                xsec = wing.xsecs[section_num]
+                # Define the relevant cross sections
+                inner_xsec = wing.xsecs[section_num]
+                outer_xsec = wing.xsecs[section_num+1]
+
+                # Make the mean camber lines for each.
 
                 # Define number of spanwise points
                 n_spanwise_coordinates = xsec.spanwise_panels + 1
