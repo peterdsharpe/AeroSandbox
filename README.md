@@ -11,7 +11,7 @@ Work in progress!
 
 
 ![AeroSandbox Image](media/images/vlm3_with_control_surfaces.png)
-*VLM3 simulation of a glider, aileron deflections of +-30°*
+*VLM3 simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H)*
 
 ## Getting Started
 
