@@ -4,14 +4,16 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 import autograd.numpy as np
 
+
 def fig3d():
     fig = plt.figure()
-    fig.figsize=(10,10)
-    ax=fig.add_subplot(111, projection='3d')
+    fig.figsize = (10, 10)
+    ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
     return fig, ax
+
 
 def set_axes_equal(ax):
     '''Make axes of 3D plot have equal scale so that spheres appear as spheres,
@@ -35,10 +37,16 @@ def set_axes_equal(ax):
 
     # The plot bounding box is a sphere in the sense of the infinity
     # norm, hence I call half the max range the plot radius.
-    plot_radius = 0.5*max([x_range, y_range, z_range])
+    plot_radius = 0.5 * max([x_range, y_range, z_range])
 
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
     plt.tight_layout()
+
+
+def point_cloud(input):
+    # Makes a point cloud plot out of an input array of 3d data. Input should be a Nx3 array.
+    fig, ax = fig3d()
+    ax.scatter(input[:, 0], input[:, 1], input[:, 2])
