@@ -15,7 +15,7 @@ glider = Airplane(
                     twist=2, # degrees
                     airfoil=Airfoil(name="naca4412"),
                     control_surface_type='symmetric',  # Flap # Control surfaces are applied between a given XSec and the next one.
-                    control_surface_deflection=0, # degrees
+                    control_surface_deflection=20, # degrees
                     control_surface_hinge_point=0.75 # as chord fraction
                 ),
                 WingXSec(  # Mid
@@ -24,7 +24,7 @@ glider = Airplane(
                     twist=0,
                     airfoil=Airfoil(name="naca4412"),
                     control_surface_type='asymmetric',  # Aileron
-                    control_surface_deflection=0,
+                    control_surface_deflection=30,
                     control_surface_hinge_point=0.75
                 ),
                 WingXSec(  # Tip
