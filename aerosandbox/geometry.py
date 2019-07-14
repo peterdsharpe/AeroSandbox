@@ -55,7 +55,7 @@ class Airplane:
         self.mass_props = mass_props
         self.wings = wings
 
-        if len(self.wings) > 1:  # If there is at least one wing
+        if len(self.wings) > 0:  # If there is at least one wing
             self.set_ref_dims_from_wing()
         if s_ref is not None: self.s_ref = s_ref
         if c_ref is not None: self.c_ref = c_ref
