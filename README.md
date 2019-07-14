@@ -15,6 +15,8 @@ Work in progress!
 
 ## Getting Started
 
+### Installation
+
 There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).)
 
 1. (Recommended) Download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases). Then, run "pip install AeroSandbox" in your command prompt to ensure that all dependencies are satisfied.
@@ -23,10 +25,10 @@ There are several easy ways to get started with AeroSandbox! (Assuming you alrea
 
 3. Both of the above options will download released versions of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
-There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm2_conventional.py".
+There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm3_conventional.py".
 
 ### Usage
-AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. For example, here is all the code that is needed to design a glider and analyze its aerodynamics in flight (found in "/examples/vlm2_conventional.py"):
+AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. For example, here is all the code that is needed to design a glider and analyze its aerodynamics in flight (found in "/examples/vlm3_conventional.py"):
 
 ```python
 from aerosandbox import *
@@ -113,7 +115,7 @@ glider = Airplane(
     ]
 )
 
-aero_problem = vlm2( # Analysis type: Vortex Lattice Method, version 2
+aero_problem = vlm3( # Analysis type: Vortex Lattice Method, version 3
     airplane=glider,
     op_point=OperatingPoint(
         velocity=10,
@@ -149,8 +151,7 @@ OpenGL is also required for visualization, though this should already be install
 
 ### Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
-* Very fast vortex-lattice method flow solver ("VLM1") fully compatible with arbitrary combinations of lifting surfaces.
-* Fully reverse-mode AD compatible vortex-lattice method flow solver ("VLM2")! With this, you can get the gradient of a design space with arbitrary dimensionality almost instantly.
+* Fully reverse-mode AD compatible vortex-lattice method flow solver ("VLM3")! Very fast (~0.35s for typical problems) and fully compatible with arbitrary combinations of lifting surfaces. With this, you can get the gradient of a design space with arbitrary dimensionality almost instantly.
 
 ### Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
@@ -193,7 +194,7 @@ Weaknesses:
 With any luck, the list of strengths and weaknesses here will help to drive AeroSandbox development to retain positive qualities and eliminate negative ones. 
 
 Specifically, the following desirable qualities (and associated quantitative metrics) have been identified:
-* Fast (for point analysis, VLM1 should yield a solution (CL, CDi) within 5% of the "Richardson-extrapolated" solution in less than 1 second for the ExampleAirplanes.conventional() airplane on a typical desktop computer)
+* Fast (for point analysis, VLM calculations should yield a solution (CL, CDi) within 5% of the "Richardson-extrapolated" solution in less than 1 second for the ExampleAirplanes.conventional() airplane on a typical desktop computer)
 * Accurate (in the limit of high panel density, the solution (CL, CDi) given by VLM1 must match AVL or XFLR5 to within 1%)
 * Reliable/Robust (gradients of the outputs w.r.t. inputs are always finite and sensible - specifically, this implies that all vortex kernels must be artificially made to have no singularities)
 * User-friendly (eventually, a GUI will be created, and AeroSandbox will optionally ship as a packaged executable)
