@@ -24,7 +24,7 @@ glider = Airplane(
                     twist=0,
                     airfoil=Airfoil(name="naca4412"),
                     control_surface_type='asymmetric',  # Aileron
-                    control_surface_deflection=-30,
+                    control_surface_deflection=0,
                     control_surface_hinge_point=0.75
                 ),
                 WingXSec(  # Tip
@@ -81,7 +81,7 @@ glider = Airplane(
         )
     ]
 )
-glider.set_paneling_everywhere(20, 20)
+# glider.set_paneling_everywhere(20, 20)
 
 ap = vlm3(
     airplane=glider,
