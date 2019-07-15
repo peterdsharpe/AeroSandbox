@@ -1568,18 +1568,18 @@ class vlm2(AeroProblem):
         a_cross_b = np.cross(a, b, axis=2)
         a_dot_b = np.einsum('ijk,ijk->ij', a, b)
 
-        a_cross_x = np.dstack((
+        a_cross_x = np.stack((
             np.zeros((n_points, n_vortices)),
             a[:, :, 2],
             -a[:, :, 1]
-        ))
+        ), axis=2)
         a_dot_x = a[:, :, 0]
 
-        b_cross_x = np.dstack((
+        b_cross_x = np.stack((
             np.zeros((n_points, n_vortices)),
             b[:, :, 2],
             -b[:, :, 1]
-        ))
+        ), axis=2)
         b_dot_x = b[:, :, 0]  # np.sum(b * x_hat,axis=2)
 
         norm_a = np.linalg.norm(a, axis=2)
@@ -2334,18 +2334,18 @@ class vlm3(AeroProblem):
         a_cross_b = np.cross(a, b, axis=2)
         a_dot_b = np.einsum('ijk,ijk->ij', a, b)
 
-        a_cross_x = np.dstack((
+        a_cross_x = np.stack((
             np.zeros((n_points, n_vortices)),
             a[:, :, 2],
             -a[:, :, 1]
-        ))
+        ), axis=2)
         a_dot_x = a[:, :, 0]
 
-        b_cross_x = np.dstack((
+        b_cross_x = np.stack((
             np.zeros((n_points, n_vortices)),
             b[:, :, 2],
             -b[:, :, 1]
-        ))
+        ), axis=2)
         b_dot_x = b[:, :, 0]  # np.sum(b * x_hat,axis=2)
 
         norm_a = np.linalg.norm(a, axis=2)
@@ -2650,12 +2650,12 @@ class panel1(AeroProblem):
                 inner_airfoil = inner_xsec.airfoil.add_control_surface(
                     deflection=inner_xsec.control_surface_deflection,
                     hinge_point=inner_xsec.control_surface_hinge_point
-                ) # type: Airfoil
+                )  # type: Airfoil
                 outer_airfoil = outer_xsec.airfoil.add_control_surface(
                     deflection=inner_xsec.control_surface_deflection,
                     # inner xsec dictates control surface deflections.
                     hinge_point=inner_xsec.control_surface_hinge_point
-                ) # type: Airfoil
+                )  # type: Airfoil
 
                 # Make the panel coordinates for each.
                 inner_xsec_coordinates_nondim = inner_airfoil.get_repaneled_airfoil(
@@ -2667,15 +2667,18 @@ class panel1(AeroProblem):
 
                 # inner_xsec_mcl: First index is point number, second index is xyz.
                 inner_xsec_mcl = xsec_xyz_le[section_num, :] + (
-                        xsec_local_back[section_num, :] * np.expand_dims(inner_xsec_coordinates_nondim[:, 0], 1) * xsec_chord[
-                    section_num] +
-                        xsec_local_up[section_num, :] * np.expand_dims(inner_xsec_coordinates_nondim[:, 1], 1) * xsec_chord[
+                        xsec_local_back[section_num, :] * np.expand_dims(inner_xsec_coordinates_nondim[:, 0], 1) *
+                        xsec_chord[
+                            section_num] +
+                        xsec_local_up[section_num, :] * np.expand_dims(inner_xsec_coordinates_nondim[:, 1], 1) *
+                        xsec_chord[
                             section_num] * xsec_scaling_factor[section_num]
                 )
                 outer_xsec_mcl = xsec_xyz_le[section_num + 1, :] + (
                         xsec_local_back[section_num + 1, :] * np.expand_dims(outer_xsec_coordinates_nondim[:, 0], 1) *
                         xsec_chord[section_num + 1] +
-                        xsec_local_up[section_num + 1, :] * np.expand_dims(outer_xsec_coordinates_nondim[:, 1], 1) * xsec_chord[
+                        xsec_local_up[section_num + 1, :] * np.expand_dims(outer_xsec_coordinates_nondim[:, 1], 1) *
+                        xsec_chord[
                             section_num + 1] * xsec_scaling_factor[
                             section_num + 1]
                 )
@@ -2803,7 +2806,8 @@ class panel1(AeroProblem):
 
                         # inner_xsec_mcl: First index is point number, second index is xyz.
                         inner_xsec_mcl = xsec_xyz_le[section_num, :] + (
-                                xsec_local_back[section_num, :] * np.expand_dims(inner_xsec_coordinates_nondim[:, 0], 1) *
+                                xsec_local_back[section_num, :] * np.expand_dims(inner_xsec_coordinates_nondim[:, 0],
+                                                                                 1) *
                                 xsec_chord[
                                     section_num] +
                                 xsec_local_up[section_num, :] * np.expand_dims(inner_xsec_coordinates_nondim[:, 1], 1) *
@@ -2811,9 +2815,11 @@ class panel1(AeroProblem):
                                     section_num] * xsec_scaling_factor[section_num]
                         )
                         outer_xsec_mcl = xsec_xyz_le[section_num + 1, :] + (
-                                xsec_local_back[section_num + 1, :] * np.expand_dims(outer_xsec_coordinates_nondim[:, 0], 1) *
+                                xsec_local_back[section_num + 1, :] * np.expand_dims(
+                            outer_xsec_coordinates_nondim[:, 0], 1) *
                                 xsec_chord[section_num + 1] +
-                                xsec_local_up[section_num + 1, :] * np.expand_dims(outer_xsec_coordinates_nondim[:, 1], 1) *
+                                xsec_local_up[section_num + 1, :] * np.expand_dims(outer_xsec_coordinates_nondim[:, 1],
+                                                                                   1) *
                                 xsec_chord[
                                     section_num + 1] * xsec_scaling_factor[
                                     section_num + 1]
@@ -3092,18 +3098,18 @@ class panel1(AeroProblem):
         a_cross_b = np.cross(a, b, axis=2)
         a_dot_b = np.einsum('ijk,ijk->ij', a, b)
 
-        a_cross_x = np.dstack((
+        a_cross_x = np.stack((
             np.zeros((n_points, n_vortices)),
             a[:, :, 2],
             -a[:, :, 1]
-        ))
+        ), axis=2)
         a_dot_x = a[:, :, 0]
 
-        b_cross_x = np.dstack((
+        b_cross_x = np.stack((
             np.zeros((n_points, n_vortices)),
             b[:, :, 2],
             -b[:, :, 1]
-        ))
+        ), axis=2)
         b_dot_x = b[:, :, 0]  # np.sum(b * x_hat,axis=2)
 
         norm_a = np.linalg.norm(a, axis=2)
