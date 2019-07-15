@@ -51,7 +51,7 @@ class vlm1(AeroProblem):
     #   # Does not support control surfaces
     #   # Does not support quasi-steady rotations (nonzero p, q, r).
 
-    @profile
+    # @profile
     def run(self, verbose=True):
         self.verbose = verbose
 
@@ -774,7 +774,7 @@ class vlm2(AeroProblem):
     #   # Access results in the command line, or through properties of the vlm2 class.
     #   #   # In a future update, this will be done through a standardized AeroData class.
 
-    @profile
+    # @profile
     def run(self, verbose=True):
         # Runs a point analysis at the specified op-point.
         self.verbose = verbose
@@ -1435,7 +1435,7 @@ class vlm2(AeroProblem):
         if self.verbose: print("Cm: ", self.Cm)
         if self.verbose: print("Cn: ", self.Cn)
 
-    @profile
+    # @profile
     def calculate_Vij_wing_by_wing(self, points):
         # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
@@ -1538,7 +1538,7 @@ class vlm2(AeroProblem):
 
         return Vij
 
-    @profile
+    # @profile
     def calculate_Vij(self, points):  # TODO finish this or delete this
         # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
@@ -1780,7 +1780,7 @@ class vlm3(AeroProblem):
         # Runs a point analysis at the specified op-point.
         self.verbose = verbose
 
-        if self.verbose: print("Running VLM2 calculation...")
+        if self.verbose: print("Running VLM3 calculation...")
 
         self.make_panels()
         self.setup_geometry()
@@ -1788,7 +1788,7 @@ class vlm3(AeroProblem):
         self.calculate_vortex_strengths()
         self.calculate_forces()
 
-        if self.verbose: print("VLM2 calculation complete!")
+        if self.verbose: print("VLM3 calculation complete!")
 
     def run_stability(self, verbose=True):
         # Runs a stability analysis about the specified op-point.
