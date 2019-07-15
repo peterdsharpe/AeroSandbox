@@ -5,7 +5,7 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 ## About
 AeroSandbox is a Python package for aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables.
 
-The 10-second elevator pitch: **In less than a second, you can calculate not only the aerodynamic performance of a given airplane, but also the derivative of aerodynamic performance with respect to a effectively-infinite number of design variables.** This can be used to perform gradient-based aircraft design optimization extremely quickly.
+The 10-second elevator pitch: **In half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an effectively-infinite number of design variables.** This can be used to perform gradient-based aircraft design optimization extremely quickly.
 
 Work in progress!
 
