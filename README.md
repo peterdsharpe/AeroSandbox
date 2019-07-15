@@ -145,9 +145,9 @@ The fastest way to ensure that all dependencies are satisfied is by simply runni
 * autograd
 * pyvista
 
-If you installed Python via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section), you likely have all of these except autograd and pyvista.
+If you installed Python via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section), you likely have all of these except autograd and pyvista. (Install these with "pip install autograd" and "pip install pyvista" in the command prompt.)
 
-OpenGL is also required for visualization, though this should already be installed on nearly every computer. (No promises if you try to run AeroSandbox on a Raspberry Pi!)
+OpenGL is also required for visualization, though this should already be installed on nearly every computer. (No promises if you try to run AeroSandbox on a Raspberry Pi or something!)
 
 ### Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
