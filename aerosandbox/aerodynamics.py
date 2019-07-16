@@ -56,9 +56,9 @@ class vlm1(AeroProblem):
         self.verbose = verbose
 
         if self.verbose: print("Running VLM1 calculation...")
-        # Deprecation warning (use VLM2 instead). Print regardless of verbose status
+        # Deprecation warning (use VLM3 instead). Print regardless of verbose status
         print(
-            "DEPRECATION WARNING: VLM1 has been wholly eclipsed in performance and functionality by VLM2. The VLM1 source code has been left intact for validation purposes and backwards-compatibility, but it will not be supported going forward.")
+            "DEPRECATION WARNING: VLM1 has been wholly eclipsed in performance and functionality by VLM2 and VLM3. The VLM1 source code has been left intact for validation purposes and backwards-compatibility, but it will not be supported going forward.")
 
         self.make_panels()
         self.setup_geometry()
@@ -172,13 +172,13 @@ class vlm1(AeroProblem):
                 next_xsec_up /= np.linalg.norm(next_xsec_up)
                 next_xsec_back = next_xsec_chord_vector / np.linalg.norm(next_xsec_chord_vector)
 
-                nondim_chordwise_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
+                nondim_chordwise_collocation_coordinates = 0.25 * nondim_chordwise_coordinates[
                                                                  :-1] + 0.75 * nondim_chordwise_coordinates[1:]
 
                 xsec_normals_2d = xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(
-                    nondim_chordwise_colocation_coordinates)  # Nx2 array of normal directions
+                    nondim_chordwise_collocation_coordinates)  # Nx2 array of normal directions
                 next_xsec_normals_2d = next_xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(
-                    nondim_chordwise_colocation_coordinates)
+                    nondim_chordwise_collocation_coordinates)
 
                 xsec_normals = (
                         xsec_up * np.expand_dims(xsec_normals_2d[:, 1], axis=1) +
@@ -189,7 +189,7 @@ class vlm1(AeroProblem):
                         next_xsec_back * np.expand_dims(next_xsec_normals_2d[:, 0], axis=1)
                 )
 
-                nondim_spanwise_colocation_coordinates = 0.5 * nondim_spanwise_coordinates[
+                nondim_spanwise_collocation_coordinates = 0.5 * nondim_spanwise_coordinates[
                                                                :-1] + 0.5 * nondim_spanwise_coordinates[1:]
 
                 # Index 0: chordwise_coordinates
@@ -197,8 +197,8 @@ class vlm1(AeroProblem):
                 # Index 2: xyz
                 section_normals = (
                         np.expand_dims(xsec_normals, axis=1) * (
-                        1 - np.reshape(nondim_spanwise_colocation_coordinates, (1, -1, 1)))
-                        + np.expand_dims(next_xsec_normals, axis=1) * np.reshape(nondim_spanwise_colocation_coordinates,
+                        1 - np.reshape(nondim_spanwise_collocation_coordinates, (1, -1, 1)))
+                        + np.expand_dims(next_xsec_normals, axis=1) * np.reshape(nondim_spanwise_collocation_coordinates,
                                                                                  (1, -1, 1))
                 )
 
@@ -216,8 +216,8 @@ class vlm1(AeroProblem):
                 np.ones((1, wing_coordinates.shape[1] - 1), dtype=bool)
             ))
 
-            # Calculate the colocation points
-            colocation_points = (
+            # Calculate the collocation points
+            collocation_points = (
                     0.25 * (front_inboard_vertices + front_outboard_vertices) / 2 +
                     0.75 * (back_inboard_vertices + back_outboard_vertices) / 2
             )
@@ -232,7 +232,7 @@ class vlm1(AeroProblem):
                     0.25 * back_outboard_vertices
             )
 
-            colocation_points = np.reshape(colocation_points, (-1, 3), order='F')
+            collocation_points = np.reshape(collocation_points, (-1, 3), order='F')
             wing_normals = np.reshape(wing_normals, (-1, 3), order='F')
             inboard_vortex_points = np.reshape(inboard_vortex_points, (-1, 3), order='F')
             outboard_vortex_points = np.reshape(outboard_vortex_points, (-1, 3), order='F')
@@ -242,7 +242,7 @@ class vlm1(AeroProblem):
             back_outboard_vertices = np.reshape(back_outboard_vertices, (-1, 3), order='F')
             is_trailing_edge_this_wing = np.reshape(is_trailing_edge_this_wing, (-1), order='F')
 
-            c = np.vstack((c, colocation_points))
+            c = np.vstack((c, collocation_points))
             n = np.vstack((n, wing_normals))
             lv = np.vstack((lv, inboard_vortex_points))
             rv = np.vstack((rv, outboard_vortex_points))
@@ -255,14 +255,14 @@ class vlm1(AeroProblem):
             if wing.symmetric:
                 inboard_vortex_points = reflect_over_XZ_plane(inboard_vortex_points)
                 outboard_vortex_points = reflect_over_XZ_plane(outboard_vortex_points)
-                colocation_points = reflect_over_XZ_plane(colocation_points)
+                collocation_points = reflect_over_XZ_plane(collocation_points)
                 wing_normals = reflect_over_XZ_plane(wing_normals)
                 front_inboard_vertices = reflect_over_XZ_plane(front_inboard_vertices)
                 front_outboard_vertices = reflect_over_XZ_plane(front_outboard_vertices)
                 back_inboard_vertices = reflect_over_XZ_plane(back_inboard_vertices)
                 back_outboard_vertices = reflect_over_XZ_plane(back_outboard_vertices)
 
-                c = np.vstack((c, colocation_points))
+                c = np.vstack((c, collocation_points))
                 n = np.vstack((n, wing_normals))
                 lv = np.vstack((lv, outboard_vortex_points))
                 rv = np.vstack((rv, inboard_vortex_points))
@@ -292,20 +292,20 @@ class vlm1(AeroProblem):
     def setup_geometry(self):
         # # Calculate AIC matrix
         # ----------------------
-        if self.verbose: print("Calculating the colocation influence matrix...")
+        if self.verbose: print("Calculating the collocation influence matrix...")
 
         # Python Mode
-        self.Vij_colocations = self.calculate_Vij(self.c)
+        self.Vij_collocations = self.calculate_Vij(self.c)
         # Numba Mode
-        # self.Vij_colocations = self.calculate_Vij_jit(self.c, self.lv, self.rv)
+        # self.Vij_collocations = self.calculate_Vij_jit(self.c, self.lv, self.rv)
 
-        # Vij_colocations: [points, vortices, xyz]
+        # Vij_collocations: [points, vortices, xyz]
         # n: [points, xyz]
         n_expanded = np.expand_dims(self.n, 1)
 
         # AIC = (Vij * normal vectors)
         self.AIC = np.sum(
-            self.Vij_colocations * n_expanded,
+            self.Vij_collocations * n_expanded,
             axis=2
         )
 
@@ -315,7 +315,7 @@ class vlm1(AeroProblem):
         self.vortex_centers = (
                                       self.lv + self.rv) / 2  # location of all vortex centers, where the near-field force is assumed to act
 
-        # Redoing the AIC calculation, but using vortex center points instead of colocation points
+        # Redoing the AIC calculation, but using vortex center points instead of collocation points
         # Python Mode
         self.Vij_centers = self.calculate_Vij(self.vortex_centers)
         # Numba Mode
@@ -334,7 +334,7 @@ class vlm1(AeroProblem):
         self.rotation_freestream_velocities = np.zeros(
             (self.n_panels, 3))  # TODO Make this actually be the rotational velocity
 
-        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel colocation point (c)
+        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         self.freestream_influences = np.sum(self.freestream_velocities * self.n, axis=1)
 
@@ -460,7 +460,7 @@ class vlm1(AeroProblem):
         return V
 
     def calculate_Vij(self, points):
-        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
         points = np.reshape(points, (-1, 3))
 
@@ -470,10 +470,10 @@ class vlm1(AeroProblem):
         c_tiled = np.expand_dims(points, 1)
 
         # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a: Vector from all collocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all collocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
         # a[i,j,:] = c[i,:] - lv[j,:]
         # b[i,j,:] = c[i,:] - rv[j,:]
         a = c_tiled - self.lv
@@ -530,7 +530,7 @@ class vlm1(AeroProblem):
         norm_a_inv = 1 / norm_a
         norm_b_inv = 1 / norm_b
 
-        # Check for the special case where the colocation point is along the bound vortex leg
+        # Check for the special case where the collocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
         bound_vortex_singularity_indices = (
                 np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
@@ -641,7 +641,7 @@ class vlm1(AeroProblem):
         plotter.show(cpos=(-1, -1, 1), full_screen=False)
 
     def draw_legacy(self,
-                    draw_colocation_points=False,
+                    draw_collocation_points=False,
                     draw_panel_numbers=False,
                     draw_vortex_strengths=False,
                     draw_forces=False,
@@ -686,7 +686,7 @@ class vlm1(AeroProblem):
                     show=False,
                     fig_to_plot_on=fig,
                     ax_to_plot_on=ax,
-                    draw_colocation_point=draw_colocation_points,
+                    draw_collocation_point=draw_collocation_points,
                     shading_color=color
                 )
             elif draw_pressures:
@@ -702,7 +702,7 @@ class vlm1(AeroProblem):
                     show=False,
                     fig_to_plot_on=fig,
                     ax_to_plot_on=ax,
-                    draw_colocation_point=draw_colocation_points,
+                    draw_collocation_point=draw_collocation_points,
                     shading_color=color
                 )
             else:
@@ -710,7 +710,7 @@ class vlm1(AeroProblem):
                     show=False,
                     fig_to_plot_on=fig,
                     ax_to_plot_on=ax,
-                    draw_colocation_point=draw_colocation_points,
+                    draw_collocation_point=draw_collocation_points,
                     shading_color=(0.5, 0.5, 0.5)
                 )
 
@@ -741,9 +741,9 @@ class vlm1(AeroProblem):
 
             if draw_panel_numbers:
                 ax.text(
-                    panel.colocation_point[0],
-                    panel.colocation_point[1],
-                    panel.colocation_point[2],
+                    panel.collocation_point[0],
+                    panel.collocation_point[1],
+                    panel.collocation_point[2],
                     str(panel_num),
                 )
 
@@ -778,6 +778,10 @@ class vlm2(AeroProblem):
     def run(self, verbose=True):
         # Runs a point analysis at the specified op-point.
         self.verbose = verbose
+
+        # Deprecation warning (use VLM3 instead). Print regardless of verbose status
+        print(
+            "DEPRECATION WARNING: VLM2 has been wholly eclipsed in performance and functionality by VLM3. The VLM2 source code has been left intact for validation purposes and backwards-compatibility, but it will not be supported going forward.")
 
         if self.verbose: print("Running VLM2 calculation...")
 
@@ -950,10 +954,10 @@ class vlm2(AeroProblem):
             nondim_xsec_normals = np.empty(
                 (wing.chordwise_panels, 0, 2))  # MxNx2 of airfoil normals in local xsec coordinates.
             # First index is chordwise point number, second index is xsec number, and third is LOCAL xy.
-            nondim_colocation_coordinates = 0.25 * nondim_chordwise_coordinates[
+            nondim_collocation_coordinates = 0.25 * nondim_chordwise_coordinates[
                                                    :-1] + 0.75 * nondim_chordwise_coordinates[1:]
             for xsec in wing.xsecs:
-                nondim_normals = xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(nondim_colocation_coordinates)
+                nondim_normals = xsec.airfoil.get_mcl_normal_direction_at_chord_fraction(nondim_collocation_coordinates)
                 nondim_normals = np.expand_dims(nondim_normals, 1)
                 nondim_xsec_normals = np.hstack((nondim_xsec_normals, nondim_normals))
 
@@ -994,7 +998,7 @@ class vlm2(AeroProblem):
                 # Do control surface deflections by rotating the local xsec direction
                 control_surface_hinge_point_index = np.interp(
                     x=xsec.control_surface_hinge_point,
-                    xp=nondim_colocation_coordinates,
+                    xp=nondim_collocation_coordinates,
                     fp=np.arange(wing.chordwise_panels)
                 )
                 deflection_angle = xsec.control_surface_deflection
@@ -1125,7 +1129,7 @@ class vlm2(AeroProblem):
                         # Do control surface deflections by rotating the local xsec direction
                         control_surface_hinge_point_index = np.interp(
                             x=xsec.control_surface_hinge_point,
-                            xp=nondim_colocation_coordinates,
+                            xp=nondim_collocation_coordinates,
                             fp=np.arange(wing.chordwise_panels)
                         )
                         deflection_angle = xsec.control_surface_deflection
@@ -1219,7 +1223,7 @@ class vlm2(AeroProblem):
         # Review of the important things that have been done up to this point:
         # * We made panel_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
-        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
+        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the collocation point.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
         #   * Takes into account control surface deflections
         # * Both panel_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
@@ -1233,7 +1237,7 @@ class vlm2(AeroProblem):
         # * And best of all, it's all verified to be reverse-mode AD compatible!!!
 
         # -----------------------------------------------------
-        ## Now, just post-process them to get the colocation points and vortex center points.
+        ## Now, just post-process them to get the collocation points and vortex center points.
         self.n_wings = len(self.mcl_coordinates_structured_list)  # Good to know
 
         self.front_left_vertices_list = []
@@ -1244,7 +1248,7 @@ class vlm2(AeroProblem):
         self.vortex_left_list = []
         self.vortex_right_list = []
 
-        self.colocations_list = []
+        self.collocations_list = []
 
         self.normals_list = []
 
@@ -1259,7 +1263,7 @@ class vlm2(AeroProblem):
             self.back_left_vertices_list.append(np.reshape(wing_back_left_vertices, (-1, 3)))
             self.back_right_vertices_list.append(np.reshape(wing_back_right_vertices, (-1, 3)))
 
-            self.colocations_list.append(
+            self.collocations_list.append(
                 np.reshape((
                         0.5 * (0.25 * wing_front_left_vertices +  # Left front
                                0.75 * wing_back_left_vertices) +  # Left back
@@ -1290,7 +1294,7 @@ class vlm2(AeroProblem):
         self.back_left_vertices_unrolled = np.vstack(self.back_left_vertices_list)
         self.back_right_vertices_unrolled = np.vstack(self.back_right_vertices_list)
 
-        self.colocations_unrolled = np.vstack(self.colocations_list)
+        self.collocations_unrolled = np.vstack(self.collocations_list)
         self.vortex_left_unrolled = np.vstack(self.vortex_left_list)
         self.vortex_right_unrolled = np.vstack(self.vortex_right_list)
         self.vortex_centers_unrolled = (self.vortex_left_unrolled + self.vortex_right_unrolled) / 2
@@ -1303,16 +1307,16 @@ class vlm2(AeroProblem):
     def setup_geometry(self):
         # # Calculate AIC matrix
         # ----------------------
-        if self.verbose: print("Calculating the colocation influence matrix...")
-        self.Vij_colocations = self.calculate_Vij(self.colocations_unrolled)
-        # Vij_colocations: [points, vortices, xyz]
+        if self.verbose: print("Calculating the collocation influence matrix...")
+        self.Vij_collocations = self.calculate_Vij(self.collocations_unrolled)
+        # Vij_collocations: [points, vortices, xyz]
         # n: [points, xyz]
 
         normals_expanded = np.expand_dims(self.normals_unrolled, 1)
 
         # AIC = (Vij * normal vectors)
         self.AIC = np.sum(
-            self.Vij_colocations * normals_expanded,
+            self.Vij_collocations * normals_expanded,
             axis=2
         )
 
@@ -1339,11 +1343,11 @@ class vlm2(AeroProblem):
         self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes() * np.ones(
             (self.n_panels, 1))  # Direction the wind is GOING TO, in geometry axes coordinates
         self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            self.colocations_unrolled)
+            self.collocations_unrolled)
 
         # np.zeros((self.n_panels, 3))  # TODO Make this actually be the rotational velocity
 
-        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel colocation point (c)
+        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         self.freestream_influences = np.sum(self.freestream_velocities * self.normals_unrolled, axis=1)
 
@@ -1437,7 +1441,7 @@ class vlm2(AeroProblem):
 
     # @profile
     def calculate_Vij_wing_by_wing(self, points):
-        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
         #
         # a and b are the vectors from the points to the horseshoe vortex corners. For a picture, see Drela's "Flight Vehicle Aerodynamics", pg. 132. Or message me.
@@ -1480,7 +1484,7 @@ class vlm2(AeroProblem):
             wing_ab_norm_inv = 1 / wing_ab_norm
 
             # ----------------------------------------------------
-            # Check for the special case where a colocation point is along a vortex filament
+            # Check for the special case where a collocation point is along a vortex filament
             # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
             # TODO: Dear future Peter: this wouldn't be a problem if you had just implemented a nonsingular kernel, you dummy
             bound_vortex_singularity_indices = (
@@ -1540,7 +1544,7 @@ class vlm2(AeroProblem):
 
     # @profile
     def calculate_Vij(self, points):  # TODO finish this or delete this
-        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
         # Make lv and rv
@@ -1552,10 +1556,10 @@ class vlm2(AeroProblem):
         n_vortices = self.n_panels
 
         # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a: Vector from all collocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all collocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
         # a[i,j,:] = c[i,:] - lv[j,:]
         # b[i,j,:] = c[i,:] - rv[j,:]
         points = np.expand_dims(points, 1)
@@ -1587,7 +1591,7 @@ class vlm2(AeroProblem):
         norm_a_inv = 1 / norm_a
         norm_b_inv = 1 / norm_b
 
-        # Check for the special case where the colocation point is along the bound vortex leg
+        # Check for the special case where the collocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
         bound_vortex_singularity_indices = (
                 np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
@@ -1800,7 +1804,7 @@ class vlm3(AeroProblem):
 
         if self.verbose: print("Meshing...")
 
-        colocation_points = np.empty((0, 3))
+        collocation_points = np.empty((0, 3))
         normal_directions = np.empty((0, 3))
         left_vortex_vertices = np.empty((0, 3))
         right_vortex_vertices = np.empty((0, 3))
@@ -1973,7 +1977,7 @@ class vlm3(AeroProblem):
                 areas_to_add = diag_cross_norm / 2
 
                 # Make the panel data
-                colocations_to_add = (
+                collocations_to_add = (
                         0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
                         0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
                 )
@@ -2005,9 +2009,9 @@ class vlm3(AeroProblem):
                     is_trailing_edge,
                     section_is_trailing_edge
                 ))
-                colocation_points = np.vstack((
-                    colocation_points,
-                    colocations_to_add
+                collocation_points = np.vstack((
+                    collocation_points,
+                    collocations_to_add
                 ))
                 normal_directions = np.vstack((
                     normal_directions,
@@ -2102,7 +2106,7 @@ class vlm3(AeroProblem):
                         areas_to_add = diag_cross_norm / 2
 
                         # Make the panels and append them to the lists of panel data (c, n, lv, rv, etc.)
-                        colocations_to_add = (
+                        collocations_to_add = (
                                 0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
                                 0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
                         )
@@ -2133,9 +2137,9 @@ class vlm3(AeroProblem):
                         is_trailing_edge,
                         section_is_trailing_edge
                     ))
-                    colocation_points = np.vstack((
-                        colocation_points,
-                        reflect_over_XZ_plane(colocations_to_add)
+                    collocation_points = np.vstack((
+                        collocation_points,
+                        reflect_over_XZ_plane(collocations_to_add)
                     ))
                     normal_directions = np.vstack((
                         normal_directions,
@@ -2157,7 +2161,7 @@ class vlm3(AeroProblem):
         self.back_right_vertices = back_right_vertices
         self.areas = areas
         self.is_trailing_edge = is_trailing_edge
-        self.colocation_points = colocation_points
+        self.collocation_points = collocation_points
         self.normal_directions = normal_directions
         self.left_vortex_vertices = left_vortex_vertices
         self.right_vortex_vertices = right_vortex_vertices
@@ -2165,14 +2169,14 @@ class vlm3(AeroProblem):
         # Do final processing for later use
         self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
         self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
-        self.n_panels = len(self.colocation_points)
+        self.n_panels = len(self.collocation_points)
 
         if self.verbose: print("Meshing complete!")
         # -----------------------------------------------------
         # Review of the important things that have been done up to this point:
         # * We made panel_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
-        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
+        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the collocation point.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
         #   * Takes into account control surface deflections
         # * Both panel_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
@@ -2188,14 +2192,14 @@ class vlm3(AeroProblem):
     def setup_geometry(self):
         # # Calculate AIC matrix
         # ----------------------
-        if self.verbose: print("Calculating the colocation influence matrix...")
-        self.Vij_colocations = self.calculate_Vij(self.colocation_points)
-        # Vij_colocations: [points, vortices, xyz]
+        if self.verbose: print("Calculating the collocation influence matrix...")
+        self.Vij_collocations = self.calculate_Vij(self.collocation_points)
+        # Vij_collocations: [points, vortices, xyz]
         # n: [points, xyz]
 
         # AIC = (Vij * normal vectors)
         self.AIC = np.sum(
-            self.Vij_colocations * np.expand_dims(self.normal_directions, 1),
+            self.Vij_collocations * np.expand_dims(self.normal_directions, 1),
             axis=2
         )
 
@@ -2222,11 +2226,11 @@ class vlm3(AeroProblem):
         self.steady_freestream_velocity = np.expand_dims(self.op_point.compute_freestream_velocity_geometry_axes(),
                                                          0)  # Direction the wind is GOING TO, in geometry axes coordinates
         self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            self.colocation_points)
+            self.collocation_points)
 
         # np.zeros((self.n_panels, 3))  # TODO Make this actually be the rotational velocity
 
-        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel colocation point (c)
+        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         self.freestream_influences = np.sum(self.freestream_velocities * self.normal_directions, axis=1)
 
@@ -2306,7 +2310,7 @@ class vlm3(AeroProblem):
 
     # @profile
     def calculate_Vij(self, points):  # TODO finish this or delete this
-        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
         # Make lv and rv
@@ -2318,10 +2322,10 @@ class vlm3(AeroProblem):
         n_vortices = self.n_panels
 
         # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a: Vector from all collocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all collocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
         # a[i,j,:] = c[i,:] - lv[j,:]
         # b[i,j,:] = c[i,:] - rv[j,:]
         points = np.expand_dims(points, 1)
@@ -2353,7 +2357,7 @@ class vlm3(AeroProblem):
         norm_a_inv = 1 / norm_a
         norm_b_inv = 1 / norm_b
 
-        # Check for the special case where the colocation point is along the bound vortex leg
+        # Check for the special case where the collocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
         bound_vortex_singularity_indices = (
                 np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
@@ -2548,7 +2552,7 @@ class panel1(AeroProblem):
 
         if self.verbose: print("Meshing...")
 
-        colocation_points = np.empty((0, 3))
+        collocation_points = np.empty((0, 3))
         normal_directions = np.empty((0, 3))
         left_vortex_vertices = np.empty((0, 3))
         right_vortex_vertices = np.empty((0, 3))
@@ -2557,7 +2561,8 @@ class panel1(AeroProblem):
         back_left_vertices = np.empty((0, 3))
         back_right_vertices = np.empty((0, 3))
         areas = np.empty((0))
-        is_trailing_edge = np.empty((0), dtype=bool)
+        is_trailing_edge_upper = np.empty((0), dtype=bool)
+        is_trailing_edge_lower = np.empty((0), dtype=bool)
 
         for wing_num in range(len(self.airplane.wings)):
             # Things we want for each wing (where M is the number of chordwise panels, N is the number of spanwise panels)
@@ -2708,17 +2713,19 @@ class panel1(AeroProblem):
                 front_outer_coordinates = section_mcl_coordinates[:-1, 1:, :]
                 back_inner_coordinates = section_mcl_coordinates[1:, :-1, :]
                 back_outer_coordinates = section_mcl_coordinates[1:, 1:, :]
-                section_is_trailing_edge = np.vstack((
+                section_is_trailing_edge_upper = np.vstack((
                     np.zeros((wing.chordwise_panels - 1, xsec.spanwise_panels), dtype=bool),
                     np.ones((1, xsec.spanwise_panels), dtype=bool)
                 ))
+                section_is_trailing_edge_lower = np.flipud(section_is_trailing_edge_upper)
 
                 # Reshape
                 front_inner_coordinates = np.reshape(front_inner_coordinates, (-1, 3), order='F')
                 front_outer_coordinates = np.reshape(front_outer_coordinates, (-1, 3), order='F')
                 back_inner_coordinates = np.reshape(back_inner_coordinates, (-1, 3), order='F')
                 back_outer_coordinates = np.reshape(back_outer_coordinates, (-1, 3), order='F')
-                section_is_trailing_edge = np.reshape(section_is_trailing_edge, (-1), order='F')
+                section_is_trailing_edge_upper = np.reshape(section_is_trailing_edge_upper, (-1), order='F')
+                section_is_trailing_edge_lower = np.reshape(section_is_trailing_edge_lower, (-1), order='F')
 
                 # Calculate panel normals and areas via diagonals
                 diag1 = front_outer_coordinates - back_inner_coordinates
@@ -2729,7 +2736,7 @@ class panel1(AeroProblem):
                 areas_to_add = diag_cross_norm / 2
 
                 # Make the panel data
-                colocations_to_add = (
+                collocations_to_add = (
                         0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
                         0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
                 )
@@ -2757,13 +2764,17 @@ class panel1(AeroProblem):
                     areas,
                     areas_to_add
                 ))
-                is_trailing_edge = np.hstack((
-                    is_trailing_edge,
-                    section_is_trailing_edge
+                is_trailing_edge_upper = np.hstack((
+                    is_trailing_edge_upper,
+                    section_is_trailing_edge_upper
                 ))
-                colocation_points = np.vstack((
-                    colocation_points,
-                    colocations_to_add
+                is_trailing_edge_lower = np.hstack((
+                    is_trailing_edge_lower,
+                    section_is_trailing_edge_lower
+                ))
+                collocation_points = np.vstack((
+                    collocation_points,
+                    collocations_to_add
                 ))
                 normal_directions = np.vstack((
                     normal_directions,
@@ -2866,7 +2877,7 @@ class panel1(AeroProblem):
                         areas_to_add = diag_cross_norm / 2
 
                         # Make the panels and append them to the lists of panel data (c, n, lv, rv, etc.)
-                        colocations_to_add = (
+                        collocations_to_add = (
                                 0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
                                 0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
                         )
@@ -2893,13 +2904,17 @@ class panel1(AeroProblem):
                         areas,
                         areas_to_add
                     ))
-                    is_trailing_edge = np.hstack((
-                        is_trailing_edge,
-                        section_is_trailing_edge
+                    is_trailing_edge_upper = np.hstack((
+                        is_trailing_edge_upper,
+                        section_is_trailing_edge_upper
                     ))
-                    colocation_points = np.vstack((
-                        colocation_points,
-                        reflect_over_XZ_plane(colocations_to_add)
+                    is_trailing_edge_lower = np.hstack((
+                        is_trailing_edge_lower,
+                        section_is_trailing_edge_lower
+                    ))
+                    collocation_points = np.vstack((
+                        collocation_points,
+                        reflect_over_XZ_plane(collocations_to_add)
                     ))
                     normal_directions = np.vstack((
                         normal_directions,
@@ -2920,8 +2935,9 @@ class panel1(AeroProblem):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.areas = areas
-        self.is_trailing_edge = is_trailing_edge
-        self.colocation_points = colocation_points
+        self.is_trailing_edge_upper = is_trailing_edge_upper
+        self.is_trailing_edge_lower = is_trailing_edge_lower
+        self.collocation_points = collocation_points
         self.normal_directions = normal_directions
         self.left_vortex_vertices = left_vortex_vertices
         self.right_vortex_vertices = right_vortex_vertices
@@ -2929,14 +2945,14 @@ class panel1(AeroProblem):
         # Do final processing for later use
         self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
         self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
-        self.n_panels = len(self.colocation_points)
+        self.n_panels = len(self.collocation_points)
 
         if self.verbose: print("Meshing complete!")
         # -----------------------------------------------------
         # Review of the important things that have been done up to this point:
         # * We made panel_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
-        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the colocation point.
+        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the collocation point.
         #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
         #   * Takes into account control surface deflections
         # * Both panel_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
@@ -2952,14 +2968,14 @@ class panel1(AeroProblem):
     def setup_geometry(self):
         # # Calculate AIC matrix
         # ----------------------
-        if self.verbose: print("Calculating the colocation influence matrix...")
-        self.Vij_colocations = self.calculate_Vij(self.colocation_points)
-        # Vij_colocations: [points, vortices, xyz]
+        if self.verbose: print("Calculating the collocation influence matrix...")
+        self.Vij_collocations = self.calculate_Vij(self.collocation_points)
+        # Vij_collocations: [points, vortices, xyz]
         # n: [points, xyz]
 
         # AIC = (Vij * normal vectors)
         self.AIC = np.sum(
-            self.Vij_colocations * np.expand_dims(self.normal_directions, 1),
+            self.Vij_collocations * np.expand_dims(self.normal_directions, 1),
             axis=2
         )
 
@@ -2986,11 +3002,11 @@ class panel1(AeroProblem):
         self.steady_freestream_velocity = np.expand_dims(self.op_point.compute_freestream_velocity_geometry_axes(),
                                                          0)  # Direction the wind is GOING TO, in geometry axes coordinates
         self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            self.colocation_points)
+            self.collocation_points)
 
         # np.zeros((self.n_panels, 3))  # TODO Make this actually be the rotational velocity
 
-        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel colocation point (c)
+        self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         self.freestream_influences = np.sum(self.freestream_velocities * self.normal_directions, axis=1)
 
@@ -3070,7 +3086,7 @@ class panel1(AeroProblem):
 
     # @profile
     def calculate_Vij(self, points):  # TODO finish this or delete this
-        # Calculates Vij, the velocity influence matrix (First index is colocation point number, second index is vortex number).
+        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
         # Make lv and rv
@@ -3082,10 +3098,10 @@ class panel1(AeroProblem):
         n_vortices = self.n_panels
 
         # Make a and b vectors.
-        # a: Vector from all colocation points to all horseshoe vortex left  vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all colocation points to all horseshoe vortex right vertices, NxNx3.
-        #   # First index is colocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a: Vector from all collocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all collocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
         # a[i,j,:] = c[i,:] - lv[j,:]
         # b[i,j,:] = c[i,:] - rv[j,:]
         points = np.expand_dims(points, 1)
@@ -3117,7 +3133,7 @@ class panel1(AeroProblem):
         norm_a_inv = 1 / norm_a
         norm_b_inv = 1 / norm_b
 
-        # Check for the special case where the colocation point is along the bound vortex leg
+        # Check for the special case where the collocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
         bound_vortex_singularity_indices = (
                 np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
