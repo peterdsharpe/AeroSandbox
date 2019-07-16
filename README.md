@@ -149,11 +149,11 @@ If you installed Python via the [Anaconda distribution](https://www.anaconda.com
 
 OpenGL is also required for visualization, though this should already be installed on nearly every computer. (No promises if you try to run AeroSandbox on a Raspberry Pi or something!)
 
-### Current Features
+## Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Fully reverse-mode AD compatible vortex-lattice method flow solver ("VLM3")! Very fast (~0.35s for typical problems) and fully compatible with arbitrary combinations of lifting surfaces. With this, you can get the gradient of a design space with arbitrary dimensionality almost instantly.
 
-### Purpose
+## Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
 
 The "holy grail" of aerodynamics that this package seeks to develop is:
