@@ -209,7 +209,7 @@ If you like this software, please consider donating to support development via P
 ## Bugs
 Please, please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
 
-Please note that, while the entirety of the codebase should be cross-platform compatible, AeroSandbox has only been tested on Windows 10.
+Please note that, while the entirety of the codebase should be cross-platform compatible, AeroSandbox has only been tested on Windows 10 in Python 3.7 via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).
 
 ## Contributing
 
