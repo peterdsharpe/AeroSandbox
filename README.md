@@ -131,7 +131,7 @@ aero_problem.run() # Runs and prints results to console
 aero_problem.draw() # Creates an interactive display of the surface pressures and streamlines
 ```
 
-The best part is that by adding just a few more lines of code, you can not only get the performance at a specified design point, but also the derivatives of any performance variable with respect to any design variable. And, thanks to reverse-mode automatic differentiation, you can calculate 10,000 design derivatives in roughly the same amount of time that it takes to do a single point analysis. For an example of this, see "/examples/gradient_test_vlm2.py".
+The best part is that by adding just a few more lines of code, you can not only get the performance at a specified design point, but also the derivatives of any performance variable with respect to any design variable. Thanks to reverse-mode automatic differentiation, this process only requires the time of one additional flow solution, regardless of the number of design variables. For an example of this, see "/examples/gradient_test_vlm2.py".
 
 One final point to note: as we're all civilized human beings here, all inputs and outputs to AeroSandbox are expressed in base metric units (meters, Newtons, kilograms, etc.).
 
