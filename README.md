@@ -131,9 +131,9 @@ aero_problem.run() # Runs and prints results to console
 aero_problem.draw() # Creates an interactive display of the surface pressures and streamlines
 ```
 
-The best part is that by adding just a few more lines of code, you can not only get the performance at a specified design point, but also the derivatives of any performance variable with respect to any design variable. And, thanks to reverse-mode automatic differentiation, you can calculate 10,000 design derivatives in roughly the same amount of time that it takes to do a single point analysis. For an example of this, see "/examples/gradient_test_vlm2.py".
+The best part is that by adding just a few more lines of code, you can not only get the performance at a specified design point, but also the derivatives of any performance variable with respect to any design variable. Thanks to reverse-mode automatic differentiation, this process only requires the time of one additional flow solution, regardless of the number of design variables. For an example of this, see "/examples/gradient_test_vlm2.py".
 
-One final point to note: as we're all civilized human beings here, all inputs and outputs to AeroSandbox are expressed in base metric units (meters, Newtons, kilograms, etc.).
+One final point to note: as we're all sensible and civilized human beings here, all inputs and outputs to AeroSandbox are expressed in base metric units (meters, Newtons, kilograms, etc.).
 
 ### Dependencies
 
@@ -149,17 +149,17 @@ If you installed Python via the [Anaconda distribution](https://www.anaconda.com
 
 OpenGL is also required for visualization, though this should already be installed on nearly every computer. (No promises if you try to run AeroSandbox on a Raspberry Pi or something!)
 
-### Current Features
+## Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
 * Fully reverse-mode AD compatible vortex-lattice method flow solver ("VLM3")! Very fast (~0.35s for typical problems) and fully compatible with arbitrary combinations of lifting surfaces. With this, you can get the gradient of a design space with arbitrary dimensionality almost instantly.
 
-### Purpose
+## Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
 
-The "holy grail" of aerodynamics that this package seeks to develop is:
-An aerodynamics tool that models flow around any general triangulated 3D shape (with non-separated flow) using strongly-coupled viscous/inviscid methods. If successful, this could be orders of magnitude faster than volume-mesh-based CFD while retaining high accuracy (XFoil is a 2D example of this). This is very difficult and likely years away, and it's likely that AeroSandbox won't be the toolbox to develop this - but there's no harm in taking a stab at it, if only to understand the problem space better!
+This package eventually seeks to develop the following:
+An aerodynamics tool that models flow around any general triangulated 3D shape (with non-separated flow) using strongly-coupled viscous/inviscid methods. If successful, this could be orders of magnitude faster than volume-mesh-based CFD while retaining high accuracy (XFoil is a 2D example of this).
 
-This code is made open-source in hopes that the aerodynamics community can benefit from this work. I've benefitted so much from open-source aerodynamics tools that came before me (XFoil, AVL, QProp, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
+This code is made open-source in hopes that the aerospace community can benefit from this work. I've benefitted so much from open-source aerospace tools that came before me (XFoil, AVL, QProp, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
 
 ## Future Goals
 In descending order of priority/feasibility:
@@ -209,7 +209,7 @@ If you like this software, please consider donating to support development via P
 ## Bugs
 Please, please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
 
-Please note that, while the entirety of the codebase should be cross-platform compatible, AeroSandbox has only been tested on Windows 10.
+Please note that, while the entirety of the codebase should be cross-platform compatible, AeroSandbox has only been tested on Windows 10 in Python 3.7 via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).
 
 ## Contributing
 
