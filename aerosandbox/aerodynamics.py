@@ -2714,7 +2714,7 @@ class panel1(AeroProblem):
                 back_inner_coordinates = section_mcl_coordinates[1:, :-1, :]
                 back_outer_coordinates = section_mcl_coordinates[1:, 1:, :]
                 section_is_trailing_edge_upper = np.vstack((
-                    np.zeros((wing.chordwise_panels - 1, xsec.spanwise_panels), dtype=bool),
+                    np.zeros((wing.chordwise_panels * 2 - 1, xsec.spanwise_panels), dtype=bool),
                     np.ones((1, xsec.spanwise_panels), dtype=bool)
                 ))
                 section_is_trailing_edge_lower = np.flipud(section_is_trailing_edge_upper)
@@ -3243,7 +3243,7 @@ class panel1(AeroProblem):
         self.streamlines = streamlines
 
     def draw(self,
-             draw_delta_cp=True,
+             shading="delta_cp", # Can be "none", "delta_cp", or "trailing_edges"
              draw_streamlines=True,
              ):
 
@@ -3271,7 +3271,10 @@ class panel1(AeroProblem):
         # Initialize Plotter
         plotter = pv.Plotter()
 
-        if draw_delta_cp:
+        if shading == "none":
+            plotter.add_mesh(wing_surfaces, color='tan', show_edges=True,
+                             smooth_shading=True)
+        elif shading == "delta_cp":
             if not hasattr(self, 'delta_cp'):
                 self.calculate_delta_cp()
 
@@ -3284,6 +3287,11 @@ class panel1(AeroProblem):
                              smooth_shading=True)
             plotter.add_scalar_bar(title="Pressure Coefficient Differential", n_labels=5, shadow=True,
                                    font_family='arial')
+        elif shading == "trailing_edges":
+            scalars = np.logical_or(self.is_trailing_edge_upper, self.is_trailing_edge_lower) # type: np.ndarray
+            scalars = scalars.astype(int)
+            plotter.add_mesh(wing_surfaces, scalars=scalars, color='tan', show_edges=True,
+                             smooth_shading=True)
 
         if draw_streamlines:
             if not hasattr(self, 'streamlines'):

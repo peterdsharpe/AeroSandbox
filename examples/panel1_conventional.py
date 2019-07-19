@@ -95,7 +95,7 @@ ap = panel1(
     ),
 )
 ap.run()
-ap.draw(draw_streamlines=False)
+ap.draw(draw_streamlines=False, shading = "trailing_edges")
 
 # Answer you should get: (XFLR5)
 # CL = 0.797
