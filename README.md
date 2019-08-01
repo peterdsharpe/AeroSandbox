@@ -213,13 +213,11 @@ Please note that, while the entirety of the codebase should be cross-platform co
 
 ## Contributing
 
-Thanks for your interest in helping with the development of AeroSandbox - contributions are always so welcome! 
-
-If you have a change you'd like to make, the easiest way to do that is by submitting a pull request. However, please let me know before you do this (pds at mit dot edu), because:
-
-Right now, branching is basically nonexistent. This is because there's currently only one contributor - me. As soon as this changes, we'll need to implement [proper branching](https://nvie.com/posts/a-successful-git-branching-model/). 
+Thanks for your interest in helping with the development of AeroSandbox - contributions are always so, so welcome! If you have a change you'd like to make, the easiest way to do that is by submitting a pull request. 
 
 If you've made several additions and would like to be involved in a more long-term capacity, please message me at (pds at mit dot edu) and we can add you as a collaborator here on Github!
+
+Right now, branching is basically nonexistent. This is because there's currently only one contributor - me. As soon as this changes, we'll need to implement [proper branching](https://nvie.com/posts/a-successful-git-branching-model/). 
 
 ## License
 
