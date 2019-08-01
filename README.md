@@ -204,7 +204,7 @@ Specifically, the following desirable qualities (and associated quantitative met
 * Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
 
 ## Donating
-If you like this software, please consider donating to support development via PayPal at [paypal.me/peterdsharpe](https://paypal.me/peterdsharpe)!
+If you like this software, please consider donating to support development via PayPal at [paypal.me/peterdsharpe](https://paypal.me/peterdsharpe)! I'm a poor grad student right now, so every dollar you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
 
 ## Bugs
 Please, please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
