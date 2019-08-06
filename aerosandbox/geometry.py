@@ -193,10 +193,16 @@ class Airplane:
                 xsec.spanwise_panels = n_spanwise_panels
 
     def get_bounding_cube(self):
-        # Finds the axis-aligned cube that encloses the airplane with the smallest size.
-        # Returns x, y, z, and s, where x, y, and z are the coordinates of the cube center,
-        # and s is half of the side length.
-        # Useful for plotting and getting a sense for the scale of a problem.
+        """ Finds the axis-aligned cube that encloses the airplane with the smallest size.
+            Useful for plotting and getting a sense for the scale of a problem.
+            
+            Args:
+                self.wings (iterable): All the wings included for analysis each containing their geometry in x,y,z notation using units of m
+            Returns:
+                tuple: Tuple of 4 floats x, y, z, and s, where x, y, and z are the coordinates of the cube center,
+                and s is half of the side length.
+        """
+
 
         # Get vertices to enclose
         vertices = None

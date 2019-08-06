@@ -13,6 +13,13 @@ class MassProps:
         self.mass_components = mass_components
 
     def get_mass(self):
+        """ Mass of the aircraft according the mass of the components
+        
+        Args:
+            self.mass_components (iterable): Iterable of components each with a mass property in kg
+        Returns:
+            float: Total mass of the aircraft in kg
+        """
         total_mass = 0.
         for component in self.mass_components:
             total_mass = total_mass + component.mass
