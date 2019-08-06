@@ -22,7 +22,7 @@ class MassProps:
         """
         total_mass = 0.
         for component in self.mass_components:
-            total_mass += component.mass
+            total_mass = total_mass + component.mass
         return total_mass
 
     def get_cg(self):
