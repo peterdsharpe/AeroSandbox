@@ -3004,8 +3004,6 @@ class panel1(AeroProblem):
         self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             self.collocation_points)
 
-        # np.zeros((self.n_panels, 3))  # TODO Make this actually be the rotational velocity
-
         self.freestream_velocities = self.steady_freestream_velocity + self.rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         self.freestream_influences = np.sum(self.freestream_velocities * self.normal_directions, axis=1)
@@ -3017,7 +3015,7 @@ class panel1(AeroProblem):
         if self.verbose: print("Calculating vortex strengths...")
         self.vortex_strengths = np.linalg.solve(self.AIC, -self.freestream_influences)
 
-    def calculate_forces(self):
+    def calculate_forces(self): # TODO rewrite this for the new velocity influence matrix
         # # Calculate Near-Field Forces and Moments
         # -----------------------------------------
         # Governing Equation: The force on a straight, small vortex filament is F = rho * V x l * gamma,
@@ -3085,7 +3083,7 @@ class panel1(AeroProblem):
         if self.verbose: print("Cn: ", self.Cn)
 
     # @profile
-    def calculate_Vij(self, points):  # TODO finish this or delete this
+    def calculate_Vij(self, points):  # TODO Rewrite for 3d panel kernel function
         # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
