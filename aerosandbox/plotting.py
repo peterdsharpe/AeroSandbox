@@ -6,6 +6,14 @@ import autograd.numpy as np
 
 
 def fig3d():
+    '''Makes a new 3D figure with Matplotlib.
+
+    Input:
+        None
+    Output: fig, ax
+        fig: a matplotlib figure object
+        ax: a matplotlib axis object
+    '''
     fig = plt.figure()
     fig.figsize = (10, 10)
     ax = fig.add_subplot(111, projection='3d')
