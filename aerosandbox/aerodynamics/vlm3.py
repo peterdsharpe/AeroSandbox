@@ -679,7 +679,7 @@ class vlm3(AeroProblem):
 
         # Constants
         n_steps = 100  # minimum of 2
-        length = 1  # meter
+        length = self.airplane.get_bounding_cube()[3]  # meter
 
         # Resolution
         length_per_step = length / n_steps

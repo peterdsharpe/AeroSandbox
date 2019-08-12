@@ -207,27 +207,27 @@ class Airplane:
         # Get vertices to enclose
         vertices = None
         for wing in self.wings:
-            for wingsection in wing.sections:
+            for xsec in wing.xsecs:
                 if vertices is None:
-                    vertices = wingsection.xyz_le + wing.xyz_le
+                    vertices = xsec.xyz_le + wing.xyz_le
                 else:
                     vertices = np.vstack((
                         vertices,
-                        wingsection.xyz_le + wing.xyz_le
+                        xsec.xyz_le + wing.xyz_le
                     ))
                 vertices = np.vstack((
                     vertices,
-                    wingsection.xyz_te() + wing.xyz_le
+                    xsec.xyz_te() + wing.xyz_le
                 ))
 
                 if wing.symmetric:
                     vertices = np.vstack((
                         vertices,
-                        reflect_over_XZ_plane(wingsection.xyz_le + wing.xyz_le)
+                        reflect_over_XZ_plane(xsec.xyz_le + wing.xyz_le)
                     ))
                     vertices = np.vstack((
                         vertices,
-                        reflect_over_XZ_plane(wingsection.xyz_te() + wing.xyz_le)
+                        reflect_over_XZ_plane(xsec.xyz_te() + wing.xyz_le)
                     ))
 
         # Enclose them
@@ -294,7 +294,7 @@ class Wing:
         return area
 
     def area_projected(self):
-        # Returns the area of the wing as projected onto the XY plane.
+        # Returns the area of the wing as projected onto the XY plane (top-down view).
         area = 0
         for i in range(len(self.xsecs) - 1):
             chord_eff = (self.xsecs[i].chord
