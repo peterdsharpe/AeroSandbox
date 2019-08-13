@@ -32,8 +32,8 @@ class panel1(AeroProblem):
 
         collocation_points = np.empty((0, 3))
         normal_directions = np.empty((0, 3))
-        left_vortex_vertices = np.empty((0, 3))
-        right_vortex_vertices = np.empty((0, 3))
+        # left_vortex_vertices = np.empty((0, 3))
+        # right_vortex_vertices = np.empty((0, 3))
         front_left_vertices = np.empty((0, 3))
         front_right_vertices = np.empty((0, 3))
         back_left_vertices = np.empty((0, 3))
@@ -43,9 +43,6 @@ class panel1(AeroProblem):
         is_trailing_edge_lower = np.empty((0), dtype=bool)
 
         for wing_num in range(len(self.airplane.wings)):
-            # Things we want for each wing (where M is the number of chordwise panels, N is the number of spanwise panels)
-            # # panel_coordinates_structured_list: M+1 x N+1 x 3; corners of every panel.
-            # # normals_structured_list: M x N x 3; normal direction of each panel
 
             # Get the wing
             wing = self.airplane.wings[wing_num]
@@ -215,11 +212,11 @@ class panel1(AeroProblem):
 
                 # Make the panel data
                 collocations_to_add = (
-                        0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
-                        0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
+                        0.5 * (0.5 * front_inner_coordinates + 0.5 * back_inner_coordinates) +
+                        0.5 * (0.5 * front_outer_coordinates + 0.5 * back_outer_coordinates)
                 )
-                inner_vortex_vertices_to_add = 0.75 * front_inner_coordinates + 0.25 * back_inner_coordinates
-                outer_vortex_vertices_to_add = 0.75 * front_outer_coordinates + 0.25 * back_outer_coordinates
+                # inner_vortex_vertices_to_add = 0.75 * front_inner_coordinates + 0.25 * back_inner_coordinates
+                # outer_vortex_vertices_to_add = 0.75 * front_outer_coordinates + 0.25 * back_outer_coordinates
 
                 # Append to the lists of panel data (c, n, lv, rv, etc.)
                 front_left_vertices = np.vstack((
@@ -258,14 +255,14 @@ class panel1(AeroProblem):
                     normal_directions,
                     normals_to_add
                 ))
-                left_vortex_vertices = np.vstack((
-                    left_vortex_vertices,
-                    inner_vortex_vertices_to_add
-                ))
-                right_vortex_vertices = np.vstack((
-                    right_vortex_vertices,
-                    outer_vortex_vertices_to_add
-                ))
+                # left_vortex_vertices = np.vstack((
+                #     left_vortex_vertices,
+                #     inner_vortex_vertices_to_add
+                # ))
+                # right_vortex_vertices = np.vstack((
+                #     right_vortex_vertices,
+                #     outer_vortex_vertices_to_add
+                # ))
 
                 # Handle symmetry
                 if wing.symmetric:
@@ -356,11 +353,11 @@ class panel1(AeroProblem):
 
                         # Make the panels and append them to the lists of panel data (c, n, lv, rv, etc.)
                         collocations_to_add = (
-                                0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
-                                0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
+                                0.5 * (0.5 * front_inner_coordinates + 0.5 * back_inner_coordinates) +
+                                0.5 * (0.5 * front_outer_coordinates + 0.5 * back_outer_coordinates)
                         )
-                        inner_vortex_vertices_to_add = 0.75 * front_inner_coordinates + 0.25 * back_inner_coordinates
-                        outer_vortex_vertices_to_add = 0.75 * front_outer_coordinates + 0.25 * back_outer_coordinates
+                        # inner_vortex_vertices_to_add = 0.75 * front_inner_coordinates + 0.25 * back_inner_coordinates
+                        # outer_vortex_vertices_to_add = 0.75 * front_outer_coordinates + 0.25 * back_outer_coordinates
 
                     front_left_vertices = np.vstack((
                         front_left_vertices,
@@ -398,14 +395,14 @@ class panel1(AeroProblem):
                         normal_directions,
                         reflect_over_XZ_plane(normals_to_add)
                     ))
-                    left_vortex_vertices = np.vstack((
-                        left_vortex_vertices,
-                        reflect_over_XZ_plane(outer_vortex_vertices_to_add)
-                    ))
-                    right_vortex_vertices = np.vstack((
-                        right_vortex_vertices,
-                        reflect_over_XZ_plane(inner_vortex_vertices_to_add)
-                    ))
+                    # left_vortex_vertices = np.vstack((
+                    #     left_vortex_vertices,
+                    #     reflect_over_XZ_plane(outer_vortex_vertices_to_add)
+                    # ))
+                    # right_vortex_vertices = np.vstack((
+                    #     right_vortex_vertices,
+                    #     reflect_over_XZ_plane(inner_vortex_vertices_to_add)
+                    # ))
 
         # Write to self object
         self.front_left_vertices = front_left_vertices
@@ -417,31 +414,16 @@ class panel1(AeroProblem):
         self.is_trailing_edge_lower = is_trailing_edge_lower
         self.collocation_points = collocation_points
         self.normal_directions = normal_directions
-        self.left_vortex_vertices = left_vortex_vertices
-        self.right_vortex_vertices = right_vortex_vertices
+        # self.left_vortex_vertices = left_vortex_vertices
+        # self.right_vortex_vertices = right_vortex_vertices
 
         # Do final processing for later use
-        self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
-        self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
+        # self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
+        # self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
         self.n_panels = len(self.collocation_points)
 
         if self.verbose: print("Meshing complete!")
         # -----------------------------------------------------
-        # Review of the important things that have been done up to this point:
-        # * We made panel_coordinates_structured_list, a MxNx3 array describing a structured quadrilateral mesh of the wing's mean camber surface.
-        #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
-        # * We made normals_structured_list, a MxNx3 array describing the normal direction of the mean camber surface at the collocation point.
-        #   * For reference: first index is chordwise coordinate, second index is spanwise coordinate, and third index is xyz.
-        #   * Takes into account control surface deflections
-        # * Both panel_coordinates_structured_list and normals_structured_list have been appended to lists of ndarrays within the vlm2 class,
-        #   accessible at self.panel_coordinates_structured_list and self.normals_structured_list, respectively.
-        # * Control surface handling:
-        #   * Control surfaces are implemented into normal directions as intended.
-        # * Symmetry handling:
-        #   * All symmetric wings have been split into separate halves.
-        #   * All wing halves have their spanwise coordinates labeled from the left side of the airplane to the right.
-        #   * Control surface deflection symmetry has been handled; this is encoded into the normal directions.
-        # * And best of all, it's all verified to be reverse-mode AD compatible!!!
 
     def setup_geometry(self):
         # # Calculate AIC matrix
@@ -561,83 +543,93 @@ class panel1(AeroProblem):
         if self.verbose: print("Cn: ", self.Cn)
 
     # @profile
-    def calculate_Vij(self, points):  # TODO Rewrite for 3d panel kernel function
+    def calculate_Vij(self, points):
         # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
-        # Make lv and rv
-        left_vortex_vertices = self.left_vortex_vertices
-        right_vortex_vertices = self.right_vortex_vertices
-
+        # Data cleanup
         points = np.reshape(points, (-1, 3))
+
+        # Getting info
         n_points = len(points)
         n_vortices = self.n_panels
 
-        # Make a and b vectors.
-        # a: Vector from all collocation points to all horseshoe vortex left  vertices, NxNx3.
+        # Make v1, v2, v3, and v4 vectors.
+        # Each vector goes from all collocation points to one type of vertex (front left, front right, etc.). NxNx3.
         #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all collocation points to all horseshoe vortex right vertices, NxNx3.
-        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
-        # a[i,j,:] = c[i,:] - lv[j,:]
-        # b[i,j,:] = c[i,:] - rv[j,:]
+        # v1: corresponds to front left vertices
+        # v2: corresponds to front right vertices
+        # v3: corresponds to back right vertices
+        # v4: corresponds to back left vertices
+        # Example: v1[i,j,:] = collocation_points[i,:] - front_left_vertices[j,:]
+
         points = np.expand_dims(points, 1)
-        a = points - left_vortex_vertices
-        b = points - right_vortex_vertices
+        v1 = points - self.front_left_vertices
+        v2 = points - self.front_right_vertices
+        v3 = points - self.back_right_vertices
+        v4 = points - self.back_left_vertices
+
         # x_hat = np.zeros([n_points, n_vortices, 3])
         # x_hat[:, :, 0] = 1
 
         # Do some useful arithmetic
-        a_cross_b = np.cross(a, b, axis=2)
-        a_dot_b = np.einsum('ijk,ijk->ij', a, b)
+        v1_cross_v2 = np.cross(v1, v2, axis = 2)
+        v2_cross_v3 = np.cross(v2, v3, axis = 2)
+        v3_cross_v4 = np.cross(v3, v4, axis = 2)
+        v4_cross_v1 = np.cross(v4, v1, axis = 2)
+        v1_dot_v2 = np.einsum('ijk,ijk->ij', v1, v2)
+        v2_dot_v3 = np.einsum('ijk,ijk->ij', v2, v3)
+        v3_dot_v4 = np.einsum('ijk,ijk->ij', v3, v4)
+        v4_dot_v1 = np.einsum('ijk,ijk->ij', v4, v1)
+        norm_v1 = np.linalg.norm(v1, axis = 2)
+        norm_v2 = np.linalg.norm(v2, axis = 2)
+        norm_v3 = np.linalg.norm(v3, axis = 2)
+        norm_v4 = np.linalg.norm(v4, axis = 2)
+        norm_v1_inv = 1 / norm_v1
+        norm_v2_inv = 1 / norm_v2
+        norm_v3_inv = 1 / norm_v3
+        norm_v4_inv = 1 / norm_v4
 
-        a_cross_x = np.stack((
-            np.zeros((n_points, n_vortices)),
-            a[:, :, 2],
-            -a[:, :, 1]
-        ), axis=2)
-        a_dot_x = a[:, :, 0]
-
-        b_cross_x = np.stack((
-            np.zeros((n_points, n_vortices)),
-            b[:, :, 2],
-            -b[:, :, 1]
-        ), axis=2)
-        b_dot_x = b[:, :, 0]  # np.sum(b * x_hat,axis=2)
-
-        norm_a = np.linalg.norm(a, axis=2)
-        norm_b = np.linalg.norm(b, axis=2)
-        norm_a_inv = 1 / norm_a
-        norm_b_inv = 1 / norm_b
 
         # Check for the special case where the collocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
-        bound_vortex_singularity_indices = (
-                np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
+        v1_v2_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v1_cross_v2, v1_cross_v2)  # norm(cross_product)^2
                 < 3.0e-16)
-        a_dot_b = a_dot_b + bound_vortex_singularity_indices
-        left_vortex_singularity_indices = (
-                np.einsum('ijk,ijk->ij', a_cross_x, a_cross_x)
-                < 3.0e-16
-        )
-        a_dot_x = a_dot_x + left_vortex_singularity_indices
-        right_vortex_singularity_indices = (
-                np.einsum('ijk,ijk->ij', b_cross_x, b_cross_x)
-                < 3.0e-16
-        )
-        b_dot_x = b_dot_x + right_vortex_singularity_indices
+        v1_dot_v2 = v1_dot_v2 + v1_v2_singularity_indices
+
+        v2_v3_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v2_cross_v3, v2_cross_v3)  # norm(cross_product)^2
+                < 3.0e-16)
+        v2_dot_v3 = v2_dot_v3 + v2_v3_singularity_indices
+
+        v3_v4_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v3_cross_v4, v3_cross_v4)  # norm(cross_product)^2
+                < 3.0e-16)
+        v3_dot_v4 = v3_dot_v4 + v3_v4_singularity_indices
+
+        v4_v1_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v4_cross_v1, v4_cross_v1)  # norm(cross_product)^2
+                < 3.0e-16)
+        v4_dot_v1 = v4_dot_v1 + v4_v1_singularity_indices
+
 
         # Calculate Vij
-        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
-        term2 = (norm_a_inv) / (norm_a - a_dot_x)
-        term3 = (norm_b_inv) / (norm_b - b_dot_x)
+        term1 = (norm_v1_inv + norm_v2_inv) / (norm_v1 * norm_v2 + v1_dot_v2)
         term1 = np.expand_dims(term1, 2)
+        term2 = (norm_v2_inv + norm_v3_inv) / (norm_v2 * norm_v3 + v2_dot_v3)
         term2 = np.expand_dims(term2, 2)
+        term3 = (norm_v3_inv + norm_v4_inv) / (norm_v3 * norm_v4 + v3_dot_v4)
         term3 = np.expand_dims(term3, 2)
+        term4 = (norm_v4_inv + norm_v1_inv) / (norm_v4 * norm_v1 + v4_dot_v1)
+        term4 = np.expand_dims(term4, 2)
+
 
         Vij = 1 / (4 * np.pi) * (
-                a_cross_b * term1 +
-                a_cross_x * term2 -
-                b_cross_x * term3
+                v1_cross_v2 * term1 +
+                v2_cross_v3 * term2 +
+                v3_cross_v4 * term3 +
+                v4_cross_v1 * term4
         )
 
         return Vij
