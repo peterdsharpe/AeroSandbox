@@ -1042,3 +1042,18 @@ def angle_axis_rotation_matrix(angle, axis, axis_already_normalized=False):
         rot_matrix = costheta * np.expand_dims(np.eye(3), 2) + sintheta * np.expand_dims(cpm, 2) + (
                 1 - costheta) * np.expand_dims(outer_axis, 2)
         return rot_matrix
+
+def linspace_3D(start, stop, n_points):
+    # Given two points (a start and an end), returns an interpolated array of points on the line between the two.
+    # Inputs:
+    #   * start: 3D coordinates expressed as a 1D numpy array, shape==(3).
+    #   * end: 3D coordinates expressed as a 1D numpy array, shape==(3).
+    #   * n_points: Number of points to be interpolated (including endpoints), a scalar.
+    # Outputs:
+    #   * points: Array of 3D coordinates expressed as a 2D numpy array, shape==(N, 3)
+    x = np.linspace(start[0],stop[0],n_points)
+    y = np.linspace(start[1],stop[1],n_points)
+    z = np.linspace(start[2],stop[2],n_points)
+
+    points = np.column_stack((x,y,z))
+    return points

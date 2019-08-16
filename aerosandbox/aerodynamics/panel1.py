@@ -21,7 +21,7 @@ class panel1(AeroProblem):
         self.setup_geometry()
         self.setup_operating_point()
         self.calculate_vortex_strengths()
-        self.calculate_forces()
+        # self.calculate_forces()
 
         if self.verbose: print("PANEL1 calculation complete!")
 
@@ -414,8 +414,10 @@ class panel1(AeroProblem):
         self.is_trailing_edge_lower = is_trailing_edge_lower
         self.collocation_points = collocation_points
         self.normal_directions = normal_directions
-        # self.left_vortex_vertices = left_vortex_vertices
-        # self.right_vortex_vertices = right_vortex_vertices
+
+        # Make the horseshoe vortex data
+        self.left_horseshoe_vortex_vertices = back_left_vertices[is_trailing_edge_upper]
+        self.right_horseshoe_vortex_vertices = back_right_vertices[is_trailing_edge_upper]
 
         # Do final processing for later use
         # self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
@@ -441,8 +443,8 @@ class panel1(AeroProblem):
 
         # # Calculate Vij at vortex centers for force calculation
         # -------------------------------------------------------
-        if self.verbose: print("Calculating the vortex center influence matrix...")
-        self.Vij_centers = self.calculate_Vij(self.vortex_centers)
+        # if self.verbose: print("Calculating the vortex center influence matrix...")
+        # self.Vij_centers = self.calculate_Vij(self.vortex_centers)
 
         # # LU Decomposition on AIC
         # -------------------------
@@ -542,9 +544,15 @@ class panel1(AeroProblem):
         if self.verbose: print("Cm: ", self.Cm)
         if self.verbose: print("Cn: ", self.Cn)
 
-    # @profile
     def calculate_Vij(self, points):
-        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
+        Vij_doublets = self.calculate_Vij_doublets(points) # Calculates the section of Vij corresponding to the doublets (ring vortices)
+        Vij_horseshoes = self.calculate_Vij_horseshoes(points) # Calculates the section of Vij corresponding to the trailing horseshoe vortices
+        Vij = np.hstack((Vij_doublets, Vij_horseshoes))
+
+        return Vij
+
+    def calculate_Vij_doublets(self, points):
+        # Calculates the doublet part of Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
         # Data cleanup
@@ -625,14 +633,17 @@ class panel1(AeroProblem):
         term4 = np.expand_dims(term4, 2)
 
 
-        Vij = 1 / (4 * np.pi) * (
+        Vij_doublets = 1 / (4 * np.pi) * (
                 v1_cross_v2 * term1 +
                 v2_cross_v3 * term2 +
                 v3_cross_v4 * term3 +
                 v4_cross_v1 * term4
         )
 
-        return Vij
+        return Vij_doublets
+
+    def calculate_Vij_horseshoes(self,points):
+        return Vij_horseshoes # TODO do this
 
     def calculate_delta_cp(self):
         # Find the area of each panel ()
@@ -679,21 +690,43 @@ class panel1(AeroProblem):
         V = Vi + freestream
         return V
 
-    def calculate_streamlines(self):
+    def calculate_streamlines(self,
+                              type="trailing", # Can be "trailing" or "line"
+                              ):
         # Calculates streamlines eminating from the trailing edges of all surfaces.
         # "streamlines" is a MxNx3 array, where M is the index of the streamline number,
         # N is the index of the timestep, and the last index is xyz
 
         # Constants
-        n_steps = 100  # minimum of 2
-        length = 1  # meter
+        n_steps = 300  # minimum of 2
+        length = 0.7  # meter # TODO make parametric
 
         # Resolution
         length_per_step = length / n_steps
         # dt = length / self.op_point.velocity / n_steps
 
         # Seed points
-        seed_points = (0.5 * (self.back_left_vertices + self.back_right_vertices))[self.is_trailing_edge]
+        if type == "trailing":
+            seed_points = np.vstack((
+                (0.5 * (self.back_left_vertices + self.back_right_vertices))[self.is_trailing_edge_upper],
+                (0.5 * (self.front_left_vertices + self.front_right_vertices))[self.is_trailing_edge_lower]
+            ))
+        elif type=="line":
+            # Spawns streamlines linearly spaced along a line.
+            # n_streamlines = 30
+            # start_point = (0.1, -1, -0.08)
+            # stop_point = (0.1, -1, 0.06) # TODO make parametric
+            #
+            #
+            # seed_points = linspace_3D(start_point, stop_point, n_streamlines)
+
+            seed_points = np.vstack((
+                linspace_3D((0.1, -1, -0.08),(0.1, -1, 0.06), 30),
+                linspace_3D((0.1, 0, -0.08),(0.1, 0, 0.06), 30),
+            ))
+
+        else:
+            raise ValueError("Streamline type (""type"") is not one of the valid options! See the method definition for a list of valid options.")
 
         n_streamlines = len(seed_points)
 
@@ -711,8 +744,9 @@ class panel1(AeroProblem):
         self.streamlines = streamlines
 
     def draw(self,
-             shading="delta_cp", # Can be "none", "delta_cp", or "trailing_edges"
+             shading="delta_cp", # Can be "none", "vortex_strengths", "delta_cp", or "trailing_edges"
              draw_streamlines=True,
+             streamlines_type="trailing", # See the definition of the "calculate_streamlines" method for options.
              ):
 
         print("Drawing...")
@@ -742,6 +776,20 @@ class panel1(AeroProblem):
         if shading == "none":
             plotter.add_mesh(wing_surfaces, color='tan', show_edges=True,
                              smooth_shading=True)
+        elif shading == "vortex_strengths":
+            if not hasattr(self, 'vortex_strengths'):
+                print("Vortex strengths not found, running again.")
+                self.run()
+
+            # min = -1.5
+            # max = 1.5
+            scalars = self.vortex_strengths #np.minimum(np.maximum(self.delta_cp, delta_cp_min), delta_cp_max)
+
+            cmap = plt.cm.get_cmap('viridis')
+            plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
+                             smooth_shading=True)
+            plotter.add_scalar_bar(title="Vortex Strengths", n_labels=5, shadow=True,
+                                   font_family='arial')
         elif shading == "delta_cp":
             if not hasattr(self, 'delta_cp'):
                 self.calculate_delta_cp()
@@ -763,7 +811,7 @@ class panel1(AeroProblem):
 
         if draw_streamlines:
             if not hasattr(self, 'streamlines'):
-                self.calculate_streamlines()
+                self.calculate_streamlines(type=streamlines_type)
 
             for streamline_num in range(len(self.streamlines)):
                 plotter.add_lines(self.streamlines[streamline_num, :, :], width=1, color='#50C7C7')
