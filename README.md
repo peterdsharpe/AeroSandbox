@@ -13,7 +13,7 @@ Work in progress!
 ![VLM3 Image](media/images/vlm3_with_control_surfaces.png)
 *VLM3 simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
 
-![PANEL1 Image](media/images/panel1_naca2412.png)
+![PANEL1 Image](media/images/panel1_naca4412.png)
 *PANEL1 simulation of a wing (extruded NACA2412, α=15°, AR=4). Note the strong three-dimensionality of the flow near the tip.*
 
 ## Getting Started
