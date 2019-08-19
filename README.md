@@ -197,9 +197,9 @@ Weaknesses:
 With any luck, the list of strengths and weaknesses here will help to drive AeroSandbox development to retain positive qualities and eliminate negative ones. 
 
 Specifically, the following desirable qualities (and associated quantitative metrics) have been identified:
-* Fast (for point analysis, VLM calculations should yield a solution (CL, CDi) within 5% of the "Richardson-extrapolated" solution in less than 1 second for the ExampleAirplanes.conventional() airplane on a typical desktop computer)
+* Fast (for point analysis, VLM calculations should yield a solution (CL, CDi) within 5% of the Richardson-extrapolated solution in less than 1 second for the ExampleAirplanes.conventional() airplane on a typical desktop computer)
 * Accurate (in the limit of high panel density, the solution (CL, CDi) given by VLM1 must match AVL or XFLR5 to within 1%)
-* Reliable/Robust (gradients of the outputs w.r.t. inputs are always finite and sensible - specifically, this implies that all vortex kernels must be artificially made to have no singularities)
+* Reliable/Robust (gradients of the outputs w.r.t. inputs are always finite and physical)
 * User-friendly (eventually, a GUI will be created, and AeroSandbox will optionally ship as a packaged executable)
 * Scriptable (the code will be object-oriented; the GUI will contain a CLI)
 * Readable (every class and function will be documented; code will be PEP-8-compatible where reasonable)
@@ -207,7 +207,7 @@ Specifically, the following desirable qualities (and associated quantitative met
 * Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
 
 ## Donating
-If you like this software, please consider donating to support development via PayPal at [paypal.me/peterdsharpe](https://paypal.me/peterdsharpe)! I'm a poor grad student right now, so every dollar you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
+If you like this software, please consider donating to support development via PayPal at [paypal.me/peterdsharpe](https://paypal.me/peterdsharpe)! I'm a poor grad student, so every dollar you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
 
 ## Bugs
 Please, please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
