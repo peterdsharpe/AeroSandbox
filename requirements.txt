@@ -1,0 +1,6 @@
+numpy
+scipy
+numba
+matplotlib
+autograd
+pyvista
