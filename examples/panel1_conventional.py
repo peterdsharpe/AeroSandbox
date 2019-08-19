@@ -95,7 +95,11 @@ ap = panel1(
     ),
 )
 ap.run()
-ap.draw(draw_streamlines=False)
+ap.draw(
+    shading_type="doublet_strengths",
+    streamlines_type="line",
+    points_type = None
+)
 
 # Answer you should get: (XFLR5)
 # CL = 0.797
