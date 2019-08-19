@@ -912,10 +912,9 @@ class panel1(AeroProblem):
                     (0.5 * (self.front_left_vertices + self.front_right_vertices))[self.is_trailing_edge_lower]
                 ))
             elif streamlines_type == "line":
-                seed_points = np.vstack((
-                    linspace_3D((0.1, -1, -0.08), (0.1, -1, 0.06), 30),
-                    linspace_3D((0.1, 0, -0.08), (0.1, 0, 0.06), 30),
-                ))
+                seed_points = linspace_3D((0,0,-0.05),(0,0,0.05),30)
+            else:
+                seed_points = streamlines_type # assume streamlines_type is a numpy ndarray
 
             streamlines = self.get_streamlines(seed_points = seed_points)
 
