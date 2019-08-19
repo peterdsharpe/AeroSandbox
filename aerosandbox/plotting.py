@@ -4,6 +4,7 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 import autograd.numpy as np
 
+plt.ion()
 
 def fig3d():
     '''Makes a new 3D figure with Matplotlib.

@@ -127,11 +127,11 @@ class panel1(AeroProblem):
                 outer_xsec = wing.xsecs[section_num + 1]  # type: WingXSec
 
                 # Define the airfoils at each cross section
-                inner_airfoil = inner_xsec.airfoil.add_control_surface(
+                inner_airfoil = inner_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface(
                     deflection=inner_xsec.control_surface_deflection,
                     hinge_point=inner_xsec.control_surface_hinge_point
                 )  # type: Airfoil
-                outer_airfoil = outer_xsec.airfoil.add_control_surface(
+                outer_airfoil = outer_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface(
                     deflection=inner_xsec.control_surface_deflection,
                     # inner xsec dictates control surface deflections.
                     hinge_point=inner_xsec.control_surface_hinge_point
@@ -272,11 +272,11 @@ class panel1(AeroProblem):
                         # outer_xsec = wing.xsecs[section_num + 1]  # type: WingXSec
 
                         # Define the airfoils at each cross section
-                        inner_airfoil = inner_xsec.airfoil.add_control_surface(
+                        inner_airfoil = inner_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface(
                             deflection=-inner_xsec.control_surface_deflection,
                             hinge_point=inner_xsec.control_surface_hinge_point
                         )
-                        outer_airfoil = outer_xsec.airfoil.add_control_surface(
+                        outer_airfoil = outer_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface(
                             deflection=-inner_xsec.control_surface_deflection,
                             # inner xsec dictates control surface deflections.
                             hinge_point=inner_xsec.control_surface_hinge_point

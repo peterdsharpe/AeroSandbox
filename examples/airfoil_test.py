@@ -34,3 +34,5 @@ def flapped_Iyy(deflection):
 
 grad_flapped_Iyy = grad(flapped_Iyy)
 dIyyddeflection = grad_flapped_Iyy(0.)
+
+print(naca0012.get_sharp_TE_airfoil().coordinates)

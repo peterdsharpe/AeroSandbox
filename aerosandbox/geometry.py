@@ -380,7 +380,7 @@ class Airfoil:
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
                  use_cache=True,  # Look in the airfoil cache, based on the airfoil's name. # TODO make airfoil caching
                  repanel=True, # Should we repanel the airfoil? Highly recommend to leave this as True.
-                 n_points_per_side=200, # Number of points to use when repaneling the airfoil (if repanel is True)
+                 n_points_per_side=400, # Number of points to use when repaneling the airfoil (if repanel is True)
                  ):
 
         self.name = name
@@ -573,6 +573,7 @@ class Airfoil:
         plt.xlim((-0.05, 1.05))
         plt.ylim((-0.5, 0.5))
         plt.axis('equal')
+        plt.show()
 
     def calculate_2D_aero_data(self):
         pass
@@ -917,6 +918,39 @@ class Airfoil:
 
         coordinates = np.column_stack((x_coors, y_coors))
         self.coordinates = coordinates
+
+    def get_sharp_TE_airfoil(self):
+        # Returns a version of the airfoil with a sharp trailing edge.
+
+        upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
+        lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
+
+        # Find data about the TE
+
+        # Get the scale factor
+        x_mcl = self.mcl_coordinates[:,0]
+        x_max = np.max(x_mcl)
+        x_min = np.min(x_mcl)
+        scale_factor = (x_mcl - x_min) / (x_max - x_min) # linear contraction
+
+        # Do the contraction
+        upper_minus_mcl_adjusted = self.upper_minus_mcl - self.upper_minus_mcl[-1,:] * np.expand_dims(scale_factor,1)
+
+        # Recreate coordinates
+        upper_coordinates_adjusted = np.flipud(self.mcl_coordinates + upper_minus_mcl_adjusted)
+        lower_coordinates_adjusted = self.mcl_coordinates - upper_minus_mcl_adjusted
+
+        coordinates = np.vstack((
+            upper_coordinates_adjusted[:-1,:],
+            lower_coordinates_adjusted
+        ))
+
+        # Make a new airfoil with the coordinates
+        name = self.name + ", with sharp TE"
+        new_airfoil = Airfoil(name=name, coordinates=coordinates, repanel=False)
+
+        return new_airfoil
+
 
     def add_control_surface(self, deflection=0., hinge_point=0.75):
         # Returns a version of the airfoil with a control surface added at a given point.
