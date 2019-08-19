@@ -127,7 +127,7 @@ class panel1(AeroProblem):
                 outer_xsec = wing.xsecs[section_num + 1]  # type: WingXSec
 
                 # Define the airfoils at each cross section
-                inner_airfoil = inner_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface(
+                inner_airfoil = inner_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface( #TODO consider whether this needs to be sharp
                     deflection=inner_xsec.control_surface_deflection,
                     hinge_point=inner_xsec.control_surface_hinge_point
                 )  # type: Airfoil
