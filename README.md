@@ -184,7 +184,7 @@ AeroSandbox attempts to improve over existing conceptual-level aerodynamics tool
 Strengths:
 * XFLR5: Reliability, speed, accuracy, visualization
 * AVL: Reliability, speed, accuracy, scriptability
-* Tornado: Implementation in a high-level language
+* Tornado: Implementation in a high-level, widely-used language (reduces dev. time and increases flexibility for users)
 * VSPAero: Rapid CAD/geometry integration, geometric flexibility
 
 Weaknesses:
