@@ -427,7 +427,7 @@ class Airfoil:
                             - 0.1260 * x_t
                             - 0.3516 * np.power(x_t, 2)
                             + 0.2843 * np.power(x_t, 3)
-                            - 0.1015 * np.power(x_t, 4)
+                            - 0.1015 * np.power(x_t, 4) #0.1015 is original, #0.1036 for sharp TE
                     )
 
                     if camber_loc == 0:

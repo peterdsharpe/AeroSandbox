@@ -27,7 +27,7 @@ a = Airplane(
     )
 a.set_ref_dims_from_wing()
 
-a.set_paneling_everywhere(n_chordwise_panels=30,n_spanwise_panels=10)
+a.set_paneling_everywhere(n_chordwise_panels=30,n_spanwise_panels=30)
 
 ap = panel1(
     airplane=a,
@@ -36,7 +36,11 @@ ap = panel1(
                             beta=0),
 )
 ap.run()
-ap.draw(draw_streamlines=True, shading = "vortex_strengths",streamlines_type="line")
+ap.draw(
+    shading_type="doublet_strengths",
+    streamlines_type="line",
+    points_type = None
+)
 
 # Answer you should get: (XFLR5)
 # CL = 0.320
