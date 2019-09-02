@@ -26,7 +26,7 @@ There are several easy ways to get started with AeroSandbox! (Assuming you alrea
 
 2. If you just want the raw package (and no test cases or examples), install by simply entering "pip install AeroSandbox" into your terminal. 
 
-3. Both of the above options will download released versions of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
+3. Both of the above options will download the latest official release of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
 There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm3_conventional.py".
 
