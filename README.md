@@ -31,7 +31,7 @@ There are several easy ways to get started with AeroSandbox! (Assuming you alrea
 There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm3_conventional.py".
 
 ### Usage
-AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. For example, here is all the code that is needed to design a glider and analyze its aerodynamics in flight (found in "/examples/vlm3_conventional.py"):
+AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. You (yes, you!) can probably learn to analyze a simple airplane and visualize airflow around it within 5 minutes of downloading AeroSandbox. For example, here is all the code that is needed to design a glider and analyze its aerodynamics in flight (found in "/examples/vlm3_conventional.py"):
 
 ```python
 from aerosandbox import *
