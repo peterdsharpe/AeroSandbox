@@ -172,9 +172,9 @@ In descending order of priority/feasibility:
 * (SKIPPING) Perhaps implement a hybrid ring/horseshoe vortex VLM (a la XFLR5's VLM2) for simulating multiple thin lifting surfaces (hopefully with improved speed and robustness over the VLM1 approach).
 * (SKIPPING) Implement a viscous drag buildup on nearly-axisymmetric bodies (using the method detailed in Drela's TASOPT v2.00 documentation, Appendix E)
 * (SKIPPING) Perhaps consider implementing a free-wake compatible VLM model?
-* (IN PROGRESS) Implement an inviscid 3D panel method for simulating multiple objects of arbitrary thickness.
-* Make the aforementioned 3D panel method able to use triangular panels for use with generalized geometries (e.g. blended wing bodies), given prescribed trailing edge stagnation points.
-* Implement a 2.5D coupled viscous/inviscid method directly using the viscous methods described in Drela's paper "Viscous-Inviscid Analysis of Transonic and Low Reynolds Number Airfoils". Inviscid flow would be fully 3D, while viscous flow would make the assumption of negligible spanwise flow.
+* (DONE) Implement an inviscid 3D panel method for simulating multiple objects of arbitrary thickness.
+* (IN PROGRESS) Make the aforementioned 3D panel method able to use triangular panels for use with generalized geometries (e.g. blended wing bodies), given prescribed trailing edge stagnation points.
+* (IN PROGRESS) Implement a 2.5D coupled viscous/inviscid method directly using the viscous methods described in Drela's paper "Viscous-Inviscid Analysis of Transonic and Low Reynolds Number Airfoils". Inviscid flow would be fully 3D, while viscous flow would make the assumption of negligible spanwise flow.
 * Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels (a la Drela's IBL3 approach detailed in his paper "Three-Dimensional Integral Boundary Layer Formulation for General Configurations"). Ideally, the trailing edge stagnation points will be automatically identified, and nothing more than a surface triangulation along with freestream conditions will be required to compute forces and moments.
 
 
