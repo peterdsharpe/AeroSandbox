@@ -462,7 +462,7 @@ class Airfoil:
                     y_L = y_c - y_t * np.cos(theta)
 
                     # Flip upper surface so it's back to front
-                    x_U, y_U = np.flip(x_U), np.flip(y_U)
+                    x_U, y_U = np.flipud(x_U), np.flipud(y_U)
 
                     # Trim 1 point from lower surface so there's no overlap
                     x_L, y_L = x_L[1:], y_L[1:]
