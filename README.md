@@ -170,12 +170,11 @@ In descending order of priority/feasibility:
 * (DONE) Implement proper stability derivative calculation (i.e. not using finite-differencing).
 * (SKIPPING) Perhaps implement a viscous drag buildup on wings from interpolated 2D XFOIL data (a la XFLR5's method for approximation of viscous drag).
 * (SKIPPING) Perhaps implement a hybrid ring/horseshoe vortex VLM (a la XFLR5's VLM2) for simulating multiple thin lifting surfaces (hopefully with improved speed and robustness over the VLM1 approach).
-* (SKIPPING) Implement a viscous drag buildup on nearly-axisymmetric bodies (using the method detailed in Drela's TASOPT v2.00 documentation, Appendix E)
 * (SKIPPING) Perhaps consider implementing a free-wake compatible VLM model?
 * (DONE) Implement an inviscid 3D panel method for simulating multiple objects of arbitrary thickness.
-* (IN PROGRESS) Make the aforementioned 3D panel method able to use triangular panels for use with generalized geometries (e.g. blended wing bodies), given prescribed trailing edge stagnation points.
-* (IN PROGRESS) Implement a 2.5D coupled viscous/inviscid method directly using the viscous methods described in Drela's paper "Viscous-Inviscid Analysis of Transonic and Low Reynolds Number Airfoils". Inviscid flow would be fully 3D, while viscous flow would make the assumption of negligible spanwise flow.
-* Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels (a la Drela's IBL3 approach detailed in his paper "Three-Dimensional Integral Boundary Layer Formulation for General Configurations"). Ideally, the trailing edge stagnation points will be automatically identified, and nothing more than a surface triangulation along with freestream conditions will be required to compute forces and moments.
+* (IN PROGRESS) Make the aforementioned 3D panel method able to use triangular panels for use with generalized geometries, given prescribed trailing edge stagnation points.
+* (IN PROGRESS) Implement a 2.5D coupled viscous/inviscid method directly using the viscous methods described in Drela's paper "Viscous-Inviscid Analysis of Transonic and Low Reynolds Number Airfoils". Inviscid flow would be fully 3D, while viscous flow would make the assumption of negligible spanwise flow (strip theory).
+* Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels. Ideally, the trailing edge stagnation points will be automatically identified, and nothing more than a surface triangulation along with freestream conditions will be required to compute forces and moments.
 
 
 ## Usefulness
@@ -203,8 +202,8 @@ Specifically, the following desirable qualities (and associated quantitative met
 * User-friendly (eventually, a GUI will be created, and AeroSandbox will optionally ship as a packaged executable)
 * Scriptable (the code will be object-oriented; the GUI will contain a CLI)
 * Readable (every class and function will be documented; code will be PEP-8-compatible where reasonable)
-* Optimizer-friendly (design gradients and stability derivatives will be efficiently computed through automatic differentiation, not finite differencing - perhaps with the autograd library?)
-* Visualization (visualization will be provided through an OpenGL-compatible library - perhaps PyVista?)
+* Optimizer-friendly (design gradients and stability derivatives will be efficiently computed through automatic differentiation)
+* Visualization (visualization will be provided through Plotly's Dash interface)
 
 ## Donating
 If you like this software, please consider donating to support development via PayPal at [paypal.me/peterdsharpe](https://paypal.me/peterdsharpe)! I'm a poor grad student, so every dollar you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
