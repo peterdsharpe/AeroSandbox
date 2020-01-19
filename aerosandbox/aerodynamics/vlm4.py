@@ -1,6 +1,6 @@
 from .aerodynamics import *
 
-class vlm3(AeroProblem):
+class vlm4(AeroProblem):
     # Vortex-Lattice Method aerodynamics code written from the ground up with lessons learned from writing VLM1 and VLM2.
     # Should eventually eclipse VLM2 in performance and render it obsolete.
     #
@@ -218,8 +218,8 @@ class vlm3(AeroProblem):
                         0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
                         0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
                 )
-                inner_vortex_vertices_to_add = 0.75 * front_inner_coordinates + 0.25 * back_inner_coordinates
-                outer_vortex_vertices_to_add = 0.75 * front_outer_coordinates + 0.25 * back_outer_coordinates
+                inner_vortex_vertices_to_add = front_inner_coordinates + back_inner_coordinates
+                outer_vortex_vertices_to_add = front_outer_coordinates + back_outer_coordinates
 
                 # Append to the lists of panel data (c, n, lv, rv, etc.)
                 front_left_vertices = np.vstack((
@@ -347,8 +347,8 @@ class vlm3(AeroProblem):
                                 0.5 * (0.25 * front_inner_coordinates + 0.75 * back_inner_coordinates) +
                                 0.5 * (0.25 * front_outer_coordinates + 0.75 * back_outer_coordinates)
                         )
-                        inner_vortex_vertices_to_add = 0.75 * front_inner_coordinates + 0.25 * back_inner_coordinates
-                        outer_vortex_vertices_to_add = 0.75 * front_outer_coordinates + 0.25 * back_outer_coordinates
+                        inner_vortex_vertices_to_add = front_inner_coordinates + back_inner_coordinates
+                        outer_vortex_vertices_to_add = front_outer_coordinates + back_outer_coordinates
 
                     front_left_vertices = np.vstack((
                         front_left_vertices,
@@ -403,10 +403,17 @@ class vlm3(AeroProblem):
         self.left_vortex_vertices = left_vortex_vertices
         self.right_vortex_vertices = right_vortex_vertices
 
+        # Make the horseshoe vortex data. Trail off upper surface.
+        self.left_horseshoe_vortex_vertices = back_left_vertices[is_trailing_edge]
+        self.right_horseshoe_vortex_vertices = back_right_vertices[is_trailing_edge]
+
+        self.horseshoe_vortex_centers = (self.left_horseshoe_vortex_vertices + self.right_horseshoe_vortex_vertices) / 2
+
         # Do final processing for later use
         self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
         self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
         self.n_panels = len(self.collocation_points)
+        self.n_horseshoes = len(self.left_horseshoe_vortex_vertices)
 
         if self.verbose: print("Meshing complete!")
         # -----------------------------------------------------
@@ -576,10 +583,10 @@ class vlm3(AeroProblem):
         # Example: v1[i,j,:] = collocation_points[i,:] - front_left_vertices[j,:]
 
         points = np.expand_dims(points, 1)
-        v1 = points - self.front_left_vertices
-        v2 = points - self.front_right_vertices
-        v3 = points - self.back_right_vertices
-        v4 = points - self.back_left_vertices
+        v1 = points - self.front_left_vertices[np.logical_not(self.is_trailing_edge)]
+        v2 = points - self.front_right_vertices[np.logical_not(self.is_trailing_edge)]
+        v3 = points - self.back_right_vertices[np.logical_not(self.is_trailing_edge)]
+        v4 = points - self.back_left_vertices[np.logical_not(self.is_trailing_edge)]
 
         # x_hat = np.zeros([n_points, n_vortices, 3])
         # x_hat[:, :, 0] = 1
