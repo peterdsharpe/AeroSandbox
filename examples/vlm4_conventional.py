@@ -2,21 +2,22 @@ from aerosandbox import *
 
 glider = Airplane(
     name="Conventional",
-    xyz_ref=[0, 0, 0], # CG location
+    xyz_ref=[0, 0, 0],  # CG location
     wings=[
         Wing(
             name="Main Wing",
-            xyz_le=[0, 0, 0], # Coordinates of the wing's leading edge
+            xyz_le=[0, 0, 0],  # Coordinates of the wing's leading edge
             symmetric=True,
-            xsecs=[ # The wing's cross ("X") sections
+            xsecs=[  # The wing's cross ("X") sections
                 WingXSec(  # Root
-                    xyz_le=[0, 0, 0], # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
+                    xyz_le=[0, 0, 0],  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
-                    twist=2, # degrees
+                    twist=2,  # degrees
                     airfoil=Airfoil(name="naca4412"),
-                    control_surface_type='symmetric',  # Flap # Control surfaces are applied between a given XSec and the next one.
-                    control_surface_deflection=0, # degrees
-                    control_surface_hinge_point=0.75 # as chord fraction
+                    control_surface_type='symmetric',
+                    # Flap # Control surfaces are applied between a given XSec and the next one.
+                    control_surface_deflection=0,  # degrees
+                    control_surface_hinge_point=0.75  # as chord fraction
                 ),
                 WingXSec(  # Mid
                     xyz_le=[0.01, 0.5, 0],
