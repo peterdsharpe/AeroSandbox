@@ -82,7 +82,6 @@ glider = Airplane(
         )
     ]
 )
-# glider.set_paneling_everywhere(20, 20)
 
 ap = vlm4(
     airplane=glider,
@@ -95,6 +94,7 @@ ap = vlm4(
         r=0,
     ),
 )
+
 ap.run()
 ap.draw()
 

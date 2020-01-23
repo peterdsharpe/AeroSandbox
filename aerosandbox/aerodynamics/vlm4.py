@@ -46,6 +46,7 @@ class vlm4(AeroProblem):
         back_right_vertices = np.empty((0, 3))
         areas = np.empty(0)
         is_trailing_edge = np.empty(0, dtype=bool)
+        xsec = None
 
         for wing_num in range(len(self.airplane.wings)):
             # For each wing, we want (where M is the number of chordwise panels, N is the number of spanwise panels):
