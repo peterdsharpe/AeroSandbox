@@ -19,16 +19,16 @@ class vlm4(AeroProblem):
         self.verbose = verbose
 
         if self.verbose:
-            print("Running VLM3 calculation...")
+            print("Running VLM4 calculation...")
 
         self.make_panels()
         self.setup_geometry()
         self.setup_operating_point()
         self.calculate_vortex_strengths()
-        self.calculate_forces()
+        # self.calculate_forces()   # ToDo Uncomment this line after the calculate forces has been implemented
 
         if self.verbose:
-            print("VLM3 calculation complete!")
+            print("VLM4 calculation complete!")
 
     def make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
@@ -375,13 +375,22 @@ class vlm4(AeroProblem):
         self.is_trailing_edge = is_trailing_edge
         self.collocation_points = collocation_points
         self.normal_directions = normal_directions
-        self.left_vortex_vertices = left_vortex_vertices
-        self.right_vortex_vertices = right_vortex_vertices
+        # self.left_vortex_vertices = left_vortex_vertices      # ToDo Delete this line if it is unnecessary
+        # self.right_vortex_vertices = right_vortex_vertices    # ToDo Delete this line if it is unnecessary
+
+        # Find horseshoe vortices
+        self.left_horseshoe_vortex_vertices = back_left_vertices[is_trailing_edge]
+        self.right_horseshoe_vortex_vertices = back_right_vertices[is_trailing_edge]
 
         # Do final processing for later use
-        self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
-        self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
+        # ToDo Delete the following line if it is unnecessary
+        # self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
+        # The following line calculates the center of the bound leg of each horseshoe vortex
+        self.horseshoe_vortex_centers = (self.left_horseshoe_vortex_vertices + self.right_horseshoe_vortex_vertices) / 2
+        # ToDo Delete the following line if it is unnecessary
+        # self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
         self.n_panels = len(self.collocation_points)
+        self.n_horseshoes = len(self.left_horseshoe_vortex_vertices)  # Calculates the number of horseshoe vortices
 
         if self.verbose:
             print("Meshing complete!")
@@ -411,6 +420,7 @@ class vlm4(AeroProblem):
         # Calculate AIC matrix
         if self.verbose:
             print("Calculating the collocation influence matrix...")
+
         self.Vij_collocations = self.calculate_Vij(self.collocation_points)
         # Vij_collocations: [points, vortices, xyz]
         # n: [points, xyz]
@@ -421,10 +431,18 @@ class vlm4(AeroProblem):
             axis=2
         )
 
-        # Calculate Vij at vortex centers for force calculation
+        if self.verbose:
+            print("Collocation influence matrix calculated!")
+
+        # ToDo Uncomment and modify after calculate_forces and calculate_delta_cp functions are complete
+        """# Calculate Vij at vortex centers for force calculation
         if self.verbose:
             print("Calculating the vortex center influence matrix...")
-        self.Vij_centers = self.calculate_Vij(self.vortex_centers)
+
+        # self.Vij_centers = self.calculate_Vij(self.vortex_centers)
+
+        if self.verbose:
+            print("Vortex center influence matrix calculated!")"""
 
         # # LU Decomposition on AIC
         # -------------------------
@@ -456,9 +474,18 @@ class vlm4(AeroProblem):
         # Governing Equation: AIC @ Gamma + freestream_influence = 0
         if self.verbose:
             print("Calculating vortex strengths...")
+
         self.vortex_strengths = np.linalg.solve(self.AIC, -self.freestream_influences)
 
-    def calculate_forces(self):
+        self.ring_vortex_strengths = self.vortex_strengths[:self.n_panels]
+        self.horseshoe_vortex_strengths = self.vortex_strengths[self.n_panels:]
+
+        if self.verbose:
+            print("Calculating vortex strengths completed!")
+            print("Net horseshoe vortex strength: ", np.sum(self.horseshoe_vortex_strengths))
+
+    # ToDo Rewrite this function to work with ring vortices
+    """def calculate_forces(self):
         # Calculate Near-Field Forces and Moments
 
         # Governing Equation: The force on a straight, small vortex filament is F = rho * V x l * gamma,
@@ -467,6 +494,7 @@ class vlm4(AeroProblem):
 
         if self.verbose:
             print("Calculating forces on each panel...")
+
         # Calculate Vi (local velocity at the ith vortex center point)
         Vi_x = self.Vij_centers[:, :, 0] @ self.vortex_strengths + self.freestream_velocities[:, 0]
         Vi_y = self.Vij_centers[:, :, 1] @ self.vortex_strengths + self.freestream_velocities[:, 1]
@@ -483,15 +511,17 @@ class vlm4(AeroProblem):
         vortex_strengths_expanded = np.expand_dims(self.vortex_strengths, axis=1)
         self.Fi_geometry = density * Vi_cross_li * vortex_strengths_expanded
 
+        if self.verbose:
+            print("Finished calculating forces on each panel!")
+
         # Calculate total forces and moments
         if self.verbose:
             print("Calculating total forces and moments...")
+
         self.Ftotal_geometry = np.sum(self.Fi_geometry,
-                                      axis=0)  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        # if self.verbose: print("Total aerodynamic forces (geometry axes): ", self.Ftotal_geometry)
+                                      axis=0)  # Remember, this is in geometry axes, not wind axes or body axes
 
         self.Ftotal_wind = np.transpose(self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Ftotal_geometry
-        # if self.verbose: print("Total aerodynamic forces (wind axes):", self.Ftotal_wind)
 
         self.Mtotal_geometry = np.sum(np.cross(self.vortex_centers - self.airplane.xyz_ref, self.Fi_geometry),
                                       axis=0)
@@ -519,30 +549,30 @@ class vlm4(AeroProblem):
 
         if self.verbose:
             print("\nForces\n-----")
-        if self.verbose:
             print("CL: ", self.CL)
-        if self.verbose:
             print("CDi: ", self.CDi)
-        if self.verbose:
             print("CY: ", self.CY)
-        if self.verbose:
             print("CL/CDi: ", self.CL_over_CDi)
-        if self.verbose:
             print("\nMoments\n-----")
-        if self.verbose:
             print("Cl: ", self.Cl)
-        if self.verbose:
             print("Cm: ", self.Cm)
-        if self.verbose:
             print("Cn: ", self.Cn)
+            print("Finished calculating total forces and moments!")"""
 
-    # @profile
     def calculate_Vij(self, points):
+
         # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex
         # number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
-        # Make lv and rv
+        Vij_ring_vortices = self.calculate_Vij_ring_vortices(
+            points)  # Calculates the section of Vij corresponding to the doublets (ring vortices)
+        Vij_horseshoe_vortices = self.calculate_Vij_horseshoe_vortices(
+            points)  # Calculates the section of Vij corresponding to the trailing horseshoe vortices
+        Vij = np.hstack((Vij_ring_vortices, Vij_horseshoe_vortices))
+
+        # ToDo Delete the following code if it is unnecessary
+        """"# Make lv and rv
         left_vortex_vertices = self.left_vortex_vertices
         right_vortex_vertices = self.right_vortex_vertices
 
@@ -618,9 +648,181 @@ class vlm4(AeroProblem):
                 b_cross_x * term3
         )
 
+        return Vij"""
+
         return Vij
 
-    def calculate_delta_cp(self):
+    def calculate_Vij_ring_vortices(self, points):
+        # Calculates the doublet part of Vij, the velocity influence matrix (First index is collocation point number,
+        # second index is vortex number).
+        # points: the list of points (Nx3) to calculate the velocity influence at.
+
+        # Data cleanup
+        points = np.reshape(points, (-1, 3))
+
+        # Make v1, v2, v3, and v4 vectors.
+        # Each vector goes from all collocation points to one type of vertex (front left, front right, etc.). NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
+        # v1: corresponds to front left vertices
+        # v2: corresponds to front right vertices
+        # v3: corresponds to back right vertices
+        # v4: corresponds to back left vertices
+        # Example: v1[i,j,:] = collocation_points[i,:] - front_left_vertices[j,:]
+
+        points = np.expand_dims(points, 1)
+        v1 = points - self.front_left_vertices[np.logical_not(self.is_trailing_edge)]
+        v2 = points - self.front_right_vertices[np.logical_not(self.is_trailing_edge)]
+        v3 = points - self.back_right_vertices[np.logical_not(self.is_trailing_edge)]
+        v4 = points - self.back_left_vertices[np.logical_not(self.is_trailing_edge)]
+
+        # x_hat = np.zeros([n_points, n_vortices, 3])
+        # x_hat[:, :, 0] = 1
+
+        # Do some useful arithmetic
+        v1_cross_v2 = np.cross(v1, v2, axis=2)
+        v2_cross_v3 = np.cross(v2, v3, axis=2)
+        v3_cross_v4 = np.cross(v3, v4, axis=2)
+        v4_cross_v1 = np.cross(v4, v1, axis=2)
+        v1_dot_v2 = np.einsum('ijk,ijk->ij', v1, v2)
+        v2_dot_v3 = np.einsum('ijk,ijk->ij', v2, v3)
+        v3_dot_v4 = np.einsum('ijk,ijk->ij', v3, v4)
+        v4_dot_v1 = np.einsum('ijk,ijk->ij', v4, v1)
+        norm_v1 = np.linalg.norm(v1, axis=2)
+        norm_v2 = np.linalg.norm(v2, axis=2)
+        norm_v3 = np.linalg.norm(v3, axis=2)
+        norm_v4 = np.linalg.norm(v4, axis=2)
+        norm_v1_inv = 1 / norm_v1
+        norm_v2_inv = 1 / norm_v2
+        norm_v3_inv = 1 / norm_v3
+        norm_v4_inv = 1 / norm_v4
+
+        # Check for the special case where the collocation point is along the bound vortex leg
+        # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term
+        # is zero.
+        v1_v2_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v1_cross_v2, v1_cross_v2)  # norm(cross_product)^2
+                < 3.0e-16)
+        v1_dot_v2 = v1_dot_v2 + v1_v2_singularity_indices
+
+        v2_v3_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v2_cross_v3, v2_cross_v3)  # norm(cross_product)^2
+                < 3.0e-16)
+        v2_dot_v3 = v2_dot_v3 + v2_v3_singularity_indices
+
+        v3_v4_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v3_cross_v4, v3_cross_v4)  # norm(cross_product)^2
+                < 3.0e-16)
+        v3_dot_v4 = v3_dot_v4 + v3_v4_singularity_indices
+
+        v4_v1_singularity_indices = (
+                np.einsum('ijk,ijk->ij', v4_cross_v1, v4_cross_v1)  # norm(cross_product)^2
+                < 3.0e-16)
+        v4_dot_v1 = v4_dot_v1 + v4_v1_singularity_indices
+
+        # Calculate Vij
+        term1 = (norm_v1_inv + norm_v2_inv) / (norm_v1 * norm_v2 + v1_dot_v2)
+        term1 = np.expand_dims(term1, 2)
+        term2 = (norm_v2_inv + norm_v3_inv) / (norm_v2 * norm_v3 + v2_dot_v3)
+        term2 = np.expand_dims(term2, 2)
+        term3 = (norm_v3_inv + norm_v4_inv) / (norm_v3 * norm_v4 + v3_dot_v4)
+        term3 = np.expand_dims(term3, 2)
+        term4 = (norm_v4_inv + norm_v1_inv) / (norm_v4 * norm_v1 + v4_dot_v1)
+        term4 = np.expand_dims(term4, 2)
+
+        Vij_ring_vortices = 1 / (4 * np.pi) * (
+                v1_cross_v2 * term1 +
+                v2_cross_v3 * term2 +
+                v3_cross_v4 * term3 +
+                v4_cross_v1 * term4
+        )
+
+        return Vij_ring_vortices
+
+    def calculate_Vij_horseshoe_vortices(self, points):
+        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex
+        # number).
+        # points: the list of points (Nx3) to calculate the velocity influence at.
+
+        # Make lv and rv
+        left_vortex_vertices = self.left_horseshoe_vortex_vertices
+        right_vortex_vertices = self.right_horseshoe_vortex_vertices
+
+        points = np.reshape(points, (-1, 3))
+        n_points = len(points)
+        n_vortices = len(left_vortex_vertices)
+
+        # Make a and b vectors.
+        # a: Vector from all collocation points to all horseshoe vortex left  vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
+        # b: Vector from all collocation points to all horseshoe vortex right vertices, NxNx3.
+        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
+        # a[i,j,:] = c[i,:] - lv[j,:]
+        # b[i,j,:] = c[i,:] - rv[j,:]
+        points = np.expand_dims(points, 1)
+        a = points - left_vortex_vertices
+        b = points - right_vortex_vertices
+        # x_hat = np.zeros([n_points, n_vortices, 3])
+        # x_hat[:, :, 0] = 1
+
+        # Do some useful arithmetic
+        a_cross_b = np.cross(a, b, axis=2)
+        a_dot_b = np.einsum('ijk,ijk->ij', a, b)
+
+        a_cross_x = np.stack((
+            np.zeros((n_points, n_vortices)),
+            a[:, :, 2],
+            -a[:, :, 1]
+        ), axis=2)
+        a_dot_x = a[:, :, 0]
+
+        b_cross_x = np.stack((
+            np.zeros((n_points, n_vortices)),
+            b[:, :, 2],
+            -b[:, :, 1]
+        ), axis=2)
+        b_dot_x = b[:, :, 0]  # np.sum(b * x_hat,axis=2)
+
+        norm_a = np.linalg.norm(a, axis=2)
+        norm_b = np.linalg.norm(b, axis=2)
+        norm_a_inv = 1 / norm_a
+        norm_b_inv = 1 / norm_b
+
+        # Check for the special case where the collocation point is along the bound vortex leg
+        # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term
+        # is zero.
+        bound_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', a_cross_b, a_cross_b)  # norm(a_cross_b) ** 2
+                < 3.0e-16)
+        a_dot_b = a_dot_b + bound_vortex_singularity_indices
+        left_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', a_cross_x, a_cross_x)
+                < 3.0e-16
+        )
+        a_dot_x = a_dot_x + left_vortex_singularity_indices
+        right_vortex_singularity_indices = (
+                np.einsum('ijk,ijk->ij', b_cross_x, b_cross_x)
+                < 3.0e-16
+        )
+        b_dot_x = b_dot_x + right_vortex_singularity_indices
+
+        # Calculate Vij
+        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
+        term2 = norm_a_inv / (norm_a - a_dot_x)
+        term3 = norm_b_inv / (norm_b - b_dot_x)
+        term1 = np.expand_dims(term1, 2)
+        term2 = np.expand_dims(term2, 2)
+        term3 = np.expand_dims(term3, 2)
+
+        Vij_horseshoe_vortices = 1 / (4 * np.pi) * (
+                a_cross_b * term1 +
+                a_cross_x * term2 -
+                b_cross_x * term3
+        )
+
+        return Vij_horseshoe_vortices
+
+    # ToDo Uncomment this function when the calculate_forces method is implemented
+    """def calculate_delta_cp(self):
         # Find the area of each panel ()
         diag1 = self.front_left_vertices - self.back_right_vertices
         diag2 = self.front_right_vertices - self.back_left_vertices
@@ -629,7 +831,7 @@ class vlm4(AeroProblem):
         # Calculate panel data
         self.Fi_normal = np.einsum('ij,ij->i', self.Fi_geometry, self.normal_directions)
         self.pressure_normal = self.Fi_normal / self.areas
-        self.delta_cp = self.pressure_normal / self.op_point.dynamic_pressure()
+        self.delta_cp = self.pressure_normal / self.op_point.dynamic_pressure()"""
 
     def get_induced_velocity_at_point(self, point):
         # Input: a Nx3 numpy array of points that you would like to know the induced velocities at.
@@ -691,35 +893,19 @@ class vlm4(AeroProblem):
 
         self.streamlines = streamlines
 
-    def draw(self,
-             draw_delta_cp=True,
-             draw_streamlines=True,
-             ):
+    def draw(self, shading_type="ring_vortex_strengths",   # Can be None, "solid", or "ring_vortex_strengths"
+             draw_streamlines=False,
+             points_type=None,          # Supply the name of a property of this class to plot a point cloud
+             ):                         # Not autograd-compatible
 
-        print("Drawing...")
-        # Not autograd-compatible
-
-        # Make airplane geometry
-        vertices = np.vstack((
-            self.front_left_vertices,
-            self.front_right_vertices,
-            self.back_right_vertices,
-            self.back_left_vertices
-        ))
-        faces = np.transpose(np.vstack((
-            4 * np.ones(self.n_panels),
-            np.arange(self.n_panels),
-            np.arange(self.n_panels) + self.n_panels,
-            np.arange(self.n_panels) + 2 * self.n_panels,
-            np.arange(self.n_panels) + 3 * self.n_panels,
-        )))
-        faces = np.reshape(faces, (-1), order='C')
-        wing_surfaces = pv.PolyData(vertices, faces)
+        if self.verbose:
+            print("Drawing...")
 
         # Initialize Plotter
         plotter = pv.Plotter()
 
-        if draw_delta_cp:
+        # ToDo Uncomment this code once the calculate_delta_cp and calculate_forces functions are complete
+        """if draw_delta_cp:
             if not hasattr(self, 'delta_cp'):
                 self.calculate_delta_cp()
 
@@ -731,8 +917,45 @@ class vlm4(AeroProblem):
             plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
                              smooth_shading=True)
             plotter.add_scalar_bar(title="Pressure Coefficient Differential", n_labels=5, shadow=True,
-                                   font_family='arial')
+                                   font_family='arial')"""
 
+        # Shading
+        if shading_type is not None:
+
+            # Make airplane geometry
+            vertices = np.vstack((
+                self.front_left_vertices,
+                self.front_right_vertices,
+                self.back_right_vertices,
+                self.back_left_vertices
+            ))
+            faces = np.transpose(np.vstack((
+                4 * np.ones(self.n_panels),
+                np.arange(self.n_panels),
+                np.arange(self.n_panels) + self.n_panels,
+                np.arange(self.n_panels) + 2 * self.n_panels,
+                np.arange(self.n_panels) + 3 * self.n_panels,
+            )))
+            faces = np.reshape(faces, (-1), order='C')
+            wing_surfaces = pv.PolyData(vertices, faces)
+
+            if shading_type == "solid":
+                plotter.add_mesh(wing_surfaces, color='tan', show_edges=True,
+                                 smooth_shading=True)
+            else:
+                if not hasattr(self, 'ring_vortex_strengths'):
+                    print("Ring vortex strengths not found, running again.")
+                    self.run()
+
+                scalars = self.ring_vortex_strengths
+
+                cmap = plt.cm.get_cmap('inferno')
+                plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
+                                 smooth_shading=True)
+                plotter.add_scalar_bar(title="Ring Vortex Strengths", n_labels=5, shadow=True,
+                                       font_family='arial')
+
+        # Streamlines
         if draw_streamlines:
             if not hasattr(self, 'streamlines'):
                 self.calculate_streamlines()
@@ -740,7 +963,16 @@ class vlm4(AeroProblem):
             for streamline_num in range(len(self.streamlines)):
                 plotter.add_lines(self.streamlines[streamline_num, :, :], width=1, color='#50C7C7')
 
+        # Points
+        if points_type is not None:
+            points = getattr(self, points_type)
+
+            plotter.add_points(points)
+
         # Do the plotting
         plotter.show_grid(color='#444444')
         plotter.set_background(color="black")
         plotter.show(cpos=(-1, -1, 1), full_screen=False)
+
+        if self.verbose:
+            print("Drawing finished!")
