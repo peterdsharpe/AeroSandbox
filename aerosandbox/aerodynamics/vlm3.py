@@ -1,5 +1,8 @@
 from .aerodynamics import *
 
+
+# import numpy as np
+
 class vlm3(AeroProblem):
     # Vortex-Lattice Method aerodynamics code written from the ground up with lessons learned from writing VLM1 and VLM2.
     # Should eventually eclipse VLM2 in performance and render it obsolete.
@@ -13,7 +16,7 @@ class vlm3(AeroProblem):
     # Usage:
     #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "vlm3(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
     #   # Call the run() method on the vlm3 object to run the problem.
-    #   # Access results in the command line, or through properties of the vlm2 class.
+    #   # Access results in the command line, or through properties of the vlm3 class.
     #   #   # In a future update, this will be done through a standardized AeroData class.
 
     # @profile
@@ -182,9 +185,9 @@ class vlm3(AeroProblem):
                 # Make section_mcl_coordinates: MxNx3 array of mean camberline coordinates.
                 # First index is chordwise location, second index is spanwise location, third is xyz.
                 section_mcl_coordinates = (
-                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                        np.expand_dims(np.expand_dims((1 - nondim_spanwise_coordinates), 0), 2) * np.expand_dims(
                     inner_xsec_mcl, 1) +
-                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
+                        np.expand_dims(np.expand_dims((nondim_spanwise_coordinates), 0), 2) * np.expand_dims(
                     outer_xsec_mcl, 1)
                 )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
 
@@ -316,9 +319,10 @@ class vlm3(AeroProblem):
                         # Make section_mcl_coordinates: MxNx3 array of mean camberline coordinates.
                         # First index is chordwise location, second index is spanwise location, third is xyz.
                         section_mcl_coordinates = (
-                                np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                                np.expand_dims(np.expand_dims((1 - nondim_spanwise_coordinates), 0),
+                                               2) * np.expand_dims(
                             inner_xsec_mcl, 1) +
-                                np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
+                                np.expand_dims(np.expand_dims(nondim_spanwise_coordinates, 0), 2) * np.expand_dims(
                             outer_xsec_mcl, 1)
                         )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
 

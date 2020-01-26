@@ -427,7 +427,7 @@ class panel1(AeroProblem):
         #   |                       horseshoes |
         #   |                                  |
         #   | *                  * *         * |
-        #   | *                              * |
+        #   | *                  * *         * |
         #   |   Kutta Condition      Zeroes    |
         #   | *    submatrix     * *         * |
 
