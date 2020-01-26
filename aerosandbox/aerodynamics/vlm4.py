@@ -176,9 +176,12 @@ class vlm4(AeroProblem):
                 # Make section_mcl_coordinates: MxNx3 array of mean camberline coordinates.
                 # First index is chordwise location, second index is spanwise location, third is xyz.
                 section_mcl_coordinates = (
-                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(inner_xsec_mcl, 1) +
-                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(outer_xsec_mcl, 1)
-                )  # TODO Generalize this to work with all twist angles, not only small ones.
+                        np.expand_dims(np.expand_dims((1 - nondim_spanwise_coordinates), 0),
+                                       2) * np.expand_dims(
+                    inner_xsec_mcl, 1) +
+                        np.expand_dims(np.expand_dims(nondim_spanwise_coordinates, 0), 2) * np.expand_dims(
+                    outer_xsec_mcl, 1)
+                )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
 
                 # Compute corners of each panel
                 front_inner_coordinates = section_mcl_coordinates[:-1, :-1, :]
@@ -293,9 +296,12 @@ class vlm4(AeroProblem):
                         # Make section_mcl_coordinates: MxNx3 array of mean camberline coordinates.
                         # First index is chordwise location, second index is spanwise location, third is xyz.
                         section_mcl_coordinates = (
-                                np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(inner_xsec_mcl, 1)
-                                + np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(outer_xsec_mcl, 1)
-                        )  # TODO Generalize this to work with all twist angles, not only small ones.
+                                np.expand_dims(np.expand_dims((1 - nondim_spanwise_coordinates), 0),
+                                               2) * np.expand_dims(
+                            inner_xsec_mcl, 1) +
+                                np.expand_dims(np.expand_dims(nondim_spanwise_coordinates, 0), 2) * np.expand_dims(
+                            outer_xsec_mcl, 1)
+                        )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
 
                         # Compute corners of each panel
                         front_inner_coordinates = section_mcl_coordinates[:-1, :-1, :]
@@ -569,7 +575,19 @@ class vlm4(AeroProblem):
             points)  # Calculates the section of Vij corresponding to the doublets (ring vortices)
         Vij_horseshoe_vortices = self.calculate_Vij_horseshoe_vortices(
             points)  # Calculates the section of Vij corresponding to the trailing horseshoe vortices
-        Vij = np.hstack((Vij_ring_vortices, Vij_horseshoe_vortices))
+        # Vij = np.hstack((Vij_ring_vortices, Vij_horseshoe_vortices))
+
+        Vij = np.zeros((self.n_panels, self.n_panels, 3))
+        np.place(
+            Vij,
+            np.tile(np.expand_dims(np.expand_dims(np.logical_not(self.is_trailing_edge), 0), 2),(self.n_panels, 1, 3)),
+            Vij_ring_vortices
+        )
+        np.place(
+            Vij,
+            np.tile(np.expand_dims(np.expand_dims((self.is_trailing_edge), 0), 2),(self.n_panels, 1, 3)),
+            Vij_horseshoe_vortices
+        )
 
         # ToDo Delete the following code if it is unnecessary
         """"# Make lv and rv
@@ -893,10 +911,10 @@ class vlm4(AeroProblem):
 
         self.streamlines = streamlines
 
-    def draw(self, shading_type="ring_vortex_strengths",   # Can be None, "solid", or "ring_vortex_strengths"
+    def draw(self, shading_type="ring_vortex_strengths",  # Can be None, "solid", or "ring_vortex_strengths"
              draw_streamlines=False,
-             points_type=None,          # Supply the name of a property of this class to plot a point cloud
-             ):                         # Not autograd-compatible
+             points_type=None,  # Supply the name of a property of this class to plot a point cloud
+             ):  # Not autograd-compatible
 
         if self.verbose:
             print("Drawing...")
