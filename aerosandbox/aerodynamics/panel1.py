@@ -1,5 +1,6 @@
 from .aerodynamics import *
 
+
 class panel1(AeroProblem):
     # 3D Panel Method aerodynamics code.
     #
@@ -127,7 +128,8 @@ class panel1(AeroProblem):
                 outer_xsec = wing.xsecs[section_num + 1]  # type: WingXSec
 
                 # Define the airfoils at each cross section
-                inner_airfoil = inner_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface( #TODO consider whether this needs to be sharp
+                inner_airfoil = inner_xsec.airfoil.get_sharp_TE_airfoil().add_control_surface(
+                    # TODO consider whether this needs to be sharp
                     deflection=inner_xsec.control_surface_deflection,
                     hinge_point=inner_xsec.control_surface_hinge_point
                 )  # type: Airfoil
@@ -177,9 +179,9 @@ class panel1(AeroProblem):
                 # Make section_panel_coordinates: MxNx3 array of the wing surface's coordinates.
                 # First index is chordwise location, second index is spanwise location, third is xyz.
                 section_panel_coordinates = (
-                        np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                        np.expand_dims(np.expand_dims((1 - nondim_spanwise_coordinates), 0), 2) * np.expand_dims(
                     inner_panel_coordinates, 1) +
-                        np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
+                        np.expand_dims(np.expand_dims(nondim_spanwise_coordinates, 0), 2) * np.expand_dims(
                     outer_panel_coordinates, 1)
                 )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
 
@@ -311,9 +313,9 @@ class panel1(AeroProblem):
                                     section_num + 1]
                         )
                         section_panel_coordinates = (
-                                np.expand_dims((1 - nondim_spanwise_coordinates), 2) * np.expand_dims(
+                                np.expand_dims(np.expand_dims((1 - nondim_spanwise_coordinates), 0), 2) * np.expand_dims(
                             inner_panel_coordinates, 1) +
-                                np.expand_dims(nondim_spanwise_coordinates, 2) * np.expand_dims(
+                                np.expand_dims(np.expand_dims(nondim_spanwise_coordinates, 0), 2) * np.expand_dims(
                             outer_panel_coordinates, 1)
                         )  # TODO this is not strictly speaking correct, only true in the limit of small twist angles.
 
@@ -440,7 +442,7 @@ class panel1(AeroProblem):
         self.AIC = np.sum(
             self.Vij * np.expand_dims(self.normal_directions, 1),
             axis=2
-        ) #
+        )  #
 
         # Kutta Conditions
         if self.verbose: print("Enforcing Kutta condition...")
@@ -462,12 +464,11 @@ class panel1(AeroProblem):
         )
 
         # Make the zeros submatrix
-        zeros_submatrix = -np.eye(self.n_horseshoes) #np.zeros((self.n_horseshoes, self.n_horseshoes))
+        zeros_submatrix = -np.eye(self.n_horseshoes)  # np.zeros((self.n_horseshoes, self.n_horseshoes))
 
         # Merge everything
         kutta_and_zeros = np.hstack((kutta_condition_submatrix, zeros_submatrix))
         self.LHS_matrix = np.vstack((self.AIC, kutta_and_zeros))
-
 
         # # Calculate Vij at vortex centers for force calculation
         # -------------------------------------------------------
@@ -517,7 +518,7 @@ class panel1(AeroProblem):
         self.horseshoe_vortex_strengths = self.solution[self.n_panels:]
         print("horseshoe_vortex_strengths sum: ", np.sum(self.horseshoe_vortex_strengths))
 
-    def calculate_forces(self): # TODO rewrite this for the new velocity influence matrix
+    def calculate_forces(self):  # TODO rewrite this for the new velocity influence matrix
         # # Calculate Near-Field Forces and Moments
         # -----------------------------------------
         # Governing Equation: The force on a straight, small vortex filament is F = rho * V x l * gamma,
@@ -585,8 +586,10 @@ class panel1(AeroProblem):
         if self.verbose: print("Cn: ", self.Cn)
 
     def calculate_Vij(self, points):
-        Vij_doublets = self.calculate_Vij_doublets(points) # Calculates the section of Vij corresponding to the doublets (ring vortices)
-        Vij_horseshoes = self.calculate_Vij_horseshoes(points) # Calculates the section of Vij corresponding to the trailing horseshoe vortices
+        Vij_doublets = self.calculate_Vij_doublets(
+            points)  # Calculates the section of Vij corresponding to the doublets (ring vortices)
+        Vij_horseshoes = self.calculate_Vij_horseshoes(
+            points)  # Calculates the section of Vij corresponding to the trailing horseshoe vortices
         Vij = np.hstack((Vij_doublets, Vij_horseshoes))
 
         return Vij
@@ -621,23 +624,22 @@ class panel1(AeroProblem):
         # x_hat[:, :, 0] = 1
 
         # Do some useful arithmetic
-        v1_cross_v2 = np.cross(v1, v2, axis = 2)
-        v2_cross_v3 = np.cross(v2, v3, axis = 2)
-        v3_cross_v4 = np.cross(v3, v4, axis = 2)
-        v4_cross_v1 = np.cross(v4, v1, axis = 2)
+        v1_cross_v2 = np.cross(v1, v2, axis=2)
+        v2_cross_v3 = np.cross(v2, v3, axis=2)
+        v3_cross_v4 = np.cross(v3, v4, axis=2)
+        v4_cross_v1 = np.cross(v4, v1, axis=2)
         v1_dot_v2 = np.einsum('ijk,ijk->ij', v1, v2)
         v2_dot_v3 = np.einsum('ijk,ijk->ij', v2, v3)
         v3_dot_v4 = np.einsum('ijk,ijk->ij', v3, v4)
         v4_dot_v1 = np.einsum('ijk,ijk->ij', v4, v1)
-        norm_v1 = np.linalg.norm(v1, axis = 2)
-        norm_v2 = np.linalg.norm(v2, axis = 2)
-        norm_v3 = np.linalg.norm(v3, axis = 2)
-        norm_v4 = np.linalg.norm(v4, axis = 2)
+        norm_v1 = np.linalg.norm(v1, axis=2)
+        norm_v2 = np.linalg.norm(v2, axis=2)
+        norm_v3 = np.linalg.norm(v3, axis=2)
+        norm_v4 = np.linalg.norm(v4, axis=2)
         norm_v1_inv = 1 / norm_v1
         norm_v2_inv = 1 / norm_v2
         norm_v3_inv = 1 / norm_v3
         norm_v4_inv = 1 / norm_v4
-
 
         # Check for the special case where the collocation point is along the bound vortex leg
         # Find where cross product is near zero, and set the dot product to infinity so that the value of the bound term is zero.
@@ -661,7 +663,6 @@ class panel1(AeroProblem):
                 < 3.0e-16)
         v4_dot_v1 = v4_dot_v1 + v4_v1_singularity_indices
 
-
         # Calculate Vij
         term1 = (norm_v1_inv + norm_v2_inv) / (norm_v1 * norm_v2 + v1_dot_v2)
         term1 = np.expand_dims(term1, 2)
@@ -672,7 +673,6 @@ class panel1(AeroProblem):
         term4 = (norm_v4_inv + norm_v1_inv) / (norm_v4 * norm_v1 + v4_dot_v1)
         term4 = np.expand_dims(term4, 2)
 
-
         Vij_doublets = 1 / (4 * np.pi) * (
                 v1_cross_v2 * term1 +
                 v2_cross_v3 * term2 +
@@ -682,7 +682,7 @@ class panel1(AeroProblem):
 
         return Vij_doublets
 
-    def calculate_Vij_horseshoes(self,points):
+    def calculate_Vij_horseshoes(self, points):
         # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
@@ -761,7 +761,7 @@ class panel1(AeroProblem):
                 b_cross_x * term3
         )
 
-        return Vij_horseshoes # TODO do this
+        return Vij_horseshoes  # TODO do this
 
     def calculate_delta_cp(self):
         # Find the area of each panel ()
@@ -810,8 +810,8 @@ class panel1(AeroProblem):
 
     def get_streamlines(self,
                         seed_points,  # A Nx3 ndarray of points to use for streamlines
-                        n_steps = 300,  # number of points in streamline
-                        length = 0.7,  # meters
+                        n_steps=300,  # number of points in streamline
+                        length=0.7,  # meters
                         ):
         # Calculates streamlines eminating from an array of given initial points.
         # "streamlines" is a MxNx3 array, where M is the index of the streamline number,
@@ -837,11 +837,12 @@ class panel1(AeroProblem):
     def draw(self,
              shading_type="solid",  # Can be None, "solid", "doublet_strengths", "delta_cp", or "trailing_edges"
              streamlines_type="trailing",  # Can be None, "trailing", "line", or a Nx3 numpy array with custom points.
-             points_type = None, # You can supply the name of a property of this class to plot a point cloud. Useful for debugging, mostly.
+             points_type=None,
+             # You can supply the name of a property of this class to plot a point cloud. Useful for debugging, mostly.
              ):
         # Note: NOT autograd-compatible!
         print("Drawing...")
-        plotter = pv.Plotter() # Initialize Plotter
+        plotter = pv.Plotter()  # Initialize Plotter
 
         # Shading
         if shading_type is not None:
@@ -873,7 +874,7 @@ class panel1(AeroProblem):
 
                 # min = -1.5
                 # max = 1.5
-                scalars = self.doublet_strengths #np.minimum(np.maximum(self.delta_cp, delta_cp_min), delta_cp_max)
+                scalars = self.doublet_strengths  # np.minimum(np.maximum(self.delta_cp, delta_cp_min), delta_cp_max)
 
                 cmap = plt.cm.get_cmap('viridis')
                 plotter.add_mesh(wing_surfaces, scalars=scalars, cmap=cmap, color='tan', show_edges=True,
@@ -894,7 +895,7 @@ class panel1(AeroProblem):
                 plotter.add_scalar_bar(title="Pressure Coefficient Differential", n_labels=5, shadow=True,
                                        font_family='arial')
             elif shading_type == "all_trailing_edges":
-                scalars = np.logical_or(self.is_trailing_edge_upper, self.is_trailing_edge_lower) # type: np.ndarray
+                scalars = np.logical_or(self.is_trailing_edge_upper, self.is_trailing_edge_lower)  # type: np.ndarray
                 scalars = scalars.astype(int)
                 plotter.add_mesh(wing_surfaces, scalars=scalars, color='tan', show_edges=True,
                                  smooth_shading=True)
@@ -912,21 +913,20 @@ class panel1(AeroProblem):
                     (0.5 * (self.front_left_vertices + self.front_right_vertices))[self.is_trailing_edge_lower]
                 ))
             elif streamlines_type == "line":
-                seed_points = linspace_3D((0,0,-0.05),(0,0,0.05),30)
+                seed_points = linspace_3D((0, 0, -0.05), (0, 0, 0.05), 30)
             else:
-                seed_points = streamlines_type # assume streamlines_type is a numpy ndarray
+                seed_points = streamlines_type  # assume streamlines_type is a numpy ndarray
 
-            streamlines = self.get_streamlines(seed_points = seed_points)
+            streamlines = self.get_streamlines(seed_points=seed_points)
 
             for streamline_num in range(len(streamlines)):
                 plotter.add_lines(streamlines[streamline_num, :, :], width=1, color='#50C7C7')
 
         # Points
         if points_type is not None:
-            points = getattr(self,points_type)
+            points = getattr(self, points_type)
 
             plotter.add_points(points)
-
 
         # Do the plotting
         plotter.show_grid(color='#444444')
