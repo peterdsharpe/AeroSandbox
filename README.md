@@ -1,6 +1,21 @@
 # [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) 
 by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
+## VERSION 0 DEPRECATION NOTICE
+Dear User,
+
+If you're reading this, you're looking at the repository for the final release of AeroSandbox v0. Development of version 0 was concluded on 2/15/2020, and AeroSandbox v0 has since been replaced by AeroSandbox v1. Please consider updating to AeroSandbox v1. In v1, analyses can be up to 2 orders of magnitude faster, solutions can be fully nonlinear, viscous & shock effects can be modeled, the code now plays well with a simultaneous-analysis-and-design (SAND) architecture, and there are huge graphics updates thanks to Plotly. Version 1 is a MASSIVE upgrade.
+
+If you do not want to upgrade, you may continue using AeroSandbox v0 from within AeroSandbox v1 by replacing your 
+```python
+import aerosandbox as asb
+```
+statement with
+```python
+import aerosandbox_legacy_v0 as asb
+```
+
+Thank you for your continued support!
 
 ## About
 AeroSandbox is a Python package for aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables.
