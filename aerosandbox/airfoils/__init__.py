@@ -1,1 +1,1 @@
-# Just so this appears as a module
+# Just so this appears as attrib_name module
