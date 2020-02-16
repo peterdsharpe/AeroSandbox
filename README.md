@@ -214,6 +214,9 @@ Please, please report all bugs by creating a new issue at [https://github.com/pe
 
 Please note that, while the entirety of the codebase should be cross-platform compatible, AeroSandbox has only been tested on Windows 10 in Python 3.7 via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).
 
+## Versioning
+AeroSandbox uses [semantic versioning](https://semver.org/), which should give you an idea of whether or not you can expect backward-compatibility and/or new features from any given update.
+
 ## Contributing
 
 Thanks for your interest in helping with the development of AeroSandbox - contributions are always so, so welcome! If you have a change you'd like to make, the easiest way to do that is by submitting a pull request. 
