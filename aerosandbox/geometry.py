@@ -81,9 +81,9 @@ class Airplane:
 
         main_wing = self.wings[main_wing_index]
 
-        self.s_ref = main_wing.area_wetted()
+        self.s_ref = main_wing.area()
         self.b_ref = main_wing.span()
-        self.c_ref = main_wing.area_wetted() / main_wing.span()
+        self.c_ref = main_wing.mean_geometric_chord()
 
     def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
         # Sets the chordwise and spanwise paneling everywhere to a specified init_val.
@@ -121,11 +121,11 @@ class Airplane:
 
         # Wings
         for wing_id in range(len(self.wings)):
-            wing = self.wings[wing_id] # type: Wing
+            wing = self.wings[wing_id]  # type: Wing
 
             for xsec_id in range(len(wing.xsecs) - 1):
-                xsec_1 = wing.xsecs[xsec_id] # type: WingXSec
-                xsec_2 = wing.xsecs[xsec_id + 1] # type: WingXSec
+                xsec_1 = wing.xsecs[xsec_id]  # type: WingXSec
+                xsec_2 = wing.xsecs[xsec_id + 1]  # type: WingXSec
 
                 le_start = xsec_1.xyz_le + wing.xyz_le
                 te_start = xsec_1.xyz_te() + wing.xyz_le
@@ -224,57 +224,57 @@ class Airplane:
                     k.append(indices_added[1])
         # Fuselages
         for fuse_id in range(len(self.fuselages)):
-            fuse = self.fuselages[fuse_id] # type: Fuselage
+            fuse = self.fuselages[fuse_id]  # type: Fuselage
 
             for xsec_id in range(len(fuse.xsecs) - 1):
-                xsec_1 = fuse.xsecs[xsec_id] # type: FuselageXSec
-                xsec_2 = fuse.xsecs[xsec_id + 1] # type: FuselageXSec
+                xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
+                xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
 
                 r1 = xsec_1.radius
                 r2 = xsec_2.radius
-                points_1 = np.zeros((fuse.circumferential_panels,3))
-                points_2 = np.zeros((fuse.circumferential_panels,3))
+                points_1 = np.zeros((fuse.circumferential_panels, 3))
+                points_2 = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
                     rot = angle_axis_rotation_matrix(
                         2 * cas.pi * point_index / fuse.circumferential_panels,
                         [1, 0, 0],
                         True
                     ).toarray()
-                    points_1[point_index,:] = rot @ np.array([0, 0, r1])
-                    points_2[point_index,:] = rot @ np.array([0, 0, r2])
+                    points_1[point_index, :] = rot @ np.array([0, 0, r1])
+                    points_2[point_index, :] = rot @ np.array([0, 0, r2])
                 points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
                 points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
                     x.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    x.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 0]))
-                    x.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 0]))
+                    x.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
+                    x.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
                     x.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
                     y.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    y.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 1]))
-                    y.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 1]))
+                    y.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
+                    y.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
                     y.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
                     z.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    z.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 2]))
-                    z.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 2]))
+                    z.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
+                    z.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
                     z.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
                     intensity.append(fuse_id)
                     intensity.append(fuse_id)
                     intensity.append(fuse_id)
                     intensity.append(fuse_id)
                     xe.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    xe.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 0]))
-                    xe.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 0]))
+                    xe.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
+                    xe.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
                     xe.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
                     xe.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
                     ye.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    ye.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 1]))
-                    ye.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 1]))
+                    ye.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
+                    ye.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
                     ye.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
                     ye.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
                     ze.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    ze.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 2]))
-                    ze.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 2]))
+                    ze.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
+                    ze.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
                     ze.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
                     ze.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
                     xe.append(None)
@@ -366,9 +366,10 @@ class Airplane:
             scene=dict(aspectmode='data')
         )
 
-        if show: fig.show()
-
-        return fig
+        if show:
+            fig.show()
+        else:
+            return fig
 
     def is_symmetric(self):
         for wing in self.wings:
@@ -437,58 +438,100 @@ class Wing:
                     pass
         return self
 
-    def area_wetted(self):
-        # Returns the wetted area of a wing.
+    def area(self,
+             type="wetted"
+             ):
+        """
+        Returns the area, with options for various ways of measuring this.
+         * wetted: wetted area
+         * projected: area projected onto the XY plane (top-down view)
+        :param type:
+        :return:
+        """
         area = 0
         for i in range(len(self.xsecs) - 1):
             chord_eff = (self.xsecs[i].chord
                          + self.xsecs[i + 1].chord) / 2
             this_xyz_te = self.xsecs[i].xyz_te()
             that_xyz_te = self.xsecs[i + 1].xyz_te()
-            span_le_eff = cas.sqrt(
-                (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
-                (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
-            )
-            span_te_eff = cas.sqrt(
-                (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
-                (this_xyz_te[2] - that_xyz_te[2]) ** 2
-            )
+            if type == "wetted":
+                span_le_eff = cas.sqrt(
+                    (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
+                    (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
+                )
+                span_te_eff = cas.sqrt(
+                    (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
+                    (this_xyz_te[2] - that_xyz_te[2]) ** 2
+                )
+            elif type == "projected":
+                span_le_eff = cas.fabs(
+                    self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]
+                )
+                span_te_eff = cas.fabs(
+                    this_xyz_te[1] - that_xyz_te[1]
+                )
+            else:
+                raise ValueError("Bad value of 'type'!")
+
             span_eff = (span_le_eff + span_te_eff) / 2
             area += chord_eff * span_eff
         if self.symmetric:
             area *= 2
         return area
 
-    def area_projected(self):
-        # Returns the area of the wing as projected onto the XY plane (top-down view).
-        area = 0
-        for i in range(len(self.xsecs) - 1):
-            chord_eff = (self.xsecs[i].chord
-                         + self.xsecs[i + 1].chord) / 2
-            this_xyz_te = self.xsecs[i].xyz_te()
-            that_xyz_te = self.xsecs[i + 1].xyz_te()
-            span_le_eff = cas.fabs(
-                self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]
+    def span(self,
+             type="wetted"
+             ):
+        """
+        Returns the span, with options for various ways of measuring this.
+         * wetted: Adds up YZ-distances of each section piece by piece
+         * yz: YZ-distance between the root and tip of the wing
+         * y: Y-distance between the root and tip of the wing
+         * z: Z-distance between the root and tip of the wing
+        If symmetric, this is doubled to obtain the full span.
+        :param type: One of the above options, as a string.
+        :return: span
+        """
+        if type == "wetted":
+            span = 0
+            for i in range(len(self.xsecs) - 1):
+                sect1_xyz_le = self.xsecs[i].xyz_le
+                sect2_xyz_le = self.xsecs[i + 1].xyz_le
+                sect1_xyz_te = self.xsecs[i].xyz_te()
+                sect2_xyz_te = self.xsecs[i + 1].xyz_te()
+
+                span_le = cas.sqrt(
+                    (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
+                    (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
+                )
+                span_te = cas.sqrt(
+                    (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
+                    (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
+                )
+                span_eff = (span_le + span_te) / 2
+                span += span_eff
+
+        elif type == "yz":
+            root = self.xsecs[0]  # type: WingXSec
+            tip = self.xsecs[-1]  # type: WingXSec
+            span = cas.sqrt(
+                (root.xyz_le[1] - tip.xyz_le[1]) ** 2 +
+                (root.xyz_le[2] - tip.xyz_le[2]) ** 2
             )
-            span_te_eff = cas.fabs(
-                this_xyz_te[1] - that_xyz_te[1]
+        elif type == "y":
+            root = self.xsecs[0]  # type: WingXSec
+            tip = self.xsecs[-1]  # type: WingXSec
+            span = cas.fabs(
+                tip.xyz_le[1] - root.xyz_le[1]
             )
-            span_eff = (span_le_eff + span_te_eff) / 2
-            area += chord_eff * span_eff
-        if self.symmetric:
-            area *= 2
-        return area
-
-    def span(self):
-        # Returns the span (y-distance between the root of the wing and the tip).
-        # If symmetric, this is doubled to obtain the full span.
-        # spans = []
-        # for i in range(len(self.xsecs)):
-        #     spans.append(cas.fabs(self.xsecs[i].xyz_le[1] - self.xsecs[0].xyz_le[1]))
-        # span = cas.fmax(spans)
-
-        span = self.xsecs[-1].xyz_le[1] - self.xsecs[0].xyz_le[1]
-
+        elif type == "z":
+            root = self.xsecs[0]  # type: WingXSec
+            tip = self.xsecs[-1]  # type: WingXSec
+            span = cas.fabs(
+                tip.xyz_le[2] - root.xyz_le[2]
+            )
+        else:
+            raise ValueError("Bad value of 'type'!")
         if self.symmetric:
             span *= 2
         return span
@@ -496,7 +539,7 @@ class Wing:
     def aspect_ratio(self):
         # Returns the aspect ratio (b^2/S).
         # Uses the full span and the full area if symmetric.
-        return self.span() ** 2 / self.area_wetted()
+        return self.span() ** 2 / self.area()
 
     def has_symmetric_control_surfaces(self):
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has control_surface_type = "symmetric".
@@ -504,6 +547,70 @@ class Wing:
             if not xsec.control_surface_type == "symmetric":
                 return False
         return True
+
+    def mean_geometric_chord(self):
+        """
+        Returns the mean geometric chord of the wing (S/b).
+        :return:
+        """
+        return self.area() / self.span()
+
+    def mean_twist_angle(self):
+        """
+        Returns the mean twist angle (in degrees) of the wing, weighted by span.
+        You can think of it as \int_{b}(twist)db, where b is span.
+        WARNING: This function's output is only exact in the case where all of the cross sections have the same twist axis!
+        :return: mean twist angle (in degrees)
+        """
+        # First, find the spans
+        span = []
+        for i in range(len(self.xsecs) - 1):
+            sect1_xyz_le = self.xsecs[i].xyz_le
+            sect2_xyz_le = self.xsecs[i + 1].xyz_le
+            sect1_xyz_te = self.xsecs[i].xyz_te()
+            sect2_xyz_te = self.xsecs[i + 1].xyz_te()
+
+            span_le = cas.sqrt(
+                (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
+                (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
+            )
+            span_te = cas.sqrt(
+                (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
+                (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
+            )
+            span_eff = (span_le + span_te) / 2
+            span.append(span_eff)
+
+        # Then, find the twist-span product
+        twist_span_product = 0
+        for i in range(len(self.xsecs)):
+            xsec = self.xsecs[i]
+            if i > 0:
+                twist_span_product += xsec.twist * span[i-1] / 2
+            if i < len(self.xsecs)-1:
+                twist_span_product += xsec.twist * span[i] / 2
+
+        # Then, divide
+        mean_twist = twist_span_product / cas.sum1(cas.vertcat(*span))
+        return mean_twist
+
+    def mean_sweep_angle(self):
+        """
+        Returns the mean quarter-chord sweep angle (in degrees) of the wing, relative to the x-axis.
+        Positive sweep is backwards, negative sweep is forward.
+        :return:
+        """
+        root_quarter_chord = 0.75 * self.xsecs[0].xyz_le + 0.25 * self.xsecs[0].xyz_te()
+        tip_quarter_chord = 0.75 * self.xsecs[-1].xyz_le + 0.25 * self.xsecs[-1].xyz_te()
+
+        vec = tip_quarter_chord-root_quarter_chord
+        vec_norm = vec / cas.norm_2(vec)
+
+        sin_sweep = vec_norm[0] # from dot product with x_hat
+
+        sweep_deg = cas.asin(sin_sweep) * 180 / cas.pi
+
+        return sweep_deg
 
 
 class WingXSec:
@@ -1258,7 +1365,8 @@ class Fuselage:
                  z_le=0,  # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
                  xsecs=[],  # This should be a list of FuselageXSec objects.
                  symmetric=False,  # Is the fuselage symmetric across the XZ plane?
-                 circumferential_panels=24, # Number of circumferential panels to use in VLM and Panel analysis. Should be even.
+                 circumferential_panels=24,
+                 # Number of circumferential panels to use in VLM and Panel analysis. Should be even.
                  ):
         self.name = name
         self.xyz_le = cas.vertcat(x_le, y_le, z_le)
@@ -1328,6 +1436,14 @@ class Fuselage:
         if self.symmetric:
             area *= 2
         return area
+
+    def length(self):
+        """
+        Returns the total front-to-back length of the fuselage. Measured as the difference between the x-coordinates
+        of the leading and trailing cross sections.
+        :return:
+        """
+        return cas.fabs(self.xsecs[-1].x_c - self.xsecs[0].x_c)
 
 
 class FuselageXSec:

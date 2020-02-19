@@ -28,6 +28,8 @@ class Casll1(AeroProblem):
               ):
         # Runs a point analysis at the specified op-point.
         self.verbose = verbose
+        if self.verbose: print("\n Initializing CasLL1 Analysis...\n-----------------------")
+
         if run_symmetric_if_possible:
             try:
                 symmetric_problem = (
@@ -1239,6 +1241,7 @@ class Casll1(AeroProblem):
 
         )
 
-        if show: fig.show()
-
-        return fig
+        if show:
+            fig.show()
+        else:
+            return fig

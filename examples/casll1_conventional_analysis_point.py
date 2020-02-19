@@ -35,31 +35,6 @@ def quasi_variable(val):
     opti.subject_to(var == val)
     return var
 
-
-# Define the 2D properties of all airfoils you want to use
-generic_cambered_airfoil = Airfoil(
-    CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function
-            (alpha * np.pi / 180) * (2 * np.pi) + 0.4550
-    ),
-    CDp_function=lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function
-            (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
-    ),
-    Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function
-        0
-    )
-)
-generic_airfoil = Airfoil(
-    CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function
-            (alpha * np.pi / 180) * (2 * np.pi)
-    ),
-    CDp_function=lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function
-            (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
-    ),
-    Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function
-        0
-    )
-)
-
 # Define the 3D geometry you want to analyze/optimize.
 # Here, all distances are in meters and all angles are in degrees.
 airplane = Airplane(
@@ -162,7 +137,7 @@ airplane = Airplane(
         )
     ]
 )
-airplane.set_spanwise_paneling_everywhere(8)  # Set the resolution of your analysis
+airplane.set_spanwise_paneling_everywhere(30)  # Set the resolution of your analysis
 ap = Casll1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
@@ -179,7 +154,7 @@ ap = Casll1(  # Set up the AeroProblem
     opti=opti  # Pass it an optimization environment to work in
 )
 # Set up the problem
-ap.setup(run_symmetric_if_possible=True)
+# ap.setup(run_symmetric_if_possible=True)
 
 # Solver options
 p_opts = {}

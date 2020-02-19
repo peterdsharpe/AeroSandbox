@@ -101,7 +101,8 @@ ap = Casll1(  # Set up the AeroProblem
         q=0,  # quasi_variable(0),
         r=0,
     ),
-    opti=opti
+    opti=opti,
+    run_setup=False
 )
 # Set up the VLM optimization submatrix
 ap.setup(run_symmetric_if_possible=True)
