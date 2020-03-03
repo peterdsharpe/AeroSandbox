@@ -1,15 +1,14 @@
 # [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) 
 by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
-Celebrating our v1.0.0 release!
-
 ## About
-AeroSandbox is a Python package for aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for computing gradients of design variables.
+AeroSandbox is a Python package for aircraft design optimization that leverages modern tools for reverse-mode automatic differentiation and large-scale design optimization.
 
-The 10-second elevator pitch: **In half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an effectively-infinite number of design variables.** This can be used to perform gradient-based aircraft design optimization extremely quickly.
+At its heart, AeroSandbox is a collection of end-to-end automatic-differentiable models and analysis tools for aircraft design applications. This property of automatic-differentiability dramatically improves performance on large problems; **design problems with thousands or tens of thousands of decision variables solve in seconds on a laptop**. Using AeroSandbox, you can **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.** 
 
-Work in progress!
+AeroSandbox has powerful aerodynamics solvers written from the ground up, and AeroSandbox can also be used as a standalone aerodynamics solver if desired. Like other modules, these solvers are differentiable. Therefore, **in half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an arbitary number of design variables.**
 
+AeroSandbox is a work in progress - expect bugs for the time being!
 
 ![VLM3 Image](media/images/vlm3_with_control_surfaces.png)
 *VLM3 simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
@@ -23,11 +22,9 @@ Work in progress!
 
 There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section) - if not, do this first.)
 
-1. (Recommended) Download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases). Then, run "pip install AeroSandbox" in your command prompt to ensure that all dependencies are satisfied.
+1. (Recommended) Type "pip install AeroSandbox" into your terminal. If you would like test cases or examples, download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases).
 
-2. If you just want the raw package (and no test cases or examples), install by simply entering "pip install AeroSandbox" into your terminal. 
-
-3. Both of the above options will download the latest official release of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
+2. The option above will download the latest official release of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
 There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm3_conventional.py".
 
@@ -141,17 +138,7 @@ One final point to note: as we're all sensible and civilized human beings here, 
 
 ### Dependencies
 
-The fastest way to ensure that all dependencies are satisfied is by simply running "pip install AeroSandbox" in your command prompt. However, you can also install dependencies on your own if you'd like. You'll need the following libraries:
-* numpy
-* scipy
-* matplotlib
-* numba
-* autograd
-* pyvista
-
-If you installed Python via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section), you likely have all of these except autograd. (Install this with "pip install autograd" in the command prompt.)
-
-OpenGL is also required for visualization, though this should already be installed on nearly every computer. (No promises if you try to run AeroSandbox on a Raspberry Pi or something!)
+The fastest way to ensure that all dependencies are satisfied is by simply running "pip install AeroSandbox" in your command prompt. However, you can also install dependencies on your own if you'd like: see "requirements.txt" for the list.
 
 ## Current Features
 * User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
@@ -165,6 +152,8 @@ An aerodynamics tool that models flow around any general triangulated 3D shape (
 
 This code is made open-source in hopes that the aerospace community can benefit from this work. I've benefitted so much from open-source aerospace tools that came before me (XFoil, AVL, QProp, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
 
+<!--
+
 ## Future Goals
 In descending order of priority/feasibility:
 * (DONE) Finish implementing a traditional VLM for simulating multiple thin lifting surfaces.
@@ -177,6 +166,7 @@ In descending order of priority/feasibility:
 * (IN PROGRESS) Implement a 2.5D coupled viscous/inviscid method directly using the viscous methods described in Drela's paper "Viscous-Inviscid Analysis of Transonic and Low Reynolds Number Airfoils". Inviscid flow would be fully 3D, while viscous flow would make the assumption of negligible spanwise flow (strip theory).
 * Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels. Ideally, the trailing edge stagnation points will be automatically identified, and nothing more than a surface triangulation along with freestream conditions will be required to compute forces and moments.
 
+-->
 
 ## Usefulness
 AeroSandbox attempts to improve over existing conceptual-level aerodynamics tools. The following strengths and weaknesses are identified with existing tools, based purely off the author's experience:
@@ -219,9 +209,9 @@ AeroSandbox uses [semantic versioning](https://semver.org/), which should give y
 
 ## Contributing
 
-Thanks for your interest in helping with the development of AeroSandbox - contributions are always so, so welcome! If you have a change you'd like to make, the easiest way to do that is by submitting a pull request. 
+Thanks for your interest in helping with the development of AeroSandbox - contributions are always so welcome! If you have a change you'd like to make, the easiest way to do that is by submitting a pull request. 
 
-If you've made several additions and would like to be involved in a more long-term capacity, please message me at (pds at mit dot edu) and we can add you as a collaborator here on Github!
+If you've already made several additions and would like to be involved in a more long-term capacity, please message me at (pds at mit dot edu)!
 
 Right now, branching is basically nonexistent. This is because there's currently only one contributor - me. As soon as this changes, we'll need to implement [proper branching](https://nvie.com/posts/a-successful-git-branching-model/). 
 
@@ -229,7 +219,7 @@ Right now, branching is basically nonexistent. This is because there's currently
 
 MIT License
 
-Copyright (c) 2019 Peter Sharpe
+Copyright (c) 2020 Peter Sharpe
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
