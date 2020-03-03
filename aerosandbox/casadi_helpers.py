@@ -74,37 +74,44 @@ def load_sol_from_file(opti, load_primal=True, load_dual=True, primal_location=d
 
 
 def flipud(x):
-    return x[np.flip(np.arange(x.shape[0])), :]
+    return x[::-1, :]
 
 
 def fliplr(x):
-    return x[:, np.flip(np.arange(x.shape[1]))]
+    return x[:, ::-1]
 
+sind = lambda theta: cas.sin(theta * cas.pi / 180)
+cosd = lambda theta: cas.cos(theta * cas.pi / 180)
+tand = lambda theta: cas.tan(theta * cas.pi / 180)
+atan2d = lambda y_val, x_val: cas.atan2(y_val, x_val) * 180 / np.pi
+smoothmax = lambda value1, value2, hardness: cas.log(
+    cas.exp(hardness * value1) + cas.exp(hardness * value2)) / hardness  # soft maximum
 
-# CasADi functors
+# # CasADi functors (experimental)
+# # dot3
+# a = cas.MX.sym('a',3)
+# b = cas.MX.sym('b',3)
+# out = (
+#         a[0] * b[0] +
+#         a[1] * b[1] +
+#         a[2] * b[2]
+# )
+# dot3 = cas.Function('dot3', [a, b], [out])
+#
+# # dot2
+# a = cas.MX.sym('a',2)
+# b = cas.MX.sym('b',2)
+# out = (
+#         a[0] * b[0] +
+#         a[1] * b[1]
+# )
+# dot2 = cas.Function('dot2', [a, b], [out])
+#
+# # Cross
+# a = cas.MX.sym('a',3)
+# b = cas.MX.sym('b',3)
+# out = cas.cross(a,b)
+#
+# del a, b, out
 
-# dot3
-a = cas.MX.sym('a',3)
-b = cas.MX.sym('b',3)
-out = (
-        a[0] * b[0] +
-        a[1] * b[1] +
-        a[2] * b[2]
-)
-dot3 = cas.Function('dot3', [a, b], [out])
-
-# dot2
-a = cas.MX.sym('a',2)
-b = cas.MX.sym('b',2)
-out = (
-        a[0] * b[0] +
-        a[1] * b[1]
-)
-dot2 = cas.Function('dot2', [a, b], [out])
-
-# Cross
-a = cas.MX.sym('a',3)
-b = cas.MX.sym('b',3)
-out = cas.cross(a,b)
-
-del a, b, out, default_primal_location, default_dual_location
+del default_primal_location, default_dual_location

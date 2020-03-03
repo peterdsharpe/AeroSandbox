@@ -1,8 +1,4 @@
-import autograd.numpy as np
-import scipy.interpolate as sp_interp
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pyvista as pv
+import numpy as np
 
 
 class MassProps:

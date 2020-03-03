@@ -2,6 +2,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
+from xfoil import XFoil
+from xfoil import model as xfoil_model
 
 from .casadi_helpers import *
 
@@ -346,7 +348,8 @@ class Airplane:
                 j=j,
                 k=k,
                 flatshading=True,
-                intensity=intensity
+                intensity=intensity,
+                colorscale="mint"
             )
         )
 
@@ -586,8 +589,8 @@ class Wing:
         for i in range(len(self.xsecs)):
             xsec = self.xsecs[i]
             if i > 0:
-                twist_span_product += xsec.twist * span[i-1] / 2
-            if i < len(self.xsecs)-1:
+                twist_span_product += xsec.twist * span[i - 1] / 2
+            if i < len(self.xsecs) - 1:
                 twist_span_product += xsec.twist * span[i] / 2
 
         # Then, divide
@@ -603,14 +606,58 @@ class Wing:
         root_quarter_chord = 0.75 * self.xsecs[0].xyz_le + 0.25 * self.xsecs[0].xyz_te()
         tip_quarter_chord = 0.75 * self.xsecs[-1].xyz_le + 0.25 * self.xsecs[-1].xyz_te()
 
-        vec = tip_quarter_chord-root_quarter_chord
+        vec = tip_quarter_chord - root_quarter_chord
         vec_norm = vec / cas.norm_2(vec)
 
-        sin_sweep = vec_norm[0] # from dot product with x_hat
+        sin_sweep = vec_norm[0]  # from dot product with x_hat
 
         sweep_deg = cas.asin(sin_sweep) * 180 / cas.pi
 
         return sweep_deg
+
+    def approximate_center_of_pressure(self):
+        """
+        Returns the approximate location of the center of pressure. Given as the area-weighted quarter chord of the wing.
+        :return: [x, y, z] of the approximate center of pressure
+        """
+        areas = []
+        quarter_chord_centroids = []
+        for i in range(len(self.xsecs) - 1):
+            # Find areas
+            chord_eff = (self.xsecs[i].chord
+                         + self.xsecs[i + 1].chord) / 2
+            this_xyz_te = self.xsecs[i].xyz_te()
+            that_xyz_te = self.xsecs[i + 1].xyz_te()
+            span_le_eff = cas.sqrt(
+                (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
+                (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
+            )
+            span_te_eff = cas.sqrt(
+                (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
+                (this_xyz_te[2] - that_xyz_te[2]) ** 2
+            )
+            span_eff = (span_le_eff + span_te_eff) / 2
+
+            areas.append(chord_eff * span_eff)
+
+            # Find quarter-chord centroids of each section
+            quarter_chord_centroids.append(
+                (
+                        0.75 * self.xsecs[i].xyz_le + 0.25 * self.xsecs[i].xyz_te() +
+                        0.75 * self.xsecs[i + 1].xyz_le + 0.25 * self.xsecs[i + 1].xyz_te()
+                ) / 2 + self.xyz_le
+            )
+
+        areas = cas.vertcat(*areas)
+        quarter_chord_centroids = cas.transpose(cas.horzcat(*quarter_chord_centroids))
+
+        total_area = cas.sum1(areas)
+        approximate_cop = cas.sum1(areas / cas.sum1(areas) * quarter_chord_centroids)
+
+        if self.symmetric:
+            approximate_cop[:, 1] = 0
+
+        return approximate_cop
 
 
 class WingXSec:
@@ -696,6 +743,7 @@ class Airfoil:
                  # If you supply "coordinates", you can manually specify the index of the leading edge here.
                  use_cache=True,  # Look in the airfoil cache, based on the airfoil's name. # TODO make airfoil caching
                  repanel=True,  # Should we repanel the airfoil upon initialization?
+                 find_mcl=True, # Should we attempt to find the mean camber line upon initialization?
                  n_points_per_side=400,  # Number of points to use when repaneling the airfoil (if repanel is True)
                  CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function
                          (alpha * np.pi / 180) * (2 * np.pi)
@@ -729,7 +777,8 @@ class Airfoil:
                 self.repanel_current_airfoil(
                     n_points_per_side=n_points_per_side)  # all airfoils are automatically repaneled to ensure consistent, good paneling.
 
-            self.populate_mcl_coordinates()
+            if find_mcl:
+                self.populate_mcl_coordinates()
 
         self.CL_function = CL_function
         self.CDp_function = CDp_function
@@ -915,9 +964,9 @@ class Airfoil:
             )
 
         fig.update_layout(
-            xaxis_title="p",
+            xaxis_title="x",
             yaxis_title="y",
-            yaxis=dict(scaleanchor="p", scaleratio=1),
+            yaxis=dict(scaleanchor="x", scaleratio=1),
             title="%s Airfoil" % self.name
         )
         fig.show()
@@ -1350,6 +1399,192 @@ class Airfoil:
         new_airfoil = Airfoil(name="%s flapped" % self.name, coordinates=coordinates, repanel=False,
                               LE_index=self.LE_index)
         return new_airfoil  # TODO fix self-intersecting airfoils at high deflections
+
+    def xfoil_a(self,
+                alpha,
+                Re=0,
+                M=0,
+                n_crit=9,
+                xtr_bot=1,
+                xtr_top=1,
+                reset_bls=False,
+                repanel=False,
+                max_iter=100,
+                ):
+        """
+        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+        Point analysis at a given alpha.
+        :param alpha: angle of attack [deg]
+        :param Re: Reynolds number
+        :param M: Mach number
+        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+        :param xtr_bot: Bottom trip location [x/c]
+        :param xtr_top: Top trip location [x/c]
+        :param reset_bls: Reset boundary layer parameters upon initialization?
+        :param repanel: Repanel airfoil within XFoil?
+        :param max_iter: Maximum number of global Newton iterations
+        :return: A tuple of (alpha, cl, cd, cm, cp)
+        """
+        xf = XFoil()
+        xf.airfoil = xfoil_model.Airfoil(
+            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
+            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+        )
+        xf.Re = Re
+        xf.M = M
+        xf.n_crit = n_crit
+        xf.xtr = (xtr_top, xtr_bot)
+        if reset_bls:
+            xf.reset_bls()
+        if repanel:
+            xf.repanel()
+        xf.max_iter = max_iter
+
+        cl, cd, cm, cp = xf.a(alpha)
+        a = alpha
+
+        return a, cl, cd, cm, cp
+
+    def xfoil_cl(self,
+                 cl,
+                 Re=0,
+                 M=0,
+                 n_crit=9,
+                 xtr_bot=1,
+                 xtr_top=1,
+                 reset_bls=False,
+                 repanel=False,
+                 max_iter=100,
+                 ):
+        """
+        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+        Point analysis at a given lift coefficient.
+        :param cl: Lift coefficient
+        :param Re: Reynolds number
+        :param M: Mach number
+        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+        :param xtr_bot: Bottom trip location [x/c]
+        :param xtr_top: Top trip location [x/c]
+        :param reset_bls: Reset boundary layer parameters upon initialization?
+        :param repanel: Repanel airfoil within XFoil?
+        :param max_iter: Maximum number of global Newton iterations
+        :return: A tuple of (alpha, cl, cd, cm, cp)
+        """
+        xf = XFoil()
+        xf.airfoil = xfoil_model.Airfoil(
+            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
+            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+        )
+        xf.Re = Re
+        xf.M = M
+        xf.n_crit = n_crit
+        xf.xtr = (xtr_top, xtr_bot)
+        if reset_bls:
+            xf.reset_bls()
+        if repanel:
+            xf.repanel()
+        xf.max_iter = max_iter
+
+        a, cd, cm, cp = xf.cl(cl)
+        cl = cl
+
+        return a, cl, cd, cm, cp
+
+    def xfoil_aseq(self,
+                   a_start,
+                   a_end,
+                   a_step,
+                   Re=0,
+                   M=0,
+                   n_crit=9,
+                   xtr_bot=1,
+                   xtr_top=1,
+                   reset_bls=False,
+                   repanel=False,
+                   max_iter=100,
+                   ):
+        """
+        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+        Alpha sweep analysis.
+        :param a_start: First angle of attack [deg]
+        :param a_end: Last angle of attack [deg]
+        :param a_step: Amount to increment angle of attack by [deg]
+        :param Re: Reynolds number
+        :param M: Mach number
+        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+        :param xtr_bot: Bottom trip location [x/c]
+        :param xtr_top: Top trip location [x/c]
+        :param reset_bls: Reset boundary layer parameters upon initialization?
+        :param repanel: Repanel airfoil within XFoil?
+        :param max_iter: Maximum number of global Newton iterations
+        :return: A tuple of (alphas, cls, cds, cms, cps)
+        """
+        xf = XFoil()
+        xf.airfoil = xfoil_model.Airfoil(
+            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
+            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+        )
+        xf.Re = Re
+        xf.M = M
+        xf.n_crit = n_crit
+        xf.xtr = (xtr_top, xtr_bot)
+        if reset_bls:
+            xf.reset_bls()
+        if repanel:
+            xf.repanel()
+        xf.max_iter = max_iter
+
+        a, cl, cd, cm, cp = xf.aseq(a_start, a_end, a_step)
+
+        return a, cl, cd, cm, cp
+
+    def xfoil_cseq(self,
+                   cl_start,
+                   cl_end,
+                   cl_step,
+                   Re=0,
+                   M=0,
+                   n_crit=9,
+                   xtr_bot=1,
+                   xtr_top=1,
+                   reset_bls=False,
+                   repanel=False,
+                   max_iter=100,
+                   ):
+        """
+        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+        Lift coefficient sweep analysis.
+        :param cl_start: First lift coefficient [unitless]
+        :param cl_end: Last lift coefficient [unitless]
+        :param cl_step: Amount to increment lift coefficient by [unitless]
+        :param Re: Reynolds number
+        :param M: Mach number
+        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+        :param xtr_bot: Bottom trip location [x/c]
+        :param xtr_top: Top trip location [x/c]
+        :param reset_bls: Reset boundary layer parameters upon initialization?
+        :param repanel: Repanel airfoil within XFoil?
+        :param max_iter: Maximum number of global Newton iterations
+        :return: A tuple of (alphas, cls, cds, cms, cps)
+        """
+        xf = XFoil()
+        xf.airfoil = xfoil_model.Airfoil(
+            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
+            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+        )
+        xf.Re = Re
+        xf.M = M
+        xf.n_crit = n_crit
+        xf.xtr = (xtr_top, xtr_bot)
+        if reset_bls:
+            xf.reset_bls()
+        if repanel:
+            xf.repanel()
+        xf.max_iter = max_iter
+
+        a, cl, cd, cm, cp = xf.cseq(cl_start, cl_end, cl_step)
+
+        return a, cl, cd, cm, cp
 
 
 class Fuselage:
