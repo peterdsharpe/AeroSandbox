@@ -1,7 +1,7 @@
 theme: jekyll-theme-cayman
 
 title: <img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="600px">
-description: Aircraft design optimization, fully-coupled viscous/inviscid 3D aerodynamics, and reverse-mode automatic differentiation for efficiently computing gradients of design variables. Written in Python, work in progress.
+description: Aircraft design optimization made fast thanks to reverse-mode automatic differentiation. Written in Python, work in progress.
 google_analytics: 
 show_downloads: true
 
