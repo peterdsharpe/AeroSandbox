@@ -171,7 +171,7 @@ def Cl_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil, 2D XFoil data
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9892
 
-    print("Warning: Cl_e216() recommended over Cl_2412(); those are MUCH more accurate fits.")
+    # print("Warning: Cl_e216() recommended over Cl_2412(); those are MUCH more accurate fits.")
 
     return 0.2568 + 0.1206 * alpha - 0.002018 * alpha ** 2
 
@@ -180,7 +180,7 @@ def Cd_profile_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil in incompressible flow.
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9713
 
-    print("Warning: Cd_profile_e216() recommended over Cd_profile_2412(); those are MUCH more accurate fits.")
+    # print("Warning: Cd_profile_e216() recommended over Cd_profile_2412(); those are MUCH more accurate fits.")
 
     Re_c = cas.fmax(Re_c, 1)
     log_Re = cas.log(Re_c)

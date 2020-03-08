@@ -745,13 +745,13 @@ class Airfoil:
                  repanel=True,  # Should we repanel the airfoil upon initialization?
                  find_mcl=True, # Should we attempt to find the mean camber line upon initialization?
                  n_points_per_side=400,  # Number of points to use when repaneling the airfoil (if repanel is True)
-                 CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function
+                 CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
                          (alpha * np.pi / 180) * (2 * np.pi)
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 CDp_function=lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function
+                 CDp_function=lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
                          (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function (about quarter-chord)
+                 Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function (about quarter-chord) (alpha in deg)
                          0
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
                  ):

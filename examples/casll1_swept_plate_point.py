@@ -82,7 +82,7 @@ airplane = Airplane(
                     spanwise_spacing='cosine',
                 ),
                 WingXSec(  # Mid
-                    x_le=2,
+                    x_le=0,
                     y_le=2,
                     z_le=0,
                     chord=0.5,
@@ -137,7 +137,9 @@ ap_sol.substitute_solution(sol)
 
 # Postprocess
 
-ap_sol.draw()
+# ap_sol.draw()
+print(ap_sol.CL)
+print(ap_sol.CDi)
 
 # Answer you should get: (XFLR5)
 # CL = 0.404

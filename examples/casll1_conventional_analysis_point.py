@@ -1,39 +1,9 @@
 import copy
 
 from aerosandbox import *
+from aerosandbox.library.airfoils import generic_airfoil, generic_cambered_airfoil
 
 opti = cas.Opti()  # Initialize an analysis/optimization environment
-
-
-# Here's how you can make design variables:
-def variable(init_val, lb=None, ub=None):
-    """
-    Initialize a scalar design variable.
-    :param init_val: Initial guess
-    :param lb: Optional lower bound
-    :param ub: Optional upper bound
-    :return: The variable.
-    """
-    var = opti.variable()
-    opti.set_initial(var, init_val)
-    if lb is not None:
-        opti.subject_to(var >= lb)
-    if ub is not None:
-        opti.subject_to(var <= ub)
-    return var
-
-
-def quasi_variable(val):
-    """
-    Initialize a scalar variable that is fixed at the value you specify. Useful, as the optimization environment will start
-    creating a computational graph for all downstream quantities of this, so you can later take gradients w.r.t. this.
-    :param val: Value to set.
-    :return: The quasi-variable.
-    """
-    var = opti.variable()
-    opti.set_initial(var, val)
-    opti.subject_to(var == val)
-    return var
 
 # Define the 3D geometry you want to analyze/optimize.
 # Here, all distances are in meters and all angles are in degrees.
@@ -148,7 +118,7 @@ ap = Casll1(  # Set up the AeroProblem
         alpha=5,  # In degrees
         beta=0,  # In degrees
         p=0,  # About the body x-axis, in rad/sec
-        q=0,  # About the body y-axis, in rad/sec
+        q=5,  # About the body y-axis, in rad/sec
         r=0,  # About the body z-axis, in rad/sec
     ),
     opti=opti  # Pass it an optimization environment to work in
@@ -159,7 +129,7 @@ ap = Casll1(  # Set up the AeroProblem
 # Solver options
 p_opts = {}
 s_opts = {}
-s_opts["mu_strategy"] = "adaptive"
+# s_opts["mu_strategy"] = "adaptive"
 opti.solver('ipopt', p_opts, s_opts)
 
 # Solve
@@ -167,6 +137,7 @@ try:
     sol = opti.solve()
 except RuntimeError:
     sol = opti.debug
+    raise Exception("An error occurred!")
 
 # Postprocess
 
@@ -174,7 +145,7 @@ except RuntimeError:
 ap_sol = copy.deepcopy(ap)
 ap_sol.substitute_solution(sol)
 
-ap_sol.draw(show=True) # Generates a pretty picture!
+ap_sol.draw(show=True, draw_streamlines=False)  # Generates a pretty picture!
 
 print("CL:", ap_sol.CL)
 print("CD:", ap_sol.CD)
@@ -182,6 +153,8 @@ print("CY:", ap_sol.CY)
 print("Cl:", ap_sol.Cl)
 print("Cm:", ap_sol.Cm)
 print("Cn:", ap_sol.Cn)
+
+
 
 # Answer you should get: (XFLR5)
 # CL = 0.797

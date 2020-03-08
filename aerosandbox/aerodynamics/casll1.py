@@ -436,16 +436,16 @@ class Casll1(AeroProblem):
     def calculate_forces(self):
 
         if self.verbose: print("Calculating induced forces...")
-        forces_inviscid_geometry = self.op_point.density * self.Vi_cross_li * self.vortex_strengths
+        self.forces_inviscid_geometry = self.op_point.density * self.Vi_cross_li * self.vortex_strengths
         force_total_inviscid_geometry = cas.vertcat(
-            cas.sum1(forces_inviscid_geometry[:, 0]),
-            cas.sum1(forces_inviscid_geometry[:, 1]),
-            cas.sum1(forces_inviscid_geometry[:, 2]),
+            cas.sum1(self.forces_inviscid_geometry[:, 0]),
+            cas.sum1(self.forces_inviscid_geometry[:, 1]),
+            cas.sum1(self.forces_inviscid_geometry[:, 2]),
         )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         if self.symmetric_problem:
             forces_inviscid_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
-                reflect_over_XZ_plane(forces_inviscid_geometry),
+                reflect_over_XZ_plane(self.forces_inviscid_geometry),
                 0
             )
             force_total_inviscid_geometry_from_symmetry = cas.vertcat(
@@ -458,19 +458,19 @@ class Casll1(AeroProblem):
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_total_inviscid_geometry
 
         if self.verbose: print("Calculating induced moments...")
-        moments_inviscid_geometry = cas.cross(
+        self.moments_inviscid_geometry = cas.cross(
             cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
-            forces_inviscid_geometry
+            self.forces_inviscid_geometry
         )
         moment_total_inviscid_geometry = cas.vertcat(
-            cas.sum1(moments_inviscid_geometry[:, 0]),
-            cas.sum1(moments_inviscid_geometry[:, 1]),
-            cas.sum1(moments_inviscid_geometry[:, 2]),
+            cas.sum1(self.moments_inviscid_geometry[:, 0]),
+            cas.sum1(self.moments_inviscid_geometry[:, 1]),
+            cas.sum1(self.moments_inviscid_geometry[:, 2]),
         )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         if self.symmetric_problem:
             moments_inviscid_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
-                -reflect_over_XZ_plane(moments_inviscid_geometry),
+                -reflect_over_XZ_plane(self.moments_inviscid_geometry),
                 0
             )
             moment_total_inviscid_geometry_from_symmetry = cas.vertcat(
@@ -483,19 +483,19 @@ class Casll1(AeroProblem):
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_total_inviscid_geometry
 
         if self.verbose: print("Calculating profile forces...")
-        forces_profile_geometry = (
+        self.forces_profile_geometry = (
                 (0.5 * self.op_point.density * self.velocity_magnitudes * self.velocities)
                 * self.CDp_locals * self.areas
         )
         force_total_profile_geometry = cas.vertcat(
-            cas.sum1(forces_profile_geometry[:, 0]),
-            cas.sum1(forces_profile_geometry[:, 1]),
-            cas.sum1(forces_profile_geometry[:, 2]),
+            cas.sum1(self.forces_profile_geometry[:, 0]),
+            cas.sum1(self.forces_profile_geometry[:, 1]),
+            cas.sum1(self.forces_profile_geometry[:, 2]),
         )
         if self.symmetric_problem:
             forces_profile_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
-                reflect_over_XZ_plane(forces_profile_geometry),
+                reflect_over_XZ_plane(self.forces_profile_geometry),
                 0
             )
             force_total_profile_geometry_from_symmetry = cas.vertcat(
@@ -508,19 +508,19 @@ class Casll1(AeroProblem):
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_total_profile_geometry
 
         if self.verbose: print("Calculating profile moments...")
-        moments_profile_geometry = cas.cross(
+        self.moments_profile_geometry = cas.cross(
             cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
-            forces_profile_geometry
+            self.forces_profile_geometry
         )
         moment_total_profile_geometry = cas.vertcat(
-            cas.sum1(moments_profile_geometry[:, 0]),
-            cas.sum1(moments_profile_geometry[:, 1]),
-            cas.sum1(moments_profile_geometry[:, 2]),
+            cas.sum1(self.moments_profile_geometry[:, 0]),
+            cas.sum1(self.moments_profile_geometry[:, 1]),
+            cas.sum1(self.moments_profile_geometry[:, 2]),
         )
         if self.symmetric_problem:
             moments_profile_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
-                -reflect_over_XZ_plane(moments_profile_geometry),
+                -reflect_over_XZ_plane(self.moments_profile_geometry),
                 0
             )
             moment_total_profile_geometry_from_symmetry = cas.vertcat(
@@ -535,19 +535,19 @@ class Casll1(AeroProblem):
         if self.verbose: print("Calculating pitching moments...")
         bound_leg_YZ = self.vortex_bound_leg
         bound_leg_YZ[:, 0] = 0
-        moments_pitching_geometry = (
+        self.moments_pitching_geometry = (
                 (0.5 * self.op_point.density * self.velocity_magnitudes ** 2) *
                 self.Cm_locals * self.chords ** 2 * bound_leg_YZ
         )
         moment_total_pitching_geometry = cas.vertcat(
-            cas.sum1(moments_pitching_geometry[:, 0]),
-            cas.sum1(moments_pitching_geometry[:, 1]),
-            cas.sum1(moments_pitching_geometry[:, 2]),
+            cas.sum1(self.moments_pitching_geometry[:, 0]),
+            cas.sum1(self.moments_pitching_geometry[:, 1]),
+            cas.sum1(self.moments_pitching_geometry[:, 2]),
         )
         if self.symmetric_problem:
             moments_pitching_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
-                -reflect_over_XZ_plane(moments_pitching_geometry),
+                -reflect_over_XZ_plane(self.moments_pitching_geometry),
                 0
             )
             moment_total_pitching_geometry_from_symmetry = cas.vertcat(
