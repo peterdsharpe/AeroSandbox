@@ -21,7 +21,7 @@ import casadi as cas
 opti = cas.Opti()
 
 L = 34.1376 / 2
-n = 200
+n = 150
 x = cas.linspace(0, L, n)
 dx = cas.diff(x)
 E = 228e9  # Pa, modulus of CF
@@ -33,13 +33,19 @@ log_nominal_diameter = opti.variable(n)
 opti.set_initial(log_nominal_diameter, cas.log(200e-3))
 nominal_diameter = cas.exp(log_nominal_diameter)
 
-thickness = 0.14e-3 * 12
+thickness = 0.14e-3 * 5
 opti.subject_to([
     nominal_diameter > thickness,
 ])
 I = cas.pi / 64 * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
 EI = E * I
-q = 9.81 * 103.873 / 2 * cas.GenDM_ones(n) / L
+total_lift_force = 9.81 * 103.873 / 2
+lift_distribution = "elliptical"
+if lift_distribution == "rectangular":
+    q = total_lift_force * cas.GenDM_ones(n) / L
+elif lift_distribution == "elliptical":
+    q = total_lift_force * cas.sqrt(1-(x/L)**2) * (4 / cas.pi) / L
+
 
 u = 1 * opti.variable(n)
 du = 0.1 * opti.variable(n)
@@ -87,13 +93,14 @@ opti.subject_to([
 volume = cas.sum1(
     cas.pi / 4 * trapz((nominal_diameter + thickness) ** 2 - (nominal_diameter - thickness) ** 2) * dx
 )
-mass = volume * 1000
+mass = volume * 1600
 opti.minimize(mass)
 
 # Tip deflection constraint
-# opti.subject_to([
-#     u[-1] == 2 # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-# ])
+opti.subject_to([
+    u[-1] < 2 # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+    # u[-1]/x[-1] < 0.2
+])
 
 p_opts = {}
 s_opts = {}
@@ -118,6 +125,8 @@ sns.set(font_scale=1)
 
 fig, ax = plt.subplots(2, 3, figsize=(10, 6), dpi=200)
 
+plt.suptitle("Beam Bending Characteristics")
+
 plt.subplot(231)
 plt.plot(sol.value(x), sol.value(u), '.-')
 plt.xlabel("x [m]")
@@ -127,16 +136,16 @@ plt.axis("equal")
 
 
 plt.subplot(232)
-plt.plot(sol.value(x), sol.value(du), '.-')
+plt.plot(sol.value(x), np.arctan(sol.value(du))*180/np.pi, '.-')
 plt.xlabel("x [m]")
-plt.ylabel(r"$du/dx$ [rad]")
+plt.ylabel(r"Local Slope [deg]")
 plt.title("Slope")
 
 plt.subplot(233)
-plt.plot(sol.value(x), sol.value(ddu), '.-')
+plt.plot(sol.value(x), sol.value(q), '.-')
 plt.xlabel("x [m]")
-plt.ylabel(r"$d^2u/dx^2$")
-plt.title("Curvature (nondim. bending moment)")
+plt.ylabel(r"$F$ [N/m]")
+plt.title("Local Load per Unit Span")
 
 plt.subplot(234)
 plt.plot(sol.value(x), sol.value(stress / 1e6), '.-')
@@ -157,6 +166,7 @@ plt.ylabel("t [m]")
 plt.title("Optimal Spar Diameter")
 
 plt.tight_layout()
+# plt.subplots_adjust(top=0.85)
 # plt.legend()
 plt.show()
 

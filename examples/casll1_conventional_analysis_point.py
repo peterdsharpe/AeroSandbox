@@ -118,7 +118,7 @@ ap = Casll1(  # Set up the AeroProblem
         alpha=5,  # In degrees
         beta=0,  # In degrees
         p=0,  # About the body x-axis, in rad/sec
-        q=5,  # About the body y-axis, in rad/sec
+        q=0,  # About the body y-axis, in rad/sec
         r=0,  # About the body z-axis, in rad/sec
     ),
     opti=opti  # Pass it an optimization environment to work in
@@ -145,7 +145,7 @@ except RuntimeError:
 ap_sol = copy.deepcopy(ap)
 ap_sol.substitute_solution(sol)
 
-ap_sol.draw(show=True, draw_streamlines=False)  # Generates a pretty picture!
+# ap_sol.draw(show=True)  # Generates a pretty picture!
 
 print("CL:", ap_sol.CL)
 print("CD:", ap_sol.CD)

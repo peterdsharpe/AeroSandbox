@@ -84,7 +84,7 @@ opti.subject_to([
 volume = cas.sum1(
     cas.pi / 4 * trapz((nominal_diameter + thickness) ** 2 - (nominal_diameter - thickness) ** 2) * dx
 )
-mass = volume * 1000
+mass = volume * 1600
 opti.minimize(mass)
 
 
