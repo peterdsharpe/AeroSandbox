@@ -7,6 +7,7 @@ def mass_hpa_wing(
         ultimate_load_factor=1.75,  # default taken from Daedalus design
         type="cantilevered",  # "cantilevered", "one-wire", "multi-wire"
         t_over_c=0.128,  # default from DAE11
+        include_spar=True, # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
 ):
     """
     Finds the mass of the wing structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
@@ -19,29 +20,34 @@ def mass_hpa_wing(
     :param ultimate_load_factor: ultimate load factor [unitless]
     :param type: Type of bracing: "cantilevered", "one-wire", "multi-wire"
     :param t_over_c: wing airfoil thickness-to-chord ratio
+    :param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
     :return: Wing structure mass [kg]
     """
     ### Primary structure
-    if type == "cantilevered":
-        mass_primary_spar = (
-                (span * 1.17e-1 + span ** 2 * 1.10e-2) *
-                (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
-        )
-    elif type == "one-wire":
-        mass_primary_spar = (
-                (span * 3.10e-2 + span ** 2 * 7.56e-3) *
-                (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
-        )
-    elif type == "multi-wire":
-        mass_primary_spar = (
-                (span * 1.35e-1 + span ** 2 * 1.68e-3) *
-                (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
-        )
-    else:
-        raise ValueError("Bad input for 'type'!")
+    if include_spar:
+        if type == "cantilevered":
+            mass_primary_spar = (
+                    (span * 1.17e-1 + span ** 2 * 1.10e-2) *
+                    (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+            )
+        elif type == "one-wire":
+            mass_primary_spar = (
+                    (span * 3.10e-2 + span ** 2 * 7.56e-3) *
+                    (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+            )
+        elif type == "multi-wire":
+            mass_primary_spar = (
+                    (span * 1.35e-1 + span ** 2 * 1.68e-3) *
+                    (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+            )
+        else:
+            raise ValueError("Bad input for 'type'!")
 
-    mass_primary = mass_primary_spar * (
-            11382.3 / 9222.2)  # accounts for rear spar, struts, fittings, kevlar x-bracing, and wing-fuselage mounts
+        mass_primary = mass_primary_spar * (
+                11382.3 / 9222.2)  # accounts for rear spar, struts, fittings, kevlar x-bracing, and wing-fuselage mounts
+    else:
+        mass_primary = 0
+
 
     ### Secondary structure
     ratio_of_rib_spacing_to_chord = (span / n_ribs) / chord
