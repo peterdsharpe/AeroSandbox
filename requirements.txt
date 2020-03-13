@@ -1,4 +1,3 @@
 numpy >= 1.18
 casadi >= 3.5.1
 plotly >= 4.5.0
-xfoil >= 1.1.1

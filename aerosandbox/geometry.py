@@ -2,8 +2,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
-from xfoil import XFoil
-from xfoil import model as xfoil_model
+try:
+    from xfoil import XFoil
+    from xfoil import model as xfoil_model
+except ModuleNotFoundError:
+    pass
 
 from .casadi_helpers import *
 
@@ -971,10 +974,6 @@ class Airfoil:
         )
         fig.show()
 
-    def calculate_2D_aero_data(self):
-        pass
-        # TODO xfoil?
-
     def LE_index(self):
         # Returns the index of the leading-edge point.
         return np.argmin(self.coordinates[:, 0])  # TODO comment out
@@ -1425,7 +1424,12 @@ class Airfoil:
         :param max_iter: Maximum number of global Newton iterations
         :return: A tuple of (alpha, cl, cd, cm, cp)
         """
-        xf = XFoil()
+        try:
+            xf = XFoil()
+        except NameError:
+            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
@@ -1470,7 +1474,12 @@ class Airfoil:
         :param max_iter: Maximum number of global Newton iterations
         :return: A tuple of (alpha, cl, cd, cm, cp)
         """
-        xf = XFoil()
+        try:
+            xf = XFoil()
+        except NameError:
+            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
@@ -1519,7 +1528,12 @@ class Airfoil:
         :param max_iter: Maximum number of global Newton iterations
         :return: A tuple of (alphas, cls, cds, cms, cps)
         """
-        xf = XFoil()
+        try:
+            xf = XFoil()
+        except NameError:
+            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
@@ -1567,7 +1581,12 @@ class Airfoil:
         :param max_iter: Maximum number of global Newton iterations
         :return: A tuple of (alphas, cls, cds, cms, cps)
         """
-        xf = XFoil()
+        try:
+            xf = XFoil()
+        except NameError:
+            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
