@@ -9,11 +9,9 @@ It baffles me that the original authors took data that's a straight line on a lo
 
 This distinction doesn't particularly matter if you're using the equation within their data range, but if you extrapolate the authors' model even slightly beyond the data range, you start to predict negative gearbox mass.
 
-Our fit:
-![Fit Display](gearboxmassfit.svg)
+Fit comparison:
 
-Authors' original fit:
-![Original Fit](Fig_from_NASA-TM-2009-215680.png)
+![Fit Display](gearboxmassfit.svg)
 
 Data from NASATM—2009-215680.
 
