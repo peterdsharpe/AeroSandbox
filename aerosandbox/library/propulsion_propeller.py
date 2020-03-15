@@ -70,6 +70,8 @@ def mass_gearbox(
     Based on data from NASA/TM-2009-215680, available here:
         https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20090042817.pdf
 
+    R^2 = 0.92 to the data.
+
     To quote this document:
         "The correlation was developed based on actual weight
         data from over fifty rotorcrafts, tiltrotors, and turboprop
