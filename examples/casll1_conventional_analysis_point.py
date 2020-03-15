@@ -3,9 +3,6 @@ import copy
 from aerosandbox import *
 from aerosandbox.library.airfoils import generic_airfoil, generic_cambered_airfoil
 
-generic_airfoil = Airfoil("naca0012")
-generic_cambered_airfoil = Airfoil("naca4412")
-
 opti = cas.Opti()  # Initialize an analysis/optimization environment
 
 # Define the 3D geometry you want to analyze/optimize.
@@ -111,7 +108,7 @@ airplane = Airplane(
     ]
 )
 airplane.set_spanwise_paneling_everywhere(30)  # Set the resolution of your analysis
-ap = Casvlm1(  # Set up the AeroProblem
+ap = Casll1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
         density=1.225,  # kg/m^3
@@ -154,8 +151,6 @@ print("CY:", ap_sol.CY)
 print("Cl:", ap_sol.Cl)
 print("Cm:", ap_sol.Cm)
 print("Cn:", ap_sol.Cn)
-
-
 
 # Answer you should get: (XFLR5)
 # CL = 0.797

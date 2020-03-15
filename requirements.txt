@@ -1,3 +1,4 @@
 numpy >= 1.18
 casadi >= 3.5.1
 plotly >= 4.5.0
+matplotlib >= 3.1.3
