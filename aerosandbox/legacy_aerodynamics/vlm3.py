@@ -1,5 +1,5 @@
 from .aerodynamics import *
-# import numpy as np
+import pyvista as pv
 
 class vlm3(AeroProblem):
     # Vortex-Lattice Method legacy_aerodynamics code written from the ground up with lessons learned from writing VLM1 and VLM2.

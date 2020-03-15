@@ -111,3 +111,9 @@ if __name__ == '__main__':
             include_variable_pitch_mechanism=False
         )
     )  # Should weight ca. 800 grams
+
+    print(mass_gearbox(
+        power=3000,
+        rpm_in=6000,
+        rpm_out=600
+    ))
