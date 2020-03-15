@@ -8,11 +8,8 @@ https://github.com/pypa/sampleproject
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 from os import path
-# io.open is needed for projects that support Python 2.7
-# It ensures open() defaults to text mode with universal newlines,
-# and accepts an argument to specify the text encoding
-# Python 3 only projects can skip this import
-from io import open
+import versioneer
+
 
 here = path.abspath(path.dirname(__file__))
 
@@ -43,7 +40,8 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.1.1',  # Required
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
