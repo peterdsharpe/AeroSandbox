@@ -13,9 +13,13 @@ class Casvlm1(AeroProblem):
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
                  opti,  # type: cas.Opti
+                 run_setup = True,
                  ):
         super().__init__(airplane, op_point)
         self.opti = opti
+
+        if run_setup:
+            self.setup()
 
     def setup(self, verbose=True):
         # Runs attrib_name point analysis at the specified op-point.
@@ -180,7 +184,7 @@ class Casvlm1(AeroProblem):
                     outer_xsec = wing.xsecs[section_num + 1]  # type: WingXSec
 
                     # Define the airfoils at each cross section
-                    if inner_xsec.control_surface_type == "symmetric_problem":
+                    if inner_xsec.control_surface_type == "symmetric":
                         inner_airfoil = inner_xsec.airfoil.get_airfoil_with_control_surface(
                             deflection=inner_xsec.control_surface_deflection,
                             hinge_point=inner_xsec.control_surface_hinge_point
@@ -199,7 +203,7 @@ class Casvlm1(AeroProblem):
                             hinge_point=inner_xsec.control_surface_hinge_point
                         )  # type: Airfoil
                     else:
-                        print("Invalid input for control_surface_type!")
+                        raise ValueError("Invalid input for control_surface_type!")
 
                     # Make the mean camber lines for each.
                     inner_xsec_mcl_nondim = inner_airfoil.get_downsampled_mcl(nondim_chordwise_coordinates)

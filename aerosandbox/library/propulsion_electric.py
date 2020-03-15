@@ -93,7 +93,7 @@ def mass_ESC(
 ):
     """
     Estimates the mass of an ESC.
-    Informal correlation to Hobbyking ESCs in the 8s 100A range
+    Informal correlation I did to Hobbyking ESCs in the 8s 100A range
     :param max_power: maximum power [W]
     :return: estimated ESC mass [kg]
     """
@@ -117,7 +117,7 @@ def mass_battery_pack(
 
 def mass_motor_electric(
         max_power,
-        kv=1000,
+        kv_rpm_volt=1000,  # This is in rpm/volt, not rads/sec/volt!
         voltage=20,
         method="astroflight"
 ):
@@ -126,7 +126,9 @@ def mass_motor_electric(
     Curve fit to scraped Hobbyking BLDC motor data as of 2/24/2020.
     Estimated range of validity: 50 < max_power < 10000
     :param max_power: maximum power [W]
-    :param method: method to use. "burton", "hobbyking", or "astroflight".
+    :param kv: Voltage constant of the motor, measured in rpm/volt, not rads/sec/volt! [rpm/volt]
+    :param voltage: Operating voltage of the motor [V]
+    :param method: method to use. "burton", "hobbyking", or "astroflight" (increasing level of detail).
     Burton source: https://dspace.mit.edu/handle/1721.1/112414
     Hobbyking source: C:\Projects\GitHub\MotorScraper, https://github.com/austinstover/MotorScraper
     Astroflight source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass Optimization for Solar-Regen..."
@@ -140,7 +142,90 @@ def mass_motor_electric(
         return 10 ** (0.8205 * cas.log10(max_power) - 3.155)  # More sophisticated model
     elif method == "astroflight":
         max_current = max_power / voltage
-        return 2.464 * max_current / kv + 0.368
+        return 2.464 * max_current / kv_rpm_volt + 0.368  # Even more sophisticated model
+
+
+def mass_wires(
+        wire_length,
+        max_current,
+        allowable_voltage_drop,
+        material="aluminum",
+        insulated=True,
+        max_voltage = 600,
+        wire_packing_factor=1,
+        insulator_density = 1700,
+        insulator_dielectric_strength = 12e6
+):
+    """
+    Estimates the mass of wires used for power transmission.
+    Materials data from: https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistivity-density_product
+        All data measured at STP; beware, as this data (especially resistivity) can be a strong function of temperature.
+    :param wire_length: Length of the wire [m]
+    :param max_current: Max current of the wire [Amps]
+    :param allowable_voltage_drop: How much is the voltage allowed to drop along the wire?
+    :param material: Conductive material of the wire ("aluminum")
+    :param insulated: Should we add the mass of the wire's insulator coating? Usually you'll want to leave this True.
+    :param max_voltage: Maximum allowable voltage (used for sizing insulator). 600 is a common off-the-shelf rating.
+    :param wire_packing_factor: What fraction of the enclosed cross section is conductor? This is 1 for a solid-core wire and less than 1 for a stranded wire.
+    :param insulator_density: Density of the wire insulator [kg/m^3]
+    :param insulator_dielectric_strength: Dielectric strength of the wire insulator [V/m]. 12e6 corresponds to rubber.
+    :return: Mass of the wire [kg]
+    """
+    if material == "sodium":  # highly reactive with water & oxygen, low physical strength
+        density = 970  # kg/m^3
+        resistivity = 47.7e-9  # ohm-meters
+    elif material == "lithium":  # highly reactive with water & oxygen, low physical strength
+        density = 530  # kg/m^3
+        resistivity = 92.8e-9  # ohm-meters
+    elif material == "calcium":  # highly reactive with water & oxygen, low physical strength
+        density = 1550  # kg/m^3
+        resistivity = 33.6e-9  # ohm-meters
+    elif material == "potassium":  # highly reactive with water & oxygen, low physical strength
+        density = 890  # kg/m^3
+        resistivity = 72.0e-9  # ohm-meters
+    elif material == "beryllium":  # toxic, brittle
+        density = 1850  # kg/m^3
+        resistivity = 35.6e-9  # ohm-meters
+    elif material == "aluminum":
+        density = 2700  # kg/m^3
+        resistivity = 26.50e-9  # ohm-meters
+    elif material == "magnesium":  # worse specific conductivity than aluminum
+        density = 1740  # kg/m^3
+        resistivity = 43.90e-9  # ohm-meters
+    elif material == "copper":  # worse specific conductivity than aluminum, moderately expensive
+        density = 8960  # kg/m^3
+        resistivity = 16.78e-9  # ohm-meters
+    elif material == "silver":  # worse specific conductivity than aluminum, expensive
+        density = 10490  # kg/m^3
+        resistivity = 15.87e-9  # ohm-meters
+    elif material == "gold":  # worse specific conductivity than aluminum, expensive
+        density = 19300  # kg/m^3
+        resistivity = 22.14e-9  # ohm-meters
+    elif material == "iron":  # worse specific conductivity than aluminum
+        density = 7874  # kg/m^3
+        resistivity = 96.1e-9  # ohm-meters
+    else:
+        raise ValueError("Bad value of 'material'!")
+
+    # Conductor mass
+    resistance = allowable_voltage_drop / max_current
+    area_conductor = resistivity * wire_length / resistance
+    volume_conductor = area_conductor * wire_length
+    mass_conductor = volume_conductor * density
+
+    # Insulator mass
+    if insulated:
+        insulator_thickness = max_voltage/insulator_dielectric_strength
+        radius_conductor = (area_conductor/wire_packing_factor / np.pi) ** 0.5
+        radius_insulator = radius_conductor + insulator_thickness
+        area_insulator = np.pi * radius_insulator ** 2 - area_conductor
+        volume_insulator = area_insulator * wire_length
+        mass_insulator = insulator_density * volume_insulator
+    else:
+        mass_insulator = 0
+
+    # Total them up
+    return mass_conductor + mass_insulator
 
 
 if __name__ == '__main__':
@@ -180,3 +265,10 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.legend()
     plt.show()
+
+    print(mass_wires(
+        wire_length=1,
+        max_current = 100,
+        allowable_voltage_drop=1,
+        material="aluminum"
+    ))

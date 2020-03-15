@@ -3,6 +3,9 @@ import copy
 from aerosandbox import *
 from aerosandbox.library.airfoils import generic_airfoil, generic_cambered_airfoil
 
+generic_airfoil = Airfoil("naca0012")
+generic_cambered_airfoil = Airfoil("naca4412")
+
 opti = cas.Opti()  # Initialize an analysis/optimization environment
 
 # Define the 3D geometry you want to analyze/optimize.
@@ -108,7 +111,7 @@ airplane = Airplane(
     ]
 )
 airplane.set_spanwise_paneling_everywhere(30)  # Set the resolution of your analysis
-ap = Casll1(  # Set up the AeroProblem
+ap = Casvlm1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
         density=1.225,  # kg/m^3
@@ -123,8 +126,6 @@ ap = Casll1(  # Set up the AeroProblem
     ),
     opti=opti  # Pass it an optimization environment to work in
 )
-# Set up the problem
-# ap.setup(run_symmetric_if_possible=True)
 
 # Solver options
 p_opts = {}
