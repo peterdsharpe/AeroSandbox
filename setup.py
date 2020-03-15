@@ -141,7 +141,10 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy', 'casadi', 'plotly', 'xfoil'],
+    install_requires=['numpy >= 1.18', 
+                      'casadi >= 3.5.1', 
+                      'plotly >= 4.5.0', 
+                      'matplotlib>=3.1.3'],
     # Optional
 
     # List additional groups of dependencies here (e.g. development
@@ -152,10 +155,11 @@ setup(
     #
     # Similar to `install_requires` above, these must be valid existing
     # projects.
-    # extras_require={  # Optional
-    #     'dev': ['check-manifest'],
+    extras_require={  # Optional
+         'xfoil': ['xfoil'], # Change the key name to something more descriptive 
+         # w.r.t. to functionality. 
     #     'test': ['coverage'],
-    # },
+    },
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.
