@@ -3,7 +3,7 @@ By Peter Sharpe
 
 ## Overview
 
-A single, universally-applicable curve fit for the drag coefficient of a cylinder in crossflow for a wide range of Reynolds numbers ranging from 1e-1 to 1e7. The fit also extrapolates sensibly beyond this range.
+A single, universally-applicable curve fit for the drag coefficient of a cylinder in crossflow for a wide range of Reynolds numbers ranging from `1e-1` to `1e7`. The fit also extrapolates sensibly beyond this range.
 
 Why doesn't this exist already in the literature?!
 
