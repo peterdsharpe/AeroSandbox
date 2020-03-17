@@ -13,7 +13,7 @@ echo Build complete.
 echo.
 echo Uploading...
 echo.
-python -m twine upload dist/*
+twine upload dist/*
 echo.
 echo If no errors were produced, it has been uploaded.
 echo.

@@ -8,7 +8,6 @@ https://github.com/pypa/sampleproject
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 from os import path
-import versioneer
 
 
 here = path.abspath(path.dirname(__file__))
@@ -40,8 +39,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    version="1.1.4",
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
@@ -113,7 +111,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization',  # Optional
+    keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
