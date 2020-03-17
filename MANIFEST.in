@@ -1,2 +1,0 @@
-include versioneer.py
-include aerosandbox/_version.py
