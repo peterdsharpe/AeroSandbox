@@ -1,4 +1,4 @@
-from aerosandbox import *
+from aerosandbox_legacy_v0 import *
 
 a = Airplane(
         name="Conventional",
