@@ -33,7 +33,8 @@ opti = cas.Opti() # Initialize a SAND environment
 
 # Define Assumptions
 L = 34.1376 / 2
-n = 200
+n = 20
+mass_total = 292
 x = cas.linspace(0, L, n)
 dx = cas.diff(x)
 E = 228e9  # Pa, modulus of CF
@@ -49,11 +50,22 @@ opti.subject_to([
     nominal_diameter > thickness,
 ])
 
-# Bending loads
+def trapz(x):
+    out = (x[:-1] + x[1:]) / 2
+    out[0] += x[0] / 2
+    out[-1] += x[-1] / 2
+    return out
 
+# Mass
+volume = cas.sum1(
+    cas.pi / 4 * trapz((nominal_diameter + thickness) ** 2 - (nominal_diameter - thickness) ** 2) * dx
+)
+mass = volume * 1600
+
+# Bending loads
 I = cas.pi / 64 * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
 EI = E * I
-total_lift_force = 9.81 * 103.873 / 2
+total_lift_force = 9.81 * (mass_total - mass) / 2 #9.81 * 292 / 2
 lift_distribution = "elliptical"
 if lift_distribution == "rectangular":
     force_per_unit_length = total_lift_force * cas.GenDM_ones(n) / L
@@ -89,13 +101,6 @@ ddEIddu = force_per_unit_length
 ddphi = -moment_per_unit_length / (G * J)
 
 # Define derivatives
-def trapz(x):
-    out = (x[:-1] + x[1:]) / 2
-    out[0] += x[0] / 2
-    out[-1] += x[-1] / 2
-    return out
-
-
 opti.subject_to([
     cas.diff(u) == trapz(du) * dx,
     cas.diff(du) == trapz(ddu) * dx,
@@ -126,16 +131,12 @@ opti.subject_to([
     stress / max_allowable_stress < 1
 ])
 
-# Mass
-volume = cas.sum1(
-    cas.pi / 4 * trapz((nominal_diameter + thickness) ** 2 - (nominal_diameter - thickness) ** 2) * dx
-)
-mass = volume * 1600
 opti.minimize(mass)
 
 # Tip deflection constraint
 opti.subject_to([
-    u[-1] < 2 # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+    # u[-1] < 2 # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+    du[-1] * 180 / cas.pi < 10
 ])
 
 # Twist
