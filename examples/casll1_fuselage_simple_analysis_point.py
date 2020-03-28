@@ -152,7 +152,7 @@ airplane = Airplane(
 # airplane.draw()
 
 airplane.set_spanwise_paneling_everywhere(8)  # Set the resolution of your analysis
-ap = Casll1Fuse(  # Set up the AeroProblem
+ap = Casll1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
         density=1.225,  # kg/m^3
@@ -167,8 +167,6 @@ ap = Casll1Fuse(  # Set up the AeroProblem
     ),
     opti=opti  # Pass it an optimization environment to work in
 )
-# Set up the problem
-ap.setup(run_symmetric_if_possible=False)
 
 # Solver options
 p_opts = {}
@@ -196,8 +194,3 @@ print("CY:", ap_sol.CY)
 print("Cl:", ap_sol.Cl)
 print("Cm:", ap_sol.Cm)
 print("Cn:", ap_sol.Cn)
-
-# Answer you should get: (XFLR5)
-# CL = 0.797
-# CDi = 0.017
-# CL/CDi = 47.211
