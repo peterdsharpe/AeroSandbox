@@ -7,11 +7,11 @@ class TubeBeam1():
     def __init__(self,
                  opti,  # type: cas.Opti
                  length,
-                 points_per_point_load=20,
+                 points_per_point_load=100,
                  E=228e9,  # Pa
                  isotropic=True,
                  poisson_ratio=0.5,
-                 diameter_guess=200e-3,
+                 diameter_guess=10, # Make this larger for more computational stability, lower for a bit faster speed
                  thickness=0.14e-3 * 5,
                  max_allowable_stress=570e6 / 1.75,
                  density=1600,
@@ -50,7 +50,7 @@ class TubeBeam1():
         :param E: Elastic modulus [Pa]
         :param isotropic: Is the material isotropic? If so, attempts to find shear modulus from poisson's ratio, or vice versa. [boolean]
         :param poisson_ratio: Poisson's ratio (if isotropic, can't set both poisson_ratio and shear modulus - one must be None)
-        :param diameter_guess: Initial guess for the tube diameter [m]
+        :param diameter_guess: Initial guess for the tube diameter [m]. Make this larger for more computational stability, lower for a bit faster speed.
         :param thickness: Tube wall thickness. This will often be set by shell buckling considerations. [m]
         :param max_allowable_stress: Maximum allowable stress in the material. [Pa]
         :param density: Density of the material [kg/m^3]
@@ -84,44 +84,50 @@ class TubeBeam1():
                     "You can't uniquely specify shear modulus and Poisson's ratio on an isotropic material!")
 
         # Create data structures to track loads
-        self.loads = []
+        self.point_loads = []
+        self.distributed_loads = []
 
     def add_point_load(self,
                        location,
                        force=0,
-                       moment=0
+                       bending_moment=0,
+                       torsional_moment=0,
                        ):
         """
         Adds a point force and/or moment.
         :param location: Location of the point force along the beam [m]
         :param force: Force to add [N]
-        :param moment: Moment to add [N-m]
+        :param bending_moment: Bending moment to add [N-m] # TODO make this work
+        :param torsional_moment: Torsional moment to add [N-m] # TODO make this work
         :return: None (in-place)
         """
-        self.loads.append(
+        self.point_loads.append(
             {
-                "type"    : "point",
-                "location": location,
-                "force"   : force,
-                "moment"  : moment
+                "location"        : location,
+                "force"           : force,
+                "bending_moment"  : bending_moment,
+                "torsional_moment": torsional_moment
             }
         )
 
     def add_uniform_load(self,
                          force=0,
-                         moment=0,
+                         bending_moment=0,
+                         torsional_moment=0,
                          ):
         """
         Adds a uniformly distributed force and/or moment across the entire length of the beam.
         :param force: Total force applied to beam [N]
-        :param moment: Total moment applied to beam [N-m]
+        :param bending_moment: Bending moment to add [N-m] # TODO make this work
+        :param torsional_moment: Torsional moment to add [N-m] # TODO make this work
         :return: None (in-place)
         """
-        self.loads.append(
+        self.distributed_loads.append(
             {
-                "type"    : "uniform",
-                "force"   : force,
-                "moment"  : moment
+                "type"            : "uniform",
+                "force"           : force,
+                "bending_moment"  : bending_moment,
+                "torsional_moment": torsional_moment
             }
         )
 
@@ -132,11 +138,42 @@ class TubeBeam1():
         Sets up the problem. Run this last.
         :return: None (in-place)
         """
+        ### Discretize and assign loads
+
         # Discretize
-        self.x = cas.linspace(0, self.length, self.points_per_point_load)
+        point_load_locations = [load["location"] for load in self.point_loads]
+        point_load_locations.insert(0, 0)
+        point_load_locations.append(self.length)
+        self.x = cas.vertcat(*[
+            cas.linspace(
+                point_load_locations[i],
+                point_load_locations[i + 1],
+                self.points_per_point_load)
+            for i in range(len(point_load_locations) - 1)
+        ])
+
+        # Post-process the discretization
         self.n = self.x.shape[0]
         dx = cas.diff(self.x)
 
+        # Add point forces
+        self.point_forces = cas.GenDM_zeros(self.n-1)
+        for i in range(len(self.point_loads)):
+            load = self.point_loads[i]
+            self.point_forces[self.points_per_point_load * (i + 1)-1] = load["force"]
+
+        # Add distributed loads
+        self.force_per_unit_length = cas.GenDM_zeros(self.n)
+        self.moment_per_unit_length = cas.GenDM_zeros(self.n)
+        for load in self.distributed_loads:
+            if load["type"] == "uniform":
+                self.force_per_unit_length += load["force"] / self.length
+            elif load["type"] == "point":
+                pass
+            else:
+                raise ValueError("Bad value of \"type\" for a load within beam.loads!")
+
+        # Initialize optimization variables
         log_nominal_diameter = self.opti.variable(self.n)
         self.opti.set_initial(log_nominal_diameter, cas.log(self.diameter_guess))
         self.nominal_diameter = cas.exp(log_nominal_diameter)
@@ -145,14 +182,10 @@ class TubeBeam1():
             log_nominal_diameter > cas.log(self.thickness)
         ])
 
-        # Assign loads
-        self.force_per_unit_length = cas.GenDM_zeros(self.n)  # TODO fix
-        self.moment_per_unit_length = cas.GenDM_zeros(self.n)  # TODO fix
-
         def trapz(x):
             out = (x[:-1] + x[1:]) / 2
-            out[0] += x[0] / 2
-            out[-1] += x[-1] / 2
+            # out[0] += x[0] / 2
+            # out[-1] += x[-1] / 2
             return out
 
         # Mass
@@ -163,6 +196,14 @@ class TubeBeam1():
             ) * dx
         )
         self.mass = self.volume * self.density
+
+        # Mass proxy
+        self.volume_proxy = cas.sum1(
+            cas.pi * trapz(
+                self.nominal_diameter
+            ) * dx * self.thickness
+        )
+        self.mass_proxy = self.volume_proxy * self.density
 
         if self.bending:
             # Find moments of inertia
@@ -175,17 +216,18 @@ class TubeBeam1():
             self.u = 1 * self.opti.variable(self.n)
             self.du = 0.1 * self.opti.variable(self.n)
             self.ddu = 0.01 * self.opti.variable(self.n)
-            self.dEIddu = 100 * self.opti.variable(self.n)
-
-            # Add forcing term
-            ddEIddu = self.force_per_unit_length
+            self.dEIddu = 1 * self.opti.variable(self.n)
+            opti.set_initial(self.u, 0)
+            opti.set_initial(self.du, 0)
+            opti.set_initial(self.ddu, 0)
+            opti.set_initial(self.dEIddu, 0)
 
             # Define derivatives
             self.opti.subject_to([
                 cas.diff(self.u) == trapz(self.du) * dx,
                 cas.diff(self.du) == trapz(self.ddu) * dx,
                 cas.diff(self.E * I * self.ddu) == trapz(self.dEIddu) * dx,
-                cas.diff(self.dEIddu) == trapz(ddEIddu) * dx,
+                cas.diff(self.dEIddu) == trapz(self.force_per_unit_length) * dx + self.point_forces,
             ])
 
             # Add BCs
@@ -218,7 +260,8 @@ class TubeBeam1():
 
         self.stress = self.stress_axial
         self.opti.subject_to([
-            self.stress / self.max_allowable_stress < 1
+            self.stress / self.max_allowable_stress < 1,
+            self.stress / self.max_allowable_stress > -1,
         ])
 
     def substitute_solution(self, sol):
@@ -302,18 +345,52 @@ if __name__ == '__main__':
     opti = cas.Opti()
     beam = TubeBeam1(
         opti=opti,
-        length=34 / 2,
+        length=60 / 2,
+        points_per_point_load=100,
+        diameter_guess=100,
         bending=True,
         torsion=False
     )
+    lift_force = 9.81 * 103.873 / 2
+    beam.add_point_load(15, 1)
+    beam.add_uniform_load(force=10)
     beam.setup()
 
+    # Tip deflection constraint
+    opti.subject_to([
+        beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        # beam.du * 180 / cas.pi < 10,
+        # beam.du * 180 / cas.pi > -10
+    ])
+    opti.subject_to([
+        cas.diff(cas.diff(beam.nominal_diameter)) == 0
+    ])
+
+
+    # opti.minimize(cas.sqrt(beam.mass))
     opti.minimize(beam.mass)
+    # opti.minimize(beam.mass ** 2)
+    # opti.minimize(beam.mass_proxy)
 
     p_opts = {}
     s_opts = {}
-    s_opts["max_iter"] = 500  # If you need to interrupt, just use ctrl+c
+    s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
+    # s_opts["bound_frac"] = 0.5
+    # s_opts["bound_push"] = 0.5
+    # s_opts["slack_bound_frac"] = 0.5
+    # s_opts["slack_bound_push"] = 0.5
     # s_opts["mu_strategy"] = "adaptive"
+    # s_opts["mu_oracle"] = "quality-function"
+    # s_opts["quality_function_max_section_steps"] = 20
+    # s_opts["fixed_mu_oracle"] = "quality-function"
+    # s_opts["alpha_for_y"] = "min"
+    # s_opts["alpha_for_y"] = "primal-and-full"
+    # s_opts["watchdog_shortened_iter_trigger"] = 1
+    # s_opts["expect_infeasible_problem"]="yes"
+    # s_opts["start_with_resto"] = "yes"
+    # s_opts["required_infeasibility_reduction"] = 0.001
+    # s_opts["evaluate_orig_obj_at_resto_trial"] = "yes"
     opti.solver('ipopt', p_opts, s_opts)
 
     try:
@@ -322,5 +399,10 @@ if __name__ == '__main__':
         print("Failed!")
         sol = opti.debug
 
-    print("Beam mass: %f kg" % beam.substitute_solution(sol).mass)
-    beam.substitute_solution(sol).draw_bending()
+    import copy
+    beam_sol = copy.deepcopy(beam).substitute_solution(sol)
+
+    print("Beam mass: %f kg" % beam_sol.mass)
+    beam_sol.draw_bending()
+
+    bs = beam_sol
