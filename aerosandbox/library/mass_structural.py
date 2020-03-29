@@ -83,9 +83,10 @@ def mass_wing_spar(
     """
     Finds the mass of the spar for a wing on a single- or multi-boom lightweight aircraft. Model originally designed for solar aircraft.
     Data was fit to the range 30 < wing_span < 90 [m] and 50 < supported_mass < 800 [kg], but validity should extend somewhat beyond that.
+    Extremely accurate fits within this range; R^2 > 0.99 for all fits.
     Source: AeroSandbox\studies\MultiBoomSparMass
     Assumptions:
-        * Rectangular lift distribution
+        * Rectangular lift distribution (close enough, slightly conservative w.r.t. elliptical)
         * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere.
         * If multi-boom, assumes aerostructurally-optimal placement of the outer booms.
     :param span: Wing span [m]
