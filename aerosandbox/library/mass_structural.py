@@ -7,7 +7,8 @@ def mass_hpa_wing(
         ultimate_load_factor=1.75,  # default taken from Daedalus design
         type="cantilevered",  # "cantilevered", "one-wire", "multi-wire"
         t_over_c=0.128,  # default from DAE11
-        include_spar=True, # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
+        include_spar=True,
+        # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
 ):
     """
     Finds the mass of the wing structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
@@ -48,7 +49,6 @@ def mass_hpa_wing(
     else:
         mass_primary = 0
 
-
     ### Secondary structure
     ratio_of_rib_spacing_to_chord = (span / n_ribs) / chord
     n_end_ribs = 2 * n_wing_sections - 2
@@ -72,6 +72,44 @@ def mass_hpa_wing(
     mass_secondary = W_wr + W_wer + W_wLE + W_wTE + W_wc
 
     return mass_primary + mass_secondary
+
+
+def mass_wing_spar(
+        span,
+        mass_supported,
+        ultimate_load_factor=1.75,  # default taken from Daedalus design
+        n_booms=1,
+):
+    """
+    Finds the mass of the spar for a wing on a single- or multi-boom lightweight aircraft. Model originally designed for solar aircraft.
+    Data was fit to the range 30 < wing_span < 90 [m] and 50 < supported_mass < 800 [kg], but validity should extend somewhat beyond that.
+    Source: AeroSandbox\studies\MultiBoomSparMass
+    Assumptions:
+        * Rectangular lift distribution
+        * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere.
+        * If multi-boom, assumes aerostructurally-optimal placement of the outer booms.
+    :param span: Wing span [m]
+    :param mass_supported: Total mass of all fuselages + tails
+    :param ultimate_load_factor: Design load factor. Default taken from Daedalus design.
+    :param n_booms: Number of booms on the design. Can be 1, 2, or 3. Assumes optimal placement of the outer booms.
+    :return:
+    """
+    if n_booms == 1:
+        c = 0.0082116578817492
+        m = 0.3380385531034899
+        n = 1.6500210118367851
+    elif n_booms == 2:
+        c = 0.0038966832809997
+        m = 0.3472862388655697
+        n = 1.6222231509034950
+    elif n_booms == 3:
+        c = 0.0059175282654185
+        m = 0.3807869156408368
+        n = 1.3862788430962647
+    else:
+        raise ValueError("Bad value of n_booms!")
+
+    return c * (mass_supported * ultimate_load_factor) ** m * span ** n
 
 
 def mass_hpa_stabilizer(
@@ -181,7 +219,7 @@ def mass_surface_balsa_monokote_cf(
 def mass_surface_solid(
         chord,
         span,
-        density = 2700, # kg/m^3, defaults to that of aluminum
+        density=2700,  # kg/m^3, defaults to that of aluminum
         mean_t_over_c=0.08
 ):
     """

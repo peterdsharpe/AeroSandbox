@@ -11,7 +11,7 @@ class TubeBeam1():
                  E=228e9,  # Pa
                  isotropic=True,
                  poisson_ratio=0.5,
-                 diameter_guess=10, # Make this larger for more computational stability, lower for a bit faster speed
+                 diameter_guess=10,  # Make this larger for more computational stability, lower for a bit faster speed
                  thickness=0.14e-3 * 5,
                  max_allowable_stress=570e6 / 1.75,
                  density=1600,
@@ -157,14 +157,14 @@ class TubeBeam1():
         dx = cas.diff(self.x)
 
         # Add point forces
-        self.point_forces = cas.GenDM_zeros(self.n-1)
+        self.point_forces = cas.GenMX_zeros(self.n - 1)
         for i in range(len(self.point_loads)):
             load = self.point_loads[i]
-            self.point_forces[self.points_per_point_load * (i + 1)-1] = load["force"]
+            self.point_forces[self.points_per_point_load * (i + 1) - 1] = load["force"]
 
         # Add distributed loads
-        self.force_per_unit_length = cas.GenDM_zeros(self.n)
-        self.moment_per_unit_length = cas.GenDM_zeros(self.n)
+        self.force_per_unit_length = cas.GenMX_zeros(self.n)
+        self.moment_per_unit_length = cas.GenMX_zeros(self.n)
         for load in self.distributed_loads:
             if load["type"] == "uniform":
                 self.force_per_unit_length += load["force"] / self.length
@@ -217,10 +217,10 @@ class TubeBeam1():
             self.du = 0.1 * self.opti.variable(self.n)
             self.ddu = 0.01 * self.opti.variable(self.n)
             self.dEIddu = 1 * self.opti.variable(self.n)
-            opti.set_initial(self.u, 0)
-            opti.set_initial(self.du, 0)
-            opti.set_initial(self.ddu, 0)
-            opti.set_initial(self.dEIddu, 0)
+            self.opti.set_initial(self.u, 0)
+            self.opti.set_initial(self.du, 0)
+            self.opti.set_initial(self.ddu, 0)
+            self.opti.set_initial(self.dEIddu, 0)
 
             # Define derivatives
             self.opti.subject_to([
@@ -301,38 +301,38 @@ class TubeBeam1():
         fig, ax = plt.subplots(2, 3, figsize=(10, 6), dpi=200)
 
         plt.subplot(231)
-        plt.plot(sol.value(self.x), sol.value(self.u), '.-')
+        plt.plot(self.x, self.u, '.-')
         plt.xlabel("x [m]")
         plt.ylabel("u [m]")
         plt.title("Displacement (Bending)")
         plt.axis("equal")
 
         plt.subplot(232)
-        plt.plot(sol.value(self.x), np.arctan(sol.value(self.du)) * 180 / np.pi, '.-')
+        plt.plot(self.x, np.arctan(self.du) * 180 / np.pi, '.-')
         plt.xlabel("x [m]")
         plt.ylabel(r"Local Slope [deg]")
         plt.title("Slope")
 
         plt.subplot(233)
-        plt.plot(sol.value(self.x), sol.value(self.force_per_unit_length), '.-')
+        plt.plot(self.x, self.force_per_unit_length, '.-')
         plt.xlabel("x [m]")
         plt.ylabel(r"$F$ [N/m]")
         plt.title("Local Load per Unit Span")
 
         plt.subplot(234)
-        plt.plot(sol.value(self.x), sol.value(self.stress_axial / 1e6), '.-')
+        plt.plot(self.x, self.stress_axial / 1e6, '.-')
         plt.xlabel("x [m]")
         plt.ylabel("Axial Stress [MPa]")
         plt.title("Axial Stress")
 
         plt.subplot(235)
-        plt.plot(sol.value(self.x), sol.value(self.dEIddu), '.-')
+        plt.plot(self.x, self.dEIddu, '.-')
         plt.xlabel("x [m]")
         plt.ylabel("F [N]")
         plt.title("Shear Force")
 
         plt.subplot(236)
-        plt.plot(sol.value(self.x), sol.value(self.nominal_diameter), '.-')
+        plt.plot(self.x, self.nominal_diameter, '.-')
         plt.xlabel("x [m]")
         plt.ylabel("t [m]")
         plt.title("Optimal Spar Diameter")
@@ -346,27 +346,34 @@ if __name__ == '__main__':
     beam = TubeBeam1(
         opti=opti,
         length=60 / 2,
-        points_per_point_load=100,
+        points_per_point_load=50,
         diameter_guess=100,
         bending=True,
         torsion=False
     )
-    lift_force = 9.81 * 103.873 / 2
-    beam.add_point_load(15, 1)
-    beam.add_uniform_load(force=10)
+    lift_force = 9.81 * 103.873
+    load_location = opti.variable()
+    opti.set_initial(load_location, 15)
+    opti.subject_to([
+        load_location > 2,
+        load_location < 60 / 2 - 2,
+        load_location == 18,
+    ])
+    beam.add_point_load(load_location, -lift_force / 3)
+    beam.add_uniform_load(force=lift_force / 2)
     beam.setup()
 
     # Tip deflection constraint
     opti.subject_to([
-        beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        # beam.du * 180 / cas.pi < 10,
-        # beam.du * 180 / cas.pi > -10
+        # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        beam.du * 180 / cas.pi < 10,
+        beam.du * 180 / cas.pi > -10
     ])
     opti.subject_to([
-        cas.diff(cas.diff(beam.nominal_diameter)) == 0
+        cas.diff(cas.diff(beam.nominal_diameter)) < 0.001,
+        cas.diff(cas.diff(beam.nominal_diameter)) > -0.001,
     ])
-
 
     # opti.minimize(cas.sqrt(beam.mass))
     opti.minimize(beam.mass)
@@ -400,6 +407,7 @@ if __name__ == '__main__':
         sol = opti.debug
 
     import copy
+
     beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
     print("Beam mass: %f kg" % beam_sol.mass)
