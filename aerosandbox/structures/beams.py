@@ -290,10 +290,12 @@ class TubeBeam1():
 
     def draw_bending(self,
                      show=True,
+                     for_print=False,
                      ):
         """
         Draws a figure that illustrates some bending properties. Must be called on a solved object (i.e. using the substitute_sol method).
         :param show: Whether or not to show the figure [boolean]
+        :param for_print: Whether or not the figure should be shaped for printing in a paper [boolean]
         :return:
         """
         import matplotlib.pyplot as plt
@@ -301,43 +303,51 @@ class TubeBeam1():
         import seaborn as sns
         sns.set(font_scale=1)
 
-        fig, ax = plt.subplots(2, 3, figsize=(10, 6), dpi=200)
+        fig, ax = plt.subplots(
+            2 if not for_print else 3,
+            3 if not for_print else 2,
+            figsize=(
+                10 if not for_print else 6,
+                6 if not for_print else 6
+            ),
+            dpi=200
+        )
 
-        plt.subplot(231)
+        plt.subplot(231) if not for_print else plt.subplot(321)
         plt.plot(self.x, self.u, '.-')
-        plt.xlabel("x [m]")
-        plt.ylabel("u [m]")
+        plt.xlabel(r"$x$ [m]")
+        plt.ylabel(r"$u$ [m]")
         plt.title("Displacement (Bending)")
         plt.axis("equal")
 
-        plt.subplot(232)
+        plt.subplot(232) if not for_print else plt.subplot(322)
         plt.plot(self.x, np.arctan(self.du) * 180 / np.pi, '.-')
-        plt.xlabel("x [m]")
+        plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"Local Slope [deg]")
         plt.title("Slope")
 
-        plt.subplot(233)
+        plt.subplot(233) if not for_print else plt.subplot(323)
         plt.plot(self.x, self.force_per_unit_length, '.-')
-        plt.xlabel("x [m]")
+        plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"$F$ [N/m]")
         plt.title("Local Load per Unit Span")
 
-        plt.subplot(234)
+        plt.subplot(234) if not for_print else plt.subplot(324)
         plt.plot(self.x, self.stress_axial / 1e6, '.-')
-        plt.xlabel("x [m]")
+        plt.xlabel(r"$x$ [m]")
         plt.ylabel("Axial Stress [MPa]")
         plt.title("Axial Stress")
 
-        plt.subplot(235)
+        plt.subplot(235) if not for_print else plt.subplot(325)
         plt.plot(self.x, self.dEIddu, '.-')
-        plt.xlabel("x [m]")
-        plt.ylabel("F [N]")
+        plt.xlabel(r"$x$ [m]")
+        plt.ylabel(r"$F$ [N]")
         plt.title("Shear Force")
 
-        plt.subplot(236)
+        plt.subplot(236) if not for_print else plt.subplot(326)
         plt.plot(self.x, self.nominal_diameter, '.-')
-        plt.xlabel("x [m]")
-        plt.ylabel("t [m]")
+        plt.xlabel(r"$x$ [m]")
+        plt.ylabel("Diameter [m]")
         plt.title("Optimal Spar Diameter")
         plt.tight_layout()
 

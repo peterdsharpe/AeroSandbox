@@ -45,8 +45,9 @@ import copy
 beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
 print("Beam mass: %f kg" % beam_sol.mass)
-beam_sol.draw_bending(show=False)
+beam_sol.draw_bending(show=False, for_print=True)
 
-plt.savefig("validation_daedalus_plot.png")
+plt.savefig("validation_daedalus_plot.pgf")
+plt.savefig("validation_daedalus_plot.pdf")
 plt.show()
 
