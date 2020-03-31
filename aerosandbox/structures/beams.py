@@ -11,7 +11,7 @@ class TubeBeam1():
                  E=228e9,  # Pa
                  isotropic=True,
                  poisson_ratio=0.5,
-                 diameter_guess=10,  # Make this larger for more computational stability, lower for a bit faster speed
+                 diameter_guess=100,  # Make this larger for more computational stability, lower for a bit faster speed
                  thickness=0.14e-3 * 5,
                  max_allowable_stress=570e6 / 1.75,
                  density=1600,
@@ -288,9 +288,12 @@ class TubeBeam1():
                     pass
         return self
 
-    def draw_bending(self):
+    def draw_bending(self,
+                     show=True,
+                     ):
         """
-
+        Draws a figure that illustrates some bending properties. Must be called on a solved object (i.e. using the substitute_sol method).
+        :param show: Whether or not to show the figure [boolean]
         :return:
         """
         import matplotlib.pyplot as plt
@@ -336,9 +339,9 @@ class TubeBeam1():
         plt.xlabel("x [m]")
         plt.ylabel("t [m]")
         plt.title("Optimal Spar Diameter")
+        plt.tight_layout()
 
-        # plt.savefig("C:/Users/User/Downloads/beam.svg")
-        plt.show()
+        plt.show() if show else None
 
 
 if __name__ == '__main__':
