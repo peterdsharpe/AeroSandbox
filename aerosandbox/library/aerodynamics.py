@@ -14,6 +14,20 @@ def firefly_CLA_and_CDA_fuse_hybrid(
         rho,
         mu,
 ):
+    """
+    Estimated equiv. lift area and equiv. drag area of the Firefly fuselage, component buildup.
+    :param fuse_fineness_ratio: Fineness ratio of the fuselage nose (length / diameter)
+    :param fuse_boattail_angle: Boattail half-angle [deg]
+    :param fuse_TE_diameter: Diameter of the fuselage's base at the "trailing edge" [m]
+    :param fuse_length: Length of the fuselage [m]
+    :param fuse_diameter: Diameter of the fuselage [m]
+    :param alpha: Angle of attack [deg]
+    :param V: Airspeed [m/s]
+    :param mach: Mach number [unitless]
+    :param rho: Air density [kg/m^3]
+    :param mu: Dynamic viscosity of air [Pa*s]
+    :return: A tuple of (CLA, CDA) [m^2]
+    """
     alpha_rad = alpha * np.pi / 180
     sin_alpha = cas.sin(alpha_rad)
     cos_alpha = cas.cos(alpha_rad)
@@ -86,9 +100,12 @@ def firefly_CLA_and_CDA_fuse_hybrid(
 
 def firefly_CLA_and_CDA_nominal_fuse_CFD(alpha):
     """
+    Estimated equiv. lift area and equiv. drag area of the Firefly fuselage, fit to CFD data.
     Calculated for fuse_fineness_ratio = 1.5, fuse_boattail_angle = 12, and fuse_TE_diameter = 20 mm.
     Lift: R^2 = 0.9961
     Drag: R^2 = 0.9876
+    :param alpha: angle of attack [deg]
+    :return: A tuple of (CLA, CDA) [m^2]
     """
     CLA = (0.4605 * alpha) / 1e4
     CDA = (3.201 + 0.009754 * alpha ** 2) / 1e4
@@ -134,6 +151,11 @@ def Cd_cylinder(
 
 
 def Cf_flat_plate(Re_L):
+    """
+    Returns the mean skin friction coefficient over a flat plate. Don't forget to double it (two sides) if you want a drag coefficient.
+    :param Re_L: Reynolds number, normalized to the length of the flat plate.
+    :return: Mean skin friction coefficient over a flat plate.
+    """
     Re_L = cas.fabs(Re_L)
     # return 0.074 / Re_L ** 0.2  # Turbulent flat plate
     # return 0.02666 * Re_L ** -0.139  # Schlichting's model, roughly accounts for laminar part ("Boundary Layer Theory" 7th Ed., pg. 644)
@@ -142,6 +164,12 @@ def Cf_flat_plate(Re_L):
 
 
 def Cl_flat_plate(alpha, Re_c):
+    """
+    Returns the approximate lift coefficient of a flat plate, following thin airfoil theory.
+    :param alpha: Angle of attack [deg]
+    :param Re_c: Reynolds number, normalized to the length of the flat plate.
+    :return: Approximate lift coefficient.
+    """
     Re_c = cas.fabs(Re_c)
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
@@ -150,9 +178,9 @@ def Cl_flat_plate(alpha, Re_c):
 def CL_over_Cl(AR, mach=0, sweep=0):
     """
     Returns the ratio of 3D lift_force coefficient (with compressibility) to 2D lift_force (incompressible) coefficient.
-    :param AR:
-    :param mach:
-    :param sweep:
+    :param AR: Aspect ratio
+    :param mach: Mach number
+    :param sweep: Sweep angle [deg]
     :return:
     """
     beta = cas.sqrt(1 - mach ** 2)
@@ -171,16 +199,12 @@ def Cl_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil, 2D XFoil data
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9892
 
-    # print("Warning: Cl_e216() recommended over Cl_2412(); those are MUCH more accurate fits.")
-
     return 0.2568 + 0.1206 * alpha - 0.002018 * alpha ** 2
 
 
 def Cd_profile_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil in incompressible flow.
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9713
-
-    # print("Warning: Cd_profile_e216() recommended over Cd_profile_2412(); those are MUCH more accurate fits.")
 
     Re_c = cas.fmax(Re_c, 1)
     log_Re = cas.log(Re_c)

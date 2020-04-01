@@ -21,7 +21,7 @@ def mass_hpa_wing(
     :param ultimate_load_factor: ultimate load factor [unitless]
     :param type: Type of bracing: "cantilevered", "one-wire", "multi-wire"
     :param t_over_c: wing airfoil thickness-to-chord ratio
-    :param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
+    :param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations. [boolean]
     :return: Wing structure mass [kg]
     """
     ### Primary structure
@@ -119,6 +119,8 @@ def mass_hpa_stabilizer(
         dynamic_pressure_at_manuever_speed,
         n_ribs,  # You should optimize on this, there's a trade between rib weight and LE sheeting weight!
         t_over_c=0.128,  # default from DAE11
+        include_spar=True,
+        # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
 ):
     """
     Finds the mass of a stabilizer structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
@@ -129,17 +131,21 @@ def mass_hpa_stabilizer(
     :param dynamic_pressure_at_manuever_speed: dynamic pressure at maneuvering speed [Pa]
     :param n_ribs: number of ribs in the wing
     :param t_over_c: wing airfoil thickness-to-chord ratio
+    :param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations. [boolean]
     :return: Stabilizer structure mass [kg]
     """
     ### Primary structure
     area = span * chord
     q = dynamic_pressure_at_manuever_speed
-    W_tss = (
-            (span * 4.15e-2 + span ** 2 * 3.91e-3) *
-            (1 + ((q * area) / 78.5 - 1) / 2)
-    )
+    if include_spar:
+        W_tss = (
+                (span * 4.15e-2 + span ** 2 * 3.91e-3) *
+                (1 + ((q * area) / 78.5 - 1) / 2)
+        )
 
-    mass_primary = W_tss
+        mass_primary = W_tss
+    else:
+        mass_primary = 0
 
     ### Secondary structure
     ratio_of_rib_spacing_to_chord = (span / n_ribs) / chord
