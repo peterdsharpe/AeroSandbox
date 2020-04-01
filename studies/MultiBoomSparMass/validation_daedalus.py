@@ -2,12 +2,14 @@ from aerosandbox.structures.beams import *
 import matplotlib.pyplot as plt
 import matplotlib.style as style
 import seaborn as sns
+
 sns.set(font_scale=1)
 
 opti = cas.Opti()
 beam = TubeBeam1(
     opti=opti,
     length=34 / 2,
+    max_allowable_stress=570e6 / 1.75,
     bending=True,
     torsion=False
 )
@@ -24,7 +26,7 @@ opti.subject_to([
 objective = beam.mass / 5
 
 penalty = (
-    cas.sum1((cas.diff(cas.diff(beam.nominal_diameter))/0.01)**2)/beam.n # soft stabilizer
+        cas.sum1((cas.diff(cas.diff(beam.nominal_diameter)) / 0.01) ** 2) / beam.n  # soft stabilizer
 )
 
 opti.minimize(objective + penalty)
@@ -42,12 +44,13 @@ except:
     sol = opti.debug
 
 import copy
+
 beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
 print("Beam mass: %f kg" % beam_sol.mass)
+print("Wing spar mass: %f kg (Wing spar consists of two of these beams)" % (2 * beam_sol.mass))
 beam_sol.draw_bending(show=False, for_print=True)
 
 plt.savefig("validation_daedalus_plot.pgf")
 plt.savefig("validation_daedalus_plot.pdf")
 plt.show()
-

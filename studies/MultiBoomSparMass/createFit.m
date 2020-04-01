@@ -28,13 +28,15 @@ opts.StartPoint = [0.275758914920589 0.750141068562642 0.959492426392903];
 [fitresult, gof] = fit( [xData, yData], zData, ft, opts );
 
 % Plot fit with data.
-% figure( 'Name', 'Spar Mass Fit' );
-% h = plot( fitresult, [xData, yData], zData );
-% legend( h, 'Spar Mass Fit', 'Spar_Masses vs. Masses, Spans', 'Location', 'NorthEast', 'Interpreter', 'none' );
-% % Label axes
-% xlabel( 'Masses', 'Interpreter', 'none' );
-% ylabel( 'Spans', 'Interpreter', 'none' );
-% zlabel( 'Spar_Masses', 'Interpreter', 'none' );
-% grid on
+figure();
+plot(fitresult);
+hold on
+scatter3(xData, yData, zData, '.k')
+% legend('Model', 'Data' );
+% Label axes
+xlabel( 'Supported Mass [kg]', 'Interpreter', 'none' );
+ylabel( 'Wingspan [m]', 'Interpreter', 'none' );
+zlabel( 'Spar Mass [kg]', 'Interpreter', 'none' );
+grid on
 
 

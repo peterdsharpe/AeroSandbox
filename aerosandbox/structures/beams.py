@@ -329,7 +329,7 @@ class TubeBeam1():
         plt.subplot(233) if not for_print else plt.subplot(323)
         plt.plot(self.x, self.force_per_unit_length, '.-')
         plt.xlabel(r"$x$ [m]")
-        plt.ylabel(r"$F$ [N/m]")
+        plt.ylabel(r"$q$ [N/m]")
         plt.title("Local Load per Unit Span")
 
         plt.subplot(234) if not for_print else plt.subplot(324)
