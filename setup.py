@@ -140,7 +140,9 @@ setup(
     install_requires=['numpy >= 1.18', 
                       'casadi >= 3.5.1', 
                       'plotly >= 4.5.0', 
-                      'matplotlib>=3.1.3'],
+                      'matplotlib>=3.1.3',
+                      'tqdm>=4.41.1',
+                      ],
     # Optional
 
     # List additional groups of dependencies here (e.g. development
