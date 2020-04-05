@@ -447,45 +447,45 @@ if __name__ == "__main__":
 
 
     # # E216 checks
-    # alpha_inputs = np.linspace(-6, 12, 200)
-    # Re_inputs = np.logspace(4, 6, 200)
-    # alphas = []
-    # Res = []
-    # CLs = []
-    # CDs = []
-    # for alpha in alpha_inputs:
-    #     for Re in Re_inputs:
-    #         alphas.append(alpha)
-    #         Res.append(Re)
-    #         CLs.append(Cl_e216(alpha, Re))
-    #         CDs.append(Cd_profile_e216(alpha, Re))
-    # px.scatter_3d(
-    #     x=alphas,
-    #     y=Res,
-    #     z=CLs,
-    #     size=np.ones_like(alphas),
-    #     color=CLs,
-    #     log_y=True,
-    #     labels={"x": "alphas", "y": "Re", "z": "CL"}
-    # ).show()
-    # px.scatter_3d(
-    #     x=alphas,
-    #     y=Res,
-    #     z=CDs,
-    #     size=np.ones_like(alphas),
-    #     color=CDs,
-    #     log_y=True,
-    #     labels={"x": "alphas", "y": "Re", "z": "CD"}
-    # ).show()
-    # px.scatter_3d(
-    #     x=alphas,
-    #     y=Res,
-    #     z=np.array(CLs) / np.array(CDs),
-    #     size=np.ones_like(alphas),
-    #     color=np.array(CLs) / np.array(CDs),
-    #     log_y=True,
-    #     labels={"x": "alphas", "y": "Re", "z": "CL/CD"}
-    # ).show()
+    alpha_inputs = np.linspace(-6, 12, 200)
+    Re_inputs = np.logspace(4, 6, 200)
+    alphas = []
+    Res = []
+    CLs = []
+    CDs = []
+    for alpha in alpha_inputs:
+        for Re in Re_inputs:
+            alphas.append(alpha)
+            Res.append(Re)
+            CLs.append(Cl_e216(alpha, Re))
+            CDs.append(Cd_profile_e216(alpha, Re))
+    px.scatter_3d(
+        x=alphas,
+        y=Res,
+        z=CLs,
+        size=np.ones_like(alphas),
+        color=CLs,
+        log_y=True,
+        labels={"x": "alphas", "y": "Re", "z": "CL"}
+    ).show()
+    px.scatter_3d(
+        x=alphas,
+        y=Res,
+        z=CDs,
+        size=np.ones_like(alphas),
+        color=CDs,
+        log_y=True,
+        labels={"x": "alphas", "y": "Re", "z": "CD"}
+    ).show()
+    px.scatter_3d(
+        x=alphas,
+        y=Res,
+        z=np.array(CLs) / np.array(CDs),
+        size=np.ones_like(alphas),
+        color=np.array(CLs) / np.array(CDs),
+        log_y=True,
+        labels={"x": "alphas", "y": "Re", "z": "CL/CD"}
+    ).show()
     #
     # # # rae2822 checks
     # alpha_inputs = np.linspace(-6, 12)

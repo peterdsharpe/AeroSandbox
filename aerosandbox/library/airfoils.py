@@ -10,7 +10,7 @@ generic_cambered_airfoil = Airfoil(
             (1 + (alpha / 5) ** 2) * 2 * Cf_flat_plate(Re_L=Re)
     ),
     Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function about quarter-chord
-        0
+        -0.1
     )
 )
 generic_airfoil = Airfoil(
@@ -35,7 +35,7 @@ e216 = Airfoil(
         Cd_wave_e216(Cl=Cl_e216(alpha=alpha, Re_c=Re), mach=mach)
     ),
     Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function about quarter-chord
-        0
+        -0.15 # TODO
     ) # TODO make this an actual curve!
 )
 rae2822 = Airfoil(
@@ -47,7 +47,7 @@ rae2822 = Airfoil(
         Cd_wave_rae2822(Cl=Cl_rae2822(alpha=alpha, Re_c=Re), mach=mach)
     ),
     Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function about quarter-chord
-        0
+        -0.05
     ) # TODO make this an actual curve!
 )
 

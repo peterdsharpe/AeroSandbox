@@ -88,7 +88,7 @@ def mass_wing_spar(
     Assumptions:
         * Rectangular lift distribution (close enough, slightly conservative w.r.t. elliptical)
         * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere.
-        * If multi-boom, assumes aerostructurally-optimal placement of the outer booms.
+        * If multi-boom, assumes static-aerostructurally-optimal placement of the outer booms.
     :param span: Wing span [m]
     :param mass_supported: Total mass of all fuselages + tails
     :param ultimate_load_factor: Design load factor. Default taken from Daedalus design.
