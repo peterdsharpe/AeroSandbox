@@ -1,8 +1,8 @@
 import casadi as cas
 import numpy as np
+from ..geometry import *
 
-
-class TubeBeam1():
+class TubeBeam1(AeroSandboxObject):
 
     def __init__(self,
                  opti,  # type: cas.Opti
@@ -263,30 +263,6 @@ class TubeBeam1():
             self.stress / self.max_allowable_stress < 1,
             self.stress / self.max_allowable_stress > -1,
         ])
-
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for attrib_name in dir(self):
-            attrib_orig = getattr(self, attrib_name)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, attrib_name, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, attrib_name, new_attrib_orig)
-                except:
-                    pass
-        return self
 
     def draw_bending(self,
                      show=True,

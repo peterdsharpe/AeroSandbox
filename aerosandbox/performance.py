@@ -1,7 +1,7 @@
 import casadi as cas
+from .geometry import *
 
-
-class OperatingPoint:
+class OperatingPoint(AeroSandboxObject):
     def __init__(self,
                  density=1.225, # kg/m^3
                  viscosity=1.81e-5, # kg/m-s
@@ -22,28 +22,6 @@ class OperatingPoint:
         self.p = p
         self.q = q
         self.r = r
-
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for attrib_name in dir(self):
-            attrib_orig = getattr(self, attrib_name)
-            try:
-                setattr(self, attrib_name, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, attrib_name, new_attrib_orig)
-                except:
-                    pass
-        return self
 
     def dynamic_pressure(self):
         """ Dynamic pressure of the working fluid

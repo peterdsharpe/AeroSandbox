@@ -12,8 +12,36 @@ from .casadi_helpers import *
 
 pio.renderers.default = "browser"
 
+class AeroSandboxObject:
+    def substitute_solution(self, sol):
+        """
+        Substitutes a solution from CasADi's solver.
+        :param sol:
+        :return:
+        """
+        for attrib_name in dir(self):
+            attrib_orig = getattr(self, attrib_name)
+            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
+                continue
+            try:
+                setattr(self, attrib_name, sol.value(attrib_orig))
+            except NotImplementedError:
+                pass
+            if isinstance(attrib_orig, list):
+                try:
+                    new_attrib_orig = []
+                    for item in attrib_orig:
+                        new_attrib_orig.append(item.substitute_solution(sol))
+                    setattr(self, attrib_name, new_attrib_orig)
+                except:
+                    pass
+            try:
+                setattr(self, attrib_name, attrib_orig.substitute_solution(sol))
+            except:
+                pass
+        return self
 
-class Airplane:
+class Airplane(AeroSandboxObject):
     """
     Definition for an airplane (or other vehicle/item to analyze).
     """
@@ -54,30 +82,6 @@ class Airplane:
         assert self.s_ref is not None
         assert self.c_ref is not None
         assert self.b_ref is not None
-
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for a in dir(self):
-            attrib_orig = getattr(self, a)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, a, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, a, new_attrib_orig)
-                except:
-                    pass
-        return self
 
     def set_ref_dims_from_wing(self,
                                main_wing_index=0
@@ -396,7 +400,7 @@ class Airplane:
         return True
 
 
-class Wing:
+class Wing(AeroSandboxObject):
     """
     Definition for a wing.
     If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the constructor.
@@ -419,30 +423,6 @@ class Wing:
         self.symmetric = symmetric
         self.chordwise_panels = chordwise_panels
         self.chordwise_spacing = chordwise_spacing
-
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for a in dir(self):
-            attrib_orig = getattr(self, a)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, a, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, a, new_attrib_orig)
-                except:
-                    pass
-        return self
 
     def area(self,
              type="wetted"
@@ -663,7 +643,7 @@ class Wing:
         return approximate_cop
 
 
-class WingXSec:
+class WingXSec(AeroSandboxObject):
     """
     Definition for a wing cross section ("X-section").
     """
@@ -700,30 +680,6 @@ class WingXSec:
         self.spanwise_spacing = spanwise_spacing
 
         self.xyz_le = cas.vertcat(x_le, y_le, z_le)
-
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for attrib_name in dir(self):
-            attrib_orig = getattr(self, attrib_name)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, attrib_name, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, attrib_name, new_attrib_orig)
-                except:
-                    pass
-        return self
 
     def xyz_te(self):
         rot = angle_axis_rotation_matrix(self.twist * cas.pi / 180, self.twist_axis)
@@ -1606,7 +1562,7 @@ class Airfoil:
         return a, cl, cd, cm, cp
 
 
-class Fuselage:
+class Fuselage(AeroSandboxObject):
     """
     Definition for a fuselage or other slender body (pod, etc.).
     For now, all fuselages are assumed to be fairly closely aligned with the body x axis. (<10 deg or so) # TODO update if this changes
@@ -1628,30 +1584,6 @@ class Fuselage:
         self.symmetric = symmetric
         assert circumferential_panels % 2 == 0
         self.circumferential_panels = circumferential_panels
-
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for a in dir(self):
-            attrib_orig = getattr(self, a)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, a, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, a, new_attrib_orig)
-                except:
-                    pass
-        return self
 
     def area_wetted(self):
         """
@@ -1700,7 +1632,7 @@ class Fuselage:
         return cas.fabs(self.xsecs[-1].x_c - self.xsecs[0].x_c)
 
 
-class FuselageXSec:
+class FuselageXSec(AeroSandboxObject):
     """
     Definition for a fuselage cross section ("X-section").
     """
@@ -1718,30 +1650,6 @@ class FuselageXSec:
         self.radius = radius
 
         self.xyz_c = cas.vertcat(x_c, y_c, z_c)
-
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for a in dir(self):
-            attrib_orig = getattr(self, a)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, a, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, a, new_attrib_orig)
-                except:
-                    pass
-        return self
 
     def xsec_area(self):
         """
