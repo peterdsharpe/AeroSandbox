@@ -80,32 +80,35 @@ def scattering_factor(elevation_angle):
     :param elevation_angle: Angle between the horizon and the sun [degrees]
     :return: Fraction of the light that is not lost to scattering.
     """
+    elevation_angle = cas.fmin(cas.fmax(elevation_angle, 0), 90)
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
     theta_rad = theta * cas.pi / 180
-    # Model 1
+
+    # # Model 1
+    # c = (
+    #     0.27891510500505767300438719757949,
+    #     -0.015994330894744987481281839336589,
+    #     -19.707332432605799255043166340329,
+    #     -0.66260979582573353852126274432521
+    # )
+    # scattering_factor = c[0] + c[3] * theta_rad + cas.exp(
+    #     c[1] * (
+    #             cas.tan(theta_rad) + c[2] * theta_rad
+    #     )
+    # )
+
+    # Model 2
     c = (
-        0.27891510500505767300438719757949,
-        -0.015994330894744987481281839336589,
-        -19.707332432605799255043166340329,
-        -0.66260979582573353852126274432521
+        -0.04636,
+        -0.3171
     )
-    scattering_factor = c[0] + c[3] * theta_rad + cas.exp(
-        c[1] * (
-                cas.tan(theta_rad - 1e-8) + c[2] * theta_rad
+    scattering_factor = cas.exp(
+        c[0] * (
+            cas.tan(theta_rad*0.999) + c[1] * theta_rad
         )
     )
 
-    # Model 2
-    # c = (
-    #     -0.04636,
-    #     -0.3171
-    # )
-    # scattering_factor = cas.exp(
-    #     c[0] * (
-    #         cas.tan(theta_rad-1e-8) + c[1] * theta_rad
-    #     )
-    # )
-    # Model 3
+    # # Model 3
     # p1 = -21.74
     # p2 = 282.6
     # p3 = -1538
@@ -116,8 +119,8 @@ def scattering_factor(elevation_angle):
     # scattering_factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
     #            (x**2 + q1*x + q2))
 
+    # Keep this:
     # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
-
     return scattering_factor
 
 def solar_flux_on_horizontal(latitude, day_of_year, time, scattering=False):
@@ -192,30 +195,47 @@ if __name__ == "__main__":
     # )
     # fig.show()
 
-    import matplotlib.pyplot as plt
-    import matplotlib.style as style
-    style.use("fivethirtyeight")
-    # style.use("seaborn")
-    # style.use("ggplot")
-
-    plt.figure()
-    lats_to_plot = [26, 49]
-    lats_to_plot = np.linspace(0, 90, 7)
-    colors = plt.cm.rainbow(np.linspace(0,1,len(lats_to_plot)))[::-1]
-    [
-        plt.plot(
-            times/3600,
-            solar_flux_on_horizontal(lats_to_plot[i], 244, times),
-            label="%iN Latitude" % lats_to_plot[i],
-            color=colors[i]
-        ) for i in range(len(lats_to_plot))
-    ]
-    plt.grid(True)
-    plt.legend()
-    plt.title("Solar Flux on a Horizontal Surface (Aug. 31)")
-    plt.xlabel("Time after Solar Noon [hours]")
-    plt.ylabel(r"Solar Flux [W/m$^2$]")
-    plt.tight_layout()
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # import matplotlib.style as style
+    # style.use("fivethirtyeight")
+    # # style.use("seaborn")
+    # # style.use("ggplot")
+    #
+    # plt.figure()
+    # lats_to_plot = [26, 49]
+    # lats_to_plot = np.linspace(0, 90, 7)
+    # colors = plt.cm.rainbow(np.linspace(0,1,len(lats_to_plot)))[::-1]
+    # [
+    #     plt.plot(
+    #         times/3600,
+    #         solar_flux_on_horizontal(lats_to_plot[i], 244, times),
+    #         label="%iN Latitude" % lats_to_plot[i],
+    #         color=colors[i]
+    #     ) for i in range(len(lats_to_plot))
+    # ]
+    # plt.grid(True)
+    # plt.legend()
+    # plt.title("Solar Flux on a Horizontal Surface (Aug. 31)")
+    # plt.xlabel("Time after Solar Noon [hours]")
+    # plt.ylabel(r"Solar Flux [W/m$^2$]")
+    # plt.tight_layout()
+    # plt.show()
 
     # Check scattering factor
+    elevations = np.linspace(-10,90,800)
+    scatter_factors = scattering_factor(elevations)
+
+    import matplotlib.pyplot as plt
+    import matplotlib.style as style
+    import seaborn as sns
+    sns.set(font_scale=1)
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    plt.plot(elevations, scatter_factors,'.-')
+    plt.xlabel(r"Elevation Angle [deg]")
+    plt.ylabel(r"Scattering Factor")
+    plt.title(r"Scattering Factor")
+    plt.tight_layout()
+    # plt.legend()
+    # plt.savefig("C:/Users/User/Downloads/temp.svg")
+    plt.show()
+
