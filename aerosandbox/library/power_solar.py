@@ -1,6 +1,7 @@
 import casadi as cas
 from aerosandbox.casadi_helpers import sind, cosd
 
+
 def solar_flux_outside_atmosphere_normal(day_of_year):
     """
     Normal solar flux at the top of the atmosphere (variation due to orbital eccentricity)
@@ -62,52 +63,62 @@ def incidence_angle_function(latitude, day_of_year, time, scattering=False):
     # Sharma: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611928/
 
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
-
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
+
     cosine_factor = cosd(theta)
 
     if not scattering:
         return cosine_factor
     else:
-        # Calculate scattering knockdown (See C:\Users\User\Google Drive\School\Grad School\2020 Spring\16-885\Solar Panel Scattering Rough Fit)
-        theta_rad = theta * cas.pi / 180
-        # Model 1
-        c = (
-            0.27891510500505767300438719757949,
-            -0.015994330894744987481281839336589,
-            -19.707332432605799255043166340329,
-            -0.66260979582573353852126274432521
+        return cosine_factor * scattering_factor(elevation_angle)
+
+
+def scattering_factor(elevation_angle):
+    """
+    Calculates a scattering factor (a factor that gives losses due to atmospheric scattering at low elevation angles).
+    Source: AeroSandbox/studies/SolarPanelScattering
+    :param elevation_angle: Angle between the horizon and the sun [degrees]
+    :return: Fraction of the light that is not lost to scattering.
+    """
+    theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
+    theta_rad = theta * cas.pi / 180
+    # Model 1
+    c = (
+        0.27891510500505767300438719757949,
+        -0.015994330894744987481281839336589,
+        -19.707332432605799255043166340329,
+        -0.66260979582573353852126274432521
+    )
+    scattering_factor = c[0] + c[3] * theta_rad + cas.exp(
+        c[1] * (
+                cas.tan(theta_rad - 1e-8) + c[2] * theta_rad
         )
-        scattering_factor = c[0] + c[3] * theta_rad + cas.exp(
-            c[1] * (
-                    cas.tan(theta_rad - 1e-8) + c[2] * theta_rad
-            )
-        )
-        # Model 2
-        # c = (
-        #     -0.04636,
-        #     -0.3171
-        # )
-        # scattering_factor = cas.exp(
-        #     c[0] * (
-        #         cas.tan(theta_rad-1e-8) + c[1] * theta_rad
-        #     )
-        # )
-        # Model 3
-        # p1 = -21.74
-        # p2 = 282.6
-        # p3 = -1538
-        # p4 = 1786
-        # q1 = -923.2
-        # q2 = 1456
-        # x = theta_rad
-        # scattering_factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
-        #            (x**2 + q1*x + q2))
+    )
 
-        # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
+    # Model 2
+    # c = (
+    #     -0.04636,
+    #     -0.3171
+    # )
+    # scattering_factor = cas.exp(
+    #     c[0] * (
+    #         cas.tan(theta_rad-1e-8) + c[1] * theta_rad
+    #     )
+    # )
+    # Model 3
+    # p1 = -21.74
+    # p2 = 282.6
+    # p3 = -1538
+    # p4 = 1786
+    # q1 = -923.2
+    # q2 = 1456
+    # x = theta_rad
+    # scattering_factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
+    #            (x**2 + q1*x + q2))
 
-        return cosine_factor * scattering_factor
+    # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
 
+    return scattering_factor
 
 def solar_flux_on_horizontal(latitude, day_of_year, time, scattering=False):
     """
@@ -132,7 +143,6 @@ if __name__ == "__main__":
     latitudes = np.linspace(26, 49, 200)
     day_of_years = np.arange(0, 365) + 1
     times = np.linspace(0, 86400, 400)
-
 
     # Times, Latitudes = np.meshgrid(times, latitudes, indexing="ij")
     # fluxes = np.array(solar_flux_on_horizontal(Latitudes, 244, Times))
@@ -207,3 +217,5 @@ if __name__ == "__main__":
     plt.ylabel(r"Solar Flux [W/m$^2$]")
     plt.tight_layout()
     plt.show()
+
+    # Check scattering factor
