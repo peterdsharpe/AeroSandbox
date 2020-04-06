@@ -102,6 +102,13 @@ class OperatingPoint(AeroSandboxObject):
 
         return rotation_velocity_geometry_axes
 
+    def compute_reynolds(self, reference_length):
+        """
+        Computes a reynolds number with respect to a given reference length.
+        :param reference_length: A reference length you choose [m]
+        :return: Reynolds number [unitless]
+        """
+        return self.density * self.velocity * reference_length / self.viscosity
 
 class AeroData:
     # A class where aerodynamic data is stored.
