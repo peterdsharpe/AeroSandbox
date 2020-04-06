@@ -11,8 +11,24 @@ class Buildup(AeroProblem):
                  ):
         super().__init__(airplane, op_point)
 
+        self.check()
+
         if run_setup:
             self.setup()
+
+    def check(self):
+        """
+        Checks to see if this is a case where the assumptions are valid.
+        :return: Throws an exception if this is the case.
+        """
+        assumptions = np.array([
+            self.op_point.beta == 0,
+            self.op_point.p == 0,
+            self.op_point.q == 0,
+            self.op_point.r == 0,
+        ])
+        if np.logical_not(assumptions).any():
+            raise ValueError("The assumptions to use an aero buildup method are not met!")
 
     def setup(self,
               verbose=True,  # Choose whether or not you want verbose output
