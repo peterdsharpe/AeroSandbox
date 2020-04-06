@@ -1,5 +1,5 @@
 import casadi as cas
-from ..casadi_helpers import sind, cosd
+from aerosandbox.casadi_helpers import sind, cosd
 
 def solar_flux_outside_atmosphere_normal(day_of_year):
     """
