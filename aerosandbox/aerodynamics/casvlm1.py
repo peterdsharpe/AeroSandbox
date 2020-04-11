@@ -4,10 +4,10 @@ from ..geometry import *
 
 class Casvlm1(AeroProblem):
     # Usage:
-    #   # Set up attrib_name problem using the syntax in the AeroProblem constructor (e.g. "Casvlm1(airplane = attrib_name, op_point = op)" for some Airplane attrib_name and OperatingPoint op)
+    #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "Casvlm1(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
     #   # Call the run() method on the vlm3 object to run the problem.
     #   # Access results in the command line, or through properties of the Casvlm1 class.
-    #   #   # In attrib_name future update, this will be done through attrib_name standardized AeroData class.
+    #   #   # In a future update, this will be done through a standardized AeroData class.
 
     def __init__(self,
                  airplane,  # type: Airplane
@@ -22,7 +22,7 @@ class Casvlm1(AeroProblem):
             self.setup()
 
     def setup(self, verbose=True):
-        # Runs attrib_name point analysis at the specified op-point.
+        # Runs a point analysis at the specified op-point.
         self.verbose = verbose
 
         if self.verbose:
@@ -397,7 +397,7 @@ class Casvlm1(AeroProblem):
     def calculate_forces(self):
         # # Calculate Near-Field Forces and Moments
         # -----------------------------------------
-        # Governing Equation: The force on attrib_name straight, small vortex filament is F = rho * V p l * gamma,
+        # Governing Equation: The force on a straight, small vortex filament is F = rho * V p l * gamma,
         # where rho is density, V is the velocity vector, p is the cross product operator,
         # l is the vector of the filament itself, and gamma is the circulation.
 
@@ -466,7 +466,7 @@ class Casvlm1(AeroProblem):
 
     def calculate_Vij(self,
                       points,  # type: cas.MX
-                      align_trailing_vortices_with_freestream=True,  # Otherwise, aligns with x-axis
+                      align_trailing_vortices_with_freestream=False,  # Otherwise, aligns with x-axis
                       ):
         # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
@@ -598,8 +598,8 @@ class Casvlm1(AeroProblem):
         return Vi
 
     def get_velocity_at_point(self, point):
-        # Input: attrib_name Nx3 numpy array of points that you would like to know the velocities at.
-        # Output: attrib_name Nx3 numpy array of the velocities at those points.
+        # Input: a Nx3 numpy array of points that you would like to know the velocities at.
+        # Output: a Nx3 numpy array of the velocities at those points.
 
         Vi = self.get_induced_velocity_at_point(point)
 
@@ -691,6 +691,41 @@ class Casvlm1(AeroProblem):
             #         right_vortex_vertices[index]
             #     ],
             # )
+
+        # Fuselages
+        for fuse_id in range(len(self.airplane.fuselages)):
+            fuse = self.airplane.fuselages[fuse_id]  # type: Fuselage
+
+            for xsec_id in range(len(fuse.xsecs) - 1):
+                xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
+                xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
+
+                r1 = xsec_1.radius
+                r2 = xsec_2.radius
+                points_1 = np.zeros((fuse.circumferential_panels, 3))
+                points_2 = np.zeros((fuse.circumferential_panels, 3))
+                for point_index in range(fuse.circumferential_panels):
+                    rot = angle_axis_rotation_matrix(
+                        2 * cas.pi * point_index / fuse.circumferential_panels,
+                        [1, 0, 0],
+                        True
+                    ).toarray()
+                    points_1[point_index, :] = rot @ np.array([0, 0, r1])
+                    points_2[point_index, :] = rot @ np.array([0, 0, r2])
+                points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
+                points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
+
+                for point_index in range(fuse.circumferential_panels):
+
+                    fig.add_quad(points=[
+                        points_1[(point_index) % fuse.circumferential_panels, :],
+                        points_1[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_2[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_2[(point_index) % fuse.circumferential_panels, :],
+                    ],
+                        intensity=0,
+                        mirror=fuse.symmetric,
+                    )
 
         if draw_streamlines:
             if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
