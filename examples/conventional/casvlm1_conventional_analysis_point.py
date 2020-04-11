@@ -176,11 +176,11 @@ except RuntimeError:
 
 # Create solved object
 ap_sol = copy.deepcopy(ap)
-ap_sol.substitute_solution(sol)
+# ap_sol.substitute_solution(sol)
 
 # Postprocess
 
-# ap_sol.draw()
+ap_sol.draw()
 
 print("CL:", ap_sol.CL)
 print("CDi:", ap_sol.CDi)

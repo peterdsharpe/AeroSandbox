@@ -13,7 +13,7 @@ class Casvlm1(AeroProblem):
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
                  opti,  # type: cas.Opti
-                 run_setup = True,
+                 run_setup=True,
                  ):
         super().__init__(airplane, op_point)
         self.opti = opti
@@ -25,7 +25,8 @@ class Casvlm1(AeroProblem):
         # Runs attrib_name point analysis at the specified op-point.
         self.verbose = verbose
 
-        if self.verbose: print("Setting up casVLM1 calculation...")
+        if self.verbose:
+            print("Setting up casVLM1 calculation...")
 
         self.make_panels()
         self.setup_geometry()
@@ -33,12 +34,14 @@ class Casvlm1(AeroProblem):
         self.calculate_vortex_strengths()
         self.calculate_forces()
 
-        if self.verbose: print("casVLM1 setup complete! Ready to pass into the solver...")
+        if self.verbose:
+            print("casVLM1 setup complete! Ready to pass into the solver...")
 
     def make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
 
-        if self.verbose: print("Meshing...")
+        if self.verbose:
+            print("Meshing...")
 
         front_left_vertices = []
         front_right_vertices = []
@@ -334,12 +337,14 @@ class Casvlm1(AeroProblem):
         # Do final processing for later use
         self.n_panels = self.collocation_points.shape[0]
 
-        if self.verbose: print("Meshing complete!")
+        if self.verbose:
+            print("Meshing complete!")
 
     def setup_geometry(self):
         # # Calculate AIC matrix
         # ----------------------
-        if self.verbose: print("Calculating the collocation influence matrix...")
+        if self.verbose:
+            print("Calculating the collocation influence matrix...")
         self.Vij_collocations_x, self.Vij_collocations_y, self.Vij_collocations_z = self.calculate_Vij(
             self.collocation_points)
 
@@ -352,11 +357,13 @@ class Casvlm1(AeroProblem):
 
         # # Calculate Vij at vortex centers for force calculation
         # -------------------------------------------------------
-        if self.verbose: print("Calculating the vortex center influence matrix...")
+        if self.verbose:
+            print("Calculating the vortex center influence matrix...")
         self.Vij_centers_x, self.Vij_centers_y, self.Vij_centers_z = self.calculate_Vij(self.vortex_centers)
 
     def setup_operating_point(self):
-        if self.verbose: print("Calculating the freestream influence...")
+        if self.verbose:
+            print("Calculating the freestream influence...")
         self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
         self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             self.collocation_points)
@@ -374,7 +381,8 @@ class Casvlm1(AeroProblem):
         # # Calculate Vortex Strengths
         # ----------------------------
         # Governing Equation: AIC @ Gamma + freestream_influence = 0
-        if self.verbose: print("Calculating vortex strengths...")
+        if self.verbose:
+            print("Calculating vortex strengths...")
 
         # Explicit solve
         self.vortex_strengths = cas.solve(self.AIC, -self.freestream_influences)
@@ -393,7 +401,8 @@ class Casvlm1(AeroProblem):
         # where rho is density, V is the velocity vector, p is the cross product operator,
         # l is the vector of the filament itself, and gamma is the circulation.
 
-        if self.verbose: print("Calculating forces on each panel...")
+        if self.verbose:
+            print("Calculating forces on each panel...")
         # Calculate Vi (local velocity at the ith vortex center point)
         Vi_x = self.Vij_centers_x @ self.vortex_strengths + self.freestream_velocities[:, 0]
         Vi_y = self.Vij_centers_y @ self.vortex_strengths + self.freestream_velocities[:, 1]
@@ -413,7 +422,8 @@ class Casvlm1(AeroProblem):
         self.Fi_geometry = density * Vi_cross_li * self.vortex_strengths
 
         # Calculate total forces and moments
-        if self.verbose: print("Calculating total forces and moments...")
+        if self.verbose:
+            print("Calculating total forces and moments...")
         self.Ftotal_geometry = cas.vertcat(
             cas.sum1(self.Fi_geometry[:, 0]),
             cas.sum1(self.Fi_geometry[:, 1]),
@@ -549,13 +559,19 @@ class Casvlm1(AeroProblem):
 
         Vij_x, Vij_y, Vij_z = self.calculate_Vij(point)
 
-        vortex_strengths = self.opti.debug.value(self.vortex_strengths)
+        # vortex_strengths = self.opti.debug.value(self.vortex_strengths)
 
-        Vi_x = Vij_x @ vortex_strengths
-        Vi_y = Vij_y @ vortex_strengths
-        Vi_z = Vij_z @ vortex_strengths
+        Vi_x = Vij_x @ self.vortex_strengths
+        Vi_y = Vij_y @ self.vortex_strengths
+        Vi_z = Vij_z @ self.vortex_strengths
 
-        Vi = np.hstack((Vi_x, Vi_y, Vi_z))
+        get = lambda x: self.opti.debug.value(x)
+        Vi_x = get(Vi_x)
+        Vi_y = get(Vi_y)
+        Vi_z = get(Vi_z)
+
+
+        Vi = np.vstack((Vi_x, Vi_y, Vi_z)).T
 
         return Vi
 
@@ -584,11 +600,8 @@ class Casvlm1(AeroProblem):
         # Resolution
         length_per_step = length / n_steps
 
-        n_streamlines = len(seed_points)
-
         # Initialize
-        streamlines = []
-        streamlines.append(seed_points)
+        streamlines = [seed_points]
 
         # Iterate
         for step_num in range(1, n_steps):
@@ -600,9 +613,13 @@ class Casvlm1(AeroProblem):
 
         self.streamlines = streamlines
 
-
-
-    def draw(self, data_to_plot=None, data_name=None, show=True, draw_streamlines=True, recalculate_streamlines=False):
+    def draw(self,
+             data_to_plot=None,
+             data_name=None,
+             show=True,
+             draw_streamlines=True,
+             recalculate_streamlines=False
+             ):
         """
         Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
@@ -622,6 +639,7 @@ class Casvlm1(AeroProblem):
         back_right_vertices = get(self.back_right_vertices)
         left_vortex_vertices = get(self.left_vortex_vertices)
         right_vortex_vertices = get(self.right_vortex_vertices)
+        self.vortex_strengths = get(self.vortex_strengths)
         try:
             data_to_plot = get(data_to_plot)
         except NotImplementedError:
@@ -631,217 +649,43 @@ class Casvlm1(AeroProblem):
             data_name = "Vortex Strengths"
             data_to_plot = get(self.vortex_strengths)
 
-        fig = go.Figure()
-
-        # x, y, and z give the vertices
-        x = []
-        y = []
-        z = []
-        # i, j and k give the connectivity of the vertices
-        i = []
-        j = []
-        k = []
-        intensity = []
-        # xe, ye, and ze give the outline of each panel
-        xe = []
-        ye = []
-        ze = []
+        fig = Figure3D()
 
         for index in range(len(front_left_vertices)):
-            x.append(front_left_vertices[index, 0])
-            x.append(front_right_vertices[index, 0])
-            x.append(back_right_vertices[index, 0])
-            x.append(back_left_vertices[index, 0])
-            y.append(front_left_vertices[index, 1])
-            y.append(front_right_vertices[index, 1])
-            y.append(back_right_vertices[index, 1])
-            y.append(back_left_vertices[index, 1])
-            z.append(front_left_vertices[index, 2])
-            z.append(front_right_vertices[index, 2])
-            z.append(back_right_vertices[index, 2])
-            z.append(back_left_vertices[index, 2])
-            intensity.append(data_to_plot[index])
-            intensity.append(data_to_plot[index])
-            intensity.append(data_to_plot[index])
-            intensity.append(data_to_plot[index])
-            xe.append(front_left_vertices[index, 0])
-            xe.append(front_right_vertices[index, 0])
-            xe.append(back_right_vertices[index, 0])
-            xe.append(back_left_vertices[index, 0])
-            ye.append(front_left_vertices[index, 1])
-            ye.append(front_right_vertices[index, 1])
-            ye.append(back_right_vertices[index, 1])
-            ye.append(back_left_vertices[index, 1])
-            ze.append(front_left_vertices[index, 2])
-            ze.append(front_right_vertices[index, 2])
-            ze.append(back_right_vertices[index, 2])
-            ze.append(back_left_vertices[index, 2])
-            xe.append(None)
-            ye.append(None)
-            ze.append(None)
-            xe.append(left_vortex_vertices[index, 0])
-            xe.append(right_vortex_vertices[index, 0])
-            ye.append(left_vortex_vertices[index, 1])
-            ye.append(right_vortex_vertices[index, 1])
-            ze.append(left_vortex_vertices[index, 2])
-            ze.append(right_vortex_vertices[index, 2])
-            xe.append(None)
-            ye.append(None)
-            ze.append(None)
-
-            indices_added = np.arange(len(x) - 4, len(x))
-
-            # Add front_left triangle
-            i.append(indices_added[0])
-            j.append(indices_added[1])
-            k.append(indices_added[3])
-            # Add back-right triangle
-            i.append(indices_added[2])
-            j.append(indices_added[3])
-            k.append(indices_added[1])
-
-            # if self.symmetric_problem:
-            #     if self.use_symmetry[index]:
-            #         x.append(front_left_vertices[index, 0])
-            #         x.append(front_right_vertices[index, 0])
-            #         x.append(back_right_vertices[index, 0])
-            #         x.append(back_left_vertices[index, 0])
-            #         y.append(-front_left_vertices[index, 1])
-            #         y.append(-front_right_vertices[index, 1])
-            #         y.append(-back_right_vertices[index, 1])
-            #         y.append(-back_left_vertices[index, 1])
-            #         z.append(front_left_vertices[index, 2])
-            #         z.append(front_right_vertices[index, 2])
-            #         z.append(back_right_vertices[index, 2])
-            #         z.append(back_left_vertices[index, 2])
-            #         intensity.append(data_to_plot[index])
-            #         intensity.append(data_to_plot[index])
-            #         intensity.append(data_to_plot[index])
-            #         intensity.append(data_to_plot[index])
-            #         xe.append(front_left_vertices[index, 0])
-            #         xe.append(front_right_vertices[index, 0])
-            #         xe.append(back_right_vertices[index, 0])
-            #         xe.append(back_left_vertices[index, 0])
-            #         ye.append(-front_left_vertices[index, 1])
-            #         ye.append(-front_right_vertices[index, 1])
-            #         ye.append(-back_right_vertices[index, 1])
-            #         ye.append(-back_left_vertices[index, 1])
-            #         ze.append(front_left_vertices[index, 2])
-            #         ze.append(front_right_vertices[index, 2])
-            #         ze.append(back_right_vertices[index, 2])
-            #         ze.append(back_left_vertices[index, 2])
-            #         xe.append(None)
-            #         ye.append(None)
-            #         ze.append(None)
-            #         xe.append(left_vortex_vertices[index, 0])
-            #         xe.append(right_vortex_vertices[index, 0])
-            #         ye.append(-left_vortex_vertices[index, 1])
-            #         ye.append(-right_vortex_vertices[index, 1])
-            #         ze.append(left_vortex_vertices[index, 2])
-            #         ze.append(right_vortex_vertices[index, 2])
-            #         xe.append(None)
-            #         ye.append(None)
-            #         ze.append(None)
-            #
-            #         indices_added = np.arange(len(x) - 4, len(x))
-            #
-            #         # Add front_left triangle
-            #         i.append(indices_added[0])
-            #         j.append(indices_added[1])
-            #         k.append(indices_added[3])
-            #         # Add back-right triangle
-            #         i.append(indices_added[2])
-            #         j.append(indices_added[3])
-            #         k.append(indices_added[1])
-
-        fig.add_trace(
-            go.Mesh3d(
-                x=x,
-                y=y,
-                z=z,
-                i=i,
-                j=j,
-                k=k,
-                flatshading=False,
-                intensity=intensity,
-                colorscale="Viridis",
-                colorbar=dict(
-                    title=data_name,
-                    titleside="top",
-                    ticks="outside"
-                )
+            fig.add_quad(
+                points=[
+                    front_left_vertices[index, :],
+                    front_right_vertices[index, :],
+                    back_right_vertices[index, :],
+                    back_left_vertices[index, :],
+                ],
+                intensity=data_to_plot[index],
+                outline=True,
             )
-        )
-
-        # define the trace for triangle sides
-        fig.add_trace(
-            go.Scatter3d(
-                x=xe,
-                y=ye,
-                z=ze,
-                mode='lines',
-                name='',
-                line=dict(color='rgb(0,0,0)', width=2),
-                showlegend=False
-            )
-        )
+            # fig.add_line( # Don't draw the quarter-chords
+            #     points=[
+            #         left_vortex_vertices[index],
+            #         right_vortex_vertices[index]
+            #     ],
+            # )
 
         if draw_streamlines:
             if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
-                if self.verbose: print("Calculating streamlines...")
-                back_centers = (self.back_left_vertices + self.back_right_vertices) / 2
-                seed_points = []
-                for index in range(back_centers.shape[0]):
-                    if self.is_trailing_edge[index]:
-                        seed_points.append(back_centers[index,:])
-                seed_points = np.vstack(seed_points)
-
+                if self.verbose:
+                    print("Calculating streamlines...")
+                is_trailing_edge = np.array(self.is_trailing_edge, dtype=bool)
+                seed_points = (back_left_vertices[is_trailing_edge] + back_right_vertices[is_trailing_edge]) / 2
                 self.calculate_streamlines(seed_points=seed_points)
 
-            if self.verbose: print("Parsing streamline data...")
+            if self.verbose:
+                print("Parsing streamline data...")
             n_streamlines = self.streamlines[0].shape[0]
             n_timesteps = len(self.streamlines)
 
-            xs = []
-            ys = []
-            zs = []
-
             for streamlines_num in range(n_streamlines):
-                xs.extend([float(self.streamlines[ts][streamlines_num, 0]) for ts in range(n_timesteps)])
-                ys.extend([float(self.streamlines[ts][streamlines_num, 1]) for ts in range(n_timesteps)])
-                zs.extend([float(self.streamlines[ts][streamlines_num, 2]) for ts in range(n_timesteps)])
-
-                xs.append(None)
-                ys.append(None)
-                zs.append(None)
-
-                # if self.symmetric_problem:  # TODO consider removing redundant plotting of centerline surfaces (low priority)
-                #     xs.extend([float(self.streamlines[ts][streamlines_num, 0]) for ts in range(n_timesteps)])
-                #     ys.extend([-float(self.streamlines[ts][streamlines_num, 1]) for ts in range(n_timesteps)])
-                #     zs.extend([float(self.streamlines[ts][streamlines_num, 2]) for ts in range(n_timesteps)])
-                #
-                #     xs.append(None)
-                #     ys.append(None)
-                #     zs.append(None)
-
-            fig.add_trace(
-                go.Scatter3d(
-                    x=xs,
-                    y=ys,
-                    z=zs,
-                    mode='lines',
-                    name='',
-                    line=dict(color='#7700ff', width=1),
-                    showlegend=False
+                streamline = [self.streamlines[ts][streamlines_num, :] for ts in range(n_timesteps)]
+                fig.add_streamline(
+                    points=streamline,
                 )
-            )
 
-        fig.update_layout(
-            title="%s Airplane, CasVLM1 Solution" % self.airplane.name,
-            scene=dict(aspectmode='data'),
-
-        )
-
-        if show: fig.show()
-
-        return fig
+        return fig.draw(show=show)

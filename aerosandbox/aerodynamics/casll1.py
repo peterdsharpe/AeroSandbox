@@ -831,13 +831,19 @@ class Casll1(AeroProblem):
 
         Vij_x, Vij_y, Vij_z = self.calculate_Vij(point)
 
-        vortex_strengths = self.opti.debug.value(self.vortex_strengths)
+        # vortex_strengths = self.opti.debug.value(self.vortex_strengths)
 
-        Vi_x = Vij_x @ vortex_strengths
-        Vi_y = Vij_y @ vortex_strengths
-        Vi_z = Vij_z @ vortex_strengths
+        Vi_x = Vij_x @ self.vortex_strengths
+        Vi_y = Vij_y @ self.vortex_strengths
+        Vi_z = Vij_z @ self.vortex_strengths
 
-        Vi = np.hstack((Vi_x, Vi_y, Vi_z))
+        get = lambda x: self.opti.debug.value(x)
+        Vi_x = get(Vi_x)
+        Vi_y = get(Vi_y)
+        Vi_z = get(Vi_z)
+
+
+        Vi = np.vstack((Vi_x, Vi_y, Vi_z)).T
 
         return Vi
 
@@ -880,7 +886,7 @@ class Casll1(AeroProblem):
 
         self.streamlines = streamlines
 
-    def draw(self,
+    def  draw(self,
              data_to_plot=None,
              data_name=None,
              show=True,
@@ -906,6 +912,7 @@ class Casll1(AeroProblem):
         back_right_vertices = get(self.back_right_vertices)
         left_vortex_vertices = get(self.left_vortex_vertices)
         right_vortex_vertices = get(self.right_vortex_vertices)
+        self.vortex_strengths = get(self.vortex_strengths)
         try:
             data_to_plot = get(data_to_plot)
         except NotImplementedError:
@@ -979,7 +986,7 @@ class Casll1(AeroProblem):
             if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
                 if self.verbose:
                     print("Calculating streamlines...")
-                seed_points = (self.back_left_vertices + self.back_right_vertices) / 2
+                seed_points = (back_left_vertices + back_right_vertices) / 2
                 self.calculate_streamlines(seed_points=seed_points)
 
             if self.verbose:
