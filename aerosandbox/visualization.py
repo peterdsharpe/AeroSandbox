@@ -185,7 +185,8 @@ class Figure3D:
     def draw(self,
              show=True,
              title="",
-             colorscale="viridis"
+             colorbar_title="",
+             colorscale="viridis",
              ):
         # Draw faces
         self.fig.add_trace(
@@ -198,6 +199,7 @@ class Figure3D:
                 k=self.k_face,
                 flatshading=False,
                 intensity=self.intensity_face,
+                colorbar=dict(title=colorbar_title),
                 colorscale=colorscale
             )
         )

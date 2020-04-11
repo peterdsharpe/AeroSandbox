@@ -712,4 +712,7 @@ class Casvlm1(AeroProblem):
                     points=streamline,
                 )
 
-        return fig.draw(show=show)
+        return fig.draw(
+            show=show,
+            colorbar_title=data_name
+        )

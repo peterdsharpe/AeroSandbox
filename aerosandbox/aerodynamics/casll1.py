@@ -1002,4 +1002,7 @@ class Casll1(AeroProblem):
                     mirror=self.symmetric_problem
                 )
 
-        return fig.draw(show=show)
+        return fig.draw(
+            show=show,
+            colorbar_title=data_name
+        )
