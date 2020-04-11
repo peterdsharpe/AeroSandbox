@@ -119,9 +119,17 @@ class Airplane(AeroSandboxObject):
                 xsec.spanwise_panels = n_spanwise_panels
 
     def draw(self,
-             show=True,
-             colorscale="mint",
+             show=True, # type: bool
+             colorscale="mint", # type: str
+             draw_quarter_chord=True, # type: bool
              ):
+        """
+        Draws the airplane using a Plotly interface.
+        :param show: Do you want to show the figure? [boolean]
+        :param colorscale: Which colorscale do you want to use? ("viridis", "plasma", mint", etc.)
+        :param draw_quarter_chord: Do you want to draw the quarter-chord? [boolean]
+        :return: A plotly figure object [go.Figure]
+        """
         fig = Figure3D()
 
         # Wings
@@ -146,6 +154,14 @@ class Airplane(AeroSandboxObject):
                     intensity=wing_id,
                     mirror=wing.symmetric,
                 )
+                if draw_quarter_chord:
+                    fig.add_line( # draw the quarter-chord line
+                        points=[
+                            0.75 * le_start + 0.25 * te_start,
+                            0.75 * le_end + 0.25 * te_end,
+                        ],
+                        mirror=wing.symmetric
+                    )
 
         # Fuselages
         for fuse_id in range(len(self.fuselages)):
@@ -178,7 +194,7 @@ class Airplane(AeroSandboxObject):
                         points_2[(point_index + 1) % fuse.circumferential_panels, :],
                         points_2[(point_index) % fuse.circumferential_panels, :],
                     ],
-                        intensity = fuse_id,
+                        intensity=fuse_id,
                         mirror=fuse.symmetric,
                     )
 
@@ -516,7 +532,8 @@ class Airfoil:
                  CDp_function=lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
                          (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function (about quarter-chord) (alpha in deg)
+                 Cm_function=lambda alpha, Re, mach, deflection: (
+                 # Moment coefficient function (about quarter-chord) (alpha in deg)
                          0
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
                  ):
@@ -1473,11 +1490,11 @@ def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
     output_vector = input_vector
     shape = output_vector.shape
-    if len(shape)==1 and shape[0]==3:
+    if len(shape) == 1 and shape[0] == 3:
         output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape)==2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
+    elif len(shape) == 2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
         output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape)==2 and shape[1] == 3:  # 2D Nx3 vector
+    elif len(shape) == 2 and shape[1] == 3:  # 2D Nx3 vector
         output_vector = cas.horzcat(output_vector[:, 0], -1 * output_vector[:, 1], output_vector[:, 2])
     # elif len(shape) == 3 and shape[2] == 3:  # 3D MxNx3 vector
     #     output_vector = output_vector * cas.array([1, -1, 1])
