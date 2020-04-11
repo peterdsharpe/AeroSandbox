@@ -2,6 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
+
 try:
     from xfoil import XFoil
     from xfoil import model as xfoil_model
@@ -11,6 +12,7 @@ except ModuleNotFoundError:
 from .casadi_helpers import *
 
 pio.renderers.default = "browser"
+
 
 class AeroSandboxObject:
     def substitute_solution(self, sol):
@@ -40,6 +42,7 @@ class AeroSandboxObject:
             except:
                 pass
         return self
+
 
 class Airplane(AeroSandboxObject):
     """
@@ -72,9 +75,12 @@ class Airplane(AeroSandboxObject):
 
         if len(self.wings) > 0:  # If there is at least one wing
             self.set_ref_dims_from_wing(main_wing_index=0)
-        if s_ref is not None: self.s_ref = s_ref
-        if c_ref is not None: self.c_ref = c_ref
-        if b_ref is not None: self.b_ref = b_ref
+        if s_ref is not None:
+            self.s_ref = s_ref
+        if c_ref is not None:
+            self.c_ref = c_ref
+        if b_ref is not None:
+            self.b_ref = b_ref
 
         # Check that everything was set right:
         assert self.name is not None
@@ -128,25 +134,6 @@ class Airplane(AeroSandboxObject):
         y_edge = []
         z_edge = []
 
-        def add_face(points, intensity=0):
-            """
-            Adds a triangular face to draw.
-            :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
-            :param intensity: Intensity associated with this face
-            :return: None
-
-            E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
-            """
-            for p in points:
-                x_face.append(float(p[0]))
-                y_face.append(float(p[1]))
-                z_face.append(float(p[2]))
-                intensity_face.append(intensity)
-            indices_added = np.arange(len(x_face) - 3, len(x_face))
-            i_face.append(indices_added[0])
-            j_face.append(indices_added[1])
-            k_face.append(indices_added[2])
-
         def add_line(points):
             """
             Adds a line (or series of lines) to draw.
@@ -163,6 +150,68 @@ class Airplane(AeroSandboxObject):
             y_edge.append(None)
             z_edge.append(None)
 
+        def add_tri(
+                points,
+                intensity=0,
+                outline=False,
+        ):
+            """
+            Adds a triangular face to draw.
+            :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
+            :param intensity: Intensity associated with this face
+            :param outline: Do you want to outline this triangle? [boolean]
+            :return: None
+
+            E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
+            """
+            if not len(points) == 3:
+                raise ValueError("'points' must have exactly 3 items!")
+            for p in points:
+                x_face.append(float(p[0]))
+                y_face.append(float(p[1]))
+                z_face.append(float(p[2]))
+                intensity_face.append(intensity)
+            indices_added = np.arange(len(x_face) - 3, len(x_face))
+            i_face.append(indices_added[0])
+            j_face.append(indices_added[1])
+            k_face.append(indices_added[2])
+            if outline:
+                add_line(list(points) + [points[0]])
+
+        def add_quad(
+                points,
+                intensity=0,
+                outline=True,
+        ):
+            """
+            Adds a quadrilateral face to draw. All points should be (approximately) coplanar if you want it to look right.
+            :param points: an iterable with 4 items. Each item is a 3D point, represented as an iterable of length 3. Points should be given in sequential order.
+            :param intensity: Intensity associated with this face
+            :param outline: Do you want to outline this quad? [boolean]
+            :return: None
+
+            E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
+            """
+            if not len(points) == 4:
+                raise ValueError("'points' must have exactly 4 items!")
+            for p in points:
+                x_face.append(float(p[0]))
+                y_face.append(float(p[1]))
+                z_face.append(float(p[2]))
+                intensity_face.append(intensity)
+            indices_added = np.arange(len(x_face) - 4, len(x_face))
+
+            i_face.append(indices_added[0])
+            j_face.append(indices_added[1])
+            k_face.append(indices_added[2])
+
+            i_face.append(indices_added[0])
+            j_face.append(indices_added[2])
+            k_face.append(indices_added[3])
+
+            if outline:
+                add_line(list(points) + [points[0]])
+
         # Wings
         for wing_id in range(len(self.wings)):
             wing = self.wings[wing_id]  # type: Wing
@@ -176,51 +225,24 @@ class Airplane(AeroSandboxObject):
                 le_end = xsec_2.xyz_le + wing.xyz_le
                 te_end = xsec_2.xyz_te() + wing.xyz_le
 
-                add_face([
-                    le_start,
-                    le_end,
-                    te_start,
-                ],
-                intensity=wing_id
-                )
-                add_face([
-                    te_end,
-                    le_end,
-                    te_start,
-                ],
-                intensity=wing_id
-                )
-                add_line([
+                add_quad(points=[
                     le_start,
                     le_end,
                     te_end,
-                    te_start,
-                    le_start
-                ])
+                    te_start
+                ],
+                    intensity=wing_id
+                )
 
                 if wing.symmetric:
-                    add_face([
-                        reflect_over_XZ_plane(le_start),
-                        reflect_over_XZ_plane(le_end),
-                        reflect_over_XZ_plane(te_start),
-                    ],
-                        intensity=wing_id
-                    )
-                    add_face([
-                        reflect_over_XZ_plane(te_end),
-                        reflect_over_XZ_plane(le_end),
-                        reflect_over_XZ_plane(te_start),
-                    ],
-                        intensity=wing_id
-                    )
-                    add_line([
+                    add_quad([
                         reflect_over_XZ_plane(le_start),
                         reflect_over_XZ_plane(le_end),
                         reflect_over_XZ_plane(te_end),
                         reflect_over_XZ_plane(te_start),
-                        reflect_over_XZ_plane(le_start),
-                    ])
-
+                    ],
+                        intensity=wing_id
+                    )
 
         # Fuselages
         for fuse_id in range(len(self.fuselages)):
@@ -246,96 +268,25 @@ class Airplane(AeroSandboxObject):
                 points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
-                    x_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    x_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    x_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    x_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                    y_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    y_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    y_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    y_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
-                    z_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    z_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    z_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    z_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                    intensity_face.append(fuse_id)
-                    intensity_face.append(fuse_id)
-                    intensity_face.append(fuse_id)
-                    intensity_face.append(fuse_id)
-                    x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    y_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    x_edge.append(None)
-                    y_edge.append(None)
-                    z_edge.append(None)
 
-                    indices_added = np.arange(len(x_face) - 4, len(x_face))
-                    # Add front_inner triangle
-                    i_face.append(indices_added[0])
-                    j_face.append(indices_added[1])
-                    k_face.append(indices_added[3])
-                    # Add back_outer triangle
-                    i_face.append(indices_added[2])
-                    j_face.append(indices_added[3])
-                    k_face.append(indices_added[1])
+                    add_quad(points=[
+                        points_1[(point_index) % fuse.circumferential_panels, :],
+                        points_1[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_2[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_2[(point_index) % fuse.circumferential_panels, :],
+                    ],
+                        intensity = fuse_id,
+                    )
 
                     if fuse.symmetric:
-                        x_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        x_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                        y_face.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        y_face.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_face.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_face.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
-                        z_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        z_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                        intensity_face.append(fuse_id)
-                        intensity_face.append(fuse_id)
-                        intensity_face.append(fuse_id)
-                        intensity_face.append(fuse_id)
-                        x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        y_edge.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        x_edge.append(None)
-                        y_edge.append(None)
-                        z_edge.append(None)
-
-                        indices_added = np.arange(len(x_face) - 4, len(x_face))
-                        # Add front_inner triangle
-                        i_face.append(indices_added[0])
-                        j_face.append(indices_added[1])
-                        k_face.append(indices_added[3])
-                        # Add back_outer triangle
-                        i_face.append(indices_added[2])
-                        j_face.append(indices_added[3])
-                        k_face.append(indices_added[1])
+                        add_quad(points=[
+                            reflect_over_XZ_plane(points_1[(point_index) % fuse.circumferential_panels, :]),
+                            reflect_over_XZ_plane(points_1[(point_index + 1) % fuse.circumferential_panels, :]),
+                            reflect_over_XZ_plane(points_2[(point_index + 1) % fuse.circumferential_panels, :]),
+                            reflect_over_XZ_plane(points_2[(point_index) % fuse.circumferential_panels, :]),
+                        ],
+                            intensity=fuse_id,
+                        )
 
         fig.add_trace(
             go.Mesh3d(
@@ -693,7 +644,7 @@ class Airfoil:
                  # If you supply "coordinates", you can manually specify the index of the leading edge here.
                  use_cache=True,  # Look in the airfoil cache, based on the airfoil's name. # TODO make airfoil caching
                  repanel=True,  # Should we repanel the airfoil upon initialization?
-                 find_mcl=True, # Should we attempt to find the mean camber line upon initialization?
+                 find_mcl=True,  # Should we attempt to find the mean camber line upon initialization?
                  n_points_per_side=400,  # Number of points to use when repaneling the airfoil (if repanel is True)
                  CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
                          (alpha * np.pi / 180) * (2 * np.pi)
@@ -1374,9 +1325,10 @@ class Airfoil:
         try:
             xf = XFoil()
         except NameError:
-            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+            raise NameError(
+                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
@@ -1424,9 +1376,10 @@ class Airfoil:
         try:
             xf = XFoil()
         except NameError:
-            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+            raise NameError(
+                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
@@ -1478,9 +1431,10 @@ class Airfoil:
         try:
             xf = XFoil()
         except NameError:
-            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+            raise NameError(
+                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
@@ -1531,9 +1485,10 @@ class Airfoil:
         try:
             xf = XFoil()
         except NameError:
-            raise NameError("It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                            "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                            "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+            raise NameError(
+                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
             x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
             y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
