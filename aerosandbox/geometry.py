@@ -2,6 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
+from .visualization import Figure3D
 
 try:
     from xfoil import XFoil
@@ -118,99 +119,7 @@ class Airplane(AeroSandboxObject):
                 xsec.spanwise_panels = n_spanwise_panels
 
     def draw(self, show=True):
-        fig = go.Figure()
-
-        # x, y, and z give the vertices
-        x_face = []
-        y_face = []
-        z_face = []
-        # i, j and k give the connectivity of the vertices
-        i_face = []
-        j_face = []
-        k_face = []
-        intensity_face = []
-        # xe, ye, and ze give the outline of each panel
-        x_edge = []
-        y_edge = []
-        z_edge = []
-
-        def add_line(points):
-            """
-            Adds a line (or series of lines) to draw.
-            :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
-            :return: None
-
-            E.g. add_line([(0, 0, 0), (1, 0, 0)])
-            """
-            for p in points:
-                x_edge.append(float(p[0]))
-                y_edge.append(float(p[1]))
-                z_edge.append(float(p[2]))
-            x_edge.append(None)
-            y_edge.append(None)
-            z_edge.append(None)
-
-        def add_tri(
-                points,
-                intensity=0,
-                outline=False,
-        ):
-            """
-            Adds a triangular face to draw.
-            :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
-            :param intensity: Intensity associated with this face
-            :param outline: Do you want to outline this triangle? [boolean]
-            :return: None
-
-            E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
-            """
-            if not len(points) == 3:
-                raise ValueError("'points' must have exactly 3 items!")
-            for p in points:
-                x_face.append(float(p[0]))
-                y_face.append(float(p[1]))
-                z_face.append(float(p[2]))
-                intensity_face.append(intensity)
-            indices_added = np.arange(len(x_face) - 3, len(x_face))
-            i_face.append(indices_added[0])
-            j_face.append(indices_added[1])
-            k_face.append(indices_added[2])
-            if outline:
-                add_line(list(points) + [points[0]])
-
-        def add_quad(
-                points,
-                intensity=0,
-                outline=True,
-        ):
-            """
-            Adds a quadrilateral face to draw. All points should be (approximately) coplanar if you want it to look right.
-            :param points: an iterable with 4 items. Each item is a 3D point, represented as an iterable of length 3. Points should be given in sequential order.
-            :param intensity: Intensity associated with this face
-            :param outline: Do you want to outline this quad? [boolean]
-            :return: None
-
-            E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
-            """
-            if not len(points) == 4:
-                raise ValueError("'points' must have exactly 4 items!")
-            for p in points:
-                x_face.append(float(p[0]))
-                y_face.append(float(p[1]))
-                z_face.append(float(p[2]))
-                intensity_face.append(intensity)
-            indices_added = np.arange(len(x_face) - 4, len(x_face))
-
-            i_face.append(indices_added[0])
-            j_face.append(indices_added[1])
-            k_face.append(indices_added[2])
-
-            i_face.append(indices_added[0])
-            j_face.append(indices_added[2])
-            k_face.append(indices_added[3])
-
-            if outline:
-                add_line(list(points) + [points[0]])
+        fig = Figure3D()
 
         # Wings
         for wing_id in range(len(self.wings)):
@@ -225,24 +134,15 @@ class Airplane(AeroSandboxObject):
                 le_end = xsec_2.xyz_le + wing.xyz_le
                 te_end = xsec_2.xyz_te() + wing.xyz_le
 
-                add_quad(points=[
+                fig.add_quad(points=[
                     le_start,
                     le_end,
                     te_end,
                     te_start
                 ],
-                    intensity=wing_id
+                    intensity=wing_id,
+                    mirror=wing.symmetric,
                 )
-
-                if wing.symmetric:
-                    add_quad([
-                        reflect_over_XZ_plane(le_start),
-                        reflect_over_XZ_plane(le_end),
-                        reflect_over_XZ_plane(te_end),
-                        reflect_over_XZ_plane(te_start),
-                    ],
-                        intensity=wing_id
-                    )
 
         # Fuselages
         for fuse_id in range(len(self.fuselages)):
@@ -269,59 +169,17 @@ class Airplane(AeroSandboxObject):
 
                 for point_index in range(fuse.circumferential_panels):
 
-                    add_quad(points=[
+                    fig.add_quad(points=[
                         points_1[(point_index) % fuse.circumferential_panels, :],
                         points_1[(point_index + 1) % fuse.circumferential_panels, :],
                         points_2[(point_index + 1) % fuse.circumferential_panels, :],
                         points_2[(point_index) % fuse.circumferential_panels, :],
                     ],
                         intensity = fuse_id,
+                        mirror=fuse.symmetric,
                     )
 
-                    if fuse.symmetric:
-                        add_quad(points=[
-                            reflect_over_XZ_plane(points_1[(point_index) % fuse.circumferential_panels, :]),
-                            reflect_over_XZ_plane(points_1[(point_index + 1) % fuse.circumferential_panels, :]),
-                            reflect_over_XZ_plane(points_2[(point_index + 1) % fuse.circumferential_panels, :]),
-                            reflect_over_XZ_plane(points_2[(point_index) % fuse.circumferential_panels, :]),
-                        ],
-                            intensity=fuse_id,
-                        )
-
-        fig.add_trace(
-            go.Mesh3d(
-                x=x_face,
-                y=y_face,
-                z=z_face,
-                i=i_face,
-                j=j_face,
-                k=k_face,
-                flatshading=True,
-                intensity=intensity_face,
-                colorscale="mint"
-            )
-        )
-
-        # define the trace for triangle sides
-        fig.add_trace(
-            go.Scatter3d(
-                x=x_edge,
-                y=y_edge,
-                z=z_edge,
-                mode='lines',
-                name='',
-                line=dict(color='rgb(0,0,0)', width=3))
-        )
-
-        fig.update_layout(
-            title="%s Airplane" % self.name,
-            scene=dict(aspectmode='data')
-        )
-
-        if show:
-            fig.show()
-        else:
-            return fig
+        return fig.draw(show=show)
 
     def is_symmetric(self):
         for wing in self.wings:
