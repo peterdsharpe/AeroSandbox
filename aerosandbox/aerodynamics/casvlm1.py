@@ -464,33 +464,36 @@ class Casvlm1(AeroProblem):
         # Solves divide by zero error
         self.CL_over_CDi = cas.if_else(self.CDi == 0, 0, self.CL / self.CDi)
 
-    def calculate_Vij(self, points):
+    def calculate_Vij(self,
+                      points,  # type: cas.MX
+                      align_trailing_vortices_with_freestream=True,  # Otherwise, aligns with x-axis
+                      ):
         # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
         # points: the list of points (Nx3) to calculate the velocity influence at.
 
-        # Make lv and rv
-        left_vortex_vertices = self.left_vortex_vertices
-        right_vortex_vertices = self.right_vortex_vertices
-
         n_points = points.shape[0]
-        n_vortices = self.n_panels
 
-        # Make attrib_name and b vectors.
-        # attrib_name: Vector from all collocation points to all horseshoe vortex left  vertices, NxNx3.
-        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
-        # b: Vector from all collocation points to all horseshoe vortex right vertices, NxNx3.
-        #   # First index is collocation point #, second is vortex #, and third is xyz. N=n_panels
-        # attrib_name[i,j,:] = c[i,:] - lv[j,:]
-        # b[i,j,:] = c[i,:] - rv[j,:]
-        a_x = points[:, 0] - cas.repmat(cas.transpose(left_vortex_vertices[:, 0]), n_points, 1)
-        a_y = points[:, 1] - cas.repmat(cas.transpose(left_vortex_vertices[:, 1]), n_points, 1)
-        a_z = points[:, 2] - cas.repmat(cas.transpose(left_vortex_vertices[:, 2]), n_points, 1)
-        b_x = points[:, 0] - cas.repmat(cas.transpose(right_vortex_vertices[:, 0]), n_points, 1)
-        b_y = points[:, 1] - cas.repmat(cas.transpose(right_vortex_vertices[:, 1]), n_points, 1)
-        b_z = points[:, 2] - cas.repmat(cas.transpose(right_vortex_vertices[:, 2]), n_points, 1)
+        # Make a and b vectors.
+        # a: Vector from all collocation points to all horseshoe vortex left vertices.
+        #   # First index is collocation point #, second is vortex #.
+        # b: Vector from all collocation points to all horseshoe vortex right vertices.
+        #   # First index is collocation point #, second is vortex #.
+        a_x = points[:, 0] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 0]), n_points, 1)
+        a_y = points[:, 1] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 1]), n_points, 1)
+        a_z = points[:, 2] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 2]), n_points, 1)
+        b_x = points[:, 0] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 0]), n_points, 1)
+        b_y = points[:, 1] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 1]), n_points, 1)
+        b_z = points[:, 2] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 2]), n_points, 1)
 
-        # x_hat = np.zeros([n_points, n_vortices, 3])
-        # x_hat[:, :, 0] = 1
+        if align_trailing_vortices_with_freestream:
+            freestream_direction = self.op_point.compute_freestream_direction_geometry_axes()
+            u_x = freestream_direction[0]
+            u_y = freestream_direction[1]
+            u_z = freestream_direction[2]
+        else:
+            u_x = 1
+            u_y = 0
+            u_z = 0
 
         # Do some useful arithmetic
         a_cross_b_x = a_y * b_z - a_z * b_y
@@ -498,20 +501,40 @@ class Casvlm1(AeroProblem):
         a_cross_b_z = a_x * b_y - a_y * b_x
         a_dot_b = a_x * b_x + a_y * b_y + a_z * b_z
 
-        a_cross_xhat_x = 0
-        a_cross_xhat_y = a_z
-        a_cross_xhat_z = -a_y
-        a_dot_xhat = a_x
+        a_cross_u_x = a_y * u_z - a_z * u_y
+        a_cross_u_y = a_z * u_x - a_x * u_z
+        a_cross_u_z = a_x * u_y - a_y * u_x
+        a_dot_u = a_x * u_x + a_y * u_y + a_z * u_z
 
-        b_cross_xhat_x = 0
-        b_cross_xhat_y = b_z
-        b_cross_xhat_z = -b_y
-        b_dot_xhat = b_x
+        b_cross_u_x = b_y * u_z - b_z * u_y
+        b_cross_u_y = b_z * u_x - b_x * u_z
+        b_cross_u_z = b_x * u_y - b_y * u_x
+        b_dot_u = b_x * u_x + b_y * u_y + b_z * u_z
 
         norm_a = cas.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
         norm_b = cas.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
         norm_a_inv = 1 / norm_a
         norm_b_inv = 1 / norm_b
+
+        # # Handle the special case where the collocation point is along a bound vortex leg
+        # a_cross_b_squared = (
+        #         a_cross_b_x ** 2 +
+        #         a_cross_b_y ** 2 +
+        #         a_cross_b_z ** 2
+        # )
+        # a_dot_b = cas.if_else(a_cross_b_squared < 1e-8, a_dot_b + 1, a_dot_b)
+        # a_cross_u_squared = (
+        #         a_cross_u_x ** 2 +
+        #         a_cross_u_y ** 2 +
+        #         a_cross_u_z ** 2
+        # )
+        # a_dot_u = cas.if_else(a_cross_u_squared < 1e-8, a_dot_u + 1, a_dot_u)
+        # b_cross_u_squared = (
+        #         b_cross_u_x ** 2 +
+        #         b_cross_u_y ** 2 +
+        #         b_cross_u_z ** 2
+        # )
+        # b_dot_u = cas.if_else(b_cross_u_squared < 1e-8, b_dot_u + 1, b_dot_u)
 
         # Handle the special case where the collocation point is along the bound vortex leg
         a_dot_b -= 1e-8
@@ -520,23 +543,23 @@ class Casvlm1(AeroProblem):
 
         # Calculate Vij
         term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
-        term2 = (norm_a_inv) / (norm_a - a_dot_xhat)
-        term3 = (norm_b_inv) / (norm_b - b_dot_xhat)
+        term2 = norm_a_inv / (norm_a - a_dot_u)
+        term3 = norm_b_inv / (norm_b - b_dot_u)
 
         Vij_x = 1 / (4 * np.pi) * (
                 a_cross_b_x * term1 +
-                a_cross_xhat_x * term2 -
-                b_cross_xhat_x * term3
+                a_cross_u_x * term2 -
+                b_cross_u_x * term3
         )
         Vij_y = 1 / (4 * np.pi) * (
                 a_cross_b_y * term1 +
-                a_cross_xhat_y * term2 -
-                b_cross_xhat_y * term3
+                a_cross_u_y * term2 -
+                b_cross_u_y * term3
         )
         Vij_z = 1 / (4 * np.pi) * (
                 a_cross_b_z * term1 +
-                a_cross_xhat_z * term2 -
-                b_cross_xhat_z * term3
+                a_cross_u_z * term2 -
+                b_cross_u_z * term3
         )
 
         return Vij_x, Vij_y, Vij_z
