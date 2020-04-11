@@ -121,6 +121,7 @@ class Airplane(AeroSandboxObject):
     def draw(self,
              show=True, # type: bool
              colorscale="mint", # type: str
+             colorbar_title="Component ID",
              draw_quarter_chord=True, # type: bool
              ):
         """
@@ -201,6 +202,7 @@ class Airplane(AeroSandboxObject):
         return fig.draw(
             show=show,
             colorscale=colorscale,
+            colorbar_title=colorbar_title,
         )
 
     def is_symmetric(self):

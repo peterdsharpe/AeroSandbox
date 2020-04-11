@@ -200,8 +200,9 @@ class Figure3D:
                 flatshading=False,
                 intensity=self.intensity_face,
                 colorbar=dict(title=colorbar_title),
-                colorscale=colorscale
-            )
+                colorscale=colorscale,
+                showscale=colorbar_title is not None
+            ),
         )
 
         # Draw lines
