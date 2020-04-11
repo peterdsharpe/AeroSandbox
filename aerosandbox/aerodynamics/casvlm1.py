@@ -648,9 +648,10 @@ class Casvlm1(AeroProblem):
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
         :return:
         """
-        print("Drawing...")
+        if self.verbose:
+            print("Drawing...")
 
-        if not self.opti.return_status() == 'Solve_Succeeded':
+        if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
             print("WARNING: This method should only be used after a solution has been found!\n"
                   "Running anyway for debugging purposes - this is likely to not work...")
 

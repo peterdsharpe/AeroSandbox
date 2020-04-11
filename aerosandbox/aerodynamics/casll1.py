@@ -825,7 +825,7 @@ class Casll1(AeroProblem):
         return fuselage_influences
 
     def get_induced_velocity_at_point(self, point):
-        if not self.opti.return_status() == 'Solve_Succeeded':
+        if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
             print("WARNING: This method should only be used after a solution has been found!!!\n"
                   "Running anyway for debugging purposes - this is likely to not work.")
 
@@ -886,7 +886,7 @@ class Casll1(AeroProblem):
 
         self.streamlines = streamlines
 
-    def  draw(self,
+    def draw(self,
              data_to_plot=None,
              data_name=None,
              show=True,
@@ -898,9 +898,10 @@ class Casll1(AeroProblem):
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
         :return:
         """
-        print("Drawing...")
+        if self.verbose:
+            print("Drawing...")
 
-        if not self.opti.return_status() == 'Solve_Succeeded':
+        if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
             print("WARNING: This method should only be used after a solution has been found!\n"
                   "Running anyway for debugging purposes - this is likely to not work...")
 
