@@ -1,5 +1,6 @@
 from .aerodynamics import *
 from ..geometry import *
+from ..visualization import Figure3D
 
 
 class Casll1(AeroProblem):
@@ -13,7 +14,7 @@ class Casll1(AeroProblem):
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
                  opti,  # type: cas.Opti
-                 run_setup = True,
+                 run_setup=True,
                  ):
         super().__init__(airplane, op_point)
         self.opti = opti
@@ -28,7 +29,8 @@ class Casll1(AeroProblem):
               ):
         # Runs a point analysis at the specified op-point.
         self.verbose = verbose
-        if self.verbose: print("\n Initializing CasLL1 Analysis...\n-----------------------")
+        if self.verbose:
+            print("\n Initializing CasLL1 Analysis...\n-----------------------")
 
         if run_symmetric_if_possible:
             try:
@@ -43,16 +45,20 @@ class Casll1(AeroProblem):
 
             if symmetric_problem:
                 self.symmetric_problem = True
-                if self.verbose: print("Symmetry confirmed; running as symmetric problem...")
+                if self.verbose:
+                    print("Symmetry confirmed; running as symmetric problem...")
             else:
                 self.symmetric_problem = False
-                if self.verbose: print(
-                    "Problem appears to be asymmetric, so a symmetric solve is not possible; running as asymmetric problem...")
+                if self.verbose:
+                    print(
+                        "Problem appears to be asymmetric, so a symmetric solve is not possible; running as asymmetric problem...")
         else:
             self.symmetric_problem = False
-            if self.verbose: print("Running as asymmetric problem...")
+            if self.verbose:
+                print("Running as asymmetric problem...")
 
-        if self.verbose: print("Setting up casLL1 calculation...")
+        if self.verbose:
+            print("Setting up casLL1 calculation...")
 
         self.make_panels()
         self.setup_geometry()
@@ -60,12 +66,14 @@ class Casll1(AeroProblem):
         self.calculate_vortex_strengths()
         self.calculate_forces()
 
-        if self.verbose: print("casLL1 setup complete! Ready to pass into the solver...")
+        if self.verbose:
+            print("casLL1 setup complete! Ready to pass into the solver...")
 
     def make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
 
-        if self.verbose: print("Meshing...")
+        if self.verbose:
+            print("Meshing...")
 
         front_left_vertices = []
         front_right_vertices = []
@@ -315,7 +323,8 @@ class Casll1(AeroProblem):
             this_fuse_radii = [xsec.radius for xsec in fuse.xsecs]
             this_fuse_radii = cas.vertcat(*this_fuse_radii)
 
-            fuse_centerline_points.append(this_fuse_centerline_points) # TODO handle fuselage symmetry (non-symmetric problem)
+            fuse_centerline_points.append(
+                this_fuse_centerline_points)  # TODO handle fuselage symmetry (non-symmetric problem)
             fuse_radii.append(this_fuse_radii)
             if (not self.symmetric_problem) and fuse.symmetric:
                 fuse_centerline_points.append(reflect_over_XZ_plane(this_fuse_centerline_points))
@@ -324,19 +333,23 @@ class Casll1(AeroProblem):
         self.fuse_centerline_points = fuse_centerline_points
         self.fuse_radii = fuse_radii
 
-        if self.verbose: print("Meshing complete!")
+        if self.verbose:
+            print("Meshing complete!")
 
     def setup_geometry(self):
-        if self.verbose: print("Calculating the vortex center velocity influence matrix...")
+        if self.verbose:
+            print("Calculating the vortex center velocity influence matrix...")
         self.Vij_x, self.Vij_y, self.Vij_z = self.calculate_Vij(self.vortex_centers)
 
-        if self.verbose: print("Calculating fuselage influences...")
+        if self.verbose:
+            print("Calculating fuselage influences...")
         self.beta = cas.sqrt(1 - self.op_point.mach)
         self.fuselage_velocities = self.calculate_fuselage_influences(self.vortex_centers)
         # TODO do this
 
     def setup_operating_point(self):
-        if self.verbose: print("Calculating the freestream influence...")
+        if self.verbose:
+            print("Calculating the freestream influence...")
         self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
         self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             self.vortex_centers)
@@ -344,7 +357,8 @@ class Casll1(AeroProblem):
             self.rotation_freestream_velocities))  # Nx3, represents the freestream velocity at each vortex center
 
     def calculate_vortex_strengths(self):
-        if self.verbose: print("Calculating vortex strengths...")
+        if self.verbose:
+            print("Calculating vortex strengths...")
 
         # Set up implicit solve (explicit is not possible for general nonlinear problem)
         self.vortex_strengths = self.opti.variable(self.n_panels)
@@ -356,7 +370,7 @@ class Casll1(AeroProblem):
             self.Vij_y @ self.vortex_strengths,
             self.Vij_z @ self.vortex_strengths,
         )
-        self.velocities = self.induced_velocities + self.freestream_velocities + self.fuselage_velocities # TODO just a reminder, fuse added here
+        self.velocities = self.induced_velocities + self.freestream_velocities + self.fuselage_velocities  # TODO just a reminder, fuse added here
         self.alpha_eff_perpendiculars = cas.atan2(
             (
                     self.velocities[:, 0] * self.normal_directions[:, 0] +
@@ -435,7 +449,8 @@ class Casll1(AeroProblem):
 
     def calculate_forces(self):
 
-        if self.verbose: print("Calculating induced forces...")
+        if self.verbose:
+            print("Calculating induced forces...")
         self.forces_inviscid_geometry = self.op_point.density * self.Vi_cross_li * self.vortex_strengths
         force_total_inviscid_geometry = cas.vertcat(
             cas.sum1(self.forces_inviscid_geometry[:, 0]),
@@ -457,7 +472,8 @@ class Casll1(AeroProblem):
         self.force_total_inviscid_wind = cas.transpose(
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_total_inviscid_geometry
 
-        if self.verbose: print("Calculating induced moments...")
+        if self.verbose:
+            print("Calculating induced moments...")
         self.moments_inviscid_geometry = cas.cross(
             cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
             self.forces_inviscid_geometry
@@ -482,7 +498,8 @@ class Casll1(AeroProblem):
         self.moment_total_inviscid_wind = cas.transpose(
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_total_inviscid_geometry
 
-        if self.verbose: print("Calculating profile forces...")
+        if self.verbose:
+            print("Calculating profile forces...")
         self.forces_profile_geometry = (
                 (0.5 * self.op_point.density * self.velocity_magnitudes * self.velocities)
                 * self.CDp_locals * self.areas
@@ -507,7 +524,8 @@ class Casll1(AeroProblem):
         self.force_total_profile_wind = cas.transpose(
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_total_profile_geometry
 
-        if self.verbose: print("Calculating profile moments...")
+        if self.verbose:
+            print("Calculating profile moments...")
         self.moments_profile_geometry = cas.cross(
             cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
             self.forces_profile_geometry
@@ -532,7 +550,8 @@ class Casll1(AeroProblem):
         self.moment_total_profile_wind = cas.transpose(
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_total_profile_geometry
 
-        if self.verbose: print("Calculating pitching moments...")
+        if self.verbose:
+            print("Calculating pitching moments...")
         bound_leg_YZ = self.vortex_bound_leg
         bound_leg_YZ[:, 0] = 0
         self.moments_pitching_geometry = (
@@ -559,7 +578,8 @@ class Casll1(AeroProblem):
         self.moment_total_pitching_wind = cas.transpose(
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_total_pitching_geometry
 
-        if self.verbose: print("Calculating total forces and moments...")
+        if self.verbose:
+            print("Calculating total forces and moments...")
         self.force_total_wind = self.force_total_inviscid_wind + self.force_total_profile_wind
         self.moment_total_wind = self.moment_total_inviscid_wind + self.moment_total_profile_wind
 
@@ -783,7 +803,8 @@ class Casll1(AeroProblem):
             source_z = (dz[:, 1:] + dz[:, :-1]) / 2
 
             areas = cas.pi * this_fuse_radii ** 2
-            freestream_x_component = self.op_point.compute_freestream_velocity_geometry_axes()[0]# TODO add in rotation corrections, add in doublets for alpha
+            freestream_x_component = self.op_point.compute_freestream_velocity_geometry_axes()[
+                0]  # TODO add in rotation corrections, add in doublets for alpha
             strengths = freestream_x_component * cas.diff(areas)
 
             denominator = 4 * cas.pi * (source_x ** 2 + source_y ** 2 + source_z ** 2) ** 1.5
@@ -824,7 +845,8 @@ class Casll1(AeroProblem):
         # Input: a Nx3 numpy array of points that you would like to know the velocities at.
         # Output: a Nx3 numpy array of the velocities at those points.
 
-        Vi = self.get_induced_velocity_at_point(point) + self.calculate_fuselage_influences(point) # TODO just a reminder, fuse added here
+        Vi = self.get_induced_velocity_at_point(point) + self.calculate_fuselage_influences(
+            point)  # TODO just a reminder, fuse added here
 
         freestream = self.op_point.compute_freestream_velocity_geometry_axes()
 
@@ -858,7 +880,13 @@ class Casll1(AeroProblem):
 
         self.streamlines = streamlines
 
-    def draw(self, data_to_plot=None, data_name=None, show=True, draw_streamlines=True, recalculate_streamlines=False):
+    def draw(self,
+             data_to_plot=None,
+             data_name=None,
+             show=True,
+             draw_streamlines=True,
+             recalculate_streamlines=False
+             ):
         """
         Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
@@ -890,358 +918,80 @@ class Casll1(AeroProblem):
             data_name = "Cl * c / c_ref"
             data_to_plot = CL_locals * chords / c_ref
 
-        fig = go.Figure()
+        fig = Figure3D()
 
-        # xe, ye, and ze give the outline of each panel
-        x_edge = []
-        y_edge = []
-        z_edge = []
-
-        # Wings
-        # x, y, and z give the vertices
-        x_wing = []
-        y_wing = []
-        z_wing = []
-        # i, j and k give the connectivity of the vertices
-        i_wing = []
-        j_wing = []
-        k_wing = []
-        intensity_wing = []
         for index in range(len(front_left_vertices)):
-            x_wing.append(front_left_vertices[index, 0])
-            x_wing.append(front_right_vertices[index, 0])
-            x_wing.append(back_right_vertices[index, 0])
-            x_wing.append(back_left_vertices[index, 0])
-            y_wing.append(front_left_vertices[index, 1])
-            y_wing.append(front_right_vertices[index, 1])
-            y_wing.append(back_right_vertices[index, 1])
-            y_wing.append(back_left_vertices[index, 1])
-            z_wing.append(front_left_vertices[index, 2])
-            z_wing.append(front_right_vertices[index, 2])
-            z_wing.append(back_right_vertices[index, 2])
-            z_wing.append(back_left_vertices[index, 2])
-            intensity_wing.append(data_to_plot[index])
-            intensity_wing.append(data_to_plot[index])
-            intensity_wing.append(data_to_plot[index])
-            intensity_wing.append(data_to_plot[index])
-            x_edge.append(front_left_vertices[index, 0])
-            x_edge.append(front_right_vertices[index, 0])
-            x_edge.append(back_right_vertices[index, 0])
-            x_edge.append(back_left_vertices[index, 0])
-            y_edge.append(front_left_vertices[index, 1])
-            y_edge.append(front_right_vertices[index, 1])
-            y_edge.append(back_right_vertices[index, 1])
-            y_edge.append(back_left_vertices[index, 1])
-            z_edge.append(front_left_vertices[index, 2])
-            z_edge.append(front_right_vertices[index, 2])
-            z_edge.append(back_right_vertices[index, 2])
-            z_edge.append(back_left_vertices[index, 2])
-            x_edge.append(None)
-            y_edge.append(None)
-            z_edge.append(None)
-            x_edge.append(left_vortex_vertices[index, 0])
-            x_edge.append(right_vortex_vertices[index, 0])
-            y_edge.append(left_vortex_vertices[index, 1])
-            y_edge.append(right_vortex_vertices[index, 1])
-            z_edge.append(left_vortex_vertices[index, 2])
-            z_edge.append(right_vortex_vertices[index, 2])
-            x_edge.append(None)
-            y_edge.append(None)
-            z_edge.append(None)
-
-            indices_added = np.arange(len(x_wing) - 4, len(x_wing))
-
-            # Add front_left triangle
-            i_wing.append(indices_added[0])
-            j_wing.append(indices_added[1])
-            k_wing.append(indices_added[3])
-            # Add back-right triangle
-            i_wing.append(indices_added[2])
-            j_wing.append(indices_added[3])
-            k_wing.append(indices_added[1])
-
-            if self.symmetric_problem:
-                if self.use_symmetry[index]:
-                    x_wing.append(front_left_vertices[index, 0])
-                    x_wing.append(front_right_vertices[index, 0])
-                    x_wing.append(back_right_vertices[index, 0])
-                    x_wing.append(back_left_vertices[index, 0])
-                    y_wing.append(-front_left_vertices[index, 1])
-                    y_wing.append(-front_right_vertices[index, 1])
-                    y_wing.append(-back_right_vertices[index, 1])
-                    y_wing.append(-back_left_vertices[index, 1])
-                    z_wing.append(front_left_vertices[index, 2])
-                    z_wing.append(front_right_vertices[index, 2])
-                    z_wing.append(back_right_vertices[index, 2])
-                    z_wing.append(back_left_vertices[index, 2])
-                    intensity_wing.append(data_to_plot[index])
-                    intensity_wing.append(data_to_plot[index])
-                    intensity_wing.append(data_to_plot[index])
-                    intensity_wing.append(data_to_plot[index])
-                    x_edge.append(front_left_vertices[index, 0])
-                    x_edge.append(front_right_vertices[index, 0])
-                    x_edge.append(back_right_vertices[index, 0])
-                    x_edge.append(back_left_vertices[index, 0])
-                    y_edge.append(-front_left_vertices[index, 1])
-                    y_edge.append(-front_right_vertices[index, 1])
-                    y_edge.append(-back_right_vertices[index, 1])
-                    y_edge.append(-back_left_vertices[index, 1])
-                    z_edge.append(front_left_vertices[index, 2])
-                    z_edge.append(front_right_vertices[index, 2])
-                    z_edge.append(back_right_vertices[index, 2])
-                    z_edge.append(back_left_vertices[index, 2])
-                    x_edge.append(None)
-                    y_edge.append(None)
-                    z_edge.append(None)
-                    x_edge.append(left_vortex_vertices[index, 0])
-                    x_edge.append(right_vortex_vertices[index, 0])
-                    y_edge.append(-left_vortex_vertices[index, 1])
-                    y_edge.append(-right_vortex_vertices[index, 1])
-                    z_edge.append(left_vortex_vertices[index, 2])
-                    z_edge.append(right_vortex_vertices[index, 2])
-                    x_edge.append(None)
-                    y_edge.append(None)
-                    z_edge.append(None)
-
-                    indices_added = np.arange(len(x_wing) - 4, len(x_wing))
-
-                    # Add front_left triangle
-                    i_wing.append(indices_added[0])
-                    j_wing.append(indices_added[1])
-                    k_wing.append(indices_added[3])
-                    # Add back-right triangle
-                    i_wing.append(indices_added[2])
-                    j_wing.append(indices_added[3])
-                    k_wing.append(indices_added[1])
-
-        fig.add_trace(
-            go.Mesh3d(
-                x=x_wing,
-                y=y_wing,
-                z=z_wing,
-                i=i_wing,
-                j=j_wing,
-                k=k_wing,
-                flatshading=False,
-                intensity=intensity_wing,
-                colorscale="Viridis",
-                colorbar=dict(
-                    title=data_name,
-                    titleside="top",
-                    ticks="outside"
-                )
+            fig.add_quad(
+                points=[
+                    front_left_vertices[index, :],
+                    front_right_vertices[index, :],
+                    back_right_vertices[index, :],
+                    back_left_vertices[index, :],
+                ],
+                intensity=data_to_plot[index],
+                outline=True,
+                mirror=self.symmetric_problem and self.use_symmetry[index]
             )
-        )
+            fig.add_line(
+                points=[
+                    left_vortex_vertices[index],
+                    right_vortex_vertices[index]
+                ],
+                mirror=self.symmetric_problem and self.use_symmetry[index]
+            )
 
-        #Fuselages
-        # x, y, and z give the vertices
-        x_fuse = []
-        y_fuse = []
-        z_fuse = []
-        # i, j and k give the connectivity of the vertices
-        i_fuse = []
-        j_fuse = []
-        k_fuse = []
-        intensity_fuse = []
+        # Fuselages
         for fuse_id in range(len(self.airplane.fuselages)):
-            fuse = self.airplane.fuselages[fuse_id] # type: Fuselage
+            fuse = self.airplane.fuselages[fuse_id]  # type: Fuselage
 
             for xsec_id in range(len(fuse.xsecs) - 1):
-                xsec_1 = fuse.xsecs[xsec_id] # type: FuselageXSec
-                xsec_2 = fuse.xsecs[xsec_id + 1] # type: FuselageXSec
+                xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
+                xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
 
                 r1 = xsec_1.radius
                 r2 = xsec_2.radius
-                points_1 = np.zeros((fuse.circumferential_panels,3))
-                points_2 = np.zeros((fuse.circumferential_panels,3))
+                points_1 = np.zeros((fuse.circumferential_panels, 3))
+                points_2 = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
                     rot = angle_axis_rotation_matrix(
                         2 * cas.pi * point_index / fuse.circumferential_panels,
                         [1, 0, 0],
                         True
                     ).toarray()
-                    points_1[point_index,:] = rot @ np.array([0, 0, r1])
-                    points_2[point_index,:] = rot @ np.array([0, 0, r2])
+                    points_1[point_index, :] = rot @ np.array([0, 0, r1])
+                    points_2[point_index, :] = rot @ np.array([0, 0, r2])
                 points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
                 points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
-                    x_fuse.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    x_fuse.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 0]))
-                    x_fuse.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 0]))
-                    x_fuse.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                    y_fuse.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    y_fuse.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 1]))
-                    y_fuse.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 1]))
-                    y_fuse.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
-                    z_fuse.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    z_fuse.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 2]))
-                    z_fuse.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 2]))
-                    z_fuse.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                    intensity_fuse.append(0)
-                    intensity_fuse.append(0)
-                    intensity_fuse.append(0)
-                    intensity_fuse.append(0)
-                    x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                    x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    y_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
-                    y_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_1[(point_index+1) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_2[(point_index+1) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                    z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    x_edge.append(None)
-                    y_edge.append(None)
-                    z_edge.append(None)
 
-                    indices_added = np.arange(len(x_fuse) - 4, len(x_fuse))
-                    # Add front_inner triangle
-                    i_fuse.append(indices_added[0])
-                    j_fuse.append(indices_added[1])
-                    k_fuse.append(indices_added[3])
-                    # Add back_outer triangle
-                    i_fuse.append(indices_added[2])
-                    j_fuse.append(indices_added[3])
-                    k_fuse.append(indices_added[1])
-
-                    if fuse.symmetric:
-                        x_fuse.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        x_fuse.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_fuse.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_fuse.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                        y_fuse.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        y_fuse.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_fuse.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_fuse.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
-                        z_fuse.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        z_fuse.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_fuse.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_fuse.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                        intensity_fuse.append(0)
-                        intensity_fuse.append(0)
-                        intensity_fuse.append(0)
-                        intensity_fuse.append(0)
-                        x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                        x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        y_edge.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
-                        y_edge.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                        z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        x_edge.append(None)
-                        y_edge.append(None)
-                        z_edge.append(None)
-
-                        indices_added = np.arange(len(x_fuse) - 4, len(x_fuse))
-                        # Add front_inner triangle
-                        i_fuse.append(indices_added[0])
-                        j_fuse.append(indices_added[1])
-                        k_fuse.append(indices_added[3])
-                        # Add back_outer triangle
-                        i_fuse.append(indices_added[2])
-                        j_fuse.append(indices_added[3])
-                        k_fuse.append(indices_added[1])
-
-        fig.add_trace(
-            go.Mesh3d(
-                x=x_fuse,
-                y=y_fuse,
-                z=z_fuse,
-                i=i_fuse,
-                j=j_fuse,
-                k=k_fuse,
-                flatshading=False,
-                intensity=intensity_fuse,
-                showscale=False,
-                color="white",
-                # colorscale="Viridis",
-                # colorbar=dict(
-                #     title=data_name,
-                #     titleside="top",
-                #     ticks="outside"
-                # )
-            )
-        )
-
-        # define the trace for triangle sides
-        fig.add_trace(
-            go.Scatter3d(
-                x=x_edge,
-                y=y_edge,
-                z=z_edge,
-                mode='lines',
-                name='',
-                line=dict(color='rgb(0,0,0)', width=2),
-                showlegend=False
-            )
-        )
+                    fig.add_quad(points=[
+                        points_1[(point_index) % fuse.circumferential_panels, :],
+                        points_1[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_2[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_2[(point_index) % fuse.circumferential_panels, :],
+                    ],
+                        intensity=0,
+                        mirror=fuse.symmetric,
+                    )
 
         if draw_streamlines:
             if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
-                if self.verbose: print("Calculating streamlines...")
+                if self.verbose:
+                    print("Calculating streamlines...")
                 seed_points = (self.back_left_vertices + self.back_right_vertices) / 2
                 self.calculate_streamlines(seed_points=seed_points)
 
-            if self.verbose: print("Parsing streamline data...")
+            if self.verbose:
+                print("Parsing streamline data...")
             n_streamlines = self.streamlines[0].shape[0]
             n_timesteps = len(self.streamlines)
 
-            xs = []
-            ys = []
-            zs = []
-
             for streamlines_num in range(n_streamlines):
-                xs.extend([float(self.streamlines[ts][streamlines_num, 0]) for ts in range(n_timesteps)])
-                ys.extend([float(self.streamlines[ts][streamlines_num, 1]) for ts in range(n_timesteps)])
-                zs.extend([float(self.streamlines[ts][streamlines_num, 2]) for ts in range(n_timesteps)])
-
-                xs.append(None)
-                ys.append(None)
-                zs.append(None)
-
-                if self.symmetric_problem:  # TODO consider removing redundant plotting of centerline surfaces (low priority)
-                    xs.extend([float(self.streamlines[ts][streamlines_num, 0]) for ts in range(n_timesteps)])
-                    ys.extend([-float(self.streamlines[ts][streamlines_num, 1]) for ts in range(n_timesteps)])
-                    zs.extend([float(self.streamlines[ts][streamlines_num, 2]) for ts in range(n_timesteps)])
-
-                    xs.append(None)
-                    ys.append(None)
-                    zs.append(None)
-
-            fig.add_trace(
-                go.Scatter3d(
-                    x=xs,
-                    y=ys,
-                    z=zs,
-                    mode='lines',
-                    name='',
-                    line=dict(color='rgba(119,0,255,200)', width=1),
-                    showlegend=False
+                streamline = [self.streamlines[ts][streamlines_num, :] for ts in range(n_timesteps)]
+                fig.add_streamline(
+                    points=streamline,
+                    mirror=self.symmetric_problem
                 )
-            )
 
-        fig.update_layout(
-            title="%s Airplane, CasLL1 Solution" % self.airplane.name,
-            scene=dict(aspectmode='data'),
-
-        )
-
-        if show:
-            fig.show()
-        else:
-            return fig
+        return fig.draw()

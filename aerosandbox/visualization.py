@@ -8,9 +8,11 @@ def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
     output_vector = input_vector
     shape = output_vector.shape
-    if shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
+    if len(shape)==1 and shape[0]==3:
         output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif shape[1] == 3:  # 2D Nx3 vector
+    elif len(shape)==2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
+        output_vector = output_vector * cas.vertcat(1, -1, 1)
+    elif len(shape)==2 and shape[1] == 3:  # 2D Nx3 vector
         output_vector = cas.horzcat(output_vector[:, 0], -1 * output_vector[:, 1], output_vector[:, 2])
     # elif len(shape) == 3 and shape[2] == 3:  # 3D MxNx3 vector
     #     output_vector = output_vector * cas.array([1, -1, 1])
@@ -23,48 +25,91 @@ class Figure3D:
     def __init__(self):
         self.fig = go.Figure()
 
-        # x, y, and z give the vertices
+        # Vertices of the faces
         self.x_face = []
         self.y_face = []
         self.z_face = []
 
-        # i, j and k give the connectivity of the vertices
+        # Connectivity and color of the faces
         self.i_face = []
         self.j_face = []
         self.k_face = []
         self.intensity_face = []
 
-        # xe, ye, and ze give lines or outlines to draw
-        self.x_edge = []
-        self.y_edge = []
-        self.z_edge = []
+        # Vertices of the lines
+        self.x_line = []
+        self.y_line = []
+        self.z_line = []
 
-    def add_line(self, points):
+        # Vertices of the streamlines
+        self.x_streamline = []
+        self.y_streamline = []
+        self.z_streamline = []
+
+    def add_line(self,
+                 points,
+                 mirror=False,
+                 ):
         """
         Adds a line (or series of lines) to draw.
         :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
+        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
         :return: None
 
         E.g. add_line([(0, 0, 0), (1, 0, 0)])
         """
         for p in points:
-            self.x_edge.append(float(p[0]))
-            self.y_edge.append(float(p[1]))
-            self.z_edge.append(float(p[2]))
-        self.x_edge.append(None)
-        self.y_edge.append(None)
-        self.z_edge.append(None)
+            self.x_line.append(float(p[0]))
+            self.y_line.append(float(p[1]))
+            self.z_line.append(float(p[2]))
+        self.x_line.append(None)
+        self.y_line.append(None)
+        self.z_line.append(None)
+        if mirror:
+            reflected_points = [reflect_over_XZ_plane(point) for point in points]
+            self.add_line(
+                points=reflected_points,
+                mirror=False
+            )
+
+    def add_streamline(self,
+                 points,
+                 mirror=False,
+                 ):
+        """
+        Adds a line (or series of lines) to draw.
+        :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
+        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
+        :return: None
+
+        E.g. add_line([(0, 0, 0), (1, 0, 0)])
+        """
+        for p in points:
+            self.x_streamline.append(float(p[0]))
+            self.y_streamline.append(float(p[1]))
+            self.z_streamline.append(float(p[2]))
+        self.x_streamline.append(None)
+        self.y_streamline.append(None)
+        self.z_streamline.append(None)
+        if mirror:
+            reflected_points = [reflect_over_XZ_plane(point) for point in points]
+            self.add_streamline(
+                points=reflected_points,
+                mirror=False
+            )
 
     def add_tri(self,
             points,
             intensity=0,
             outline=False,
+            mirror=False,
     ):
         """
         Adds a triangular face to draw.
         :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
         :param intensity: Intensity associated with this face
         :param outline: Do you want to outline this triangle? [boolean]
+        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
         :return: None
 
         E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
@@ -82,6 +127,14 @@ class Figure3D:
         self.k_face.append(indices_added[2])
         if outline:
             self.add_line(list(points) + [points[0]])
+        if mirror:
+            reflected_points = [reflect_over_XZ_plane(point) for point in points]
+            self.add_tri(
+                points=reflected_points,
+                intensity=intensity,
+                outline=outline,
+                mirror=False
+            )
 
     def add_quad(self,
             points,
@@ -94,6 +147,7 @@ class Figure3D:
         :param points: an iterable with 4 items. Each item is a 3D point, represented as an iterable of length 3. Points should be given in sequential order.
         :param intensity: Intensity associated with this face
         :param outline: Do you want to outline this quad? [boolean]
+        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
         :return: None
 
         E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
@@ -129,7 +183,9 @@ class Figure3D:
     def draw(self,
              show=True,
              title="",
+             colorscale="viridis"
              ):
+        # Draw faces
         self.fig.add_trace(
             go.Mesh3d(
                 x=self.x_face,
@@ -138,21 +194,36 @@ class Figure3D:
                 i=self.i_face,
                 j=self.j_face,
                 k=self.k_face,
-                flatshading=True,
+                flatshading=False,
                 intensity=self.intensity_face,
-                colorscale="mint"
+                colorscale=colorscale
             )
         )
 
-        # define the trace for triangle sides
+        # Draw lines
         self.fig.add_trace(
             go.Scatter3d(
-                x=self.x_edge,
-                y=self.y_edge,
-                z=self.z_edge,
+                x=self.x_line,
+                y=self.y_line,
+                z=self.z_line,
                 mode='lines',
                 name='',
-                line=dict(color='rgb(0,0,0)', width=3))
+                line=dict(color='rgb(0,0,0)', width=3),
+                showlegend=False,
+            )
+        )
+
+        # Draw streamlines
+        self.fig.add_trace(
+            go.Scatter3d(
+                x=self.x_streamline,
+                y=self.y_streamline,
+                z=self.z_streamline,
+                mode='lines',
+                name='',
+                line=dict(color='rgba(119,0,255,200)', width=1),
+                showlegend=False,
+            )
         )
 
         self.fig.update_layout(

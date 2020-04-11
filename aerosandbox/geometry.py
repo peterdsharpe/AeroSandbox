@@ -118,7 +118,10 @@ class Airplane(AeroSandboxObject):
             for xsec in wing.xsecs:
                 xsec.spanwise_panels = n_spanwise_panels
 
-    def draw(self, show=True):
+    def draw(self,
+             show=True,
+             colorscale="mint",
+             ):
         fig = Figure3D()
 
         # Wings
@@ -179,7 +182,10 @@ class Airplane(AeroSandboxObject):
                         mirror=fuse.symmetric,
                     )
 
-        return fig.draw(show=show)
+        return fig.draw(
+            show=show,
+            colorscale=colorscale,
+        )
 
     def is_symmetric(self):
         for wing in self.wings:
@@ -1467,9 +1473,11 @@ def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
     output_vector = input_vector
     shape = output_vector.shape
-    if shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
+    if len(shape)==1 and shape[0]==3:
         output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif shape[1] == 3:  # 2D Nx3 vector
+    elif len(shape)==2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
+        output_vector = output_vector * cas.vertcat(1, -1, 1)
+    elif len(shape)==2 and shape[1] == 3:  # 2D Nx3 vector
         output_vector = cas.horzcat(output_vector[:, 0], -1 * output_vector[:, 1], output_vector[:, 2])
     # elif len(shape) == 3 and shape[2] == 3:  # 3D MxNx3 vector
     #     output_vector = output_vector * cas.array([1, -1, 1])

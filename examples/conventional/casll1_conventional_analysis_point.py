@@ -143,7 +143,7 @@ except RuntimeError:
 ap_sol = copy.deepcopy(ap)
 ap_sol.substitute_solution(sol)
 
-# ap_sol.draw(show=True)  # Generates a pretty picture!
+ap_sol.draw()  # Generates
 
 print("CL:", ap_sol.CL)
 print("CD:", ap_sol.CD)
