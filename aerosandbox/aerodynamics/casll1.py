@@ -842,7 +842,6 @@ class Casll1(AeroProblem):
         Vi_y = get(Vi_y)
         Vi_z = get(Vi_z)
 
-
         Vi = np.vstack((Vi_x, Vi_y, Vi_z)).T
 
         return Vi
