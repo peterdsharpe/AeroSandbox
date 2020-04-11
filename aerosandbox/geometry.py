@@ -115,18 +115,53 @@ class Airplane(AeroSandboxObject):
         fig = go.Figure()
 
         # x, y, and z give the vertices
-        x = []
-        y = []
-        z = []
+        x_face = []
+        y_face = []
+        z_face = []
         # i, j and k give the connectivity of the vertices
-        i = []
-        j = []
-        k = []
-        intensity = []
+        i_face = []
+        j_face = []
+        k_face = []
+        intensity_face = []
         # xe, ye, and ze give the outline of each panel
-        xe = []
-        ye = []
-        ze = []
+        x_edge = []
+        y_edge = []
+        z_edge = []
+
+        def add_face(points, intensity=0):
+            """
+            Adds a triangular face to draw.
+            :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
+            :param intensity: Intensity associated with this face
+            :return: None
+
+            E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
+            """
+            for p in points:
+                x_face.append(float(p[0]))
+                y_face.append(float(p[1]))
+                z_face.append(float(p[2]))
+                intensity_face.append(intensity)
+            indices_added = np.arange(len(x_face) - 3, len(x_face))
+            i_face.append(indices_added[0])
+            j_face.append(indices_added[1])
+            k_face.append(indices_added[2])
+
+        def add_line(points):
+            """
+            Adds a line (or series of lines) to draw.
+            :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
+            :return: None
+
+            E.g. add_line([(0, 0, 0), (1, 0, 0)])
+            """
+            for p in points:
+                x_edge.append(float(p[0]))
+                y_edge.append(float(p[1]))
+                z_edge.append(float(p[2]))
+            x_edge.append(None)
+            y_edge.append(None)
+            z_edge.append(None)
 
         # Wings
         for wing_id in range(len(self.wings)):
@@ -141,96 +176,52 @@ class Airplane(AeroSandboxObject):
                 le_end = xsec_2.xyz_le + wing.xyz_le
                 te_end = xsec_2.xyz_te() + wing.xyz_le
 
-                x.append(float(le_start[0]))
-                x.append(float(le_end[0]))
-                x.append(float(te_end[0]))
-                x.append(float(te_start[0]))
-                y.append(float(le_start[1]))
-                y.append(float(le_end[1]))
-                y.append(float(te_end[1]))
-                y.append(float(te_start[1]))
-                z.append(float(le_start[2]))
-                z.append(float(le_end[2]))
-                z.append(float(te_end[2]))
-                z.append(float(te_start[2]))
-                intensity.append(wing_id)
-                intensity.append(wing_id)
-                intensity.append(wing_id)
-                intensity.append(wing_id)
-                xe.append(float(le_start[0]))
-                xe.append(float(le_end[0]))
-                xe.append(float(te_end[0]))
-                xe.append(float(te_start[0]))
-                xe.append(float(le_start[0]))
-                ye.append(float(le_start[1]))
-                ye.append(float(le_end[1]))
-                ye.append(float(te_end[1]))
-                ye.append(float(te_start[1]))
-                ye.append(float(le_start[1]))
-                ze.append(float(le_start[2]))
-                ze.append(float(le_end[2]))
-                ze.append(float(te_end[2]))
-                ze.append(float(te_start[2]))
-                ze.append(float(le_start[2]))
-                xe.append(None)
-                ye.append(None)
-                ze.append(None)
-
-                indices_added = np.arange(len(x) - 4, len(x))
-                # Add front_inner triangle
-                i.append(indices_added[0])
-                j.append(indices_added[1])
-                k.append(indices_added[3])
-                # Add back_outer triangle
-                i.append(indices_added[2])
-                j.append(indices_added[3])
-                k.append(indices_added[1])
+                add_face([
+                    le_start,
+                    le_end,
+                    te_start,
+                ],
+                intensity=wing_id
+                )
+                add_face([
+                    te_end,
+                    le_end,
+                    te_start,
+                ],
+                intensity=wing_id
+                )
+                add_line([
+                    le_start,
+                    le_end,
+                    te_end,
+                    te_start,
+                    le_start
+                ])
 
                 if wing.symmetric:
-                    x.append(float(le_start[0]))
-                    x.append(float(le_end[0]))
-                    x.append(float(te_end[0]))
-                    x.append(float(te_start[0]))
-                    y.append(float(-le_start[1]))
-                    y.append(float(-le_end[1]))
-                    y.append(float(-te_end[1]))
-                    y.append(float(-te_start[1]))
-                    z.append(float(le_start[2]))
-                    z.append(float(le_end[2]))
-                    z.append(float(te_end[2]))
-                    z.append(float(te_start[2]))
-                    intensity.append(wing_id)
-                    intensity.append(wing_id)
-                    intensity.append(wing_id)
-                    intensity.append(wing_id)
-                    xe.append(float(le_start[0]))
-                    xe.append(float(le_end[0]))
-                    xe.append(float(te_end[0]))
-                    xe.append(float(te_start[0]))
-                    xe.append(float(le_start[0]))
-                    ye.append(float(-le_start[1]))
-                    ye.append(float(-le_end[1]))
-                    ye.append(float(-te_end[1]))
-                    ye.append(float(-te_start[1]))
-                    ye.append(float(-le_start[1]))
-                    ze.append(float(le_start[2]))
-                    ze.append(float(le_end[2]))
-                    ze.append(float(te_end[2]))
-                    ze.append(float(te_start[2]))
-                    ze.append(float(le_start[2]))
-                    xe.append(None)
-                    ye.append(None)
-                    ze.append(None)
+                    add_face([
+                        reflect_over_XZ_plane(le_start),
+                        reflect_over_XZ_plane(le_end),
+                        reflect_over_XZ_plane(te_start),
+                    ],
+                        intensity=wing_id
+                    )
+                    add_face([
+                        reflect_over_XZ_plane(te_end),
+                        reflect_over_XZ_plane(le_end),
+                        reflect_over_XZ_plane(te_start),
+                    ],
+                        intensity=wing_id
+                    )
+                    add_line([
+                        reflect_over_XZ_plane(le_start),
+                        reflect_over_XZ_plane(le_end),
+                        reflect_over_XZ_plane(te_end),
+                        reflect_over_XZ_plane(te_start),
+                        reflect_over_XZ_plane(le_start),
+                    ])
 
-                    indices_added = np.arange(len(x) - 4, len(x))
-                    # Add front_inner triangle
-                    i.append(indices_added[0])
-                    j.append(indices_added[1])
-                    k.append(indices_added[3])
-                    # Add back_outer triangle
-                    i.append(indices_added[2])
-                    j.append(indices_added[3])
-                    k.append(indices_added[1])
+
         # Fuselages
         for fuse_id in range(len(self.fuselages)):
             fuse = self.fuselages[fuse_id]  # type: Fuselage
@@ -255,107 +246,107 @@ class Airplane(AeroSandboxObject):
                 points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
-                    x.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    x.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    x.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    x.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                    y.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    y.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    y.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    y.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
-                    z.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    z.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    z.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    z.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                    intensity.append(fuse_id)
-                    intensity.append(fuse_id)
-                    intensity.append(fuse_id)
-                    intensity.append(fuse_id)
-                    xe.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    xe.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    xe.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                    xe.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                    xe.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                    ye.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    ye.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    ye.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                    ye.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
-                    ye.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
-                    ze.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    ze.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    ze.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                    ze.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                    ze.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                    xe.append(None)
-                    ye.append(None)
-                    ze.append(None)
+                    x_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
+                    x_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
+                    x_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
+                    x_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
+                    y_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
+                    y_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
+                    y_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
+                    y_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
+                    z_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
+                    z_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
+                    z_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
+                    z_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
+                    intensity_face.append(fuse_id)
+                    intensity_face.append(fuse_id)
+                    intensity_face.append(fuse_id)
+                    intensity_face.append(fuse_id)
+                    x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
+                    x_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
+                    x_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
+                    x_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
+                    x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
+                    y_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
+                    y_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
+                    y_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
+                    y_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 1]))
+                    y_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 1]))
+                    z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
+                    z_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
+                    z_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
+                    z_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
+                    z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
+                    x_edge.append(None)
+                    y_edge.append(None)
+                    z_edge.append(None)
 
-                    indices_added = np.arange(len(x) - 4, len(x))
+                    indices_added = np.arange(len(x_face) - 4, len(x_face))
                     # Add front_inner triangle
-                    i.append(indices_added[0])
-                    j.append(indices_added[1])
-                    k.append(indices_added[3])
+                    i_face.append(indices_added[0])
+                    j_face.append(indices_added[1])
+                    k_face.append(indices_added[3])
                     # Add back_outer triangle
-                    i.append(indices_added[2])
-                    j.append(indices_added[3])
-                    k.append(indices_added[1])
+                    i_face.append(indices_added[2])
+                    j_face.append(indices_added[3])
+                    k_face.append(indices_added[1])
 
                     if fuse.symmetric:
-                        x.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        x.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        x.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                        y.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        y.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        y.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
-                        z.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        z.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        z.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                        intensity.append(fuse_id)
-                        intensity.append(fuse_id)
-                        intensity.append(fuse_id)
-                        intensity.append(fuse_id)
-                        xe.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        xe.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        xe.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
-                        xe.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
-                        xe.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
-                        ye.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        ye.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        ye.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
-                        ye.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
-                        ye.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
-                        ze.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        ze.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        ze.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
-                        ze.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
-                        ze.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
-                        xe.append(None)
-                        ye.append(None)
-                        ze.append(None)
+                        x_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
+                        x_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
+                        x_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
+                        x_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
+                        y_face.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
+                        y_face.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
+                        y_face.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
+                        y_face.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
+                        z_face.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
+                        z_face.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
+                        z_face.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
+                        z_face.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
+                        intensity_face.append(fuse_id)
+                        intensity_face.append(fuse_id)
+                        intensity_face.append(fuse_id)
+                        intensity_face.append(fuse_id)
+                        x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
+                        x_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 0]))
+                        x_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 0]))
+                        x_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 0]))
+                        x_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 0]))
+                        y_edge.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
+                        y_edge.append(float(-points_1[(point_index + 1) % fuse.circumferential_panels, 1]))
+                        y_edge.append(float(-points_2[(point_index + 1) % fuse.circumferential_panels, 1]))
+                        y_edge.append(float(-points_2[(point_index) % fuse.circumferential_panels, 1]))
+                        y_edge.append(float(-points_1[(point_index) % fuse.circumferential_panels, 1]))
+                        z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
+                        z_edge.append(float(points_1[(point_index + 1) % fuse.circumferential_panels, 2]))
+                        z_edge.append(float(points_2[(point_index + 1) % fuse.circumferential_panels, 2]))
+                        z_edge.append(float(points_2[(point_index) % fuse.circumferential_panels, 2]))
+                        z_edge.append(float(points_1[(point_index) % fuse.circumferential_panels, 2]))
+                        x_edge.append(None)
+                        y_edge.append(None)
+                        z_edge.append(None)
 
-                        indices_added = np.arange(len(x) - 4, len(x))
+                        indices_added = np.arange(len(x_face) - 4, len(x_face))
                         # Add front_inner triangle
-                        i.append(indices_added[0])
-                        j.append(indices_added[1])
-                        k.append(indices_added[3])
+                        i_face.append(indices_added[0])
+                        j_face.append(indices_added[1])
+                        k_face.append(indices_added[3])
                         # Add back_outer triangle
-                        i.append(indices_added[2])
-                        j.append(indices_added[3])
-                        k.append(indices_added[1])
+                        i_face.append(indices_added[2])
+                        j_face.append(indices_added[3])
+                        k_face.append(indices_added[1])
 
         fig.add_trace(
             go.Mesh3d(
-                x=x,
-                y=y,
-                z=z,
-                i=i,
-                j=j,
-                k=k,
+                x=x_face,
+                y=y_face,
+                z=z_face,
+                i=i_face,
+                j=j_face,
+                k=k_face,
                 flatshading=True,
-                intensity=intensity,
+                intensity=intensity_face,
                 colorscale="mint"
             )
         )
@@ -363,9 +354,9 @@ class Airplane(AeroSandboxObject):
         # define the trace for triangle sides
         fig.add_trace(
             go.Scatter3d(
-                x=xe,
-                y=ye,
-                z=ze,
+                x=x_edge,
+                y=y_edge,
+                z=z_edge,
                 mode='lines',
                 name='',
                 line=dict(color='rgb(0,0,0)', width=3))
