@@ -50,8 +50,8 @@ generic_airfoil = Airfoil(
 )
 
 # Optimization setup
-n = 10 + 1
-panels_per_section = 5
+n = 12 + 1
+panels_per_section = 4
 # twists = cas.linspace(0, 0, n)
 twists = cas.vertcat(*[variable(0, -10, 10) for i in range(n)])
 # chords = cas.linspace(0.2, 0.2, n)
@@ -148,11 +148,29 @@ print("Cm:", ap_sol.Cm)
 print("Cn:", ap_sol.Cn)
 
 import matplotlib.pyplot as plt
+import matplotlib.style as style
+import seaborn as sns
+sns.set(font_scale=1)
+
 
 plt.figure()
 plt.plot(ap_sol.vortex_centers[:, 1], ap_sol.CL_locals * ap_sol.chords, ".-", label="Optimized Loading")
+plt.annotate(
+    s="Slight deviation from\ninviscid theory due\nto viscous effects",
+    xy=(0.6, 0.08),
+    xytext=(0.2, 0.05),
+    xycoords="data",
+    arrowprops={
+        "color"     : "k",
+        "width"     : 0.25,
+        "headwidth" : 4,
+        "headlength": 6,
+    }
+)
+
+
 plt.xlabel("y [m]")
-plt.ylabel("CL * c")
+plt.ylabel(r"$CL \cdot c$")
 plt.title("Spanload Optimization Test")
 
 y_e = np.linspace(0, 1, 400)
