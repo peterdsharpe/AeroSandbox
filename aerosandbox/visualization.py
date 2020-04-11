@@ -4,15 +4,16 @@ import dash
 import numpy as np
 import casadi as cas
 
+
 def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.
     output_vector = input_vector
     shape = output_vector.shape
-    if len(shape)==1 and shape[0]==3:
+    if len(shape) == 1 and shape[0] == 3:
         output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape)==2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
+    elif len(shape) == 2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
         output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape)==2 and shape[1] == 3:  # 2D Nx3 vector
+    elif len(shape) == 2 and shape[1] == 3:  # 2D Nx3 vector
         output_vector = cas.horzcat(output_vector[:, 0], -1 * output_vector[:, 1], output_vector[:, 2])
     # elif len(shape) == 3 and shape[2] == 3:  # 3D MxNx3 vector
     #     output_vector = output_vector * cas.array([1, -1, 1])
@@ -20,6 +21,7 @@ def reflect_over_XZ_plane(input_vector):
         raise Exception("Invalid input for reflect_over_XZ_plane!")
 
     return output_vector
+
 
 class Figure3D:
     def __init__(self):
@@ -73,9 +75,9 @@ class Figure3D:
             )
 
     def add_streamline(self,
-                 points,
-                 mirror=False,
-                 ):
+                       points,
+                       mirror=False,
+                       ):
         """
         Adds a line (or series of lines) to draw.
         :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
@@ -99,11 +101,11 @@ class Figure3D:
             )
 
     def add_tri(self,
-            points,
-            intensity=0,
-            outline=False,
-            mirror=False,
-    ):
+                points,
+                intensity=0,
+                outline=False,
+                mirror=False,
+                ):
         """
         Adds a triangular face to draw.
         :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
@@ -137,11 +139,11 @@ class Figure3D:
             )
 
     def add_quad(self,
-            points,
-            intensity=0,
-            outline=True,
-            mirror=False,
-    ):
+                 points,
+                 intensity=0,
+                 outline=True,
+                 mirror=False,
+                 ):
         """
         Adds a quadrilateral face to draw. All points should be (approximately) coplanar if you want it to look right.
         :param points: an iterable with 4 items. Each item is a 3D point, represented as an iterable of length 3. Points should be given in sequential order.
@@ -235,3 +237,48 @@ class Figure3D:
             self.fig.show()
 
         return self.fig
+
+
+def spy(
+        matrix,
+        show=True,
+):
+    """
+    Plots the sparsity pattern of a matrix.
+    :param matrix: The matrix to plot the sparsity pattern of. [2D ndarray or CasADi array]
+    :param show: Whether or not to show the sparsity plot. [boolean]
+    :return: The figure to be plotted [go.Figure]
+    """
+    try:
+        matrix = matrix.toarray()
+    except:
+        pass
+    abs_m = np.abs(matrix)
+    sparsity_pattern = abs_m >= 1e-16
+    matrix[sparsity_pattern] = np.log10(abs_m[sparsity_pattern] + 1e-16)
+    j_index_map, i_index_map = np.meshgrid(np.arange(matrix.shape[1]), np.arange(matrix.shape[0]))
+
+    i_index = i_index_map[sparsity_pattern]
+    j_index = j_index_map[sparsity_pattern]
+    val = matrix[sparsity_pattern]
+    val = np.ones_like(i_index)
+    fig = go.Figure(
+        data=go.Heatmap(
+            y=i_index,
+            x=j_index,
+            z=val,
+            # type='heatmap',
+            colorscale='RdBu',
+            showscale=False,
+        ),
+    )
+    fig.update_layout(
+        plot_bgcolor="black",
+        xaxis=dict(showgrid=False, zeroline=False),
+        yaxis=dict(showgrid=False, zeroline=False, autorange="reversed", scaleanchor="x", scaleratio=1),
+        width=800,
+        height=800 * (matrix.shape[0] / matrix.shape[1]),
+    )
+    if show:
+        fig.show()
+    return fig
