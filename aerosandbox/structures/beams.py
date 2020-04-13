@@ -207,7 +207,7 @@ class TubeBeam1(AeroSandboxObject):
 
         if self.bending:
             # Find moments of inertia
-            I = cas.pi / 64 * (  # bending
+            self.I = cas.pi / 64 * (  # bending
                     (self.nominal_diameter + self.thickness) ** 4 -
                     (self.nominal_diameter - self.thickness) ** 4
             )
@@ -226,7 +226,7 @@ class TubeBeam1(AeroSandboxObject):
             self.opti.subject_to([
                 cas.diff(self.u) == trapz(self.du) * dx,
                 cas.diff(self.du) == trapz(self.ddu) * dx,
-                cas.diff(self.E * I * self.ddu) == trapz(self.dEIddu) * dx,
+                cas.diff(self.E * self.I * self.ddu) == trapz(self.dEIddu) * dx,
                 cas.diff(self.dEIddu) == trapz(self.force_per_unit_length) * dx + self.point_forces,
             ])
 

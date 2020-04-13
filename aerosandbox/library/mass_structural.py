@@ -305,3 +305,29 @@ if __name__ == "__main__":
             n_ribs=20,
         )
     )
+
+    # Test Cruz and physics-based mass models
+    span = 34
+    mass_total = 104.1
+
+    mass_wing_primary_cruz = mass_hpa_wing(
+        span=span,
+        chord=0.902,
+        vehicle_mass=mass_total,
+        n_ribs=sol.value(nr_opt),
+        n_wing_sections=1,
+        type="cantilevered"
+    ) - mass_hpa_wing(
+        span=span,
+        chord=0.902,
+        vehicle_mass=mass_total,
+        n_ribs=sol.value(nr_opt),
+        n_wing_sections=1,
+        type="cantilevered",
+        include_spar=False
+    )
+
+    mass_wing_primary_physics = mass_wing_spar(
+        span=span,
+        mass_supported=mass_total
+    )
