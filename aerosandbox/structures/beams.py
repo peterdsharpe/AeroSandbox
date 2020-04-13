@@ -205,13 +205,17 @@ class TubeBeam1(AeroSandboxObject):
         )
         self.mass_proxy = self.volume_proxy * self.density
 
-        if self.bending:
-            # Find moments of inertia
-            self.I = cas.pi / 64 * (  # bending
-                    (self.nominal_diameter + self.thickness) ** 4 -
-                    (self.nominal_diameter - self.thickness) ** 4
-            )
+        # Find moments of inertia
+        self.I = cas.pi / 64 * (  # bending
+                (self.nominal_diameter + self.thickness) ** 4 -
+                (self.nominal_diameter - self.thickness) ** 4
+        )
+        self.J = cas.pi / 32 * (  # torsion
+                (self.nominal_diameter + self.thickness) ** 4 -
+                (self.nominal_diameter - self.thickness) ** 4
+        )
 
+        if self.bending:
             # Set up derivatives
             self.u = 1 * self.opti.variable(self.n)
             self.du = 0.1 * self.opti.variable(self.n)
@@ -245,18 +249,13 @@ class TubeBeam1(AeroSandboxObject):
             self.stress_axial = (self.nominal_diameter + self.thickness) / 2 * self.E * self.ddu
 
         if self.torsion:
-            # Find moments of inertia
-            J = cas.pi / 32 * (  # torsion
-                    (self.nominal_diameter + self.thickness) ** 4 -
-                    (self.nominal_diameter - self.thickness) ** 4
-            )
 
             # Set up derivatives
             phi = 0.1 * self.opti.variable(self.n)
             dphi = 0.01 * self.opti.variable(self.n)
 
             # Add forcing term
-            ddphi = -self.moment_per_unit_length / (self.G * J)
+            ddphi = -self.moment_per_unit_length / (self.G * self.J)
 
         self.stress = self.stress_axial
         self.opti.subject_to([
