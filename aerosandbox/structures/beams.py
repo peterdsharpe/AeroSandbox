@@ -76,7 +76,7 @@ class TubeBeam1(AeroSandboxObject):
         # Calculate G
         if isotropic:
             if G is None:
-                G = E / 2 / (1 + poisson_ratio)
+                self.G = E / 2 / (1 + poisson_ratio)
             elif poisson_ratio is None:
                 pass  # TODO find poisson?
             else:
