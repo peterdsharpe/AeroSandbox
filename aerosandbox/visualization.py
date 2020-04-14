@@ -3,6 +3,11 @@ import plotly.graph_objects as go
 import dash
 import numpy as np
 import casadi as cas
+import matplotlib.pyplot as plt
+import matplotlib.style as style
+import seaborn as sns
+
+sns.set(font_scale=1)
 
 
 def reflect_over_XZ_plane(input_vector):
@@ -285,3 +290,24 @@ def spy(
     if show:
         fig.show()
     return fig
+
+
+def contour(
+        func,  # type: callable
+        x_range,  # type: tuple
+        y_range,  # type: tuple
+        resolution=50,  # type: int
+        show=True,  # type: bool
+):
+    """
+    Makes a contour plot of a function of 2 variables. Can also plot a list of functions.
+    :param func: function of form f(x,y) to plot.
+    :param x_range: Range of x values to plot, expressed as a tuple (x_min, x_max)
+    :param y_range: Range of y values to plot, expressed as a tuple (y_min, y_max)
+    :param resolution: Resolution in x and y to plot. [int]
+    :param show: Should we show the plot?
+    :return:
+    """
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    x = np.linspace(x_range[0], x_range[1], resolution)
+    y = np.linspace(y_range[0], y_range[1], resolution)

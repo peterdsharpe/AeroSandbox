@@ -48,7 +48,7 @@ def solar_elevation_angle(latitude, day_of_year, time):
     return solar_elevation_angle
 
 
-def incidence_angle_function(latitude, day_of_year, time, scattering=False):
+def incidence_angle_function(latitude, day_of_year, time, scattering=True):
     """
     What is the fraction of insolation that a horizontal surface will receive as a function of sun position in the sky?
     :param latitude: Latitude [degrees]
@@ -104,7 +104,7 @@ def scattering_factor(elevation_angle):
     )
     scattering_factor = cas.exp(
         c[0] * (
-            cas.tan(theta_rad*0.999) + c[1] * theta_rad
+                cas.tan(theta_rad * 0.999) + c[1] * theta_rad
         )
     )
 
@@ -123,7 +123,8 @@ def scattering_factor(elevation_angle):
     # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
     return scattering_factor
 
-def solar_flux_on_horizontal(latitude, day_of_year, time, scattering=False):
+
+def solar_flux_on_horizontal(latitude, day_of_year, time, scattering=True):
     """
     What is the solar flux on a horizontal surface for some given conditions?
     :param latitude: Latitude [degrees]
@@ -136,6 +137,28 @@ def solar_flux_on_horizontal(latitude, day_of_year, time, scattering=False):
             solar_flux_outside_atmosphere_normal(day_of_year) *
             incidence_angle_function(latitude, day_of_year, time, scattering)
     )
+
+
+def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True):
+    """
+    How many hours of equivalent peak sun do you get per day?
+    :param latitude: Latitude [degrees]
+    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    :param time: Time since (local) solar noon [seconds]
+    :param scattering: Boolean: include scattering effects at very low angles?
+    :return:
+    """
+    times = np.linspace(0, 86400, 1000)
+    dt = np.diff(times)
+    normalized_fluxes = (
+            # solar_flux_outside_atmosphere_normal(day_of_year) *
+            incidence_angle_function(latitude, day_of_year, times, scattering)
+    )
+    sun_hours = np.sum(
+        (normalized_fluxes[1:]+normalized_fluxes[:-1])/2 * dt
+    ) / 3600
+
+    return sun_hours
 
 
 if __name__ == "__main__":
@@ -195,47 +218,47 @@ if __name__ == "__main__":
     # )
     # fig.show()
 
-    # import matplotlib.pyplot as plt
-    # import matplotlib.style as style
-    # style.use("fivethirtyeight")
-    # # style.use("seaborn")
-    # # style.use("ggplot")
-    #
-    # plt.figure()
-    # lats_to_plot = [26, 49]
-    # lats_to_plot = np.linspace(0, 90, 7)
-    # colors = plt.cm.rainbow(np.linspace(0,1,len(lats_to_plot)))[::-1]
-    # [
-    #     plt.plot(
-    #         times/3600,
-    #         solar_flux_on_horizontal(lats_to_plot[i], 244, times),
-    #         label="%iN Latitude" % lats_to_plot[i],
-    #         color=colors[i]
-    #     ) for i in range(len(lats_to_plot))
-    # ]
-    # plt.grid(True)
-    # plt.legend()
-    # plt.title("Solar Flux on a Horizontal Surface (Aug. 31)")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # plt.show()
-
-    # Check scattering factor
-    elevations = np.linspace(-10,90,800)
-    scatter_factors = scattering_factor(elevations)
-
     import matplotlib.pyplot as plt
     import matplotlib.style as style
-    import seaborn as sns
-    sns.set(font_scale=1)
-    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    plt.plot(elevations, scatter_factors,'.-')
-    plt.xlabel(r"Elevation Angle [deg]")
-    plt.ylabel(r"Scattering Factor")
-    plt.title(r"Scattering Factor")
+
+    style.use("fivethirtyeight")
+    # style.use("seaborn")
+    # style.use("ggplot")
+
+    plt.figure()
+    lats_to_plot = [26, 49]
+    lats_to_plot = np.linspace(0, 90, 7)
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
+    [
+        plt.plot(
+            times / 3600,
+            solar_flux_on_horizontal(lats_to_plot[i], 244, times),
+            label="%iN Latitude" % lats_to_plot[i],
+            color=colors[i]
+        ) for i in range(len(lats_to_plot))
+    ]
+    plt.grid(True)
+    plt.legend()
+    plt.title("Solar Flux on a Horizontal Surface (Aug. 31)")
+    plt.xlabel("Time after Solar Noon [hours]")
+    plt.ylabel(r"Solar Flux [W/m$^2$]")
     plt.tight_layout()
-    # plt.legend()
-    # plt.savefig("C:/Users/User/Downloads/temp.svg")
     plt.show()
 
+    # # Check scattering factor
+    # elevations = np.linspace(-10,90,800)
+    # scatter_factors = scattering_factor(elevations)
+    #
+    # import matplotlib.pyplot as plt
+    # import matplotlib.style as style
+    # import seaborn as sns
+    # sns.set(font_scale=1)
+    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    # plt.plot(elevations, scatter_factors,'.-')
+    # plt.xlabel(r"Elevation Angle [deg]")
+    # plt.ylabel(r"Scattering Factor")
+    # plt.title(r"Scattering Factor")
+    # plt.tight_layout()
+    # # plt.legend()
+    # # plt.savefig("C:/Users/User/Downloads/temp.svg")
+    # plt.show()
