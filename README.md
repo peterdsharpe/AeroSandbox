@@ -1,4 +1,4 @@
-# [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) 
+# [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) :airplane:
 by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
 ## About
