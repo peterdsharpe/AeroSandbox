@@ -22,14 +22,14 @@ AeroSandbox is a work in progress - expect bugs for the time being!
 
 There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section) - if not, do this first.)
 
-1. (Recommended) Type `pip install AeroSandbox` into your terminal. If you would like test cases or examples, download the latest release here: [https://github.com/peterdsharpe/AeroSandbox/releases](https://github.com/peterdsharpe/AeroSandbox/releases).
+1. (Recommended) Type `pip install AeroSandbox` into your terminal. This will install the latest official release of AeroSandbox (update with `pip install --upgrade AeroSandbox`).
 
-2. The option above will download the latest official release of AeroSandbox. If you'd rather get a nightly/dev version (which has more features but may be buggy), clone or download directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
+2. If you would like to get test cases, examples, or the latest dev version (which has more features but may be buggy), clone directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
 
-There are many example cases you can try out in the /examples/ directory! Specifically, try running "/examples/vlm3_conventional.py".
+There are many example cases you can try out in the `/examples/` directory! Specifically, try running `/examples/conventional/casll1_conventional_analysis_point.py`.
 
 ### Usage
-AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. You (yes, you!) can probably learn to analyze a simple airplane and visualize airflow around it within 5 minutes of downloading AeroSandbox. For example, here is all the code that is needed to design a glider, analyze its aerodynamics in flight, and visualize it (found in "/examples/vlm3_conventional.py"):
+AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. You (yes, you!) can probably learn to analyze a simple airplane and visualize airflow around it within 5 minutes of downloading AeroSandbox. For example, here is all the code that is needed to design a glider, analyze its aerodynamics in flight, and visualize it (found in `/examples/conventional/casll1_conventional_analysis_point.py`):
 
 ```python
 from aerosandbox import *
