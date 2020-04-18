@@ -151,11 +151,11 @@ def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True)
     times = np.linspace(0, 86400, 1000)
     dt = np.diff(times)
     normalized_fluxes = (
-            # solar_flux_outside_atmosphere_normal(day_of_year) *
-            incidence_angle_function(latitude, day_of_year, times, scattering)
+        # solar_flux_outside_atmosphere_normal(day_of_year) *
+        incidence_angle_function(latitude, day_of_year, times, scattering)
     )
     sun_hours = np.sum(
-        (normalized_fluxes[1:]+normalized_fluxes[:-1])/2 * dt
+        (normalized_fluxes[1:] + normalized_fluxes[:-1]) / 2 * dt
     ) / 3600
 
     return sun_hours
@@ -220,12 +220,11 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     import matplotlib.style as style
+    import seaborn as sns
 
-    style.use("fivethirtyeight")
-    # style.use("seaborn")
-    # style.use("ggplot")
+    sns.set(font_scale=1)
 
-    plt.figure()
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     lats_to_plot = [26, 49]
     lats_to_plot = np.linspace(0, 90, 7)
     colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
@@ -234,7 +233,8 @@ if __name__ == "__main__":
             times / 3600,
             solar_flux_on_horizontal(lats_to_plot[i], 244, times),
             label="%iN Latitude" % lats_to_plot[i],
-            color=colors[i]
+            color=colors[i],
+            linewidth=3
         ) for i in range(len(lats_to_plot))
     ]
     plt.grid(True)
@@ -243,6 +243,7 @@ if __name__ == "__main__":
     plt.xlabel("Time after Solar Noon [hours]")
     plt.ylabel(r"Solar Flux [W/m$^2$]")
     plt.tight_layout()
+    plt.savefig("C:/Users/User/Downloads/temp.png")
     plt.show()
 
     # # Check scattering factor
