@@ -238,4 +238,5 @@ airplane = asb.Airplane(
     fuselages=fuses,
 )
 
-airplane.draw()
+# airplane.draw()
+airplane.write_aswing("solar1.asw")

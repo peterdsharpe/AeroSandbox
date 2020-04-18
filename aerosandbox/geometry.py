@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
 from aerosandbox.visualization import Figure3D
-import os
+import os, contextlib
 import copy
 
 try:
@@ -215,6 +215,10 @@ class Airplane(AeroSandboxObject):
         )
 
     def is_symmetric(self):
+        """
+        Returns a boolean describing whether the airplane is geometrically entirely symmetric across the XZ-plane.
+        :return: [boolean]
+        """
         for wing in self.wings:
             for xsec in wing.xsecs:
                 if not (xsec.control_surface_type == "symmetric" or xsec.control_surface_deflection == 0):
@@ -231,6 +235,90 @@ class Airplane(AeroSandboxObject):
                         return False
 
         return True
+
+    def write_aswing(self, filepath=None):
+        """
+        Contributed by Brent Avery, Edited by Peter Sharpe. Work in progress.
+        Writes a geometry file compatible with Mark Drela's ASWing.
+        :param filepath: Filepath to write to. Should include ".asw" extension [string]
+        :return: None
+        """
+        if filepath is None:
+            filepath = "%s.asw" % self.name
+        with open(filepath, 'w+') as f:
+            f.write('\n'.join([
+                '#============',
+                'Name',
+                self.name,
+                'End',
+                '',
+                '#============',
+                'Units',
+                'L 0.3048 m',
+                'T 1.0  s',
+                'F 4.450 N',
+                'End',
+                '',
+                '#============',
+                'Constant',
+                '#  g     rho_0     a_0',
+                '%f %f %f' % (9.81, 1.205, 343.3),
+                'End',
+                '', '#============',  # Reference values (change automatically with input file)
+                'Reference',
+                '#   Sref    Cref    Bref',
+                '%f %f %f' % (self.s_ref, self.c_ref, self.b_ref),
+                'End',
+                # Ok so 'ground' is a point on the plane that is constrained from translation or rotation.
+                # Based on the documentation this is usually the 'frontest' part of the aircraft (why do I suck at words).
+                # There is definitely a much better way to do this and I'm working on it but right now I'm just assuming
+                # that it is the front part of the main wing, and just make that a constraint in AeroSandBox
+                '',
+                '#============',
+                'Ground',
+                '#  Nbeam  t',
+                '%i %i' % (1, 0),
+                'End',
+            ]))
+
+            # The juicy stuff! This part of the code iterates over each wing and then subiterates (is that a word?) over
+            # each wing's cross section. Along the way it collects information on chord length, angle, and coordinates of
+            # all the leading edges. It then writes all this info in a way that ASWing likes
+            for i, wing in enumerate(self.wings):
+                xsecs = wing.xsecs
+                chordalfa = []
+                coords = []
+                '''
+                This part is hard to explain but basically I defined t (the beamwise axis)
+                as the axis that the beam changes most along. This can be generalized
+                but I'm not entirely sure how
+                '''
+                max_le = {abs(xsecs[-1].x_le - xsecs[0].x_le): 'sec.x_le', \
+                          abs(xsecs[-1].y_le - xsecs[0].y_le): 'sec.y_le', \
+                          abs(xsecs[-1].z_le - xsecs[0].z_le): 'sec.z_le'}
+                for xsec in xsecs:
+                    if max_le.get(max(max_le)) == 'sec.x_le':
+                        t = xsec.x_le
+                    elif max_le.get(max(max_le)) == 'sec.y_le':
+                        t = xsec.y_le
+                    elif max_le.get(max(max_le)) == 'sec.z_le':
+                        t = xsec.z_le
+                    chordalfa.append('    '.join([str(t), str(xsec.chord), str(xsec.twist)]))
+                    coords.append('    '.join(
+                        [str(t), str(xsec.x_le + wing.xyz_le[0]), str(xsec.y_le + wing.xyz_le[1]),
+                         str(xsec.z_le + wing.xyz_le[2])]))
+                f.write('\n'.join([
+                    '',
+                    '#============',
+                    'Beam %i' % (i + 1),
+                    wing.name,
+                    't    chord    twist',
+                    '\n'.join(chordalfa),
+                    '#',
+                    't    x    y    z',
+                    '\n'.join(coords),
+                    'End'
+                ]))
 
 
 class Wing(AeroSandboxObject):
@@ -1092,6 +1180,7 @@ class Airfoil:
                 reset_bls=False,
                 repanel=False,
                 max_iter=100,
+                verbose=True,
                 ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1105,7 +1194,8 @@ class Airfoil:
         :param reset_bls: Reset boundary layer parameters upon initialization?
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
-        :return: A tuple of (alpha, cl, cd, cm, cp)
+        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+        :return: A dict of {alpha, cl, cd, cm, cp_min}
         """
         try:
             xf = XFoil()
@@ -1128,15 +1218,15 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        cl, cd, cm, cp = xf.a(alpha)
+        cl, cd, cm, cp_min = xf.a(alpha)
         a = alpha
 
         return {
-            "a" : a,
-            "cl": cl,
-            "cd": cd,
-            "cm": cm,
-            "cp": cp
+            "a"     : a,
+            "cl"    : cl,
+            "cd"    : cd,
+            "cm"    : cm,
+            "cp_min": cp_min
         }
 
     def xfoil_cl(self,
@@ -1149,6 +1239,7 @@ class Airfoil:
                  reset_bls=False,
                  repanel=False,
                  max_iter=100,
+                 verbose=True,
                  ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1162,7 +1253,8 @@ class Airfoil:
         :param reset_bls: Reset boundary layer parameters upon initialization?
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
-        :return: A tuple of (alpha, cl, cd, cm, cp)
+        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+        :return: A dict of {alpha, cl, cd, cm, cp_min}
         """
         try:
             xf = XFoil()
@@ -1185,15 +1277,16 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        a, cd, cm, cp = xf.cl(cl)
+        a, cd, cm, cp_min = xf.cl(cl)
+
         cl = cl
 
         return {
-            "a" : a,
-            "cl": cl,
-            "cd": cd,
-            "cm": cm,
-            "cp": cp
+            "a"     : a,
+            "cl"    : cl,
+            "cd"    : cd,
+            "cm"    : cm,
+            "cp_min": cp_min
         }
 
     def xfoil_aseq(self,
@@ -1208,6 +1301,7 @@ class Airfoil:
                    reset_bls=False,
                    repanel=False,
                    max_iter=100,
+                   verbose=True,
                    ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1223,7 +1317,8 @@ class Airfoil:
         :param reset_bls: Reset boundary layer parameters upon initialization?
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
-        :return: A tuple of (alphas, cls, cds, cms, cps)
+        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+        :return: A dict of {alphas, cls, cds, cms, cp_mins}
         """
         try:
             xf = XFoil()
@@ -1246,14 +1341,14 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        a, cl, cd, cm, cp = xf.aseq(a_start, a_end, a_step)
+        a, cl, cd, cm, cp_min = xf.aseq(a_start, a_end, a_step)
 
         return {
-            "a" : a,
-            "cl": cl,
-            "cd": cd,
-            "cm": cm,
-            "cp": cp
+            "a"     : a,
+            "cl"    : cl,
+            "cd"    : cd,
+            "cm"    : cm,
+            "cp_min": cp_min
         }
 
     def xfoil_cseq(self,
@@ -1268,6 +1363,7 @@ class Airfoil:
                    reset_bls=False,
                    repanel=False,
                    max_iter=100,
+                   verbose=True,
                    ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1283,7 +1379,8 @@ class Airfoil:
         :param reset_bls: Reset boundary layer parameters upon initialization?
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
-        :return: A tuple of (alphas, cls, cds, cms, cps)
+        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+        :return: A dict of {alphas, cls, cds, cms, cp_mins}
         """
         try:
             xf = XFoil()
@@ -1306,14 +1403,14 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        a, cl, cd, cm, cp = xf.cseq(cl_start, cl_end, cl_step)
+        a, cl, cd, cm, cp_min = xf.cseq(cl_start, cl_end, cl_step)
 
         return {
-            "a" : a,
-            "cl": cl,
-            "cd": cd,
-            "cm": cm,
-            "cp": cp
+            "a"     : a,
+            "cl"    : cl,
+            "cd"    : cd,
+            "cm"    : cm,
+            "cp_min": cp_min
         }
 
 
