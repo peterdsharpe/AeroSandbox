@@ -1,14 +1,15 @@
 import casadi as cas
 from aerosandbox.geometry import *
 
+
 class OperatingPoint(AeroSandboxObject):
     def __init__(self,
-                 density=1.225, # kg/m^3
-                 viscosity=1.81e-5, # kg/m-s
-                 velocity=10, # m/s
-                 mach = 0, # Freestream mach number
-                 alpha=5, # In degrees
-                 beta=0, # In degrees
+                 density=1.225,  # kg/m^3
+                 viscosity=1.81e-5,  # kg/m-s
+                 velocity=10,  # m/s
+                 mach=0,  # Freestream mach number
+                 alpha=5,  # In degrees
+                 beta=0,  # In degrees
                  p=0,  # About the body x-axis, in rad/sec
                  q=0,  # About the body y-axis, in rad/sec
                  r=0,  # About the body z-axis, in rad/sec
@@ -93,9 +94,9 @@ class OperatingPoint(AeroSandboxObject):
         b = points
 
         rotation_velocity_geometry_axes = cas.horzcat(
-            a[1]*b[:,2] - a[2] * b[:,1],
-            a[2]*b[:,0] - a[0] * b[:,2],
-            a[0]*b[:,1] - a[1] * b[:,0]
+            a[1] * b[:, 2] - a[2] * b[:, 1],
+            a[2] * b[:, 0] - a[0] * b[:, 2],
+            a[0] * b[:, 1] - a[1] * b[:, 0]
         )
 
         rotation_velocity_geometry_axes = -rotation_velocity_geometry_axes  # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
@@ -109,6 +110,7 @@ class OperatingPoint(AeroSandboxObject):
         :return: Reynolds number [unitless]
         """
         return self.density * self.velocity * reference_length / self.viscosity
+
 
 class AeroData:
     # A class where aerodynamic data is stored.

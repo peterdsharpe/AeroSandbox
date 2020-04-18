@@ -99,7 +99,8 @@ class Buildup(AeroProblem):
             for i, wing in enumerate(self.airplane.wings)
         ]
         self.drag_wing_induceds = [
-            self.lift_wings[i] ** 2 / (self.op_point.dynamic_pressure() * np.pi * wing.span() ** 2 * self.wing_oswalds_efficiencies[i])
+            self.lift_wings[i] ** 2 / (
+                        self.op_point.dynamic_pressure() * np.pi * wing.span() ** 2 * self.wing_oswalds_efficiencies[i])
             for i, wing in enumerate(self.airplane.wings)
         ]
 
@@ -111,11 +112,12 @@ class Buildup(AeroProblem):
         self.wing_Cm_incs = [
             self.wing_airfoils[i].Cm_function(self.op_point.alpha + wing.mean_twist_angle(), self.wing_Res[i], 0, 0)
             for i, wing in enumerate(self.airplane.wings)
-        ] # Incompressible 2D moment coefficient
+        ]  # Incompressible 2D moment coefficient
         self.wing_CMs = [
-            self.wing_Cm_incs[i] * aero.CL_over_Cl(wing.aspect_ratio(), mach=self.op_point.mach, sweep=wing.mean_sweep_angle())
+            self.wing_Cm_incs[i] * aero.CL_over_Cl(wing.aspect_ratio(), mach=self.op_point.mach,
+                                                   sweep=wing.mean_sweep_angle())
             for i, wing in enumerate(self.airplane.wings)
-        ] # Compressible 3D moment coefficient
+        ]  # Compressible 3D moment coefficient
         self.local_moment_wings = [
             self.wing_CMs[i] * self.op_point.dynamic_pressure() * wing.area() * wing.mean_geometric_chord()
             for i, wing in enumerate(self.airplane.wings)
