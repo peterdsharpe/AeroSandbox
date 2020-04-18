@@ -93,7 +93,6 @@ airplane = Airplane(
         ),
     ]
 )
-airplane.set_paneling_everywhere(1, 20)
 ap = Casll1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(

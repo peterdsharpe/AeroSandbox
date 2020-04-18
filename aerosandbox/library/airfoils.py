@@ -40,7 +40,7 @@ e216 = Airfoil(
             Cd_wave_e216(Cl=Cl_e216(alpha=alpha, Re_c=Re), mach=mach)
     ),
     Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function about quarter-chord
-        -0.15  # TODO
+        -0.15
     ),  # TODO make this an actual curve!
 )
 

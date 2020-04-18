@@ -1,5 +1,5 @@
-from ..geometry import *
-from ..performance import *
+from aerosandbox.geometry import *
+from aerosandbox.performance import *
 
 class AeroProblem(AeroSandboxObject):
     def __init__(self,

@@ -13,3 +13,6 @@ class AirfoilFitter():
 
 
 af = AirfoilFitter(Airfoil("e216"))
+
+if __name__ == '__main__':
+    pass

@@ -1,6 +1,6 @@
-from .aerodynamics import *
-from ..geometry import *
-from ..visualization import Figure3D
+from aerosandbox.aerodynamics.aerodynamics import *
+from aerosandbox.geometry import *
+from aerosandbox.visualization import Figure3D
 
 
 class Casll1(AeroProblem):

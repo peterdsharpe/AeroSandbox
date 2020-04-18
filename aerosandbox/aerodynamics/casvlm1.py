@@ -1,5 +1,5 @@
-from .aerodynamics import *
-from ..geometry import *
+from aerosandbox.aerodynamics.aerodynamics import *
+from aerosandbox.geometry import *
 
 
 class Casvlm1(AeroProblem):

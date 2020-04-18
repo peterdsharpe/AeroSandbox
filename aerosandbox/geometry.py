@@ -2,7 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
-from .visualization import Figure3D
+from aerosandbox.visualization import Figure3D
 import os
 import copy
 
@@ -12,7 +12,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-from .casadi_helpers import *
+from aerosandbox.casadi_helpers import *
 
 pio.renderers.default = "browser"
 
@@ -802,7 +802,7 @@ class Airfoil:
 
     def LE_index(self):
         # Returns the index of the leading-edge point.
-        return np.argmin(self.coordinates[:, 0])  # TODO comment out
+        return np.argmin(self.coordinates[:, 0])
 
     def lower_coordinates(self):
         # Returns a matrix (N by 2) of [x, y] coordinates that describe the lower surface of the airfoil.
@@ -1320,7 +1320,7 @@ class Airfoil:
 class Fuselage(AeroSandboxObject):
     """
     Definition for a fuselage or other slender body (pod, etc.).
-    For now, all fuselages are assumed to be fairly closely aligned with the body x axis. (<10 deg or so) # TODO update if this changes
+    For now, all fuselages are assumed to be circular and fairly closely aligned with the body x axis. (<10 deg or so) # TODO update if this changes
     """
 
     def __init__(self,

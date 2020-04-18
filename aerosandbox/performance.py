@@ -1,5 +1,5 @@
 import casadi as cas
-from .geometry import *
+from aerosandbox.geometry import *
 
 class OperatingPoint(AeroSandboxObject):
     def __init__(self,

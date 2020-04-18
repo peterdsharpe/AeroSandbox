@@ -28,8 +28,8 @@ boom_diameter = 0.2
 
 wing = asb.Wing(
     name="Main Wing",
-    # x_le=-0.05 * wing_root_chord,  # Coordinates of the wing's leading edge # TODO make this a free parameter?
-    x_le=wing_x_quarter_chord,  # Coordinates of the wing's leading edge # TODO make this a free parameter?
+    # x_le=-0.05 * wing_root_chord,  # Coordinates of the wing's leading edge
+    x_le=wing_x_quarter_chord,  # Coordinates of the wing's leading edge
     y_le=0,  # Coordinates of the wing's leading edge
     z_le=0,  # Coordinates of the wing's leading edge
     symmetric=True,
@@ -67,7 +67,7 @@ hstab = asb.Wing(
             y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             chord=hstab_chord,
-            twist=-3,  # degrees # TODO fix
+            twist=-3,  # degrees
             airfoil=generic_airfoil,  # Airfoils are blended between a given XSec and the next one.
             control_surface_type='symmetric',
             # Flap # Control surfaces are applied between a given XSec and the next one.
@@ -78,7 +78,7 @@ hstab = asb.Wing(
             y_le=hstab_span / 2,
             z_le=0,
             chord=hstab_chord,
-            twist=-3,  # TODO fix
+            twist=-3,
             airfoil=generic_airfoil,
         ),
     ]
