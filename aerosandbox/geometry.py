@@ -3,6 +3,8 @@ import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
 from .visualization import Figure3D
+import os
+import copy
 
 try:
     from xfoil import XFoil
@@ -126,10 +128,10 @@ class Airplane(AeroSandboxObject):
                 xsec.spanwise_panels = n_spanwise_panels
 
     def draw(self,
-             show=True, # type: bool
-             colorscale="mint", # type: str
+             show=True,  # type: bool
+             colorscale="mint",  # type: str
              colorbar_title="Component ID",
-             draw_quarter_chord=True, # type: bool
+             draw_quarter_chord=True,  # type: bool
              ):
         """
         Draws the airplane using a Plotly interface.
@@ -163,7 +165,7 @@ class Airplane(AeroSandboxObject):
                     mirror=wing.symmetric,
                 )
                 if draw_quarter_chord:
-                    fig.add_line( # draw the quarter-chord line
+                    fig.add_line(  # draw the quarter-chord line
                         points=[
                             0.75 * le_start + 0.25 * te_start,
                             0.75 * le_end + 0.25 * te_end,
@@ -261,7 +263,6 @@ class Wing(AeroSandboxObject):
             len(self.xsecs),
             "symmetric" if self.symmetric else "not symmetric"
         )
-
 
     def area(self,
              type="wetted"
@@ -542,17 +543,9 @@ class WingXSec(AeroSandboxObject):
 
 
 class Airfoil:
-    cached_airfoils = []
-
     def __init__(self,
                  name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
-                 LE_index=None,
-                 # If you supply "coordinates", you can manually specify the index of the leading edge here.
-                 use_cache=True,  # Look in the airfoil cache, based on the airfoil's name. # TODO make airfoil caching
-                 repanel=True,  # Should we repanel the airfoil upon initialization?
-                 find_mcl=True,  # Should we attempt to find the mean camber line upon initialization?
-                 n_points_per_side=400,  # Number of points to use when repaneling the airfoil (if repanel is True)
                  CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
                          (alpha * np.pi / 180) * (2 * np.pi)
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
@@ -560,34 +553,41 @@ class Airfoil:
                          (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
                  Cm_function=lambda alpha, Re, mach, deflection: (
-                 # Moment coefficient function (about quarter-chord) (alpha in deg)
+                         # Moment coefficient function (about quarter-chord) (alpha in deg)
                          0
                  ),  # type: callable # with exactly the arguments listed (no more, no fewer).
                  ):
-        if (name is not None) or (coordinates is not None):
-            if name is not None:
-                self.name = name
-            else:
-                self.name = "Untitled"
-            if coordinates is not None:
+        """
+        Creates an Airfoil object.
+        :param name: Name of the airfoil [string]
+        :param coordinates: Either:
+            a) None if "name" is a 4-digit NACA airfoil (e.g. "naca2412"),
+            a) None if "name" is the name of an airfoil in the UIUC airfoil database (must be the name of the .dat file, e.g. "s1223"),
+            b) a filepath to a .dat file (including the .dat) [string], or
+            c) an array of coordinates [Nx2 ndarray].
+        :param CL_function:
+        :param CDp_function:
+        :param Cm_function:
+        """
+        self.name = name if name is not None else "Untitled"
+        self.coordinates = None
+        if coordinates is not None:
+            if type(coordinates) is str:  # Assume coordinates is a filepath to a .dat file
+                try:
+                    self.populate_coordinates_from_filepath(filepath=coordinates)
+                except Exception as e:
+                    print(e)
+                    print("Couldn't populate coordinates from filepath!")
+            else:  # Assume coordinates are the actual coordinates
                 self.coordinates = coordinates
-                if LE_index is None:
-                    self.LE_index = np.argmin(self.coordinates[:, 0])
-                else:
-                    self.LE_index = LE_index
-            else:
-                self.populate_coordinates()  # populates self.coordinates
-            assert hasattr(self, 'coordinates'), "Couldn't figure out the coordinates of this airfoil! You need to either \
-            a) use a name corresponding to an airfoil in the UIUC Airfoil Database or \
-            b) provide your own coordinates in the constructor, such as Airfoil(""MyFoilName"", <Nx2 array of coordinates>)."
-
-            # self.normalize()
-            if repanel:
-                self.repanel_current_airfoil(
-                    n_points_per_side=n_points_per_side)  # all airfoils are automatically repaneled to ensure consistent, good paneling.
-
-            if find_mcl:
-                self.populate_mcl_coordinates()
+        else:  # There are no coordinates given
+            try:  # See if it's a NACA airfoil
+                self.populate_coordinates_from_naca()
+            except:
+                try:  # See if it's in the UIUC airfoil database
+                    self.populate_coordinates_from_UIUC_database()
+                except:
+                    pass
 
         self.CL_function = CL_function
         self.CDp_function = CDp_function
@@ -599,155 +599,174 @@ class Airfoil:
             self.coordinates.shape[0] if self.coordinates is not None else 0,
         )
 
-    def populate_coordinates(self):
-        # Populates a variable called self.coordinates with the coordinates of the airfoil.
+    def populate_coordinates_from_naca(self, n_points_per_side=100):
+        """
+        Populates a variable called self.coordinates with the coordinates of the airfoil.
+        :param n_points_per_side: Number of points per side of the airfoil (top/bottom).
+        :return: None (in-place)
+        """
+        name = self.name.lower().strip()
+        assert "naca" in name, "Not a NACA airfoil!"
+
+        nacanumber = name.split("naca")[1]
+        assert nacanumber.isdigit(), "Couldn't parse the number of the NACA airfoil!"
+
+        assert len(nacanumber) == 4, "Can only parse 4-digit NACA airfoils at the moment!"
+
+        # Parse
+        max_camber = int(nacanumber[0]) * 0.01
+        camber_loc = int(nacanumber[1]) * 0.1
+        thickness = int(nacanumber[2:]) * 0.01
+
+        # Referencing https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_cambered_4-digit_NACA_airfoil
+        # from here on out
+
+        # Make uncambered coordinates
+        x_t = cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
+        y_t = 5 * thickness * (
+                + 0.2969 * x_t ** 0.5
+                - 0.1260 * x_t
+                - 0.3516 * x_t ** 2
+                + 0.2843 * x_t ** 3
+                - 0.1015 * x_t ** 4  # 0.1015 is original, #0.1036 for sharp TE
+        )
+
+        if camber_loc == 0:
+            camber_loc = 0.5  # prevents divide by zero errors for things like naca0012's.
+
+        # Get camber
+
+        y_c = cas.if_else(
+            x_t <= camber_loc,
+            max_camber / camber_loc ** 2 * (2 * camber_loc * x_t - x_t ** 2),
+            max_camber / (1 - camber_loc) ** 2 * ((1 - 2 * camber_loc) + 2 * camber_loc * x_t - x_t ** 2)
+        )
+
+        # Get camber slope
+        dycdx = cas.if_else(
+            x_t <= camber_loc,
+            2 * max_camber / camber_loc ** 2 * (camber_loc - x_t),
+            2 * max_camber / (1 - camber_loc) ** 2 * (camber_loc - x_t)
+        )
+        theta = cas.atan(dycdx)
+
+        # Combine everything
+        x_U = x_t - y_t * cas.sin(theta)
+        x_L = x_t + y_t * cas.sin(theta)
+        y_U = y_c + y_t * cas.cos(theta)
+        y_L = y_c - y_t * cas.cos(theta)
+
+        # Flip upper surface so it's back to front
+        x_U, y_U = flipud(x_U), flipud(y_U)
+
+        # Trim 1 point from lower surface so there's no overlap
+        x_L, y_L = x_L[1:], y_L[1:]
+
+        x = cas.vertcat(x_U, x_L)
+        y = cas.vertcat(y_U, y_L)
+
+        self.coordinates = np.array(cas.horzcat(x, y))
+
+    def populate_coordinates_from_UIUC_database(self):
+        """
+        Populates a variable called self.coordinates with the coordinates of the airfoil.
+        :return: None (in-place)
+        """
+
         name = self.name.lower().strip()
 
-        # If it's a NACA 4-series airfoil, try to generate it
-        if "naca" in name:
-            nacanumber = name.split("naca")[1]
-            if nacanumber.isdigit():
-                if len(nacanumber) == 4:
+        import importlib.resources
+        from . import airfoils
 
-                    # Parse
-                    max_camber = int(nacanumber[0]) * 0.01
-                    camber_loc = int(nacanumber[1]) * 0.1
-                    thickness = int(nacanumber[2:]) * 0.01
-
-                    # Set number of points per side
-                    n_points_per_side = 100
-
-                    # Referencing https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_cambered_4-digit_NACA_airfoil
-                    # from here on out
-
-                    # Make uncambered coordinates
-                    x_t = cosspace(n_points=n_points_per_side)  # Generate some cosine-spaced points
-                    y_t = 5 * thickness * (
-                            + 0.2969 * x_t ** 0.5
-                            - 0.1260 * x_t
-                            - 0.3516 * x_t ** 2
-                            + 0.2843 * x_t ** 3
-                            - 0.1015 * x_t ** 4  # 0.1015 is original, #0.1036 for sharp TE
-                    )
-
-                    if camber_loc == 0:
-                        camber_loc = 0.5  # prevents divide by zero errors for things like naca0012's.
-
-                    # Get camber
-                    y_c = cas.if_else(
-                        x_t <= camber_loc,
-                        max_camber / camber_loc ** 2 * (2 * camber_loc * x_t - x_t ** 2),
-                        max_camber / (1 - camber_loc) ** 2 * ((1 - 2 * camber_loc) + 2 * camber_loc * x_t - x_t ** 2)
-                    )
-
-                    # Get camber slope
-                    dycdx = cas.if_else(
-                        x_t <= camber_loc,
-                        2 * max_camber / camber_loc ** 2 * (camber_loc - x_t),
-                        2 * max_camber / (1 - camber_loc) ** 2 * (camber_loc - x_t)
-                    )
-                    theta = cas.atan(dycdx)
-
-                    # Combine everything
-                    x_U = x_t - y_t * cas.sin(theta)
-                    x_L = x_t + y_t * cas.sin(theta)
-                    y_U = y_c + y_t * cas.cos(theta)
-                    y_L = y_c - y_t * cas.cos(theta)
-
-                    # Flip upper surface so it's back to front
-                    x_U, y_U = flipud(x_U), flipud(y_U)
-
-                    # Trim 1 point from lower surface so there's no overlap
-                    x_L, y_L = x_L[1:], y_L[1:]
-
-                    x = cas.vertcat(x_U, x_L)
-                    y = cas.vertcat(y_U, y_L)
-
-                    coordinates = cas.horzcat(x, y)
-
-                    self.coordinates = coordinates
-                    self.LE_index = np.argmin(self.coordinates[:, 0])
-                    return
-                else:
-                    print("Unfortunately, only 4-series NACA airfoils can be generated at this time.")
-
-        # Try to read from airfoil database
         try:
-            import importlib.resources
-            from . import airfoils
-            raw_text = importlib.resources.read_text(airfoils, name + '.dat')
-            trimmed_text = raw_text[raw_text.find('\n'):]
+            with importlib.resources.open_text(airfoils, name) as f:
+                raw_text = f.readlines()
+        except:
+            with importlib.resources.open_text(airfoils, name + '.dat') as f:
+                raw_text = f.readlines()
 
-            coordinates1D = np.fromstring(trimmed_text, sep='\n')  # returns the coordinates in a 1D array
-            assert len(
-                coordinates1D) % 2 == 0, 'File was found in airfoil database, but it could not be read correctly!'  # Should be even
+        trimmed_text = []
+        for line in raw_text:
+            try:
+                line_np = np.fromstring(line, sep=" ")
+                if line_np.shape[0] == 2:
+                    trimmed_text.append(line_np)
+            except:
+                pass
 
-            coordinates = np.reshape(coordinates1D, (-1, 2))
-            self.coordinates = coordinates
-            self.LE_index = np.argmin(self.coordinates[:, 0])
-            return
+        coordinates = np.hstack(trimmed_text).reshape((-1, 2))
+        self.coordinates = coordinates
 
-        except FileNotFoundError:
-            print("Could not find a file associated with your airfoil (%s.dat) in airfoil database!" % name)
+    def populate_coordinates_from_filepath(self, filepath):
+        """
+        Populates a variable called self.coordinates with the coordinates of the airfoil.
+        :param filepath: A DAT file to pull the airfoil coordinates from. (includes the ".dat") [string]
+        :return: None (in-place)
+        """
+        try:
+            with open(filepath, "r") as f:
+                raw_text = f.readlines()
+        except:
+            with open(filepath + ".dat", "r") as f:
+                raw_text = f.readlines()
 
-    def populate_mcl_coordinates(self):
-        # Populates self.mcl_coordinates, a Nx2 list of the airfoil's mean camber line coordinates.
-        # Ordered from the leading edge to the trailing edge.
-        #
-        # Also populates self.upper_minus_mcl and self.lower_minus mcl, which are Nx2 lists of the vectors needed to
-        # go from the mcl coordinates to the upper and lower surfaces, respectively. Both listed leading-edge to trailing-edge.
-        #
-        # Also populates self.thickness, a vector of the thicknesses at the mcl_coordinates p-points.
+        trimmed_text = []
+        for line in raw_text:
+            try:
+                line_np = np.fromstring(line, sep=" ")
+                if line_np.shape[0] == 2:
+                    trimmed_text.append(line_np)
+            except:
+                pass
 
-        upper = flipud(self.upper_coordinates())
+        coordinates = np.hstack(trimmed_text).reshape((-1, 2))
+        self.coordinates = coordinates
+
+    def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
+        """
+        Returns the local camber of the airfoil.
+        :param x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
+        :return: Local camber of the airfoil (y/c) [1D array].
+        """
+        # TODO casadify?
+        upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
 
-        assert upper.shape == lower.shape, "The upper and lower surfaces must have the same number of coordinates before you can call Airfoil.populate_mcl_coordinates(). You should use the Airfoil.repanel() method first."
+        upper_interpolated = np.interp(
+            x_over_c,
+            upper[:, 0],
+            upper[:, 1],
+        )
+        lower_interpolated = np.interp(
+            x_over_c,
+            lower[:, 0],
+            lower[:, 1],
+        )
 
-        mcl_coordinates = (upper + lower) / 2
-        self.mcl_coordinates = mcl_coordinates
+        return (upper_interpolated + lower_interpolated) / 2
 
-        self.upper_minus_mcl = upper - self.mcl_coordinates
-        # self.lower_minus_mcl = -self.upper_minus_mcl
+    def local_thickness(self, x_over_c=np.linspace(0, 1, 101)):
+        """
+        Returns the local thickness of the airfoil.
+        :param x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
+        :return: Local thickness of the airfoil (y/c) [1D array].
+        """
+        # TODO casadify?
+        upper = self.upper_coordinates()[::-1]
+        lower = self.lower_coordinates()
 
-        self.thickness = 2 * self.upper_minus_mcl
+        upper_interpolated = np.interp(
+            x_over_c,
+            upper[:, 0],
+            upper[:, 1],
+        )
+        lower_interpolated = np.interp(
+            x_over_c,
+            lower[:, 0],
+            lower[:, 1],
+        )
 
-    # def normalize(self): # TODO make this return a new airfoil instead
-    #     # Alters the airfoil's coordinates to exactly achieve several goals:
-    #     #   # x_c == 0
-    #     #   # y_c == 0
-    #     #   # average( y_te_upper, y_te_lower ) == 0
-    #     #   # max( x_te_upper, x_te_upper ) == 1
-    #     # The first two goals are achieved by translating in p and y. The third goal is achieved by rotating about (0,0).
-    #     # The fourth goal is achieved by uniform scaling.
-    #
-    #     # Goals 1 and 2
-    #     LE_point_original = self.coordinates[self.LE_index, :]
-    #     assert abs(LE_point_original[
-    #                    0]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
-    #                    Are you sure this isn't bad airfoil geometry?"
-    #     assert abs(LE_point_original[
-    #                    1]) < 0.02, "The leading edge point x_coordinate looks like it's at a really weird location! \
-    #                    Are you sure this isn't bad airfoil geometry?"
-    #     self.coordinates -= LE_point_original
-    #
-    #     # Goal 3
-    #     TE_point_pre_rotation = (self.coordinates[0, :] + self.coordinates[-1, :]) / 2
-    #     rotation_angle = -cas.arctan(TE_point_pre_rotation[1] / TE_point_pre_rotation[
-    #         0])  # You need to rotate this many radians counterclockwise
-    #     assert abs(cas.degrees(
-    #         rotation_angle)) < 0.5, "The foil appears to be really weirdly rotated! \
-    #         Are you sure this isn't bad airfoil geometry?"
-    #     cos_theta = cas.cos(rotation_angle)
-    #     sin_theta = cas.sin(rotation_angle)
-    #     rotation_matrix = cas.array([[cos_theta, -sin_theta], [sin_theta, cos_theta]])
-    #     self.coordinates = cas.transpose(rotation_matrix @ cas.transpose(self.coordinates))
-    #
-    #     # Goal 4
-    #     x_max = cas.fmax(self.coordinates[:, 0])
-    #     assert x_max <= 1.02 and x_max >= 0.98, "x_max is really weird! Are you sure this isn't bad airfoil geometry?"
-    #     scale_factor = 1 / x_max
-    #     self.coordinates *= scale_factor
+        return upper_interpolated - lower_interpolated
 
     def draw(self, draw_mcl=True):
         x = np.array(self.coordinates[:, 0]).reshape(-1)
@@ -762,13 +781,8 @@ class Airfoil:
             ),
         )
         if draw_mcl:
-            try:
-                x_mcl = np.array(self.mcl_coordinates[:, 0]).reshape(-1)
-                y_mcl = np.array(self.mcl_coordinates[:, 1]).reshape(-1)
-            except AttributeError:
-                self.populate_mcl_coordinates()
-                x_mcl = np.array(self.mcl_coordinates[:, 0]).reshape(-1)
-                y_mcl = np.array(self.mcl_coordinates[:, 1]).reshape(-1)
+            x_mcl = np.linspace(0, 1, 101)
+            y_mcl = self.local_camber(x_mcl)
             fig.add_trace(
                 go.Scatter(
                     x=x_mcl,
@@ -791,347 +805,212 @@ class Airfoil:
         return np.argmin(self.coordinates[:, 0])  # TODO comment out
 
     def lower_coordinates(self):
-        # Returns a matrix (N by 2) of [p y] coordinates that describe the lower surface of the airfoil.
+        # Returns a matrix (N by 2) of [x, y] coordinates that describe the lower surface of the airfoil.
         # Order is from leading edge to trailing edge.
         # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
-        return self.coordinates[self.LE_index:, :]
+        return self.coordinates[self.LE_index():, :]
 
     def upper_coordinates(self):
-        # Returns a matrix (N by 2) of [p y] coordinates that describe the upper surface of the airfoil.
+        # Returns a matrix (N by 2) of [x, y] coordinates that describe the upper surface of the airfoil.
         # Order is from trailing edge to leading edge.
         # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
-        return self.coordinates[:self.LE_index + 1, :]
-
-    # def get_thickness_at_chord_fraction(self, chord_fraction):
-    #     thickness_func = sp_interp.interp1d(
-    #         p=self.mcl_coordinates[:, 0],
-    #         y=self.thickness,
-    #         copy=False,
-    #         fill_value='extrapolate'
-    #     )
-    #     return thickness_func(chord_fraction)
-
-    def get_downsampled_mcl(self, mcl_fractions):
-        # Returns the mean camber line in downsampled form
-
-        mcl = self.mcl_coordinates
-        # Find distances along mcl, assuming linear interpolation
-        mcl_distances_between_points = cas.sqrt(
-            (mcl[:-1, 0] - mcl[1:, 0]) ** 2 +
-            (mcl[:-1, 1] - mcl[1:, 1]) ** 2
-        )
-        mcl_distances_cumulative = cas.vertcat(0, cas.cumsum(mcl_distances_between_points))
-        mcl_distances_cumulative_normalized = mcl_distances_cumulative / mcl_distances_cumulative[-1]
-
-        mcl_downsampled_x = cas.interp1d(
-            np.array(mcl_distances_cumulative_normalized).reshape(-1).tolist(),
-            mcl[:, 0],
-            mcl_fractions
-        )
-        mcl_downsampled_y = cas.interp1d(
-            np.array(mcl_distances_cumulative_normalized).reshape(-1).tolist(),
-            mcl[:, 1],
-            mcl_fractions
-        )
-
-        mcl_downsampled = cas.horzcat(mcl_downsampled_x, mcl_downsampled_y)
-
-        return mcl_downsampled
-
-    def get_camber_at_chord_fraction(self, chord_fraction):
-        return cas.interp1d(
-            np.array(self.mcl_coordinates[:, 0]).reshape(-1).tolist(),
-            self.mcl_coordinates[:, 1],
-            chord_fraction
-        )
-
-    # def get_camber_at_chord_fraction_legacy(self, chord_fraction):
-    #     # Returns the (interpolated) camber at a given location(s). The location is specified by the chord fraction, as measured from the leading edge. Camber is nondimensionalized by chord (i.e. this function returns camber/c at a given p/c).
-    #     chord = cas.fmax(self.coordinates[:, 0]) - cas.min(
-    #         self.coordinates[:, 0])  # This should always be 1, but this is just coded for robustness.
-    #
-    #     p = chord_fraction * chord + min(self.coordinates[:, 0])
-    #
-    #     upperCoors = self.upper_coordinates()
-    #     lowerCoors = self.lower_coordinates()
-    #
-    #     y_upper_func = sp_interp.interp1d(p=upperCoors[:, 0], y=upperCoors[:, 1], copy=False, fill_value='extrapolate')
-    #     y_lower_func = sp_interp.interp1d(p=lowerCoors[:, 0], y=lowerCoors[:, 1], copy=False, fill_value='extrapolate')
-    #
-    #     y_upper = y_upper_func(p)
-    #     y_lower = y_lower_func(p)
-    #
-    #     camber = (y_upper + y_lower) / 2
-    #
-    #     return camber
-
-    # def get_mcl_normal_direction_at_chord_fraction(self, chord_fraction):
-    #     # Returns the normal direction of the mean camber line at a specified chord fraction.
-    #     # If you input a single init_val, returns a 1D numpy array with 2 elements (p,y).
-    #     # If you input a vector of values, returns a 2D numpy array. First index is the point number, second index is (p,y)
-    #
-    #     # Right now, does it by finite differencing camber values :(
-    #     # When I'm less lazy I'll make it do it in a proper, more efficient way
-    #     # TODO make this not finite difference
-    #     epsilon = cas.sqrt(cas.finfo(float).eps)
-    #
-    #     cambers = self.get_camber_at_chord_fraction(chord_fraction)
-    #     cambers_incremented = self.get_camber_at_chord_fraction(chord_fraction + epsilon)
-    #     dydx = (cambers_incremented - cambers) / epsilon
-    #
-    #     if dydx.shape == 1:  # single point
-    #         normal = cas.hstack((-dydx, 1))
-    #         normal /= cas.linalg.norm(normal)
-    #         return normal
-    #     else:  # multiple points vectorized
-    #         normal = cas.column_stack((-dydx, cas.ones(dydx.shape)))
-    #         normal /= cas.expand_dims(cas.linalg.norm(normal, axis=1), axis=1)  # normalize
-    #         return normal
+        return self.coordinates[:self.LE_index() + 1, :]
 
     def TE_thickness(self):
         # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
-        return self.thickness[-1]
+        return self.local_thickness(x_over_c=1)
 
     def TE_angle(self):
         # Returns the trailing edge angle of the airfoil, in degrees
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
 
-        return 180 / np.pi * (cas.atan2(
+        return 180 / np.pi * (np.atan2(
             upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
             upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
         ))
 
-    # def area(self):
-    #     # Returns the area of the airfoil, in nondimensional (normalized to chord^2) units.
-    #     p = self.coordinates[:, 0]
-    #     y = self.coordinates[:, 1]
-    #     x_n = cas.roll(p, -1)  # x_next, or x_i+1
-    #     y_n = cas.roll(y, -1)  # y_next, or y_i+1
-    #
-    #     a = p * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-    #
-    #     A = 0.5 * cas.sum1(a)  # area
-    #
-    #     return A
-    #
-    # def centroid(self):
-    #     # Returns the centroid of the airfoil, in nondimensional (chord-normalized) units.
-    #     p = self.coordinates[:, 0]
-    #     y = self.coordinates[:, 1]
-    #     x_n = cas.roll(p, -1)  # x_next, or x_i+1
-    #     y_n = cas.roll(y, -1)  # y_next, or y_i+1
-    #
-    #     a = p * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-    #
-    #     A = 0.5 * cas.sum1(a)  # area
-    #
-    #     x_c = 1 / (6 * A) * cas.sum1(a * (p + x_n))
-    #     y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
-    #     centroid = cas.array([x_c, y_c])
-    #
-    #     return centroid
-    #
-    # def Ixx(self):
-    #     # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
-    #     p = self.coordinates[:, 0]
-    #     y = self.coordinates[:, 1]
-    #     x_n = cas.roll(p, -1)  # x_next, or x_i+1
-    #     y_n = cas.roll(y, -1)  # y_next, or y_i+1
-    #
-    #     a = p * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-    #
-    #     A = 0.5 * cas.sum1(a)  # area
-    #
-    #     x_c = 1 / (6 * A) * cas.sum1(a * (p + x_n))
-    #     y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
-    #     centroid = cas.array([x_c, y_c])
-    #
-    #     Ixx = 1 / 12 * cas.sum1(a * (cas.power(y, 2) + y * y_n + cas.power(y_n, 2)))
-    #
-    #     Iuu = Ixx - A * centroid[1] ** 2
-    #
-    #     return Iuu
-    #
-    # def Iyy(self):
-    #     # Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
-    #     p = self.coordinates[:, 0]
-    #     y = self.coordinates[:, 1]
-    #     x_n = cas.roll(p, -1)  # x_next, or x_i+1
-    #     y_n = cas.roll(y, -1)  # y_next, or y_i+1
-    #
-    #     a = p * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-    #
-    #     A = 0.5 * cas.sum1(a)  # area
-    #
-    #     x_c = 1 / (6 * A) * cas.sum1(a * (p + x_n))
-    #     y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
-    #     centroid = cas.array([x_c, y_c])
-    #
-    #     Iyy = 1 / 12 * cas.sum1(a * (cas.power(p, 2) + p * x_n + cas.power(x_n, 2)))
-    #
-    #     Ivv = Iyy - A * centroid[0] ** 2
-    #
-    #     return Ivv
-    #
-    # def Ixy(self):
-    #     # Returns the nondimensionalized product of inertia, taken about the centroid.
-    #     p = self.coordinates[:, 0]
-    #     y = self.coordinates[:, 1]
-    #     x_n = cas.roll(p, -1)  # x_next, or x_i+1
-    #     y_n = cas.roll(y, -1)  # y_next, or y_i+1
-    #
-    #     a = p * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-    #
-    #     A = 0.5 * cas.sum1(a)  # area
-    #
-    #     x_c = 1 / (6 * A) * cas.sum1(a * (p + x_n))
-    #     y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
-    #     centroid = cas.array([x_c, y_c])
-    #
-    #     Ixy = 1 / 24 * cas.sum1(a * (p * y_n + 2 * p * y + 2 * x_n * y_n + x_n * y))
-    #
-    #     Iuv = Ixy - A * centroid[0] * centroid[1]
-    #
-    #     return Iuv
-    #
-    # def J(self):
-    #     # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
-    #     p = self.coordinates[:, 0]
-    #     y = self.coordinates[:, 1]
-    #     x_n = cas.roll(p, -1)  # x_next, or x_i+1
-    #     y_n = cas.roll(y, -1)  # y_next, or y_i+1
-    #
-    #     a = p * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-    #
-    #     A = 0.5 * cas.sum1(a)  # area
-    #
-    #     x_c = 1 / (6 * A) * cas.sum1(a * (p + x_n))
-    #     y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
-    #     centroid = cas.array([x_c, y_c])
-    #
-    #     Ixx = 1 / 12 * cas.sum1(a * (cas.power(y, 2) + y * y_n + cas.power(y_n, 2)))
-    #
-    #     Iyy = 1 / 12 * cas.sum1(a * (cas.power(p, 2) + p * x_n + cas.power(x_n, 2)))
-    #
-    #     J = Ixx + Iyy
-    #
-    #     return J
+    def area(self):
+        # Returns the area of the airfoil, in nondimensional (normalized to chord^2) units.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-    def get_repaneled_airfoil(self, n_points_per_side=100):
-        # Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
-        # Inputs:
-        #   # n_points_per_side is the number of points PER SIDE (upper and lower) of the airfoil. 100 is a good number.
-        # Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
-        # since one point (the leading edge point) is shared by both the upper and lower surfaces.
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
-        lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
+        A = 0.5 * np.sum(a)  # area
 
-        # Find distances between coordinates, assuming linear interpolation
-        upper_distances_between_points = cas.sqrt(
-            cas.power(upper_original_coors[:-1, 0] - upper_original_coors[1:, 0], 2) +
-            cas.power(upper_original_coors[:-1, 1] - upper_original_coors[1:, 1], 2)
-        )
-        lower_distances_between_points = cas.sqrt(
-            cas.power(lower_original_coors[:-1, 0] - lower_original_coors[1:, 0], 2) +
-            cas.power(lower_original_coors[:-1, 1] - lower_original_coors[1:, 1], 2)
-        )
-        upper_distances_from_TE = cas.vertcat(0, cas.cumsum(upper_distances_between_points))
-        lower_distances_from_LE = cas.vertcat(0, cas.cumsum(lower_distances_between_points))
-        upper_distances_from_TE_normalized = upper_distances_from_TE / upper_distances_from_TE[-1]
-        lower_distances_from_LE_normalized = lower_distances_from_LE / lower_distances_from_LE[-1]
+        return A
 
-        # Generate a cosine-spaced list of points from 0 to 1
-        s = cosspace(n_points=n_points_per_side)
+    def centroid(self):
+        # Returns the centroid of the airfoil, in nondimensional (chord-normalized) units.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-        x_upper = cas.interp1d(
-            np.array(upper_distances_from_TE_normalized).reshape(-1).tolist(),
-            upper_original_coors[:, 0],
-            np.array(s).reshape(-1).tolist()
-        )
-        y_upper = cas.interp1d(
-            np.array(upper_distances_from_TE_normalized).reshape(-1).tolist(),
-            upper_original_coors[:, 1],
-            np.array(s).reshape(-1).tolist()
-        )
-        x_lower = cas.interp1d(
-            np.array(lower_distances_from_LE_normalized).reshape(-1).tolist(),
-            lower_original_coors[:, 0],
-            np.array(s).reshape(-1).tolist()
-        )
-        y_lower = cas.interp1d(
-            np.array(lower_distances_from_LE_normalized).reshape(-1).tolist(),
-            lower_original_coors[:, 1],
-            np.array(s).reshape(-1).tolist()
-        )
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        x_coors = cas.vertcat(x_upper, x_lower[1:])
-        y_coors = cas.vertcat(y_upper, y_lower[1:])
+        A = 0.5 * np.sum(a)  # area
 
-        coordinates = cas.horzcat(x_coors, y_coors)
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
 
-        # Make a new airfoil with the coordinates
-        name = "%s, repaneled to %i pts" % (self.name, n_points_per_side)
-        new_airfoil = Airfoil(name=name, coordinates=coordinates, repanel=False, LE_index=n_points_per_side - 1)
+        return centroid
 
-        return new_airfoil
+    def Ixx(self):
+        # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-    def repanel_current_airfoil(self, n_points_per_side=100):
-        # Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
-        # Inputs:
-        #   # n_points_per_side is the number of points PER SIDE (upper and lower) of the airfoil. 100 is a good number.
-        # Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
-        # since one point (the leading edge point) is shared by both the upper and lower surfaces.
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * cas.sum1(a * (x + x_n))
+        y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
+
+        Iuu = Ixx - A * centroid[1] ** 2
+
+        return Iuu
+
+    def Iyy(self):
+        # Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
+
+        Ivv = Iyy - A * centroid[0] ** 2
+
+        return Ivv
+
+    def Ixy(self):
+        # Returns the nondimensionalized product of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Ixy = 1 / 24 * np.sum(a * (x * y_n + 2 * x * y + 2 * x_n * y_n + x_n * y))
+
+        Iuv = Ixy - A * centroid[0] * centroid[1]
+
+        return Iuv
+
+    def J(self):
+        # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        x_n = np.roll(x, -1)  # x_next, or x_i+1
+        y_n = np.roll(y, -1)  # y_next, or y_i+1
+
+        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+
+        A = 0.5 * np.sum(a)  # area
+
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        centroid = np.array([x_c, y_c])
+
+        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
+
+        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
+
+        J = Ixx + Iyy
+
+        return J
+
+    def repanel(self,
+                n_points_per_side=100,
+                inplace=False,
+                ):
+        """
+        Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+        :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
+            Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
+            since one point (the leading edge point) is shared by both the upper and lower surfaces.
+        :param inplace: Whether to perform this as an in-place operation or return the new airfoil as a newly instantiated object [boolean]
+        :return: If inplace is True, None. If inplace is False, the new airfoil [Airfoil].
+        """
 
         upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
         lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
 
         # Find distances between coordinates, assuming linear interpolation
-        upper_distances_between_points = cas.sqrt(
-            cas.power(upper_original_coors[:-1, 0] - upper_original_coors[1:, 0], 2) +
-            cas.power(upper_original_coors[:-1, 1] - upper_original_coors[1:, 1], 2)
-        )
-        lower_distances_between_points = cas.sqrt(
-            cas.power(lower_original_coors[:-1, 0] - lower_original_coors[1:, 0], 2) +
-            cas.power(lower_original_coors[:-1, 1] - lower_original_coors[1:, 1], 2)
-        )
-        upper_distances_from_TE = cas.vertcat(0, cas.cumsum(upper_distances_between_points))
-        lower_distances_from_LE = cas.vertcat(0, cas.cumsum(lower_distances_between_points))
+        upper_distances_between_points = (
+                                                 (upper_original_coors[:-1, 0] - upper_original_coors[1:, 0]) ** 2 +
+                                                 (upper_original_coors[:-1, 1] - upper_original_coors[1:, 1]) ** 2
+                                         ) ** 0.5
+        lower_distances_between_points = (
+                                                 (lower_original_coors[:-1, 0] - lower_original_coors[1:, 0]) ** 2 +
+                                                 (lower_original_coors[:-1, 1] - lower_original_coors[1:, 1]) ** 2
+                                         ) ** 0.5
+        upper_distances_from_TE = np.hstack((0, np.cumsum(upper_distances_between_points)))
+        lower_distances_from_LE = np.hstack((0, np.cumsum(lower_distances_between_points)))
         upper_distances_from_TE_normalized = upper_distances_from_TE / upper_distances_from_TE[-1]
         lower_distances_from_LE_normalized = lower_distances_from_LE / lower_distances_from_LE[-1]
 
         # Generate a cosine-spaced list of points from 0 to 1
-        s = cosspace(n_points=n_points_per_side)
+        s = np_cosspace(0, 1, n_points_per_side)
 
-        x_upper = cas.interp1d(
-            np.array(upper_distances_from_TE_normalized).reshape(-1).tolist(),
+        x_upper = np.interp(
+            s,
+            upper_distances_from_TE_normalized,
             upper_original_coors[:, 0],
-            np.array(s).reshape(-1).tolist()
         )
-        y_upper = cas.interp1d(
-            np.array(upper_distances_from_TE_normalized).reshape(-1).tolist(),
+        y_upper = np.interp(
+            s,
+            upper_distances_from_TE_normalized,
             upper_original_coors[:, 1],
-            np.array(s).reshape(-1).tolist()
         )
-        x_lower = cas.interp1d(
-            np.array(lower_distances_from_LE_normalized).reshape(-1).tolist(),
+        x_lower = np.interp(
+            s,
+            lower_distances_from_LE_normalized,
             lower_original_coors[:, 0],
-            np.array(s).reshape(-1).tolist()
         )
-        y_lower = cas.interp1d(
-            np.array(lower_distances_from_LE_normalized).reshape(-1).tolist(),
+        y_lower = np.interp(
+            s,
+            lower_distances_from_LE_normalized,
             lower_original_coors[:, 1],
-            np.array(s).reshape(-1).tolist()
         )
 
-        x_coors = cas.vertcat(x_upper, x_lower[1:])
-        y_coors = cas.vertcat(y_upper, y_lower[1:])
+        x_coors = np.hstack((x_upper, x_lower[1:]))
+        y_coors = np.hstack((y_upper, y_lower[1:]))
 
-        coordinates = cas.horzcat(x_coors, y_coors)
+        coordinates = np.vstack((x_coors, y_coors)).T
 
-        self.coordinates = coordinates
-        self.LE_index = n_points_per_side - 1
+        # Finalize
+        airfoil = self if inplace else copy.deepcopy(self)
+        if not "Repaneled" in airfoil.name:
+            airfoil.name += " (Repaneled)"
+        airfoil.coordinates = coordinates
+        return airfoil
 
     # def get_sharp_TE_airfoil(self):
     #     # Returns a version of the airfoil with a sharp trailing edge.
@@ -1165,51 +1044,43 @@ class Airfoil:
     #
     #     return new_airfoil
 
-    def get_airfoil_with_control_surface(self, deflection=0., hinge_point=0.75):
-        # Returns a version of the airfoil with a control surface added at a given point.
-        # Inputs:
-        #   # deflection: the deflection angle, in degrees. Downwards-positive.
-        #   # hinge_point: the location of the hinge, as a fraction of chord.
+    def add_control_surface(
+            self,
+            deflection=0.,
+            hinge_point_x=0.75,
+            inplace=False,
+    ):
+        """
+        Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
+        :param deflection: deflection angle [degrees]. Downwards-positive.
+        :param hinge_point_x: location of the hinge, as a fraction of chord [float].
+        :param inplace: Whether to perform this as an in-place operation or return the new airfoil as a newly instantiated object [boolean]
+        :return: If inplace is True, None. If inplace is False, the new airfoil [Airfoil].
+        """
 
         # Make the rotation matrix for the given angle.
-        sintheta = cas.sin(-cas.pi / 180 * deflection)
-        costheta = cas.cos(-cas.pi / 180 * deflection)
-        rotation_matrix = (
-            cas.vertcat(
-                cas.horzcat(costheta, -sintheta),
-                cas.horzcat(sintheta, costheta),
-            )
-        )
+        sintheta = np.sin(-cas.pi / 180 * deflection)
+        costheta = np.cos(-cas.pi / 180 * deflection)
+        rotation_matrix = np.array([
+            [costheta, sintheta],
+            [-sintheta, costheta]
+        ])
 
         # Find the hinge point
-        hinge_point = cas.vertcat(hinge_point,
-                                  self.get_camber_at_chord_fraction(
-                                      [hinge_point]))  # Make hinge_point a vector.
+        hinge_point_y = self.local_camber(hinge_point_x)
+        hinge_point = np.hstack((hinge_point_x, hinge_point_y))
 
-        # Split the airfoil into the sections before and after the hinge
-        split_index = np.where(self.mcl_coordinates[:, 0] > hinge_point[0])[0][0]
-        mcl_coordinates_before = self.mcl_coordinates[:split_index, :]
-        mcl_coordinates_after = self.mcl_coordinates[split_index:, :]
-        upper_minus_mcl_before = self.upper_minus_mcl[:split_index, :]
-        upper_minus_mcl_after = self.upper_minus_mcl[split_index:, :]
+        # Find the new coordinates
+        c = np.copy(self.coordinates)
+        c[c[:, 0] > hinge_point_x] = (rotation_matrix.T @ (c[c[:, 0] > hinge_point_x] - hinge_point).T).T + hinge_point
+        coordinates = c
 
-        # Rotate the mean camber line (MCL) and "upper minus mcl"
-        new_mcl_coordinates_after = cas.transpose(
-            rotation_matrix @ (cas.transpose(mcl_coordinates_after) - hinge_point) + hinge_point)
-        new_upper_minus_mcl_after = cas.transpose(rotation_matrix @ cas.transpose(upper_minus_mcl_after))
-
-        # Do blending
-
-        # Assemble airfoil
-        new_mcl_coordinates = cas.vertcat(mcl_coordinates_before, new_mcl_coordinates_after)
-        new_upper_minus_mcl = cas.vertcat(upper_minus_mcl_before, new_upper_minus_mcl_after)
-        upper_coordinates = flipud(new_mcl_coordinates + new_upper_minus_mcl)
-        lower_coordinates = new_mcl_coordinates - new_upper_minus_mcl
-        coordinates = cas.vertcat(upper_coordinates, lower_coordinates[1:, :])
-
-        new_airfoil = Airfoil(name="%s flapped" % self.name, coordinates=coordinates, repanel=False,
-                              LE_index=self.LE_index)
-        return new_airfoil  # TODO fix self-intersecting airfoils at high deflections
+        # Finalize
+        airfoil = self if inplace else copy.deepcopy(self)
+        if not "Flapped" in airfoil.name:
+            airfoil.name += " (Flapped)"
+        airfoil.coordinates = coordinates
+        return airfoil
 
     def xfoil_a(self,
                 alpha,
@@ -1244,8 +1115,8 @@ class Airfoil:
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
-            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+            x=np.array(self.coordinates[:, 0]).reshape(-1),
+            y=np.array(self.coordinates[:, 1]).reshape(-1),
         )
         xf.Re = Re
         xf.M = M
@@ -1260,7 +1131,13 @@ class Airfoil:
         cl, cd, cm, cp = xf.a(alpha)
         a = alpha
 
-        return a, cl, cd, cm, cp
+        return {
+            "a" : a,
+            "cl": cl,
+            "cd": cd,
+            "cm": cm,
+            "cp": cp
+        }
 
     def xfoil_cl(self,
                  cl,
@@ -1295,8 +1172,8 @@ class Airfoil:
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
-            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+            x=np.array(self.coordinates[:, 0]).reshape(-1),
+            y=np.array(self.coordinates[:, 1]).reshape(-1),
         )
         xf.Re = Re
         xf.M = M
@@ -1311,7 +1188,13 @@ class Airfoil:
         a, cd, cm, cp = xf.cl(cl)
         cl = cl
 
-        return a, cl, cd, cm, cp
+        return {
+            "a" : a,
+            "cl": cl,
+            "cd": cd,
+            "cm": cm,
+            "cp": cp
+        }
 
     def xfoil_aseq(self,
                    a_start,
@@ -1350,8 +1233,8 @@ class Airfoil:
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
-            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+            x=np.array(self.coordinates[:, 0]).reshape(-1),
+            y=np.array(self.coordinates[:, 1]).reshape(-1),
         )
         xf.Re = Re
         xf.M = M
@@ -1365,7 +1248,13 @@ class Airfoil:
 
         a, cl, cd, cm, cp = xf.aseq(a_start, a_end, a_step)
 
-        return a, cl, cd, cm, cp
+        return {
+            "a" : a,
+            "cl": cl,
+            "cd": cd,
+            "cm": cm,
+            "cp": cp
+        }
 
     def xfoil_cseq(self,
                    cl_start,
@@ -1404,8 +1293,8 @@ class Airfoil:
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
         xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1)[::5],
-            y=np.array(self.coordinates[:, 1]).reshape(-1)[::5],
+            x=np.array(self.coordinates[:, 0]).reshape(-1),
+            y=np.array(self.coordinates[:, 1]).reshape(-1),
         )
         xf.Re = Re
         xf.M = M
@@ -1419,7 +1308,13 @@ class Airfoil:
 
         a, cl, cd, cm, cp = xf.cseq(cl_start, cl_end, cl_step)
 
-        return a, cl, cd, cm, cp
+        return {
+            "a" : a,
+            "cl": cl,
+            "cd": cd,
+            "cm": cm,
+            "cp": cp
+        }
 
 
 class Fuselage(AeroSandboxObject):

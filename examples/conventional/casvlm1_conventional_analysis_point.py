@@ -176,7 +176,7 @@ except RuntimeError:
 
 # Create solved object
 ap_sol = copy.deepcopy(ap)
-# ap_sol.substitute_solution(sol)
+ap_sol.substitute_solution(sol)
 
 # Postprocess
 

@@ -84,26 +84,26 @@ class Casvlm1(AeroProblem):
                 outer_xsec_xyz_te = outer_xsec.xyz_te() + wing.xyz_le
 
                 # Define the airfoils at each cross section
-                inner_airfoil = inner_xsec.airfoil.get_airfoil_with_control_surface(
+                inner_airfoil = inner_xsec.airfoil.add_control_surface(
                     deflection=inner_xsec.control_surface_deflection,
-                    hinge_point=inner_xsec.control_surface_hinge_point
+                    hinge_point_x=inner_xsec.control_surface_hinge_point
                 )  # type: Airfoil
-                outer_airfoil = outer_xsec.airfoil.get_airfoil_with_control_surface(
+                outer_airfoil = outer_xsec.airfoil.add_control_surface(
                     deflection=inner_xsec.control_surface_deflection,
-                    hinge_point=inner_xsec.control_surface_hinge_point
+                    hinge_point_x=inner_xsec.control_surface_hinge_point
                 )  # type: Airfoil
 
                 # Make the mean camber lines for each.
-                inner_xsec_mcl_nondim = inner_airfoil.get_downsampled_mcl(nondim_chordwise_coordinates)
-                outer_xsec_mcl_nondim = outer_airfoil.get_downsampled_mcl(nondim_chordwise_coordinates)
+                inner_xsec_mcl_y_nondim = inner_airfoil.local_camber(nondim_chordwise_coordinates)
+                outer_xsec_mcl_y_nondim = outer_airfoil.local_camber(nondim_chordwise_coordinates)
 
                 # Find the tangent angles of the mean camber lines
                 inner_xsec_mcl_angle = (
-                        cas.atan2(cas.diff(inner_xsec_mcl_nondim[:, 1]), cas.diff(inner_xsec_mcl_nondim[:, 0])) - (
+                        cas.atan2(cas.diff(inner_xsec_mcl_y_nondim), cas.diff(nondim_chordwise_coordinates)) - (
                         inner_xsec.twist * np.pi / 180)
                 )  # in radians
                 outer_xsec_mcl_angle = (
-                        cas.atan2(cas.diff(outer_xsec_mcl_nondim[:, 1]), cas.diff(outer_xsec_mcl_nondim[:, 0])) - (
+                        cas.atan2(cas.diff(outer_xsec_mcl_y_nondim), cas.diff(nondim_chordwise_coordinates)) - (
                         outer_xsec.twist * np.pi / 180)
                 )  # in radians
 
@@ -188,40 +188,38 @@ class Casvlm1(AeroProblem):
 
                     # Define the airfoils at each cross section
                     if inner_xsec.control_surface_type == "symmetric":
-                        inner_airfoil = inner_xsec.airfoil.get_airfoil_with_control_surface(
+                        inner_airfoil = inner_xsec.airfoil.add_control_surface(
                             deflection=inner_xsec.control_surface_deflection,
-                            hinge_point=inner_xsec.control_surface_hinge_point
+                            hinge_point_x=inner_xsec.control_surface_hinge_point
                         )  # type: Airfoil
-                        outer_airfoil = outer_xsec.airfoil.get_airfoil_with_control_surface(
+                        outer_airfoil = outer_xsec.airfoil.add_control_surface(
                             deflection=inner_xsec.control_surface_deflection,
-                            hinge_point=inner_xsec.control_surface_hinge_point
+                            hinge_point_x=inner_xsec.control_surface_hinge_point
                         )  # type: Airfoil
                     elif inner_xsec.control_surface_type == "asymmetric":
-                        inner_airfoil = inner_xsec.airfoil.get_airfoil_with_control_surface(
+                        inner_airfoil = inner_xsec.airfoil.add_control_surface(
                             deflection=-inner_xsec.control_surface_deflection,
-                            hinge_point=inner_xsec.control_surface_hinge_point
+                            hinge_point_x=inner_xsec.control_surface_hinge_point
                         )  # type: Airfoil
-                        outer_airfoil = outer_xsec.airfoil.get_airfoil_with_control_surface(
+                        outer_airfoil = outer_xsec.airfoil.add_control_surface(
                             deflection=-inner_xsec.control_surface_deflection,
-                            hinge_point=inner_xsec.control_surface_hinge_point
+                            hinge_point_x=inner_xsec.control_surface_hinge_point
                         )  # type: Airfoil
                     else:
                         raise ValueError("Invalid input for control_surface_type!")
 
                     # Make the mean camber lines for each.
-                    inner_xsec_mcl_nondim = inner_airfoil.get_downsampled_mcl(nondim_chordwise_coordinates)
-                    outer_xsec_mcl_nondim = outer_airfoil.get_downsampled_mcl(nondim_chordwise_coordinates)
+                    inner_xsec_mcl_y_nondim = inner_airfoil.local_camber(nondim_chordwise_coordinates)
+                    outer_xsec_mcl_y_nondim = outer_airfoil.local_camber(nondim_chordwise_coordinates)
 
                     # Find the tangent angles of the mean camber lines
                     inner_xsec_mcl_angle = (
-                            cas.atan2(cas.diff(inner_xsec_mcl_nondim[:, 1]),
-                                      cas.diff(inner_xsec_mcl_nondim[:, 0])) - (
-                                    inner_xsec.twist * np.pi / 180)
+                            cas.atan2(cas.diff(inner_xsec_mcl_y_nondim), cas.diff(nondim_chordwise_coordinates)) - (
+                            inner_xsec.twist * np.pi / 180)
                     )  # in radians
                     outer_xsec_mcl_angle = (
-                            cas.atan2(cas.diff(outer_xsec_mcl_nondim[:, 1]),
-                                      cas.diff(outer_xsec_mcl_nondim[:, 0])) - (
-                                    outer_xsec.twist * np.pi / 180)
+                            cas.atan2(cas.diff(outer_xsec_mcl_y_nondim), cas.diff(nondim_chordwise_coordinates)) - (
+                            outer_xsec.twist * np.pi / 180)
                     )  # in radians
 
                     # Find the effective twist axis
