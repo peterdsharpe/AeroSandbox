@@ -73,5 +73,11 @@ sol = opti.solve()
 opti.set_initial(sol.value_variables())
 beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
-beam_sol.draw_bending()
+import matplotlib.pyplot as plt
+import matplotlib.style as style
+import seaborn as sns
+sns.set(font_scale=1)
+beam_sol.draw_bending(for_print=True, show=False)
+plt.savefig("C:/Users/User/Downloads/beam_example.png")
+plt.show()
 print(sol.value(2 * beam.mass))

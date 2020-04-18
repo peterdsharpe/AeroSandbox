@@ -6,7 +6,7 @@ def propeller_shaft_power_from_thrust(
         area_propulsive,
         airspeed,
         rho,
-        propeller_efficiency=0.8,
+        propeller_coefficient_of_performance=0.8,
 ):
     """
     Using dynamic disc actuator theory, gives the shaft power required to generate
@@ -18,14 +18,14 @@ def propeller_shaft_power_from_thrust(
     :param area_propulsive: Total disc area of all propulsive surfaces [m^2]
     :param airspeed: Airspeed [m/s]
     :param rho: Air density [kg/m^3]
-    :param propeller_efficiency: propeller efficiency [unitless]
+    :param propeller_coefficient_of_performance: propeller coeff. of performance (due to viscous losses) [unitless]
     :return: Shaft power [W]
     """
     return 0.5 * thrust_force * airspeed * (
             cas.sqrt(
                 thrust_force / (area_propulsive * airspeed ** 2 * rho / 2) + 1
             ) + 1
-    ) / propeller_efficiency
+    ) / propeller_coefficient_of_performance
 
 
 def mass_hpa_propeller(
