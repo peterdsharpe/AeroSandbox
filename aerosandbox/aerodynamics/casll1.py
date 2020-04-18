@@ -583,16 +583,23 @@ class Casll1(AeroProblem):
         self.force_total_wind = self.force_total_inviscid_wind + self.force_total_profile_wind
         self.moment_total_wind = self.moment_total_inviscid_wind + self.moment_total_profile_wind
 
+        # Calculate dimensional forces
+        self.lift_force = -self.force_total_wind[2]
+        self.drag_force = -self.force_total_wind[0]
+        self.drag_force_induced = -self.force_total_inviscid_wind[0]
+        self.drag_force_profile = -self.force_total_profile_wind[0]
+        self.side_force = self.force_total_wind[1]
+
         # Calculate nondimensional forces
         q = self.op_point.dynamic_pressure()
         s_ref = self.airplane.s_ref
         b_ref = self.airplane.b_ref
         c_ref = self.airplane.c_ref
-        self.CL = -self.force_total_wind[2] / q / s_ref
-        self.CD = -self.force_total_wind[0] / q / s_ref
-        self.CDi = -self.force_total_inviscid_wind[0] / q / s_ref
-        self.CDp = -self.force_total_profile_wind[0] / q / s_ref
-        self.CY = self.force_total_wind[1] / q / s_ref
+        self.CL = self.lift_force / q / s_ref
+        self.CD = self.drag_force / q / s_ref
+        self.CDi = self.drag_force_induced / q / s_ref
+        self.CDp = self.drag_force_profile / q / s_ref
+        self.CY = self.side_force / q / s_ref
         self.Cl = self.moment_total_wind[0] / q / s_ref / b_ref
         self.Cm = self.moment_total_wind[1] / q / s_ref / c_ref
         self.Cn = self.moment_total_wind[2] / q / s_ref / b_ref

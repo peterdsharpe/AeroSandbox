@@ -56,7 +56,7 @@ airplane = Airplane(
                     chord=variable(0.18,0,1),#0.18,
                     twist=0,#variable(0,-10,10),  # degrees
                     airfoil=Airfoil(name="naca4412"),
-                    control_surface_type='symmetric_problem',
+                    control_surface_type='symmetric',
                     # Flap # Control surfaces are applied between attrib_name given XSec and the next one.
                     control_surface_deflection=0,  # degrees
                     control_surface_hinge_point=0.75  # as chord fraction
@@ -96,7 +96,7 @@ airplane = Airplane(
                     chord=0.1,
                     twist=variable(-10,-30,0),
                     airfoil=Airfoil(name="naca0012"),
-                    control_surface_type='symmetric_problem',  # Elevator
+                    control_surface_type='symmetric',  # Elevator
                     control_surface_deflection=0,
                     control_surface_hinge_point=0.75
                 ),
@@ -124,7 +124,7 @@ airplane = Airplane(
                     chord=0.1,
                     twist=0,
                     airfoil=Airfoil(name="naca0012"),
-                    control_surface_type='symmetric_problem',  # Rudder
+                    control_surface_type='symmetric',  # Rudder
                     control_surface_deflection=0,
                     control_surface_hinge_point=0.75
                 ),
@@ -153,13 +153,11 @@ ap = Casvlm1(  # Set up the AeroProblem
     ),
     opti=opti
 )
-# Set up the VLM optimization submatrix
-ap.setup()
 
 # Extra constraints
 # Trim constraint
 opti.subject_to([
-    -ap.Ftotal_wind[2] == 9.81 * 0.5,
+    -ap.force_total_wind[2] == 9.81 * 0.5,
     # ap.CY == 0,
     # ap.Cl == 0,
     ap.Cm == 0,
@@ -170,7 +168,7 @@ opti.subject_to([
 # opti.subject_to(cas.gradient(ap.Cm, ap.op_point.alpha) * 180/np.pi == -1)
 
 # Objective
-opti.minimize(-ap.Ftotal_wind[0])
+opti.minimize(-ap.force_total_wind[0])
 
 # Solver options
 p_opts = {}

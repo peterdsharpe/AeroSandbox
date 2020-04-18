@@ -140,7 +140,7 @@ airplane = Airplane(
         )
     ]
 )
-airplane.set_paneling_everywhere(10, 10)
+airplane.set_paneling_everywhere(6, 6)
 ap = Casvlm1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(

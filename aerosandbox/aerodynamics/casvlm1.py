@@ -417,47 +417,52 @@ class Casvlm1(AeroProblem):
             Vi_x * self.vortex_bound_leg[:, 1] - Vi_y * self.vortex_bound_leg[:, 0],
         )
         # vortex_strengths_expanded = np.expand_dims(self.vortex_strengths, axis=1)
-        self.Fi_geometry = density * Vi_cross_li * self.vortex_strengths
+        self.forces_geometry = density * Vi_cross_li * self.vortex_strengths
 
         # Calculate total forces and moments
         if self.verbose:
             print("Calculating total forces and moments...")
-        self.Ftotal_geometry = cas.vertcat(
-            cas.sum1(self.Fi_geometry[:, 0]),
-            cas.sum1(self.Fi_geometry[:, 1]),
-            cas.sum1(self.Fi_geometry[:, 2]),
+        self.force_total_geometry = cas.vertcat(
+            cas.sum1(self.forces_geometry[:, 0]),
+            cas.sum1(self.forces_geometry[:, 1]),
+            cas.sum1(self.forces_geometry[:, 2]),
         )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
         # if self.verbose: print("Total aerodynamic forces (geometry axes): ", self.force_total_inviscid_geometry)
 
-        self.Ftotal_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Ftotal_geometry
+        self.force_total_wind = cas.transpose(
+            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.force_total_geometry
         # if self.verbose: print("Total aerodynamic forces (wind axes):", self.force_total_inviscid_wind)
 
-        self.Mi_geometry = cas.cross(
+        self.moments_geometry = cas.cross(
             cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
-            self.Fi_geometry
+            self.forces_geometry
         )
 
         self.Mtotal_geometry = cas.vertcat(
-            cas.sum1(self.Mi_geometry[:, 0]),
-            cas.sum1(self.Mi_geometry[:, 1]),
-            cas.sum1(self.Mi_geometry[:, 2]),
+            cas.sum1(self.moments_geometry[:, 0]),
+            cas.sum1(self.moments_geometry[:, 1]),
+            cas.sum1(self.moments_geometry[:, 2]),
         )
 
-        self.Mtotal_wind = cas.transpose(
+        self.moment_total_wind = cas.transpose(
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Mtotal_geometry
+
+        # Calculate dimensional forces
+        self.lift_force = -self.force_total_wind[2]
+        self.drag_force_induced = -self.force_total_wind[0]
+        self.side_force = self.force_total_wind[1]
 
         # Calculate nondimensional forces
         q = self.op_point.dynamic_pressure()
         s_ref = self.airplane.s_ref
         b_ref = self.airplane.b_ref
         c_ref = self.airplane.c_ref
-        self.CL = -self.Ftotal_wind[2] / q / s_ref
-        self.CDi = -self.Ftotal_wind[0] / q / s_ref
-        self.CY = self.Ftotal_wind[1] / q / s_ref
-        self.Cl = self.Mtotal_wind[0] / q / s_ref / b_ref
-        self.Cm = self.Mtotal_wind[1] / q / s_ref / c_ref
-        self.Cn = self.Mtotal_wind[2] / q / s_ref / b_ref
+        self.CL = self.lift_force / q / s_ref
+        self.CDi = self.drag_force_induced / q / s_ref
+        self.CY = self.side_force / q / s_ref
+        self.Cl = self.moment_total_wind[0] / q / s_ref / b_ref
+        self.Cm = self.moment_total_wind[1] / q / s_ref / c_ref
+        self.Cn = self.moment_total_wind[2] / q / s_ref / b_ref
 
         # Solves divide by zero error
         self.CL_over_CDi = cas.if_else(self.CDi == 0, 0, self.CL / self.CDi)
