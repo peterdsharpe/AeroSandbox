@@ -90,6 +90,13 @@ class Airplane(AeroSandboxObject):
         assert self.c_ref is not None
         assert self.b_ref is not None
 
+    def __repr__(self):
+        return "Airplane %s (%i wings, %i fuselages)" % (
+            self.name,
+            len(self.wings),
+            len(self.fuselages)
+        )
+
     def set_ref_dims_from_wing(self,
                                main_wing_index=0
                                ):
@@ -247,6 +254,14 @@ class Wing(AeroSandboxObject):
         self.symmetric = symmetric
         self.chordwise_panels = chordwise_panels
         self.chordwise_spacing = chordwise_spacing
+
+    def __repr__(self):
+        return "Wing %s (%i xsecs, %s)" % (
+            self.name,
+            len(self.xsecs),
+            "symmetric" if self.symmetric else "not symmetric"
+        )
+
 
     def area(self,
              type="wetted"
@@ -489,6 +504,9 @@ class WingXSec(AeroSandboxObject):
                  # The number of spanwise panels to be used between this cross section and the next one.
                  spanwise_spacing="cosine"  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
                  ):
+        if airfoil is None:
+            raise ValueError("'airfoil' argument missing! (Needs an object of Airfoil type)")
+
         self.x_le = x_le
         self.y_le = y_le
         self.z_le = z_le
@@ -504,6 +522,13 @@ class WingXSec(AeroSandboxObject):
         self.spanwise_spacing = spanwise_spacing
 
         self.xyz_le = cas.vertcat(x_le, y_le, z_le)
+
+    def __repr__(self):
+        return "WingXSec (airfoil = %s, chord = %f, twist = %f)" % (
+            self.airfoil.name,
+            self.chord,
+            self.twist
+        )
 
     def xyz_te(self):
         rot = angle_axis_rotation_matrix(self.twist * cas.pi / 180, self.twist_axis)
@@ -567,6 +592,12 @@ class Airfoil:
         self.CL_function = CL_function
         self.CDp_function = CDp_function
         self.Cm_function = Cm_function
+
+    def __repr__(self):
+        return "Airfoil %s (%i points)" % (
+            self.name,
+            self.coordinates.shape[0] if self.coordinates is not None else 0,
+        )
 
     def populate_coordinates(self):
         # Populates a variable called self.coordinates with the coordinates of the airfoil.
