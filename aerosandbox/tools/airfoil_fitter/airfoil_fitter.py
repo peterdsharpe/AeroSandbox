@@ -131,7 +131,7 @@ class AirfoilFitter():
         ax = fig.add_subplot(323)
         x = d["Re"]
         y = d["alpha"]
-        z = d["cl"]
+        z = d["Cl"]
         levels = np.linspace(-0.5, 1.5, 21)
         norm = None
         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
@@ -147,7 +147,7 @@ class AirfoilFitter():
         ax = fig.add_subplot(324)
         x = d["Re"]
         y = d["alpha"]
-        z = d["cd"]
+        z = d["Cd"]
         levels = np.logspace(-2.5, -1, 21)
         norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
@@ -163,7 +163,7 @@ class AirfoilFitter():
         ax = fig.add_subplot(325)
         x = d["Re"]
         y = d["alpha"]
-        z = d["cl"] / d["cd"]
+        z = d["Cl"] / d["Cd"]
         x = x[d["alpha"] >= 0]
         y = y[d["alpha"] >= 0]
         z = z[d["alpha"] >= 0]
@@ -182,7 +182,7 @@ class AirfoilFitter():
         ax = fig.add_subplot(326)
         x = d["Re"]
         y = d["alpha"]
-        z = d["cm"]
+        z = d["Cm"]
         levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
         norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
@@ -218,7 +218,7 @@ except:
     with open("af.pkl", "wb+") as f:
         pickle.dump(af, f)
 
-# af.plot_xfoil_data()
+af.plot_xfoil_data()
 self = af
 
 supercritical_threshold = 5e5
@@ -271,7 +271,7 @@ def plot_fit_alpha_Re(
                 y=x_data['Re'],
                 z=model(d, params_solved),
                 intensity=model(d, params_solved),
-                colorscale="viridis",
+                colorscale="plasma",
                 flatshading=True
             ),
         ],
