@@ -3,7 +3,6 @@ import plotly.graph_objects as go
 # Set the rendering to happen in browser
 import plotly.io as pio
 from aerosandbox.visualization import Figure3D
-import os, contextlib
 import copy
 
 try:
@@ -12,7 +11,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-from aerosandbox.casadi_helpers import *
+from aerosandbox.tools.casadi_tools import *
 
 pio.renderers.default = "browser"
 
@@ -745,7 +744,7 @@ class Airfoil:
         y_L = y_c - y_t * cas.cos(theta)
 
         # Flip upper surface so it's back to front
-        x_U, y_U = flipud(x_U), flipud(y_U)
+        x_U, y_U = x_U[::-1, :], y_U[::-1, :]
 
         # Trim 1 point from lower surface so there's no overlap
         x_L, y_L = x_L[1:], y_L[1:]
@@ -1195,7 +1194,7 @@ class Airfoil:
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
         :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alpha, cl, cd, cm, cp_min}
+        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
         """
         try:
             xf = XFoil()
@@ -1218,15 +1217,15 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        cl, cd, cm, cp_min = xf.a(alpha)
+        cl, cd, cm, Cp_min = xf.a(alpha)
         a = alpha
 
         return {
-            "a"     : a,
-            "cl"    : cl,
-            "cd"    : cd,
-            "cm"    : cm,
-            "cp_min": cp_min
+            "alpha" : a,
+            "Cl"    : cl,
+            "Cd"    : cd,
+            "Cm"    : cm,
+            "Cp_min": Cp_min
         }
 
     def xfoil_cl(self,
@@ -1254,7 +1253,7 @@ class Airfoil:
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
         :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alpha, cl, cd, cm, cp_min}
+        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
         """
         try:
             xf = XFoil()
@@ -1277,16 +1276,16 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        a, cd, cm, cp_min = xf.cl(cl)
+        a, cd, cm, Cp_min = xf.cl(cl)
 
         cl = cl
 
         return {
-            "a"     : a,
-            "cl"    : cl,
-            "cd"    : cd,
-            "cm"    : cm,
-            "cp_min": cp_min
+            "alpha" : a,
+            "Cl"    : cl,
+            "Cd"    : cd,
+            "Cm"    : cm,
+            "Cp_min": Cp_min
         }
 
     def xfoil_aseq(self,
@@ -1318,7 +1317,7 @@ class Airfoil:
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
         :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alphas, cls, cds, cms, cp_mins}
+        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
         """
         try:
             xf = XFoil()
@@ -1341,14 +1340,14 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        a, cl, cd, cm, cp_min = xf.aseq(a_start, a_end, a_step)
+        a, cl, cd, cm, Cp_min = xf.aseq(a_start, a_end, a_step)
 
         return {
-            "a"     : a,
-            "cl"    : cl,
-            "cd"    : cd,
-            "cm"    : cm,
-            "cp_min": cp_min
+            "alpha" : a,
+            "Cl"    : cl,
+            "Cd"    : cd,
+            "Cm"    : cm,
+            "Cp_min": Cp_min
         }
 
     def xfoil_cseq(self,
@@ -1380,7 +1379,7 @@ class Airfoil:
         :param repanel: Repanel airfoil within XFoil?
         :param max_iter: Maximum number of global Newton iterations
         :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alphas, cls, cds, cms, cp_mins}
+        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
         """
         try:
             xf = XFoil()
@@ -1403,14 +1402,14 @@ class Airfoil:
             xf.repanel()
         xf.max_iter = max_iter
 
-        a, cl, cd, cm, cp_min = xf.cseq(cl_start, cl_end, cl_step)
+        a, cl, cd, cm, Cp_min = xf.cseq(cl_start, cl_end, cl_step)
 
         return {
-            "a"     : a,
-            "cl"    : cl,
-            "cd"    : cd,
-            "cm"    : cm,
-            "cp_min": cp_min
+            "alpha" : a,
+            "Cl"    : cl,
+            "Cd"    : cd,
+            "Cm"    : cm,
+            "Cp_min": Cp_min
         }
 
 

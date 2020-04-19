@@ -73,12 +73,71 @@ def load_sol_from_file(opti, load_primal=True, load_dual=True, primal_location=d
             opti.set_initial(opti.lam_g[i], dual_vals[i])
 
 
-def flipud(x):
-    return x[::-1, :]
+def fit(
+        func,  # type: callable
+        x_data, # type: dict
+        y_data, # type: np.ndarray
+        param_guesses,  # type: dict
+        param_bounds=None, # type: dict
+        weights=None, # type: np.ndarray
+):
+    """
+    Fits a model to data through least-squares minimization.
+    :param func: A callable with syntax f(x, p) where:
+        * x is a dict of dependent variables. Same format as x_data. [dict of 1D ndarrays of length n]
+        * p is a dict of parameters. Same format as param_guesses. [dict of scalars]
+    func should use CasADi functions for differentiability.
+    :param x_data: a dict of dependent variables. Same format as func's x. [dict of 1D ndarrays of length n]
+    :param y_data: independent variable. [1D ndarray of length n]
+    :param param_guesses: a dict of fit parameters. Same format as func's p. Keys are parameter names, values are initial guesses. [dict of scalars]
+    :param param_bounds: Optional: a dict of bounds on fit parameters.
+        Keys are parameter names, values are a tuple of (min, max).
+        May contain only a subset of param_guesses if desired.
+        Use None to represent one-sided constraints (i.e. (None, 5)).
+        [dict of tuples]
+    :param weights: Optional: weights for data points. [1D ndarray of length n]
+    :return: Optimal fit parameters [dict]
+    """
+    opti = cas.Opti()
 
+    def fit_param(initial_guess, lower_bound = None, upper_bound = None):
+        var = opti.variable()
+        opti.set_initial(var, initial_guess)
+        if lower_bound is not None:
+            opti.subject_to(var > lower_bound)
+        if upper_bound is not None:
+            opti.subject_to(var < upper_bound)
+        return var
 
-def fliplr(x):
-    return x[:, ::-1]
+    if param_bounds is None:
+        params = {
+            k: fit_param(param_guesses[k])
+            for k in param_guesses
+        }
+    else:
+        params = {
+            k: fit_param(param_guesses[k]) if k not in param_bounds else
+            fit_param(param_guesses[k], param_bounds[k][0], param_bounds[k][1])
+            for k in param_guesses
+        }
+
+    y_model = func(x_data, params)
+
+    residuals = y_model - y_data
+    opti.minimize(cas.sum1(
+        residuals ** 2 *
+        (weights if weights is not None else 1)
+    ))
+
+    opti.solver('ipopt')
+    sol = opti.solve()
+
+    params_solved = {
+        k: sol.value(params[k])
+        for k in params
+    }
+
+    return params_solved
 
 
 sind = lambda theta: cas.sin(theta * cas.pi / 180)

@@ -4,7 +4,7 @@ import numpy as np
 import casadi as cas
 import copy
 
-n_booms = 3
+n_booms = 1
 
 # wing
 wing_span = 37.126

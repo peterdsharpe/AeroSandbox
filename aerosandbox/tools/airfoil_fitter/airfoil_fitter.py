@@ -3,6 +3,10 @@ Functions to fit automatic-differentiable models to aerodynamic data from an air
 Requires the xfoil package from PyPI
 """
 from aerosandbox.geometry import *
+from aerosandbox.tools.casadi_tools import *
+import plotly.express as px
+import plotly.graph_objects as go
+import dash
 
 
 class AirfoilFitter():
@@ -14,11 +18,11 @@ class AirfoilFitter():
     def get_xfoil_data(self,
                        a_start=-5,
                        a_end=12,
-                       a_step=1,
+                       a_step=0.5,
                        a_init=0,
-                       Re_start=5e4,
+                       Re_start=1e4,
                        Re_end=5e6,
-                       n_Res=10,
+                       n_Res=30,
                        mach=0,
                        max_iter=30,
                        repanel=True,
@@ -105,8 +109,8 @@ class AirfoilFitter():
     def plot_xfoil_data(self):
         import matplotlib.pyplot as plt
         import matplotlib.style as style
-        from matplotlib import ticker
         import matplotlib.colors as colors
+        import matplotlib
         import seaborn as sns
         sns.set(font_scale=1)
 
@@ -122,23 +126,9 @@ class AirfoilFitter():
         plt.title(r"XFoil Data for %s Airfoil" % self.airfoil.name)
         plt.axis("equal")
 
-        ax = fig.add_subplot(323)
-        x = d["Re"]
-        y = d["cl"]
-        z = d["cd"]
-        levels = np.logspace(-2.5, -1, 21)
-        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.3f')
-        cbar.set_label(r"$C_d$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$C_l$")
-        plt.title(r"$C_d$ from $Re$, $C_l$")
-        ax.set_xscale('log')
+        style.use("default")
 
-        ax = fig.add_subplot(324)
+        ax = fig.add_subplot(323)
         x = d["Re"]
         y = d["a"]
         z = d["cl"]
@@ -152,6 +142,22 @@ class AirfoilFitter():
         plt.xlabel(r"$Re$")
         plt.ylabel(r"$\alpha$")
         plt.title(r"$C_l$ from $Re$, $\alpha$")
+        ax.set_xscale('log')
+
+        ax = fig.add_subplot(324)
+        x = d["Re"]
+        y = d["a"]
+        z = d["cd"]
+        levels = np.logspace(-2.5, -1, 21)
+        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+        cbar = plt.colorbar(CF, format='%.3f')
+        cbar.set_label(r"$C_d$")
+        plt.grid(False)
+        plt.xlabel(r"$Re$")
+        plt.ylabel(r"$\alpha$")
+        plt.title(r"$C_d$ from $Re$, $\alpha$")
         ax.set_xscale('log')
 
         ax = fig.add_subplot(325)
@@ -176,25 +182,112 @@ class AirfoilFitter():
         ax = fig.add_subplot(326)
         x = d["Re"]
         y = d["a"]
-        z = d["cd"]
-        levels = np.logspace(-2.5, -1, 21)
-        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+        z = d["cm"]
+        levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
+        norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
         C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.3f')
-        cbar.set_label(r"$C_d$")
+        cbar = plt.colorbar(CF, format='%.2f')
+        cbar.set_label(r"$C_m$")
         plt.grid(False)
         plt.xlabel(r"$Re$")
         plt.ylabel(r"$\alpha$")
-        plt.title(r"$C_d$ from $Re$, $\alpha$")
+        plt.title(r"$C_m$ from $Re$, $\alpha$")
         ax.set_xscale('log')
 
         plt.tight_layout()
         plt.savefig("C:/Users/User/Downloads/temp.svg")
         plt.show()
 
+    # def fit_xfoil_data(self):
+    #
 
-if __name__ == '__main__':
-    af = AirfoilFitter(Airfoil(name="HALE_02", coordinates="C:/Users/User/Downloads/HALE_02.dat"))
-    af.get_xfoil_data(repanel=True)
-    af.plot_xfoil_data()
+
+import dill as pickle
+
+try:
+    with open("af.pkl", "rb") as f:
+        af = pickle.load(f)
+except:
+    af = AirfoilFitter(Airfoil(name="HALE_thiqboi_02", coordinates="C:/Users/User/Downloads/HALE_02.dat"))
+    af.get_xfoil_data(
+        a_step=0.5,
+        n_Res=30,
+    )
+
+    with open("af.pkl", "wb+") as f:
+        pickle.dump(af, f)
+
+# af.plot_xfoil_data()
+self = af
+
+supercritical_threshold = 5e5
+subcritical_threshold = 3e4
+
+### Fit utilities, data extraction
+d = self.xfoil_data_1D  # data
+raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
+sigmoid = lambda x, x_cent, x_scale, y_cent, y_scale: y_cent + y_scale * raw_sigmoid((x - x_cent) / x_scale)
+
+
+### Fit the supercritical data
+def model_Cl_turbulent(x, p):
+    Cl_turbulent = sigmoid(x['a'], p['clt_a_cent'], p['clt_a_scale'], p['clt_cl_cent'], p['clt_cl_scale'])
+    return Cl_turbulent
+
+
+params_guess = {
+    'clt_a_cent'  : 3,
+    'clt_a_scale' : 8,
+    'clt_cl_cent' : 0.4,
+    'clt_cl_scale': 1,
+}
+param_bounds = {}
+
+params_solved = fit(
+    func=model_Cl_turbulent,
+    x_data=d,
+    y_data=d['cl'],
+    param_guesses=params_guess,
+    param_bounds=param_bounds,
+    weights=(d['Re'] > supercritical_threshold).astype('int')
+)
+[print(k, v) for k, v in params_solved.items()]
+
+fig = go.Figure(
+    data=[
+        go.Scatter3d(
+            x=d['a'],
+            y=d['Re'],
+            z=d['cl'],
+            mode="markers",
+            marker=dict(
+                size=2,
+                color="black"
+            )
+        ),
+        go.Mesh3d(
+            x=d['a'],
+            y=d['Re'],
+            z=model_Cl_turbulent(d, params_solved),
+            intensity=model_Cl_turbulent(d, params_solved),
+            colorscale="viridis",
+            flatshading=True
+        ),
+    ],
+    layout=go.Layout(
+        scene=dict(
+            xaxis=dict(
+                title="Alpha"
+            ),
+            yaxis=dict(
+                type='log',
+                title="Re"
+            ),
+            zaxis=dict(
+                title="Cl"
+            ),
+        ),
+        title="Fit: Lift Coefficient (Turbulent)"
+    )
+).show()

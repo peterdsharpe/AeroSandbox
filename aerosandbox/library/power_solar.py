@@ -1,5 +1,5 @@
 import casadi as cas
-from aerosandbox.casadi_helpers import sind, cosd
+from aerosandbox.tools.casadi_tools import sind, cosd
 
 
 def solar_flux_outside_atmosphere_normal(day_of_year):
@@ -163,7 +163,6 @@ def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True)
 
 if __name__ == "__main__":
     # Run some checks
-    import plotly.graph_objects as go
     import numpy  as np
 
     latitudes = np.linspace(26, 49, 200)
@@ -219,7 +218,6 @@ if __name__ == "__main__":
     # fig.show()
 
     import matplotlib.pyplot as plt
-    import matplotlib.style as style
     import seaborn as sns
 
     sns.set(font_scale=1)
