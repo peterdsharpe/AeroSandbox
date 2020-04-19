@@ -75,11 +75,12 @@ def load_sol_from_file(opti, load_primal=True, load_dual=True, primal_location=d
 
 def fit(
         model,  # type: callable
-        x_data, # type: dict
-        y_data, # type: np.ndarray
+        x_data,  # type: dict
+        y_data,  # type: np.ndarray
         param_guesses,  # type: dict
-        param_bounds=None, # type: dict
-        weights=None, # type: np.ndarray
+        param_bounds=None,  # type: dict
+        weights=None,  # type: np.ndarray
+        verbose=True,  # type: bool
 ):
     """
     Fits a model to data through least-squares minimization.
@@ -95,12 +96,26 @@ def fit(
         May contain only a subset of param_guesses if desired.
         Use None to represent one-sided constraints (i.e. (None, 5)).
         [dict of tuples]
-    :param weights: Optional: weights for data points. [1D ndarray of length n]
+    :param weights: Optional: weights for data points. If not supplied, weights are assumed to be uniform.
+        Weights are automatically normalized. [1D ndarray of length n]
+    :param verbose: Whether or not to print information about parameters and goodness of fit.
     :return: Optimal fit parameters [dict]
     """
     opti = cas.Opti()
 
-    def fit_param(initial_guess, lower_bound = None, upper_bound = None):
+    # Handle weighting
+    if weights is None:
+        weights = cas.GenDM_ones(y_data.shape[0])
+    weights /= cas.sum1(weights)
+
+    def fit_param(initial_guess, lower_bound=None, upper_bound=None):
+        """
+        Helper function to create a fit variable
+        :param initial_guess:
+        :param lower_bound:
+        :param upper_bound:
+        :return:
+        """
         var = opti.variable()
         opti.set_initial(var, initial_guess)
         if lower_bound is not None:
@@ -124,10 +139,7 @@ def fit(
     y_model = model(x_data, params)
 
     residuals = y_model - y_data
-    opti.minimize(cas.sum1(
-        residuals ** 2 *
-        (weights if weights is not None else 1)
-    ))
+    opti.minimize(cas.sum1(weights * residuals ** 2))
 
     opti.solver('ipopt')
     sol = opti.solve()
@@ -136,6 +148,29 @@ def fit(
         k: sol.value(params[k])
         for k in params
     }
+
+    # printing
+    if verbose:
+        # Print parameters
+        print("\nFit Parameters:")
+        if len(params_solved) <= 20:
+            [print("\t%s: %f" % (k, v)) for k, v in params_solved.items()]
+        else:
+            print("\t%i parameters solved for." % len(params_solved))
+        print("\nGoodness of Fit:")
+
+        # Print RMS error
+        weighted_RMS_error = sol.value(cas.sqrt(cas.sum1(
+            weights * residuals ** 2
+        )))
+        print("\tWeighted RMS error: %f" % weighted_RMS_error)
+
+        # Print R^2
+        y_data_mean = cas.sum1(y_data)/y_data.shape[0]
+        SS_tot = cas.sum1(weights * (y_data - y_data_mean)**2)
+        SS_res = cas.sum1(weights * (y_data - y_model)**2)
+        R_squared = sol.value(1 - SS_res/SS_tot)
+        print("\tR^2: %f" % R_squared)
 
     return params_solved
 

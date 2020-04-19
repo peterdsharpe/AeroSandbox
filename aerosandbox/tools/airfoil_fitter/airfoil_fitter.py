@@ -236,7 +236,6 @@ def plot_fit_alpha_Re(
         y_data,
         params_solved,
         title=None,
-        print_params=True,
         show=True
 ):
     """
@@ -246,14 +245,9 @@ def plot_fit_alpha_Re(
     :param y_data:
     :param params_solved:
     :param title:
-    :param print_params:
     :param show:
     :return:
     """
-    if print_params:
-        print("\nFit Parameters:")
-        [print("\t%s: %.3f" % (k, v)) for k, v in params_solved.items()]
-
     fig = go.Figure(
         data=[
             go.Scatter3d(
