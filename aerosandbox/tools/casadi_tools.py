@@ -144,10 +144,12 @@ def fit(
     opti.solver('ipopt')
     sol = opti.solve()
 
-    params_solved = {
-        k: sol.value(params[k])
-        for k in params
-    }
+    params_solved ={}
+    for k in params:
+        try:
+            params_solved[k] = sol.value(params[k])
+        except:
+            params_solved[k] = np.NaN
 
     # printing
     if verbose:

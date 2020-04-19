@@ -292,21 +292,22 @@ def plot_fit_alpha_Re(
 
 ### Fit the supercritical data
 def model_Cl_turbulent(x, p):
-    Cl_turbulent = sigmoid(x['alpha'], p['Cl_t_alpha_cent'], p['Cl_t_alpha_scale'], p['Cl_t_Cl_cent'],
-                           p['Cl_t_Cl_scale'])
+    Cl_turbulent = (
+        sigmoid(x['alpha'], p['clt_a_c'], p['clt_a_s'], p['clt_cl_c'], p['clt_cl_s'])
+    )
     return Cl_turbulent
 
 
 Cl_turbulent_params_guess = {
-    'Cl_t_alpha_cent' : 3,
-    'Cl_t_alpha_scale': 8,
-    'Cl_t_Cl_cent'    : 0.4,
-    'Cl_t_Cl_scale'   : 1,
+    'clt_a_c' : 3,
+    'clt_a_s' : 8,
+    'clt_cl_c': 0.4,
+    'clt_cl_s': 1,
 }
 Cl_turbulent_param_bounds = {
-    'Cl_t_alpha_scale': (0, 15),
-    'Cl_t_Cl_cent'    : (0, 1.5),
-    'Cl_t_Cl_scale': (0, 2),
+    'clt_a_s' : (0, 15),
+    'clt_cl_c': (0, 1.5),
+    'clt_cl_s': (0, 2),
 }
 
 Cl_turbulent_params_solved = fit(
@@ -326,23 +327,30 @@ plot_fit_alpha_Re(
     title="Fit: Lift Coefficient (Turbulent)"
 )
 
+
 ### Fit the subcritical data
 def model_Cl_laminar(x, p):
-    Cl_laminar = sigmoid(x['alpha'], p['Cl_l_alpha_cent'], p['Cl_l_alpha_scale'], p['Cl_l_Cl_cent'],
-                           p['Cl_l_Cl_scale'])
+    Cl_laminar = (
+            sigmoid(x['alpha'], p['cll_a_c'], p['cll_a_s'], p['cll_cl_c'], p['cll_cl_s']) +
+            sigmoid(x['alpha'], p['cll_a_c'], p['cll_a_s'], p['cll_cl_c'], p['cll_cl_s'])
+    )
     return Cl_laminar
 
 
 Cl_laminar_params_guess = {
-    'Cl_l_alpha_cent' : 3,
-    'Cl_l_alpha_scale': 8,
-    'Cl_l_Cl_cent'    : 0.4,
-    'Cl_l_Cl_scale'   : 1,
+    'cll_a_c'  : 3,
+    'cll_a_s'  : 8,
+    'cll_cl_c' : 0.4,
+    'cll_cl_s' : 1,
+    'clld_a_c' : -1,
+    'clld_a_s' : 2,
+    'clld_cl_c': 0.1,
+    'clld_cl_s': 0.1,
 }
 Cl_laminar_param_bounds = {
-    'Cl_l_alpha_scale': (0, 15),
-    'Cl_l_Cl_cent'    : (0, 1.5),
-    'Cl_l_Cl_scale': (0, 2),
+    'cll_a_s' : (0, 15),
+    'cll_cl_c': (0, 1.5),
+    'cll_cl_s': (0, 2),
 }
 
 Cl_laminar_params_solved = fit(
