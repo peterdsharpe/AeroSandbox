@@ -74,7 +74,7 @@ def load_sol_from_file(opti, load_primal=True, load_dual=True, primal_location=d
 
 
 def fit(
-        func,  # type: callable
+        model,  # type: callable
         x_data, # type: dict
         y_data, # type: np.ndarray
         param_guesses,  # type: dict
@@ -83,13 +83,13 @@ def fit(
 ):
     """
     Fits a model to data through least-squares minimization.
-    :param func: A callable with syntax f(x, p) where:
-        * x is a dict of dependent variables. Same format as x_data. [dict of 1D ndarrays of length n]
-        * p is a dict of parameters. Same format as param_guesses. [dict of scalars]
-    func should use CasADi functions for differentiability.
-    :param x_data: a dict of dependent variables. Same format as func's x. [dict of 1D ndarrays of length n]
+    :param model: A callable with syntax f(x, p) where:
+            x is a dict of dependent variables. Same format as x_data [dict of 1D ndarrays of length n].
+            p is a dict of parameters. Same format as param_guesses [dict of scalars].
+        Model should use CasADi functions for differentiability.
+    :param x_data: a dict of dependent variables. Same format as model's x. [dict of 1D ndarrays of length n]
     :param y_data: independent variable. [1D ndarray of length n]
-    :param param_guesses: a dict of fit parameters. Same format as func's p. Keys are parameter names, values are initial guesses. [dict of scalars]
+    :param param_guesses: a dict of fit parameters. Same format as model's p. Keys are parameter names, values are initial guesses. [dict of scalars]
     :param param_bounds: Optional: a dict of bounds on fit parameters.
         Keys are parameter names, values are a tuple of (min, max).
         May contain only a subset of param_guesses if desired.
@@ -121,7 +121,7 @@ def fit(
             for k in param_guesses
         }
 
-    y_model = func(x_data, params)
+    y_model = model(x_data, params)
 
     residuals = y_model - y_data
     opti.minimize(cas.sum1(

@@ -87,12 +87,12 @@ class AirfoilFitter():
                 for d in runs_data
             ])
         xfoil_data_2D["Re"] = np.tile(Res, (
-            xfoil_data_2D["a"].shape[1],
+            xfoil_data_2D["alpha"].shape[1],
             1
         )).T
         np.place(
             arr=xfoil_data_2D["Re"],
-            mask=np.isnan(xfoil_data_2D["a"]),
+            mask=np.isnan(xfoil_data_2D["alpha"]),
             vals=np.NaN
         )
 
@@ -130,7 +130,7 @@ class AirfoilFitter():
 
         ax = fig.add_subplot(323)
         x = d["Re"]
-        y = d["a"]
+        y = d["alpha"]
         z = d["cl"]
         levels = np.linspace(-0.5, 1.5, 21)
         norm = None
@@ -146,7 +146,7 @@ class AirfoilFitter():
 
         ax = fig.add_subplot(324)
         x = d["Re"]
-        y = d["a"]
+        y = d["alpha"]
         z = d["cd"]
         levels = np.logspace(-2.5, -1, 21)
         norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
@@ -162,11 +162,11 @@ class AirfoilFitter():
 
         ax = fig.add_subplot(325)
         x = d["Re"]
-        y = d["a"]
+        y = d["alpha"]
         z = d["cl"] / d["cd"]
-        x = x[d["a"] >= 0]
-        y = y[d["a"] >= 0]
-        z = z[d["a"] >= 0]
+        x = x[d["alpha"] >= 0]
+        y = y[d["alpha"] >= 0]
+        z = z[d["alpha"] >= 0]
         levels = np.logspace(1, np.log10(150), 21)
         norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
@@ -181,7 +181,7 @@ class AirfoilFitter():
 
         ax = fig.add_subplot(326)
         x = d["Re"]
-        y = d["a"]
+        y = d["alpha"]
         z = d["cm"]
         levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
         norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
@@ -224,70 +224,146 @@ self = af
 supercritical_threshold = 5e5
 subcritical_threshold = 3e4
 
-### Fit utilities, data extraction
+### Fit utilities, data extraction, plotting tools
 d = self.xfoil_data_1D  # data
 raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
 sigmoid = lambda x, x_cent, x_scale, y_cent, y_scale: y_cent + y_scale * raw_sigmoid((x - x_cent) / x_scale)
 
 
+def plot_fit_alpha_Re(
+        model,
+        x_data,
+        y_data,
+        params_solved,
+        title=None,
+        print_params=True,
+        show=True
+):
+    """
+    See the docstring of the "fit" function in aerosandbox.tools.casadi_tools for syntax.
+    :param model:
+    :param x_data:
+    :param y_data:
+    :param params_solved:
+    :param title:
+    :param print_params:
+    :param show:
+    :return:
+    """
+    if print_params:
+        print("\nFit Parameters:")
+        [print("\t%s: %.3f" % (k, v)) for k, v in params_solved.items()]
+
+    fig = go.Figure(
+        data=[
+            go.Scatter3d(
+                x=x_data['alpha'],
+                y=x_data['Re'],
+                z=y_data,
+                mode="markers",
+                marker=dict(
+                    size=2,
+                    color="black"
+                )
+            ),
+            go.Mesh3d(
+                x=x_data['alpha'],
+                y=x_data['Re'],
+                z=model(d, params_solved),
+                intensity=model(d, params_solved),
+                colorscale="viridis",
+                flatshading=True
+            ),
+        ],
+        layout=go.Layout(
+            scene=dict(
+                xaxis=dict(
+                    title="Alpha"
+                ),
+                yaxis=dict(
+                    type='log',
+                    title="Re"
+                ),
+                zaxis=dict(
+                    title="f(alpha, Re)"
+                ),
+            ),
+            title=title
+        )
+    )
+    if show:
+        fig.show()
+    return fig
+
+
 ### Fit the supercritical data
 def model_Cl_turbulent(x, p):
-    Cl_turbulent = sigmoid(x['a'], p['clt_a_cent'], p['clt_a_scale'], p['clt_cl_cent'], p['clt_cl_scale'])
+    Cl_turbulent = sigmoid(x['alpha'], p['Cl_t_alpha_cent'], p['Cl_t_alpha_scale'], p['Cl_t_Cl_cent'],
+                           p['Cl_t_Cl_scale'])
     return Cl_turbulent
 
 
-params_guess = {
-    'clt_a_cent'  : 3,
-    'clt_a_scale' : 8,
-    'clt_cl_cent' : 0.4,
-    'clt_cl_scale': 1,
+Cl_turbulent_params_guess = {
+    'Cl_t_alpha_cent' : 3,
+    'Cl_t_alpha_scale': 8,
+    'Cl_t_Cl_cent'    : 0.4,
+    'Cl_t_Cl_scale'   : 1,
 }
-param_bounds = {}
+Cl_turbulent_param_bounds = {
+    'Cl_t_alpha_scale': (0, 15),
+    'Cl_t_Cl_cent'    : (0, 1.5),
+    'Cl_t_Cl_scale': (0, 2),
+}
 
-params_solved = fit(
-    func=model_Cl_turbulent,
+Cl_turbulent_params_solved = fit(
+    model=model_Cl_turbulent,
     x_data=d,
-    y_data=d['cl'],
-    param_guesses=params_guess,
-    param_bounds=param_bounds,
+    y_data=d['Cl'],
+    param_guesses=Cl_turbulent_params_guess,
+    param_bounds=Cl_turbulent_param_bounds,
     weights=(d['Re'] > supercritical_threshold).astype('int')
 )
-[print(k, v) for k, v in params_solved.items()]
 
-fig = go.Figure(
-    data=[
-        go.Scatter3d(
-            x=d['a'],
-            y=d['Re'],
-            z=d['cl'],
-            mode="markers",
-            marker=dict(
-                size=2,
-                color="black"
-            )
-        ),
-        go.Mesh3d(
-            x=d['a'],
-            y=d['Re'],
-            z=model_Cl_turbulent(d, params_solved),
-            intensity=model_Cl_turbulent(d, params_solved),
-            colorscale="viridis",
-            flatshading=True
-        ),
-    ],
-    layout=go.Layout(
-        scene=dict(
-            xaxis=dict(
-                title="Alpha"
-            ),
-            yaxis=dict(
-                type='log',
-                title="Re"
-            ),
-            zaxis=dict(
-                title="Cl"
-            ),
-        ),
-        title="Fit: Lift Coefficient (Turbulent)"
-    )
-).show()
+plot_fit_alpha_Re(
+    model=model_Cl_turbulent,
+    x_data=d,
+    y_data=d['Cl'],
+    params_solved=Cl_turbulent_params_solved,
+    title="Fit: Lift Coefficient (Turbulent)"
+)
+
+### Fit the subcritical data
+def model_Cl_laminar(x, p):
+    Cl_laminar = sigmoid(x['alpha'], p['Cl_l_alpha_cent'], p['Cl_l_alpha_scale'], p['Cl_l_Cl_cent'],
+                           p['Cl_l_Cl_scale'])
+    return Cl_laminar
+
+
+Cl_laminar_params_guess = {
+    'Cl_l_alpha_cent' : 3,
+    'Cl_l_alpha_scale': 8,
+    'Cl_l_Cl_cent'    : 0.4,
+    'Cl_l_Cl_scale'   : 1,
+}
+Cl_laminar_param_bounds = {
+    'Cl_l_alpha_scale': (0, 15),
+    'Cl_l_Cl_cent'    : (0, 1.5),
+    'Cl_l_Cl_scale': (0, 2),
+}
+
+Cl_laminar_params_solved = fit(
+    model=model_Cl_laminar,
+    x_data=d,
+    y_data=d['Cl'],
+    param_guesses=Cl_laminar_params_guess,
+    param_bounds=Cl_laminar_param_bounds,
+    weights=(d['Re'] < subcritical_threshold).astype('int')
+)
+
+plot_fit_alpha_Re(
+    model=model_Cl_laminar,
+    x_data=d,
+    y_data=d['Cl'],
+    params_solved=Cl_laminar_params_solved,
+    title="Fit: Lift Coefficient (Turbulent)"
+)
