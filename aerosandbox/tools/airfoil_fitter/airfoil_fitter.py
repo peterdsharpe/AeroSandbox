@@ -292,10 +292,18 @@ class AirfoilFitter():
         ### Fit utilities, data extraction, plotting tools
         d = self.xfoil_data_1D  # data
         raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
-        sigmoid = lambda x, x_cent, x_scale, y_cent, y_scale: y_cent + y_scale * raw_sigmoid((x - x_cent) / x_scale)
+
+        def sigmoid(
+                x, x_cent, x_scale, y_cent, y_scale,
+                raw_sigmoid=raw_sigmoid,
+        ):
+            return y_cent + y_scale * raw_sigmoid((x - x_cent) / x_scale)
 
         ### Fit the supercritical data
-        def model_Cl_turbulent(x, p):
+        def model_Cl_turbulent(
+                x, p,
+                sigmoid=sigmoid,  # packaging dependencies
+        ):
             log10_Re = cas.log10(x['Re'])
             Cl_turbulent = (
                     sigmoid(x['alpha'], p['clt_a_c'], p['clt_a_s'], p['clt_cl_c'], p['clt_cl_s']) +
@@ -335,7 +343,10 @@ class AirfoilFitter():
         # )
 
         ### Fit the subcritical data
-        def model_Cl_laminar(x, p):
+        def model_Cl_laminar(
+                x, p,
+                sigmoid=sigmoid,  # packaging dependencies
+        ):
             Cl_laminar = (
                     p['cll_cla'] * x['alpha'] + p['cll_cl0'] +
                     sigmoid(x['alpha'], p['clld_a_c'], p['clld_a_s'], 0, p['clld_cl_s'])
@@ -374,7 +385,12 @@ class AirfoilFitter():
         # )
 
         # Fit the blend
-        def model_Cl_blend(x, p):
+        def model_Cl_blend(
+                x, p,
+                sigmoid=sigmoid,  # packaging dependencies
+                model_Cl_turbulent=model_Cl_turbulent,  # packaging dependencies
+                model_Cl_laminar=model_Cl_laminar,  # packaging dependencies
+        ):
             v = lambda x, k, a: (k + x ** 2) ** 0.5 + a * x
 
             log10_Re = cas.log10(x['Re'])
@@ -426,52 +442,16 @@ class AirfoilFitter():
                 title="Fit: Lift Coefficient (Blend)"
             )
 
-        # Make the final function, packaging parameters using an inner function.
-        def outer(
-                Cl_blend_params_solved
+        # Make the final function.
+        def Cl_function(
+                alpha, Re,
+                Cl_blend_params_solved=Cl_blend_params_solved,  # packaging dependencies
+                model_Cl_blend=model_Cl_blend  # packaging dependencies
         ):
-            def inner(alpha, Re):
-                raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
-                sigmoid = lambda x, x_cent, x_scale, y_cent, y_scale: y_cent + y_scale * raw_sigmoid(
-                    (x - x_cent) / x_scale)
-
-                def model_Cl_turbulent(x, p):
-                    log10_Re = cas.log10(x['Re'])
-                    Cl_turbulent = (
-                            sigmoid(x['alpha'], p['clt_a_c'], p['clt_a_s'], p['clt_cl_c'], p['clt_cl_s']) +
-                            p['clt_clre'] * log10_Re
-                    )
-                    return Cl_turbulent
-
-                def model_Cl_laminar(x, p):
-                    Cl_laminar = (
-                            p['cll_cla'] * x['alpha'] + p['cll_cl0'] +
-                            sigmoid(x['alpha'], p['clld_a_c'], p['clld_a_s'], 0, p['clld_cl_s'])
-                    )
-                    return Cl_laminar
-
-                def model_Cl_blend(x, p):
-                    v = lambda x, k, a: (k + x ** 2) ** 0.5 + a * x
-
-                    log10_Re = cas.log10(x['Re'])
-                    blend_input = -p['clb_hardness'] * (
-                            p['clb_a_scale'] * v(x['alpha'] - p['clb_a_0'], 0.1, p['clb_asym']) + p['clb_re_0']
-                            - log10_Re
-                    )
-                    blend = sigmoid(blend_input, 0, 1, 0.5, 0.5)
-                    Cl = blend * model_Cl_turbulent(x, p) + (1 - blend) * model_Cl_laminar(x, p)
-                    return Cl
-
-                return model_Cl_blend(
-                    x={'alpha': alpha, 'Re': Re},
-                    p=Cl_blend_params_solved
-                )
-
-            return inner
-
-        Cl_function = outer(
-            Cl_blend_params_solved
-        )
+            return model_Cl_blend(
+                x={'alpha': alpha, 'Re': Re},
+                p=Cl_blend_params_solved
+            )
 
         self.Cl_function = Cl_function
         return Cl_function
@@ -673,6 +653,7 @@ class AirfoilFitter():
         #
         # self.Cd_function = Cd_function
         # return Cd_function
+
 
 a = Airfoil(name="HALE_thiqboi_02", coordinates="C:/Users/User/Downloads/HALE_02.dat")
 

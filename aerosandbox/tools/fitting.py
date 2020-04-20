@@ -10,6 +10,7 @@ def fit(
         param_bounds=None,  # type: dict
         weights=None,  # type: np.ndarray
         verbose=True,  # type: bool
+        scale_problem=True,  # type: bool
 ):
     """
     Fits a model to data through least-squares minimization.
@@ -28,6 +29,7 @@ def fit(
     :param weights: Optional: weights for data points. If not supplied, weights are assumed to be uniform.
         Weights are automatically normalized. [1D ndarray of length n]
     :param verbose: Whether or not to print information about parameters and goodness of fit.
+    :param scale_problem: Whether or not to attempt to scale variables, constraints, and objective for more robust solve. [boolean]
     :return: Optimal fit parameters [dict]
     """
     opti = cas.Opti()
@@ -45,12 +47,23 @@ def fit(
         :param upper_bound:
         :return:
         """
-        var = opti.variable()
+        if scale_problem and np.abs(initial_guess) > 1e-8:
+            var = initial_guess * opti.variable()  # scale variables
+        else:
+            var = opti.variable()
         opti.set_initial(var, initial_guess)
         if lower_bound is not None:
-            opti.subject_to(var > lower_bound)
+            lower_bound_abs = np.abs(lower_bound)
+            if scale_problem and lower_bound_abs > 1e-8:
+                opti.subject_to(var / lower_bound_abs > lower_bound / lower_bound_abs)
+            else:
+                opti.subject_to(var > lower_bound)
         if upper_bound is not None:
-            opti.subject_to(var < upper_bound)
+            upper_bound_abs = np.abs(upper_bound)
+            if scale_problem and upper_bound_abs > 1e-8:
+                opti.subject_to(var / upper_bound_abs < upper_bound / upper_bound_abs)
+            else:
+                opti.subject_to(var < upper_bound)
         return var
 
     if param_bounds is None:
@@ -65,11 +78,27 @@ def fit(
             for k in param_guesses
         }
 
-    y_model = model(x_data, params)
+    if scale_problem:
+        y_model_initial = model(x_data, param_guesses)
+        residuals_initial = y_model_initial - y_data
+        SSE_initial = cas.sum1(weights * residuals_initial ** 2)
+        y_model = model(x_data, params)
+        residuals = y_model - y_data
+        SSE = cas.sum1(weights * residuals ** 2)
+        opti.minimize(SSE / SSE_initial)
 
-    residuals = y_model - y_data
-    opti.minimize(cas.sum1(weights * residuals ** 2))
+    else:
+        y_model = model(x_data, params)
+        residuals = y_model - y_data
+        SSE = cas.sum1(weights * residuals ** 2)
+        opti.minimize(SSE)
 
+    # Solve
+    p_opts = {}
+    s_opts = {}
+    s_opts["max_iter"] = 3e3  # If you need to interrupt, just use ctrl+c
+    # s_opts["mu_strategy"] = "adaptive"
+    opti.solver('ipopt', p_opts, s_opts)
     opti.solver('ipopt')
     sol = opti.solve()
 
