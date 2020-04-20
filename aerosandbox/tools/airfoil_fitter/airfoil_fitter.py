@@ -688,12 +688,12 @@ except:
 
 # af.plot_xfoil_data_2D()
 # af.plot_xfoil_alpha_Re('Cl')
-af.plot_xfoil_alpha_Re('Cd', log_z=True)
-# func = af.fit_xfoil_data_Cl(plot_fit=False)
-func = af.fit_xfoil_data_Cd(plot_fit=True)
+# af.plot_xfoil_alpha_Re('Cd', log_z=True)
+func = af.fit_xfoil_data_Cl(plot_fit=False)
+# func = af.fit_xfoil_data_Cd(plot_fit=True)
 
 with open("func.pkl", "wb+") as f:
     pickle.dump(func, f)
-# print(
-#     func(0, 1e6)
-# )
+print(
+    func(0, 1e6)
+)
