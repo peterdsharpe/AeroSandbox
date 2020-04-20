@@ -203,7 +203,7 @@ class AirfoilFitter():
     def plot_xfoil_data_3D(self):
         pass
 
-    def make_fig_alpha_Re(self,
+    def plot_xfoil_alpha_Re(self,
                           y_data_name,
                           model=None,
                           params_solved=None,
@@ -294,84 +294,6 @@ class AirfoilFitter():
         raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
         sigmoid = lambda x, x_cent, x_scale, y_cent, y_scale: y_cent + y_scale * raw_sigmoid((x - x_cent) / x_scale)
 
-        def plot_fit_alpha_Re(
-                model,
-                x_data,
-                y_data,
-                params_solved,
-                title=None,
-                show=True
-        ):
-            """
-            See the docstring of the "fit" function in aerosandbox.tools.casadi_tools for syntax.
-            :param model:
-            :param x_data:
-            :param y_data:
-            :param params_solved:
-            :param title:
-            :param show:
-            :return:
-            """
-            # Get model data
-            n = 60
-            linspace = lambda x: np.linspace(np.min(x), np.max(x), n)
-            logspace = lambda x: np.logspace(np.log10(np.min(x)), np.log10(np.max(x)), n)
-            x1 = linspace(x_data['alpha'])
-            x2 = logspace(x_data['Re'])
-            X1, X2 = np.meshgrid(x1, x2)
-            x_model = {
-                'alpha': X1.reshape(-1),
-                'Re'   : X2.reshape(-1)
-            }
-            y_model = np.array(model(x_model, params_solved)).reshape((n, n))
-
-            # Make plot
-            fig = go.Figure(
-                data=[
-                    go.Scatter3d(
-                        x=x_data['alpha'],
-                        y=x_data['Re'],
-                        z=y_data,
-                        mode="markers",
-                        marker=dict(
-                            size=2,
-                            color="black"
-                        )
-                    ),
-                    go.Surface(
-                        contours={
-                            # "x": {"show": True, "start": -20, "end": 20, "size": 1},
-                            # "y": {"show": True, "start": 1e4, "end": 1e6, "size": 1e5},
-                            # "z": {"show": True, "start": -5, "end": 5, "size": 0.1}
-                        },
-                        x=x1,
-                        y=x2,
-                        z=y_model,
-                        # intensity=y_model,
-                        colorscale="plasma",
-                        # flatshading=True
-                    ),
-                ],
-                layout=go.Layout(
-                    scene=dict(
-                        xaxis=dict(
-                            title="Alpha"
-                        ),
-                        yaxis=dict(
-                            type='log',
-                            title="Re"
-                        ),
-                        zaxis=dict(
-                            title="f(alpha, Re)"
-                        ),
-                    ),
-                    title=title
-                )
-            )
-            if show:
-                fig.show()
-            return fig
-
         ### Fit the supercritical data
         def model_Cl_turbulent(x, p):
             log10_Re = cas.log10(x['Re'])
@@ -405,10 +327,9 @@ class AirfoilFitter():
             weights=np.logical_and(d['Re'] >= supercritical_Re_threshold, True).astype('int')
         )
 
-        # plot_fit_alpha_Re(
+        # self.plot_xfoil_alpha_Re(
+        #     y_data_name='Cl',
         #     model=model_Cl_turbulent,
-        #     x_data=d,
-        #     y_data=d['Cl'],
         #     params_solved=Cl_turbulent_params_solved,
         #     title="Fit: Lift Coefficient (Turbulent)"
         # )
@@ -445,10 +366,9 @@ class AirfoilFitter():
             weights=np.logical_and(d['Re'] <= subcritical_Re_threshold, True).astype('int')
         )
 
-        # plot_fit_alpha_Re(
+        # self.plot_xfoil_alpha_Re(
+        #     y_data_name='Cl',
         #     model=model_Cl_laminar,
-        #     x_data=d,
-        #     y_data=d['Cl'],
         #     params_solved=Cl_laminar_params_solved,
         #     title="Fit: Lift Coefficient (Laminar)"
         # )
@@ -499,10 +419,9 @@ class AirfoilFitter():
         )
 
         if plot_fit:
-            plot_fit_alpha_Re(
+            self.plot_xfoil_alpha_Re(
+                y_data_name='Cl',
                 model=model_Cl_blend,
-                x_data=d,
-                y_data=d['Cl'],
                 params_solved=Cl_blend_params_solved,
                 title="Fit: Lift Coefficient (Blend)"
             )
@@ -844,7 +763,7 @@ except:
     with open("af.pkl", "wb+") as f:
         pickle.dump(af, f)
 
-af.plot_xfoil_data_2D()
-af.make_fig_alpha_Re('Cl')
-af.make_fig_alpha_Re('Cd', log_z=True)
-af.fit_xfoil_data_Cl()
+# af.plot_xfoil_data_2D()
+# af.plot_xfoil_alpha_Re('Cl')
+# af.plot_xfoil_alpha_Re('Cd', log_z=True)
+f = af.fit_xfoil_data_Cl(plot_fit=False)
