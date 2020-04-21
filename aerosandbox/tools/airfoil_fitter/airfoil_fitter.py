@@ -8,6 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import dash
 import dill as pickle
+import multiprocessing_on_dill as mp
 
 
 class AirfoilFitter():
@@ -27,6 +28,7 @@ class AirfoilFitter():
                        mach=0,
                        max_iter=30,
                        repanel=True,
+                       parallel=True,
                        ):
         """
         Pulls XFoil data for a particular airfoil and both writes it to self.xfoil_data and returns it.
@@ -51,8 +53,10 @@ class AirfoilFitter():
 
         Res = np.logspace(np.log10(Re_start), np.log10(Re_end), n_Res)
 
-        runs_data = []
-        for i, Re in enumerate(Res):
+        def get_xfoil_data_at_Re(Re):
+
+            import numpy as np # needs to be imported here to support parallelization
+
             run_data_upper = self.airfoil.xfoil_aseq(
                 a_start=a_init + a_step,
                 a_end=a_end,
@@ -79,7 +83,15 @@ class AirfoilFitter():
                     run_data_upper[k]
                 )) for k in run_data_upper.keys()
             }
-            runs_data.append(run_data)
+            return run_data
+
+        if not parallel:
+            runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
+        else:
+            pool = mp.Pool(mp.cpu_count())
+            runs_data = pool.map(get_xfoil_data_at_Re, Res)
+            pool.close()
+
 
         xfoil_data_2D = {}
         for k in runs_data[0].keys():
@@ -655,26 +667,30 @@ class AirfoilFitter():
         # return Cd_function
 
 
-a = Airfoil(name="HALE_thiqboi_02", coordinates="C:/Users/User/Downloads/HALE_02.dat")
+if __name__ == '__main__':
 
-try:
-    with open("%s.pkl" % a.name, "rb") as f:
-        af = pickle.load(f)
-except:
-    af = AirfoilFitter(a)
-    af.get_xfoil_data()
+    # a = Airfoil(name="HALE_03 (Thiqboi)", coordinates="C:/Projects/Github/Airfoils/HALE_03.dat")
+    a = Airfoil("naca0012")
 
-    with open("%s.pkl" % a.name, "wb+") as f:
-        pickle.dump(af, f)
+    try:
+        with open("%s.pkl" % a.name, "rb") as f:
+            af = pickle.load(f)
+        raise Exception()
+    except:
+        af = AirfoilFitter(a)
+        af.get_xfoil_data(parallel=True)
 
-# af.plot_xfoil_data_2D()
-# af.plot_xfoil_alpha_Re('Cl')
-# af.plot_xfoil_alpha_Re('Cd', log_z=True)
-func = af.fit_xfoil_data_Cl(plot_fit=False)
-# func = af.fit_xfoil_data_Cd(plot_fit=True)
+        with open("%s.pkl" % a.name, "wb+") as f:
+            pickle.dump(af, f)
 
-with open("func.pkl", "wb+") as f:
-    pickle.dump(func, f)
-print(
-    func(0, 1e6)
-)
+    af.plot_xfoil_data_2D()
+    # af.plot_xfoil_alpha_Re('Cl')
+    # af.plot_xfoil_alpha_Re('Cd', log_z=True)
+    # func = af.fit_xfoil_data_Cl(plot_fit=True)
+    # func = af.fit_xfoil_data_Cd(plot_fit=True)
+
+    # with open("func.pkl", "wb+") as f:
+    #     pickle.dump(func, f)
+    # print(
+    #     func(0, 1e6)
+    # )

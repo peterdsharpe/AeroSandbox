@@ -9,7 +9,6 @@ https://github.com/pypa/sampleproject
 from setuptools import setup, find_packages
 from os import path
 
-
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
@@ -111,7 +110,8 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation',  # Optional
+    keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation',
+    # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
@@ -137,12 +137,15 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy >= 1.18', 
-                      'casadi >= 3.5.1', 
-                      'plotly >= 4.5.0', 
-                      'matplotlib>=3.1.3',
-                      'tqdm>=4.41.1',
-                      ],
+    install_requires=[
+        'numpy >= 1',
+        'casadi >= 3.5',
+        'plotly >= 4',
+        'matplotlib >= 3',
+        'tqdm >= 4',
+        'dill >= 0.3.1.1',
+        'multiprocessing_on_dill > 3',
+    ],
     # Optional
 
     # List additional groups of dependencies here (e.g. development
@@ -154,9 +157,9 @@ setup(
     # Similar to `install_requires` above, these must be valid existing
     # projects.
     extras_require={  # Optional
-         'xfoil': ['xfoil'], # Change the key name to something more descriptive 
-         # w.r.t. to functionality. 
-    #     'test': ['coverage'],
+        'xfoil': ['xfoil'],  # Change the key name to something more descriptive
+        # w.r.t. to functionality.
+        #     'test': ['coverage'],
     },
 
     # If there are data files included in your packages that need to be
@@ -166,7 +169,7 @@ setup(
     # MANIFEST.in as well.
     include_package_data=True,
     package_data={  # Optional
-        '': ['*.dat'], # include all data
+        '': ['*.dat'],  # include all data
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -200,6 +203,6 @@ setup(
     # what's used to render the link text on PyPI.
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/peterdsharpe/AeroSandbox/issues',
-        'Source': 'https://github.com/peterdsharpe/AeroSandbox',
+        'Source'     : 'https://github.com/peterdsharpe/AeroSandbox',
     },
 )
