@@ -241,7 +241,7 @@ class AirfoilFitter():
                 plt.plot(
                     Cds,
                     Cls,
-                    label="Re = %s" % eng_string(Re, "%.3g", True),
+                    label="Re = %s" % eng_string(Re),
                     color=colors[i],
                 )
         plt.xlim(0, 0.04)

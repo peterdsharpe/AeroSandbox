@@ -1,7 +1,7 @@
 import math
 
 
-def eng_string(x, format='%.3g', si=False):
+def eng_string(x, format='%.3g', si=True):
     '''
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
 
