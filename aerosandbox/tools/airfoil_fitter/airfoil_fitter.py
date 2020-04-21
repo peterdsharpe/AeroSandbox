@@ -1,12 +1,12 @@
 """
 Functions to fit automatic-differentiable models to aerodynamic data from an airfoil.
-Requires the xfoil package from PyPI
+Requires the xfoil package from PyPI; see aerosandbox.geometry for more information on this.
 """
 from aerosandbox.geometry import *
 from aerosandbox.tools.fitting import *
+from aerosandbox.tools.miscellaneous import eng_string
 import plotly.express as px
 import plotly.graph_objects as go
-import dash
 import dill as pickle
 import multiprocessing_on_dill as mp
 
@@ -55,7 +55,7 @@ class AirfoilFitter():
 
         def get_xfoil_data_at_Re(Re):
 
-            import numpy as np # needs to be imported here to support parallelization
+            import numpy as np  # needs to be imported here to support parallelization
 
             run_data_upper = self.airfoil.xfoil_aseq(
                 a_start=a_init + a_step,
@@ -92,7 +92,6 @@ class AirfoilFitter():
             runs_data = pool.map(get_xfoil_data_at_Re, Res)
             pool.close()
 
-
         xfoil_data_2D = {}
         for k in runs_data[0].keys():
             xfoil_data_2D[k] = np.vstack([
@@ -108,6 +107,8 @@ class AirfoilFitter():
             mask=np.isnan(xfoil_data_2D["alpha"]),
             vals=np.NaN
         )
+        xfoil_data_2D["alpha_indices"] = np.arange(a_start, a_end + a_step / 2, a_step)
+        xfoil_data_2D["Re_indices"] = Res
 
         self.xfoil_data_2D = xfoil_data_2D
 
@@ -119,7 +120,7 @@ class AirfoilFitter():
         }
         self.xfoil_data_1D = xfoil_data_1D
 
-    def plot_xfoil_data_2D(self):
+    def plot_xfoil_data_contours(self): # TODO add docstring
         import matplotlib.pyplot as plt
         import matplotlib.style as style
         import matplotlib.colors as colors
@@ -212,8 +213,46 @@ class AirfoilFitter():
         plt.savefig("C:/Users/User/Downloads/temp.svg")
         plt.show()
 
-    def plot_xfoil_data_3D(self):
-        pass
+    def plot_xfoil_data_polars(self): # TODO add docstring
+        import matplotlib.pyplot as plt
+        import matplotlib.style as style
+        import seaborn as sns
+        sns.set(font_scale=1)
+        remove_nans = lambda x: x[~np.isnan(x)]
+
+        fig, ax = plt.subplots(1, 1, figsize=(8, 6), dpi=200)
+        # ax = fig.add_subplot(211)
+        indices = np.array(
+            np.round(np.linspace(0, len(self.xfoil_data_2D["Re_indices"]) - 1, 20)),
+            dtype=int
+        )
+        indices_worth_plotting = [
+            np.min(remove_nans(self.xfoil_data_2D["Cd"][index, :]))< 0.04
+            for index in indices
+        ]
+        indices = indices[indices_worth_plotting]
+
+        colors = plt.cm.rainbow(np.linspace(0, 1, len(indices)))[::-1]
+        for i, Re in enumerate(self.xfoil_data_2D["Re_indices"][indices]):
+            Cds = remove_nans(self.xfoil_data_2D["Cd"][indices[i], :])
+            Cls = remove_nans(self.xfoil_data_2D["Cl"][indices[i], :])
+            Cd_min = np.min(Cds)
+            if Cd_min < 0.04:
+                plt.plot(
+                    Cds,
+                    Cls,
+                    label="Re = %s" % eng_string(Re, "%.3g", True),
+                    color=colors[i],
+                )
+        plt.xlim(0, 0.04)
+        plt.ylim(0, 2)
+        plt.xlabel(r"$Cd$")
+        plt.ylabel(r"$Cl$")
+        plt.title("XFoil Polars for %s Airfoil" % self.airfoil.name)
+        plt.tight_layout()
+        plt.legend()
+        plt.savefig("C:/Users/User/Downloads/temp.svg")
+        plt.show()
 
     def plot_xfoil_alpha_Re(self,
                             y_data_name,
@@ -669,13 +708,12 @@ class AirfoilFitter():
 
 if __name__ == '__main__':
 
-    # a = Airfoil(name="HALE_03 (Thiqboi)", coordinates="C:/Projects/Github/Airfoils/HALE_03.dat")
-    a = Airfoil("naca0012")
+    a = Airfoil(name="HALE_03 (Thiqboi)", coordinates="C:/Projects/Github/Airfoils/HALE_03.dat")
+    # a = Airfoil("naca0012")
 
     try:
         with open("%s.pkl" % a.name, "rb") as f:
             af = pickle.load(f)
-        raise Exception()
     except:
         af = AirfoilFitter(a)
         af.get_xfoil_data(parallel=True)
@@ -683,7 +721,8 @@ if __name__ == '__main__':
         with open("%s.pkl" % a.name, "wb+") as f:
             pickle.dump(af, f)
 
-    af.plot_xfoil_data_2D()
+    # af.plot_xfoil_data_contours()
+    af.plot_xfoil_data_polars()
     # af.plot_xfoil_alpha_Re('Cl')
     # af.plot_xfoil_alpha_Re('Cd', log_z=True)
     # func = af.fit_xfoil_data_Cl(plot_fit=True)
