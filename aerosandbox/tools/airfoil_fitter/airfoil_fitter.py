@@ -15,254 +15,10 @@ import time
 class AirfoilFitter():
     def __init__(self,
                  airfoil,  # type: Airfoil
+                 parallel = True,
                  ):
+        airfoil.has_xfoil_data()
         self.airfoil = airfoil
-
-    def get_xfoil_data(self,
-                       a_start=-6,
-                       a_end=12,
-                       a_step=0.25,
-                       a_init=0,
-                       Re_start=1e4,
-                       Re_end=5e6,
-                       n_Res=50,
-                       mach=0,
-                       max_iter=30,
-                       repanel=True,
-                       parallel=True,
-                       verbose=True,
-                       ):
-        """ # TODO finish docstring
-        Pulls XFoil data for a particular airfoil and both writes it to self.xfoil_data and returns it.
-        Does a 2D grid sweep of the alpha-Reynolds space at a particular mach number.
-        :param a_start: Lower bound of angle of attack [deg]
-        :param a_end: Upper bound of angle of attack [deg]
-        :param a_step: Angle of attack increment size [deg]
-        :param a_init: Angle of attack to initialize runs at. Should solve easily (0 recommended) [deg]
-        :param Re_start:
-        :param Re_end:
-        :param n_Res:
-        :param mach:
-        :param max_iter:
-        :param repanel:
-        :param verbose:
-        :return:
-        """
-        assert a_init > a_start
-        assert a_init < a_end
-        assert Re_start < Re_end
-        assert n_Res >= 1
-        assert mach >= 0
-
-        Res = np.logspace(np.log10(Re_start), np.log10(Re_end), n_Res)
-
-        def get_xfoil_data_at_Re(Re):
-
-            import numpy as np  # needs to be imported here to support parallelization
-
-            run_data_upper = self.airfoil.xfoil_aseq(
-                a_start=a_init + a_step,
-                a_end=a_end,
-                a_step=a_step,
-                Re=Re,
-                repanel=repanel,
-                max_iter=max_iter,
-                M=mach,
-                reset_bls=True,
-            )
-            run_data_lower = self.airfoil.xfoil_aseq(
-                a_start=a_init,
-                a_end=a_start,
-                a_step=-a_step,
-                Re=Re,
-                repanel=repanel,
-                max_iter=max_iter,
-                M=mach,
-                reset_bls=True,
-            )
-            run_data = {
-                k: np.hstack((
-                    run_data_lower[k][::-1],
-                    run_data_upper[k]
-                )) for k in run_data_upper.keys()
-            }
-            return run_data
-
-        start_time = time.time()
-
-        if not parallel:
-            runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
-        else:
-            pool = mp.Pool(mp.cpu_count())
-            runs_data = pool.map(get_xfoil_data_at_Re, Res)
-            pool.close()
-
-        run_time = time.time() - start_time
-        if verbose:
-            print("XFoil Runtime: %.3f sec" % run_time)
-
-        xfoil_data_2D = {}
-        for k in runs_data[0].keys():
-            xfoil_data_2D[k] = np.vstack([
-                d[k]
-                for d in runs_data
-            ])
-        xfoil_data_2D["Re"] = np.tile(Res, (
-            xfoil_data_2D["alpha"].shape[1],
-            1
-        )).T
-        np.place(
-            arr=xfoil_data_2D["Re"],
-            mask=np.isnan(xfoil_data_2D["alpha"]),
-            vals=np.NaN
-        )
-        xfoil_data_2D["alpha_indices"] = np.arange(a_start, a_end + a_step / 2, a_step)
-        xfoil_data_2D["Re_indices"] = Res
-
-        self.xfoil_data_2D = xfoil_data_2D
-
-        # 1-dimensionalize it and remove NaNs
-        xfoil_data_1D = {
-            k: remove_nans(xfoil_data_2D[k].reshape(-1))
-            for k in xfoil_data_2D.keys()
-        }
-        self.xfoil_data_1D = xfoil_data_1D
-
-    def plot_xfoil_data_contours(self):  # TODO add docstring
-        import matplotlib.pyplot as plt
-        import matplotlib.style as style
-        import matplotlib.colors as colors
-        import matplotlib
-        import seaborn as sns
-        sns.set(font_scale=1)
-
-        d = self.xfoil_data_1D  # data
-
-        fig = plt.figure(figsize=(10, 8), dpi=200)
-
-        ax = fig.add_subplot(311)
-        coords = self.airfoil.coordinates
-        plt.plot(coords[:, 0], coords[:, 1], '.-', color='#280887')
-        plt.xlabel(r"$x/c$")
-        plt.ylabel(r"$y/c$")
-        plt.title(r"XFoil Data for %s Airfoil" % self.airfoil.name)
-        plt.axis("equal")
-
-        style.use("default")
-
-        ax = fig.add_subplot(323)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cl"]
-        levels = np.linspace(-0.5, 1.5, 21)
-        norm = None
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.2f')
-        cbar.set_label(r"$C_l$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$C_l$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
-
-        ax = fig.add_subplot(324)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cd"]
-        levels = np.logspace(-2.5, -1, 21)
-        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.3f')
-        cbar.set_label(r"$C_d$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$C_d$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
-
-        ax = fig.add_subplot(325)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cl"] / d["Cd"]
-        x = x[d["alpha"] >= 0]
-        y = y[d["alpha"] >= 0]
-        z = z[d["alpha"] >= 0]
-        levels = np.logspace(1, np.log10(150), 21)
-        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.1f')
-        cbar.set_label(r"$L/D$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$L/D$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
-
-        ax = fig.add_subplot(326)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cm"]
-        levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
-        norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.2f')
-        cbar.set_label(r"$C_m$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$C_m$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
-
-        plt.tight_layout()
-        plt.savefig("C:/Users/User/Downloads/temp.svg")
-        plt.show()
-
-    def plot_xfoil_data_polars(self,
-                               n_lines_max=20,
-                               Cd_plot_max=0.04,
-                               ):  # TODO add docstring
-        import matplotlib.pyplot as plt
-        import matplotlib.style as style
-        import seaborn as sns
-        sns.set(font_scale=1)
-
-        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
-        # ax = fig.add_subplot(211)
-        indices = np.array(
-            np.round(np.linspace(0, len(self.xfoil_data_2D["Re_indices"]) - 1, n_lines_max)),
-            dtype=int
-        )
-        indices_worth_plotting = [
-            np.min(remove_nans(self.xfoil_data_2D["Cd"][index, :])) < Cd_plot_max
-            for index in indices
-        ]
-        indices = indices[indices_worth_plotting]
-
-        colors = plt.cm.rainbow(np.linspace(0, 1, len(indices)))[::-1]
-        for i, Re in enumerate(self.xfoil_data_2D["Re_indices"][indices]):
-            Cds = remove_nans(self.xfoil_data_2D["Cd"][indices[i], :])
-            Cls = remove_nans(self.xfoil_data_2D["Cl"][indices[i], :])
-            Cd_min = np.min(Cds)
-            if Cd_min < Cd_plot_max:
-                plt.plot(
-                    Cds * 1e4,
-                    Cls,
-                    label="Re = %s" % eng_string(Re),
-                    color=colors[i],
-                )
-        plt.xlim(0, Cd_plot_max * 1e4)
-        plt.ylim(0, 2)
-        plt.xlabel(r"$C_d \cdot 10^4$")
-        plt.ylabel(r"$C_l$")
-        plt.title("XFoil Polars for %s Airfoil" % self.airfoil.name)
-        plt.tight_layout()
-        plt.legend()
-        plt.savefig("C:/Users/User/Downloads/temp.svg")
-        plt.show()
 
     def plot_xfoil_alpha_Re(self,
                             y_data_name,
@@ -286,9 +42,9 @@ class AirfoilFitter():
         fig = go.Figure()
         fig.add_trace(
             go.Scatter3d(
-                x=self.xfoil_data_1D['alpha'],
-                y=self.xfoil_data_1D['Re'],
-                z=self.xfoil_data_1D[y_data_name],
+                x=self.airfoil.xfoil_data_1D['alpha'],
+                y=self.airfoil.xfoil_data_1D['Re'],
+                z=self.airfoil.xfoil_data_1D[y_data_name],
                 mode="markers",
                 marker=dict(
                     size=2,
@@ -301,8 +57,8 @@ class AirfoilFitter():
             n = 60
             linspace = lambda x: np.linspace(np.min(x), np.max(x), n)
             logspace = lambda x: np.logspace(np.log10(np.min(x)), np.log10(np.max(x)), n)
-            x1 = linspace(self.xfoil_data_1D['alpha'])
-            x2 = logspace(self.xfoil_data_1D['Re'])
+            x1 = linspace(self.airfoil.xfoil_data_1D['alpha'])
+            x2 = logspace(self.airfoil.xfoil_data_1D['Re'])
             X1, X2 = np.meshgrid(x1, x2)
             x_model = {
                 'alpha': X1.reshape(-1),
@@ -351,7 +107,7 @@ class AirfoilFitter():
                           ):
 
         ### Fit utilities, data extraction, plotting tools
-        d = self.xfoil_data_1D  # data
+        d = self.airfoil.xfoil_data_1D  # data
         raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
 
         def sigmoid(

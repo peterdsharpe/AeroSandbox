@@ -1,4 +1,4 @@
-from .airfoil_fitter import *
+from aerosandbox.tools.airfoil_fitter.airfoil_fitter import *
 
 if __name__ == '__main__':
 
@@ -9,14 +9,15 @@ if __name__ == '__main__':
         with open("%s.pkl" % a.name, "rb") as f:
             af = pickle.load(f)
     except:
+        a.get_xfoil_data()
         af = AirfoilFitter(a)
-        af.get_xfoil_data(parallel=True)
 
         with open("%s.pkl" % a.name, "wb+") as f:
             pickle.dump(af, f)
 
-    af.plot_xfoil_data_contours()
-    af.plot_xfoil_data_polars(Cd_plot_max=0.04)
+
+    af.airfoil.plot_xfoil_data_contours()
+    af.airfoil.plot_xfoil_data_polars()
     # af.plot_xfoil_alpha_Re('Cl')
     # af.plot_xfoil_alpha_Re('Cd', log_z=True)
     # func = af.fit_xfoil_data_Cl(plot_fit=True)

@@ -1,5 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 import dash
 import numpy as np
 import casadi as cas
@@ -9,6 +10,8 @@ import seaborn as sns
 
 sns.set(font_scale=1)
 
+# Set the rendering to happen in browser
+pio.renderers.default = "browser"
 
 def reflect_over_XZ_plane(input_vector):
     # Takes in a vector or an array and flips the y-coordinates.

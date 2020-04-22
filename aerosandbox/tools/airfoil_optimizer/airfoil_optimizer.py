@@ -1,9 +1,2 @@
-import numpy as np
-from scipy.special import comb
-from aerosandbox.geometry import np_cosspace
+from aerosandbox.geometry import *
 
-class AirfoilOptimizer():
-    def __init__(self):
-        pass
-
-    @abs

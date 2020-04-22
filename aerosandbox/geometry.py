@@ -1,9 +1,9 @@
-import plotly.express as px
-import plotly.graph_objects as go
-# Set the rendering to happen in browser
-import plotly.io as pio
-from aerosandbox.visualization import Figure3D
+from aerosandbox.visualization import *
 import copy
+import multiprocessing_on_dill as mp
+import time
+from aerosandbox.tools.miscellaneous import remove_nans, eng_string
+from scipy.special import comb
 
 try:
     from xfoil import XFoil
@@ -13,7 +13,7 @@ except ModuleNotFoundError:
 
 from aerosandbox.tools.casadi_tools import *
 
-pio.renderers.default = "browser"
+
 
 
 class AeroSandboxObject:
@@ -1411,6 +1411,357 @@ class Airfoil:
             "Cm"    : cm,
             "Cp_min": Cp_min
         }
+
+    def get_xfoil_data(self,
+                       a_start=-6, # type: float
+                       a_end=12, # type: float
+                       a_step=0.25, # type: float
+                       a_init=0, # type: float
+                       Re_start=1e4, # type: float
+                       Re_end=5e6, # type: float
+                       n_Res=50, # type: int
+                       mach=0, # type: float
+                       max_iter=30, # type: int
+                       repanel=True, # type: bool
+                       parallel=True, # type: bool
+                       verbose=True, # type: bool
+                       ):
+        """ # TODO finish docstring
+        Calculates aerodynamic performance data for a particular airfoil with XFoil.
+        Does a 2D grid sweep of the alpha-Reynolds space at a particular Mach number.
+        Populates two new instance variables:
+            * self.xfoil_data_1D: A dict of XFoil data at all calculated operating points (1D arrays, NaNs removed)
+            * self.xfoil_data_2D: A dict of XFoil data at all calculated operating points (2D arrays, NaNs present)
+        :param a_start: Lower bound of angle of attack [deg]
+        :param a_end: Upper bound of angle of attack [deg]
+        :param a_step: Angle of attack increment size [deg]
+        :param a_init: Angle of attack to initialize runs at. Should solve easily (0 recommended) [deg]
+        :param Re_start: Reynolds number to begin sweep at. [unitless]
+        :param Re_end: Reynolds number to end sweep at. [unitless]
+        :param n_Res: Number of Reynolds numbers to sweep. Points are log-spaced.
+        :param mach: Mach number to sweep at.
+        :param max_iter: Maximum number of XFoil iterations per op-point.
+        :param repanel: Should we interally repanel the airfoil within XFoil before running? [boolean]
+            Consider disabling this if you try to do optimization based on this data (for smoothness reasons).
+            Otherwise, it's generally a good idea to leave this on.
+        :param parallel: Should we run in parallel? Generally results in significant speedup, but might not run
+            correctly on some machines. Disable this if it's a problem. [boolean]
+        :param verbose: Should we do verbose output? [boolean]
+        :return: None (in-place operation that creates self.xfoil_data_1D and self.xfoil_data_2D)
+        """
+        assert a_init > a_start
+        assert a_init < a_end
+        assert Re_start < Re_end
+        assert n_Res >= 1
+        assert mach >= 0
+
+        Res = np.logspace(np.log10(Re_start), np.log10(Re_end), n_Res)
+
+        def get_xfoil_data_at_Re(Re):
+
+            import numpy as np  # needs to be imported here to support parallelization
+
+            run_data_upper = self.xfoil_aseq(
+                a_start=a_init + a_step,
+                a_end=a_end,
+                a_step=a_step,
+                Re=Re,
+                repanel=repanel,
+                max_iter=max_iter,
+                M=mach,
+                reset_bls=True,
+            )
+            run_data_lower = self.xfoil_aseq(
+                a_start=a_init,
+                a_end=a_start,
+                a_step=-a_step,
+                Re=Re,
+                repanel=repanel,
+                max_iter=max_iter,
+                M=mach,
+                reset_bls=True,
+            )
+            run_data = {
+                k: np.hstack((
+                    run_data_lower[k][::-1],
+                    run_data_upper[k]
+                )) for k in run_data_upper.keys()
+            }
+            return run_data
+
+        start_time = time.time()
+
+        if not parallel:
+            runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
+        else:
+            pool = mp.Pool(mp.cpu_count())
+            runs_data = pool.map(get_xfoil_data_at_Re, Res)
+            pool.close()
+
+        run_time = time.time() - start_time
+        if verbose:
+            print("XFoil Runtime: %.3f sec" % run_time)
+
+        xfoil_data_2D = {}
+        for k in runs_data[0].keys():
+            xfoil_data_2D[k] = np.vstack([
+                d[k]
+                for d in runs_data
+            ])
+        xfoil_data_2D["Re"] = np.tile(Res, (
+            xfoil_data_2D["alpha"].shape[1],
+            1
+        )).T
+        np.place(
+            arr=xfoil_data_2D["Re"],
+            mask=np.isnan(xfoil_data_2D["alpha"]),
+            vals=np.NaN
+        )
+        xfoil_data_2D["alpha_indices"] = np.arange(a_start, a_end + a_step / 2, a_step)
+        xfoil_data_2D["Re_indices"] = Res
+
+        self.xfoil_data_2D = xfoil_data_2D
+
+        # 1-dimensionalize it and remove NaNs
+        xfoil_data_1D = {
+            k: remove_nans(xfoil_data_2D[k].reshape(-1))
+            for k in xfoil_data_2D.keys()
+        }
+        self.xfoil_data_1D = xfoil_data_1D
+
+    def has_xfoil_data(self, raise_exception_if_absent = True):
+        """
+        Runs a quick check to see if this airfoil has XFoil data.
+        :param raise_exception_if_absent: Boolean flag to raise an Exception if XFoil data is not found.
+        :return: Boolean of whether or not XFoil data is present.
+        """
+        data_present = (
+            hasattr(self, 'xfoil_data_1D') and
+            hasattr(self, 'xfoil_data_2D')
+        )
+        if not data_present and raise_exception_if_absent:
+            raise Exception(
+                """This Airfoil does not yet have XFoil data,
+                so you can't run the function you've called.
+                To get XFoil data, first call:
+                    Airfoil.get_xfoil_data()
+                which will perform an in-place update that
+                provides the data."""
+            )
+        return data_present
+
+    def plot_xfoil_data_contours(self):  # TODO add docstring
+        self.has_xfoil_data() # Ensure data is present.
+        from matplotlib import colors
+
+        d = self.xfoil_data_1D  # data
+
+        fig = plt.figure(figsize=(10, 8), dpi=200)
+
+        ax = fig.add_subplot(311)
+        coords = self.coordinates
+        plt.plot(coords[:, 0], coords[:, 1], '.-', color='#280887')
+        plt.xlabel(r"$x/c$")
+        plt.ylabel(r"$y/c$")
+        plt.title(r"XFoil Data for %s Airfoil" % self.name)
+        plt.axis("equal")
+
+        style.use("default")
+
+        ax = fig.add_subplot(323)
+        x = d["Re"]
+        y = d["alpha"]
+        z = d["Cl"]
+        levels = np.linspace(-0.5, 1.5, 21)
+        norm = None
+        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+        cbar = plt.colorbar(CF, format='%.2f')
+        cbar.set_label(r"$C_l$")
+        plt.grid(False)
+        plt.xlabel(r"$Re$")
+        plt.ylabel(r"$\alpha$")
+        plt.title(r"$C_l$ from $Re$, $\alpha$")
+        ax.set_xscale('log')
+
+        ax = fig.add_subplot(324)
+        x = d["Re"]
+        y = d["alpha"]
+        z = d["Cd"]
+        levels = np.logspace(-2.5, -1, 21)
+        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+        cbar = plt.colorbar(CF, format='%.3f')
+        cbar.set_label(r"$C_d$")
+        plt.grid(False)
+        plt.xlabel(r"$Re$")
+        plt.ylabel(r"$\alpha$")
+        plt.title(r"$C_d$ from $Re$, $\alpha$")
+        ax.set_xscale('log')
+
+        ax = fig.add_subplot(325)
+        x = d["Re"]
+        y = d["alpha"]
+        z = d["Cl"] / d["Cd"]
+        x = x[d["alpha"] >= 0]
+        y = y[d["alpha"] >= 0]
+        z = z[d["alpha"] >= 0]
+        levels = np.logspace(1, np.log10(150), 21)
+        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+        cbar = plt.colorbar(CF, format='%.1f')
+        cbar.set_label(r"$L/D$")
+        plt.grid(False)
+        plt.xlabel(r"$Re$")
+        plt.ylabel(r"$\alpha$")
+        plt.title(r"$L/D$ from $Re$, $\alpha$")
+        ax.set_xscale('log')
+
+        ax = fig.add_subplot(326)
+        x = d["Re"]
+        y = d["alpha"]
+        z = d["Cm"]
+        levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
+        norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+        cbar = plt.colorbar(CF, format='%.2f')
+        cbar.set_label(r"$C_m$")
+        plt.grid(False)
+        plt.xlabel(r"$Re$")
+        plt.ylabel(r"$\alpha$")
+        plt.title(r"$C_m$ from $Re$, $\alpha$")
+        ax.set_xscale('log')
+
+        plt.tight_layout()
+        plt.show()
+
+    def plot_xfoil_data_polars(self,
+                               n_lines_max=20,
+                               Cd_plot_max=0.04,
+                               ):  # TODO add docstring
+
+        self.has_xfoil_data() # Ensure data is present.
+
+        n_lines_max = min(n_lines_max, len(self.xfoil_data_2D["Re_indices"]))
+
+        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
+        indices = np.array(
+            np.round(np.linspace(0, len(self.xfoil_data_2D["Re_indices"]) - 1, n_lines_max)),
+            dtype=int
+        )
+        indices_worth_plotting = [
+            np.min(remove_nans(self.xfoil_data_2D["Cd"][index, :])) < Cd_plot_max
+            for index in indices
+        ]
+        indices = indices[indices_worth_plotting]
+
+        colors = plt.cm.rainbow(np.linspace(0, 1, len(indices)))[::-1]
+        for i, Re in enumerate(self.xfoil_data_2D["Re_indices"][indices]):
+            Cds = remove_nans(self.xfoil_data_2D["Cd"][indices[i], :])
+            Cls = remove_nans(self.xfoil_data_2D["Cl"][indices[i], :])
+            Cd_min = np.min(Cds)
+            if Cd_min < Cd_plot_max:
+                plt.plot(
+                    Cds * 1e4,
+                    Cls,
+                    label="Re = %s" % eng_string(Re),
+                    color=colors[i],
+                )
+        plt.xlim(0, Cd_plot_max * 1e4)
+        plt.ylim(0, 2)
+        plt.xlabel(r"$C_d \cdot 10^4$")
+        plt.ylabel(r"$C_l$")
+        plt.title("XFoil Polars for %s Airfoil" % self.name)
+        plt.tight_layout()
+        plt.legend()
+        plt.show()
+
+    # def plot_xfoil_alpha_Re(self,
+    #                         y_data_name,
+    #                         model=None,
+    #                         params_solved=None,
+    #                         title=None,
+    #                         log_z=False,
+    #                         show=True
+    #                         ):
+    #     """
+    #     See the docstring of the "fit" function in aerosandbox.tools.casadi_tools for syntax.
+    #     :param model:
+    #     :param x_data:
+    #     :param y_data:
+    #     :param params_solved:
+    #     :param title:
+    #     :param show:
+    #     :return:
+    #     """
+    #     self.has_xfoil_data() # Ensure data is present.
+    #
+    #     # Make plot
+    #     fig = go.Figure()
+    #     fig.add_trace(
+    #         go.Scatter3d(
+    #             x=self.xfoil_data_1D['alpha'],
+    #             y=self.xfoil_data_1D['Re'],
+    #             z=self.xfoil_data_1D[y_data_name],
+    #             mode="markers",
+    #             marker=dict(
+    #                 size=2,
+    #                 color="black"
+    #             )
+    #         )
+    #     )
+    #     if model is not None:
+    #         # Get model data
+    #         n = 60
+    #         linspace = lambda x: np.linspace(np.min(x), np.max(x), n)
+    #         logspace = lambda x: np.logspace(np.log10(np.min(x)), np.log10(np.max(x)), n)
+    #         x1 = linspace(self.xfoil_data_1D['alpha'])
+    #         x2 = logspace(self.xfoil_data_1D['Re'])
+    #         X1, X2 = np.meshgrid(x1, x2)
+    #         x_model = {
+    #             'alpha': X1.reshape(-1),
+    #             'Re'   : X2.reshape(-1)
+    #         }
+    #         y_model = np.array(model(x_model, params_solved)).reshape((n, n))
+    #         fig.add_trace(
+    #             go.Surface(
+    #                 contours={
+    #                     # "x": {"show": True, "start": -20, "end": 20, "size": 1},
+    #                     # "y": {"show": True, "start": 1e4, "end": 1e6, "size": 1e5},
+    #                     # "z": {"show": True, "start": -5, "end": 5, "size": 0.1}
+    #                 },
+    #                 x=x1,
+    #                 y=x2,
+    #                 z=y_model,
+    #                 # intensity=y_model,
+    #                 colorscale="plasma",
+    #                 # flatshading=True
+    #             )
+    #         )
+    #     fig.update_layout(
+    #         scene=dict(
+    #             xaxis=dict(
+    #                 title="Alpha"
+    #             ),
+    #             yaxis=dict(
+    #                 type='log',
+    #                 title="Re"
+    #             ),
+    #             zaxis=dict(
+    #                 type='log' if log_z else 'linear',
+    #                 title="f(alpha, Re)"
+    #             ),
+    #         ),
+    #         title=title
+    #     )
+    #     if show:
+    #         fig.show()
+    #     return fig
+
+
 
 
 class Fuselage(AeroSandboxObject):
