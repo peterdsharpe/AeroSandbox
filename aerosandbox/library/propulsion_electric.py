@@ -17,7 +17,6 @@ def motor_electric_performance(
     http://web.mit.edu/drela/Public/web/qprop/motor1_theory.pdf
     Instructions: Input EXACTLY TWO of the following parameters: voltage, current, rpm, torque.
     Exception: You cannot supply the combination of current and torque - this makes for an ill-posed problem.
-    The function will output a tuple of all four parameters, plus efficiency: (voltage, current, rpm, torque, efficiency)
     :param voltage: Voltage across motor terminals [Volts]
     :param current: Current through motor [Amps]
     :param rpm: Motor rotation speed [rpm]
@@ -25,7 +24,7 @@ def motor_electric_performance(
     :param kv: voltage constant, in rpm/volt
     :param resistance: resistance, in ohms
     :param no_load_current: no-load current, in amps
-    :return: tuple of all four parameters, plus efficiency: (voltage, current, rpm, torque, efficiency)
+    :return: dict of {voltage, current, rpm, torque, efficiency}
     """
     # Validate inputs
     voltage_known = voltage is not None
@@ -72,7 +71,13 @@ def motor_electric_performance(
 
     efficiency = (rpm * np.pi / 30) * torque / (voltage * current)
 
-    return voltage, current, rpm, torque, efficiency
+    return {
+        "voltage"   : voltage,
+        "current"   : current,
+        "rpm"       : rpm,
+        "torque"    : torque,
+        "efficiency": efficiency,
+    }
 
 
 def motor_resistance_from_no_load_current(
@@ -151,10 +156,10 @@ def mass_wires(
         allowable_voltage_drop,
         material="aluminum",
         insulated=True,
-        max_voltage = 600,
+        max_voltage=600,
         wire_packing_factor=1,
-        insulator_density = 1700,
-        insulator_dielectric_strength = 12e6
+        insulator_density=1700,
+        insulator_dielectric_strength=12e6
 ):
     """
     Estimates the mass of wires used for power transmission.
@@ -215,8 +220,8 @@ def mass_wires(
 
     # Insulator mass
     if insulated:
-        insulator_thickness = max_voltage/insulator_dielectric_strength
-        radius_conductor = (area_conductor/wire_packing_factor / np.pi) ** 0.5
+        insulator_thickness = max_voltage / insulator_dielectric_strength
+        radius_conductor = (area_conductor / wire_packing_factor / np.pi) ** 0.5
         radius_insulator = radius_conductor + insulator_thickness
         area_insulator = np.pi * radius_insulator ** 2 - area_conductor
         volume_insulator = area_insulator * wire_length
@@ -268,7 +273,7 @@ if __name__ == '__main__':
 
     print(mass_wires(
         wire_length=1,
-        max_current = 100,
+        max_current=100,
         allowable_voltage_drop=1,
         material="aluminum"
     ))

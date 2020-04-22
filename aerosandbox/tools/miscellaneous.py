@@ -1,5 +1,5 @@
 import math
-
+import numpy as np
 
 def eng_string(x, format='%.3g', si=True):
     '''
@@ -39,3 +39,5 @@ def eng_string(x, format='%.3g', si=True):
         exp3_text = 'e%s' % exp3
 
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
+
+remove_nans = lambda x: x[~np.isnan(x)]

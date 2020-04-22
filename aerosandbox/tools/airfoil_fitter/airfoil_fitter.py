@@ -4,11 +4,12 @@ Requires the xfoil package from PyPI; see aerosandbox.geometry for more informat
 """
 from aerosandbox.geometry import *
 from aerosandbox.tools.fitting import *
-from aerosandbox.tools.miscellaneous import eng_string
+from aerosandbox.tools.miscellaneous import eng_string, remove_nans
 import plotly.express as px
 import plotly.graph_objects as go
 import dill as pickle
 import multiprocessing_on_dill as mp
+import time
 
 
 class AirfoilFitter():
@@ -29,8 +30,9 @@ class AirfoilFitter():
                        max_iter=30,
                        repanel=True,
                        parallel=True,
+                       verbose=True,
                        ):
-        """
+        """ # TODO finish docstring
         Pulls XFoil data for a particular airfoil and both writes it to self.xfoil_data and returns it.
         Does a 2D grid sweep of the alpha-Reynolds space at a particular mach number.
         :param a_start: Lower bound of angle of attack [deg]
@@ -43,6 +45,7 @@ class AirfoilFitter():
         :param mach:
         :param max_iter:
         :param repanel:
+        :param verbose:
         :return:
         """
         assert a_init > a_start
@@ -85,12 +88,18 @@ class AirfoilFitter():
             }
             return run_data
 
+        start_time = time.time()
+
         if not parallel:
             runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
         else:
             pool = mp.Pool(mp.cpu_count())
             runs_data = pool.map(get_xfoil_data_at_Re, Res)
             pool.close()
+
+        run_time = time.time() - start_time
+        if verbose:
+            print("XFoil Runtime: %.3f sec" % run_time)
 
         xfoil_data_2D = {}
         for k in runs_data[0].keys():
@@ -113,14 +122,13 @@ class AirfoilFitter():
         self.xfoil_data_2D = xfoil_data_2D
 
         # 1-dimensionalize it and remove NaNs
-        remove_nans = lambda x: x[~np.isnan(x)]
         xfoil_data_1D = {
             k: remove_nans(xfoil_data_2D[k].reshape(-1))
             for k in xfoil_data_2D.keys()
         }
         self.xfoil_data_1D = xfoil_data_1D
 
-    def plot_xfoil_data_contours(self): # TODO add docstring
+    def plot_xfoil_data_contours(self):  # TODO add docstring
         import matplotlib.pyplot as plt
         import matplotlib.style as style
         import matplotlib.colors as colors
@@ -213,21 +221,23 @@ class AirfoilFitter():
         plt.savefig("C:/Users/User/Downloads/temp.svg")
         plt.show()
 
-    def plot_xfoil_data_polars(self): # TODO add docstring
+    def plot_xfoil_data_polars(self,
+                               n_lines_max=20,
+                               Cd_plot_max=0.04,
+                               ):  # TODO add docstring
         import matplotlib.pyplot as plt
         import matplotlib.style as style
         import seaborn as sns
         sns.set(font_scale=1)
-        remove_nans = lambda x: x[~np.isnan(x)]
 
-        fig, ax = plt.subplots(1, 1, figsize=(8, 6), dpi=200)
+        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
         # ax = fig.add_subplot(211)
         indices = np.array(
-            np.round(np.linspace(0, len(self.xfoil_data_2D["Re_indices"]) - 1, 20)),
+            np.round(np.linspace(0, len(self.xfoil_data_2D["Re_indices"]) - 1, n_lines_max)),
             dtype=int
         )
         indices_worth_plotting = [
-            np.min(remove_nans(self.xfoil_data_2D["Cd"][index, :]))< 0.04
+            np.min(remove_nans(self.xfoil_data_2D["Cd"][index, :])) < Cd_plot_max
             for index in indices
         ]
         indices = indices[indices_worth_plotting]
@@ -237,17 +247,17 @@ class AirfoilFitter():
             Cds = remove_nans(self.xfoil_data_2D["Cd"][indices[i], :])
             Cls = remove_nans(self.xfoil_data_2D["Cl"][indices[i], :])
             Cd_min = np.min(Cds)
-            if Cd_min < 0.04:
+            if Cd_min < Cd_plot_max:
                 plt.plot(
-                    Cds,
+                    Cds * 1e4,
                     Cls,
                     label="Re = %s" % eng_string(Re),
                     color=colors[i],
                 )
-        plt.xlim(0, 0.04)
+        plt.xlim(0, Cd_plot_max * 1e4)
         plt.ylim(0, 2)
-        plt.xlabel(r"$Cd$")
-        plt.ylabel(r"$Cl$")
+        plt.xlabel(r"$C_d \cdot 10^4$")
+        plt.ylabel(r"$C_l$")
         plt.title("XFoil Polars for %s Airfoil" % self.airfoil.name)
         plt.tight_layout()
         plt.legend()
@@ -704,32 +714,3 @@ class AirfoilFitter():
         #
         # self.Cd_function = Cd_function
         # return Cd_function
-
-
-if __name__ == '__main__':
-
-    a = Airfoil(name="HALE_03 (Thiqboi)", coordinates="C:/Projects/Github/Airfoils/HALE_03.dat")
-    # a = Airfoil("naca0012")
-
-    try:
-        with open("%s.pkl" % a.name, "rb") as f:
-            af = pickle.load(f)
-    except:
-        af = AirfoilFitter(a)
-        af.get_xfoil_data(parallel=True)
-
-        with open("%s.pkl" % a.name, "wb+") as f:
-            pickle.dump(af, f)
-
-    # af.plot_xfoil_data_contours()
-    af.plot_xfoil_data_polars()
-    # af.plot_xfoil_alpha_Re('Cl')
-    # af.plot_xfoil_alpha_Re('Cd', log_z=True)
-    # func = af.fit_xfoil_data_Cl(plot_fit=True)
-    # func = af.fit_xfoil_data_Cd(plot_fit=True)
-
-    # with open("func.pkl", "wb+") as f:
-    #     pickle.dump(func, f)
-    # print(
-    #     func(0, 1e6)
-    # )

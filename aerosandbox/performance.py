@@ -112,7 +112,7 @@ class OperatingPoint(AeroSandboxObject):
         return self.density * self.velocity * reference_length / self.viscosity
 
 
-class AeroData:
+class AeroData: # TODO finish this class
     # A class where aerodynamic data is stored.
     # There is very little structure here. Suggested attributes you could add here:
 
