@@ -2,7 +2,7 @@ from aerosandbox.visualization import *
 import copy
 import multiprocessing_on_dill as mp
 import time
-from aerosandbox.tools.miscellaneous import remove_nans, eng_string
+from aerosandbox.tools.miscellaneous import *
 from scipy.special import comb
 
 try:
@@ -1178,8 +1178,8 @@ class Airfoil:
                 xtr_top=1,
                 reset_bls=False,
                 repanel=False,
-                max_iter=100,
-                verbose=True,
+                max_iter=20,
+                verbose=False,
                 ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1203,21 +1203,27 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-        xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1),
-            y=np.array(self.coordinates[:, 1]).reshape(-1),
-        )
-        xf.Re = Re
-        xf.M = M
-        xf.n_crit = n_crit
-        xf.xtr = (xtr_top, xtr_bot)
-        if reset_bls:
-            xf.reset_bls()
-        if repanel:
-            xf.repanel()
-        xf.max_iter = max_iter
+        def run():
+            xf.airfoil = xfoil_model.Airfoil(
+                x=np.array(self.coordinates[:, 0]).reshape(-1),
+                y=np.array(self.coordinates[:, 1]).reshape(-1),
+            )
+            xf.Re = Re
+            xf.M = M
+            xf.n_crit = n_crit
+            xf.xtr = (xtr_top, xtr_bot)
+            if reset_bls:
+                xf.reset_bls()
+            if repanel:
+                xf.repanel()
+            xf.max_iter = max_iter
+            return xf.a(alpha)
 
-        cl, cd, cm, Cp_min = xf.a(alpha)
+        if verbose:
+            cl, cd, cm, Cp_min = run()
+        else:
+            with stdout_redirected():
+                cl, cd, cm, Cp_min = run()
         a = alpha
 
         return {
@@ -1237,8 +1243,8 @@ class Airfoil:
                  xtr_top=1,
                  reset_bls=False,
                  repanel=False,
-                 max_iter=100,
-                 verbose=True,
+                 max_iter=20,
+                 verbose=False,
                  ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1262,21 +1268,27 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-        xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1),
-            y=np.array(self.coordinates[:, 1]).reshape(-1),
-        )
-        xf.Re = Re
-        xf.M = M
-        xf.n_crit = n_crit
-        xf.xtr = (xtr_top, xtr_bot)
-        if reset_bls:
-            xf.reset_bls()
-        if repanel:
-            xf.repanel()
-        xf.max_iter = max_iter
+        def run():
+            xf.airfoil = xfoil_model.Airfoil(
+                x=np.array(self.coordinates[:, 0]).reshape(-1),
+                y=np.array(self.coordinates[:, 1]).reshape(-1),
+            )
+            xf.Re = Re
+            xf.M = M
+            xf.n_crit = n_crit
+            xf.xtr = (xtr_top, xtr_bot)
+            if reset_bls:
+                xf.reset_bls()
+            if repanel:
+                xf.repanel()
+            xf.max_iter = max_iter
+            return xf.cl(cl)
 
-        a, cd, cm, Cp_min = xf.cl(cl)
+        if verbose:
+            a, cd, cm, Cp_min = run()
+        else:
+            with stdout_redirected():
+                a, cd, cm, Cp_min = run()
 
         cl = cl
 
@@ -1299,8 +1311,8 @@ class Airfoil:
                    xtr_top=1,
                    reset_bls=False,
                    repanel=False,
-                   max_iter=100,
-                   verbose=True,
+                   max_iter=20,
+                   verbose=False,
                    ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1326,21 +1338,27 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-        xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1),
-            y=np.array(self.coordinates[:, 1]).reshape(-1),
-        )
-        xf.Re = Re
-        xf.M = M
-        xf.n_crit = n_crit
-        xf.xtr = (xtr_top, xtr_bot)
-        if reset_bls:
-            xf.reset_bls()
-        if repanel:
-            xf.repanel()
-        xf.max_iter = max_iter
+        def run():
+            xf.airfoil = xfoil_model.Airfoil(
+                x=np.array(self.coordinates[:, 0]).reshape(-1),
+                y=np.array(self.coordinates[:, 1]).reshape(-1),
+            )
+            xf.Re = Re
+            xf.M = M
+            xf.n_crit = n_crit
+            xf.xtr = (xtr_top, xtr_bot)
+            if reset_bls:
+                xf.reset_bls()
+            if repanel:
+                xf.repanel()
+            xf.max_iter = max_iter
+            return xf.aseq(a_start, a_end, a_step)
 
-        a, cl, cd, cm, Cp_min = xf.aseq(a_start, a_end, a_step)
+        if verbose:
+            a, cl, cd, cm, Cp_min = run()
+        else:
+            with stdout_redirected():
+                a, cl, cd, cm, Cp_min = run()
 
         return {
             "alpha" : a,
@@ -1361,8 +1379,8 @@ class Airfoil:
                    xtr_top=1,
                    reset_bls=False,
                    repanel=False,
-                   max_iter=100,
-                   verbose=True,
+                   max_iter=20,
+                   verbose=False,
                    ):
         """
         Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
@@ -1388,21 +1406,27 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-        xf.airfoil = xfoil_model.Airfoil(
-            x=np.array(self.coordinates[:, 0]).reshape(-1),
-            y=np.array(self.coordinates[:, 1]).reshape(-1),
-        )
-        xf.Re = Re
-        xf.M = M
-        xf.n_crit = n_crit
-        xf.xtr = (xtr_top, xtr_bot)
-        if reset_bls:
-            xf.reset_bls()
-        if repanel:
-            xf.repanel()
-        xf.max_iter = max_iter
+        def run():
+            xf.airfoil = xfoil_model.Airfoil(
+                x=np.array(self.coordinates[:, 0]).reshape(-1),
+                y=np.array(self.coordinates[:, 1]).reshape(-1),
+            )
+            xf.Re = Re
+            xf.M = M
+            xf.n_crit = n_crit
+            xf.xtr = (xtr_top, xtr_bot)
+            if reset_bls:
+                xf.reset_bls()
+            if repanel:
+                xf.repanel()
+            xf.max_iter = max_iter
+            return xf.cseq(cl_start, cl_end, cl_step)
 
-        a, cl, cd, cm, Cp_min = xf.cseq(cl_start, cl_end, cl_step)
+        if verbose:
+            a, cl, cd, cm, Cp_min = run()
+        else:
+            with stdout_redirected():
+                a, cl, cd, cm, Cp_min = run()
 
         return {
             "alpha" : a,
@@ -1421,7 +1445,7 @@ class Airfoil:
                        Re_end=5e6, # type: float
                        n_Res=50, # type: int
                        mach=0, # type: float
-                       max_iter=30, # type: int
+                       max_iter=20, # type: int
                        repanel=True, # type: bool
                        parallel=True, # type: bool
                        verbose=True, # type: bool
