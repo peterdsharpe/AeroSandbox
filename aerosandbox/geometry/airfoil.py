@@ -1,632 +1,4 @@
-from aerosandbox.visualization import *
-import copy
-import multiprocessing_on_dill as mp
-import time
-from aerosandbox.tools.miscellaneous import *
-from scipy.special import comb
-
-try:
-    from xfoil import XFoil
-    from xfoil import model as xfoil_model
-except ModuleNotFoundError:
-    pass
-
-from aerosandbox.tools.casadi_tools import *
-
-
-
-
-class AeroSandboxObject:
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for attrib_name in dir(self):
-            attrib_orig = getattr(self, attrib_name)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, attrib_name, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, attrib_name, new_attrib_orig)
-                except:
-                    pass
-            try:
-                setattr(self, attrib_name, attrib_orig.substitute_solution(sol))
-            except:
-                pass
-        return self
-
-
-class Airplane(AeroSandboxObject):
-    """
-    Definition for an airplane (or other vehicle/item to analyze).
-    """
-
-    def __init__(self,
-                 name="Untitled",  # A sensible name for your airplane.
-                 x_ref=0,  # Ref. point for moments; should be the center of gravity.
-                 y_ref=0,  # Ref. point for moments; should be the center of gravity.
-                 z_ref=0,  # Ref. point for moments; should be the center of gravity.
-                 mass_props=None,  # An object of MassProps type; only needed for dynamic analysis
-                 # If xyz_ref is not set, but mass_props is, the xyz_ref will be taken from the CG there.
-                 wings=[],  # A list of Wing objects.
-                 fuselages=[],  # A list of Fuselage objects.
-                 s_ref=None,  # If not set, populates from first wing object.
-                 c_ref=None,  # See above
-                 b_ref=None,  # See above
-                 ):
-        self.name = name
-
-        self.xyz_ref = cas.vertcat(x_ref, y_ref, z_ref)
-        # if xyz_ref is None and mass_props is not None:
-        #     self.xyz_ref = mass_props.get_cg()
-        # else:
-        #     self.xyz_ref = cas.MX(xyz_ref)
-        # self.mass_props = mass_props
-        self.wings = wings
-        self.fuselages = fuselages
-
-        if len(self.wings) > 0:  # If there is at least one wing
-            self.set_ref_dims_from_wing(main_wing_index=0)
-        if s_ref is not None:
-            self.s_ref = s_ref
-        if c_ref is not None:
-            self.c_ref = c_ref
-        if b_ref is not None:
-            self.b_ref = b_ref
-
-        # Check that everything was set right:
-        assert self.name is not None
-        assert self.xyz_ref is not None
-        assert self.s_ref is not None
-        assert self.c_ref is not None
-        assert self.b_ref is not None
-
-    def __repr__(self):
-        return "Airplane %s (%i wings, %i fuselages)" % (
-            self.name,
-            len(self.wings),
-            len(self.fuselages)
-        )
-
-    def set_ref_dims_from_wing(self,
-                               main_wing_index=0
-                               ):
-        # Sets the reference dimensions of the airplane from measurements obtained from a specific wing.
-
-        main_wing = self.wings[main_wing_index]
-
-        self.s_ref = main_wing.area()
-        self.b_ref = main_wing.span()
-        self.c_ref = main_wing.mean_geometric_chord()
-
-    def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
-        # Sets the chordwise and spanwise paneling everywhere to a specified init_val.
-        # Useful for quickly changing the fidelity of your simulation.
-
-        for wing in self.wings:
-            wing.chordwise_panels = n_chordwise_panels
-            for xsec in wing.xsecs:
-                xsec.spanwise_panels = n_spanwise_panels
-
-    def set_spanwise_paneling_everywhere(self, n_spanwise_panels):
-        # Sets the spanwise paneling everywhere to a specified value.
-        # Useful for quickly changing the fidelity of your simulation.
-
-        for wing in self.wings:
-            for xsec in wing.xsecs:
-                xsec.spanwise_panels = n_spanwise_panels
-
-    def draw(self,
-             show=True,  # type: bool
-             colorscale="mint",  # type: str
-             colorbar_title="Component ID",
-             draw_quarter_chord=True,  # type: bool
-             ):
-        """
-        Draws the airplane using a Plotly interface.
-        :param show: Do you want to show the figure? [boolean]
-        :param colorscale: Which colorscale do you want to use? ("viridis", "plasma", mint", etc.)
-        :param draw_quarter_chord: Do you want to draw the quarter-chord? [boolean]
-        :return: A plotly figure object [go.Figure]
-        """
-        fig = Figure3D()
-
-        # Wings
-        for wing_id in range(len(self.wings)):
-            wing = self.wings[wing_id]  # type: Wing
-
-            for xsec_id in range(len(wing.xsecs) - 1):
-                xsec_1 = wing.xsecs[xsec_id]  # type: WingXSec
-                xsec_2 = wing.xsecs[xsec_id + 1]  # type: WingXSec
-
-                le_start = xsec_1.xyz_le + wing.xyz_le
-                te_start = xsec_1.xyz_te() + wing.xyz_le
-                le_end = xsec_2.xyz_le + wing.xyz_le
-                te_end = xsec_2.xyz_te() + wing.xyz_le
-
-                fig.add_quad(points=[
-                    le_start,
-                    le_end,
-                    te_end,
-                    te_start
-                ],
-                    intensity=wing_id,
-                    mirror=wing.symmetric,
-                )
-                if draw_quarter_chord:
-                    fig.add_line(  # draw the quarter-chord line
-                        points=[
-                            0.75 * le_start + 0.25 * te_start,
-                            0.75 * le_end + 0.25 * te_end,
-                        ],
-                        mirror=wing.symmetric
-                    )
-
-        # Fuselages
-        for fuse_id in range(len(self.fuselages)):
-            fuse = self.fuselages[fuse_id]  # type: Fuselage
-
-            for xsec_id in range(len(fuse.xsecs) - 1):
-                xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
-                xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
-
-                r1 = xsec_1.radius
-                r2 = xsec_2.radius
-                points_1 = np.zeros((fuse.circumferential_panels, 3))
-                points_2 = np.zeros((fuse.circumferential_panels, 3))
-                for point_index in range(fuse.circumferential_panels):
-                    rot = angle_axis_rotation_matrix(
-                        2 * cas.pi * point_index / fuse.circumferential_panels,
-                        [1, 0, 0],
-                        True
-                    ).toarray()
-                    points_1[point_index, :] = rot @ np.array([0, 0, r1])
-                    points_2[point_index, :] = rot @ np.array([0, 0, r2])
-                points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
-                points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
-
-                for point_index in range(fuse.circumferential_panels):
-
-                    fig.add_quad(points=[
-                        points_1[(point_index) % fuse.circumferential_panels, :],
-                        points_1[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index) % fuse.circumferential_panels, :],
-                    ],
-                        intensity=fuse_id,
-                        mirror=fuse.symmetric,
-                    )
-
-        return fig.draw(
-            show=show,
-            colorscale=colorscale,
-            colorbar_title=colorbar_title,
-        )
-
-    def is_symmetric(self):
-        """
-        Returns a boolean describing whether the airplane is geometrically entirely symmetric across the XZ-plane.
-        :return: [boolean]
-        """
-        for wing in self.wings:
-            for xsec in wing.xsecs:
-                if not (xsec.control_surface_type == "symmetric" or xsec.control_surface_deflection == 0):
-                    return False
-                if not wing.symmetric:
-                    if not xsec.xyz_le[1] == 0:
-                        return False
-                    if not xsec.twist == 0:
-                        if not (xsec.twist_axis[0] == 0 and xsec.twist_axis[2] == 0):
-                            return False
-                    if not xsec.airfoil.CL_function(0, 1e6, 0, 0) == 0:
-                        return False
-                    if not xsec.airfoil.Cm_function(0, 1e6, 0, 0) == 0:
-                        return False
-
-        return True
-
-    def write_aswing(self, filepath=None):
-        """
-        Contributed by Brent Avery, Edited by Peter Sharpe. Work in progress.
-        Writes a geometry file compatible with Mark Drela's ASWing.
-        :param filepath: Filepath to write to. Should include ".asw" extension [string]
-        :return: None
-        """
-        if filepath is None:
-            filepath = "%s.asw" % self.name
-        with open(filepath, 'w+') as f:
-            f.write('\n'.join([
-                '#============',
-                'Name',
-                self.name,
-                'End',
-                '',
-                '#============',
-                'Units',
-                'L 0.3048 m',
-                'T 1.0  s',
-                'F 4.450 N',
-                'End',
-                '',
-                '#============',
-                'Constant',
-                '#  g     rho_0     a_0',
-                '%f %f %f' % (9.81, 1.205, 343.3),
-                'End',
-                '', '#============',  # Reference values (change automatically with input file)
-                'Reference',
-                '#   Sref    Cref    Bref',
-                '%f %f %f' % (self.s_ref, self.c_ref, self.b_ref),
-                'End',
-                # Ok so 'ground' is a point on the plane that is constrained from translation or rotation.
-                # Based on the documentation this is usually the 'frontest' part of the aircraft (why do I suck at words).
-                # There is definitely a much better way to do this and I'm working on it but right now I'm just assuming
-                # that it is the front part of the main wing, and just make that a constraint in AeroSandBox
-                '',
-                '#============',
-                'Ground',
-                '#  Nbeam  t',
-                '%i %i' % (1, 0),
-                'End',
-            ]))
-
-            # The juicy stuff! This part of the code iterates over each wing and then subiterates (is that a word?) over
-            # each wing's cross section. Along the way it collects information on chord length, angle, and coordinates of
-            # all the leading edges. It then writes all this info in a way that ASWing likes
-            for i, wing in enumerate(self.wings):
-                xsecs = wing.xsecs
-                chordalfa = []
-                coords = []
-                '''
-                This part is hard to explain but basically I defined t (the beamwise axis)
-                as the axis that the beam changes most along. This can be generalized
-                but I'm not entirely sure how
-                '''
-                max_le = {abs(xsecs[-1].x_le - xsecs[0].x_le): 'sec.x_le', \
-                          abs(xsecs[-1].y_le - xsecs[0].y_le): 'sec.y_le', \
-                          abs(xsecs[-1].z_le - xsecs[0].z_le): 'sec.z_le'}
-                for xsec in xsecs:
-                    if max_le.get(max(max_le)) == 'sec.x_le':
-                        t = xsec.x_le
-                    elif max_le.get(max(max_le)) == 'sec.y_le':
-                        t = xsec.y_le
-                    elif max_le.get(max(max_le)) == 'sec.z_le':
-                        t = xsec.z_le
-                    chordalfa.append('    '.join([str(t), str(xsec.chord), str(xsec.twist)]))
-                    coords.append('    '.join(
-                        [str(t), str(xsec.x_le + wing.xyz_le[0]), str(xsec.y_le + wing.xyz_le[1]),
-                         str(xsec.z_le + wing.xyz_le[2])]))
-                f.write('\n'.join([
-                    '',
-                    '#============',
-                    'Beam %i' % (i + 1),
-                    wing.name,
-                    't    chord    twist',
-                    '\n'.join(chordalfa),
-                    '#',
-                    't    x    y    z',
-                    '\n'.join(coords),
-                    'End'
-                ]))
-
-
-class Wing(AeroSandboxObject):
-    """
-    Definition for a wing.
-    If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the constructor.
-    If the wing is not symmetric across the XZ plane, just define the wing.
-    """
-
-    def __init__(self,
-                 name="Untitled Wing",  # It can help when debugging to give each wing a sensible name.
-                 x_le=0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 y_le=0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 z_le=0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 xsecs=[],  # This should be a list of WingXSec objects.
-                 symmetric=False,  # Is the wing symmetric across the XZ plane?
-                 chordwise_panels=8,  # The number of chordwise panels to be used in VLM and panel analyses.
-                 chordwise_spacing="cosine",  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
-                 ):
-        self.name = name
-        self.xyz_le = cas.vertcat(x_le, y_le, z_le)
-        self.xsecs = xsecs
-        self.symmetric = symmetric
-        self.chordwise_panels = chordwise_panels
-        self.chordwise_spacing = chordwise_spacing
-
-    def __repr__(self):
-        return "Wing %s (%i xsecs, %s)" % (
-            self.name,
-            len(self.xsecs),
-            "symmetric" if self.symmetric else "not symmetric"
-        )
-
-    def area(self,
-             type="wetted"
-             ):
-        """
-        Returns the area, with options for various ways of measuring this.
-         * wetted: wetted area
-         * projected: area projected onto the XY plane (top-down view)
-        :param type:
-        :return:
-        """
-        area = 0
-        for i in range(len(self.xsecs) - 1):
-            chord_eff = (self.xsecs[i].chord
-                         + self.xsecs[i + 1].chord) / 2
-            this_xyz_te = self.xsecs[i].xyz_te()
-            that_xyz_te = self.xsecs[i + 1].xyz_te()
-            if type == "wetted":
-                span_le_eff = cas.sqrt(
-                    (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
-                    (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
-                )
-                span_te_eff = cas.sqrt(
-                    (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
-                    (this_xyz_te[2] - that_xyz_te[2]) ** 2
-                )
-            elif type == "projected":
-                span_le_eff = cas.fabs(
-                    self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]
-                )
-                span_te_eff = cas.fabs(
-                    this_xyz_te[1] - that_xyz_te[1]
-                )
-            else:
-                raise ValueError("Bad value of 'type'!")
-
-            span_eff = (span_le_eff + span_te_eff) / 2
-            area += chord_eff * span_eff
-        if self.symmetric:
-            area *= 2
-        return area
-
-    def span(self,
-             type="wetted"
-             ):
-        """
-        Returns the span, with options for various ways of measuring this.
-         * wetted: Adds up YZ-distances of each section piece by piece
-         * yz: YZ-distance between the root and tip of the wing
-         * y: Y-distance between the root and tip of the wing
-         * z: Z-distance between the root and tip of the wing
-        If symmetric, this is doubled to obtain the full span.
-        :param type: One of the above options, as a string.
-        :return: span
-        """
-        if type == "wetted":
-            span = 0
-            for i in range(len(self.xsecs) - 1):
-                sect1_xyz_le = self.xsecs[i].xyz_le
-                sect2_xyz_le = self.xsecs[i + 1].xyz_le
-                sect1_xyz_te = self.xsecs[i].xyz_te()
-                sect2_xyz_te = self.xsecs[i + 1].xyz_te()
-
-                span_le = cas.sqrt(
-                    (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
-                    (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
-                )
-                span_te = cas.sqrt(
-                    (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
-                    (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
-                )
-                span_eff = (span_le + span_te) / 2
-                span += span_eff
-
-        elif type == "yz":
-            root = self.xsecs[0]  # type: WingXSec
-            tip = self.xsecs[-1]  # type: WingXSec
-            span = cas.sqrt(
-                (root.xyz_le[1] - tip.xyz_le[1]) ** 2 +
-                (root.xyz_le[2] - tip.xyz_le[2]) ** 2
-            )
-        elif type == "y":
-            root = self.xsecs[0]  # type: WingXSec
-            tip = self.xsecs[-1]  # type: WingXSec
-            span = cas.fabs(
-                tip.xyz_le[1] - root.xyz_le[1]
-            )
-        elif type == "z":
-            root = self.xsecs[0]  # type: WingXSec
-            tip = self.xsecs[-1]  # type: WingXSec
-            span = cas.fabs(
-                tip.xyz_le[2] - root.xyz_le[2]
-            )
-        else:
-            raise ValueError("Bad value of 'type'!")
-        if self.symmetric:
-            span *= 2
-        return span
-
-    def aspect_ratio(self):
-        # Returns the aspect ratio (b^2/S).
-        # Uses the full span and the full area if symmetric.
-        return self.span() ** 2 / self.area()
-
-    def has_symmetric_control_surfaces(self):
-        # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has control_surface_type = "symmetric".
-        for xsec in self.xsecs:
-            if not xsec.control_surface_type == "symmetric":
-                return False
-        return True
-
-    def mean_geometric_chord(self):
-        """
-        Returns the mean geometric chord of the wing (S/b).
-        :return:
-        """
-        return self.area() / self.span()
-
-    def mean_twist_angle(self):
-        """
-        Returns the mean twist angle (in degrees) of the wing, weighted by span.
-        You can think of it as \int_{b}(twist)db, where b is span.
-        WARNING: This function's output is only exact in the case where all of the cross sections have the same twist axis!
-        :return: mean twist angle (in degrees)
-        """
-        # First, find the spans
-        span = []
-        for i in range(len(self.xsecs) - 1):
-            sect1_xyz_le = self.xsecs[i].xyz_le
-            sect2_xyz_le = self.xsecs[i + 1].xyz_le
-            sect1_xyz_te = self.xsecs[i].xyz_te()
-            sect2_xyz_te = self.xsecs[i + 1].xyz_te()
-
-            span_le = cas.sqrt(
-                (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
-                (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
-            )
-            span_te = cas.sqrt(
-                (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
-                (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
-            )
-            span_eff = (span_le + span_te) / 2
-            span.append(span_eff)
-
-        # Then, find the twist-span product
-        twist_span_product = 0
-        for i in range(len(self.xsecs)):
-            xsec = self.xsecs[i]
-            if i > 0:
-                twist_span_product += xsec.twist * span[i - 1] / 2
-            if i < len(self.xsecs) - 1:
-                twist_span_product += xsec.twist * span[i] / 2
-
-        # Then, divide
-        mean_twist = twist_span_product / cas.sum1(cas.vertcat(*span))
-        return mean_twist
-
-    def mean_sweep_angle(self):
-        """
-        Returns the mean quarter-chord sweep angle (in degrees) of the wing, relative to the x-axis.
-        Positive sweep is backwards, negative sweep is forward.
-        :return:
-        """
-        root_quarter_chord = 0.75 * self.xsecs[0].xyz_le + 0.25 * self.xsecs[0].xyz_te()
-        tip_quarter_chord = 0.75 * self.xsecs[-1].xyz_le + 0.25 * self.xsecs[-1].xyz_te()
-
-        vec = tip_quarter_chord - root_quarter_chord
-        vec_norm = vec / cas.norm_2(vec)
-
-        sin_sweep = vec_norm[0]  # from dot product with x_hat
-
-        sweep_deg = cas.asin(sin_sweep) * 180 / cas.pi
-
-        return sweep_deg
-
-    def approximate_center_of_pressure(self):
-        """
-        Returns the approximate location of the center of pressure. Given as the area-weighted quarter chord of the wing.
-        :return: [x, y, z] of the approximate center of pressure
-        """
-        areas = []
-        quarter_chord_centroids = []
-        for i in range(len(self.xsecs) - 1):
-            # Find areas
-            chord_eff = (self.xsecs[i].chord
-                         + self.xsecs[i + 1].chord) / 2
-            this_xyz_te = self.xsecs[i].xyz_te()
-            that_xyz_te = self.xsecs[i + 1].xyz_te()
-            span_le_eff = cas.sqrt(
-                (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
-                (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
-            )
-            span_te_eff = cas.sqrt(
-                (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
-                (this_xyz_te[2] - that_xyz_te[2]) ** 2
-            )
-            span_eff = (span_le_eff + span_te_eff) / 2
-
-            areas.append(chord_eff * span_eff)
-
-            # Find quarter-chord centroids of each section
-            quarter_chord_centroids.append(
-                (
-                        0.75 * self.xsecs[i].xyz_le + 0.25 * self.xsecs[i].xyz_te() +
-                        0.75 * self.xsecs[i + 1].xyz_le + 0.25 * self.xsecs[i + 1].xyz_te()
-                ) / 2 + self.xyz_le
-            )
-
-        areas = cas.vertcat(*areas)
-        quarter_chord_centroids = cas.transpose(cas.horzcat(*quarter_chord_centroids))
-
-        total_area = cas.sum1(areas)
-        approximate_cop = cas.sum1(areas / cas.sum1(areas) * quarter_chord_centroids)
-
-        if self.symmetric:
-            approximate_cop[:, 1] = 0
-
-        return approximate_cop
-
-
-class WingXSec(AeroSandboxObject):
-    """
-    Definition for a wing cross section ("X-section").
-    """
-
-    def __init__(self,
-                 x_le=0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 y_le=0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 z_le=0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 chord=0,  # Chord of the wing at this cross section
-                 twist=0,  # Twist always occurs about the leading edge!
-                 twist_axis=cas.DM([0, 1, 0]),  # By default, always twists about the Y-axis.
-                 airfoil=None,  # type: Airfoil # The airfoil to be used at this cross section.
-                 control_surface_type="symmetric",
-                 # Can be "symmetric" or "asymmetric". Symmetric is like flaps, asymmetric is like an aileron.
-                 control_surface_hinge_point=0.75,  # The location of the control surface hinge, as a fraction of chord.
-                 # Point at which the control surface is applied, as a fraction of chord.
-                 control_surface_deflection=0,  # Control deflection, in degrees. Downwards-positive.
-                 spanwise_panels=8,
-                 # The number of spanwise panels to be used between this cross section and the next one.
-                 spanwise_spacing="cosine"  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
-                 ):
-        if airfoil is None:
-            raise ValueError("'airfoil' argument missing! (Needs an object of Airfoil type)")
-
-        self.x_le = x_le
-        self.y_le = y_le
-        self.z_le = z_le
-
-        self.chord = chord
-        self.twist = twist
-        self.twist_axis = twist_axis
-        self.airfoil = airfoil
-        self.control_surface_type = control_surface_type
-        self.control_surface_hinge_point = control_surface_hinge_point
-        self.control_surface_deflection = control_surface_deflection
-        self.spanwise_panels = spanwise_panels
-        self.spanwise_spacing = spanwise_spacing
-
-        self.xyz_le = cas.vertcat(x_le, y_le, z_le)
-
-    def __repr__(self):
-        return "WingXSec (airfoil = %s, chord = %f, twist = %f)" % (
-            self.airfoil.name,
-            self.chord,
-            self.twist
-        )
-
-    def xyz_te(self):
-        rot = angle_axis_rotation_matrix(self.twist * cas.pi / 180, self.twist_axis)
-        xyz_te = self.xyz_le + rot @ cas.vertcat(self.chord, 0, 0)
-        # xyz_te = self.xyz_le + self.chord * cas.vertcat(
-        #     cas.cos(self.twist * cas.pi / 180),
-        #     0,
-        #     -cas.sin(self.twist * cas.pi / 180)
-        # )
-        return xyz_te
+from aerosandbox.geometry.common import *
 
 
 class Airfoil:
@@ -763,13 +135,13 @@ class Airfoil:
         name = self.name.lower().strip()
 
         import importlib.resources
-        from . import airfoils
+        from aerosandbox import airfoil_database
 
         try:
-            with importlib.resources.open_text(airfoils, name) as f:
+            with importlib.resources.open_text(airfoil_database, name) as f:
                 raw_text = f.readlines()
         except:
-            with importlib.resources.open_text(airfoils, name + '.dat') as f:
+            with importlib.resources.open_text(airfoil_database, name + '.dat') as f:
                 raw_text = f.readlines()
 
         trimmed_text = []
@@ -855,37 +227,56 @@ class Airfoil:
 
         return upper_interpolated - lower_interpolated
 
-    def draw(self, draw_mcl=True):
+    def draw(self, draw_mcl=True, backend="plotly"):
+        """
+        Draw the airfoil object.
+        :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
+        :param backend: Which backend should we use? "plotly" or "matplotlib" [boolean]
+        :return: None
+        """
         x = np.array(self.coordinates[:, 0]).reshape(-1)
         y = np.array(self.coordinates[:, 1]).reshape(-1)
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines+markers",
-                name="Airfoil"
-            ),
-        )
-        if draw_mcl:
-            x_mcl = np.linspace(0, 1, 101)
-            y_mcl = self.local_camber(x_mcl)
+        if backend == "plotly":
+            fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
-                    x=x_mcl,
-                    y=y_mcl,
+                    x=x,
+                    y=y,
                     mode="lines+markers",
-                    name="Mean Camber Line (MCL)"
-                )
+                    name="Airfoil"
+                ),
             )
-
-        fig.update_layout(
-            xaxis_title="x",
-            yaxis_title="y",
-            yaxis=dict(scaleanchor="x", scaleratio=1),
-            title="%s Airfoil" % self.name
-        )
-        fig.show()
+            if draw_mcl:
+                x_mcl = np.linspace(np.min(x), np.max(x), len(x))
+                y_mcl = self.local_camber(x_mcl)
+                fig.add_trace(
+                    go.Scatter(
+                        x=x_mcl,
+                        y=y_mcl,
+                        mode="lines+markers",
+                        name="Mean Camber Line (MCL)"
+                    )
+                )
+            fig.update_layout(
+                xaxis_title="x/c",
+                yaxis_title="y/c",
+                yaxis=dict(scaleanchor="x", scaleratio=1),
+                title="%s Airfoil" % self.name
+            )
+            fig.show()
+        elif backend == "matplotlib":
+            fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+            plt.plot(x, y, ".-", zorder=11, color='#280887')
+            if draw_mcl:
+                x_mcl = np.linspace(np.min(x), np.max(x), len(x))
+                y_mcl = self.local_camber(x_mcl)
+                plt.plot(x_mcl, y_mcl, "-", zorder=4, color='#28088744')
+            plt.axis("equal")
+            plt.xlabel(r"$x/c$")
+            plt.ylabel(r"$y/c$")
+            plt.title("%s Airfoil" % self.name)
+            plt.tight_layout()
+            plt.show()
 
     def LE_index(self):
         # Returns the index of the leading-edge point.
@@ -1169,6 +560,20 @@ class Airfoil:
         airfoil.coordinates = coordinates
         return airfoil
 
+    def write_dat(self,
+                  filepath # type: str
+                  ):
+        """
+        Writes a .dat file corresponding to this airfoil to a filepath.
+        :param filepath: filepath (including the filename and .dat extension) [string]
+        :return: None
+        """
+        with open(filepath, "w+") as f:
+            f.writelines(
+                [self.name+"\n"] +
+                ["     %.12f    %.12f\n" % tuple(coordinate) for coordinate in self.coordinates]
+            )
+
     def xfoil_a(self,
                 alpha,
                 Re=0,
@@ -1203,6 +608,7 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+
         def run():
             xf.airfoil = xfoil_model.Airfoil(
                 x=np.array(self.coordinates[:, 0]).reshape(-1),
@@ -1268,6 +674,7 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+
         def run():
             xf.airfoil = xfoil_model.Airfoil(
                 x=np.array(self.coordinates[:, 0]).reshape(-1),
@@ -1338,6 +745,7 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+
         def run():
             xf.airfoil = xfoil_model.Airfoil(
                 x=np.array(self.coordinates[:, 0]).reshape(-1),
@@ -1406,6 +814,7 @@ class Airfoil:
                 "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
                 "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
                 "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+
         def run():
             xf.airfoil = xfoil_model.Airfoil(
                 x=np.array(self.coordinates[:, 0]).reshape(-1),
@@ -1437,18 +846,18 @@ class Airfoil:
         }
 
     def get_xfoil_data(self,
-                       a_start=-6, # type: float
-                       a_end=12, # type: float
-                       a_step=0.25, # type: float
-                       a_init=0, # type: float
-                       Re_start=1e4, # type: float
-                       Re_end=5e6, # type: float
-                       n_Res=50, # type: int
-                       mach=0, # type: float
-                       max_iter=20, # type: int
-                       repanel=True, # type: bool
-                       parallel=True, # type: bool
-                       verbose=True, # type: bool
+                       a_start=-6,  # type: float
+                       a_end=12,  # type: float
+                       a_step=0.25,  # type: float
+                       a_init=0,  # type: float
+                       Re_start=1e4,  # type: float
+                       Re_end=5e6,  # type: float
+                       n_Res=50,  # type: int
+                       mach=0,  # type: float
+                       max_iter=20,  # type: int
+                       repanel=True,  # type: bool
+                       parallel=True,  # type: bool
+                       verbose=True,  # type: bool
                        ):
         """ # TODO finish docstring
         Calculates aerodynamic performance data for a particular airfoil with XFoil.
@@ -1513,17 +922,20 @@ class Airfoil:
             }
             return run_data
 
-        start_time = time.time()
+        if verbose:
+            import time
+            start_time = time.time()
 
         if not parallel:
             runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
         else:
+            import multiprocessing_on_dill as mp
             pool = mp.Pool(mp.cpu_count())
             runs_data = pool.map(get_xfoil_data_at_Re, Res)
             pool.close()
 
-        run_time = time.time() - start_time
         if verbose:
+            run_time = time.time() - start_time
             print("XFoil Runtime: %.3f sec" % run_time)
 
         xfoil_data_2D = {}
@@ -1553,15 +965,15 @@ class Airfoil:
         }
         self.xfoil_data_1D = xfoil_data_1D
 
-    def has_xfoil_data(self, raise_exception_if_absent = True):
+    def has_xfoil_data(self, raise_exception_if_absent=True):
         """
         Runs a quick check to see if this airfoil has XFoil data.
         :param raise_exception_if_absent: Boolean flag to raise an Exception if XFoil data is not found.
         :return: Boolean of whether or not XFoil data is present.
         """
         data_present = (
-            hasattr(self, 'xfoil_data_1D') and
-            hasattr(self, 'xfoil_data_2D')
+                hasattr(self, 'xfoil_data_1D') and
+                hasattr(self, 'xfoil_data_2D')
         )
         if not data_present and raise_exception_if_absent:
             raise Exception(
@@ -1575,7 +987,7 @@ class Airfoil:
         return data_present
 
     def plot_xfoil_data_contours(self):  # TODO add docstring
-        self.has_xfoil_data() # Ensure data is present.
+        self.has_xfoil_data()  # Ensure data is present.
         from matplotlib import colors
 
         d = self.xfoil_data_1D  # data
@@ -1667,7 +1079,7 @@ class Airfoil:
                                Cd_plot_max=0.04,
                                ):  # TODO add docstring
 
-        self.has_xfoil_data() # Ensure data is present.
+        self.has_xfoil_data()  # Ensure data is present.
 
         n_lines_max = min(n_lines_max, len(self.xfoil_data_2D["Re_indices"]))
 
@@ -1784,272 +1196,3 @@ class Airfoil:
     #     if show:
     #         fig.show()
     #     return fig
-
-
-
-
-class Fuselage(AeroSandboxObject):
-    """
-    Definition for a fuselage or other slender body (pod, etc.).
-    For now, all fuselages are assumed to be circular and fairly closely aligned with the body x axis. (<10 deg or so) # TODO update if this changes
-    """
-
-    def __init__(self,
-                 name="Untitled Fuselage",  # It can help when debugging to give each fuselage a sensible name.
-                 x_le=0,  # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 y_le=0,  # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 z_le=0,  # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 xsecs=[],  # This should be a list of FuselageXSec objects.
-                 symmetric=False,  # Is the fuselage symmetric across the XZ plane?
-                 circumferential_panels=24,
-                 # Number of circumferential panels to use in VLM and Panel analysis. Should be even.
-                 ):
-        self.name = name
-        self.xyz_le = cas.vertcat(x_le, y_le, z_le)
-        self.xsecs = xsecs
-        self.symmetric = symmetric
-        assert circumferential_panels % 2 == 0
-        self.circumferential_panels = circumferential_panels
-
-    def area_wetted(self):
-        """
-        Returns the wetted area of the fuselage.
-
-        If the Fuselage is symmetric (i.e. two symmetric wingtip pods),
-        returns the combined wetted area of both pods.
-        :return:
-        """
-        area = 0
-        for i in range(len(self.xsecs) - 1):
-            this_radius = self.xsecs[i].radius
-            next_radius = self.xsecs[i + 1].radius
-            x_separation = self.xsecs[i + 1].x_c - self.xsecs[i].x_c
-            area += cas.pi * (this_radius + next_radius) * cas.sqrt(
-                (this_radius - next_radius) ** 2 + x_separation ** 2)
-        if self.symmetric:
-            area *= 2
-        return area
-
-    #
-    def area_projected(self):
-        """
-        Returns the area of the fuselage as projected onto the XY plane (top-down view).
-
-        If the Fuselage is symmetric (i.e. two symmetric wingtip pods),
-        returns the combined projected area of both pods.
-        :return:
-        """
-        area = 0
-        for i in range(len(self.xsecs) - 1):
-            this_radius = self.xsecs[i].radius
-            next_radius = self.xsecs[i + 1].radius
-            x_separation = self.xsecs[i + 1].x_c - self.xsecs[i].x_c
-            area += (this_radius + next_radius) * x_separation
-        if self.symmetric:
-            area *= 2
-        return area
-
-    def length(self):
-        """
-        Returns the total front-to-back length of the fuselage. Measured as the difference between the x-coordinates
-        of the leading and trailing cross sections.
-        :return:
-        """
-        return cas.fabs(self.xsecs[-1].x_c - self.xsecs[0].x_c)
-
-
-class FuselageXSec(AeroSandboxObject):
-    """
-    Definition for a fuselage cross section ("X-section").
-    """
-
-    def __init__(self,
-                 x_c=0,
-                 y_c=0,
-                 z_c=0,
-                 radius=0,
-                 ):
-        self.x_c = x_c
-        self.y_c = y_c
-        self.z_c = z_c
-
-        self.radius = radius
-
-        self.xyz_c = cas.vertcat(x_c, y_c, z_c)
-
-    def xsec_area(self):
-        """
-        Returns the FuselageXSec's cross-sectional (xsec) area.
-        :return:
-        """
-        return cas.pi * self.radius ** 2
-
-
-def reflect_over_XZ_plane(input_vector):
-    """
-    Takes in a vector or an array and flips the y-coordinates.
-    :param input_vector: A vector or list of vectors to flip.
-    :return: Vector with flipped sign on y-coordinate.
-    """
-    output_vector = input_vector
-    shape = output_vector.shape
-    if len(shape) == 1 and shape[0] == 3:
-        output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape) == 2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
-        output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape) == 2 and shape[1] == 3:  # 2D Nx3 vector
-        output_vector = cas.horzcat(output_vector[:, 0], -1 * output_vector[:, 1], output_vector[:, 2])
-    # elif len(shape) == 3 and shape[2] == 3:  # 3D MxNx3 vector
-    #     output_vector = output_vector * cas.array([1, -1, 1])
-    else:
-        raise Exception("Invalid input for reflect_over_XZ_plane!")
-
-    return output_vector
-
-
-def cosspace(min=0, max=1, n_points=50):
-    """
-    Returns cosine-spaced points using CasADi. Syntax analogous to np.linspace().
-    :param min: Minimum value
-    :param max: Maximum value
-    :param n_points: Number of points
-    :return: CasADi array
-    """
-    mean = (max + min) / 2
-    amp = (max - min) / 2
-    return mean + amp * cas.cos(cas.linspace(cas.pi, 0, n_points))
-
-
-def np_cosspace(min=0, max=1, n_points=50):
-    """
-    Returns cosine-spaced points using NumPy. Syntax analogous to np.linspace().
-    :param min: Minimum value
-    :param max: Maximum value
-    :param n_points: Number of points
-    :return: 1D NumPy array
-    """
-    mean = (max + min) / 2
-    amp = (max - min) / 2
-    return mean + amp * np.cos(np.linspace(np.pi, 0, n_points))
-
-
-def angle_axis_rotation_matrix(angle, axis, axis_already_normalized=False):
-    """
-    Gives the rotation matrix from an angle and an axis.
-    An implmentation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
-    :param angle: can be one angle or a vector (1d ndarray) of angles. Given in radians.
-    :param axis: a 1d numpy array of length 3 (p,y,z). Represents the angle.
-    :param axis_already_normalized: boolean, skips normalization for speed if you flag this true.
-    :return:
-        * If angle is a scalar, returns a 3x3 rotation matrix.
-        * If angle is a vector, returns a 3x3xN rotation matrix.
-    """
-    if not axis_already_normalized:
-        axis = axis / cas.norm_2(axis)
-
-    sintheta = cas.sin(angle)
-    costheta = cas.cos(angle)
-    cpm = cas.vertcat(
-        cas.horzcat(0, -axis[2], axis[1]),
-        cas.horzcat(axis[2], 0, -axis[0]),
-        cas.horzcat(-axis[1], axis[0], 0),
-    )  # The cross product matrix of the rotation axis vector
-    outer_axis = axis @ cas.transpose(axis)
-
-    rot_matrix = costheta * cas.DM.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
-    return rot_matrix
-
-
-def linspace_3D(start, stop, n_points):
-    """
-    Given two points (a start and an end), returns an interpolated array of points on the line between the two.
-    :param start: 3D coordinates expressed as a 1D numpy array, shape==(3).
-    :param stop: 3D coordinates expressed as a 1D numpy array, shape==(3).
-    :param n_points: Number of points to be interpolated (including endpoints), a scalar.
-    :return: Array of 3D coordinates expressed as a 2D numpy array, shape==(N, 3)
-    """
-    x = cas.linspace(start[0], stop[0], n_points)
-    y = cas.linspace(start[1], stop[1], n_points)
-    z = cas.linspace(start[2], stop[2], n_points)
-
-    points = cas.horzcat(x, y, z)
-    return points
-
-
-def plot_point_cloud(
-        p  # type: np.ndarray
-):
-    """
-    Plots an Nx3 point cloud with Plotly
-    :param p: An Nx3 array of points to be plotted.
-    :return: None
-    """
-    p = np.array(p)
-    px.scatter_3d(x=p[:, 0], y=p[:, 1], z=p[:, 2]).show()
-
-
-def kulfan_coordinates(
-        lower_weights=-0.2 * np.ones(5),  # type: np.ndarray
-        upper_weights=0.2 * np.ones(5),  # type: np.ndarray
-        TE_thickness=0.005,  # type: float
-        n_points_per_side=100,  # type: int
-        N1=0.5,  # type: float
-        N2=1.0,  # type: float
-):
-    """
-    Calculates the coordinates of a Kulfan (CST) airfoil.
-    To make a Kulfan (CST) airfoil, use the following syntax:
-
-    asb.Airfoil("My Airfoil Name", coordinates = asb.kulfan_coordinates(*args))
-
-    More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
-    Notes on N1, N2 (shape factor) combinations:
-        * 0.5, 1: Conventional airfoil
-        * 0.5, 0.5: Elliptic airfoil
-        * 1, 1: Biconvex airfoil
-        * 0.75, 0.75: Sears-Haack body (radius distribution)
-        * 0.75, 0.25: Low-drag projectile
-        * 1, 0.001: Cone or wedge airfoil
-        * 0.001, 0.001: Rectangle, circular duct, or circular rod.
-    :param lower_weights:
-    :param upper_weights:
-    :param TE_thickness:
-    :param n_points_per_side:
-    :param N1: LE shape factor
-    :param N2: TE shape factor
-    :return:
-    """
-    x_lower = np_cosspace(0, 1, n_points_per_side)
-    x_upper = x_lower[::-1]
-
-    def shape(w, x):
-        # Class function
-        C = x ** N1 * (1 - x) ** N2
-
-        # Shape function (Bernstein polynomials)
-        n = len(w) - 1  # Order of Bernstein polynomials
-
-        K = comb(n, np.arange(n + 1))  # Bernstein polynomial coefficients
-
-        S_matrix = (
-                w * K * np.expand_dims(x, 1) ** np.arange(n + 1) *
-                np.expand_dims(1 - x, 1) ** (n - np.arange(n + 1))
-        )  # Polynomial coefficient * weight matrix
-        S = np.sum(S_matrix, axis=1)
-
-        # Calculate y output
-        y = C * S
-        return y
-
-    y_lower = shape(lower_weights, x_lower)
-    y_upper = shape(upper_weights, x_upper)
-
-    # TE thickness
-    y_lower -= x_lower * TE_thickness / 2
-    y_upper += x_upper * TE_thickness / 2
-
-    x = np.concatenate([x_upper, x_lower])
-    y = np.concatenate([y_upper, y_lower])
-    coordinates = np.vstack((x, y)).T
-
-    return coordinates
