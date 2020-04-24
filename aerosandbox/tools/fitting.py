@@ -1,6 +1,6 @@
 import numpy as np
 import casadi as cas
-
+from aerosandbox.tools.miscellaneous import stdout_redirected
 
 def fit(
         model,  # type: callable
@@ -100,7 +100,11 @@ def fit(
     # s_opts["mu_strategy"] = "adaptive"
     opti.solver('ipopt', p_opts, s_opts)
     opti.solver('ipopt')
-    sol = opti.solve()
+    if verbose:
+        sol = opti.solve()
+    else:
+        with stdout_redirected():
+            sol = opti.solve()
 
     params_solved = {}
     for k in params:

@@ -15,10 +15,16 @@ import time
 class AirfoilFitter():
     def __init__(self,
                  airfoil,  # type: Airfoil
-                 parallel = True,
+                 parallel=True,
+                 verbose=True,
                  ):
         airfoil.has_xfoil_data()
         self.airfoil = airfoil
+        self.verbose = verbose
+
+    @staticmethod
+    def fit_weights(x):
+        return 1 + 3 * (x['Cl'] >= 0) * (x['alpha'] >= 0)
 
     def plot_xfoil_alpha_Re(self,
                             y_data_name,
@@ -75,7 +81,7 @@ class AirfoilFitter():
                     x=x1,
                     y=x2,
                     z=y_model,
-                    # intensity=y_model,
+                    surfacecolor=np.log10(y_model) if log_z else y_model,
                     colorscale="plasma",
                     # flatshading=True
                 )
@@ -102,7 +108,7 @@ class AirfoilFitter():
 
     def fit_xfoil_data_Cl(self,
                           supercritical_Re_threshold=1e6,
-                          subcritical_Re_threshold=1e4,
+                          subcritical_Re_threshold=5e4,
                           plot_fit=True
                           ):
 
@@ -149,7 +155,8 @@ class AirfoilFitter():
             y_data=d['Cl'],
             param_guesses=Cl_turbulent_params_guess,
             param_bounds=Cl_turbulent_param_bounds,
-            weights=np.logical_and(d['Re'] >= supercritical_Re_threshold, True).astype('int')
+            weights=(d['Re'] >= supercritical_Re_threshold) * self.fit_weights(d),
+            verbose=self.verbose,
         )
 
         # self.plot_xfoil_alpha_Re(
@@ -191,7 +198,8 @@ class AirfoilFitter():
             y_data=d['Cl'],
             param_guesses=Cl_laminar_params_guess,
             param_bounds=Cl_laminar_param_bounds,
-            weights=np.logical_and(d['Re'] <= subcritical_Re_threshold, True).astype('int')
+            weights=(d['Re'] <= subcritical_Re_threshold) * self.fit_weights(d),
+            verbose=self.verbose,
         )
 
         # self.plot_xfoil_alpha_Re(
@@ -201,7 +209,7 @@ class AirfoilFitter():
         #     title="Fit: Lift Coefficient (Laminar)"
         # )
 
-        # Fit the blend
+        ### Fit the blend
         def model_Cl_blend(
                 x, p,
                 sigmoid=sigmoid,  # packaging dependencies
@@ -212,8 +220,12 @@ class AirfoilFitter():
 
             log10_Re = cas.log10(x['Re'])
             blend_input = -p['clb_hardness'] * (
-                    p['clb_a_scale'] * v(x['alpha'] - p['clb_a_0'], 0.1, p['clb_asym']) + p['clb_re_0']
-                    - log10_Re
+            #         p['clb_a_scale'] * v(
+            #     x['alpha'] - p['clb_a_0'],
+            #     0.1,
+            #     p['clb_asym']
+            # ) +
+                    p['clb_Re1'] - log10_Re
             )
             blend = sigmoid(blend_input, 0, 1, 0.5, 0.5)
             Cl = blend * model_Cl_turbulent(x, p) + (1 - blend) * model_Cl_laminar(x, p)
@@ -222,18 +234,16 @@ class AirfoilFitter():
         Cl_blend_params_guess = {
             **Cl_turbulent_params_solved,
             **Cl_laminar_params_solved,
-            'clb_hardness': 1.7,
-            'clb_a_scale' : 0.3,
-            'clb_asym'    : 0.5,
-            'clb_a_0'     : 6,
-            'clb_re_0'    : 3.5,
-
+            'clb_hardness': 3,
+            'clb_Re1'    : 5,
+            # 'clb_a1'    : 5,
         }
         Cl_blend_param_bounds = {
-            'clb_hardness': (1e-3, 10),
-            'clb_a_scale' : (0, 1),
-            'clb_a_0'     : (-4, 12),
-            'clb_re_0'    : (3, 6),
+            'clb_hardness': (1e-2, 100),
+            # 'clb_a_scale' : (0, 10),
+            # 'clb_a_0'     : (-4, 12),
+            'clb_Re1'    : (3, 6),
+            # 'clb_a1'    : (3, 6),
         }
 
         Cl_blend_params_solved = fit(
@@ -242,13 +252,37 @@ class AirfoilFitter():
             y_data=d['Cl'],
             param_guesses=Cl_blend_params_guess,
             param_bounds={
+                **{k: (v, v) for k, v in Cl_laminar_params_solved.items()},
+                **{k: (v, v) for k, v in Cl_turbulent_params_solved.items()},
+                # **Cl_laminar_param_bounds,
+                # **Cl_turbulent_param_bounds,
+                **Cl_blend_param_bounds
+            },
+            weights=self.fit_weights(d),
+            verbose=self.verbose,
+        )
+
+        # self.plot_xfoil_alpha_Re(
+        #     y_data_name='Cl',
+        #     model=model_Cl_blend,
+        #     params_solved=Cl_blend_params_solved,
+        #     title="Fit: Lift Coefficient (Blend-Intermediate)"
+        # )
+
+        Cl_blend_params_solved = fit(
+            model=model_Cl_blend,
+            x_data=d,
+            y_data=d['Cl'],
+            param_guesses=Cl_blend_params_solved,
+            param_bounds={
                 # **{k: (v, v) for k, v in Cl_laminar_params_solved.items()},
                 # **{k: (v, v) for k, v in Cl_turbulent_params_solved.items()},
                 **Cl_laminar_param_bounds,
                 **Cl_turbulent_param_bounds,
                 **Cl_blend_param_bounds
             },
-            # weights=(d['Cl'] >= 0).astype('int')
+            weights=self.fit_weights(d),
+            verbose=self.verbose,
         )
 
         if plot_fit:
@@ -275,26 +309,35 @@ class AirfoilFitter():
 
     def fit_xfoil_data_Cd(self,
                           supercritical_Re_threshold=1e6,
-                          subcritical_Re_threshold=1e4,
+                          subcritical_Re_threshold=5e4,
                           plot_fit=True
                           ):
 
         ### Fit utilities, data extraction, plotting tools
-        d = self.xfoil_data_1D  # data
+        d = self.airfoil.xfoil_data_1D  # data
         raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
-        sigmoid = lambda x, x_cent, x_scale, y_cent, y_scale: y_cent + y_scale * raw_sigmoid((x - x_cent) / x_scale)
+
+        def sigmoid(
+                x, x_cent, x_scale, y_cent, y_scale,
+                raw_sigmoid=raw_sigmoid,
+        ):
+            return y_cent + y_scale * raw_sigmoid((x - x_cent) / x_scale)
 
         ### Fit the supercritical data
-        def model_log10_Cd_turbulent(x, p):
-            a = x['alpha']
-            log10_Re = cas.log10(x['Re'])
+        def model_log10_Cd_turbulent(
+                x, p,
+                sigmoid=sigmoid,  # packaging dependencies
+        ):
+            v = lambda x, k, a: (k + x ** 2) ** 0.5 + a * x
+            log10_Re_eff = cas.log10(x['Re']) - 6
+            a_scaled = x['alpha'] - p['cdt_a_Cd0'] - p['cdt_a_Cd0_Re'] * log10_Re_eff
             log10_Cd_turbulent = (
                     p['cdt_0'] +
-                    p['cdt_a1'] * a +
-                    p['cdt_Re1'] * log10_Re +
-                    p['cdt_a2'] * a ** 2 +
-                    p['cdt_aRe'] * a * log10_Re +
-                    p['cdt_Re2'] * log10_Re ** 2
+                    p['cdt_Re1'] * (log10_Re_eff) +
+                    # p['cdt_a2'] * (a_scaled / 10) ** 2 +
+                    p['cdt_av_scale'] * v(
+                a_scaled, p['cdt_av_k'], p['cdt_av_a']
+            )
             )
 
             return log10_Cd_turbulent
@@ -302,14 +345,16 @@ class AirfoilFitter():
         model_Cd_turbulent = lambda *args: 10 ** model_log10_Cd_turbulent(*args)
 
         log10_Cd_turbulent_params_guess = {
-            'cdt_0'  : -2,
-            'cdt_a1' : 0,
-            'cdt_Re1': -1,
-            'cdt_a2' : 0.0035,
-            'cdt_aRe': 0,
-            'cdt_Re2': 0.01,
+            'cdt_0'       : -2.5,
+            'cdt_a_Cd0'   : 3,
+            'cdt_a_Cd0_Re': -1,
+            'cdt_Re1'     : -0.2,
+            'cdt_av_scale': 0.07,
+            'cdt_av_k'    : 10,
+            'cdt_av_a'    : 0,
         }
         log10_Cd_turbulent_param_bounds = {
+            'cdt_av_k': (1e-2, 100),
         }
 
         Cd_turbulent_params_solved = fit(
@@ -318,155 +363,155 @@ class AirfoilFitter():
             y_data=cas.log10(d['Cd']),
             param_guesses=log10_Cd_turbulent_params_guess,
             param_bounds=log10_Cd_turbulent_param_bounds,
-            weights=np.logical_and(d['Re'] >= supercritical_Re_threshold, True).astype('int')
+            weights=(d['Re'] >= supercritical_Re_threshold) * self.fit_weights(d),
+            verbose=self.verbose,
         )
 
-        self.plot_xfoil_alpha_Re(
-            y_data_name='Cd',
-            model=model_Cd_turbulent,
-            params_solved=Cd_turbulent_params_solved,
-            title="Fit: Lift Coefficient (Turbulent)",
-            log_z=True
+        # self.plot_xfoil_alpha_Re(
+        #     y_data_name='Cd',
+        #     model=model_Cd_turbulent,
+        #     params_solved=Cd_turbulent_params_solved,
+        #     title="Fit: Drag Coefficient (Turbulent)",
+        #     log_z=True
+        # )
+
+        ### Fit the subcritical data
+        def model_log10_Cd_laminar(
+                x, p,
+                sigmoid=sigmoid,  # packaging dependencies
+        ):
+            v = lambda x, k, a: (k + x ** 2) ** 0.5 + a * x
+            log10_Re_eff = cas.log10(x['Re']) - 6
+            a_scaled = x['alpha'] - p['cdl_a_Cd0'] - p['cdl_a_Cd0_Re'] * log10_Re_eff
+            log10_Cd_laminar = (
+                    p['cdl_0'] +
+                    p['cdl_Re1'] * (log10_Re_eff) +
+                    # p['cdt_a2'] * (a_scaled / 10) ** 2 +
+                    p['cdl_av_scale'] * v(
+                a_scaled, p['cdl_av_k'], p['cdl_av_a']
+            )
+            )
+
+            return log10_Cd_laminar
+
+        model_Cd_laminar = lambda *args: 10 ** model_log10_Cd_laminar(*args)
+
+        log10_Cd_laminar_params_guess = {
+            'cdl_0'       : -2.5,
+            'cdl_a_Cd0'   : 3,
+            'cdl_a_Cd0_Re': -1,
+            'cdl_Re1'     : -0.2,
+            'cdl_av_scale': 0.07,
+            'cdl_av_k'    : 10,
+            'cdl_av_a'    : 0,
+        }
+        log10_Cd_laminar_param_bounds = {
+            'cdl_av_k': (1e-2, 100),
+        }
+
+        Cd_laminar_params_solved = fit(
+            model=model_log10_Cd_laminar,
+            x_data=d,
+            y_data=cas.log10(d['Cd']),
+            param_guesses=log10_Cd_laminar_params_guess,
+            param_bounds=log10_Cd_laminar_param_bounds,
+            weights=(d['Re'] <= subcritical_Re_threshold) * self.fit_weights(d),
+            verbose=self.verbose,
         )
 
-        # ### Fit the subcritical data
-        # def model_Cd_laminar(x, p):
-        #     Cd_laminar = (
-        #             p['cdl_cda'] * x['alpha'] + p['cdl_cd0'] +
-        #             sigmoid(x['alpha'], p['cdld_a_c'], p['cdld_a_s'], 0, p['cdld_cd_s'])
-        #     )
-        #     return Cd_laminar
-        #
-        # Cd_laminar_params_guess = {
-        #     'cdl_cda'  : 0.04,
-        #     'cdl_cd0'  : 0,
-        #     'cdld_a_c' : 0,
-        #     'cdld_a_s' : 2,
-        #     'cdld_cd_s': 0.1,
-        # }
-        # Cd_laminar_param_bounds = {
-        #     'cdl_cda'  : (0.01, 0.2),
-        #     'cdl_cd0'  : (None, 1.5),
-        #     'cdld_a_c' : (-8, 8),
-        #     'cdld_a_s' : (0, 8),
-        #     'cdld_cd_s': (0, 0.4),
-        # }
-        #
-        # Cd_laminar_params_solved = fit(
+        # self.plot_xfoil_alpha_Re(
+        #     y_data_name='Cd',
         #     model=model_Cd_laminar,
-        #     x_data=d,
-        #     y_data=d['Cd'],
-        #     param_guesses=Cd_laminar_params_guess,
-        #     param_bounds=Cd_laminar_param_bounds,
-        #     weights=np.logical_and(d['Re'] <= subcritical_Re_threshold, True).astype('int')
+        #     params_solved=Cd_laminar_params_solved,
+        #     title="Fit: Drag Coefficient (Laminar)",
+        #     log_z=True
         # )
-        #
-        # # self.plot_xfoil_alpha_Re(
-        # #     y_data_name='Cd',
-        # #     model=model_Cd_laminar,
-        # #     params_solved=Cd_laminar_params_solved,
-        # #     title="Fit: Lift Coefficient (Laminar)"
-        # # )
-        #
-        # # Fit the blend
-        # def model_Cd_blend(x, p):
-        #     v = lambda x, k, a: (k + x ** 2) ** 0.5 + a * x
-        #
-        #     log10_Re = cas.log10(x['Re'])
-        #     blend_input = -p['cdb_hardness'] * (
-        #             p['cdb_a_scale'] * v(x['alpha'] - p['cdb_a_0'], 0.1, p['cdb_asym']) + p['cdb_re_0']
-        #             - log10_Re
-        #     )
-        #     blend = sigmoid(blend_input, 0, 1, 0.5, 0.5)
-        #     Cd = blend * model_Cd_turbulent(x, p) + (1 - blend) * model_Cd_laminar(x, p)
-        #     return Cd
-        #
-        # Cd_blend_params_guess = {
-        #     **Cd_turbulent_params_solved,
-        #     **Cd_laminar_params_solved,
-        #     'cdb_hardness': 1.7,
-        #     'cdb_a_scale' : 0.3,
-        #     'cdb_asym'    : 0.5,
-        #     'cdb_a_0'     : 6,
-        #     'cdb_re_0'    : 3.5,
-        #
-        # }
-        # Cd_blend_param_bounds = {
-        #     'cdb_hardness': (1e-3, 10),
-        #     'cdb_a_scale' : (0, 1),
-        #     'cdb_a_0'     : (-4, 12),
-        #     'cdb_re_0'    : (3, 6),
-        # }
-        #
-        # Cd_blend_params_solved = fit(
-        #     model=model_Cd_blend,
-        #     x_data=d,
-        #     y_data=d['Cd'],
-        #     param_guesses=Cd_blend_params_guess,
-        #     param_bounds={
-        #         # **{k: (v, v) for k, v in Cd_laminar_params_solved.items()},
-        #         # **{k: (v, v) for k, v in Cd_turbulent_params_solved.items()},
-        #         **Cd_laminar_param_bounds,
-        #         **Cd_turbulent_param_bounds,
-        #         **Cd_blend_param_bounds
-        #     },
-        #     # weights=(d['Cd'] >= 0).astype('int')
-        # )
-        #
-        # if plot_fit:
-        #     self.plot_xfoil_alpha_Re(
-        #         y_data_name='Cd',
-        #         model=model_Cd_blend,
-        #         params_solved=Cd_blend_params_solved,
-        #         title="Fit: Lift Coefficient (Blend)"
-        #     )
-        #
-        # # Make the final function, packaging parameters using an inner function.
-        # def outer(
-        #         Cd_blend_params_solved
-        # ):
-        #     def inner(alpha, Re):
-        #         raw_sigmoid = lambda x: x / (1 + x ** 4) ** (1 / 4)
-        #         sigmoid = lambda x, x_cent, x_scale, y_cent, y_scale: y_cent + y_scale * raw_sigmoid(
-        #             (x - x_cent) / x_scale)
-        #
-        #         def model_Cd_turbulent(x, p):
-        #             log10_Re = cas.log10(x['Re'])
-        #             Cd_turbulent = (
-        #                     sigmoid(x['alpha'], p['cdt_a_c'], p['cdt_a_s'], p['cdt_cd_c'], p['cdt_cd_s']) +
-        #                     p['cdt_cdre'] * log10_Re
-        #             )
-        #             return Cd_turbulent
-        #
-        #         def model_Cd_laminar(x, p):
-        #             Cd_laminar = (
-        #                     p['cdl_cda'] * x['alpha'] + p['cdl_cd0'] +
-        #                     sigmoid(x['alpha'], p['cdld_a_c'], p['cdld_a_s'], 0, p['cdld_cd_s'])
-        #             )
-        #             return Cd_laminar
-        #
-        #         def model_Cd_blend(x, p):
-        #             v = lambda x, k, a: (k + x ** 2) ** 0.5 + a * x
-        #
-        #             log10_Re = cas.log10(x['Re'])
-        #             blend_input = -p['cdb_hardness'] * (
-        #                     p['cdb_a_scale'] * v(x['alpha'] - p['cdb_a_0'], 0.1, p['cdb_asym']) + p['cdb_re_0']
-        #                     - log10_Re
-        #             )
-        #             blend = sigmoid(blend_input, 0, 1, 0.5, 0.5)
-        #             Cd = blend * model_Cd_turbulent(x, p) + (1 - blend) * model_Cd_laminar(x, p)
-        #             return Cd
-        #
-        #         return model_Cd_blend(
-        #             x={'alpha': alpha, 'Re': Re},
-        #             p=Cd_blend_params_solved
-        #         )
-        #
-        #     return inner
-        #
-        # Cd_function = outer(
-        #     Cd_blend_params_solved
-        # )
-        #
-        # self.Cd_function = Cd_function
-        # return Cd_function
+
+        ### Fit the blend
+        def model_log10_Cd_blend(
+                x, p,
+                sigmoid=sigmoid,  # packaging dependencies
+                model_log10_Cd_turbulent=model_log10_Cd_turbulent,  # packaging dependencies
+                model_log10_Cd_laminar=model_log10_Cd_laminar,  # packaging dependencies
+        ):
+            log10_Re_eff = cas.log10(x['Re']) - 5
+            alpha_eff = x['alpha']
+            blend_input = (
+                    p['cdb_0']
+                    - p['cdb_Re1'] * log10_Re_eff
+                    - p['cdb_a1'] * alpha_eff / 10
+                    - p['cdb_a2'] * (alpha_eff / 10) ** 2
+
+            )
+            blend = sigmoid(blend_input, 0, 1, 0.5, 0.5)
+            log10_Cd = blend * model_log10_Cd_turbulent(x, p) + (1 - blend) * model_log10_Cd_laminar(x, p)
+            return log10_Cd
+
+        model_Cd_blend = lambda *args: 10 ** model_log10_Cd_blend(*args)
+
+        log10_Cd_blend_params_guess = {
+            **Cd_turbulent_params_solved,
+            **Cd_laminar_params_solved,
+            'cdb_0'  : 0,
+            'cdb_Re1': -5,
+            'cdb_a1' : 0,
+            'cdb_a2' : 0,
+        }
+        log10_Cd_blend_param_bounds = {
+            'cdb_0': (-1, 1),
+        }
+
+        Cd_blend_params_solved = fit(
+            model=model_log10_Cd_blend,
+            x_data=d,
+            y_data=cas.log10(d['Cd']),
+            param_guesses=log10_Cd_blend_params_guess,
+            param_bounds={
+                **{k: (v, v) for k, v in Cd_laminar_params_solved.items()},
+                **{k: (v, v) for k, v in Cd_turbulent_params_solved.items()},
+                # **log10_Cd_laminar_param_bounds,
+                # **log10_Cd_turbulent_param_bounds,
+                **log10_Cd_blend_param_bounds
+            },
+            weights=self.fit_weights(d),
+            verbose=self.verbose,
+        )
+
+        Cd_blend_params_solved = fit(
+            model=model_log10_Cd_blend,
+            x_data=d,
+            y_data=cas.log10(d['Cd']),
+            param_guesses=Cd_blend_params_solved,
+            param_bounds={
+                # **{k: (v, v) for k, v in Cd_laminar_params_solved.items()},
+                # **{k: (v, v) for k, v in Cd_turbulent_params_solved.items()},
+                **log10_Cd_laminar_param_bounds,
+                **log10_Cd_turbulent_param_bounds,
+                **log10_Cd_blend_param_bounds
+            },
+            weights=self.fit_weights(d),
+            verbose=self.verbose,
+        )
+
+        if plot_fit:
+            self.plot_xfoil_alpha_Re(
+                y_data_name='Cd',
+                model=model_Cd_blend,
+                params_solved=Cd_blend_params_solved,
+                title="Fit: Drag Coefficient (Blend)",
+                log_z=True
+            )
+
+        # Make the final function.
+        def Cd_function(
+                alpha, Re,
+                Cd_blend_params_solved=Cd_blend_params_solved,  # packaging dependencies
+                model_log10_Cd_blend=model_log10_Cd_blend  # packaging dependencies
+        ):
+            return 10 ** model_log10_Cd_blend(
+                x={'alpha': alpha, 'Re': Re},
+                p=Cd_blend_params_solved
+            )
+
+        self.Cd_function = Cd_function
+        return Cd_function
