@@ -5,16 +5,16 @@ class Airfoil:
     def __init__(self,
                  name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
-                 CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
-                         (alpha * np.pi / 180) * (2 * np.pi)
-                 ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 CDp_function=lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
-                         (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
-                 ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=lambda alpha, Re, mach, deflection: (
+                 CL_function=None, #lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
+                         #(alpha * np.pi / 180) * (2 * np.pi)
+                 #),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 CDp_function=None, #lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
+                         #(1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
+                 #),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 Cm_function=None, #lambda alpha, Re, mach, deflection: (
                          # Moment coefficient function (about quarter-chord) (alpha in deg)
-                         0
-                 ),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                         #0
+                 #),  # type: callable # with exactly the arguments listed (no more, no fewer).
                  ):
         """
         Creates an Airfoil object.
@@ -851,7 +851,7 @@ class Airfoil:
                        a_step=0.25,  # type: float
                        a_init=0,  # type: float
                        Re_start=1e4,  # type: float
-                       Re_end=5e6,  # type: float
+                       Re_end=1e7,  # type: float
                        n_Res=50,  # type: int
                        mach=0,  # type: float
                        max_iter=20,  # type: int
@@ -923,6 +923,7 @@ class Airfoil:
             return run_data
 
         if verbose:
+            print("Running XFoil sweeps...")
             import time
             start_time = time.time()
 
@@ -1002,74 +1003,74 @@ class Airfoil:
         plt.title(r"XFoil Data for %s Airfoil" % self.name)
         plt.axis("equal")
 
-        style.use("default")
+        with plt.style.context("default"):
 
-        ax = fig.add_subplot(323)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cl"]
-        levels = np.linspace(-0.5, 1.5, 21)
-        norm = None
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.2f')
-        cbar.set_label(r"$C_l$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$C_l$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
+            ax = fig.add_subplot(323)
+            x = d["Re"]
+            y = d["alpha"]
+            z = d["Cl"]
+            levels = np.linspace(-0.5, 1.5, 21)
+            norm = None
+            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+            cbar = plt.colorbar(CF, format='%.2f')
+            cbar.set_label(r"$C_l$")
+            plt.grid(False)
+            plt.xlabel(r"$Re$")
+            plt.ylabel(r"$\alpha$")
+            plt.title(r"$C_l$ from $Re$, $\alpha$")
+            ax.set_xscale('log')
 
-        ax = fig.add_subplot(324)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cd"]
-        levels = np.logspace(-2.5, -1, 21)
-        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.3f')
-        cbar.set_label(r"$C_d$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$C_d$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
+            ax = fig.add_subplot(324)
+            x = d["Re"]
+            y = d["alpha"]
+            z = d["Cd"]
+            levels = np.logspace(-2.5, -1, 21)
+            norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+            cbar = plt.colorbar(CF, format='%.3f')
+            cbar.set_label(r"$C_d$")
+            plt.grid(False)
+            plt.xlabel(r"$Re$")
+            plt.ylabel(r"$\alpha$")
+            plt.title(r"$C_d$ from $Re$, $\alpha$")
+            ax.set_xscale('log')
 
-        ax = fig.add_subplot(325)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cl"] / d["Cd"]
-        x = x[d["alpha"] >= 0]
-        y = y[d["alpha"] >= 0]
-        z = z[d["alpha"] >= 0]
-        levels = np.logspace(1, np.log10(150), 21)
-        norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.1f')
-        cbar.set_label(r"$L/D$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$L/D$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
+            ax = fig.add_subplot(325)
+            x = d["Re"]
+            y = d["alpha"]
+            z = d["Cl"] / d["Cd"]
+            x = x[d["alpha"] >= 0]
+            y = y[d["alpha"] >= 0]
+            z = z[d["alpha"] >= 0]
+            levels = np.logspace(1, np.log10(150), 21)
+            norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+            cbar = plt.colorbar(CF, format='%.1f')
+            cbar.set_label(r"$L/D$")
+            plt.grid(False)
+            plt.xlabel(r"$Re$")
+            plt.ylabel(r"$\alpha$")
+            plt.title(r"$L/D$ from $Re$, $\alpha$")
+            ax.set_xscale('log')
 
-        ax = fig.add_subplot(326)
-        x = d["Re"]
-        y = d["alpha"]
-        z = d["Cm"]
-        levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
-        norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-        CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-        C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-        cbar = plt.colorbar(CF, format='%.2f')
-        cbar.set_label(r"$C_m$")
-        plt.grid(False)
-        plt.xlabel(r"$Re$")
-        plt.ylabel(r"$\alpha$")
-        plt.title(r"$C_m$ from $Re$, $\alpha$")
-        ax.set_xscale('log')
+            ax = fig.add_subplot(326)
+            x = d["Re"]
+            y = d["alpha"]
+            z = d["Cm"]
+            levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
+            norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+            cbar = plt.colorbar(CF, format='%.2f')
+            cbar.set_label(r"$C_m$")
+            plt.grid(False)
+            plt.xlabel(r"$Re$")
+            plt.ylabel(r"$\alpha$")
+            plt.title(r"$C_m$ from $Re$, $\alpha$")
+            ax.set_xscale('log')
 
         plt.tight_layout()
         plt.show()
