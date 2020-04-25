@@ -30,6 +30,9 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
         with open("naca0008.pkl", "wb+") as f: pickle.dump(naca0008, f)
 
     ### Method 2: Explicit fits (look here in the library to see what these look like)
+    # These will be generally faster to run, and probably more accurate. They can also tell you things about
+    # control surface deflections or transonic performance (so long as you make fits accordingly). However,
+    # right now, they require a good bit of manual labor to individually fit and make.
     from aerosandbox.library.airfoils import e216, naca0008
 
     ########## Now, we're ready to start putting together our 3D CasLL1 run! ##########
