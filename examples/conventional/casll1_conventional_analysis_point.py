@@ -12,6 +12,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
     # I'll show you what both methods to get data look like!
 
     ### Method 1: XFoil Fitting
+    # Here, we run XFoil (by default in parallel) and make automated fits to this data.
 
     # I've wrapped these in a simple caching script, since the XFoil runs are slow!
     try:
