@@ -993,7 +993,7 @@ class Airfoil:
             return run_data
 
         if verbose:
-            print("Running XFoil sweeps...")
+            print("Running XFoil sweeps on Airfoil %s..." % self.name)
             import time
             start_time = time.time()
 
