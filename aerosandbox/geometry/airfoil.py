@@ -1,4 +1,5 @@
 from aerosandbox.geometry.common import *
+from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 
 
 class Airfoil:
@@ -181,6 +182,74 @@ class Airfoil:
 
         coordinates = np.hstack(trimmed_text).reshape((-1, 2))
         self.coordinates = coordinates
+
+    def populate_sectional_functions_from_xfoil_fits(self,
+                                                     parallel=True,
+                                                     verbose=True,
+                                                     ):  # TODO write docstring
+        if not self.has_xfoil_data(raise_exception_if_absent=False):
+            self.get_xfoil_data(
+                parallel=parallel,
+                verbose=verbose,
+            )
+
+        self.AirfoilFitter = AirfoilFitter(
+            airfoil=self,
+            parallel=parallel,
+            verbose=verbose,
+        )
+        self.AirfoilFitter.fit_xfoil_data_Cl(plot_fit=False)
+        self.AirfoilFitter.fit_xfoil_data_Cd(plot_fit=False)
+
+        def CL_function(
+                alpha, Re, mach=0, deflection=0,
+                fitter=self.AirfoilFitter
+        ):
+            return fitter.Cl_function(
+                alpha=alpha,
+                Re=Re,
+            )
+
+        def CDp_function(
+                alpha, Re, mach=0, deflection=0,
+                fitter=self.AirfoilFitter
+        ):
+            return fitter.Cd_function(
+                alpha=alpha,
+                Re=Re,
+            )
+
+        def Cm_function(
+                alpha, Re, mach=0, deflection=0,
+                fitter=self.AirfoilFitter
+        ):
+            return alpha * 0
+
+        self.CL_function = CL_function
+        self.CDp_function = CDp_function
+        self.Cm_function = Cm_function
+
+    def has_sectional_functions(self, raise_exception_if_absent=True):
+        """
+        Runs a quick check to see if this airfoil has sectional functions.
+        :param raise_exception_if_absent: Boolean flag to raise an Exception if sectional functions are not found.
+        :return: Boolean of whether or not sectional functions is present.
+        """
+        data_present = (
+                hasattr(self, 'CL_function') and callable(self.CL_function) and
+                hasattr(self, 'CDp_function') and callable(self.CDp_function) and
+                hasattr(self, 'Cm_function') and callable(self.Cm_function)
+        )
+        if not data_present and raise_exception_if_absent:
+            raise Exception(
+                """This Airfoil %s does not yet have sectional functions,
+                so you can't run the function you've called.
+                To get sectional functions, first call:
+                    Airfoil.populate_sectional_functions_from_xfoil_fits()
+                which will perform an in-place update that
+                provides the data.""" % self.name
+            )
+        return data_present
 
     def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
         """
@@ -849,11 +918,11 @@ class Airfoil:
     def get_xfoil_data(self,
                        a_start=-6,  # type: float
                        a_end=12,  # type: float
-                       a_step=0.25,  # type: float
+                       a_step=0.5,  # type: float
                        a_init=0,  # type: float
                        Re_start=1e4,  # type: float
                        Re_end=1e7,  # type: float
-                       n_Res=50,  # type: int
+                       n_Res=30,  # type: int
                        mach=0,  # type: float
                        max_iter=20,  # type: int
                        repanel=True,  # type: bool
@@ -979,12 +1048,12 @@ class Airfoil:
         )
         if not data_present and raise_exception_if_absent:
             raise Exception(
-                """This Airfoil does not yet have XFoil data,
+                """This Airfoil %s does not yet have XFoil data,
                 so you can't run the function you've called.
                 To get XFoil data, first call:
                     Airfoil.get_xfoil_data()
                 which will perform an in-place update that
-                provides the data."""
+                provides the data.""" % self.name
             )
         return data_present
 
