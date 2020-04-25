@@ -1157,7 +1157,7 @@ class Airfoil:
             xfoil_data = self.xfoil_cseq(
                 cl_start=0,
                 cl_end=2,
-                cl_step=0.05,
+                cl_step=cl_step,
                 Re=Re,
                 M=0,
                 reset_bls=True,
