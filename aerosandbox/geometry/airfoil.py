@@ -5,16 +5,17 @@ class Airfoil:
     def __init__(self,
                  name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
-                 CL_function=None, #lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
-                         #(alpha * np.pi / 180) * (2 * np.pi)
-                 #),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 CDp_function=None, #lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
-                         #(1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
-                 #),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=None, #lambda alpha, Re, mach, deflection: (
-                         # Moment coefficient function (about quarter-chord) (alpha in deg)
-                         #0
-                 #),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 CL_function=None,  # lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
+                 # (alpha * np.pi / 180) * (2 * np.pi)
+                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 CDp_function=None,
+                 # lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
+                 # (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
+                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 Cm_function=None,  # lambda alpha, Re, mach, deflection: (
+                 # Moment coefficient function (about quarter-chord) (alpha in deg)
+                 # 0
+                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
                  ):
         """
         Creates an Airfoil object.
@@ -561,7 +562,7 @@ class Airfoil:
         return airfoil
 
     def write_dat(self,
-                  filepath # type: str
+                  filepath  # type: str
                   ):
         """
         Writes a .dat file corresponding to this airfoil to a filepath.
@@ -570,7 +571,7 @@ class Airfoil:
         """
         with open(filepath, "w+") as f:
             f.writelines(
-                [self.name+"\n"] +
+                [self.name + "\n"] +
                 ["     %.12f    %.12f\n" % tuple(coordinate) for coordinate in self.coordinates]
             )
 
@@ -1004,7 +1005,6 @@ class Airfoil:
         plt.axis("equal")
 
         with plt.style.context("default"):
-
             ax = fig.add_subplot(323)
             x = d["Re"]
             y = d["alpha"]
@@ -1123,12 +1123,12 @@ class Airfoil:
         plt.show()
 
     def plot_xfoil_data_polar(self,
-                              Res, # type: list
+                              Res,  # type: list
                               Cd_plot_max=0.04,
-                              cl_step = 0.1,
-                              repanel = True,
-                              parallel = True,
-                              max_iter = 20,
+                              cl_step=0.1,
+                              repanel=True,
+                              parallel=True,
+                              max_iter=20,
                               verbose=True,
                               ):
         """
@@ -1145,7 +1145,7 @@ class Airfoil:
         fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
         colors = plt.cm.rainbow(np.linspace(0, 1, len(Res)))[::-1]
 
-        try: # If it's not an iterable, make it one.
+        try:  # If it's not an iterable, make it one.
             Res[0]
         except TypeError:
             Res = [Res]
