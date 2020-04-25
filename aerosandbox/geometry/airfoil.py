@@ -1075,10 +1075,16 @@ class Airfoil:
         plt.tight_layout()
         plt.show()
 
-    def plot_xfoil_data_polars(self,
-                               n_lines_max=20,
-                               Cd_plot_max=0.04,
-                               ):  # TODO add docstring
+    def plot_xfoil_data_all_polars(self,
+                                   n_lines_max=20,
+                                   Cd_plot_max=0.04,
+                                   ):
+        """
+        Plots the existing XFoil data found by running self.get_xfoil_data().
+        :param n_lines_max: Maximum number of Reynolds numbers to plot. Useful if you ran a sweep with tons of Reynolds numbers.
+        :param Cd_plot_max: Upper limit of Cd to plot [float]
+        :return: None (makes plot)
+        """
 
         self.has_xfoil_data()  # Ensure data is present.
 
@@ -1116,84 +1122,82 @@ class Airfoil:
         plt.legend()
         plt.show()
 
-    # def plot_xfoil_alpha_Re(self,
-    #                         y_data_name,
-    #                         model=None,
-    #                         params_solved=None,
-    #                         title=None,
-    #                         log_z=False,
-    #                         show=True
-    #                         ):
-    #     """
-    #     See the docstring of the "fit" function in aerosandbox.tools.casadi_tools for syntax.
-    #     :param model:
-    #     :param x_data:
-    #     :param y_data:
-    #     :param params_solved:
-    #     :param title:
-    #     :param show:
-    #     :return:
-    #     """
-    #     self.has_xfoil_data() # Ensure data is present.
-    #
-    #     # Make plot
-    #     fig = go.Figure()
-    #     fig.add_trace(
-    #         go.Scatter3d(
-    #             x=self.xfoil_data_1D['alpha'],
-    #             y=self.xfoil_data_1D['Re'],
-    #             z=self.xfoil_data_1D[y_data_name],
-    #             mode="markers",
-    #             marker=dict(
-    #                 size=2,
-    #                 color="black"
-    #             )
-    #         )
-    #     )
-    #     if model is not None:
-    #         # Get model data
-    #         n = 60
-    #         linspace = lambda x: np.linspace(np.min(x), np.max(x), n)
-    #         logspace = lambda x: np.logspace(np.log10(np.min(x)), np.log10(np.max(x)), n)
-    #         x1 = linspace(self.xfoil_data_1D['alpha'])
-    #         x2 = logspace(self.xfoil_data_1D['Re'])
-    #         X1, X2 = np.meshgrid(x1, x2)
-    #         x_model = {
-    #             'alpha': X1.reshape(-1),
-    #             'Re'   : X2.reshape(-1)
-    #         }
-    #         y_model = np.array(model(x_model, params_solved)).reshape((n, n))
-    #         fig.add_trace(
-    #             go.Surface(
-    #                 contours={
-    #                     # "x": {"show": True, "start": -20, "end": 20, "size": 1},
-    #                     # "y": {"show": True, "start": 1e4, "end": 1e6, "size": 1e5},
-    #                     # "z": {"show": True, "start": -5, "end": 5, "size": 0.1}
-    #                 },
-    #                 x=x1,
-    #                 y=x2,
-    #                 z=y_model,
-    #                 # intensity=y_model,
-    #                 colorscale="plasma",
-    #                 # flatshading=True
-    #             )
-    #         )
-    #     fig.update_layout(
-    #         scene=dict(
-    #             xaxis=dict(
-    #                 title="Alpha"
-    #             ),
-    #             yaxis=dict(
-    #                 type='log',
-    #                 title="Re"
-    #             ),
-    #             zaxis=dict(
-    #                 type='log' if log_z else 'linear',
-    #                 title="f(alpha, Re)"
-    #             ),
-    #         ),
-    #         title=title
-    #     )
-    #     if show:
-    #         fig.show()
-    #     return fig
+    def plot_xfoil_data_polar(self,
+                              Res, # type: list
+                              Cd_plot_max=0.04,
+                              cl_step = 0.1,
+                              repanel = True,
+                              parallel = True,
+                              max_iter = 20,
+                              verbose=True,
+                              ):
+        """
+        Plots CL-CD polar for a single Reynolds number or a variety of Reynolds numbers.
+        :param Res: Reynolds number to plot polars at. Either a single float or an iterable (list, 1D ndarray, etc.)
+        :param Cd_plot_max: Upper limit of Cd to plot [float]
+        :param cl_step: Cl increment for XFoil runs. Trades speed vs. plot resolution. [float]
+        :param repanel: Should we repanel the airfoil within XFoil? [boolean]
+        :param parallel: Should we run different Res in parallel? [boolean]
+        :param max_iter: Maximum number of iterations for XFoil to run. [int]
+        :param verbose: Should we print information as we run the sweeps? [boolean]
+        :return: None (makes plot)
+        """
+        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
+        colors = plt.cm.rainbow(np.linspace(0, 1, len(Res)))[::-1]
+
+        try: # If it's not an iterable, make it one.
+            Res[0]
+        except TypeError:
+            Res = [Res]
+
+        def get_xfoil_data_at_Re(Re):
+
+            import numpy as np  # needs to be imported here to support parallelization
+
+            xfoil_data = self.xfoil_cseq(
+                cl_start=0,
+                cl_end=2,
+                cl_step=0.05,
+                Re=Re,
+                M=0,
+                reset_bls=True,
+                repanel=repanel,
+                max_iter=max_iter,
+                verbose=False,
+            )
+            Cd = remove_nans(xfoil_data["Cd"])
+            Cl = remove_nans(xfoil_data["Cl"])
+            return {"Cl": Cl, "Cd": Cd}
+
+        if verbose:
+            print("Running XFoil sweeps...")
+            import time
+            start_time = time.time()
+
+        if not parallel:
+            runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
+        else:
+            import multiprocessing_on_dill as mp
+            pool = mp.Pool(mp.cpu_count())
+            runs_data = pool.map(get_xfoil_data_at_Re, Res)
+            pool.close()
+
+        if verbose:
+            run_time = time.time() - start_time
+            print("XFoil Runtime: %.3f sec" % run_time)
+
+        for i, Re in enumerate(Res):
+            plt.plot(
+                runs_data[i]["Cd"] * 1e4,
+                runs_data[i]["Cl"],
+                label="Re = %s" % eng_string(Re),
+                color=colors[i],
+            )
+        plt.xlim(0, Cd_plot_max * 1e4)
+        plt.ylim(0, 2)
+        plt.xlabel(r"$C_d \cdot 10^4$")
+        plt.ylabel(r"$C_l$")
+        plt.title("XFoil Polars for %s Airfoil" % self.name)
+        plt.tight_layout()
+        plt.legend()
+        plt.show()
