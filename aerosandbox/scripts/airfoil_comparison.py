@@ -7,23 +7,15 @@ style.use("seaborn")
 afs = ["e216", "dae11", "e63", "naca4410", "naca662415"]
 
 for af_name in afs:
-    af = Airfoil(af_name, repanel=True, find_mcl=False)
-    alphas, cls, cds, cms, cps = af.xfoil_aseq(
+    af = Airfoil(af_name)
+    xfoil_data = af.xfoil_aseq(
         0,
         15,
-        0.1,
+        0.5,
         Re=200e3,
         repanel=False,
         max_iter=50,
     )
-
-    # cleanup
-    nans = np.isnan(alphas)
-    alphas = alphas[~nans]
-    cls = cls[~nans]
-    cds = cds[~nans]
-    cms = cms[~nans]
-    cps = cps[~nans]
 
     #     plt.plot(alphas, cls/cds, ".-", label=af_name)
     # plt.xlabel("Angle of Attack [deg]")
@@ -33,7 +25,11 @@ for af_name in afs:
     # plt.tight_layout()
     # plt.show()
 
-    plt.plot(cds, cls, "-", label=af_name)
+    plt.plot(
+        remove_nans(xfoil_data["Cd"]),
+        remove_nans(xfoil_data["Cl"]),
+        "-", label=af_name
+    )
 plt.xlabel("CD")
 plt.xlim(0, 0.05)
 plt.ylim(0, 2)

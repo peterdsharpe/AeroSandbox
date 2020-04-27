@@ -1,6 +1,6 @@
 from aerosandbox.geometry.common import *
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
-
+from scipy.interpolate import interp1d
 
 class Airfoil:
     def __init__(self,
@@ -17,6 +17,7 @@ class Airfoil:
                  # Moment coefficient function (about quarter-chord) (alpha in deg)
                  # 0
                  # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 repanel=False
                  ):
         """
         Creates an Airfoil object.
@@ -29,6 +30,7 @@ class Airfoil:
         :param CL_function:
         :param CDp_function:
         :param Cm_function:
+        :param repanel: should we repanel this airfoil upon creation?
         """
         self.name = name if name is not None else "Untitled"
         self.coordinates = None
@@ -53,6 +55,9 @@ class Airfoil:
         self.CL_function = CL_function
         self.CDp_function = CDp_function
         self.Cm_function = Cm_function
+
+        if repanel:
+            self.repanel(inplace=True)
 
     def __repr__(self):
         return "Airfoil %s (%i points)" % (
@@ -495,6 +500,68 @@ class Airfoil:
         return J
 
     def repanel(self,
+                n_points_per_side=80,
+                inplace=False,
+                ):
+        """
+        Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+        :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
+            Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
+            since one point (the leading edge point) is shared by both the upper and lower surfaces.
+        :param inplace: Whether to perform this as an in-place operation or return the new airfoil as a newly instantiated object [boolean]
+        :return: If inplace is True, None. If inplace is False, the new airfoil [Airfoil].
+        """
+
+        upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
+        lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
+
+        # Find distances between coordinates, assuming linear interpolation
+        upper_distances_between_points = (
+                                                 (upper_original_coors[:-1, 0] - upper_original_coors[1:, 0]) ** 2 +
+                                                 (upper_original_coors[:-1, 1] - upper_original_coors[1:, 1]) ** 2
+                                         ) ** 0.5
+        lower_distances_between_points = (
+                                                 (lower_original_coors[:-1, 0] - lower_original_coors[1:, 0]) ** 2 +
+                                                 (lower_original_coors[:-1, 1] - lower_original_coors[1:, 1]) ** 2
+                                         ) ** 0.5
+        upper_distances_from_TE = np.hstack((0, np.cumsum(upper_distances_between_points)))
+        lower_distances_from_LE = np.hstack((0, np.cumsum(lower_distances_between_points)))
+        upper_distances_from_TE_normalized = upper_distances_from_TE / upper_distances_from_TE[-1]
+        lower_distances_from_LE_normalized = lower_distances_from_LE / lower_distances_from_LE[-1]
+
+        distances_from_TE_normalized = np.hstack((
+            upper_distances_from_TE_normalized,
+            1+lower_distances_from_LE_normalized[1:]
+        ))
+
+        # Generate a cosine-spaced list of points from 0 to 1
+        cosspaced_points = np_cosspace(0, 1, n_points_per_side)
+        s = np.hstack((
+              cosspaced_points,
+              1+cosspaced_points[1:],
+        ))
+
+        x_coors = interp1d(
+            distances_from_TE_normalized,
+            self.coordinates[:, 0],
+            kind="cubic",
+        )(s)
+        y_coors = interp1d(
+            distances_from_TE_normalized,
+            self.coordinates[:, 1],
+            kind="cubic",
+        )(s)
+
+        coordinates = np.vstack((x_coors, y_coors)).T
+
+        # Finalize
+        airfoil = self if inplace else copy.deepcopy(self)
+        if not "Repaneled" in airfoil.name:
+            airfoil.name += " (Repaneled)"
+        airfoil.coordinates = coordinates
+        return airfoil
+
+    def repanel_legacy(self, # TODO delete
                 n_points_per_side=100,
                 inplace=False,
                 ):
@@ -527,22 +594,22 @@ class Airfoil:
         # Generate a cosine-spaced list of points from 0 to 1
         s = np_cosspace(0, 1, n_points_per_side)
 
-        x_upper = np.interp(
+        x_upper = interp1d(
             s,
             upper_distances_from_TE_normalized,
             upper_original_coors[:, 0],
         )
-        y_upper = np.interp(
+        y_upper = interp1d(
             s,
             upper_distances_from_TE_normalized,
             upper_original_coors[:, 1],
         )
-        x_lower = np.interp(
+        x_lower = interp1d(
             s,
             lower_distances_from_LE_normalized,
             lower_original_coors[:, 0],
         )
-        y_lower = np.interp(
+        y_lower = interp1d(
             s,
             lower_distances_from_LE_normalized,
             lower_original_coors[:, 1],
@@ -925,7 +992,7 @@ class Airfoil:
                        n_Res=30,  # type: int
                        mach=0,  # type: float
                        max_iter=20,  # type: int
-                       repanel=True,  # type: bool
+                       repanel=False,  # type: bool
                        parallel=True,  # type: bool
                        verbose=True,  # type: bool
                        ):
@@ -950,7 +1017,7 @@ class Airfoil:
         :param parallel: Should we run in parallel? Generally results in significant speedup, but might not run
             correctly on some machines. Disable this if it's a problem. [boolean]
         :param verbose: Should we do verbose output? [boolean]
-        :return: None (in-place operation that creates self.xfoil_data_1D and self.xfoil_data_2D)
+        :return: self (in-place operation that creates self.xfoil_data_1D and self.xfoil_data_2D)
         """
         assert a_init > a_start
         assert a_init < a_end
@@ -1035,6 +1102,8 @@ class Airfoil:
             for k in xfoil_data_2D.keys()
         }
         self.xfoil_data_1D = xfoil_data_1D
+
+        return self
 
     def has_xfoil_data(self, raise_exception_if_absent=True):
         """
@@ -1144,6 +1213,8 @@ class Airfoil:
         plt.tight_layout()
         plt.show()
 
+        return self
+
     def plot_xfoil_data_all_polars(self,
                                    n_lines_max=20,
                                    Cd_plot_max=0.04,
@@ -1152,7 +1223,7 @@ class Airfoil:
         Plots the existing XFoil data found by running self.get_xfoil_data().
         :param n_lines_max: Maximum number of Reynolds numbers to plot. Useful if you ran a sweep with tons of Reynolds numbers.
         :param Cd_plot_max: Upper limit of Cd to plot [float]
-        :return: None (makes plot)
+        :return: self (makes plot)
         """
 
         self.has_xfoil_data()  # Ensure data is present.
@@ -1191,11 +1262,13 @@ class Airfoil:
         plt.legend()
         plt.show()
 
+        return self
+
     def plot_xfoil_data_polar(self,
                               Res,  # type: list
                               Cd_plot_max=0.04,
                               cl_step=0.1,
-                              repanel=True,
+                              repanel=False,
                               parallel=True,
                               max_iter=20,
                               verbose=True,
@@ -1209,15 +1282,16 @@ class Airfoil:
         :param parallel: Should we run different Res in parallel? [boolean]
         :param max_iter: Maximum number of iterations for XFoil to run. [int]
         :param verbose: Should we print information as we run the sweeps? [boolean]
-        :return: None (makes plot)
+        :return: self (makes plot)
         """
-        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
-        colors = plt.cm.rainbow(np.linspace(0, 1, len(Res)))[::-1]
 
         try:  # If it's not an iterable, make it one.
             Res[0]
         except TypeError:
             Res = [Res]
+
+        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
+        colors = plt.cm.rainbow(np.linspace(0, 1, len(Res)))[::-1]
 
         def get_xfoil_data_at_Re(Re):
 
@@ -1270,3 +1344,5 @@ class Airfoil:
         plt.tight_layout()
         plt.legend()
         plt.show()
+
+        return self

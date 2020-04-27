@@ -1,7 +1,4 @@
-from aerosandbox.tools.airfoil_optimizer.airfoil_optimizer import *
 import copy
-import multiprocessing as mp
-
 
 if __name__ == '__main__':
     epss = np.logspace(-10, -1, 30)
