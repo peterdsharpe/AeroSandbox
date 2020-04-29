@@ -7,13 +7,13 @@ style.use("seaborn")
 afs = ["e216", "dae11", "e63", "naca4410", "naca662415"]
 
 for af_name in afs:
-    af = Airfoil(af_name)
+    af = Airfoil(af_name, repanel=False)
     xfoil_data = af.xfoil_aseq(
         0,
         15,
-        0.5,
+        0.25,
+        repanel=True,
         Re=200e3,
-        repanel=False,
         max_iter=50,
     )
 
