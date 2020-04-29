@@ -148,12 +148,12 @@ def plot_point_cloud(
 def kulfan_coordinates(
         lower_weights=-0.2 * np.ones(5),  # type: np.ndarray
         upper_weights=0.2 * np.ones(5),  # type: np.ndarray
+        enforce_continuous_LE_radius=True,
         TE_thickness=0.005,  # type: float
         n_points_per_side=100,  # type: int
         N1=0.5,  # type: float
         N2=1.0,  # type: float
 ):
-    from scipy.special import comb
     """
     Calculates the coordinates of a Kulfan (CST) airfoil.
     To make a Kulfan (CST) airfoil, use the following syntax:
@@ -171,12 +171,18 @@ def kulfan_coordinates(
         * 0.001, 0.001: Rectangle, circular duct, or circular rod.
     :param lower_weights:
     :param upper_weights:
+    :param enforce_continuous_LE_radius: Enforces a continous leading-edge radius by throwing out the first lower weight.
     :param TE_thickness:
     :param n_points_per_side:
     :param N1: LE shape factor
     :param N2: TE shape factor
     :return:
     """
+    from scipy.special import comb
+
+    if enforce_continuous_LE_radius:
+        lower_weights[0] = -1 * upper_weights[0]
+
     x_lower = np_cosspace(0, 1, n_points_per_side)
     x_upper = x_lower[::-1]
 

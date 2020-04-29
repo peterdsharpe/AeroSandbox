@@ -1267,10 +1267,9 @@ class Airfoil:
     def plot_xfoil_data_polar(self,
                               Res,  # type: list
                               Cd_plot_max=0.04,
-                              cl_step=0.1,
                               repanel=False,
                               parallel=True,
-                              max_iter=20,
+                              max_iter=40,
                               verbose=True,
                               ):
         """
@@ -1297,10 +1296,10 @@ class Airfoil:
 
             import numpy as np  # needs to be imported here to support parallelization
 
-            xfoil_data = self.xfoil_cseq(
-                cl_start=0,
-                cl_end=2,
-                cl_step=cl_step,
+            xfoil_data = self.xfoil_aseq(
+                a_start=0,
+                a_end=15,
+                a_step=0.25,
                 Re=Re,
                 M=0,
                 reset_bls=True,

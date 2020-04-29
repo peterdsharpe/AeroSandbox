@@ -300,6 +300,9 @@ class WingXSec(AeroSandboxObject):
         )
 
     def xyz_te(self):
+        """
+        Returns the (wing-relative) coordinates of the trailing edge of the cross section.
+        """
         rot = angle_axis_rotation_matrix(self.twist * cas.pi / 180, self.twist_axis)
         xyz_te = self.xyz_le + rot @ cas.vertcat(self.chord, 0, 0)
         # xyz_te = self.xyz_le + self.chord * cas.vertcat(
