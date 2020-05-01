@@ -131,6 +131,29 @@ class TubeBeam1(AeroSandboxObject):
             }
         )
 
+
+    def add_elliptical_load(self,
+                            force=0,
+                            bending_moment=0,
+                            torsional_moment=0,
+                            ):
+        """
+        Adds an elliptically distributed force and/or moment across the entire length of the beam.
+        :param force: Total force applied to beam [N]
+        :param bending_moment: Bending moment to add [N-m] # TODO make this work
+        :param torsional_moment: Torsional moment to add [N-m] # TODO make this work
+        :return: None (in-place)
+        """
+        self.distributed_loads.append(
+            {
+                "type"            : "elliptical",
+                "force"           : force,
+                "bending_moment"  : bending_moment,
+                "torsional_moment": torsional_moment
+            }
+        )
+
+
     def setup(self,
               bending_BC_type="cantilevered"
               ):
@@ -168,10 +191,13 @@ class TubeBeam1(AeroSandboxObject):
         for load in self.distributed_loads:
             if load["type"] == "uniform":
                 self.force_per_unit_length += load["force"] / self.length
-            elif load["type"] == "point":
-                pass
+            elif load["type"] == "elliptical":
+                load_to_add = load["force"] / self.length * (
+                        4 / cas.pi * cas.sqrt(1 - (self.x/self.length) ** 2)
+                )
+                self.force_per_unit_length += load_to_add
             else:
-                raise ValueError("Bad value of \"type\" for a load within beam.loads!")
+                raise ValueError("Bad value of \"type\" for a load within beam.distributed_loads!")
 
         # Initialize optimization variables
         log_nominal_diameter = self.opti.variable(self.n)

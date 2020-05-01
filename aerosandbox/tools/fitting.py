@@ -2,6 +2,7 @@ import numpy as np
 import casadi as cas
 from aerosandbox.tools.miscellaneous import stdout_redirected
 
+
 def fit(
         model,  # type: callable
         x_data,  # type: dict
@@ -11,6 +12,7 @@ def fit(
         weights=None,  # type: np.ndarray
         verbose=True,  # type: bool
         scale_problem=True,  # type: bool
+        put_residuals_in_logspace=False,  # type: bool
 ):
     """
     Fits a model to data through least-squares minimization.
@@ -30,6 +32,8 @@ def fit(
         Weights are automatically normalized. [1D ndarray of length n]
     :param verbose: Whether or not to print information about parameters and goodness of fit.
     :param scale_problem: Whether or not to attempt to scale variables, constraints, and objective for more robust solve. [boolean]
+    :param put_residuals_in_logspace: Whether to optimize using the logarithmic error as opposed to the absolute error (useful for minimizing percent error).
+        Note: If any model outputs or data are negative, this will fail!
     :return: Optimal fit parameters [dict]
     """
     opti = cas.Opti()
@@ -80,16 +84,26 @@ def fit(
 
     if scale_problem:
         y_model_initial = model(x_data, param_guesses)
-        residuals_initial = y_model_initial - y_data
+        if not put_residuals_in_logspace:
+            residuals_initial = y_model_initial - y_data
+        else:
+            residuals_initial = cas.log10(y_model_initial) - cas.log10(y_data)
         SSE_initial = cas.sum1(weights * residuals_initial ** 2)
+
         y_model = model(x_data, params)
-        residuals = y_model - y_data
+        if not put_residuals_in_logspace:
+            residuals = y_model - y_data
+        else:
+            residuals = cas.log10(y_model) - cas.log10(y_data)
         SSE = cas.sum1(weights * residuals ** 2)
         opti.minimize(SSE / SSE_initial)
 
     else:
         y_model = model(x_data, params)
-        residuals = y_model - y_data
+        if not put_residuals_in_logspace:
+            residuals = y_model - y_data
+        else:
+            residuals = cas.log10(y_model) - cas.log10(y_data)
         SSE = cas.sum1(weights * residuals ** 2)
         opti.minimize(SSE)
 

@@ -82,13 +82,13 @@ def mass_wing_spar(
 ):
     """
     Finds the mass of the spar for a wing on a single- or multi-boom lightweight aircraft. Model originally designed for solar aircraft.
-    Data was fit to the range 30 < wing_span < 90 [m] and 50 < supported_mass < 800 [kg], but validity should extend somewhat beyond that.
-    Extremely accurate fits within this range; R^2 > 0.99 for all fits.
-    Source: AeroSandbox\studies\MultiBoomSparMass
+    Data was fit to the range 3 < wing_span < 120 [m] and 5 < supported_mass < 3000 [kg], but validity should extend somewhat beyond that.
+    Extremely accurate fits within this range; R^2 > 0.995 for all fits.
+    Source: AeroSandbox\studies\MultiBoomSparMass_v2
     Assumptions:
-        * Rectangular lift distribution (close enough, slightly conservative w.r.t. elliptical)
-        * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere.
-        * If multi-boom, assumes static-aerostructurally-optimal placement of the outer booms.
+        * Elliptical lift distribution
+        * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere in the ultimate load case.
+        * If multi-boom, assumes roughly static-aerostructurally-optimal placement of the outer booms and equal boom weights.
     :param span: Wing span [m]
     :param mass_supported: Total mass of all fuselages + tails
     :param ultimate_load_factor: Design load factor. Default taken from Daedalus design.
@@ -96,21 +96,25 @@ def mass_wing_spar(
     :return:
     """
     if n_booms == 1:
-        c = 0.0082116578817492
-        m = 0.3380385531034899
-        n = 1.6500210118367851
+        c = 20.7100792220283090
+        span_exp = 1.6155586404697364
+        mass_exp = 0.3779456295164249
     elif n_booms == 2:
-        c = 0.0038966832809997
-        m = 0.3472862388655697
-        n = 1.6222231509034950
+        c = 12.3247625359796285
+        span_exp = 1.5670343007798109
+        mass_exp = 0.4342199756794465
     elif n_booms == 3:
-        c = 0.0059175282654185
-        m = 0.3807869156408368
-        n = 1.3862788430962647
+        c = 10.0864141678007844
+        span_exp = 1.5614086940653213
+        mass_exp = 0.4377206254456823
     else:
         raise ValueError("Bad value of n_booms!")
 
-    return c * (mass_supported * ultimate_load_factor) ** m * span ** n
+    mass_eff = mass_supported * ultimate_load_factor
+
+    spar_mass = c * (span / 40) ** span_exp * (mass_eff / 300) ** mass_exp
+
+    return spar_mass
 
 
 def mass_hpa_stabilizer(
