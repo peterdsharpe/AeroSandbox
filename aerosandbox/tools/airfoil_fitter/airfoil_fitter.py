@@ -4,12 +4,7 @@ Requires the xfoil package from PyPI; see aerosandbox.geometry for more informat
 """
 from aerosandbox.geometry import *
 from aerosandbox.tools.fitting import *
-from aerosandbox.tools.miscellaneous import eng_string, remove_nans
-import plotly.express as px
 import plotly.graph_objects as go
-import dill as pickle
-import multiprocessing_on_dill as mp
-import time
 
 
 class AirfoilFitter():
