@@ -1067,7 +1067,7 @@ class Airfoil:
         if not parallel:
             runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
         else:
-            import multiprocessing_on_dill as mp
+            import multiprocess as mp
             pool = mp.Pool(mp.cpu_count())
             runs_data = pool.map(get_xfoil_data_at_Re, Res)
             pool.close()
@@ -1319,7 +1319,7 @@ class Airfoil:
         if not parallel:
             runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
         else:
-            import multiprocessing_on_dill as mp
+            import multiprocess as mp
             pool = mp.Pool(mp.cpu_count())
             runs_data = pool.map(get_xfoil_data_at_Re, Res)
             pool.close()
