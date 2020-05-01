@@ -6,7 +6,7 @@ import casadi as cas
 import matplotlib.pyplot as plt
 import matplotlib.style as style
 import seaborn as sns
-
+plt.ion()
 sns.set(font_scale=1)
 
 # Set the rendering to happen in browser
