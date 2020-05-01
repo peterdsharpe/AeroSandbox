@@ -157,7 +157,7 @@ setup(
     # projects.
     extras_require={  # Optional
         'xfoil': ['xfoil'],  # Change the key name to something more descriptive
-        'parallelization': ['multiprocessing_on_dill']
+        'parallelization': ['multiprocess']
         # w.r.t. to functionality.
         #     'test': ['coverage'],
     },
