@@ -143,7 +143,7 @@ setup(
         'plotly >= 4',
         'pandas >= 0.25',
         'matplotlib >= 3',
-        'seaborn >= 0.10'
+        'seaborn >= 0.10',
         'tqdm >= 4',
         'dill >= 0.3.1.1',
         'multiprocess >= 0.70'
