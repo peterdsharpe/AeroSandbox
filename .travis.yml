@@ -1,11 +1,10 @@
 language: python
-python:
+python: # Python versions to test on
   - "3.7"
-os:
+os: # operating systems to test on
   - linux
-# command to install dependencies
-install:
+install: # command to install dependencies
   - python -m pip install .
-# command to run tests
-script:
-  - pytest
+script: # command to run tests
+  - pytest aerosandbox # run all unit tests in the package itself
+#  - pytest examples # run all examples
