@@ -1,7 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
-import dash
 import numpy as np
 import casadi as cas
 import matplotlib.pyplot as plt
