@@ -144,6 +144,7 @@ setup(
         'matplotlib >= 3',
         'tqdm >= 4',
         'dill >= 0.3.1.1',
+        'multiprocess >= 0.70'
     ],
     # Optional
 
@@ -157,7 +158,6 @@ setup(
     # projects.
     extras_require={  # Optional
         'xfoil': ['xfoil'],  # Change the key name to something more descriptive
-        'parallelization': ['multiprocess']
         # w.r.t. to functionality.
         #     'test': ['coverage'],
     },
