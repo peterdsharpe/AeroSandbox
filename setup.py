@@ -141,6 +141,7 @@ setup(
         'numpy >= 1',
         'casadi >= 3.5',
         'plotly >= 4',
+        'pandas >= 0.25',
         'matplotlib >= 3',
         'tqdm >= 4',
         'dill >= 0.3.1.1',
