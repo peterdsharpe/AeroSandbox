@@ -1,6 +1,7 @@
 # [AeroSandbox](https://peterdsharpe.github.io/AeroSandbox/) :airplane:
 by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
+[![Downloads](https://pepy.tech/badge/aerosandbox)](https://pepy.tech/project/aerosandbox)
 [![Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox/month)
 [![Build Status](https://travis-ci.org/peterdsharpe/AeroSandbox.svg?branch=master)](https://travis-ci.org/peterdsharpe/AeroSandbox)
 
