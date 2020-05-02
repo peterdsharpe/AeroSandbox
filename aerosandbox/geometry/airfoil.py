@@ -2,6 +2,7 @@ from aerosandbox.geometry.common import *
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from scipy.interpolate import interp1d
 
+
 class Airfoil:
     def __init__(self,
                  name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
@@ -531,14 +532,14 @@ class Airfoil:
 
         distances_from_TE_normalized = np.hstack((
             upper_distances_from_TE_normalized,
-            1+lower_distances_from_LE_normalized[1:]
+            1 + lower_distances_from_LE_normalized[1:]
         ))
 
         # Generate a cosine-spaced list of points from 0 to 1
         cosspaced_points = np_cosspace(0, 1, n_points_per_side)
         s = np.hstack((
-              cosspaced_points,
-              1+cosspaced_points[1:],
+            cosspaced_points,
+            1 + cosspaced_points[1:],
         ))
 
         x_coors = interp1d(
@@ -561,10 +562,10 @@ class Airfoil:
         airfoil.coordinates = coordinates
         return airfoil
 
-    def repanel_legacy(self, # TODO delete
-                n_points_per_side=100,
-                inplace=False,
-                ):
+    def repanel_legacy(self,  # TODO delete
+                       n_points_per_side=100,
+                       inplace=False,
+                       ):
         """
         Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
         :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
