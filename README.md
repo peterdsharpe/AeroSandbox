@@ -10,8 +10,6 @@ At its heart, AeroSandbox is a collection of end-to-end automatic-differentiable
 
 AeroSandbox has powerful aerodynamics solvers written from the ground up, and AeroSandbox can also be used as a standalone aerodynamics solver if desired. Like other modules, these solvers are differentiable. Therefore, **in half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an arbitary number of design variables.**
 
-AeroSandbox is a work in progress - expect bugs for the time being!
-
 ![VLM3 Image](media/images/vlm3_with_control_surfaces.png)
 *VLM3 simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
 
@@ -26,7 +24,7 @@ There are several easy ways to get started with AeroSandbox! (Assuming you alrea
 
 1. (Recommended) Type `pip install AeroSandbox` into your terminal. This will install the latest official release of AeroSandbox (update with `pip install --upgrade AeroSandbox`).
 
-2. If you would like to get test cases, examples, or the latest dev version (which has more features but may be buggy), clone directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox).
+2. If you would like to get test cases and examples as well, clone directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox) (*master* branch for stable releases; *develop* branch for nightly build.)
 
 There are many example cases you can try out in the `/examples/` directory! Specifically, try running `/examples/conventional/casll1_conventional_analysis_point.py`.
 
