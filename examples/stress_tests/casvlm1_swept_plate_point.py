@@ -126,10 +126,7 @@ s_opts["mu_strategy"] = "adaptive"
 opti.solver('ipopt', p_opts, s_opts)
 
 # Solve
-try:
-    sol = opti.solve()
-except RuntimeError:
-    sol = opti.debug
+sol = opti.solve()
 
 # Create solved object
 ap_sol = copy.deepcopy(ap)
