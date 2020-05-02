@@ -166,8 +166,6 @@ In descending order of priority/feasibility:
 * (IN PROGRESS) Implement a 2.5D coupled viscous/inviscid method directly using the viscous methods described in Drela's paper "Viscous-Inviscid Analysis of Transonic and Low Reynolds Number Airfoils". Inviscid flow would be fully 3D, while viscous flow would make the assumption of negligible spanwise flow (strip theory).
 * Implement a fully 3D coupled viscous/inviscid method, compatible with triangular panels. Ideally, the trailing edge stagnation points will be automatically identified, and nothing more than a surface triangulation along with freestream conditions will be required to compute forces and moments.
 
--->
-
 ## Usefulness
 AeroSandbox attempts to improve over existing conceptual-level aerodynamics tools. The following strengths and weaknesses are identified with existing tools, based purely off the author's experience:
 
@@ -195,6 +193,8 @@ Specifically, the following desirable qualities (and associated quantitative met
 * Readable (every class and function will be documented; code will be PEP-8-compatible where reasonable)
 * Optimizer-friendly (design gradients and stability derivatives will be efficiently computed through automatic differentiation)
 * Visualization (visualization will be provided through Plotly's Dash interface)
+
+-->
 
 ## Donating
 If you like this software, please consider donating to support development via PayPal at [paypal.me/peterdsharpe](https://paypal.me/peterdsharpe)! I'm a poor grad student, so every dollar you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
