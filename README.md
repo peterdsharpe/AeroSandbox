@@ -211,8 +211,6 @@ Please feel free to join the development of AeroSandbox - contributions are alwa
 
 If you've already made several additions and would like to be involved in a more long-term capacity, please message me! Contact information can be found next to my name near the top of this README.
 
-Right now, branching is basically nonexistent. This is because there's currently only one contributor - me. As soon as this changes, we'll need to implement [proper branching](https://nvie.com/posts/a-successful-git-branching-model/). 
-
 ## License
 
 MIT License
