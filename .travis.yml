@@ -6,4 +6,4 @@ os: # operating systems to test on
 install: # command to install dependencies
   - python -m pip install .
 script: # command to run tests
-  - pytest # run all unit tests in the package itself and all examples
+  - pytest aerosandbox # run all unit tests in the package itself
