@@ -9,7 +9,7 @@ script:
 - pytest aerosandbox
 deploy:
   provider: pypi
-  user: peterdsharpe
+  user: __token__
   distributions: sdist bdist_wheel
   skip_existing: true
   password:
