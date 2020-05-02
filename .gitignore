@@ -4,3 +4,5 @@ AeroSandbox.egg-info/
 __pycache__/
 build/
 publish_to_pypi.bat
+*.pkl
+*.asw
