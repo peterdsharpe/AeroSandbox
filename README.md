@@ -22,13 +22,11 @@ AeroSandbox has powerful aerodynamics solvers written from the ground up, and Ae
 
 ### Installation
 
-There are several easy ways to get started with AeroSandbox! (Assuming you already have Python >=3.7 installed, preferably via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section) - if not, do this first.)
+Install with `pip install AeroSandbox`. Requires Python 3.7+.
 
-1. (Recommended) Type `pip install AeroSandbox` into your terminal. This will install the latest official release of AeroSandbox (update with `pip install --upgrade AeroSandbox`).
+To get examples as well, clone from *master* on [GitHub](https://github.com/peterdsharpe/AeroSandbox). (Nightly builds available on *develop* branch.)
 
-2. If you would like to get test cases and examples as well, clone directly from [the AeroSandbox GitHub page](https://github.com/peterdsharpe/AeroSandbox) (*master* branch for stable releases; *develop* branch for nightly build.)
-
-There are many example cases you can try out in the `/examples/` directory! Specifically, try running `/examples/conventional/casll1_conventional_analysis_point.py`.
+There are many example cases you can try out in the `/examples/` directory! A good place to start is `/examples/conventional/casll1_conventional_analysis_point.py`.
 
 ### Usage
 AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. You (yes, you!) can probably learn to analyze a simple airplane and visualize airflow around it within 5 minutes of downloading AeroSandbox. For example, here is all the code that is needed to design a glider, analyze its aerodynamics in flight, and visualize it (found in `/examples/conventional/casll1_conventional_analysis_point.py`):
