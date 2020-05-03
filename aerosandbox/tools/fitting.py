@@ -132,7 +132,7 @@ def fit(
         # Print parameters
         print("\nFit Parameters:")
         if len(params_solved) <= 20:
-            [print("\t%s: %f" % (k, v)) for k, v in params_solved.items()]
+            [print("\t%s = %f" % (k, v)) for k, v in params_solved.items()]
         else:
             print("\t%i parameters solved for." % len(params_solved))
         print("\nGoodness of Fit:")
