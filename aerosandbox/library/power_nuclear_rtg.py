@@ -44,4 +44,4 @@ def po210_specific_power(
         (po_210_mass_amu - alpha_particle_mass_amu - pb_206_mass_amu) * c ** 2
         / po_210_mass_amu
     ) # J/kg
-
+    # TODO finish
