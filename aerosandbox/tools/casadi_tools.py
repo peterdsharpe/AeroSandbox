@@ -79,14 +79,16 @@ tand = lambda theta: cas.tan(theta * cas.pi / 180)
 atan2d = lambda y_val, x_val: cas.atan2(y_val, x_val) * 180 / np.pi
 
 
-def smoothmax(value1, value2, hardness=1):
+def smoothmax(value1, value2, hardness):
     """
     A smooth maximum between two functions.
-    Useful because
+    Useful because it's differentiable and convex!
+    Great writeup by John D Cook here:
+        https://www.johndcook.com/soft_maximum.pdf
     :param value1: Value of function 1.
-    :param value2:
-    :param hardness:
-    :return:
+    :param value2: Value of function 2.
+    :param hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
+    :return: Soft maximum of the two supplied values.
     """
     value1 = value1 * hardness
     value2 = value2 * hardness
