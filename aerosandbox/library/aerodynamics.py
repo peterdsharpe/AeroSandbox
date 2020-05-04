@@ -1,5 +1,6 @@
 import casadi as cas
 import numpy as np
+from aerosandbox.tools.casadi_tools import *
 
 
 def Cd_cylinder(
@@ -331,14 +332,20 @@ def induced_drag_ratio_from_ground_effect(
 ):
     """
     Gives the ratio of actual induced drag to free-flight induced drag experienced by a wing in ground effect.
+    Artificially smoothed below around h/b == 0.05 to retain differentiability and practicality.
     Source: W. F. Phillips, D. F. Hunsaker, "Lifting-Line Predictions for Induced Drag and Lift in Ground Effect".
-        Using Equation 4 from the paper, which is taken from Torenbeek:
+        Using Equation 5 from the paper, which is modified from a model from Torenbeek:
             Torenbeek, E. "Ground Effects", 1982.
     :param h_over_b: (Height above ground) divided by (wingspan).
     :return: Ratio of induced drag in ground effect to induced drag out of ground effect [unitless]
     """
+    h_over_b = smoothmax(
+        h_over_b,
+        0,
+        hardness=1/0.03
+    )
     return 1 - cas.exp(
-        -2.48 * (2 * h_over_b) ** 0.768
+        -4.01 * (2 * h_over_b) ** 0.717
     )
 
 
@@ -453,55 +460,56 @@ def firefly_CLA_and_CDA_nominal_fuse_CFD(alpha):  # TODO remove
 
 
 if __name__ == "__main__":
-    # Run some checks
-    import matplotlib.pyplot as plt
-    import matplotlib.style as style
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import dash
-
-    style.use("seaborn")
-
-    # # E216 checks
-    alpha_inputs = np.linspace(-6, 12, 200)
-    Re_inputs = np.logspace(4, 6, 200)
-    alphas = []
-    Res = []
-    CLs = []
-    CDs = []
-    for alpha in alpha_inputs:
-        for Re in Re_inputs:
-            alphas.append(alpha)
-            Res.append(Re)
-            CLs.append(Cl_e216(alpha, Re))
-            CDs.append(Cd_profile_e216(alpha, Re))
-    px.scatter_3d(
-        x=alphas,
-        y=Res,
-        z=CLs,
-        size=np.ones_like(alphas),
-        color=CLs,
-        log_y=True,
-        labels={"x": "alphas", "y": "Re", "z": "CL"}
-    ).show()
-    px.scatter_3d(
-        x=alphas,
-        y=Res,
-        z=CDs,
-        size=np.ones_like(alphas),
-        color=CDs,
-        log_y=True,
-        labels={"x": "alphas", "y": "Re", "z": "CD"}
-    ).show()
-    px.scatter_3d(
-        x=alphas,
-        y=Res,
-        z=np.array(CLs) / np.array(CDs),
-        size=np.ones_like(alphas),
-        color=np.array(CLs) / np.array(CDs),
-        log_y=True,
-        labels={"x": "alphas", "y": "Re", "z": "CL/CD"}
-    ).show()
+    pass
+    # # Run some checks
+    # import matplotlib.pyplot as plt
+    # import matplotlib.style as style
+    # import plotly.express as px
+    # import plotly.graph_objects as go
+    # import dash
+    #
+    # style.use("seaborn")
+    #
+    # # # E216 checks
+    # alpha_inputs = np.linspace(-6, 12, 200)
+    # Re_inputs = np.logspace(4, 6, 200)
+    # alphas = []
+    # Res = []
+    # CLs = []
+    # CDs = []
+    # for alpha in alpha_inputs:
+    #     for Re in Re_inputs:
+    #         alphas.append(alpha)
+    #         Res.append(Re)
+    #         CLs.append(Cl_e216(alpha, Re))
+    #         CDs.append(Cd_profile_e216(alpha, Re))
+    # px.scatter_3d(
+    #     x=alphas,
+    #     y=Res,
+    #     z=CLs,
+    #     size=np.ones_like(alphas),
+    #     color=CLs,
+    #     log_y=True,
+    #     labels={"x": "alphas", "y": "Re", "z": "CL"}
+    # ).show()
+    # px.scatter_3d(
+    #     x=alphas,
+    #     y=Res,
+    #     z=CDs,
+    #     size=np.ones_like(alphas),
+    #     color=CDs,
+    #     log_y=True,
+    #     labels={"x": "alphas", "y": "Re", "z": "CD"}
+    # ).show()
+    # px.scatter_3d(
+    #     x=alphas,
+    #     y=Res,
+    #     z=np.array(CLs) / np.array(CDs),
+    #     size=np.ones_like(alphas),
+    #     color=np.array(CLs) / np.array(CDs),
+    #     log_y=True,
+    #     labels={"x": "alphas", "y": "Re", "z": "CL/CD"}
+    # ).show()
     #
     # # # rae2822 checks
     # alpha_inputs = np.linspace(-6, 12)
@@ -610,15 +618,15 @@ if __name__ == "__main__":
     #     range_z=(0, 200e-4)
     # ).show()
 
-    # # Cylinder Drag Check
-    Res = np.logspace(-1, 8, 300)
-    CDs = Cd_cylinder(Res)
-    CDs_s = Cd_cylinder(Res, True)
-
-    plt.loglog(Res, CDs, label="Full Model")
-    plt.loglog(Res, CDs_s, label="Subcrit. Only Model")
-    plt.xlabel("Re")
-    plt.ylabel("CD")
-    plt.title("Cylinder Drag Checking")
-    plt.legend()
-    plt.show()
+    # # # Cylinder Drag Check
+    # Res = np.logspace(-1, 8, 300)
+    # CDs = Cd_cylinder(Res)
+    # CDs_s = Cd_cylinder(Res, True)
+    #
+    # plt.loglog(Res, CDs, label="Full Model")
+    # plt.loglog(Res, CDs_s, label="Subcrit. Only Model")
+    # plt.xlabel("Re")
+    # plt.ylabel("CD")
+    # plt.title("Cylinder Drag Checking")
+    # plt.legend()
+    # plt.show()
