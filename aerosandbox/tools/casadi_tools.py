@@ -73,13 +73,29 @@ def load_sol_from_file(opti, load_primal=True, load_dual=True, primal_location=d
             opti.set_initial(opti.lam_g[i], dual_vals[i])
 
 
-
 sind = lambda theta: cas.sin(theta * cas.pi / 180)
 cosd = lambda theta: cas.cos(theta * cas.pi / 180)
 tand = lambda theta: cas.tan(theta * cas.pi / 180)
 atan2d = lambda y_val, x_val: cas.atan2(y_val, x_val) * 180 / np.pi
-smoothmax = lambda value1, value2, hardness: cas.log(
-    cas.exp(hardness * value1) + cas.exp(hardness * value2)) / hardness  # soft maximum
+
+
+def smoothmax(value1, value2, hardness=1):
+    """
+    A smooth maximum between two functions.
+    Useful because
+    :param value1: Value of function 1.
+    :param value2:
+    :param hardness:
+    :return:
+    """
+    value1 = value1 * hardness
+    value2 = value2 * hardness
+    max = cas.fmax(value1, value2)
+    min = cas.fmin(value1, value2)
+    out = max + cas.log(1 + cas.exp(min - max))
+    out /= hardness
+    return out
+
 
 # # CasADi functors (experimental)
 # # dot3
@@ -109,3 +125,26 @@ smoothmax = lambda value1, value2, hardness: cas.log(
 # del a, b, out
 
 del default_primal_location, default_dual_location
+
+if __name__ == '__main__':
+    # Test smoothmax
+    import matplotlib.pyplot as plt
+    from matplotlib import style
+    import seaborn as sns
+
+    sns.set(font_scale=1)
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    x = np.linspace(-10, 10, 100)
+    y1 = x
+    y2 = -2 * x - 3
+    hardness = 0.5
+    plt.plot(x, y1, label="y1")
+    plt.plot(x, y2, label="y2")
+    plt.plot(x, smoothmax(y1, y2, hardness), label="smoothmax")
+    plt.xlabel(r"x")
+    plt.ylabel(r"y")
+    plt.title(r"Smoothmax")
+    plt.tight_layout()
+    plt.legend()
+    # plt.savefig("C:/Users/User/Downloads/temp.svg")
+    plt.show()
