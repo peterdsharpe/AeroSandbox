@@ -326,7 +326,23 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     return Cd_wave
 
 
-def firefly_CLA_and_CDA_fuse_hybrid( # TODO remove
+def induced_drag_ratio_from_ground_effect(
+        h_over_b  # type: float
+):
+    """
+    Gives the ratio of actual induced drag to free-flight induced drag experienced by a wing in ground effect.
+    Source: W. F. Phillips, D. F. Hunsaker, "Lifting-Line Predictions for Induced Drag and Lift in Ground Effect".
+        Using Equation 4 from the paper, which is taken from Torenbeek:
+            Torenbeek, E. "Ground Effects", 1982.
+    :param h_over_b: (Height above ground) divided by (wingspan).
+    :return: Ratio of induced drag in ground effect to induced drag out of ground effect [unitless]
+    """
+    return 1 - cas.exp(
+        -2.48 * (2 * h_over_b) ** 0.768
+    )
+
+
+def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
         fuse_fineness_ratio,
         fuse_boattail_angle,
         fuse_TE_diameter,
@@ -422,7 +438,7 @@ def firefly_CLA_and_CDA_fuse_hybrid( # TODO remove
     return CLA, CDA
 
 
-def firefly_CLA_and_CDA_nominal_fuse_CFD(alpha): # TODO remove
+def firefly_CLA_and_CDA_nominal_fuse_CFD(alpha):  # TODO remove
     """
     Estimated equiv. lift area and equiv. drag area of the Firefly fuselage, fit to CFD data.
     Calculated for fuse_fineness_ratio = 1.5, fuse_boattail_angle = 12, and fuse_TE_diameter = 20 mm.
