@@ -114,17 +114,7 @@ def augmented_objective(x):
     )
     if np.isnan(xfoil["Cd"]).any():
         return np.Inf
-    # xfoil = airfoil.xfoil_cl(
-    #     cl=1.1,
-    #     Re=Re_des,
-    #     verbose=False,
-    #     max_iter=40,
-    #     repanel=False
-    # )
-    # if np.isnan(xfoil["Cd"]):
-    #     return np.Inf
 
-    # objective = np.mean(xfoil["Cd"])
     objective = np.sqrt(np.mean(xfoil["Cd"] ** 2))  # RMS
 
     penalty = 0
@@ -161,7 +151,7 @@ if __name__ == '__main__':
             * x0
     )
     initial_simplex[0,:] = x0 # Include x0 in the simplex
-    print("Initializing simplex...")
+    print("Initializing simplex (give this a few minutes)...")
     res = optimize.minimize(
         fun=augmented_objective,
         x0=pack(lower_guess, upper_guess),
