@@ -17,8 +17,8 @@ for dataset in datasets:
         delimiter=","
     )
     data = data[data[:,0].argsort()]
-    # plt.semilogx(
-    plt.loglog(
+    plt.semilogx(
+    # plt.loglog(
         data[:,0],
         data[:,1],
         ".",
