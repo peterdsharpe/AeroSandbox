@@ -3,30 +3,30 @@ from scipy import optimize
 
 ### Design Conditions
 Re_des = 3e5  # Re to design to
-Cl_start = 1.15  # Lower bound of CLs that you care about
-Cl_end = 1.45  # Upper bound of CLs that you care about
+Cl_start = 1.0  # Lower bound of CLs that you care about
+Cl_end = 1.5  # Upper bound of CLs that you care about (Effectively, CL_max)
 Cm_min = -0.08  # Worst-allowable pitching moment that you'll allow
 TE_thickness = 0.0015  # Sets trailing edge thickness
-enforce_continuous_LE_radius = False  # Should we force the leading edge to have continous curvature?
+enforce_continuous_LE_radius = True  # Should we force the leading edge to have continous curvature?
 
 ### Guesses for airfoil CST parameters; you usually don't need to change these
-# lower_guess = -0.05 * np.ones(30)
-# upper_guess = 0.25 * np.ones(30)
-# upper_guess[0] = 0.15
-# upper_guess[1] = 0.20
+lower_guess = -0.05 * np.ones(30)
+upper_guess = 0.25 * np.ones(30)
+upper_guess[0] = 0.15
+upper_guess[1] = 0.20
 
-lower_guess = [-0.21178419, -0.05500152, -0.04540216, -0.03436429, -0.03305599,
-               -0.03121454, -0.04513736, -0.05491045, -0.02861083, -0.05673649,
-               -0.06402239, -0.05963394, -0.0417384, -0.0310728, -0.04983729,
-               -0.04211283, -0.04999657, -0.0632682, -0.07226548, -0.03604782,
-               -0.06151112, -0.04030985, -0.02748867, -0.02705322, -0.04279788,
-               -0.04734922, -0.033705, -0.02380217, -0.04480772, -0.03756881]
-upper_guess = [0.17240303, 0.26668075, 0.21499604, 0.26299318, 0.22545807,
-               0.24759903, 0.31644402, 0.2964658, 0.15360716, 0.31317824,
-               0.27760982, 0.23009955, 0.24045039, 0.37542525, 0.21361931,
-               0.18678503, 0.23466624, 0.20630533, 0.16191541, 0.20453953,
-               0.14370825, 0.13428077, 0.15387739, 0.13767285, 0.15173257,
-               0.14042002, 0.11336701, 0.35640688, 0.10953915, 0.08167446]
+# lower_guess = [-0.21178419, -0.05500152, -0.04540216, -0.03436429, -0.03305599,
+#                -0.03121454, -0.04513736, -0.05491045, -0.02861083, -0.05673649,
+#                -0.06402239, -0.05963394, -0.0417384, -0.0310728, -0.04983729,
+#                -0.04211283, -0.04999657, -0.0632682, -0.07226548, -0.03604782,
+#                -0.06151112, -0.04030985, -0.02748867, -0.02705322, -0.04279788,
+#                -0.04734922, -0.033705, -0.02380217, -0.04480772, -0.03756881]
+# upper_guess = [0.17240303, 0.26668075, 0.21499604, 0.26299318, 0.22545807,
+#                0.24759903, 0.31644402, 0.2964658, 0.15360716, 0.31317824,
+#                0.27760982, 0.23009955, 0.24045039, 0.37542525, 0.21361931,
+#                0.18678503, 0.23466624, 0.20630533, 0.16191541, 0.20453953,
+#                0.14370825, 0.13428077, 0.15387739, 0.13767285, 0.15173257,
+#                0.14042002, 0.11336701, 0.35640688, 0.10953915, 0.08167446]
 
 ### Packing/Unpacking functions
 n_lower = len(lower_guess)
@@ -74,7 +74,10 @@ trace_current, = ax.plot(
     label="Current Airfoil"
 )
 plt.axis("equal")
-
+plt.xlabel(r"$x/c$")
+plt.ylabel(r"$y/c$")
+plt.title("Airfoil Optimization")
+plt.legend()
 
 def draw(
         airfoil  # type: Airfoil
@@ -144,7 +147,6 @@ def callback(x):
 
 if __name__ == '__main__':
     draw(initial_airfoil)
-    ax.set_title("Airfoil Optimization")
 
     initial_simplex = (
             (0.5 + 1 * np.random.random((len(x0) + 1, len(x0))))
