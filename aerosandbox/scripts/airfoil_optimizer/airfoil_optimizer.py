@@ -79,6 +79,7 @@ plt.ylabel(r"$y/c$")
 plt.title("Airfoil Optimization")
 plt.legend()
 
+
 def draw(
         airfoil  # type: Airfoil
 ):
@@ -121,10 +122,10 @@ def augmented_objective(x):
     objective = np.sqrt(np.mean(xfoil["Cd"] ** 2))  # RMS
 
     penalty = 0
-    penalty += np.sum(np.minimum(0, xfoil["Cm"] - Cm_min) ** 2 / 0.01)  # Cm constraint
-    penalty += np.minimum(0, airfoil.TE_angle() - 5) ** 2 / 1  # TE angle constraint
-    penalty += np.minimum(0, airfoil.local_thickness(0.90) - 0.015) ** 2 / 0.005  # Spar thickness constraint
-    penalty += np.minimum(0, airfoil.local_thickness(0.30) - 0.12) ** 2 / 0.005  # Spar thickness constraint
+    penalty += np.sum(np.minimum(0, (xfoil["Cm"] - Cm_min) / 0.01) ** 2)  # Cm constraint
+    penalty += np.minimum(0, (airfoil.TE_angle() - 5) / 1) ** 2  # TE angle constraint
+    penalty += np.minimum(0, (airfoil.local_thickness(0.90) - 0.015) / 0.005) ** 2  # Spar thickness constraint
+    penalty += np.minimum(0, (airfoil.local_thickness(0.30) - 0.12) / 0.005) ** 2  # Spar thickness constraint
 
     xs.append(x)
     fs.append(objective)
@@ -152,7 +153,7 @@ if __name__ == '__main__':
             (0.5 + 1 * np.random.random((len(x0) + 1, len(x0))))
             * x0
     )
-    initial_simplex[0,:] = x0 # Include x0 in the simplex
+    initial_simplex[0, :] = x0  # Include x0 in the simplex
     print("Initializing simplex (give this a few minutes)...")
     res = optimize.minimize(
         fun=augmented_objective,
