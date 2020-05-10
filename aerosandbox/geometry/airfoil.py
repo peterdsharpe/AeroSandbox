@@ -37,11 +37,7 @@ class Airfoil:
         self.coordinates = None
         if coordinates is not None:
             if type(coordinates) is str:  # Assume coordinates is a filepath to a .dat file
-                try:
-                    self.populate_coordinates_from_filepath(filepath=coordinates)
-                except Exception as e:
-                    print(e)
-                    print("Couldn't populate coordinates from filepath!")
+                self.populate_coordinates_from_filepath(filepath=coordinates)
             else:  # Assume coordinates are the actual coordinates
                 self.coordinates = coordinates
         else:  # There are no coordinates given
