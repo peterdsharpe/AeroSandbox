@@ -8,7 +8,7 @@ R_air = R_universal / M_air  #
 
 def get_pressure_at_altitude(altitude):
     """
-    Fit to the 1976 COESA model; see C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\Atmosphere Fitting for details.
+    Fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
     Valid from 0 to 40 km.
     :param altitude:
     :return:
@@ -31,7 +31,7 @@ def get_pressure_at_altitude(altitude):
 
 def get_temperature_at_altitude(altitude):
     """
-    Fit to the 1976 COESA model; see C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\Atmosphere Fitting for details.
+    Fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
     Valid from 0 to 40 km.
     :param altitude:
     :return:
