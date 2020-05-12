@@ -8,7 +8,7 @@ So there are two kind of paths that you can use that both arrive at the whole au
 
 The CS-like path basically is: This is how you would efficiently find the derivative of a series of operations  using the chain rule. There's a way to do this "forward" and "backward" - oh and hey, design optimization is a prime use-case for this backwards way.
 
-The Math/Physics-like path is probably most related to adjoint methods for PDEs, though we only occasionally use PDEs in our aircraft design optimization work (usually we have some simplified model that approximates this). In the world of PDEs, there's something called an adjoint method that lets you effectively "differentiate backwards" through a PDE by exploiting some properties when you differentiate the governing equation. That turns out to be very useful for design optimization! Oh, and how would we actually efficiently implement this in code?
+The Math/Physics-like path is probably most related to adjoint methods for PDEs, though we only occasionally directly use PDEs in our aircraft design optimization work (usually we have some surrogate model that approximates this for speed reasons). In the world of PDEs, an adjoint method that lets you effectively "differentiate backwards" through a PDE by exploiting some properties of residuals when you differentiate the governing equation. That turns out to be very useful for design optimization! Oh, and how would we actually efficiently implement this in code?
 
 I think the best way to learn this is to bark up both trees and try to have them meet somewhere in the middle.
 
