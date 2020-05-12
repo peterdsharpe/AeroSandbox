@@ -442,3 +442,20 @@ class Airplane(AeroSandboxObject):
                                    't    x    y    z',
                                    '\n'.join(coords),
                                    'End']))
+
+    def approximate_longitudinal_center_of_pressure(self):
+        """
+        Returns the approximate location of the center of pressure. Given as the area-weighted quarter chord of the wing.
+        :return: [x, y, z] of the approximate center of pressure
+        """
+        areas = [wing.area(type="projected") for wing in self.wings]
+        COPs = [wing.approximate_center_of_pressure() for wing in self.wings]
+
+        total_area = cas.sum1(cas.vertcat(*areas))
+
+        COP = cas.sum1(cas.vertcat(*[
+            COPs[i]*areas[i]/total_area
+            for i in range(len(self.wings))
+        ]))
+
+        return COP
