@@ -1,7 +1,7 @@
 numpy~=1.18.2
 casadi~=3.5.1
 plotly~=4.6.0
-pandas~=0.25.3
+pandas~=1.0.3
 matplotlib~=3.2.1
 seaborn~=0.10.1
 tqdm~=4.45.0
