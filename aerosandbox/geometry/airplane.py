@@ -62,7 +62,7 @@ class Airplane(AeroSandboxObject):
 
         self.s_ref = main_wing.area()
         self.b_ref = main_wing.span()
-        self.c_ref = main_wing.mean_geometric_chord()
+        self.c_ref = main_wing.mean_aerodynamic_chord()
 
     def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
         # Sets the chordwise and spanwise paneling everywhere to a specified init_val.

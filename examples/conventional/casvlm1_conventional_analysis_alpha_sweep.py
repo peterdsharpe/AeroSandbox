@@ -56,7 +56,7 @@ airplane = Airplane(
                     chord=0.18,
                     twist=2,  # degrees
                     airfoil=Airfoil(name="naca4412"),
-                    control_surface_type='symmetric_problem',
+                    control_surface_type='symmetric',
                     # Flap # Control surfaces are applied between a given XSec and the next one.
                     control_surface_deflection=0,  # degrees
                     control_surface_hinge_point=0.75  # as chord fraction
@@ -96,7 +96,7 @@ airplane = Airplane(
                     chord=0.1,
                     twist=-10,
                     airfoil=Airfoil(name="naca0012"),
-                    control_surface_type='symmetric_problem',  # Elevator
+                    control_surface_type='symmetric',  # Elevator
                     control_surface_deflection=0,
                     control_surface_hinge_point=0.75
                 ),
@@ -124,7 +124,7 @@ airplane = Airplane(
                     chord=0.1,
                     twist=0,
                     airfoil=Airfoil(name="naca0012"),
-                    control_surface_type='symmetric_problem',  # Rudder
+                    control_surface_type='symmetric',  # Rudder
                     control_surface_deflection=0,
                     control_surface_hinge_point=0.75
                 ),
