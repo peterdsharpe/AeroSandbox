@@ -149,6 +149,87 @@ class Wing(AeroSandboxObject):
         """
         return self.area() / self.span()
 
+    def mean_aerodynamic_chord(self):
+        """
+        Returns the mean aerodynamc chord of the wing
+        The method used below accounts only for cases where LE and TE of the slice are straight lines
+        For further development, when LE or TE would be represented as a function of y coordinate,
+        integration method could be incorporated
+        The current method uses standard formulas for MAC as a function of tapper_ratio
+        """
+        area = 0
+        sum_dMAC_dA = 0
+
+        for i, xsec in enumerate(self.xsecs):
+
+            if not i == len(self.xsecs) - 1:
+                c_r = xsec.chord
+                c_t = self.xsecs[i+1].chord
+                y_r = xsec.y_le
+                y_t = self.xsecs[i+1].y_le
+
+                tapper_ratio = c_t / c_r
+                d_area = (c_r + c_t) * (y_t - y_r) / 2
+                MAC_i = (2/3) * c_r * ((1 + tapper_ratio + tapper_ratio ** 2) / (1 + tapper_ratio))
+                area = area + d_area
+                sum_dMAC_dA = d_area * MAC_i + sum_dMAC_dA
+
+        MAC = sum_dMAC_dA / area
+
+        return MAC
+
+    def mean_aerodynamic_chord_x(self):
+        """
+        Returns the mean aerodynamc chord x LE position
+        Bases on the same assumptions as mean_aerodynamic_chord
+        """
+        area = 0
+        sum_dx_dA = 0
+        for i, xsec in enumerate(self.xsecs):
+
+            if not i == len(self.xsecs) - 1:
+                c_r = xsec.chord
+                c_t = self.xsecs[i+1].chord
+                y_r = xsec.y_le
+                y_t = self.xsecs[i+1].y_le
+                x_r = xsec.x_le
+                x_t = self.xsecs[i + 1].x_le
+                tapper_ratio = c_t / c_r
+                d_area = (c_r + c_t) * (y_t - y_r) / 2
+                area = area + d_area
+
+                x_mac = x_r + (x_t - x_r) * (1 + 2 * tapper_ratio) / (3 + 3 * tapper_ratio)
+                sum_dx_dA = d_area * x_mac + sum_dx_dA
+
+        x_mac = sum_dx_dA / area
+
+        return x_mac
+
+    def mean_aerodynamic_chord_y(self):
+        """
+        Returns the mean aerodynamic chord y LE position
+        Bases on the same assumptions as mean_aerodynamic_chord
+        """
+        area = 0
+        sum_dy_dA = 0
+
+        for i, xsec in enumerate(self.xsecs):
+
+            if not i == len(self.xsecs) - 1:
+                c_r = xsec.chord
+                c_t = self.xsecs[i+1].chord
+                y_r = xsec.y_le
+                y_t = self.xsecs[i+1].y_le
+                tapper_ratio = c_t / c_r
+                d_area = (c_r + c_t) * (y_t - y_r) / 2
+                area = area + d_area
+
+                y_mac = y_r + (y_t - y_r)*(1 + 2 * tapper_ratio) / (3 + 3 * tapper_ratio)
+                sum_dy_dA = d_area * y_mac + sum_dy_dA
+
+        y_mac = sum_dy_dA / area
+        return y_mac
+
     def mean_twist_angle(self):
         """
         Returns the mean twist angle (in degrees) of the wing, weighted by span.
