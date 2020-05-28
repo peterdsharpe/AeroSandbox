@@ -6,3 +6,5 @@ build/
 publish_to_pypi.bat
 *.pkl
 *.asw
+docs/_build
+docs/source
