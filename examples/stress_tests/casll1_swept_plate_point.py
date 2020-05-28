@@ -70,7 +70,7 @@ airplane = Airplane(
             x_le=0,  # Coordinates of the wing's leading edge
             y_le=0,  # Coordinates of the wing's leading edge
             z_le=0,  # Coordinates of the wing's leading edge
-            symmetric=False,
+            symmetric=True,
             xsecs=[  # The wing's cross ("X") sections
                 WingXSec(  # Root
                     x_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
@@ -82,7 +82,7 @@ airplane = Airplane(
                     spanwise_spacing='cosine',
                 ),
                 WingXSec(  # Mid
-                    x_le=0,
+                    x_le=2,
                     y_le=2,
                     z_le=0,
                     chord=0.5,
@@ -107,7 +107,7 @@ ap = Casll1(  # Set up the AeroProblem
     opti=opti
 )
 # Set up the VLM optimization submatrix
-ap.setup(run_symmetric_if_possible=False)
+ap.setup(run_symmetric_if_possible=True)
 
 # Extra constraints
 # Cmalpha constraint
