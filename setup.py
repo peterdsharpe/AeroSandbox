@@ -146,7 +146,8 @@ setup(
         'seaborn >= 0.10',
         'tqdm >= 4',
         'dill >= 0.3.1.1',
-        'multiprocess >= 0.70'
+        'multiprocess >= 0.70',
+        'sphinx >= 3',
     ],
     # Optional
 
