@@ -170,8 +170,11 @@ class Airfoil:
             with open(filepath, "r") as f:
                 raw_text = f.readlines()
         except:
-            with open(filepath + ".dat", "r") as f:
-                raw_text = f.readlines()
+            try:
+                with open(filepath + ".dat", "r") as f:
+                    raw_text = f.readlines()
+            except:
+                raise FileNotFoundError("Neither file \"%s\" nor file \"%s\" exist!" % (filepath, filepath + ".dat"))
 
         trimmed_text = []
         for line in raw_text:
