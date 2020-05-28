@@ -1,0 +1,924 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>aerosandbox.library package &#8212; AeroSandbox  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="aerosandbox.library.winds_conus_summer package" href="aerosandbox.library.winds_conus_summer.html" />
+    <link rel="prev" title="aerosandbox.geometry package" href="aerosandbox.geometry.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.library.winds_conus_summer.html" title="aerosandbox.library.winds_conus_summer package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.geometry.html" title="aerosandbox.geometry package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">AeroSandbox  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="aerosandbox-library-package">
+<h1>aerosandbox.library package<a class="headerlink" href="#aerosandbox-library-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="aerosandbox.library.winds_conus_summer.html">aerosandbox.library.winds_conus_summer package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aerosandbox.library.winds_conus_summer.html#module-aerosandbox.library.winds_conus_summer">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-aerosandbox.library.aerodynamics">
+<span id="aerosandbox-library-aerodynamics-module"></span><h2>aerosandbox.library.aerodynamics module<a class="headerlink" href="#module-aerosandbox.library.aerodynamics" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.CL_over_Cl">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">CL_over_Cl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">AR</span></em>, <em class="sig-param"><span class="n">mach</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">sweep</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.CL_over_Cl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the ratio of 3D lift_force coefficient (with compressibility) to 2D lift_force (incompressible) coefficient.
+:param AR: Aspect ratio
+:param mach: Mach number
+:param sweep: Sweep angle [deg]
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cd_cylinder">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cd_cylinder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Re_D</span></em>, <em class="sig-param"><span class="n">subcritical_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cd_cylinder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number.
+:param Re_D: Reynolds number, referenced to diameter
+:param subcritical_only: Determines whether the model models purely subcritical (Re &lt; 300k) cylinder flows. Useful, since
+this model is now convex and can be more well-behaved.
+:return: Drag coefficient</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cd_profile_2412">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cd_profile_2412</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">Re_c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cd_profile_2412" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cd_profile_e216">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cd_profile_e216</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">Re_c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cd_profile_e216" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cd_profile_rae2822">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cd_profile_rae2822</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">Re_c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cd_profile_rae2822" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cd_wave_Korn">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cd_wave_Korn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Cl</span></em>, <em class="sig-param"><span class="n">t_over_c</span></em>, <em class="sig-param"><span class="n">mach</span></em>, <em class="sig-param"><span class="n">sweep</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">kappa_A</span><span class="o">=</span><span class="default_value">0.95</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cd_wave_Korn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wave drag_force coefficient prediction using the (very) low-fidelity Korn Equation method; derived in “Configuration Aerodynamics” by W.H. Mason, Sect. 7.5.2, pg. 7-18
+:param Cl: (2D) lift_force coefficient
+:param t_over_c: thickness-to-chord ratio
+:param sweep: sweep angle, in degrees
+:param kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
+:return: Wave drag coefficient</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cd_wave_e216">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cd_wave_e216</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Cl</span></em>, <em class="sig-param"><span class="n">mach</span></em>, <em class="sig-param"><span class="n">sweep</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cd_wave_e216" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>A curve fit I did to Eppler 216 airfoil data.
+Within -0.4 &lt; CL &lt; 0.75 and 0 &lt; mach &lt; ~0.9, has R^2 = 0.9982.
+See: C:ProjectsGitHub</p>
+</div></blockquote>
+<dl class="simple">
+<dt>irefly_aerodynamicsMSES Interfacenalysise216</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param Cl</dt>
+<dd class="field-odd"><p>Lift coefficient</p>
+</dd>
+<dt class="field-even">param mach</dt>
+<dd class="field-even"><p>Mach number</p>
+</dd>
+<dt class="field-odd">param sweep</dt>
+<dd class="field-odd"><p>Sweep angle, in deg</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>Wave drag coefficient.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cd_wave_rae2822">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cd_wave_rae2822</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Cl</span></em>, <em class="sig-param"><span class="n">mach</span></em>, <em class="sig-param"><span class="n">sweep</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cd_wave_rae2822" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>A curve fit I did to RAE2822 airfoil data.
+Within -0.4 &lt; CL &lt; 0.75 and 0 &lt; mach &lt; ~0.9, has R^2 = 0.9982.
+See: C:ProjectsGitHub</p>
+</div></blockquote>
+<p>irefly_aerodynamicsMSES Interfacenalysis
+ae2822</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param Cl</dt>
+<dd class="field-odd"><p>Lift coefficient</p>
+</dd>
+<dt class="field-even">param mach</dt>
+<dd class="field-even"><p>Mach number</p>
+</dd>
+<dt class="field-odd">param sweep</dt>
+<dd class="field-odd"><p>Sweep angle, in deg</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>Wave drag coefficient.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cf_flat_plate">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cf_flat_plate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Re_L</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cf_flat_plate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the mean skin friction coefficient over a flat plate. Don’t forget to double it (two sides) if you want a drag coefficient.
+:param Re_L: Reynolds number, normalized to the length of the flat plate.
+:return: Mean skin friction coefficient over a flat plate.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cl_2412">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cl_2412</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">Re_c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cl_2412" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cl_e216">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cl_e216</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">Re_c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cl_e216" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cl_flat_plate">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cl_flat_plate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">Re_c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cl_flat_plate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the approximate lift coefficient of a flat plate, following thin airfoil theory.
+:param alpha: Angle of attack [deg]
+:param Re_c: Reynolds number, normalized to the length of the flat plate.
+:return: Approximate lift coefficient.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.Cl_rae2822">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">Cl_rae2822</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">Re_c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.Cl_rae2822" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.firefly_CLA_and_CDA_fuse_hybrid">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">firefly_CLA_and_CDA_fuse_hybrid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fuse_fineness_ratio</span></em>, <em class="sig-param"><span class="n">fuse_boattail_angle</span></em>, <em class="sig-param"><span class="n">fuse_TE_diameter</span></em>, <em class="sig-param"><span class="n">fuse_length</span></em>, <em class="sig-param"><span class="n">fuse_diameter</span></em>, <em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">V</span></em>, <em class="sig-param"><span class="n">mach</span></em>, <em class="sig-param"><span class="n">rho</span></em>, <em class="sig-param"><span class="n">mu</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.firefly_CLA_and_CDA_fuse_hybrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimated equiv. lift area and equiv. drag area of the Firefly fuselage, component buildup.
+:param fuse_fineness_ratio: Fineness ratio of the fuselage nose (length / diameter)
+:param fuse_boattail_angle: Boattail half-angle [deg]
+:param fuse_TE_diameter: Diameter of the fuselage’s base at the “trailing edge” [m]
+:param fuse_length: Length of the fuselage [m]
+:param fuse_diameter: Diameter of the fuselage [m]
+:param alpha: Angle of attack [deg]
+:param V: Airspeed [m/s]
+:param mach: Mach number [unitless]
+:param rho: Air density [kg/m^3]
+:param mu: Dynamic viscosity of air [Pa*s]
+:return: A tuple of (CLA, CDA) [m^2]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.firefly_CLA_and_CDA_nominal_fuse_CFD">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">firefly_CLA_and_CDA_nominal_fuse_CFD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.firefly_CLA_and_CDA_nominal_fuse_CFD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimated equiv. lift area and equiv. drag area of the Firefly fuselage, fit to CFD data.
+Calculated for fuse_fineness_ratio = 1.5, fuse_boattail_angle = 12, and fuse_TE_diameter = 20 mm.
+Lift: R^2 = 0.9961
+Drag: R^2 = 0.9876
+:param alpha: angle of attack [deg]
+:return: A tuple of (CLA, CDA) [m^2]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.aerodynamics.induced_drag_ratio_from_ground_effect">
+<code class="sig-prename descclassname">aerosandbox.library.aerodynamics.</code><code class="sig-name descname">induced_drag_ratio_from_ground_effect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h_over_b</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.aerodynamics.induced_drag_ratio_from_ground_effect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the ratio of actual induced drag to free-flight induced drag experienced by a wing in ground effect.
+Artificially smoothed below around h/b == 0.05 to retain differentiability and practicality.
+Source: W. F. Phillips, D. F. Hunsaker, “Lifting-Line Predictions for Induced Drag and Lift in Ground Effect”.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Using Equation 5 from the paper, which is modified from a model from Torenbeek:</dt><dd><p>Torenbeek, E. “Ground Effects”, 1982.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>h_over_b</strong> – (Height above ground) divided by (wingspan).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Ratio of induced drag in ground effect to induced drag out of ground effect [unitless]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.airfoils">
+<span id="aerosandbox-library-airfoils-module"></span><h2>aerosandbox.library.airfoils module<a class="headerlink" href="#module-aerosandbox.library.airfoils" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-aerosandbox.library.atmosphere">
+<span id="aerosandbox-library-atmosphere-module"></span><h2>aerosandbox.library.atmosphere module<a class="headerlink" href="#module-aerosandbox.library.atmosphere" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.atmosphere.get_density_at_altitude">
+<code class="sig-prename descclassname">aerosandbox.library.atmosphere.</code><code class="sig-name descname">get_density_at_altitude</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">altitude</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.atmosphere.get_density_at_altitude" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.atmosphere.get_pressure_at_altitude">
+<code class="sig-prename descclassname">aerosandbox.library.atmosphere.</code><code class="sig-name descname">get_pressure_at_altitude</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">altitude</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.atmosphere.get_pressure_at_altitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit to the 1976 COESA model; see AeroSandboxstudiesAtmosphere Fitting for details.
+Valid from 0 to 40 km.
+:param altitude:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.atmosphere.get_speed_of_sound_from_temperature">
+<code class="sig-prename descclassname">aerosandbox.library.atmosphere.</code><code class="sig-name descname">get_speed_of_sound_from_temperature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">temperature</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.atmosphere.get_speed_of_sound_from_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the speed of sound from a specified temperature. Assumes ideal gas properties.
+:param temperature: Temperature, in Kelvin
+:return: Speed of sound, in m/s</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.atmosphere.get_temperature_at_altitude">
+<code class="sig-prename descclassname">aerosandbox.library.atmosphere.</code><code class="sig-name descname">get_temperature_at_altitude</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">altitude</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.atmosphere.get_temperature_at_altitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit to the 1976 COESA model; see AeroSandboxstudiesAtmosphere Fitting for details.
+Valid from 0 to 40 km.
+:param altitude:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.atmosphere.get_viscosity_from_temperature">
+<code class="sig-prename descclassname">aerosandbox.library.atmosphere.</code><code class="sig-name descname">get_viscosity_from_temperature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">temperature</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.atmosphere.get_viscosity_from_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the dynamics viscosity of air from a specified temperature. Uses Sutherland’s Law
+:param temperature: Temperature, in Kelvin
+:return: Dynamic viscosity, in kg/(m*s)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.finite_difference_operators">
+<span id="aerosandbox-library-finite-difference-operators-module"></span><h2>aerosandbox.library.finite_difference_operators module<a class="headerlink" href="#module-aerosandbox.library.finite_difference_operators" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.finite_difference_operators.first_derivative">
+<code class="sig-prename descclassname">aerosandbox.library.finite_difference_operators.</code><code class="sig-name descname">first_derivative</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xs</span></em>, <em class="sig-param"><span class="n">ys</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'centered'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.finite_difference_operators.first_derivative" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.finite_difference_operators.second_derivative">
+<code class="sig-prename descclassname">aerosandbox.library.finite_difference_operators.</code><code class="sig-name descname">second_derivative</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xs</span></em>, <em class="sig-param"><span class="n">ys</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'centered'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.finite_difference_operators.second_derivative" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.mass_structural">
+<span id="aerosandbox-library-mass-structural-module"></span><h2>aerosandbox.library.mass_structural module<a class="headerlink" href="#module-aerosandbox.library.mass_structural" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.mass_structural.mass_hpa_stabilizer">
+<code class="sig-prename descclassname">aerosandbox.library.mass_structural.</code><code class="sig-name descname">mass_hpa_stabilizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">span</span></em>, <em class="sig-param"><span class="n">chord</span></em>, <em class="sig-param"><span class="n">dynamic_pressure_at_manuever_speed</span></em>, <em class="sig-param"><span class="n">n_ribs</span></em>, <em class="sig-param"><span class="n">t_over_c</span><span class="o">=</span><span class="default_value">0.128</span></em>, <em class="sig-param"><span class="n">include_spar</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.mass_structural.mass_hpa_stabilizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the mass of a stabilizer structure of a human powered aircraft (HPA), following Juan Cruz’s correlations in
+<a class="reference external" href="http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718">http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718</a>
+Note: apply this once to BOTH the rudder and elevator!!!
+:param span: stabilizer span [m]
+:param chord: stabilizer mean chord [m]
+:param dynamic_pressure_at_manuever_speed: dynamic pressure at maneuvering speed [Pa]
+:param n_ribs: number of ribs in the wing
+:param t_over_c: wing airfoil thickness-to-chord ratio
+:param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations. [boolean]
+:return: Stabilizer structure mass [kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.mass_structural.mass_hpa_tail_boom">
+<code class="sig-prename descclassname">aerosandbox.library.mass_structural.</code><code class="sig-name descname">mass_hpa_tail_boom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">length_tail_boom</span></em>, <em class="sig-param"><span class="n">dynamic_pressure_at_manuever_speed</span></em>, <em class="sig-param"><span class="n">mean_tail_surface_area</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.mass_structural.mass_hpa_tail_boom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the mass of a tail boom structure of a human powered aircraft (HPA), following Juan Cruz’s correlations in
+<a class="reference external" href="http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718">http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718</a>
+Assumes a tubular tail boom of high modules (E &gt; 228 GPa) graphite/epoxy
+:param length_tail_boom: length of the tail boom [m]. Calculated as distance from the wing 1/4 chord to the furthest tail surface.
+:param dynamic_pressure_at_manuever_speed: dynamic pressure at maneuvering speed [Pa]
+:param mean_tail_surface_area: mean of the areas of the tail surfaces (elevator, rudder)
+:return: mass of the tail boom [m]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.mass_structural.mass_hpa_wing">
+<code class="sig-prename descclassname">aerosandbox.library.mass_structural.</code><code class="sig-name descname">mass_hpa_wing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">span</span></em>, <em class="sig-param"><span class="n">chord</span></em>, <em class="sig-param"><span class="n">vehicle_mass</span></em>, <em class="sig-param"><span class="n">n_ribs</span></em>, <em class="sig-param"><span class="n">n_wing_sections</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">ultimate_load_factor</span><span class="o">=</span><span class="default_value">1.75</span></em>, <em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">'cantilevered'</span></em>, <em class="sig-param"><span class="n">t_over_c</span><span class="o">=</span><span class="default_value">0.128</span></em>, <em class="sig-param"><span class="n">include_spar</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.mass_structural.mass_hpa_wing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the mass of the wing structure of a human powered aircraft (HPA), following Juan Cruz’s correlations in
+<a class="reference external" href="http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718">http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718</a>
+:param span: wing span [m]
+:param chord: wing mean chord [m]
+:param vehicle_mass: aircraft gross weight [kg]
+:param n_ribs: number of ribs in the wing
+:param n_wing_sections: number of wing sections or panels (for disassembly?)
+:param ultimate_load_factor: ultimate load factor [unitless]
+:param type: Type of bracing: “cantilevered”, “one-wire”, “multi-wire”
+:param t_over_c: wing airfoil thickness-to-chord ratio
+:param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations. [boolean]
+:return: Wing structure mass [kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.mass_structural.mass_surface_balsa_monokote_cf">
+<code class="sig-prename descclassname">aerosandbox.library.mass_structural.</code><code class="sig-name descname">mass_surface_balsa_monokote_cf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chord</span></em>, <em class="sig-param"><span class="n">span</span></em>, <em class="sig-param"><span class="n">mean_t_over_c</span><span class="o">=</span><span class="default_value">0.08</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.mass_structural.mass_surface_balsa_monokote_cf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of a lifting surface constructed with balsa-monokote-carbon-fiber construction techniques.
+Warning: Not well validated; spar sizing is a guessed scaling and not based on structural analysis.
+:param chord: wing mean chord [m]
+:param span: wing span [m]
+:param mean_t_over_c: wing thickness-to-chord ratio [unitless]
+:return: estimated surface mass [kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.mass_structural.mass_surface_solid">
+<code class="sig-prename descclassname">aerosandbox.library.mass_structural.</code><code class="sig-name descname">mass_surface_solid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chord</span></em>, <em class="sig-param"><span class="n">span</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">2700</span></em>, <em class="sig-param"><span class="n">mean_t_over_c</span><span class="o">=</span><span class="default_value">0.08</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.mass_structural.mass_surface_solid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of a lifting surface constructed out of a solid piece of material.
+Warning: Not well validated; spar sizing is a guessed scaling and not based on structural analysis.
+:param chord: wing mean chord [m]
+:param span: wing span [m]
+:param mean_t_over_c: wing thickness-to-chord ratio [unitless]
+:return: estimated surface mass [kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.mass_structural.mass_wing_spar">
+<code class="sig-prename descclassname">aerosandbox.library.mass_structural.</code><code class="sig-name descname">mass_wing_spar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">span</span></em>, <em class="sig-param"><span class="n">mass_supported</span></em>, <em class="sig-param"><span class="n">ultimate_load_factor</span><span class="o">=</span><span class="default_value">1.75</span></em>, <em class="sig-param"><span class="n">n_booms</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.mass_structural.mass_wing_spar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the mass of the spar for a wing on a single- or multi-boom lightweight aircraft. Model originally designed for solar aircraft.
+Data was fit to the range 3 &lt; wing_span &lt; 120 [m] and 5 &lt; supported_mass &lt; 3000 [kg], but validity should extend somewhat beyond that.
+Extremely accurate fits within this range; R^2 &gt; 0.995 for all fits.
+Source: AeroSandboxstudiesMultiBoomSparMass_v2
+Assumptions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Elliptical lift distribution</p></li>
+<li><p>Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere in the ultimate load case.</p></li>
+<li><p>If multi-boom, assumes roughly static-aerostructurally-optimal placement of the outer booms and equal boom weights.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>span</strong> – Wing span [m]</p></li>
+<li><p><strong>mass_supported</strong> – Total mass of all fuselages + tails</p></li>
+<li><p><strong>ultimate_load_factor</strong> – Design load factor. Default taken from Daedalus design.</p></li>
+<li><p><strong>n_booms</strong> – Number of booms on the design. Can be 1, 2, or 3. Assumes optimal placement of the outer booms.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.power_gas">
+<span id="aerosandbox-library-power-gas-module"></span><h2>aerosandbox.library.power_gas module<a class="headerlink" href="#module-aerosandbox.library.power_gas" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.power_gas.mass_gas_engine">
+<code class="sig-prename descclassname">aerosandbox.library.power_gas.</code><code class="sig-name descname">mass_gas_engine</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_power</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_gas.mass_gas_engine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of a small piston-driven motor.
+Source: <a class="reference external" href="https://docs.google.com/spreadsheets/d/103VPDwbQ5PfIE3oQl4CXxM5AP6Ueha-zbw7urElkQBM/edit#gid=0">https://docs.google.com/spreadsheets/d/103VPDwbQ5PfIE3oQl4CXxM5AP6Ueha-zbw7urElkQBM/edit#gid=0</a>
+:param max_power: Maximum power output [W]
+:return: Estimated motor mass [kg]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.power_human">
+<span id="aerosandbox-library-power-human-module"></span><h2>aerosandbox.library.power_human module<a class="headerlink" href="#module-aerosandbox.library.power_human" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.power_human.power_human">
+<code class="sig-prename descclassname">aerosandbox.library.power_human.</code><code class="sig-name descname">power_human</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">duration</span></em>, <em class="sig-param"><span class="n">dataset</span><span class="o">=</span><span class="default_value">'Healthy Men'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_human.power_human" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the power output that a human can sustain for a given duration.
+Data was fit for durations in the range of 6 seconds to 60,000 seconds.
+Fits are modeled at: AeroSandbox/studies/HumanPower
+Data Source: Bicycling Science by D. Wilson, 2004. Figure 2.4.</p>
+<blockquote>
+<div><p>Wilson is aggregating many data sources here.
+The raw data pulls from a variety of sources:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>NASA SP-3006, 1964</p></li>
+<li><p>U.K. amateur trials and time-trials records (Whitt, F.R. 1971 “A note on the estimation of the energy expenditure of sporting cyclists.” Ergonomics 14)</p></li>
+<li><p>Wilsons’ own analyses</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<p>Weight estimates for tests subjects are unfortunately not given.
+:param duration: Time to sustain power output [seconds]
+:param dataset: Dataset to pull from. A string that is one of the following:</p>
+<blockquote>
+<div><p>“Healthy Men”,
+“First-Class Athletes”,
+“World-Class Athletes”,</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sustainable power output for the specified duration [W]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.power_nuclear_rtg">
+<span id="aerosandbox-library-power-nuclear-rtg-module"></span><h2>aerosandbox.library.power_nuclear_rtg module<a class="headerlink" href="#module-aerosandbox.library.power_nuclear_rtg" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.power_nuclear_rtg.po210_specific_power">
+<code class="sig-prename descclassname">aerosandbox.library.power_nuclear_rtg.</code><code class="sig-name descname">po210_specific_power</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">days_after_formation</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_nuclear_rtg.po210_specific_power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.power_solar">
+<span id="aerosandbox-library-power-solar-module"></span><h2>aerosandbox.library.power_solar module<a class="headerlink" href="#module-aerosandbox.library.power_solar" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.power_solar.declination_angle">
+<code class="sig-prename descclassname">aerosandbox.library.power_solar.</code><code class="sig-name descname">declination_angle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">day_of_year</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_solar.declination_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declination angle, in degrees, as a func. of day of year. (Seasonality)
+:param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+:return: Declination angle [deg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.power_solar.incidence_angle_function">
+<code class="sig-prename descclassname">aerosandbox.library.power_solar.</code><code class="sig-name descname">incidence_angle_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">latitude</span></em>, <em class="sig-param"><span class="n">day_of_year</span></em>, <em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">scattering</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_solar.incidence_angle_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>What is the fraction of insolation that a horizontal surface will receive as a function of sun position in the sky?
+:param latitude: Latitude [degrees]
+:param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+:param time: Time since (local) solar noon [seconds]
+:param scattering: Boolean: include scattering effects at very low angles?</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.power_solar.peak_sun_hours_per_day_on_horizontal">
+<code class="sig-prename descclassname">aerosandbox.library.power_solar.</code><code class="sig-name descname">peak_sun_hours_per_day_on_horizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">latitude</span></em>, <em class="sig-param"><span class="n">day_of_year</span></em>, <em class="sig-param"><span class="n">scattering</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_solar.peak_sun_hours_per_day_on_horizontal" title="Permalink to this definition">¶</a></dt>
+<dd><p>How many hours of equivalent peak sun do you get per day?
+:param latitude: Latitude [degrees]
+:param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+:param time: Time since (local) solar noon [seconds]
+:param scattering: Boolean: include scattering effects at very low angles?
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.power_solar.scattering_factor">
+<code class="sig-prename descclassname">aerosandbox.library.power_solar.</code><code class="sig-name descname">scattering_factor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">elevation_angle</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_solar.scattering_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a scattering factor (a factor that gives losses due to atmospheric scattering at low elevation angles).
+Source: AeroSandbox/studies/SolarPanelScattering
+:param elevation_angle: Angle between the horizon and the sun [degrees]
+:return: Fraction of the light that is not lost to scattering.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.power_solar.solar_elevation_angle">
+<code class="sig-prename descclassname">aerosandbox.library.power_solar.</code><code class="sig-name descname">solar_elevation_angle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">latitude</span></em>, <em class="sig-param"><span class="n">day_of_year</span></em>, <em class="sig-param"><span class="n">time</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_solar.solar_elevation_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Elevation angle of the sun [degrees] for a local observer.
+:param latitude: Latitude [degrees]
+:param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+:param time: Time after local solar noon [seconds]
+:return: Solar elevation angle [degrees] (angle between horizon and sun). Returns 0 if the sun is below the horizon.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.power_solar.solar_flux_on_horizontal">
+<code class="sig-prename descclassname">aerosandbox.library.power_solar.</code><code class="sig-name descname">solar_flux_on_horizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">latitude</span></em>, <em class="sig-param"><span class="n">day_of_year</span></em>, <em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">scattering</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_solar.solar_flux_on_horizontal" title="Permalink to this definition">¶</a></dt>
+<dd><p>What is the solar flux on a horizontal surface for some given conditions?
+:param latitude: Latitude [degrees]
+:param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+:param time: Time since (local) solar noon [seconds]
+:param scattering: Boolean: include scattering effects at very low angles?
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.power_solar.solar_flux_outside_atmosphere_normal">
+<code class="sig-prename descclassname">aerosandbox.library.power_solar.</code><code class="sig-name descname">solar_flux_outside_atmosphere_normal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">day_of_year</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.power_solar.solar_flux_outside_atmosphere_normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normal solar flux at the top of the atmosphere (variation due to orbital eccentricity)
+:param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+:return: Solar flux [W/m^2]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.propulsion_electric">
+<span id="aerosandbox-library-propulsion-electric-module"></span><h2>aerosandbox.library.propulsion_electric module<a class="headerlink" href="#module-aerosandbox.library.propulsion_electric" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_electric.mass_ESC">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_electric.</code><code class="sig-name descname">mass_ESC</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_power</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_electric.mass_ESC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of an ESC.
+Informal correlation I did to Hobbyking ESCs in the 8s 100A range
+:param max_power: maximum power [W]
+:return: estimated ESC mass [kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_electric.mass_battery_pack">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_electric.</code><code class="sig-name descname">mass_battery_pack</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">battery_capacity_Wh</span></em>, <em class="sig-param"><span class="n">battery_cell_specific_energy_Wh_kg</span><span class="o">=</span><span class="default_value">240</span></em>, <em class="sig-param"><span class="n">battery_pack_cell_fraction</span><span class="o">=</span><span class="default_value">0.7</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_electric.mass_battery_pack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of a lithium-polymer battery.
+:param battery_capacity_Wh: Battery capacity, in Watt-hours [W*h]
+:param battery_cell_specific_energy: Specific energy of the battery at the CELL level [W*h/kg]
+:param battery_pack_cell_fraction: Fraction of the battery pack that is cells, by weight.
+:return: Estimated battery mass [kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_electric.mass_motor_electric">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_electric.</code><code class="sig-name descname">mass_motor_electric</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_power</span></em>, <em class="sig-param"><span class="n">kv_rpm_volt</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">voltage</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'astroflight'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_electric.mass_motor_electric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of a brushless DC electric motor.
+Curve fit to scraped Hobbyking BLDC motor data as of 2/24/2020.
+Estimated range of validity: 50 &lt; max_power &lt; 10000
+:param max_power: maximum power [W]
+:param kv: Voltage constant of the motor, measured in rpm/volt, not rads/sec/volt! [rpm/volt]
+:param voltage: Operating voltage of the motor [V]
+:param method: method to use. “burton”, “hobbyking”, or “astroflight” (increasing level of detail).
+Burton source: <a class="reference external" href="https://dspace.mit.edu/handle/1721.1/112414">https://dspace.mit.edu/handle/1721.1/112414</a>
+Hobbyking source: C:ProjectsGitHubMotorScraper, https://github.com/austinstover/MotorScraper
+Astroflight source: Gates, et. al., “Combined Trajectory, Propulsion, and Battery Mass Optimization for Solar-Regen…”</p>
+<blockquote>
+<div><p><a class="reference external" href="https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&amp;context=facpub">https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&amp;context=facpub</a>
+Validity claimed from 1.5 kW to 15 kW, kv from 32 to 1355.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>estimated motor mass [kg]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_electric.mass_wires">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_electric.</code><code class="sig-name descname">mass_wires</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">wire_length</span></em>, <em class="sig-param"><span class="n">max_current</span></em>, <em class="sig-param"><span class="n">allowable_voltage_drop</span></em>, <em class="sig-param"><span class="n">material</span><span class="o">=</span><span class="default_value">'aluminum'</span></em>, <em class="sig-param"><span class="n">insulated</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">max_voltage</span><span class="o">=</span><span class="default_value">600</span></em>, <em class="sig-param"><span class="n">wire_packing_factor</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">insulator_density</span><span class="o">=</span><span class="default_value">1700</span></em>, <em class="sig-param"><span class="n">insulator_dielectric_strength</span><span class="o">=</span><span class="default_value">12000000.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_electric.mass_wires" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of wires used for power transmission.
+Materials data from: <a class="reference external" href="https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistivity-density_product">https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistivity-density_product</a></p>
+<blockquote>
+<div><p>All data measured at STP; beware, as this data (especially resistivity) can be a strong function of temperature.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wire_length</strong> – Length of the wire [m]</p></li>
+<li><p><strong>max_current</strong> – Max current of the wire [Amps]</p></li>
+<li><p><strong>allowable_voltage_drop</strong> – How much is the voltage allowed to drop along the wire?</p></li>
+<li><p><strong>material</strong> – Conductive material of the wire (“aluminum”)</p></li>
+<li><p><strong>insulated</strong> – Should we add the mass of the wire’s insulator coating? Usually you’ll want to leave this True.</p></li>
+<li><p><strong>max_voltage</strong> – Maximum allowable voltage (used for sizing insulator). 600 is a common off-the-shelf rating.</p></li>
+<li><p><strong>wire_packing_factor</strong> – What fraction of the enclosed cross section is conductor? This is 1 for a solid-core wire and less than 1 for a stranded wire.</p></li>
+<li><p><strong>insulator_density</strong> – Density of the wire insulator [kg/m^3]</p></li>
+<li><p><strong>insulator_dielectric_strength</strong> – Dielectric strength of the wire insulator [V/m]. 12e6 corresponds to rubber.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Mass of the wire [kg]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_electric.motor_electric_performance">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_electric.</code><code class="sig-name descname">motor_electric_performance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">voltage</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">current</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rpm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">torque</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kv</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">resistance</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">no_load_current</span><span class="o">=</span><span class="default_value">0.4</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_electric.motor_electric_performance" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function for predicting the performance of an electric motor.
+Performance equations based on Mark Drela’s First Order Motor Model:
+<a class="reference external" href="http://web.mit.edu/drela/Public/web/qprop/motor1_theory.pdf">http://web.mit.edu/drela/Public/web/qprop/motor1_theory.pdf</a>
+Instructions: Input EXACTLY TWO of the following parameters: voltage, current, rpm, torque.
+Exception: You cannot supply the combination of current and torque - this makes for an ill-posed problem.
+:param voltage: Voltage across motor terminals [Volts]
+:param current: Current through motor [Amps]
+:param rpm: Motor rotation speed [rpm]
+:param torque: Motor torque [N m]
+:param kv: voltage constant, in rpm/volt
+:param resistance: resistance, in ohms
+:param no_load_current: no-load current, in amps
+:return: dict of {voltage, current, rpm, torque, efficiency}</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_electric.motor_resistance_from_no_load_current">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_electric.</code><code class="sig-name descname">motor_resistance_from_no_load_current</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">no_load_current</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_electric.motor_resistance_from_no_load_current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the internal resistance of a motor from its no_load_current. Gates quotes R^2=0.93 for this model.
+Source: Gates, et. al., “Combined Trajectory, Propulsion, and Battery Mass Optimization for Solar-Regen…”</p>
+<blockquote>
+<div><p><a class="reference external" href="https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&amp;context=facpub">https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&amp;context=facpub</a></p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>no_load_current</strong> – No-load current [amps]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>motor internal resistance [ohms]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.propulsion_propeller">
+<span id="aerosandbox-library-propulsion-propeller-module"></span><h2>aerosandbox.library.propulsion_propeller module<a class="headerlink" href="#module-aerosandbox.library.propulsion_propeller" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_propeller.mass_gearbox">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_propeller.</code><code class="sig-name descname">mass_gearbox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">power</span></em>, <em class="sig-param"><span class="n">rpm_in</span></em>, <em class="sig-param"><span class="n">rpm_out</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_propeller.mass_gearbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the mass of a gearbox.</p>
+<dl class="simple">
+<dt>Based on data from NASA/TM-2009-215680, available here:</dt><dd><p><a class="reference external" href="https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20090042817.pdf">https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20090042817.pdf</a></p>
+</dd>
+</dl>
+<p>R^2 = 0.92 to the data.</p>
+<dl class="simple">
+<dt>To quote this document:</dt><dd><p>“The correlation was developed based on actual weight
+data from over fifty rotorcrafts, tiltrotors, and turboprop
+aircraft.”</p>
+</dd>
+<dt>Data fits in the NASA document were thrown out and refitted to extrapolate more sensibly; see:</dt><dd><p>C:ProjectsGitHubAeroSandboxstudiesGearboxMassFits</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>power</strong> – Shaft power through the gearbox [W]</p></li>
+<li><p><strong>rpm_in</strong> – RPM of the input to the gearbox [rpm]</p></li>
+<li><p><strong>rpm_out</strong> – RPM of the output of the gearbox [rpm]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Estimated mass of the gearbox [kg]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_propeller.mass_hpa_propeller">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_propeller.</code><code class="sig-name descname">mass_hpa_propeller</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">diameter</span></em>, <em class="sig-param"><span class="n">max_power</span></em>, <em class="sig-param"><span class="n">include_variable_pitch_mechanism</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_propeller.mass_hpa_propeller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the estimated mass of a propeller assembly for low-disc-loading applications (human powered airplane, paramotor, etc.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>diameter</strong> – diameter of the propeller [m]</p></li>
+<li><p><strong>max_power</strong> – maximum power of the propeller [W]</p></li>
+<li><p><strong>include_variable_pitch_mechanism</strong> – boolean, does this propeller have a variable pitch mechanism?</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>estimated weight [kg]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_propeller.propeller_shaft_power_from_thrust">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_propeller.</code><code class="sig-name descname">propeller_shaft_power_from_thrust</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">thrust_force</span></em>, <em class="sig-param"><span class="n">area_propulsive</span></em>, <em class="sig-param"><span class="n">airspeed</span></em>, <em class="sig-param"><span class="n">rho</span></em>, <em class="sig-param"><span class="n">propeller_coefficient_of_performance</span><span class="o">=</span><span class="default_value">0.8</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_propeller.propeller_shaft_power_from_thrust" title="Permalink to this definition">¶</a></dt>
+<dd><p>Using dynamic disc actuator theory, gives the shaft power required to generate
+a certain amount of thrust.</p>
+<p>Source: <a class="reference external" href="https://web.mit.edu/16.unified/www/FALL/thermodynamics/notes/node86.html">https://web.mit.edu/16.unified/www/FALL/thermodynamics/notes/node86.html</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>thrust_force</strong> – Thrust force [N]</p></li>
+<li><p><strong>area_propulsive</strong> – Total disc area of all propulsive surfaces [m^2]</p></li>
+<li><p><strong>airspeed</strong> – Airspeed [m/s]</p></li>
+<li><p><strong>rho</strong> – Air density [kg/m^3]</p></li>
+<li><p><strong>propeller_coefficient_of_performance</strong> – propeller coeff. of performance (due to viscous losses) [unitless]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Shaft power [W]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.propulsion_small_solid_rocket">
+<span id="aerosandbox-library-propulsion-small-solid-rocket-module"></span><h2>aerosandbox.library.propulsion_small_solid_rocket module<a class="headerlink" href="#module-aerosandbox.library.propulsion_small_solid_rocket" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_small_solid_rocket.burn_rate_coefficient">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_small_solid_rocket.</code><code class="sig-name descname">burn_rate_coefficient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">oxamide_fraction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_small_solid_rocket.burn_rate_coefficient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Burn rate vs oxamide content model.
+Valid from 0% to 15% oxamide. # TODO IMPLEMENT THIS</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>propellant burn rate coefficient</dt><dd><p>[units: pascal**(-n) meter second**-1].</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>a</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_small_solid_rocket.c_star">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_small_solid_rocket.</code><code class="sig-name descname">c_star</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">oxamide_fraction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_small_solid_rocket.c_star" title="Permalink to this definition">¶</a></dt>
+<dd><p>Characteristic velocity vs. oxamide content model.
+Valid from 0% to 15% oxamide. # TODO IMPLEMENT THIS</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ideal characteristic velocity [units: meter second**-1].</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>c_star</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_small_solid_rocket.dubious_min_combustion_pressure">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_small_solid_rocket.</code><code class="sig-name descname">dubious_min_combustion_pressure</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">oxamide_fraction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_small_solid_rocket.dubious_min_combustion_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum pressure for stable combustion vs. oxamide content model.</p>
+<p>Note: this model is of DUBIOUS accuracy. Don’t trust it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_small_solid_rocket.expansion_ratio_from_pressure">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_small_solid_rocket.</code><code class="sig-name descname">expansion_ratio_from_pressure</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chamber_pressure</span></em>, <em class="sig-param"><span class="n">exit_pressure</span></em>, <em class="sig-param"><span class="n">gamma</span></em>, <em class="sig-param"><span class="n">oxamide_fraction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_small_solid_rocket.expansion_ratio_from_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the nozzle expansion ratio from the chamber and exit pressures.</p>
+<p>See <span class="xref std std-ref">expansion-ratio-tutorial-label</span> for a physical description of the
+expansion ratio.</p>
+<p>Reference: Rocket Propulsion Elements, 8th Edition, Equation 3-25</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chamber_pressure</strong> (<em>scalar</em>) – Nozzle stagnation chamber pressure [units: pascal].</p></li>
+<li><p><strong>exit_pressure</strong> (<em>scalar</em>) – Nozzle exit static pressure [units: pascal].</p></li>
+<li><p><strong>gamma</strong> (<em>scalar</em>) – Exhaust gas ratio of specific heats [units: dimensionless].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expansion ratio <span class="math notranslate nohighlight">\(\epsilon = A_e / A_t\)</span> [units: dimensionless]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scalar</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_small_solid_rocket.gamma">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_small_solid_rocket.</code><code class="sig-name descname">gamma</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">oxamide_fraction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_small_solid_rocket.gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ratio of specific heats vs. oxamide content model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Exhaust gas ratio of specific heats [units: dimensionless].</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>gamma</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="aerosandbox.library.propulsion_small_solid_rocket.thrust_coefficient">
+<code class="sig-prename descclassname">aerosandbox.library.propulsion_small_solid_rocket.</code><code class="sig-name descname">thrust_coefficient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chamber_pressure</span></em>, <em class="sig-param"><span class="n">exit_pressure</span></em>, <em class="sig-param"><span class="n">gamma</span></em>, <em class="sig-param"><span class="n">p_a</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">er</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.propulsion_small_solid_rocket.thrust_coefficient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nozzle thrust coefficient, <span class="math notranslate nohighlight">\(C_F\)</span>.</p>
+<p>The thrust coefficient is a figure of merit for the nozzle expansion process.
+See <span class="xref std std-ref">thrust-coefficient-label</span> for a description of the physical meaning of the
+thrust coefficient.</p>
+<p>Reference: Equation 1-33a in Huzel and Huang.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chamber_pressure</strong> (<em>scalar</em>) – Nozzle stagnation chamber pressure [units: pascal].</p></li>
+<li><p><strong>exit_pressure</strong> (<em>scalar</em>) – Nozzle exit static pressure [units: pascal].</p></li>
+<li><p><strong>gamma</strong> (<em>scalar</em>) – Exhaust gas ratio of specific heats [units: dimensionless].</p></li>
+<li><p><strong>p_a</strong> (<em>scalar</em><em>, </em><em>optional</em>) – Ambient pressure [units: pascal]. If None,
+then p_a = exit_pressure.</p></li>
+<li><p><strong>er</strong> (<em>scalar</em><em>, </em><em>optional</em>) – Nozzle area expansion ratio [units: dimensionless]. If None,
+then p_a = exit_pressure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The thrust coefficient, <span class="math notranslate nohighlight">\(C_F\)</span> [units: dimensionless].</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scalar</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library.winds">
+<span id="aerosandbox-library-winds-module"></span><h2>aerosandbox.library.winds module<a class="headerlink" href="#module-aerosandbox.library.winds" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="aerosandbox.library.winds.wind_speed_conus_summer_99">
+<code class="sig-prename descclassname">aerosandbox.library.winds.</code><code class="sig-name descname">wind_speed_conus_summer_99</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">altitude</span></em>, <em class="sig-param"><span class="n">latitude</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.library.winds.wind_speed_conus_summer_99" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the 99th-percentile wind speed magnitude over the continental United States (CONUS) in July-Aug. Aggregate of data from 1972 to 2019.
+Fits at C:ProjectsGitHubWind_Analysis
+:param altitude: altitude [m]
+:param latitude: latitude [deg]
+:return: 99th-percentile wind speed over the continental United States in the summertime. [m/s]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.library">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-aerosandbox.library" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">aerosandbox.library package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.aerodynamics">aerosandbox.library.aerodynamics module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.airfoils">aerosandbox.library.airfoils module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.atmosphere">aerosandbox.library.atmosphere module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.finite_difference_operators">aerosandbox.library.finite_difference_operators module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.mass_structural">aerosandbox.library.mass_structural module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.power_gas">aerosandbox.library.power_gas module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.power_human">aerosandbox.library.power_human module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.power_nuclear_rtg">aerosandbox.library.power_nuclear_rtg module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.power_solar">aerosandbox.library.power_solar module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.propulsion_electric">aerosandbox.library.propulsion_electric module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.propulsion_propeller">aerosandbox.library.propulsion_propeller module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.propulsion_small_solid_rocket">aerosandbox.library.propulsion_small_solid_rocket module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library.winds">aerosandbox.library.winds module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.library">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="aerosandbox.geometry.html"
+                        title="previous chapter">aerosandbox.geometry package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="aerosandbox.library.winds_conus_summer.html"
+                        title="next chapter">aerosandbox.library.winds_conus_summer package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/source/aerosandbox.library.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.library.winds_conus_summer.html" title="aerosandbox.library.winds_conus_summer package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.geometry.html" title="aerosandbox.geometry package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">AeroSandbox  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Peter Sharpe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+aerosandbox.tools.optimization\_algorithms package
+==================================================
+
+Submodules
+----------
+
+aerosandbox.tools.optimization\_algorithms.patternsearch module
+---------------------------------------------------------------
+
+.. automodule:: aerosandbox.tools.optimization_algorithms.patternsearch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: aerosandbox.tools.optimization_algorithms
+   :members:
+   :undoc-members:
+   :show-inheritance:

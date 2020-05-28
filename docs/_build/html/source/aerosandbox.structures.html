@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>aerosandbox.structures package &#8212; AeroSandbox  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="aerosandbox.tools package" href="aerosandbox.tools.html" />
+    <link rel="prev" title="aerosandbox.library.winds_conus_summer package" href="aerosandbox.library.winds_conus_summer.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.tools.html" title="aerosandbox.tools package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.library.winds_conus_summer.html" title="aerosandbox.library.winds_conus_summer package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">AeroSandbox  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="aerosandbox-structures-package">
+<h1>aerosandbox.structures package<a class="headerlink" href="#aerosandbox-structures-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-aerosandbox.structures.beams">
+<span id="aerosandbox-structures-beams-module"></span><h2>aerosandbox.structures.beams module<a class="headerlink" href="#module-aerosandbox.structures.beams" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="aerosandbox.structures.beams.TubeBeam1">
+<em class="property">class </em><code class="sig-prename descclassname">aerosandbox.structures.beams.</code><code class="sig-name descname">TubeBeam1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">opti</span></em>, <em class="sig-param"><span class="n">length</span></em>, <em class="sig-param"><span class="n">points_per_point_load</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">228000000000.0</span></em>, <em class="sig-param"><span class="n">isotropic</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">poisson_ratio</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">diameter_guess</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">thickness</span><span class="o">=</span><span class="default_value">0.0006999999999999999</span></em>, <em class="sig-param"><span class="n">max_allowable_stress</span><span class="o">=</span><span class="default_value">325714285.71428573</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">1600</span></em>, <em class="sig-param"><span class="n">G</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bending</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">torsion</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.structures.beams.TubeBeam1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="aerosandbox.geometry.html#aerosandbox.geometry.common.AeroSandboxObject" title="aerosandbox.geometry.common.AeroSandboxObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">aerosandbox.geometry.common.AeroSandboxObject</span></code></a></p>
+<dl class="py method">
+<dt id="aerosandbox.structures.beams.TubeBeam1.add_elliptical_load">
+<code class="sig-name descname">add_elliptical_load</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">bending_moment</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">torsional_moment</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.structures.beams.TubeBeam1.add_elliptical_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an elliptically distributed force and/or moment across the entire length of the beam.
+:param force: Total force applied to beam [N]
+:param bending_moment: Bending moment to add [N-m] # TODO make this work
+:param torsional_moment: Torsional moment to add [N-m] # TODO make this work
+:return: None (in-place)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="aerosandbox.structures.beams.TubeBeam1.add_point_load">
+<code class="sig-name descname">add_point_load</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">location</span></em>, <em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">bending_moment</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">torsional_moment</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.structures.beams.TubeBeam1.add_point_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a point force and/or moment.
+:param location: Location of the point force along the beam [m]
+:param force: Force to add [N]
+:param bending_moment: Bending moment to add [N-m] # TODO make this work
+:param torsional_moment: Torsional moment to add [N-m] # TODO make this work
+:return: None (in-place)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="aerosandbox.structures.beams.TubeBeam1.add_uniform_load">
+<code class="sig-name descname">add_uniform_load</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">bending_moment</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">torsional_moment</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.structures.beams.TubeBeam1.add_uniform_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a uniformly distributed force and/or moment across the entire length of the beam.
+:param force: Total force applied to beam [N]
+:param bending_moment: Bending moment to add [N-m] # TODO make this work
+:param torsional_moment: Torsional moment to add [N-m] # TODO make this work
+:return: None (in-place)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="aerosandbox.structures.beams.TubeBeam1.draw_bending">
+<code class="sig-name descname">draw_bending</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">show</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">for_print</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.structures.beams.TubeBeam1.draw_bending" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draws a figure that illustrates some bending properties. Must be called on a solved object (i.e. using the substitute_sol method).
+:param show: Whether or not to show the figure [boolean]
+:param for_print: Whether or not the figure should be shaped for printing in a paper [boolean]
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="aerosandbox.structures.beams.TubeBeam1.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bending_BC_type</span><span class="o">=</span><span class="default_value">'cantilevered'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aerosandbox.structures.beams.TubeBeam1.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up the problem. Run this last.
+:return: None (in-place)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-aerosandbox.structures.simple_beam_opt">
+<span id="aerosandbox-structures-simple-beam-opt-module"></span><h2>aerosandbox.structures.simple_beam_opt module<a class="headerlink" href="#module-aerosandbox.structures.simple_beam_opt" title="Permalink to this headline">¶</a></h2>
+<p>Simple Beam</p>
+<p>A simple 2D beam example, to be integrated later for full aerostructural modeling. TODO do that.</p>
+<p>Governing equation for bending:
+Euler-Bernoulli beam theory.</p>
+<p>(E * I * u(x)’’)’’ = q(x)</p>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p>E is the elastic modulus</p></li>
+<li><p>I is the bending moment of inertia</p></li>
+<li><p>u(x) is the local displacement at x.</p></li>
+<li><p>q(x) is the force-per-unit-length at x. (In other words, a dirac delta is a point load.)</p></li>
+<li><p>()’ is a derivative w.r.t. x.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Governing equation for torsion:
+phi(x)’’ = -T / (G * J)</p>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p>phi is the local twist angle</p></li>
+<li><p>T is the local torque per unit length</p></li>
+<li><p>G is the local shear modulus</p></li>
+<li><p>J is the polar moment of inertia</p></li>
+<li><p>()’ is a derivative w.r.t. x.</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-aerosandbox.structures.simple_beam_opt_daedalus_calibration">
+<span id="aerosandbox-structures-simple-beam-opt-daedalus-calibration-module"></span><h2>aerosandbox.structures.simple_beam_opt_daedalus_calibration module<a class="headerlink" href="#module-aerosandbox.structures.simple_beam_opt_daedalus_calibration" title="Permalink to this headline">¶</a></h2>
+<p>Simple Beam</p>
+<p>A simple 2D beam example, to be integrated later for full aerostructural modeling. TODO do that.</p>
+<p>Governing equation for bending:
+Euler-Bernoulli beam theory.</p>
+<p>(E * I * u(x)’’)’’ = q(x)</p>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p>E is the elastic modulus</p></li>
+<li><p>I is the bending moment of inertia</p></li>
+<li><p>u(x) is the local displacement at x.</p></li>
+<li><p>q(x) is the force-per-unit-length at x. (In other words, a dirac delta is a point load.)</p></li>
+<li><p>()’ is a derivative w.r.t. x.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Governing equation for torsion:
+phi(x)’’ = -T / (G * J)</p>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p>phi is the local twist angle</p></li>
+<li><p>T is the local torque per unit length</p></li>
+<li><p>G is the local shear modulus</p></li>
+<li><p>J is the polar moment of inertia</p></li>
+<li><p>()’ is a derivative w.r.t. x.</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-aerosandbox.structures">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-aerosandbox.structures" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">aerosandbox.structures package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.structures.beams">aerosandbox.structures.beams module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.structures.simple_beam_opt">aerosandbox.structures.simple_beam_opt module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.structures.simple_beam_opt_daedalus_calibration">aerosandbox.structures.simple_beam_opt_daedalus_calibration module</a></li>
+<li><a class="reference internal" href="#module-aerosandbox.structures">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="aerosandbox.library.winds_conus_summer.html"
+                        title="previous chapter">aerosandbox.library.winds_conus_summer package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="aerosandbox.tools.html"
+                        title="next chapter">aerosandbox.tools package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/source/aerosandbox.structures.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.tools.html" title="aerosandbox.tools package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="aerosandbox.library.winds_conus_summer.html" title="aerosandbox.library.winds_conus_summer package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">AeroSandbox  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Peter Sharpe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.4.
+    </div>
+  </body>
+</html>
