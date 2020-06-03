@@ -1,4 +1,5 @@
 from aerosandbox.geometry.common import *
+from typing import List
 
 
 class Wing(AeroSandboxObject):
@@ -9,14 +10,14 @@ class Wing(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name="Untitled Wing",  # It can help when debugging to give each wing a sensible name.
-                 x_le=0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 y_le=0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 z_le=0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 xsecs=[],  # This should be a list of WingXSec objects.
-                 symmetric=False,  # Is the wing symmetric across the XZ plane?
-                 chordwise_panels=8,  # The number of chordwise panels to be used in VLM and panel analyses.
-                 chordwise_spacing="cosine",  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
+                 name: str = "Untitled Wing",  # It can help when debugging to give each wing a sensible name.
+                 x_le: float = 0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
+                 y_le: float = 0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
+                 z_le: float = 0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
+                 xsecs: List['WingXSec'] = [],  # This should be a list of WingXSec objects.
+                 symmetric: bool = False,  # Is the wing symmetric across the XZ plane?
+                 chordwise_panels: int = 8,  # The number of chordwise panels to be used in VLM and panel analyses.
+                 chordwise_spacing: str = "cosine",  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
                  ):
         self.name = name
         self.xyz_le = cas.vertcat(x_le, y_le, z_le)
@@ -25,7 +26,7 @@ class Wing(AeroSandboxObject):
         self.chordwise_panels = chordwise_panels
         self.chordwise_spacing = chordwise_spacing
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Wing %s (%i xsecs, %s)" % (
             self.name,
             len(self.xsecs),
@@ -33,8 +34,8 @@ class Wing(AeroSandboxObject):
         )
 
     def area(self,
-             type="wetted"
-             ):
+             type: str = "wetted"
+             ) -> float:
         """
         Returns the area, with options for various ways of measuring this.
          * wetted: wetted area
@@ -74,8 +75,8 @@ class Wing(AeroSandboxObject):
         return area
 
     def span(self,
-             type="wetted"
-             ):
+             type: str = "wetted"
+             ) -> float:
         """
         Returns the span, with options for various ways of measuring this.
          * wetted: Adds up YZ-distances of each section piece by piece
@@ -130,26 +131,26 @@ class Wing(AeroSandboxObject):
             span *= 2
         return span
 
-    def aspect_ratio(self):
+    def aspect_ratio(self) -> float:
         # Returns the aspect ratio (b^2/S).
         # Uses the full span and the full area if symmetric.
         return self.span() ** 2 / self.area()
 
-    def has_symmetric_control_surfaces(self):
+    def has_symmetric_control_surfaces(self) -> bool:
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has control_surface_type = "symmetric".
         for xsec in self.xsecs:
             if not xsec.control_surface_type == "symmetric":
                 return False
         return True
 
-    def mean_geometric_chord(self):
+    def mean_geometric_chord(self) -> float:
         """
         Returns the mean geometric chord of the wing (S/b).
         :return:
         """
         return self.area() / self.span()
 
-    def mean_twist_angle(self):
+    def mean_twist_angle(self) -> float:
         """
         Returns the mean twist angle (in degrees) of the wing, weighted by span.
         You can think of it as \int_{b}(twist)db, where b is span.
@@ -188,7 +189,7 @@ class Wing(AeroSandboxObject):
         mean_twist = twist_span_product / cas.sum1(cas.vertcat(*span))
         return mean_twist
 
-    def mean_sweep_angle(self):
+    def mean_sweep_angle(self) -> float:
         """
         Returns the mean quarter-chord sweep angle (in degrees) of the wing, relative to the x-axis.
         Positive sweep is backwards, negative sweep is forward.
@@ -206,7 +207,7 @@ class Wing(AeroSandboxObject):
 
         return sweep_deg
 
-    def approximate_center_of_pressure(self):
+    def approximate_center_of_pressure(self) -> cas.DM:
         """
         Returns the approximate location of the center of pressure. Given as the area-weighted quarter chord of the wing.
         :return: [x, y, z] of the approximate center of pressure
@@ -257,21 +258,22 @@ class WingXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 x_le=0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 y_le=0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 z_le=0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 chord=0,  # Chord of the wing at this cross section
-                 twist=0,  # Twist always occurs about the leading edge!
-                 twist_axis=cas.DM([0, 1, 0]),  # By default, always twists about the Y-axis.
-                 airfoil=None,  # type: Airfoil # The airfoil to be used at this cross section.
-                 control_surface_type="symmetric",
+                 x_le: float = 0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
+                 y_le: float = 0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
+                 z_le: float = 0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
+                 chord: float = 0,  # Chord of the wing at this cross section
+                 twist: float = 0,  # Twist always occurs about the leading edge!
+                 twist_axis: cas.DM = cas.DM([0, 1, 0]),  # By default, always twists about the Y-axis.
+                 airfoil: 'Airfoil' = None, # The airfoil to be used at this cross section.
+                 control_surface_type: str = "symmetric",  # TODO change this to a boolean
                  # Can be "symmetric" or "asymmetric". Symmetric is like flaps, asymmetric is like an aileron.
-                 control_surface_hinge_point=0.75,  # The location of the control surface hinge, as a fraction of chord.
+                 control_surface_hinge_point: float = 0.75,
+                 # The location of the control surface hinge, as a fraction of chord.
                  # Point at which the control surface is applied, as a fraction of chord.
-                 control_surface_deflection=0,  # Control deflection, in degrees. Downwards-positive.
-                 spanwise_panels=8,
+                 control_surface_deflection: float = 0,  # Control deflection, in degrees. Downwards-positive.
+                 spanwise_panels: int = 8,
                  # The number of spanwise panels to be used between this cross section and the next one.
-                 spanwise_spacing="cosine"  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
+                 spanwise_spacing: str = "cosine"  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
                  ):
         if airfoil is None:
             raise ValueError("'airfoil' argument missing! (Needs an object of Airfoil type)")
@@ -292,14 +294,14 @@ class WingXSec(AeroSandboxObject):
 
         self.xyz_le = cas.vertcat(x_le, y_le, z_le)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "WingXSec (airfoil = %s, chord = %f, twist = %f)" % (
             self.airfoil.name,
             self.chord,
             self.twist
         )
 
-    def xyz_te(self):
+    def xyz_te(self) -> np.ndarray:
         """
         Returns the (wing-relative) coordinates of the trailing edge of the cross section.
         """
