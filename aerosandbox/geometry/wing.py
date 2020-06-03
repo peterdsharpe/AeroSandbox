@@ -251,6 +251,15 @@ class Wing(AeroSandboxObject):
 
         return approximate_cop
 
+    def taper_ratio(self) -> float:
+        """
+        Gives the taper ratio of the Wing. Strictly speaking, only valid for trapezoidal wings.
+
+        Returns:
+            Taper ratio of the Wing.
+
+        """
+        return self.xsecs[-1].chord / self.xsecs[0].chord
 
 class WingXSec(AeroSandboxObject):
     """
