@@ -1,5 +1,5 @@
 from aerosandbox.geometry.common import *
-
+from typing import List
 
 class Airplane(AeroSandboxObject):
     """
@@ -7,17 +7,17 @@ class Airplane(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name="Untitled",  # A sensible name for your airplane.
-                 x_ref=0,  # Ref. point for moments; should be the center of gravity.
-                 y_ref=0,  # Ref. point for moments; should be the center of gravity.
-                 z_ref=0,  # Ref. point for moments; should be the center of gravity.
+                 name: str="Untitled",  # A sensible name for your airplane.
+                 x_ref: float=0,  # Ref. point for moments; should be the center of gravity.
+                 y_ref: float=0,  # Ref. point for moments; should be the center of gravity.
+                 z_ref: float=0,  # Ref. point for moments; should be the center of gravity.
                  mass_props=None,  # An object of MassProps type; only needed for dynamic analysis
                  # If xyz_ref is not set, but mass_props is, the xyz_ref will be taken from the CG there.
-                 wings=[],  # A list of Wing objects.
-                 fuselages=[],  # A list of Fuselage objects.
-                 s_ref=None,  # If not set, populates from first wing object.
-                 c_ref=None,  # See above
-                 b_ref=None,  # See above
+                 wings: List['Wing']=[],  # A list of Wing objects.
+                 fuselages: List['Fuselage']=[],  # A list of Fuselage objects.
+                 s_ref: float=None,  # If not set, populates from first wing object.
+                 c_ref: float=None,  # See above
+                 b_ref: float=None,  # See above
                  ):
         self.name = name
 
