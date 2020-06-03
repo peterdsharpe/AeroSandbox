@@ -1,4 +1,5 @@
 from aerosandbox.geometry.common import *
+from typing import List
 
 
 class Fuselage(AeroSandboxObject):
@@ -8,23 +9,27 @@ class Fuselage(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name="Untitled Fuselage",  # It can help when debugging to give each fuselage a sensible name.
-                 x_le=0,  # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 y_le=0,  # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 z_le=0,  # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 xsecs=[],  # This should be a list of FuselageXSec objects.
-                 symmetric=False,  # Is the fuselage symmetric across the XZ plane?
-                 circumferential_panels=24,
+                 name: str = "Untitled Fuselage",  # It can help when debugging to give each fuselage a sensible name.
+                 x_le: float = 0,
+                 # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
+                 y_le: float = 0,
+                 # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
+                 z_le: float = 0,
+                 # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
+                 xsecs: List['FuselageXSec'] = [],  # This should be a list of FuselageXSec objects.
+                 symmetric: bool = False,  # Is the fuselage symmetric across the XZ plane?
+                 circumferential_panels: int = 24,
                  # Number of circumferential panels to use in VLM and Panel analysis. Should be even.
                  ):
         self.name = name
         self.xyz_le = cas.vertcat(x_le, y_le, z_le)
         self.xsecs = xsecs
         self.symmetric = symmetric
-        assert circumferential_panels % 2 == 0
+        if not circumferential_panels % 2 == 0:
+            raise ValueError("You should use an even number of circumferential panels to avoid symmetry problems.")
         self.circumferential_panels = circumferential_panels
 
-    def area_wetted(self):
+    def area_wetted(self) -> float:
         """
         Returns the wetted area of the fuselage.
 
@@ -44,7 +49,7 @@ class Fuselage(AeroSandboxObject):
         return area
 
     #
-    def area_projected(self):
+    def area_projected(self) -> float:
         """
         Returns the area of the fuselage as projected onto the XY plane (top-down view).
 
@@ -62,13 +67,31 @@ class Fuselage(AeroSandboxObject):
             area *= 2
         return area
 
-    def length(self):
+    def length(self) -> float:
         """
         Returns the total front-to-back length of the fuselage. Measured as the difference between the x-coordinates
         of the leading and trailing cross sections.
         :return:
         """
         return cas.fabs(self.xsecs[-1].x_c - self.xsecs[0].x_c)
+
+    def volume(self) -> float:
+        """
+        Gives the volume of the Fuselage.
+
+        Returns:
+            Fuselage volume.
+        """
+        volume = 0
+        for i in range(len(self.xsecs) - 1):
+            xsec_a, xsec_b = self.xsecs[i], self.xsecs[i + 1]
+            h = np.abs(xsec_b.x_c - xsec_a.x_c)
+            radius_a = xsec_a.radius
+            radius_b = xsec_b.radius
+            volume += np.pi * h / 3 * (
+                    radius_a ** 2 + radius_a * radius_b + radius_b ** 2
+            )
+        return volume
 
 
 class FuselageXSec(AeroSandboxObject):
