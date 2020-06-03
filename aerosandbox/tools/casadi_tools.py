@@ -77,7 +77,7 @@ sind = lambda theta: cas.sin(theta * cas.pi / 180)
 cosd = lambda theta: cas.cos(theta * cas.pi / 180)
 tand = lambda theta: cas.tan(theta * cas.pi / 180)
 atan2d = lambda y_val, x_val: cas.atan2(y_val, x_val) * 180 / np.pi
-
+clip = lambda x, min, max: cas.fmin(cas.fmax(min, x), max)
 
 def smoothmax(value1, value2, hardness):
     """
