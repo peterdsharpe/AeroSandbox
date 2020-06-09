@@ -66,7 +66,8 @@ naca0008 = Airfoil(
         Cl_flat_plate(alpha=alpha, Re_c=Re)  # TODO fit this to actual data
     ),
     CDp_function=lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function
-            (1 + (alpha / 5) ** 2) * 2 * Cf_flat_plate(Re_L=Re)  # TODO fit this to actual data
+            (1 + (alpha / 5) ** 2) * 2 * Cf_flat_plate(Re_L=Re) +  # TODO fit this to actual data
+            Cd_wave_Korn(Cl=Cl_flat_plate(alpha=alpha, Re_c=Re), t_over_c=0.08, mach=mach, kappa_A=0.87)
     ),
     Cm_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function about quarter-chord
         0
