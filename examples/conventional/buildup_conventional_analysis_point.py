@@ -150,8 +150,6 @@ print("CD:", ap_sol.CD)
 # print("CY:", ap_sol.CY)
 # print("Cl:", ap_sol.Cl)
 print("Cm:", ap_sol.Cm)
-
-
 # print("Cn:", ap_sol.Cn)
 
 # Answer you should get: (XFLR5)
