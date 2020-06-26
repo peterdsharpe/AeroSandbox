@@ -125,7 +125,12 @@ def scattering_factor(elevation_angle):
     return scattering_factor
 
 
-def solar_flux_on_horizontal(latitude, day_of_year, time, scattering=True):
+def solar_flux_on_horizontal(
+        latitude: float,
+        day_of_year: float,
+        time: float,
+        scattering: bool = True
+) -> float:
     """
     What is the solar flux on a horizontal surface for some given conditions?
     :param latitude: Latitude [degrees]
@@ -160,6 +165,24 @@ def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True)
     ) / 3600
 
     return sun_hours
+
+
+def mass_MPPT(
+        power: float
+) -> float:
+    """
+    Gives the estimated mass of a Maximum Power Point Tracking (MPPT) unit for solar energy
+    collection. Based on regressions at AeroSandbox/studies/SolarMPPTMasses.
+
+    Args:
+        power: Power of MPPT [watts]
+
+    Returns:
+        Estimated MPPT mass [kg]
+    """
+    constant = 0.066343
+    exponent = 0.515140
+    return constant * power ** exponent
 
 
 if __name__ == "__main__":
