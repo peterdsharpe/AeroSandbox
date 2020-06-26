@@ -247,26 +247,22 @@ if __name__ == '__main__':
         mass_battery_pack(100)
     )
 
-    pows = np.logspace(2, 4, 300)
+    pows = np.logspace(2, 5, 300)
     mass_mot_burton = mass_motor_electric(pows, method="burton")
     mass_mot_hobbyking = mass_motor_electric(pows, method="hobbyking")
     mass_mot_astroflight = mass_motor_electric(pows, method="astroflight")
 
     import matplotlib.pyplot as plt
-    import matplotlib.style as style
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import dash
     import seaborn as sns
+    sns.set(palette=sns.color_palette("husl"))
 
-    sns.set(font_scale=1)
-
-    plt.loglog(pows, np.array(mass_mot_burton), label="Burton Model")
-    plt.plot(pows, np.array(mass_mot_hobbyking), label="Hobbyking Model")
-    plt.plot(pows, np.array(mass_mot_astroflight), label="Astroflight Model")
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    plt.loglog(pows, np.array(mass_mot_burton), "-", label="Burton Model")
+    plt.plot(pows, np.array(mass_mot_hobbyking), "--", label="Hobbyking Model")
+    plt.plot(pows, np.array(mass_mot_astroflight), "-.", label="Astroflight Model")
     plt.xlabel("Motor Power [W]")
     plt.ylabel("Motor Mass [kg]")
-    plt.title("Motor Mass Models")
+    plt.title("Small Electric Motor Mass Models\n(500 kv, 100 V)")
     plt.tight_layout()
     plt.legend()
     plt.show()
