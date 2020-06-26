@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     # Define Assumptions
     L = 34.1376 / 2
-    n = 20
+    n = 50
     mass_total = 292
     x = cas.linspace(0, L, n)
     dx = cas.diff(x)

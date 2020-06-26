@@ -145,17 +145,22 @@ print("Cm:", ap_sol.Cm)
 print("Cn:", ap_sol.Cn)
 
 import matplotlib.pyplot as plt
-import matplotlib.style as style
 import seaborn as sns
-sns.set(font_scale=1)
+sns.set(palette=sns.color_palette("tab10"))
 
 
-plt.figure()
-plt.plot(ap_sol.vortex_centers[:, 1], ap_sol.CL_locals * ap_sol.chords, ".-", label="Optimized Loading")
+fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+plt.plot(
+    ap_sol.vortex_centers[:, 1],
+    ap_sol.CL_locals * ap_sol.chords / ap_sol.airplane.c_ref,
+    ".-",
+    label="Optimized Loading",
+    zorder=10
+)
 plt.annotate(
     s="Slight deviation from\ninviscid theory due\nto viscous effects",
-    xy=(0.6, 0.08),
-    xytext=(0.2, 0.05),
+    xy=(0.6, 0.4),
+    xytext=(0.2, 0.2),
     xycoords="data",
     arrowprops={
         "color"     : "k",
@@ -167,12 +172,12 @@ plt.annotate(
 
 
 plt.xlabel("y [m]")
-plt.ylabel(r"$CL \cdot c$")
+plt.ylabel(r"$CL \cdot c / c_{ref}$")
 plt.title("Spanload Optimization Test")
 
 y_e = np.linspace(0, 1, 400)
-CL_e = np.sqrt(1 - y_e ** 2) * ap_sol.CL_locals[0] * ap_sol.chords[0]
-plt.plot(y_e, CL_e, label="Elliptical Loading")
+CL_e = np.sqrt(1 - y_e ** 2) * ap_sol.CL_locals[0] * ap_sol.chords[0] / ap_sol.airplane.c_ref
+plt.plot(y_e, CL_e, label="Elliptical Loading (Theory)")
 plt.grid(True)
 plt.legend()
 plt.show()

@@ -250,6 +250,8 @@ if __name__ == "__main__":
     import casadi as cas
     import numpy as np
     import matplotlib.pyplot as plt
+    import seaborn as sns
+    sns.set(palette=sns.color_palette("husl"))
 
     # Daedalus wing mass validation
     print(
