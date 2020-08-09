@@ -4,6 +4,40 @@ Utilities for making better carpet plots
 
 import numpy as np
 
+import signal
+from contextlib import contextmanager
+
+class TimeoutException(Exception): pass
+
+@contextmanager
+def time_limit(seconds):
+    """
+    Allows you to run a block of code with a timeout. This way, you can sweep through points to make a carpet plot
+        without getting stuck on a particular point that may not terminate in a reasonable amount of time.
+
+    Usage:
+        Attempt to set x equal to the value of a complicated function. If it takes longer than 5 seconds, skip it.
+        >>> try:
+        >>>     with time_limit(5):
+        >>>         x = complicated_function()
+        >>> except TimeoutException:
+        >>>     x = np.NaN
+
+    Args:
+        seconds: Duration of timeout [seconds]
+
+    Returns:
+
+    """
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 def patch_nans(array):
     """
     Patches NaN values in a 2D array. Can patch holes or entire regions. Uses Laplacian smoothing.
