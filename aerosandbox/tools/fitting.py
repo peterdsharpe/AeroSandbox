@@ -1,6 +1,6 @@
 import numpy as np
 import casadi as cas
-from aerosandbox.tools.miscellaneous import stdout_redirected
+from aerosandbox.tools.string_formatting import stdout_redirected
 
 
 def fit(
