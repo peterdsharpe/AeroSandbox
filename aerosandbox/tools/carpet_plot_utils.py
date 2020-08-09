@@ -6,6 +6,7 @@ import numpy as np
 
 import signal
 from contextlib import contextmanager
+import sys
 
 class TimeoutException(Exception): pass
 
@@ -14,6 +15,8 @@ def time_limit(seconds):
     """
     Allows you to run a block of code with a timeout. This way, you can sweep through points to make a carpet plot
         without getting stuck on a particular point that may not terminate in a reasonable amount of time.
+
+    Only runs on Linux!
 
     Usage:
         Attempt to set x equal to the value of a complicated function. If it takes longer than 5 seconds, skip it.
@@ -31,7 +34,10 @@ def time_limit(seconds):
     """
     def signal_handler(signum, frame):
         raise TimeoutException("Timed out!")
-    signal.signal(signal.SIGALRM, signal_handler)
+    try:
+        signal.signal(signal.SIGALRM, signal_handler)
+    except AttributeError:
+        raise OSError("signal.SIGALRM could not be found. This is probably because you're not using Linux.")
     signal.alarm(seconds)
     try:
         yield
