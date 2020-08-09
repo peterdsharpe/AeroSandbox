@@ -1,7 +1,7 @@
 
 import copy
 from aerosandbox.visualization import *
-from aerosandbox.tools.miscellaneous import *
+from aerosandbox.tools.string_formatting import *
 from aerosandbox.tools.casadi_tools import *
 
 try:
