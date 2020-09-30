@@ -309,8 +309,8 @@ class Airfoil:
         :param backend: Which backend should we use? "plotly" or "matplotlib" [boolean]
         :return: None
         """
-        x = np.array(self.coordinates[:, 0]).reshape(-1)
-        y = np.array(self.coordinates[:, 1]).reshape(-1)
+        x = np.array(self.x()).reshape(-1)
+        y = np.array(self.y()).reshape(-1)
         if backend == "plotly":
             fig = go.Figure()
             fig.add_trace(
@@ -369,6 +369,20 @@ class Airfoil:
         # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
         return self.coordinates[:self.LE_index() + 1, :]
 
+    def x(self):
+        """
+        Returns the x coordinates of the airfoil. Equivalent to Airfoil.coordinates[:,0].
+        :return: X coordinates as a vector
+        """
+        return self.coordinates[:, 0]
+
+    def y(self):
+        """
+        Returns the y coordinates of the airfoil. Equivalent to Airfoil.coordinates[:,1].
+        :return: Y coordinates as a vector
+        """
+        return self.coordinates[:, 1]
+
     def TE_thickness(self):
         # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
         return self.local_thickness(x_over_c=1)
@@ -385,8 +399,8 @@ class Airfoil:
 
     def area(self):
         # Returns the area of the airfoil, in nondimensional (normalized to chord^2) units.
-        x = self.coordinates[:, 0]
-        y = self.coordinates[:, 1]
+        x = self.x()
+        y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
@@ -398,8 +412,8 @@ class Airfoil:
 
     def centroid(self):
         # Returns the centroid of the airfoil, in nondimensional (chord-normalized) units.
-        x = self.coordinates[:, 0]
-        y = self.coordinates[:, 1]
+        x = self.x()
+        y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
@@ -415,8 +429,8 @@ class Airfoil:
 
     def Ixx(self):
         # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
-        x = self.coordinates[:, 0]
-        y = self.coordinates[:, 1]
+        x = self.x()
+        y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
@@ -436,8 +450,8 @@ class Airfoil:
 
     def Iyy(self):
         # Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
-        x = self.coordinates[:, 0]
-        y = self.coordinates[:, 1]
+        x = self.x()
+        y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
@@ -457,8 +471,8 @@ class Airfoil:
 
     def Ixy(self):
         # Returns the nondimensionalized product of inertia, taken about the centroid.
-        x = self.coordinates[:, 0]
-        y = self.coordinates[:, 1]
+        x = self.x()
+        y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
@@ -478,8 +492,8 @@ class Airfoil:
 
     def J(self):
         # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
-        x = self.coordinates[:, 0]
-        y = self.coordinates[:, 1]
+        x = self.x()
+        y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
@@ -650,8 +664,8 @@ class Airfoil:
 
         def run():
             xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.coordinates[:, 0]).reshape(-1),
-                y=np.array(self.coordinates[:, 1]).reshape(-1),
+                x=np.array(self.x()).reshape(-1),
+                y=np.array(self.y()).reshape(-1),
             )
             xf.Re = Re
             xf.M = M
@@ -716,8 +730,8 @@ class Airfoil:
 
         def run():
             xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.coordinates[:, 0]).reshape(-1),
-                y=np.array(self.coordinates[:, 1]).reshape(-1),
+                x=np.array(self.x()).reshape(-1),
+                y=np.array(self.y()).reshape(-1),
             )
             xf.Re = Re
             xf.M = M
@@ -787,8 +801,8 @@ class Airfoil:
 
         def run():
             xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.coordinates[:, 0]).reshape(-1),
-                y=np.array(self.coordinates[:, 1]).reshape(-1),
+                x=np.array(self.x()).reshape(-1),
+                y=np.array(self.y()).reshape(-1),
             )
             xf.Re = Re
             xf.M = M
@@ -856,8 +870,8 @@ class Airfoil:
 
         def run():
             xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.coordinates[:, 0]).reshape(-1),
-                y=np.array(self.coordinates[:, 1]).reshape(-1),
+                x=np.array(self.x()).reshape(-1),
+                y=np.array(self.y()).reshape(-1),
             )
             xf.Re = Re
             xf.M = M
