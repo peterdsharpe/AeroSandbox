@@ -292,11 +292,13 @@ class TubeBeam1(AeroSandboxObject):
     def draw_bending(self,
                      show=True,
                      for_print=False,
+                     equal_scale=True,
                      ):
         """
         Draws a figure that illustrates some bending properties. Must be called on a solved object (i.e. using the substitute_sol method).
         :param show: Whether or not to show the figure [boolean]
         :param for_print: Whether or not the figure should be shaped for printing in a paper [boolean]
+        :param equal_scale: Whether or not to make the displacement plot have equal scale (i.e. true deformation only)
         :return:
         """
         import matplotlib.pyplot as plt
@@ -319,7 +321,8 @@ class TubeBeam1(AeroSandboxObject):
         plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"$u$ [m]")
         plt.title("Displacement (Bending)")
-        plt.axis("equal")
+        if equal_scale:
+            plt.axis("equal")
 
         plt.subplot(232) if not for_print else plt.subplot(322)
         plt.plot(self.x, np.arctan(self.du) * 180 / np.pi, '.-')
