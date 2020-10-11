@@ -122,7 +122,7 @@ setup(
     #
     #   py_modules=["my_module"],
     #
-    packages=find_packages(exclude=['media', 'examples', 'studies']),  # Required
+    packages=find_packages(exclude=['docs', 'media', 'examples', 'studies']),  # Required
 
     # Specify which Python versions you support. In contrast to the
     # 'Programming Language' classifiers above, 'pip install' will check this
