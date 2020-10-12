@@ -18,10 +18,13 @@ class Opti(cas.Opti):
                  scale: float = 1,
                  log_transform: bool = False,
                  category: str = "Default",
-                 fix: bool = False,
+                 freeze: bool = False,
                  ):
         """
         Initializes a new decision variable.
+        
+        It is recommended that you provide an initial guess (`init_guess`) and scale (`scale`) for each variable,
+        although these are not strictly required.
 
         Args:
             n_vars: Number of variables to initialize (used to initialize a vector of variables). If you are
@@ -46,7 +49,7 @@ class Opti(cas.Opti):
                 If not specified, initial guess defaults to 0 for non-log-transformed variables and 1 for
                 log-transformed variables.
 
-            scale:
+            scale: Approximate scale of the variable 
 
             log_transform:
             category:
@@ -67,10 +70,10 @@ class Opti(cas.Opti):
 
         # If the variable is in a category to be frozen, fix the variable at the initial guess.
         if category in self.categories_to_freeze:
-            fix = True
+            freeze = True
 
-        # If the variable is to be fixed, just return the initial guess and end here
-        if fix:
+        # If the variable is to be frozen, just return the initial guess and end here
+        if freeze:
             return init_guess * np.ones(n_vars)
 
         if not log_transform:
@@ -103,16 +106,16 @@ class Opti(cas.Opti):
                 continue
 
             # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
-            # This allows you to toggle fixed variables without causing problems with setting up constraints.
+            # This allows you to toggle frozen variables without causing problems with setting up constraints.
             if np.all(constraint):
                 continue
 
             # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
-            # This indicates that the problem is infeasible as-written, likely because the user has fixed too
-            # many decision variables using the Opti.variable(fix=True) syntax.
+            # This indicates that the problem is infeasible as-written, likely because the user has frozen too
+            # many decision variables using the Opti.variable(freeze=True) syntax.
             elif np.any(np.logical_not(constraint)):
                 raise RuntimeError("""The problem is infeasible due to a constraint that always evaluates False.
-                                   Check if you've fixed too many decision variables, leading to an overconstrained 
+                                   Check if you've frozen too many decision variables, leading to an overconstrained 
                                    problem.""")
 
             else:  # In theory, this should never be called, so long as the constraints can be boolean-evaluated.
