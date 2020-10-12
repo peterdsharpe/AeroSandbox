@@ -3,15 +3,14 @@ from typing import Union, List
 import numpy as np
 import pytest
 
+
 class Opti(cas.Opti):
     def __init__(self,
                  variable_categories_to_freeze=[],
-                 constraint_categories_to_freeze=[],
                  ):
         super().__init__()
         self.solver('ipopt')  # Default to IPOPT solver
         self.variable_categories_to_freeze = variable_categories_to_freeze
-        self.constraint_categories_to_freeze = constraint_categories_to_freeze
 
     def variable(self,
                  n_vars: int = 1,
@@ -80,7 +79,6 @@ class Opti(cas.Opti):
 
     def subject_to(self,
                    constraints: List,
-                   category: str = "Default"
                    ):
 
         # Put the constraints into a list, if they aren't already in one.
@@ -107,10 +105,11 @@ class Opti(cas.Opti):
                                    Check if you've fixed too many decision variables, leading to an overconstrained 
                                    problem.""")
 
-            else: # In theory, this should never be called, so long as the constraints can be boolean-evaluated.
+            else:  # In theory, this should never be called, so long as the constraints can be boolean-evaluated.
                 raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
                 doesn't appear to be a symbolic type. You supplied the following constraint:
                 {constraint}""")
+
 
 if __name__ == '__main__':
     pytest.main()
