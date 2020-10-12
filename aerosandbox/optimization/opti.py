@@ -56,6 +56,10 @@ class Opti(cas.Opti):
         if np.any(scale <= 0):
             raise ValueError("The 'scale' argument must be a positive number.")
 
+        # If the variable is in a category to be frozen, fix the variable at the initial guess.
+        if category in self.variable_categories_to_freeze:
+            fix = True
+
         # If the variable is to be fixed, just return the initial guess and end here
         if fix:
             return init_guess * np.ones(n_vars)
@@ -75,7 +79,8 @@ class Opti(cas.Opti):
         return var
 
     def subject_to(self,
-                   constraints: List
+                   constraints: List,
+                   category: str = "Default"
                    ):
 
         # Put the constraints into a list, if they aren't already in one.
@@ -93,6 +98,7 @@ class Opti(cas.Opti):
             # This allows you to toggle fixed variables without causing problems with setting up constraints.
             if np.all(constraint):
                 continue
+
             # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
             # This indicates that the problem is infeasible as-written, likely because the user has fixed too
             # many decision variables using the Opti.variable(fix=True) syntax.
@@ -100,8 +106,9 @@ class Opti(cas.Opti):
                 raise RuntimeError("""The problem is infeasible due to a constraint that always evaluates False.
                                    Check if you've fixed too many decision variables, leading to an overconstrained 
                                    problem.""")
-            else:
-                raise ValueError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
+
+            else: # In theory, this should never be called, so long as the constraints can be boolean-evaluated.
+                raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
                 doesn't appear to be a symbolic type. You supplied the following constraint:
                 {constraint}""")
 
