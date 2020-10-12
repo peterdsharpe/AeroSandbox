@@ -10,15 +10,15 @@ class Opti(cas.Opti):
                  ):
         super().__init__()
         self.solver('ipopt')  # Default to IPOPT solver
-        self.variable_categories_to_freeze = variable_categories_to_freeze
+        self.categories_to_freeze = variable_categories_to_freeze
 
     def variable(self,
                  n_vars: int = 1,
-                 init_guess: Union[float, np.ndarray] = 0,
+                 init_guess: Union[float, np.ndarray] = None,
                  scale: float = 1,
                  log_transform: bool = False,
                  category: str = "Default",
-                 fix=False,
+                 fix: bool = False,
                  ):
         """
         Initializes a new decision variable.
@@ -43,6 +43,9 @@ class Opti(cas.Opti):
                 not be log-transformed as well; this happens under the hood. The initial guess must, of course, be a
                 positive number in this case.
 
+                If not specified, initial guess defaults to 0 for non-log-transformed variables and 1 for
+                log-transformed variables.
+
             scale:
 
             log_transform:
@@ -51,12 +54,19 @@ class Opti(cas.Opti):
         Returns:
 
         """
+        # Set defaults
+        if init_guess is None:
+            if log_transform:
+                init_guess = 1
+            else:
+                init_guess = 0
+
         # Validate the inputs
         if np.any(scale <= 0):
             raise ValueError("The 'scale' argument must be a positive number.")
 
         # If the variable is in a category to be frozen, fix the variable at the initial guess.
-        if category in self.variable_categories_to_freeze:
+        if category in self.categories_to_freeze:
             fix = True
 
         # If the variable is to be fixed, just return the initial guess and end here
