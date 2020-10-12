@@ -1,7 +1,7 @@
 import casadi as cas
 from typing import Union, List
 import numpy as np
-
+import pytest
 
 class Opti(cas.Opti):
     def __init__(self,
@@ -10,14 +10,16 @@ class Opti(cas.Opti):
                  ):
         super().__init__()
         self.solver('ipopt')  # Default to IPOPT solver
+        self.variable_categories_to_freeze = variable_categories_to_freeze
+        self.constraint_categories_to_freeze = constraint_categories_to_freeze
 
     def variable(self,
                  n_vars: int = 1,
-                 initial_guess: Union[float, np.ndarray] = 0,
+                 init_guess: Union[float, np.ndarray] = 0,
                  scale: float = 1,
                  log_transform: bool = False,
                  category: str = "Default",
-                 fix = False,
+                 fix=False,
                  ):
         """
         Initializes a new decision variable.
@@ -30,10 +32,10 @@ class Opti(cas.Opti):
                 Example:
                     >>> opti = asb.Opti()
                     >>> my_var = opti.variable(n_vars = 5)
-                    >>> opti.subjec_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
+                    >>> opti.subject_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
                     >>> my_sum = asb.cas.sum1(my_var)  # This will sum up all elements of `my_var`
 
-            initial_guess: Initial guess for the variable being initialized. For scalar variables, this should be a
+            init_guess: Initial guess for the variable being initialized. For scalar variables, this should be a
                 float. For vector variables (see `n_vars`), you can provide either a float (in which case all elements
                 of the vector will be initialized to the given value) or an iterable of equal length (in which case
                 each element will be initialized to the corresponding value in the given iterable).
@@ -56,19 +58,19 @@ class Opti(cas.Opti):
 
         # If the variable is to be fixed, just return the initial guess and end here
         if fix:
-            return initial_guess
+            return init_guess * np.ones(n_vars)
 
         if not log_transform:
             var = scale * super().variable(n_vars)
-            self.set_initial(var, initial_guess)
+            self.set_initial(var, init_guess)
         else:
-            if np.any(initial_guess <= 0):
+            if np.any(init_guess <= 0):
                 raise ValueError(
                     "If you are initializing a log-transformed variable, the initial guess must be positive.")
-            log_scale = scale / initial_guess
+            log_scale = scale / init_guess
             log_var = log_scale * super().variable(n_vars)
             var = cas.exp(log_var)
-            self.set_initial(log_var, cas.log(initial_guess))
+            self.set_initial(log_var, cas.log(init_guess))
 
         return var
 
@@ -82,15 +84,26 @@ class Opti(cas.Opti):
 
         # Iterate through the constraints
         for constraint in constraints:
-            # If the constraint always evaluates True (e.g. if you enter "5 > 3"), skip it.
-            # This allows you to toggle true/false different fixed constraints
-            if constraint is True:
+            # If it's a proper constraint, pass it into the problem formulation and be done with it.
+            if isinstance(constraint, cas.MX):
+                super().subject_to(constraint)
                 continue
-            # If the constraint always evaluates False (e.g. if you enter "5 < 3"), raise an error.
+
+            # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
+            # This allows you to toggle fixed variables without causing problems with setting up constraints.
+            if np.all(constraint):
+                continue
+            # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
             # This indicates that the problem is infeasible as-written, likely because the user has fixed too
             # many decision variables using the Opti.variable(fix=True) syntax.
-            elif constraint is False:
+            elif np.any(np.logical_not(constraint)):
                 raise RuntimeError("""The problem is infeasible due to a constraint that always evaluates False.
                                    Check if you've fixed too many decision variables, leading to an overconstrained 
                                    problem.""")
-            super().subject_to(constraint) # Otherwise, pass it into the problem formulation.
+            else:
+                raise ValueError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
+                doesn't appear to be a symbolic type. You supplied the following constraint:
+                {constraint}""")
+
+if __name__ == '__main__':
+    pytest.main()

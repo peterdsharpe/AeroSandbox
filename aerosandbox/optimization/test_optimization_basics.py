@@ -14,8 +14,8 @@ def test_normal_problem():
     """
     opti = asb.Opti()
 
-    chord = opti.variable(initial_guess=1)
-    span = opti.variable(initial_guess=2)
+    chord = opti.variable(init_guess=1)
+    span = opti.variable(init_guess=2)
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
@@ -36,8 +36,8 @@ def test_normal_problem():
 def test_log_transformed_problem():
     opti = asb.Opti()
 
-    chord = opti.variable(initial_guess=1, log_transform=True)
-    span = opti.variable(initial_guess=2, log_transform=True)
+    chord = opti.variable(init_guess=1, log_transform=True)
+    span = opti.variable(init_guess=2, log_transform=True)
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
@@ -59,13 +59,13 @@ def test_log_transformed_negativity_error():
     opti = asb.Opti()
 
     with pytest.raises(ValueError):
-        myvar = opti.variable(log_transform=True, initial_guess=-1)
+        myvar = opti.variable(log_transform=True, init_guess=-1)
 
 def test_fixed_variable():
     opti = asb.Opti()
 
-    chord = opti.variable(initial_guess=1, fix=True)
-    span = opti.variable(initial_guess=2)
+    chord = opti.variable(init_guess=1, fix=True)
+    span = opti.variable(init_guess=2)
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
@@ -86,8 +86,8 @@ def test_fixed_variable():
 def test_fully_fixed_problem():
     opti = asb.Opti()
 
-    chord = opti.variable(initial_guess=1, fix=True)
-    span = opti.variable(initial_guess=1, fix=True)
+    chord = opti.variable(init_guess=1, fix=True)
+    span = opti.variable(init_guess=1, fix=True)
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
@@ -108,8 +108,8 @@ def test_fully_fixed_problem():
 def test_overconstrained_fully_fixed_problem():
     opti = asb.Opti()
 
-    chord = opti.variable(initial_guess=1, fix=True)
-    span = opti.variable(initial_guess=2, fix=True)
+    chord = opti.variable(init_guess=1, fix=True)
+    span = opti.variable(init_guess=2, fix=True)
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
