@@ -10,7 +10,7 @@ AeroSandbox is a Python package for aircraft design optimization that leverages 
 
 At its heart, AeroSandbox is a collection of end-to-end automatic-differentiable models and analysis tools for aircraft design applications. This property of automatic-differentiability dramatically improves performance on large problems; **design problems with thousands or tens of thousands of decision variables solve in seconds on a laptop**. Using AeroSandbox, you can **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.** 
 
-AeroSandbox has powerful aerodynamics solvers written from the ground up, and AeroSandbox can also be used as a standalone aerodynamics solver if desired. Like other modules, these solvers are differentiable. Therefore, **in half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an arbitary number of design variables.**
+AeroSandbox has powerful aerodynamics solvers (VLM, 3D panel) written from the ground up, and AeroSandbox can also be used as a standalone aerodynamics solver if desired. Like all other modules, these solvers are end-to-end automatic-differentiable. Therefore, **in half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an arbitary number of design variables.**
 
 ![VLM3 Image](media/images/vlm3_with_control_surfaces.png)
 *VLM3 simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
