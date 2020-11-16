@@ -22,7 +22,7 @@ AeroSandbox has powerful aerodynamics solvers (VLM, 3D panel) written from the g
 
 ### Installation
 
-Install with `pip install AeroSandbox`. Requires Python 3.7+.
+Install with `pip install AeroSandbox`. Requires Python 3.7. Nearly all features work in Python 3.8+, although automated interfacing with XFoil for 2D aerodynamic analysis does not.
 
 To get examples as well, clone from *master* on [GitHub](https://github.com/peterdsharpe/AeroSandbox). (Nightly builds available on *develop* branch.)
 
