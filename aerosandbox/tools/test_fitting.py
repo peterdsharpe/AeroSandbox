@@ -8,7 +8,7 @@ sns.set(palette=sns.color_palette("husl"))
 
 plot = False # Should we plot during testing?
 
-def test_single_dimensional_quadratic_fitting():
+def test_single_dimensional_polynomial_fitting():
     np.random.seed(0)  # Set a seed for repeatability.
 
     ### Make some data
