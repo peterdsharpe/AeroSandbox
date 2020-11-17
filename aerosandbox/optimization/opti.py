@@ -23,7 +23,7 @@ class Opti(cas.Opti):
                  log_transform: bool = False,
                  category: str = "Default",
                  freeze: bool = False,
-                 ):
+                 ) -> cas.MX:
         """
         Initializes a new decision variable.
         
@@ -59,6 +59,7 @@ class Opti(cas.Opti):
             category:
 
         Returns:
+            The variable itself as a symbolic CasADi variable (MX type).
 
         """
         # Validate the inputs
