@@ -153,7 +153,4 @@ def test_error_from_no_flattening():
 
 
 if __name__ == '__main__':
-    # test_single_dimensional_quadratic_fitting()
-    # test_multidimensional_power_law_fitting()
-    # test_error_from_no_flattening()
     pytest.main()
