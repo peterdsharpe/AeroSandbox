@@ -105,6 +105,7 @@ class Opti(cas.Opti):
         if isinstance(constraint, List):
             for each_constraint in constraint:
                 self.subject_to(each_constraint)
+            return
 
         # If it's a proper constraint (MX type), pass it into the problem formulation and be done with it.
         if isinstance(constraint, cas.MX):
