@@ -9,13 +9,17 @@ class Opti(cas.Opti):
                  variable_categories_to_freeze=[],
                  ):
         super().__init__()
-        self.solver('ipopt')  # Default to IPOPT solver
+        p_opts = {}
+        s_opts = {}
+        s_opts["max_iter"] = 3000
+        s_opts["mu_strategy"] = "adaptive"
+        self.solver('ipopt', p_opts, s_opts)  # Default to IPOPT solver
         self.categories_to_freeze = variable_categories_to_freeze
 
     def variable(self,
                  n_vars: int = 1,
                  init_guess: Union[float, np.ndarray] = None,
-                 scale: float = 1,
+                 scale: float = None,
                  log_transform: bool = False,
                  category: str = "Default",
                  freeze: bool = False,
@@ -57,12 +61,17 @@ class Opti(cas.Opti):
         Returns:
 
         """
+        # Validate the inputs
+        if log_transform and init_guess is not None:
+            if np.any(init_guess <= 0):
+                raise ValueError(
+                    "If you are initializing a log-transformed variable, the initial guess(es) must be positive.")
+
         # Set defaults
         if init_guess is None:
-            if log_transform:
-                init_guess = 1
-            else:
-                init_guess = 0
+            init_guess = 1 if log_transform else 0
+        if scale is None:
+            scale = init_guess if log_transform else 1
 
         # Validate the inputs
         if np.any(scale <= 0):
@@ -80,9 +89,6 @@ class Opti(cas.Opti):
             var = scale * super().variable(n_vars)
             self.set_initial(var, init_guess)
         else:
-            if np.any(init_guess <= 0):
-                raise ValueError(
-                    "If you are initializing a log-transformed variable, the initial guess must be positive.")
             log_scale = scale / init_guess
             log_var = log_scale * super().variable(n_vars)
             var = cas.exp(log_var)
