@@ -403,7 +403,7 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
 
     CLA = CLA_slender_body + CLA_crossflow
 
-    """
+    r"""
     Zero-lift_force drag_force
     Model derived from high-fidelity data at: C:\Projects\GitHub\firefly_aerodynamics\Design_Opt\studies\Circular Firefly Fuse CFD\Zero-Lift Drag
     """
@@ -430,7 +430,7 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
             (fuse_length * fuse_diameter) / c[8]
     )
 
-    """
+    r"""
     Assumes a ring-shaped wake projection into the Trefftz plane with a sinusoidal circulation distribution.
     This results in a uniform grad(phi) within the ring in the Trefftz plane.
     Derivation at C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\Ring Wing Potential Flow
