@@ -98,37 +98,36 @@ class Opti(cas.Opti):
         return var
 
     def subject_to(self,
-                   constraints: List,
-                   ):
+                   constraint: Union[cas.MX, bool, List],
+                   ) -> None:
+        # Determine whether you're dealing with a single (possibly vectorized) constraint or a list of constraints.
+        # If the latter, recursively apply them.
+        if isinstance(constraint, List):
+            for each_constraint in constraint:
+                self.subject_to(each_constraint)
 
-        # Put the constraints into a list, if they aren't already in one.
-        if not isinstance(constraints, List):
-            constraints = [constraints]
+        # If it's a proper constraint (MX type), pass it into the problem formulation and be done with it.
+        if isinstance(constraint, cas.MX):
+            super().subject_to(constraint)
+            return
 
-        # Iterate through the constraints
-        for constraint in constraints:
-            # If it's a proper constraint, pass it into the problem formulation and be done with it.
-            if isinstance(constraint, cas.MX):
-                super().subject_to(constraint)
-                continue
+        # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
+        # This allows you to toggle frozen variables without causing problems with setting up constraints.
+        elif np.all(constraint):
+            pass
 
-            # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
-            # This allows you to toggle frozen variables without causing problems with setting up constraints.
-            if np.all(constraint):
-                continue
+        # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
+        # This indicates that the problem is infeasible as-written, likely because the user has frozen too
+        # many decision variables using the Opti.variable(freeze=True) syntax.
+        elif np.any(np.logical_not(constraint)):
+            raise RuntimeError(f"""The problem is infeasible due to a constraint that always evaluates False. You 
+            supplied the following constraint: {constraint}. This can happen if you've frozen too 
+            many decision variables, leading to an overconstrained problem.""")
 
-            # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
-            # This indicates that the problem is infeasible as-written, likely because the user has frozen too
-            # many decision variables using the Opti.variable(freeze=True) syntax.
-            elif np.any(np.logical_not(constraint)):
-                raise RuntimeError("""The problem is infeasible due to a constraint that always evaluates False.
-                                   Check if you've frozen too many decision variables, leading to an overconstrained 
-                                   problem.""")
-
-            else:  # In theory, this should never be called, so long as the constraints can be boolean-evaluated.
-                raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
-                doesn't appear to be a symbolic type. You supplied the following constraint:
-                {constraint}""")
+        else:  # In theory, this should never be called, so long as the constraints can be boolean-evaluated.
+            raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
+            doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
+            {constraint}""")
 
 
 if __name__ == '__main__':
