@@ -182,7 +182,7 @@ def Cd_profile_e216(alpha, Re_c):
 
 
 def Cd_wave_e216(Cl, mach, sweep=0.):
-    """
+    r"""
     A curve fit I did to Eppler 216 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
     See: C:\Projects\GitHub\firefly_aerodynamics\MSES Interface\analysis\e216
@@ -278,7 +278,7 @@ def Cd_profile_rae2822(alpha, Re_c):
 
 
 def Cd_wave_rae2822(Cl, mach, sweep=0.):
-    """
+    r"""
     A curve fit I did to RAE2822 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
     See: C:\Projects\GitHub\firefly_aerodynamics\MSES Interface\analysis\rae2822

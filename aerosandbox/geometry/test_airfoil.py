@@ -7,7 +7,9 @@ def naca4412():
 
 @pytest.fixture
 def e216():
-    return Airfoil("e216")
+    a = Airfoil("e216")
+    assert len(a.coordinates) == 61
+    return a
 
 def test_TE_angle(naca4412):
     assert naca4412.TE_angle() == pytest.approx(14.766578406372423)

@@ -1,7 +1,7 @@
 from aerosandbox.geometry.common import *
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from scipy.interpolate import interp1d
-
+import re
 
 class Airfoil:
     def __init__(self,
@@ -148,16 +148,26 @@ class Airfoil:
             with importlib.resources.open_text(airfoil_database, name + '.dat') as f:
                 raw_text = f.readlines()
 
-        trimmed_text = []
+        raw_coordinates = []
+        def is_number(s): # determines whether a string is representable as a float
+            try:
+                float(s)
+            except ValueError:
+                return False
+            return True
+
         for line in raw_text:
             try:
-                line_np = np.fromstring(line, sep=" ")
-                if line_np.shape[0] == 2:
-                    trimmed_text.append(line_np)
+                line_split = re.split('[; |, |\*|\n]', line)
+                line_items = [s for s in line_split
+                              if s != "" and is_number(s)
+                              ]
+                if len(line_items) == 2:
+                    raw_coordinates.append(line_items)
             except:
                 pass
 
-        coordinates = np.hstack(trimmed_text).reshape((-1, 2))
+        coordinates = np.array(raw_coordinates, dtype=float)
         self.coordinates = coordinates
 
     def populate_coordinates_from_filepath(self, filepath):
