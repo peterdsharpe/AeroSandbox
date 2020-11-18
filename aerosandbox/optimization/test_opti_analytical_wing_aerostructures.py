@@ -70,7 +70,7 @@ def test_original_gpkit_like_solve():
     ])
 
     # Objective
-    opti.minimize(D)
+    opti.minimize(cas.log(D))
 
     sol = opti.solve()
 

@@ -82,18 +82,18 @@ class Opti(cas.Opti):
         if category in self.categories_to_freeze:
             freeze = True
 
-        # If the variable is to be frozen, just return the initial guess and end here
+        # If the variable is to be frozen, return the initial guess. Otherwise, define the variable using CasADi symbolics.
         if freeze:
-            return init_guess * np.ones(n_vars)
-
-        if not log_transform:
-            var = scale * super().variable(n_vars)
-            self.set_initial(var, init_guess)
+            var = init_guess * np.ones(n_vars)
         else:
-            log_scale = scale / init_guess
-            log_var = log_scale * super().variable(n_vars)
-            var = cas.exp(log_var)
-            self.set_initial(log_var, cas.log(init_guess))
+            if not log_transform:
+                var = scale * super().variable(n_vars)
+                self.set_initial(var, init_guess)
+            else:
+                log_scale = scale / init_guess
+                log_var = log_scale * super().variable(n_vars)
+                var = cas.exp(log_var)
+                self.set_initial(log_var, cas.log(init_guess))
 
         return var
 
