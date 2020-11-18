@@ -7,11 +7,11 @@ R_air = R_universal / M_air  #
 
 
 def get_pressure_at_altitude(altitude):
-    """
-    Fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
+    r"""
+    Smoothed fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
     Valid from 0 to 40 km.
-    :param altitude:
-    :return:
+    :param altitude: Altitude [meters]
+    :return: Pressure [Pa]
     """
     altitude_scaled = altitude / 40000
 
@@ -30,11 +30,11 @@ def get_pressure_at_altitude(altitude):
 
 
 def get_temperature_at_altitude(altitude):
-    """
-    Fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
+    r"""
+    Smoothed fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
     Valid from 0 to 40 km.
-    :param altitude:
-    :return:
+    :param altitude: Altitude [meters]
+    :return: Temperature [K]
     """
 
     altitude_scaled = altitude / 40000
@@ -56,7 +56,14 @@ def get_temperature_at_altitude(altitude):
 
 
 def get_density_at_altitude(altitude):
-    # More efficient to do this using equation of state, but you can use this if you really want.
+    """
+    Returns the density as a function of altitude. Based on the 1976 COESA model.
+    There's a more efficient to do this using equation of state, but you can use this if you really want.
+    Args:
+        altitude: Altitude [meters]
+
+    Returns: Density [kg/m^3]
+    """
 
     P = get_pressure_at_altitude(altitude)
     T = get_temperature_at_altitude(altitude)
@@ -68,9 +75,10 @@ def get_density_at_altitude(altitude):
 
 def get_speed_of_sound_from_temperature(temperature):
     """
-    Finds the speed of sound from a specified temperature. Assumes ideal gas properties.
-    :param temperature: Temperature, in Kelvin
-    :return: Speed of sound, in m/s
+    Finds the speed of sound from a specified temperature.
+    Assumes ideal gas properties and ratio of specific heats of 1.4.
+    :param temperature: Temperature [K]
+    :return: Speed of sound [m/s]
     """
     return cas.sqrt(1.4 * R_air * temperature)
 
