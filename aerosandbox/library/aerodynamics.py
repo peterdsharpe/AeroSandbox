@@ -68,13 +68,17 @@ def Cl_flat_plate(alpha, Re_c):
 
 def CL_over_Cl(AR, mach=0, sweep=0):
     """
-    Returns the ratio of 3D lift_force coefficient (with compressibility) to 2D lift_force (incompressible) coefficient.
+    Returns the ratio of 3D lift coefficient (with compressibility) to 2D lift coefficient (incompressible).
     :param AR: Aspect ratio
     :param mach: Mach number
     :param sweep: Sweep angle [deg]
     :return:
     """
-    beta = cas.sqrt(1 - mach ** 2)
+    beta = cas.if_else(
+        1 - mach ** 2 >= 0,
+        cas.sqrt(1 - mach**2),
+        0
+    )
     sweep_rad = sweep * np.pi / 180
     # return AR / (AR + 2) # Equivalent to equation in Drela's FVA in incompressible, 2*pi*alpha limit.
     # return AR / (2 + cas.sqrt(4 + AR ** 2))  # more theoretically sound at low AR
