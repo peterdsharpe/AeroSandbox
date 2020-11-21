@@ -1,26 +1,28 @@
 import numpy as np
 import casadi as cas
 from aerosandbox.tools.string_formatting import stdout_redirected
-
+from aerosandbox.optimization.opti import Opti
 
 def fit(
-        model,  # type: callable
-        x_data,  # type: dict
-        y_data,  # type: np.ndarray
-        param_guesses,  # type: dict
-        param_bounds=None,  # type: dict
-        weights=None,  # type: np.ndarray
-        verbose=True,  # type: bool
-        scale_problem=True,  # type: bool
-        put_residuals_in_logspace=False,  # type: bool
+        model: callable,
+        x_data: dict,
+        y_data: np.ndarray,
+        param_guesses: dict,
+        param_bounds: dict = None,
+        weights: np.ndarray = None,
+        verbose: bool = True,
+        scale_problem: bool = True,
+        put_residuals_in_logspace: bool = False,
+        residual_norm_type: str = "SSE",
 ):
     """
-    Fits a model to data through least-squares minimization.
+    Fits an analytical model to n datapoints using an automatic-differentiable optimization approach.
     :param model: A callable with syntax f(x, p) where:
             x is a dict of dependent variables. Same format as x_data [dict of 1D ndarrays of length n].
             p is a dict of parameters. Same format as param_guesses [dict of scalars].
+        Model should return a 1D ndarray of length n.
         Model should use CasADi functions for differentiability.
-    :param x_data: a dict of dependent variables. Same format as model's x. [dict of 1D ndarrays of length n]
+    :param x_data: a dict of dependent variables. Same format as model's x. [1D ndarray or dict of 1D ndarrays of length n]
     :param y_data: independent variable. [1D ndarray of length n]
     :param param_guesses: a dict of fit parameters. Same format as model's p. Keys are parameter names, values are initial guesses. [dict of scalars]
     :param param_bounds: Optional: a dict of bounds on fit parameters.
@@ -34,9 +36,13 @@ def fit(
     :param scale_problem: Whether or not to attempt to scale variables, constraints, and objective for more robust solve. [boolean]
     :param put_residuals_in_logspace: Whether to optimize using the logarithmic error as opposed to the absolute error (useful for minimizing percent error).
         Note: If any model outputs or data are negative, this will fail!
-    :return: Optimal fit parameters [dict]
+    :param residual_norm_type: What type of error norm should we use to optimize the fit parameters? [string]
+        Options:
+            * "SSE": minimizes the sum of squared errors.
+            * "deviation": minimizes the maximum deviation of the fit; basically the infinity-norm of the error vector.
+    :return: Optimal fit parameters [dict with same keys as param_guesses]
     """
-    opti = cas.Opti()
+    opti = Opti()
 
     # Handle weighting
     if weights is None:
@@ -47,7 +53,7 @@ def fit(
     n_datapoints = len(np.array(y_data).flatten())
     for key, value in {
         **x_data,
-        "y_data": y_data,
+        "y_data" : y_data,
         "weights": weights,
     }.items():
         series = np.array(value)
@@ -61,16 +67,15 @@ def fit(
                 dimension_length != 1 for dimension_length in shape
             ])
             if number_of_nontrivial_dimensions != 1:
-                raise ValueError(f"The supplied data series \"{key}\" is not a 1D ndarray (or convertible to one). You should flatten it.")
+                raise ValueError(
+                    f"The supplied data series \"{key}\" is not a 1D ndarray (or convertible to one). You should flatten it.")
             series = series.flatten()
 
         # Check that the length of the inputs are consistent
         series_length = len(series)
         if not series_length == n_datapoints:
-            raise ValueError(f"The supplied data series \"{key}\" has length {series_length}, but y_data has length {n_datapoints}.")
-
-
-
+            raise ValueError(
+                f"The supplied data series \"{key}\" has length {series_length}, but y_data has length {n_datapoints}.")
 
     def fit_param(initial_guess, lower_bound=None, upper_bound=None):
         """
@@ -111,38 +116,51 @@ def fit(
             for k in param_guesses
         }
 
+    # if residual_type == "SSE":
+    #     def error_norm(error_vector):
+    #         return cas.sum1(weights * residuals ** 2)
+    # elif:
+    #     def error_norm(error_vector):
+    #         return cas.fmax(residuals)
+    # else:
+    #     return ValueError("Bad input for the 'residual_type' parameter.")
+    #
+
+    def objective_function(params):
+        """
+        Given some parameters for the model, what is the "badness" of the corresponding fit.
+
+        Args:
+            params
+
+        Returns: A scalar representing the "badness" of the fit.
+
+        """
+        y_model = model(x_data, params)
+        if y_model is None:
+            raise TypeError("model(x, param_guesses) returned None, when it should've returned a 1D ndarray.")
+
+        if put_residuals_in_logspace:
+            residuals = cas.log(y_model) - cas.log(y_data)
+        else:
+            residuals = y_model - y_data
+
+        if residual_norm_type == "SSE":
+            return cas.sum1(weights * residuals ** 2)
+        elif residual_norm_type == "deviation":
+            return cas.sum1(cas.fabs(weights * residuals))
+        else:
+            return ValueError("Bad input for the 'residual_type' parameter.")
+
+
+    initial_objective = objective_function(param_guesses)
+
     if scale_problem:
-        y_model_initial = model(x_data, param_guesses)
-        if not put_residuals_in_logspace:
-            residuals_initial = y_model_initial - y_data
-        else:
-            residuals_initial = cas.log10(y_model_initial) - cas.log10(y_data)
-        SSE_initial = cas.sum1(weights * residuals_initial ** 2)
-
-        y_model = model(x_data, params)
-        if not put_residuals_in_logspace:
-            residuals = y_model - y_data
-        else:
-            residuals = cas.log10(y_model) - cas.log10(y_data)
-        SSE = cas.sum1(weights * residuals ** 2)
-        opti.minimize(SSE / SSE_initial)
-
+        opti.minimize(objective_function(params)/initial_objective)
     else:
-        y_model = model(x_data, params)
-        if not put_residuals_in_logspace:
-            residuals = y_model - y_data
-        else:
-            residuals = cas.log10(y_model) - cas.log10(y_data)
-        SSE = cas.sum1(weights * residuals ** 2)
-        opti.minimize(SSE)
+        opti.minimize(objective_function(params))
 
     # Solve
-    p_opts = {}
-    s_opts = {}
-    s_opts["max_iter"] = 3e3  # If you need to interrupt, just use ctrl+c
-    # s_opts["mu_strategy"] = "adaptive"
-    opti.solver('ipopt', p_opts, s_opts)
-    opti.solver('ipopt')
     if verbose:
         sol = opti.solve()
     else:
@@ -166,17 +184,15 @@ def fit(
             print("\t%i parameters solved for." % len(params_solved))
         print("\nGoodness of Fit:")
 
-        # Print RMS error
-        weighted_RMS_error = sol.value(cas.sqrt(cas.sum1(
-            weights * residuals ** 2
-        )))
-        print("\tWeighted RMS error: %f" % weighted_RMS_error)
+        # Print objective function value
+        print(f"\tInitial Badness (objective function): {initial_objective}")
+        print(f"\tFinal Badness (objective function): {objective_function(params_solved)}")
 
         # Print R^2
         y_data_mean = cas.sum1(y_data) / y_data.shape[0]
         SS_tot = cas.sum1(weights * (y_data - y_data_mean) ** 2)
-        SS_res = cas.sum1(weights * (y_data - y_model) ** 2)
+        SS_res = cas.sum1(weights * (y_data - model(x_data, params_solved)) ** 2)
         R_squared = sol.value(1 - SS_res / SS_tot)
-        print("\tR^2: %f" % R_squared)
+        print(f"\tR^2: {R_squared}")
 
     return params_solved
