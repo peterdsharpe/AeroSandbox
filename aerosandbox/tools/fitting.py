@@ -122,7 +122,7 @@ def fit(
         :return:
         """
         if scale_problem and np.abs(initial_guess) > 1e-8:
-            var = opti.variable(scale=initial_guess, init_guess=initial_guess)  # scale variables
+            var = opti.variable(scale=np.abs(initial_guess), init_guess=initial_guess)  # scale variables
         else:
             var = opti.variable(init_guess=initial_guess)
         if lower_bound is not None:
