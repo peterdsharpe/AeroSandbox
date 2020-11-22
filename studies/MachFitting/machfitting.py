@@ -29,7 +29,6 @@ weights[machs_to_fit > 0.95] = 0.25
 
 
 # def model(x, p):
-#     x= x["x"]
 #     return sigmoid(
 #         p["m"]*x+p["th"]*cas.tanh((x-p["o"]))+p["c"]
 #     )
@@ -37,9 +36,7 @@ weights[machs_to_fit > 0.95] = 0.25
 #
 # fit_params = fit(
 #     model=model,
-#     x_data={
-#         "x": machs_to_fit
-#     },
+#     x_data=machs_to_fit,
 #     y_data=beta(machs_to_fit),
 #     param_guesses={
 #         "m": 10,
@@ -111,3 +108,4 @@ plt.ylabel(r"$\ln(\beta)$")
 plt.subplot("224")
 plt.plot(machs_to_fit, error)
 plt.title("Error in Fit range")
+plt.savefig("machfitting.png")
