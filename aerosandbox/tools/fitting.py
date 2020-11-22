@@ -42,37 +42,40 @@ def fit(
             * "deviation": minimizes the maximum deviation of the fit; basically the infinity-norm of the error vector.
     :return: Optimal fit parameters [dict with same keys as param_guesses]
     """
+    ### Initialize an optimization environment
     opti = Opti()
 
-    # Handle weighting
-    if weights is None:
-        weights = cas.GenDM_ones(y_data.shape[0])
-    weights /= cas.sum1(weights)
+    ### Flatten all inputs
+    def flatten(input):
+        return np.array(input).flatten()
 
-    # Check dimensionality of inputs to fitting algorithm
-    n_datapoints = len(np.array(y_data).flatten())
+    try:
+        x_data = {
+            k: flatten(v)
+            for k, v in x_data.items()
+        }
+    except AttributeError: # If it's not a dict, or a dict-like, put it in one
+        x_data = {
+            "x": flatten(x_data)
+        }
+    y_data = flatten(y_data)
+    n_datapoints = len(y_data)
+
+    ### Handle weighting
+    if weights is None:
+        weights = np.ones(n_datapoints)
+    else:
+        weights = flatten(weights)
+    weights /= np.sum(weights)
+
+    ### Check dimensionality of inputs to fitting algorithm
     for key, value in {
         **x_data,
         "y_data" : y_data,
         "weights": weights,
     }.items():
-        series = np.array(value)
-
-        # Check that it's 1D or 1D-ish
-        shape = np.shape(series)
-        if len(shape) == 1:
-            pass
-        else:
-            number_of_nontrivial_dimensions = sum([
-                dimension_length != 1 for dimension_length in shape
-            ])
-            if number_of_nontrivial_dimensions != 1:
-                raise ValueError(
-                    f"The supplied data series \"{key}\" is not a 1D ndarray (or convertible to one). You should flatten it.")
-            series = series.flatten()
-
         # Check that the length of the inputs are consistent
-        series_length = len(series)
+        series_length = len(value)
         if not series_length == n_datapoints:
             raise ValueError(
                 f"The supplied data series \"{key}\" has length {series_length}, but y_data has length {n_datapoints}.")
