@@ -2,14 +2,15 @@ import numpy as np
 import casadi as cas
 from aerosandbox.tools.string_formatting import stdout_redirected
 from aerosandbox.optimization.opti import Opti
+from typing import Union, Dict, Callable
 
 
 def fit(
-        model: callable,
-        x_data: dict,
+        model: Callable[[Union[Dict[str:np.ndarray], np.ndarray], Dict[str:float]], np.ndarray],
+        x_data: Union[Dict[str:np.ndarray], np.ndarray],
         y_data: np.ndarray,
-        param_guesses: dict,
-        param_bounds: dict = None,
+        param_guesses: Dict[str:float],
+        param_bounds: Dict[str:tuple] = None,
         weights: np.ndarray = None,
         verbose: bool = True,
         scale_problem: bool = True,
@@ -20,23 +21,30 @@ def fit(
     """
     Fits an analytical model to n datapoints using an automatic-differentiable optimization approach.
     :param model: A callable with syntax f(x, p) where:
-            x is a dict of dependent variables. Same format as x_data [dict of 1D ndarrays of length n].
-            p is a dict of parameters. Same format as param_guesses [dict of scalars].
+            * x is a dict of dependent variables.
+              If one-dimensional (e.g. f(x) instead of f(x,y)), you can instead supply x as a 1D ndarray.
+                Same format as x_data [dict of 1D ndarrays of length n].
+            * p is a dict of parameters. Same format as param_guesses [dict with syntax param_name:param_value].
         Model should return a 1D ndarray of length n.
         Model should use CasADi functions for differentiability.
-    :param x_data: a dict of dependent variables. Same format as model's x. [1D ndarray or dict of 1D ndarrays of length n]
+    :param x_data: a dict of dependent variables.
+        * If one-dimensional (e.g. f(x) instead of f(x,y)), you can instead supply x_data as a 1D ndarray.
+        * Same format as model's x. [1D ndarray or dict of 1D ndarrays of length n]
     :param y_data: independent variable. [1D ndarray of length n]
-    :param param_guesses: a dict of fit parameters. Same format as model's p. Keys are parameter names, values are initial guesses. [dict of scalars]
+    :param param_guesses: a dict of fit parameters.
+        * Same format as model's p [dict with syntax param_name:param_value].
+        * Keys are parameter names, values are initial guesses.
     :param param_bounds: Optional: a dict of bounds on fit parameters.
         Keys are parameter names, values are a tuple of (min, max).
         May contain only a subset of param_guesses if desired.
         Use None to represent one-sided constraints (i.e. (None, 5)).
-        [dict of tuples]
+        [dict of parameter_name:tuples]
     :param weights: Optional: weights for data points. If not supplied, weights are assumed to be uniform.
         Weights are automatically normalized. [1D ndarray of length n]
     :param verbose: Whether or not to print information about parameters and goodness of fit.
     :param scale_problem: Whether or not to attempt to scale variables, constraints, and objective for more robust solve. [boolean]
-    :param put_residuals_in_logspace: Whether to optimize using the logarithmic error as opposed to the absolute error (useful for minimizing percent error).
+    :param put_residuals_in_logspace: Whether to optimize using the logarithmic error as opposed to the absolute error
+        (useful for minimizing percent error).
         Note: If any model outputs or data are negative, this will fail!
     :param residual_norm_type: What type of error norm should we use to optimize the fit parameters? [string]
         Options:
