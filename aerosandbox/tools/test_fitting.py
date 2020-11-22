@@ -6,7 +6,8 @@ import seaborn as sns
 
 sns.set(palette=sns.color_palette("husl"))
 
-plot = False # Should we plot during testing?
+plot = False  # Should we plot during testing?
+
 
 def test_single_dimensional_polynomial_fitting():
     np.random.seed(0)  # Set a seed for repeatability.
@@ -108,6 +109,96 @@ def test_multidimensional_power_law_fitting():
     assert fitted_parameters["multiplier"] == pytest.approx(0.546105, abs=1e-3)
     assert fitted_parameters["X_power"] == pytest.approx(0.750000, abs=1e-3)
     assert fitted_parameters["Y_power"] == pytest.approx(1.250000, abs=1e-3)
+
+
+def test_deviation_single_dimensional_fit():
+    np.random.seed(0)  # Set a seed for repeatability
+
+    ### Making data
+    hour = np.linspace(1, 10, 100)
+    noise = 0.1 * np.random.randn(len(hour))
+    temperature_c = np.log(hour) + noise
+
+    ### Fit
+    def model(x, p):
+        return p["m"] * x["hour"] + p["b"]
+
+    x_data = {
+        "hour": hour,
+    }
+    y_data = temperature_c
+    solved_parameters = fit(
+        model=model,
+        x_data=x_data,
+        y_data=y_data,
+        param_guesses={
+            "m": 0,
+            "b": 0,
+        },
+        # residual_norm_type="SSE",
+        residual_norm_type="deviation",
+    )
+    temperature_model = model(x_data, solved_parameters)
+    ### Plotting
+    if plot:
+        fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+        plt.plot(hour, temperature_c, ".")
+        plt.plot(hour, temperature_model, "-")
+        plt.xlabel(r"$hour$")
+        plt.ylabel(r"$temp$")
+        plt.title(r"Data and Fit")
+        plt.tight_layout()
+        plt.legend()
+        # plt.savefig("C:/Users/User/Downloads/temp.svg")
+        plt.show()
+
+    # Check that the fit is right
+    assert solved_parameters["m"] == pytest.approx(0.247116, abs=1e-5)
+    assert solved_parameters["b"] == pytest.approx(0.227797, abs=1e-5)
+
+def test_deviation_without_x_in_dict():
+    np.random.seed(0)  # Set a seed for repeatability
+
+    ### Making data
+    hour = np.linspace(1, 10, 100)
+    noise = 0.1 * np.random.randn(len(hour))
+    temperature_c = np.log(hour) + noise
+
+    ### Fit
+    def model(x, p):
+        return p["m"] * x + p["b"]
+
+    x_data = hour
+    y_data = temperature_c
+
+    solved_parameters = fit(
+        model=model,
+        x_data=x_data,
+        y_data=y_data,
+        param_guesses={
+            "m": 0,
+            "b": 0,
+        },
+        # residual_norm_type="SSE",
+        residual_norm_type="deviation",
+    )
+    temperature_model = model(x_data, solved_parameters)
+    ### Plotting
+    if plot:
+        fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+        plt.plot(hour, temperature_c, ".")
+        plt.plot(hour, temperature_model, "-")
+        plt.xlabel(r"$hour$")
+        plt.ylabel(r"$temp$")
+        plt.title(r"Data and Fit")
+        plt.tight_layout()
+        plt.legend()
+        # plt.savefig("C:/Users/User/Downloads/temp.svg")
+        plt.show()
+
+    # Check that the fit is right
+    assert solved_parameters["m"] == pytest.approx(0.247116, abs=1e-5)
+    assert solved_parameters["b"] == pytest.approx(0.227797, abs=1e-5)
 
 if __name__ == '__main__':
     pytest.main()

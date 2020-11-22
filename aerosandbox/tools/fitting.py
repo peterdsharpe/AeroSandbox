@@ -3,6 +3,7 @@ import casadi as cas
 from aerosandbox.tools.string_formatting import stdout_redirected
 from aerosandbox.optimization.opti import Opti
 
+
 def fit(
         model: callable,
         x_data: dict,
@@ -14,6 +15,7 @@ def fit(
         scale_problem: bool = True,
         put_residuals_in_logspace: bool = False,
         residual_norm_type: str = "SSE",
+        plot_fit: bool = False,
 ):
     """
     Fits an analytical model to n datapoints using an automatic-differentiable optimization approach.
@@ -54,10 +56,10 @@ def fit(
             k: flatten(v)
             for k, v in x_data.items()
         }
-    except AttributeError: # If it's not a dict, or a dict-like, put it in one
-        x_data = {
-            "x": flatten(x_data)
-        }
+        x_data_is_dict = True
+    except AttributeError:  # If it's not a dict or dict-like, assume it's a 1D ndarray dataset
+        x_data = flatten(x_data)
+        x_data_is_dict = False
     y_data = flatten(y_data)
     n_datapoints = len(y_data)
 
@@ -68,17 +70,34 @@ def fit(
         weights = flatten(weights)
     weights /= np.sum(weights)
 
+    ### Check format of param_bounds input
+    if param_bounds is None:
+        param_bounds = {}
+    for k, v in param_bounds.items():
+        if k not in param_guesses.keys():
+            raise ValueError(f"A parameter name (key = \"{k}\") in param_bounds was not found in param_guesses.")
+        if not len(v) == 2:
+            raise ValueError("Every value in param_bounds must be a tuple in the format (lower_bound, upper_bound). "
+                             "For one-sided bounds, use None for the unbounded side.")
+
     ### Check dimensionality of inputs to fitting algorithm
-    for key, value in {
-        **x_data,
+    relevant_inputs = {
         "y_data" : y_data,
         "weights": weights,
-    }.items():
+    }
+    try:
+        relevant_inputs.update(x_data)
+    except TypeError:
+        relevant_inputs.update({"x": x_data})
+
+    for key, value in relevant_inputs.items():
         # Check that the length of the inputs are consistent
         series_length = len(value)
         if not series_length == n_datapoints:
             raise ValueError(
                 f"The supplied data series \"{key}\" has length {series_length}, but y_data has length {n_datapoints}.")
+
+    ### Set up the variables and bounds constraints
 
     def fit_param(initial_guess, lower_bound=None, upper_bound=None):
         """
@@ -89,10 +108,9 @@ def fit(
         :return:
         """
         if scale_problem and np.abs(initial_guess) > 1e-8:
-            var = initial_guess * opti.variable()  # scale variables
+            var = opti.variable(scale=initial_guess, init_guess=initial_guess)  # scale variables
         else:
-            var = opti.variable()
-        opti.set_initial(var, initial_guess)
+            var = opti.variable(init_guess=initial_guess)
         if lower_bound is not None:
             lower_bound_abs = np.abs(lower_bound)
             if scale_problem and lower_bound_abs > 1e-8:
@@ -107,61 +125,70 @@ def fit(
                 opti.subject_to(var < upper_bound)
         return var
 
-    if param_bounds is None:
-        params = {
-            k: fit_param(param_guesses[k])
-            for k in param_guesses
-        }
-    else:
-        params = {
-            k: fit_param(param_guesses[k]) if k not in param_bounds else
-            fit_param(param_guesses[k], param_bounds[k][0], param_bounds[k][1])
-            for k in param_guesses
-        }
+    params = {
+        k: fit_param(param_guesses[k]) if k not in param_bounds else
+        fit_param(param_guesses[k], param_bounds[k][0], param_bounds[k][1])
+        for k in param_guesses
+    }
 
-    # if residual_type == "SSE":
-    #     def error_norm(error_vector):
-    #         return cas.sum1(weights * residuals ** 2)
-    # elif:
-    #     def error_norm(error_vector):
-    #         return cas.fmax(residuals)
-    # else:
-    #     return ValueError("Bad input for the 'residual_type' parameter.")
-    #
+    ### Setup the objective handling
+    if residual_norm_type == "SSE":
+        def SSE_objective(params):
+            """
+            Given some parameters for the model, what is the "badness" of the corresponding fit.
 
-    def objective_function(params):
-        """
-        Given some parameters for the model, what is the "badness" of the corresponding fit.
+            Args:
+                params
 
-        Args:
-            params
+            Returns: A scalar representing the "badness" of the fit.
 
-        Returns: A scalar representing the "badness" of the fit.
+            """
+            y_model = model(x_data, params)
+            if y_model is None:
+                raise TypeError("model(x, param_guesses) returned None, when it should've returned a 1D ndarray.")
 
-        """
+            if put_residuals_in_logspace:
+                residuals = cas.log(y_model) - cas.log(y_data)
+            else:
+                residuals = y_model - y_data
+
+            if residual_norm_type == "SSE":
+                return cas.sum1(weights * residuals ** 2)
+            elif residual_norm_type == "deviation":
+                return cas.sum1(cas.fabs(weights * residuals))
+            else:
+                return ValueError("Bad input for the 'residual_type' parameter.")
+
+        initial_objective = SSE_objective(param_guesses)
+        objective = SSE_objective(params)
+
+    elif residual_norm_type == "deviation":
+        y_model_initial = model(x_data, param_guesses)
+        initial_objective = np.max(np.abs(y_model_initial - y_data))
+
         y_model = model(x_data, params)
-        if y_model is None:
-            raise TypeError("model(x, param_guesses) returned None, when it should've returned a 1D ndarray.")
 
-        if put_residuals_in_logspace:
-            residuals = cas.log(y_model) - cas.log(y_data)
+        if scale_problem and initial_objective >= 1e-8:
+            objective = opti.variable(init_guess=initial_objective, scale=initial_objective)
+            opti.subject_to([
+                objective / initial_objective >= (y_model - y_data) / initial_objective,
+                objective / initial_objective >= -(y_model - y_data) / initial_objective
+            ])
         else:
-            residuals = y_model - y_data
-
-        if residual_norm_type == "SSE":
-            return cas.sum1(weights * residuals ** 2)
-        elif residual_norm_type == "deviation":
-            return cas.sum1(cas.fabs(weights * residuals))
-        else:
-            return ValueError("Bad input for the 'residual_type' parameter.")
+            objective = opti.variable(init_guess=initial_objective)
+            opti.subject_to([
+                objective >= (y_model - y_data),
+                objective >= -(y_model - y_data)
+            ])
 
 
-    initial_objective = objective_function(param_guesses)
+    else:
+        return ValueError("Bad input for the 'residual_type' parameter.")
 
     if scale_problem:
-        opti.minimize(objective_function(params)/initial_objective)
+        opti.minimize(objective / initial_objective)
     else:
-        opti.minimize(objective_function(params))
+        opti.minimize(objective)
 
     # Solve
     if verbose:
@@ -189,7 +216,7 @@ def fit(
 
         # Print objective function value
         print(f"\tInitial Badness (objective function): {initial_objective}")
-        print(f"\tFinal Badness (objective function): {objective_function(params_solved)}")
+        print(f"\tFinal Badness (objective function): {sol.value(objective)}")
 
         # Print R^2
         y_data_mean = cas.sum1(y_data) / y_data.shape[0]
