@@ -6,11 +6,17 @@ from typing import Union, Dict, Callable
 
 
 def fit(
-        model: Callable[[Union[Dict[str:np.ndarray], np.ndarray], Dict[str:float]], np.ndarray],
-        x_data: Union[Dict[str:np.ndarray], np.ndarray],
+        model: Callable[
+            [
+                Union[Dict[str, np.ndarray], np.ndarray],
+                Dict[str, float]
+            ],
+            np.ndarray
+        ],
+        x_data: Union[Dict[str, np.ndarray], np.ndarray],
         y_data: np.ndarray,
-        param_guesses: Dict[str:float],
-        param_bounds: Dict[str:tuple] = None,
+        param_guesses: Dict[str, float],
+        param_bounds: Dict[str, tuple] = None,
         weights: np.ndarray = None,
         verbose: bool = True,
         scale_problem: bool = True,
@@ -160,12 +166,7 @@ def fit(
             else:
                 residuals = y_model - y_data
 
-            if residual_norm_type == "SSE":
-                return cas.sum1(weights * residuals ** 2)
-            elif residual_norm_type == "deviation":
-                return cas.sum1(cas.fabs(weights * residuals))
-            else:
-                return ValueError("Bad input for the 'residual_type' parameter.")
+            return cas.sum1(weights * residuals ** 2)
 
         initial_objective = SSE_objective(param_guesses)
         objective = SSE_objective(params)
