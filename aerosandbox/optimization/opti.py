@@ -21,7 +21,7 @@ class Opti(cas.Opti):
                  init_guess: Union[float, np.ndarray] = None,
                  scale: float = None,
                  log_transform: bool = False,
-                 category: str = "Default",
+                 category: str = "Uncategorized",
                  freeze: bool = False,
                  ) -> cas.MX:
         """
