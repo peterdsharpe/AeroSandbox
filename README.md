@@ -41,9 +41,9 @@ glider = Airplane(
         Wing(
             name="Main Wing",
             xyz_le=[0, 0, 0], # Coordinates of the wing's leading edge
-            symmetric=True,
+            symmetric=True,  # Should we mirror the wing across the XZ plane?
             xsecs=[ # The wing's cross ("X") sections
-                WingXSec(  # Root
+                WingXSec(  # Root cross ("X") section
                     xyz_le=[0, 0, 0], # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
                     twist=2, # degrees
@@ -119,12 +119,12 @@ glider = Airplane(
 aero_problem = vlm3( # Analysis type: Vortex Lattice Method, version 3
     airplane=glider,
     op_point=OperatingPoint(
-        velocity=10,
-        alpha=5,
-        beta=0,
-        p=0,
-        q=0,
-        r=0,
+        velocity=10,  # airspeed, m/s
+        alpha=5,  # angle of attack, deg
+        beta=0,  # sideslip angle, deg
+        p=0,  # x-axis rotation rate, rad/sec
+        q=0,  # y-axis rotation rate, rad/sec
+        r=0,  # z-axis rotation rate, rad/sec
     ),
 )
 
@@ -134,7 +134,7 @@ aero_problem.draw() # Creates an interactive display of the surface pressures an
 
 The best part is that by adding just a few more lines of code, you can not only get the performance at a specified design point, but also the derivatives of any performance variable with respect to any design variable. Thanks to reverse-mode automatic differentiation, this process only requires the time of one additional flow solution, regardless of the number of design variables. For an example of this, see "/examples/gradient_test_vlm2.py".
 
-One final point to note: as we're all sensible and civilized human beings here, all inputs and outputs to AeroSandbox are expressed in base metric units, or derived units thereof (meters, Newtons, meters per second, kilograms, etc.).
+One final point to note: as we're all sensible and civilized human beings here, **all inputs and outputs to AeroSandbox are expressed in base metric units, or derived units thereof** (meters, newtons, meters per second, kilograms, etc.). The only exception to this rule is when units are explicitly noted in a variable name: for example, `battery_capacity` would be in units of joules, `elastic_modulus` would be in units of pascals, and `battery_capacity_watt_hours` would be in units of watt-hours.
 
 ### Dependencies
 
