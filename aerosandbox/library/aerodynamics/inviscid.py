@@ -30,7 +30,7 @@ def oswalds_efficiency(
         taper_ratio,
         AR,
         sweep=0,
-        fuselage_diameter = 0,
+        fuselage_diameter_to_span_ratio = 0,
 ):
     """
     Computes the Oswald's efficiency factor for a planar, tapered, swept wing.
@@ -69,7 +69,11 @@ def oswalds_efficiency(
             1 + f(taper_ratio - delta_lambda) * AR
     )
 
-    return e_theo
+    fuselage_wake_contraction_correction_factor = 1 - 2 * (fuselage_diameter_to_span_ratio) ** 2
+
+    e = e_theo * fuselage_wake_contraction_correction_factor
+
+    return e
 
 
 def optimal_taper_ratio(
