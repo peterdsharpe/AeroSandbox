@@ -83,6 +83,7 @@ class Wing(AeroSandboxObject):
          * yz: YZ-distance between the root and tip of the wing
          * y: Y-distance between the root and tip of the wing
          * z: Z-distance between the root and tip of the wing
+         * y-full: Y-distance between the centerline and the tip of the wing
         If symmetric, this is doubled to obtain the full span.
         :param type: One of the above options, as a string.
         :return: span
@@ -124,6 +125,11 @@ class Wing(AeroSandboxObject):
             tip = self.xsecs[-1]  # type: WingXSec
             span = cas.fabs(
                 tip.xyz_le[2] - root.xyz_le[2]
+            )
+        elif type == "y-full":
+            tip = self.xsecs[-1]
+            span = cas.fabs(
+                tip.xyz_le[1] - 0
             )
         else:
             raise ValueError("Bad value of 'type'!")
