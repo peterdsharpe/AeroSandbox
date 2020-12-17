@@ -115,7 +115,7 @@ class Opti(cas.Opti):
         # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
         # This allows you to toggle frozen variables without causing problems with setting up constraints.
         elif np.all(constraint):
-            pass
+            return
 
         # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
         # This indicates that the problem is infeasible as-written, likely because the user has frozen too
