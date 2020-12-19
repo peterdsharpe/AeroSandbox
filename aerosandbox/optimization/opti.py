@@ -179,13 +179,18 @@ class Opti(cas.Opti):
             {constraint}""")
 
     def parameter(self,
-                  value: float,
+                  value: float = 0.,
                   ) -> cas.MX:
         """
         Initialize a new parameter.
 
         Args:
-            value: Value to set the parameter to.
+            value: Value to set the parameter to. Defaults to zero.
+                The value can also be manually set (or re-set) after parameter initialization using the syntax:
+                >>> param = opti.parameter()
+                >>> opti.set_value(param, 5)
+                Which initializes a new parameter and sets its value to 5.
+
 
         Returns:
             The parameter itself as a symbolic CasADi variable (MX type).
