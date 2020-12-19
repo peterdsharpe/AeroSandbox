@@ -204,5 +204,42 @@ class Opti(cas.Opti):
 
         return param
 
+    def solve(self,
+              parameter_mapping: dict = None
+              ) -> cas.OptiSol:
+        """
+        Solve the optimization problem.
+
+        Args:
+            parameter_mapping: [Optional] Allows you to specify values for parameters.
+                Dictionary where the key is the parameter and the value is the value to be set to.
+
+                Example:
+                    >>> opti = asb.Opti()
+                    >>> x = opti.variable()
+                    >>> p = opti.parameter()
+                    >>> opti.minimize(x ** 2)
+                    >>> opti.subject_to(x >= p)
+                    >>> sol = opti.solve(
+                    >>>     {
+                    >>>         p: 5 # Sets the value of parameter p to 5, then solves.
+                    >>>     }
+                    >>> )
+
+
+        Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
+            OptiSol.value(variable).
+
+            Example:
+                >>> sol = opti.solve()
+                >>> x_star = sol.value(x) # Get the value of variable x at the optimum.
+
+        """
+        if parameter_mapping is not None:
+            for k, v in parameter_mapping.items():
+                self.set_value(k, v)
+
+        return super().solve()
+
 if __name__ == '__main__':
     pytest.main()
