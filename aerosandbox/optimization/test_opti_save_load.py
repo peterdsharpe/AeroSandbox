@@ -142,4 +142,5 @@ def test_save_and_load_opti_vectorized(tmp_path=r"C:/Users/User/Downloads"):
 
 if __name__ == '__main__':
     pytest.main()
+    print("Hello world")
     # test_save_and_load_opti_vectorized()
