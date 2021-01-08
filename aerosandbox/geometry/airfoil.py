@@ -158,7 +158,7 @@ class Airfoil:
 
         for line in raw_text:
             try:
-                line_split = re.split('[; |, |\*|\n]', line)
+                line_split = re.split(r'[; |, |\*|\n]', line)
                 line_items = [s for s in line_split
                               if s != "" and is_number(s)
                               ]

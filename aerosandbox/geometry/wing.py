@@ -223,7 +223,7 @@ class Wing(AeroSandboxObject):
     #     return cas.vertcat(x_mac, y_mac, z_mac)
 
     def mean_twist_angle(self) -> float:
-        """
+        r"""
         Returns the mean twist angle (in degrees) of the wing, weighted by span.
         You can think of it as \int_{b}(twist)db, where b is span.
         WARNING: This function's output is only exact in the case where all of the cross sections have the same twist axis!
