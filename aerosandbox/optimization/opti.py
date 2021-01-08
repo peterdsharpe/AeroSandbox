@@ -1,8 +1,9 @@
 import casadi as cas
-from typing import Union, List
+from typing import Union, List, Dict
 import numpy as np
 import pytest
 import json
+
 
 class Opti(cas.Opti):
     def __init__(self,
@@ -104,7 +105,7 @@ class Opti(cas.Opti):
         # If the variable is to be frozen, return the initial guess. Otherwise, define the variable using CasADi symbolics.
         if freeze:
             # var = init_guess * np.ones(n_vars)
-            var = self.parameter(n_params = n_vars, value = init_guess)
+            var = self.parameter(n_params=n_vars, value=init_guess)
         else:
             if not log_transform:
                 var = scale * super().variable(n_vars)
@@ -159,7 +160,7 @@ class Opti(cas.Opti):
             dual = self.dual(constraint)
 
             return dual
-        else: # Constraint is not valid because it is not MX type or is parametric.
+        else:  # Constraint is not valid because it is not MX type or is parametric.
             try:
                 constraint_satisfied = np.all(self.value(constraint))
             except:
@@ -214,19 +215,55 @@ class Opti(cas.Opti):
 
         return param
 
-    def save_solution(self,
-                      ):
+    def save_solution(self):
+        if self.cache_filename is None:
+            raise ValueError("""In order to use the save feature, you need to supply a filepath for the cache upon
+                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
+
+        # Write a function that tries to turn an iterable into a JSON-serializable list
+        def try_to_put_in_list(iterable):
+            try:
+                return list(iterable)
+            except TypeError:
+                return iterable
+
+        # Build up a dictionary of all the variables
         solution_dict = {}
-        for k, v in self.variables_categorized.items():
-            pass # TODO finish
+        for category, category_variables in self.variables_categorized.items():
+            category_values = [
+                try_to_put_in_list(self.value(variable))
+                for variable in category_variables
+            ]
+
+            solution_dict[category] = category_values
+
+        # Write the dictionary to file
         with open(self.cache_filename, "w+") as f:
             json.dump(
-                variables_dict,
+                solution_dict,
+                fp=f,
                 indent=4
             )
 
+        return solution_dict
+
+    def get_solution_dict_from_cache(self):
+        if self.cache_filename is None:
+            raise ValueError("""In order to use the load feature, you need to supply a filepath for the cache upon
+                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
+
+        with open(self.cache_filename, "r") as f:
+            solution_dict = json.load(fp=f)
+
+        # Turn all vectorized variables back into NumPy arrays
+        for category in solution_dict:
+            for i, var in enumerate(solution_dict[category]):
+                solution_dict[category][i] = np.array(var)
+
+        return solution_dict
+
     def solve(self,
-              parameter_mapping: dict = None
+              parameter_mapping: Dict[cas.MX, float] = None
               ) -> cas.OptiSol:
         """
         Solve the optimization problem.
@@ -256,14 +293,46 @@ class Opti(cas.Opti):
                 >>> x_star = sol.value(x) # Get the value of variable x at the optimum.
 
         """
-        if parameter_mapping is not None:
-            for k, v in parameter_mapping.items():
-                self.set_value(k, v)
+        if parameter_mapping is None:
+            parameter_mapping = {}
 
+        # If you're loading frozen variables from cache, do it here:
+        if self.load_frozen_variables_from_cache:
+            solution_dict = self.get_solution_dict_from_cache()
+            for category in self.variable_categories_to_freeze:
+                category_variables = self.variables_categorized[category]
+                category_values = solution_dict[category]
+
+                if len(category_variables) != len(category_values):
+                    raise RuntimeError("""Problem with loading cached solution: it looks like new variables have been
+                    defined since the cached solution was saved (or variables were defined in a different order). 
+                    Because of this, the cache cannot be loaded. 
+                    Re-run the original optimization study to regenerate the cached solution.""")
+
+                new_parameter_mappings = {
+                    k: v for k, v in zip(category_variables, category_values)
+                }
+                parameter_mapping = {**parameter_mapping, **new_parameter_mappings}
+
+        # Map any parameters to needed values
+        for k, v in parameter_mapping.items():
+            size_k = np.product(k.shape)
+            size_v = np.product(v.shape)
+            if size_k != size_v:
+                raise RuntimeError("""Problem with loading cached solution: it looks like the length of a vectorized 
+                variable has changed since the cached solution was saved (or variables were defined in a different order). 
+                Because of this, the cache cannot be loaded. 
+                Re-run the original optimization study to regenerate the cached solution.""")
+
+            self.set_value(k, v)
+
+        # Do the actual solve
         sol = super().solve()
 
-        return sol
+        if self.save_to_cache_on_solve:
+            self.save_solution()
 
+        return sol
 
 
 if __name__ == '__main__':
