@@ -2,6 +2,7 @@ import aerosandbox as asb
 from aerosandbox import cas
 import numpy as np
 import pytest
+import os
 
 """
 Minimization over a simple unimodal function is used here:
@@ -24,7 +25,9 @@ def test_opti():
     for i in [x, y]:
         assert sol.value(i) == pytest.approx(1, abs=1e-4)
 
-def test_save_opti(temp_filename=r"C:/Users/User/Downloads/temp.json"):
+def test_save_opti(tmp_path=r"C:/Users/User/Downloads"):
+    temp_filename = tmp_path + os.sep + "temp.json"
+
     opti = asb.Opti(cache_filename=temp_filename)  # set up an optimization environment
 
     # Define optimization variables
@@ -40,7 +43,9 @@ def test_save_opti(temp_filename=r"C:/Users/User/Downloads/temp.json"):
 
     opti.save_solution()
 
-def test_save_and_load_opti(temp_filename=r"C:/Users/User/Downloads/temp.json"):
+def test_save_and_load_opti(tmp_path=r"C:/Users/User/Downloads"):
+    temp_filename = tmp_path + os.sep + "temp.json"
+
     ### Round 1 optimization: free optimization
 
     opti = asb.Opti(
@@ -86,7 +91,9 @@ def test_save_and_load_opti(temp_filename=r"C:/Users/User/Downloads/temp.json"):
     assert sol.value(y) == pytest.approx(2)
     assert sol.value(f) == pytest.approx(1)
 
-def test_save_and_load_opti_vectorized(temp_filename=r"C:/Users/User/Downloads/temp.json"):
+def test_save_and_load_opti_vectorized(tmp_path=r"C:/Users/User/Downloads"):
+    temp_filename = tmp_path + os.sep + "temp.json"
+
     ### Round 1 optimization: free optimization
 
     opti = asb.Opti(
