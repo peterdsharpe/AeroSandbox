@@ -4,13 +4,13 @@ import numpy as np
 import pytest
 import json
 
-
 class Opti(cas.Opti):
     def __init__(self,
                  variable_categories_to_freeze: List[str] = [],
                  cache_filename: str = None,
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
+                 ignore_violated_parametric_constraints: bool = False,
                  ):
 
         # Parent class initialization
@@ -21,13 +21,7 @@ class Opti(cas.Opti):
         self.cache_filename = cache_filename
         self.load_frozen_variables_from_cache = load_frozen_variables_from_cache
         self.save_to_cache_on_solve = save_to_cache_on_solve
-
-        # Set default solver settings.
-        p_opts = {}
-        s_opts = {}
-        s_opts["max_iter"] = 3000
-        s_opts["mu_strategy"] = "adaptive"
-        self.solver('ipopt', p_opts, s_opts)  # Default to IPOPT solver
+        self.ignore_violated_parametric_constraints = ignore_violated_parametric_constraints
 
         # Start tracking variables and categorize them.
         self.variables_categorized = {}  # key: value :: category name [str] : list of variables [list]
@@ -168,7 +162,7 @@ class Opti(cas.Opti):
                     doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
                     {constraint}""")
 
-            if constraint_satisfied:
+            if constraint_satisfied or self.ignore_violated_parametric_constraints:
                 # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
                 # This allows you to toggle frozen variables without causing problems with setting up constraints.
                 return None  # dual of an always-true constraint doesn't make sense to evaluate.
@@ -176,9 +170,8 @@ class Opti(cas.Opti):
                 # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
                 # This indicates that the problem is infeasible as-written, likely because the user has frozen too
                 # many decision variables using the Opti.variable(freeze=True) syntax.
-                raise RuntimeError(f"""The problem is infeasible due to a constraint that always evaluates False. You 
-                supplied the following constraint: {constraint}. This can happen if you've frozen too 
-                many decision variables, leading to an overconstrained problem.""")
+                raise RuntimeError(f"""The problem is infeasible due to a constraint that always evaluates False. 
+                This can happen if you've frozen too many decision variables, leading to an overconstrained problem.""")
 
     def parameter(self,
                   n_params: int = 1,
@@ -263,7 +256,9 @@ class Opti(cas.Opti):
         return solution_dict
 
     def solve(self,
-              parameter_mapping: Dict[cas.MX, float] = None
+              parameter_mapping: Dict[cas.MX, float] = None,
+              max_iter: int = 3000,
+              solver: str = 'ipopt'
               ) -> cas.OptiSol:
         """
         Solve the optimization problem.
@@ -325,6 +320,13 @@ class Opti(cas.Opti):
                 Re-run the original optimization study to regenerate the cached solution.""")
 
             self.set_value(k, v)
+
+        # Set solver settings.
+        p_opts = {}
+        s_opts = {}
+        s_opts["max_iter"] = max_iter
+        s_opts["mu_strategy"] = "adaptive"
+        self.solver(solver, p_opts, s_opts)  # Default to IPOPT solver
 
         # Do the actual solve
         sol = super().solve()
