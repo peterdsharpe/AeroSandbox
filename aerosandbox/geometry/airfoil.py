@@ -3,6 +3,7 @@ from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from scipy.interpolate import interp1d
 import re
 
+
 class Airfoil:
     def __init__(self,
                  name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
@@ -56,11 +57,9 @@ class Airfoil:
         if repanel:
             self.repanel(inplace=True)
 
-    def __repr__(self):
-        return "Airfoil %s (%i points)" % (
-            self.name,
-            self.coordinates.shape[0] if self.coordinates is not None else 0,
-        )
+    def __repr__(self):  # String representation
+        n_points = self.coordinates.shape[0] if self.coordinates is not None else 0
+        return f"Airfoil {self.name} ({n_points} points)"
 
     def populate_coordinates_from_naca(self, n_points_per_side=100):
         """
@@ -149,7 +148,8 @@ class Airfoil:
                 raw_text = f.readlines()
 
         raw_coordinates = []
-        def is_number(s): # determines whether a string is representable as a float
+
+        def is_number(s):  # determines whether a string is representable as a float
             try:
                 float(s)
             except ValueError:
@@ -268,7 +268,7 @@ class Airfoil:
 
     def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
         """
-        Returns the local camber of the airfoil.
+        Returns the local camber of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
         :return: Local camber of the airfoil (y/c) [1D array].
         """
@@ -291,7 +291,7 @@ class Airfoil:
 
     def local_thickness(self, x_over_c=np.linspace(0, 1, 101)):
         """
-        Returns the local thickness of the airfoil.
+        Returns the local thickness of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
         :return: Local thickness of the airfoil (y/c) [1D array].
         """
