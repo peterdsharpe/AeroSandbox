@@ -8,7 +8,9 @@ import signal
 from contextlib import contextmanager
 import sys
 
+
 class TimeoutException(Exception): pass
+
 
 @contextmanager
 def time_limit(seconds):
@@ -32,8 +34,10 @@ def time_limit(seconds):
     Returns:
 
     """
+
     def signal_handler(signum, frame):
         raise TimeoutException("Timed out!")
+
     try:
         signal.signal(signal.SIGALRM, signal_handler)
     except AttributeError:
@@ -43,6 +47,19 @@ def time_limit(seconds):
         yield
     finally:
         signal.alarm(0)
+
+
+def remove_nans(array):
+    """
+    Removes NaN values in a 1D array.
+    Args:
+        array: a 1D array of data.
+
+    Returns: The array with all NaN values stripped.
+
+    """
+    return array[~np.isnan(array)]
+
 
 def patch_nans(array):
     """

@@ -42,8 +42,6 @@ def eng_string(x, format='%.3g', si=True):
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
 
 
-remove_nans = lambda x: x[~np.isnan(x)]
-
 import sys
 import os
 from contextlib import contextmanager
