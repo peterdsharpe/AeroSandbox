@@ -1,6 +1,7 @@
 import copy
 from aerosandbox.tools.string_formatting import eng_string
 from aerosandbox.tools.casadi_functions import *
+import numpy as np
 
 try:
     from xfoil import XFoil
