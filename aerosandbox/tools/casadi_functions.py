@@ -3,15 +3,15 @@ from typing import Tuple
 
 
 def sind(x):
-    return cas.sin(theta * cas.pi / 180)
+    return cas.sin(x * cas.pi / 180)
 
 
 def cosd(x):
-    return cas.cos(theta * cas.pi / 180)
+    return cas.cos(x * cas.pi / 180)
 
 
 def tand(x):
-    return cas.tan(theta * cas.pi / 180)
+    return cas.tan(x * cas.pi / 180)
 
 
 def atan2d(y, x):
