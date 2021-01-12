@@ -2,7 +2,7 @@
 import copy
 from aerosandbox.visualization import *
 from aerosandbox.tools.string_formatting import *
-from aerosandbox.tools.casadi_tools import *
+from aerosandbox.tools.casadi_functions import *
 
 try:
     from xfoil import XFoil
