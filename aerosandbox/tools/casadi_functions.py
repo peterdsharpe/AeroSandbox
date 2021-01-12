@@ -1,5 +1,5 @@
 import casadi as cas
-from typing import Tuple
+from typing import Tuple, Union
 
 
 def sind(x):
@@ -25,7 +25,7 @@ def clip(x, min, max):  # Clip a value to a range [min, max].
 def sigmoid(
         x,
         sigmoid_type: str = "tanh",
-        normalization_range: Tuple[float] = (0, 1)
+        normalization_range: Tuple[Union[float, int], Union[float, int]] = (0, 1)
 ):
     """
     A sigmoid function. From Wikipedia (https://en.wikipedia.org/wiki/Sigmoid_function):
