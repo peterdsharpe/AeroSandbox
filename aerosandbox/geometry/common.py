@@ -1,6 +1,4 @@
-
 import copy
-from aerosandbox.visualization import *
 from aerosandbox.tools.string_formatting import *
 from aerosandbox.tools.casadi_functions import *
 
@@ -133,16 +131,6 @@ def linspace_3D(start, stop, n_points):
     return points
 
 
-def plot_point_cloud(
-        p  # type: np.ndarray
-):
-    """
-    Plots an Nx3 point cloud with Plotly
-    :param p: An Nx3 array of points to be plotted.
-    :return: None
-    """
-    p = np.array(p)
-    px.scatter_3d(x=p[:, 0], y=p[:, 1], z=p[:, 2]).show()
 
 
 def kulfan_coordinates(
