@@ -1271,3 +1271,78 @@ class Airfoil:
         plt.show()
 
         return self
+
+
+
+def kulfan_coordinates(
+        lower_weights=-0.2 * np.ones(5),  # type: np.ndarray
+        upper_weights=0.2 * np.ones(5),  # type: np.ndarray
+        enforce_continuous_LE_radius=True,
+        TE_thickness=0.005,  # type: float
+        n_points_per_side=100,  # type: int
+        N1=0.5,  # type: float
+        N2=1.0,  # type: float
+):
+    """
+    Calculates the coordinates of a Kulfan (CST) airfoil.
+    To make a Kulfan (CST) airfoil, use the following syntax:
+
+    asb.Airfoil("My Airfoil Name", coordinates = asb.kulfan_coordinates(*args))
+
+    More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
+    Notes on N1, N2 (shape factor) combinations:
+        * 0.5, 1: Conventional airfoil
+        * 0.5, 0.5: Elliptic airfoil
+        * 1, 1: Biconvex airfoil
+        * 0.75, 0.75: Sears-Haack body (radius distribution)
+        * 0.75, 0.25: Low-drag projectile
+        * 1, 0.001: Cone or wedge airfoil
+        * 0.001, 0.001: Rectangle, circular duct, or circular rod.
+    :param lower_weights:
+    :param upper_weights:
+    :param enforce_continuous_LE_radius: Enforces a continous leading-edge radius by throwing out the first lower weight.
+    :param TE_thickness:
+    :param n_points_per_side:
+    :param N1: LE shape factor
+    :param N2: TE shape factor
+    :return:
+    """
+    from scipy.special import comb
+
+    if enforce_continuous_LE_radius:
+        lower_weights[0] = -1 * upper_weights[0]
+
+    x_lower = np_cosspace(0, 1, n_points_per_side)
+    x_upper = x_lower[::-1]
+
+    def shape(w, x):
+        # Class function
+        C = x ** N1 * (1 - x) ** N2
+
+        # Shape function (Bernstein polynomials)
+        n = len(w) - 1  # Order of Bernstein polynomials
+
+        K = comb(n, np.arange(n + 1))  # Bernstein polynomial coefficients
+
+        S_matrix = (
+                w * K * np.expand_dims(x, 1) ** np.arange(n + 1) *
+                np.expand_dims(1 - x, 1) ** (n - np.arange(n + 1))
+        )  # Polynomial coefficient * weight matrix
+        S = np.sum(S_matrix, axis=1)
+
+        # Calculate y output
+        y = C * S
+        return y
+
+    y_lower = shape(lower_weights, x_lower)
+    y_upper = shape(upper_weights, x_upper)
+
+    # TE thickness
+    y_lower -= x_lower * TE_thickness / 2
+    y_upper += x_upper * TE_thickness / 2
+
+    x = np.concatenate([x_upper, x_lower])
+    y = np.concatenate([y_upper, y_lower])
+    coordinates = np.vstack((x, y)).T
+
+    return coordinates
