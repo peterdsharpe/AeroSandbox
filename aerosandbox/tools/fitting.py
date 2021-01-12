@@ -26,6 +26,9 @@ def fit(
 ):
     """
     Fits an analytical model to n datapoints using an automatic-differentiable optimization approach.
+
+    For examples of usage, see aerosandbox.tools.test_fitting
+
     :param model: A callable with syntax f(x, p) where:
             * x is a dict of dependent variables.
               If one-dimensional (e.g. f(x) instead of f(x,y)), you can instead supply x as a 1D ndarray.
