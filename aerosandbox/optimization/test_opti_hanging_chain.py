@@ -10,9 +10,9 @@ Hanging Chain problem from https://web.casadi.org/blog/opti/
 Next, we will visit the hanging chain problem. We consider 
 N point masses, connected by springs, hung from two fixed points at (-2, 1) and (2, 1), subject to gravity.
 
+The chain should also remain above a locally-concave ground plane.
+
 We seek the rest position of the system, obtained by minimizing the total energy in the system.
-
-
 
 """
 
