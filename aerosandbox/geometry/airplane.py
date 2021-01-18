@@ -1,5 +1,6 @@
 from aerosandbox.geometry.common import *
 from typing import List
+from aerosandbox.visualization.plotly_Figure3D import Figure3D
 
 class Airplane(AeroSandboxObject):
     """

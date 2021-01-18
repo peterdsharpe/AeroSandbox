@@ -1,6 +1,7 @@
 from aerosandbox.geometry.common import *
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from scipy.interpolate import interp1d
+import plotly.graph_objects as go
 import re
 
 
