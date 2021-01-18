@@ -299,7 +299,7 @@ class Opti(cas.Opti):
 
             Example:
                 >>> sol = opti.solve()
-                >>> x_star = sol.value(x) # Get the value of variable x at the optimum.
+                >>> x_opt = sol.value(x) # Get the value of variable x at the optimum.
 
         """
         if parameter_mapping is None:
