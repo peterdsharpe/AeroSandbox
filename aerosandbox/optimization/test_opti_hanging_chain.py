@@ -1,5 +1,6 @@
 import aerosandbox as asb
 from aerosandbox import cas
+import numpy as np
 import pytest
 import matplotlib.pyplot as plt
 
@@ -64,7 +65,8 @@ def test_opti_hanging_chain_with_callback():
             opti.debug.value(x),
             opti.debug.value(y),
             ".-",
-            label=f"Iter {iter}"
+            label=f"Iter {iter}",
+            zorder = 3 + iter
         )
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
@@ -72,6 +74,10 @@ def test_opti_hanging_chain_with_callback():
     sol = opti.solve(
         callback=plot
     )
+
+    x_ground = np.linspace(-2, 2, N)
+    y_ground = np.cos(0.1 * x_ground) - 0.5
+    plt.plot(x_ground, y_ground, "--k", zorder=2)
 
     plt.legend()
     plt.show()
