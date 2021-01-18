@@ -93,6 +93,7 @@ class Opti(cas.Opti):
             raise ValueError("The 'scale' argument must be a positive number.")
 
         # If the variable is in a category to be frozen, fix the variable at the initial guess.
+        is_manually_frozen = freeze
         if category in self.variable_categories_to_freeze:
             freeze = True
 
@@ -114,6 +115,7 @@ class Opti(cas.Opti):
         if category not in self.variables_categorized:  # Add a category if it does not exist
             self.variables_categorized[category] = []
         self.variables_categorized[category].append(var)
+        var.is_manually_frozen = is_manually_frozen
 
         return var
 
@@ -304,10 +306,12 @@ class Opti(cas.Opti):
                     Because of this, the cache cannot be loaded. 
                     Re-run the original optimization study to regenerate the cached solution.""")
 
-                new_parameter_mappings = {
-                    k: v for k, v in zip(category_variables, category_values)
-                }
-                parameter_mapping = {**parameter_mapping, **new_parameter_mappings}
+                for var, val in zip(category_variables, category_values):
+                    if not var.is_manually_frozen:
+                        parameter_mapping = {
+                            **parameter_mapping,
+                            var: val
+                        }
 
         # Map any parameters to needed values
         for k, v in parameter_mapping.items():

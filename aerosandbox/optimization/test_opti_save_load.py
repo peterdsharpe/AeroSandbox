@@ -139,6 +139,53 @@ def test_save_and_load_opti_vectorized(tmp_path):
     assert sol.value(y) == pytest.approx(4)
     assert sol.value(f) == pytest.approx(12)
 
+def test_save_and_load_opti_freeze_override(tmp_path):
+    temp_filename = tmp_path / "temp.json"
+
+    ### Round 1 optimization: free optimization
+
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        variable_categories_to_freeze=[],
+        save_to_cache_on_solve=True,
+    )
+    x = opti.variable(category="Cat 1")
+    y = opti.variable(category="Cat 2")
+    f = (x-1) ** 2 + (y-1) ** 2
+    opti.minimize(f)
+
+    # Optimize, save to cache, print
+    sol = opti.solve()
+    opti.save_solution()
+    for i in ["x", "y", "f"]:
+        print(f"{i}: {sol.value(eval(i))}")
+
+    # Test
+    assert sol.value(x) == pytest.approx(1)
+    assert sol.value(y) == pytest.approx(1)
+    assert sol.value(f) == pytest.approx(0)
+
+    ### Round 2 optimization: Cat 1 is fixed from before but then overridden; slightly different objective now
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        variable_categories_to_freeze=["Cat 1"],
+        load_frozen_variables_from_cache=True,
+
+    )
+    x = opti.variable(category="Cat 1", init_guess=3, freeze=True)
+    y = opti.variable(category="Cat 2")
+    f = (x-2) ** 2 + (y-2) ** 2
+    opti.minimize(f)
+
+    # Optimize, save to cache, print
+    sol = opti.solve()
+    for i in ["x", "y", "f"]:
+        print(f"{i}: {sol.value(eval(i))}")
+
+    # Test
+    assert sol.value(x) == pytest.approx(3)
+    assert sol.value(y) == pytest.approx(2)
+    assert sol.value(f) == pytest.approx(1)
 
 if __name__ == '__main__':
     pytest.main()
