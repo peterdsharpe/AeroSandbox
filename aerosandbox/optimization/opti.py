@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 import json
 
+
 class Opti(cas.Opti):
     def __init__(self,
                  variable_categories_to_freeze: List[str] = [],
@@ -260,7 +261,7 @@ class Opti(cas.Opti):
     def solve(self,
               parameter_mapping: Dict[cas.MX, float] = None,
               max_iter: int = 3000,
-              callback: Callable = None, # A Callable that takes in the argument opti
+              callback: Callable = None,
               solver: str = 'ipopt'
               ) -> cas.OptiSol:
         """
@@ -282,6 +283,16 @@ class Opti(cas.Opti):
                     >>>     }
                     >>> )
 
+            max_iter: [Optional] The maximum number of iterations allowed before giving up.
+
+            callback: [Optional] A function to be called at each iteration of the optimization algorithm.
+                Useful for printing progress or displaying intermediate results.
+
+                The callback function `func` should have the syntax `func(iteration_number)`, where iteration_number
+                is an integer corresponding to the current iteration number. In order to access intermediate quantities
+                of optimization variables, use the `Opti.debug.value(x)` syntax for each variable `x`.
+
+            solve: [Optional] Which optimization backend do you wish to use? [str] Only tested with "ipopt".
 
         Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
             OptiSol.value(variable).
