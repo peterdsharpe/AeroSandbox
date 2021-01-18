@@ -8,3 +8,4 @@ publish_to_pypi.bat
 *.asw
 docs/_build
 docs/source
+.pytest_cache/
