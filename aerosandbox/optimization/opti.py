@@ -1,5 +1,5 @@
 import casadi as cas
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Callable
 import numpy as np
 import pytest
 import json
@@ -260,6 +260,7 @@ class Opti(cas.Opti):
     def solve(self,
               parameter_mapping: Dict[cas.MX, float] = None,
               max_iter: int = 3000,
+              callback: Callable = None, # A Callable that takes in the argument opti
               solver: str = 'ipopt'
               ) -> cas.OptiSol:
         """
@@ -331,6 +332,10 @@ class Opti(cas.Opti):
         s_opts["max_iter"] = max_iter
         s_opts["mu_strategy"] = "adaptive"
         self.solver(solver, p_opts, s_opts)  # Default to IPOPT solver
+
+        # Set the callback
+        if callback is not None:
+            self.callback(callback)
 
         # Do the actual solve
         sol = super().solve()
