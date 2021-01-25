@@ -5,7 +5,7 @@ from aerosandbox.geometry.airfoil.airfoil_families import *
 from scipy.interpolate import interp1d
 
 
-class Airfoil(Polygon):
+class Airfoil(AeroSandboxObject, Polygon):
     def __init__(self,
                  name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
