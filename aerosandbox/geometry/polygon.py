@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Polygon():
     def __init__(self, coordinates):
         self.coordinates = coordinates  # Nx2 NumPy ndarray
@@ -17,20 +18,6 @@ class Polygon():
         :return: Y coordinates as a vector
         """
         return self.coordinates[:, 1]
-
-    def TE_thickness(self):
-        # Returns the thickness of the trailing edge of the polygon, in nondimensional (chord-normalized) units.
-        return self.local_thickness(x_over_c=1)
-
-    def TE_angle(self):
-        # Returns the trailing edge angle of the polygon, in degrees
-        upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
-        lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
-
-        return 180 / np.pi * (np.arctan2(
-            upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
-            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
-        ))
 
     def area(self):
         # Returns the area of the polygon, in nondimensional (normalized to chord^2) units.
@@ -147,3 +134,19 @@ class Polygon():
         J = Ixx + Iyy
 
         return J
+
+
+def stack_coordinates(
+        x: np.ndarray,
+        y: np.ndarray
+) -> np.ndarray:
+    """
+    Stacks a pair of x, y coordinate arrays into a Nx2 ndarray.
+    Args:
+        x: A 1D ndarray of x-coordinates
+        y: A 1D ndarray of y-coordinates
+
+    Returns: A Nx2 ndarray of [x, y] coordinates.
+
+    """
+    return np.vstack((x, y)).T

@@ -1,8 +1,8 @@
 from aerosandbox.geometry.common import *
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
+from aerosandbox.geometry.airfoil.airfoil_families import *
 from scipy.interpolate import interp1d
-import re
 
 
 class Airfoil(Polygon):
@@ -20,7 +20,6 @@ class Airfoil(Polygon):
                  # Moment coefficient function (about quarter-chord) (alpha in deg)
                  # 0
                  # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 repanel=False
                  ):
         """
         Creates an Airfoil object.
@@ -35,169 +34,34 @@ class Airfoil(Polygon):
         :param Cm_function:
         :param repanel: should we repanel this airfoil upon creation?
         """
-        self.name = name if name is not None else "Untitled"
-        self.coordinates = None
-        if coordinates is not None:
-            if type(coordinates) is str:  # Assume coordinates is a filepath to a .dat file
-                self._populate_coordinates_from_filepath(filepath=coordinates)
-            else:  # Assume coordinates are the actual coordinates
-                self.coordinates = coordinates
-        else:  # There are no coordinates given
+        ### Handle the airfoil name
+        if name is not None:
+            self.name = name
+        else:
+            self.name = "Untitled"
+
+        ### Handle the coordinates
+        if coordinates is None:  # If no coordinates are given
             try:  # See if it's a NACA airfoil
-                self._populate_coordinates_from_naca()
+                coordinates = get_NACA_coordinates(name=self.name)
             except:
                 try:  # See if it's in the UIUC airfoil database
-                    self._populate_coordinates_from_UIUC_database()
+                    coordinates = get_UIUC_coordinates(name=self.name)
                 except:
                     pass
+        elif isinstance(coordinates, str):  # If coordinates is a string, assume it's a filepath to a .dat file
+            coordinates = get_file_coordinates(filepath=coordinates)
 
+        self.coordinates = coordinates
+
+        ### Handle other arguments
         self.CL_function = CL_function
         self.CDp_function = CDp_function
         self.Cm_function = Cm_function
 
-        if repanel:
-            self.repanel(inplace=True)
-
     def __repr__(self):  # String representation
         n_points = self.coordinates.shape[0] if self.coordinates is not None else 0
         return f"Airfoil {self.name} ({n_points} points)"
-
-    def _populate_coordinates_from_naca(self, n_points_per_side=100):
-        """
-        Populates a variable called self.coordinates with the coordinates of the airfoil.
-        :param n_points_per_side: Number of points per side of the airfoil (top/bottom).
-        :return: None (in-place)
-        """
-        name = self.name.lower().strip()
-        assert "naca" in name, "Not a NACA airfoil!"
-
-        nacanumber = name.split("naca")[1]
-        assert nacanumber.isdigit(), "Couldn't parse the number of the NACA airfoil!"
-
-        assert len(nacanumber) == 4, "Can only parse 4-digit NACA airfoils at the moment!"
-
-        # Parse
-        max_camber = int(nacanumber[0]) * 0.01
-        camber_loc = int(nacanumber[1]) * 0.1
-        thickness = int(nacanumber[2:]) * 0.01
-
-        # Referencing https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_cambered_4-digit_NACA_airfoil
-        # from here on out
-
-        # Make uncambered coordinates
-        x_t = cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
-        y_t = 5 * thickness * (
-                + 0.2969 * x_t ** 0.5
-                - 0.1260 * x_t
-                - 0.3516 * x_t ** 2
-                + 0.2843 * x_t ** 3
-                - 0.1015 * x_t ** 4  # 0.1015 is original, #0.1036 for sharp TE
-        )
-
-        if camber_loc == 0:
-            camber_loc = 0.5  # prevents divide by zero errors for things like naca0012's.
-
-        # Get camber
-
-        y_c = cas.if_else(
-            x_t <= camber_loc,
-            max_camber / camber_loc ** 2 * (2 * camber_loc * x_t - x_t ** 2),
-            max_camber / (1 - camber_loc) ** 2 * ((1 - 2 * camber_loc) + 2 * camber_loc * x_t - x_t ** 2)
-        )
-
-        # Get camber slope
-        dycdx = cas.if_else(
-            x_t <= camber_loc,
-            2 * max_camber / camber_loc ** 2 * (camber_loc - x_t),
-            2 * max_camber / (1 - camber_loc) ** 2 * (camber_loc - x_t)
-        )
-        theta = cas.atan(dycdx)
-
-        # Combine everything
-        x_U = x_t - y_t * cas.sin(theta)
-        x_L = x_t + y_t * cas.sin(theta)
-        y_U = y_c + y_t * cas.cos(theta)
-        y_L = y_c - y_t * cas.cos(theta)
-
-        # Flip upper surface so it's back to front
-        x_U, y_U = x_U[::-1, :], y_U[::-1, :]
-
-        # Trim 1 point from lower surface so there's no overlap
-        x_L, y_L = x_L[1:], y_L[1:]
-
-        x = cas.vertcat(x_U, x_L)
-        y = cas.vertcat(y_U, y_L)
-
-        self.coordinates = np.array(cas.horzcat(x, y))
-
-    def _populate_coordinates_from_UIUC_database(self):
-        """
-        Populates a variable called self.coordinates with the coordinates of the airfoil.
-        :return: None (in-place)
-        """
-
-        name = self.name.lower().strip()
-
-        import importlib.resources
-        from aerosandbox import airfoil_database
-
-        try:
-            with importlib.resources.open_text(airfoil_database, name) as f:
-                raw_text = f.readlines()
-        except:
-            with importlib.resources.open_text(airfoil_database, name + '.dat') as f:
-                raw_text = f.readlines()
-
-        raw_coordinates = []
-
-        def is_number(s):  # determines whether a string is representable as a float
-            try:
-                float(s)
-            except ValueError:
-                return False
-            return True
-
-        for line in raw_text:
-            try:
-                line_split = re.split(r'[; |, |\*|\n]', line)
-                line_items = [s for s in line_split
-                              if s != "" and is_number(s)
-                              ]
-                if len(line_items) == 2:
-                    raw_coordinates.append(line_items)
-            except:
-                pass
-
-        coordinates = np.array(raw_coordinates, dtype=float)
-        self.coordinates = coordinates
-
-    def _populate_coordinates_from_filepath(self, filepath):
-        """
-        Populates a variable called self.coordinates with the coordinates of the airfoil.
-        :param filepath: A DAT file to pull the airfoil coordinates from. (includes the ".dat") [string]
-        :return: None (in-place)
-        """
-        try:
-            with open(filepath, "r") as f:
-                raw_text = f.readlines()
-        except:
-            try:
-                with open(filepath + ".dat", "r") as f:
-                    raw_text = f.readlines()
-            except:
-                raise FileNotFoundError("Neither file \"%s\" nor file \"%s\" exist!" % (filepath, filepath + ".dat"))
-
-        trimmed_text = []
-        for line in raw_text:
-            try:
-                line_np = np.fromstring(line, sep=" ")
-                if line_np.shape[0] == 2:
-                    trimmed_text.append(line_np)
-            except:
-                pass
-
-        coordinates = np.hstack(trimmed_text).reshape((-1, 2))
-        self.coordinates = coordinates
 
     def populate_sectional_functions_from_xfoil_fits(self,
                                                      parallel=True,
@@ -379,6 +243,20 @@ class Airfoil(Polygon):
         # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
         return self.coordinates[:self.LE_index() + 1, :]
 
+    def TE_thickness(self):
+        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
+        return self.local_thickness(x_over_c=1)
+
+    def TE_angle(self):
+        # Returns the trailing edge angle of the polygon, in degrees
+        upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
+        lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
+
+        return 180 / np.pi * (np.arctan2(
+            upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
+            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
+        ))
+
     def repanel(self,
                 n_points_per_side=80,
                 inplace=False,
@@ -421,22 +299,20 @@ class Airfoil(Polygon):
             1 + cosspaced_points[1:],
         ))
 
-        x_coors = interp1d(
+        x = interp1d(
             distances_from_TE_normalized,
             self.coordinates[:, 0],
             kind="cubic",
         )(s)
-        y_coors = interp1d(
+        y = interp1d(
             distances_from_TE_normalized,
             self.coordinates[:, 1],
             kind="cubic",
         )(s)
 
-        coordinates = np.vstack((x_coors, y_coors)).T
-
         return Airfoil(
-            name=f"Repaneled {self.name}",
-            coordinates = coordinates
+            name=self.name,
+            coordinates=stack_coordinates(x, y)
         )
 
     def add_control_surface(
@@ -457,28 +333,92 @@ class Airfoil(Polygon):
 
         # Find the hinge point
         hinge_point_y = self.local_camber(hinge_point_x)
-        hinge_point = np.hstack((hinge_point_x, hinge_point_y))
 
-        # Find the new coordinates
-        c = np.copy(self.coordinates)
-        c[c[:, 0] > hinge_point_x] = (rotation_matrix.T @ (c[c[:, 0] > hinge_point_x] - hinge_point).T).T + hinge_point
-        coordinates = c
-
-        return Airfoil(
-            name=f"Flapped {self.name}",
-            coordinates = coordinates
+        # Find the coordinates of a rotated airfoil
+        rotated_airfoil = self.rotate(
+            angle=-np.pi / 180 * deflection,
+            x_center=hinge_point_x,
+            y_center=hinge_point_y,
         )
 
-    def flip(self):
-        x = self.x()
-        y = self.y()
+        # Merge the two sets of coordinates
 
-        x = x[::-1]
-        y = -y[::-1]
+        coordinates = np.copy(self.coordinates)
+        is_past_hinge = self.x() > hinge_point_x # TODO fix hinge self-intersecting paneling issue for large deflection
+        coordinates[is_past_hinge] = rotated_airfoil.coordinates[is_past_hinge]
+
         return Airfoil(
-            name=f"Flipped {self.name}",
-            coordinates=np.vstack((x, y)).T
+            name=self.name,
+            coordinates=coordinates
         )
+
+    def scale(self,
+              scale_x=1,
+              scale_y=1,
+              ):
+        x = self.x() * scale_x
+        y = self.y() * scale_y
+
+        if scale_y < 0:
+            x = x[::-1]
+            y = y[::-1]
+
+        return Airfoil(
+            name=self.name,
+            coordinates=stack_coordinates(x, y)
+        )
+
+    def translate(self,
+                  translate_x=0.,
+                  translate_y=0.,
+                  ):
+        x = self.x() + translate_x
+        y = self.y() + translate_y
+
+        return Airfoil(
+            name=self.name,
+            coordinates=stack_coordinates(x, y)
+        )
+
+    def rotate(self,
+               angle,
+               x_center=0.,
+               y_center=0.
+               ):
+        """
+        Rotates the airfoil clockwise by the specified amount, in radians.
+
+        Rotates about the point (x_center, y_center).
+        Args:
+            angle: Angle to rotate, counterclockwise, in radians.
+
+        Returns:
+
+        """
+
+        coordinates = np.copy(self.coordinates)
+
+        ### Translate
+        translation = np.array([x_center, y_center])
+        coordinates -= translation
+
+        ### Rotate
+        rotation_matrix = rotation_matrix_2D(
+            angle=angle,
+            backend='numpy'
+        )
+        coordinates = (rotation_matrix @ coordinates.T).T
+
+        ### Translate
+        coordinates += translation
+
+        return Airfoil(
+            name=self.name,
+            coordinates=coordinates
+        )
+
+    def normalize(self):
+        pass  # TODO finish me
 
     def write_dat(self,
                   filepath  # type: str
@@ -491,7 +431,7 @@ class Airfoil(Polygon):
         with open(filepath, "w+") as f:
             f.writelines(
                 [self.name + "\n"] +
-                ["     %.12f    %.12f\n" % tuple(coordinate) for coordinate in self.coordinates]
+                [f"\t%f\t%f\n" % tuple(coordinate) for coordinate in self.coordinates]
             )
 
     def xfoil_a(self,
@@ -1077,8 +1017,6 @@ class Airfoil(Polygon):
 
         def get_xfoil_data_at_Re(Re):
 
-            import numpy as np  # needs to be imported here to support parallelization
-
             xfoil_data = self.xfoil_aseq(
                 a_start=0,
                 a_end=15,
@@ -1128,77 +1066,3 @@ class Airfoil(Polygon):
         plt.show()
 
         return self
-
-
-def kulfan_coordinates(
-        lower_weights=-0.2 * np.ones(5),  # type: np.ndarray
-        upper_weights=0.2 * np.ones(5),  # type: np.ndarray
-        enforce_continuous_LE_radius=True,
-        TE_thickness=0.005,  # type: float
-        n_points_per_side=100,  # type: int
-        N1=0.5,  # type: float
-        N2=1.0,  # type: float
-):
-    """
-    Calculates the coordinates of a Kulfan (CST) airfoil.
-    To make a Kulfan (CST) airfoil, use the following syntax:
-
-    asb.Airfoil("My Airfoil Name", coordinates = asb.kulfan_coordinates(*args))
-
-    More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
-    Notes on N1, N2 (shape factor) combinations:
-        * 0.5, 1: Conventional airfoil
-        * 0.5, 0.5: Elliptic airfoil
-        * 1, 1: Biconvex airfoil
-        * 0.75, 0.75: Sears-Haack body (radius distribution)
-        * 0.75, 0.25: Low-drag projectile
-        * 1, 0.001: Cone or wedge airfoil
-        * 0.001, 0.001: Rectangle, circular duct, or circular rod.
-    :param lower_weights:
-    :param upper_weights:
-    :param enforce_continuous_LE_radius: Enforces a continous leading-edge radius by throwing out the first lower weight.
-    :param TE_thickness:
-    :param n_points_per_side:
-    :param N1: LE shape factor
-    :param N2: TE shape factor
-    :return:
-    """
-    from scipy.special import comb
-
-    if enforce_continuous_LE_radius:
-        lower_weights[0] = -1 * upper_weights[0]
-
-    x_lower = np_cosspace(0, 1, n_points_per_side)
-    x_upper = x_lower[::-1]
-
-    def shape(w, x):
-        # Class function
-        C = x ** N1 * (1 - x) ** N2
-
-        # Shape function (Bernstein polynomials)
-        n = len(w) - 1  # Order of Bernstein polynomials
-
-        K = comb(n, np.arange(n + 1))  # Bernstein polynomial coefficients
-
-        S_matrix = (
-                w * K * np.expand_dims(x, 1) ** np.arange(n + 1) *
-                np.expand_dims(1 - x, 1) ** (n - np.arange(n + 1))
-        )  # Polynomial coefficient * weight matrix
-        S = np.sum(S_matrix, axis=1)
-
-        # Calculate y output
-        y = C * S
-        return y
-
-    y_lower = shape(lower_weights, x_lower)
-    y_upper = shape(upper_weights, x_upper)
-
-    # TE thickness
-    y_lower -= x_lower * TE_thickness / 2
-    y_upper += x_upper * TE_thickness / 2
-
-    x = np.concatenate([x_upper, x_lower])
-    y = np.concatenate([y_upper, y_lower])
-    coordinates = np.vstack((x, y)).T
-
-    return coordinates

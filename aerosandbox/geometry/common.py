@@ -108,15 +108,15 @@ def rotation_matrix_2D(
         sintheta = np.sin(angle)
         costheta = np.cos(angle)
         rotation_matrix = np.array([
-            [costheta, sintheta],
-            [-sintheta, costheta]
+            [costheta, -sintheta],
+            [sintheta, costheta]
         ])
     elif backend == "casadi":
         sintheta = cas.sin(angle)
         costheta = cas.cos(angle)
         rotation_matrix = cas.vertcat(
-            cas.horzcat(costheta, sintheta),
-            cas.horzcat(-sintheta, costheta)
+            cas.horzcat(costheta, -sintheta),
+            cas.horzcat(sintheta, costheta)
         )
     else:
         raise ValueError("Bad value of 'backend'!")
@@ -154,7 +154,7 @@ def angle_axis_rotation_matrix(
     return rot_matrix
 
 
-def linspace_3D(start, stop, n_points):
+def linspace_3D(start, stop, n_points): # TODO make n-dimensional
     """
     Given two points (a start and an end), returns an interpolated array of points on the line between the two.
     :param start: 3D coordinates expressed as a 1D numpy array, shape==(3).
