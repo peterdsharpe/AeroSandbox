@@ -21,7 +21,7 @@ def LE_index_test(e216):
     assert e216.LE_index() == 32
 
 def repanel_test(naca4412):
-    naca4412.repanel(n_points_per_side=200, inplace=True)
+    naca4412.repanel(n_points_per_side=200)
     # assert
 
 if __name__ == '__main__':
