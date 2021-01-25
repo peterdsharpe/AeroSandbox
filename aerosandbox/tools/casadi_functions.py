@@ -142,6 +142,8 @@ def smoothmax(value1, value2, hardness):
     out /= hardness
     return out
 
+def trapz(x): # TODO document
+    return (x[1:] + x[:-1]) / 2
 
 if __name__ == '__main__':
     import numpy as np
