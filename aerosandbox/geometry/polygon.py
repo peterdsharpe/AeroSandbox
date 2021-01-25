@@ -19,6 +19,16 @@ class Polygon():
         """
         return self.coordinates[:, 1]
 
+    def n_points(self) -> int:
+        """
+        Returns the number of points/vertices/coordinates of the polygon.
+        Analogous to len(coordinates)
+        """
+        try:
+            return len(self.coordinates)
+        except TypeError:
+            return self.coordinates.shape[0]
+
     def area(self):
         # Returns the area of the polygon, in nondimensional (normalized to chord^2) units.
         x = self.x()
