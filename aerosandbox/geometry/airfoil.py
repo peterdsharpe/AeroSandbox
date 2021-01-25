@@ -2,7 +2,7 @@ from aerosandbox.geometry.common import *
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from scipy.interpolate import interp1d
-import plotly.graph_objects as go
+
 import re
 
 
@@ -318,11 +318,14 @@ class Airfoil(Polygon):
         """
         Draw the airfoil object.
         :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
-        :param backend: Which backend should we use? "plotly" or "matplotlib" [boolean]
+        :param backend: Which backend should we use? "plotly" or "matplotlib"
         :return: None
         """
         x = np.array(self.x()).reshape(-1)
         y = np.array(self.y()).reshape(-1)
+        if draw_mcl:
+            x_mcl = np.linspace(np.min(x), np.max(x), len(x))
+            y_mcl = self.local_camber(x_mcl)
         if backend == "plotly":
             fig = go.Figure()
             fig.add_trace(
@@ -334,8 +337,6 @@ class Airfoil(Polygon):
                 ),
             )
             if draw_mcl:
-                x_mcl = np.linspace(np.min(x), np.max(x), len(x))
-                y_mcl = self.local_camber(x_mcl)
                 fig.add_trace(
                     go.Scatter(
                         x=x_mcl,
@@ -355,8 +356,6 @@ class Airfoil(Polygon):
             fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
             plt.plot(x, y, ".-", zorder=11, color='#280887')
             if draw_mcl:
-                x_mcl = np.linspace(np.min(x), np.max(x), len(x))
-                y_mcl = self.local_camber(x_mcl)
                 plt.plot(x_mcl, y_mcl, "-", zorder=4, color='#28088744')
             plt.axis("equal")
             plt.xlabel(r"$x/c$")
