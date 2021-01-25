@@ -2,7 +2,6 @@ from aerosandbox.geometry.common import *
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from scipy.interpolate import interp1d
-
 import re
 
 
@@ -435,18 +434,15 @@ class Airfoil(Polygon):
 
         coordinates = np.vstack((x_coors, y_coors)).T
 
-        # Finalize
-        airfoil = self if inplace else copy.deepcopy(self)
-        if not "Repaneled" in airfoil.name:
-            airfoil.name += " (Repaneled)"
-        airfoil.coordinates = coordinates
-        return airfoil
+        return Airfoil(
+            name=f"Repaneled {self.name}",
+            coordinates = coordinates
+        )
 
     def add_control_surface(
             self,
             deflection=0.,
             hinge_point_x=0.75,
-            inplace=False,
     ):
         """
         Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
@@ -468,12 +464,21 @@ class Airfoil(Polygon):
         c[c[:, 0] > hinge_point_x] = (rotation_matrix.T @ (c[c[:, 0] > hinge_point_x] - hinge_point).T).T + hinge_point
         coordinates = c
 
-        # Finalize
-        airfoil = self if inplace else copy.deepcopy(self)
-        if not "Flapped" in airfoil.name:
-            airfoil.name += " (Flapped)"
-        airfoil.coordinates = coordinates
-        return airfoil
+        return Airfoil(
+            name=f"Flapped {self.name}",
+            coordinates = coordinates
+        )
+
+    def flip(self):
+        x = self.x()
+        y = self.y()
+
+        x = x[::-1]
+        y = -y[::-1]
+        return Airfoil(
+            name=f"Flipped {self.name}",
+            coordinates=np.vstack((x, y)).T
+        )
 
     def write_dat(self,
                   filepath  # type: str
