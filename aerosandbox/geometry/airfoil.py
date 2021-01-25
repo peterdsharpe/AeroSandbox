@@ -1,11 +1,12 @@
 from aerosandbox.geometry.common import *
+from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from scipy.interpolate import interp1d
 import plotly.graph_objects as go
 import re
 
 
-class Airfoil:
+class Airfoil(Polygon):
     def __init__(self,
                  name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
@@ -39,15 +40,15 @@ class Airfoil:
         self.coordinates = None
         if coordinates is not None:
             if type(coordinates) is str:  # Assume coordinates is a filepath to a .dat file
-                self.populate_coordinates_from_filepath(filepath=coordinates)
+                self._populate_coordinates_from_filepath(filepath=coordinates)
             else:  # Assume coordinates are the actual coordinates
                 self.coordinates = coordinates
         else:  # There are no coordinates given
             try:  # See if it's a NACA airfoil
-                self.populate_coordinates_from_naca()
+                self._populate_coordinates_from_naca()
             except:
                 try:  # See if it's in the UIUC airfoil database
-                    self.populate_coordinates_from_UIUC_database()
+                    self._populate_coordinates_from_UIUC_database()
                 except:
                     pass
 
@@ -62,7 +63,7 @@ class Airfoil:
         n_points = self.coordinates.shape[0] if self.coordinates is not None else 0
         return f"Airfoil {self.name} ({n_points} points)"
 
-    def populate_coordinates_from_naca(self, n_points_per_side=100):
+    def _populate_coordinates_from_naca(self, n_points_per_side=100):
         """
         Populates a variable called self.coordinates with the coordinates of the airfoil.
         :param n_points_per_side: Number of points per side of the airfoil (top/bottom).
@@ -130,7 +131,7 @@ class Airfoil:
 
         self.coordinates = np.array(cas.horzcat(x, y))
 
-    def populate_coordinates_from_UIUC_database(self):
+    def _populate_coordinates_from_UIUC_database(self):
         """
         Populates a variable called self.coordinates with the coordinates of the airfoil.
         :return: None (in-place)
@@ -171,7 +172,7 @@ class Airfoil:
         coordinates = np.array(raw_coordinates, dtype=float)
         self.coordinates = coordinates
 
-    def populate_coordinates_from_filepath(self, filepath):
+    def _populate_coordinates_from_filepath(self, filepath):
         """
         Populates a variable called self.coordinates with the coordinates of the airfoil.
         :param filepath: A DAT file to pull the airfoil coordinates from. (includes the ".dat") [string]
@@ -380,150 +381,6 @@ class Airfoil:
         # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
         return self.coordinates[:self.LE_index() + 1, :]
 
-    def x(self):
-        """
-        Returns the x coordinates of the airfoil. Equivalent to Airfoil.coordinates[:,0].
-        :return: X coordinates as a vector
-        """
-        return self.coordinates[:, 0]
-
-    def y(self):
-        """
-        Returns the y coordinates of the airfoil. Equivalent to Airfoil.coordinates[:,1].
-        :return: Y coordinates as a vector
-        """
-        return self.coordinates[:, 1]
-
-    def TE_thickness(self):
-        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
-        return self.local_thickness(x_over_c=1)
-
-    def TE_angle(self):
-        # Returns the trailing edge angle of the airfoil, in degrees
-        upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
-        lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
-
-        return 180 / np.pi * (np.arctan2(
-            upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
-            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
-        ))
-
-    def area(self):
-        # Returns the area of the airfoil, in nondimensional (normalized to chord^2) units.
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        return A
-
-    def centroid(self):
-        # Returns the centroid of the airfoil, in nondimensional (chord-normalized) units.
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
-
-        return centroid
-
-    def Ixx(self):
-        # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * cas.sum1(a * (x + x_n))
-        y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
-
-        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
-
-        Iuu = Ixx - A * centroid[1] ** 2
-
-        return Iuu
-
-    def Iyy(self):
-        # Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
-
-        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
-
-        Ivv = Iyy - A * centroid[0] ** 2
-
-        return Ivv
-
-    def Ixy(self):
-        # Returns the nondimensionalized product of inertia, taken about the centroid.
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
-
-        Ixy = 1 / 24 * np.sum(a * (x * y_n + 2 * x * y + 2 * x_n * y_n + x_n * y))
-
-        Iuv = Ixy - A * centroid[0] * centroid[1]
-
-        return Iuv
-
-    def J(self):
-        # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
-
-        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
-
-        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
-
-        J = Ixx + Iyy
-
-        return J
-
     def repanel(self,
                 n_points_per_side=80,
                 inplace=False,
@@ -601,12 +458,7 @@ class Airfoil:
         """
 
         # Make the rotation matrix for the given angle.
-        sintheta = np.sin(-cas.pi / 180 * deflection)
-        costheta = np.cos(-cas.pi / 180 * deflection)
-        rotation_matrix = np.array([
-            [costheta, sintheta],
-            [-sintheta, costheta]
-        ])
+        rotation_matrix = rotation_matrix_2D(-cas.pi / 180 * deflection, backend='casadi')
 
         # Find the hinge point
         hinge_point_y = self.local_camber(hinge_point_x)
@@ -1272,7 +1124,6 @@ class Airfoil:
         plt.show()
 
         return self
-
 
 
 def kulfan_coordinates(
