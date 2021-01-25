@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import path
 
 
 class Polygon():
@@ -28,6 +29,18 @@ class Polygon():
             return len(self.coordinates)
         except TypeError:
             return self.coordinates.shape[0]
+
+    def contains_points(self,
+                        points,
+                        ):
+        if len(points.shape) != 2:
+            points = np.array(points).reshape((-1, 2))
+
+        return path.Path(
+            vertices=self.coordinates
+        ).contains_points(
+            points
+        )
 
     def area(self):
         # Returns the area of the polygon, in nondimensional (normalized to chord^2) units.
