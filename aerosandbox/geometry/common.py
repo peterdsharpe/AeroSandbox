@@ -88,19 +88,54 @@ def np_cosspace(min=0, max=1, n_points=50):
     amp = (max - min) / 2
     return mean + amp * np.cos(np.linspace(np.pi, 0, n_points))
 
-
-def angle_axis_rotation_matrix(angle, axis, axis_already_normalized=False):
+def rotation_matrix_2D(
+        angle,
+        backend="numpy",
+):
     """
-    Gives the rotation matrix from an angle and an axis.
+    Gives the 2D rotation matrix associated with a counterclockwise rotation about an angle.
+    Args:
+        angle: Angle by which to rotate. Given in radians.
+        backend: "numpy" or "casadi".
+
+    Returns: The 2D rotation matrix
+
+    """
+    if backend == "numpy":
+        sintheta = np.sin(angle)
+        costheta = np.cos(angle)
+        rotation_matrix = np.array([
+            [costheta, sintheta],
+            [-sintheta, costheta]
+        ])
+    elif backend == "casadi":
+        sintheta = cas.sin(angle)
+        costheta = cas.cos(angle)
+        rotation_matrix = cas.vertcat(
+            cas.horzcat(costheta, sintheta),
+            cas.horzcat(-sintheta, costheta)
+        )
+    else:
+        raise ValueError("Bad value of 'backend'!")
+    return rotation_matrix
+
+def angle_axis_rotation_matrix(
+        angle,
+        axis,
+        _axis_already_normalized=False
+):
+    """
+    Gives the 3D rotation matrix from an angle and an axis.
     An implmentation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
     :param angle: can be one angle or a vector (1d ndarray) of angles. Given in radians.
-    :param axis: a 1d numpy array of length 3 (p,y,z). Represents the angle.
-    :param axis_already_normalized: boolean, skips normalization for speed if you flag this true.
+        Direction corresponds to the right-hand rule.
+    :param axis: a 1d numpy array of length 3 (x,y,z). Represents the angle.
+    :param _axis_already_normalized: boolean, skips normalization for speed if you flag this true.
     :return:
         * If angle is a scalar, returns a 3x3 rotation matrix.
         * If angle is a vector, returns a 3x3xN rotation matrix.
     """
-    if not axis_already_normalized:
+    if not _axis_already_normalized:
         axis = axis / cas.norm_2(axis)
 
     sintheta = cas.sin(angle)

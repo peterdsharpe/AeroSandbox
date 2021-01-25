@@ -250,7 +250,7 @@ class vlm2(AeroProblem):
                 rot_matrix = angle_axis_rotation_matrix(
                     angle=np.radians(deflection_angle),
                     axis=section_normal,
-                    axis_already_normalized=True
+                    _axis_already_normalized=True
                 )
                 inner_xsec_back_rotated = np.matmul(rot_matrix, inner_xsec_back)
                 outer_xsec_back_rotated = np.matmul(rot_matrix, outer_xsec_back)
@@ -272,7 +272,7 @@ class vlm2(AeroProblem):
                     rot_matrix = angle_axis_rotation_matrix(
                         angle=np.radians(xsec.control_surface_deflection * fraction_to_modify),
                         axis=section_normal,
-                        axis_already_normalized=True
+                        _axis_already_normalized=True
                     )
                     inner_xsec_back_semirotated = np.matmul(rot_matrix, inner_xsec_back)
                     outer_xsec_back_semirotated = np.matmul(rot_matrix, outer_xsec_back)
@@ -383,7 +383,7 @@ class vlm2(AeroProblem):
                         rot_matrix = angle_axis_rotation_matrix(
                             angle=np.radians(deflection_angle),
                             axis=section_normal,
-                            axis_already_normalized=True
+                            _axis_already_normalized=True
                         )
                         inner_xsec_back_rotated = np.matmul(rot_matrix, inner_xsec_back)
                         outer_xsec_back_rotated = np.matmul(rot_matrix, outer_xsec_back)
@@ -405,7 +405,7 @@ class vlm2(AeroProblem):
                             rot_matrix = angle_axis_rotation_matrix(
                                 angle=np.radians(xsec.control_surface_deflection * fraction_to_modify),
                                 axis=section_normal,
-                                axis_already_normalized=True
+                                _axis_already_normalized=True
                             )
                             inner_xsec_back_semirotated = np.matmul(rot_matrix, inner_xsec_back)
                             outer_xsec_back_semirotated = np.matmul(rot_matrix, outer_xsec_back)
