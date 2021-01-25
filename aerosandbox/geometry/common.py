@@ -2,6 +2,9 @@ import copy
 from aerosandbox.tools.string_formatting import eng_string
 from aerosandbox.tools.casadi_functions import *
 import numpy as np
+import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 try:
     from xfoil import XFoil
