@@ -7,3 +7,4 @@ seaborn~=0.10.1
 tqdm~=4.48.2
 dill~=0.3.1.1
 multiprocess~=0.70.9
+pytest~=6.2.2
