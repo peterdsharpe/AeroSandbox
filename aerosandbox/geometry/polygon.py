@@ -31,16 +31,29 @@ class Polygon():
             return self.coordinates.shape[0]
 
     def contains_points(self,
-                        points,
+                        x,
+                        y,
                         ):
-        if len(points.shape) != 2:
-            points = np.array(points).reshape((-1, 2))
+        x = np.array(x)
+        y = np.array(y)
+        try:
+            input_shape = (x + y).shape
+        except ValueError as e:  # If arrays are not broadcastable
+            raise ValueError("Inputs x and y could not be broadcast together!") from e
 
-        return path.Path(
+        x = x.reshape(-1, 1)
+        y = y.reshape(-1, 1)
+
+        points = np.hstack((x, y))
+
+        contained = path.Path(
             vertices=self.coordinates
         ).contains_points(
             points
         )
+        contained = np.array(contained).reshape(input_shape)
+
+        return contained
 
     def area(self):
         # Returns the area of the polygon, in nondimensional (normalized to chord^2) units.
