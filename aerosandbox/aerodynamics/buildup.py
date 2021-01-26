@@ -11,12 +11,12 @@ class Buildup(AeroProblem):
                  ):
         super().__init__(airplane, op_point)
 
-        self.check()
+        self._check_assumptions()
 
         if run_setup:
             self.setup()
 
-    def check(self):
+    def _check_assumptions(self):
         """
         Checks to see if this is a case where the assumptions are valid.
         :return: Throws an exception if this is the case.
