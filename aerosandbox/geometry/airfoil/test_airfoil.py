@@ -39,6 +39,11 @@ def test_containts_points(naca4412):
         x=np.array([0.5, 0.5]),
         y=np.array([0, -0.1])
     ) == np.array([True, False]))
+    shape = (1, 2, 3, 4)
+    x_points = np.random.randn(*shape)
+    y_points = np.random.randn(*shape)
+    contains = naca4412.contains_points(x_points, y_points)
+    assert shape == contains.shape
 
 
 if __name__ == '__main__':
