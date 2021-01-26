@@ -247,7 +247,7 @@ class Airplane(AeroSandboxObject):
                     coords = '       '.join(['    1', str(onewing + 1), str(t), '0'])
                     f.write('\n'.join(['', coords]))
                 if wing.name == "Vertical Stabilizer":
-                    wing2 = self.wings[np.ceil(onewing / 2)]
+                    wing2 = self.wings[int(np.ceil(onewing / 2))]
                     wing3 = self.wings[0]
                     xsecs = []
                     for xsec in wing.xsecs:
@@ -291,7 +291,7 @@ class Airplane(AeroSandboxObject):
                 xsecs2 = []
                 for xsec2 in horiz.xsecs:
                     xsecs2.append(xsec2)
-                vert = self.wings[corr_stab[fuse + len(self.wings) + 1][1]]
+                vert = self.wings[int(corr_stab[fuse + len(self.wings) + 1][1])]
                 xsecs3 = []
                 for xsec3 in vert.xsecs:
                     xsecs3.append(xsec3)
