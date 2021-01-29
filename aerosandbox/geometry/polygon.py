@@ -28,7 +28,10 @@ class Polygon():
         try:
             return len(self.coordinates)
         except TypeError:
-            return self.coordinates.shape[0]
+            try:
+                return self.coordinates.shape[0]
+            except AttributeError:
+                return 0
 
     def contains_points(self,
                         x,

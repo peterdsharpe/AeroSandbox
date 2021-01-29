@@ -4,7 +4,7 @@ from aerosandbox.geometry.polygon import stack_coordinates
 from aerosandbox.tools.casadi_functions import cosspace
 import re
 
-_default_n_points_per_side = 100
+_default_n_points_per_side = 200
 
 
 def get_NACA_coordinates(

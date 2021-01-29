@@ -61,8 +61,7 @@ class Airfoil(AeroSandboxObject, Polygon):
         self.Cm_function = Cm_function
 
     def __repr__(self):  # String representation
-        n_points = self.coordinates.shape[0] if self.coordinates is not None else 0
-        return f"Airfoil {self.name} ({n_points} points)"
+        return f"Airfoil {self.name} ({self.n_points()} points)"
 
     def populate_sectional_functions_from_xfoil_fits(self,
                                                      parallel=True,
@@ -230,7 +229,7 @@ class Airfoil(AeroSandboxObject, Polygon):
 
     def LE_index(self):
         # Returns the index of the leading-edge point.
-        return np.argmin(self.coordinates[:, 0])
+        return np.argmin(self.x())
 
     def lower_coordinates(self):
         # Returns a matrix (N by 2) of [x, y] coordinates that describe the lower surface of the airfoil.
@@ -260,15 +259,13 @@ class Airfoil(AeroSandboxObject, Polygon):
 
     def repanel(self,
                 n_points_per_side=80,
-                inplace=False,
                 ):
         """
         Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
         :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
             Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
             since one point (the leading edge point) is shared by both the upper and lower surfaces.
-        :param inplace: Whether to perform this as an in-place operation or return the new airfoil as a newly instantiated object [boolean]
-        :return: If inplace is True, None. If inplace is False, the new airfoil [Airfoil].
+        :return: Returns the new airfoil.
         """
 
         upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
@@ -302,12 +299,12 @@ class Airfoil(AeroSandboxObject, Polygon):
 
         x = interp1d(
             distances_from_TE_normalized,
-            self.coordinates[:, 0],
+            self.x(),
             kind="cubic",
         )(s)
         y = interp1d(
             distances_from_TE_normalized,
-            self.coordinates[:, 1],
+            self.y(),
             kind="cubic",
         )(s)
 
@@ -325,8 +322,7 @@ class Airfoil(AeroSandboxObject, Polygon):
         Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
         :param deflection: deflection angle [degrees]. Downwards-positive.
         :param hinge_point_x: location of the hinge, as a fraction of chord [float].
-        :param inplace: Whether to perform this as an in-place operation or return the new airfoil as a newly instantiated object [boolean]
-        :return: If inplace is True, None. If inplace is False, the new airfoil [Airfoil].
+        :return: The new airfoil.
         """
 
         # Make the rotation matrix for the given angle.

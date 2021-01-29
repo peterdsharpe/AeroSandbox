@@ -10,12 +10,15 @@ def naca4412():
 @pytest.fixture
 def e216():
     a = Airfoil("e216")
-    assert len(a.coordinates) == 61
+    assert a.n_points() == 61
     return a
+
 
 def test_fake_airfoil():
     a = Airfoil("dae12")
     assert a.coordinates is None
+    assert a.n_points() == 0
+
 
 def test_TE_angle(naca4412):
     assert naca4412.TE_angle() == pytest.approx(14.766578406372423)
@@ -30,8 +33,8 @@ def test_LE_index(e216):
 
 
 def test_repanel(naca4412):
-    naca4412.repanel(n_points_per_side=200)
-    # assert
+    naca4412 = naca4412.repanel(n_points_per_side=300)
+    assert naca4412.n_points() == 599
 
 
 def test_containts_points(naca4412):
