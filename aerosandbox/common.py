@@ -1,3 +1,4 @@
+from aerosandbox.optimization import *
 
 class AeroSandboxObject:
     def substitute_solution(self, sol):
@@ -31,8 +32,6 @@ class AeroSandboxObject:
 
 class ImplicitAnalysis(AeroSandboxObject):
     def __init__(self,
-                 airplane: Airplane,
-                 op_point: OperatingPoint,
+                 opti: asb.Opti
                  ):
-        self.airplane = airplane
-        self.op_point = op_point
+        pass # TODO add opti functionality
