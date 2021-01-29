@@ -2,7 +2,7 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import *
 
 
-class AeroProblem(AeroSandboxObject):
+class ImplicitAnalysis(AeroSandboxObject):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,

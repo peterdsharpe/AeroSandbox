@@ -2,7 +2,7 @@ from aerosandbox.aerodynamics.aerodynamics import *
 from aerosandbox.geometry import *
 
 
-class Casvlm1(AeroProblem):
+class Casvlm1(ImplicitAnalysis):
     # Usage:
     #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "Casvlm1(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
     #   # Call the run() method on the vlm3 object to run the problem.

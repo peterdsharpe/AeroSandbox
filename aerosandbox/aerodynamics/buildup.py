@@ -3,7 +3,7 @@ from aerosandbox.geometry import *
 import aerosandbox.library.aerodynamics as aero
 
 
-class Buildup(AeroProblem):
+class Buildup(ImplicitAnalysis):
     def __init__(self,
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
