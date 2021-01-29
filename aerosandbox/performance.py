@@ -83,9 +83,9 @@ class OperatingPoint(AeroSandboxObject):
         return self.compute_freestream_direction_geometry_axes() * self.velocity
 
     def compute_rotation_velocity_geometry_axes(self, points):
-        # Computes the effective velocity due to rotation at attrib_name set of points.
-        # Input: attrib_name Nx3 array of points
-        # Output: attrib_name Nx3 array of effective velocities
+        # Computes the effective velocity due to rotation at a set of points.
+        # Input: a Nx3 array of points
+        # Output: a Nx3 array of effective velocities
         angular_velocity_vector_geometry_axes = cas.vertcat(
             -self.p, self.q, -self.r)  # signs convert from body axes to geometry axes
         # angular_velocity_vector_geometry_axes = cas.expand_dims(angular_velocity_vector_geometry_axes, axis=0)

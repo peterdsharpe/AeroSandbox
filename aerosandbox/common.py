@@ -5,7 +5,9 @@ class AeroSandboxObject:
     def substitute_solution(self, sol):
         """
         Substitutes a solution from CasADi's solver.
-        :param sol:
+
+        In-place operation. To make it not in-place, do a copy.deepcopy(x) first.
+        :param sol: OptiSol object.
         :return:
         """
         for attrib_name in dir(self):
@@ -44,7 +46,11 @@ class ImplicitAnalysis(AeroSandboxObject):
 
         self.opti_provided = opti_input is not None
 
-        if  self.opti_provided:
+        if self.opti_provided:
             self.opti = opti_input
         else:
             self.opti = Opti()
+
+
+class ExplicitAnalysis(AeroSandboxObject):
+    pass

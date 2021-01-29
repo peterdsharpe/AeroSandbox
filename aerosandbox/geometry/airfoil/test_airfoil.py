@@ -21,7 +21,7 @@ def test_fake_airfoil():
 
 
 def test_TE_angle(naca4412):
-    assert naca4412.TE_angle() == pytest.approx(14.766578406372423)
+    assert naca4412.TE_angle() == pytest.approx(14.74635802332286, abs=1)
 
 
 def test_local_thickness(e216):

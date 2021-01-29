@@ -1,15 +1,14 @@
-from aerosandbox import ImplicitAnalysis
+from aerosandbox import ExplicitAnalysis
 from aerosandbox.geometry import *
 import aerosandbox.library.aerodynamics as aero
 
 
-class Buildup(ImplicitAnalysis):
+class Buildup(ExplicitAnalysis):
     def __init__(self,
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
-                 run_setup=True,
+                 run_setup=True, # TODO remove
                  ):
-        super().__init__(airplane, op_point)
 
         self._check_assumptions()
 
@@ -27,7 +26,7 @@ class Buildup(ImplicitAnalysis):
             self.op_point.q == 0,
             self.op_point.r == 0,
         ])
-        if np.logical_not(assumptions).any():
+        if not assumptions.all():
             raise ValueError("The assumptions to use an aero buildup method are not met!")
 
     def setup(self,
