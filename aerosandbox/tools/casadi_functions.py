@@ -35,26 +35,17 @@ def atan2d(y, x):
     return np.arctan2(y, x) * 180 / pi
 
 
-def cosspace(min=0, max=1, n_points=50, backend="numpy"):
+def cosspace(min=0, max=1, n_points=50):
     """
     Returns cosine-spaced points using CasADi. Syntax analogous to np.linspace().
     :param min: Minimum value
     :param max: Maximum value
     :param n_points: Number of points
-    :return: CasADi array
+    :return: Cosine-spaced output.
     """
-    if backend == "numpy":
-        cos = lambda x: np.cos(x)
-        linspace = lambda start, stop, num: np.linspace(start, stop, num)
-    elif backend == "casadi":
-        cos = lambda x: cas.cos(x)
-        linspace = lambda start, stop, num: cas.linspace(start, stop, num)
-    else:
-        raise ValueError("Bad value of 'backend'!")
-
     mean = (max + min) / 2
     amp = (max - min) / 2
-    return mean + amp * cos(linspace(pi, 0, n_points))
+    return mean + amp * np.cos(np.linspace(pi, 0, n_points))
 
 
 def clip(x, min, max):  # Clip a value to a range [min, max].
