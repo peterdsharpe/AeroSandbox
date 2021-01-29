@@ -293,7 +293,7 @@ class Airfoil(AeroSandboxObject, Polygon):
         ))
 
         # Generate a cosine-spaced list of points from 0 to 1
-        cosspaced_points = np_cosspace(0, 1, n_points_per_side)
+        cosspaced_points = cosspace(0, 1, n_points_per_side)
         s = np.hstack((
             cosspaced_points,
             1 + cosspaced_points[1:],

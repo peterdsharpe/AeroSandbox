@@ -65,7 +65,7 @@ class Casvlm1(ImplicitAnalysis):
             if wing.chordwise_spacing == 'uniform':
                 nondim_chordwise_coordinates = np.linspace(0, 1, n_chordwise_coordinates)
             elif wing.chordwise_spacing == 'cosine':
-                nondim_chordwise_coordinates = np_cosspace(0, 1, n_chordwise_coordinates)
+                nondim_chordwise_coordinates = cosspace(0, 1, n_chordwise_coordinates)
             else:
                 raise Exception("Bad init_val of wing.chordwise_spacing!")
 
@@ -118,7 +118,7 @@ class Casvlm1(ImplicitAnalysis):
                 if inner_xsec.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
                 elif inner_xsec.spanwise_spacing == 'cosine':
-                    nondim_spanwise_coordinates = np_cosspace(0, 1, n_spanwise_coordinates)
+                    nondim_spanwise_coordinates = cosspace(0, 1, n_spanwise_coordinates)
                 else:
                     raise Exception("Bad init_val of section.spanwise_spacing!")
 
@@ -233,7 +233,7 @@ class Casvlm1(ImplicitAnalysis):
                     if inner_xsec.spanwise_spacing == 'uniform':
                         nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
                     elif inner_xsec.spanwise_spacing == 'cosine':
-                        nondim_spanwise_coordinates = np_cosspace(0, 1, n_spanwise_coordinates)
+                        nondim_spanwise_coordinates = cosspace(0, 1, n_spanwise_coordinates)
                     else:
                         raise Exception("Bad init_val of section.spanwise_spacing!")
 

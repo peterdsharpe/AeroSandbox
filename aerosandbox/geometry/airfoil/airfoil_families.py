@@ -41,7 +41,7 @@ def get_NACA_coordinates(
     # from here on out
 
     # Make uncambered coordinates
-    x_t = np_cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
+    x_t = cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
     y_t = 5 * thickness * (
             + 0.2969 * x_t ** 0.5
             - 0.1260 * x_t
@@ -123,7 +123,7 @@ def get_kulfan_coordinates(
     if enforce_continuous_LE_radius:
         lower_weights[0] = -1 * upper_weights[0]
 
-    x_lower = np_cosspace(0, 1, n_points_per_side)
+    x_lower = cosspace(0, 1, n_points_per_side)
     x_upper = x_lower[::-1]
 
     def shape(w, x):

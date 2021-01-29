@@ -106,7 +106,7 @@ class Casll1(ImplicitAnalysis):
                 if inner_xsec.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
                 elif inner_xsec.spanwise_spacing == 'cosine':
-                    nondim_spanwise_coordinates = np_cosspace(0, 1, n_spanwise_coordinates)
+                    nondim_spanwise_coordinates = cosspace(0, 1, n_spanwise_coordinates)
                 else:
                     raise Exception("Bad init_val of section.spanwise_spacing!")
 

@@ -13,37 +13,6 @@ except ModuleNotFoundError:
     pass
 
 
-
-class AeroSandboxObject:
-    def substitute_solution(self, sol):
-        """
-        Substitutes a solution from CasADi's solver.
-        :param sol:
-        :return:
-        """
-        for attrib_name in dir(self):
-            attrib_orig = getattr(self, attrib_name)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
-            try:
-                setattr(self, attrib_name, sol.value(attrib_orig))
-            except NotImplementedError:
-                pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, attrib_name, new_attrib_orig)
-                except:
-                    pass
-            try:
-                setattr(self, attrib_name, attrib_orig.substitute_solution(sol))
-            except:
-                pass
-        return self
-
-
 def reflect_over_XZ_plane(input_vector):
     """
     Takes in a vector or an array and flips the y-coordinates.
@@ -66,18 +35,6 @@ def reflect_over_XZ_plane(input_vector):
     return output_vector
 
 
-def cosspace(min=0, max=1, n_points=50):
-    """
-    Returns cosine-spaced points using CasADi. Syntax analogous to np.linspace().
-    :param min: Minimum value
-    :param max: Maximum value
-    :param n_points: Number of points
-    :return: CasADi array
-    """
-    mean = (max + min) / 2
-    amp = (max - min) / 2
-    return mean + amp * cas.cos(cas.linspace(cas.pi, 0, n_points))
-
 
 def np_cosspace(min=0, max=1, n_points=50):
     """
@@ -90,6 +47,7 @@ def np_cosspace(min=0, max=1, n_points=50):
     mean = (max + min) / 2
     amp = (max - min) / 2
     return mean + amp * np.cos(np.linspace(np.pi, 0, n_points))
+
 
 def rotation_matrix_2D(
         angle,
@@ -121,6 +79,7 @@ def rotation_matrix_2D(
     else:
         raise ValueError("Bad value of 'backend'!")
     return rotation_matrix
+
 
 def angle_axis_rotation_matrix(
         angle,
@@ -154,7 +113,7 @@ def angle_axis_rotation_matrix(
     return rot_matrix
 
 
-def linspace_3D(start, stop, n_points): # TODO make n-dimensional
+def linspace_3D(start, stop, n_points):  # TODO make n-dimensional
     """
     Given two points (a start and an end), returns an interpolated array of points on the line between the two.
     :param start: 3D coordinates expressed as a 1D numpy array, shape==(3).

@@ -1,21 +1,42 @@
 import casadi as cas
 from typing import Tuple, Union
+from numpy import pi
 
 
 def sind(x):
-    return cas.sin(x * cas.pi / 180)
+    return cas.sin(x * pi / 180)
 
 
 def cosd(x):
-    return cas.cos(x * cas.pi / 180)
+    return cas.cos(x * pi / 180)
 
 
 def tand(x):
-    return cas.tan(x * cas.pi / 180)
+    return cas.tan(x * pi / 180)
 
 
 def atan2d(y, x):
-    return cas.atan2(y, x) * 180 / np.pi
+    return cas.atan2(y, x) * 180 / pi
+
+
+def cosspace(min=0, max=1, n_points=50, backend="numpy"):
+    """
+    Returns cosine-spaced points using CasADi. Syntax analogous to np.linspace().
+    :param min: Minimum value
+    :param max: Maximum value
+    :param n_points: Number of points
+    :return: CasADi array
+    """
+    if backend == "numpy":
+        cos = lambda x: np.cos(x)
+        linspace = lambda start, stop, num: np.linspace(start, stop, num)
+    elif backend == "casadi":
+        cos = lambda x: cas.cos(x)
+        linspace = lambda start, stop, num: cas.linspace(start, stop, num)
+
+    mean = (max + min) / 2
+    amp = (max - min) / 2
+    return mean + amp * cos(linspace(pi, 0, n_points))
 
 
 def clip(x, min, max):  # Clip a value to a range [min, max].
@@ -64,7 +85,7 @@ def sigmoid(
         #   normalization these functions are identical.
         s = cas.tanh(x)
     elif sigmoid_type == "arctan":
-        s = 2 / cas.pi * cas.arctan(cas.pi / 2 * x)
+        s = 2 / pi * cas.arctan(pi / 2 * x)
     elif sigmoid_type == "polynomial":
         s = x / (1 + x ** 2) ** 0.5
     else:
