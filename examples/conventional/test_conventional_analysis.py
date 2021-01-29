@@ -1,9 +1,5 @@
-import copy
-
 from aerosandbox import *
 from aerosandbox.library.airfoils import e216, naca0008
-
-opti = cas.Opti()  # Initialize an analysis/optimization environment
 
 # Define the 3D geometry you want to analyze/optimize.
 # Here, all distances are in meters and all angles are in degrees.
@@ -107,7 +103,7 @@ airplane = Airplane(
         )
     ]
 )
-ap = Casll1(  # Set up the AeroProblem
+analysis = Casll1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
         density=1.225,  # kg/m^3
@@ -119,27 +115,15 @@ ap = Casll1(  # Set up the AeroProblem
         p=0,  # About the body x-axis, in rad/sec
         q=0,  # About the body y-axis, in rad/sec
         r=0,  # About the body z-axis, in rad/sec
-    ),
-    opti=opti  # Pass it an optimization environment to work in
+    )
 )
 
-# Solver options
-opti.solver('ipopt')
-
-# Solve
-sol = opti.solve()
-
 # Postprocess
+analysis.draw()  # Draw the solution
 
-# Create solved object
-ap_sol = copy.deepcopy(ap)
-ap_sol.substitute_solution(sol)
-
-ap_sol.draw()  # Generates
-
-print("CL:", ap_sol.CL)
-print("CD:", ap_sol.CD)
-print("CY:", ap_sol.CY)
-print("Cl:", ap_sol.Cl)
-print("Cm:", ap_sol.Cm)
-print("Cn:", ap_sol.Cn)
+print("CL:", analysis.CL)
+print("CD:", analysis.CD)
+print("CY:", analysis.CY)
+print("Cl:", analysis.Cl)
+print("Cm:", analysis.Cm)
+print("Cn:", analysis.Cn)

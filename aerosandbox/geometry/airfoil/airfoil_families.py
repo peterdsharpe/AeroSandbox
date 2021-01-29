@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import comb
-from aerosandbox.geometry.common import np_cosspace
 from aerosandbox.geometry.polygon import stack_coordinates
+from aerosandbox.tools.casadi_functions import cosspace
 import re
 
 _default_n_points_per_side = 100
@@ -228,7 +228,7 @@ def get_UIUC_coordinates(
     name = name.lower().strip()
 
     import importlib.resources
-    from aerosandbox import airfoil_database
+    from aerosandbox.geometry.airfoil import airfoil_database
 
     try:
         with importlib.resources.open_text(airfoil_database, name) as f:

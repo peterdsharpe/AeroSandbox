@@ -1,4 +1,5 @@
 import casadi as cas
+import numpy as np
 from typing import Tuple, Union
 from numpy import pi
 

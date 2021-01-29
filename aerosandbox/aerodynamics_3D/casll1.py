@@ -1,4 +1,4 @@
-from aerosandbox.aerodynamics.aerodynamics import *
+from aerosandbox import ImplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.visualization import Figure3D
 
@@ -13,47 +13,47 @@ class Casll1(ImplicitAnalysis):
     def __init__(self,
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
-                 opti,  # type: cas.Opti
-                 run_setup=True,
+                 opti=None,  # type: asb.Opti # TODO type hint
+                 verbose=True,  # Choose whether or not you want verbose output
+                 run_symmetric_if_possible=True,
+                 # Choose whether or not you want to run a symmetric analysis about the XZ plane (~4x faster)
                  ):
-        super().__init__(airplane, op_point)
-        self.opti = opti
-
-        if run_setup:
-            self.setup()
-
-    def setup(self,
-              verbose=True,  # Choose whether or not you want verbose output
-              run_symmetric_if_possible=True,
-              # Choose whether or not you want to run a symmetric_problem analysis about XZ (~4x faster)
-              ):
-        # Runs a point analysis at the specified op-point.
+        ### Initialize
+        super().__init__()
+        self.airplane = airplane
+        self.op_point = op_point
         self.verbose = verbose
-        if self.verbose:
-            print("\n Initializing CasLL1 Analysis...\n-----------------------")
+        self.run_symmetric_if_possible = run_symmetric_if_possible
 
-        if run_symmetric_if_possible:
+        if self.verbose:
+            print("\n".join([
+                "",
+                "Initializing CasLL1 Analysis...",
+                "-" * 20
+            ]))
+
+        if self.run_symmetric_if_possible:
             try:
-                symmetric_problem = (
+                problem_is_symmetric = (
                         self.op_point.beta == 0 and
                         self.op_point.p == 0 and
                         self.op_point.r == 0 and
                         self.airplane.is_symmetric()
                 )
             except RuntimeError:
-                symmetric_problem = False
+                problem_is_symmetric = False
 
-            if symmetric_problem:
-                self.symmetric_problem = True
+            if problem_is_symmetric:
+                self.run_symmetric = True
                 if self.verbose:
                     print("Symmetry confirmed; running as symmetric problem...")
             else:
-                self.symmetric_problem = False
+                self.run_symmetric = False
                 if self.verbose:
                     print(
                         "Problem appears to be asymmetric, so a symmetric solve is not possible; running as asymmetric problem...")
         else:
-            self.symmetric_problem = False
+            self.run_symmetric = False
             if self.verbose:
                 print("Running as asymmetric problem...")
 
@@ -68,6 +68,10 @@ class Casll1(ImplicitAnalysis):
 
         if self.verbose:
             print("casLL1 setup complete! Ready to pass into the solver...")
+
+        if not self.opti_provided:
+            sol = self.opti.solve()
+            self.substitute_solution(sol)
 
     def make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
@@ -191,7 +195,7 @@ class Casll1(ImplicitAnalysis):
 
                     wing_id.append(wing_num)
 
-                    if wing.symmetric and not self.symmetric_problem:
+                    if wing.symmetric and not self.run_symmetric:
                         front_right_vertices.append(reflect_over_XZ_plane(front_left_vertex))
                         front_left_vertices.append(reflect_over_XZ_plane(front_right_vertex))
                         back_right_vertices.append(reflect_over_XZ_plane(back_left_vertex))
@@ -269,7 +273,7 @@ class Casll1(ImplicitAnalysis):
         self.Cm_functions = Cm_functions  # type: list # of callables
         self.wing_id = wing_id
 
-        if self.symmetric_problem:
+        if self.run_symmetric:
             self.use_symmetry = [self.airplane.wings[i].symmetric for i in self.wing_id]
 
         # # Concatenate things (MX)
@@ -330,7 +334,7 @@ class Casll1(ImplicitAnalysis):
             fuse_centerline_points.append(
                 this_fuse_centerline_points)  # TODO handle fuselage symmetry (non-symmetric problem)
             fuse_radii.append(this_fuse_radii)
-            if (not self.symmetric_problem) and fuse.symmetric:
+            if (not self.run_symmetric) and fuse.symmetric:
                 fuse_centerline_points.append(reflect_over_XZ_plane(this_fuse_centerline_points))
                 fuse_radii.append(this_fuse_radii)
 
@@ -461,7 +465,7 @@ class Casll1(ImplicitAnalysis):
             cas.sum1(self.forces_inviscid_geometry[:, 1]),
             cas.sum1(self.forces_inviscid_geometry[:, 2]),
         )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        if self.symmetric_problem:
+        if self.run_symmetric:
             forces_inviscid_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
                 reflect_over_XZ_plane(self.forces_inviscid_geometry),
@@ -487,7 +491,7 @@ class Casll1(ImplicitAnalysis):
             cas.sum1(self.moments_inviscid_geometry[:, 1]),
             cas.sum1(self.moments_inviscid_geometry[:, 2]),
         )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        if self.symmetric_problem:
+        if self.run_symmetric:
             moments_inviscid_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
                 -reflect_over_XZ_plane(self.moments_inviscid_geometry),
@@ -513,7 +517,7 @@ class Casll1(ImplicitAnalysis):
             cas.sum1(self.forces_profile_geometry[:, 1]),
             cas.sum1(self.forces_profile_geometry[:, 2]),
         )
-        if self.symmetric_problem:
+        if self.run_symmetric:
             forces_profile_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
                 reflect_over_XZ_plane(self.forces_profile_geometry),
@@ -539,7 +543,7 @@ class Casll1(ImplicitAnalysis):
             cas.sum1(self.moments_profile_geometry[:, 1]),
             cas.sum1(self.moments_profile_geometry[:, 2]),
         )
-        if self.symmetric_problem:
+        if self.run_symmetric:
             moments_profile_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
                 -reflect_over_XZ_plane(self.moments_profile_geometry),
@@ -567,7 +571,7 @@ class Casll1(ImplicitAnalysis):
             cas.sum1(self.moments_pitching_geometry[:, 1]),
             cas.sum1(self.moments_pitching_geometry[:, 2]),
         )
-        if self.symmetric_problem:
+        if self.run_symmetric:
             moments_pitching_geometry_from_symmetry = cas.if_else(
                 self.use_symmetry,
                 -reflect_over_XZ_plane(self.moments_pitching_geometry),
@@ -703,7 +707,7 @@ class Casll1(ImplicitAnalysis):
                 a_cross_u_z * term2 -
                 b_cross_u_z * term3
         )
-        if self.symmetric_problem:  # If it's a symmetric problem, you've got to add the other side's influence.
+        if self.run_symmetric:  # If it's a symmetric problem, you've got to add the other side's influence.
 
             # If it is symmetric, re-do it with flipped coordinates
 
@@ -948,14 +952,14 @@ class Casll1(ImplicitAnalysis):
                 ],
                 intensity=data_to_plot[index],
                 outline=True,
-                mirror=self.symmetric_problem and self.use_symmetry[index]
+                mirror=self.run_symmetric and self.use_symmetry[index]
             )
             fig.add_line(
                 points=[
                     left_vortex_vertices[index],
                     right_vortex_vertices[index]
                 ],
-                mirror=self.symmetric_problem and self.use_symmetry[index]
+                mirror=self.run_symmetric and self.use_symmetry[index]
             )
 
         # Fuselages
@@ -1009,7 +1013,7 @@ class Casll1(ImplicitAnalysis):
                 streamline = [self.streamlines[ts][streamlines_num, :] for ts in range(n_timesteps)]
                 fig.add_streamline(
                     points=streamline,
-                    mirror=self.symmetric_problem
+                    mirror=self.run_symmetric
                 )
 
         return fig.draw(

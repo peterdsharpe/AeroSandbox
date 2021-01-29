@@ -221,7 +221,7 @@ ap = Casll1(  # Set up the AeroProblem
     opti=opti
 )
 # Set up the VLM optimization submatrix
-ap.setup(run_symmetric_if_possible=True)
+ap._setup(run_symmetric_if_possible=True)
 
 # Extra constraints
 # Cmalpha constraint

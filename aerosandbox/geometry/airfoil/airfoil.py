@@ -1,4 +1,5 @@
 from aerosandbox.geometry.common import *
+from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from aerosandbox.geometry.airfoil.airfoil_families import *

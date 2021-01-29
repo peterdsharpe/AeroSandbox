@@ -1,5 +1,6 @@
 from aerosandbox.optimization import *
 
+
 class AeroSandboxObject:
     def substitute_solution(self, sol):
         """
@@ -31,7 +32,19 @@ class AeroSandboxObject:
 
 
 class ImplicitAnalysis(AeroSandboxObject):
-    def __init__(self,
-                 opti: asb.Opti
-                 ):
-        pass # TODO add opti functionality
+    def __init__(self):
+        """
+        If an optimiztion environment is provided, use that. If not, create one.
+        """
+        args = locals()
+        try:
+            opti_input = args["opti"]
+        except KeyError:
+            opti_input = None
+
+        self.opti_provided = opti_input is not None
+
+        if  self.opti_provided:
+            self.opti = opti_input
+        else:
+            self.opti = Opti()

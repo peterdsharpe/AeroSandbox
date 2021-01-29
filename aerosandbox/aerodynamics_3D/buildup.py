@@ -1,4 +1,4 @@
-from aerosandbox.aerodynamics.aerodynamics import *
+from aerosandbox import ImplicitAnalysis
 from aerosandbox.geometry import *
 import aerosandbox.library.aerodynamics as aero
 

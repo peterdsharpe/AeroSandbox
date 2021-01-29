@@ -13,6 +13,9 @@ def e216():
     assert len(a.coordinates) == 61
     return a
 
+def test_fake_airfoil():
+    a = Airfoil("dae12")
+    assert a.coordinates is None
 
 def test_TE_angle(naca4412):
     assert naca4412.TE_angle() == pytest.approx(14.766578406372423)
