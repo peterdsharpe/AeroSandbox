@@ -92,9 +92,9 @@ def sigmoid(
     if sigmoid_type == ("tanh" or "logistic"):
         # Note: tanh(x) is simply a scaled and shifted version of a logistic curve; after
         #   normalization these functions are identical.
-        s = cas.tanh(x)
+        s = np.tanh(x)
     elif sigmoid_type == "arctan":
-        s = 2 / pi * cas.arctan(pi / 2 * x)
+        s = 2 / pi * np.arctan(pi / 2 * x)
     elif sigmoid_type == "polynomial":
         s = x / (1 + x ** 2) ** 0.5
     else:
