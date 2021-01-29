@@ -3,20 +3,36 @@ from typing import Tuple, Union
 from numpy import pi
 
 
+def is_numpy_compatible(*args) -> bool:
+    """
+    Checks if the given inputs are NumPy compatible
+    Args:
+        *args: Any number of input arguments.
+
+    Returns: A boolean indicating whether ALL of the given input arguments are "NumPy"-compatible
+        based on their data type.
+
+        For example:
+            floats, ints, and NumPy ndarrays are NumPy compatible.
+            casadi DM types are NumPy compatible, but SX and MX types are not (generally) NumPy compatible.
+
+    """
+
+
 def sind(x):
-    return cas.sin(x * pi / 180)
+    return np.sin(x * pi / 180)
 
 
 def cosd(x):
-    return cas.cos(x * pi / 180)
+    return np.cos(x * pi / 180)
 
 
 def tand(x):
-    return cas.tan(x * pi / 180)
+    return np.tan(x * pi / 180)
 
 
 def atan2d(y, x):
-    return cas.atan2(y, x) * 180 / pi
+    return np.arctan2(y, x) * 180 / pi
 
 
 def cosspace(min=0, max=1, n_points=50, backend="numpy"):
@@ -33,6 +49,8 @@ def cosspace(min=0, max=1, n_points=50, backend="numpy"):
     elif backend == "casadi":
         cos = lambda x: cas.cos(x)
         linspace = lambda start, stop, num: cas.linspace(start, stop, num)
+    else:
+        raise ValueError("Bad value of 'backend'!")
 
     mean = (max + min) / 2
     amp = (max - min) / 2
@@ -56,9 +74,9 @@ def sigmoid(
     Args:
         x: The input
         sigmoid_type: Type of sigmoid function to use [str]. Can be one of:
-            *
-            *
-            *
+            * "tanh" or "logistic" (same thing)
+            * "arctan"
+            * "polynomial"
         normalization_type: Range in which to normalize the sigmoid, shorthanded here in the
             documentation as "N". This parameter is given as a two-element tuple (min, max).
 
