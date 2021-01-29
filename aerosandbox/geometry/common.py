@@ -35,20 +35,6 @@ def reflect_over_XZ_plane(input_vector):
     return output_vector
 
 
-
-def np_cosspace(min=0, max=1, n_points=50):
-    """
-    Returns cosine-spaced points using NumPy. Syntax analogous to np.linspace().
-    :param min: Minimum value
-    :param max: Maximum value
-    :param n_points: Number of points
-    :return: 1D NumPy array
-    """
-    mean = (max + min) / 2
-    amp = (max - min) / 2
-    return mean + amp * np.cos(np.linspace(np.pi, 0, n_points))
-
-
 def rotation_matrix_2D(
         angle,
         backend="numpy",

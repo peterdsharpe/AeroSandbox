@@ -3,7 +3,7 @@ from aerosandbox.geometry import *
 from aerosandbox.visualization import Figure3D
 
 
-class Casll1(ImplicitAnalysis):
+class LiftingLine(ImplicitAnalysis):
     # Usage:
     #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "Casll1(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
     #   # Call the setup() method on the vlm3 object to set up the problem in a CasADi Opti environment.
