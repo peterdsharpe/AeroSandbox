@@ -1,1 +1,0 @@
-python airfoil_optimizer.py
