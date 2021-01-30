@@ -9,6 +9,6 @@ assignees: ''
 
 ## Description of Proposed Feature
 
-## Alternatives I have Considered
+## Alternatives I Have Considered
 
 ## Additional Context
