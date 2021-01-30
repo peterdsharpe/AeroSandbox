@@ -7,19 +7,8 @@ class AeroBuildup(ExplicitAnalysis):
     def __init__(self,
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
-                 run_setup=True, # TODO remove
                  ):
 
-        self._check_assumptions()
-
-        if run_setup:
-            self.setup()
-
-    def _check_assumptions(self):
-        """
-        Checks to see if this is a case where the assumptions are valid.
-        :return: Throws an exception if this is the case.
-        """
         assumptions = np.array([
             self.op_point.beta == 0,
             self.op_point.p == 0,
@@ -28,13 +17,6 @@ class AeroBuildup(ExplicitAnalysis):
         ])
         if not assumptions.all():
             raise ValueError("The assumptions to use an aero buildup method are not met!")
-
-    def setup(self,
-              verbose=True,  # Choose whether or not you want verbose output
-              run_symmetric_if_possible=True,
-              # Choose whether or not you want to run a symmetric_problem analysis about XZ (~4x faster)
-              ):
-        # Runs a point analysis at the specified op-point.
 
         ### Fuselages
         self.fuse_Res = [
@@ -99,7 +81,7 @@ class AeroBuildup(ExplicitAnalysis):
         ]
         self.drag_wing_induceds = [
             self.lift_wings[i] ** 2 / (
-                        self.op_point.dynamic_pressure() * np.pi * wing.span() ** 2 * self.wing_oswalds_efficiencies[i])
+                    self.op_point.dynamic_pressure() * np.pi * wing.span() ** 2 * self.wing_oswalds_efficiencies[i])
             for i, wing in enumerate(self.airplane.wings)
         ]
 
