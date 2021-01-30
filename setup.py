@@ -139,14 +139,11 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'numpy >= 1',
-        'casadi >= 3.5',
+        'casadi >= 3.5.5',
         'plotly >= 4',
         'pandas >= 0.25',
         'matplotlib >= 3',
         'seaborn >= 0.10',
-        'tqdm >= 4',
-        'dill >= 0.3.1.1',
-        'multiprocess >= 0.70',
     ],
     # Optional
 
@@ -159,7 +156,7 @@ setup(
     # Similar to `install_requires` above, these must be valid existing
     # projects.
     extras_require={  # Optional
-        'xfoil': ['xfoil'],  # Change the key name to something more descriptive
+        # Change the key name to something more descriptive
         # w.r.t. to functionality.
         #     'test': ['coverage'],
     },
