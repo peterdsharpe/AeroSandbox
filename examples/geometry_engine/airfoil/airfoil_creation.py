@@ -14,5 +14,6 @@ d = Airfoil(name="Ellipsish",
 
 # And some commands
 
+a.draw()
 b.draw()
 
