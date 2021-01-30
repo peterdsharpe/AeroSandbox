@@ -17,7 +17,13 @@ class Atmosphere(AeroSandboxObject):
     def __init__(self,
                  altitude: float = 0.  # meters
                  ):
+        """
+        Initialize a new Atmosphere.
+        Args:
+            altitude: Flight altitude, in meters.
+        """
         self.altitude = altitude
+        self._valid_range = (0, 40000)
 
     def pressure(self):
         """

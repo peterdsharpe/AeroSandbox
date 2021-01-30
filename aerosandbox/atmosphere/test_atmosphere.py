@@ -1,1 +1,0 @@
-from aerosandbox import atmosphere as atmo
