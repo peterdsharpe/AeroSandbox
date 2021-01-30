@@ -1,4 +1,4 @@
-from linear_strength_line_singularities import *
+from aerosandbox.aerodynamics.aero_2D.singularities.linear_strength_line_singularities import *
 import pytest
 
 def test_calculate_induced_velocity_panel_coordinates():
