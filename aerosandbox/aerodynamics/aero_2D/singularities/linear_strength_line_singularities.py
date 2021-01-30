@@ -56,16 +56,6 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
     if isinstance(yp_field, (float, int)):
         yp_field = np.array([yp_field])
 
-    ### Define functions according to the backend to be used
-    if backend == "numpy":
-        arctan2 = lambda y, x: np.arctan2(y, x)
-        ln = lambda x: np.log(x)
-        fabs = lambda x: np.abs(x)
-    elif backend == "casadi":
-        arctan2 = lambda y, x: cas.arctan2(y, x)
-        ln = lambda x: cas.log(x)
-        fabs = lambda x: np.fabs(x)
-
     ### Determine if you can skip either the vortex or source parts
     if backend == "numpy":
         skip_vortex_math = gamma_start == 0 and gamma_end == 0
@@ -81,7 +71,7 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
         ) and sigma_start == 0 and sigma_end == 0
 
     ### Determine which points are effectively on the panel, necessitating different math:
-    is_on_panel = fabs(yp_field) <= 1e-8
+    is_on_panel = np.abs(yp_field) <= 1e-8
 
     ### Do some geometry calculation
     r_1 = (
@@ -92,9 +82,9 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
                   (xp_field - xp_panel_end) ** 2 +
                   yp_field ** 2
           ) ** 0.5
-    theta_1 = arctan2(yp_field, xp_field)
-    theta_2 = arctan2(yp_field, xp_field - xp_panel_end)
-    ln_r_2_r_1 = ln(r_2 / r_1)
+    theta_1 = np.arctan2(yp_field, xp_field)
+    theta_2 = np.arctan2(yp_field, xp_field - xp_panel_end)
+    ln_r_2_r_1 = np.log(r_2 / r_1)
     d_theta = theta_2 - theta_1
     tau = 2 * pi
 
