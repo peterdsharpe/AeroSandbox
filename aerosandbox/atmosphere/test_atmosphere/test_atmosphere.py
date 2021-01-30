@@ -35,7 +35,7 @@ def test_atmosphere():
 
         atmo = Atmosphere(altitude=altitude)
 
-        if altitude > atmo._valid_range[0] and altitude < atmo._valid_range[1]:
+        if altitude >= atmo._valid_range[0] and altitude <= atmo._valid_range[1]:
 
             fail_message = f"{altitude} m"
 
