@@ -27,11 +27,11 @@ def induced_drag(
 
 
 def oswalds_efficiency(
-        taper_ratio,
-        AR,
-        sweep=0,
-        fuselage_diameter_to_span_ratio = 0,
-):
+        taper_ratio: float,
+        aspect_ratio: float,
+        sweep: float = 0.,
+        fuselage_diameter_to_span_ratio: float = 0.,
+) -> float:
     """
     Computes the Oswald's efficiency factor for a planar, tapered, swept wing.
 
@@ -44,7 +44,7 @@ def oswalds_efficiency(
 
     Args:
         taper_ratio: Taper ratio of the wing (tip_chord / root_chord) [-]
-        AR: Aspect ratio of the wing (b^2 / S) [-]
+        aspect_ratio: Aspect ratio of the wing (b^2 / S) [-]
         sweep: Wing quarter-chord sweep angle [deg]
 
     Returns: Oswald's efficiency factor [-]
@@ -66,7 +66,7 @@ def oswalds_efficiency(
     # A bit of thinking about this reveals that this omission must be erroneous.
 
     e_theo = 1 / (
-            1 + f(taper_ratio - delta_lambda) * AR
+            1 + f(taper_ratio - delta_lambda) * aspect_ratio
     )
 
     fuselage_wake_contraction_correction_factor = 1 - 2 * (fuselage_diameter_to_span_ratio) ** 2
@@ -77,8 +77,8 @@ def oswalds_efficiency(
 
 
 def optimal_taper_ratio(
-        sweep=0,
-):
+        sweep=0.,
+) -> float:
     """
     Computes the optimal (minimum-induced-drag) taper ratio for a given quarter-chord sweep angle.
 
@@ -96,10 +96,14 @@ def optimal_taper_ratio(
     return 0.45 * cas.exp(-0.0375 * sweep)
 
 
-def CL_over_Cl(AR, mach=0, sweep=0):
+def CL_over_Cl(
+        aspect_ratio: float,
+        mach: float = 0.,
+        sweep: float = 0.
+) -> float:
     """
     Returns the ratio of 3D lift coefficient (with compressibility) to 2D lift coefficient (incompressible).
-    :param AR: Aspect ratio
+    :param aspect_ratio: Aspect ratio
     :param mach: Mach number
     :param sweep: Sweep angle [deg]
     :return:
@@ -110,12 +114,12 @@ def CL_over_Cl(AR, mach=0, sweep=0):
         0
     )
     sweep_rad = sweep * np.pi / 180
-    # return AR / (AR + 2) # Equivalent to equation in Drela's FVA in incompressible, 2*pi*alpha limit.
-    # return AR / (2 + cas.sqrt(4 + AR ** 2))  # more theoretically sound at low AR
+    # return aspect_ratio / (aspect_ratio + 2) # Equivalent to equation in Drela's FVA in incompressible, 2*pi*alpha limit.
+    # return aspect_ratio / (2 + cas.sqrt(4 + aspect_ratio ** 2))  # more theoretically sound at low aspect_ratio
     eta = 0.95
-    return AR / (
+    return aspect_ratio / (
             2 + cas.sqrt(
-        4 + (AR * beta / eta) ** 2 * (1 + (cas.tan(sweep_rad) / beta) ** 2)
+        4 + (aspect_ratio * beta / eta) ** 2 * (1 + (cas.tan(sweep_rad) / beta) ** 2)
     )
     )  # From Raymer, Sect. 12.4.1; citing DATCOM
 
