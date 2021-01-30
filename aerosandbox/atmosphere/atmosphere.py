@@ -2,21 +2,26 @@ from aerosandbox.common import AeroSandboxObject
 import numpy as np
 
 R_universal = 8.31432  # J/(mol*K); universal gas constant
-M_air = 28.9644e-3  # kg/mol; molecular mass_total of air
-R_air = R_universal / M_air  # Gas constant of air
+M_air = 28.9644e-3  # kg/mol; molecular mass of air
+R_air = R_universal / M_air  # J/(kg*K); gas constant of air
+
 
 class Atmosphere(AeroSandboxObject):
+    r"""
+    All models here are smoothed fits to the 1976 COESA model;
+    see AeroSandbox\studies\Atmosphere Fitting for details.
+
+    All models considered valid from 0 to 40 km.
+    """
+
     def __init__(self,
-                 altitude: float=0. # meters
+                 altitude: float = 0.  # meters
                  ):
         self.altitude = altitude
 
     def pressure(self):
-        r"""
-        Smoothed fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
-        Valid from 0 to 40 km.
-        :param altitude: Altitude [meters]
-        :return: Pressure [Pa]
+        """
+        Returns the pressure, in Pascals.
         """
         altitude_scaled = self.altitude / 40000
 
@@ -34,11 +39,8 @@ class Atmosphere(AeroSandboxObject):
         return pressure
 
     def temperature(self):
-        r"""
-        Smoothed fit to the 1976 COESA model; see AeroSandbox\studies\Atmosphere Fitting for details.
-        Valid from 0 to 40 km.
-        :param altitude: Altitude [meters]
-        :return: Temperature [K]
+        """
+        Returns the temperature, in Kelvin.
         """
 
         altitude_scaled = self.altitude / 40000
@@ -60,47 +62,39 @@ class Atmosphere(AeroSandboxObject):
 
     def density(self):
         """
-        Returns the density as a function of altitude. Based on the 1976 COESA model.
-        There's a more efficient to do this using equation of state, but you can use this if you really want.
-        Args:
-            altitude: Altitude [meters]
-
-        Returns: Density [kg/m^3]
+        Returns the density, in kg/m^3.
         """
-
-        P = get_pressure_at_altitude(altitude)
-        T = get_temperature_at_altitude(altitude)
-
-        rho = P / (T * R_air)
+        rho = self.pressure() / (self.temperature() * R_air)
 
         return rho
 
     def speed_of_sound(self):
         """
-        Finds the speed of sound from a specified temperature.
-        Assumes ideal gas properties and ratio of specific heats of 1.4.
-        :param temperature: Temperature [K]
-        :return: Speed of sound [m/s]
+        Returns the speed of sound, in m/s.
         """
         temperature = self.temperature()
         return (1.4 * R_air * temperature) ** 0.5
 
     def dynamic_viscosity(self):
         """
-        Finds the dynamic viscosity of air from a specified temperature. Uses Sutherland's Law
-        :param temperature: Temperature, in Kelvin
-        :return: Dynamic viscosity, in kg/(m*s)
+        Returns the dynamic viscosity, in kg/(m*s).
+
+        Based on Sutherland's Law, citing `https://www.cfd-online.com/Wiki/Sutherland's_law`.
+
+        According to Rathakrishnan, E. (2013). Theoretical aerodynamics. John Wiley & Sons.:
+        This relationship is valid from 0.01 to 100 atm, and between 0 and 3000K.
+
+        According to White, F. M., & Corfield, I. (2006). Viscous fluid flow (Vol. 3, pp. 433-434). New York: McGraw-Hill.:
+        The error is no more than approximately 2% for air between 170K and 1900K.
         """
-        # Uses Sutherland's law from the temperature
-        # From `https://www.cfd-online.com/Wiki/Sutherland's_law`
 
-        temperature = self.temperature()
-
-        # Sutherland constant
+        # Sutherland constants
         C1 = 1.458e-6  # kg/(m*s*sqrt(K))
         S = 110.4  # K
 
-        mu = C1 * temperature ** (3 / 2) / (temperature + S)
+        # Sutherland equation
+        mu = C1 * self.temperature() ** 1.5 / (self.temperature() + S)
+
         return mu
 
 
