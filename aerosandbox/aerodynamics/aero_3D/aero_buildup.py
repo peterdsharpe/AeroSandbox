@@ -1,14 +1,19 @@
 from aerosandbox import ExplicitAnalysis
 from aerosandbox.geometry import *
+from aerosandbox.performance import OperatingPoint
 import aerosandbox.library.aerodynamics as aero
 
 
 class AeroBuildup(ExplicitAnalysis):
     def __init__(self,
                  airplane,  # type: Airplane
-                 op_point,  # type: op_point
+                 op_point,  # type: OperatingPoint
                  ):
+        ### Initialize
+        self.airplane = airplane
+        self.op_point = op_point
 
+        ### Check assumptions
         assumptions = np.array([
             self.op_point.beta == 0,
             self.op_point.p == 0,
@@ -19,31 +24,25 @@ class AeroBuildup(ExplicitAnalysis):
             raise ValueError("The assumptions to use an aero buildup method are not met!")
 
         ### Fuselages
-        self.fuse_Res = [
-            self.op_point.compute_reynolds(fuse.length())
-            for i, fuse in enumerate(self.airplane.fuselages)
-        ]
-        self.CLA_fuses = [
-            0
-            for i, fuse in enumerate(self.airplane.fuselages)
-        ]
-        self.CDA_fuses = [
-            aero.Cf_flat_plate(self.fuse_Res[i]) * fuse.area_wetted() * 1.2  # wetted area with form factor
-            for i, fuse in enumerate(self.airplane.fuselages)
-        ]
+        for fuselage in self.airplane.fuselages:
+            fuselage.Re = self.op_point.reynolds(fuselage.length())
+            fuselage.CLA = 0
+            fuselage.CDA = aero.Cf_flat_plate(fuselage.Re * fuselage.area_wetted()) * 1.2 # wetted area with form factor
 
-        self.lift_fuses = [
-            self.CLA_fuses[i] * self.op_point.dynamic_pressure()
-            for i, fuse in enumerate(self.airplane.fuselages)
-        ]
-        self.drag_fuses = [
-            self.CDA_fuses[i] * self.op_point.dynamic_pressure()
-            for i, fuse in enumerate(self.airplane.fuselages)
-        ]
+            fuselage.lift_force = fuselage.CLA * self.op_point.dynamic_pressure()
+            fuselage.drag_force = fuselage.CDA * self.op_point.dynamic_pressure()
 
         ### Wings
+        for wing in self.airplane.wings:
+            wing.Re = self.op_point.reynolds(wing.mean_aerodynamic_chord())
+            wing.airfoil = wing.xsecs[0].airfoil
+            wing.Cl_incompressible= wing.airfoil.Cl_function(
+                alpha = wing.alpha,
+                Re = wing.Re # TODO finish
+            )
+
         self.wing_Res = [
-            self.op_point.compute_reynolds(wing.mean_geometric_chord())
+            self.op_point.reynolds(wing.mean_geometric_chord())
             for i, wing in enumerate(self.airplane.wings)
         ]
         self.wing_airfoils = [
