@@ -1,4 +1,5 @@
 from .common import *
+from .atmosphere import *
 from .aerodynamics import *
 from .geometry import *
 from .optimization import *
