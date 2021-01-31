@@ -8,6 +8,8 @@ import os
 Minimization over a simple unimodal function is used here:
     Minimize (x-1) ** 2 + (y-1) ** 2
 """
+
+
 def test_opti():
     opti = asb.Opti()  # set up an optimization environment
 
@@ -16,7 +18,7 @@ def test_opti():
     y = opti.variable()
 
     # Define objective
-    f = (x-1) ** 2 + (y-1) ** 2
+    f = (x - 1) ** 2 + (y - 1) ** 2
     opti.minimize(f)
 
     # Optimize
@@ -24,6 +26,7 @@ def test_opti():
 
     for i in [x, y]:
         assert sol.value(i) == pytest.approx(1, abs=1e-4)
+
 
 def test_save_opti(tmp_path):
     temp_filename = tmp_path / "temp.json"
@@ -35,13 +38,14 @@ def test_save_opti(tmp_path):
     y = opti.variable()
 
     # Define objective
-    f = (x-1) ** 2 + (y-1) ** 2
+    f = (x - 1) ** 2 + (y - 1) ** 2
     opti.minimize(f)
 
     # Optimize
     sol = opti.solve()
 
     opti.save_solution()
+
 
 def test_save_and_load_opti(tmp_path):
     temp_filename = tmp_path / "temp.json"
@@ -55,7 +59,7 @@ def test_save_and_load_opti(tmp_path):
     )
     x = opti.variable(category="Cat 1")
     y = opti.variable(category="Cat 2")
-    f = (x-1) ** 2 + (y-1) ** 2
+    f = (x - 1) ** 2 + (y - 1) ** 2
     opti.minimize(f)
 
     # Optimize, save to cache, print
@@ -78,7 +82,7 @@ def test_save_and_load_opti(tmp_path):
     )
     x = opti.variable(category="Cat 1")
     y = opti.variable(category="Cat 2")
-    f = (x-2) ** 2 + (y-2) ** 2
+    f = (x - 2) ** 2 + (y - 2) ** 2
     opti.minimize(f)
 
     # Optimize, save to cache, print
@@ -90,6 +94,7 @@ def test_save_and_load_opti(tmp_path):
     assert sol.value(x) == pytest.approx(1)
     assert sol.value(y) == pytest.approx(2)
     assert sol.value(f) == pytest.approx(1)
+
 
 def test_save_and_load_opti_vectorized(tmp_path):
     temp_filename = tmp_path / "temp.json"
@@ -103,7 +108,7 @@ def test_save_and_load_opti_vectorized(tmp_path):
     )
     x = opti.variable(n_vars=3, category="Cat 1")
     y = opti.variable(n_vars=3, category="Cat 2")
-    f = cas.sumsqr(x-1) + cas.sumsqr(y-2)
+    f = cas.sumsqr(x - 1) + cas.sumsqr(y - 2)
     opti.minimize(f)
 
     # Optimize, save to cache, print
@@ -126,7 +131,7 @@ def test_save_and_load_opti_vectorized(tmp_path):
     )
     x = opti.variable(n_vars=3, category="Cat 1")
     y = opti.variable(n_vars=3, category="Cat 2")
-    f = cas.sumsqr(x-3) + cas.sumsqr(y-4)
+    f = cas.sumsqr(x - 3) + cas.sumsqr(y - 4)
     opti.minimize(f)
 
     # Optimize, save to cache, print
@@ -138,6 +143,7 @@ def test_save_and_load_opti_vectorized(tmp_path):
     assert sol.value(x) == pytest.approx(1)
     assert sol.value(y) == pytest.approx(4)
     assert sol.value(f) == pytest.approx(12)
+
 
 def test_save_and_load_opti_freeze_override(tmp_path):
     temp_filename = tmp_path / "temp.json"
@@ -151,7 +157,7 @@ def test_save_and_load_opti_freeze_override(tmp_path):
     )
     x = opti.variable(category="Cat 1")
     y = opti.variable(category="Cat 2")
-    f = (x-1) ** 2 + (y-1) ** 2
+    f = (x - 1) ** 2 + (y - 1) ** 2
     opti.minimize(f)
 
     # Optimize, save to cache, print
@@ -174,7 +180,7 @@ def test_save_and_load_opti_freeze_override(tmp_path):
     )
     x = opti.variable(category="Cat 1", init_guess=3, freeze=True)
     y = opti.variable(category="Cat 2")
-    f = (x-2) ** 2 + (y-2) ** 2
+    f = (x - 2) ** 2 + (y - 2) ** 2
     opti.minimize(f)
 
     # Optimize, save to cache, print
@@ -186,6 +192,7 @@ def test_save_and_load_opti_freeze_override(tmp_path):
     assert sol.value(x) == pytest.approx(3)
     assert sol.value(y) == pytest.approx(2)
     assert sol.value(f) == pytest.approx(1)
+
 
 if __name__ == '__main__':
     pytest.main()
