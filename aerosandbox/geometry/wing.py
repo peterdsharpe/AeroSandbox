@@ -1,6 +1,8 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List
+from aerosandbox.geometry.airfoil import Airfoil
+from numpy import pi
 
 
 class Wing(AeroSandboxObject):
@@ -341,59 +343,50 @@ class WingXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 x_le: float = 0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 y_le: float = 0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 z_le: float = 0,  # Coordinate of the leading edge of the cross section, relative to the wing's datum.
-                 chord: float = 0,  # Chord of the wing at this cross section
-                 twist: float = 0,  # Twist always occurs about the leading edge!
-                 twist_axis: cas.DM = cas.DM([0, 1, 0]),  # By default, always twists about the Y-axis.
-                 airfoil: 'Airfoil' = None,  # The airfoil to be used at this cross section.
-                 control_surface_type: str = "symmetric",  # TODO change this to a boolean
-                 # Can be "symmetric" or "asymmetric". Symmetric is like flaps, asymmetric is like an aileron.
+                 xyz_le: np.ndarray = np.array([0, 0, 0]),
+                 chord: float = 1.,
+                 twist_angle: float = 0,
+                 twist_axis: np.ndarray = np.array([0, 1, 0]),
+                 airfoil: Airfoil = Airfoil("naca0012"),
+                 control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
-                 # The location of the control surface hinge, as a fraction of chord.
-                 # Point at which the control surface is applied, as a fraction of chord.
-                 control_surface_deflection: float = 0,  # Control deflection, in degrees. Downwards-positive.
-                 spanwise_panels: int = 8,
-                 # The number of spanwise panels to be used between this cross section and the next one.
-                 spanwise_spacing: str = "cosine"  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
+                 control_surface_deflection: float = 0.,
                  ):
-        if airfoil is None:
-            raise ValueError("'airfoil' argument missing! (Needs an object of Airfoil type)")
+        """
+        Initialize a new wing cross section.
+        Args:
+            xyz_le: xyz-coordinates of the leading edge of the cross section, relative to the wing's datum.
+            chord: Chord of the wing at this cross section
+            twist_angle: Twist angle, in degrees, as defined about the leading edge.
+            twist_axis: The twist axis vector, used if twist_angle != 0.
+            airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
+            control_surface_is_symmetric: Is the control surface symmetric? (e.g. True for flaps, False for ailerons.)
+            control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
+            control_surface_deflection: Control deflection, in degrees. Downwards-positive.
+        """
 
-        self.x_le = x_le
-        self.y_le = y_le
-        self.z_le = z_le
-
+        self.xyz_le = xyz_le
         self.chord = chord
-        self.twist = twist
+        self.twist = twist_angle
         self.twist_axis = twist_axis
         self.airfoil = airfoil
-        self.control_surface_type = control_surface_type
+        self.control_surface_is_symmetric = control_surface_is_symmetric
         self.control_surface_hinge_point = control_surface_hinge_point
         self.control_surface_deflection = control_surface_deflection
-        self.spanwise_panels = spanwise_panels
-        self.spanwise_spacing = spanwise_spacing
-
-        self.xyz_le = cas.vertcat(x_le, y_le, z_le)
 
     def __repr__(self) -> str:
-        return "WingXSec (airfoil = %s, chord = %f, twist = %f)" % (
-            self.airfoil.name,
-            self.chord,
-            self.twist
-        )
+        return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
 
-    def quarter_chord(self) -> cas.DM:
+    def quarter_chord(self) -> np.ndarray:
         """
         Returns the (wing-relative) coordinates of the quarter chord of the cross section.
         """
         return 0.75 * self.xyz_le + 0.25 * self.xyz_te()
 
-    def xyz_te(self) -> cas.DM:
+    def xyz_te(self) -> np.ndarray:
         """
         Returns the (wing-relative) coordinates of the trailing edge of the cross section.
         """
-        rot = angle_axis_rotation_matrix(self.twist * cas.pi / 180, self.twist_axis)
-        xyz_te = self.xyz_le + rot @ cas.vertcat(self.chord, 0, 0)
+        rot = rotation_matrix_angle_axis(self.twist * pi / 180, self.twist_axis)
+        xyz_te = self.xyz_le + rot @ [self.chord, 0, 0]
         return xyz_te
