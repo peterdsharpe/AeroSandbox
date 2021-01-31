@@ -6,12 +6,6 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-try:
-    from xfoil import XFoil
-    from xfoil import model as xfoil_model
-except ModuleNotFoundError:
-    pass
-
 
 def reflect_over_XZ_plane(input_vector):
     """
@@ -37,37 +31,25 @@ def reflect_over_XZ_plane(input_vector):
 
 def rotation_matrix_2D(
         angle,
-        backend="numpy",
 ):
     """
     Gives the 2D rotation matrix associated with a counterclockwise rotation about an angle.
     Args:
         angle: Angle by which to rotate. Given in radians.
-        backend: "numpy" or "casadi".
 
     Returns: The 2D rotation matrix
 
     """
-    if backend == "numpy":
-        sintheta = np.sin(angle)
-        costheta = np.cos(angle)
-        rotation_matrix = np.array([
-            [costheta, -sintheta],
-            [sintheta, costheta]
-        ])
-    elif backend == "casadi":
-        sintheta = cas.sin(angle)
-        costheta = cas.cos(angle)
-        rotation_matrix = cas.vertcat(
-            cas.horzcat(costheta, -sintheta),
-            cas.horzcat(sintheta, costheta)
-        )
-    else:
-        raise ValueError("Bad value of 'backend'!")
+    sintheta = np.sin(angle)
+    costheta = np.cos(angle)
+    rotation_matrix = np.array([
+        [costheta, -sintheta],
+        [sintheta, costheta]
+    ])
     return rotation_matrix
 
 
-def angle_axis_rotation_matrix(
+def rotation_matrix_angle_axis(
         angle,
         axis,
         _axis_already_normalized=False
@@ -84,18 +66,18 @@ def angle_axis_rotation_matrix(
         * If angle is a vector, returns a 3x3xN rotation matrix.
     """
     if not _axis_already_normalized:
-        axis = axis / cas.norm_2(axis)
+        axis = axis / np.linalg.norm(axis)
 
-    sintheta = cas.sin(angle)
-    costheta = cas.cos(angle)
-    cpm = cas.vertcat(
-        cas.horzcat(0, -axis[2], axis[1]),
-        cas.horzcat(axis[2], 0, -axis[0]),
-        cas.horzcat(-axis[1], axis[0], 0),
-    )  # The cross product matrix of the rotation axis vector
-    outer_axis = axis @ cas.transpose(axis)
+    sintheta = np.sin(angle)
+    costheta = np.cos(angle)
+    cpm = np.array([
+        [0, -axis[2], axis[1]],
+        [axis[2], 0, -axis[0]],
+        [-axis[1], axis[0], 0],
+    ])  # The cross product matrix of the rotation axis vector
+    outer_axis = axis @ axis.T
 
-    rot_matrix = costheta * cas.DM.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
+    rot_matrix = costheta * np.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
     return rot_matrix
 
 
