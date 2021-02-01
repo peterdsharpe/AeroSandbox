@@ -64,6 +64,7 @@ def test_basic_math(types):
             x - y
             x * y
             x / y
+            sum1(x)  # Sum of all entries of array-like object x
 
             ### Exponentials & Powers
             x ** y
@@ -153,6 +154,13 @@ def test_spacing(types):
     for x in types["scalar"]:
         linspace(x - 1, x + 1, 10)
         cosspace(x - 1, x + 1, 10)
+
+
+def test_rotation_matrices(types):
+    for angle in types["scalar"]:
+        for axis in types["vector"]:
+            rotation_matrix_2D(angle)
+            rotation_matrix_angle_axis(angle, array([axis[0], axis[1], axis[0]]))
 
 
 if __name__ == '__main__':

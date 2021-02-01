@@ -1,5 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
+from aerosandbox.optimization.math import *
 from typing import List
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
@@ -32,111 +33,107 @@ class Wing(AeroSandboxObject):
         self.symmetric = symmetric
 
     def __repr__(self) -> str:
-        return f"Wing {self.name} ({len(self.xsecs)} xsecs, {'symmetric' if self.symmetric else 'asymmetric'})"
+        n_xsecs = len(self.xsecs)
+        symmetry_description = "symmetric" if self.symmetric else "asymmetric"
+        return f"Wing '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'}, {symmetry_description})"
+
+    def span(self,
+             type: str = "wetted",
+             _sectional: bool = False,
+             ) -> float:
+        """
+        Returns the span, with options for various ways of measuring this.
+         * wetted: Adds up YZ-distances of each section piece by piece
+         * y: Adds up the Y-distances of each section piece by piece
+         * z: Adds up the Z-distances of each section piece by piece
+         * y-full: Y-distance between the XZ plane and the tip of the wing. (Can't be used with _sectional).
+        If symmetric, this is doubled left/right to obtain the full span.
+
+        Args:
+            type: One of the above options, as a string.
+            _sectional: A boolean. If False, returns the total span. If True, returns a list of spans for each of the
+                `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
+        """
+        if type == "y-full":
+            if _sectional:
+                raise ValueError("Cannot use `_sectional` with the parameter type as `y-full`!")
+            return self.xsecs[-1].quarter_chord()[1]
+
+        sectional_spans = []
+
+        for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
+            quarter_chord_vector = outer_xsec.quarter_chord() - inner_xsec.quarter_chord()
+
+            if type == "wetted":
+                section_span = (
+                                       quarter_chord_vector[1] ** 2 +
+                                       quarter_chord_vector[2] ** 2
+                               ) ** 0.5
+            elif type == "y":
+                section_span = (
+                    np.fabs(quarter_chord_vector[1])
+                )
+            elif type == "z":
+                section_span = (
+                    np.fabs(quarter_chord_vector[2])
+                )
+            else:
+                raise ValueError("Bad value of 'type'!")
+
+            sectional_spans.append(section_span)
+
+        span = sum(sectional_spans)
+
+        if self.symmetric:
+            span *= 2
+
+        if _sectional:
+            return sectional_spans
+        else:
+            return span
 
     def area(self,
-             type: str = "wetted"
+             type: str = "wetted",
+             _sectional: bool = False,
              ) -> float:
         """
         Returns the area, with options for various ways of measuring this.
          * wetted: wetted area
          * projected: area projected onto the XY plane (top-down view)
-        :param type:
-        :return:
+        If symmetric, this is doubled left/right to obtain the full wing area.
+
+        Args:
+            type: One of the above options, as a string.
+            _sectional: A boolean. If False, returns the total area. If True, returns a list of areas for each of the
+                `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
+
         """
         area = 0
-        for i in range(len(self.xsecs) - 1):
-            chord_eff = (self.xsecs[i].chord
-                         + self.xsecs[i + 1].chord) / 2
-            this_xyz_te = self.xsecs[i].xyz_te()
-            that_xyz_te = self.xsecs[i + 1].xyz_te()
-            if type == "wetted":
-                span_le_eff = (
-                                      (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
-                                      (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
-                              ) ** 0.5
-                span_te_eff = (
-                                      (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
-                                      (this_xyz_te[2] - that_xyz_te[2]) ** 2
-                              ) ** 0.5
-            elif type == "projected":
-                span_le_eff = np.fabs(
-                    self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]
-                )
-                span_te_eff = np.fabs(
-                    this_xyz_te[1] - that_xyz_te[1]
-                )
-            else:
-                raise ValueError("Bad value of 'type'!")
+        chords = [xsec.chord for xsec in self.xsecs]
+        sectional_spans = self.span(_sectional=True)
+        sectional_chords = [
+            (inner_chord + outer_chord) / 2
+            for inner_chord, outer_chord in zip(
+                chords[1:],
+                chords[:-1]
+            )
+        ]
+        sectional_areas = [
+            span * chord
+            for span, chord in zip(
+                sectional_spans,
+                sectional_chords
+            )
+        ]
+        area = sum(sectional_areas)
 
-            span_eff = (span_le_eff + span_te_eff) / 2
-            area += chord_eff * span_eff
+        if _sectional:
+            return sectional_areas
+
         if self.symmetric:
             area *= 2
+
         return area
-
-    def span(self,
-             type: str = "wetted"
-             ) -> float:
-        """
-        Returns the span, with options for various ways of measuring this.
-         * wetted: Adds up YZ-distances of each section piece by piece
-         * yz: YZ-distance between the root and tip of the wing
-         * y: Y-distance between the root and tip of the wing
-         * z: Z-distance between the root and tip of the wing
-         * y-full: Y-distance between the centerline and the tip of the wing
-        If symmetric, this is doubled to obtain the full span.
-        :param type: One of the above options, as a string.
-        :return: span
-        """
-        if type == "wetted":
-            span = 0
-            for i in range(len(self.xsecs) - 1):
-                sect1_xyz_le = self.xsecs[i].xyz_le
-                sect2_xyz_le = self.xsecs[i + 1].xyz_le
-                sect1_xyz_te = self.xsecs[i].xyz_te()
-                sect2_xyz_te = self.xsecs[i + 1].xyz_te()
-
-                span_le = (
-                                  (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
-                                  (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
-                          ) ** 0.5
-                span_te = (
-                                  (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
-                                  (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
-                          ) ** 0.5
-                span_eff = (span_le + span_te) / 2
-                span += span_eff
-
-        elif type == "yz":
-            root = self.xsecs[0]  # type: WingXSec
-            tip = self.xsecs[-1]  # type: WingXSec
-            span = (
-                           (root.xyz_le[1] - tip.xyz_le[1]) ** 2 +
-                           (root.xyz_le[2] - tip.xyz_le[2]) ** 2
-                   ) ** 0.5
-        elif type == "y":
-            root = self.xsecs[0]  # type: WingXSec
-            tip = self.xsecs[-1]  # type: WingXSec
-            span = np.fabs(
-                tip.xyz_le[1] - root.xyz_le[1]
-            )
-        elif type == "z":
-            root = self.xsecs[0]  # type: WingXSec
-            tip = self.xsecs[-1]  # type: WingXSec
-            span = np.fabs(
-                tip.xyz_le[2] - root.xyz_le[2]
-            )
-        elif type == "y-full":
-            tip = self.xsecs[-1]
-            span = np.fabs(
-                tip.xyz_le[1] - 0
-            )
-        else:
-            raise ValueError("Bad value of 'type'!")
-        if self.symmetric:
-            span *= 2
-        return span
 
     def aspect_ratio(self) -> float:
         # Returns the aspect ratio (b^2/S).
@@ -144,7 +141,9 @@ class Wing(AeroSandboxObject):
         return self.span() ** 2 / self.area()
 
     def has_symmetric_control_surfaces(self) -> bool:
-        # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has control_surface_type = "symmetric".
+        # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has symmetric control surfaces.
+        if not self.symmetric:
+            return False
         for xsec in self.xsecs:
             if not xsec.control_surface_is_symmetric:
                 return False
@@ -161,27 +160,29 @@ class Wing(AeroSandboxObject):
         """
         Returns the mean aerodynamic chord of the wing.
         """
-        area = 0
-        sum_dMAC_dA = 0
 
-        for inner, outer in zip(self.xsecs[:-1], self.xsecs[1:]):
-            quarter_chord_vector = outer.quarter_chord() - inner.quarter_chord()
+        sectional_areas = self.area(_sectional=True)
+        sectional_MACs = []
 
-            section_span = (
-                                   quarter_chord_vector[1] ** 2 +
-                                   quarter_chord_vector[2] ** 2
-                           ) ** 0.5
+        for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
 
-            section_taper_ratio = outer.chord / inner.chord
-            section_area = (inner.chord + outer.chord) / 2 * section_span
-            section_MAC = (2 / 3) * inner.chord * (
+            section_taper_ratio = outer_xsec.chord / inner_xsec.chord
+            section_MAC = (2 / 3) * inner_xsec.chord * (
                     (1 + section_taper_ratio + section_taper_ratio ** 2) /
                     (1 + section_taper_ratio)
             )
-            area = area + section_area
-            sum_dMAC_dA = sum_dMAC_dA + section_area * section_MAC
 
-        MAC = sum_dMAC_dA / area
+            sectional_MACs.append(section_MAC)
+
+        sectional_MAC_area_products = [
+            area * MAC
+            for area, MAC in zip(
+                sectional_areas,
+                sectional_MACs
+            )
+        ]
+
+        MAC = sum(sectional_MAC_area_products) / sum(sectional_areas)
 
         return MAC
 
@@ -226,35 +227,29 @@ class Wing(AeroSandboxObject):
 
     def mean_twist_angle(self) -> float:
         r"""
-        Returns the mean twist angle (in degrees) of the wing, weighted by span.
-        You can think of it as \int_{b}(twist)db, where b is span.
+        Returns the mean twist angle (in degrees) of the wing, weighted by area.
         WARNING: This function's output is only exact in the case where all of the cross sections have the same twist axis!
         :return: mean twist angle (in degrees)
         """
-        # First, find the spans
-        span = []
 
-        for inner, outer in zip(self.xsecs[:-1], self.xsecs[1:]):
-            quarter_chord_vector = outer.quarter_chord() - inner.quarter_chord()
+        sectional_twists = [
+            (inner_xsec.twist + outer_xsec.twist) / 2
+            for inner_xsec, outer_xsec in zip(
+                self.xsecs[1:],
+                self.xsecs[:-1]
+            )
+        ]
+        sectional_areas = self.area(_sectional=True)
 
-            section_span = (
-                                   quarter_chord_vector[1] ** 2 +
-                                   quarter_chord_vector[2] ** 2
-                           ) ** 0.5
+        sectional_twist_area_products = [
+            twist * area
+            for twist, area in zip(
+                sectional_twists, sectional_areas
+            )
+        ]
 
-            span.append(section_span)
+        mean_twist = sum(sectional_twist_area_products) / sum(sectional_areas)
 
-        # Then, find the twist-span product
-        twist_span_product = 0
-        for i in range(len(self.xsecs)):
-            xsec = self.xsecs[i]
-            if i > 0:
-                twist_span_product += xsec.twist * span[i - 1] / 2
-            if i < len(self.xsecs) - 1:
-                twist_span_product += xsec.twist * span[i] / 2
-
-        # Then, divide
-        mean_twist = twist_span_product / cas.sum1(cas.vertcat(*span))
         return mean_twist
 
     def mean_sweep_angle(self) -> float:
@@ -263,61 +258,48 @@ class Wing(AeroSandboxObject):
         Positive sweep is backwards, negative sweep is forward.
         :return:
         """
-        root_quarter_chord = 0.75 * self.xsecs[0].xyz_le + 0.25 * self.xsecs[0].xyz_te()
-        tip_quarter_chord = 0.75 * self.xsecs[-1].xyz_le + 0.25 * self.xsecs[-1].xyz_te()
+        root_quarter_chord = self.xsecs[0].quarter_chord()
+        tip_quarter_chord = self.xsecs[-1].quarter_chord()
 
         vec = tip_quarter_chord - root_quarter_chord
-        vec_norm = vec / cas.norm_2(vec)
+        vec_norm = vec / norm(vec)
 
         sin_sweep = vec_norm[0]  # from dot product with x_hat
 
-        sweep_deg = cas.asin(sin_sweep) * 180 / cas.pi
+        sweep_deg = np.arcsin(sin_sweep) * 180 / cas.pi
 
         return sweep_deg
 
-    def approximate_center_of_pressure(self) -> cas.DM:
+    def aerodynamic_center(self) -> cas.DM:
         """
-        Returns the approximate location of the center of pressure. Given as the area-weighted quarter chord of the wing.
-        :return: [x, y, z] of the approximate center of pressure
+        Returns the approximate location of the aerodynamic center.
+        Approximately computed as the area-weighted quarter chord of the wing.
+        :return: [x, y, z] of the approximate center of pressure in global coordinates.
         """
-        areas = []
-        quarter_chord_centroids = []
-        for i in range(len(self.xsecs) - 1):
-            # Find areas
-            chord_eff = (self.xsecs[i].chord
-                         + self.xsecs[i + 1].chord) / 2
-            this_xyz_te = self.xsecs[i].xyz_te()
-            that_xyz_te = self.xsecs[i + 1].xyz_te()
-            span_le_eff = cas.sqrt(
-                (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
-                (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
+        sectional_ACs = [
+            (inner_xsec.quarter_chord() + outer_xsec.quarter_chord()) / 2
+            for inner_xsec, outer_xsec in zip(
+                self.xsecs[:-1],
+                self.xsecs[1:]
             )
-            span_te_eff = cas.sqrt(
-                (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
-                (this_xyz_te[2] - that_xyz_te[2]) ** 2
+        ]
+        sectional_areas = self.area(_sectional=True)
+
+        sectional_AC_area_products = [
+            AC * area
+            for AC, area in zip(
+                sectional_ACs, sectional_areas
             )
-            span_eff = (span_le_eff + span_te_eff) / 2
+        ]
 
-            areas.append(chord_eff * span_eff)
+        mean_AC = sum(sectional_AC_area_products) / sum(sectional_areas)
 
-            # Find quarter-chord centroids of each section
-            quarter_chord_centroids.append(
-                (
-                        0.75 * self.xsecs[i].xyz_le + 0.25 * self.xsecs[i].xyz_te() +
-                        0.75 * self.xsecs[i + 1].xyz_le + 0.25 * self.xsecs[i + 1].xyz_te()
-                ) / 2 + self.xyz_le
-            )
-
-        areas = cas.vertcat(*areas)
-        quarter_chord_centroids = cas.transpose(cas.horzcat(*quarter_chord_centroids))
-
-        total_area = cas.sum1(areas)
-        approximate_cop = cas.sum1(areas / cas.sum1(areas) * quarter_chord_centroids)
+        mean_AC += self.xyz_le
 
         if self.symmetric:
-            approximate_cop[:, 1] = 0
+            mean_AC[1] = 0
 
-        return approximate_cop
+        return mean_AC
 
     def taper_ratio(self) -> float:
         """

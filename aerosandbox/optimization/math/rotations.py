@@ -52,5 +52,5 @@ def rotation_matrix_angle_axis(
     ])  # The cross product matrix of the rotation axis vector
     outer_axis = outer(axis, axis)
 
-    rot_matrix = costheta * np.eye(3) + sintheta * cpm + (1 - costheta) @ outer_axis
+    rot_matrix = costheta * np.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
     return rot_matrix

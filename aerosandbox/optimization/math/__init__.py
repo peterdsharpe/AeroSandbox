@@ -4,6 +4,7 @@ from .calculus import *
 from .conditionals import *
 from .linalg import *
 from .logicals import *
+from .rotations import *
 from .spacing import *
 from .surrogate_model_tools import *
 from .trig import *

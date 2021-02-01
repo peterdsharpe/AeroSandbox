@@ -67,11 +67,11 @@ class Airplane(AeroSandboxObject):
         assert self.b_ref is not None
 
     def __repr__(self):
-        return "Airplane %s (%i wings, %i fuselages)" % (
-            self.name,
-            len(self.wings),
-            len(self.fuselages)
-        )
+        n_wings = len(self.wings)
+        n_fuselages = len(self.fuselages)
+        return f"Airplane '{self.name}' " \
+               f"({n_wings} {'wing' if n_wings == 1 else 'wings'}, " \
+               f"{n_fuselages} {'fuselage' if n_fuselages == 1 else 'fuselages'})"
 
     def draw(self,
              show=True,  # type: bool
