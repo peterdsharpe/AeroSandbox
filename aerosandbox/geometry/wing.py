@@ -13,28 +13,26 @@ class Wing(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name: str = "Untitled Wing",  # It can help when debugging to give each wing a sensible name.
-                 x_le: float = 0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 y_le: float = 0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 z_le: float = 0,  # Will translate all of the xsecs of the wing. Useful for moving the wing around.
-                 xsecs: List['WingXSec'] = [],  # This should be a list of WingXSec objects.
-                 symmetric: bool = False,  # Is the wing symmetric across the XZ plane?
-                 chordwise_panels: int = 8,  # The number of chordwise panels to be used in VLM and panel analyses.
-                 chordwise_spacing: str = "cosine",  # Can be 'cosine' or 'uniform'. Highly recommended to be cosine.
+                 name: str = "Untitled Wing",
+                 xyz_le: np.ndarray = array([0, 0, 0]),
+                 xsecs: List['WingXSec'] = [],
+                 symmetric: bool = False,
                  ):
+        """
+        Initialize a new wing.
+        Args:
+            name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
+            xyz_le: xyz-coordinates of the datum point (typically the root leading edge) of the wing.
+            xsecs: A list of wing cross ("X") sections in the form of WingXSec objects.
+            symmetric: Is the wing symmetric across the XZ plane?
+        """
         self.name = name
-        self.xyz_le = cas.vertcat(x_le, y_le, z_le)
+        self.xyz_le = xyz_le
         self.xsecs = xsecs
         self.symmetric = symmetric
-        self.chordwise_panels = chordwise_panels
-        self.chordwise_spacing = chordwise_spacing
 
     def __repr__(self) -> str:
-        return "Wing %s (%i xsecs, %s)" % (
-            self.name,
-            len(self.xsecs),
-            "symmetric" if self.symmetric else "not symmetric"
-        )
+        return f"Wing {self.name} ({len(self.xsecs)} xsecs, {'symmetric' if self.symmetric else 'asymmetric'})"
 
     def area(self,
              type: str = "wetted"
@@ -53,19 +51,19 @@ class Wing(AeroSandboxObject):
             this_xyz_te = self.xsecs[i].xyz_te()
             that_xyz_te = self.xsecs[i + 1].xyz_te()
             if type == "wetted":
-                span_le_eff = cas.sqrt(
-                    (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
-                    (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
-                )
-                span_te_eff = cas.sqrt(
-                    (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
-                    (this_xyz_te[2] - that_xyz_te[2]) ** 2
-                )
+                span_le_eff = (
+                                      (self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]) ** 2 +
+                                      (self.xsecs[i].xyz_le[2] - self.xsecs[i + 1].xyz_le[2]) ** 2
+                              ) ** 0.5
+                span_te_eff = (
+                                      (this_xyz_te[1] - that_xyz_te[1]) ** 2 +
+                                      (this_xyz_te[2] - that_xyz_te[2]) ** 2
+                              ) ** 0.5
             elif type == "projected":
-                span_le_eff = cas.fabs(
+                span_le_eff = np.fabs(
                     self.xsecs[i].xyz_le[1] - self.xsecs[i + 1].xyz_le[1]
                 )
-                span_te_eff = cas.fabs(
+                span_te_eff = np.fabs(
                     this_xyz_te[1] - that_xyz_te[1]
                 )
             else:
@@ -99,39 +97,39 @@ class Wing(AeroSandboxObject):
                 sect1_xyz_te = self.xsecs[i].xyz_te()
                 sect2_xyz_te = self.xsecs[i + 1].xyz_te()
 
-                span_le = cas.sqrt(
-                    (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
-                    (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
-                )
-                span_te = cas.sqrt(
-                    (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
-                    (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
-                )
+                span_le = (
+                                  (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
+                                  (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
+                          ) ** 0.5
+                span_te = (
+                                  (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
+                                  (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
+                          ) ** 0.5
                 span_eff = (span_le + span_te) / 2
                 span += span_eff
 
         elif type == "yz":
             root = self.xsecs[0]  # type: WingXSec
             tip = self.xsecs[-1]  # type: WingXSec
-            span = cas.sqrt(
-                (root.xyz_le[1] - tip.xyz_le[1]) ** 2 +
-                (root.xyz_le[2] - tip.xyz_le[2]) ** 2
-            )
+            span = (
+                           (root.xyz_le[1] - tip.xyz_le[1]) ** 2 +
+                           (root.xyz_le[2] - tip.xyz_le[2]) ** 2
+                   ) ** 0.5
         elif type == "y":
             root = self.xsecs[0]  # type: WingXSec
             tip = self.xsecs[-1]  # type: WingXSec
-            span = cas.fabs(
+            span = np.fabs(
                 tip.xyz_le[1] - root.xyz_le[1]
             )
         elif type == "z":
             root = self.xsecs[0]  # type: WingXSec
             tip = self.xsecs[-1]  # type: WingXSec
-            span = cas.fabs(
+            span = np.fabs(
                 tip.xyz_le[2] - root.xyz_le[2]
             )
         elif type == "y-full":
             tip = self.xsecs[-1]
-            span = cas.fabs(
+            span = np.fabs(
                 tip.xyz_le[1] - 0
             )
         else:
@@ -148,7 +146,7 @@ class Wing(AeroSandboxObject):
     def has_symmetric_control_surfaces(self) -> bool:
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has control_surface_type = "symmetric".
         for xsec in self.xsecs:
-            if not xsec.control_surface_type == "symmetric":
+            if not xsec.control_surface_is_symmetric:
                 return False
         return True
 
@@ -166,16 +164,17 @@ class Wing(AeroSandboxObject):
         area = 0
         sum_dMAC_dA = 0
 
-        for i, xsec_a in enumerate(self.xsecs[:-1]):
-            xsec_b = self.xsecs[i + 1]
+        for inner, outer in zip(self.xsecs[:-1], self.xsecs[1:]):
+            quarter_chord_vector = outer.quarter_chord() - inner.quarter_chord()
 
-            section_span = cas.sqrt(
-                cas.sumsqr(xsec_a.quarter_chord()[1:, :] - xsec_b.quarter_chord()[1:, :])
-            )
+            section_span = (
+                                   quarter_chord_vector[1] ** 2 +
+                                   quarter_chord_vector[2] ** 2
+                           ) ** 0.5
 
-            section_taper_ratio = xsec_b.chord / xsec_a.chord
-            section_area = (xsec_a.chord + xsec_b.chord) / 2 * section_span
-            section_MAC = (2 / 3) * xsec_a.chord * (
+            section_taper_ratio = outer.chord / inner.chord
+            section_area = (inner.chord + outer.chord) / 2 * section_span
+            section_MAC = (2 / 3) * inner.chord * (
                     (1 + section_taper_ratio + section_taper_ratio ** 2) /
                     (1 + section_taper_ratio)
             )
@@ -234,22 +233,16 @@ class Wing(AeroSandboxObject):
         """
         # First, find the spans
         span = []
-        for i in range(len(self.xsecs) - 1):
-            sect1_xyz_le = self.xsecs[i].xyz_le
-            sect2_xyz_le = self.xsecs[i + 1].xyz_le
-            sect1_xyz_te = self.xsecs[i].xyz_te()
-            sect2_xyz_te = self.xsecs[i + 1].xyz_te()
 
-            span_le = cas.sqrt(
-                (sect1_xyz_le[1] - sect2_xyz_le[1]) ** 2 +
-                (sect1_xyz_le[2] - sect2_xyz_le[2]) ** 2
-            )
-            span_te = cas.sqrt(
-                (sect1_xyz_te[1] - sect2_xyz_te[1]) ** 2 +
-                (sect1_xyz_te[2] - sect2_xyz_te[2]) ** 2
-            )
-            span_eff = (span_le + span_te) / 2
-            span.append(span_eff)
+        for inner, outer in zip(self.xsecs[:-1], self.xsecs[1:]):
+            quarter_chord_vector = outer.quarter_chord() - inner.quarter_chord()
+
+            section_span = (
+                                   quarter_chord_vector[1] ** 2 +
+                                   quarter_chord_vector[2] ** 2
+                           ) ** 0.5
+
+            span.append(section_span)
 
         # Then, find the twist-span product
         twist_span_product = 0
@@ -343,10 +336,10 @@ class WingXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_le: np.ndarray = np.array([0, 0, 0]),
+                 xyz_le: np.ndarray = array([0, 0, 0]),
                  chord: float = 1.,
                  twist_angle: float = 0,
-                 twist_axis: np.ndarray = np.array([0, 1, 0]),
+                 twist_axis: np.ndarray = array([0, 1, 0]),
                  airfoil: Airfoil = Airfoil("naca0012"),
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
@@ -388,5 +381,5 @@ class WingXSec(AeroSandboxObject):
         Returns the (wing-relative) coordinates of the trailing edge of the cross section.
         """
         rot = rotation_matrix_angle_axis(self.twist * pi / 180, self.twist_axis)
-        xyz_te = self.xyz_le + rot @ [self.chord, 0, 0]
+        xyz_te = self.xyz_le + rot @ array([self.chord, 0, 0])
         return xyz_te
