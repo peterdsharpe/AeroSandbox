@@ -3,7 +3,7 @@ import pytest
 from aerosandbox.optimization.math import *
 import numpy as np
 
-### Cause warnings to raise exceptions, to make this bulletproof
+### Cause all NumPy warnings to raise exceptions, to make this bulletproof
 np.seterr(all='raise')
 
 
@@ -90,10 +90,21 @@ def test_basic_math(types):
 
 
 def test_logic(types):
-    for option_set in types.values():
+    for option_set in [
+        types["scalar"],
+        types["vector"],
+        types["matrix"],
+    ]:
         for x in option_set:
             for y in option_set:
                 ### Comparisons
+                """
+                Note: if warnings appear here, they're from `np.array(1) == cas.MX(1)` - 
+                sensitive to order, as `cas.MX(1) == np.array(1)` is fine.
+                
+                However, checking the outputs, these seem to be yielding correct results despite
+                the warning sooo...
+                """
                 x == y
                 x != y
                 x > y
@@ -122,32 +133,26 @@ def test_logic(types):
 def test_vector_math(types):
     for x in types["vector"]:
         for y in types["vector"]:
+            x.T
             inner(x, y)
             outer(x, y)
             norm(x)
+
+
+def test_matrix_math(types):
+    for v in types["vector"]:
+        for m in types["matrix"]:
+            m.T
+            m @ v
+            for m_other in types["matrix"]:
+                m @ m_other
+            linear_solve(m, v)
 
 
 def test_spacing(types):
     for x in types["scalar"]:
         linspace(x - 1, x + 1, 10)
         cosspace(x - 1, x + 1, 10)
-
-        # ### Vector math
-        # v.T @ v  # Inner product
-        # v @ v.T  # Warning: this does NOT give you an outer product
-        # inner(v, v)  # Inner product
-        # outer(v, v)  # Outer product
-        # # np.matmul(v, v) # Note: use v @ v notation instead.
-        # norm(v)
-        #
-        # ### Matrix math
-        # # np.transpose(m)  # Note: use m.T or v.T instead.
-        # m.T
-        # v.T
-        # m @ m
-        # m @ v  # TODO investigate this
-        # # v.T @ m  # TODO investigate this
-        # linear_solve(m, v)  # TODO get this working
 
 
 if __name__ == '__main__':
