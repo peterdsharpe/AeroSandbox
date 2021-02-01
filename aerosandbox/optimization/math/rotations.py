@@ -1,4 +1,5 @@
 from aerosandbox.optimization.math.linalg import norm, outer
+from aerosandbox.optimization.math.array import array
 import numpy as np
 import casadi as cas
 
@@ -16,7 +17,7 @@ def rotation_matrix_2D(
     """
     sintheta = np.sin(angle)
     costheta = np.cos(angle)
-    rotation_matrix = np.array([
+    rotation_matrix = array([
         [costheta, -sintheta],
         [sintheta, costheta]
     ])
@@ -44,7 +45,7 @@ def rotation_matrix_angle_axis(
 
     sintheta = np.sin(angle)
     costheta = np.cos(angle)
-    cpm = np.array([
+    cpm = array([
         [0, -axis[2], axis[1]],
         [axis[2], 0, -axis[0]],
         [-axis[1], axis[0], 0],
@@ -53,6 +54,3 @@ def rotation_matrix_angle_axis(
 
     rot_matrix = costheta * np.eye(3) + sintheta * cpm + (1 - costheta) @ outer_axis
     return rot_matrix
-
-if __name__ == '__main__':
-    rotation_matrix_angle_axis(0, cas.MX([1, 0, 1]))
