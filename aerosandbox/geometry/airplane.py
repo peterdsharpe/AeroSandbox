@@ -11,9 +11,7 @@ class Airplane(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled",  # A sensible name for your airplane.
-                 x_ref: float = 0.,  # Ref. point for moments; should be the center of gravity.
-                 y_ref: float = 0.,  # Ref. point for moments; should be the center of gravity.
-                 z_ref: float = 0.,  # Ref. point for moments; should be the center of gravity.
+                 xyz_ref: np.ndarray = array([0, 0, 0]),  # Ref. point for moments; should be the center of gravity.
                  wings: List['Wing'] = None,  # A list of Wing objects.
                  fuselages: List['Fuselage'] = None,  # A list of Fuselage objects.
                  s_ref: float = None,  # If not set, populates from first wing object.
@@ -23,48 +21,34 @@ class Airplane(AeroSandboxObject):
         ### Initialize
         self.name = name
 
-        self.x_ref = x_ref,
-        self.y_ref = y_ref,
-        self.z_ref = z_ref,
+        self.xyz_ref = xyz_ref
 
+        ## Add the wing objects
         if wings is not None:
             self.wings = wings
         else:
             self.wings = []
 
+        ## Add the fuselage objects
         if fuselages is not None:
             self.fuselages = fuselages
         else:
             self.fuselages = []
 
-        if s_ref is not None:
-            self.s_ref = s_ref
-        else:
-            try:
-                self.s_ref = self.wings[0].area()
-            except IndexError:
-                pass
-        if c_ref is not None:
-            self.c_ref = c_ref
-        else:
-            try:
-                self.c_ref = self.wings[0].mean_aerodynamic_chord()
-            except IndexError:
-                pass
-        if b_ref is not None:
-            self.b_ref = b_ref
-        else:
-            try:
-                self.b_ref = self.wings[0].span()
-            except IndexError:
-                pass
-
-        # Check that everything was set right:
-        assert self.name is not None
-        assert self.xyz_ref is not None
-        assert self.s_ref is not None
-        assert self.c_ref is not None
-        assert self.b_ref is not None
+        ## Assign reference values
+        try:
+            main_wing = self.wings[0]
+            if s_ref is None:
+                s_ref = main_wing.area()
+            if c_ref is None:
+                c_ref = main_wing.mean_aerodynamic_chord()
+            if b_ref is None:
+                b_ref = main_wing.span()
+        except IndexError:
+            pass
+        self.s_ref = s_ref
+        self.c_ref = c_ref
+        self.b_ref = b_ref
 
     def __repr__(self):
         n_wings = len(self.wings)
