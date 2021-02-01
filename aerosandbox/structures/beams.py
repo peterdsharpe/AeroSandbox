@@ -411,7 +411,7 @@ if __name__ == '__main__':
     # s_opts["alpha_for_y"] = "min"
     # s_opts["alpha_for_y"] = "primal-and-full"
     # s_opts["watchdog_shortened_iter_trigger"] = 1
-    # s_opts["expect_infeasible_problem"]="yes"
+    # s_opts["expect_infeasible_problem"]="yes" # TODO remove all this
     # s_opts["start_with_resto"] = "yes"
     # s_opts["required_infeasibility_reduction"] = 0.001
     # s_opts["evaluate_orig_obj_at_resto_trial"] = "yes"

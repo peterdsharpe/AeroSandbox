@@ -60,7 +60,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                         z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                         chord=0.18,
-                        twist=2,  # degrees
+                        twist_angle=2,  # degrees
                         airfoil=e216,  # Airfoils are blended between a given XSec and the next one.
                         control_surface_type='symmetric', # Flap (ctrl. surfs. applied between this XSec and the next one.)
                         control_surface_deflection=0,  # degrees
@@ -70,7 +70,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         y_le=0.5,
                         z_le=0,
                         chord=0.16,
-                        twist=0,
+                        twist_angle=0,
                         airfoil=e216,
                         control_surface_type='asymmetric',  # Aileron
                         control_surface_deflection=0,
@@ -80,7 +80,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         y_le=1,
                         z_le=0.1,
                         chord=0.08,
-                        twist=-2,
+                        twist_angle=-2,
                         airfoil=e216,
                     ),
                 ]
@@ -97,7 +97,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         y_le=0,
                         z_le=0,
                         chord=0.1,
-                        twist=-10,
+                        twist_angle=-10,
                         airfoil=naca0008,
                         control_surface_type='symmetric',  # Elevator
                         control_surface_deflection=0,
@@ -107,7 +107,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         y_le=0.17,
                         z_le=0,
                         chord=0.08,
-                        twist=-10,
+                        twist_angle=-10,
                         airfoil=naca0008
                     )
                 ]
@@ -124,7 +124,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         y_le=0,
                         z_le=0,
                         chord=0.1,
-                        twist=0,
+                        twist_angle=0,
                         airfoil=naca0008,
                         control_surface_type='symmetric',  # Rudder
                         control_surface_deflection=0,
@@ -134,7 +134,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         y_le=0,
                         z_le=0.15,
                         chord=0.06,
-                        twist=0,
+                        twist_angle=0,
                         airfoil=naca0008
                     )
                 ]

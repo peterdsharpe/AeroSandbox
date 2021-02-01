@@ -3,43 +3,61 @@ from aerosandbox.geometry.common import *
 from typing import List
 from aerosandbox.visualization.plotly_Figure3D import Figure3D
 
+
 class Airplane(AeroSandboxObject):
     """
-    Definition for an airplane (or other vehicle/item to analyze).
+    Definition for an airplane.
     """
 
     def __init__(self,
-                 name: str="Untitled",  # A sensible name for your airplane.
-                 x_ref: float=0,  # Ref. point for moments; should be the center of gravity.
-                 y_ref: float=0,  # Ref. point for moments; should be the center of gravity.
-                 z_ref: float=0,  # Ref. point for moments; should be the center of gravity.
-                 mass_props=None,  # An object of MassProps type; only needed for dynamic analysis
-                 # If xyz_ref is not set, but mass_props is, the xyz_ref will be taken from the CG there.
-                 wings: List['Wing']=[],  # A list of Wing objects.
-                 fuselages: List['Fuselage']=[],  # A list of Fuselage objects.
-                 s_ref: float=None,  # If not set, populates from first wing object.
-                 c_ref: float=None,  # See above
-                 b_ref: float=None,  # See above
+                 name: str = "Untitled",  # A sensible name for your airplane.
+                 x_ref: float = 0.,  # Ref. point for moments; should be the center of gravity.
+                 y_ref: float = 0.,  # Ref. point for moments; should be the center of gravity.
+                 z_ref: float = 0.,  # Ref. point for moments; should be the center of gravity.
+                 wings: List['Wing'] = None,  # A list of Wing objects.
+                 fuselages: List['Fuselage'] = None,  # A list of Fuselage objects.
+                 s_ref: float = None,  # If not set, populates from first wing object.
+                 c_ref: float = None,  # See above
+                 b_ref: float = None,  # See above
                  ):
+        ### Initialize
         self.name = name
 
-        self.xyz_ref = cas.vertcat(x_ref, y_ref, z_ref)
-        # if xyz_ref is None and mass_props is not None:
-        #     self.xyz_ref = mass_props.get_cg()
-        # else:
-        #     self.xyz_ref = cas.MX(xyz_ref)
-        # self.mass_props = mass_props
-        self.wings = wings
-        self.fuselages = fuselages
+        self.x_ref = x_ref,
+        self.y_ref = y_ref,
+        self.z_ref = z_ref,
 
-        if len(self.wings) > 0:  # If there is at least one wing
-            self.set_ref_dims_from_wing(main_wing_index=0)
+        if wings is not None:
+            self.wings = wings
+        else:
+            self.wings = []
+
+        if fuselages is not None:
+            self.fuselages = fuselages
+        else:
+            self.fuselages = []
+
         if s_ref is not None:
             self.s_ref = s_ref
+        else:
+            try:
+                self.s_ref = self.wings[0].area()
+            except IndexError:
+                pass
         if c_ref is not None:
             self.c_ref = c_ref
+        else:
+            try:
+                self.c_ref = self.wings[0].mean_aerodynamic_chord()
+            except IndexError:
+                pass
         if b_ref is not None:
             self.b_ref = b_ref
+        else:
+            try:
+                self.b_ref = self.wings[0].span()
+            except IndexError:
+                pass
 
         # Check that everything was set right:
         assert self.name is not None
@@ -54,34 +72,6 @@ class Airplane(AeroSandboxObject):
             len(self.wings),
             len(self.fuselages)
         )
-
-    def set_ref_dims_from_wing(self,
-                               main_wing_index=0
-                               ):
-        # Sets the reference dimensions of the airplane from measurements obtained from a specific wing.
-
-        main_wing = self.wings[main_wing_index]
-
-        self.s_ref = main_wing.area()
-        self.b_ref = main_wing.span()
-        self.c_ref = main_wing.mean_aerodynamic_chord()
-
-    def set_paneling_everywhere(self, n_chordwise_panels, n_spanwise_panels):
-        # Sets the chordwise and spanwise paneling everywhere to a specified init_val.
-        # Useful for quickly changing the fidelity of your simulation.
-
-        for wing in self.wings:
-            wing.chordwise_panels = n_chordwise_panels
-            for xsec in wing.xsecs:
-                xsec.spanwise_panels = n_spanwise_panels
-
-    def set_spanwise_paneling_everywhere(self, n_spanwise_panels):
-        # Sets the spanwise paneling everywhere to a specified value.
-        # Useful for quickly changing the fidelity of your simulation.
-
-        for wing in self.wings:
-            for xsec in wing.xsecs:
-                xsec.spanwise_panels = n_spanwise_panels
 
     def draw(self,
              show=True,  # type: bool
@@ -142,7 +132,7 @@ class Airplane(AeroSandboxObject):
                 points_1 = np.zeros((fuse.circumferential_panels, 3))
                 points_2 = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
-                    rot = angle_axis_rotation_matrix(
+                    rot = rotation_matrix_angle_axis(
                         2 * cas.pi * point_index / fuse.circumferential_panels,
                         [1, 0, 0],
                         True
@@ -456,7 +446,7 @@ class Airplane(AeroSandboxObject):
         total_area = cas.sum1(cas.vertcat(*areas))
 
         COP = cas.sum1(cas.vertcat(*[
-            COPs[i]*areas[i]/total_area
+            COPs[i] * areas[i] / total_area
             for i in range(len(self.wings))
         ]))
 

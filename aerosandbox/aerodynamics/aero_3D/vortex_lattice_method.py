@@ -177,7 +177,7 @@ class VortexLatticeMethod(ImplicitAnalysis):
                                 inner_xsec_mcl_angle[chord_index] * (1 - nondim_spanwise_coordinate) +
                                 inner_xsec_mcl_angle[chord_index] * nondim_spanwise_coordinate
                         )
-                        rot = angle_axis_rotation_matrix(-angle - np.pi / 2, effective_twist_axis)
+                        rot = rotation_matrix_angle_axis(-angle - np.pi / 2, effective_twist_axis)
                         normal_directions.append(rot @ cas.vertcat(1, 0, 0))
 
                 # Handle symmetry
@@ -292,7 +292,7 @@ class VortexLatticeMethod(ImplicitAnalysis):
                                     inner_xsec_mcl_angle[chord_index] * (1 - nondim_spanwise_coordinate) +
                                     inner_xsec_mcl_angle[chord_index] * nondim_spanwise_coordinate
                             )
-                            rot = angle_axis_rotation_matrix(-angle - np.pi / 2, effective_twist_axis)
+                            rot = rotation_matrix_angle_axis(-angle - np.pi / 2, effective_twist_axis)
                             normal_directions.append(reflect_over_XZ_plane(rot @ cas.vertcat(1, 0, 0)))
 
         # Concatenate things (DM)
@@ -708,7 +708,7 @@ class VortexLatticeMethod(ImplicitAnalysis):
                 points_1 = np.zeros((fuse.circumferential_panels, 3))
                 points_2 = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
-                    rot = angle_axis_rotation_matrix(
+                    rot = rotation_matrix_angle_axis(
                         2 * cas.pi * point_index / fuse.circumferential_panels,
                         [1, 0, 0],
                         True

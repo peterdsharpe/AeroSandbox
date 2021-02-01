@@ -4,11 +4,9 @@ from aerosandbox.visualization import Figure3D
 
 
 class LiftingLine(ImplicitAnalysis):
-    # Usage:
-    #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "Casll1(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
-    #   # Call the setup() method on the vlm3 object to set up the problem in a CasADi Opti environment.
-    #   # Solve the problem with opti.solve().
-    #   # Access results in the command line, or through properties of the Casll1 class.
+    """
+    An implicit analysis based on lifting line theory, with modifications for nonzero sweep and dihedral + multiple wings.
+    """
 
     def __init__(self,
                  airplane,  # type: Airplane
@@ -25,55 +23,30 @@ class LiftingLine(ImplicitAnalysis):
         self.verbose = verbose
         self.run_symmetric_if_possible = run_symmetric_if_possible
 
-        if self.verbose:
-            print("\n".join([
-                "",
-                "Initializing CasLL1 Analysis...",
-                "-" * 20
-            ]))
-
+        ### Determine whether you should run the problem as symmetric
+        self.run_symmetric = False
         if self.run_symmetric_if_possible:
             try:
-                problem_is_symmetric = (
+                self.run_symmetric = (  # Satisfies assumptions
                         self.op_point.beta == 0 and
                         self.op_point.p == 0 and
                         self.op_point.r == 0 and
                         self.airplane.is_symmetric()
                 )
             except RuntimeError:
-                problem_is_symmetric = False
+                pass
 
-            if problem_is_symmetric:
-                self.run_symmetric = True
-                if self.verbose:
-                    print("Symmetry confirmed; running as symmetric problem...")
-            else:
-                self.run_symmetric = False
-                if self.verbose:
-                    print(
-                        "Problem appears to be asymmetric, so a symmetric solve is not possible; running as asymmetric problem...")
-        else:
-            self.run_symmetric = False
-            if self.verbose:
-                print("Running as asymmetric problem...")
-
-        if self.verbose:
-            print("Setting up casLL1 calculation...")
-
-        self.make_panels()
-        self.setup_geometry()
-        self.setup_operating_point()
-        self.calculate_vortex_strengths()
-        self.calculate_forces()
-
-        if self.verbose:
-            print("casLL1 setup complete! Ready to pass into the solver...")
+        self._make_panels()
+        self._setup_geometry()
+        self._setup_operating_point()
+        self._calculate_vortex_strengths()
+        self._calculate_forces()
 
         if not self.opti_provided:
             sol = self.opti.solve()
             self.substitute_solution(sol)
 
-    def make_panels(self):
+    def _make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
 
         if self.verbose:
@@ -88,14 +61,11 @@ class LiftingLine(ImplicitAnalysis):
         Cm_functions = []
         wing_id = []
 
-        for wing_num in range(len(self.airplane.wings)):
-            # Get the wing
-            wing = self.airplane.wings[wing_num]  # type: Wing
-            # Make the panels for each section.
-            for section_num in range(len(wing.xsecs) - 1):
-                # Define the relevant cross sections
-                inner_xsec = wing.xsecs[section_num]  # type: WingXSec
-                outer_xsec = wing.xsecs[section_num + 1]  # type: WingXSec
+        for wing_index, wing in enumerate(self.airplane.wings):  # Iterate through wings
+            for inner_xsec, outer_xsec in zip(
+                    wing.xsecs[:-1],
+                    wing.xsecs[1:]
+            ):  # Iterate through pairs of wing cross sections
 
                 # Find the corners
                 inner_xsec_xyz_le = inner_xsec.xyz_le + wing.xyz_le
@@ -106,33 +76,34 @@ class LiftingLine(ImplicitAnalysis):
                 # Define number of spanwise points
                 n_spanwise_coordinates = inner_xsec.spanwise_panels + 1
 
-                # Get the spanwise coordinates
+                # Get the spanwise coordinates # TODO resume here
                 if inner_xsec.spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
                 elif inner_xsec.spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = cosspace(0, 1, n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad init_val of section.spanwise_spacing!")
+                    raise Exception("Bad value of section.spanwise_spacing!")
 
-                for span_index in range(inner_xsec.spanwise_panels):
-                    nondim_spanwise_coordinate = nondim_spanwise_coordinates[span_index]
-                    nondim_spanwise_coordinate_next = nondim_spanwise_coordinates[span_index + 1]
+                for nondim_spanwise_coordinate_inner, nondim_spanwise_coordinate_outer in zip(
+                        nondim_spanwise_coordinates[:-1],
+                        nondim_spanwise_coordinates[1:]
+                ):
 
                     # Calculate vertices
                     front_left_vertex = (
-                            inner_xsec_xyz_le * (1 - nondim_spanwise_coordinate) +
-                            outer_xsec_xyz_le * nondim_spanwise_coordinate)
+                            inner_xsec_xyz_le * (1 - nondim_spanwise_coordinate_inner) +
+                            outer_xsec_xyz_le * nondim_spanwise_coordinate_inner)
                     front_right_vertex = (
-                            inner_xsec_xyz_le * (1 - nondim_spanwise_coordinate_next) +
-                            outer_xsec_xyz_le * nondim_spanwise_coordinate_next
+                            inner_xsec_xyz_le * (1 - nondim_spanwise_coordinate_outer) +
+                            outer_xsec_xyz_le * nondim_spanwise_coordinate_outer
                     )
                     back_left_vertex = (
-                            inner_xsec_xyz_te * (1 - nondim_spanwise_coordinate) +
-                            outer_xsec_xyz_te * nondim_spanwise_coordinate
+                            inner_xsec_xyz_te * (1 - nondim_spanwise_coordinate_inner) +
+                            outer_xsec_xyz_te * nondim_spanwise_coordinate_inner
                     )
                     back_right_vertex = (
-                            inner_xsec_xyz_te * (1 - nondim_spanwise_coordinate_next) +
-                            outer_xsec_xyz_te * nondim_spanwise_coordinate_next
+                            inner_xsec_xyz_te * (1 - nondim_spanwise_coordinate_outer) +
+                            outer_xsec_xyz_te * nondim_spanwise_coordinate_outer
                     )
 
                     front_left_vertices.append(front_left_vertex)
@@ -148,7 +119,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=nondim_spanwise_coordinate,
+                               nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
                         : (
                                 inner_xsec.airfoil.CL_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -164,7 +135,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=nondim_spanwise_coordinate,
+                               nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
                         : (
                                 inner_xsec.airfoil.CDp_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -180,7 +151,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=nondim_spanwise_coordinate,
+                               nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
                         : (
                                 inner_xsec.airfoil.Cm_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -193,7 +164,7 @@ class LiftingLine(ImplicitAnalysis):
                         )
                     )
 
-                    wing_id.append(wing_num)
+                    wing_id.append(wing_index)
 
                     if wing.symmetric and not self.run_symmetric:
                         front_right_vertices.append(reflect_over_XZ_plane(front_left_vertex))
@@ -205,7 +176,7 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate,
+                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
                             : (
                                     inner_xsec.airfoil.CL_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -225,7 +196,7 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate,
+                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
                             : (
                                     inner_xsec.airfoil.CDp_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -245,7 +216,7 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate,
+                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
                             : (
                                     inner_xsec.airfoil.Cm_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -261,7 +232,7 @@ class LiftingLine(ImplicitAnalysis):
                                     ) * nondim_spanwise_coordinate
                             )
                         )
-                        wing_id.append(wing_num)
+                        wing_id.append(wing_index)
 
         # Concatenate things (DX)
         self.front_left_vertices = cas.transpose(cas.horzcat(*front_left_vertices))
@@ -344,7 +315,7 @@ class LiftingLine(ImplicitAnalysis):
         if self.verbose:
             print("Meshing complete!")
 
-    def setup_geometry(self):
+    def _setup_geometry(self):
         if self.verbose:
             print("Calculating the vortex center velocity influence matrix...")
         self.Vij_x, self.Vij_y, self.Vij_z = self.calculate_Vij(self.vortex_centers)
@@ -355,7 +326,7 @@ class LiftingLine(ImplicitAnalysis):
         self.fuselage_velocities = self.calculate_fuselage_influences(self.vortex_centers)
         # TODO do this
 
-    def setup_operating_point(self):
+    def _setup_operating_point(self):
         if self.verbose:
             print("Calculating the freestream influence...")
         self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
@@ -364,7 +335,7 @@ class LiftingLine(ImplicitAnalysis):
         self.freestream_velocities = cas.transpose(self.steady_freestream_velocity + cas.transpose(
             self.rotation_freestream_velocities))  # Nx3, represents the freestream velocity at each vortex center
 
-    def calculate_vortex_strengths(self):
+    def _calculate_vortex_strengths(self):
         if self.verbose:
             print("Calculating vortex strengths...")
 
@@ -455,7 +426,7 @@ class LiftingLine(ImplicitAnalysis):
             self.CL_locals
         ])
 
-    def calculate_forces(self):
+    def _calculate_forces(self):
 
         if self.verbose:
             print("Calculating induced forces...")
@@ -975,7 +946,7 @@ class LiftingLine(ImplicitAnalysis):
                 points_1 = np.zeros((fuse.circumferential_panels, 3))
                 points_2 = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
-                    rot = angle_axis_rotation_matrix(
+                    rot = rotation_matrix_angle_axis(
                         2 * cas.pi * point_index / fuse.circumferential_panels,
                         [1, 0, 0],
                         True

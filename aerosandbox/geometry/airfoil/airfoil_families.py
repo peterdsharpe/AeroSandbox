@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import comb
 from aerosandbox.geometry.polygon import stack_coordinates
-from aerosandbox.tools.casadi_functions import cosspace
+from aerosandbox.optimization.math import cosspace
 import re
 
 _default_n_points_per_side = 200

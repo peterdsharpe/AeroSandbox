@@ -62,7 +62,7 @@ airplane = Airplane(
                     y_le=y_les[i],
                     z_le=z_les[i],
                     chord=chords[i],  # variable(1,0.01,2),
-                    twist=twists[i],
+                    twist_angle=twists[i],
                     airfoil=generic_airfoil,
                     spanwise_spacing="uniform"
                 )

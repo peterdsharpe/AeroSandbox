@@ -1,6 +1,4 @@
-import casadi as cas
-import numpy as np
-from aerosandbox.tools.casadi_functions import *
+from aerosandbox.optimization.math import *
 
 
 def induced_drag(

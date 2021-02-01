@@ -121,7 +121,7 @@ airplane = Airplane(
                     y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
-                    twist=2,  # degrees
+                    twist_angle=2,  # degrees
                     airfoil=generic_cambered_airfoil,  # Airfoils are blended between a given XSec and the next one.
                     control_surface_type='symmetric',
                     # Flap # Control surfaces are applied between a given XSec and the next one.
@@ -132,7 +132,7 @@ airplane = Airplane(
                     y_le=0.5,
                     z_le=0,
                     chord=0.16,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_cambered_airfoil,
                     control_surface_type='asymmetric',  # Aileron
                     control_surface_deflection=0,
@@ -142,7 +142,7 @@ airplane = Airplane(
                     y_le=1,
                     z_le=0.1,
                     chord=0.08,
-                    twist=-2,
+                    twist_angle=-2,
                     airfoil=generic_cambered_airfoil,
                 ),
             ]

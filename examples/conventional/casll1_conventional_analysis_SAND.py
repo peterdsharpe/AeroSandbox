@@ -77,9 +77,9 @@ airplane = Airplane(
                     y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
-                    twist=2,  # degrees
+                    twist_angle=2,  # degrees
                     airfoil=generic_cambered_airfoil,  # Airfoils are blended between a given XSec and the next one.
-                    control_surface_type='symmetric',
+                    control_surface_type=True,
                     # Flap # Control surfaces are applied between a given XSec and the next one.
                     control_surface_deflection=0,  # degrees
                 ),
@@ -88,9 +88,9 @@ airplane = Airplane(
                     y_le=0.5,
                     z_le=0,
                     chord=0.16,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_cambered_airfoil,
-                    control_surface_type='asymmetric',  # Aileron
+                    control_surface_type=False,  # Aileron
                     control_surface_deflection=0,
                 ),
                 WingXSec(  # Tip
@@ -98,7 +98,7 @@ airplane = Airplane(
                     y_le=1,
                     z_le=0.1,
                     chord=0.08,
-                    twist=-2,
+                    twist_angle=-2,
                     airfoil=generic_cambered_airfoil,
                 )
             ]
@@ -115,9 +115,9 @@ airplane = Airplane(
                     y_le=0,
                     z_le=0,
                     chord=0.1,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_airfoil,
-                    control_surface_type='symmetric',  # Elevator
+                    control_surface_type=True,  # Elevator
                     control_surface_deflection=0,
                 ),
                 WingXSec(  # tip
@@ -125,7 +125,7 @@ airplane = Airplane(
                     y_le=0.17,
                     z_le=0,
                     chord=0.08,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_airfoil
                 )
             ]
@@ -142,9 +142,9 @@ airplane = Airplane(
                     y_le=0,
                     z_le=0,
                     chord=0.1,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_airfoil,
-                    control_surface_type='symmetric',  # Rudder
+                    control_surface_type=True,  # Rudder
                     control_surface_deflection=0,
                 ),
                 WingXSec(
@@ -152,7 +152,7 @@ airplane = Airplane(
                     y_le=0,
                     z_le=0.15,
                     chord=0.06,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_airfoil
                 )
             ]
@@ -182,20 +182,8 @@ opti.subject_to(cas.gradient(ap.Cm, ap.op_point.alpha) == 0)
 # Objective
 opti.minimize(-ap.CL_over_CD)
 
-# Solver options
-p_opts = {}
-s_opts = {}
-s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
-s_opts["mu_strategy"] = "adaptive"
-# s_opts["start_with_resto"] = "yes"
-# s_opts["required_infeasibility_reduction"] = 0.1
-opti.solver('ipopt', p_opts, s_opts)
-
 # Solve
-try:
-    sol = opti.solve()
-except RuntimeError:
-    sol = opti.debug
+sol = opti.solve()
 
 # Create solved object
 ap_sol = copy.deepcopy(ap)

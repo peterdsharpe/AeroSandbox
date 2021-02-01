@@ -78,7 +78,7 @@ airplane = Airplane(
                     y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.5,
-                    twist=0,  # degrees
+                    twist_angle=0,  # degrees
                     airfoil=Airfoil("naca0012"),  # Airfoils are blended between a given XSec and the next one.
                     spanwise_spacing='uniform',
                 ),
@@ -87,7 +87,7 @@ airplane = Airplane(
                     y_le=np.sqrt(2),
                     z_le=np.sqrt(2),
                     chord=0.5,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=Airfoil("naca0012"),
                 ),
             ]

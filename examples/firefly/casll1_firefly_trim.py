@@ -107,7 +107,7 @@ airplane = Airplane(
                     y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.07,
-                    twist=0,  # degrees
+                    twist_angle=0,  # degrees
                     airfoil=generic_cambered_airfoil,  # Airfoils are blended between a given XSec and the next one.
                     control_surface_type='symmetric',
                     # Flap # Control surfaces are applied between a given XSec and the next one.
@@ -118,7 +118,7 @@ airplane = Airplane(
                     y_le=0.220,
                     z_le=0,
                     chord=0.0198,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_cambered_airfoil,
                 ),
             ]
@@ -135,7 +135,7 @@ airplane = Airplane(
                     y_le=0.0,
                     z_le=0.0,
                     chord=0.012,
-                    twist=variable(0, -30, 30),
+                    twist_angle=variable(0, -30, 30),
                     airfoil=generic_airfoil,
                     control_surface_type='symmetric',  # Elevator
                     control_surface_deflection=0,
@@ -145,7 +145,7 @@ airplane = Airplane(
                     y_le=0.06081,
                     z_le=0,
                     chord=0.012,
-                    twist=variable(0, -30, 30),
+                    twist_angle=variable(0, -30, 30),
                     airfoil=generic_airfoil,
                 ),
             ]
@@ -162,7 +162,7 @@ airplane = Airplane(
                     y_le=0.0177,
                     z_le=0.0177,
                     chord=0.012,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_airfoil,
                     control_surface_type='symmetric',  # Rudder
                     control_surface_deflection=0,
@@ -172,7 +172,7 @@ airplane = Airplane(
                     y_le=0.0518,
                     z_le=0.0518,
                     chord=0.012,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=generic_airfoil
                 )
             ]

@@ -1,6 +1,5 @@
 import casadi as cas
-import numpy as np
-from aerosandbox.tools.casadi_functions import sind, cosd
+from aerosandbox.optimization.math import sind, cosd
 
 
 def solar_flux_outside_atmosphere_normal(day_of_year):

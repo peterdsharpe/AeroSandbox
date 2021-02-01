@@ -39,7 +39,7 @@ wing = asb.Wing(
             y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             chord=wing_root_chord,
-            twist=0,  # degrees
+            twist_angle=0,  # degrees
             airfoil=e216,  # Airfoils are blended between a given XSec and the next one.
             control_surface_type='symmetric',
             # Flap # Control surfaces are applied between a given XSec and the next one.
@@ -50,7 +50,7 @@ wing = asb.Wing(
             y_le=wing_span / 2,
             z_le=0,  # wing_span / 2 * cas.pi / 180 * 5,
             chord=wing_root_chord * 0.5,
-            twist=0,
+            twist_angle=0,
             airfoil=e216,
         ),
     ]
@@ -67,7 +67,7 @@ hstab = asb.Wing(
             y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             chord=hstab_chord,
-            twist=-3,  # degrees
+            twist_angle=-3,  # degrees
             airfoil=generic_airfoil,  # Airfoils are blended between a given XSec and the next one.
             control_surface_type='symmetric',
             # Flap # Control surfaces are applied between a given XSec and the next one.
@@ -78,7 +78,7 @@ hstab = asb.Wing(
             y_le=hstab_span / 2,
             z_le=0,
             chord=hstab_chord,
-            twist=-3,
+            twist_angle=-3,
             airfoil=generic_airfoil,
         ),
     ]
@@ -95,7 +95,7 @@ vstab = asb.Wing(
             y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
             chord=vstab_chord,
-            twist=0,  # degrees
+            twist_angle=0,  # degrees
             airfoil=generic_airfoil,  # Airfoils are blended between a given XSec and the next one.
             control_surface_type='symmetric',
             # Flap # Control surfaces are applied between a given XSec and the next one.
@@ -106,7 +106,7 @@ vstab = asb.Wing(
             y_le=0,
             z_le=vstab_span,
             chord=vstab_chord,
-            twist=0,
+            twist_angle=0,
             airfoil=generic_airfoil,
         ),
     ]

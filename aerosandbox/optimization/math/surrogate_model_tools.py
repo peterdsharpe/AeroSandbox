@@ -1,56 +1,27 @@
-import casadi as cas
 import numpy as np
+import casadi as cas
 from typing import Tuple, Union
 from numpy import pi
 
 
-def is_numpy_compatible(*args) -> bool:
+def smoothmax(value1, value2, hardness):
     """
-    Checks if the given inputs are NumPy compatible
-    Args:
-        *args: Any number of input arguments.
-
-    Returns: A boolean indicating whether ALL of the given input arguments are "NumPy"-compatible
-        based on their data type.
-
-        For example:
-            floats, ints, and NumPy ndarrays are NumPy compatible.
-            casadi DM types are NumPy compatible, but SX and MX types are not (generally) NumPy compatible.
-
+    A smooth maximum between two functions.
+    Useful because it's differentiable and preserves convexity!
+    Great writeup by John D Cook here:
+        https://www.johndcook.com/soft_maximum.pdf
+    :param value1: Value of function 1.
+    :param value2: Value of function 2.
+    :param hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
+    :return: Soft maximum of the two supplied values.
     """
-
-
-def sind(x):
-    return np.sin(x * pi / 180)
-
-
-def cosd(x):
-    return np.cos(x * pi / 180)
-
-
-def tand(x):
-    return np.tan(x * pi / 180)
-
-
-def atan2d(y, x):
-    return np.arctan2(y, x) * 180 / pi
-
-
-def cosspace(min=0, max=1, n_points=50):
-    """
-    Returns cosine-spaced points using CasADi. Syntax analogous to np.linspace().
-    :param min: Minimum value
-    :param max: Maximum value
-    :param n_points: Number of points
-    :return: Cosine-spaced output.
-    """
-    mean = (max + min) / 2
-    amp = (max - min) / 2
-    return mean + amp * np.cos(np.linspace(pi, 0, n_points))
-
-
-def clip(x, min, max):  # Clip a value to a range [min, max].
-    return cas.fmin(cas.fmax(min, x), max)
+    value1 = value1 * hardness
+    value2 = value2 * hardness
+    max = np.fmax(value1, value2)
+    min = np.fmin(value1, value2)
+    out = max + np.log(1 + np.exp(min - max))
+    out /= hardness
+    return out
 
 
 def sigmoid(
@@ -141,7 +112,6 @@ def blend(
     """
     blend_function = lambda x: sigmoid(
         x,
-        sigmoid_type="tanh",
         normalization_range=(0, 1)
     )
     weight_to_value_switch_high = blend_function(switch)
@@ -152,78 +122,3 @@ def blend(
     )
 
     return blend_value
-
-
-def smoothmax(value1, value2, hardness):
-    """
-    A smooth maximum between two functions.
-    Useful because it's differentiable and convex!
-    Great writeup by John D Cook here:
-        https://www.johndcook.com/soft_maximum.pdf
-    :param value1: Value of function 1.
-    :param value2: Value of function 2.
-    :param hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
-    :return: Soft maximum of the two supplied values.
-    """
-    value1 = value1 * hardness
-    value2 = value2 * hardness
-    max = cas.fmax(value1, value2)
-    min = cas.fmin(value1, value2)
-    out = max + cas.log(1 + cas.exp(min - max))
-    out /= hardness
-    return out
-
-
-def diff(x):
-    """
-    Computes the approximate local derivative of `x` via finite differencing assuming unit spacing.
-    Can be viewed as the opposite of trapz().
-
-    Args:
-        x: The vector-like object (1D np.ndarray, cas.MX) to be integrated.
-
-    Returns: A vector of length N-1 with each piece corresponding to the difference between one value and the next.
-
-    """
-    return x[1:] - x[:-1]
-
-
-def trapz(x):
-    """
-    Computes each piece of the approximate integral of `x` via the trapezoidal method with unit spacing.
-    Can be viewed as the opposite of diff().
-
-    Args:
-        x: The vector-like object (1D np.ndarray, cas.MX) to be integrated.
-
-    Returns: A vector of length N-1 with each piece corresponding to the mean value of the function on the interval
-        starting at index i.
-
-    """
-    return (x[1:] + x[:-1]) / 2
-
-
-if __name__ == '__main__':
-    import numpy as np
-
-    # Test smoothmax
-    import matplotlib.pyplot as plt
-    from matplotlib import style
-    import seaborn as sns
-
-    sns.set(font_scale=1)
-    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    x = np.linspace(-10, 10, 100)
-    y1 = x
-    y2 = -2 * x - 3
-    hardness = 0.5
-    plt.plot(x, y1, label="y1")
-    plt.plot(x, y2, label="y2")
-    plt.plot(x, smoothmax(y1, y2, hardness), label="smoothmax")
-    plt.xlabel(r"x")
-    plt.ylabel(r"y")
-    plt.title(r"Smoothmax")
-    plt.tight_layout()
-    plt.legend()
-    # plt.savefig("C:/Users/User/Downloads/temp.svg")
-    plt.show()
