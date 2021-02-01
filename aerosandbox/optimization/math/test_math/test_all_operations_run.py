@@ -120,7 +120,11 @@ def test_logic(types):
 
 
 def test_vector_math(types):
-    pass
+    for x in types["vector"]:
+        for y in types["vector"]:
+            inner(x, y)
+            outer(x, y)
+            norm(x)
 
 
 def test_spacing(types):

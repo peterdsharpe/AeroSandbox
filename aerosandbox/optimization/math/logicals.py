@@ -17,4 +17,4 @@ def clip(
     Returns:
 
     """
-    return np.fmin(np.fmax(min, x), max)
+    return np.fmin(np.fmax(x, min), max)

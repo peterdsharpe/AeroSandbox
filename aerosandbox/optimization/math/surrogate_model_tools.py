@@ -6,7 +6,7 @@ from numpy import pi
 
 def smoothmax(value1, value2, hardness):
     """
-    A smooth maximum between two functions.
+    A smooth maximum between two functions. Also referred to as the logsumexp() function.
     Useful because it's differentiable and preserves convexity!
     Great writeup by John D Cook here:
         https://www.johndcook.com/soft_maximum.pdf
