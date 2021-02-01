@@ -2,6 +2,7 @@ from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List
 from aerosandbox.visualization.plotly_Figure3D import Figure3D
+from numpy import pi
 
 
 class Airplane(AeroSandboxObject):
@@ -73,23 +74,19 @@ class Airplane(AeroSandboxObject):
         fig = Figure3D()
 
         # Wings
-        for wing_id in range(len(self.wings)):
-            wing = self.wings[wing_id]  # type: Wing
+        for wing_id, wing in enumerate(self.wings):
+            for inner_xsec, outer_xsec in zip(wing.xsecs[:-1], wing.xsecs[1:]):
 
-            for xsec_id in range(len(wing.xsecs) - 1):
-                xsec_1 = wing.xsecs[xsec_id]  # type: WingXSec
-                xsec_2 = wing.xsecs[xsec_id + 1]  # type: WingXSec
-
-                le_start = xsec_1.xyz_le + wing.xyz_le
-                te_start = xsec_1.xyz_te() + wing.xyz_le
-                le_end = xsec_2.xyz_le + wing.xyz_le
-                te_end = xsec_2.xyz_te() + wing.xyz_le
+                le_inner = inner_xsec.xyz_le + wing.xyz_le
+                te_inner = inner_xsec.xyz_te() + wing.xyz_le
+                le_outer = outer_xsec.xyz_le + wing.xyz_le
+                te_outer = outer_xsec.xyz_te() + wing.xyz_le
 
                 fig.add_quad(points=[
-                    le_start,
-                    le_end,
-                    te_end,
-                    te_start
+                    le_inner,
+                    le_outer,
+                    te_outer,
+                    te_inner
                 ],
                     intensity=wing_id,
                     mirror=wing.symmetric,
@@ -97,42 +94,38 @@ class Airplane(AeroSandboxObject):
                 if draw_quarter_chord:
                     fig.add_line(  # draw the quarter-chord line
                         points=[
-                            0.75 * le_start + 0.25 * te_start,
-                            0.75 * le_end + 0.25 * te_end,
+                            0.75 * le_inner + 0.25 * te_inner,
+                            0.75 * le_outer + 0.25 * te_outer,
                         ],
                         mirror=wing.symmetric
                     )
 
         # Fuselages
-        for fuse_id in range(len(self.fuselages)):
-            fuse = self.fuselages[fuse_id]  # type: Fuselage
+        for fuse_id, fuse in enumerate(self.fuselages):
 
-            for xsec_id in range(len(fuse.xsecs) - 1):
-                xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
-                xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
-
-                r1 = xsec_1.radius
-                r2 = xsec_2.radius
-                points_1 = np.zeros((fuse.circumferential_panels, 3))
-                points_2 = np.zeros((fuse.circumferential_panels, 3))
+            for front_xsec, back_xsec in zip(fuse.xsecs[:-1], fuse.xsecs[1:]):
+                r_front = front_xsec.radius
+                r_back = back_xsec.radius
+                points_front = np.zeros((fuse.circumferential_panels, 3))
+                points_rear = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
                     rot = rotation_matrix_angle_axis(
-                        2 * cas.pi * point_index / fuse.circumferential_panels,
+                        2 * pi * point_index / fuse.circumferential_panels,
                         [1, 0, 0],
-                        True
-                    ).toarray()
-                    points_1[point_index, :] = rot @ np.array([0, 0, r1])
-                    points_2[point_index, :] = rot @ np.array([0, 0, r2])
-                points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
-                points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
+                        _axis_already_normalized=True
+                    )
+                    points_front[point_index, :] = rot @ np.array([0, 0, r_front])
+                    points_rear[point_index, :] = rot @ np.array([0, 0, r_back])
+                points_front = points_front + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
+                points_rear = points_rear + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
 
                     fig.add_quad(points=[
-                        points_1[(point_index) % fuse.circumferential_panels, :],
-                        points_1[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index) % fuse.circumferential_panels, :],
+                        points_front[(point_index) % fuse.circumferential_panels, :],
+                        points_front[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_rear[(point_index + 1) % fuse.circumferential_panels, :],
+                        points_rear[(point_index) % fuse.circumferential_panels, :],
                     ],
                         intensity=fuse_id,
                         mirror=fuse.symmetric,
