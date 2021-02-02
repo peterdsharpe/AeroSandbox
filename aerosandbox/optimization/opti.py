@@ -28,8 +28,8 @@ class Opti(cas.Opti):
         self.variables_categorized = {}  # key: value :: category name [str] : list of variables [list]
 
     def variable(self,
-                 n_vars: int = 1,
-                 init_guess: Union[float, np.ndarray] = None,
+                 init_guess: Union[float, np.ndarray],
+                 n_vars: int = None,
                  scale: float = None,
                  log_transform: bool = False,
                  category: str = "Uncategorized",
@@ -37,32 +37,51 @@ class Opti(cas.Opti):
                  ) -> cas.MX:
         """
         Initializes a new decision variable (or vector of decision variables, if n_vars != 1).
-        
-        It is recommended that you provide an initial guess (`init_guess`) and scale (`scale`) for each variable,
-        although these are not strictly required.
+
+        It is recommended that you provide a scale (`scale`) for each variable, although these are not strictly
+        required.
 
         Args:
-            n_vars: [Optional] Number of variables to initialize (used to initialize a vector of variables). If you are
-                initializing a scalar variable (the most typical case), leave this equal to 1. When using vector variables,
-                individual components of this vector of variables can be accessed via normal indexing.
 
-                Example:
+            init_guess: Initial guess for the optimal value of the variable being initialized. This is where in the
+            design space the optimizer will start looking.
+
+                This can be either a float or a NumPy ndarray; the dimension of the variable (i.e. scalar,
+                vector) that is created will be automatically inferred from the shape of the initial guess you
+                provide here. (Although it can also be overridden using the `n_vars` parameter; see below.)
+
+                For scalar variables, your initial guess should be a float.
+                >>> opti = asb.Opti()
+                >>> scalar_var = opti.variable(init_guess=5) # Initializes a scalar variable at a value of 5
+
+                For vector variables, your initial guess should be either:
+
+                    * a float, in which case you must pass the length of the vector as `n_vars` otherwise a scalar
+                    variable will be created
                     >>> opti = asb.Opti()
-                    >>> my_var = opti.variable(n_vars = 5)
-                    >>> opti.subject_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
-                    >>> my_sum = asb.cas.sum1(my_var)  # This will sum up all elements of `my_var`
+                    >>> vector_var = opti.variable(init_guess=5, n_vars=10) # Initializes a vector variable of length
+                        # 10, with all 10 elements set to an initial guess of 5.
 
-            init_guess: [Optional] Initial guess for the variable being initialized. For scalar variables, this should be a
-                float. For vector variables (see `n_vars`), you can provide either a float (in which case all elements
-                of the vector will be initialized to the given value) or an iterable of equal length (in which case
-                each element will be initialized to the corresponding value in the given iterable).
+                    * a NumPy ndarray, in which case each element will be initialized to the corresponding value in
+                    the given array.
+                    >>> opti = asb.Opti()
+                    >>> vector_var = opti.variable(init_guess=np.linspace(0, 5, 10)) # Initializes a vector variable of
+                        # length 10, with all 10 elements initialized to linearly vary between 0 and 5.
 
-                In the case where the variable is to be log-transformed (see `log_transform`), the initial guess should
-                not be log-transformed as well; this happens under the hood. The initial guess must, of course, be a
-                positive number in this case.
+                In the case where the variable is to be log-transformed (see `log_transform`), the initial guess
+                should not be log-transformed as well - just supply the initial guess as usual. (Log-transform of the
+                initial guess happens under the hood.) The initial guess must, of course, be a positive number in
+                this case.
 
-                If not specified, initial guess defaults to 0 for non-log-transformed variables and 1 for
-                log-transformed variables.
+            n_vars: [Optional] Used to manually override the dimensionality of the variable to create; if not
+            provided, the dimensionality of the variable is inferred from the initial guess `init_guess`.
+
+                The only real case where you need to use this argument would be if you are initializing a vector
+                variable to a scalar value; for example:
+                    >>> opti = asb.Opti()
+                    >>> vector_var = opti.variable(init_guess=5, n_vars=10) # Initializes a vector variable of length
+                        # 10, with all 10 elements set to an initial guess of 5.
+
 
             scale: [Optional] Approximate scale of the variable. If not specified, defaults to the supplied initial
                 guess if one exists; otherwise, defaults to 1.
@@ -72,6 +91,15 @@ class Opti(cas.Opti):
             if negative (e.g. mass). Log-transforming these variables can help maintain convexity.
 
             category: [Optional] What category of variables does this belong to
+
+        Usage notes:
+
+            When using vector variables, individual components of this vector of variables can be accessed via normal
+            indexing. Example:
+                >>> opti = asb.Opti()
+                >>> my_var = opti.variable(n_vars = 5)
+                >>> opti.subject_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
+                >>> my_sum = asb.sum(my_var)  # This will sum up all elements of `my_var`
 
         Returns:
             The variable itself as a symbolic CasADi variable (MX type).
