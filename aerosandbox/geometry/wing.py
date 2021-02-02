@@ -114,7 +114,7 @@ class Wing(AeroSandboxObject):
         if type == "wetted":
             sectional_spans = self.span(_sectional=True)
         elif type == "projected":
-            sectional_spans = self.span(type="y",_sectional=True)
+            sectional_spans = self.span(type="y", _sectional=True)
         else:
             raise ValueError("Bad value of `type`!")
         sectional_chords = [
@@ -194,44 +194,6 @@ class Wing(AeroSandboxObject):
         MAC_length = sum(sectional_MAC_length_area_products) / sum(sectional_areas)
 
         return MAC_length
-
-    # def mean_aerodynamic_chord_location(self): # TODO verify and add
-    #     """
-    #     Returns the x and y LE position of the mean aerodynamic chord.
-    #     Based on the same assumptions as wing.mean_aerodynamic_chord.
-    #     """
-    #     area = 0
-    #     sum_dx_dA = 0
-    #     sum_dy_dA = 0
-    #     sum_dz_dA = 0
-    #
-    #     for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
-    #
-    #         c_r = inner_xsec.chord
-    #         c_t = outer_xsec.chord
-    #         x_r = inner_xsec.x_le
-    #         x_t = outer_xsec.x_le
-    #         y_r = inner_xsec.y_le
-    #         y_t = outer_xsec.y_le
-    #         z_r = inner_xsec.z_le
-    #         z_t = outer_xsec.z_le
-    #
-    #         taper_ratio = c_t / c_r
-    #         d_area = (c_r + c_t) * (y_t - y_r) / 2
-    #         area = area + d_area
-    #
-    #         x_mac = x_r + (x_t - x_r) * (1 + 2 * taper_ratio) / (3 + 3 * taper_ratio)
-    #         sum_dx_dA = d_area * x_mac + sum_dx_dA
-    #         y_mac = y_r + (y_t - y_r) * (1 + 2 * taper_ratio) / (3 + 3 * taper_ratio)
-    #         sum_dy_dA = d_area * y_mac + sum_dy_dA
-    #         z_mac = z_r + (z_t - z_r) * (1 + 2 * taper_ratio) / (3 + 3 * taper_ratio)
-    #         sum_dz_dA = d_area * z_mac + sum_dz_dA
-    #
-    #     x_mac = sum_dx_dA / area
-    #     y_mac = sum_dy_dA / area
-    #     z_mac = sum_dz_dA / area
-    #
-    #     return cas.vertcat(x_mac, y_mac, z_mac)
 
     def mean_twist_angle(self) -> float:
         r"""
