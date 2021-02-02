@@ -137,12 +137,14 @@ class Airplane(AeroSandboxObject):
             colorbar_title=colorbar_title,
         )
 
-    def is_symmetric(self):
+    def is_entirely_symmetric(self):
         """
         Returns a boolean describing whether the airplane is geometrically entirely symmetric across the XZ-plane.
         :return: [boolean]
         """
         for wing in self.wings:
+            if not wing.is_entirely_symmetric():
+                return False
             for xsec in wing.xsecs:
                 if not (xsec.control_surface_type == "symmetric" or xsec.control_surface_deflection == 0):
                     return False

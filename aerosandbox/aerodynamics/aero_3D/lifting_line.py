@@ -31,7 +31,7 @@ class LiftingLine(ImplicitAnalysis):
                         self.op_point.beta == 0 and
                         self.op_point.p == 0 and
                         self.op_point.r == 0 and
-                        self.airplane.is_symmetric()
+                        self.airplane.is_entirely_symmetric()
                 )
             except RuntimeError:
                 pass

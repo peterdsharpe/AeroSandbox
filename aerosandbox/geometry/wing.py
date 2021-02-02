@@ -140,12 +140,12 @@ class Wing(AeroSandboxObject):
         # Uses the full span and the full area if symmetric.
         return self.span() ** 2 / self.area()
 
-    def has_symmetric_control_surfaces(self) -> bool:
+    def is_entirely_symmetric(self) -> bool:
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has symmetric control surfaces.
         if not self.symmetric:
             return False
         for xsec in self.xsecs:
-            if not xsec.control_surface_is_symmetric:
+            if not (xsec.control_surface_is_symmetric or xsec.control_surface_deflection == 0):
                 return False
         return True
 
@@ -158,33 +158,36 @@ class Wing(AeroSandboxObject):
 
     def mean_aerodynamic_chord(self) -> float:
         """
-        Returns the mean aerodynamic chord of the wing.
-        """
+        Computes the length of the mean aerodynamic chord of the wing.
+        Uses the generalized methodology described here:
+            https://core.ac.uk/download/pdf/79175663.pdf
 
+        Returns: The length of the mean aerodynamic chord.
+        """
         sectional_areas = self.area(_sectional=True)
-        sectional_MACs = []
+        sectional_MAC_lengths = []
 
         for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
 
             section_taper_ratio = outer_xsec.chord / inner_xsec.chord
-            section_MAC = (2 / 3) * inner_xsec.chord * (
+            section_MAC_length = (2 / 3) * inner_xsec.chord * (
                     (1 + section_taper_ratio + section_taper_ratio ** 2) /
                     (1 + section_taper_ratio)
             )
 
-            sectional_MACs.append(section_MAC)
+            sectional_MAC_lengths.append(section_MAC_length)
 
-        sectional_MAC_area_products = [
-            area * MAC
-            for area, MAC in zip(
+        sectional_MAC_length_area_products = [
+            MAC * area
+            for MAC, area in zip(
+                sectional_MAC_lengths,
                 sectional_areas,
-                sectional_MACs
             )
         ]
 
-        MAC = sum(sectional_MAC_area_products) / sum(sectional_areas)
+        MAC_length = sum(sectional_MAC_length_area_products) / sum(sectional_areas)
 
-        return MAC
+        return MAC_length
 
     # def mean_aerodynamic_chord_location(self): # TODO verify and add
     #     """
@@ -196,17 +199,16 @@ class Wing(AeroSandboxObject):
     #     sum_dy_dA = 0
     #     sum_dz_dA = 0
     #
-    #     for i, xsec_a in enumerate(self.xsecs[:-1]):
-    #         xsec_b = self.xsecs[i + 1]
+    #     for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
     #
-    #         c_r = xsec_a.chord
-    #         c_t = xsec_b.chord
-    #         x_r = xsec_a.x_le
-    #         x_t = xsec_b.x_le
-    #         y_r = xsec_a.y_le
-    #         y_t = xsec_b.y_le
-    #         z_r = xsec_a.z_le
-    #         z_t = xsec_b.z_le
+    #         c_r = inner_xsec.chord
+    #         c_t = outer_xsec.chord
+    #         x_r = inner_xsec.x_le
+    #         x_t = outer_xsec.x_le
+    #         y_r = inner_xsec.y_le
+    #         y_t = outer_xsec.y_le
+    #         z_r = inner_xsec.z_le
+    #         z_t = outer_xsec.z_le
     #
     #         taper_ratio = c_t / c_r
     #         d_area = (c_r + c_t) * (y_t - y_r) / 2
@@ -270,36 +272,62 @@ class Wing(AeroSandboxObject):
 
         return sweep_deg
 
-    def aerodynamic_center(self) -> cas.DM:
+    def aerodynamic_center(self, chord_fraction: float = 0.25) -> np.ndarray:
         """
-        Returns the approximate location of the aerodynamic center.
-        Approximately computed as the area-weighted quarter chord of the wing.
-        :return: [x, y, z] of the approximate center of pressure in global coordinates.
+        Computes the location of the aerodynamic center of the wing.
+        Uses the generalized methodology described here:
+            https://core.ac.uk/download/pdf/79175663.pdf
+
+        Args:
+            chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
+                Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing.
+                However, wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less.
+                Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability".
+                PDF: https://www.sciencedirect.com/science/article/pii/B9780080982427000031
+
+        Returns: The (x, y, z) coordinates of the aerodynamic center of the wing.
+
         """
-        sectional_ACs = [
-            (inner_xsec.quarter_chord() + outer_xsec.quarter_chord()) / 2
-            for inner_xsec, outer_xsec in zip(
-                self.xsecs[:-1],
-                self.xsecs[1:]
-            )
-        ]
         sectional_areas = self.area(_sectional=True)
+        sectional_ACs = []
+
+        for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
+
+            section_taper_ratio = outer_xsec.chord / inner_xsec.chord
+            section_MAC_length = (2 / 3) * inner_xsec.chord * (
+                    (1 + section_taper_ratio + section_taper_ratio ** 2) /
+                    (1 + section_taper_ratio)
+            )
+            section_MAC_le = (
+                    inner_xsec.xyz_le +
+                    (outer_xsec.xyz_le - inner_xsec.xyz_le) *
+                    (1 + 2 * section_taper_ratio) /
+                    (3 + 3 * section_taper_ratio)
+            )
+            section_AC = section_MAC_le + array([
+                chord_fraction * section_MAC_length,
+                0,
+                0
+            ])
+
+            sectional_ACs.append(section_AC)
 
         sectional_AC_area_products = [
             AC * area
             for AC, area in zip(
-                sectional_ACs, sectional_areas
+                sectional_ACs,
+                sectional_areas,
             )
         ]
 
-        mean_AC = sum(sectional_AC_area_products) / sum(sectional_areas)
+        aerodynamic_center = sum(sectional_AC_area_products) / sum(sectional_areas)
 
-        mean_AC += self.xyz_le
+        aerodynamic_center += self.xyz_le
 
         if self.symmetric:
-            mean_AC[1] = 0
+            aerodynamic_center[1] = 0
 
-        return mean_AC
+        return aerodynamic_center
 
     def taper_ratio(self) -> float:
         """

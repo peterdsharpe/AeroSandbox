@@ -4,7 +4,7 @@ import pytest
 
 @pytest.fixture()
 def w():
-    return Wing(
+    wing = Wing(
         name="MyWing",
         xyz_le=array([1, 2, 3]),
         xsecs=[
@@ -23,6 +23,7 @@ def w():
         ],
         symmetric=True
     )
+    return wing
 
 
 def test_span(w):
@@ -37,8 +38,8 @@ def test_aspect_ratio(w):
     assert w.aspect_ratio() == pytest.approx(4)
 
 
-def test_has_symmetric_control_surfaces(w):
-    assert w.has_symmetric_control_surfaces()
+def test_is_entirely_symmetric(w):
+    assert w.is_entirely_symmetric()
 
 
 def test_mean_geometric_chord(w):
