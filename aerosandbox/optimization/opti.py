@@ -3,6 +3,7 @@ from typing import Union, List, Dict, Callable
 import numpy as np
 import pytest
 import json
+from aerosandbox.optimization.math import *
 
 
 class Opti(cas.Opti):
@@ -38,8 +39,8 @@ class Opti(cas.Opti):
         """
         Initializes a new decision variable (or vector of decision variables, if n_vars != 1).
 
-        It is recommended that you provide a scale (`scale`) for each variable, although these are not strictly
-        required.
+        It is highly, highly recommended that you provide a scale (`scale`) for each variable, especially for
+        nonconvex problems, although this is not strictly required.
 
         Args:
 
@@ -83,8 +84,19 @@ class Opti(cas.Opti):
                         # 10, with all 10 elements set to an initial guess of 5.
 
 
-            scale: [Optional] Approximate scale of the variable. If not specified, defaults to the supplied initial
-                guess if one exists; otherwise, defaults to 1.
+            scale: [Optional] Approximate scale of the variable.
+
+                For example, if you're optimizing the design of a car and setting the wheel diameter as an
+                optimization variable, you might choose `scale=0.5`, corresponding to 0.5 meters.
+
+                Properly scaling your variables can have a huge impact on solution speed (or even if the optimizer
+                converges at all). Although the optimizer IPOPT is theoretically scale-invariant, numerical precision
+                issues due to floating-point arithmetic can make solving poorly-scaled problems really difficult. See
+                here for more info: https://web.casadi.org/blog/nlp-scaling/
+
+                If not specified, the code will try to pick a sensible value by defaulting to the `init_guess`.
+
+
 
             log_transform: [Optional] Advanced use only. A flag of whether to internally-log-transform this variable
             before passing it to the optimizer. Good for known positive engineering quantities that become nonsensical
@@ -105,19 +117,30 @@ class Opti(cas.Opti):
             The variable itself as a symbolic CasADi variable (MX type).
 
         """
+        ### Set defaults
+        if n_vars is None: # Infer dimensionality from init_guess if it is not provided
+            try:
+                n_vars = len(init_guess)
+            except TypeError: # init_guess has no function len() -> either float, int, or CasADi type
+                try:
+                    n_vars = init_guess.shape[0]
+                except AttributeError: # init_guess has no attribute shape -> either float or int
+                    n_vars = 1
+        if scale is None: # Infer a scale from init_guess if it is not provided
+            if log_transform:
+                scale = 1
+            else:
+                scale = if_else( # Initialize the scale to the init_guess, unless it's zero, in which case use 1.
+                    init_guess != 0,
+                    init_guess,
+                    1
+                )
+
         # Validate the inputs
-        if log_transform and init_guess is not None:
+        if log_transform:
             if np.any(init_guess <= 0):
                 raise ValueError(
-                    "If you are initializing a log-transformed variable, the initial guess(es) must be positive.")
-
-        # Set defaults
-        if init_guess is None:
-            init_guess = 1 if log_transform else 0
-        if scale is None:
-            scale = init_guess if log_transform else 1
-
-        # Validate the inputs
+                    "If you are initializing a log-transformed variable, the initial guess(es) must all be positive.")
         if np.any(scale <= 0):
             raise ValueError("The 'scale' argument must be a positive number.")
 
