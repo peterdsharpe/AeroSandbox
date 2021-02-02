@@ -110,7 +110,13 @@ class Wing(AeroSandboxObject):
         """
         area = 0
         chords = [xsec.chord for xsec in self.xsecs]
-        sectional_spans = self.span(_sectional=True)
+
+        if type == "wetted":
+            sectional_spans = self.span(_sectional=True)
+        elif type == "projected":
+            sectional_spans = self.span(type="y",_sectional=True)
+        else:
+            raise ValueError("Bad value of `type`!")
         sectional_chords = [
             (inner_chord + outer_chord) / 2
             for inner_chord, outer_chord in zip(
