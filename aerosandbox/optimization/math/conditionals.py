@@ -8,13 +8,13 @@ def if_else(
         value_if_false,
 ):
     try:
-        np.where(
+        return np.where(
             condition,
             value_if_true,
             value_if_false
         )
     except Exception:
-        cas.if_else(
+        return cas.if_else(
             condition,
             value_if_true,
             value_if_false
