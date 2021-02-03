@@ -223,12 +223,20 @@ class Opti(cas.Opti):
                    constraint: Union[cas.MX, bool, List],
                    ) -> cas.MX:
         """
-        Initialize a new constraint(s).
+        Initialize a new equality or inequality constraint(s).
 
         Args:
-            constraint: A constraint that you want to hold true at the optimum. Example:
+            constraint: A constraint that you want to hold true at the optimum.
+
+                Inequality example:
                 >>> x = opti.variable()
                 >>> opti.subject_to(x >= 5)
+
+                Equality example; also showing that you can directly constrain functions of variables:
+                >>> x = opti.variable()
+                >>> f = np.sin(x)
+                >>> opti.subject_to(f == 0.5)
+
                 You can also pass in a list of multiple constraints using list syntax. For example:
                 >>> x = opti.variable()
                 >>> opti.subject_to([

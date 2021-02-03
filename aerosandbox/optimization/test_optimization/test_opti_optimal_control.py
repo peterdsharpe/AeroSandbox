@@ -35,6 +35,7 @@ Now, we want to control the rocket in a manner to minimize the maximum thrust re
 subject to the preceding constraints.
 """
 
+# TODO make it second order
 
 def test_rocket_control_problem(plot=False):
     ### Constants
