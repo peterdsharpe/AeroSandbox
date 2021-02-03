@@ -1,8 +1,16 @@
 import casadi as cas
 import numpy as np
+from typing import Union
+from collections import namedtuple
 from aerosandbox.geometry import *
 
-class TubeBeam1(AeroSandboxObject):
+def trapz(x):
+    out = (x[:-1] + x[1:]) / 2
+    # out[0] += x[0] / 2
+    # out[-1] += x[-1] / 2
+    return out
+
+class SimpleBeam(AeroSandboxObject):
 
     def __init__(self,
                  opti,  # type: cas.Opti
@@ -11,8 +19,7 @@ class TubeBeam1(AeroSandboxObject):
                  E=228e9,  # Pa
                  isotropic=True,
                  poisson_ratio=0.5,
-                 diameter_guess=100,  # Make this larger for more computational stability, lower for a bit faster speed
-                 thickness=0.14e-3 * 5,
+                 geometry: Union[dict, namedtuple] = {},
                  max_allowable_stress=570e6 / 1.75,
                  density=1600,
                  G=None,
@@ -65,8 +72,9 @@ class TubeBeam1(AeroSandboxObject):
         self.E = E
         self.isotropic = isotropic
         self.poisson_ratio = poisson_ratio
-        self.diameter_guess = diameter_guess
-        self.thickness = thickness
+        #self.diameter_guess = diameter_guess
+        #self.thickness = thickness
+        self.geometry = geometry
         self.max_allowable_stress = max_allowable_stress
         self.density = density
         self.G = G
@@ -86,6 +94,30 @@ class TubeBeam1(AeroSandboxObject):
         # Create data structures to track loads
         self.point_loads = []
         self.distributed_loads = []
+        
+    #### Properties
+    
+    @property
+    def geometry(self):
+        return self._geometry
+    
+    @geometry.setter
+    def set_geometry(self, value):
+        raise NotImplementedError('Geometry not specified for object of type ' + str(type(self)))
+    
+    @property
+    def I(self):
+        raise NotImplementedError('I is not specified for object of type ' + str(type(self)))
+    
+    @property
+    def J(self):
+        raise NotImplementedError('J is not specified for object of type ' + str(type(self)))
+
+    @property
+    def volume(self):
+        return NotImplementedError('Volume in not specified for object of type ' + str(type(self)))
+
+    #### Methods
 
     def add_point_load(self,
                        location,
@@ -153,6 +185,8 @@ class TubeBeam1(AeroSandboxObject):
             }
         )
 
+    def _init_opt_vars(self):
+        raise NotImplementedError()
 
     def setup(self,
               bending_BC_type="cantilevered"
@@ -177,7 +211,10 @@ class TubeBeam1(AeroSandboxObject):
 
         # Post-process the discretization
         self.n = self.x.shape[0]
-        dx = cas.diff(self.x)
+        self.dx = cas.diff(self.x)
+        
+        # Initialize optimization variables
+        self._init_opt_vars()
 
         # Add point forces
         self.point_forces = cas.GenMX_zeros(self.n - 1)
@@ -199,47 +236,11 @@ class TubeBeam1(AeroSandboxObject):
             else:
                 raise ValueError("Bad value of \"type\" for a load within beam.distributed_loads!")
 
-        # Initialize optimization variables
-        log_nominal_diameter = self.opti.variable(self.n)
-        self.opti.set_initial(log_nominal_diameter, cas.log(self.diameter_guess))
-        self.nominal_diameter = cas.exp(log_nominal_diameter)
-
-        self.opti.subject_to([
-            log_nominal_diameter > cas.log(self.thickness)
-        ])
-
-        def trapz(x):
-            out = (x[:-1] + x[1:]) / 2
-            # out[0] += x[0] / 2
-            # out[-1] += x[-1] / 2
-            return out
-
         # Mass
-        self.volume = cas.sum1(
-            cas.pi / 4 * trapz(
-                (self.nominal_diameter + self.thickness) ** 2 -
-                (self.nominal_diameter - self.thickness) ** 2
-            ) * dx
-        )
         self.mass = self.volume * self.density
 
         # Mass proxy
-        self.volume_proxy = cas.sum1(
-            cas.pi * trapz(
-                self.nominal_diameter
-            ) * dx * self.thickness
-        )
         self.mass_proxy = self.volume_proxy * self.density
-
-        # Find moments of inertia
-        self.I = cas.pi / 64 * (  # bending
-                (self.nominal_diameter + self.thickness) ** 4 -
-                (self.nominal_diameter - self.thickness) ** 4
-        )
-        self.J = cas.pi / 32 * (  # torsion
-                (self.nominal_diameter + self.thickness) ** 4 -
-                (self.nominal_diameter - self.thickness) ** 4
-        )
 
         if self.bending:
             # Set up derivatives
@@ -254,10 +255,10 @@ class TubeBeam1(AeroSandboxObject):
 
             # Define derivatives
             self.opti.subject_to([
-                cas.diff(self.u) == trapz(self.du) * dx,
-                cas.diff(self.du) == trapz(self.ddu) * dx,
-                cas.diff(self.E * self.I * self.ddu) == trapz(self.dEIddu) * dx,
-                cas.diff(self.dEIddu) == trapz(self.force_per_unit_length) * dx + self.point_forces,
+                cas.diff(self.u) == trapz(self.du) * self.dx,
+                cas.diff(self.du) == trapz(self.ddu) * self.dx,
+                cas.diff(self.E * self.I * self.ddu) == trapz(self.dEIddu) * self.dx,
+                cas.diff(self.dEIddu) == trapz(self.force_per_unit_length) * self.dx + self.point_forces,
             ])
 
             # Add BCs
@@ -272,8 +273,9 @@ class TubeBeam1(AeroSandboxObject):
                 raise ValueError("Bad value of bending_BC_type!")
 
             # Stress
-            self.stress_axial = (self.nominal_diameter + self.thickness) / 2 * self.E * self.ddu
+            self.stress_axial
 
+        # TODO: Add torsion
         if self.torsion:
 
             # Set up derivatives
@@ -356,20 +358,112 @@ class TubeBeam1(AeroSandboxObject):
         plt.tight_layout()
 
         plt.show() if show else None
+        
+
+class Tube(SimpleBeam):
+    
+    def __init__(self, 
+                 *args, 
+                 geometry: dict = {
+                     'diameter_guess': 100,
+                     'thickness': 1E-3,
+                     },
+                 **kwargs):
+        
+        super().__init__(
+            *args, 
+            geometry = geometry,
+            **kwargs)
+    
+    #### Properties
+    
+    @property
+    def geometry(self):
+        return self._geometry
+    
+    @geometry.setter
+    def geometry(self, value):
+        
+        # TODO: Better error handling for wrong geometries
+        if type(value) == dict:
+            geometry = namedtuple('geometry', ['thickness', 'diameter_guess'])
+            geometry.diameter_guess = value['diameter_guess']
+            geometry.thickness = value['thickness']
+        elif type(value) == namedtuple:
+            geometry = namedtuple
+        else:
+            raise TypeError('Cannot parse geometry of type ' + str(type(value)))
+        
+        self._geometry = geometry
+    
+    @property
+    def I(self):
+        I = cas.pi / 64 * (  # bending
+                (self.nominal_diameter + self.geometry.thickness) ** 4 -
+                (self.nominal_diameter - self.geometry.thickness) ** 4
+        )
+        return I
+        
+        
+    @property
+    def J(self):
+        J = cas.pi / 32 * (  # torsion
+                (self.nominal_diameter + self.geometry.thickness) ** 4 -
+                (self.nominal_diameter - self.geometry.thickness) ** 4
+        )
+        return J
+    
+    @property
+    def volume(self):
+        volume = cas.sum1(
+            cas.pi / 4 * trapz(
+                (self.nominal_diameter + self.geometry.thickness) ** 2 -
+                (self.nominal_diameter - self.geometry.thickness) ** 2
+            ) * self.dx
+        )
+        return volume
+    
+    @property
+    def volume_proxy(self):
+        volume_proxy = cas.sum1(
+            cas.pi * trapz(
+                self.nominal_diameter
+            ) * self.dx * self.geometry.thickness
+        )
+        return volume_proxy
+    
+    @property
+    def stress_axial(self):
+        return (self.nominal_diameter + self.geometry.thickness) / 2 * self.E * self.ddu
+    
+    #### Methods
+    
+    def _init_opt_vars(self):
+        # Initialize optimization variables
+        log_nominal_diameter = self.opti.variable(self.n)
+        self.opti.set_initial(log_nominal_diameter, cas.log(self.geometry.diameter_guess))
+        self.nominal_diameter = cas.exp(log_nominal_diameter)
+
+        self.opti.subject_to([
+            log_nominal_diameter > cas.log(self.geometry.thickness)
+        ])
 
 
 if __name__ == '__main__':
+    
+    import aerosandbox as asb
+    
     opti = cas.Opti()
-    beam = TubeBeam1(
+    beam = Tube(
         opti=opti,
         length=60 / 2,
         points_per_point_load=50,
-        diameter_guess=100,
+        #diameter_guess=100,
         bending=True,
         torsion=False
     )
     lift_force = 9.81 * 103.873
-    load_location = opti.variable()
+    load_location = opti.variable()#init_guess=15)
     opti.set_initial(load_location, 15)
     opti.subject_to([
         load_location > 2,
