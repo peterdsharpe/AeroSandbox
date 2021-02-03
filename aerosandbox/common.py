@@ -14,10 +14,20 @@ class AeroSandboxObject:
             attrib_orig = getattr(self, attrib_name)
             if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
                 continue
+            
+            # Skip attribute if it has no setter (fset == none)
+            if (attrib_name in self.__class__.__dict__.keys()
+                    and isinstance(getattr(self.__class__, attrib_name), property)
+                    and getattr(self.__class__, attrib_name).fset == None):
+                continue
+                    
             try:
                 setattr(self, attrib_name, sol.value(attrib_orig))
             except NotImplementedError:
                 pass
+            except AttributeError:
+                raise AttributeError("can't set attribute " + attrib_name)
+                
             if isinstance(attrib_orig, list):
                 try:
                     new_attrib_orig = []
