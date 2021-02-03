@@ -244,10 +244,14 @@ class SimpleBeam(AeroSandboxObject):
 
         if self.bending:
             # Set up derivatives
-            self.u = 1 * self.opti.variable(0, n_vars = self.n)
-            self.du = 0.1 * self.opti.variable(0, n_vars = self.n)
-            self.ddu = 0.01 * self.opti.variable(0, n_vars = self.n)
-            self.dEIddu = 1 * self.opti.variable(0, n_vars = self.n)
+            self.u = 1 * self.opti.variable(self.n)
+            self.du = 0.1 * self.opti.variable(self.n)
+            self.ddu = 0.01 * self.opti.variable(self.n)
+            self.dEIddu = 1 * self.opti.variable(self.n)
+            self.opti.set_initial(self.u, 0)
+            self.opti.set_initial(self.du, 0)
+            self.opti.set_initial(self.ddu, 0)
+            self.opti.set_initial(self.dEIddu, 0)
 
             # Define derivatives
             self.opti.subject_to([
@@ -275,8 +279,8 @@ class SimpleBeam(AeroSandboxObject):
         if self.torsion:
 
             # Set up derivatives
-            phi = 0.1 * self.opti.variable(0, n_vars = self.n)
-            dphi = 0.01 * self.opti.variable(0, n_vars = self.n)
+            phi = 0.1 * self.opti.variable(self.n)
+            dphi = 0.01 * self.opti.variable(self.n)
 
             # Add forcing term
             ddphi = -self.moment_per_unit_length / (self.G * self.J)
@@ -436,10 +440,7 @@ class Tube(SimpleBeam):
     
     def _init_opt_vars(self):
         # Initialize optimization variables
-        log_nominal_diameter = self.opti.variable(
-            init_guess = cas.log(self.geometry.diameter_guess),
-            n_vars = self.n
-        )
+        log_nominal_diameter = self.opti.variable(self.n)
         self.opti.set_initial(log_nominal_diameter, cas.log(self.geometry.diameter_guess))
         self.nominal_diameter = cas.exp(log_nominal_diameter)
 
@@ -452,17 +453,18 @@ if __name__ == '__main__':
     
     import aerosandbox as asb
     
-    opti = asb.Opti()
+    opti = cas.Opti()
     beam = Tube(
         opti=opti,
         length=60 / 2,
         points_per_point_load=50,
-        geometry={'diameter_guess': 100, 'thickness': 0.14e-3 * 5},
+        #diameter_guess=100,
         bending=True,
         torsion=False
     )
     lift_force = 9.81 * 103.873
-    load_location = opti.variable(15)
+    load_location = opti.variable()#init_guess=15)
+    opti.set_initial(load_location, 15)
     opti.subject_to([
         load_location > 2,
         load_location < 60 / 2 - 2,
