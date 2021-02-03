@@ -21,7 +21,7 @@ class Opti(cas.Opti):
         # Initialize class variables
         self.variable_categories_to_freeze = variable_categories_to_freeze
         self.cache_filename = cache_filename
-        self.load_frozen_variables_from_cache = load_frozen_variables_from_cache
+        self.load_frozen_variables_from_cache = load_frozen_variables_from_cache  # TODO load and start tracking
         self.save_to_cache_on_solve = save_to_cache_on_solve
         self.ignore_violated_parametric_constraints = ignore_violated_parametric_constraints
 
@@ -32,12 +32,14 @@ class Opti(cas.Opti):
                  init_guess: Union[float, np.ndarray],
                  n_vars: int = None,
                  scale: float = None,
+                 freeze: bool = False,
                  log_transform: bool = False,
                  category: str = "Uncategorized",
-                 freeze: bool = False,
                  ) -> cas.MX:
         """
-        Initializes a new decision variable (or vector of decision variables, if n_vars != 1).
+        Initializes a new decision variable (or vector of decision variables). You must pass an initial guess (
+        `init_guess`) upon defining a new variable. Dimensionality is inferred from this initial guess, but it can be
+        overridden; see below for syntax.
 
         It is highly, highly recommended that you provide a scale (`scale`) for each variable, especially for
         nonconvex problems, although this is not strictly required.
@@ -51,23 +53,23 @@ class Opti(cas.Opti):
                 vector) that is created will be automatically inferred from the shape of the initial guess you
                 provide here. (Although it can also be overridden using the `n_vars` parameter; see below.)
 
-                For scalar variables, your initial guess should be a float.
+                For scalar variables, your initial guess should be a float:
                 >>> opti = asb.Opti()
                 >>> scalar_var = opti.variable(init_guess=5) # Initializes a scalar variable at a value of 5
 
                 For vector variables, your initial guess should be either:
 
                     * a float, in which case you must pass the length of the vector as `n_vars` otherwise a scalar
-                    variable will be created
+                    variable will be created:
                     >>> opti = asb.Opti()
                     >>> vector_var = opti.variable(init_guess=5, n_vars=10) # Initializes a vector variable of length
-                        # 10, with all 10 elements set to an initial guess of 5.
+                    >>> # 10, with all 10 elements set to an initial guess of 5.
 
                     * a NumPy ndarray, in which case each element will be initialized to the corresponding value in
-                    the given array.
+                    the given array:
                     >>> opti = asb.Opti()
                     >>> vector_var = opti.variable(init_guess=np.linspace(0, 5, 10)) # Initializes a vector variable of
-                        # length 10, with all 10 elements initialized to linearly vary between 0 and 5.
+                    >>> # length 10, with all 10 elements initialized to linearly vary between 0 and 5.
 
                 In the case where the variable is to be log-transformed (see `log_transform`), the initial guess
                 should not be log-transformed as well - just supply the initial guess as usual. (Log-transform of the
@@ -78,31 +80,77 @@ class Opti(cas.Opti):
             provided, the dimensionality of the variable is inferred from the initial guess `init_guess`.
 
                 The only real case where you need to use this argument would be if you are initializing a vector
-                variable to a scalar value; for example:
+                variable to a scalar value, but you don't feel like using `init_guess = value * np.ones(n_vars)`.
+                For example:
+
                     >>> opti = asb.Opti()
                     >>> vector_var = opti.variable(init_guess=5, n_vars=10) # Initializes a vector variable of length
-                        # 10, with all 10 elements set to an initial guess of 5.
-
+                    >>> # 10, with all 10 elements set to an initial guess of 5.
 
             scale: [Optional] Approximate scale of the variable.
 
-                For example, if you're optimizing the design of a car and setting the wheel diameter as an
+                For example, if you're optimizing the design of a automobile and setting the tire diameter as an
                 optimization variable, you might choose `scale=0.5`, corresponding to 0.5 meters.
 
                 Properly scaling your variables can have a huge impact on solution speed (or even if the optimizer
-                converges at all). Although the optimizer IPOPT is theoretically scale-invariant, numerical precision
-                issues due to floating-point arithmetic can make solving poorly-scaled problems really difficult. See
-                here for more info: https://web.casadi.org/blog/nlp-scaling/
+                converges at all). Although most modern second-order optimizers (such as IPOPT, used here) are
+                theoretically scale-invariant, numerical precision issues due to floating-point arithmetic can make
+                solving poorly-scaled problems really difficult or impossible. See here for more info:
+                https://web.casadi.org/blog/nlp-scaling/
 
                 If not specified, the code will try to pick a sensible value by defaulting to the `init_guess`.
 
+            freeze: [Optional] This boolean tells the optimizer to "freeze" the variable at a specific value. In
+            order to select the determine to freeze the variable at, the optimizer will use the following logic:
 
+                    * If you initialize a new variable with the parameter `freeze=True`: the optimizer will freeze
+                    the variable at the value of initial guess.
+
+                        >>> opti = Opti()
+                        >>> my_var = opti.variable(init_guess=5, freeze=True) # This will freeze my_var at a value of 5.
+
+                    * If the Opti instance is associated with a cache file, and you told it to freeze a specific
+                    category(s) of variables that your variable is a member of, and you didn't manually specify to
+                    freeze the variable: the variable will be frozen based on the value in the cache file (and ignore
+                    the `init_guess`). Example:
+
+                        >>> opti = Opti(cache_filename="my_file.json", variable_categories_to_freeze=["Wheel Sizing"])
+                        >>> # Assume, for example, that `my_file.json` was from a previous run where my_var=10.
+                        >>> my_var = opti.variable(init_guess=5, category="Wheel Sizing")
+                        >>> # This will freeze my_var at a value of 10 (from the cache file, not the init_guess)
+
+                    * If the Opti instance is associated with a cache file, and you told it to freeze a specific
+                    category(s) of variables that your variable is a member of, but you then manually specified that
+                    the variable should be frozen: the variable will once again be frozen at the value of `init_guess`:
+
+                        >>> opti = Opti(cache_filename="my_file.json", variable_categories_to_freeze=["Wheel Sizing"])
+                        >>> # Assume, for example, that `my_file.json` was from a previous run where my_var=10.
+                        >>> my_var = opti.variable(init_guess=5, category="Wheel Sizing", freeze=True)
+                        >>> # This will freeze my_var at a value of 5 (`freeze` overrides category loading.)
+
+            Motivation for freezing variables:
+
+                The ability to freeze variables is exceptionally useful when designing engineering systems. Let's say
+                we're designing an airplane. In the beginning of the design process, we're doing "clean-sheet" design
+                - any variable is up for grabs for us to optimize on, because the airplane doesn't exist yet!
+                However, the farther we get into the design process, the more things get "locked in" - we may have
+                ordered jigs, settled on a wingspan, chosen an engine, et cetera. So, if something changes later (
+                let's say that we discover that one of our assumptions was too optimistic halfway through the design
+                process), we have to make up for that lost margin using only the variables that are still free. To do
+                this, we would freeze the variables that are already decided on.
+
+                By categorizing variables, you can also freeze entire categories of variables. For example,
+                you can freeze all of the wing design variables for an airplane but leave all of the fuselage
+                variables free.
+
+                This idea of freezing variables can also be used to look at off-design performance - freeze a
+                design, but change the operating conditions.
 
             log_transform: [Optional] Advanced use only. A flag of whether to internally-log-transform this variable
             before passing it to the optimizer. Good for known positive engineering quantities that become nonsensical
-            if negative (e.g. mass). Log-transforming these variables can help maintain convexity.
+            if negative (e.g. mass). Log-transforming these variables can also help maintain convexity.
 
-            category: [Optional] What category of variables does this belong to
+            category: [Optional] What category of variables does this belong to?
 
         Usage notes:
 
@@ -118,23 +166,24 @@ class Opti(cas.Opti):
 
         """
         ### Set defaults
-        if n_vars is None: # Infer dimensionality from init_guess if it is not provided
+        if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
             try:
                 n_vars = len(init_guess)
-            except TypeError: # init_guess has no function len() -> either float, int, or CasADi type
+            except TypeError:  # init_guess has no function len() -> either float, int, or CasADi type
                 try:
                     n_vars = init_guess.shape[0]
-                except AttributeError: # init_guess has no attribute shape -> either float or int
+                except AttributeError:  # init_guess has no attribute shape -> either float or int
                     n_vars = 1
-        if scale is None: # Infer a scale from init_guess if it is not provided
+        if scale is None:  # Infer a scale from init_guess if it is not provided
             if log_transform:
                 scale = 1
             else:
-                scale = np.fabs(if_else( # Initialize the scale to the init_guess, unless it's zero, in which case use 1.
-                    init_guess != 0,
-                    init_guess,
-                    1
-                ))
+                scale = np.fabs(
+                    if_else(  # Initialize the scale to the init_guess, unless it's zero, in which case use 1.
+                        init_guess != 0,
+                        init_guess,
+                        1
+                    ))
 
         # Validate the inputs
         if log_transform:
@@ -151,7 +200,6 @@ class Opti(cas.Opti):
 
         # If the variable is to be frozen, return the initial guess. Otherwise, define the variable using CasADi symbolics.
         if freeze:
-            # var = init_guess * np.ones(n_vars)
             var = self.parameter(n_params=n_vars, value=init_guess)
         else:
             if not log_transform:
@@ -228,8 +276,8 @@ class Opti(cas.Opti):
                 This can happen if you've frozen too many decision variables, leading to an overconstrained problem.""")
 
     def parameter(self,
+                  value: float = 0.,  # TODO infer n_params from value
                   n_params: int = 1,
-                  value: float = 0.,
                   ) -> cas.MX:
         """
         Initialize a new parameter (or vector of paramters, if n_params != 1).
