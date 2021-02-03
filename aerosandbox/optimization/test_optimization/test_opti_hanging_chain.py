@@ -27,12 +27,11 @@ def test_opti_hanging_chain_with_callback():
     opti = asb.Opti()
 
     x = opti.variable(
-        n_vars=N,
         init_guess=cas.linspace(-2, 2, N)
     )
     y = opti.variable(
+        init_guess=1,
         n_vars=N,
-        init_guess=1
     )
 
     distance = cas.sqrt(  # Distance from one node to the next
@@ -66,7 +65,7 @@ def test_opti_hanging_chain_with_callback():
             opti.debug.value(y),
             ".-",
             label=f"Iter {iter}",
-            zorder = 3 + iter
+            zorder=3 + iter
         )
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)

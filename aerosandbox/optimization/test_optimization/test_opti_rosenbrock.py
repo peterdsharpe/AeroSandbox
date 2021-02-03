@@ -69,7 +69,7 @@ def test_ND_rosenbrock_constrained(N=10):  # N-dimensional rosenbrock
 
     opti = asb.Opti()  # set up an optimization environment
 
-    x = opti.variable(N, init_guess=1)  # vector of variables
+    x = opti.variable(init_guess=1, n_vars=N)  # vector of variables
 
     objective = 0
     for i in range(N - 1):

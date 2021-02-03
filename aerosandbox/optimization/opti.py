@@ -130,11 +130,11 @@ class Opti(cas.Opti):
             if log_transform:
                 scale = 1
             else:
-                scale = if_else( # Initialize the scale to the init_guess, unless it's zero, in which case use 1.
+                scale = np.fabs(if_else( # Initialize the scale to the init_guess, unless it's zero, in which case use 1.
                     init_guess != 0,
                     init_guess,
                     1
-                )
+                ))
 
         # Validate the inputs
         if log_transform:

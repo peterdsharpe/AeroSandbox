@@ -21,13 +21,12 @@ x ** 2 + y ** 2 <= r
 
 """
 
-plot = False
 
-def test_rosenbrock_constrained():
+def test_rosenbrock_constrained(plot=False):
     opti = asb.Opti()
 
-    x = opti.variable()
-    y = opti.variable()
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
     r = opti.parameter()
 
     f = (1 - x) ** 2 + (y - x ** 2) ** 2
@@ -46,7 +45,7 @@ def test_rosenbrock_constrained():
         for sol in sols
     ]
     duals = [
-        sol.value(dual) # Ensure the dual can be evaluated
+        sol.value(dual)  # Ensure the dual can be evaluated
         for sol in sols
     ]
 
@@ -58,7 +57,7 @@ def test_rosenbrock_constrained():
         plt.xlabel("$r$")
         plt.show()
 
-    assert dual is not None # The dual should be a real value
+    assert dual is not None  # The dual should be a real value
     assert r_values[0] == pytest.approx(1)
     assert duals[0] == pytest.approx(0.10898760051521068, abs=1e-6)
 

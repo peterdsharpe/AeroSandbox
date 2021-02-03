@@ -47,11 +47,11 @@ def test_rocket_control_problem(plot=False):
     ### Optimization
     opti = asb.Opti()  # set up an optimization environment
 
-    x = opti.variable(T, init_guess=np.linspace(0, d, T))  # position
-    v = opti.variable(T, init_guess=d / T)  # velocity
-    a = opti.variable(T, init_guess=0)  # acceleration
-    gamma = opti.variable(T)  # instantaneous fuel consumption
-    a_max = opti.variable()  # maximum acceleration
+    x = opti.variable(init_guess=np.linspace(0, d, T))  # position
+    v = opti.variable(init_guess=d / T, n_vars=T)  # velocity
+    a = opti.variable(init_guess=0, n_vars=T)  # acceleration
+    gamma = opti.variable(init_guess=0, n_vars=T)  # instantaneous fuel consumption
+    a_max = opti.variable(init_guess=0)  # maximum acceleration
 
     opti.subject_to([
         cas.diff(x) == v[:-1],  # physics
