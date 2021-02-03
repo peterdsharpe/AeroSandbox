@@ -244,21 +244,20 @@ class Opti(cas.Opti):
                 >>>     x <= 10
                 >>> ])
 
-
         Returns: The dual variable associated with the new constraint. If the `constraint` input is a list, returns
             a list of dual variables.
 
         """
         # Determine whether you're dealing with a single (possibly vectorized) constraint or a list of constraints.
         # If the latter, recursively apply them.
-        if isinstance(constraint, List):
+        if type(constraint) in (list, tuple):
             return [
                 self.subject_to(each_constraint)  # return the dual of each constraint
                 for each_constraint in constraint
             ]
 
-        # If it's a proper constraint (MX type and non-parametric),
-        # pass it into the problem formulation and be done with it.
+        # If it's a proper constraint (MX-type and non-parametric),
+        # pass it into the parent class Opti formulation and be done with it.
         if isinstance(constraint, cas.MX) and not self.advanced.is_parametric(constraint):
             super().subject_to(constraint)
             dual = self.dual(constraint)
