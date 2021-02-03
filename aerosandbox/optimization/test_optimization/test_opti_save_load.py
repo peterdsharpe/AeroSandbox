@@ -14,8 +14,8 @@ def test_opti():
     opti = asb.Opti()  # set up an optimization environment
 
     # Define optimization variables
-    x = opti.variable()
-    y = opti.variable()
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
 
     # Define objective
     f = (x - 1) ** 2 + (y - 1) ** 2
@@ -34,8 +34,8 @@ def test_save_opti(tmp_path):
     opti = asb.Opti(cache_filename=temp_filename)  # set up an optimization environment
 
     # Define optimization variables
-    x = opti.variable()
-    y = opti.variable()
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
 
     # Define objective
     f = (x - 1) ** 2 + (y - 1) ** 2
@@ -57,8 +57,8 @@ def test_save_and_load_opti(tmp_path):
         variable_categories_to_freeze=[],
         save_to_cache_on_solve=True,
     )
-    x = opti.variable(category="Cat 1")
-    y = opti.variable(category="Cat 2")
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
     f = (x - 1) ** 2 + (y - 1) ** 2
     opti.minimize(f)
 
@@ -80,8 +80,8 @@ def test_save_and_load_opti(tmp_path):
         load_frozen_variables_from_cache=True,
 
     )
-    x = opti.variable(category="Cat 1")
-    y = opti.variable(category="Cat 2")
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
     f = (x - 2) ** 2 + (y - 2) ** 2
     opti.minimize(f)
 
@@ -106,8 +106,8 @@ def test_save_and_load_opti_vectorized(tmp_path):
         variable_categories_to_freeze=[],
         save_to_cache_on_solve=True,
     )
-    x = opti.variable(n_vars=3, category="Cat 1")
-    y = opti.variable(n_vars=3, category="Cat 2")
+    x = opti.variable(init_guess=0, n_vars=3, category="Cat 1")
+    y = opti.variable(init_guess=0, n_vars=3, category="Cat 2")
     f = cas.sumsqr(x - 1) + cas.sumsqr(y - 2)
     opti.minimize(f)
 
@@ -129,8 +129,8 @@ def test_save_and_load_opti_vectorized(tmp_path):
         load_frozen_variables_from_cache=True,
 
     )
-    x = opti.variable(n_vars=3, category="Cat 1")
-    y = opti.variable(n_vars=3, category="Cat 2")
+    x = opti.variable(init_guess=0, n_vars=3, category="Cat 1")
+    y = opti.variable(init_guess=0, n_vars=3, category="Cat 2")
     f = cas.sumsqr(x - 3) + cas.sumsqr(y - 4)
     opti.minimize(f)
 
@@ -155,8 +155,8 @@ def test_save_and_load_opti_freeze_override(tmp_path):
         variable_categories_to_freeze=[],
         save_to_cache_on_solve=True,
     )
-    x = opti.variable(category="Cat 1")
-    y = opti.variable(category="Cat 2")
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
     f = (x - 1) ** 2 + (y - 1) ** 2
     opti.minimize(f)
 
@@ -178,8 +178,8 @@ def test_save_and_load_opti_freeze_override(tmp_path):
         load_frozen_variables_from_cache=True,
 
     )
-    x = opti.variable(category="Cat 1", init_guess=3, freeze=True)
-    y = opti.variable(category="Cat 2")
+    x = opti.variable(init_guess=3, category="Cat 1", freeze=True)
+    y = opti.variable(init_guess=0, category="Cat 2")
     f = (x - 2) ** 2 + (y - 2) ** 2
     opti.minimize(f)
 
