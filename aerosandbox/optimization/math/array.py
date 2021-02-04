@@ -23,7 +23,7 @@ def array(object):
         ]
     )
 
-def length(array):
+def length(array) -> int:
     """
     Returns the length of an array-like object.
     Args:
