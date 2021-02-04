@@ -1,4 +1,4 @@
-from aerosandbox.tools.fitting import *
+from aerosandbox.modeling.fitting import *
 
 masses = np.load("masses.npy")
 spans = np.load("spans.npy")

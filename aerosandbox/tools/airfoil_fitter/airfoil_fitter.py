@@ -3,7 +3,7 @@ Functions to fit automatic-differentiable models to aerodynamic data from an air
 Requires the xfoil package from PyPI; see aerosandbox.geometry for more information on this.
 """
 from aerosandbox.geometry import *
-from aerosandbox.tools.fitting import *
+from aerosandbox.modeling.fitting import *
 import plotly.graph_objects as go
 
 
