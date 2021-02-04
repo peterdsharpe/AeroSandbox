@@ -1,7 +1,17 @@
 from aerosandbox.optimization import *
+from abc import abstractmethod
 
 
 class AeroSandboxObject:
+
+    @abstractmethod
+    def __init__(self):
+        """
+        Denotes AeroSandboxObject as an abstract class, meaning you can't instantiate it directly - you must subclass
+        (extend) it instead.
+        """
+        pass
+
     def substitute_solution(self, sol):
         """
         Substitutes a solution from CasADi's solver.
@@ -10,7 +20,7 @@ class AeroSandboxObject:
         :param sol: OptiSol object.
         :return:
         """
-        for attrib_name in dir(self): # TODO use vars() syntax (built-in) instead, make this cleaner
+        for attrib_name in dir(self):  # TODO use vars() syntax (built-in) instead, make this cleaner
             attrib_orig = getattr(self, attrib_name)
             if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
                 continue
@@ -34,7 +44,7 @@ class AeroSandboxObject:
 
 
 class ImplicitAnalysis(AeroSandboxObject):
-    def __init__(self):
+    def __init__(self):  # TODO make this an abstractmethod after verifying functionality.
         """
         If an optimiztion environment is provided, use that. If not, create one.
         """
