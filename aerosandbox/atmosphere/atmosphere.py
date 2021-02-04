@@ -140,7 +140,7 @@ class Atmosphere(AeroSandboxObject):
 
         ### Add lower bound case
         pressure = if_else(
-            alt < isa_base_altitude[0],
+            alt <= isa_base_altitude[0],
             barometric_formula(
                 P_b=isa_pressure[0],
                 T_b=isa_base_temperature[0],
@@ -171,7 +171,7 @@ class Atmosphere(AeroSandboxObject):
 
         ### Add lower bound case
         temp = if_else(
-            alt < isa_base_altitude[0],
+            alt <= isa_base_altitude[0],
             (alt - isa_base_altitude[0]) * isa_lapse_rate[0] + isa_base_temperature[0],
             temp
         )
