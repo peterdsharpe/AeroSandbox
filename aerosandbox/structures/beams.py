@@ -436,8 +436,10 @@ class Tube(SimpleBeam):
     
     def _init_opt_vars(self):
         # Initialize optimization variables
-        log_nominal_diameter = self.opti.variable(init_guess = self.geometry.diameter_guess,
-                                                  n_vars = self.n)
+        log_nominal_diameter = self.opti.variable(
+            init_guess = cas.log(self.geometry.diameter_guess),
+            n_vars = self.n
+        )
         self.opti.set_initial(log_nominal_diameter, cas.log(self.geometry.diameter_guess))
         self.nominal_diameter = cas.exp(log_nominal_diameter)
 
