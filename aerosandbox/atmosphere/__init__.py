@@ -1,2 +1,1 @@
-from .atmosphere import *
-
+from .atmosphere import Atmosphere

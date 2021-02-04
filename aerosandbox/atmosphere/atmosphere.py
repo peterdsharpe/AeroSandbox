@@ -4,15 +4,58 @@ from aerosandbox import linspace, if_else
 import pandas as pd
 from pathlib import Path
 
+### Define constants
 R_universal = 8.31432  # J/(mol*K); universal gas constant
 M_air = 28.9644e-3  # kg/mol; molecular mass of air
 R_air = R_universal / M_air  # J/(kg*K); gas constant of air
+g = 9.81  # m/s^2, gravitational acceleration on earth
 
 ### Read ISA table data
 isa_table = pd.read_csv(Path(__file__).parent.absolute() / "isa_data/isa_table.csv")
 isa_base_altitude = isa_table["Base Altitude [m]"].values
 isa_lapse_rate = isa_table["Lapse Rate [K/km]"].values / 1000
 isa_base_temperature = isa_table["Base Temperature [C]"].values + 273.15
+
+
+### Calculate pressure at each ISA level programmatically using the barometric pressure equation with linear temperature.
+def barometric_formula(
+        P_b,
+        T_b,
+        L_b,
+        h,
+        h_b,
+):
+    """
+    The barometric pressure equation, from here: https://en.wikipedia.org/wiki/Barometric_formula
+    Args:
+        P_b: Pressure at the base of the layer, in Pa
+        T_b: Temperature at the base of the layer, in K
+        L_b: Temperature lapse rate, in K/m
+        h: Altitude, in m
+        h_b:
+
+    Returns:
+
+    """
+    T = T_b + L_b * (h - h_b)
+    T = np.fmax(T, 0)  # Keep temperature nonnegative, no matter the inputs.
+    if L_b != 0:
+        return P_b * (T / T_b) ** (-g / (R_air * L_b))
+    else:
+        return P_b * np.exp(-g * (h - h_b) / (R_air * T_b))
+
+
+isa_pressure = [101325.]  # Pascals
+for i in range(len(isa_table) - 1):
+    isa_pressure.append(
+        barometric_formula(
+            P_b=isa_pressure[i],
+            T_b=isa_base_temperature[i],
+            L_b=isa_lapse_rate[i],
+            h=isa_base_altitude[i + 1],
+            h_b=isa_base_altitude[i]
+        )
+    )
 
 
 ### Define the Atmosphere class
@@ -71,12 +114,49 @@ class Atmosphere(AeroSandboxObject):
     ### Individual models for the two primary state variables, pressure and temperature, go here!
 
     def _pressure_isa(self):
-        return 5e4 * np.ones_like(self.altitude)
+        """
+        Computes the pressure at the Atmosphere's altitude based on the International Standard Atmosphere.
+
+        Uses the Barometric formula, as implemented here: https://en.wikipedia.org/wiki/Barometric_formula
+
+        Returns: Pressure [Pa]
+
+        """
+        alt = self.altitude
+        pressure = 0 * alt  # Initialize the pressure to all zeros.
+
+        for i in range(len(isa_table)):
+            pressure = if_else(
+                alt > isa_base_altitude[i],
+                barometric_formula(
+                    P_b=isa_pressure[i],
+                    T_b=isa_base_temperature[i],
+                    L_b=isa_lapse_rate[i],
+                    h=alt,
+                    h_b=isa_base_altitude[i]
+                ),
+                pressure
+            )
+
+        ### Add lower bound case
+        pressure = if_else(
+            alt < isa_base_altitude[0],
+            barometric_formula(
+                P_b=isa_pressure[0],
+                T_b=isa_base_temperature[0],
+                L_b=isa_lapse_rate[0],
+                h=alt,
+                h_b=isa_base_altitude[0]
+            ),
+            pressure
+        )
+
+        return pressure
 
     def _temperature_isa(self):
         """
         Computes the temperature at the Atmosphere's altitude based on the International Standard Atmosphere.
-        Returns:
+        Returns: Temperature [K]
 
         """
         alt = self.altitude
@@ -92,7 +172,7 @@ class Atmosphere(AeroSandboxObject):
         ### Add lower bound case
         temp = if_else(
             alt < isa_base_altitude[0],
-            isa_base_temperature[0],
+            (alt - isa_base_altitude[0]) * isa_lapse_rate[0] + isa_base_temperature[0],
             temp
         )
 
@@ -170,21 +250,23 @@ class Atmosphere(AeroSandboxObject):
         S = 110.4  # K
 
         # Sutherland equation
-        mu = C1 * self.temperature() ** 1.5 / (self.temperature() + S)
+        temperature = self.temperature()
+        mu = C1 * temperature ** 1.5 / (temperature + S)
 
         return mu
 
 
 if __name__ == "__main__":
     # Make AeroSandbox Atmosphere
-    altitude = linspace(-5000, 110000, 201)
+    altitude = linspace(-5000, 100000, 500)
     atmo_diff = Atmosphere(altitude=altitude)
     atmo_isa = Atmosphere(altitude=altitude, type="isa")
 
     import matplotlib.pyplot as plt
-    import matplotlib.style as style
+    import seaborn as sns
 
-    style.use("seaborn")
+    sns.set(palette=sns.color_palette("husl"))
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 
     plt.semilogy(
         atmo_diff.altitude,
