@@ -172,8 +172,12 @@ class Opti(cas.Opti):
             if log_transform:
                 scale = 1
             else:
+                scale = mean(np.fabs(init_guess))  # Initialize the scale to a heuristic based on the init_guess
+                if scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
+                    scale = 1
+
                 scale = np.fabs(
-                    if_else(  # Initialize the scale to the init_guess, unless it's zero, in which case use 1.
+                    if_else(
                         init_guess != 0,
                         init_guess,
                         1
