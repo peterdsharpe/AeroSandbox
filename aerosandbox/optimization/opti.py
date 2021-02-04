@@ -281,8 +281,8 @@ class Opti(cas.Opti):
                 This can happen if you've frozen too many decision variables, leading to an overconstrained problem.""")
 
     def parameter(self,
-                  value: float = 0.,  # TODO infer n_params from value
-                  n_params: int = 1,
+                  value: Union[float, np.ndarray] = 0.,
+                  n_params: int = None,
                   ) -> cas.MX:
         """
         Initialize a new parameter (or vector of paramters, if n_params != 1).
@@ -310,7 +310,14 @@ class Opti(cas.Opti):
             The parameter itself as a symbolic CasADi variable (MX type).
 
         """
+        # Infer dimensionality from value if it is not provided
+        if n_params is None:
+            n_params = length(value)
+
+        # Create the parameter
         param = super().parameter(n_params)
+
+        # Set the value of the parameter
         self.set_value(param, value)
 
         return param
