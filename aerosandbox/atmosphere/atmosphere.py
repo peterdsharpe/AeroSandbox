@@ -85,7 +85,7 @@ class Atmosphere(AeroSandboxObject):
         """
         self.altitude = altitude
         self.type = type
-        self._valid_altitude_range = (0, 40000)
+        self._valid_altitude_range = (0, 80000)
 
     ### The two primary state variables, pressure and temperature, go here!
 

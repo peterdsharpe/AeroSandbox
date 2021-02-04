@@ -21,7 +21,7 @@ def approx(x):
     return pytest.approx(x, rel=0.02)
 
 
-def test_atmosphere():
+def test_isa_atmosphere():
     for altitude, pressure, temperature, density, speed_of_sound in zip(
             isa_data["Altitude [m]"],
             isa_data["Pressure [Pa]"],
@@ -30,7 +30,7 @@ def test_atmosphere():
             isa_data["Speed of Sound [m/s]"]
     ):
 
-        atmo = Atmosphere(altitude=altitude)
+        atmo = Atmosphere(altitude=altitude, type='isa')
 
         if altitude >= atmo._valid_altitude_range[0] and altitude <= atmo._valid_altitude_range[1]:
 
