@@ -9,3 +9,4 @@ publish_to_pypi.bat
 docs/_build
 docs/source
 .pytest_cache/
+.spyrpoject/
