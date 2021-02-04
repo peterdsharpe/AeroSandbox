@@ -101,7 +101,7 @@ class Opti(cas.Opti):
             provided, the dimensionality of the variable is inferred from the initial guess `init_guess`.
 
                 The only real case where you need to use this argument would be if you are initializing a vector
-                variable to a scalar value, but you don't feel like using `init_guess = value * np.ones(n_vars)`.
+                variable to a scalar value, but you don't feel like using `init_guess=value * np.ones(n_vars)`.
                 For example:
 
                     >>> opti = asb.Opti()
@@ -337,17 +337,16 @@ class Opti(cas.Opti):
                     >>> vector_param = opti.parameter(value=np.linspace(0, 5, 10)) # Initializes a vector parameter of
                     >>> # length 10, with all 10 elements set to a value varying from 0 to 5.
 
-            n_params: [Optional] Number of parameters to initialize (used to initialize a vector of parameters). If you
-                are initializing a scalar parameter (the most typical case), leave this equal to 1. When using vector
-                parameters, inidividual components of this vector of parameters can be aaccessed via normal indexing.
+            n_vars: [Optional] Used to manually override the dimensionality of the parameter to create; if not
+            provided, the dimensionality of the parameter is inferred from `value`.
 
-                Example:
+                The only real case where you need to use this argument would be if you are initializing a vector
+                parameter to a scalar value, but you don't feel like using `value=my_value * np.ones(n_vars)`.
+                For example:
+
                     >>> opti = asb.Opti()
-                    >>> my_param = opti.parameter(n_params = 5)
-                    >>> for i in range(5):
-                    >>>     print(my_param[i]) # This is a valid way of indexing
-
-
+                    >>> vector_var = opti.parameter(value=5, n_vars=10) # Initializes a vector parameter of length
+                    >>> # 10, with all 10 elements set to a value of 5.
 
         Returns:
             The parameter itself as a symbolic CasADi variable (MX type).
