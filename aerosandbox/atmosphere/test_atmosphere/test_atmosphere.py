@@ -7,13 +7,10 @@ from pathlib import Path
 Validates the Atmosphere class against data from the International Standard Atmosphere (ISA).
 
 Some deviation is allowed, as the ISA model is not C1-continuous, but we want our to be C1-continuous for optimization. 
-
-All test values pulled from International Standard Atmosphere (ISA) tables.
-https://www.engineeringtoolbox.com/international-standard-atmosphere-d_985.html
 """
 
 isa_data = pd.read_csv(str(
-    Path(__file__).parent.absolute() / "isa_data.csv"
+    Path(__file__).parent / "../isa_data/isa_sample_values.csv"
 ))
 
 
@@ -35,9 +32,9 @@ def test_atmosphere():
 
         atmo = Atmosphere(altitude=altitude)
 
-        if altitude >= atmo._valid_range[0] and altitude <= atmo._valid_range[1]:
+        if altitude >= atmo._valid_altitude_range[0] and altitude <= atmo._valid_altitude_range[1]:
 
-            fail_message = f"{altitude} m"
+            fail_message = f"FAILED @ {altitude} m"
 
             assert atmo.pressure() == approx(pressure), fail_message
             assert atmo.temperature() == approx(temperature), fail_message
