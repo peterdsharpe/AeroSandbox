@@ -25,7 +25,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 6. When writing math, use NumPy functions everywhere where possible. If this throws an error during testing, replace the offending function with its equivalent from `aerosandbox.optimization.math`. If you do not find the function you need here, notify a core developer.
 
 7. Every function must be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are slightly preferred but not required. It is highly recommended (but not required) that you also do the following:
-    
+   
     * Document the purpose, function, and expected input type(s) of every input parameter within this docstring. 
     * [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.
     * Include usage examples in runnable Python in for each function in its docstring (demarcated by `>>>`) 
@@ -55,6 +55,8 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
         (y_start - y_end) ** 2
     ) ** 0.5
     ```
+
+10. Write unit tests for all new functionality using `pytest`. Make sure the tests pass before submitting a pull request.
 
 ## Code of Conduct
 
