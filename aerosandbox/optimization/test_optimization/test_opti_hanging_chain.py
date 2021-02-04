@@ -17,7 +17,7 @@ We seek the rest position of the system, obtained by minimizing the total energy
 """
 
 
-def test_opti_hanging_chain_with_callback():
+def test_opti_hanging_chain_with_callback(plot=False):
     N = 40
     m = 40 / N
     D = 70 * N
@@ -59,29 +59,37 @@ def test_opti_hanging_chain_with_callback():
 
     # Add a callback
 
-    def plot(iter: int):
-        plt.plot(
-            opti.debug.value(x),
-            opti.debug.value(y),
-            ".-",
-            label=f"Iter {iter}",
-            zorder=3 + iter
-        )
+    if plot:
+        def my_callback(iter: int):
+            plt.plot(
+                opti.debug.value(x),
+                opti.debug.value(y),
+                ".-",
+                label=f"Iter {iter}",
+                zorder=3 + iter
+            )
+    else:
+        def my_callback(iter: int):
+            print(f"Iter {iter}")
+            print(f"\tx = {opti.debug.value(x)}")
+            print(f"\ty = {opti.debug.value(y)}")
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 
     sol = opti.solve(
-        callback=plot
+        callback=my_callback
     )
 
-    x_ground = np.linspace(-2, 2, N)
-    y_ground = np.cos(0.1 * x_ground) - 0.5
-    plt.plot(x_ground, y_ground, "--k", zorder=2)
-
-    plt.legend()
-    plt.show()
-
     assert sol.value(potential_energy) == pytest.approx(626.462, abs=1e-3)
+
+    if plot:
+        x_ground = np.linspace(-2, 2, N)
+        y_ground = np.cos(0.1 * x_ground) - 0.5
+        plt.plot(x_ground, y_ground, "--k", zorder=2)
+
+        plt.legend()
+        plt.show()
+
 
 
 if __name__ == '__main__':
