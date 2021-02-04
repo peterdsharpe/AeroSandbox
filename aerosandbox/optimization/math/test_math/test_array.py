@@ -36,9 +36,13 @@ def test_length():
     assert length(5) == 1
     assert length(5.) == 1
     assert length([1, 2, 3]) == 3
+
+    assert length(np.array(5)) == 1
+    assert length(np.array([5])) == 1
     assert length(np.array([1, 2, 3])) == 3
-    assert length(cas.GenMX_ones(5)) == 5
     assert length(np.ones((3, 2))) == 3
+
+    assert length(cas.GenMX_ones(5)) == 5
 
 
 if __name__ == '__main__':
