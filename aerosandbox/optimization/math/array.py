@@ -22,3 +22,20 @@ def array(object):
             for row in object
         ]
     )
+
+def length(array):
+    """
+    Returns the length of an array-like object.
+    Args:
+        array:
+
+    Returns:
+
+    """
+    try:
+        return len(array)
+    except TypeError: # array has no function len() -> either float, int, or CasADi type
+        try:
+            return array.shape[0]
+        except AttributeError: # array has no attribute shape -> either float or int
+            return 1

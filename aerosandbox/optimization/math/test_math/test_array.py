@@ -1,4 +1,4 @@
-from aerosandbox.optimization.math import array
+from aerosandbox.optimization.math.array import *
 import pytest
 import numpy as np
 import casadi as cas
@@ -27,8 +27,19 @@ def test_numpy_equivalency_2D():
 
     assert np.all(a == a_np)
 
+
 def test_casadi_1D_shape():
     a = array([cas.DM(1), cas.DM(2)])
+
+
+def test_length():
+    assert length(5) == 1
+    assert length(5.) == 1
+    assert length([1, 2, 3]) == 3
+    assert length(np.array([1, 2, 3])) == 3
+    assert length(cas.GenMX_ones(5)) == 5
+    assert length(np.ones((3, 2))) == 3
+
 
 if __name__ == '__main__':
     pytest.main()
