@@ -36,6 +36,9 @@ def length(array) -> int:
         return len(array)
     except TypeError: # array has no function len() -> either float, int, or CasADi type
         try:
-            return array.shape[0]
+            if len(array.shape) >= 1:
+                return array.shape[0]
+            else:
+                raise AttributeError
         except AttributeError: # array has no attribute shape -> either float or int
             return 1
