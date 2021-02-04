@@ -31,6 +31,8 @@ def test_if_else_casadi():
         c == cas.DM([1, 2, 1, 2])
     )
 
+# def test_if_else_mixed(): # TODO write this
+
 
 if __name__ == '__main__':
     pytest.main()
