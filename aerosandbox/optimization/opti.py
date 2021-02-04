@@ -7,6 +7,24 @@ from aerosandbox.optimization.math import *
 
 
 class Opti(cas.Opti):
+    """
+    The base class for mathematical optimization. For detailed usage, see the docstrings in:
+        * Opti.variable()
+        * Opti.subject_to()
+        * Opti.parameter()
+        * Opti.solve()
+
+    Example usage is as follows:
+
+    >>> opti = asb.Opti() # Initializes an optimization environment
+    >>> x = opti.variable(init_guess=5) # Initializes a new variable in that environment
+    >>> f = x ** 2 # Evaluates a (nonlinear) function based on a variable
+    >>> opti.subject_to(x > 3) # Adds a constraint to be enforced
+    >>> opti.minimize(f) # Sets the objective function as f
+    >>> sol = opti.solve() # Solves the problem using CasADi and IPOPT backend
+    >>> print(sol.value(x)) # Prints the value of x at the optimum.
+    """
+
     def __init__(self,
                  variable_categories_to_freeze: List[str] = [],
                  cache_filename: str = None,
@@ -54,19 +72,22 @@ class Opti(cas.Opti):
                 provide here. (Although it can also be overridden using the `n_vars` parameter; see below.)
 
                 For scalar variables, your initial guess should be a float:
+
                 >>> opti = asb.Opti()
                 >>> scalar_var = opti.variable(init_guess=5) # Initializes a scalar variable at a value of 5
 
                 For vector variables, your initial guess should be either:
 
-                    * a float, in which case you must pass the length of the vector as `n_vars` otherwise a scalar
+                    * a float, in which case you must pass the length of the vector as `n_vars`, otherwise a scalar
                     variable will be created:
+
                     >>> opti = asb.Opti()
                     >>> vector_var = opti.variable(init_guess=5, n_vars=10) # Initializes a vector variable of length
                     >>> # 10, with all 10 elements set to an initial guess of 5.
 
                     * a NumPy ndarray, in which case each element will be initialized to the corresponding value in
                     the given array:
+
                     >>> opti = asb.Opti()
                     >>> vector_var = opti.variable(init_guess=np.linspace(0, 5, 10)) # Initializes a vector variable of
                     >>> # length 10, with all 10 elements initialized to linearly vary between 0 and 5.
@@ -285,9 +306,37 @@ class Opti(cas.Opti):
                   n_params: int = None,
                   ) -> cas.MX:
         """
-        Initialize a new parameter (or vector of paramters, if n_params != 1).
+        Initializes a new parameter (or vector of parameters). You must pass a value (`value`) upon defining a new
+        parameter. Dimensionality is inferred from this valXPue, but it can be overridden; see below for syntax.
 
         Args:
+
+            value: Value to set the new parameter to.
+
+                This can either be a float or a NumPy ndarray; the dimension of the parameter (i.e. scalar,
+                vector) that is created will be automatically inferred from the shape of the value you provide here.
+                (Although it can be overridden using the `n_params` parameter; see below.)
+
+                For scalar parameters, your value should be a float:
+                >>> opti = asb.Opti()
+                >>> scalar_param = opti.parameter(value=5) # Initializes a scalar parameter and sets its value to 5.
+
+                For vector variables, your value should be either:
+
+                    * a float, in which case you must pass the length of the vector as `n_params`, otherwise a scalar
+                    parameter will be created:
+
+                    >>> opti = asb.Opti()
+                    >>> vector_param = opti.parameter(value=5, n_params=10) # Initializes a vector parameter of length
+                    >>> # 10, with all 10 elements set to value of 5.
+
+                    * a NumPy ndarray, in which case each element will be set to the corresponding value in the given
+                    array:
+
+                    >>> opti = asb.Opti()
+                    >>> vector_param = opti.parameter(value=np.linspace(0, 5, 10)) # Initializes a vector parameter of
+                    >>> # length 10, with all 10 elements set to a value varying from 0 to 5.
+
             n_params: [Optional] Number of parameters to initialize (used to initialize a vector of parameters). If you
                 are initializing a scalar parameter (the most typical case), leave this equal to 1. When using vector
                 parameters, inidividual components of this vector of parameters can be aaccessed via normal indexing.
@@ -298,12 +347,6 @@ class Opti(cas.Opti):
                     >>> for i in range(5):
                     >>>     print(my_param[i]) # This is a valid way of indexing
 
-            value: Value to set the parameter to. Defaults to zero.
-                The value can alternatively be manually set (or overwritten) after parameter initialization
-                using the syntax:
-                >>> param = opti.parameter()
-                >>> opti.set_value(param, 5)
-                Which initializes a new parameter and sets its value to 5.
 
 
         Returns:
