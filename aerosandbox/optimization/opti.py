@@ -167,13 +167,7 @@ class Opti(cas.Opti):
         """
         ### Set defaults
         if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
-            try:
-                n_vars = len(init_guess)
-            except TypeError:  # init_guess has no function len() -> either float, int, or CasADi type
-                try:
-                    n_vars = init_guess.shape[0]
-                except AttributeError:  # init_guess has no attribute shape -> either float or int
-                    n_vars = 1
+            n_vars = length(init_guess)
         if scale is None:  # Infer a scale from init_guess if it is not provided
             if log_transform:
                 scale = 1
