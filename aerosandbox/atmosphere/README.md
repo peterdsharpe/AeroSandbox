@@ -1,0 +1,3 @@
+* `isa_atmosphere` contains a model of the International Standard Atmosphere (ISA), used commonly throughout aerospace. The ISA model is standardized and validated throughout the literature, which is very nice. However, the ISA model is not $C^1$ continuous in temperature (it is piecewise linear), which can often lead to optimization difficulties when using second-order optimizers like IPOPT. To remedy this, we provide `atmosphere` instead:
+
+* `atmosphere`, which is the default atmosphere, contains a very close fit to the ISA atmosphere model that is $C^1$ continuous in pressure and temperature.
