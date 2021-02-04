@@ -36,7 +36,7 @@ class Atmosphere(AeroSandboxObject):
             altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
             
             type: Type of atmosphere that you want. Either:
-                * "differentiable" - a fit to the International Standard Atmosphere
+                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere
                 * "isa" - the International Standard Atmosphere
                 
         """
