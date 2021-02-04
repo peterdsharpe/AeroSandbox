@@ -7,4 +7,4 @@ from .performance import *
 from .propulsion import *
 from .structures import *
 
-__version__ = "2.4.2"
+__version__ = "3.0.0"
