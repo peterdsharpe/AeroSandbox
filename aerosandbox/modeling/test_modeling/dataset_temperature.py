@@ -1,5 +1,7 @@
 import numpy as np
 
+np.random.seed(0) # Fix a seed for reproducibility
+
 ### Create some data (some fictional system where temperature is a function of time, and we're measuring it)
 n = 20
 
