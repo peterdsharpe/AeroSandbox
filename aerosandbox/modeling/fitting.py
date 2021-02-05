@@ -9,6 +9,25 @@ import copy
 
 
 class FittedModel(SurrogateModel):
+    """
+    A model that is fitted to data. Maps from R^N -> R^1.
+
+    You can evaluate this model at a given point by calling it just like a function, e.g.:
+
+    >>> y = my_fitted_model(x)
+
+    The input to the model (`x` in the example above) is of the type:
+        * in the general N-dimensional case, a dictionary where keys are variable names and values are float/array
+        * in the case of a 1-dimensional input (R^1 -> R^2), a float/array.
+    If you're not sure what the input type of `my_fitted_model` should be, just do:
+
+    >>> print(my_fitted_model) # Displays the valid input type to the model
+
+    The output of the model (`y` in the example above) is always a float or array.
+
+    Created as the output of the `fit_model()` function; look at the docstring of that function for further
+    documentation.
+    """
     def __init__(self,
                  model: Callable[
                      [
@@ -30,18 +49,23 @@ class FittedModel(SurrogateModel):
     def __call__(self, x):
         return self.model(x, self.parameters)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         input_names = self.input_names()
         if input_names is not None:
-            input_dimension = len(input_names)
             input_description = f"a dict with keys {input_names}; values as float or array"
         else:
-            input_dimension = 1
             input_description = f"a float or array"
         return "\n".join([
-            f"FittedModel(x) [R^{input_dimension} -> R^1]",
+            f"FittedModel(x) [R^{self.input_dimensionality()} -> R^1]",
             f"\tInput: {input_description}"
         ])
+
+    def input_dimensionality(self) -> int:
+        input_names = self.input_names()
+        if input_names is not None:
+            return len(input_names)
+        else:
+            return 1
 
     def input_names(self) -> Union[List, None]:
         try:
