@@ -5,10 +5,12 @@ import pandas as pd
 from pathlib import Path
 
 ### Define constants
-R_universal = 8.31432  # J/(mol*K); universal gas constant
-M_air = 28.9644e-3  # kg/mol; molecular mass of air
-R_air = R_universal / M_air  # J/(kg*K); gas constant of air
+gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
+molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
+gas_constant_air = gas_constant_universal / molecular_mass_air  # J/(kg*K); gas constant of air
 g = 9.81  # m/s^2, gravitational acceleration on earth
+effective_collision_diameter = 0.365e-9 # m, effective collision diameter of an air molecule
+ratio_of_specific_heats = 1.4 # unitless, ratio of specific heats of air
 
 ### Read ISA table data
 isa_table = pd.read_csv(Path(__file__).parent.absolute() / "isa_data/isa_table.csv")
@@ -40,9 +42,9 @@ def barometric_formula(
     T = T_b + L_b * (h - h_b)
     T = np.fmax(T, 0)  # Keep temperature nonnegative, no matter the inputs.
     if L_b != 0:
-        return P_b * (T / T_b) ** (-g / (R_air * L_b))
+        return P_b * (T / T_b) ** (-g / (gas_constant_air * L_b))
     else:
-        return P_b * np.exp(-g * (h - h_b) / (R_air * T_b))
+        return P_b * np.exp(-g * (h - h_b) / (gas_constant_air * T_b))
 
 
 isa_pressure = [101325.]  # Pascals
@@ -221,7 +223,7 @@ class Atmosphere(AeroSandboxObject):
         """
         Returns the density, in kg/m^3.
         """
-        rho = self.pressure() / (self.temperature() * R_air)
+        rho = self.pressure() / (self.temperature() * gas_constant_air)
 
         return rho
 
@@ -230,7 +232,7 @@ class Atmosphere(AeroSandboxObject):
         Returns the speed of sound, in m/s.
         """
         temperature = self.temperature()
-        return (1.4 * R_air * temperature) ** 0.5
+        return (ratio_of_specific_heats * gas_constant_air * temperature) ** 0.5
 
     def dynamic_viscosity(self):
         """
@@ -254,6 +256,19 @@ class Atmosphere(AeroSandboxObject):
         mu = C1 * temperature ** 1.5 / (temperature + S)
 
         return mu
+
+    # def thermal_velocity(self): # TODO implement for our hypersonics friends
+    #     """
+    #     Returns the thermal velocity (mean particle speed)
+    #     Returns:
+    #
+    #     """
+    #
+    # def mean_free_path(self):
+    #     """Returns the mean free path of an air molecule, in meters."""
+    #     return 1/(
+    #         2 ** 0.5 * np.pi *
+    #     )
 
 
 if __name__ == "__main__":
