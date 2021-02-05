@@ -3,7 +3,7 @@ import casadi as cas
 from aerosandbox.tools.string_formatting import stdout_redirected
 from aerosandbox.optimization.opti import Opti
 from typing import Union, Dict, Callable
-
+from aerosandbox.optimization.math import *
 
 def fit(
         model: Callable[
@@ -85,7 +85,7 @@ def fit(
         weights = np.ones(n_datapoints)
     else:
         weights = flatten(weights)
-    weights /= np.sum(weights)
+    weights /= sum1(weights)
 
     ### Check format of param_bounds input
     if param_bounds is None:
