@@ -133,6 +133,9 @@ class FittedModel(SurrogateModel):
             plt.legend()
             plt.show()
 
+        else:
+            raise NotImplementedError()
+
 
 def fit_model(
         model: Callable[
