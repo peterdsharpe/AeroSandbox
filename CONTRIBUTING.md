@@ -18,7 +18,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 
 3. Use long, descriptive variable names. Use `temperature` instead of `T`. Use `wing_tip_coordinate_x` instead of `wtx`. In the age of modern IDEs with autocomplete and one-click refactoring, there is no reason not to.
 
-4. All new classes should extend one of the classes in the top-level file `common.py`. In particular, all explicit analyses (e.g. workbook-style aero buildups) should extend `ExplicitAnalysis` and all implicit analyses (i.e. analyses that involve iteratively solving nonlinear systems of equations) should extend `ImplicitAnalysis`. All other classes should extend `AeroSandboxObject`.
+4. All new classes should extend one of the classes in the top-level file `common.py`. In particular, all explicit analyses (e.g. workbook-style aero buildups) should extend `ExplicitAnalysis` and all implicit analyses (i.e. analyses that involve iteratively solving nonlinear systems of equations) should extend `ImplicitAnalysis`. All other classes should extend `AeroSandboxObject`. Also, all user-facing classes should contain a `__repr__` method.
 
 5. All engineering quantities (i.e. quantities with units) used anywhere in AeroSandbox are expressed in base metric units, or derived units thereof (meters, newtons, meters per second, kilograms, etc.). This is true even for quantities that are usually expressed in non-base-metric units: `battery_capacity` is in units of joules (not watt-hours), `temperature` is in Kelvin (not Celsius), and`elastic_modulus` is in units of pascals (not GPa). The only exception is when units are explicitly noted as a suffix in a variable name: for example,and `battery_capacity_watt_hours` is in units of watt-hours, and `altitude_ft` is in units of feet.
 
@@ -40,10 +40,10 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
     
     ### Instead, do this:
     for var in [x, y, z]:
-        print(sol.value(var))
+    	print(sol.value(var))
     ```
 
-9. Spread long mathematical expressions across multiple lines based on natural groupings of ideas in the equation. For example:
+9. Spread mathematical expressions across multiple lines based on natural groupings of ideas in the equation. For example:
 
     ```python
     ### This is discouraged
@@ -52,7 +52,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
     ### Instead, do this:
     distance = (
     	(x_start - x_end) ** 2 +
-        (y_start - y_end) ** 2
+    	(y_start - y_end) ** 2
     ) ** 0.5
     ```
 
