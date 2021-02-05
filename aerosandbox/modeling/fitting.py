@@ -8,6 +8,7 @@ from aerosandbox.modeling.surrogate_model import SurrogateModel
 import copy
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 sns.set(palette=sns.color_palette("husl", 2))
 
 
@@ -134,7 +135,6 @@ class FittedModel(SurrogateModel):
             plt.show()
 
 
-
 def fit_model(
         model: Callable[
             [
@@ -148,6 +148,7 @@ def fit_model(
         parameter_guesses: Dict[str, float],
         parameter_bounds: Dict[str, tuple] = None,
         residual_norm_type: str = "L2",
+        fit_type: str = "best",
         weights: np.ndarray = None,
         put_residuals_in_logspace: bool = False,
 ) -> FittedModel:
@@ -205,6 +206,18 @@ def fit_model(
 
             * "Linf": minimize the L_infinty norm or max(abs(error)). More sensitive to outliers.
 
+        fit_type: Should we find the model of best fit (i.e. the model that minimizes the specified residual norm),
+        or should we look for a model that represents an upper/lower bound on the data (useful for robust surrogate
+        modeling, so that you can put bounds on modeling error):
+
+            * "best": finds the model of best fit. Usually, this is what you want.
+
+            * "upper bound": finds a model that represents an upper bound on the data (while still trying to minimize
+            the specified residual norm).
+
+            * "lower bound": finds a model that represents a lower bound on the data (while still trying to minimize
+            the specified residual norm).
+
         weights: Optional: weights for data points. If not supplied, weights are assumed to be uniform.
 
             * Weights are automatically normalized. [1D ndarray of length n]
@@ -259,6 +272,11 @@ def fit_model(
                 "Every value in parameter_bounds must be a tuple in the format (lower_bound, upper_bound). "
                 "For one-sided bounds, use None for the unbounded side.")
 
+    ### If putting residuals in logspace, check positivity
+    if put_residuals_in_logspace:
+        if not np.all(y_data > 0):
+            raise ValueError("You can't fit a model with residuals in logspace if y_data is not entirely positive!")
+
     ### Check dimensionality of inputs to fitting algorithm
     relevant_inputs = {
         "y_data" : y_data,
@@ -295,11 +313,12 @@ def fit_model(
                 init_guess=param_initial_guess,
             )
 
-    ### Evaluate the model at the data points you're trying to fit, and compute how fare off you are.
+    ### Evaluate the model at the data points you're trying to fit
     y_model = model(x_data, params)
     if y_model is None:  # Make sure that y_model actually returned something sensible
         raise TypeError("model(x_data, parameter_guesses) returned None, when it should've returned a 1D ndarray.")
 
+    ### Compute how far off you are (error)
     if not put_residuals_in_logspace:
         error = y_model - y_data
     else:
@@ -308,7 +327,8 @@ def fit_model(
 
     ### Set up the optimization problem to minimize some norm(error), which looks different depending on the norm used:
     if residual_norm_type.lower() == "l1":  # Minimize the L1 norm
-        abs_error = opti.variable(init_guess=0, n_vars=length(y_data))  # Make the abs() of each error entry an opt. var.
+        abs_error = opti.variable(init_guess=0,
+                                  n_vars=length(y_data))  # Make the abs() of each error entry an opt. var.
         opti.subject_to([
             abs_error >= error,
             abs_error >= -error,
@@ -328,6 +348,16 @@ def fit_model(
 
     else:
         raise ValueError("Bad input for the 'residual_type' parameter.")
+
+    ### Add in the constraints specified by fit_type, which force the model to stay above / below the data points.
+    if fit_type == "best":
+        pass
+    elif fit_type == "upper bound":
+        opti.subject_to(y_model >= y_data)
+    elif fit_type == "lower bound":
+        opti.subject_to(y_model <= y_data)
+    else:
+        raise ValueError("Bad input for the 'fit_type' parameter.")
 
     ### Solve
     sol = opti.solve()
