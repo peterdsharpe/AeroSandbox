@@ -21,6 +21,7 @@ class FittedModel(SurrogateModel):
                  x_data: Union[np.ndarray, Dict[str, np.ndarray]],
                  y_data: np.ndarray,
                  ):
+        super().__init__()
         self.model = model
         self.parameters = parameters
         self.x_data = x_data
@@ -220,7 +221,7 @@ def fit_model(
     if not put_residuals_in_logspace:
         error = y_model - y_data
     else:
-        y_model = np.fmax(y_model, 1e-300) # Keep y_model very slightly always positive, so that log() doesn't NaN.
+        y_model = np.fmax(y_model, 1e-300)  # Keep y_model very slightly always positive, so that log() doesn't NaN.
         error = np.log(y_model) - np.log(y_data)
 
     ### Set up the optimization problem to minimize some norm(error), which looks different depending on the norm used:
