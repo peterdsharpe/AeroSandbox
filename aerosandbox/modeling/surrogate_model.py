@@ -9,6 +9,8 @@ class SurrogateModel(AeroSandboxObject):
     pickling) while also having the capability to save associated data (for example, constants associated with a
     particular model).
     """
+    def __init__(self):
+        pass
 
     @abstractmethod
     def __call__(self, *args):

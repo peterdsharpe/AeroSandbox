@@ -1,4 +1,4 @@
-from aerosandbox.modeling.fitting import fit
+from aerosandbox.modeling.fitting import fit_model
 import pytest
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,16 +29,16 @@ def test_single_dimensional_polynomial_fitting():
         "x1": x
     }
 
-    fitted_parameters = fit(
+    fitted_model = fit_model(
         model=model,
         x_data=x_data,
         y_data=y,
-        param_guesses={
+        parameter_guesses={
             "a": 1,
             "b": 1,
             "c": 1,
         },
-        param_bounds={
+        parameter_bounds={
             "a": (None, None),
             "b": (None, None),
             "c": (None, None),
@@ -59,9 +59,9 @@ def test_single_dimensional_polynomial_fitting():
         plt.show()
 
     ### Check that the fit is right
-    assert fitted_parameters["a"] == pytest.approx(1.046091, abs=1e-3)
-    assert fitted_parameters["b"] == pytest.approx(-9.166716, abs=1e-3)
-    assert fitted_parameters["c"] == pytest.approx(9.984351, abs=1e-3)
+    assert fitted_model.parameters["a"] == pytest.approx(1.046091, abs=1e-3)
+    assert fitted_model.parameters["b"] == pytest.approx(-9.166716, abs=1e-3)
+    assert fitted_model.parameters["c"] == pytest.approx(9.984351, abs=1e-3)
 
 
 def test_multidimensional_power_law_fitting():
@@ -87,16 +87,16 @@ def test_multidimensional_power_law_fitting():
         "Y": Y.flatten(),
     }
 
-    fitted_parameters = fit(
+    fitted_model = fit_model(
         model=model,
         x_data=x_data,
         y_data=Z.flatten(),
-        param_guesses={
+        parameter_guesses={
             "multiplier": 1,
             "X_power"   : 1,
             "Y_power"   : 1,
         },
-        param_bounds={
+        parameter_bounds={
             "multiplier": (None, None),
             "X_power"   : (None, None),
             "Y_power"   : (None, None),
@@ -106,12 +106,12 @@ def test_multidimensional_power_law_fitting():
     )
 
     ### Check that the fit is right
-    assert fitted_parameters["multiplier"] == pytest.approx(0.546105, abs=1e-3)
-    assert fitted_parameters["X_power"] == pytest.approx(0.750000, abs=1e-3)
-    assert fitted_parameters["Y_power"] == pytest.approx(1.250000, abs=1e-3)
+    assert fitted_model.parameters["multiplier"] == pytest.approx(0.546105, abs=1e-3)
+    assert fitted_model.parameters["X_power"] == pytest.approx(0.750000, abs=1e-3)
+    assert fitted_model.parameters["Y_power"] == pytest.approx(1.250000, abs=1e-3)
 
 
-def test_deviation_single_dimensional_fit():
+def test_Linf_single_dimensional_fit():
     np.random.seed(0)  # Set a seed for repeatability
 
     ### Making data
@@ -127,36 +127,23 @@ def test_deviation_single_dimensional_fit():
         "hour": hour,
     }
     y_data = temperature_c
-    solved_parameters = fit(
+    fitted_model = fit_model(
         model=model,
         x_data=x_data,
         y_data=y_data,
-        param_guesses={
+        parameter_guesses={
             "m": 0,
             "b": 0,
         },
-        # residual_norm_type="SSE",
-        residual_norm_type="deviation",
+        residual_norm_type="Linf",
     )
-    temperature_model = model(x_data, solved_parameters)
-    ### Plotting
-    if plot:
-        fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-        plt.plot(hour, temperature_c, ".")
-        plt.plot(hour, temperature_model, "-")
-        plt.xlabel(r"$hour$")
-        plt.ylabel(r"$temp$")
-        plt.title(r"Data and Fit")
-        plt.tight_layout()
-        plt.legend()
-        # plt.savefig("C:/Users/User/Downloads/temp.svg")
-        plt.show()
 
     # Check that the fit is right
-    assert solved_parameters["m"] == pytest.approx(0.247116, abs=1e-5)
-    assert solved_parameters["b"] == pytest.approx(0.227797, abs=1e-5)
+    assert fitted_model.parameters["m"] == pytest.approx(0.247116, abs=1e-5)
+    assert fitted_model.parameters["b"] == pytest.approx(0.227797, abs=1e-5)
 
-def test_deviation_without_x_in_dict():
+
+def test_Linf_without_x_in_dict():
     np.random.seed(0)  # Set a seed for repeatability
 
     ### Making data
@@ -171,34 +158,21 @@ def test_deviation_without_x_in_dict():
     x_data = hour
     y_data = temperature_c
 
-    solved_parameters = fit(
+    fitted_model = fit_model(
         model=model,
         x_data=x_data,
         y_data=y_data,
-        param_guesses={
+        parameter_guesses={
             "m": 0,
             "b": 0,
         },
-        # residual_norm_type="SSE",
-        residual_norm_type="deviation",
+        residual_norm_type="Linf",
     )
-    temperature_model = model(x_data, solved_parameters)
-    ### Plotting
-    if plot:
-        fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-        plt.plot(hour, temperature_c, ".")
-        plt.plot(hour, temperature_model, "-")
-        plt.xlabel(r"$hour$")
-        plt.ylabel(r"$temp$")
-        plt.title(r"Data and Fit")
-        plt.tight_layout()
-        plt.legend()
-        # plt.savefig("C:/Users/User/Downloads/temp.svg")
-        plt.show()
 
     # Check that the fit is right
-    assert solved_parameters["m"] == pytest.approx(0.247116, abs=1e-5)
-    assert solved_parameters["b"] == pytest.approx(0.227797, abs=1e-5)
+    assert fitted_model.parameters["m"] == pytest.approx(0.247116, abs=1e-5)
+    assert fitted_model.parameters["b"] == pytest.approx(0.227797, abs=1e-5)
+
 
 if __name__ == '__main__':
     pytest.main()

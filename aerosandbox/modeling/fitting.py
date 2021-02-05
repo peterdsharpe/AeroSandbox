@@ -2,67 +2,144 @@ import numpy as np
 import casadi as cas
 from aerosandbox.tools.string_formatting import stdout_redirected
 from aerosandbox.optimization.opti import Opti
-from typing import Union, Dict, Callable
+from typing import Union, Dict, Callable, List
 from aerosandbox.optimization.math import *
+from aerosandbox.modeling.surrogate_model import SurrogateModel
+import copy
 
-def fit(
+
+class FittedModel(SurrogateModel):
+    def __init__(self,
+                 model: Callable[
+                     [
+                         Union[np.ndarray, Dict[str, np.ndarray]],
+                         Dict[str, float]
+                     ],
+                     np.ndarray
+                 ],
+                 parameters: Dict[str, float],
+                 x_data: Union[np.ndarray, Dict[str, np.ndarray]],
+                 y_data: np.ndarray,
+                 ):
+        self.model = model
+        self.parameters = parameters
+        self.x_data = x_data
+        self.y_data = y_data
+
+    def __call__(self, x):
+        return self.model(x, self.parameters)
+
+    def __repr__(self):
+        input_names = self.input_names()
+        if input_names is not None:
+            input_dimension = len(input_names)
+            input_description = f"a dict with keys {input_names}; values as float or array"
+        else:
+            input_dimension = 1
+            input_description = f"a float or array"
+        return "\n".join([
+            f"FittedModel(x) [R^{input_dimension} -> R^1]",
+            f"\tInput: {input_description}"
+        ])
+
+    def input_names(self) -> Union[List, None]:
+        try:
+            return list(self.x_data.keys())
+        except AttributeError:
+            return None
+
+    def plot_fit(self):
+        pass
+
+
+def fit_model(
         model: Callable[
             [
-                Union[Dict[str, np.ndarray], np.ndarray],
+                Union[np.ndarray, Dict[str, np.ndarray]],
                 Dict[str, float]
             ],
             np.ndarray
         ],
-        x_data: Union[Dict[str, np.ndarray], np.ndarray],
+        x_data: Union[np.ndarray, Dict[str, np.ndarray]],
         y_data: np.ndarray,
-        param_guesses: Dict[str, float],
-        param_bounds: Dict[str, tuple] = None,
+        parameter_guesses: Dict[str, float],
+        parameter_bounds: Dict[str, tuple] = None,
+        residual_norm_type: str = "L2",
         weights: np.ndarray = None,
-        verbose: bool = True,
-        scale_problem: bool = True,
         put_residuals_in_logspace: bool = False,
-        residual_norm_type: str = "SSE",
-        plot_fit: bool = False,
-):
+) -> FittedModel:
     """
-    Fits an analytical model to n datapoints using an automatic-differentiable optimization approach.
+    Fits an analytical model to n-dimensional data using an automatic-differentiable optimization approach.
 
-    For examples of usage, see aerosandbox/modeling/test_modeling/test_fitting.py
+    Args:
 
-    :param model: A callable with syntax f(x, p) where:
-            * x is a dict of dependent variables.
-              If one-dimensional (e.g. f(x) instead of f(x,y)), you can instead supply x as a 1D ndarray.
-                Same format as x_data [dict of 1D ndarrays of length n].
+        model: The model that you want to fit your dataset to. This is a callable with syntax f(x, p) where:
+
+            * x is a dict of dependent variables. Same format as x_data [dict of 1D ndarrays of length n].
+
+                * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead interpret x
+                as a 1D ndarray. (If you do this, just give `x_data` as an array.)
+
             * p is a dict of parameters. Same format as param_guesses [dict with syntax param_name:param_value].
-        Model should return a 1D ndarray of length n.
-        Model should use CasADi functions for differentiability.
-    :param x_data: a dict of dependent variables.
-        * If one-dimensional (e.g. f(x) instead of f(x,y)), you can instead supply x_data as a 1D ndarray.
-        * Same format as model's x. [1D ndarray or dict of 1D ndarrays of length n]
-    :param y_data: independent variable. [1D ndarray of length n]
-    :param param_guesses: a dict of fit parameters.
-        * Same format as model's p [dict with syntax param_name:param_value].
-        * Keys are parameter names, values are initial guesses.
-    :param param_bounds: Optional: a dict of bounds on fit parameters.
-        Keys are parameter names, values are a tuple of (min, max).
-        May contain only a subset of param_guesses if desired.
-        Use None to represent one-sided constraints (i.e. (None, 5)).
-        [dict of parameter_name:tuples]
-    :param weights: Optional: weights for data points. If not supplied, weights are assumed to be uniform.
-        Weights are automatically normalized. [1D ndarray of length n]
-    :param verbose: Whether or not to print information about parameters and goodness of fit.
-    :param scale_problem: Whether or not to attempt to scale variables, constraints, and objective for more robust solve. [boolean]
-    :param put_residuals_in_logspace: Whether to optimize using the logarithmic error as opposed to the absolute error
+
+            Model should return a 1D ndarray of length n.
+
+            Basically, if you've done it right:
+            >>> model(x_data, parameter_guesses)
+            should evaluate to a 1D ndarray where each x_data is mapped to something analogous to y_data. (The fit
+            will likely be bad at this point, because we haven't yet optimized on param_guesses - but the types
+            should be happy.)
+
+            Model should use simple operators where possible (+,-,*,/,**), NumPy operators for more complex things (
+            np.exp(), np.log(), np.fabs()), and aerosandbox.optimization.math operators for even more complex things
+            (if_else(), array() for new arrays, etc.).
+
+        x_data: Values of the dependent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
+        var_name:var_data}.
+
+            * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead supply x_data
+            as a 1D ndarray. (If you do this, just treat `x` as an array in your model, not a dict.)
+
+        y_data: Values of the independent variable in the dataset to be fitted. [1D ndarray of length n]
+
+        parameter_guesses: a dict of fit parameters. Syntax is {param_name:param_initial_guess}.
+
+            * Parameters will be initialized to the values set here; all parameters need an initial guess.
+
+            * param_initial_guess is a float; note that only scalar parameters are allowed.
+
+        parameter_bounds: Optional: a dict of bounds on fit parameters. Syntax is {param_name:(min, max)}.
+
+            * May contain only a subset of param_guesses if desired.
+
+            * Use None to represent one-sided constraints (i.e. (None, 5)).
+
+        residual_norm_type: What error norm should we minimize to optimize the fit parameters? Options:
+
+            * "L1": minimize the L1 norm or sum(abs(error)). Less sensitive to outliers.
+
+            * "L2": minimize the L2 norm, also known as the Euclidian norm, or sqrt(sum(error ** 2)). The default.
+
+            * "Linf": minimize the L_infinty norm or max(abs(error)). More sensitive to outliers.
+
+        weights: Optional: weights for data points. If not supplied, weights are assumed to be uniform.
+
+            * Weights are automatically normalized. [1D ndarray of length n]
+
+        put_residuals_in_logspace: Whether to optimize using the logarithmic error as opposed to the absolute error
         (useful for minimizing percent error).
-        Note: If any model outputs or data are negative, this will fail!
-    :param residual_norm_type: What type of error norm should we use to optimize the fit parameters? [string]
-        Options:
-            * "SSE": minimizes the sum of squared errors.
-            * "deviation": minimizes the maximum deviation of the fit; basically the infinity-norm of the error vector.
-    :return: Optimal fit parameters [dict with same keys as param_guesses]
+
+        Note: If any model outputs or data are negative, this will raise an error!
+
+    Returns: A model in the form of a FittedModel object. Some things you can do:
+        >>> y = FittedModel(x) # evaluate the FittedModel at new x points
+        >>> FittedModel.parameters # directly examine the optimal values of the parameters that were found
+        >>> FittedModel.plot_fit() # plot the fit
+
+
     """
-    ### Initialize an optimization environment
-    opti = Opti()
+
+    ##### Prepare all inputs, check types/sizes.
 
     ### Flatten all inputs
     def flatten(input):
@@ -78,24 +155,26 @@ def fit(
         x_data = flatten(x_data)
         x_data_is_dict = False
     y_data = flatten(y_data)
-    n_datapoints = len(y_data)
+    n_datapoints = length(y_data)
 
     ### Handle weighting
     if weights is None:
         weights = np.ones(n_datapoints)
     else:
         weights = flatten(weights)
-    weights /= sum1(weights)
+    weights /= sum1(weights)  # Normalize weights so that they sum to 1.
 
-    ### Check format of param_bounds input
-    if param_bounds is None:
-        param_bounds = {}
-    for k, v in param_bounds.items():
-        if k not in param_guesses.keys():
-            raise ValueError(f"A parameter name (key = \"{k}\") in param_bounds was not found in param_guesses.")
-        if not len(v) == 2:
-            raise ValueError("Every value in param_bounds must be a tuple in the format (lower_bound, upper_bound). "
-                             "For one-sided bounds, use None for the unbounded side.")
+    ### Check format of parameter_bounds input
+    if parameter_bounds is None:
+        parameter_bounds = {}
+    for param_name, v in parameter_bounds.items():
+        if param_name not in parameter_guesses.keys():
+            raise ValueError(
+                f"A parameter name (key = \"{param_name}\") in parameter_bounds was not found in parameter_guesses.")
+        if not length(v) == 2:
+            raise ValueError(
+                "Every value in parameter_bounds must be a tuple in the format (lower_bound, upper_bound). "
+                "For one-sided bounds, use None for the unbounded side.")
 
     ### Check dimensionality of inputs to fitting algorithm
     relevant_inputs = {
@@ -105,136 +184,85 @@ def fit(
     try:
         relevant_inputs.update(x_data)
     except TypeError:
-        relevant_inputs.update({"x": x_data})
+        relevant_inputs.update({"x_data": x_data})
 
     for key, value in relevant_inputs.items():
         # Check that the length of the inputs are consistent
-        series_length = len(value)
+        series_length = length(value)
         if not series_length == n_datapoints:
             raise ValueError(
                 f"The supplied data series \"{key}\" has length {series_length}, but y_data has length {n_datapoints}.")
 
-    ### Set up the variables and bounds constraints
+    ##### Formulate and solve the fitting optimization problem
 
-    def fit_param(initial_guess, lower_bound=None, upper_bound=None):
-        """
-        Helper function to create a fit variable
-        :param initial_guess:
-        :param lower_bound:
-        :param upper_bound:
-        :return:
-        """
-        if scale_problem and np.abs(initial_guess) > 1e-8:
-            var = opti.variable(scale=np.abs(initial_guess), init_guess=initial_guess)  # scale variables
+    ### Initialize an optimization environment
+    opti = Opti()
+
+    ### Initialize the parameters as optimization variables
+    params = {}
+    for param_name, param_initial_guess in parameter_guesses.items():
+        if param_name in parameter_bounds:
+            params[param_name] = opti.variable(
+                init_guess=param_initial_guess,
+                lower_bound=parameter_bounds[param_name][0],
+                upper_bound=parameter_bounds[param_name][1],
+            )
         else:
-            var = opti.variable(init_guess=initial_guess)
-        if lower_bound is not None:
-            lower_bound_abs = np.abs(lower_bound)
-            if scale_problem and lower_bound_abs > 1e-8:
-                opti.subject_to(var / lower_bound_abs > lower_bound / lower_bound_abs)
-            else:
-                opti.subject_to(var > lower_bound)
-        if upper_bound is not None:
-            upper_bound_abs = np.abs(upper_bound)
-            if scale_problem and upper_bound_abs > 1e-8:
-                opti.subject_to(var / upper_bound_abs < upper_bound / upper_bound_abs)
-            else:
-                opti.subject_to(var < upper_bound)
-        return var
+            params[param_name] = opti.variable(
+                init_guess=param_initial_guess,
+            )
 
-    params = {
-        k: fit_param(param_guesses[k]) if k not in param_bounds else
-        fit_param(param_guesses[k], param_bounds[k][0], param_bounds[k][1])
-        for k in param_guesses
-    }
+    ### Evaluate the model at the data points you're trying to fit, and compute how fare off you are.
+    y_model = model(x_data, params)
+    if y_model is None:  # Make sure that y_model actually returned something sensible
+        raise TypeError("model(x_data, parameter_guesses) returned None, when it should've returned a 1D ndarray.")
 
-    ### Setup the objective handling
-    if residual_norm_type == "SSE":
-        def SSE_objective(params):
-            """
-            Given some parameters for the model, what is the "badness" of the corresponding fit.
+    if not put_residuals_in_logspace:
+        error = y_model - y_data
+    else:
+        y_model = np.fmax(y_model, 1e-300) # Keep y_model very slightly always positive, so that log() doesn't NaN.
+        error = np.log(y_model) - np.log(y_data)
 
-            Args:
-                params
+    ### Set up the optimization problem to minimize some norm(error), which looks different depending on the norm used:
+    if residual_norm_type.lower() == "l1":  # Minimize the L1 norm
+        abs_params = opti.variable(init_guess=0, n_vars=length(params))  # Make the abs() of each param an opt. var.
+        opti.subject_to([
+            abs_params >= params.values(),
+            abs_params >= -params.values()
+        ])
+        opti.minimize(sum1(abs_params))
 
-            Returns: A scalar representing the "badness" of the fit.
+    elif residual_norm_type.lower() == "l2":  # Minimize the L2 norm
+        opti.minimize(sum1(error ** 2))
 
-            """
-            y_model = model(x_data, params)
-            if y_model is None:
-                raise TypeError("model(x, param_guesses) returned None, when it should've returned a 1D ndarray.")
-
-            if put_residuals_in_logspace:
-                residuals = cas.log(y_model) - cas.log(y_data)
-            else:
-                residuals = y_model - y_data
-
-            return cas.sum1(weights * residuals ** 2)
-
-        initial_objective = SSE_objective(param_guesses)
-        objective = SSE_objective(params)
-
-    elif residual_norm_type == "deviation":
-        y_model_initial = model(x_data, param_guesses)
-        initial_objective = np.max(np.abs(y_model_initial - y_data))
-
-        y_model = model(x_data, params)
-
-        if scale_problem and initial_objective >= 1e-8:
-            objective = opti.variable(init_guess=initial_objective, scale=initial_objective)
-            opti.subject_to([
-                objective / initial_objective >= (y_model - y_data) / initial_objective,
-                objective / initial_objective >= -(y_model - y_data) / initial_objective
-            ])
-        else:
-            objective = opti.variable(init_guess=initial_objective)
-            opti.subject_to([
-                objective >= (y_model - y_data),
-                objective >= -(y_model - y_data)
-            ])
-
+    elif residual_norm_type.lower() == "linf":  # Minimize the L-infinity norm
+        linf_value = opti.variable(init_guess=0)  # Make the value of the L-infinity norm an optimization variable
+        opti.subject_to([
+            linf_value >= error,
+            linf_value >= -error
+        ])
+        opti.minimize(linf_value)
 
     else:
-        return ValueError("Bad input for the 'residual_type' parameter.")
+        raise ValueError("Bad input for the 'residual_type' parameter.")
 
-    if scale_problem:
-        opti.minimize(objective / initial_objective)
-    else:
-        opti.minimize(objective)
+    ### Solve
+    sol = opti.solve()
 
-    # Solve
-    if verbose:
-        sol = opti.solve()
-    else:
-        with stdout_redirected():
-            sol = opti.solve()
+    ##### Construct a FittedModel
 
+    ### Create a vector of solved parameters
     params_solved = {}
-    for k in params:
+    for param_name in params:
         try:
-            params_solved[k] = sol.value(params[k])
+            params_solved[param_name] = sol.value(params[param_name])
         except:
-            params_solved[k] = np.NaN
+            params_solved[param_name] = np.NaN
 
-    # printing
-    if verbose:
-        # Print parameters
-        print("\nFit Parameters:")
-        if len(params_solved) <= 20:
-            [print("\t%s = %f" % (k, v)) for k, v in params_solved.items()]
-        else:
-            print("\t%i parameters solved for." % len(params_solved))
-        print("\nGoodness of Fit:")
-
-        # Print objective function value
-        print(f"\tInitial Badness (objective function): {initial_objective}")
-        print(f"\tFinal Badness (objective function): {sol.value(objective)}")
-
-        # Print R^2
-        y_data_mean = cas.sum1(y_data) / y_data.shape[0]
-        SS_tot = cas.sum1(weights * (y_data - y_data_mean) ** 2)
-        SS_res = cas.sum1(weights * (y_data - model(x_data, params_solved)) ** 2)
-        R_squared = sol.value(1 - SS_res / SS_tot)
-        print(f"\tR^2: {R_squared}")
-
-    return params_solved
+    ### Return
+    return FittedModel(
+        model=model,
+        parameters=params_solved,
+        x_data=x_data,
+        y_data=y_data,
+    )
