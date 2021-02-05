@@ -20,7 +20,7 @@ class AeroSandboxObject:
         :param sol: OptiSol object.
         :return:
         """
-        for attrib_name in dir(self):  # TODO use vars() syntax (built-in) instead, make this cleaner
+        for attrib_name in dir(self):
             attrib_orig = getattr(self, attrib_name)
             if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
                 continue
