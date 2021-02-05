@@ -9,8 +9,6 @@ import copy
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sns.set(palette=sns.color_palette("husl", 2))
-
 
 class FittedModel(SurrogateModel):
     """
@@ -117,13 +115,14 @@ class FittedModel(SurrogateModel):
             plt.plot(
                 x_data,
                 self.y_data,
-                ".",
+                ".k",
                 label="Data",
             )
             plt.plot(
                 x_fit,
                 y_fit,
                 "-",
+                color="#cb3bff",
                 label="Fit",
                 zorder=4,
             )
