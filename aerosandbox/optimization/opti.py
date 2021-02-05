@@ -53,6 +53,8 @@ class Opti(cas.Opti):
                  freeze: bool = False,
                  log_transform: bool = False,
                  category: str = "Uncategorized",
+                 lower_bound: float = None,
+                 upper_bound: float = None,
                  ) -> cas.MX:
         """
         Initializes a new decision variable (or vector of decision variables). You must pass an initial guess (
@@ -235,6 +237,12 @@ class Opti(cas.Opti):
             self.variables_categorized[category] = []
         self.variables_categorized[category].append(var)
         var.is_manually_frozen = is_manually_frozen
+
+        # Apply bounds
+        if lower_bound is not None:
+            self.subject_to(var >= lower_bound)
+        if upper_bound is not None:
+            self.subject_to(var <= upper_bound)
 
         return var
 
