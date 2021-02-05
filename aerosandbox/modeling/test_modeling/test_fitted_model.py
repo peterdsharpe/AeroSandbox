@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from dataset_temperature import time, measured_temperature
 
+
 ### Fit a model
 def model(x, p):
     return p["m"] * x + p["b"]  # Linear regression

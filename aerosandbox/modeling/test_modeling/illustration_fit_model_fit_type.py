@@ -25,7 +25,6 @@ def fit_model_with_fit_type(fit_type):
             "b": 0,
         },
         fit_type=fit_type,
-        put_residuals_in_logspace=True
     )
 
 
