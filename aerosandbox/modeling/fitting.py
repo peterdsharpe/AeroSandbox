@@ -6,6 +6,9 @@ from typing import Union, Dict, Callable, List
 from aerosandbox.optimization.math import *
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 import copy
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(palette=sns.color_palette("husl", 2))
 
 
 class FittedModel(SurrogateModel):
@@ -28,6 +31,7 @@ class FittedModel(SurrogateModel):
     Created as the output of the `fit_model()` function; look at the docstring of that function for further
     documentation.
     """
+
     def __init__(self,
                  model: Callable[
                      [
@@ -73,8 +77,62 @@ class FittedModel(SurrogateModel):
         except AttributeError:
             return None
 
-    def plot_fit(self):
-        pass
+    def plot_fit(self, resolution=100):
+        def axis_range(x_data_axis: np.ndarray) -> Tuple[float, float]:
+            """
+            Given the entries of one axis of the dependent variable, determine a min/max range over which to plot the fit.
+            Args:
+                x_data_axis: The entries of one axis of the dependent variable, i.e. x_data["x1"].
+
+            Returns: A tuple representing the (min, max) value over which to plot that axis.
+            """
+            minval = np.min(x_data_axis)
+            maxval = np.max(x_data_axis)
+
+            return (minval, maxval)
+
+        if self.input_dimensionality() == 1:
+
+            ### Parse the x_data
+            if self.input_names() is not None:
+                x_name = self.x_data.keys()[0]
+                x_data = self.x_data.values()[0]
+
+                minval, maxval = axis_range(x_data)
+
+                x_fit = {x_name: linspace(minval, maxval, resolution)}
+                y_fit = self(x_fit)
+            else:
+                x_name = "x"
+                x_data = self.x_data
+
+                minval, maxval = axis_range(x_data)
+
+                x_fit = linspace(minval, maxval, resolution)
+                y_fit = self(x_fit)
+
+            ### Plot the 2D figure
+            fig = plt.figure(dpi=200)
+            plt.plot(
+                x_data,
+                self.y_data,
+                ".",
+                label="Data",
+            )
+            plt.plot(
+                x_fit,
+                y_fit,
+                "-",
+                label="Fit",
+                zorder=4,
+            )
+            plt.xlabel(x_name)
+            plt.ylabel(rf"$f({x_name})$")
+            plt.title(r"Fit of FittedModel")
+            plt.tight_layout()
+            plt.legend()
+            plt.show()
+
 
 
 def fit_model(
@@ -250,12 +308,12 @@ def fit_model(
 
     ### Set up the optimization problem to minimize some norm(error), which looks different depending on the norm used:
     if residual_norm_type.lower() == "l1":  # Minimize the L1 norm
-        abs_params = opti.variable(init_guess=0, n_vars=length(params))  # Make the abs() of each param an opt. var.
+        abs_error = opti.variable(init_guess=0, n_vars=length(y_data))  # Make the abs() of each error entry an opt. var.
         opti.subject_to([
-            abs_params >= params.values(),
-            abs_params >= -params.values()
+            abs_error >= error,
+            abs_error >= -error,
         ])
-        opti.minimize(sum1(abs_params))
+        opti.minimize(sum1(abs_error))
 
     elif residual_norm_type.lower() == "l2":  # Minimize the L2 norm
         opti.minimize(sum1(error ** 2))
