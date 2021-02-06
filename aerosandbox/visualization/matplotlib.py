@@ -1,5 +1,5 @@
 from typing import Callable, Tuple, Union
-import numpy as np
+import aerosandbox.numpy as np
 import casadi as cas
 import matplotlib.pyplot as plt
 import matplotlib.style as style
