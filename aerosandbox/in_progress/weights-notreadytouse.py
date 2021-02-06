@@ -11,7 +11,7 @@ class MassProps:
         """ Mass of the aircraft according the mass of the components
         
         Args:
-            self.mass_components (iterable): Iterable of components each with attrib_name mass property in kg
+            self.mass_components (iterable): Iterable of components each with a mass property in kg
         Returns:
             float: Total mass of the aircraft in kg
         """
