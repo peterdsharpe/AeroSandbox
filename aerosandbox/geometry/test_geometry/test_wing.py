@@ -6,16 +6,16 @@ import pytest
 def w():
     wing = Wing(
         name="MyWing",
-        xyz_le=array([1, 2, 3]),
+        xyz_le=np.array([1, 2, 3]),
         xsecs=[
             WingXSec(
-                xyz_le=array([1, 1, 0]),
+                xyz_le=np.array([1, 1, 0]),
                 chord=0.5,
                 twist_angle=5,
                 control_surface_is_symmetric=True
             ),
             WingXSec(
-                xyz_le=array([2, 2, 0]),
+                xyz_le=np.array([2, 2, 0]),
                 chord=0.5,
                 twist_angle=5,
                 control_surface_is_symmetric=True

@@ -291,7 +291,7 @@ class Airfoil(AeroSandboxObject, Polygon):
         ))
 
         # Generate a cosine-spaced list of points from 0 to 1
-        cosspaced_points = cosspace(0, 1, n_points_per_side)
+        cosspaced_points = np.cosspace(0, 1, n_points_per_side)
         s = np.hstack((
             cosspaced_points,
             1 + cosspaced_points[1:],
@@ -749,7 +749,7 @@ class Airfoil(AeroSandboxObject, Polygon):
 
         def get_xfoil_data_at_Re(Re):
 
-            import numpy as np  # needs to be imported here to support parallelization
+            import aerosandbox.numpy as np  # needs to be imported here to support parallelization
 
             run_data_upper = self.xfoil_aseq(
                 a_start=a_init + a_step,
