@@ -1,9 +1,8 @@
 import casadi as cas
 from typing import Union, List, Dict, Callable
-import numpy as np
+import aerosandbox.numpy as np
 import pytest
 import json
-from aerosandbox.optimization.math import *
 
 
 class Opti(cas.Opti):
@@ -190,17 +189,17 @@ class Opti(cas.Opti):
         """
         ### Set defaults
         if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
-            n_vars = length(init_guess)
+            n_vars = np.length(init_guess)
         if scale is None:  # Infer a scale from init_guess if it is not provided
             if log_transform:
                 scale = 1
             else:
-                scale = mean(np.fabs(init_guess))  # Initialize the scale to a heuristic based on the init_guess
+                scale = np.mean(np.fabs(init_guess))  # Initialize the scale to a heuristic based on the init_guess
                 if scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
                     scale = 1
 
                 scale = np.fabs(
-                    if_else(
+                    np.where(
                         init_guess != 0,
                         init_guess,
                         1
@@ -229,8 +228,8 @@ class Opti(cas.Opti):
             else:
                 log_scale = scale / init_guess
                 log_var = log_scale * super().variable(n_vars)
-                var = cas.exp(log_var)
-                self.set_initial(log_var, cas.log(init_guess))
+                var = np.exp(log_var)
+                self.set_initial(log_var, np.log(init_guess))
 
         # Track the variable
         if category not in self.variables_categorized:  # Add a category if it does not exist
@@ -362,7 +361,7 @@ class Opti(cas.Opti):
         """
         # Infer dimensionality from value if it is not provided
         if n_params is None:
-            n_params = length(value)
+            n_params = np.length(value)
 
         # Create the parameter
         param = super().parameter(n_params)

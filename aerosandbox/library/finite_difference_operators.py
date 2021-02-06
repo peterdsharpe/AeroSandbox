@@ -43,9 +43,9 @@ def second_derivative(xs, ys, mode='centered'):
 
 
 if __name__ == "__main__":
-    import numpy as np
+    import aerosandbox.numpy as np
 
-    x = np.linspace(0, 1, 11)**2
+    x = np.linspace(0, 1, 11) ** 2
     y = x ** 2
     dydx = first_derivative(x, y, mode='forward')
     d2ydx2 = second_derivative(x, y)

@@ -1,4 +1,4 @@
-import numpy as np
+import aerosandbox.numpy as np
 
 
 class MassProps:
@@ -11,7 +11,7 @@ class MassProps:
         """ Mass of the aircraft according the mass of the components
         
         Args:
-            self.mass_components (iterable): Iterable of components each with attrib_name mass property in kg
+            self.mass_components (iterable): Iterable of components each with a mass property in kg
         Returns:
             float: Total mass of the aircraft in kg
         """
@@ -40,17 +40,17 @@ class MassComponent:
     def __init__(self,
                  name=None,  # Totally optional, not used for anything.
                  mass=0,  # Mass of the component.
-                 xyz_cg=(0., 0., 0.),  # Location of the component's CG. Axes are in geometry axes.
-                 Ixx=0,  # About the component's center of mass. 0 if this is attrib_name point mass.
-                 Iyy=0,  # About the component's center of mass. 0 if this is attrib_name point mass.
-                 Izz=0,  # About the component's center of mass. 0 if this is attrib_name point mass.
-                 Ixy=0,  # About the component's center of mass. 0 if this is symmetric_problem about z.
-                 Ixz=0,  # About the component's center of mass. 0 if this is symmetric_problem about y.
-                 Iyz=0,  # About the component's center of mass. 0 if this is symmetric_problem about p.
+                 xyz_cg=np.array([0, 0, 0]),  # Location of the component's CG. Axes are in geometry axes.
+                 Ixx=0,  # About the component's center of mass. 0 if this is a point mass.
+                 Iyy=0,  # About the component's center of mass. 0 if this is a point mass.
+                 Izz=0,  # About the component's center of mass. 0 if this is a point mass.
+                 Iyz=0,  # About the component's center of mass. 0 if this is symmetric about x.
+                 Ixz=0,  # About the component's center of mass. 0 if this is symmetric about y.
+                 Ixy=0,  # About the component's center of mass. 0 if this is symmetric about z.
                  ):
         self.name = name
         self.mass = mass
-        self.xyz_cg = np.array(xyz_cg)
+        self.xyz_cg = xyz_cg
         self.Ixx = Ixx
         self.Iyy = Iyy
         self.Izz = Izz

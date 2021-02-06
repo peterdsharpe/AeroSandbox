@@ -27,6 +27,16 @@ def tand(x):
     return np.tan(radians(x))
 
 
+def arcsind(x):
+    """Returns the arcsin of an x, in degrees"""
+    return degrees(np.arcsin(x))
+
+
+def arccosd(x):
+    """Returns the arccos of an x, in degrees"""
+    return degrees(np.arccos(x))
+
+
 def arctan2d(y, x):
     """Returns the angle associated with arctan(y, x), in degrees"""
-    return deg(np.arctan2(y, x))
+    return degrees(np.arctan2(y, x))

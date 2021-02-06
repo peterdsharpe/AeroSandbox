@@ -22,7 +22,7 @@ def outer(x, y):
         return x @ y.T
 
 
-def linear_solve(A, b):  # TODO get this working
+def solve(A, b):  # TODO get this working
     """
     Solve the linear system Ax=b for x.
     Args:

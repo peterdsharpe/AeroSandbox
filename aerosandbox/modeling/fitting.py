@@ -1,13 +1,9 @@
-import numpy as np
-import casadi as cas
-from aerosandbox.tools.string_formatting import stdout_redirected
+import aerosandbox.numpy as np
+import numpy as onp
 from aerosandbox.optimization.opti import Opti
-from typing import Union, Dict, Callable, List
-from aerosandbox.optimization.math import *
+from typing import Union, Dict, Callable, List, Tuple
 from aerosandbox.modeling.surrogate_model import SurrogateModel
-import copy
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 class FittedModel(SurrogateModel):
@@ -85,8 +81,8 @@ class FittedModel(SurrogateModel):
 
             Returns: A tuple representing the (min, max) value over which to plot that axis.
             """
-            minval = np.min(x_data_axis)
-            maxval = np.max(x_data_axis)
+            minval = onp.min(x_data_axis)
+            maxval = onp.max(x_data_axis)
 
             return (minval, maxval)
 
@@ -99,7 +95,7 @@ class FittedModel(SurrogateModel):
 
                 minval, maxval = axis_range(x_data)
 
-                x_fit = {x_name: linspace(minval, maxval, resolution)}
+                x_fit = {x_name: np.linspace(minval, maxval, resolution)}
                 y_fit = self(x_fit)
             else:
                 x_name = "x"
@@ -107,7 +103,7 @@ class FittedModel(SurrogateModel):
 
                 minval, maxval = axis_range(x_data)
 
-                x_fit = linspace(minval, maxval, resolution)
+                x_fit = np.linspace(minval, maxval, resolution)
                 y_fit = self(x_fit)
 
             ### Plot the 2D figure
@@ -253,14 +249,14 @@ def fit_model(
         x_data = flatten(x_data)
         x_data_is_dict = False
     y_data = flatten(y_data)
-    n_datapoints = length(y_data)
+    n_datapoints = np.length(y_data)
 
     ### Handle weighting
     if weights is None:
         weights = np.ones(n_datapoints)
     else:
         weights = flatten(weights)
-    weights /= sum1(weights)  # Normalize weights so that they sum to 1.
+    weights /= np.sum(weights)  # Normalize weights so that they sum to 1.
 
     ### Check format of parameter_bounds input
     if parameter_bounds is None:
@@ -269,7 +265,7 @@ def fit_model(
         if param_name not in parameter_guesses.keys():
             raise ValueError(
                 f"A parameter name (key = \"{param_name}\") in parameter_bounds was not found in parameter_guesses.")
-        if not length(v) == 2:
+        if not np.length(v) == 2:
             raise ValueError(
                 "Every value in parameter_bounds must be a tuple in the format (lower_bound, upper_bound). "
                 "For one-sided bounds, use None for the unbounded side.")
@@ -291,7 +287,7 @@ def fit_model(
 
     for key, value in relevant_inputs.items():
         # Check that the length of the inputs are consistent
-        series_length = length(value)
+        series_length = np.length(value)
         if not series_length == n_datapoints:
             raise ValueError(
                 f"The supplied data series \"{key}\" has length {series_length}, but y_data has length {n_datapoints}.")
@@ -330,15 +326,15 @@ def fit_model(
     ### Set up the optimization problem to minimize some norm(error), which looks different depending on the norm used:
     if residual_norm_type.lower() == "l1":  # Minimize the L1 norm
         abs_error = opti.variable(init_guess=0,
-                                  n_vars=length(y_data))  # Make the abs() of each error entry an opt. var.
+                                  n_vars=np.length(y_data))  # Make the abs() of each error entry an opt. var.
         opti.subject_to([
             abs_error >= error,
             abs_error >= -error,
         ])
-        opti.minimize(sum1(abs_error))
+        opti.minimize(np.sum(abs_error))
 
     elif residual_norm_type.lower() == "l2":  # Minimize the L2 norm
-        opti.minimize(sum1(error ** 2))
+        opti.minimize(np.sum(error ** 2))
 
     elif residual_norm_type.lower() == "linf":  # Minimize the L-infinity norm
         linf_value = opti.variable(init_guess=0)  # Make the value of the L-infinity norm an optimization variable

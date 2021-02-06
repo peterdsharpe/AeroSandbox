@@ -1,7 +1,6 @@
 from aerosandbox import Opti
 import pytest
-from aerosandbox.optimization.math import *
-import numpy as np
+import aerosandbox.numpy as np
 
 ### Cause all NumPy warnings to raise exceptions, to make this bulletproof
 np.seterr(all='raise')
@@ -10,8 +9,8 @@ np.seterr(all='raise')
 @pytest.fixture
 def types():
     ### NumPy data types
-    scalar_np = array(1)
-    vector_np = array([1, 1])
+    scalar_np = np.array(1)
+    vector_np = np.array([1, 1])
     matrix_np = np.ones((2, 2))
 
     ### CasADi data types
@@ -20,8 +19,8 @@ def types():
     vector_cas = opti.variable(n_vars=2, init_guess=1)
 
     ### Dynamically-typed data type creation (i.e. type depends on inputs)
-    vector_dynamic = array([scalar_cas, scalar_cas])  # vector as a dynamic-typed array
-    matrix_dynamic = array([  # matrix as an dynamic-typed array
+    vector_dynamic = np.array([scalar_cas, scalar_cas])  # vector as a dynamic-typed array
+    matrix_dynamic = np.array([  # matrix as an dynamic-typed array
         [scalar_cas, scalar_cas],
         [scalar_cas, scalar_cas]
     ])
@@ -64,7 +63,7 @@ def test_basic_math(types):
             x - y
             x * y
             x / y
-            sum1(x)  # Sum of all entries of array-like object x
+            np.sum(x)  # Sum of all entries of array-like object x
 
             ### Exponentials & Powers
             x ** y
@@ -114,7 +113,7 @@ def test_logic(types):
                 x <= y
 
                 ### Conditionals
-                if_else(
+                np.where(
                     x > 1,
                     x ** 2,
                     0
@@ -128,16 +127,16 @@ def test_logic(types):
         np.fabs(x)
         np.floor(x)
         np.ceil(x)
-        clip(x, 0, 1)
+        np.clip(x, 0, 1)
 
 
 def test_vector_math(types):
     for x in types["vector"]:
         for y in types["vector"]:
             x.T
-            inner(x, y)
-            outer(x, y)
-            norm(x)
+            np.linalg.inner(x, y)
+            np.linalg.outer(x, y)
+            np.linalg.norm(x)
 
 
 def test_matrix_math(types):
@@ -147,20 +146,20 @@ def test_matrix_math(types):
             m @ v
             for m_other in types["matrix"]:
                 m @ m_other
-            linear_solve(m, v)
+            np.linalg.solve(m, v)
 
 
 def test_spacing(types):
     for x in types["scalar"]:
-        linspace(x - 1, x + 1, 10)
-        cosspace(x - 1, x + 1, 10)
+        np.linspace(x - 1, x + 1, 10)
+        np.cosspace(x - 1, x + 1, 10)
 
 
 def test_rotation_matrices(types):
     for angle in types["scalar"]:
         for axis in types["vector"]:
-            rotation_matrix_2D(angle)
-            rotation_matrix_angle_axis(angle, array([axis[0], axis[1], axis[0]]))
+            np.rotation_matrix_2D(angle)
+            np.rotation_matrix_3D(angle, np.array([axis[0], axis[1], axis[0]]))
 
 
 if __name__ == '__main__':

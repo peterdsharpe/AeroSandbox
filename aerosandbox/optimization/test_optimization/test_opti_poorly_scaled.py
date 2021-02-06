@@ -1,5 +1,5 @@
 import aerosandbox as asb
-import numpy as np
+import aerosandbox.numpy as np
 import pytest
 
 

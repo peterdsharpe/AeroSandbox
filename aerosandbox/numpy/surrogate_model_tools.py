@@ -1,4 +1,4 @@
-import numpy as np
+import aerosandbox.numpy as np
 import casadi as cas
 from typing import Tuple, Union
 from numpy import pi
@@ -81,9 +81,9 @@ def sigmoid(
 
 
 def blend(
-        value_switch_low,
+        switch: float,
         value_switch_high,
-        switch: float
+        value_switch_low,
 ):
     """
     Smoothly blends between two values on the basis of some switch function.
@@ -97,14 +97,14 @@ def blend(
     smoothmax(), and choose the correct one.
 
     Args:
-        value_switch_low: Value to be returned when switch is low. Can be a float or an array.
-        value_switch_high: Value to be returned when switch is high. Can be a float or an array.
         switch: A value that acts as a "switch" between the two values [float].
             If switch is -Inf, value_switch_low is returned.
             If switch is Inf, value_switch_high is returned.
             If switch is 0, the mean of value_switch_low and value_switch_high is returned.
             If switch is 1, the return value is roughly (0.88 * value_switch_high + 0.12 * value_switch_low).
             If switch is -1, the return value is roughly (0.88 * value_switch_low + 0.12 * value_switch_high).
+        value_switch_high: Value to be returned when switch is high. Can be a float or an array.
+        value_switch_low: Value to be returned when switch is low. Can be a float or an array.
 
     Returns: A value that is a blend between value_switch_low and value_switch_high, with the weighting dependent
         on the value of the 'switch' parameter.

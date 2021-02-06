@@ -1,6 +1,6 @@
 import aerosandbox as asb
 from aerosandbox import cas
-import numpy as np
+import aerosandbox.numpy as np
 import pytest
 import matplotlib.pyplot as plt
 

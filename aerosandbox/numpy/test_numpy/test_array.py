@@ -1,6 +1,6 @@
-from aerosandbox.optimization.math.array import *
+from aerosandbox.numpy.array import *
 import pytest
-import numpy as np
+import aerosandbox.numpy as np
 import casadi as cas
 
 

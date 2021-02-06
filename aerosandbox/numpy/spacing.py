@@ -1,6 +1,6 @@
 import numpy as np
 import casadi as cas
-from numpy import pi
+
 
 
 def linspace(
@@ -37,4 +37,4 @@ def cosspace(
     """
     mean = (stop + start) / 2
     amp = (stop - start) / 2
-    return mean + amp * np.cos(np.linspace(pi, 0, n_points))
+    return mean + amp * np.cos(np.linspace(np.pi, 0, n_points))

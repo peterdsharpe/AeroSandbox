@@ -1,5 +1,5 @@
 from numpy import pi
-import numpy as np
+import aerosandbox.numpy as np
 from aerosandbox import cas
 from typing import Union
 
@@ -12,7 +12,7 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
         sigma_start: float = 0.,
         sigma_end: float = 0.,
         xp_panel_end: float = 1.,
-        backend: str = "numpy",
+        backend: str = "numpy", # TODO rewrite to deprecate this based on aerosandbox.numpy overloading
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point (xp_field, yp_field) in a 2D potential-flow flowfield.
@@ -71,7 +71,7 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
         ) and sigma_start == 0 and sigma_end == 0
 
     ### Determine which points are effectively on the panel, necessitating different math:
-    is_on_panel = np.abs(yp_field) <= 1e-8
+    is_on_panel = np.fabs(yp_field) <= 1e-8
 
     ### Do some geometry calculation
     r_1 = (

@@ -1,7 +1,7 @@
-import numpy as np
+import aerosandbox.numpy as np
+import numpy as onp
 from scipy.special import comb
 from aerosandbox.geometry.polygon import stack_coordinates
-from aerosandbox.optimization.math import cosspace
 import re
 
 _default_n_points_per_side = 200
@@ -41,7 +41,7 @@ def get_NACA_coordinates(
     # from here on out
 
     # Make uncambered coordinates
-    x_t = cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
+    x_t = np.cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
     y_t = 5 * thickness * (
             + 0.2969 * x_t ** 0.5
             - 0.1260 * x_t
@@ -191,7 +191,7 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
     if len(raw_coordinates) == 0:
         raise ValueError("File was found, but could not read any coordinates!")
 
-    coordinates = np.array(raw_coordinates, dtype=float)
+    coordinates = onp.array(raw_coordinates, dtype=float)
 
     return coordinates
 

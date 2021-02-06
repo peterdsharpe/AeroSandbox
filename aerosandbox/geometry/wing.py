@@ -1,21 +1,24 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from aerosandbox.optimization.math import *
 from typing import List
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
+import aerosandbox.numpy as np
 
 
 class Wing(AeroSandboxObject):
     """
     Definition for a wing.
-    If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the constructor.
+
+    If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the
+    constructor.
+
     If the wing is not symmetric across the XZ plane, just define the wing.
     """
 
     def __init__(self,
                  name: str = "Untitled Wing",
-                 xyz_le: np.ndarray = array([0, 0, 0]),
+                 xyz_le: np.ndarray = np.array([0, 0, 0]),
                  xsecs: List['WingXSec'] = [],
                  symmetric: bool = False,
                  ):
@@ -232,11 +235,11 @@ class Wing(AeroSandboxObject):
         tip_quarter_chord = self.xsecs[-1].quarter_chord()
 
         vec = tip_quarter_chord - root_quarter_chord
-        vec_norm = vec / norm(vec)
+        vec_norm = vec / np.linalg.norm(vec)
 
         sin_sweep = vec_norm[0]  # from dot product with x_hat
 
-        sweep_deg = np.arcsin(sin_sweep) * 180 / cas.pi
+        sweep_deg = np.arcsind(sin_sweep)
 
         return sweep_deg
 
@@ -246,12 +249,12 @@ class Wing(AeroSandboxObject):
         Uses the generalized methodology described here:
             https://core.ac.uk/download/pdf/79175663.pdf
 
-        Args:
-            chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
-                Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing.
-                However, wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less.
-                Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability".
-                PDF: https://www.sciencedirect.com/science/article/pii/B9780080982427000031
+        Args: chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
+
+            Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing. However,
+            wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less. Citing Cook,
+            Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability". PDF:
+            https://www.sciencedirect.com/science/article/pii/B9780080982427000031
 
         Returns: The (x, y, z) coordinates of the aerodynamic center of the wing.
 
@@ -272,7 +275,7 @@ class Wing(AeroSandboxObject):
                     (1 + 2 * section_taper_ratio) /
                     (3 + 3 * section_taper_ratio)
             )
-            section_AC = section_MAC_le + array([
+            section_AC = section_MAC_le + np.array([ # TODO rotate this vector by the local twist angle
                 chord_fraction * section_MAC_length,
                 0,
                 0
@@ -314,10 +317,10 @@ class WingXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_le: np.ndarray = array([0, 0, 0]),
+                 xyz_le: np.ndarray = np.array([0, 0, 0]),
                  chord: float = 1.,
                  twist_angle: float = 0,
-                 twist_axis: np.ndarray = array([0, 1, 0]),
+                 twist_axis: np.ndarray = np.array([0, 1, 0]),
                  airfoil: Airfoil = Airfoil("naca0012"),
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
@@ -358,6 +361,6 @@ class WingXSec(AeroSandboxObject):
         """
         Returns the (wing-relative) coordinates of the trailing edge of the cross section.
         """
-        rot = rotation_matrix_angle_axis(self.twist * pi / 180, self.twist_axis)
-        xyz_te = self.xyz_le + rot @ array([self.chord, 0, 0])
+        rot = np.rotation_matrix_3D(self.twist * pi / 180, self.twist_axis)
+        xyz_te = self.xyz_le + rot @ np.array([self.chord, 0, 0])
         return xyz_te

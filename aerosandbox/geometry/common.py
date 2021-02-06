@@ -1,5 +1,4 @@
-from aerosandbox.optimization.math import *
-import numpy as np
+import aerosandbox.numpy as np
 
 
 def reflect_over_XZ_plane(input_vector):
@@ -22,4 +21,3 @@ def reflect_over_XZ_plane(input_vector):
         raise Exception("Invalid input for reflect_over_XZ_plane!")
 
     return output_vector
-

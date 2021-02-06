@@ -2,7 +2,7 @@
 Utilities for making better carpet plots
 """
 
-import numpy as np
+import aerosandbox.numpy as np
 
 import signal
 from contextlib import contextmanager

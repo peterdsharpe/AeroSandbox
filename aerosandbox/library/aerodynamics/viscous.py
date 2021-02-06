@@ -1,6 +1,3 @@
-from aerosandbox.optimization.math import *
-
-
 def Cd_cylinder(
         Re_D,
         subcritical_only=False
@@ -23,16 +20,16 @@ def Cd_cylinder(
     csuph = 9.9999999999999787
     csupscl = -0.4570690347113859
 
-    x = cas.log10(Re_D)
+    x = np.log10(Re_D)
 
     if subcritical_only:
         Cd = 10 ** (csub0 * x + csub1) + csub2 + csub3 * x
     else:
         log10_Cd = (
-                (cas.log10(10 ** (csub0 * x + csub1) + csub2 + csub3 * x))
-                * (1 - 1 / (1 + cas.exp(-csigh * (x - csigc))))
-                + (csup0 + csupscl / csuph * cas.log(cas.exp(csuph * (csupc - x)) + 1))
-                * (1 / (1 + cas.exp(-csigh * (x - csigc))))
+                (np.log10(10 ** (csub0 * x + csub1) + csub2 + csub3 * x))
+                * (1 - 1 / (1 + np.exp(-csigh * (x - csigc))))
+                + (csup0 + csupscl / csuph * np.log(np.exp(csuph * (csupc - x)) + 1))
+                * (1 / (1 + np.exp(-csigh * (x - csigc))))
         )
         Cd = 10 ** log10_Cd
 
@@ -45,11 +42,11 @@ def Cf_flat_plate(Re_L):
     :param Re_L: Reynolds number, normalized to the length of the flat plate.
     :return: Mean skin friction coefficient over a flat plate.
     """
-    Re_L = cas.fabs(Re_L)
+    Re_L = np.fabs(Re_L)
     # return 0.074 / Re_L ** 0.2  # Turbulent flat plate
     # return 0.02666 * Re_L ** -0.139  # Schlichting's model, roughly accounts for laminar part ("Boundary Layer Theory" 7th Ed., pg. 644)
     # return smoothmax(0.074 / Re_L ** 0.2 - 1742 / Re_L, 1.33 / Re_L ** 0.5, 1000)
-    return cas.fmax(0.074 / Re_L ** 0.2 - 1742 / Re_L, 1.33 / Re_L ** 0.5)
+    return np.fmax(0.074 / Re_L ** 0.2 - 1742 / Re_L, 1.33 / Re_L ** 0.5)
 
 
 def Cl_flat_plate(alpha, Re_c):
@@ -59,7 +56,7 @@ def Cl_flat_plate(alpha, Re_c):
     :param Re_c: Reynolds number, normalized to the length of the flat plate.
     :return: Approximate lift coefficient.
     """
-    Re_c = cas.fabs(Re_c)
+    Re_c = np.fabs(Re_c)
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
 
@@ -75,8 +72,8 @@ def Cd_profile_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil in incompressible flow.
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9713
 
-    Re_c = cas.fmax(Re_c, 1)
-    log_Re = cas.log(Re_c)
+    Re_c = np.fmax(Re_c, 1)
+    log_Re = np.log(Re_c)
 
     CD0 = -5.249
     Re0 = 15.61
@@ -89,7 +86,7 @@ def Cd_profile_2412(alpha, Re_c):
 
     log_CD = CD0 + cx * (alpha - alpha0) ** 2 + cy * (log_Re - Re0) ** 2 + cxy * (alpha - alpha1) * (
             log_Re - Re1)  # basically, a rotated paraboloid in logspace
-    CD = cas.exp(log_CD)
+    CD = np.exp(log_CD)
 
     return CD
 
@@ -100,8 +97,8 @@ def Cl_e216(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < Inf.
     # See: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\e216
 
-    Re_c = cas.fmax(Re_c, 1)
-    log10_Re = cas.log10(Re_c)
+    Re_c = np.fmax(Re_c, 1)
+    log10_Re = np.log10(Re_c)
 
     # Coeffs
     a1l = 3.0904412662858878e-02
@@ -120,9 +117,9 @@ def Cl_e216(alpha, Re_c):
     a = alpha
     r = log10_Re
 
-    Cl = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + cas.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)) + (
-            c0l + a1l * a + asl / (1 + cas.exp(-ksl * (a - xsl)))) * (
-                 1 - 1 / (1 + cas.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)))
+    Cl = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)) + (
+            c0l + a1l * a + asl / (1 + np.exp(-ksl * (a - xsl)))) * (
+                 1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)))
 
     return Cl
 
@@ -133,8 +130,8 @@ def Cd_profile_e216(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < 10^6.
     # see: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\e216
 
-    Re_c = cas.fmax(Re_c, 1)
-    log10_Re = cas.log10(Re_c)
+    Re_c = np.fmax(Re_c, 1)
+    log10_Re = np.log10(Re_c)
 
     # Coeffs
     a1l = 4.7167470806940448e-02
@@ -151,8 +148,8 @@ def Cd_profile_e216(alpha, Re_c):
     a = alpha
     r = log10_Re
 
-    log10_Cd = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + cas.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)) + (
-            c0l + a1l * a + a2l * a ** 2) * (1 - 1 / (1 + cas.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)))
+    log10_Cd = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)) + (
+            c0l + a1l * a + a2l * a ** 2) * (1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)))
 
     Cd = 10 ** log10_Cd
 
@@ -170,10 +167,9 @@ def Cd_wave_e216(Cl, mach, sweep=0.):
     :return: Wave drag coefficient.
     """
 
-    mach = cas.fmax(mach, 0)
-    sweep_rad = np.pi / 180 * sweep
-    mach_perpendicular = mach * cas.cos(sweep_rad)  # Relation from FVA Eq. 8.176
-    Cl_perpendicular = Cl / cas.cos(sweep_rad) ** 2  # Relation from FVA Eq. 8.177
+    mach = np.fmax(mach, 0)
+    mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
+    Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
 
     # Coeffs
     c0 = 7.2685945744797997e-01
@@ -187,7 +183,7 @@ def Cd_wave_e216(Cl, mach, sweep=0.):
     m = mach_perpendicular
     l = Cl_perpendicular
 
-    Cd_wave = (cas.fmax(m - (c0 + c1 * cas.sqrt(c3 + (l - c4) ** 2) + c5 * l), 0) * (l0 + l1 * l)) ** 2
+    Cd_wave = (np.fmax(m - (c0 + c1 * np.sqrt(c3 + (l - c4) ** 2) + c5 * l), 0) * (l0 + l1 * l)) ** 2
 
     return Cd_wave
 
@@ -198,8 +194,8 @@ def Cl_rae2822(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < 10^6.
     # See: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\rae2822
 
-    Re_c = cas.fmax(Re_c, 1)
-    log10_Re = cas.log10(Re_c)
+    Re_c = np.fmax(Re_c, 1)
+    log10_Re = np.log10(Re_c)
 
     # Coeffs
     a1l = 5.5686866813855172e-02
@@ -216,8 +212,8 @@ def Cl_rae2822(alpha, Re_c):
     a = alpha
     r = log10_Re
 
-    Cl = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + cas.exp(ctr - rtr * r - atr * a - atr2 * a ** 2)) + (
-            c0l + a1l * a + a4l * a ** 4) * (1 - 1 / (1 + cas.exp(ctr - rtr * r - atr * a - atr2 * a ** 2)))
+    Cl = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + np.exp(ctr - rtr * r - atr * a - atr2 * a ** 2)) + (
+            c0l + a1l * a + a4l * a ** 4) * (1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - atr2 * a ** 2)))
 
     return Cl
 
@@ -228,8 +224,8 @@ def Cd_profile_rae2822(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < Inf.
     # see: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\e216
 
-    Re_c = cas.fmax(Re_c, 1)
-    log10_Re = cas.log10(Re_c)
+    Re_c = np.fmax(Re_c, 1)
+    log10_Re = np.log10(Re_c)
 
     # Coeffs
     at = 8.1034027621509015e+00
@@ -246,9 +242,9 @@ def Cd_profile_rae2822(alpha, Re_c):
     r = log10_Re
 
     log10_Cd = (c0t + r1t * (r - 4)) * (
-            1 / (1 + cas.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt)))) + (
+            1 / (1 + np.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt)))) + (
                        c0l + r1l * (r - 4)) * (
-                       1 - 1 / (1 + cas.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt))))
+                       1 - 1 / (1 + np.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt))))
 
     Cd = 10 ** log10_Cd
 
@@ -266,10 +262,9 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
     :return: Wave drag coefficient.
     """
 
-    mach = cas.fmax(mach, 0)
-    sweep_rad = np.pi / 180 * sweep
-    mach_perpendicular = mach * cas.cos(sweep_rad)  # Relation from FVA Eq. 8.176
-    Cl_perpendicular = Cl / cas.cos(sweep_rad) ** 2  # Relation from FVA Eq. 8.177
+    mach = np.fmax(mach, 0)
+    mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
+    Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
 
     # Coeffs
     c2 = 4.5776476424519119e+00
@@ -281,7 +276,7 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
     m = mach_perpendicular
     l = Cl_perpendicular
 
-    Cd_wave = cas.fmax(m - (mc0 - mc1 * cas.sqrt(mc2 + (l - mc3) ** 2)), 0) ** 2 * c2
+    Cd_wave = np.fmax(m - (mc0 - mc1 * np.sqrt(mc2 + (l - mc3) ** 2)), 0) ** 2 * c2
 
     return Cd_wave
 
@@ -295,12 +290,11 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     :param kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
     :return: Wave drag coefficient
     """
-    mach = cas.fmax(mach, 0)
-    sweep_rad = np.pi / 180 * sweep
-    Mdd = kappa_A / cas.cos(sweep_rad) - t_over_c / cas.cos(sweep_rad) ** 2 - Cl / (10 * cas.cos(sweep_rad) ** 3)
+    mach = np.fmax(mach, 0)
+    Mdd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - Cl / (10 * np.cosd(sweep) ** 3)
     Mcrit = Mdd - (0.1 / 80) ** (1 / 3)
     # Cd_wave = 20 * cas.ramp(mach - Mcrit) ** 4
-    Cd_wave = 20 * cas.if_else(mach > Mcrit, mach - Mcrit, 0) ** 4
+    Cd_wave = 20 * np.where(mach > Mcrit, mach - Mcrit, 0) ** 4
 
     return Cd_wave
 
