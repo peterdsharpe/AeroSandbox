@@ -71,7 +71,7 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
         ) and sigma_start == 0 and sigma_end == 0
 
     ### Determine which points are effectively on the panel, necessitating different math:
-    is_on_panel = np.abs(yp_field) <= 1e-8
+    is_on_panel = np.fabs(yp_field) <= 1e-8
 
     ### Do some geometry calculation
     r_1 = (
