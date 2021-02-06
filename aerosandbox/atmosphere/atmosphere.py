@@ -1,6 +1,5 @@
 from aerosandbox.common import AeroSandboxObject
-import numpy as np
-from aerosandbox import linspace, if_else
+import aerosandbox.numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -128,7 +127,7 @@ class Atmosphere(AeroSandboxObject):
         pressure = 0 * alt  # Initialize the pressure to all zeros.
 
         for i in range(len(isa_table)):
-            pressure = if_else(
+            pressure = np.where(
                 alt > isa_base_altitude[i],
                 barometric_formula(
                     P_b=isa_pressure[i],
@@ -141,7 +140,7 @@ class Atmosphere(AeroSandboxObject):
             )
 
         ### Add lower bound case
-        pressure = if_else(
+        pressure = np.where(
             alt <= isa_base_altitude[0],
             barometric_formula(
                 P_b=isa_pressure[0],
@@ -165,14 +164,14 @@ class Atmosphere(AeroSandboxObject):
         temp = 0 * alt  # Initialize the temperature to all zeros.
 
         for i in range(len(isa_table)):
-            temp = if_else(
+            temp = np.where(
                 alt > isa_base_altitude[i],
                 (alt - isa_base_altitude[i]) * isa_lapse_rate[i] + isa_base_temperature[i],
                 temp
             )
 
         ### Add lower bound case
-        temp = if_else(
+        temp = np.where(
             alt <= isa_base_altitude[0],
             (alt - isa_base_altitude[0]) * isa_lapse_rate[0] + isa_base_temperature[0],
             temp
