@@ -1,8 +1,8 @@
 import math
-import numpy as np
+import aerosandbox.numpy as np
 
 
-def eng_string(x, format='%.3g', si=True):
+def eng_string(x: float, format='%.3g', si=True):
     '''
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
 
@@ -15,14 +15,14 @@ def eng_string(x, format='%.3g', si=True):
     e-9 etc.
 
     E.g. with format='%.2f':
-        1.23e-08 => 12.30e-9
-             123 => 123.00
-          1230.0 => 1.23e3
-      -1230000.0 => -1.23e6
+        1.23e-08 -> 12.30e-9
+             123 -> 123.00
+          1230.0 -> 1.23e3
+      -1230000.0 -> -1.23e6
 
     and with si=True:
-          1230.0 => 1.23k
-      -1230000.0 => -1.23M
+          1230.0 -> 1.23k
+      -1230000.0 -> -1.23M
     '''
     sign = ''
     if x < 0:
