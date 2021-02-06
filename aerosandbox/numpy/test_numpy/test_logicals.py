@@ -1,22 +1,20 @@
-import numpy as np
-from aerosandbox.optimization import math
+import aerosandbox.numpy as np
 import pytest
 
 
 def test_smoothmax(plot=False):
     # Test smoothmax
-    x = math.linspace(-10, 10, 100)
+    x = np.linspace(-10, 10, 100)
     y1 = x
     y2 = -2 * x - 3
     hardness = 0.5
 
-    ysmooth = math.smoothmax(y1, y2, hardness)
+    ysmooth = np.smoothmax(y1, y2, hardness)
 
-    assert math.smoothmax(0, 0, 1) == np.log(2)
+    assert np.smoothmax(0, 0, 1) == np.log(2)
 
     if plot:
         import matplotlib.pyplot as plt
-        from matplotlib import style
         import seaborn as sns
 
         sns.set(font_scale=1)

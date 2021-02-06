@@ -1,12 +1,13 @@
-from aerosandbox.optimization.math import *
+import aerosandbox.numpy as np
+import casadi as cas
 import pytest
 
 
-def test_if_else_numpy():
+def test_where_numpy():
     a = np.ones(4)
     b = 2 * np.ones(4)
 
-    c = if_else(
+    c = np.where(
         np.array([True, False, True, False]),
         a,
         b
@@ -17,11 +18,11 @@ def test_if_else_numpy():
     )
 
 
-def test_if_else_casadi():
+def test_where_casadi():
     a = cas.GenDM_ones(4)
     b = 2 * cas.GenDM_ones(4)
 
-    c = if_else(
+    c = np.where(
         cas.DM([1, 0, 1, 0]),
         a,
         b
