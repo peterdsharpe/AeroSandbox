@@ -4,7 +4,7 @@ An illustration of the various fit types that can be used during function regres
 
 from aerosandbox.modeling.fitting import fit_model
 import pytest
-import numpy as np
+import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from dataset_temperature import time, measured_temperature

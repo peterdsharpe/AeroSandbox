@@ -1,4 +1,4 @@
-import numpy as np
+import aerosandbox.numpy as np
 
 np.random.seed(0) # Fix a seed for reproducibility
 
