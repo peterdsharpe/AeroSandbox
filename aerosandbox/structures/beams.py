@@ -1,5 +1,5 @@
 import casadi as cas
-import numpy as np
+import aerosandbox.numpy as np
 from aerosandbox.geometry import *
 
 class TubeBeam1(AeroSandboxObject):
