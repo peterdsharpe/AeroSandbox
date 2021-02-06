@@ -1,7 +1,6 @@
-from aerosandbox.optimization.math.linalg import norm, outer
-from aerosandbox.optimization.math.array import array
+from aerosandbox.numpy.linalg import norm, outer
+from aerosandbox.numpy.array import array
 import numpy as np
-import casadi as cas
 
 
 def rotation_matrix_2D(
@@ -24,7 +23,7 @@ def rotation_matrix_2D(
     return rotation_matrix
 
 
-def rotation_matrix_angle_axis(
+def rotation_matrix_3D(
         angle,
         axis,
         _axis_already_normalized=False

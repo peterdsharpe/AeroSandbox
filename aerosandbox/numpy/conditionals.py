@@ -2,7 +2,7 @@ import numpy as np
 import casadi as cas
 
 
-def if_else(
+def where(
         condition,
         value_if_true,
         value_if_false,
