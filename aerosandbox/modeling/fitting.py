@@ -25,6 +25,12 @@ class FittedModel(SurrogateModel):
 
     Created as the output of the `fit_model()` function; look at the docstring of that function for further
     documentation.
+
+    One might have expected `fit_model()` to output a literal Python function rather than a Python class - the
+    benefit of having FittedModel as a class rather than a function is that you can easily save (pickle) classes
+    including data (e.g. parameters, x_data, y_data), but you can't do that with functions. And, because the
+    FittedModel class has a __call__ method, you can basically still just think of it like a function.
+
     """
 
     def __init__(self,
