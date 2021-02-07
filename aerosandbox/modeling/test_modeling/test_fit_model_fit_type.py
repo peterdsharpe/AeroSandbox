@@ -25,6 +25,7 @@ def test_fit_model_fit_type(plot=False):
                 "b": 0,
                 "c": 0,
             },
+            parameter_bounds={"a": (0, 0)},
             fit_type=fit_type,
             residual_norm_type="L1"
         )
@@ -45,7 +46,7 @@ def test_fit_model_fit_type(plot=False):
         plt.plot(x, lower_bound_model(x), label=r"Lower-Bound Fit")
         plt.xlabel(r"Time")
         plt.ylabel(r"Temperature")
-        plt.title(r"Illustration of Fit Types for Robust Surrogate Modeling")
+        plt.title(r"Illustration of Fit Types for Robust Surrogate Modeling (Linear Model)")
         plt.tight_layout()
         plt.legend()
         plt.show()
