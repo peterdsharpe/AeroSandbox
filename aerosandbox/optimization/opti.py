@@ -17,7 +17,7 @@ class Opti(cas.Opti):
 
     >>> opti = asb.Opti() # Initializes an optimization environment
     >>> x = opti.variable(init_guess=5) # Initializes a new variable in that environment
-    >>> f = x ** 2 # Evaluates a (nonlinear) function based on a variable
+    >>> f = x ** 2 # Evaluates a (in this case, nonlinear) function based on a variable
     >>> opti.subject_to(x > 3) # Adds a constraint to be enforced
     >>> opti.minimize(f) # Sets the objective function as f
     >>> sol = opti.solve() # Solves the problem using CasADi and IPOPT backend
