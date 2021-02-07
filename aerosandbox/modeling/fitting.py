@@ -265,7 +265,7 @@ def fit_model(
         weights = np.ones(n_datapoints)
     else:
         weights = flatten(weights)
-    weights /= np.sum(weights)  # Normalize weights so that they sum to 1.
+    weights = weights / np.sum(weights)  # Normalize weights so that they sum to 1.
 
     ### Check format of parameter_bounds input
     if parameter_bounds is None:
