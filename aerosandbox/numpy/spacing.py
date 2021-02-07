@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as onp
 import casadi as cas
 
 
@@ -16,7 +16,7 @@ def linspace(
         n_points: Number of points in the vector.
     """
     try:
-        return np.linspace(start, stop, n_points)
+        return onp.linspace(start, stop, n_points)
     except Exception:
         return cas.linspace(start, stop, n_points)
 
@@ -37,4 +37,4 @@ def cosspace(
     """
     mean = (stop + start) / 2
     amp = (stop - start) / 2
-    return mean + amp * np.cos(np.linspace(np.pi, 0, n_points))
+    return mean + amp * onp.cos(onp.linspace(onp.pi, 0, n_points))

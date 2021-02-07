@@ -1,24 +1,24 @@
-import numpy as np
+import numpy as onp
 import casadi as cas
 
 
 def inner(x, y):
     """Return the inner product of vectors x and y."""
     try:
-        return np.inner(x, y)
+        return onp.inner(x, y)
     except Exception:
         if len(x.shape) == 1:  # Force x to be transposable if it's not.
-            x = np.expand_dims(x, 1)
+            x = onp.expand_dims(x, 1)
         return x.T @ y
 
 
 def outer(x, y):
     """Return the outer product of vectors x and y."""
     try:
-        return np.outer(x, y)
+        return onp.outer(x, y)
     except Exception:
         if len(y.shape) == 1:  # Force y to be transposable if it's not.
-            y = np.expand_dims(y, 1)
+            y = onp.expand_dims(y, 1)
         return x @ y.T
 
 
@@ -33,7 +33,7 @@ def solve(A, b):  # TODO get this working
 
     """
     try:
-        return np.linalg.solve(A, b)
+        return onp.linalg.solve(A, b)
     except Exception:
         return cas.solve(A, b)
 
@@ -43,6 +43,6 @@ def norm(x):
     Returns the L2-norm of a vector x.
     """
     try:
-        return np.linalg.norm(x)
+        return onp.linalg.norm(x)
     except Exception:
         return cas.norm_2(x)

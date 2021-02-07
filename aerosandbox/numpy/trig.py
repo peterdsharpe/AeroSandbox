@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as onp
 from numpy import pi
 
 
@@ -14,29 +14,29 @@ def radians(x):
 
 def sind(x):
     """Returns the sin of an angle x, given in degrees"""
-    return np.sin(radians(x))
+    return onp.sin(radians(x))
 
 
 def cosd(x):
     """Returns the cos of an angle x, given in degrees"""
-    return np.cos(radians(x))
+    return onp.cos(radians(x))
 
 
 def tand(x):
     """Returns the tangent of an angle x, given in degrees"""
-    return np.tan(radians(x))
+    return onp.tan(radians(x))
 
 
 def arcsind(x):
     """Returns the arcsin of an x, in degrees"""
-    return degrees(np.arcsin(x))
+    return degrees(onp.arcsin(x))
 
 
 def arccosd(x):
     """Returns the arccos of an x, in degrees"""
-    return degrees(np.arccos(x))
+    return degrees(onp.arccos(x))
 
 
 def arctan2d(y, x):
     """Returns the angle associated with arctan(y, x), in degrees"""
-    return degrees(np.arctan2(y, x))
+    return degrees(onp.arctan2(y, x))

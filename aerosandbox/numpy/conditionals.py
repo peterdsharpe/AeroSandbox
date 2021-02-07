@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as onp
 import casadi as cas
 
 
@@ -8,7 +8,7 @@ def where(
         value_if_false,
 ):
     try:
-        return np.where(
+        return onp.where(
             condition,
             value_if_true,
             value_if_false
