@@ -1,21 +1,46 @@
-from aerosandbox import ImplicitAnalysis
+from aerosandbox import ImplicitAnalysis, Opti
 from aerosandbox.geometry import *
+from aerosandbox.performance import OperatingPoint
 from aerosandbox.visualization import Figure3D
 
 
 class LiftingLine(ImplicitAnalysis):
     """
     An implicit analysis based on lifting line theory, with modifications for nonzero sweep and dihedral + multiple wings.
+
+    Key outputs:
+
+        * LiftingLine.CL
+        * LiftingLine.CD
+        * LiftingLine.Cm
+        * LiftingLine.lift_force
+        * LiftingLine.drag_force
+
     """
 
     def __init__(self,
-                 airplane,  # type: Airplane
-                 op_point,  # type: op_point
-                 opti=None,  # type: asb.Opti # TODO type hint
-                 verbose=True,  # Choose whether or not you want verbose output
+                 airplane: Airplane,
+                 op_point: OperatingPoint,
+                 opti: Opti = None,
                  run_symmetric_if_possible=True,
-                 # Choose whether or not you want to run a symmetric analysis about the XZ plane (~4x faster)
                  ):
+        """
+        Initializes and conducts a LiftingLine analysis.
+        Args:
+            airplane: An Airplane object that you want to analyze.
+            op_point: The OperatingPoint that you want to analyze the Airplane at.
+            opti: An asb.Opti environment.
+
+                If provided, adds the governing equations to that instance. Does not solve the equations (you need to
+                call `sol = opti.solve()` to do that).
+
+                If not provided, creates and solves the governing equations in a new instance.
+
+            run_symmetric_if_possible: If this flag is True and the problem fomulation is XZ-symmetric, the solver will
+            attempt to exploit the symmetry. This results in roughly half the number of governing equations.
+
+        """
+
         ### Initialize
         super().__init__()
         self.airplane = airplane
