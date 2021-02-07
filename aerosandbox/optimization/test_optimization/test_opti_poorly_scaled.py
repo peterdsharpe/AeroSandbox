@@ -3,7 +3,7 @@ import aerosandbox.numpy as np
 import pytest
 
 
-def test_opti_poorly_scaled_constraints(condition_number=1e10):
+def test_opti_poorly_scaled_constraints(constraint_jacobian_condition_number=1e10):
     # Constants
     a = 1
     b = 100
@@ -15,7 +15,7 @@ def test_opti_poorly_scaled_constraints(condition_number=1e10):
     x = opti.variable(init_guess=10)
     y = opti.variable(init_guess=10)
 
-    c = np.sqrt(condition_number)
+    c = np.sqrt(constraint_jacobian_condition_number)
 
     # Define constraints
     opti.subject_to([
@@ -35,13 +35,13 @@ def test_opti_poorly_scaled_constraints(condition_number=1e10):
     assert sol.value(y) == pytest.approx(0.81, abs=1e-4)
 
 
-def test_opti_poorly_scaled_objective(condition_number=1e10):
+def test_opti_poorly_scaled_objective(objective_hessian_condition_number=1e10):
     opti = asb.Opti()
 
     x = opti.variable(init_guess=10)
     y = opti.variable(init_guess=10)
 
-    c = np.sqrt(condition_number)
+    c = np.sqrt(objective_hessian_condition_number)
 
     # Define objective
     f = x ** 4 * c + y ** 4 / c
