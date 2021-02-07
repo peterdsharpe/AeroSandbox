@@ -61,7 +61,7 @@ def remove_nans(array):
     return array[~np.isnan(array)]
 
 
-def patch_nans(array):
+def patch_nans(array): # TODO remove modification on incoming values; only patch nans
     """
     Patches NaN values in a 2D array. Can patch holes or entire regions. Uses Laplacian smoothing.
     :param array:
