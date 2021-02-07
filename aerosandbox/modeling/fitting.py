@@ -79,7 +79,7 @@ class FittedModel(SurrogateModel):
         except AttributeError:
             return None
 
-    def plot_fit(self, resolution=100):
+    def plot_fit(self, resolution=250):
         def axis_range(x_data_axis: np.ndarray) -> Tuple[float, float]:
             """
             Given the entries of one axis of the dependent variable, determine a min/max range over which to plot the fit.
