@@ -256,14 +256,14 @@ class Atmosphere(AeroSandboxObject):
 
         return mu
 
-    # def thermal_velocity(self): # TODO implement for our hypersonics friends
+    # def thermal_velocity(self):
     #     """
     #     Returns the thermal velocity (mean particle speed)
     #     Returns:
     #
     #     """
     #
-    # def mean_free_path(self):
+    # def mean_free_path(self): # TODO finish implementing methods for our hypersonics friends
     #     """Returns the mean free path of an air molecule, in meters."""
     #     return 1/(
     #         2 ** 0.5 * np.pi *
@@ -282,34 +282,45 @@ if __name__ == "__main__":
     sns.set(palette=sns.color_palette("husl"))
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 
-    plt.semilogy(
-        atmo_diff.altitude,
-        atmo_diff.pressure(),
-        label="ASB Atmo."
-    )
-    plt.semilogy(
-        atmo_isa.altitude,
+
+    plt.semilogx(
         atmo_isa.pressure(),
+        atmo_isa.altitude/1e3,
         label="ISA Ref."
     )
-    plt.xlabel("Altitude [m]")
-    plt.ylabel("Pressure [Pa]")
-    plt.title("AeroSandbox Atmosphere vs. ISA Atmosphere")
-    plt.legend()
-    plt.show()
-
-    plt.plot(
-        atmo_diff.altitude,
-        atmo_diff.temperature(),
+    lims = ax.get_xlim(), ax.get_ylim()
+    plt.semilogx(
+        atmo_diff.pressure(),
+        atmo_diff.altitude/1e3,
         label="ASB Atmo."
     )
-    plt.plot(
-        atmo_isa.altitude,
-        atmo_isa.temperature(),
-        label="ISA Ref.",
-    )
-    plt.xlabel("Altitude [m]")
-    plt.ylabel("Temperature [K]")
+    ax.set_xlim(*lims[0])
+    ax.set_ylim(*lims[1])
+    plt.xlabel("Pressure [Pa]")
+    plt.ylabel("Altitude [km]")
     plt.title("AeroSandbox Atmosphere vs. ISA Atmosphere")
     plt.legend()
+    plt.tight_layout()
     plt.show()
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    plt.plot(
+        atmo_isa.temperature(),
+        atmo_isa.altitude/1e3,
+        label="ISA Ref.",
+    )
+    lims = ax.get_xlim(), ax.get_ylim()
+    plt.plot(
+        atmo_diff.temperature(),
+        atmo_diff.altitude/1e3,
+        label="ASB Atmo."
+    )
+    ax.set_xlim(*lims[0])
+    ax.set_ylim(*lims[1])
+    plt.xlabel("Temperature [K]")
+    plt.ylabel("Altitude [km]")
+    plt.title("AeroSandbox Atmosphere vs. ISA Atmosphere")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
