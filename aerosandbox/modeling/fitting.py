@@ -321,9 +321,17 @@ def fit_model(
             )
 
     ### Evaluate the model at the data points you're trying to fit
-    x_data_original = copy.deepcopy(x_data) # Make a copy of x_data so that you can determine if the model did in-place operations on x and tattle on the user.
-    y_model = model(x_data, params) # Evaluate the model
-    if not np.all(x_data == x_data_original):
+    x_data_original = copy.deepcopy(
+        x_data)  # Make a copy of x_data so that you can determine if the model did in-place operations on x and tattle on the user.
+    y_model = model(x_data, params)  # Evaluate the model
+    try:
+        x_data_is_unchanged = np.all(x_data == x_data_original)
+    except ValueError:
+        x_data_is_unchanged = np.all([
+            x_series == x_series_original
+            for x_series, x_series_original in zip(x_data, x_data_original)
+        ])
+    if not x_data_is_unchanged:
         raise TypeError("model(x_data, parameter_guesses) did in-place operations on x, which is not allowed!")
     if y_model is None:  # Make sure that y_model actually returned something sensible
         raise TypeError("model(x_data, parameter_guesses) returned None, when it should've returned a 1D ndarray.")
