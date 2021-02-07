@@ -400,9 +400,8 @@ class Airfoil(Polygon):
         coordinates -= translation
 
         ### Rotate
-        rotation_matrix = rotation_matrix_2D(
+        rotation_matrix = np.rotation_matrix_2D(
             angle=angle,
-            backend='numpy'
         )
         coordinates = (rotation_matrix @ coordinates.T).T
 
