@@ -18,6 +18,11 @@ from .trig import degrees, radians, sind, cosd, tand, arcsind, arccosd, arctan2d
 
 from numpy import round, min, max
 
+from numpy import abs as _abs
+
 
 def abs(x):
-    return fabs(x)
+    try:
+        return _abs(x)
+    except TypeError:
+        return fabs(x)
