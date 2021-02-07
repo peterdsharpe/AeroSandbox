@@ -1,5 +1,5 @@
 import aerosandbox.numpy as np
-
+import casadi as cas
 
 def reflect_over_XZ_plane(input_vector):
     """
@@ -7,17 +7,31 @@ def reflect_over_XZ_plane(input_vector):
     :param input_vector: A vector or list of vectors to flip.
     :return: Vector with flipped sign on y-coordinate.
     """
-    output_vector = input_vector
-    shape = output_vector.shape
-    if len(shape) == 1 and shape[0] == 3:
-        output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape) == 2 and shape[1] == 1 and shape[0] == 3:  # Vector of 3 items
-        output_vector = output_vector * cas.vertcat(1, -1, 1)
-    elif len(shape) == 2 and shape[1] == 3:  # 2D Nx3 vector
-        output_vector = cas.horzcat(output_vector[:, 0], -1 * output_vector[:, 1], output_vector[:, 2])
-    # elif len(shape) == 3 and shape[2] == 3:  # 3D MxNx3 vector
-    #     output_vector = output_vector * cas.array([1, -1, 1])
-    else:
-        raise Exception("Invalid input for reflect_over_XZ_plane!")
+    if isinstance(input_vector, np.ndarray):
+        shape = input_vector.shape
+        if len(shape) == 1:
+            return input_vector * np.array([1, -1, 1])
+        elif len(shape) == 2:
+            if not shape[1] == 3:
+                raise ValueError("The function expected either a 3-element vector or a Nx3 array!")
+            return input_vector * np.array([1, -1, 1])
+        else:
+            raise ValueError("The function expected either a 3-element vector or a Nx3 array!")
 
-    return output_vector
+    if not (
+        isinstance(input_vector, cas.MX) or
+        isinstance(input_vector, cas.DM) or
+        isinstance(input_vector, cas.SX)
+    ):
+        raise TypeError("Got an unexpected data type for `input_vector`!")
+
+    if input_vector.shape[1] == 1:
+        return input_vector * np.array([1, -1, 1])
+    elif input_vector.shape[1] == 3:
+        return cas.horzcat(
+            input_vector[:,0],
+            -1 * input_vector[:,1],
+            input_vector[:,2],
+        )
+    else:
+        raise ValueError("This function expected either a 3-element vector or an Nx3 array!")
