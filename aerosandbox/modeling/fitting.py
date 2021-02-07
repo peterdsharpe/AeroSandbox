@@ -4,6 +4,7 @@ from aerosandbox.optimization.opti import Opti
 from typing import Union, Dict, Callable, List, Tuple
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 import matplotlib.pyplot as plt
+import copy
 
 
 class FittedModel(SurrogateModel):
@@ -178,9 +179,11 @@ def fit_model(
             will likely be bad at this point, because we haven't yet optimized on param_guesses - but the types
             should be happy.)
 
-            Model should use simple operators where possible (+,-,*,/,**), NumPy operators for more complex things (
-            np.exp(), np.log(), np.fabs()), and aerosandbox.optimization.math operators for even more complex things
-            (if_else(), array() for new arrays, etc.).
+            Model should use aerosandbox.numpy operators.
+
+            The model is not allowed to make any in-place changes to the input `x`. The most common way this
+            manifests itself is if someone writes something to the effect of `x += 3` or similar. Instead, write `x =
+            x + 3`.
 
         x_data: Values of the dependent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
         var_name:var_data}.
@@ -318,7 +321,10 @@ def fit_model(
             )
 
     ### Evaluate the model at the data points you're trying to fit
-    y_model = model(x_data, params)
+    x_data_original = copy.deepcopy(x_data) # Make a copy of x_data so that you can determine if the model did in-place operations on x and tattle on the user.
+    y_model = model(x_data, params) # Evaluate the model
+    if not np.all(x_data == x_data_original):
+        raise TypeError("model(x_data, parameter_guesses) did in-place operations on x, which is not allowed!")
     if y_model is None:  # Make sure that y_model actually returned something sensible
         raise TypeError("model(x_data, parameter_guesses) returned None, when it should've returned a 1D ndarray.")
 
