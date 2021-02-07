@@ -1,5 +1,4 @@
 import aerosandbox.numpy as np
-import numpy as onp
 from aerosandbox.optimization.opti import Opti
 from typing import Union, Dict, Callable, List, Tuple
 from aerosandbox.modeling.surrogate_model import SurrogateModel
@@ -88,8 +87,8 @@ class FittedModel(SurrogateModel):
 
             Returns: A tuple representing the (min, max) value over which to plot that axis.
             """
-            minval = onp.min(x_data_axis)
-            maxval = onp.max(x_data_axis)
+            minval = np.min(x_data_axis)
+            maxval = np.max(x_data_axis)
 
             return (minval, maxval)
 

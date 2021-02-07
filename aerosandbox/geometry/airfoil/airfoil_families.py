@@ -1,5 +1,4 @@
 import aerosandbox.numpy as np
-import numpy as onp
 from scipy.special import comb
 from aerosandbox.geometry.polygon import stack_coordinates
 import re
@@ -191,7 +190,7 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
     if len(raw_coordinates) == 0:
         raise ValueError("File was found, but could not read any coordinates!")
 
-    coordinates = onp.array(raw_coordinates, dtype=float)
+    coordinates = np.array(raw_coordinates, dtype=float)
 
     return coordinates
 
