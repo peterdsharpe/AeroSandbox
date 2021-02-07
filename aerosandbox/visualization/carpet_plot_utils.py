@@ -61,7 +61,7 @@ def remove_nans(array):
     return array[~np.isnan(array)]
 
 
-def patch_nans(array): # TODO remove modification on incoming values; only patch nans
+def patch_nans(array):  # TODO remove modification on incoming values; only patch nans
     """
     Patches NaN values in a 2D array. Can patch holes or entire regions. Uses Laplacian smoothing.
     :param array:
@@ -147,7 +147,7 @@ def patch_nans(array): # TODO remove modification on incoming values; only patch
     assert last_nanfrac == 0, "Could not patch all NaNs!"
 
     # Diffusing
-    print_title("Diffusing")
+    print_title("Diffusing") # TODO Perhaps use skimage gaussian blur kernel or similar instead of "+" stencil?
     for iter in range(50):
         print(f"{iter + 1:4}")
         for i in range(array.shape[0]):
