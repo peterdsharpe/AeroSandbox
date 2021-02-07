@@ -13,7 +13,7 @@ from dataset_temperature import time, measured_temperature
 def test_fit_model_fit_type(plot=False):
     ### Fit a model
     def model(x, p):
-        return p["a"] * x ** 2 + p["b"] * x + p["c"]  # Quadratic regression
+        return p["2"] * x ** 2 + p["1"] * x + p["0"]  # Quadratic regression
 
     def fit_model_with_fit_type(fit_type):
         return fit_model(
@@ -21,11 +21,10 @@ def test_fit_model_fit_type(plot=False):
             x_data=time,
             y_data=measured_temperature,
             parameter_guesses={
-                "a": 0,
-                "b": 0,
-                "c": 0,
+                "2": 0,
+                "1": 0,
+                "0": 0,
             },
-            parameter_bounds={"a": (0, 0)},
             fit_type=fit_type,
             residual_norm_type="L1"
         )

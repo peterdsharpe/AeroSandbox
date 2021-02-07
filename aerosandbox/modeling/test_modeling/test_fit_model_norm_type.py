@@ -13,7 +13,7 @@ from dataset_temperature import time, measured_temperature
 def test_fit_model_norm_type(plot=False):
     ### Fit a model
     def model(x, p):
-        return p["m"] * x + p["b"]  # Linear regression
+        return p["1"] * x + p["0"]  # Linear regression
 
     def fit_model_with_norm(residual_norm_type):
         return fit_model(
@@ -21,8 +21,8 @@ def test_fit_model_norm_type(plot=False):
             x_data=time,
             y_data=measured_temperature,
             parameter_guesses={
-                "m": 0,
-                "b": 0,
+                "1": 0,
+                "0": 0,
             },
             residual_norm_type=residual_norm_type
         )
