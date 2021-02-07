@@ -1,9 +1,9 @@
-import numpy as np
+import numpy as onp
 import casadi as cas
 
 
-def array(object):
-    a = np.array(object)
+def array(object, dtype=None):
+    a = onp.array(object, dtype=dtype)
 
     if a.dtype != "O":  # If it's not an object array, then you're done here!
         return a
@@ -23,6 +23,7 @@ def array(object):
         ]
     )
 
+
 def length(array) -> int:
     """
     Returns the length of an array-like object.
@@ -34,11 +35,11 @@ def length(array) -> int:
     """
     try:
         return len(array)
-    except TypeError: # array has no function len() -> either float, int, or CasADi type
+    except TypeError:  # array has no function len() -> either float, int, or CasADi type
         try:
             if len(array.shape) >= 1:
                 return array.shape[0]
             else:
                 raise AttributeError
-        except AttributeError: # array has no attribute shape -> either float or int
+        except AttributeError:  # array has no attribute shape -> either float or int
             return 1
