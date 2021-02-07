@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as onp
 import casadi as cas
 from aerosandbox.numpy.array import length
 
@@ -6,7 +6,7 @@ from aerosandbox.numpy.array import length
 def sum(x):
     """Returns the sum of a vector x."""
     try:
-        return np.sum(x)
+        return onp.sum(x)
     except Exception:
         return cas.sum1(x)
 
