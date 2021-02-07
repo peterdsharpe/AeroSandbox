@@ -272,7 +272,7 @@ class Atmosphere(AeroSandboxObject):
 
 if __name__ == "__main__":
     # Make AeroSandbox Atmosphere
-    altitude = linspace(-5000, 100000, 500)
+    altitude = np.linspace(-5000, 100000, 500)
     atmo_diff = Atmosphere(altitude=altitude)
     atmo_isa = Atmosphere(altitude=altitude, type="isa")
 
