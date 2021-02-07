@@ -44,6 +44,23 @@ class AeroSandboxObject:
 
 
 class ImplicitAnalysis(AeroSandboxObject):
+    """
+    An implicit analysis. To extend this, inherit from this. Your new class should look something like:
+
+    >>> class MyImplicitAnalysis(ImplicitAnalysis):
+    >>>
+    >>>     def __init__(self, *args):
+    >>>
+    >>>         super().__init__()
+    >>>
+    >>>         do_my_entire_analysis_here(*args) # Outputs should be stored as class properties, e.g. `self.lift_force`
+    >>>
+    >>>         super()._init_end()
+
+    See the LiftingLine class as an example of this.
+
+    """
+
     def __init__(self):  # TODO make this an abstractmethod after verifying functionality.
         """
         If an optimiztion environment is provided, use that. If not, create one.
@@ -60,6 +77,11 @@ class ImplicitAnalysis(AeroSandboxObject):
             self.opti = opti_input
         else:
             self.opti = Opti()
+
+    def _init_end(self):
+        if not self.opti_provided:
+            sol = self.opti.solve()
+            self.substitute_solution(sol)
 
 
 class ExplicitAnalysis(AeroSandboxObject):

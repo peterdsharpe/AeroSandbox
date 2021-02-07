@@ -42,9 +42,7 @@ class LiftingLine(ImplicitAnalysis):
         self._calculate_vortex_strengths()
         self._calculate_forces()
 
-        if not self.opti_provided:
-            sol = self.opti.solve()
-            self.substitute_solution(sol)
+        super()._init_end()
 
     def _make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
