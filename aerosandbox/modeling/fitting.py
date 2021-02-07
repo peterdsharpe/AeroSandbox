@@ -265,6 +265,11 @@ def fit_model(
         weights = np.ones(n_datapoints)
     else:
         weights = flatten(weights)
+    sum_weights = np.sum(weights)
+    if sum_weights <= 0:
+        raise ValueError("The weights must sum to a positive number!")
+    if np.any(weights < 0):
+        raise ValueError("No entries of the weights vector are allowed to be negative!")
     weights = weights / np.sum(weights)  # Normalize weights so that they sum to 1.
 
     ### Check format of parameter_bounds input
@@ -351,16 +356,16 @@ def fit_model(
             abs_error >= error,
             abs_error >= -error,
         ])
-        opti.minimize(np.sum(abs_error))
+        opti.minimize(np.sum(weights * abs_error))
 
     elif residual_norm_type.lower() == "l2":  # Minimize the L2 norm
-        opti.minimize(np.sum(error ** 2))
+        opti.minimize(np.sum(weights * error ** 2))
 
     elif residual_norm_type.lower() == "linf":  # Minimize the L-infinity norm
         linf_value = opti.variable(init_guess=0)  # Make the value of the L-infinity norm an optimization variable
         opti.subject_to([
-            linf_value >= error,
-            linf_value >= -error
+            linf_value >= weights * error,
+            linf_value >= -weights * error
         ])
         opti.minimize(linf_value)
 
