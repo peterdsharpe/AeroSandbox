@@ -39,7 +39,7 @@ Before continuing, I'd recommend practicing a bit using the `Opti()` stack and `
 
 * `/geometry/`: The main goal of AeroSandbox is to make engineering design optimization more harmonious. Engineering design can look like a lot of things depending on what you're trying to design - airplanes, cars, bridges, et cetera. 
 
-	However, all of these objects have one thing in common - geometry! They're all *physical* objects that we're trying to optimize the shape of - remember that **engineering design is the process of finding an optimal mapping from an object's function to its form** (in the words of my excellent advisor, Prof. John Hansman).
+	However, all of these objects have one thing in common - geometry! They're all *physical* objects that we're trying to optimize the shape of - remember that **engineering design is the process of finding an optimal mapping from an object's function to that object's form** (in the words of my excellent advisor, Prof. John Hansman).
 
 	The `geometry` folder therefore is a self-contained object-oriented framework for representing the geometry of engineered systems in Python. Right now, it's primarily used for aircraft - you can build a nested data structure all the way from an entire aircraft down to each point that defines the shape of an individual airfoil. Once you have that data structure, you can do all sorts of useful things with - output it to various filetypes, draw it in an interactive 3D window so that you can see it, and pass it to all kinds of analysis tools.
 
