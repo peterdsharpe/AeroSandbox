@@ -105,8 +105,8 @@ def test_logic(types):
                 However, checking the outputs, these seem to be yielding correct results despite
                 the warning sooo...
                 """
-                x == y
-                x != y
+                x == y  # Warnings coming from here
+                x != y  # Warnings coming from here
                 x > y
                 x >= y
                 x < y
