@@ -26,7 +26,7 @@ def array(object, dtype=None):
 
 def length(array) -> int:
     """
-    Returns the length of an array-like object.
+    Returns the length of an 1D-array-like object.
     Args:
         array:
 
