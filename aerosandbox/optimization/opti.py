@@ -357,4 +357,5 @@ class Opti(cas.Opti):
 
 
 if __name__ == '__main__':
+    import pytest
     pytest.main()
