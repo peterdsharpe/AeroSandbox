@@ -107,7 +107,7 @@ class Beam6DOF(AeroSandboxObject):
         self._init_geometry = value
         
         for key in value.keys():
-            setattr(self, key, value[key])
+            setattr(self, key, np.array(value[key]))
             
     @property
     def cross_section(self):
@@ -349,7 +349,7 @@ class RoundTube(Beam6DOF):
                  *args, 
                  init_geometry: dict = {
                      'diameter': 100,
-                     'thickness': 1E-3,
+                     'thickness': 5,
                      'num_eval': 100
                      },
                  **kwargs):
@@ -367,10 +367,11 @@ class RoundTube(Beam6DOF):
         diameter = self.diameter
         thickness = self.thickness
         
+        # TODO: Convert to Casadi
         angle = np.linspace( 0 , 2 * np.pi, 
-                            self.geometry.get('num_eval', 100))   # Default to 100
+                            self.init_geometry.get('num_eval', 100))   # Default to 100
          
-        xy = np.array([np.cos(angle), np.sin(angle)])
+        xy = np.array([np.cos(angle), np.sin(angle)]).T
         
         points = np.hstack(
             [
@@ -378,6 +379,16 @@ class RoundTube(Beam6DOF):
                 np.flip(xy * diameter, axis=0),
                 ]
             ).T
+        
+        x1 = xy[:, 0].reshape((1, -1)) * (diameter.T - thickness.T)
+        y1 = xy[:, 1].reshape((1, -1)) * (diameter.T - thickness.T)
+        x2 = np.flip(xy[:, 0].reshape((1, -1)), axis=1) * diameter.T
+        y2 = np.flip(xy[:, 1].reshape((1, -1)), axis=1) * diameter.T
+        
+        x = cas.horzcat(x1, x2)
+        y = cas.horzcat(y1, y2)
+        
+        points = cas.vertcat(x, y).T
         
         #TODO: Probably quite inefficient for circles (high poly approx)
         poly = asb.Polygon(points)
@@ -415,14 +426,16 @@ class RectTube(Beam6DOF):
             [1, 1], [0, 1],
             [0, 0]
             ])
-        width_height = np.array([width, height])
         
-        points = np.vstack(
-            [
-                xy * (width_height - 2 * thickness) +  thickness,
-                np.flip(xy * width_height, axis=0),
-                ]
-            )
+        x1 = xy[:, 0].reshape((1, -1)) * (width.T - 2 * thickness) +  thickness
+        y1 = xy[:, 1].reshape((1, -1)) * (height.T - 2 * thickness) +  thickness
+        x2 = xy[:, 0].reshape((1, -1)) * width.T
+        y2 = xy[:, 1].reshape((1, -1)) * height.T
+        
+        x = cas.horzcat(x1, x2)
+        y = cas.horzcat(y1, y2)
+        
+        points = cas.vertcat(x, y).T
         
         poly = asb.Polygon(points)
         
@@ -479,3 +492,13 @@ if __name__ == '__main__':
         bending=True,
         torsion=True
     )
+    beam.cross_section.plot()
+    
+    tube = RoundTube(
+        opti=opti,
+        length=60 / 2,
+        points_per_point_load=50,
+        bending=True,
+        torsion=True
+    )
+    tube.cross_section.plot()
