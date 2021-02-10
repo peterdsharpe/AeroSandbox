@@ -1,7 +1,6 @@
 import casadi as cas
 from typing import Union, List, Dict, Callable
 import numpy as np
-import pytest
 import json
 
 
