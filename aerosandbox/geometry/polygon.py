@@ -1,11 +1,18 @@
+import casadi as cas
 import aerosandbox.numpy as np
 from matplotlib import path
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as mplPolygon
 from aerosandbox.common import AeroSandboxObject
 
 
 class Polygon(AeroSandboxObject):
     def __init__(self, coordinates):
         self.coordinates = coordinates  # Nx2 NumPy ndarray
+        
+        # TODO: Make this better, fixes negative areas etc though
+        # if self.area() < 0:
+        #     self.coordinates = np.flip(coordinates, axis=0)
 
     def x(self):
         """
@@ -20,6 +27,15 @@ class Polygon(AeroSandboxObject):
         :return: Y coordinates as a vector
         """
         return self.coordinates[:, 1]
+    
+    def _x_n(self):
+        # replicates np.roll behavior for casadi compatibility
+        return cas.vertcat(self.x()[-1], self.x()[:-1])
+    
+    def _y_n(self):
+        # replicates np.roll behavior for casadi compatibility
+        return cas.vertcat(self.y()[-1], self.y()[:-1])
+        
 
     def n_points(self) -> int:
         """
@@ -63,8 +79,8 @@ class Polygon(AeroSandboxObject):
         # Returns the area of the polygon, in nondimensional (normalized to chord^2) units.
         x = self.x()
         y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
+        x_n = self._x_n()  # x_next, or x_i+1
+        y_n = self._y_n()  # y_next, or y_i+1
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
@@ -76,8 +92,8 @@ class Polygon(AeroSandboxObject):
         # Returns the centroid of the polygon, in nondimensional (chord-normalized) units.
         x = self.x()
         y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
+        x_n = self._x_n()  # x_next, or x_i+1
+        y_n = self._y_n()  # y_next, or y_i+1
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
@@ -93,15 +109,15 @@ class Polygon(AeroSandboxObject):
         # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
         x = self.x()
         y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
+        x_n = self._x_n()  # x_next, or x_i+1
+        y_n = self._y_n()  # y_next, or y_i+1
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
         A = 0.5 * np.sum(a)  # area
 
-        x_c = 1 / (6 * A) * cas.sum1(a * (x + x_n))
-        y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
         centroid = np.array([x_c, y_c])
 
         Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
@@ -114,16 +130,13 @@ class Polygon(AeroSandboxObject):
         # Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
         x = self.x()
         y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
+        x_n = self._x_n()  # x_next, or x_i+1
+        y_n = self._y_n()  # y_next, or y_i+1
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
+        A = self.area()
+        centroid = self.centroid()
 
         Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
 
@@ -135,45 +148,46 @@ class Polygon(AeroSandboxObject):
         # Returns the nondimensionalized product of inertia, taken about the centroid.
         x = self.x()
         y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
+        x_n = self._x_n()  # x_next, or x_i+1
+        y_n = self._y_n()  # y_next, or y_i+1
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
+        A = self.area()
+        centroid = self.centroid()
 
         Ixy = 1 / 24 * np.sum(a * (x * y_n + 2 * x * y + 2 * x_n * y_n + x_n * y))
 
         Iuv = Ixy - A * centroid[0] * centroid[1]
 
         return Iuv
+    
+    # TODO: Make these properties?
+    def I(self):
+        # Returns the Area moment of intertia matrix
+        I = np.array([
+            [self.Ixx(), self.Ixy()],
+            [self.Ixy(), self.Iyy()]  # Ixy = Iyx
+            ])
+        return I
 
     def J(self):
         # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
-
-        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
-
-        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
-
-        J = Ixx + Iyy
+        J = self.Ixx + self.Iyy
 
         return J
+    
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.autoscale(enable=True) 
+        
+        x = self.x()            
+        y = self.y()
+        poly = mplPolygon( np.c_[x,y], facecolor='red', edgecolor='red', alpha=0.25)
+        ax.add_patch(poly)
+        
+        plt.show()
 
 
 def stack_coordinates(
