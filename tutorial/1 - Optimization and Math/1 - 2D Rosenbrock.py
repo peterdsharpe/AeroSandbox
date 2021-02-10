@@ -36,10 +36,10 @@ f = (1 - x) ** 2 + 100 * (y - x ** 2) ** 2  # You can construct nonlinear functi
 opti.minimize(f)  # ...and then optimize them.
 
 # Optimize
-sol = opti.solve()  # This is the standard solve convention.
+sol = opti.solve()  # This is the conventional syntax to solve the optimization problem.
 
 # Extract values at the optimum
-x_opt = sol.value(x) # Evaluates x using the values when the solver converged.
+x_opt = sol.value(x) # Evaluates x at the point where the solver converged.
 y_opt = sol.value(y)
 
 # Print values
