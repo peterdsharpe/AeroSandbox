@@ -16,9 +16,9 @@ There's a big world in here filled with functions, classes, analyses, and more -
 
 These are the two key pieces of AeroSandbox to understand - once you get these, you're 90% of the way there.
 
-* `/optimization/`: This folder contains only one thing, and it's the single most important class in AeroSandbox: the `Opti()` stack. `Opti` is an object-oriented way to formulate and solve an optimization problem, with syntax specifically aimed at engineering design. 
+* `/optimization/`: This folder contains only one thing, and it's the single most important class in AeroSandbox: the `Opti` stack. The `Opti` class is an object-oriented way to formulate and solve an optimization problem, with syntax specifically aimed at engineering design. 
 
-	One of the core principles of AeroSandbox is that *everything* is an optimization problem. Even for problems that look like pure analysis ("I already have a design, how well does it perform?"), there's beautiful duality between optimization and analysis through something called "Simultaneous Analysis and Design" - more on this later. Because of this, the `Opti` stack is truly ubiquitous throughout AeroSandbox.
+	One of the core principles of AeroSandbox is that *everything* is an optimization problem. Even for problems that look like pure analysis ("I already have a design, how well does it perform?"), there's a beautiful duality between optimization and analysis through something called "Simultaneous Analysis and Design" - more on this later. Because of this, the `Opti` stack is truly ubiquitous throughout AeroSandbox.
 
 	Extensive documentation with examples is provided in `aerosandbox.optimization.opti` - please read this!
 
