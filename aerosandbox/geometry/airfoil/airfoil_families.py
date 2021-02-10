@@ -243,6 +243,3 @@ def get_UIUC_coordinates(
 
     return get_coordinates_from_raw_dat(raw_text)
 
-
-if __name__ == '__main__':
-    get_UIUC_coordinates("dae11")
