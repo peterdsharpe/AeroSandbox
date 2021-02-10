@@ -27,8 +27,8 @@ def test_2D_rosenbrock():  # 2-dimensional rosenbrock
     opti = asb.Opti()  # set up an optimization environment
 
     # Define optimization variables
-    x = opti.variable(init_guess=1)
-    y = opti.variable(init_guess=1)
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
 
     # Define objective
     f = (a - x) ** 2 + b * (y - x ** 2) ** 2
