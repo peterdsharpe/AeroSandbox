@@ -1,6 +1,6 @@
 import casadi as cas
 from typing import Union, List, Dict, Callable
-import numpy as np
+import aerosandbox.numpy as np
 import json
 
 
