@@ -33,7 +33,7 @@ These are the two key pieces of AeroSandbox to understand - once you get these, 
 		* If you pass normal NumPy arrays to these functions, they'll work 100% exactly the same as they would in original NumPy - same result and same speed.
 		* If you pass optimization variables to these functions, they'll intelligently switch over to a version of the function that allows us to preserve the AD trace.
 	* **So what does this mean for you, dear user?** It means that when working with AeroSandbox, all you need to do is replace `import numpy as np` with `import aerosandbox.numpy as np`, and you're good to go!
-	* Caveat: Not all NumPy functions that should be overwritten have been overwritten - we've done our best, but there are *sooo* many obscure NumPy functions! If you get an error on a function you want to use, raise an issue ticket!
+	* Caveat: Not all NumPy functions that should be overwritten have been overwritten - we've done our best, but there are *sooo* many obscure NumPy functions! If you get an error on a function you want to use, raise an issue ticket [here](https://github.com/peterdsharpe/AeroSandbox/issues)!
 
 Before continuing, I'd recommend practicing a bit using the `Opti()` stack and `aerosandbox.numpy` to solve a few canonical optimization problems. A good starter problem is finding the minimum of the 2D [Rosenbrock function](https://en.wikipedia.org/wiki/Rosenbrock_function) - for extra credit, add a constraint that the point has to lie inside the unit circle!
 
