@@ -1,7 +1,6 @@
 import casadi as cas
 from typing import Union, List, Dict, Callable
-import aerosandbox.numpy as np
-import pytest
+import numpy as np
 import json
 
 
@@ -518,4 +517,5 @@ class Opti(cas.Opti):
 
 
 if __name__ == '__main__':
+    import pytest
     pytest.main()
