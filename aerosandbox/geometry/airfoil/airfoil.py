@@ -63,51 +63,51 @@ class Airfoil(Polygon):
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
-    def populate_sectional_functions_from_xfoil_fits(self,
-                                                     parallel=True,
-                                                     verbose=True,
-                                                     ):  # TODO write docstring
-        if not self.has_xfoil_data(raise_exception_if_absent=False):
-            self.get_xfoil_data(
-                parallel=parallel,
-                verbose=verbose,
-            )
-
-        self.AirfoilFitter = AirfoilFitter(
-            airfoil=self,
-            parallel=parallel,
-            verbose=verbose,
-        )
-        self.AirfoilFitter.fit_xfoil_data_Cl(plot_fit=False)
-        self.AirfoilFitter.fit_xfoil_data_Cd(plot_fit=False)
-
-        def CL_function(
-                alpha, Re, mach=0, deflection=0,
-                fitter=self.AirfoilFitter
-        ):
-            return fitter.Cl_function(
-                alpha=alpha,
-                Re=Re,
-            )
-
-        def CDp_function(
-                alpha, Re, mach=0, deflection=0,
-                fitter=self.AirfoilFitter
-        ):
-            return fitter.Cd_function(
-                alpha=alpha,
-                Re=Re,
-            )
-
-        def Cm_function(
-                alpha, Re, mach=0, deflection=0,
-                fitter=self.AirfoilFitter
-        ):
-            return alpha * 0
-
-        self.CL_function = CL_function
-        self.CDp_function = CDp_function
-        self.Cm_function = Cm_function
+    # def populate_sectional_functions_from_xfoil_fits(self,
+    #                                                  parallel=True,
+    #                                                  verbose=True,
+    #                                                  ):  # TODO write docstring
+    #     if not self.has_xfoil_data(raise_exception_if_absent=False):
+    #         self.get_xfoil_data(
+    #             parallel=parallel,
+    #             verbose=verbose,
+    #         )
+    #
+    #     self.AirfoilFitter = AirfoilFitter(
+    #         airfoil=self,
+    #         parallel=parallel,
+    #         verbose=verbose,
+    #     )
+    #     self.AirfoilFitter.fit_xfoil_data_Cl(plot_fit=False)
+    #     self.AirfoilFitter.fit_xfoil_data_Cd(plot_fit=False)
+    #
+    #     def CL_function(
+    #             alpha, Re, mach=0, deflection=0,
+    #             fitter=self.AirfoilFitter
+    #     ):
+    #         return fitter.Cl_function(
+    #             alpha=alpha,
+    #             Re=Re,
+    #         )
+    #
+    #     def CDp_function(
+    #             alpha, Re, mach=0, deflection=0,
+    #             fitter=self.AirfoilFitter
+    #     ):
+    #         return fitter.Cd_function(
+    #             alpha=alpha,
+    #             Re=Re,
+    #         )
+    #
+    #     def Cm_function(
+    #             alpha, Re, mach=0, deflection=0,
+    #             fitter=self.AirfoilFitter
+    #     ):
+    #         return alpha * 0
+    #
+    #     self.CL_function = CL_function
+    #     self.CDp_function = CDp_function
+    #     self.Cm_function = Cm_function
 
     def has_sectional_functions(self, raise_exception_if_absent=True):
         """
@@ -413,8 +413,8 @@ class Airfoil(Polygon):
             coordinates=coordinates
         )
 
-    def normalize(self):
-        pass  # TODO finish me
+    # def normalize(self):
+    #     pass  # TODO finish me
 
     def write_dat(self,
                   filepath  # type: str
@@ -430,635 +430,635 @@ class Airfoil(Polygon):
                 [f"\t%f\t%f\n" % tuple(coordinate) for coordinate in self.coordinates]
             )
 
-    def xfoil_a(self,
-                alpha,
-                Re=0,
-                M=0,
-                n_crit=9,
-                xtr_bot=1,
-                xtr_top=1,
-                reset_bls=False,
-                repanel=False,
-                max_iter=20,
-                verbose=False,
-                ):
-        """
-        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-        Point analysis at a given alpha.
-        :param alpha: angle of attack [deg]
-        :param Re: Reynolds number
-        :param M: Mach number
-        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-        :param xtr_bot: Bottom trip location [x/c]
-        :param xtr_top: Top trip location [x/c]
-        :param reset_bls: Reset boundary layer parameters upon initialization?
-        :param repanel: Repanel airfoil within XFoil?
-        :param max_iter: Maximum number of global Newton iterations
-        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-        """
-        try:
-            xf = XFoil()
-        except NameError:
-            raise NameError(
-                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-
-        def run():
-            xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.x()).reshape(-1),
-                y=np.array(self.y()).reshape(-1),
-            )
-            xf.Re = Re
-            xf.M = M
-            xf.n_crit = n_crit
-            xf.xtr = (xtr_top, xtr_bot)
-            if reset_bls:
-                xf.reset_bls()
-            if repanel:
-                xf.repanel()
-            xf.max_iter = max_iter
-            return xf.a(alpha)
-
-        if verbose:
-            cl, cd, cm, Cp_min = run()
-        else:
-            with stdout_redirected():
-                cl, cd, cm, Cp_min = run()
-        a = alpha
-
-        return {
-            "alpha" : a,
-            "Cl"    : cl,
-            "Cd"    : cd,
-            "Cm"    : cm,
-            "Cp_min": Cp_min
-        }
-
-    def xfoil_cl(self,
-                 cl,
-                 Re=0,
-                 M=0,
-                 n_crit=9,
-                 xtr_bot=1,
-                 xtr_top=1,
-                 reset_bls=False,
-                 repanel=False,
-                 max_iter=20,
-                 verbose=False,
-                 ):
-        """
-        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-        Point analysis at a given lift coefficient.
-        :param cl: Lift coefficient
-        :param Re: Reynolds number
-        :param M: Mach number
-        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-        :param xtr_bot: Bottom trip location [x/c]
-        :param xtr_top: Top trip location [x/c]
-        :param reset_bls: Reset boundary layer parameters upon initialization?
-        :param repanel: Repanel airfoil within XFoil?
-        :param max_iter: Maximum number of global Newton iterations
-        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-        """
-        try:
-            xf = XFoil()
-        except NameError:
-            raise NameError(
-                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-
-        def run():
-            xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.x()).reshape(-1),
-                y=np.array(self.y()).reshape(-1),
-            )
-            xf.Re = Re
-            xf.M = M
-            xf.n_crit = n_crit
-            xf.xtr = (xtr_top, xtr_bot)
-            if reset_bls:
-                xf.reset_bls()
-            if repanel:
-                xf.repanel()
-            xf.max_iter = max_iter
-            return xf.cl(cl)
-
-        if verbose:
-            a, cd, cm, Cp_min = run()
-        else:
-            with stdout_redirected():
-                a, cd, cm, Cp_min = run()
-
-        cl = cl
-
-        return {
-            "alpha" : a,
-            "Cl"    : cl,
-            "Cd"    : cd,
-            "Cm"    : cm,
-            "Cp_min": Cp_min
-        }
-
-    def xfoil_aseq(self,
-                   a_start,
-                   a_end,
-                   a_step,
-                   Re=0,
-                   M=0,
-                   n_crit=9,
-                   xtr_bot=1,
-                   xtr_top=1,
-                   reset_bls=False,
-                   repanel=False,
-                   max_iter=20,
-                   verbose=False,
-                   ):
-        """
-        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-        Alpha sweep analysis.
-        :param a_start: First angle of attack [deg]
-        :param a_end: Last angle of attack [deg]
-        :param a_step: Amount to increment angle of attack by [deg]
-        :param Re: Reynolds number
-        :param M: Mach number
-        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-        :param xtr_bot: Bottom trip location [x/c]
-        :param xtr_top: Top trip location [x/c]
-        :param reset_bls: Reset boundary layer parameters upon initialization?
-        :param repanel: Repanel airfoil within XFoil?
-        :param max_iter: Maximum number of global Newton iterations
-        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-        """
-        try:
-            xf = XFoil()
-        except NameError:
-            raise NameError(
-                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-
-        def run():
-            xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.x()).reshape(-1),
-                y=np.array(self.y()).reshape(-1),
-            )
-            xf.Re = Re
-            xf.M = M
-            xf.n_crit = n_crit
-            xf.xtr = (xtr_top, xtr_bot)
-            if reset_bls:
-                xf.reset_bls()
-            if repanel:
-                xf.repanel()
-            xf.max_iter = max_iter
-            return xf.aseq(a_start, a_end, a_step)
-
-        if verbose:
-            a, cl, cd, cm, Cp_min = run()
-        else:
-            with stdout_redirected():
-                a, cl, cd, cm, Cp_min = run()
-
-        return {
-            "alpha" : a,
-            "Cl"    : cl,
-            "Cd"    : cd,
-            "Cm"    : cm,
-            "Cp_min": Cp_min
-        }
-
-    def xfoil_cseq(self,
-                   cl_start,
-                   cl_end,
-                   cl_step,
-                   Re=0,
-                   M=0,
-                   n_crit=9,
-                   xtr_bot=1,
-                   xtr_top=1,
-                   reset_bls=False,
-                   repanel=False,
-                   max_iter=20,
-                   verbose=False,
-                   ):
-        """
-        Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-        Lift coefficient sweep analysis.
-        :param cl_start: First lift coefficient [unitless]
-        :param cl_end: Last lift coefficient [unitless]
-        :param cl_step: Amount to increment lift coefficient by [unitless]
-        :param Re: Reynolds number
-        :param M: Mach number
-        :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-        :param xtr_bot: Bottom trip location [x/c]
-        :param xtr_top: Top trip location [x/c]
-        :param reset_bls: Reset boundary layer parameters upon initialization?
-        :param repanel: Repanel airfoil within XFoil?
-        :param max_iter: Maximum number of global Newton iterations
-        :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-        :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-        """
-        try:
-            xf = XFoil()
-        except NameError:
-            raise NameError(
-                "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-                "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-                "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-
-        def run():
-            xf.airfoil = xfoil_model.Airfoil(
-                x=np.array(self.x()).reshape(-1),
-                y=np.array(self.y()).reshape(-1),
-            )
-            xf.Re = Re
-            xf.M = M
-            xf.n_crit = n_crit
-            xf.xtr = (xtr_top, xtr_bot)
-            if reset_bls:
-                xf.reset_bls()
-            if repanel:
-                xf.repanel()
-            xf.max_iter = max_iter
-            return xf.cseq(cl_start, cl_end, cl_step)
-
-        if verbose:
-            a, cl, cd, cm, Cp_min = run()
-        else:
-            with stdout_redirected():
-                a, cl, cd, cm, Cp_min = run()
-
-        return {
-            "alpha" : a,
-            "Cl"    : cl,
-            "Cd"    : cd,
-            "Cm"    : cm,
-            "Cp_min": Cp_min
-        }
-
-    def get_xfoil_data(self,
-                       a_start=-6,  # type: float
-                       a_end=12,  # type: float
-                       a_step=0.5,  # type: float
-                       a_init=0,  # type: float
-                       Re_start=1e4,  # type: float
-                       Re_end=1e7,  # type: float
-                       n_Res=30,  # type: int
-                       mach=0,  # type: float
-                       max_iter=20,  # type: int
-                       repanel=False,  # type: bool
-                       parallel=True,  # type: bool
-                       verbose=True,  # type: bool
-                       ):
-        """ # TODO finish docstring
-        Calculates aerodynamic performance data for a particular airfoil with XFoil.
-        Does a 2D grid sweep of the alpha-Reynolds space at a particular Mach number.
-        Populates two new instance variables:
-            * self.xfoil_data_1D: A dict of XFoil data at all calculated operating points (1D arrays, NaNs removed)
-            * self.xfoil_data_2D: A dict of XFoil data at all calculated operating points (2D arrays, NaNs present)
-        :param a_start: Lower bound of angle of attack [deg]
-        :param a_end: Upper bound of angle of attack [deg]
-        :param a_step: Angle of attack increment size [deg]
-        :param a_init: Angle of attack to initialize runs at. Should solve easily (0 recommended) [deg]
-        :param Re_start: Reynolds number to begin sweep at. [unitless]
-        :param Re_end: Reynolds number to end sweep at. [unitless]
-        :param n_Res: Number of Reynolds numbers to sweep. Points are log-spaced.
-        :param mach: Mach number to sweep at.
-        :param max_iter: Maximum number of XFoil iterations per op-point.
-        :param repanel: Should we interally repanel the airfoil within XFoil before running? [boolean]
-            Consider disabling this if you try to do optimization based on this data (for smoothness reasons).
-            Otherwise, it's generally a good idea to leave this on.
-        :param parallel: Should we run in parallel? Generally results in significant speedup, but might not run
-            correctly on some machines. Disable this if it's a problem. [boolean]
-        :param verbose: Should we do verbose output? [boolean]
-        :return: self (in-place operation that creates self.xfoil_data_1D and self.xfoil_data_2D)
-        """
-        assert a_init > a_start
-        assert a_init < a_end
-        assert Re_start < Re_end
-        assert n_Res >= 1
-        assert mach >= 0
-
-        Res = np.logspace(np.log10(Re_start), np.log10(Re_end), n_Res)
-
-        def get_xfoil_data_at_Re(Re):
-
-            import aerosandbox.numpy as np  # needs to be imported here to support parallelization
-
-            run_data_upper = self.xfoil_aseq(
-                a_start=a_init + a_step,
-                a_end=a_end,
-                a_step=a_step,
-                Re=Re,
-                repanel=repanel,
-                max_iter=max_iter,
-                M=mach,
-                reset_bls=True,
-            )
-            run_data_lower = self.xfoil_aseq(
-                a_start=a_init,
-                a_end=a_start,
-                a_step=-a_step,
-                Re=Re,
-                repanel=repanel,
-                max_iter=max_iter,
-                M=mach,
-                reset_bls=True,
-            )
-            run_data = {
-                k: np.hstack((
-                    run_data_lower[k][::-1],
-                    run_data_upper[k]
-                )) for k in run_data_upper.keys()
-            }
-            return run_data
-
-        if verbose:
-            print("Running XFoil sweeps on Airfoil %s..." % self.name)
-            import time
-            start_time = time.time()
-
-        if not parallel:
-            runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
-        else:
-            import multiprocess as mp
-            pool = mp.Pool(mp.cpu_count())
-            runs_data = pool.map(get_xfoil_data_at_Re, Res)
-            pool.close()
-
-        if verbose:
-            run_time = time.time() - start_time
-            print("XFoil Runtime: %.3f sec" % run_time)
-
-        xfoil_data_2D = {}
-        for k in runs_data[0].keys():
-            xfoil_data_2D[k] = np.vstack([
-                d[k]
-                for d in runs_data
-            ])
-        xfoil_data_2D["Re"] = np.tile(Res, (
-            xfoil_data_2D["alpha"].shape[1],
-            1
-        )).T
-        np.place(
-            arr=xfoil_data_2D["Re"],
-            mask=np.isnan(xfoil_data_2D["alpha"]),
-            vals=np.NaN
-        )
-        xfoil_data_2D["alpha_indices"] = np.arange(a_start, a_end + a_step / 2, a_step)
-        xfoil_data_2D["Re_indices"] = Res
-
-        self.xfoil_data_2D = xfoil_data_2D
-
-        # 1-dimensionalize it and remove NaNs
-        xfoil_data_1D = {
-            k: remove_nans(xfoil_data_2D[k].reshape(-1))
-            for k in xfoil_data_2D.keys()
-        }
-        self.xfoil_data_1D = xfoil_data_1D
-
-        return self
-
-    def has_xfoil_data(self, raise_exception_if_absent=True):
-        """
-        Runs a quick check to see if this airfoil has XFoil data.
-        :param raise_exception_if_absent: Boolean flag to raise an Exception if XFoil data is not found.
-        :return: Boolean of whether or not XFoil data is present.
-        """
-        data_present = (
-                hasattr(self, 'xfoil_data_1D') and
-                hasattr(self, 'xfoil_data_2D')
-        )
-        if not data_present and raise_exception_if_absent:
-            raise Exception(
-                """This Airfoil %s does not yet have XFoil data,
-                so you can't run the function you've called.
-                To get XFoil data, first call:
-                    Airfoil.get_xfoil_data()
-                which will perform an in-place update that
-                provides the data.""" % self.name
-            )
-        return data_present
-
-    def plot_xfoil_data_contours(self):  # TODO add docstring
-        self.has_xfoil_data()  # Ensure data is present.
-        from matplotlib import colors
-
-        d = self.xfoil_data_1D  # data
-
-        fig = plt.figure(figsize=(10, 8), dpi=200)
-
-        ax = fig.add_subplot(311)
-        coords = self.coordinates
-        plt.plot(coords[:, 0], coords[:, 1], '.-', color='#280887')
-        plt.xlabel(r"$x/c$")
-        plt.ylabel(r"$y/c$")
-        plt.title(r"XFoil Data for %s Airfoil" % self.name)
-        plt.axis("equal")
-
-        with plt.style.context("default"):
-            ax = fig.add_subplot(323)
-            x = d["Re"]
-            y = d["alpha"]
-            z = d["Cl"]
-            levels = np.linspace(-0.5, 1.5, 21)
-            norm = None
-            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-            cbar = plt.colorbar(CF, format='%.2f')
-            cbar.set_label(r"$C_l$")
-            plt.grid(False)
-            plt.xlabel(r"$Re$")
-            plt.ylabel(r"$\alpha$")
-            plt.title(r"$C_l$ from $Re$, $\alpha$")
-            ax.set_xscale('log')
-
-            ax = fig.add_subplot(324)
-            x = d["Re"]
-            y = d["alpha"]
-            z = d["Cd"]
-            levels = np.logspace(-2.5, -1, 21)
-            norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-            cbar = plt.colorbar(CF, format='%.3f')
-            cbar.set_label(r"$C_d$")
-            plt.grid(False)
-            plt.xlabel(r"$Re$")
-            plt.ylabel(r"$\alpha$")
-            plt.title(r"$C_d$ from $Re$, $\alpha$")
-            ax.set_xscale('log')
-
-            ax = fig.add_subplot(325)
-            x = d["Re"]
-            y = d["alpha"]
-            z = d["Cl"] / d["Cd"]
-            x = x[d["alpha"] >= 0]
-            y = y[d["alpha"] >= 0]
-            z = z[d["alpha"] >= 0]
-            levels = np.logspace(1, np.log10(150), 21)
-            norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-            cbar = plt.colorbar(CF, format='%.1f')
-            cbar.set_label(r"$L/D$")
-            plt.grid(False)
-            plt.xlabel(r"$Re$")
-            plt.ylabel(r"$\alpha$")
-            plt.title(r"$L/D$ from $Re$, $\alpha$")
-            ax.set_xscale('log')
-
-            ax = fig.add_subplot(326)
-            x = d["Re"]
-            y = d["alpha"]
-            z = d["Cm"]
-            levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
-            norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
-            CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
-            C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
-            cbar = plt.colorbar(CF, format='%.2f')
-            cbar.set_label(r"$C_m$")
-            plt.grid(False)
-            plt.xlabel(r"$Re$")
-            plt.ylabel(r"$\alpha$")
-            plt.title(r"$C_m$ from $Re$, $\alpha$")
-            ax.set_xscale('log')
-
-        plt.tight_layout()
-        plt.show()
-
-        return self
-
-    def plot_xfoil_data_all_polars(self,
-                                   n_lines_max=20,
-                                   Cd_plot_max=0.04,
-                                   ):
-        """
-        Plots the existing XFoil data found by running self.get_xfoil_data().
-        :param n_lines_max: Maximum number of Reynolds numbers to plot. Useful if you ran a sweep with tons of Reynolds numbers.
-        :param Cd_plot_max: Upper limit of Cd to plot [float]
-        :return: self (makes plot)
-        """
-
-        self.has_xfoil_data()  # Ensure data is present.
-
-        n_lines_max = min(n_lines_max, len(self.xfoil_data_2D["Re_indices"]))
-
-        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
-        indices = np.array(
-            np.round(np.linspace(0, len(self.xfoil_data_2D["Re_indices"]) - 1, n_lines_max)),
-            dtype=int
-        )
-        indices_worth_plotting = [
-            np.min(remove_nans(self.xfoil_data_2D["Cd"][index, :])) < Cd_plot_max
-            for index in indices
-        ]
-        indices = indices[indices_worth_plotting]
-
-        colors = plt.cm.rainbow(np.linspace(0, 1, len(indices)))[::-1]
-        for i, Re in enumerate(self.xfoil_data_2D["Re_indices"][indices]):
-            Cds = remove_nans(self.xfoil_data_2D["Cd"][indices[i], :])
-            Cls = remove_nans(self.xfoil_data_2D["Cl"][indices[i], :])
-            Cd_min = np.min(Cds)
-            if Cd_min < Cd_plot_max:
-                plt.plot(
-                    Cds * 1e4,
-                    Cls,
-                    label="Re = %s" % eng_string(Re),
-                    color=colors[i],
-                )
-        plt.xlim(0, Cd_plot_max * 1e4)
-        plt.ylim(0, 2)
-        plt.xlabel(r"$C_d \cdot 10^4$")
-        plt.ylabel(r"$C_l$")
-        plt.title("XFoil Polars for %s Airfoil" % self.name)
-        plt.tight_layout()
-        plt.legend()
-        plt.show()
-
-        return self
-
-    def plot_xfoil_data_polar(self,
-                              Res,  # type: list
-                              Cd_plot_max=0.04,
-                              repanel=False,
-                              parallel=True,
-                              max_iter=40,
-                              verbose=True,
-                              ):
-        """
-        Plots CL-CD polar for a single Reynolds number or a variety of Reynolds numbers.
-        :param Res: Reynolds number to plot polars at. Either a single float or an iterable (list, 1D ndarray, etc.)
-        :param Cd_plot_max: Upper limit of Cd to plot [float]
-        :param cl_step: Cl increment for XFoil runs. Trades speed vs. plot resolution. [float]
-        :param repanel: Should we repanel the airfoil within XFoil? [boolean]
-        :param parallel: Should we run different Res in parallel? [boolean]
-        :param max_iter: Maximum number of iterations for XFoil to run. [int]
-        :param verbose: Should we print information as we run the sweeps? [boolean]
-        :return: self (makes plot)
-        """
-
-        try:  # If it's not an iterable, make it one.
-            Res[0]
-        except TypeError:
-            Res = [Res]
-
-        fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
-        colors = plt.cm.rainbow(np.linspace(0, 1, len(Res)))[::-1]
-
-        def get_xfoil_data_at_Re(Re):
-
-            xfoil_data = self.xfoil_aseq(
-                a_start=0,
-                a_end=15,
-                a_step=0.25,
-                Re=Re,
-                M=0,
-                reset_bls=True,
-                repanel=repanel,
-                max_iter=max_iter,
-                verbose=False,
-            )
-            Cd = remove_nans(xfoil_data["Cd"])
-            Cl = remove_nans(xfoil_data["Cl"])
-            return {"Cl": Cl, "Cd": Cd}
-
-        if verbose:
-            print("Running XFoil sweeps...")
-            import time
-            start_time = time.time()
-
-        if not parallel:
-            runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
-        else:
-            import multiprocess as mp
-            pool = mp.Pool(mp.cpu_count())
-            runs_data = pool.map(get_xfoil_data_at_Re, Res)
-            pool.close()
-
-        if verbose:
-            run_time = time.time() - start_time
-            print("XFoil Runtime: %.3f sec" % run_time)
-
-        for i, Re in enumerate(Res):
-            plt.plot(
-                runs_data[i]["Cd"] * 1e4,
-                runs_data[i]["Cl"],
-                label="Re = %s" % eng_string(Re),
-                color=colors[i],
-            )
-        plt.xlim(0, Cd_plot_max * 1e4)
-        plt.ylim(0, 2)
-        plt.xlabel(r"$C_d \cdot 10^4$")
-        plt.ylabel(r"$C_l$")
-        plt.title("XFoil Polars for %s Airfoil" % self.name)
-        plt.tight_layout()
-        plt.legend()
-        plt.show()
-
-        return self
+    # def xfoil_a(self,
+    #             alpha,
+    #             Re=0,
+    #             M=0,
+    #             n_crit=9,
+    #             xtr_bot=1,
+    #             xtr_top=1,
+    #             reset_bls=False,
+    #             repanel=False,
+    #             max_iter=20,
+    #             verbose=False,
+    #             ):
+    #     """
+    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+    #     Point analysis at a given alpha.
+    #     :param alpha: angle of attack [deg]
+    #     :param Re: Reynolds number
+    #     :param M: Mach number
+    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+    #     :param xtr_bot: Bottom trip location [x/c]
+    #     :param xtr_top: Top trip location [x/c]
+    #     :param reset_bls: Reset boundary layer parameters upon initialization?
+    #     :param repanel: Repanel airfoil within XFoil?
+    #     :param max_iter: Maximum number of global Newton iterations
+    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
+    #     """
+    #     try:
+    #         xf = XFoil()
+    #     except NameError:
+    #         raise NameError(
+    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+    #
+    #     def run():
+    #         xf.airfoil = xfoil_model.Airfoil(
+    #             x=np.array(self.x()).reshape(-1),
+    #             y=np.array(self.y()).reshape(-1),
+    #         )
+    #         xf.Re = Re
+    #         xf.M = M
+    #         xf.n_crit = n_crit
+    #         xf.xtr = (xtr_top, xtr_bot)
+    #         if reset_bls:
+    #             xf.reset_bls()
+    #         if repanel:
+    #             xf.repanel()
+    #         xf.max_iter = max_iter
+    #         return xf.a(alpha)
+    #
+    #     if verbose:
+    #         cl, cd, cm, Cp_min = run()
+    #     else:
+    #         with stdout_redirected():
+    #             cl, cd, cm, Cp_min = run()
+    #     a = alpha
+    #
+    #     return {
+    #         "alpha" : a,
+    #         "Cl"    : cl,
+    #         "Cd"    : cd,
+    #         "Cm"    : cm,
+    #         "Cp_min": Cp_min
+    #     }
+    #
+    # def xfoil_cl(self,
+    #              cl,
+    #              Re=0,
+    #              M=0,
+    #              n_crit=9,
+    #              xtr_bot=1,
+    #              xtr_top=1,
+    #              reset_bls=False,
+    #              repanel=False,
+    #              max_iter=20,
+    #              verbose=False,
+    #              ):
+    #     """
+    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+    #     Point analysis at a given lift coefficient.
+    #     :param cl: Lift coefficient
+    #     :param Re: Reynolds number
+    #     :param M: Mach number
+    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+    #     :param xtr_bot: Bottom trip location [x/c]
+    #     :param xtr_top: Top trip location [x/c]
+    #     :param reset_bls: Reset boundary layer parameters upon initialization?
+    #     :param repanel: Repanel airfoil within XFoil?
+    #     :param max_iter: Maximum number of global Newton iterations
+    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
+    #     """
+    #     try:
+    #         xf = XFoil()
+    #     except NameError:
+    #         raise NameError(
+    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+    #
+    #     def run():
+    #         xf.airfoil = xfoil_model.Airfoil(
+    #             x=np.array(self.x()).reshape(-1),
+    #             y=np.array(self.y()).reshape(-1),
+    #         )
+    #         xf.Re = Re
+    #         xf.M = M
+    #         xf.n_crit = n_crit
+    #         xf.xtr = (xtr_top, xtr_bot)
+    #         if reset_bls:
+    #             xf.reset_bls()
+    #         if repanel:
+    #             xf.repanel()
+    #         xf.max_iter = max_iter
+    #         return xf.cl(cl)
+    #
+    #     if verbose:
+    #         a, cd, cm, Cp_min = run()
+    #     else:
+    #         with stdout_redirected():
+    #             a, cd, cm, Cp_min = run()
+    #
+    #     cl = cl
+    #
+    #     return {
+    #         "alpha" : a,
+    #         "Cl"    : cl,
+    #         "Cd"    : cd,
+    #         "Cm"    : cm,
+    #         "Cp_min": Cp_min
+    #     }
+    #
+    # def xfoil_aseq(self,
+    #                a_start,
+    #                a_end,
+    #                a_step,
+    #                Re=0,
+    #                M=0,
+    #                n_crit=9,
+    #                xtr_bot=1,
+    #                xtr_top=1,
+    #                reset_bls=False,
+    #                repanel=False,
+    #                max_iter=20,
+    #                verbose=False,
+    #                ):
+    #     """
+    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+    #     Alpha sweep analysis.
+    #     :param a_start: First angle of attack [deg]
+    #     :param a_end: Last angle of attack [deg]
+    #     :param a_step: Amount to increment angle of attack by [deg]
+    #     :param Re: Reynolds number
+    #     :param M: Mach number
+    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+    #     :param xtr_bot: Bottom trip location [x/c]
+    #     :param xtr_top: Top trip location [x/c]
+    #     :param reset_bls: Reset boundary layer parameters upon initialization?
+    #     :param repanel: Repanel airfoil within XFoil?
+    #     :param max_iter: Maximum number of global Newton iterations
+    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
+    #     """
+    #     try:
+    #         xf = XFoil()
+    #     except NameError:
+    #         raise NameError(
+    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+    #
+    #     def run():
+    #         xf.airfoil = xfoil_model.Airfoil(
+    #             x=np.array(self.x()).reshape(-1),
+    #             y=np.array(self.y()).reshape(-1),
+    #         )
+    #         xf.Re = Re
+    #         xf.M = M
+    #         xf.n_crit = n_crit
+    #         xf.xtr = (xtr_top, xtr_bot)
+    #         if reset_bls:
+    #             xf.reset_bls()
+    #         if repanel:
+    #             xf.repanel()
+    #         xf.max_iter = max_iter
+    #         return xf.aseq(a_start, a_end, a_step)
+    #
+    #     if verbose:
+    #         a, cl, cd, cm, Cp_min = run()
+    #     else:
+    #         with stdout_redirected():
+    #             a, cl, cd, cm, Cp_min = run()
+    #
+    #     return {
+    #         "alpha" : a,
+    #         "Cl"    : cl,
+    #         "Cd"    : cd,
+    #         "Cm"    : cm,
+    #         "Cp_min": Cp_min
+    #     }
+    #
+    # def xfoil_cseq(self,
+    #                cl_start,
+    #                cl_end,
+    #                cl_step,
+    #                Re=0,
+    #                M=0,
+    #                n_crit=9,
+    #                xtr_bot=1,
+    #                xtr_top=1,
+    #                reset_bls=False,
+    #                repanel=False,
+    #                max_iter=20,
+    #                verbose=False,
+    #                ):
+    #     """
+    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
+    #     Lift coefficient sweep analysis.
+    #     :param cl_start: First lift coefficient [unitless]
+    #     :param cl_end: Last lift coefficient [unitless]
+    #     :param cl_step: Amount to increment lift coefficient by [unitless]
+    #     :param Re: Reynolds number
+    #     :param M: Mach number
+    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
+    #     :param xtr_bot: Bottom trip location [x/c]
+    #     :param xtr_top: Top trip location [x/c]
+    #     :param reset_bls: Reset boundary layer parameters upon initialization?
+    #     :param repanel: Repanel airfoil within XFoil?
+    #     :param max_iter: Maximum number of global Newton iterations
+    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
+    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
+    #     """
+    #     try:
+    #         xf = XFoil()
+    #     except NameError:
+    #         raise NameError(
+    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
+    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
+    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
+    #
+    #     def run():
+    #         xf.airfoil = xfoil_model.Airfoil(
+    #             x=np.array(self.x()).reshape(-1),
+    #             y=np.array(self.y()).reshape(-1),
+    #         )
+    #         xf.Re = Re
+    #         xf.M = M
+    #         xf.n_crit = n_crit
+    #         xf.xtr = (xtr_top, xtr_bot)
+    #         if reset_bls:
+    #             xf.reset_bls()
+    #         if repanel:
+    #             xf.repanel()
+    #         xf.max_iter = max_iter
+    #         return xf.cseq(cl_start, cl_end, cl_step)
+    #
+    #     if verbose:
+    #         a, cl, cd, cm, Cp_min = run()
+    #     else:
+    #         with stdout_redirected():
+    #             a, cl, cd, cm, Cp_min = run()
+    #
+    #     return {
+    #         "alpha" : a,
+    #         "Cl"    : cl,
+    #         "Cd"    : cd,
+    #         "Cm"    : cm,
+    #         "Cp_min": Cp_min
+    #     }
+    #
+    # def get_xfoil_data(self,
+    #                    a_start=-6,  # type: float
+    #                    a_end=12,  # type: float
+    #                    a_step=0.5,  # type: float
+    #                    a_init=0,  # type: float
+    #                    Re_start=1e4,  # type: float
+    #                    Re_end=1e7,  # type: float
+    #                    n_Res=30,  # type: int
+    #                    mach=0,  # type: float
+    #                    max_iter=20,  # type: int
+    #                    repanel=False,  # type: bool
+    #                    parallel=True,  # type: bool
+    #                    verbose=True,  # type: bool
+    #                    ):
+    #     """ # TODO finish docstring
+    #     Calculates aerodynamic performance data for a particular airfoil with XFoil.
+    #     Does a 2D grid sweep of the alpha-Reynolds space at a particular Mach number.
+    #     Populates two new instance variables:
+    #         * self.xfoil_data_1D: A dict of XFoil data at all calculated operating points (1D arrays, NaNs removed)
+    #         * self.xfoil_data_2D: A dict of XFoil data at all calculated operating points (2D arrays, NaNs present)
+    #     :param a_start: Lower bound of angle of attack [deg]
+    #     :param a_end: Upper bound of angle of attack [deg]
+    #     :param a_step: Angle of attack increment size [deg]
+    #     :param a_init: Angle of attack to initialize runs at. Should solve easily (0 recommended) [deg]
+    #     :param Re_start: Reynolds number to begin sweep at. [unitless]
+    #     :param Re_end: Reynolds number to end sweep at. [unitless]
+    #     :param n_Res: Number of Reynolds numbers to sweep. Points are log-spaced.
+    #     :param mach: Mach number to sweep at.
+    #     :param max_iter: Maximum number of XFoil iterations per op-point.
+    #     :param repanel: Should we interally repanel the airfoil within XFoil before running? [boolean]
+    #         Consider disabling this if you try to do optimization based on this data (for smoothness reasons).
+    #         Otherwise, it's generally a good idea to leave this on.
+    #     :param parallel: Should we run in parallel? Generally results in significant speedup, but might not run
+    #         correctly on some machines. Disable this if it's a problem. [boolean]
+    #     :param verbose: Should we do verbose output? [boolean]
+    #     :return: self (in-place operation that creates self.xfoil_data_1D and self.xfoil_data_2D)
+    #     """
+    #     assert a_init > a_start
+    #     assert a_init < a_end
+    #     assert Re_start < Re_end
+    #     assert n_Res >= 1
+    #     assert mach >= 0
+    #
+    #     Res = np.logspace(np.log10(Re_start), np.log10(Re_end), n_Res)
+    #
+    #     def get_xfoil_data_at_Re(Re):
+    #
+    #         import aerosandbox.numpy as np  # needs to be imported here to support parallelization
+    #
+    #         run_data_upper = self.xfoil_aseq(
+    #             a_start=a_init + a_step,
+    #             a_end=a_end,
+    #             a_step=a_step,
+    #             Re=Re,
+    #             repanel=repanel,
+    #             max_iter=max_iter,
+    #             M=mach,
+    #             reset_bls=True,
+    #         )
+    #         run_data_lower = self.xfoil_aseq(
+    #             a_start=a_init,
+    #             a_end=a_start,
+    #             a_step=-a_step,
+    #             Re=Re,
+    #             repanel=repanel,
+    #             max_iter=max_iter,
+    #             M=mach,
+    #             reset_bls=True,
+    #         )
+    #         run_data = {
+    #             k: np.hstack((
+    #                 run_data_lower[k][::-1],
+    #                 run_data_upper[k]
+    #             )) for k in run_data_upper.keys()
+    #         }
+    #         return run_data
+    #
+    #     if verbose:
+    #         print("Running XFoil sweeps on Airfoil %s..." % self.name)
+    #         import time
+    #         start_time = time.time()
+    #
+    #     if not parallel:
+    #         runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
+    #     else:
+    #         import multiprocess as mp
+    #         pool = mp.Pool(mp.cpu_count())
+    #         runs_data = pool.map(get_xfoil_data_at_Re, Res)
+    #         pool.close()
+    #
+    #     if verbose:
+    #         run_time = time.time() - start_time
+    #         print("XFoil Runtime: %.3f sec" % run_time)
+    #
+    #     xfoil_data_2D = {}
+    #     for k in runs_data[0].keys():
+    #         xfoil_data_2D[k] = np.vstack([
+    #             d[k]
+    #             for d in runs_data
+    #         ])
+    #     xfoil_data_2D["Re"] = np.tile(Res, (
+    #         xfoil_data_2D["alpha"].shape[1],
+    #         1
+    #     )).T
+    #     np.place(
+    #         arr=xfoil_data_2D["Re"],
+    #         mask=np.isnan(xfoil_data_2D["alpha"]),
+    #         vals=np.NaN
+    #     )
+    #     xfoil_data_2D["alpha_indices"] = np.arange(a_start, a_end + a_step / 2, a_step)
+    #     xfoil_data_2D["Re_indices"] = Res
+    #
+    #     self.xfoil_data_2D = xfoil_data_2D
+    #
+    #     # 1-dimensionalize it and remove NaNs
+    #     xfoil_data_1D = {
+    #         k: remove_nans(xfoil_data_2D[k].reshape(-1))
+    #         for k in xfoil_data_2D.keys()
+    #     }
+    #     self.xfoil_data_1D = xfoil_data_1D
+    #
+    #     return self
+    #
+    # def has_xfoil_data(self, raise_exception_if_absent=True):
+    #     """
+    #     Runs a quick check to see if this airfoil has XFoil data.
+    #     :param raise_exception_if_absent: Boolean flag to raise an Exception if XFoil data is not found.
+    #     :return: Boolean of whether or not XFoil data is present.
+    #     """
+    #     data_present = (
+    #             hasattr(self, 'xfoil_data_1D') and
+    #             hasattr(self, 'xfoil_data_2D')
+    #     )
+    #     if not data_present and raise_exception_if_absent:
+    #         raise Exception(
+    #             """This Airfoil %s does not yet have XFoil data,
+    #             so you can't run the function you've called.
+    #             To get XFoil data, first call:
+    #                 Airfoil.get_xfoil_data()
+    #             which will perform an in-place update that
+    #             provides the data.""" % self.name
+    #         )
+    #     return data_present
+    #
+    # def plot_xfoil_data_contours(self):  # TODO add docstring
+    #     self.has_xfoil_data()  # Ensure data is present.
+    #     from matplotlib import colors
+    #
+    #     d = self.xfoil_data_1D  # data
+    #
+    #     fig = plt.figure(figsize=(10, 8), dpi=200)
+    #
+    #     ax = fig.add_subplot(311)
+    #     coords = self.coordinates
+    #     plt.plot(coords[:, 0], coords[:, 1], '.-', color='#280887')
+    #     plt.xlabel(r"$x/c$")
+    #     plt.ylabel(r"$y/c$")
+    #     plt.title(r"XFoil Data for %s Airfoil" % self.name)
+    #     plt.axis("equal")
+    #
+    #     with plt.style.context("default"):
+    #         ax = fig.add_subplot(323)
+    #         x = d["Re"]
+    #         y = d["alpha"]
+    #         z = d["Cl"]
+    #         levels = np.linspace(-0.5, 1.5, 21)
+    #         norm = None
+    #         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+    #         C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+    #         cbar = plt.colorbar(CF, format='%.2f')
+    #         cbar.set_label(r"$C_l$")
+    #         plt.grid(False)
+    #         plt.xlabel(r"$Re$")
+    #         plt.ylabel(r"$\alpha$")
+    #         plt.title(r"$C_l$ from $Re$, $\alpha$")
+    #         ax.set_xscale('log')
+    #
+    #         ax = fig.add_subplot(324)
+    #         x = d["Re"]
+    #         y = d["alpha"]
+    #         z = d["Cd"]
+    #         levels = np.logspace(-2.5, -1, 21)
+    #         norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+    #         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+    #         C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+    #         cbar = plt.colorbar(CF, format='%.3f')
+    #         cbar.set_label(r"$C_d$")
+    #         plt.grid(False)
+    #         plt.xlabel(r"$Re$")
+    #         plt.ylabel(r"$\alpha$")
+    #         plt.title(r"$C_d$ from $Re$, $\alpha$")
+    #         ax.set_xscale('log')
+    #
+    #         ax = fig.add_subplot(325)
+    #         x = d["Re"]
+    #         y = d["alpha"]
+    #         z = d["Cl"] / d["Cd"]
+    #         x = x[d["alpha"] >= 0]
+    #         y = y[d["alpha"] >= 0]
+    #         z = z[d["alpha"] >= 0]
+    #         levels = np.logspace(1, np.log10(150), 21)
+    #         norm = colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+    #         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+    #         C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+    #         cbar = plt.colorbar(CF, format='%.1f')
+    #         cbar.set_label(r"$L/D$")
+    #         plt.grid(False)
+    #         plt.xlabel(r"$Re$")
+    #         plt.ylabel(r"$\alpha$")
+    #         plt.title(r"$L/D$ from $Re$, $\alpha$")
+    #         ax.set_xscale('log')
+    #
+    #         ax = fig.add_subplot(326)
+    #         x = d["Re"]
+    #         y = d["alpha"]
+    #         z = d["Cm"]
+    #         levels = np.linspace(-0.15, 0, 21)  # np.logspace(1, np.log10(150), 21)
+    #         norm = None  # colors.PowerNorm(gamma=1 / 2, vmin=np.min(levels), vmax=np.max(levels))
+    #         CF = ax.tricontourf(x, y, z, levels=levels, norm=norm, cmap="plasma", extend="both")
+    #         C = ax.tricontour(x, y, z, levels=levels, norm=norm, colors='k', extend="both", linewidths=0.5)
+    #         cbar = plt.colorbar(CF, format='%.2f')
+    #         cbar.set_label(r"$C_m$")
+    #         plt.grid(False)
+    #         plt.xlabel(r"$Re$")
+    #         plt.ylabel(r"$\alpha$")
+    #         plt.title(r"$C_m$ from $Re$, $\alpha$")
+    #         ax.set_xscale('log')
+    #
+    #     plt.tight_layout()
+    #     plt.show()
+    #
+    #     return self
+    #
+    # def plot_xfoil_data_all_polars(self,
+    #                                n_lines_max=20,
+    #                                Cd_plot_max=0.04,
+    #                                ):
+    #     """
+    #     Plots the existing XFoil data found by running self.get_xfoil_data().
+    #     :param n_lines_max: Maximum number of Reynolds numbers to plot. Useful if you ran a sweep with tons of Reynolds numbers.
+    #     :param Cd_plot_max: Upper limit of Cd to plot [float]
+    #     :return: self (makes plot)
+    #     """
+    #
+    #     self.has_xfoil_data()  # Ensure data is present.
+    #
+    #     n_lines_max = min(n_lines_max, len(self.xfoil_data_2D["Re_indices"]))
+    #
+    #     fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
+    #     indices = np.array(
+    #         np.round(np.linspace(0, len(self.xfoil_data_2D["Re_indices"]) - 1, n_lines_max)),
+    #         dtype=int
+    #     )
+    #     indices_worth_plotting = [
+    #         np.min(remove_nans(self.xfoil_data_2D["Cd"][index, :])) < Cd_plot_max
+    #         for index in indices
+    #     ]
+    #     indices = indices[indices_worth_plotting]
+    #
+    #     colors = plt.cm.rainbow(np.linspace(0, 1, len(indices)))[::-1]
+    #     for i, Re in enumerate(self.xfoil_data_2D["Re_indices"][indices]):
+    #         Cds = remove_nans(self.xfoil_data_2D["Cd"][indices[i], :])
+    #         Cls = remove_nans(self.xfoil_data_2D["Cl"][indices[i], :])
+    #         Cd_min = np.min(Cds)
+    #         if Cd_min < Cd_plot_max:
+    #             plt.plot(
+    #                 Cds * 1e4,
+    #                 Cls,
+    #                 label="Re = %s" % eng_string(Re),
+    #                 color=colors[i],
+    #             )
+    #     plt.xlim(0, Cd_plot_max * 1e4)
+    #     plt.ylim(0, 2)
+    #     plt.xlabel(r"$C_d \cdot 10^4$")
+    #     plt.ylabel(r"$C_l$")
+    #     plt.title("XFoil Polars for %s Airfoil" % self.name)
+    #     plt.tight_layout()
+    #     plt.legend()
+    #     plt.show()
+    #
+    #     return self
+    #
+    # def plot_xfoil_data_polar(self,
+    #                           Res,  # type: list
+    #                           Cd_plot_max=0.04,
+    #                           repanel=False,
+    #                           parallel=True,
+    #                           max_iter=40,
+    #                           verbose=True,
+    #                           ):
+    #     """
+    #     Plots CL-CD polar for a single Reynolds number or a variety of Reynolds numbers.
+    #     :param Res: Reynolds number to plot polars at. Either a single float or an iterable (list, 1D ndarray, etc.)
+    #     :param Cd_plot_max: Upper limit of Cd to plot [float]
+    #     :param cl_step: Cl increment for XFoil runs. Trades speed vs. plot resolution. [float]
+    #     :param repanel: Should we repanel the airfoil within XFoil? [boolean]
+    #     :param parallel: Should we run different Res in parallel? [boolean]
+    #     :param max_iter: Maximum number of iterations for XFoil to run. [int]
+    #     :param verbose: Should we print information as we run the sweeps? [boolean]
+    #     :return: self (makes plot)
+    #     """
+    #
+    #     try:  # If it's not an iterable, make it one.
+    #         Res[0]
+    #     except TypeError:
+    #         Res = [Res]
+    #
+    #     fig, ax = plt.subplots(1, 1, figsize=(7, 6), dpi=200)
+    #     colors = plt.cm.rainbow(np.linspace(0, 1, len(Res)))[::-1]
+    #
+    #     def get_xfoil_data_at_Re(Re):
+    #
+    #         xfoil_data = self.xfoil_aseq(
+    #             a_start=0,
+    #             a_end=15,
+    #             a_step=0.25,
+    #             Re=Re,
+    #             M=0,
+    #             reset_bls=True,
+    #             repanel=repanel,
+    #             max_iter=max_iter,
+    #             verbose=False,
+    #         )
+    #         Cd = remove_nans(xfoil_data["Cd"])
+    #         Cl = remove_nans(xfoil_data["Cl"])
+    #         return {"Cl": Cl, "Cd": Cd}
+    #
+    #     if verbose:
+    #         print("Running XFoil sweeps...")
+    #         import time
+    #         start_time = time.time()
+    #
+    #     if not parallel:
+    #         runs_data = [get_xfoil_data_at_Re(Re) for Re in Res]
+    #     else:
+    #         import multiprocess as mp
+    #         pool = mp.Pool(mp.cpu_count())
+    #         runs_data = pool.map(get_xfoil_data_at_Re, Res)
+    #         pool.close()
+    #
+    #     if verbose:
+    #         run_time = time.time() - start_time
+    #         print("XFoil Runtime: %.3f sec" % run_time)
+    #
+    #     for i, Re in enumerate(Res):
+    #         plt.plot(
+    #             runs_data[i]["Cd"] * 1e4,
+    #             runs_data[i]["Cl"],
+    #             label="Re = %s" % eng_string(Re),
+    #             color=colors[i],
+    #         )
+    #     plt.xlim(0, Cd_plot_max * 1e4)
+    #     plt.ylim(0, 2)
+    #     plt.xlabel(r"$C_d \cdot 10^4$")
+    #     plt.ylabel(r"$C_l$")
+    #     plt.title("XFoil Polars for %s Airfoil" % self.name)
+    #     plt.tight_layout()
+    #     plt.legend()
+    #     plt.show()
+    #
+    #     return self
