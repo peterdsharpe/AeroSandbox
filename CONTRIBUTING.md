@@ -24,10 +24,22 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 
 6. When writing math, use `aerosandbox.numpy` functions everywhere where possible. If this throws an error during testing or if you do not find the function you need here, notify a core developer.
 
-7. Every function must be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are slightly preferred but not required. It is highly recommended (but not required) that you also do the following:
+7. Every function is required to be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are preferred but not required - as long as your docstring is intelligible to an average engineer who might come across it, you're fine. It is highly recommended (but not required) that you also do the following:
    
     * Document the purpose, function, and expected input type(s) of every input parameter within this docstring. 
-    * [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.
+    * [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write. That means write something like:
+    ```python
+    from typing import List  # Note: List, Tuple, Dict, Union, etc. need to be imported from the built-in "typing"
+    
+   
+    def my_function(
+        input_1: float, 
+        input_2: int, 
+        input_3: List
+    ) -> bool:
+        return True
+    ```
+    * Also notice that in this example above, we put each parameter on its own line. Do this; see point #9.
     * Include usage examples in runnable Python in for each function in its docstring (demarcated by `>>>`) 
     
 8. With *very* rare exceptions, do not type the same sequence of characters more than twice. For example:
