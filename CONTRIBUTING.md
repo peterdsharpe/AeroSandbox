@@ -13,8 +13,8 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 2. As far as code style goes, we use standard Python PEP8 naming conventions:
 
       1. `variable_names_use_snake_case`
-      2. `function_names_also_use_snake_case`
-      3. `ClassNamesUsePascalCase`
+      2. `def function_names_also_use_snake_case():`
+      3. `class ClassNamesUsePascalCase:`
 
 3. Use long, descriptive variable names. Use `temperature` instead of `T`. Use `wing_tip_coordinate_x` instead of `wtx`. In the age of modern IDEs with autocomplete and one-click refactoring, there is no reason not to obfuscate meaning with short variable names. Long variable names also force you to split complicated expressions onto multiple lines; this is a good thing (see point #9).
 
