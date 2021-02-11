@@ -341,7 +341,7 @@ class Airfoil(Polygon):
         # Merge the two sets of coordinates
 
         coordinates = np.copy(self.coordinates)
-        is_past_hinge = self.x() > hinge_point_x # TODO fix hinge self-intersecting paneling issue for large deflection
+        is_past_hinge = self.x() > hinge_point_x  # TODO fix hinge self-intersecting paneling issue for large deflection
         coordinates[is_past_hinge] = rotated_airfoil.coordinates[is_past_hinge]
 
         return Airfoil(
@@ -417,7 +417,7 @@ class Airfoil(Polygon):
     #     pass  # TODO finish me
 
     def write_dat(self,
-                  filepath  # type: str
+                  filepath: str
                   ):
         """
         Writes a .dat file corresponding to this airfoil to a filepath.
@@ -429,6 +429,27 @@ class Airfoil(Polygon):
                 [self.name + "\n"] +
                 [f"\t%f\t%f\n" % tuple(coordinate) for coordinate in self.coordinates]
             )
+
+    def write_sldcrv(self,
+                     filepath: str
+                     ):
+        """
+        Writes a .sldcrv (SolidWorks curve) file corresponding to this airfoil to a filepath.
+        Args:
+            filepath: A filepath (including the filename and .sldcrv extension) [string]
+
+        Returns: None
+
+        """
+        with open(filepath, "w+") as f:
+            for i, coordinate in enumerate(self.coordinates):
+                f.write(
+                    f"{coordinate[0]} {coordinate[1]} 0"
+                )
+                if i < self.n_points() - 1:
+                    f.write(
+                        f"\n"
+                    )
 
     # def xfoil_a(self,
     #             alpha,
