@@ -178,5 +178,8 @@ as good as the models and assumptions you give it, and the optimizer will happil
 give you an unrealistic solution. Your models and assumptions need to be bulletproof before you give them to the 
 optimizer. 
 
+If a weird-looking answer is found, 99 times out of a 100, it's an issue with the way the question was posed, 
+not the optimizer itself. 
+
 """
 
