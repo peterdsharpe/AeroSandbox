@@ -1,11 +1,15 @@
 # Contributing
 
-Wow! So you're interested in contributing - first of all, thank you so much! Here's what you need to know before contributing:
+Wow! So you're interested in contributing - thank you so much! 
 
-1. We use the Git branching model [posted here](https://nvie.com/posts/a-successful-git-branching-model/), which is by far the most common model in open-source software development. Main points:
+First, read the AeroSandbox roadmap in `AeroSandbox/aerosandbox/README.md`.
+
+After reading that, here's what else you need to know before contributing:
+
+1. We use the Git branching model [posted here](https://nvie.com/posts/a-successful-git-branching-model/) (this is by far the most common model Git branching model, so if you've used Git before on a collaborative project, you probably already know this). Main points:
 
       1. Never commit directly to `master`!
-      2. Add features in new branches named `feature/insert-name-here`. Be sure to branch off of `develop`, not off of `master`!
+      2. Add features in new branches named `feature/insert-name-here`. Be sure to branch these features off of `develop`, not off of `master`!
       3. When your feature is ready in your feature branch:
           1. First, rebase your feature branch on `develop` and check that all unit tests still pass (run `pytest` in terminal in the project root directory).
           2. Submit a pull request to merge it back into `develop` and wait for a core developer to approve.
@@ -22,7 +26,11 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 
 5. All engineering quantities (i.e. quantities with units) used anywhere in AeroSandbox are expressed in base metric units, or derived units thereof (meters, newtons, meters per second, kilograms, etc.). This is true even for quantities that are usually expressed in non-base-metric units: `battery_capacity` is in units of joules (not watt-hours), `temperature` is in Kelvin (not Celsius), and`elastic_modulus` is in units of pascals (not GPa). The only exception is when units are explicitly noted as a suffix in a variable name: for example,and `battery_capacity_watt_hours` is in units of watt-hours, and `altitude_ft` is in units of feet.
 
-6. When writing math, use `aerosandbox.numpy` functions everywhere where possible. If this throws an error during testing or if you do not find the function you need here, notify a core developer.
+6. Some notes when adding math or other analyses:
+   
+    * Use `aerosandbox.numpy` functions everywhere where possible. If this throws an error during testing or if you do not find the function you need here, notify a core developer.
+
+    * You should never need to import CasADi or try to manually determine array type anywhere outside of `aerosandbox/numpy/`. If for some reason you need to do CasADi-specific things, do them within a function inside `aerosandbox/numpy`.
 
 7. Every function is required to be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are preferred but not required - as long as your docstring is intelligible to an average engineer who might come across it, you're fine. It is highly recommended (but not required) that you also do the following:
    
@@ -33,10 +41,10 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
     
    
     def my_function(
-        input_1: float, 
-        input_2: int, 
-        input_3: List
-    ) -> bool:
+        input_1: float,  # <-- this is a type hint for a parameter!
+        input_2: int,  # note that Python doesn't enforce the type you specify, they're just "hints" for the user
+        input_3: Union[List, Tuple]  # You can denote multiple acceptable inputs with "Union", imported from "typing"
+    ) -> bool:  # <-- this is a type hint for a return!
         return True
     ```
     * Also notice that in this example above, we put each parameter on its own line. Do this; see point #9.
@@ -116,4 +124,4 @@ Breaking this up:
 
 ### Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org/version/1/4/code-of-conduct.html).
+This Code of Conduct is loosely adapted from the [Contributor Covenant](https://www.contributor-covenant.org/version/1/4/code-of-conduct.html).
