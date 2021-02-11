@@ -49,6 +49,7 @@ print(f"y = {y_opt}")
 """
 The solution is found to be (1, 1), which can be shown to be the optimal value via hand calcs.
 
-(To show this, we would calculate the gradient of our objective function, set it to zero, and solve for x and y.)
+(To show this, we would calculate the gradient of our objective function by taking partial derivatives with respect 
+to x and y, set both terms of the gradient to zero, and solve for x and y.) 
 
 """
