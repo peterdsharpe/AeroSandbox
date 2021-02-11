@@ -234,7 +234,6 @@ class Opti(cas.Opti):
         if category not in self.variables_categorized:  # Add a category if it does not exist
             self.variables_categorized[category] = []
         self.variables_categorized[category].append(var)
-        var.category = category
         var.is_manually_frozen = is_manually_frozen
 
         # Apply bounds
