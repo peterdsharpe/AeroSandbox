@@ -4,7 +4,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 
 1. We use the Git branching model [posted here](https://nvie.com/posts/a-successful-git-branching-model/), which is by far the most common model in open-source software development. Main points:
 
-      1. Never commit directly to `master`!!!
+      1. Never commit directly to `master`!
       2. Add features in new branches named `feature/insert-name-here`. Be sure to branch off of `develop`, not off of `master`!
       3. When your feature is ready in your feature branch:
           1. First, rebase your feature branch on `develop` and check that all unit tests still pass (run `pytest` in terminal in the project root directory).
