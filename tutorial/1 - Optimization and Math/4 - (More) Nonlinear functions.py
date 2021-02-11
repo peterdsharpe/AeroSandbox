@@ -79,4 +79,10 @@ print(f"x = {x_opt}")
 
 Nice, it solved! The value of x at the optimum turns out to be equal to pi / 2.
 
+Note that there are tons and tons of nonlinear functions you can use - everything from logarithms to vector norms to 
+linear solves to eigenvalue decompositions. The list is quite extensive and can be viewed at:
+`aerosandbox/numpy/test_numpy/test_all_operations_run.py`, where many of the valid operations are listed.
+
+This would not be possible without tons of hard work by the CasADi team!
+
 """
