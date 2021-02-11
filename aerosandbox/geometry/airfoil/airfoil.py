@@ -421,8 +421,12 @@ class Airfoil(Polygon):
                   ):
         """
         Writes a .dat file corresponding to this airfoil to a filepath.
-        :param filepath: filepath (including the filename and .dat extension) [string]
-        :return: None
+
+        Args:
+            filepath: filepath (including the filename and .dat extension) [string]
+
+        Returns: None
+
         """
         with open(filepath, "w+") as f:
             f.writelines(
