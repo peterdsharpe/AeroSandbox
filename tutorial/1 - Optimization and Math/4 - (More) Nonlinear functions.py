@@ -51,11 +51,11 @@ opti = asb.Opti()
 
 x = opti.variable(init_guess=3)
 
-f = np.exp(
-    np.cos(
+f = np.exp(  # You can use normal operations from NumPy like this!
+    np.cos(  # These functions are intelligently overloading in the background...
         x
     )
-)  # You can use normal operations from NumPy like this! They are intelligently overloading in the background...
+)
 
 opti.minimize(f)
 
