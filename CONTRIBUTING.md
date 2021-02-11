@@ -16,7 +16,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
       2. `function_names_also_use_snake_case`
       3. `ClassNamesUsePascalCase`
 
-3. Use long, descriptive variable names. Use `temperature` instead of `T`. Use `wing_tip_coordinate_x` instead of `wtx`. In the age of modern IDEs with autocomplete and one-click refactoring, there is no reason not to.
+3. Use long, descriptive variable names. Use `temperature` instead of `T`. Use `wing_tip_coordinate_x` instead of `wtx`. In the age of modern IDEs with autocomplete and one-click refactoring, there is no reason not to obfuscate meaning with short variable names. Long variable names also force you to split complicated expressions onto multiple lines; this is a good thing (see point #9).
 
 4. All new classes should extend one of the classes in the top-level file `common.py`. In particular, all explicit analyses (e.g. workbook-style aero buildups) should extend `ExplicitAnalysis` and all implicit analyses (i.e. analyses that involve iteratively solving nonlinear systems of equations) should extend `ImplicitAnalysis`. All other classes should extend `AeroSandboxObject`. Also, all user-facing classes should contain a `__repr__` method.
 
@@ -30,7 +30,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
     * [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.
     * Include usage examples in runnable Python in for each function in its docstring (demarcated by `>>>`) 
     
-8. With *very* rare exceptions, do not write the same sequence of characters more than twice. For example:
+8. With *very* rare exceptions, do not type the same sequence of characters more than twice. For example:
 
     ``` python
     ### This is discouraged
@@ -43,7 +43,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
     	print(sol.value(var))
     ```
 
-9. Spread mathematical expressions across multiple lines based on natural groupings of ideas in the equation. For example:
+9. Spread expressions across multiple lines based on natural groupings of ideas. Generally, all functions with multiple input parameters should have each parameter on a new line unless it exceptionally short (something like `range(3,10)`, for example). Some examples of discouraged and encouraged coding standards:
 
     ```python
     ### This is discouraged
@@ -55,8 +55,29 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
     	(y_start - y_end) ** 2
     ) ** 0.5
     ```
+    
+    ```python
+    ### This is discouraged
+    np.linspace(temperature_start, temperature_end, n_temperature_points)
+    
+    ### Instead, do this:
+    np.linspace(
+        temperature_start,
+        temperature_end,
+        n_temperature_points
+    )
+    ```
 
 10. Write unit tests for all new functionality using `pytest`. Make sure the tests pass before submitting a pull request.
+
+11. Write concise but descriptive commit messages - think "Google search" type language. Examples:
+
+    * "Add method is_red to class House in house.py" (preferred) 
+    * "Add is_red to House" (acceptable)
+    * "Add methods to house.py" (acceptable)
+    * "Change default parameter x in geometry/polygon.py"
+    
+    One exception to the rule: if you're just adding/changing comments or documentation with no code changes, you can just write "docs" as your commit message and be done.
 
 ## Code of Conduct
 
@@ -72,6 +93,7 @@ Breaking this up:
 	* Gracefully accept constructive criticism. 
 	* Do not waste others' time by trolling or arguing in bad faith.
 	* Do not insult, harass, or dox others.
+    * Stay respectful even when others may be disrespectful.
 * "everyone": Everyone means everyone, regardless of age, body
 	size, disability, ethnicity, sex characteristics, gender identity and expression,
 	level of experience, education, socio-economic status, nationality, personal
