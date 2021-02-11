@@ -28,6 +28,10 @@ opti.subject_to(
     r <= 1  # Constrain the distance from the origin to be less than or equal to 1.
 )
 
+"""Note that in continuous optimization, there is no difference between "less than" and "less than or equal to". (At 
+least, not when we solve them numerically on a computer - contrived counterexamples can be made.) So, use < or <=, 
+whatever feels best to you. """
+
 # Optimize
 sol = opti.solve()
 
