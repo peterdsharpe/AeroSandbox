@@ -7,6 +7,7 @@ from .array import array, length
 from .arithmetic import sum, mean
 from .calculus import diff, trapz
 from .conditionals import where
+from .finite_difference_operators import finite_difference_coefficients
 import aerosandbox.numpy.linalg as linalg
 from .logicals import clip
 from .rotations import rotation_matrix_2D, rotation_matrix_3D
