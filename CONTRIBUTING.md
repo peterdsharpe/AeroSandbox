@@ -4,13 +4,13 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 
 1. We use the Git branching model [posted here](https://nvie.com/posts/a-successful-git-branching-model/), which is by far the most common model in open-source software development. Main points:
 
-      1. Never commit directly to `master`!
+      1. Never commit directly to `master`!!!
       2. Add features in new branches named `feature/insert-name-here`. Be sure to branch off of `develop`, not off of `master`!
       3. When your feature is ready in your feature branch:
           1. First, rebase your feature branch on `develop` and check that all unit tests still pass (run `pytest` in terminal in the project root directory).
           2. Submit a pull request to merge it back into `develop` and wait for a core developer to approve.
 
-2. As far as code style goes, we use PEP8 naming conventions:
+2. As far as code style goes, we use standard Python PEP8 naming conventions:
 
       1. `variable_names_use_snake_case`
       2. `function_names_also_use_snake_case`
@@ -22,7 +22,7 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 
 5. All engineering quantities (i.e. quantities with units) used anywhere in AeroSandbox are expressed in base metric units, or derived units thereof (meters, newtons, meters per second, kilograms, etc.). This is true even for quantities that are usually expressed in non-base-metric units: `battery_capacity` is in units of joules (not watt-hours), `temperature` is in Kelvin (not Celsius), and`elastic_modulus` is in units of pascals (not GPa). The only exception is when units are explicitly noted as a suffix in a variable name: for example,and `battery_capacity_watt_hours` is in units of watt-hours, and `altitude_ft` is in units of feet.
 
-6. When writing math, use NumPy functions everywhere where possible. If this throws an error during testing, replace the offending function with its equivalent from `aerosandbox.optimization.math`. If you do not find the function you need here, notify a core developer.
+6. When writing math, use `aerosandbox.numpy` functions everywhere where possible. If this throws an error during testing or if you do not find the function you need here, notify a core developer.
 
 7. Every function must be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are slightly preferred but not required. It is highly recommended (but not required) that you also do the following:
    
