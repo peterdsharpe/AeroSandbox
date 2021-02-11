@@ -96,7 +96,7 @@ Let's continue.
 """
 
 # We don't know the best airspeed to fly at, so let's make that an unknown, too.
-airspeed = opti.variable(init_guess=30, lower_bound=0)
+airspeed = opti.variable(init_guess=30, lower_bound=0) # See the following comment block
 
 """
 
