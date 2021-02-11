@@ -82,12 +82,15 @@ Wow! So you're interested in contributing - first of all, thank you so much! Her
 
 10. Write unit tests for all new functionality using `pytest`. Make sure the tests pass before submitting a pull request.
 
-11. Write concise but descriptive commit messages - think "Google search" type language. Examples:
+11. Commit often. In general, commit after every "unit" of work or anytime the code base returns to a "working" (i.e. tests passing) state. If you find yourself working for more than an hour or writing >100 lines since your last commit, consider whether a "unit" of work has been done. (Perhaps it has, perhaps it hasn't - just think about it.)
+
+12. Write concise but descriptive commit messages - think "Google search" type language. Examples:
 
     * "Add method is_red to class House in house.py" (preferred) 
     * "Add is_red to House" (acceptable)
     * "Add methods to house.py" (acceptable)
-    * "Change default parameter x in geometry/polygon.py"
+    * "Change default parameter x in geometry/polygon.py" (acceptable)
+    * "blah" (not acceptable)
     
     One exception to the rule: if you're just adding/changing comments or documentation with no code changes, you can just write "docs" as your commit message and be done.
 
