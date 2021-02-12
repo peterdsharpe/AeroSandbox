@@ -1,14 +1,17 @@
 """
-AeroSandbox is fundamentally a tool for solving optimization problems. Therefore, the most important part of
-AeroSandbox is the Opti stack, which allows you formulate and solve an optimization problem in natural mathematical
-syntax.
+Welcome to the first AeroSandbox tutorial!
+
+AeroSandbox is fundamentally a tool for solving optimization problems that are relevant to large, multidisciplinary
+engineered systems. Therefore, the most important part of AeroSandbox is the Opti stack, which allows you formulate
+and solve an optimization problem in natural mathematical syntax.
 
 The `Opti` class inherits directly from the `Opti` class of CasADi, an underlying tool for algorithmic
 differentiation - huge credit goes to the CasADi team for putting together such an elegant and easy-to-use interface.
 
-AeroSandbox's Opti class acts as a wrapper for this interface with syntax tailored specifically for engineering
+AeroSandbox's Opti class acts as an extension of this interface with syntax tailored specifically for engineering
 design, letting users easily implement problem scaling, common transformations, bounds constraints,
-freezing variables, categorizing variables, and more. We'll explore more of these features later!
+freezing variables, categorizing variables, derivatives of variables, and more. We'll explore more of these features
+later!
 
 For now, let's show a basic optimization problem by solving the 2D Rosenbrock problem:
 
@@ -20,6 +23,8 @@ Mathematically, it is stated as:
     With decision variables x and y:
     Minimize: (a-x)**2 + b*(y-x**2)**2
     for a = 1, b = 100.
+
+It is
 
 """
 
@@ -39,7 +44,7 @@ opti.minimize(f)  # ...and then optimize them.
 sol = opti.solve()  # This is the conventional syntax to solve the optimization problem.
 
 # Extract values at the optimum
-x_opt = sol.value(x) # Evaluates x at the point where the solver converged.
+x_opt = sol.value(x)  # Evaluates x at the point where the solver converged.
 y_opt = sol.value(y)
 
 # Print values
