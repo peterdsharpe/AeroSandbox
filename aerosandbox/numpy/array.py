@@ -6,9 +6,9 @@ def array(object, dtype=None):
     try:
         a = onp.array(object, dtype=dtype)
         if a.dtype == "O":
-            raise AttributeError
+            raise Exception
         return a
-    except AttributeError: # If this occurs, it needs to be a CasADi type.
+    except (AttributeError, Exception): # If this occurs, it needs to be a CasADi type.
         # First, determine the dimension
         def make_row(row):
             try:
