@@ -668,10 +668,12 @@ class Opti(cas.Opti):
               parameter_mapping: Dict[cas.MX, float] = None,
               max_iter: int = 3000,
               callback: Callable = None,
-              solver: str = 'ipopt'
+              verbose: bool = True,
+              jit: bool = False,  # TODO document, add unit tests for jit
+              options: Dict = None,  # TODO document
               ) -> cas.OptiSol:
         """
-        Solve the optimization problem.
+        Solve the optimization problem using CasADi with IPOPT backend.
 
         Args:
             parameter_mapping: [Optional] Allows you to specify values for parameters.
@@ -698,7 +700,7 @@ class Opti(cas.Opti):
                 is an integer corresponding to the current iteration number. In order to access intermediate quantities
                 of optimization variables, use the `Opti.debug.value(x)` syntax for each variable `x`.
 
-            solve: [Optional] Which optimization backend do you wish to use? [str] Only tested with "ipopt".
+            verbose: Should we print the output of IPOPT?
 
         Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
             OptiSol.value(variable).
@@ -711,7 +713,7 @@ class Opti(cas.Opti):
         if parameter_mapping is None:
             parameter_mapping = {}
 
-        # If you're loading frozen variables from cache, do it here:
+        ### If you're loading frozen variables from cache, do it here:
         if self.load_frozen_variables_from_cache:
             solution_dict = self.get_solution_dict_from_cache()
             for category in self.variable_categories_to_freeze:
@@ -731,7 +733,7 @@ class Opti(cas.Opti):
                             var: val
                         }
 
-        # Map any parameters to needed values
+        ### Map any parameters to needed values
         for k, v in parameter_mapping.items():
             size_k = np.product(k.shape)
             size_v = np.product(v.shape)
@@ -743,12 +745,31 @@ class Opti(cas.Opti):
 
             self.set_value(k, v)
 
-        # Set solver settings.
-        p_opts = {}
-        s_opts = {}
-        s_opts["max_iter"] = max_iter
-        s_opts["mu_strategy"] = "adaptive"
-        self.solver(solver, p_opts, s_opts)  # Default to IPOPT solver
+        ### Set solver settings.
+        if options is None:
+            options = {}
+
+        if jit:
+            options["jit"] = True
+            # options["compiler"] = "shell"
+            options["jit_options"] = {
+                "flags"  : ["-O3"],
+                # "verbose": True
+            }
+
+        options["ipopt.sb"] = 'yes'
+
+        if not verbose:
+            options["print_time"] = False
+            options["ipopt.print_level"] = 0
+
+        # Set defaults, if not set
+        if "ipopt.max_iter" not in options:
+            options["ipopt.max_iter"] = max_iter
+        if "ipopt.mu_strategy" not in options:
+            options["ipopt.mu_strategy"] = "adaptive"
+
+        self.solver('ipopt', options)
 
         # Set the callback
         if callback is not None:
