@@ -93,7 +93,7 @@ def finite_difference_coefficients(
     delta[0, 0, 0] = 1
     c1 = 1
     for n in range(1,
-                   N + 1):  # TODO make this algorithm more efficient; you only need to store a fraction of this data.
+                   N + 1):  # TODO make this algorithm more efficient; we only need to store a fraction of this data.
         c2 = 1
         for v in range(n):
             c3 = x[n] - x[v]
