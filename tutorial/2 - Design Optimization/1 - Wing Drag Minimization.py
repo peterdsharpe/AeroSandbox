@@ -91,7 +91,7 @@ b) probably report that the problem is unbounded.
 All in all, I find that it's usually best to start without using log-transforms, and to add it in later if need be. 
 We're using it in this example mostly just for illustration and to introduce the concept. 
 
-Let's continue.
+Let's continue, and while we're at it, let's show how you can automatically bound a variable at initialization time. 
 
 """
 
