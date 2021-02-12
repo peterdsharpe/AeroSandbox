@@ -1,5 +1,5 @@
 import plotly.graph_objects as go
-import numpy as np
+import aerosandbox.numpy as np
 from aerosandbox.geometry.common import reflect_over_XZ_plane
 
 

@@ -1,6 +1,4 @@
-import casadi as cas
-import numpy as np
-from aerosandbox.tools.casadi_functions import sind, cosd
+from aerosandbox.optimization import *
 
 
 def solar_flux_outside_atmosphere_normal(day_of_year):
@@ -41,11 +39,11 @@ def solar_elevation_angle(latitude, day_of_year, time):
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/elevation-angle
     declination = declination_angle(day_of_year)
 
-    solar_elevation_angle = cas.asin(
+    solar_elevation_angle = np.arcsin(
         sind(declination) * sind(latitude) +
         cosd(declination) * cosd(latitude) * cosd(time / 86400 * 360)
-    ) * 180 / cas.pi  # in degrees
-    solar_elevation_angle = cas.fmax(solar_elevation_angle, 0)
+    ) * 180 / pi  # in degrees
+    solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
 
 
@@ -81,9 +79,8 @@ def scattering_factor(elevation_angle):
     :param elevation_angle: Angle between the horizon and the sun [degrees]
     :return: Fraction of the light that is not lost to scattering.
     """
-    elevation_angle = cas.fmin(cas.fmax(elevation_angle, 0), 90)
+    elevation_angle = clip(elevation_angle, 0, 90)
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
-    theta_rad = theta * cas.pi / 180
 
     # # Model 1
     # c = (
@@ -103,9 +100,9 @@ def scattering_factor(elevation_angle):
         -0.04636,
         -0.3171
     )
-    scattering_factor = cas.exp(
+    scattering_factor = np.exp(
         c[0] * (
-                cas.tan(theta_rad * 0.999) + c[1] * theta_rad
+                tand(theta * 0.999) + c[1] * radians(theta)
         )
     )
 

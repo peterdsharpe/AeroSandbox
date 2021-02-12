@@ -2,10 +2,7 @@ dist/
 AeroSandbox.egg-info/
 .idea/
 __pycache__/
-build/
-publish_to_pypi.bat
 *.pkl
 *.asw
-docs/_build
-docs/source
 .pytest_cache/
+.spyrpoject/

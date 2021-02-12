@@ -1,6 +1,5 @@
-from aerosandbox.tools.fitting import *
+from aerosandbox.modeling.fitting import *
 import matplotlib.pyplot as plt
-from matplotlib import style
 import seaborn as sns
 sns.set(font_scale=1)
 
