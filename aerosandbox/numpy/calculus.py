@@ -12,7 +12,7 @@ def diff(x):
     return x[1:] - x[:-1]
 
 
-def trapz(x):
+def trapz(x, modify_endpoints=False):
     """
     Computes each piece of the approximate integral of `x` via the trapezoidal method with unit spacing.
     Can be viewed as the opposite of diff().
@@ -24,4 +24,11 @@ def trapz(x):
         starting at index i.
 
     """
-    return (x[1:] + x[:-1]) / 2
+    integral = (
+                       x[1:] + x[:-1]
+               ) / 2
+    if modify_endpoints:
+        integral[0] = integral[0] + x[0] * 0.5
+        integral[-1] = integral[-1] + x[-1] * 0.5
+
+    return integral
