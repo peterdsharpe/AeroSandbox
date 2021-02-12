@@ -5,6 +5,10 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 [![Monthly Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox)
 ![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)
 
+### NEWS
+
+AeroSandbox v3.0.0 is out in beta mode! You can install this by running `pip install --pre aerosandbox` (add the `--upgrade` flag as well to upgrade an existing installation).
+
 ## Overview
 AeroSandbox is a Python package for aircraft design optimization that leverages modern tools for reverse-mode automatic differentiation and large-scale design optimization.
 
