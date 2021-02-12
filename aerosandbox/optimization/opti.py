@@ -1,7 +1,7 @@
-import casadi as cas
 from typing import Union, List, Dict, Callable
-import aerosandbox.numpy as np
 import json
+import casadi as cas
+import aerosandbox.numpy as np
 
 
 class Opti(cas.Opti):
@@ -370,6 +370,253 @@ class Opti(cas.Opti):
 
         return param
 
+    def derivative_of(self,
+                      variable: cas.MX,
+                      with_respect_to: Union[np.ndarray, cas.MX],
+                      derivative_init_guess: Union[float, np.ndarray],  # TODO add default
+                      derivative_scale: float = None,
+                      method: str = "midpoint",
+                      regularize: bool = False,
+                      explicit: bool = False  # TODO implement explicit
+                      ) -> cas.MX:
+        """
+        Returns a quantity that is either defined or constrained to be a derivative of an existing variable.
+
+        For example:
+
+        >>> opti = Opti()
+        >>> position = opti.variable(init_guess=0, n_vars=100)
+        >>> time = np.linspace(0, 1, 100)
+        >>> velocity = opti.derivative_of(position, with_respect_to=time)
+        >>> acceleration = opti.derivative_of(velocity, with_respect_to=time)
+
+        Args:
+
+            variable: The variable or quantity that you are taking the derivative of. The "numerator" of the
+            derivative, in colloquial parlance.
+
+            with_respect_to: The variable or quantity that you are taking the derivative with respect to. The
+            "denominator" of the derivative, in colloquial parlance.
+
+                In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
+                value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
+
+            derivative_init_guess: Initial guess for the value of the derivative. Should be either a float (in which
+            case the initial guess will be a vector equal to this value) or a vector of initial guesses with the same
+            length as `variable`. For more info, look at the docstring of opti.variable()'s `init_guess` parameter.
+
+            derivative_scale: Scale factor for the value of the derivative. For more info, look at the docstring of
+            opti.variable()'s `scale` parameter.
+
+            method: The type of integrator to use to define this derivative. Options are:
+
+                * "forward euler" - a first-order-accurate forward Euler method
+
+                    Citation: https://en.wikipedia.org/wiki/Euler_method
+
+                * "backwards euler" - a first-order-accurate backwards Euler method
+
+                    Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
+
+                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
+
+                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
+
+                * "simpson" - Simpson's rule for integration
+
+                    Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
+
+                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
+                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
+
+                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
+
+                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
+                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
+                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
+                as the Butcher tableau is more dense (i.e. not banded).
+
+                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
+                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
+
+            regularize: Most of these integration methods result in N-1 constraints for a problem with N state
+            variables. This makes the problem ill-posed, as there is an extra degree of freedom added to the problem.
+            If the regularize flag is set True, we will automatically add one more constraint to make the problem
+            well-posed. The specific constraint that is added depends on the integration method used.
+
+            explicit: If true, returns an explicit derivative rather than an implicit one. In other words,
+            this *defines* the output to be a derivative of the input rather than *constraining* the output to the a
+            derivative of the input.
+
+                Explicit derivatives result in smaller, denser systems of equations that are more akin to
+                shooting-type methods. Implicit derivatives result in larger, sparser systems of equations that are
+                more akin to collocation methods. Explicit derivatives are better for simple, stable systems with few
+                states, while implicit derivatives are better for complex, potentially-unstable systems with many
+                states.
+
+                # TODO implement explicit
+
+
+
+        Returns: A vector consisting of the derivative of the parameter `variable` with respect to `with_respect_to`.
+
+        """
+        ### Set defaults
+        # if with_respect_to is None:
+        #     with_respect_to = np.ones(shape=np.length(variable)) # TODO consider whether we want to even allow this...
+        # if derivative_init_guess is None:
+        #     raise NotImplementedError() # TODO implement default value for this
+
+        ### Check inputs
+        N = np.length(variable)
+        if not np.length(with_respect_to) == N:
+            raise ValueError("The inputs `variable` and `with_respect_to` must be vectors of the same length!")
+
+        ### Clean inputs
+        method = method.lower()
+
+        ### Implement the derivative
+        if not explicit:
+            derivative = self.variable(
+                init_guess=derivative_init_guess,
+                n_vars=N,
+                scale=derivative_scale,
+            )
+
+            self.constrain_derivative(
+                derivative=derivative,
+                variable=variable,
+                with_respect_to=with_respect_to,
+                method=method,
+                regularize=regularize
+            )
+
+        else:
+            raise NotImplementedError("Haven't yet implemented explicit derivatives! Use implicit ones for now...")
+
+        return derivative
+
+    def constrain_derivative(self,
+                             derivative: cas.MX,
+                             variable: cas.MX,
+                             with_respect_to: Union[np.ndarray, cas.MX],
+                             method: str = "midpoint",
+                             regularize: bool = False,
+                             ) -> None:
+        """
+        Adds a constraint to the optimization problem such that:
+
+            d(variable) / d(with_respect_to) == derivative
+
+        Can be used directly; also called indirectly by opti.derivative_of() for implicit derivative creation.
+
+        Args:
+            derivative: The derivative that is to be constrained here.
+
+            variable: The variable or quantity that you are taking the derivative of. The "numerator" of the
+            derivative, in colloquial parlance.
+
+            with_respect_to: The variable or quantity that you are taking the derivative with respect to. The
+            "denominator" of the derivative, in colloquial parlance.
+
+                In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
+                value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
+
+            method: The type of integrator to use to define this derivative. Options are:
+
+                * "forward euler" - a first-order-accurate forward Euler method
+
+                    Citation: https://en.wikipedia.org/wiki/Euler_method
+
+                * "backwards euler" - a first-order-accurate backwards Euler method
+
+                    Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
+
+                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
+
+                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
+
+                * "simpson" - Simpson's rule for integration
+
+                    Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
+
+                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
+                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
+
+                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
+
+                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
+                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
+                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
+                as the Butcher tableau is more dense (i.e. not banded).
+
+                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
+                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
+
+            Note that all methods are expressed as integrators rather than differentiators; this prevents
+            singularities from forming in the limit of timestep approaching zero. (For those coming from the PDE
+            world, this is analogous to using finite volume methods rather than finite difference methods to allow
+            shock capturing.)
+
+            regularize: Most of these integration methods result in N-1 constraints for a problem with N state
+            variables. This makes the problem ill-posed, as there is an extra degree of freedom added to the problem.
+            If the regularize flag is set True, we will automatically add one more constraint to make the problem
+            well-posed. The specific constraint that is added depends on the integration method used.
+
+        Returns: None (adds constraint in-place).
+
+        """
+        d_var = np.diff(variable)
+        d_time = np.diff(with_respect_to)  # Calculate the timestep
+
+        # TODO scale constraints by variable scale?
+        # TODO make
+
+        if method == "forward euler":
+            raise NotImplementedError
+            self.subject_to(
+                d_var == derivative[:-1] * d_time
+            )
+            self.subject_to(
+                derivative[-1] == derivative[-2]  # First-order constraint at last point
+            )
+
+
+        elif method == "backward euler":
+            raise NotImplementedError
+            self.subject_to(
+                d_var == derivative[1:] * d_time
+            )
+            self.subject_to(
+                derivative[0] == derivative[1]  # First-order constraint at first point
+            )
+
+        elif method == "midpoint" or method == "trapezoid":
+            self.subject_to(
+                d_var == np.trapz(derivative) * d_time,
+            )
+            if regularize:
+                # Apply a second-order constraint at the first point
+                coefficients = np.finite_difference_coefficients(
+                    x=with_respect_to[:3],
+                    x0=with_respect_to[0],
+                    derivative_degree=1
+                )
+                derivative_value = np.sum(variable[:3] * coefficients)
+                self.subject_to(
+                    derivative[0] == derivative_value
+                )
+
+
+        elif method == "simpson":
+            raise NotImplementedError
+
+        elif method == "runge-kutta" or method == "rk4":
+            raise NotImplementedError
+
+        elif method == "runge-kutta-3/8":
+            raise NotImplementedError
+
     def save_solution(self):
         if self.cache_filename is None:
             raise ValueError("""In order to use the save feature, you need to supply a filepath for the cache upon
@@ -518,4 +765,5 @@ class Opti(cas.Opti):
 
 if __name__ == '__main__':
     import pytest
+
     pytest.main()
