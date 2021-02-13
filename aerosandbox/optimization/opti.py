@@ -245,7 +245,7 @@ class Opti(cas.Opti):
         return var
 
     def subject_to(self,
-                   constraint: Union[cas.MX, bool, List],
+                   constraint: Union[cas.MX, bool, List],  # TODO add scale
                    ) -> cas.MX:
         """
         Initialize a new equality or inequality constraint(s).
@@ -751,15 +751,17 @@ class Opti(cas.Opti):
 
         if jit:
             options["jit"] = True
-            # options["compiler"] = "shell"
+            # options["compiler"] = "shell"  # Recommended by CasADi devs, but doesn't work on my machine
             options["jit_options"] = {
-                "flags"  : ["-O3"],
+                "flags": ["-O3"],
                 # "verbose": True
             }
 
         options["ipopt.sb"] = 'yes'
 
-        if not verbose:
+        if verbose:
+            options["ipopt.print_level"] = 5
+        else:
             options["print_time"] = False
             options["ipopt.print_level"] = 0
 
