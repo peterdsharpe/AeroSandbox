@@ -24,9 +24,8 @@ def run_all_python_files(path: Path, recursive=True) -> None:
         return
 
     ### Run the file if it's a Python file
-    if path.is_file():
-        if path.suffix == ".py":
-            exec(open(str(path)).read())
+    if path.is_file() and path.suffix == ".py":
+        exec(open(str(path)).read())
 
     ### Recurse through a directory if directed to
     if recursive and path.is_dir():
