@@ -1,12 +1,14 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
-n_timesteps = 301
+n_timesteps = 2000
 mass_block = 1
 
 opti = asb.Opti()
 
-time = np.cosspace(0, 1, n_timesteps)
+time_end = opti.variable(init_guess=1, lower_bound=0)
+
+time = np.cosspace(0, time_end, n_timesteps)
 
 position = opti.variable(
     init_guess=np.linspace(0, 1, n_timesteps)
@@ -20,7 +22,9 @@ velocity = opti.derivative_of(
 
 force = opti.variable(
     init_guess=np.linspace(1, -1, n_timesteps),
-    n_vars=n_timesteps
+    n_vars=n_timesteps,
+    lower_bound=-1,
+    upper_bound=1
 )
 
 opti.constrain_derivative(
@@ -29,11 +33,7 @@ opti.constrain_derivative(
     derivative=force / mass_block,
 )
 
-effort_expended = np.sum(
-    np.trapz(force ** 2) * np.diff(time)
-)
-
-opti.minimize(effort_expended)
+opti.minimize(time_end)
 
 ### Boundary conditions
 opti.subject_to([

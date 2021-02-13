@@ -1,5 +1,6 @@
 import math
 import aerosandbox.numpy as np
+import hashlib
 
 
 def eng_string(x: float, format='%.3g', si=True):
@@ -40,3 +41,14 @@ def eng_string(x: float, format='%.3g', si=True):
         exp3_text = 'e%s' % exp3
 
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
+
+
+def hash(string: str) -> int:
+    """
+    Hashes a string into an integer! (Quasi-random; based on an MD5 checksum algorithm.)
+    """
+    md5 = hashlib.md5(string.encode('utf-8'))
+    hash_hex = md5.hexdigest()
+    hash_int = int(hash_hex, 16)
+    hash_int64 = hash_int % (2 ** 32 - 1)
+    return hash_int64
