@@ -3,8 +3,8 @@
 from numpy import *
 
 ### Overwrite some functions
-from .array import array, length
-from .arithmetic import sum, mean
+from .array import array, length, roll, max, min
+from .arithmetic import sum, mean, cumsum
 from .calculus import diff, trapz
 from .conditionals import where
 import aerosandbox.numpy.linalg as linalg
@@ -16,7 +16,7 @@ from .trig import degrees, radians, sind, cosd, tand, arcsind, arccosd, arctan2d
 
 ### Force-overwrite built-in Python functions.
 
-from numpy import round, min, max
+from numpy import round  # TODO: Remove?, min, max
 
 from numpy import abs as _abs
 

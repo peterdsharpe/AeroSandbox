@@ -43,3 +43,53 @@ def length(array) -> int:
                 raise AttributeError
         except AttributeError:  # array has no attribute shape -> either float or int
             return 1
+
+
+def roll(a, shift):
+    """
+    Roll array elements along a given axis.
+
+    Elements that roll beyond the last position are re-introduced at the first.
+
+    Parameters
+    ----------
+    a : array_like
+        Input array.
+    shift : int
+        The number of places by which elements are shifted.
+
+    Returns
+    -------
+    res : ndarray
+        Output array, with the same shape as a.
+
+    """
+    try:
+        return onp.roll()
+    except Exception:
+        if len(a.shape) == 1:
+            return cas.vertcat(a[-shift], a[:-shift])
+        else:
+            return cas.vertcat(a[-shift, :], a[:-shift, :])
+        
+        
+def max(a):
+    """
+    Returns the maximum value of an array
+    """
+            
+    try: 
+        return onp.max(a)
+    except TypeError:
+        return cas.mmax(a)
+
+
+def min(a):
+    """
+    Returns the minimum value of an array
+    """
+            
+    try:
+        return onp.min(a)
+    except TypeError:
+        return cas.mmin(a)
