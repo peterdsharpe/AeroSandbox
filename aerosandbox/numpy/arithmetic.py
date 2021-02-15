@@ -15,3 +15,11 @@ def sum(x):
 def mean(x):
     """Returns the mean of a vector x."""
     return sum(x) / length(x)
+
+def cumsum(x, **kwargs):
+    """Return the cumulative sum of the elements."""
+    
+    try:
+        return onp.cumsum(x, **kwargs)
+    except Exception:
+        return cas.cumsum(x, **kwargs)

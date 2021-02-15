@@ -14,5 +14,11 @@ def test_mean():
     assert np.mean(a) == pytest.approx(5)
 
 
+def test_cumsum():
+    a = np.array([1, 2, 3])
+    
+    assert np.all(np.cumsum(a) == np.array([ 1,  3,  6]))
+    
+
 if __name__ == '__main__':
     pytest.main()
