@@ -65,7 +65,7 @@ def roll(a, shift):
 
     """
     try:
-        return onp.roll()
+        return onp.roll(a, shift)
     except Exception:
         if len(a.shape) == 1:
             return cas.vertcat(a[-shift], a[:-shift])
@@ -93,3 +93,11 @@ def min(a):
         return onp.min(a)
     except TypeError:
         return cas.mmin(a)
+    
+def reshape(a, newshape):
+    """Gives a new shape to an array without changing its data."""
+    
+    try:
+        return onp.reshape(a, newshape)
+    except Exception:
+        return cas.reshape(a, newshape)

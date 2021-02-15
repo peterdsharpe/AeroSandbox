@@ -3,7 +3,7 @@
 from numpy import *
 
 ### Overwrite some functions
-from .array import array, length, roll, max, min
+from .array import array, length, roll, max, min, reshape
 from .arithmetic import sum, mean, cumsum
 from .calculus import diff, trapz
 from .conditionals import where
