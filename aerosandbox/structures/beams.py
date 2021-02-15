@@ -94,16 +94,20 @@ class Beam6DOF(AeroSandboxObject):
     #### Properties
 
     @property
-    def I(self):
-        """
-        :return: np.ndarray
-        """
-        # TODO: Fix this to matrix form if possible
+    def Ixx(self):
         return self.cross_section.Ixx().T
     
     @property
+    def Iyy(self):
+        return self.cross_section.Iyy().T
+    
+    @property
+    def Ixy(self):
+        return self.cross_section.Ixy().T
+    
+    @property
     def J(self):
-        raise self.cross_section.J()
+        return self.cross_section.J().T
 
     @property
     def volume(self):
@@ -370,16 +374,18 @@ class Beam6DOF(AeroSandboxObject):
         self.ddv = 0.01 * self.opti.variable(0, n_vars = self.n)
         self.dEIddv = 1 * self.opti.variable(0, n_vars = self.n)
 
+        # TODO: Add point moments
+
         # Define derivatives
         self.opti.subject_to([
             cas.diff(self.u) == np.trapz(self.du) * self.dx,
             cas.diff(self.du) == np.trapz(self.ddu) * self.dx,
-            cas.diff(self.E * self.I * self.ddu) == np.trapz(self.dEIddu) * self.dx,
+            cas.diff(self.E * self.Ixx * self.ddu) == np.trapz(self.dEIddu) * self.dx,
             cas.diff(self.dEIddu) == np.trapz(self.forces_per_unit_length_x) * self.dx + self.point_forces_x,
             
             cas.diff(self.v) == np.trapz(self.dv) * self.dx,
             cas.diff(self.dv) == np.trapz(self.ddv) * self.dx,
-            cas.diff(self.E * self.I * self.ddv) == np.trapz(self.dEIddv) * self.dx,
+            cas.diff(self.E * self.Iyy * self.ddv) == np.trapz(self.dEIddv) * self.dx,
             cas.diff(self.dEIddv) == np.trapz(self.forces_per_unit_length_y) * self.dx + self.point_forces_y,
         ])
 
@@ -405,13 +411,13 @@ class Beam6DOF(AeroSandboxObject):
         
         # Find the stress at vertices
         self._bending_stress_vertices = np.sqrt(
-                stress_f_x(self.cross_section.x())**2 + 
-                stress_f_y(self.cross_section.y())**2
+                stress_f_x(self.cross_section.x().T)**2 + 
+                stress_f_y(self.cross_section.y().T)**2
             )
 
         self._min_max_bending_stress = (
-            np.min(stress_vertices),  # Compressive
-            np.max(stress_vertices),  # Tensile
+            np.min(self._bending_stress_vertices),  # Compressive
+            np.max(self._bending_stress_vertices),  # Tensile
             )  # TODO: Check
         
     def calc_torsional_stress(self):
@@ -429,10 +435,11 @@ class Beam6DOF(AeroSandboxObject):
         self.opti.subject_to([
             cas.diff(self.u) == np.trapz(self.du) * self.dx,
             cas.diff(self.du) == np.trapz(self.ddu) * self.dx,
-            cas.diff(self.dEIddu) == np.trapz(self.force_per_unit_length_x) * self.dx + self.point_forces[0],
+            cas.diff(self.dEIddu) == np.trapz(self.forces_per_unit_length_x) * self.dx + self.point_torsional_moments,
         ])
         
-        stress_f = (lambda dist: dist)
+        # TODO: Add torsion formula
+        stress_f = (lambda dist: 0)
         
         self._torsional_stress_vertices = stress_f(
                 np.sqrt(
@@ -446,22 +453,27 @@ class Beam6DOF(AeroSandboxObject):
     def calc_max_stress(self):
         
         # Find max Von Mises Stress
-        # TODO: Check this
-        self.max_stress = np.max(
-            np.sqrt(
-                (
+        # TODO: Check this, shear component is wrong
+        
+        axial_components = (
                     self.axial_stress
                     +
                     self._bending_stress_vertices
-                )**2 
-                +
-                3 * (
+                )**2
+        
+        shear_components = (
                     self.shear_stress_x**2 
                     + 
                     self.shear_stress_y**2  
                     +
-                    3 * self._torsional_stress_vertices**2
+                    self._torsional_stress_vertices**2
                 )
+        
+        self.max_stress = np.max(
+            np.sqrt(
+                axial_components
+                +
+                3 * shear_components
                 )
             )
         
@@ -705,9 +717,14 @@ if __name__ == '__main__':
         beam.du * 180 / cas.pi < 10,
         beam.du * 180 / cas.pi > -10
     ])
+    
+    # Add some profile change constraints
     opti.subject_to([
-        cas.diff(cas.diff(beam.nominal_diameter)) < 0.001,
-        cas.diff(cas.diff(beam.nominal_diameter)) > -0.001,
+        cas.diff(cas.diff(beam.height)) < 0.001,
+        cas.diff(cas.diff(beam.height)) > -0.001,
+        
+        cas.diff(cas.diff(beam.width)) < 0.001,
+        cas.diff(cas.diff(beam.width)) > -0.001,
     ])
 
     opti.minimize(beam.mass)
@@ -719,8 +736,9 @@ if __name__ == '__main__':
 
     try:
         sol = opti.solve()
+        sol = beam.substitute_solution(sol)
     except:
         print("Failed!")
         sol = opti.debug
         
-    sol = beam.substitute_solution(sol)
+    print(sol)
