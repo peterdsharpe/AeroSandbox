@@ -201,7 +201,7 @@ class Polygon(AeroSandboxObject):
 
     def J(self):
         # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
-        J = self.Ixx + self.Iyy
+        J = self.Ixx() + self.Iyy()
 
         return J
     
