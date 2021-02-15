@@ -1,4 +1,3 @@
-import casadi as cas
 import aerosandbox.numpy as np
 from matplotlib import path
 import matplotlib.pyplot as plt
@@ -6,35 +5,67 @@ from matplotlib.patches import Polygon as mplPolygon
 from aerosandbox.common import AeroSandboxObject
 
 
+# TODO: Clean this up, casadi compat made a mess
 class Polygon(AeroSandboxObject):
-    def __init__(self, coordinates):
-        self.coordinates = coordinates  # Nx2 NumPy ndarray
+    def __init__(self, *args):
+        
+        if len(args) == 1:
+            self._coordinates = args[0]  # Nx2 NumPy ndarray
+        elif len(args) == 2:
+            try:
+                # Still try to combine them
+                self._coordinates = np.hstack([*args])
+            except:
+                # Casadi only supports 2D matrices
+                self._x = args[0]
+                self._y = args[1]
         
         # TODO: Make this better, fixes negative areas etc though
         # if self.area() < 0:
         #     self.coordinates = np.flip(coordinates, axis=0)
+
+    @property
+    def coordinates(self):
+        if hasattr(self, "_coordinates"):
+            return self._coordinates
+        else:
+            return (self.x(), self.y())
+        
+    @coordinates.setter
+    def coordinates(self, value):
+        self._coordinates = value
 
     def x(self):
         """
         Returns the x coordinates of the polygon. Equivalent to Polygon.coordinates[:,0].
         :return: X coordinates as a vector
         """
-        return self.coordinates[:, 0]
+        if hasattr(self, "_coordinates"):
+            return self._coordinates[:, 0]
+        else:
+            return self._x
 
     def y(self):
         """
         Returns the y coordinates of the polygon. Equivalent to Polygon.coordinates[:,1].
         :return: Y coordinates as a vector
         """
-        return self.coordinates[:, 1]
+        if hasattr(self, "_coordinates"):
+            return self._coordinates[:, 1]
+        else:
+            return self._y
     
     def _x_n(self):
-        # replicates np.roll behavior for casadi compatibility
-        return cas.vertcat(self.x()[-1], self.x()[:-1])
+        """
+        Returns x coordinates offset by one.
+        """
+        return np.roll(self.x(), 1)
     
     def _y_n(self):
-        # replicates np.roll behavior for casadi compatibility
-        return cas.vertcat(self.y()[-1], self.y()[:-1])
+        """
+        Returns y coordinates offset by one.
+        """
+        return np.roll(self.y(), 1)
         
 
     def n_points(self) -> int:
@@ -42,6 +73,10 @@ class Polygon(AeroSandboxObject):
         Returns the number of points/vertices/coordinates of the polygon.
         Analogous to len(coordinates)
         """
+        try:
+            return self.x().shape[0]
+        except: pass
+        
         try:
             return len(self.coordinates)
         except TypeError:
@@ -54,6 +89,8 @@ class Polygon(AeroSandboxObject):
                         x,
                         y,
                         ):
+        assert type(self.coordinates) != tuple, 'Method does not work with symbolics.'
+        
         x = np.array(x)
         y = np.array(y)
         try:
@@ -161,21 +198,33 @@ class Polygon(AeroSandboxObject):
         Iuv = Ixy - A * centroid[0] * centroid[1]
 
         return Iuv
-    
-    # TODO: Make these properties?
-    def I(self):
-        # Returns the Area moment of intertia matrix
-        I = np.array([
-            [self.Ixx(), self.Ixy()],
-            [self.Ixy(), self.Iyy()]  # Ixy = Iyx
-            ])
-        return I
 
     def J(self):
         # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
         J = self.Ixx + self.Iyy
 
         return J
+    
+    def max_x(self):
+        """
+        Finds the maximum x from the centroid
+        """
+        return np.max(self.x()-self.centroid()[0])
+    
+    def max_y(self):
+        """
+        Finds the maximum y from the centroid
+        """
+        return np.max(self.y()-self.centroid()[1])
+    
+    def max_xy(self):
+        """
+        Finds the maximum distance from the centroid
+        """
+        return np.max(np.sqrt(
+            (self.x()-self.centroid()[0])**2 +
+            (self.y()-self.centroid()[1])**2
+            ))
     
     def plot(self):
         fig = plt.figure()
