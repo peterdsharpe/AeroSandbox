@@ -116,7 +116,8 @@ class Beam6DOF(AeroSandboxObject):
         volume = np.sum(
             np.trapz(
                 self.cross_section.area().T
-            ) * self.dx
+            ) * self.dx,
+            axis=1
         )
         return volume
 
@@ -225,13 +226,7 @@ class Beam6DOF(AeroSandboxObject):
         #### Initialize Stresses
         self.shear_stress_x = np.zeros(self.n)
         self.shear_stress_y = np.zeros(self.n)
-        
         self.axial_stress = np.zeros(self.n)
-        
-        self.bending_stress_x = np.zeros(self.n)
-        self.bending_stress_y = np.zeros(self.n)
-        
-        self.torsional_stress = np.zeros(self.n)
         
         #### Add geometry-specific constraints
         self._extra_constraints()
@@ -249,17 +244,22 @@ class Beam6DOF(AeroSandboxObject):
         #### Bending
         if self.bending:
             self.calc_bending_stress()
+        else:
+            self._bending_stress_vertices = 0
             
         #### Torsion
         if self.torsion:
             self.calc_torsional_stress()
+        else:
+            self._torsional_stress_vertices = 0
             
-        #### Calc Max Stress
-        self.stress = self.calc_max_stress()
+        #### Calc Stress
+        self.calc_stress()
         
+        #### Constrain to allowable stress
         self.opti.subject_to([
-            self.stress / self.max_allowable_stress < 1,
-            self.stress / self.max_allowable_stress > -1,
+            cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress <= 1,
+            cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress >= -1,
         ])
         
     def _discretize(self):
@@ -293,6 +293,11 @@ class Beam6DOF(AeroSandboxObject):
                         n_vars = self.n
                     )
                 )
+            
+            # Assume all geometry parameters are positive
+            opti.subject_to([
+                getattr(self, var) > 0,
+                ])
         
     def _add_loads(self):
         
@@ -348,7 +353,6 @@ class Beam6DOF(AeroSandboxObject):
             self.moments_per_unit_length_y += load['bending_moment'][1] / self.length * scaling
             
             self.torsional_moments_per_unit_length += load['torsional_moment'] / self.length * scaling
-        
     
     def calc_axial_stress(self):
         """Calculates stresses from shear loads"""
@@ -410,15 +414,13 @@ class Beam6DOF(AeroSandboxObject):
         stress_f_y = (lambda y: y * self.E * self.ddv)
         
         # Find the stress at vertices
-        self._bending_stress_vertices = np.sqrt(
-                stress_f_x(self.cross_section.x().T)**2 + 
-                stress_f_y(self.cross_section.y().T)**2
-            )
+        self._bending_stress_vertices_x = stress_f_x(self.cross_section.x().T)
+        self._bending_stress_vertices_y = stress_f_y(self.cross_section.y().T)
 
-        self._min_max_bending_stress = (
-            np.min(self._bending_stress_vertices),  # Compressive
-            np.max(self._bending_stress_vertices),  # Tensile
-            )  # TODO: Check
+        # self._min_max_bending_stress = (
+        #     np.min(self._bending_stress_vertices),  # Compressive
+        #     np.max(self._bending_stress_vertices),  # Tensile
+        #     )  # TODO: Check
         
     def calc_torsional_stress(self):
         """Calculates stresses from torsional loads"""    
@@ -448,9 +450,9 @@ class Beam6DOF(AeroSandboxObject):
                 )
             )
         
-        self._max_torsional_stress = np.max(self._torsional_stress_vertices)  # TODO: check
+        #self._max_torsional_stress = np.max(self._torsional_stress_vertices)  # TODO: check
     
-    def calc_max_stress(self):
+    def calc_stress(self):
         
         # Find max Von Mises Stress
         # TODO: Check this, shear component is wrong
@@ -458,8 +460,10 @@ class Beam6DOF(AeroSandboxObject):
         axial_components = (
                     self.axial_stress
                     +
-                    self._bending_stress_vertices
-                )**2
+                    self._bending_stress_vertices_x
+                    +
+                    self._bending_stress_vertices_y
+                )
         
         shear_components = (
                     self.shear_stress_x**2 
@@ -469,15 +473,14 @@ class Beam6DOF(AeroSandboxObject):
                     self._torsional_stress_vertices**2
                 )
         
-        self.max_stress = np.max(
-            np.sqrt(
-                axial_components
-                +
-                3 * shear_components
-                )
-            )
+        self.stress = axial_components
+                # np.sqrt(
+                # axial_components
+                # +
+                # 3 * shear_components
+                # )
         
-        return self.max_stress
+        return self.stress
     
     def plot3D(self, displacement=False):
         sections = self.cross_section.coordinates
@@ -583,7 +586,7 @@ class RoundTube(Beam6DOF):
         
         x1 = np.vstack([xy[:, 0]]*self.n) * (diameter - thickness)
         y1 = np.vstack([xy[:, 1]]*self.n) * (diameter - thickness)
-        x2 = np.flip(np.vstack([xy[:, 0]]*self.n), axis=1) * diameter
+        x2 = np.flip(np.vstack([xy[:, 0]]*self.n), axis=0) * diameter
         y2 = np.flip(np.vstack([xy[:, 1]]*self.n), axis=1) * diameter
         
         x = cas.horzcat(x1, x2)
@@ -667,8 +670,11 @@ class RectBar(Beam6DOF):
             [0, 0]
             ]), axis=0)
         
-        x = np.vstack([xy[:, 0]]*self.n) * width
-        y = np.vstack([xy[:, 1]]*self.n) * height
+        x = np.vstack([xy[:, 0]]*self.n) * np.reshape(width, (-1, 1))
+        y = np.vstack([xy[:, 1]]*self.n) * np.reshape(height, (-1, 1))
+        
+        self.x = x
+        self.y = y
         
         poly = asb.Polygon(x.T, y.T)
         
@@ -682,30 +688,21 @@ if __name__ == '__main__':
     # Use default geometry guess
     beam = RectBar(
         opti=opti,
+        init_geometry = {
+            'height': 100,
+            'width': 100,
+            },
         length=60 / 2,
         points_per_point_load=50,
         bending=True,
-        torsion=True
+        torsion=False
     )
-    beam.cross_section.plot()
-    
-    tube = RoundTube(
-        opti=opti,
-        length=60 / 2,
-        points_per_point_load=50,
-        bending=True,
-        torsion=True
-    )
-    tube.cross_section.plot()
+    #beam.cross_section.plot()
     
     # Solve beam
     lift_force = 9.81 * 103.873
-    load_location = opti.variable(15)
-    opti.subject_to([
-        load_location > 2,
-        load_location < 60 / 2 - 2,
-        load_location == 18,
-    ])
+    load_location = 15
+    
     beam.add_point_load(load_location, np.array([-lift_force / 3, 0, 1]))
     beam.add_distributed_load(force= np.array([lift_force / 2, 0, 0]), load_type='uniform')
     beam.setup()
@@ -717,6 +714,14 @@ if __name__ == '__main__':
         beam.du * 180 / cas.pi < 10,
         beam.du * 180 / cas.pi > -10
     ])
+    
+    # Some sensible boundaries to avoid crazy beams
+    opti.subject_to([
+        beam.height < 1000,
+        beam.width < 1000,
+        beam.height > 1,
+        beam.width > 1,
+        ])
     
     # Add some profile change constraints
     opti.subject_to([
@@ -736,9 +741,9 @@ if __name__ == '__main__':
 
     try:
         sol = opti.solve()
-        sol = beam.substitute_solution(sol)
+        beam.substitute_solution(sol)
     except:
+        raise
         print("Failed!")
         sol = opti.debug
-        
-    print(sol)
+        print(sol)
