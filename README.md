@@ -5,7 +5,7 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 [![Monthly Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox)
 ![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)
 
-### NEWS
+### News
 
 * AeroSandbox v3.0.0 is out in beta mode! 
     * Install: `pip install --pre aerosandbox` (add the `--upgrade` flag as well to upgrade an existing installation).
