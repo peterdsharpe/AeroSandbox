@@ -12,10 +12,10 @@ class Polygon(AeroSandboxObject):
         if len(args) == 1:
             self._coordinates = args[0]  # Nx2 NumPy ndarray
         elif len(args) == 2:
-            try:
+            if args[0].shape[0] == 1 and args[1].shape[1] == 1:
                 # Still try to combine them
                 self._coordinates = np.hstack([*args])
-            except:
+            else:
                 # Casadi only supports 2D matrices
                 self._x = args[0]
                 self._y = args[1]
@@ -121,7 +121,7 @@ class Polygon(AeroSandboxObject):
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        A = 0.5 * np.sum(a)  # area
+        A = 0.5 * np.sum(a, axis=1)  # area
 
         return A
 
@@ -134,10 +134,10 @@ class Polygon(AeroSandboxObject):
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        A = 0.5 * np.sum(a)  # area
+        A = self.area()  # area
 
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n), axis=1)
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n), axis=1)
         centroid = np.array([x_c, y_c])
 
         return centroid
@@ -151,13 +151,10 @@ class Polygon(AeroSandboxObject):
 
         a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        A = 0.5 * np.sum(a)  # area
+        A = self.area()
+        centroid = self.centroid()
 
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-        centroid = np.array([x_c, y_c])
-
-        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
+        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2), axis=1)
 
         Iuu = Ixx - A * centroid[1] ** 2
 
@@ -175,7 +172,7 @@ class Polygon(AeroSandboxObject):
         A = self.area()
         centroid = self.centroid()
 
-        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
+        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2), axis=1)
 
         Ivv = Iyy - A * centroid[0] ** 2
 
@@ -193,7 +190,7 @@ class Polygon(AeroSandboxObject):
         A = self.area()
         centroid = self.centroid()
 
-        Ixy = 1 / 24 * np.sum(a * (x * y_n + 2 * x * y + 2 * x_n * y_n + x_n * y))
+        Ixy = 1 / 24 * np.sum(a * (x * y_n + 2 * x * y + 2 * x_n * y_n + x_n * y), axis=1)
 
         Iuv = Ixy - A * centroid[0] * centroid[1]
 
