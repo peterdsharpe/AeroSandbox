@@ -47,6 +47,7 @@ class Beam6DOF(AeroSandboxObject):
                  G:                     float=None,
                  bending:               bool=True,  # Should we consider beam bending?
                  torsion:               bool=True,  # Should we consider beam torsion?
+                 locked_geometry_vars:  list=[],
                  ):
         """
         :param opti: An optimization environment. # type: cas.Opti
@@ -76,6 +77,7 @@ class Beam6DOF(AeroSandboxObject):
         self.G = G
         self.bending = bending
         self.torsion = torsion
+        self.locked_geometry_vars = locked_geometry_vars
         
         # Calculate G
         if isotropic:
@@ -304,7 +306,12 @@ class Beam6DOF(AeroSandboxObject):
         Geometry-specific variables.
         :return: None (in-place)
         """
+        
         for var in self.req_geometry_vars:
+            # If locked just skip it
+            if var in self.locked_geometry_vars:
+                continue
+            
             setattr(self, var, 
                     self.opti.variable(
                         init_guess = self.init_geometry[var],
@@ -320,14 +327,14 @@ class Beam6DOF(AeroSandboxObject):
     def _add_loads(self):
         
         # Add point loads
-        self.point_forces_x = cas.GenMX_zeros(self.n - 1)
-        self.point_forces_y = cas.GenMX_zeros(self.n - 1)
-        self.point_forces_z = cas.GenMX_zeros(self.n - 1)
+        self.point_forces_x = np.zeros(self.n - 1)
+        self.point_forces_y = np.zeros(self.n - 1)
+        self.point_forces_z = np.zeros(self.n - 1)
         
-        self.point_moments_x = cas.GenMX_zeros(self.n - 1)
-        self.point_moments_y = cas.GenMX_zeros(self.n - 1)
+        self.point_moments_x = np.zeros(self.n - 1)
+        self.point_moments_y = np.zeros(self.n - 1)
         
-        self.point_torsional_moments = cas.GenMX_zeros(self.n - 1)
+        self.point_torsional_moments = np.zeros(self.n - 1)
         
         for i in range(len(self.point_loads)):
             load = self.point_loads[i]
@@ -427,13 +434,9 @@ class Beam6DOF(AeroSandboxObject):
         else:
             raise ValueError("Bad value of bending_BC_type!")
 
-        # Stress functions for x and y based on radius of curvature ddx
-        stress_f_x = (lambda x: x.T * self.E * self.ddu)
-        stress_f_y = (lambda y: y.T * self.E * self.ddv)
-        
-        # Find the stress at vertices
-        self._bending_stress_vertices_x = stress_f_x(self.cross_section.x().T)
-        self._bending_stress_vertices_y = stress_f_y(self.cross_section.y().T)
+        # Find the stress at vertices based on radius of curvature ddx
+        self._bending_stress_vertices_x = self.cross_section.x() * self.E * self.ddu
+        self._bending_stress_vertices_y = self.cross_section.y() * self.E * self.ddv
 
         # self._min_max_bending_stress = (
         #     np.min(self._bending_stress_vertices),  # Compressive
@@ -500,8 +503,53 @@ class Beam6DOF(AeroSandboxObject):
         
         return self.stress
     
-    def plot3D(self, displacement=False):
-        sections = self.cross_section.coordinates
+    def plot3D(self, displacement=False, axes_equal=True):
+        x = self.cross_section.x() #- self.cross_section.centroid()[0]
+        y = self.cross_section.y() #- self.cross_section.centroid()[1]
+        
+        assert x.shape == y.shape and self.x.shape[0] == x.shape[0]
+        
+        x = x - np.ones(x.shape) * self.cross_section.centroid()[0].reshape(-1, 1)
+        y = y - np.ones(x.shape) * self.cross_section.centroid()[1].reshape(-1, 1)
+        z = np.ones(x.shape) * self.x.reshape(-1, 1)
+        
+        X = x.flatten()
+        Y = y.flatten()
+        Z = z.flatten()
+        
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import proj3d
+        
+        fig = plt.figure(figsize=(8, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        if axes_equal:
+            # Create cubic bounding box to simulate equal aspect ratio
+            max_range = np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
+            Xb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][0].flatten() + 0.5*(X.max()+X.min())
+            Yb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][1].flatten() + 0.5*(Y.max()+Y.min())
+            Zb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][2].flatten() + 0.5*(Z.max()+Z.min())
+            # Comment or uncomment following both lines to test the fake bounding box:
+            for xb, yb, zb in zip(Xb, Yb, Zb):
+               ax.plot([xb], [yb], [zb], 'w')
+        
+        ax.scatter(x, y, z)
+        plt.show()
+        
+    def draw_geometry_vars(self):
+        import matplotlib.pyplot as plt
+        # import matplotlib.style as style
+        import seaborn as sns
+        sns.set(font_scale=1)
+        
+        for var in self.req_geometry_vars:
+            fig, ax = plt.subplots()
+            
+            plt.subplot(111)
+            plt.plot(self.x, getattr(self, var).flatten(), '.-')
+            plt.xlabel(r"${}$ [m]".format('x'))
+            plt.ylabel(r"${}$ [m]".format(var))
+            plt.title("{} vs x".format(var.capitalize()))
     
     def draw_bending(self,
                      show=True,
@@ -732,10 +780,10 @@ if __name__ == '__main__':
     
     # Some sensible boundaries to avoid crazy beams
     opti.subject_to([
-        beam.height < 1000,
-        beam.width < 1000,
-        # beam.height > 1,
-        # beam.width > 1,
+        # beam.height < 1000,
+        # beam.width < 1000,
+        # beam.height > 0.001,
+        # beam.width > 0.001,
         ])
     
     # Add some profile change constraints
@@ -745,6 +793,11 @@ if __name__ == '__main__':
         
         cas.diff(cas.diff(beam.width)) < 0.001,
         cas.diff(cas.diff(beam.width)) > -0.001,
+        cas.diff(beam.height) < 0.1,
+        cas.diff(beam.height) > -0.1,
+        
+        cas.diff(beam.width) < 0.1,
+        cas.diff(beam.width) > -0.1,
     ])
 
     opti.minimize(beam.mass)
@@ -754,17 +807,13 @@ if __name__ == '__main__':
     s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
     opti.solver('ipopt', p_opts, s_opts)
 
-    OLDSHAPE = beam.width.shape
-
     try:
         sol = opti.solve()
         beam.substitute_solution(sol)
+        beam.plot3D()
+        beam.draw_geometry_vars()
     except:
         print("Failed!")
         sol = opti.debug
         print(sol)
         raise
-        
-    print(OLDSHAPE)
-    print(beam.width.shape)
-    print(beam.cross_section.area())
