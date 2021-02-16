@@ -6,6 +6,7 @@ import aerosandbox.numpy as np
 from aerosandbox.geometry import *
         
 # TODO: Check and document
+# TODO: Clean up mess made by casidi compat
 class Beam6DOF(AeroSandboxObject):
     """
     A Euler-Bernoulli 6 DOF FE beam.
@@ -115,9 +116,9 @@ class Beam6DOF(AeroSandboxObject):
         # TODO: Check it's correct, it's a bit too late for math
         volume = np.sum(
             np.trapz(
-                self.cross_section.area().T
+                self.cross_section.area()
             ) * self.dx,
-            axis=1
+            axis=0
         )
         return volume
 
@@ -134,7 +135,24 @@ class Beam6DOF(AeroSandboxObject):
         self._init_geometry = value
         
         self.n = 1  # Init with 1 cross-section
+        
+        # make them properties so we can mess with setting
         for key in value.keys():
+            
+            def getter(self):
+                return getattr(self, "_"+key)
+            
+            def setter(self, value):
+                if len(value.shape) == 1:
+                    value = np.reshape(value, (1, -1))
+                
+                setattr(self, "_"+key, value)
+            
+            prop = property(fget=getter, fset=setter)
+            
+            # Add it to the list of properties
+            setattr(self.__class__, key, prop)
+            
             setattr(self, key, np.array(value[key]))
             
     @property
@@ -257,10 +275,10 @@ class Beam6DOF(AeroSandboxObject):
         self.calc_stress()
         
         #### Constrain to allowable stress
-        self.opti.subject_to([
-            cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress <= 1,
-            cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress >= -1,
-        ])
+        # self.opti.subject_to([
+        #     cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress <= 1,
+        #     cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress >= -1,
+        # ])
         
     def _discretize(self):
         point_load_locations = [load["location"] for load in self.point_loads]
@@ -291,13 +309,13 @@ class Beam6DOF(AeroSandboxObject):
                     self.opti.variable(
                         init_guess = self.init_geometry[var],
                         n_vars = self.n
-                    )
+                    ).T
                 )
             
             # Assume all geometry parameters are positive
-            opti.subject_to([
-                getattr(self, var) > 0,
-                ])
+            # opti.subject_to([
+            #     getattr(self, var) >= 0,
+            #     ])
         
     def _add_loads(self):
         
@@ -384,12 +402,12 @@ class Beam6DOF(AeroSandboxObject):
         self.opti.subject_to([
             cas.diff(self.u) == np.trapz(self.du) * self.dx,
             cas.diff(self.du) == np.trapz(self.ddu) * self.dx,
-            cas.diff(self.E * self.Ixx * self.ddu) == np.trapz(self.dEIddu) * self.dx,
+            cas.diff(self.E * self.Ixx.T * self.ddu) == np.trapz(self.dEIddu) * self.dx,
             cas.diff(self.dEIddu) == np.trapz(self.forces_per_unit_length_x) * self.dx + self.point_forces_x,
             
             cas.diff(self.v) == np.trapz(self.dv) * self.dx,
             cas.diff(self.dv) == np.trapz(self.ddv) * self.dx,
-            cas.diff(self.E * self.Iyy * self.ddv) == np.trapz(self.dEIddv) * self.dx,
+            cas.diff(self.E * self.Iyy.T * self.ddv) == np.trapz(self.dEIddv) * self.dx,
             cas.diff(self.dEIddv) == np.trapz(self.forces_per_unit_length_y) * self.dx + self.point_forces_y,
         ])
 
@@ -410,8 +428,8 @@ class Beam6DOF(AeroSandboxObject):
             raise ValueError("Bad value of bending_BC_type!")
 
         # Stress functions for x and y based on radius of curvature ddx
-        stress_f_x = (lambda x: x * self.E * self.ddu)
-        stress_f_y = (lambda y: y * self.E * self.ddv)
+        stress_f_x = (lambda x: x.T * self.E * self.ddu)
+        stress_f_y = (lambda y: y.T * self.E * self.ddv)
         
         # Find the stress at vertices
         self._bending_stress_vertices_x = stress_f_x(self.cross_section.x().T)
@@ -441,7 +459,7 @@ class Beam6DOF(AeroSandboxObject):
         ])
         
         # TODO: Add torsion formula
-        stress_f = (lambda dist: 0)
+        stress_f = (lambda dist: dist*0)
         
         self._torsional_stress_vertices = stress_f(
                 np.sqrt(
@@ -593,7 +611,7 @@ class RoundTube(Beam6DOF):
         y = cas.horzcat(y1, y2)
         
         #TODO: Probably quite inefficient for circles (high poly approx)
-        poly = asb.Polygon(x.T, y.T)
+        poly = asb.Polygon(x, y)
         
         return poly
     
@@ -637,7 +655,7 @@ class RectTube(Beam6DOF):
         x = cas.horzcat(x1, x2)
         y = cas.horzcat(y1, y2)
         
-        poly = asb.Polygon(x.T, y.T)
+        poly = asb.Polygon(x, y)
         
         return poly
     
@@ -670,13 +688,10 @@ class RectBar(Beam6DOF):
             [0, 0]
             ]), axis=0)
         
-        x = np.vstack([xy[:, 0]]*self.n) * np.reshape(width, (-1, 1))
-        y = np.vstack([xy[:, 1]]*self.n) * np.reshape(height, (-1, 1))
+        x = np.vstack([xy[:, 0]]*self.n) * width.T
+        y = np.vstack([xy[:, 1]]*self.n) * height.T
         
-        self.x = x
-        self.y = y
-        
-        poly = asb.Polygon(x.T, y.T)
+        poly = asb.Polygon(x, y)
         
         return poly
     
@@ -707,30 +722,30 @@ if __name__ == '__main__':
     beam.add_distributed_load(force= np.array([lift_force / 2, 0, 0]), load_type='uniform')
     beam.setup()
 
-    # Tip deflection constraint
-    opti.subject_to([
-        # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        beam.du * 180 / cas.pi < 10,
-        beam.du * 180 / cas.pi > -10
-    ])
+    # # Tip deflection constraint
+    # opti.subject_to([
+    #     # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+    #     # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+    #     beam.du * 180 / cas.pi < 10,
+    #     beam.du * 180 / cas.pi > -10
+    # ])
     
-    # Some sensible boundaries to avoid crazy beams
-    opti.subject_to([
-        beam.height < 1000,
-        beam.width < 1000,
-        beam.height > 1,
-        beam.width > 1,
-        ])
+    # # Some sensible boundaries to avoid crazy beams
+    # opti.subject_to([
+    #     beam.height < 1000,
+    #     beam.width < 1000,
+    #     beam.height > 1,
+    #     beam.width > 1,
+    #     ])
     
-    # Add some profile change constraints
-    opti.subject_to([
-        cas.diff(cas.diff(beam.height)) < 0.001,
-        cas.diff(cas.diff(beam.height)) > -0.001,
+    # # Add some profile change constraints
+    # opti.subject_to([
+    #     cas.diff(cas.diff(beam.height)) < 0.001,
+    #     cas.diff(cas.diff(beam.height)) > -0.001,
         
-        cas.diff(cas.diff(beam.width)) < 0.001,
-        cas.diff(cas.diff(beam.width)) > -0.001,
-    ])
+    #     cas.diff(cas.diff(beam.width)) < 0.001,
+    #     cas.diff(cas.diff(beam.width)) > -0.001,
+    # ])
 
     opti.minimize(beam.mass)
 
@@ -739,11 +754,17 @@ if __name__ == '__main__':
     s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
     opti.solver('ipopt', p_opts, s_opts)
 
+    OLDSHAPE = beam.width.shape
+
     try:
         sol = opti.solve()
         beam.substitute_solution(sol)
     except:
-        raise
         print("Failed!")
         sol = opti.debug
         print(sol)
+        raise
+        
+    print(OLDSHAPE)
+    print(beam.width.shape)
+    print(beam.cross_section.area())
