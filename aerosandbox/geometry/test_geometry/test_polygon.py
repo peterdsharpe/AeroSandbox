@@ -1,5 +1,6 @@
-from aerosandbox.geometry.polygon import *
+from aerosandbox.geometry.polygon import Polygon
 import aerosandbox.numpy as np
+import casadi as cas
 import pytest
 
 # Unit square TODO: Check bahavior when flipped
@@ -38,6 +39,41 @@ def test_area3():
     assert np.all(poly.x() == x)
     assert np.all(poly.y() == y)
     assert np.all(poly.area() == np.ones((100,)))
+    
+def test_area_cas():
+    x = np.vstack([xy[:, 0]]*100)
+    y = np.vstack([xy[:, 1]]*100)
+    x_ = cas.SX(x)
+    y_ = cas.SX(y)
+    
+    poly = Polygon(x, y)
+    poly_ = Polygon(x_, y_)
+
+    assert np.all(poly.area() == cas.DM(poly_.area()))
+    
+def test_x_y_cas():
+    x = np.vstack([xy[:, 0]]*100)
+    y = np.vstack([xy[:, 1]]*100)
+    x_ = cas.SX(x)
+    y_ = cas.SX(y)
+    
+    poly = Polygon(x, y)
+    poly_ = Polygon(x_, y_)
+    
+    assert np.all(poly.x() == cas.DM(poly_.x()))
+    assert np.all(poly.y() == cas.DM(poly_.y()))
+    
+def test_xn_yn_cas():
+    x = np.vstack([xy[:, 0]]*100)
+    y = np.vstack([xy[:, 1]]*100)
+    x_ = cas.SX(x)
+    y_ = cas.SX(y)
+    
+    poly = Polygon(x, y)
+    poly_ = Polygon(x_, y_)
+    
+    assert np.all(poly._x_n() == cas.DM(poly_._x_n()))
+    assert np.all(poly._y_n() == cas.DM(poly_._y_n()))
     
     
 def contains_point1():
