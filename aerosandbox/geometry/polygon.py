@@ -65,13 +65,19 @@ class Polygon(AeroSandboxObject):
         """
         Returns x coordinates offset by one.
         """
-        return np.roll(self.x(), 1)
+        if len(self.x().shape) > 1:
+            return np.roll(self.x(), 1, axis=1)
+        else:
+            return np.roll(self.x(), 1, axis=0)
     
     def _y_n(self):
         """
         Returns y coordinates offset by one.
         """
-        return np.roll(self.y(), 1)
+        if len(self.y().shape) > 1:
+            return np.roll(self.y(), 1, axis=1)
+        else:
+            return np.roll(self.y(), 1, axis=0)
         
 
     def n_points(self) -> int:

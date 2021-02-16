@@ -50,14 +50,21 @@ def test_roll_onp():
     a = [1, 2, 3]
     b = [3, 1, 2]
     
-    assert np.roll(a, 1) == b
+    assert np.all(np.roll(a, 1) == b)
     
     
 def test_roll_casadi():
-    a = cas.SX([1,2,3])
-    b = np.array([3,1,2])
+    b = np.array([[3,1,2]])
+    a = cas.SX(b)
       
-    assert all(np.array(cas.DM(np.roll(a, 1)) == b))
+    assert np.all(np.array(cas.DM(np.roll(a, 1)) == b))
+    
+
+def test_roll_casadi_2d():
+    a = np.array([[1, 2, 3], [4, 5, 6]])
+    b = cas.SX(a)
+      
+    assert np.all(np.array(cas.DM(np.roll(b, 1, axis=1)) == np.roll(a, 1, axis=1)))
     
     
 def test_max():

@@ -1,13 +1,14 @@
 import numpy as onp
 import casadi as cas
 from aerosandbox.numpy.array import length
+from aerosandbox.numpy.determine_type import is_casadi_type
 
 
 def sum(x, axis=0):
     """Returns the sum of a vector x."""
-    try:
+    if not is_casadi_type(x):
         return onp.sum(x, axis)
-    except Exception:  # TODO: Check behavior
+    else:  # TODO: Check behavior
         if axis==1:
             return cas.sum1(x.T).T
         if axis==0:

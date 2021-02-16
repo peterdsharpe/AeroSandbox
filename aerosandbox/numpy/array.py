@@ -1,5 +1,6 @@
 import numpy as onp
 import casadi as cas
+from aerosandbox.numpy.determine_type import is_casadi_type
 
 
 def array(object, dtype=None):
@@ -45,7 +46,7 @@ def length(array) -> int:
             return 1
 
 
-def roll(a, shift):
+def roll(a, shift, axis=0):
     """
     Roll array elements along a given axis.
 
@@ -64,13 +65,18 @@ def roll(a, shift):
         Output array, with the same shape as a.
 
     """
-    try:
-        return onp.roll(a, shift)
-    except Exception:
-        if len(a.shape) == 1:
-            return cas.vertcat(a[-shift], a[:-shift])
-        else:
+    if not is_casadi_type(a):
+        return onp.roll(a, shift, axis=axis)
+    else:  #TODO add some checking to make sure shift < len(a)
+        # assert shift < a.shape[axis]
+        if 1 in a.shape and axis==0:
             return cas.vertcat(a[-shift, :], a[:-shift, :])
+        elif axis == 1:
+            return cas.horzcat(a[:, -shift], a[:, :-shift])
+        elif axis == 0:
+            return cas.vertcat(a.T[:, -shift], a.T[:, :-shift]).T
+        else:
+            raise Exception("Wrong axis")
         
         
 def max(a):
@@ -97,7 +103,7 @@ def min(a):
 def reshape(a, newshape):
     """Gives a new shape to an array without changing its data."""
     
-    try:
+    if not is_casadi_type(a):
         return onp.reshape(a, newshape)
-    except Exception:
+    else:
         return cas.reshape(a, newshape)
