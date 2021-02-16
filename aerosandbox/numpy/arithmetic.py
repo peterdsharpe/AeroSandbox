@@ -8,13 +8,12 @@ def sum(x, axis=0):
     try:
         return onp.sum(x, axis)
     except Exception:  # TODO: Check behavior
-        if axis==0:
-            return cas.sum1(x.T).T
         if axis==1:
+            return cas.sum1(x.T).T
+        if axis==0:
             return cas.sum1(x)
         else:
             raise
-
 
 def mean(x):
     """Returns the mean of a vector x."""
