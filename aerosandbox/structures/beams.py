@@ -275,10 +275,10 @@ class Beam6DOF(AeroSandboxObject):
         self.calc_stress()
         
         #### Constrain to allowable stress
-        # self.opti.subject_to([
-        #     cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress <= 1,
-        #     cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress >= -1,
-        # ])
+        self.opti.subject_to([
+            cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress <= 1,
+            cas.reshape(self.stress, (-1, 1)) / self.max_allowable_stress >= -1,
+        ])
         
     def _discretize(self):
         point_load_locations = [load["location"] for load in self.point_loads]
@@ -312,10 +312,10 @@ class Beam6DOF(AeroSandboxObject):
                     ).T
                 )
             
-            # Assume all geometry parameters are positive
-            # opti.subject_to([
-            #     getattr(self, var) >= 0,
-            #     ])
+            # Assuming all geometry parameters are positive
+            opti.subject_to([
+                getattr(self, var) >= 0,
+                ])
         
     def _add_loads(self):
         
@@ -704,8 +704,8 @@ if __name__ == '__main__':
     beam = RectBar(
         opti=opti,
         init_geometry = {
-            'height': 100,
-            'width': 100,
+            'height': 1,
+            'width': 1,
             },
         length=60 / 2,
         points_per_point_load=50,
@@ -722,30 +722,30 @@ if __name__ == '__main__':
     beam.add_distributed_load(force= np.array([lift_force / 2, 0, 0]), load_type='uniform')
     beam.setup()
 
-    # # Tip deflection constraint
-    # opti.subject_to([
-    #     # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-    #     # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-    #     beam.du * 180 / cas.pi < 10,
-    #     beam.du * 180 / cas.pi > -10
-    # ])
+    # Tip deflection constraint
+    opti.subject_to([
+        # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        beam.du * 180 / cas.pi < 10,
+        beam.du * 180 / cas.pi > -10
+    ])
     
-    # # Some sensible boundaries to avoid crazy beams
-    # opti.subject_to([
-    #     beam.height < 1000,
-    #     beam.width < 1000,
-    #     beam.height > 1,
-    #     beam.width > 1,
-    #     ])
+    # Some sensible boundaries to avoid crazy beams
+    opti.subject_to([
+        beam.height < 1000,
+        beam.width < 1000,
+        # beam.height > 1,
+        # beam.width > 1,
+        ])
     
-    # # Add some profile change constraints
-    # opti.subject_to([
-    #     cas.diff(cas.diff(beam.height)) < 0.001,
-    #     cas.diff(cas.diff(beam.height)) > -0.001,
+    # Add some profile change constraints
+    opti.subject_to([
+        cas.diff(cas.diff(beam.height)) < 0.001,
+        cas.diff(cas.diff(beam.height)) > -0.001,
         
-    #     cas.diff(cas.diff(beam.width)) < 0.001,
-    #     cas.diff(cas.diff(beam.width)) > -0.001,
-    # ])
+        cas.diff(cas.diff(beam.width)) < 0.001,
+        cas.diff(cas.diff(beam.width)) > -0.001,
+    ])
 
     opti.minimize(beam.mass)
 
