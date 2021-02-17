@@ -55,7 +55,10 @@ def run_all_python_files(path: Path, recursive=True) -> None:
 
         ### Run the file if it's a Python file
         if path.suffix == ".py":
-            exec(open(str(path)).read())
+            try:
+                exec(open(str(path)).read())
+            except Exception as err:
+                raise Exception(f"Error in '{path.name}', see traceback!")
 
         ### Run the file if it's a Jupyter notebook
         if path.suffix == ".ipynb":
@@ -70,7 +73,10 @@ def run_all_python_files(path: Path, recursive=True) -> None:
 
                 convert_ipynb_to_py(notebook, python_file)
 
-                exec(open(python_file).read())
+                try:
+                    exec(open(python_file).read())
+                except Exception as err:
+                    raise Exception(f"Error in '{path.name}', see traceback!")
 
     ### Recurse through a directory if directed to
     if recursive and path.is_dir():
@@ -84,7 +90,7 @@ def test_all_tutorials():
 
 
 if __name__ == '__main__':
-    # test_all_tutorials()
+    test_all_tutorials()
 
     import pytest
     pytest.main()
