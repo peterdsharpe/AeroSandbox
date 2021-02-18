@@ -9,9 +9,9 @@ def test_smoothmax(plot=False):
     y2 = -2 * x - 3
     hardness = 0.5
 
-    ysmooth = np.smoothmax(y1, y2, hardness)
+    ysmooth = np.softmax(y1, y2, hardness)
 
-    assert np.smoothmax(0, 0, 1) == np.log(2)
+    assert np.softmax(0, 0, 1) == np.log(2)
 
     if plot:
         import matplotlib.pyplot as plt
