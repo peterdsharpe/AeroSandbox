@@ -1,5 +1,4 @@
-import numpy as np
-import casadi as cas
+import aerosandbox.numpy as np
 
 
 def motor_electric_performance(
@@ -144,7 +143,7 @@ def mass_motor_electric(
     if method == "burton":
         return max_power / 4128  # Less sophisticated model. 95% CI (3992, 4263), R^2 = 0.866
     elif method == "hobbyking":
-        return 10 ** (0.8205 * cas.log10(max_power) - 3.155)  # More sophisticated model
+        return 10 ** (0.8205 * np.log10(max_power) - 3.155)  # More sophisticated model
     elif method == "astroflight":
         max_current = max_power / voltage
         return 2.464 * max_current / kv_rpm_volt + 0.368  # Even more sophisticated model

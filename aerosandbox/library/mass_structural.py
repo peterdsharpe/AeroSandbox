@@ -247,8 +247,8 @@ def mass_surface_solid(
 
 
 if __name__ == "__main__":
-    import casadi as cas
-    import numpy as np
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
     import matplotlib.pyplot as plt
     import seaborn as sns
     sns.set(palette=sns.color_palette("husl"))
@@ -287,9 +287,8 @@ if __name__ == "__main__":
     plt.show()
 
     # Test rib number optimization
-    opti = cas.Opti()
-    nr_opt = opti.variable()
-    opti.set_initial(nr_opt, 100)
+    opti = asb.Opti()
+    nr_opt = opti.variable(init_guess=100)
     opti.minimize(mass_hpa_wing(
         span=34,
         chord=0.902,
@@ -298,7 +297,6 @@ if __name__ == "__main__":
         n_wing_sections=5,
         type="one-wire"
     ))
-    opti.solver('ipopt')
     sol = opti.solve()
     print("Optimal number of ribs: %f" % sol.value(nr_opt))
 

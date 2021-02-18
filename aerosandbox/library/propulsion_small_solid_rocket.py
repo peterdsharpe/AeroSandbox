@@ -1,5 +1,4 @@
-import casadi as cas
-import numpy as np
+import aerosandbox.numpy as np
 
 # import firefly_propulsion.propellant.oxamide_model as oxm
 # from proptools import nozzle as ptn
@@ -27,7 +26,7 @@ lamb = 6.20
 # [units: pascal**(-n) meter second**-1].
 # This is for propellant in the motor.
 # Based on strand burner fit for 400 um blend AP as of 2020-02-21
-a_0 = 3.43 * 1.15 * (1e6)**(-n) * 1e-3
+a_0 = 3.43 * 1.15 * (1e6) ** (-n) * 1e-3
 
 # Strand burner burn rate reduction factor
 strand_reduction_factor = 1 / 1.15
@@ -44,6 +43,7 @@ W_OM_VALID_RANGE = (0, 0.22)
 OUT_OF_RANGE_ERROR_STRING = (
     '{:.3f} is outside the model valid range of {:.3f} <= w_om <= {:.3f}')
 
+
 def burn_rate_coefficient(oxamide_fraction):
     """Burn rate vs oxamide content model.
     Valid from 0% to 15% oxamide. # TODO IMPLEMENT THIS
@@ -52,7 +52,7 @@ def burn_rate_coefficient(oxamide_fraction):
         a: propellant burn rate coefficient
             [units: pascal**(-n) meter second**-1].
     """
-    oxamide_fraction = cas.fmax(oxamide_fraction, 0)
+    oxamide_fraction = np.fmax(oxamide_fraction, 0)
 
     return a_0 * (1 - oxamide_fraction) / (1 + lamb * oxamide_fraction)
 
@@ -75,9 +75,9 @@ def dubious_min_combustion_pressure(oxamide_fraction):
     Note: this model is of DUBIOUS accuracy. Don't trust it.
     """
     coefs = [7.73179444e+00, 3.60886970e-01, 7.64587936e-03]
-    p_min_MPa = coefs[0] * oxamide_fraction**2 + coefs[1] * oxamide_fraction + coefs[2]
+    p_min_MPa = coefs[0] * oxamide_fraction ** 2 + coefs[1] * oxamide_fraction + coefs[2]
     p_min = 1e6 * p_min_MPa
-    return p_min # Pa
+    return p_min  # Pa
 
 
 def gamma(oxamide_fraction):
@@ -108,12 +108,12 @@ def expansion_ratio_from_pressure(chamber_pressure, exit_pressure, gamma, oxamid
     Returns:
         scalar: Expansion ratio :math:`\\epsilon = A_e / A_t` [units: dimensionless]
     """
-    chamber_pressure = cas.fmax(chamber_pressure, dubious_min_combustion_pressure(oxamide_fraction))
-    chamber_pressure = cas.fmax(chamber_pressure, exit_pressure * 1.5)
+    chamber_pressure = np.fmax(chamber_pressure, dubious_min_combustion_pressure(oxamide_fraction))
+    chamber_pressure = np.fmax(chamber_pressure, exit_pressure * 1.5)
 
     AtAe = ((gamma + 1) / 2) ** (1 / (gamma - 1)) \
            * (exit_pressure / chamber_pressure) ** (1 / gamma) \
-           * cas.sqrt((gamma + 1) / (gamma - 1) * (1 - (exit_pressure / chamber_pressure) ** ((gamma - 1) / gamma)))
+           * np.sqrt((gamma + 1) / (gamma - 1) * (1 - (exit_pressure / chamber_pressure) ** ((gamma - 1) / gamma)))
     er = 1 / AtAe
     return er
 
@@ -180,8 +180,8 @@ if __name__ == "__main__":
             ers.append(expansion_ratio_from_pressure(chamber_pressure, exit_pressure, gamma(ox_for_test), ox_for_test))
     data = pd.DataFrame({
         'chamber_pressure': chamber_pressures,
-        'exit_pressure': exit_pressures,
-        'ers': ers
+        'exit_pressure'   : exit_pressures,
+        'ers'             : ers
     })
     px.scatter_3d(data, x='chamber_pressure', y='exit_pressure', z='ers', color='ers', log_x=True, log_y=True,
                   log_z=True).show()

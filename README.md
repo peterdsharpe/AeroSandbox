@@ -2,8 +2,14 @@
 by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
 [![Downloads](https://pepy.tech/badge/aerosandbox)](https://pepy.tech/project/aerosandbox)
-[![Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox/month)
-[![Build Status](https://travis-ci.org/peterdsharpe/AeroSandbox.svg?branch=master)](https://travis-ci.org/peterdsharpe/AeroSandbox)
+[![Monthly Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox)
+![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)
+
+### NEWS
+
+* AeroSandbox v3.0.0 is out in beta mode! 
+    * Install: `pip install --pre aerosandbox` (add the `--upgrade` flag as well to upgrade an existing installation).
+* Check out the new tutorials in `/tutorial/`!
 
 ## Overview
 AeroSandbox is a Python package for aircraft design optimization that leverages modern tools for reverse-mode automatic differentiation and large-scale design optimization.
@@ -24,7 +30,7 @@ AeroSandbox has powerful aerodynamics solvers (VLM, 3D panel) written from the g
 
 Install with `pip install AeroSandbox`. Requires Python 3.7. Nearly all features work in Python 3.8+, although automated interfacing with XFoil for 2D aerodynamic analysis does not.
 
-To get examples as well, clone from *master* on [GitHub](https://github.com/peterdsharpe/AeroSandbox). (Nightly builds available on *develop* branch.)
+To get examples as well, clone from `master` on [GitHub](https://github.com/peterdsharpe/AeroSandbox). (Nightly builds available on `develop` branch.)
 
 There are many example cases you can try out in the `/examples/` directory! A good place to start is `/examples/conventional/casll1_conventional_analysis_point.py`.
 
@@ -36,26 +42,27 @@ from aerosandbox import *
 
 glider = Airplane(
     name="Peter's Glider",
-    xyz_ref=[0, 0, 0], # CG location
+    xyz_ref=[0, 0, 0],  # CG location
     wings=[
         Wing(
             name="Main Wing",
-            xyz_le=[0, 0, 0], # Coordinates of the wing's leading edge
-            symmetric=True,
-            xsecs=[ # The wing's cross ("X") sections
-                WingXSec(  # Root
-                    xyz_le=[0, 0, 0], # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
+            xyz_le=[0, 0, 0],  # Coordinates of the wing's leading edge
+            symmetric=True,  # Should we mirror the wing across the XZ plane?
+            xsecs=[  # The wing's cross ("X") sections
+                WingXSec(  # Root cross ("X") section
+                    xyz_le=[0, 0, 0],  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
-                    twist=2, # degrees
+                    twist_angle=2,  # degrees
                     airfoil=Airfoil(name="naca4412"),
-                    control_surface_type='symmetric',  # Flap # Control surfaces are applied between a given XSec and the next one.
-                    control_surface_deflection=0, # degrees
-                    control_surface_hinge_point=0.75 # as chord fraction
+                    control_surface_type='symmetric',
+                    # Flap # Control surfaces are applied between a given XSec and the next one.
+                    control_surface_deflection=0,  # degrees
+                    control_surface_hinge_point=0.75  # as chord fraction
                 ),
                 WingXSec(  # Mid
                     xyz_le=[0.01, 0.5, 0],
                     chord=0.16,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=Airfoil(name="naca4412"),
                     control_surface_type='asymmetric',  # Aileron
                     control_surface_deflection=0,
@@ -64,7 +71,7 @@ glider = Airplane(
                 WingXSec(  # Tip
                     xyz_le=[0.08, 1, 0.1],
                     chord=0.08,
-                    twist=-2,
+                    twist_angle=-2,
                     airfoil=Airfoil(name="naca4412"),
                 )
             ]
@@ -77,7 +84,7 @@ glider = Airplane(
                 WingXSec(  # root
                     xyz_le=[0, 0, 0],
                     chord=0.1,
-                    twist=-10,
+                    twist_angle=-10,
                     airfoil=Airfoil(name="naca0012"),
                     control_surface_type='symmetric',  # Elevator
                     control_surface_deflection=0,
@@ -86,7 +93,7 @@ glider = Airplane(
                 WingXSec(  # tip
                     xyz_le=[0.02, 0.17, 0],
                     chord=0.08,
-                    twist=-10,
+                    twist_angle=-10,
                     airfoil=Airfoil(name="naca0012")
                 )
             ]
@@ -99,7 +106,7 @@ glider = Airplane(
                 WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=0.1,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=Airfoil(name="naca0012"),
                     control_surface_type='symmetric',  # Rudder
                     control_surface_deflection=0,
@@ -108,7 +115,7 @@ glider = Airplane(
                 WingXSec(
                     xyz_le=[0.04, 0, 0.15],
                     chord=0.06,
-                    twist=0,
+                    twist_angle=0,
                     airfoil=Airfoil(name="naca0012")
                 )
             ]
@@ -116,25 +123,25 @@ glider = Airplane(
     ]
 )
 
-aero_problem = vlm3( # Analysis type: Vortex Lattice Method, version 3
+aero_problem = vlm3(  # Analysis type: Vortex Lattice Method, version 3
     airplane=glider,
     op_point=OperatingPoint(
-        velocity=10,
-        alpha=5,
-        beta=0,
-        p=0,
-        q=0,
-        r=0,
+        velocity=10,  # airspeed, m/s
+        alpha=5,  # angle of attack, deg
+        beta=0,  # sideslip angle, deg
+        p=0,  # x-axis rotation rate, rad/sec
+        q=0,  # y-axis rotation rate, rad/sec
+        r=0,  # z-axis rotation rate, rad/sec
     ),
 )
 
-aero_problem.run() # Runs and prints results to console
-aero_problem.draw() # Creates an interactive display of the surface pressures and streamlines
+aero_problem.run()  # Runs and prints results to console
+aero_problem.draw()  # Creates an interactive display of the surface pressures and streamlines
 ```
 
 The best part is that by adding just a few more lines of code, you can not only get the performance at a specified design point, but also the derivatives of any performance variable with respect to any design variable. Thanks to reverse-mode automatic differentiation, this process only requires the time of one additional flow solution, regardless of the number of design variables. For an example of this, see "/examples/gradient_test_vlm2.py".
 
-One final point to note: as we're all sensible and civilized human beings here, all inputs and outputs to AeroSandbox are expressed in base metric units, or derived units thereof (meters, Newtons, meters per second, kilograms, etc.).
+One final point to note: as we're all sensible and civilized human beings here, **all inputs and outputs to AeroSandbox are expressed in base metric units, or derived units thereof** (meters, newtons, meters per second, kilograms, etc.). The only exception to this rule is when units are explicitly noted in a variable name: for example, `battery_capacity` would be in units of joules, `elastic_modulus` would be in units of pascals, and `battery_capacity_watt_hours` would be in units of watt-hours.
 
 ### Dependencies
 

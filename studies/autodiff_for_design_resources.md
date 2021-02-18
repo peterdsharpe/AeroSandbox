@@ -35,4 +35,4 @@ Martin's stuff is also great because it touches on related topics beyond just pu
 To go deeper into the math, follow the fearless Qiqi Wang:
 https://www.youtube.com/watch?v=l20FDuv2gL4&list=PLcqHTXprNMIPwiMg7zXg-QsgrDCikCIMl
 
-All this "adjoint" stuff should hopefully help you wrap your mind around what it means to take a reverse-mode derivative ("backpropagation").
+All this "adjoint" stuff should hopefully help illustrate what it means to take a reverse-mode derivative ("backpropagation").

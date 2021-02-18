@@ -26,7 +26,7 @@ where:
     * ()' is a derivative w.r.t. x.
 
 """
-import numpy as np
+import aerosandbox.numpy as np
 import casadi as cas
 
 if __name__ == '__main__':
