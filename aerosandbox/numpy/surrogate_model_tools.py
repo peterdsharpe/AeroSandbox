@@ -20,7 +20,7 @@ def smoothmax(value1, value2, hardness):
     max = np.fmax(value1, value2)
     min = np.fmin(value1, value2)
     out = max + np.log(1 + np.exp(min - max))
-    out /= hardness
+    out = out / hardness
     return out
 
 
