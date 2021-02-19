@@ -4,10 +4,13 @@ from typing import Union
 import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.geometry import *
+
+import warnings
         
 # TODO: Check and document
 # TODO: Clean up mess made by casidi compat
 # TODO: Check xyz for forces is not the same as xyz for beams (assume beam is horizontal?)
+# TODO: Add large displacements check
 class Beam6DOF(AeroSandboxObject):
     """
     A Euler-Bernoulli 6 DOF FE beam.
@@ -246,11 +249,6 @@ class Beam6DOF(AeroSandboxObject):
         #### Initialize optimization variables
         self._init_opt_vars()
         
-        #### Initialize Stresses
-        self.shear_stress_x = np.zeros(self.n)
-        self.shear_stress_y = np.zeros(self.n)
-        self.axial_stress = np.zeros(self.n)
-        
         #### Add geometry-specific constraints
         self._extra_constraints()
     
@@ -392,12 +390,28 @@ class Beam6DOF(AeroSandboxObject):
     
     def calc_axial_stress(self):
         """Calculates stresses from shear loads"""
-        self.axial_stress += 0  # self.forces_z / self.cross_section.area()
+        self.axial_stress = np.zeros(self.n)
+        
+        if self.bending_BC_type == 'cantilevered':
+            per_point_forces_z = self.forces_per_unit_length_z + np.hstack([0, self.point_forces_z])
+            forces_z = np.cumsum(per_point_forces_z[::-1])[::-1]
+            
+            self.axial_stress += forces_z / self.cross_section.area()
         
     def calc_shear_stress(self):
         """Calculates stresses from axial loads"""
-        self.shear_stress_x += 0  # self.forces_x / self.cross_section.area()
-        self.shear_stress_y += 0  # self.forces_y / self.cross_section.area()
+        self.shear_stress_x = np.zeros(self.n)
+        self.shear_stress_y = np.zeros(self.n)
+        
+        if self.bending_BC_type == 'cantilevered':
+            per_point_forces_x = self.forces_per_unit_length_x + np.hstack([0, self.point_forces_x])
+            forces_x = np.cumsum(per_point_forces_x[::-1])[::-1]
+            
+            per_point_forces_y = self.forces_per_unit_length_y + np.hstack([0, self.point_forces_y])
+            forces_y = np.cumsum(per_point_forces_y[::-1])[::-1]
+            
+            self.shear_stress_x += forces_x / self.cross_section.area()  # self.forces_x / self.cross_section.area()
+            self.shear_stress_y += forces_y / self.cross_section.area()  # self.forces_y / self.cross_section.area()
         
     def calc_bending_stress(self):
         """Calculates stresses from bending loads"""
@@ -492,27 +506,28 @@ class Beam6DOF(AeroSandboxObject):
         # TODO: Check this, shear component is wrong
         
         axial_components = (
-                    self.axial_stress
+                    # TODO: This below is not very clean, but works?
+                    np.ones(self.cross_section.x().shape) * self.axial_stress.reshape(-1, 1)
                     +
-                    self._bending_stress_vertices_x
+                    (self._bending_stress_vertices_x if self.bending else 0)
                     +
-                    self._bending_stress_vertices_y
+                    (self._bending_stress_vertices_y if self.bending else 0)
                 )
         
         shear_components = (
-                    self.shear_stress_x**2 
+                    np.ones(self.cross_section.x().shape) * self.shear_stress_x.reshape(-1, 1)
                     + 
-                    self.shear_stress_y**2  
+                    np.ones(self.cross_section.x().shape) * self.shear_stress_y.reshape(-1, 1)
                     +
-                    self._torsional_stress_vertices**2
+                    (self._torsional_stress_vertices if self.torsion else 0)
                 )
         
-        self.stress = axial_components
-                # np.sqrt(
-                # axial_components
-                # +
-                # 3 * shear_components
-                # )
+        self.stress = \
+                np.sqrt(
+                    axial_components**2
+                    +
+                    3 * shear_components**2
+                )
         
         return self.stress
     
@@ -537,8 +552,11 @@ class Beam6DOF(AeroSandboxObject):
         z = np.ones(x.shape) * self.x.reshape(-1, 1)
         
         if displacement:
-            x = x + self.u.reshape(-1, 1)
-            y = y + self.v.reshape(-1, 1)
+            if self.bending:
+                x = x + self.u.reshape(-1, 1)
+                y = y + self.v.reshape(-1, 1)
+            else:
+                warnings.warn('Displacement is 0 if bending is disabled')
         
         X = x.flatten()
         Y = y.flatten()
@@ -790,7 +808,8 @@ class RectBar(Beam6DOF):
         
         return poly
     
-        
+  
+#### Main      
 if __name__ == '__main__':
     
     opti = asb.Opti()
@@ -821,16 +840,18 @@ if __name__ == '__main__':
     opti.subject_to([
         # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
         # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        beam.du * 180 / np.pi < 5,
-        beam.du * 180 / np.pi > -5
+        (beam.du * 180 / np.pi) < 10,
+        (beam.du * 180 / np.pi) > -10,
+        (beam.dv * 180 / np.pi) < 10,
+        (beam.dv * 180 / np.pi) > -10,
     ])
     
     # Some sensible boundaries to avoid crazy beams
     opti.subject_to([
         beam.height < 1000,
         beam.width < 1000,
-        beam.height > 0.001,
-        beam.width > 0.001,
+        beam.height > 0.01,
+        beam.width > 0.01,
         ])
     
     # Add some profile change constraints

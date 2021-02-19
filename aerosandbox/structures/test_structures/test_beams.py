@@ -7,6 +7,12 @@ import casadi as cas
 
 from numpy.testing import assert_approx_equal
 
+   
+# Some recuring variables
+p_opts = {}
+s_opts = {}
+s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
+
     
 # %% RectBar tests
 
@@ -44,7 +50,10 @@ def test_rectbar_vars():
     assert type(beam.width) == cas.MX
     assert type(beam.height) == np.ndarray
 
-def test_rectbar1():
+def test_rectbar_runs():
+    """
+    Let's just make sure it runs at all
+    """
     
     opti = asb.Opti()
     beam = RectBar(
@@ -70,11 +79,6 @@ def test_rectbar1():
 
     beam.setup()
 
-    opti.minimize(beam.mass)
-
-    p_opts = {}
-    s_opts = {}
-    s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
     opti.solver('ipopt', p_opts, s_opts)
 
     try:
@@ -85,6 +89,93 @@ def test_rectbar1():
     except:
         print("Failed!")
         raise
+        
+def test_rectbar_axial():
+    """
+    Let's check axial stress
+    """
+    
+    opti = asb.Opti()
+    beam = RectBar(
+        opti=opti,
+        init_geometry = {
+            'height': 1,
+            'width': 1,
+            },
+        length=10,
+        points_per_point_load=10,
+        bending=False,
+        torsion=False
+    )
+    
+    # Lock all vars
+    beam.locked_geometry_vars = beam.req_geometry_vars
+    
+    force = 100
+    load_location = 10
+    
+    # Add a load on the tip
+    beam.add_point_load(load_location, np.array([0, 0, force]))
+    
+    beam.setup()
+
+    opti.solver('ipopt', p_opts, s_opts)
+
+    try:
+        sol = opti.solve()
+        beam.substitute_solution(sol)
+        beam.plot3D()
+        beam.draw_geometry_vars()
+    except:
+        print("Failed!")
+        raise
+        
+    # Since area == 1, stress should be 100/1 for all to load
+    assert np.all(np.isclose(beam.stress[:9], force/1)) 
+
+def test_rectbar_shear():
+    """
+    Let's check axial stress
+    """
+    
+    opti = asb.Opti()
+    beam = RectBar(
+        opti=opti,
+        init_geometry = {
+            'height': 1,
+            'width': 1,
+            },
+        length=10,
+        points_per_point_load=10,
+        bending=False,
+        torsion=False
+    )
+    
+    # Lock all vars
+    beam.locked_geometry_vars = beam.req_geometry_vars
+    
+    force = 100
+    load_location = 10
+    
+    # Add a load on the tip
+    beam.add_point_load(load_location, np.array([force*2, force, 0]))
+    
+    beam.setup()
+
+    opti.solver('ipopt', p_opts, s_opts)
+
+    try:
+        sol = opti.solve()
+        beam.substitute_solution(sol)
+        beam.plot3D()
+        beam.draw_geometry_vars()
+    except:
+        print("Failed!")
+        raise
+        
+    # Since area == 1, stress should be force/1 for all to load
+    assert np.all(np.isclose(beam.shear_stress_x[:9], force*2/1))
+    assert np.all(np.isclose(beam.shear_stress_y[:9], force/1))
     
 # %%
 # def test_tube1():
