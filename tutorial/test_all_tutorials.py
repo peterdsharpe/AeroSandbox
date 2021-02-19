@@ -4,14 +4,15 @@ to ensure that they don't throw any errors).
 """
 
 import os
+import sys
 from pathlib import Path
 import tempfile
 import json
 
 
 def convert_ipynb_to_py(
-        input_file: str,
-        output_file: str,
+        input_file: Path,
+        output_file: Path,
 ):
     """
     Reads an input Jupyter notebook (.ipynb) and converts it to a Python file (.py)
@@ -20,8 +21,8 @@ def convert_ipynb_to_py(
     this should *not* take more than a few milliseconds - come on, Jupyter!
 
     Args:
-        input_file: File path, including ".ipynb"
-        output_file: File path, including ".py"
+        input_file: File path
+        output_file: File path
 
     Returns: None
 
@@ -33,6 +34,11 @@ def convert_ipynb_to_py(
             if cell['cell_type'] == "code":
                 f.writelines(cell['source'])
                 f.write("\n")
+
+
+def run_python_file(path):
+    sys.path.append(str(path.parent))
+    __import__(os.path.splitext(path.name)[0])
 
 
 def run_all_python_files(path: Path, recursive=True) -> None:
@@ -48,35 +54,30 @@ def run_all_python_files(path: Path, recursive=True) -> None:
     # Exclusions:
     if path == Path(os.path.abspath(__file__)):  # Don't run this file
         return
-    if "Tutorials in Progress - Ignore for Now" in str(path):  # Don't run this folder
+    if "ignore" in str(path).lower():  # Don't run any file or folder with the word "ignore" in the name.
         return
 
     if path.is_file():
 
         ### Run the file if it's a Python file
         if path.suffix == ".py":
-            try:
-                exec(open(str(path)).read())
-            except Exception as err:
-                raise Exception(f"Error in '{path.name}', see traceback!")
+            run_python_file(path)
 
         ### Run the file if it's a Jupyter notebook
         if path.suffix == ".ipynb":
             with tempfile.TemporaryDirectory() as tempdir:
+                tempdir = Path(tempdir)
                 notebook = path
                 output_dir = tempdir
                 output_filename = path.name.strip(path.suffix) + ".py"
-                python_file = output_dir + os.sep + output_filename
+                python_file = output_dir / output_filename
 
                 # convert_command = f'jupyter nbconvert --to python "{notebook}" --output-dir "{output_dir}" --output "{output_filename}"'
                 # os.system(convert_command)
 
                 convert_ipynb_to_py(notebook, python_file)
 
-                try:
-                    exec(open(python_file).read())
-                except Exception as err:
-                    raise Exception(f"Error in '{path.name}', see traceback!")
+                run_python_file(python_file)
 
     ### Recurse through a directory if directed to
     if recursive and path.is_dir():
