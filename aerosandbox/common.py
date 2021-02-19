@@ -39,7 +39,8 @@ class AeroSandboxObject:
             except NotImplementedError:
                 pass
             except AttributeError:
-                raise AttributeError("can't set attribute " + attrib_name)
+                print("Can't set attribute " + attrib_name)
+                raise
                 
             if isinstance(attrib_orig, list):
                 try:
