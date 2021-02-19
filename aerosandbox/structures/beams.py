@@ -7,6 +7,7 @@ from aerosandbox.geometry import *
         
 # TODO: Check and document
 # TODO: Clean up mess made by casidi compat
+# TODO: Check xyz for forces is not the same as xyz for beams (assume beam is horizontal?)
 class Beam6DOF(AeroSandboxObject):
     """
     A Euler-Bernoulli 6 DOF FE beam.
@@ -308,21 +309,25 @@ class Beam6DOF(AeroSandboxObject):
         """
         
         for var in self.req_geometry_vars:
-            # If locked just skip it
+            # If locked just stack it
             if var in self.locked_geometry_vars:
-                continue
+                value = np.tile(self.init_geometry[var], self.n)
+                
+                setattr(self, var, value)
             
-            setattr(self, var, 
-                    self.opti.variable(
-                        init_guess = self.init_geometry[var],
-                        n_vars = self.n
-                    ).T
-                )
+            # Otherwise make it variable
+            else:
+                value = self.opti.variable(
+                            init_guess = self.init_geometry[var],
+                            n_vars = self.n
+                        ).T
+                
+                setattr(self, var, value)
             
-            # Assuming all geometry parameters are positive
-            opti.subject_to([
-                getattr(self, var) >= 0,
-                ])
+                # Assuming all geometry parameters are positive
+                opti.subject_to([
+                    getattr(self, var) >= 0,
+                    ])
         
     def _add_loads(self):
         
@@ -504,6 +509,16 @@ class Beam6DOF(AeroSandboxObject):
         return self.stress
     
     def plot3D(self, displacement=False, axes_equal=True):
+        
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import proj3d
+        
+        my_cmap = plt.get_cmap('hsv')
+        
+        fig = plt.figure(figsize=(8, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        #### Add scatterplot of vertices
         x = self.cross_section.x() #- self.cross_section.centroid()[0]
         y = self.cross_section.y() #- self.cross_section.centroid()[1]
         
@@ -516,13 +531,21 @@ class Beam6DOF(AeroSandboxObject):
         X = x.flatten()
         Y = y.flatten()
         Z = z.flatten()
+        c = self.stress
         
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import proj3d
+        ax.scatter(x, y, z, c = c, cmap = my_cmap)
         
-        fig = plt.figure(figsize=(8, 8))
-        ax = fig.add_subplot(111, projection='3d')
+        #### Add distributed load vectors
+        qx = self.forces_per_unit_length_x
+        qy = self.forces_per_unit_length_y
+        qz = self.forces_per_unit_length_z
         
+        for i in range(len(qx)):
+            vlength=np.linalg.norm(np.array([qx[i], qy[i], qz[i]]))
+            ax.quiver(0, 0, self.x[i], qx[i], qy[i], qz[i],
+            pivot='tip',length=vlength/100)
+        
+        #### Show
         if axes_equal:
             # Create cubic bounding box to simulate equal aspect ratio
             max_range = np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
@@ -532,8 +555,7 @@ class Beam6DOF(AeroSandboxObject):
             # Comment or uncomment following both lines to test the fake bounding box:
             for xb, yb, zb in zip(Xb, Yb, Zb):
                ax.plot([xb], [yb], [zb], 'w')
-        
-        ax.scatter(x, y, z)
+               
         plt.show()
         
     def draw_geometry_vars(self):
@@ -766,8 +788,8 @@ if __name__ == '__main__':
     lift_force = 9.81 * 103.873
     load_location = 15
     
-    beam.add_point_load(load_location, np.array([-lift_force / 3, 0, 1]))
-    beam.add_distributed_load(force= np.array([lift_force / 2, 0, 0]), load_type='uniform')
+    beam.add_point_load(load_location, np.array([-lift_force / 3, 0, 0]))
+    beam.add_distributed_load(force= np.array([0, lift_force / 2, 0]), load_type='uniform')
     beam.setup()
 
     # Tip deflection constraint
