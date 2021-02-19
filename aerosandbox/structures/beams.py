@@ -516,7 +516,7 @@ class Beam6DOF(AeroSandboxObject):
         
         return self.stress
     
-    def plot3D(self, displacement=False, axes_equal=True):
+    def plot3D(self, displacement=True, axes_equal=True):
         
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import proj3d
@@ -535,6 +535,10 @@ class Beam6DOF(AeroSandboxObject):
         x = x - np.ones(x.shape) * self.cross_section.centroid()[0].reshape(-1, 1)
         y = y - np.ones(x.shape) * self.cross_section.centroid()[1].reshape(-1, 1)
         z = np.ones(x.shape) * self.x.reshape(-1, 1)
+        
+        if displacement:
+            x = x + self.u.reshape(-1, 1)
+            y = y + self.u.reshape(-1, 1)
         
         X = x.flatten()
         Y = y.flatten()
@@ -836,11 +840,12 @@ if __name__ == '__main__':
         
         cas.diff(cas.diff(beam.width)) < 0.001,
         cas.diff(cas.diff(beam.width)) > -0.001,
-        cas.diff(beam.height) < 0.1,
-        cas.diff(beam.height) > -0.1,
         
-        cas.diff(beam.width) < 0.1,
-        cas.diff(beam.width) > -0.1,
+        # cas.diff(beam.height) < 0.1,
+        # cas.diff(beam.height) > -0.1,
+        
+        # cas.diff(beam.width) < 0.1,
+        # cas.diff(beam.width) > -0.1,
     ])
 
     opti.minimize(beam.mass)
@@ -853,7 +858,7 @@ if __name__ == '__main__':
     try:
         sol = opti.solve()
         beam.substitute_solution(sol)
-        beam.plot3D(axes_equal=False)
+        beam.plot3D(axes_equal=True)
         beam.draw_geometry_vars()
     except:
         print("Failed!")
