@@ -36,7 +36,15 @@ def convert_ipynb_to_py(
                 f.write("\n")
 
 
-def run_python_file(path):
+def run_python_file(path: Path):
+    """
+    Executes a Python file from a path.
+    Args:
+        path: File path
+
+    Returns: None
+
+    """
     sys.path.append(str(path.parent))
     __import__(os.path.splitext(path.name)[0])
 
