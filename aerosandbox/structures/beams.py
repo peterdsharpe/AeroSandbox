@@ -538,7 +538,7 @@ class Beam6DOF(AeroSandboxObject):
         
         if displacement:
             x = x + self.u.reshape(-1, 1)
-            y = y + self.u.reshape(-1, 1)
+            y = y + self.v.reshape(-1, 1)
         
         X = x.flatten()
         Y = y.flatten()
@@ -821,8 +821,8 @@ if __name__ == '__main__':
     opti.subject_to([
         # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
         # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        beam.du * 180 / cas.pi < 10,
-        beam.du * 180 / cas.pi > -10
+        beam.du * 180 / np.pi < 5,
+        beam.du * 180 / np.pi > -5
     ])
     
     # Some sensible boundaries to avoid crazy beams
