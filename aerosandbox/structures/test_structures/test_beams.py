@@ -10,7 +10,7 @@ from numpy.testing import assert_approx_equal
     
 # %% RectBar tests
 
-def test_rectbar1():
+def test_rectbar_vars():
     
     opti = asb.Opti()
     beam = RectBar(
@@ -25,14 +25,48 @@ def test_rectbar1():
         torsion=False
     )
     
+    beam.add_point_load(9, np.array([-100, 0, 0]))
+    beam.add_distributed_load(force= np.array([-100, 0, 0]), load_type='uniform')
+    
+    # Lock a var
+    beam.locked_geometry_vars = ['height']
+    
+    # Set BC type
+    beam.bending_BC_type = 'cantilevered'
+    
+    # Discretise
+    beam._discretize()
+    
+    # Init vars
+    beam._init_opt_vars()
+    
+    # Check the variables are correct
+    assert type(beam.width) == cas.MX
+    assert type(beam.height) == np.ndarray
+
+def test_rectbar1():
+    
+    opti = asb.Opti()
+    beam = RectBar(
+        opti=opti,
+        init_geometry = {
+            'height': 1,
+            'width': 1,
+            },
+        length=10,
+        points_per_point_load=10,
+        bending=True,
+        torsion=False
+    )
+    
     # Lock all vars
     beam.locked_geometry_vars = beam.req_geometry_vars
     
     lift_force = 100
-    #load_location = 10
+    load_location = 5
     
-    #beam.add_point_load(load_location, np.array([-lift_force, 0, 0]))
-    beam.add_distributed_load(force= np.array([-lift_force, 0, 0]), load_type='uniform')
+    beam.add_point_load(load_location, np.array([-lift_force, 0, 0]))
+    beam.add_distributed_load(force= np.array([0, -lift_force, 0]), load_type='uniform')
 
     beam.setup()
 
@@ -50,8 +84,6 @@ def test_rectbar1():
         beam.draw_geometry_vars()
     except:
         print("Failed!")
-        sol = opti.debug
-        print(sol)
         raise
     
 # %%
