@@ -679,7 +679,7 @@ class Opti(cas.Opti):
             parameter_mapping: [Optional] Allows you to specify values for parameters.
                 Dictionary where the key is the parameter and the value is the value to be set to.
 
-                Example:
+                Example: # TODO update syntax for required init_guess
                     >>> opti = asb.Opti()
                     >>> x = opti.variable()
                     >>> p = opti.parameter()
