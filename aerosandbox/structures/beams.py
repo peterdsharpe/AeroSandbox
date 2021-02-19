@@ -132,6 +132,7 @@ class Beam6DOF(AeroSandboxObject):
     req_geometry_vars = []
     @init_geometry.setter
     def init_geometry(self, value):
+        # Make sure all required variables are here
         for var in self.req_geometry_vars:
             assert var in value.keys()
         
@@ -140,18 +141,23 @@ class Beam6DOF(AeroSandboxObject):
         self.n = 1  # Init with 1 cross-section
         
         # make them properties so we can mess with setting
-        for key in value.keys():
+        for key in self._init_geometry.keys():
             
-            def getter(self):
-                return getattr(self, "_"+key)
+            # Use function factories to not mess up the keys
+            def make_getter(key):
+                def getter(self):
+                    return getattr(self, "_"+key)
+                return getter
             
-            def setter(self, value):
-                if len(value.shape) == 1:
-                    value = np.reshape(value, (1, -1))
-                
-                setattr(self, "_"+key, value)
+            def make_setter(key):
+                def setter(self, value):
+                    if len(value.shape) == 1:
+                        value = np.reshape(value, (1, -1))
+                    setattr(self, "_"+key, value)
+                return setter
             
-            prop = property(fget=getter, fset=setter)
+            prop = property(fget=make_getter(key),
+                            fset=make_setter(key))
             
             # Add it to the list of properties
             setattr(self.__class__, key, prop)
@@ -232,14 +238,10 @@ class Beam6DOF(AeroSandboxObject):
         Sets up the problem. Run this last.
         :return: None (in-place)
         """
-        self.bending_BC_type = "cantilevered"
+        self.bending_BC_type = bending_BC_type
         
         #### Discretize
         self._discretize()
-
-        #### Post-process the discretization
-        self.n = self.x.shape[0]
-        self.dx = np.diff(self.x)
         
         #### Initialize optimization variables
         self._init_opt_vars()
@@ -294,6 +296,10 @@ class Beam6DOF(AeroSandboxObject):
                 self.points_per_point_load)
             for i in range(len(point_load_locations) - 1)
         ])
+
+        #### Post-process the discretization
+        self.n = self.x.shape[0]
+        self.dx = np.diff(self.x)
         
     def _extra_constraints(self):
         """
@@ -311,7 +317,7 @@ class Beam6DOF(AeroSandboxObject):
         for var in self.req_geometry_vars:
             # If locked just stack it
             if var in self.locked_geometry_vars:
-                value = np.tile(self.init_geometry[var], self.n)
+                value = np.array(np.tile(self.init_geometry[var], self.n))
                 
                 setattr(self, var, value)
             
@@ -325,7 +331,7 @@ class Beam6DOF(AeroSandboxObject):
                 setattr(self, var, value)
             
                 # Assuming all geometry parameters are positive
-                opti.subject_to([
+                self.opti.subject_to([
                     getattr(self, var) >= 0,
                     ])
         
@@ -439,6 +445,7 @@ class Beam6DOF(AeroSandboxObject):
         else:
             raise ValueError("Bad value of bending_BC_type!")
 
+        # TODO: Check if there's a better way, somewhat inefficient
         # Find the stress at vertices based on radius of curvature ddx
         self._bending_stress_vertices_x = self.cross_section.x() * self.E * self.ddu
         self._bending_stress_vertices_y = self.cross_section.y() * self.E * self.ddv
@@ -461,14 +468,15 @@ class Beam6DOF(AeroSandboxObject):
         
         # Define derivatives
         self.opti.subject_to([
-            cas.diff(self.u) == np.trapz(self.du) * self.dx,
-            cas.diff(self.du) == np.trapz(self.ddu) * self.dx,
-            cas.diff(self.dEIddu) == np.trapz(self.forces_per_unit_length_x) * self.dx + self.point_torsional_moments,
+            cas.diff(self.phi) == np.trapz(self.dphi) * self.dx,
+            cas.diff(self.dphi) == np.trapz(self.ddphi) * self.dx,
+            cas.diff(self.dEIddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx + self.point_torsional_moments,
         ])
         
         # TODO: Add torsion formula
         stress_f = (lambda dist: dist*0)
         
+        # TODO: cas.sqrt might not work with AD, test cas.norm2?
         self._torsional_stress_vertices = stress_f(
                 np.sqrt(
                     (self.cross_section.x())**2 + 
@@ -531,7 +539,7 @@ class Beam6DOF(AeroSandboxObject):
         X = x.flatten()
         Y = y.flatten()
         Z = z.flatten()
-        c = self.stress
+        c = self.stress.flatten()
         
         ax.scatter(x, y, z, c = c, cmap = my_cmap)
         
@@ -541,9 +549,22 @@ class Beam6DOF(AeroSandboxObject):
         qz = self.forces_per_unit_length_z
         
         for i in range(len(qx)):
-            vlength=np.linalg.norm(np.array([qx[i], qy[i], qz[i]]))
             ax.quiver(0, 0, self.x[i], qx[i], qy[i], qz[i],
-            pivot='tip',length=vlength/100)
+                      pivot='tip',
+                      length=0.1, cmap='YlOrRd', lw=2)
+        
+        #### Add point load vectors
+        
+        for i in range(len(self.point_loads)):
+            x = self.point_loads[i]['force'][0]
+            y = self.point_loads[i]['force'][1]
+            z = self.point_loads[i]['force'][2]
+            
+            loc = self.point_loads[i]['location']
+            
+            ax.quiver(0, 0, loc, x, y, z,
+                      pivot='tip',
+                      length=0.1, cmap='Reds', lw=2)
         
         #### Show
         if axes_equal:
@@ -802,10 +823,10 @@ if __name__ == '__main__':
     
     # Some sensible boundaries to avoid crazy beams
     opti.subject_to([
-        # beam.height < 1000,
-        # beam.width < 1000,
-        # beam.height > 0.001,
-        # beam.width > 0.001,
+        beam.height < 1000,
+        beam.width < 1000,
+        beam.height > 0.001,
+        beam.width > 0.001,
         ])
     
     # Add some profile change constraints
@@ -832,7 +853,7 @@ if __name__ == '__main__':
     try:
         sol = opti.solve()
         beam.substitute_solution(sol)
-        beam.plot3D()
+        beam.plot3D(axes_equal=False)
         beam.draw_geometry_vars()
     except:
         print("Failed!")
