@@ -6,7 +6,7 @@ import aerosandbox.numpy as np
 
 class Opti(cas.Opti):
     """
-    The base class for mathematical optimization. For detailed usage, see the docstrings in:
+    The base class for mathematical optimization. For detailed usage, see the docstrings in its key methods:
         * Opti.variable()
         * Opti.subject_to()
         * Opti.parameter()
