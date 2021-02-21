@@ -15,6 +15,8 @@ def softmax(value1, value2, hardness=1):
     :param hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
     :return: Soft maximum of the two supplied values.
     """
+    if hardness <= 0:
+        raise ValueError("The value of `hardness` must be positive.")
     value1 = value1 * hardness
     value2 = value2 * hardness
     max = np.fmax(value1, value2)
