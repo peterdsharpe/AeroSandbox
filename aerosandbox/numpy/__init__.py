@@ -3,7 +3,7 @@
 from numpy import *
 
 ### Overwrite some functions
-from .array import array, length
+from .array import array, concatenate, stack, hstack, vstack, dstack, length
 from .arithmetic import sum, mean
 from .calculus import diff, trapz
 from .conditionals import where
