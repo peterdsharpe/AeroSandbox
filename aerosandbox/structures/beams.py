@@ -43,11 +43,12 @@ class Beam6DOF(AeroSandboxObject):
                  length:                float,
                  init_geometry:         dict = {},
                  points_per_point_load: int=100,
-                 E:                     float=228e9,  # Pa
-                 isotropic:             bool=True,
-                 poisson_ratio:         float=0.5,
-                 max_allowable_stress:  float=570e6 / 1.75,
-                 density:               float=1600,
+                 material:              asb.structures.Material=None,
+                 E:                     float=None, #228e9,  # Pa
+                 isotropic:             bool=None,  #True,
+                 poisson_ratio:         float=None, #0.5,
+                 max_allowable_stress:  float=None, #570e6 / 1.75,
+                 density:               float=None, #1600,
                  G:                     float=None,
                  bending:               bool=True,  # Should we consider beam bending?
                  torsion:               bool=True,  # Should we consider beam torsion?
@@ -73,17 +74,35 @@ class Beam6DOF(AeroSandboxObject):
         self.length = length
         self.init_geometry = init_geometry
         self.points_per_point_load = points_per_point_load
+        
+        # TODO: Check this behavior is the one we want
+        if material:
+            if E == None:
+                E = material.E
+            if isotropic == None:
+                isotropic = material.isotropic
+            if poisson_ratio == None:
+                poisson_ratio = material.poisson_ratio
+            if max_allowable_stress == None:
+                max_allowable_stress = material.yield_stress
+            if density == None:
+                density = material.density
+            if G == None:
+                G = material.G
+            
         self.E = E
         self.isotropic = isotropic
         self.poisson_ratio = poisson_ratio
         self.max_allowable_stress = max_allowable_stress
         self.density = density
         self.G = G
+            
+        
         self.bending = bending
         self.torsion = torsion
         self.locked_geometry_vars = locked_geometry_vars
         
-        # Calculate G
+        # Calculate G  # TODO: Add to materials class
         if isotropic:
             if G is None:
                 self.G = E / 2 / (1 + poisson_ratio)
@@ -815,6 +834,7 @@ class RectBar(Beam6DOF):
 if __name__ == '__main__':
     
     opti = asb.Opti()
+    material = asb.structures.materials.AISI_1006_Steel_Cold_Drawn()
     
     # Use default geometry guess
     beam = RectBar(
@@ -823,6 +843,7 @@ if __name__ == '__main__':
             'height': 1,
             'width': 1,
             },
+        material = material,
         length=60 / 2,
         points_per_point_load=50,
         bending=True,
