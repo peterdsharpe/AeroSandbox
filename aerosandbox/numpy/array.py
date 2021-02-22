@@ -107,16 +107,17 @@ def length(array) -> int:
     Returns:
 
     """
-    try:
-        return len(array)
-    except TypeError:  # array has no function len() -> either float, int, or CasADi type
+    if not is_casadi_type(array):
         try:
-            if len(array.shape) >= 1:
-                return array.shape[0]
-            else:
-                raise AttributeError
-        except AttributeError:  # array has no attribute shape -> either float or int
+            return len(array)
+        except TypeError:
             return 1
+
+    else:
+        if array.shape[0] != 1:
+            return array.shape[0]
+        else:
+            return array.shape[1]
 
 def diag(v, k=0):
     """
