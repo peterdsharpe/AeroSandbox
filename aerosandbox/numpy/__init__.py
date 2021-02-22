@@ -4,7 +4,7 @@ from numpy import *
 
 ### Overwrite some functions
 from .array import array, concatenate, stack, hstack, vstack, dstack, length
-from .arithmetic import sum, mean
+from .arithmetic import sum, mean, abs
 from .calculus import diff, trapz
 from .conditionals import where
 from .finite_difference_operators import finite_difference_coefficients
@@ -18,12 +18,3 @@ from .trig import degrees, radians, sind, cosd, tand, arcsind, arccosd, arctan2d
 ### Force-overwrite built-in Python functions.
 
 from numpy import round, min, max
-
-from numpy import abs as _abs
-
-
-def abs(x):
-    try:
-        return _abs(x)
-    except TypeError:
-        return fabs(x)

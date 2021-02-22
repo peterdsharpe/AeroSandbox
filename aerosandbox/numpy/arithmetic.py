@@ -15,3 +15,9 @@ def sum(x):
 def mean(x):
     """Returns the mean of a vector x."""
     return sum(x) / length(x)
+
+def abs(x):
+    try:
+        return onp.abs(x)
+    except TypeError:
+        return onp.fabs(x)
