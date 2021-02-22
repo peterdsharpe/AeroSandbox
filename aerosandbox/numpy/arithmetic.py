@@ -1,6 +1,5 @@
-import numpy as onp
-import casadi as cas
-from aerosandbox.numpy.array import length
+import numpy as _onp
+import casadi as _cas
 from .determine_type import is_casadi_type
 
 
@@ -11,12 +10,12 @@ def sum(x, axis: int = None):
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.sum.html
     """
     if not is_casadi_type(x):
-        return onp.sum(x, axis=axis)
+        return _onp.sum(x, axis=axis)
     else:
         if axis == 0:
-            return cas.sum1(x)
+            return _cas.sum1(x)
         elif axis == 1:
-            return cas.sum2(x)
+            return _cas.sum2(x)
         elif axis is None:
             return sum(sum(x, axis=0), axis=1)
         else:
@@ -30,7 +29,7 @@ def mean(x, axis: int = None):
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.mean.html
     """
     if not is_casadi_type(x):
-        return onp.mean(x, axis=axis)
+        return _onp.mean(x, axis=axis)
     else:
         if axis == 0:
             return sum(x, axis=0) / x.shape[0]
@@ -43,7 +42,7 @@ def mean(x, axis: int = None):
 
 
 def abs(x):
-    try:
-        return onp.abs(x)
-    except TypeError:
-        return onp.fabs(x)
+    if not is_casadi_type(x):
+        return _onp.abs(x)
+    else:
+        return _cas.fabs(x)
