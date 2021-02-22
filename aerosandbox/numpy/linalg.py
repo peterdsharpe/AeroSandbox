@@ -4,9 +4,10 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 
 def inner(x, y):
     """Return the inner product of vectors x and y."""
-    try:
+    if not is_casadi_type([x, y], recursive=True):
         return _onp.inner(x, y)
-    except Exception:
+
+    else:
         if len(x.shape) == 1:  # Force x to be transposable if it's not.
             x = _onp.expand_dims(x, 1)
         return x.T @ y
@@ -14,9 +15,10 @@ def inner(x, y):
 
 def outer(x, y):
     """Return the outer product of vectors x and y."""
-    try:
+    if not is_casadi_type([x, y], recursive=True):
         return _onp.outer(x, y)
-    except Exception:
+
+    else:
         if len(y.shape) == 1:  # Force y to be transposable if it's not.
             y = _onp.expand_dims(y, 1)
         return x @ y.T
@@ -32,9 +34,10 @@ def solve(A, b):  # TODO get this working
     Returns: The solution vector x.
 
     """
-    try:
+    if not is_casadi_type([A, b]):
         return _onp.linalg.solve(A, b)
-    except Exception:
+
+    else:
         return _cas.solve(A, b)
 
 
@@ -42,7 +45,8 @@ def norm(x):
     """
     Returns the L2-norm of a vector x.
     """
-    try:
+    if not is_casadi_type(x):
         return _onp.linalg.norm(x)
-    except Exception:
+
+    else:
         return _cas.norm_2(x)
