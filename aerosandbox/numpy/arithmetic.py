@@ -6,7 +6,7 @@ from .determine_type import is_casadi_type
 
 def sum(x, axis: int = None):
     """
-    Returns the sum of x.
+    Sum of array elements over a given axis.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.sum.html
     """
@@ -23,9 +23,23 @@ def sum(x, axis: int = None):
             raise ValueError("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
 
 
-def mean(x):
-    """Returns the mean of a vector x."""
-    return sum(x) / length(x)
+def mean(x, axis: int = None):
+    """
+    Compute the arithmetic mean along the specified axis.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.mean.html
+    """
+    if not is_casadi_type(x):
+        return onp.mean(x, axis=axis)
+    else:
+        if axis == 0:
+            return sum(x, axis=0) / x.shape[0]
+        elif axis == 1:
+            return sum(x, axis=1) / x.shape[1]
+        elif axis is None:
+            return mean(mean(x, axis=0), axis=1)
+        else:
+            raise ValueError("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
 
 
 def abs(x):
