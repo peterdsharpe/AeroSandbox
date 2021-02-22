@@ -36,10 +36,11 @@ class Material:
         ],
         'tensile_strength_yield': [
             'yield_strength',
+            'yield_stress',
         ],
         'tensile_strength_Ultimate':[
             'ultimate_strength',
-            'tensile strength',  # Not sure I like this, but typical?
+            'tensile_strength',  # Not sure I like this, but typical?
         ],
         'elongation_at_break': [
             'elongation',
