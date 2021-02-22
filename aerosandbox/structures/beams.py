@@ -284,6 +284,8 @@ class Beam6DOF(AeroSandboxObject):
         ])
         
     def _discretize(self):
+        
+        # TODO: Don't add points if load location == length
         point_load_locations = [load["location"] for load in self.point_loads]
         point_load_locations.insert(0, 0)
         point_load_locations.append(self.length)
@@ -507,7 +509,7 @@ class Beam6DOF(AeroSandboxObject):
         
         axial_components = (
                     # TODO: This below is not very clean, but works?
-                    np.ones(self.cross_section.x().shape) * self.axial_stress.reshape(-1, 1)
+                    np.ones(self.cross_section.x().shape) * self.axial_stress.reshape((-1, 1))
                     +
                     (self._bending_stress_vertices_x if self.bending else 0)
                     +
@@ -515,9 +517,9 @@ class Beam6DOF(AeroSandboxObject):
                 )
         
         shear_components = (
-                    np.ones(self.cross_section.x().shape) * self.shear_stress_x.reshape(-1, 1)
+                    np.ones(self.cross_section.x().shape) * self.shear_stress_x.reshape((-1, 1))
                     + 
-                    np.ones(self.cross_section.x().shape) * self.shear_stress_y.reshape(-1, 1)
+                    np.ones(self.cross_section.x().shape) * self.shear_stress_y.reshape((-1, 1))
                     +
                     (self._torsional_stress_vertices if self.torsion else 0)
                 )
