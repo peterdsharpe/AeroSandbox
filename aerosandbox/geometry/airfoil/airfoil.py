@@ -4,7 +4,7 @@ from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from aerosandbox.geometry.airfoil.airfoil_families import *
 from scipy.interpolate import interp1d
-
+from aerosandbox.visualization.matplotlib import plt
 
 class Airfoil(Polygon):
     def __init__(self,
