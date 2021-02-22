@@ -117,3 +117,23 @@ def length(array) -> int:
                 raise AttributeError
         except AttributeError:  # array has no attribute shape -> either float or int
             return 1
+
+def diag(v, k=0):
+    """
+    Extract a diagonal or construct a diagonal array.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diag.html
+    """
+    if not is_casadi_type(v):
+        return _onp.diag(v, k=k)
+
+    else:
+        if k != 0:
+            raise NotImplementedError("Should be super possible, just haven't had the need yet.")
+
+        if v.shape[0] == 1 or v.shape[1] == 1:
+            return _cas.diag(v)
+        elif v.shape[0] == v.shape[1]:
+            raise NotImplementedError("Should be super possible, just haven't had the need yet.")
+        else:
+            raise ValueError("Cannot return the diagonal of a non-square matrix.")
