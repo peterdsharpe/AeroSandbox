@@ -1,5 +1,5 @@
-import numpy as onp
-import casadi as cas
+import numpy as _onp
+import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
@@ -14,9 +14,9 @@ def linspace(
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.linspace.html
     """
     if not is_casadi_type([start, stop, num], recursive=True):
-        return onp.linspace(start, stop, num)
+        return _onp.linspace(start, stop, num)
     else:
-        return cas.linspace(start, stop, num)
+        return _cas.linspace(start, stop, num)
 
 
 def cosspace(
@@ -38,7 +38,7 @@ def cosspace(
     """
     mean = (stop + start) / 2
     amp = (stop - start) / 2
-    return mean + amp * onp.cos(linspace(onp.pi, 0, num))
+    return mean + amp * _onp.cos(linspace(_onp.pi, 0, num))
 
 
 def logspace(
@@ -52,7 +52,7 @@ def logspace(
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.logspace.html
     """
     if not is_casadi_type([start, stop, num], recursive=True):
-        return onp.logspace(start, stop, num)
+        return _onp.logspace(start, stop, num)
     else:
         return 10 ** linspace(start, stop, num)
 
@@ -70,8 +70,8 @@ def geomspace(
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.geomspace.html
     """
     if not is_casadi_type([start, stop, num], recursive=True):
-        return onp.geomspace(start, stop, num)
+        return _onp.geomspace(start, stop, num)
     else:
         if start <= 0 or stop <= 0:
             raise ValueError("Both start and stop must be positive!")
-        return onp.log10(10 ** linspace(start, stop, num))
+        return _onp.log10(10 ** linspace(start, stop, num))

@@ -1,5 +1,4 @@
-import numpy as onp
-import casadi as cas
+import numpy as _onp
 
 
 def clip(
@@ -17,4 +16,4 @@ def clip(
     Returns:
 
     """
-    return onp.fmin(onp.fmax(x, min), max)
+    return _onp.fmin(_onp.fmax(x, min), max)

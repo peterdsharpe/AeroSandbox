@@ -1,6 +1,6 @@
-from aerosandbox.numpy.linalg import norm, outer
+from aerosandbox.numpy import linalg
 from aerosandbox.numpy.array import array
-import numpy as onp
+import numpy as _onp
 
 
 def rotation_matrix_2D(
@@ -14,8 +14,8 @@ def rotation_matrix_2D(
     Returns: The 2D rotation matrix
 
     """
-    sintheta = onp.sin(angle)
-    costheta = onp.cos(angle)
+    sintheta = _onp.sin(angle)
+    costheta = _onp.cos(angle)
     rotation_matrix = array([
         [costheta, -sintheta],
         [sintheta, costheta]
@@ -40,16 +40,16 @@ def rotation_matrix_3D(
         * If angle is a vector, returns a 3x3xN rotation matrix.
     """
     if not _axis_already_normalized:
-        axis = axis / norm(axis)
+        axis = axis / linalg.norm(axis)
 
-    sintheta = onp.sin(angle)
-    costheta = onp.cos(angle)
+    sintheta = _onp.sin(angle)
+    costheta = _onp.cos(angle)
     cpm = array([
         [0, -axis[2], axis[1]],
         [axis[2], 0, -axis[0]],
         [-axis[1], axis[0], 0],
     ])  # The cross product matrix of the rotation axis vector
-    outer_axis = outer(axis, axis)
+    outer_axis = linalg.outer(axis, axis)
 
-    rot_matrix = costheta * onp.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
+    rot_matrix = costheta * _onp.eye(3) + sintheta * cpm + (1 - costheta) * outer_axis
     return rot_matrix

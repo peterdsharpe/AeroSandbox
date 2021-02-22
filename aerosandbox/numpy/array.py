@@ -1,5 +1,5 @@
-import numpy as onp
-import casadi as cas
+import numpy as _onp
+import casadi as _cas
 from typing import List, Tuple
 from aerosandbox.numpy.determine_type import is_casadi_type
 
@@ -11,16 +11,16 @@ def array(array_like, dtype=None):
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.array.html
     """
     if not is_casadi_type(array_like, recursive=True):
-        return onp.array(array_like, dtype=dtype)
+        return _onp.array(array_like, dtype=dtype)
 
     else:
         def make_row(contents: List):
             try:
-                return cas.horzcat(*contents)
+                return _cas.horzcat(*contents)
             except (TypeError, Exception):
                 return contents
 
-        return cas.vertcat(
+        return _cas.vertcat(
             *[
                 make_row(row)
                 for row in array_like
@@ -36,13 +36,13 @@ def concatenate(arrays: Tuple, axis: int = 0):
     """
 
     if not is_casadi_type(arrays, recursive=True):
-        return onp.concatenate(arrays, axis=axis)
+        return _onp.concatenate(arrays, axis=axis)
 
     else:
         if axis == 0:
-            return cas.vertcat(*arrays)
+            return _cas.vertcat(*arrays)
         elif axis == 1:
-            return cas.horzcat(*arrays)
+            return _cas.horzcat(*arrays)
         else:
             raise ValueError("CasADi-backend arrays can only be 1D or 2D, so `axis` must be 0 or 1.")
 
@@ -54,7 +54,7 @@ def stack(arrays: Tuple, axis: int = 0):
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.stack.html
     """
     if not is_casadi_type(arrays, recursive=True):
-        return onp.stack(arrays, axis=axis)
+        return _onp.stack(arrays, axis=axis)
 
     else:
         ### Validate stackability
@@ -67,16 +67,16 @@ def stack(arrays: Tuple, axis: int = 0):
                     raise ValueError("Can only stack 1D NumPy ndarrays alongside CasADi arrays!")
 
         if axis == 0 or axis == -2:
-            return cas.transpose(cas.horzcat(*arrays))
+            return _cas.transpose(_cas.horzcat(*arrays))
         elif axis == 1 or axis == -1:
-            return cas.horzcat(*arrays)
+            return _cas.horzcat(*arrays)
         else:
             raise ValueError("CasADi-backend arrays can only be 1D or 2D, so `axis` must be 0 or 1.")
 
 
 def hstack(arrays):
     if not is_casadi_type(arrays, recursive=True):
-        return onp.hstack(arrays)
+        return _onp.hstack(arrays)
     else:
         raise ValueError(
             "Use `np.stack()` or `np.concatenate()` instead of `np.hstack()` when dealing with mixed-backend arrays.")
@@ -84,7 +84,7 @@ def hstack(arrays):
 
 def vstack(arrays):
     if not is_casadi_type(arrays, recursive=True):
-        return onp.vstack(arrays)
+        return _onp.vstack(arrays)
     else:
         raise ValueError(
             "Use `np.stack()` or `np.concatenate()` instead of `np.vstack()` when dealing with mixed-backend arrays.")
@@ -92,7 +92,7 @@ def vstack(arrays):
 
 def dstack(arrays):
     if not is_casadi_type(arrays, recursive=True):
-        return onp.dstack(arrays)
+        return _onp.dstack(arrays)
     else:
         raise ValueError(
             "Use `np.stack()` or `np.concatenate()` instead of `np.dstack()` when dealing with mixed-backend arrays.")
@@ -117,7 +117,3 @@ def length(array) -> int:
                 raise AttributeError
         except AttributeError:  # array has no attribute shape -> either float or int
             return 1
-
-
-if __name__ == '__main__':
-    array
