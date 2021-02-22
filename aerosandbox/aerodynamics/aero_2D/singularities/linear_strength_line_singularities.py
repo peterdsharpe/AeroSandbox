@@ -68,12 +68,30 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
                   (xp_field - xp_panel_end) ** 2 +
                   yp_field ** 2
           ) ** 0.5
+
+    ### Regularize
+    is_on_endpoint = (
+            (r_1 == 0) | (r_2 == 0)
+    )
+    r_1 = np.where(
+        r_1 == 0,
+        1,
+        r_1,
+    )
+    r_2 = np.where(
+        r_2 == 0,
+        1,
+        r_2
+    )
+
+    ### Continue geometry calculation
     theta_1 = np.arctan2(yp_field, xp_field)
     theta_2 = np.arctan2(yp_field, xp_field - xp_panel_end)
     ln_r_2_r_1 = np.log(r_2 / r_1)
     d_theta = theta_2 - theta_1
     tau = 2 * np.pi
 
+    ### Regularize if the point is on the panel.
     yp_field_regularized = np.where(
         is_on_panel,
         1,
@@ -169,6 +187,19 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
     ### Return
     u = u_vortex + u_source
     v = v_vortex + v_source
+
+    ### If the field point is on the endpoint of the panel, replace the NaN with a zero.
+    u = np.where(
+        is_on_endpoint,
+        0,
+        u
+    )
+    v = np.where(
+        is_on_endpoint,
+        0,
+        v
+    )
+
     return u, v
 
 
@@ -205,6 +236,8 @@ def _calculate_induced_velocity_line_singularity(
     panel_dx = x_panel_end - x_panel_start
     panel_dy = y_panel_end - y_panel_start
     panel_length = (panel_dx ** 2 + panel_dy ** 2) ** 0.5
+
+    panel_length = np.fmax(panel_length, 1e-16)
 
     xp_hat_x = panel_dx / panel_length  # x-coordinate of the xp_hat vector
     xp_hat_y = panel_dy / panel_length  # y-coordinate of the yp_hat vector

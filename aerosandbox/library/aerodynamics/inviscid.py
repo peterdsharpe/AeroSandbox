@@ -133,7 +133,7 @@ def induced_drag_ratio_from_ground_effect(
     :param h_over_b: (Height above ground) divided by (wingspan).
     :return: Ratio of induced drag in ground effect to induced drag out of ground effect [unitless]
     """
-    h_over_b = np.smoothmax(
+    h_over_b = np.softmax(
         h_over_b,
         0,
         hardness=1 / 0.03

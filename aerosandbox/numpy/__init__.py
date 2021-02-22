@@ -12,7 +12,7 @@ import aerosandbox.numpy.linalg as linalg
 from .logicals import clip
 from .rotations import rotation_matrix_2D, rotation_matrix_3D
 from .spacing import linspace, cosspace
-from .surrogate_model_tools import smoothmax, sigmoid, blend
+from .surrogate_model_tools import softmax, sigmoid, blend
 from .trig import degrees, radians, sind, cosd, tand, arcsind, arccosd, arctan2d
 
 ### Force-overwrite built-in Python functions.

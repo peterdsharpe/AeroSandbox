@@ -7,15 +7,14 @@ from numpy import pi
 class OperatingPoint(AeroSandboxObject):
     def __init__(self,
                  atmosphere: Atmosphere = Atmosphere(altitude=0),
-                 velocity: float = 10.,  # m/s
-                 alpha: float = 5.,  # In degrees
+                 velocity: float = 1.,  # m/s
+                 alpha: float = 0.,  # In degrees
                  beta: float = 0.,  # In degrees
                  p: float = 0.,  # About the body x-axis, in rad/sec
                  q: float = 0.,  # About the body y-axis, in rad/sec
                  r: float = 0.,  # About the body z-axis, in rad/sec
                  ):
         self.atmosphere = atmosphere
-        self.altitude = altitude
         self.velocity = velocity
         self.alpha = alpha
         self.beta = beta

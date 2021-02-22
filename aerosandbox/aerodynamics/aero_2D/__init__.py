@@ -1,0 +1,1 @@
+from .airfoil_inviscid import AirfoilInviscid

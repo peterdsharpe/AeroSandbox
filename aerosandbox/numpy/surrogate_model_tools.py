@@ -4,7 +4,7 @@ from typing import Tuple, Union
 from numpy import pi
 
 
-def smoothmax(value1, value2, hardness):
+def softmax(value1, value2, hardness=1):
     """
     A smooth maximum between two functions. Also referred to as the logsumexp() function.
     Useful because it's differentiable and preserves convexity!
@@ -15,12 +15,14 @@ def smoothmax(value1, value2, hardness):
     :param hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
     :return: Soft maximum of the two supplied values.
     """
+    if hardness <= 0:
+        raise ValueError("The value of `hardness` must be positive.")
     value1 = value1 * hardness
     value2 = value2 * hardness
     max = np.fmax(value1, value2)
     min = np.fmin(value1, value2)
     out = max + np.log(1 + np.exp(min - max))
-    out /= hardness
+    out = out / hardness
     return out
 
 
