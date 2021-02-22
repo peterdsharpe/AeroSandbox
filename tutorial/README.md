@@ -7,9 +7,10 @@ by Peter Sharpe
 Welcome to the AeroSandbox tutorial!
 
 Here's how this works: 
-* Read through the folders in the order denoted, starting with `1 - Optimization and Math`.
-* In each folder, first read through the `README.md`, if one exists. Then read through the files in the order denoted.
+* Read through the folders and files in ascending order. Read the `README.md` in each subfolder, if it exists.
+* Every file is a Jupyter Notebook. You can either:
+  * [View them on GitHub non-interactively](https://github.com/peterdsharpe/AeroSandbox/tree/master/tutorial)
+  * View them on your computer interactively (recommended). If you're new to Jupyter notebooks, [follow this tutorial here](https://www.codecademy.com/articles/how-to-use-jupyter-notebooks)
 * Comments will be added throughout the code when **new** features are introduced, so that these new features are made more obvious.
-* Consider executing these scripts in an IPython terminal so that you can explore and manipulate the data structures left over at the end of each script.
 
 Happy reading!
