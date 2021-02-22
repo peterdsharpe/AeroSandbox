@@ -11,7 +11,7 @@ def test_airfoil_with_TE_gap():
             alpha=5
         )
     )
-    assert a.Cl == pytest.approx(1.0754, abs=0.01)
+    assert a.Cl == pytest.approx(1.0754, abs=0.01)  # From XFoil
 
 
 def test_airfoil_without_TE_gap():
@@ -22,7 +22,25 @@ def test_airfoil_without_TE_gap():
             alpha=5
         )
     )
-    assert a.Cl == pytest.approx(1.9304, abs=0.01)
+    assert a.Cl == pytest.approx(1.9304, abs=0.01)  # From XFoil
+
+
+def test_airfoil_multielement():
+    a = asb.AirfoilInviscid(
+        airfoil=[
+            asb.Airfoil("e423")
+                .repanel(n_points_per_side=50),
+            asb.Airfoil("naca6408")
+                .repanel(n_points_per_side=25)
+                .scale(0.4, 0.4)
+                .rotate(np.radians(-35))
+                .translate(0.9, -0.1),
+        ],
+        op_point=asb.OperatingPoint(
+            velocity=1,
+            alpha=5
+        )
+    )
 
 
 if __name__ == '__main__':
