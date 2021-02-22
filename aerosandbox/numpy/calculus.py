@@ -7,9 +7,9 @@ def diff(a, n=1, axis=-1):
     """
     Calculate the n-th discrete difference along the given axis.
 
-    See syntax here:
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diff.html
     """
-    if not is_casadi_type(x):
+    if not is_casadi_type(a):
         return _onp.diff(a, n=n, axis=axis)
 
     else:
@@ -22,7 +22,7 @@ def diff(a, n=1, axis=-1):
         return result
 
 
-def trapz(x, modify_endpoints=False):
+def trapz(x, modify_endpoints=False): # TODO unify with NumPy trapz, this is different
     """
     Computes each piece of the approximate integral of `x` via the trapezoidal method with unit spacing.
     Can be viewed as the opposite of diff().
