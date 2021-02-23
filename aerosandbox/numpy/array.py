@@ -10,11 +10,12 @@ def array(array_like, dtype=None):
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.array.html
     """
-    if is_casadi_type(array_like, recursive=False): # If you were literally given a CasADi array, just return it
+    if is_casadi_type(array_like, recursive=False):  # If you were literally given a CasADi array, just return it
         # Handles inputs like cas.DM([1, 2, 3])
         return array_like
 
-    elif not is_casadi_type(array_like, recursive=True): # If you were given a list of iterables that don't have CasADi types:
+    elif not is_casadi_type(array_like,
+                            recursive=True):  # If you were given a list of iterables that don't have CasADi types:
         # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
 
@@ -125,6 +126,7 @@ def length(array) -> int:
         else:
             return array.shape[1]
 
+
 def diag(v, k=0):
     """
     Extract a diagonal or construct a diagonal array.
@@ -167,9 +169,9 @@ def roll(a, shift, axis=0):
     """
     if not is_casadi_type(a):
         return _onp.roll(a, shift, axis=axis)
-    else:  #TODO add some checking to make sure shift < len(a)
+    else:  # TODO add some checking to make sure shift < len(a)
         # assert shift < a.shape[axis]
-        if 1 in a.shape and axis==0:
+        if 1 in a.shape and axis == 0:
             return _cas.vertcat(a[-shift, :], a[:-shift, :])
         elif axis == 1:
             return _cas.horzcat(a[:, -shift], a[:, :-shift])
@@ -199,6 +201,7 @@ def min(a):
         return _onp.min(a)
     except TypeError:
         return _cas.mmin(a)
+
 
 def reshape(a, newshape):
     """Gives a new shape to an array without changing its data."""

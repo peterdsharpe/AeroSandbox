@@ -47,6 +47,7 @@ def abs(x):
     else:
         return _cas.fabs(x)
 
+
 # TODO trace()
 
 def cumsum(x, **kwargs):
