@@ -5,6 +5,9 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.geometry import *
 
+import plotly.express as px
+import plotly.graph_objects as go
+
 import warnings
         
 # TODO: Check and document
@@ -504,8 +507,8 @@ class Beam6DOF(AeroSandboxObject):
         self.opti.subject_to([
             cas.diff(self.phi) == np.trapz(self.dphi) * self.dx,
             cas.diff(self.dphi) == np.trapz(self.ddphi) * self.dx,
-            cas.diff(self.G * self.J.T * self.ddv/self.dphi) == np.trapz(self.dEIddphi) * self.dx, # TODO: This formula is based on no real source
-            cas.diff(self.dEIddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx, # + self.point_torsional_moments,
+            cas.diff(self.G * self.J.T * self.ddv/self.dphi) == np.trapz(self.dGJddphi) * self.dx, # TODO: This formula is based on no real source
+            cas.diff(self.dGJddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx, # + self.point_torsional_moments,
         ])
         
         # Add BCs
@@ -565,23 +568,19 @@ class Beam6DOF(AeroSandboxObject):
         
         return self.stress
     
-    def plot3D(self, displacement=True, axes_equal=True):
+    def plot3D(self, 
+               displacement: bool=True,
+               axes_equal: bool=True, 
+               show: bool=True, 
+               fig: go.Figure=None
+               ) -> go.Figure:
         
-        # import matplotlib.pyplot as plt
-        # from mpl_toolkits.mplot3d import proj3d
-        
-        # my_cmap = plt.get_cmap('hsv')
-        
-        # fig = plt.figure(figsize=(8, 8))
-        # ax = fig.add_subplot(111, projection='3d')
-        
-        import plotly.express as px
-        import plotly.graph_objects as go
-        fig = go.Figure()
+        if not fig:
+            fig = go.Figure()
         
         #### Add scatterplot of vertices
-        x = self.cross_section.x() #- self.cross_section.centroid()[0]
-        y = self.cross_section.y() #- self.cross_section.centroid()[1]
+        x = self.cross_section.x()
+        y = self.cross_section.y()
         
         assert x.shape == y.shape and self.x.shape[0] == x.shape[0]
         
@@ -594,7 +593,6 @@ class Beam6DOF(AeroSandboxObject):
         Z = z.flatten()
         c = self.stress.flatten()
         
-        # ax.scatter(x, y, z, c = c, cmap = my_cmap)
         scatterplot_nodisplaceement = \
             go.Scatter3d(
                 x = X,
@@ -619,7 +617,6 @@ class Beam6DOF(AeroSandboxObject):
         Z = z.flatten()
         c = self.stress.flatten()
         
-        # ax.scatter(x, y, z, c = c, cmap = my_cmap)
         scatterplot = \
             go.Scatter3d(
                 x = X,
@@ -637,10 +634,6 @@ class Beam6DOF(AeroSandboxObject):
         qy = self.forces_per_unit_length_y
         qz = self.forces_per_unit_length_z
         
-        # for i in range(len(qx)):
-        #     ax.quiver(0, 0, self.x[i], qx[i], qy[i], qz[i],
-        #               pivot='tip',
-        #               length=0.1, cmap='YlOrRd', lw=2)
         distributed_forces = \
             go.Cone(
                 x=np.zeros(self.x.shape),
@@ -669,10 +662,6 @@ class Beam6DOF(AeroSandboxObject):
             z.append(self.point_loads[i]['force'][2])
             
             loc.append(self.point_loads[i]['location'])
-            
-        #     ax.quiver(0, 0, loc, x, y, z,
-        #               pivot='tip',
-        #               length=0.1, cmap='Reds', lw=2)
         
         point_forces = \
             go.Cone(
@@ -696,12 +685,11 @@ class Beam6DOF(AeroSandboxObject):
             Xb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][0].flatten() + 0.5*(X.max()+X.min())
             Yb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][1].flatten() + 0.5*(Y.max()+Y.min())
             Zb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][2].flatten() + 0.5*(Z.max()+Z.min())
-            # Comment or uncomment following both lines to test the fake bounding box:
+
             x = []
             y = []
             z = []
             for xb, yb, zb in zip(Xb, Yb, Zb):
-                # ax.plot([xb], [yb], [zb], 'w')
                 x.append(xb)
                 y.append(yb)
                 z.append(zb)
@@ -717,7 +705,6 @@ class Beam6DOF(AeroSandboxObject):
                 )
             )
                
-        # plt.show()
         
         # TODO, fix colorbar, add quads/tri meshes
         fig.add_trace(point_forces)
@@ -728,14 +715,17 @@ class Beam6DOF(AeroSandboxObject):
         fig.update_layout(scene=dict(aspectratio=dict(x=1, y=1, z=1),
                                      camera_eye=dict(x=1.2, y=1.2, z=0.6)))
         
-        fig.show()
+        if show:
+            fig.show()
+            
+        return fig
         
     def draw_geometry_vars(self):
         import matplotlib.pyplot as plt
-        # import matplotlib.style as style
         import seaborn as sns
         sns.set(font_scale=1)
         
+        # TODO: Tile these properly or add to plotly interface
         for var in self.req_geometry_vars:
             fig, ax = plt.subplots()
             
