@@ -138,3 +138,5 @@ def diag(v, k=0):
             raise NotImplementedError("Should be super possible, just haven't had the need yet.")
         else:
             raise ValueError("Cannot return the diagonal of a non-square matrix.")
+
+# TODO reshape, tile
