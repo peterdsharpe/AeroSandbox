@@ -10,9 +10,7 @@ def inner(x, y):
         return _onp.inner(x, y)
 
     else:
-        if len(x.shape) == 1:  # Force x to be transposable if it's not.
-            x = _onp.expand_dims(x, 1)
-        return x.T @ y
+        return _cas.dot(x, y)
 
 
 def outer(x, y):
