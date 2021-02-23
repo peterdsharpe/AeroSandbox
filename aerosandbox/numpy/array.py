@@ -10,10 +10,16 @@ def array(array_like, dtype=None):
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.array.html
     """
-    if not is_casadi_type(array_like, recursive=True):
+    if is_casadi_type(array_like, recursive=False): # If you were literally given a CasADi array, just return it
+        # Handles inputs like cas.DM([1, 2, 3])
+        return array_like
+
+    elif not is_casadi_type(array_like, recursive=True): # If you were given a list of iterables that don't have CasADi types:
+        # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
 
     else:
+        # Handles inputs like [[opti_var_1, opti_var_2], [opti_var_3, opti_var_4]]
         def make_row(contents: List):
             try:
                 return _cas.horzcat(*contents)

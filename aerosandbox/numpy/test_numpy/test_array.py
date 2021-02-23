@@ -33,6 +33,13 @@ def test_array_casadi_1D_shape():
     assert length(a) == 2
 
 
+def test_can_convert_DM_to_ndarray():
+    c = cas.DM([1, 2, 3])
+    n = np.array(c)
+
+    assert np.all(n == np.array([1, 2, 3]))
+
+
 def test_length():
     assert length(5) == 1
     assert length(5.) == 1
@@ -85,32 +92,33 @@ def test_roll_onp():
 
 
 def test_roll_casadi():
-    b = np.array([[3,1,2]])
+    b = np.array([[3, 1, 2]])
     a = cas.SX(b)
 
-    assert np.all(np.array(cas.DM(np.roll(a, 1)) == b))
+    assert np.all(cas.DM(np.roll(a, 1)) == b)
 
 
 def test_roll_casadi_2d():
     a = np.array([[1, 2, 3], [4, 5, 6]])
     b = cas.SX(a)
 
-    assert np.all(np.array(cas.DM(np.roll(b, 1, axis=1)) == np.roll(a, 1, axis=1)))
+    assert np.all(cas.DM(np.roll(b, 1, axis=1)) == np.roll(a, 1, axis=1))
 
 
 def test_max():
-    a = cas.SX([1,2,3])
-    b = [1,2,3]
+    a = cas.SX([1, 2, 3])
+    b = [1, 2, 3]
 
     assert int(np.max(a)) == int(np.max(b))
 
 
 def test_min():
-    a = cas.SX([1,2,3])
-    b = [1,2,3]
+    a = cas.SX([1, 2, 3])
+    b = [1, 2, 3]
 
     assert int(np.min(a)) == int(np.min(b))
 
 
 if __name__ == '__main__':
+    test_can_convert_DM_to_ndarray()
     pytest.main()
