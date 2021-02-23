@@ -281,17 +281,16 @@ class Beam6DOF(AeroSandboxObject):
         self.calc_shear_stress()
         self.calc_axial_stress()
         
-        #### Bending
+        #### Bending        
+        self._bending_stress_vertices = 0
         if self.bending:
             self.calc_bending_stress()
-        else:
-            self._bending_stress_vertices = 0
             
         #### Torsion
+        self._torsional_stress_vertices_x = 0
+        self._torsional_stress_vertices_y = 0
         if self.torsion:
             self.calc_torsional_stress()
-        else:
-            self._torsional_stress_vertices = 0
             
         #### Calc Stress
         self.calc_stress()
@@ -399,7 +398,6 @@ class Beam6DOF(AeroSandboxObject):
             else:
                 raise ValueError("Bad value of \"type\" for a load within beam.distributed_loads!")
                 
-            # TODO: Check if this is correct
             self.forces_per_unit_length_x += load['force'][0] / self.length * scaling
             self.forces_per_unit_length_y += load['force'][1] / self.length * scaling
             self.forces_per_unit_length_z += load['force'][2] / self.length * scaling
@@ -414,6 +412,7 @@ class Beam6DOF(AeroSandboxObject):
         self.axial_stress = np.zeros(self.n)
         
         if self.bending_BC_type == 'cantilevered':
+            # TODO: Fix hstacks to support casadi types
             per_point_forces_z = self.forces_per_unit_length_z + np.hstack([0, self.point_forces_z])
             forces_z = np.cumsum(per_point_forces_z[::-1])[::-1]
             
@@ -437,6 +436,8 @@ class Beam6DOF(AeroSandboxObject):
     def calc_bending_stress(self):
         """Calculates stresses from bending loads"""
         
+        warnings.warn('Bending has not been checked yet.')  # TODO: Check and remove
+        
         # Set up derivatives
         # TODO: What are these factors before variables?
         self.u = 1 * self.opti.variable(0, n_vars = self.n)
@@ -455,12 +456,12 @@ class Beam6DOF(AeroSandboxObject):
         self.opti.subject_to([
             cas.diff(self.u) == np.trapz(self.du) * self.dx,
             cas.diff(self.du) == np.trapz(self.ddu) * self.dx,
-            cas.diff(self.E * self.Ixx.T * self.ddu) == np.trapz(self.dEIddu) * self.dx,
+            cas.diff(self.E * self.Ixx.T * self.ddu) == np.trapz(self.dEIddu) * self.dx, # + self.point_moments_y,
             cas.diff(self.dEIddu) == np.trapz(self.forces_per_unit_length_x) * self.dx + self.point_forces_x,
             
             cas.diff(self.v) == np.trapz(self.dv) * self.dx,
             cas.diff(self.dv) == np.trapz(self.ddv) * self.dx,
-            cas.diff(self.E * self.Iyy.T * self.ddv) == np.trapz(self.dEIddv) * self.dx,
+            cas.diff(self.E * self.Iyy.T * self.ddv) == np.trapz(self.dEIddv) * self.dx, # + self.point_moments_y,
             cas.diff(self.dEIddv) == np.trapz(self.forces_per_unit_length_y) * self.dx + self.point_forces_y,
         ])
 
@@ -485,13 +486,11 @@ class Beam6DOF(AeroSandboxObject):
         self._bending_stress_vertices_x = self.cross_section.x() * self.E * self.ddu
         self._bending_stress_vertices_y = self.cross_section.y() * self.E * self.ddv
 
-        # self._min_max_bending_stress = (
-        #     np.min(self._bending_stress_vertices),  # Compressive
-        #     np.max(self._bending_stress_vertices),  # Tensile
-        #     )  # TODO: Check
         
     def calc_torsional_stress(self):
-        """Calculates stresses from torsional loads"""    
+        """Calculates stresses from torsional loads"""  
+        
+        warnings.warn('Torsion has not been checked yet.')  # TODO: Check and remove
         
         # Set up derivatives
         phi = 0.1 * self.opti.variable(0, n_vars = self.n)
@@ -500,24 +499,38 @@ class Beam6DOF(AeroSandboxObject):
         # Add forcing term
         ddphi = -self.torsional_moments_per_unit_length / (self.G * self.J)
         
-        
+        # TODO: Add point moments
         # Define derivatives
         self.opti.subject_to([
             cas.diff(self.phi) == np.trapz(self.dphi) * self.dx,
             cas.diff(self.dphi) == np.trapz(self.ddphi) * self.dx,
-            cas.diff(self.dEIddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx + self.point_torsional_moments,
+            cas.diff(self.G * self.J.T * self.ddv/self.dphi) == np.trapz(self.dEIddphi) * self.dx, # TODO: This formula is based on no real source
+            cas.diff(self.dEIddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx, # + self.point_torsional_moments,
         ])
         
+        # Add BCs
+        if self.bending_BC_type == "cantilevered":
+            self.opti.subject_to([
+                self.phi[0] == 0,
+                self.dphi[0] == 0,
+                self.dphi[-1] == 0,  # No tip moment
+                self.dEIddphi[-1] == 0,  # No tip higher order stuff
+            ])
+        else:
+            raise ValueError("Bad value of bending_BC_type!")
+
+        
         # TODO: Add torsion formula
-        stress_f = (lambda dist: dist*0)
+        distance = np.sqrt(
+            self.cross_section.x()**2 +
+            self.cross_section.y()**2
+        )
+            
+        stress = self.G * distance * self.dphi/self.dx
         
         # TODO: cas.sqrt might not work with AD, test cas.norm2?
-        self._torsional_stress_vertices = stress_f(
-                np.sqrt(
-                    (self.cross_section.x())**2 + 
-                    (self.cross_section.y())**2
-                )
-            )
+        self._torsional_stress_vertices_x = 0
+        self._torsional_stress_vertices_y = 0
         
         #self._max_torsional_stress = np.max(self._torsional_stress_vertices)  # TODO: check
     
@@ -554,13 +567,17 @@ class Beam6DOF(AeroSandboxObject):
     
     def plot3D(self, displacement=True, axes_equal=True):
         
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import proj3d
+        # import matplotlib.pyplot as plt
+        # from mpl_toolkits.mplot3d import proj3d
         
-        my_cmap = plt.get_cmap('hsv')
+        # my_cmap = plt.get_cmap('hsv')
         
-        fig = plt.figure(figsize=(8, 8))
-        ax = fig.add_subplot(111, projection='3d')
+        # fig = plt.figure(figsize=(8, 8))
+        # ax = fig.add_subplot(111, projection='3d')
+        
+        import plotly.express as px
+        import plotly.graph_objects as go
+        fig = go.Figure()
         
         #### Add scatterplot of vertices
         x = self.cross_section.x() #- self.cross_section.centroid()[0]
@@ -571,6 +588,24 @@ class Beam6DOF(AeroSandboxObject):
         x = x - np.ones(x.shape) * self.cross_section.centroid()[0].reshape(-1, 1)
         y = y - np.ones(x.shape) * self.cross_section.centroid()[1].reshape(-1, 1)
         z = np.ones(x.shape) * self.x.reshape(-1, 1)
+        
+        X = x.flatten()
+        Y = y.flatten()
+        Z = z.flatten()
+        c = self.stress.flatten()
+        
+        # ax.scatter(x, y, z, c = c, cmap = my_cmap)
+        scatterplot_nodisplaceement = \
+            go.Scatter3d(
+                x = X,
+                y = Y,
+                z = Z,
+                name = 'Beam_Ghost',
+                mode = 'lines',
+                marker = dict(color='rgba(100,100,100,0.1)'),
+                line = dict(color='rgba(100,100,100,0.1)', width=2),
+                showlegend=False,
+                )
         
         if displacement:
             if self.bending:
@@ -584,30 +619,75 @@ class Beam6DOF(AeroSandboxObject):
         Z = z.flatten()
         c = self.stress.flatten()
         
-        ax.scatter(x, y, z, c = c, cmap = my_cmap)
+        # ax.scatter(x, y, z, c = c, cmap = my_cmap)
+        scatterplot = \
+            go.Scatter3d(
+                x = X,
+                y = Y,
+                z = Z,
+                name = 'Beam',
+                mode = 'lines',
+                marker = dict(color=c, opacity=0.5),
+                line = dict(color=c, width=2),
+                showlegend=True,
+                )
         
         #### Add distributed load vectors
         qx = self.forces_per_unit_length_x
         qy = self.forces_per_unit_length_y
         qz = self.forces_per_unit_length_z
         
-        for i in range(len(qx)):
-            ax.quiver(0, 0, self.x[i], qx[i], qy[i], qz[i],
-                      pivot='tip',
-                      length=0.1, cmap='YlOrRd', lw=2)
+        # for i in range(len(qx)):
+        #     ax.quiver(0, 0, self.x[i], qx[i], qy[i], qz[i],
+        #               pivot='tip',
+        #               length=0.1, cmap='YlOrRd', lw=2)
+        distributed_forces = \
+            go.Cone(
+                x=np.zeros(self.x.shape),
+                y=np.zeros(self.x.shape),
+                z=self.x,
+                u=qx,
+                v=qy,
+                w=qz,
+                colorscale='Reds',
+                sizemode="absolute",
+                sizeref=100,
+                anchor="tip",
+                showlegend=False,
+                )
         
         #### Add point load vectors
         
+        x = []
+        y = []
+        z = []
+        loc = []
+        
         for i in range(len(self.point_loads)):
-            x = self.point_loads[i]['force'][0]
-            y = self.point_loads[i]['force'][1]
-            z = self.point_loads[i]['force'][2]
+            x.append(self.point_loads[i]['force'][0])
+            y.append(self.point_loads[i]['force'][1])
+            z.append(self.point_loads[i]['force'][2])
             
-            loc = self.point_loads[i]['location']
+            loc.append(self.point_loads[i]['location'])
             
-            ax.quiver(0, 0, loc, x, y, z,
-                      pivot='tip',
-                      length=0.1, cmap='Reds', lw=2)
+        #     ax.quiver(0, 0, loc, x, y, z,
+        #               pivot='tip',
+        #               length=0.1, cmap='Reds', lw=2)
+        
+        point_forces = \
+            go.Cone(
+                x=np.zeros(len(loc)),
+                y=np.zeros(len(loc)),
+                z=loc,
+                u=x,
+                v=y,
+                w=z,
+                colorscale='Blues',
+                sizemode="absolute",
+                sizeref=3,
+                anchor="tip",
+                showlegend=False,
+                )
         
         #### Show
         if axes_equal:
@@ -617,10 +697,38 @@ class Beam6DOF(AeroSandboxObject):
             Yb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][1].flatten() + 0.5*(Y.max()+Y.min())
             Zb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][2].flatten() + 0.5*(Z.max()+Z.min())
             # Comment or uncomment following both lines to test the fake bounding box:
+            x = []
+            y = []
+            z = []
             for xb, yb, zb in zip(Xb, Yb, Zb):
-               ax.plot([xb], [yb], [zb], 'w')
+                # ax.plot([xb], [yb], [zb], 'w')
+                x.append(xb)
+                y.append(yb)
+                z.append(zb)
+            fig.add_trace(
+                go.Scatter3d(
+                    x = x,
+                    y = y,
+                    z = z,
+                    name = '',
+                    mode = 'markers',
+                    marker = dict(size=0, color='rgba(0, 0, 0, 0)'),
+                    showlegend=False,
+                )
+            )
                
-        plt.show()
+        # plt.show()
+        
+        # TODO, fix colorbar, add quads/tri meshes
+        fig.add_trace(point_forces)
+        fig.add_trace(distributed_forces)
+        fig.add_trace(scatterplot_nodisplaceement)
+        fig.add_trace(scatterplot)
+        
+        fig.update_layout(scene=dict(aspectratio=dict(x=1, y=1, z=1),
+                                     camera_eye=dict(x=1.2, y=1.2, z=0.6)))
+        
+        fig.show()
         
     def draw_geometry_vars(self):
         import matplotlib.pyplot as plt
@@ -852,7 +960,7 @@ if __name__ == '__main__':
     #beam.cross_section.plot()
     
     # Solve beam
-    lift_force = 9.81 * 103.873
+    lift_force = 9.81 * 103.873 * 100
     load_location = 15
     
     beam.add_point_load(load_location, np.array([-lift_force / 3, 0, 0]))
