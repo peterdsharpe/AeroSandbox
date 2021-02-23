@@ -17,4 +17,4 @@ from .trig import *
 
 ### Force-overwrite built-in Python functions.
 
-from numpy import round, min, max
+from numpy import round # TODO check that min, max are properly imported

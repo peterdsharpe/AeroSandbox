@@ -77,5 +77,40 @@ def test_stack():
         stack((c, c), axis=2)
 
 
+def test_roll_onp():
+    a = [1, 2, 3]
+    b = [3, 1, 2]
+
+    assert np.all(np.roll(a, 1) == b)
+
+
+def test_roll_casadi():
+    b = np.array([[3,1,2]])
+    a = cas.SX(b)
+
+    assert np.all(np.array(cas.DM(np.roll(a, 1)) == b))
+
+
+def test_roll_casadi_2d():
+    a = np.array([[1, 2, 3], [4, 5, 6]])
+    b = cas.SX(a)
+
+    assert np.all(np.array(cas.DM(np.roll(b, 1, axis=1)) == np.roll(a, 1, axis=1)))
+
+
+def test_max():
+    a = cas.SX([1,2,3])
+    b = [1,2,3]
+
+    assert int(np.max(a)) == int(np.max(b))
+
+
+def test_min():
+    a = cas.SX([1,2,3])
+    b = [1,2,3]
+
+    assert int(np.min(a)) == int(np.min(b))
+
+
 if __name__ == '__main__':
     pytest.main()

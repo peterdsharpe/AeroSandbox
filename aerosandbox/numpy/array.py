@@ -139,4 +139,65 @@ def diag(v, k=0):
         else:
             raise ValueError("Cannot return the diagonal of a non-square matrix.")
 
-# TODO reshape, tile
+
+def roll(a, shift, axis=0):
+    """
+    Roll array elements along a given axis.
+
+    Elements that roll beyond the last position are re-introduced at the first.
+
+    Parameters
+    ----------
+    a : array_like
+        Input array.
+    shift : int
+        The number of places by which elements are shifted.
+
+    Returns
+    -------
+    res : ndarray
+        Output array, with the same shape as a.
+
+    """
+    if not is_casadi_type(a):
+        return _onp.roll(a, shift, axis=axis)
+    else:  #TODO add some checking to make sure shift < len(a)
+        # assert shift < a.shape[axis]
+        if 1 in a.shape and axis==0:
+            return _cas.vertcat(a[-shift, :], a[:-shift, :])
+        elif axis == 1:
+            return _cas.horzcat(a[:, -shift], a[:, :-shift])
+        elif axis == 0:
+            return _cas.vertcat(a.T[:, -shift], a.T[:, :-shift]).T
+        else:
+            raise Exception("Wrong axis")
+
+
+def max(a):
+    """
+    Returns the maximum value of an array
+    """
+
+    try:
+        return _onp.max(a)
+    except TypeError:
+        return _cas.mmax(a)
+
+
+def min(a):
+    """
+    Returns the minimum value of an array
+    """
+
+    try:
+        return _onp.min(a)
+    except TypeError:
+        return _cas.mmin(a)
+
+def reshape(a, newshape):
+    """Gives a new shape to an array without changing its data."""
+
+    if not is_casadi_type(a):
+        return _onp.reshape(a, newshape)
+    else:
+        return _cas.reshape(a, newshape)
