@@ -66,6 +66,9 @@ class FittedModel(SurrogateModel):
         ])
 
     def input_dimensionality(self) -> int:
+        """
+        Returns the number of inputs that should be supplied in x, where x is the input to the FittedModel.
+        """
         input_names = self.input_names()
         if input_names is not None:
             return len(input_names)
@@ -73,6 +76,11 @@ class FittedModel(SurrogateModel):
             return 1
 
     def input_names(self) -> Union[List, None]:
+        """
+        Returns the keys that should be passed into x, where x is the input to the FittedModel.
+
+        If x is 1D and simply takes in floats or arrays, returns None.
+        """
         try:
             return list(self.x_data.keys())
         except AttributeError:
@@ -137,6 +145,43 @@ class FittedModel(SurrogateModel):
 
         else:
             raise NotImplementedError()
+
+    def goodness_of_fit(self, type="R^2"):
+        """
+        Returns a metric of the goodness of the fit.
+
+        Args:
+
+            type: Type of metric to use for goodness of fit. One of:
+
+                * R^2: The coefficient of determination. Strictly speaking only mathematically rigorous to use this
+                for linear fits.
+
+                    https://en.wikipedia.org/wiki/Coefficient_of_determination
+
+        Returns: The metric of the goodness of the fit.
+
+        """
+        if type == "R^2":
+
+            y_mean = np.mean(self.y_data)
+
+            SS_tot = np.sum(
+                (self.y_data - y_mean) ** 2
+            )
+
+            y_model = self(self.x_data)
+
+            SS_res = np.sum(
+                (self.y_data - y_model) ** 2
+            )
+
+            R_squared = 1 - SS_res / SS_tot
+
+            return R_squared
+
+        else:
+            raise ValueError("Bad value of `type`!")
 
 
 def fit_model(
