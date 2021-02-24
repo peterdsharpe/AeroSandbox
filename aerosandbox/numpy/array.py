@@ -107,7 +107,7 @@ def dstack(arrays):
 
 def length(array) -> int:
     """
-    Returns the length of an 1D-array-like object.
+    Returns the length of an 1D-array-like object. An extension of len() with slightly different functionality.
     Args:
         array:
 
@@ -140,7 +140,7 @@ def diag(v, k=0):
         if k != 0:
             raise NotImplementedError("Should be super possible, just haven't had the need yet.")
 
-        if v.shape[0] == 1 or v.shape[1] == 1:
+        if 1 in v.shape:
             return _cas.diag(v)
         elif v.shape[0] == v.shape[1]:
             raise NotImplementedError("Should be super possible, just haven't had the need yet.")
@@ -148,11 +148,13 @@ def diag(v, k=0):
             raise ValueError("Cannot return the diagonal of a non-square matrix.")
 
 
-def roll(a, shift, axis=0):
+def roll(a, shift, axis: int = None):
     """
     Roll array elements along a given axis.
 
     Elements that roll beyond the last position are re-introduced at the first.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.roll.html
 
     Parameters
     ----------
@@ -169,16 +171,18 @@ def roll(a, shift, axis=0):
     """
     if not is_casadi_type(a):
         return _onp.roll(a, shift, axis=axis)
-    else:  # TODO add some checking to make sure shift < len(a)
+    else:  # TODO add some checking to make sure shift < len(a), or shift is modulo'd down by len(a).
         # assert shift < a.shape[axis]
         if 1 in a.shape and axis == 0:
             return _cas.vertcat(a[-shift, :], a[:-shift, :])
-        elif axis == 1:
-            return _cas.horzcat(a[:, -shift], a[:, :-shift])
         elif axis == 0:
             return _cas.vertcat(a.T[:, -shift], a.T[:, :-shift]).T
+        elif axis == 1:
+            return _cas.horzcat(a[:, -shift], a[:, :-shift])
+        elif axis is None:
+            return roll(a, shift=shift, axis=0)
         else:
-            raise Exception("Wrong axis")
+            raise Exception("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
 
 
 def max(a):
