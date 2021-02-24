@@ -11,6 +11,7 @@ def sum(x, axis: int = None):
     """
     if not is_casadi_type(x):
         return _onp.sum(x, axis=axis)
+
     else:
         if axis == 0:
             return _cas.sum1(x)
@@ -30,6 +31,7 @@ def mean(x, axis: int = None):
     """
     if not is_casadi_type(x):
         return _onp.mean(x, axis=axis)
+
     else:
         if axis == 0:
             return sum(x, axis=0) / x.shape[0]
@@ -44,16 +46,24 @@ def mean(x, axis: int = None):
 def abs(x):
     if not is_casadi_type(x):
         return _onp.abs(x)
+
     else:
         return _cas.fabs(x)
 
 
 # TODO trace()
 
-def cumsum(x, **kwargs):
-    """Return the cumulative sum of the elements."""
+def cumsum(x, axis: int = None):
+    """
+    Return the cumulative sum of the elements along a given axis.
 
-    try:
-        return _onp.cumsum(x, **kwargs)
-    except Exception:
-        return _cas.cumsum(x, **kwargs)
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.cumsum.html
+    """
+
+    if not is_casadi_type(x):
+        return _onp.cumsum(x, axis=axis)
+
+    else:
+        raise NotImplementedError
+        if axis is None:
+            return _cas.cumsum(_onp.flatten(x))
