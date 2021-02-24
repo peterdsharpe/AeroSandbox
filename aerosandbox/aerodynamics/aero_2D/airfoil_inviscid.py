@@ -255,8 +255,8 @@ if __name__ == '__main__':
             Airfoil("naca6408")
                 .repanel(n_points_per_side=25)
                 .scale(0.4, 0.4)
-                .rotate(np.radians(-35))
-                .translate(0.9, -0.1),
+                .rotate(np.radians(-20))
+                .translate(0.9, -0.05),
         ],
         op_point=OperatingPoint(
             velocity=1,
