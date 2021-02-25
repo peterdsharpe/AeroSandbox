@@ -8,6 +8,8 @@ from .arithmetic import *
 from .calculus import *
 from .conditionals import *
 from .finite_difference_operators import *
+from .integrate import *
+from .interpolate import *
 import aerosandbox.numpy.linalg as linalg
 from .logicals import *
 from .rotations import *
@@ -17,4 +19,4 @@ from .trig import *
 
 ### Force-overwrite built-in Python functions.
 
-from numpy import round # TODO check that min, max are properly imported
+from numpy import round  # TODO check that min, max are properly imported
