@@ -1,14 +1,17 @@
 from aerosandbox.geometry.common import *
 from aerosandbox import AeroSandboxObject
-from aerosandbox.geometry.polygon import Polygon
+from aerosandbox.geometry.polygon import Polygon, stack_coordinates
 from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
-from aerosandbox.geometry.airfoil.airfoil_families import *
+from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
+    get_kulfan_coordinates, get_file_coordinates
 from scipy.interpolate import interp1d
+from aerosandbox.visualization.matplotlib import plt
+from aerosandbox.visualization.plotly import go, px
 
 
 class Airfoil(Polygon):
     def __init__(self,
-                 name=None,  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
+                 name="Untitled",  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
                  CL_function=None,  # lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
                  # (alpha * np.pi / 180) * (2 * np.pi)
@@ -36,10 +39,7 @@ class Airfoil(Polygon):
         :param repanel: should we repanel this airfoil upon creation?
         """
         ### Handle the airfoil name
-        if name is not None:
-            self.name = name
-        else:
-            self.name = "Untitled"
+        self.name = name
 
         ### Handle the coordinates
         if coordinates is None:  # If no coordinates are given
@@ -177,7 +177,7 @@ class Airfoil(Polygon):
 
         return upper_interpolated - lower_interpolated
 
-    def draw(self, draw_mcl=True, backend="plotly"):
+    def draw(self, draw_mcl=True, backend="plotly", show=True):
         """
         Draw the airfoil object.
         :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
@@ -214,7 +214,10 @@ class Airfoil(Polygon):
                 yaxis=dict(scaleanchor="x", scaleratio=1),
                 title="%s Airfoil" % self.name
             )
-            fig.show()
+            if show:
+                fig.show()
+            else:
+                return fig
         elif backend == "matplotlib":
             fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
             plt.plot(x, y, ".-", zorder=11, color='#280887')
@@ -225,7 +228,10 @@ class Airfoil(Polygon):
             plt.ylabel(r"$y/c$")
             plt.title("%s Airfoil" % self.name)
             plt.tight_layout()
-            plt.show()
+            if show:
+                plt.show()
+            else:
+                return fig, ax
 
     def LE_index(self):
         # Returns the index of the leading-edge point.

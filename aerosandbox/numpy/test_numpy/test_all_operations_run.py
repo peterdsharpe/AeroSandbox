@@ -142,6 +142,8 @@ def test_vector_math(types):
 def test_matrix_math(types):
     for v in types["vector"]:
         for m in types["matrix"]:
+            m = m + np.eye(2) # Regularize the matrix so it's not singular
+
             m.T
             m @ v
             for m_other in types["matrix"]:

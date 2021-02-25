@@ -1,18 +1,28 @@
-def diff(x):
+import numpy as _onp
+import casadi as _cas
+from aerosandbox.numpy.determine_type import is_casadi_type
+
+
+def diff(a, n=1, axis=-1):
     """
-    Computes the approximate local derivative of `x` via finite differencing assuming unit spacing.
-    Can be viewed as the opposite of trapz().
+    Calculate the n-th discrete difference along the given axis.
 
-    Args:
-        x: The vector-like object (1D np.ndarray, cas.MX) to be integrated.
-
-    Returns: A vector of length N-1 with each piece corresponding to the difference between one value and the next.
-
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diff.html
     """
-    return x[1:] - x[:-1]
+    if not is_casadi_type(a):
+        return _onp.diff(a, n=n, axis=axis)
+
+    else:
+        if axis != -1:
+            raise NotImplementedError("This could be implemented, but haven't had the need yet.")
+
+        result = a
+        for i in range(n):
+            result = _cas.diff(a)
+        return result
 
 
-def trapz(x, modify_endpoints=False):
+def trapz(x, modify_endpoints=False): # TODO unify with NumPy trapz, this is different
     """
     Computes each piece of the approximate integral of `x` via the trapezoidal method with unit spacing.
     Can be viewed as the opposite of diff().

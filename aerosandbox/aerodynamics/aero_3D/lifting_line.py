@@ -21,14 +21,21 @@ class LiftingLine(ImplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
-                 opti: Opti = None,
                  run_symmetric_if_possible=True,
+                 opti: Opti = None,
                  ):
         """
         Initializes and conducts a LiftingLine analysis.
+
         Args:
+
             airplane: An Airplane object that you want to analyze.
+
             op_point: The OperatingPoint that you want to analyze the Airplane at.
+
+            run_symmetric_if_possible: If this flag is True and the problem fomulation is XZ-symmetric, the solver will
+            attempt to exploit the symmetry. This results in roughly half the number of governing equations.
+
             opti: An asb.Opti environment.
 
                 If provided, adds the governing equations to that instance. Does not solve the equations (you need to
@@ -36,16 +43,12 @@ class LiftingLine(ImplicitAnalysis):
 
                 If not provided, creates and solves the governing equations in a new instance.
 
-            run_symmetric_if_possible: If this flag is True and the problem fomulation is XZ-symmetric, the solver will
-            attempt to exploit the symmetry. This results in roughly half the number of governing equations.
-
         """
 
         ### Initialize
         super().__init__()
         self.airplane = airplane
         self.op_point = op_point
-        self.verbose = verbose
         self.run_symmetric_if_possible = run_symmetric_if_possible
 
         ### Determine whether you should run the problem as symmetric
@@ -58,7 +61,7 @@ class LiftingLine(ImplicitAnalysis):
                         self.op_point.r == 0 and
                         self.airplane.is_entirely_symmetric()
                 )
-            except RuntimeError:
+            except RuntimeError: # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
                 pass
 
         self._make_panels()

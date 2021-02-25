@@ -1,32 +1,31 @@
-import aerosandbox as asb
-import aerosandbox.numpy as np
+from aerosandbox.numpy.array import array, length
+import numpy as _onp
 
-
-def derivative(
-        variable: np.ndarray,
-        with_respect_to: np.ndarray = None,
-        derivative_degree: int = 1,
-        accuracy_order: int = 1,
-        mode="centered",
-):
-    """
-    Returns the finite-difference
-    Args:
-        array:
-        derivative_degree:
-        accuracy_order:
-        mode:
-
-    Returns:
-
-    """
+# def derivative(
+#         variable: np.ndarray,
+#         with_respect_to: np.ndarray = None,
+#         derivative_degree: int = 1,
+#         accuracy_order: int = 1,
+#         mode="centered",
+# ):
+#     """
+#     Returns the finite-difference
+#     Args:
+#         array:
+#         derivative_degree:
+#         accuracy_order:
+#         mode:
+#
+#     Returns:
+#
+#     """
 
 
 def finite_difference_coefficients(
-        x: np.ndarray,
+        x: _onp.ndarray,
         x0: float = 0,
         derivative_degree: int = 1,
-) -> np.ndarray:
+) -> _onp.ndarray:
     """
     Computes the weights (coefficients) in compact finite differece formulas for any order of derivative
     and to any order of accuracy on one-dimensional grids with arbitrary spacing.
@@ -74,14 +73,14 @@ def finite_difference_coefficients(
     ### Check inputs
     if derivative_degree < 1:
         return ValueError("The parameter derivative_degree must be an integer >= 1.")
-    expected_order_of_accuracy = np.length(x) - derivative_degree
+    expected_order_of_accuracy = length(x) - derivative_degree
     if expected_order_of_accuracy < 1:
         return ValueError("You need to provide at least (derivative_degree+1) grid points in the x vector.")
 
     ### Implement algorithm; notation from paper in docstring.
-    N = np.length(x) - 1
+    N = length(x) - 1
 
-    delta = np.zeros(
+    delta = _onp.zeros(
         shape=(
             derivative_degree + 1,
             N + 1,
@@ -114,6 +113,6 @@ def finite_difference_coefficients(
 
     coefficients_object_array = delta[derivative_degree, -1, :]
 
-    coefficients = np.array([*coefficients_object_array])  # Reconstructs using aerosandbox.numpy to intelligently type
+    coefficients = array([*coefficients_object_array])  # Reconstructs using aerosandbox.numpy to intelligently type
 
     return coefficients

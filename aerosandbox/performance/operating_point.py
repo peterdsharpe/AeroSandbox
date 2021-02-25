@@ -1,21 +1,19 @@
-import casadi as cas
 from aerosandbox.geometry import *
 from aerosandbox import Atmosphere
-from numpy import pi
+import aerosandbox.numpy as np
 
 
 class OperatingPoint(AeroSandboxObject):
     def __init__(self,
                  atmosphere: Atmosphere = Atmosphere(altitude=0),
-                 velocity: float = 10.,  # m/s
-                 alpha: float = 5.,  # In degrees
+                 velocity: float = 1.,  # m/s
+                 alpha: float = 0.,  # In degrees
                  beta: float = 0.,  # In degrees
                  p: float = 0.,  # About the body x-axis, in rad/sec
                  q: float = 0.,  # About the body y-axis, in rad/sec
                  r: float = 0.,  # About the body z-axis, in rad/sec
                  ):
         self.atmosphere = atmosphere
-        self.altitude = altitude
         self.velocity = velocity
         self.alpha = alpha
         self.beta = beta
@@ -51,69 +49,60 @@ class OperatingPoint(AeroSandboxObject):
         """
         return self.velocity / self.atmosphere.speed_of_sound()
 
-    def compute_rotation_matrix_wind_to_geometry(self):
-        # Computes the 3x3 rotation matrix required to go from wind axes to geometry axes.
-        sinalpha = np.sin(self.alpha * pi / 180)
-        cosalpha = np.cos(self.alpha * pi / 180)
-        sinbeta = np.sin(self.beta * pi / 180)
-        cosbeta = np.cos(self.beta * pi / 180)
+    def compute_rotation_matrix_wind_to_geometry(self) -> np.ndarray:
+        """
+        Computes the 3x3 rotation matrix that transforms from wind axes to geometry axes.
 
-        # r=-1*cas.array([
-        #     [cosbeta*cosalpha, -sinbeta, cosbeta*sinalpha],
-        #     [sinbeta*cosalpha, cosbeta, sinbeta*sinalpha],
-        #     [-sinalpha, 0, cosalpha]
-        # ])
+        Returns: a 3x3 rotation matrix.
 
-        alpharotation = cas.vertcat(
-            cas.horzcat(cosalpha, 0, -sinalpha),
-            cas.horzcat(0, 1, 0),
-            cas.horzcat(sinalpha, 0, cosalpha),
+        """
+
+        alpha_rotation = np.rotation_matrix_3D(
+            angle=np.radians(self.alpha),
+            axis=np.array([0, 1, 0]),
+            _axis_already_normalized=True
         )
-
-        betarotation = cas.vertcat(
-            cas.horzcat(cosbeta, -sinbeta, 0),
-            cas.horzcat(sinbeta, cosbeta, 0),
-            cas.horzcat(0, 0, 1),
+        beta_rotation = np.rotation_matrix_3D(
+            angle=np.radians(self.beta),
+            axis=np.array([0, 0, 1]),
+            _axis_already_normalized=True
         )
+        axes_flip = np.rotation_matrix_3D(
+            angle=np.pi,
+            axis=np.array([0, 1, 0]),
+            _axis_already_normalized=True
+        )  # Since in geometry axes, X is downstream by convention, while in wind axes, X is upstream by convetion. Same with Z being up/down respectively.
 
-        axesflip = cas.DM([
-            [-1, 0, 0],
-            [0, 1, 0, ],
-            [0, 0, -1]
-        ])  # Since in geometry axes, X is downstream by convention, while in wind axes, X is upstream by convetion. Same with Z being up/down respectively.
-
-        eye = cas.DM_eye(3)
-
-        r = axesflip @ alpharotation @ betarotation @ eye  # where "@" is the matrix multiplication operator
+        r = axes_flip @ alpha_rotation @ beta_rotation  # where "@" is the matrix multiplication operator
 
         return r
 
     def compute_freestream_direction_geometry_axes(self):
         # Computes the freestream direction (direction the wind is GOING TO) in the geometry axes
-        vel_dir_wind = cas.DM([-1, 0, 0])
-        vel_dir_geometry = self.compute_rotation_matrix_wind_to_geometry() @ vel_dir_wind
-        return vel_dir_geometry
+        return self.compute_rotation_matrix_wind_to_geometry() @ np.array([-1, 0, 0])
 
     def compute_freestream_velocity_geometry_axes(self):
         # Computes the freestream velocity vector (direction the wind is GOING TO) in geometry axes
         return self.compute_freestream_direction_geometry_axes() * self.velocity
 
     def compute_rotation_velocity_geometry_axes(self, points):
-        # Computes the effective velocity due to rotation at a set of points.
+        # Computes the effective velocity-due-to-rotation at a set of points.
         # Input: a Nx3 array of points
         # Output: a Nx3 array of effective velocities
-        angular_velocity_vector_geometry_axes = cas.vertcat(
-            -self.p, self.q, -self.r)  # signs convert from body axes to geometry axes
-        # angular_velocity_vector_geometry_axes = cas.expand_dims(angular_velocity_vector_geometry_axes, axis=0)
+        angular_velocity_vector_geometry_axes = np.array([
+            -self.p,
+            self.q,
+            -self.r
+        ])  # signs convert from body axes to geometry axes
 
         a = angular_velocity_vector_geometry_axes
         b = points
 
-        rotation_velocity_geometry_axes = cas.horzcat(
+        rotation_velocity_geometry_axes = np.array([
             a[1] * b[:, 2] - a[2] * b[:, 1],
             a[2] * b[:, 0] - a[0] * b[:, 2],
             a[0] * b[:, 1] - a[1] * b[:, 0]
-        )
+        ])
 
         rotation_velocity_geometry_axes = -rotation_velocity_geometry_axes  # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
 

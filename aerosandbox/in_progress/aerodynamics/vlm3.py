@@ -572,7 +572,7 @@ class vlm3(AeroProblem):
         points = np.expand_dims(points, 1)
         a = points - left_vortex_vertices
         b = points - right_vortex_vertices
-        # x_hat = np.zeros([n_points, n_vortices, 3])
+        # x_hat = np.zeros([num, n_vortices, 3])
         # x_hat[:, :, 0] = 1
 
         # Do some useful arithmetic

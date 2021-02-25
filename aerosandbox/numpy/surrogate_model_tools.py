@@ -1,10 +1,8 @@
-import aerosandbox.numpy as np
-import casadi as cas
+import aerosandbox.numpy as _np
 from typing import Tuple, Union
-from numpy import pi
 
 
-def smoothmax(value1, value2, hardness):
+def softmax(value1, value2, hardness=1):
     """
     A smooth maximum between two functions. Also referred to as the logsumexp() function.
     Useful because it's differentiable and preserves convexity!
@@ -15,12 +13,14 @@ def smoothmax(value1, value2, hardness):
     :param hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
     :return: Soft maximum of the two supplied values.
     """
+    if hardness <= 0:
+        raise ValueError("The value of `hardness` must be positive.")
     value1 = value1 * hardness
     value2 = value2 * hardness
-    max = np.fmax(value1, value2)
-    min = np.fmin(value1, value2)
-    out = max + np.log(1 + np.exp(min - max))
-    out /= hardness
+    max = _np.fmax(value1, value2)
+    min = _np.fmin(value1, value2)
+    out = max + _np.log(1 + _np.exp(min - max))
+    out = out / hardness
     return out
 
 
@@ -64,9 +64,9 @@ def sigmoid(
     if sigmoid_type == ("tanh" or "logistic"):
         # Note: tanh(x) is simply a scaled and shifted version of a logistic curve; after
         #   normalization these functions are identical.
-        s = np.tanh(x)
+        s = _np.tanh(x)
     elif sigmoid_type == "arctan":
-        s = 2 / pi * np.arctan(pi / 2 * x)
+        s = 2 / _np.pi * _np.arctan(_np.pi / 2 * x)
     elif sigmoid_type == "polynomial":
         s = x / (1 + x ** 2) ** 0.5
     else:

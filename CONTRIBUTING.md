@@ -102,6 +102,16 @@ After reading that, here's what else you need to know before contributing:
     
     One exception to the rule: if you're just adding/changing comments or documentation with no code changes, you can just write "docs" as your commit message and be done.
 
+13. If you're developing, install AeroSandbox in editable mode. In other words:
+
+    * Clone the repository from GitHub.
+    * Open up a terminal in the AeroSandbox root directory. (This file, `CONTRIBUTING.md`, should be a file in the directory you're in.)
+    * Install the repository in editable mode (`pip install -e .`). If you already have an AeroSandbox installation on your computer, first uninstall that (`pip uninstall aerosandbox`), then install in editable mode.
+    * Switch to the develop branch for normal use (`git checkout develop`)
+    * *While on the develop branch*, create a new branch if you want to make changes (`git checkout -b feature/my-new-feature`)
+    
+
+
 ## Code of Conduct
 
 There is just one rule when interacting with this project:
