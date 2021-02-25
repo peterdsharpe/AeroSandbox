@@ -1,5 +1,3 @@
-# A mix of numpy interpolation routines and scipy.interpolate.
-
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
@@ -85,3 +83,4 @@ def interp(x, xp, fp, left=None, right=None, period=None):
 
         ### Return
         return f
+
