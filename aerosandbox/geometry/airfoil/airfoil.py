@@ -6,6 +6,7 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, 
     get_kulfan_coordinates, get_file_coordinates
 from scipy.interpolate import interp1d
 from aerosandbox.visualization.matplotlib import plt
+from aerosandbox.visualization.plotly import go, px
 
 
 class Airfoil(Polygon):
@@ -176,7 +177,7 @@ class Airfoil(Polygon):
 
         return upper_interpolated - lower_interpolated
 
-    def draw(self, draw_mcl=True, backend="plotly"):
+    def draw(self, draw_mcl=True, backend="plotly", show=True):
         """
         Draw the airfoil object.
         :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
@@ -213,7 +214,10 @@ class Airfoil(Polygon):
                 yaxis=dict(scaleanchor="x", scaleratio=1),
                 title="%s Airfoil" % self.name
             )
-            fig.show()
+            if show:
+                fig.show()
+            else:
+                return fig
         elif backend == "matplotlib":
             fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
             plt.plot(x, y, ".-", zorder=11, color='#280887')
@@ -224,7 +228,10 @@ class Airfoil(Polygon):
             plt.ylabel(r"$y/c$")
             plt.title("%s Airfoil" % self.name)
             plt.tight_layout()
-            plt.show()
+            if show:
+                plt.show()
+            else:
+                return fig, ax
 
     def LE_index(self):
         # Returns the index of the leading-edge point.
