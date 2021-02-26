@@ -4,6 +4,8 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
+from typing import Tuple
+from scipy import interpolate as _interpolate
 
 
 def interp(x, xp, fp, left=None, right=None, period=None):
@@ -84,3 +86,100 @@ def interp(x, xp, fp, left=None, right=None, period=None):
         ### Return
         return f
 
+
+def interpn(
+        points: Tuple[_onp.ndarray],
+        values: _onp.ndarray,
+        xi: _onp.ndarray,
+        method: str = "linear",
+        bounds_error=True,
+        fill_value=_onp.NaN
+) -> _onp.ndarray:
+    """
+    Performs multidimensional interpolation on regular grids.
+
+    See syntax here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interpn.html
+
+    Args:
+
+        points: The points defining the regular grid in n dimensions.
+
+        values: The data on the regular grid in n dimensions.
+
+        xi: The coordinates to sample the gridded data at.
+
+        method: The method of interpolation to perform.
+
+        bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
+        a ValueError is raised. If False, then fill_value is used.
+
+        fill_value: If provided, the value to use for points outside of the interpolation domain. If None,
+        values outside the domain are extrapolated.
+
+    Returns: Interpolated values at input coordinates.
+
+    """
+    if (
+            not is_casadi_type([points, values, xi], recursive=True)
+    ) and (
+            (method == "linear") or (method == "nearest")
+    ):
+        return _interpolate.interpn(
+            points=points,
+            values=values,
+            xi=xi,
+            method=method,
+            bounds_error=bounds_error,
+            fill_value=fill_value
+        )
+
+    elif (
+            (method == "linear") or (method == "bspline")
+    ):
+        ### Check input types
+        if is_casadi_type([points, values], recursive=True):
+            raise TypeError("The underlying dataset (points, values) must consist of NumPy arrays.")
+
+        ### Ensure xi is a CasADi type
+        if not is_casadi_type(xi, recursive=False):
+            xi = _cas.DM(xi)
+
+        ### Transpose xi so that xi.shape is [n_points, n_dimensions].
+        if xi.shape[1] == 1:
+            xi = xi.T
+
+        ### Check bounds_error
+        for axis, axis_values in enumerate(points):
+            axis_values_min = _onp.min(axis_values)
+            axis_values_max = _onp.max(axis_values)
+
+            axis_xi = xi[:, axis]
+
+            if any(
+                logical_or(
+                    axis_xi >= axis_values_max,
+                    axis_xi <= axis_values_min
+                )
+            ):
+                raise ValueError(
+                    f"One of the requested xi is out of bounds in dimension {axis}"
+                )
+
+
+        ### Do the interpolation
+        values_flattened = _onp.ravel(values, order='F')
+        interpolator = _cas.interpolant(
+            'name',
+            method,
+            points,
+            values_flattened
+        )
+
+        fi = interpolator(xi.T).T
+
+        # TODO bounds_error, fill_value
+
+        return fi
+
+    else:
+        raise ValueError("Bad value of `method`!")
