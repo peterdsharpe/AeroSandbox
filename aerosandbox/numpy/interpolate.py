@@ -87,6 +87,39 @@ def interp(x, xp, fp, left=None, right=None, period=None):
         return f
 
 
+def is_data_structured(
+        x_data_coordinates: Tuple[_onp.ndarray],
+        y_data_structured: _onp.ndarray
+) -> bool:
+    """
+    Determines if the shapes of a given dataset are consistent with "structured" (i.e. gridded) data.
+
+    For this to evaluate True, the inputs should be:
+
+        x_data_coordinates: A tuple or list of 1D ndarrays that represent coordinates along each axis of a N-dimensional hypercube.
+
+        y_data_structured: The values of some scalar defined on that N-dimensional hypercube, expressed as an
+        N-dimesional array. In other words, y_data_structured is evaluated at `np.meshgrid(*x_data_coordinates,
+        indexing="ij")`.
+
+    Returns: Boolean of whether the above description is true.
+    """
+    try:
+        for coordinates in x_data_coordinates:
+            if len(coordinates.shape) != 1:
+                return False
+
+        implied_y_data_shape = tuple(len(coordinates) for coordinates in x_data_coordinates)
+        if not y_data_structured.shape == implied_y_data_shape:
+            return False
+    except TypeError:  # if x_data_coordinates is not iterable, for instance
+        return False
+    except AttributeError:  # if y_data_structured has no shape, for instance
+        return False
+
+    return True
+
+
 def interpn(
         points: Tuple[_onp.ndarray],
         values: _onp.ndarray,
@@ -130,12 +163,13 @@ def interpn(
             raise ValueError("`points` must consist of a tuple of 1D ndarrays defining the coordinates of each axis.")
 
     ### Check dimensions of values
-    if not values.shape == tuple(len(points_axis) for points_axis in points):
-        raise ValueError("""
-        The shape of `values` should be `(len(points[0]), len(points[1]), ...)`. 
+    implied_values_shape = tuple(len(points_axis) for points_axis in points)
+    if not values.shape == implied_values_shape:
+        raise ValueError(f"""
+        The shape of `values` should be {implied_values_shape}. 
         """)
 
-    if ( ### NumPy implementation
+    if (  ### NumPy implementation
             not is_casadi_type([points, values, xi], recursive=True)
     ) and (
             (method == "linear") or (method == "nearest")
@@ -149,17 +183,30 @@ def interpn(
             fill_value=fill_value
         )
 
-    elif ( ### CasADi implementation
+    elif (  ### CasADi implementation
             (method == "linear") or (method == "bspline")
     ):
 
-        ### Ensure xi is a CasADi type
-        if not is_casadi_type(xi, recursive=False):
-            xi = _cas.DM(xi)
+        ### If xi is an int or float, promote it to an array
+        if isinstance(xi, int) or isinstance(xi, float):
+            xi = array([xi])
+
+        ### If xi is a NumPy array and 1D, convert it to 2D for this.
+        if not is_casadi_type(xi, recursive=False) and len(xi.shape) == 1:
+            xi = _onp.reshape(xi, (-1, 1))
+
+        ### Check that xi is now 2D
+        if not len(xi.shape) == 2:
+            raise ValueError("`xi` must have the shape (n_points, n_dimensions)!")
 
         ### Transpose xi so that xi.shape is [n_points, n_dimensions].
-        if xi.shape[1] == 1:
+        n_dimensions = len(points)
+        if not len(points) in xi.shape:
+            raise ValueError("`xi` must have the shape (n_points, n_dimensions)!")
+
+        if not xi.shape[1] == n_dimensions:
             xi = xi.T
+            assert xi.shape[1] == n_dimensions
 
         ### Check bounds_error
         for axis, axis_values in enumerate(points):
@@ -169,15 +216,14 @@ def interpn(
             axis_xi = xi[:, axis]
 
             if any(
-                logical_or(
-                    axis_xi >= axis_values_max,
-                    axis_xi <= axis_values_min
-                )
+                    logical_or(
+                        axis_xi > axis_values_max,
+                        axis_xi < axis_values_min
+                    )
             ):
                 raise ValueError(
                     f"One of the requested xi is out of bounds in dimension {axis}"
                 )
-
 
         ### Do the interpolation
         values_flattened = _onp.ravel(values, order='F')
@@ -189,6 +235,13 @@ def interpn(
         )
 
         fi = interpolator(xi.T).T
+
+        ### If DM output (i.e. a numeric value, convert that back to an array
+        if isinstance(fi, _cas.DM):
+            if fi.shape == (1, 1):
+                return fi[0, 0]
+            else:
+                return _onp.array(fi, dtype=float).reshape(-1)
 
         # TODO bounds_error, fill_value
 

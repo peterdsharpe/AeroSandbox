@@ -1,6 +1,7 @@
 import aerosandbox.numpy as np
 import pytest
 import casadi as cas
+import numpy as onp
 
 
 def test_interp():
@@ -82,16 +83,14 @@ def test_interpn_linear_multiple_samples():
     value = np.interpn(
         points, values, point
     )
-    assert np.all(
-        value == pytest.approx(
-            value_func_3d(
-                *[
-                    point[:, i] for i in range(point.shape[1])
-                ]
-            )
-        )
+    value_actual = value_func_3d(
+        *[
+            np.array(point[:, i]) for i in range(point.shape[1])
+        ]
     )
-    assert value.shape == (2, 1)
+    for i in range(len(value)):
+        assert value[i] == pytest.approx(value_actual[i])
+    assert value.shape == (2,)
 
 
 def test_interpn_bspline_casadi():
@@ -170,5 +169,4 @@ def test_interpn_bounds_error_multiple_samples():
 
 
 if __name__ == '__main__':
-    test_interpn_linear()
     pytest.main()
