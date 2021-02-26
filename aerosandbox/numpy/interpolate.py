@@ -96,7 +96,7 @@ def interpn(
         fill_value=_onp.NaN
 ) -> _onp.ndarray:
     """
-    Performs multidimensional interpolation on regular grids.
+    Performs multidimensional interpolation on regular grids. Analogue to scipy.interpolate.interpn().
 
     See syntax here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interpn.html
 
