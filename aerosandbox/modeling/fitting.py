@@ -300,18 +300,25 @@ class FittedModel(SurrogateModel):
             except:
                 params_solved[param_name] = np.NaN
 
+        ### Store all the data and inputs
         self.model = model
-        self.parameters = params_solved
         self.x_data = x_data
         self.y_data = y_data
-
+        self.parameters = params_solved
+        self.parameter_guesses = parameter_guesses
+        self.parameter_bounds = parameter_bounds
+        self.residual_norm_type = residual_norm_type
+        self.fit_type = fit_type
+        self.weights = weights
+        self.put_residuals_in_logspace = put_residuals_in_logspace
 
     def __call__(self, x):
         super().__call__(x)
         return self.model(x, self.parameters)
 
     def plot_fit(self):
-        raise DeprecationWarning("Use FittedModel.plot() instead, which generalizes plotting to non-fitted surrogate models")
+        raise DeprecationWarning(
+            "Use FittedModel.plot() instead, which generalizes plotting to non-fitted surrogate models")
 
     def goodness_of_fit(self, type="R^2"):
         """
