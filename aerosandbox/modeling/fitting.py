@@ -50,7 +50,7 @@ class FittedModel(SurrogateModel):
                  put_residuals_in_logspace: bool = False,
                  ):
         """
-        Fits an analytical model to n-dimensional data using an automatic-differentiable optimization approach.
+        Fits an analytical model to n-dimensional unstructured data using an automatic-differentiable optimization approach.
 
         Args:
 
