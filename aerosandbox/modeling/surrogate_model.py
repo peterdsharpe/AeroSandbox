@@ -151,7 +151,3 @@ class SurrogateModel(AeroSandboxObject):
 
         else:
             raise NotImplementedError()
-
-
-class DataDrivenModel(SurrogateModel):
-    pass
