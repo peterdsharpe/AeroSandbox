@@ -43,7 +43,7 @@ def eng_string(x: float, format='%.3g', si=True):
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
 
 
-def hash(string: str) -> int:
+def hash_string(string: str) -> int:
     """
     Hashes a string into an integer! (Quasi-random; based on an MD5 checksum algorithm.)
     """
