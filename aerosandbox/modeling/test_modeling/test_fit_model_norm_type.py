@@ -2,7 +2,7 @@
 An illustration of the various types of norms that can be used during function regression, and what they look like.
 """
 
-from aerosandbox.modeling.fitting import fit_model
+from aerosandbox.modeling.fitting import FittedModel
 import pytest
 import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ def test_fit_model_norm_type(plot=False):
         return p["1"] * x + p["0"]  # Linear regression
 
     def fit_model_with_norm(residual_norm_type):
-        return fit_model(
+        return FittedModel(
             model=model,
             x_data=time,
             y_data=measured_temperature,
@@ -50,4 +50,4 @@ def test_fit_model_norm_type(plot=False):
 
 
 if __name__ == '__main__':
-    test_fit_model_norm_type(True)
+    test_fit_model_norm_type(plot=True)

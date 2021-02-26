@@ -1,1 +1,1 @@
-from .fitting import fit_model
+from .fitting import FittedModel

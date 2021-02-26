@@ -1,4 +1,4 @@
-from aerosandbox.modeling.fitting import fit_model
+from aerosandbox.modeling.fitting import FittedModel
 import pytest
 import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
@@ -29,7 +29,7 @@ def test_single_dimensional_polynomial_fitting():
         "x1": x
     }
 
-    fitted_model = fit_model(
+    fitted_model = FittedModel(
         model=model,
         x_data=x_data,
         y_data=y,
@@ -87,7 +87,7 @@ def test_multidimensional_power_law_fitting():
         "Y": Y.flatten(),
     }
 
-    fitted_model = fit_model(
+    fitted_model = FittedModel(
         model=model,
         x_data=x_data,
         y_data=Z.flatten(),
@@ -127,7 +127,7 @@ def test_Linf_single_dimensional_fit():
         "hour": hour,
     }
     y_data = temperature_c
-    fitted_model = fit_model(
+    fitted_model = FittedModel(
         model=model,
         x_data=x_data,
         y_data=y_data,
@@ -158,7 +158,7 @@ def test_Linf_without_x_in_dict():
     x_data = hour
     y_data = temperature_c
 
-    fitted_model = fit_model(
+    fitted_model = FittedModel(
         model=model,
         x_data=x_data,
         y_data=y_data,
@@ -188,7 +188,7 @@ def test_type_errors():
     x_data = hour
     y_data = temperature_c
 
-    fitted_model = fit_model(
+    fitted_model = FittedModel(
         model=model,
         x_data=x_data,
         y_data=y_data,
@@ -209,7 +209,7 @@ def test_type_errors():
     def model(x, p):
         return p["m"] * x["hour"] + p["b"]
 
-    fitted_model = fit_model(
+    fitted_model = FittedModel(
         model=model,
         x_data={
             "hour": hour
