@@ -173,6 +173,61 @@ def test_Linf_without_x_in_dict():
     assert fitted_model.parameters["m"] == pytest.approx(0.247116, abs=1e-5)
     assert fitted_model.parameters["b"] == pytest.approx(0.227797, abs=1e-5)
 
+def test_type_errors():
+    np.random.seed(0)  # Set a seed for repeatability
+
+    ### Making data
+    hour = np.linspace(1, 10, 100)
+    noise = 0.1 * np.random.randn(len(hour))
+    temperature_c = np.log(hour) + noise
+
+    ### Fit
+    def model(x, p):
+        return p["m"] * x + p["b"]
+
+    x_data = hour
+    y_data = temperature_c
+
+    fitted_model = fit_model(
+        model=model,
+        x_data=x_data,
+        y_data=y_data,
+        parameter_guesses={
+            "m": 0,
+            "b": 0,
+        },
+        residual_norm_type="Linf",
+    )
+
+    fitted_model(5)
+
+    with pytest.raises(TypeError):
+        fitted_model({
+            "temperature": 5
+        })
+
+    def model(x, p):
+        return p["m"] * x["hour"] + p["b"]
+
+    fitted_model = fit_model(
+        model=model,
+        x_data={
+            "hour": hour
+        },
+        y_data=y_data,
+        parameter_guesses={
+            "m": 0,
+            "b": 0,
+        },
+        residual_norm_type="Linf",
+    )
+
+    fitted_model({
+        "hour": 5
+    })
+
+    with pytest.raises(TypeError):
+        fitted_model(5)
 
 if __name__ == '__main__':
     pytest.main()

@@ -1,9 +1,9 @@
 import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
-from typing import Union, Dict, Callable, List, Tuple
+from typing import Union, Dict, Callable, List
 from aerosandbox.modeling.surrogate_model import SurrogateModel
-import matplotlib.pyplot as plt
 import copy
+import warnings
 
 
 class FittedModel(SurrogateModel):
@@ -15,8 +15,8 @@ class FittedModel(SurrogateModel):
     >>> y = my_fitted_model(x)
 
     The input to the model (`x` in the example above) is of the type:
-        * in the general N-dimensional case, a dictionary where keys are variable names and values are float/array
-        * in the case of a 1-dimensional input (R^1 -> R^2), a float/array.
+        * in the general N-dimensional case, a dictionary where: keys are variable names and values are float/array
+        * in the case of a 1-dimensional input (R^1 -> R^1), a float/array.
     If you're not sure what the input type of `my_fitted_model` should be, just do:
 
     >>> print(my_fitted_model) # Displays the valid input type to the model
@@ -52,99 +52,11 @@ class FittedModel(SurrogateModel):
         self.y_data = y_data
 
     def __call__(self, x):
+        super().__call__(x)
         return self.model(x, self.parameters)
 
-    def __repr__(self) -> str:
-        input_names = self.input_names()
-        if input_names is not None:
-            input_description = f"a dict with keys {input_names}; values as float or array"
-        else:
-            input_description = f"a float or array"
-        return "\n".join([
-            f"FittedModel(x) [R^{self.input_dimensionality()} -> R^1]",
-            f"\tInput: {input_description}"
-        ])
-
-    def input_dimensionality(self) -> int:
-        """
-        Returns the number of inputs that should be supplied in x, where x is the input to the FittedModel.
-        """
-        input_names = self.input_names()
-        if input_names is not None:
-            return len(input_names)
-        else:
-            return 1
-
-    def input_names(self) -> Union[List, None]:
-        """
-        Returns the keys that should be passed into x, where x is the input to the FittedModel.
-
-        If x is 1D and simply takes in floats or arrays, returns None.
-        """
-        try:
-            return list(self.x_data.keys())
-        except AttributeError:
-            return None
-
-    def plot_fit(self, resolution=250):
-        def axis_range(x_data_axis: np.ndarray) -> Tuple[float, float]:
-            """
-            Given the entries of one axis of the dependent variable, determine a min/max range over which to plot the fit.
-            Args:
-                x_data_axis: The entries of one axis of the dependent variable, i.e. x_data["x1"].
-
-            Returns: A tuple representing the (min, max) value over which to plot that axis.
-            """
-            minval = np.min(x_data_axis)
-            maxval = np.max(x_data_axis)
-
-            return (minval, maxval)
-
-        if self.input_dimensionality() == 1:
-
-            ### Parse the x_data
-            if self.input_names() is not None:
-                x_name = self.x_data.keys()[0]
-                x_data = self.x_data.values()[0]
-
-                minval, maxval = axis_range(x_data)
-
-                x_fit = {x_name: np.linspace(minval, maxval, resolution)}
-                y_fit = self(x_fit)
-            else:
-                x_name = "x"
-                x_data = self.x_data
-
-                minval, maxval = axis_range(x_data)
-
-                x_fit = np.linspace(minval, maxval, resolution)
-                y_fit = self(x_fit)
-
-            ### Plot the 2D figure
-            fig = plt.figure(dpi=200)
-            plt.plot(
-                x_data,
-                self.y_data,
-                ".k",
-                label="Data",
-            )
-            plt.plot(
-                x_fit,
-                y_fit,
-                "-",
-                color="#cb3bff",
-                label="Fit",
-                zorder=4,
-            )
-            plt.xlabel(x_name)
-            plt.ylabel(rf"$f({x_name})$")
-            plt.title(r"Fit of FittedModel")
-            plt.tight_layout()
-            plt.legend()
-            plt.show()
-
-        else:
-            raise NotImplementedError()
+    def plot_fit(self):
+        raise DeprecationWarning("Use FittedModel.plot() instead, which generalizes plotting to non-fitted surrogate models")
 
     def goodness_of_fit(self, type="R^2"):
         """
@@ -372,8 +284,20 @@ def fit_model(
     ### Evaluate the model at the data points you're trying to fit
     x_data_original = copy.deepcopy(
         x_data)  # Make a copy of x_data so that you can determine if the model did in-place operations on x and tattle on the user.
-    y_model = model(x_data, params)  # Evaluate the model
+
     try:
+        y_model = model(x_data, params)  # Evaluate the model
+    except Exception:
+        raise Exception("""
+        There was an error when evaluating the model you supplied with the x_data you supplied.
+        Likely possible causes:
+            * Your model() does not have the call syntax model(x, p), where x is the x_data and p are parameters.
+            * Your model should take in p as a dict of parameters, but it does not.
+            * Your model assumes x is an array-like but you provided x_data as a dict, or vice versa.
+        See the docstring of FittedModel() if you have other usage questions or would like to see examples.
+        """)
+
+    try:  ### If the model did in-place operations on x_data, throw an error
         x_data_is_unchanged = np.all(x_data == x_data_original)
     except ValueError:
         x_data_is_unchanged = np.all([

@@ -23,7 +23,7 @@ def get_fitted_model():
 
 
 def test_plot_fit(get_fitted_model):
-    get_fitted_model.plot_fit()
+    get_fitted_model.plot()
 
 
 if __name__ == '__main__':
