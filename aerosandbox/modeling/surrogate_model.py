@@ -66,8 +66,8 @@ class SurrogateModel(AeroSandboxObject):
             input_description = f"a float or array"
         return "\n".join([
             f"SurrogateModel(x) [R^{self.input_dimensionality()} -> R^1]",
-            f"\tInput: {input_description}"
-            f"\tOutput: float or array"
+            f"\tInput: {input_description}",
+            f"\tOutput: float or array",
         ])
 
     def input_dimensionality(self) -> int:
