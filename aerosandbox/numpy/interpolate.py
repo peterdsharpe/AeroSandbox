@@ -102,7 +102,7 @@ def interpn(
 
     Args:
 
-        points: The points defining the regular grid in n dimensions.
+        points: The points defining the regular grid in n dimensions. Tuple of coordinates of each axis.
 
         values: The data on the regular grid in n dimensions.
 
@@ -119,7 +119,23 @@ def interpn(
     Returns: Interpolated values at input coordinates.
 
     """
-    if (
+    ### Check input types for points and values
+    if is_casadi_type([points, values], recursive=True):
+        raise TypeError("The underlying dataset (points, values) must consist of NumPy arrays.")
+
+    ### Check dimensions of points
+    for points_axis in points:
+        points_axis = array(points_axis)
+        if not len(points_axis.shape) == 1:
+            raise ValueError("`points` must consist of a tuple of 1D ndarrays defining the coordinates of each axis.")
+
+    ### Check dimensions of values
+    if not values.shape == tuple(len(points_axis) for points_axis in points):
+        raise ValueError("""
+        The shape of `values` should be `(len(points[0]), len(points[1]), ...)`. 
+        """)
+
+    if ( ### NumPy implementation
             not is_casadi_type([points, values, xi], recursive=True)
     ) and (
             (method == "linear") or (method == "nearest")
@@ -133,12 +149,9 @@ def interpn(
             fill_value=fill_value
         )
 
-    elif (
+    elif ( ### CasADi implementation
             (method == "linear") or (method == "bspline")
     ):
-        ### Check input types
-        if is_casadi_type([points, values], recursive=True):
-            raise TypeError("The underlying dataset (points, values) must consist of NumPy arrays.")
 
         ### Ensure xi is a CasADi type
         if not is_casadi_type(xi, recursive=False):

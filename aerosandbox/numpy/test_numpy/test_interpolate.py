@@ -141,6 +141,7 @@ def test_interpn_bounds_error_one_sample():
             points, values, point
         )
 
+
 def test_interpn_bounds_error_multiple_samples():
     def value_func_3d(x, y, z):
         return 2 * x + 3 * y - z
@@ -169,4 +170,5 @@ def test_interpn_bounds_error_multiple_samples():
 
 
 if __name__ == '__main__':
+    test_interpn_linear()
     pytest.main()
