@@ -23,10 +23,9 @@ class FittedModel(SurrogateModel):
 
     The output of the model (`y` in the example above) is always a float or array.
 
-    Created as the output of the `fit_model()` function; look at the docstring of that function for further
-    documentation.
+    See the docstring __init__ method of FittedModel for more details of how to instantiate and use FittedModel.
 
-    One might have expected `fit_model()` to output a literal Python function rather than a Python class - the
+    One might have expected a fitted model to be a literal Python function rather than a Python class - the
     benefit of having FittedModel as a class rather than a function is that you can easily save (pickle) classes
     including data (e.g. parameters, x_data, y_data), but you can't do that with functions. And, because the
     FittedModel class has a __call__ method, you can basically still just think of it like a function.
