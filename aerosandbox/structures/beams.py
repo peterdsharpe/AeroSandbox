@@ -726,7 +726,9 @@ class Beam6DOF(AeroSandboxObject):
             
         return fig
         
-    def draw_geometry_vars(self):
+    def draw_geometry_vars(self,
+                           show: bool=True,
+                           ):
         import matplotlib.pyplot as plt
         import seaborn as sns
         sns.set(font_scale=1)
