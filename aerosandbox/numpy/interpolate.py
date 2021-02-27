@@ -209,26 +209,27 @@ def interpn(
             assert xi.shape[1] == n_dimensions
 
         ### Check bounds_error
-        for axis, axis_values in enumerate(points):
-            axis_values_min = _onp.min(axis_values)
-            axis_values_max = _onp.max(axis_values)
+        if bounds_error:
+            for axis, axis_values in enumerate(points):
+                axis_values_min = _onp.min(axis_values)
+                axis_values_max = _onp.max(axis_values)
 
-            axis_xi = xi[:, axis]
+                axis_xi = xi[:, axis]
 
-            if any(
-                    logical_or(
-                        axis_xi > axis_values_max,
-                        axis_xi < axis_values_min
+                if any(
+                        logical_or(
+                            axis_xi > axis_values_max,
+                            axis_xi < axis_values_min
+                        )
+                ):
+                    raise ValueError(
+                        f"One of the requested xi is out of bounds in dimension {axis}"
                     )
-            ):
-                raise ValueError(
-                    f"One of the requested xi is out of bounds in dimension {axis}"
-                )
 
         ### Do the interpolation
         values_flattened = _onp.ravel(values, order='F')
         interpolator = _cas.interpolant(
-            'name',
+            'Interpolator',
             method,
             points,
             values_flattened
@@ -243,7 +244,7 @@ def interpn(
             else:
                 return _onp.array(fi, dtype=float).reshape(-1)
 
-        # TODO bounds_error, fill_value
+        # TODO fill_value
 
         return fi
 
