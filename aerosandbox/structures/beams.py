@@ -11,9 +11,8 @@ import plotly.graph_objects as go
 import warnings
         
 # TODO: Check and document
-# TODO: Clean up mess made by casidi compat
-# TODO: Check xyz for forces is not the same as xyz for beams (assume beam is horizontal?)
 # TODO: Add large displacements check
+
 class Beam6DOF(AeroSandboxObject):
     """
     A Euler-Bernoulli 6 DOF FE beam.
@@ -490,8 +489,15 @@ class Beam6DOF(AeroSandboxObject):
         self._bending_stress_vertices_y = self.cross_section.y() * self.E * self.ddv
 
         
+    torsion_formula = None
     def calc_torsional_stress(self):
-        """Calculates stresses from torsional loads"""  
+        """
+        Calculates stresses from torsional loads
+        
+        These might need to be specified  per geometry
+        
+        http://web.mit.edu/16.20/homepage/6_Torsion/Torsion_files/module_6_with_solutions.pdf
+        """  
         
         warnings.warn('Torsion has not been checked yet.')  # TODO: Check and remove
         
@@ -734,72 +740,6 @@ class Beam6DOF(AeroSandboxObject):
             plt.xlabel(r"${}$ [m]".format('x'))
             plt.ylabel(r"${}$ [m]".format(var))
             plt.title("{} vs x".format(var.capitalize()))
-    
-    def draw_bending(self,
-                     show=True,
-                     for_print=False,
-                     equal_scale=True,
-                     ):
-        """
-        Draws a figure that illustrates some bending properties. Must be called on a solved object (i.e. using the substitute_sol method).
-        :param show: Whether or not to show the figure [boolean]
-        :param for_print: Whether or not the figure should be shaped for printing in a paper [boolean]
-        :param equal_scale: Whether or not to make the displacement plot have equal scale (i.e. true deformation only)
-        :return:
-        """
-        import matplotlib.pyplot as plt
-        import matplotlib.style as style
-        import seaborn as sns
-        sns.set(font_scale=1)
-
-        fig, ax = plt.subplots(
-            2 if not for_print else 3,
-            3 if not for_print else 2,
-            figsize=(
-                10 if not for_print else 6,
-                6 if not for_print else 6
-            ),
-            dpi=200
-        )
-
-        plt.subplot(231) if not for_print else plt.subplot(321)
-        plt.plot(self.x, self.u, '.-')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel(r"$u$ [m]")
-        plt.title("Displacement (Bending)")
-        if equal_scale:
-            plt.axis("equal")
-
-        plt.subplot(232) if not for_print else plt.subplot(322)
-        plt.plot(self.x, np.arctan(self.du) * 180 / np.pi, '.-')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel(r"Local Slope [deg]")
-        plt.title("Slope")
-
-        plt.subplot(233) if not for_print else plt.subplot(323)
-        plt.plot(self.x, self.force_per_unit_length, '.-')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel(r"$q$ [N/m]")
-        plt.title("Local Load per Unit Span")
-
-        plt.subplot(234) if not for_print else plt.subplot(324)
-        plt.plot(self.x, self.stress_axial / 1e6, '.-')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel("Axial Stress [MPa]")
-        plt.title("Axial Stress")
-
-        plt.subplot(235) if not for_print else plt.subplot(325)
-        plt.plot(self.x, self.dEIddu, '.-')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel(r"$F$ [N]")
-        plt.title("Shear Force")
-
-        plt.subplot(236) if not for_print else plt.subplot(326)
-        plt.plot(self.x, self.nominal_diameter, '.-')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel("Diameter [m]")
-        plt.title("Optimal Spar Diameter")
-        plt.tight_layout()
 
         plt.show() if show else None
         
