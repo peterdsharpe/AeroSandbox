@@ -176,7 +176,7 @@ def roll(a, shift, axis: int = None):
         if 1 in a.shape and axis == 0:
             return _cas.vertcat(a[-shift, :], a[:-shift, :])
         elif axis == 0:
-            return _cas.vertcat(a.T[:, -shift], a.T[:, :-shift]).T
+            return _cas.vertcat(a[:, -shift].T, a[:, :-shift].T).T
         elif axis == 1:
             return _cas.horzcat(a[:, -shift], a[:, :-shift])
         elif axis is None:
