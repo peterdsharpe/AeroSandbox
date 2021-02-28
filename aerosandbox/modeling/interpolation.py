@@ -75,7 +75,8 @@ class InterpolatedModel(SurrogateModel):
             """)
 
         ### Store data
-        self.x_data_coordinates = x_data_coordinates_values
+        self.x_data_coordinates = x_data_coordinates
+        self.x_data_coordinates_values = x_data_coordinates_values
         self.y_data_structured = y_data_structured
         self.method = method
         self.fill_value = fill_value
@@ -93,7 +94,7 @@ class InterpolatedModel(SurrogateModel):
 
     def __call__(self, x):
         return np.interpn(
-            points=self.x_data_coordinates,
+            points=self.x_data_coordinates_values,
             values=self.y_data_structured,
             xi=x,
             method=self.method,
