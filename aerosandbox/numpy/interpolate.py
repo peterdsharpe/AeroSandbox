@@ -208,18 +208,42 @@ def interpn(
             xi = xi.T
             assert xi.shape[1] == n_dimensions
 
+        ### Calculate the minimum and maximum values along each axis.
+        axis_values_min = [
+            _onp.min(axis_values)
+            for axis_values in points
+        ]
+        axis_values_max = [
+            _onp.max(axis_values)
+            for axis_values in points
+        ]
+
+        ### If fill_value is None, project the xi back onto the nearest point in the domain.
+        if fill_value is None:
+            for axis in range(n_dimensions):
+
+                xi[:, axis] = where(
+                    xi[:, axis] > axis_values_max[axis],
+                    axis_values_max[axis],
+                    xi[:, axis]
+                )
+                xi[:, axis] = where(
+                    xi[:, axis] < axis_values_min[axis],
+                    axis_values_min[axis],
+                    xi[:, axis]
+                )
+
         ### Check bounds_error
         if bounds_error:
-            for axis, axis_values in enumerate(points):
-                axis_values_min = _onp.min(axis_values)
-                axis_values_max = _onp.max(axis_values)
+            if isinstance(xi, _cas.MX):
+                raise ValueError("Can't have the `bounds_error` flag as True if `xi` is of cas.MX type.")
 
-                axis_xi = xi[:, axis]
+            for axis in range(n_dimensions):
 
                 if any(
                         logical_or(
-                            axis_xi > axis_values_max,
-                            axis_xi < axis_values_min
+                            xi[:, axis] > axis_values_max[axis],
+                            xi[:, axis] < axis_values_min[axis]
                         )
                 ):
                     raise ValueError(
@@ -237,14 +261,27 @@ def interpn(
 
         fi = interpolator(xi.T).T
 
-        ### If DM output (i.e. a numeric value, convert that back to an array
+        ### If fill_value is a scalar, replace all out-of-bounds xi with that value.
+        if fill_value is not None:
+            for axis in range(n_dimensions):
+
+                fi = where(
+                    xi[:, axis] > axis_values_max[axis],
+                    fill_value,
+                    fi
+                )
+                fi = where(
+                    xi[:, axis] < axis_values_min[axis],
+                    fill_value,
+                    fi
+                )
+
+        ### If DM output (i.e. a numeric value), convert that back to an array
         if isinstance(fi, _cas.DM):
             if fi.shape == (1, 1):
-                return fi[0, 0]
+                return float(fi)
             else:
                 return _onp.array(fi, dtype=float).reshape(-1)
-
-        # TODO fill_value
 
         return fi
 

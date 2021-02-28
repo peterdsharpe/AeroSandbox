@@ -168,5 +168,42 @@ def test_interpn_bounds_error_multiple_samples():
         )
 
 
+def test_interpn_fill_value():
+    def value_func_3d(x, y, z):
+        return 2 * x + 3 * y - z
+
+    x = np.linspace(0, 5, 10)
+    y = np.linspace(0, 5, 20)
+    z = np.linspace(0, 5, 30)
+    points = (x, y, z)
+    values = value_func_3d(*np.meshgrid(*points, indexing="ij"))
+
+    point = np.array([5.21, 3.12, 1.15])
+
+    value = np.interpn(
+        points, values, point,
+        method="bspline",
+        bounds_error=False,
+        fill_value=-17
+    )
+    assert value == pytest.approx(-17)
+
+    value = np.interpn(
+        points, values, point,
+        method="bspline",
+        bounds_error=False,
+    )
+    assert np.isnan(value)
+
+    value = np.interpn(
+        points, values, point,
+        method="bspline",
+        bounds_error=None,
+        fill_value=None
+    )
+    assert value == pytest.approx(value_func_3d(5, 3.12, 1.15))
+
+
 if __name__ == '__main__':
+    test_interpn_fill_value()
     pytest.main()
