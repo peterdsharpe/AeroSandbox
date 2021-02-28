@@ -33,8 +33,7 @@ class InterpolatedModel(SurrogateModel):
                  x_data_coordinates: Union[np.ndarray, Dict[str, np.ndarray]],
                  y_data_structured: np.ndarray,
                  method: str = "bspline",
-                 bounds_error=False,
-                 fill_value=None,  # Default behavior extrapolates
+                 fill_value=np.NaN,  # Default behavior NaNs outside range
                  ):
         """
 
@@ -79,7 +78,6 @@ class InterpolatedModel(SurrogateModel):
         self.x_data_coordinates = x_data_coordinates_values
         self.y_data_structured = y_data_structured
         self.method = method
-        self.bounds_error = bounds_error
         self.fill_value = fill_value
 
         ### Create unstructured versions of the data for plotting, etc.
@@ -99,7 +97,7 @@ class InterpolatedModel(SurrogateModel):
             values=self.y_data_structured,
             xi=x,
             method=self.method,
-            bounds_error=self.bounds_error,
+            bounds_error=False,  # Can't be set true if general MX-type inputs are to be expected.
             fill_value=self.fill_value
         )
 
