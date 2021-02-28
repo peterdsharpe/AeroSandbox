@@ -38,9 +38,9 @@ class InterpolatedModel(SurrogateModel):
         """
 
         Args:
-            x_data_coordinates:
+            x_data_coordinates: # TODO
 
-            y_data_structured:
+            y_data_structured: # TODO
 
             method: The method of interpolation to perform. If you want it to be differentiable, your options are:
 
