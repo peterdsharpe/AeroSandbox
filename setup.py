@@ -55,6 +55,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'numpy >= 1',
+        'scipy >= 1',
         'casadi >= 3.5.5',
         'plotly >= 4',
         'pandas >= 1',
