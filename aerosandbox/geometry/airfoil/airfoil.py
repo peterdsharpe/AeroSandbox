@@ -196,7 +196,11 @@ class Airfoil(Polygon):
                     x=x,
                     y=y,
                     mode="lines+markers",
-                    name="Airfoil"
+                    name="Airfoil",
+                    fill="toself",
+                    line=dict(
+                        color="blue"
+                    )
                 ),
             )
             if draw_mcl:
@@ -205,7 +209,10 @@ class Airfoil(Polygon):
                         x=x_mcl,
                         y=y_mcl,
                         mode="lines+markers",
-                        name="Mean Camber Line (MCL)"
+                        name="Mean Camber Line (MCL)",
+                        line=dict(
+                            color="#28088744"
+                        )
                     )
                 )
             fig.update_layout(
@@ -302,6 +309,10 @@ class Airfoil(Polygon):
             cosspaced_points,
             1 + cosspaced_points[1:],
         ))
+
+        # Check that there are no duplicate points in the airfoil.
+        if np.any(np.diff(distances_from_TE_normalized) == 0):
+            raise ValueError("This airfoil has a duplicated point (i.e. two adjacent points with the same (x, y) coordinates), so you can't repanel it!")
 
         x = interp1d(
             distances_from_TE_normalized,
