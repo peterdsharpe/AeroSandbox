@@ -43,5 +43,18 @@ def test_airfoil_multielement():
     )
 
 
+def test_airfoil_ground_effect():
+    a = asb.AirfoilInviscid(
+        airfoil=asb.Airfoil("naca4408").repanel(100).translate(0, 0.2),
+        op_point=asb.OperatingPoint(
+            velocity=1,
+            alpha=0
+        ),
+        ground_effect=True
+    )
+    assert a.calculate_velocity(0, 0)[1] == pytest.approx(0)
+
+
 if __name__ == '__main__':
+    # pass
     pytest.main()
