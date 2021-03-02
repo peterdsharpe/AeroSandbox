@@ -91,3 +91,41 @@ def calculate_reduced_time(
         return 2 / chord * reduced_time
     
     
+def duhamel_integral_kussner(
+        reduced_time: List,
+        gust_velocity: List,
+        velocity: float
+): 
+    
+    assert np.size(reduced_time) == np.size(gust_velocity)
+    
+    dw_ds = np.gradient(gust_velocity)
+    
+    lift_coefficient = np.zeros_like(reduced_time)
+    kussner = kussners_function(reduced_time)
+    ds =  np.gradient(reduced_time)
+    
+    for i,s in enumerate(reduced_time):
+        lift_coefficient[i] = 2 * np.pi / velocity * (gust_velocity[0] * kussner[i] + np.sum([dw_ds[j]  * kussner[i-j] * ds[j] for j in range(i)]))
+    
+    return lift_coefficient
+
+    
+    
+    
+time = np.linspace(0,10,100)
+velocity = 10
+chord = 2
+reduced_time = calculate_reduced_time(time, velocity, chord)
+
+gust_velocity = np.zeros_like(reduced_time)
+gust_velocity[30:60] = 1 
+
+
+cl = duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
+    
+plt.plot(gust_velocity)
+plt.plot(cl)
+
+
+
