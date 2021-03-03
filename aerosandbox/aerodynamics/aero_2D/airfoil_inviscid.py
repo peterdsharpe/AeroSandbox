@@ -1,5 +1,5 @@
 from aerosandbox import ImplicitAnalysis, Opti
-from aerosandbox.geometry import *
+from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
 import aerosandbox.numpy as np
@@ -16,8 +16,8 @@ class AirfoilInviscid(ImplicitAnalysis):
     def __init__(self,
                  airfoil: Union[Airfoil, List[Airfoil]],
                  op_point: OperatingPoint,
+                 ground_effect: bool = False,
                  opti: Opti = None,
-                 ground_effect: bool = False
                  ):
         super().__init__()
 
