@@ -31,7 +31,7 @@ class Wing(AeroSandboxObject):
             symmetric: Is the wing symmetric across the XZ plane?
         """
         self.name = name
-        self.xyz_le = xyz_le
+        self.xyz_le = np.array(xyz_le)
         self.xsecs = xsecs
         self.symmetric = symmetric
 
@@ -339,10 +339,10 @@ class WingXSec(AeroSandboxObject):
             control_surface_deflection: Control deflection, in degrees. Downwards-positive.
         """
 
-        self.xyz_le = xyz_le
+        self.xyz_le = np.array(xyz_le)
         self.chord = chord
         self.twist = twist_angle
-        self.twist_axis = twist_axis
+        self.twist_axis = np.array(twist_axis)
         self.airfoil = airfoil
         self.control_surface_is_symmetric = control_surface_is_symmetric
         self.control_surface_hinge_point = control_surface_hinge_point

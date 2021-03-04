@@ -1,4 +1,5 @@
-from aerosandbox import ImplicitAnalysis, Opti
+from aerosandbox.common import *
+from aerosandbox import Opti
 from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
@@ -11,16 +12,19 @@ import seaborn as sns
 class AirfoilInviscid(ImplicitAnalysis):
     """
     An implicit analysis for inviscid analysis of an airfoil (or family of airfoils).
+
+    Key outputs:
+
+        * AirfoilInviscid.Cl
+
     """
 
+    @ImplicitAnalysis.initialize
     def __init__(self,
                  airfoil: Union[Airfoil, List[Airfoil]],
                  op_point: OperatingPoint,
                  ground_effect: bool = False,
-                 opti: Opti = None,
                  ):
-        super().__init__()
-
         if isinstance(airfoil, Airfoil):
             self.airfoils = [airfoil]
         else:
@@ -33,8 +37,6 @@ class AirfoilInviscid(ImplicitAnalysis):
         self._setup_unknowns()
         self._enforce_governing_equations()
         self._calculate_forces()
-
-        super()._init_end()
 
     def _setup_unknowns(self):
         for airfoil in self.airfoils:
@@ -265,3 +267,13 @@ if __name__ == '__main__':
     )
     a.draw_streamlines()
     a.draw_cp()
+
+    opti2 = Opti()
+    b = AirfoilInviscid(
+        airfoil=Airfoil("naca4408"),
+        op_point=OperatingPoint(
+            velocity=1,
+            alpha=5
+        ),
+        opti=opti2
+    )
