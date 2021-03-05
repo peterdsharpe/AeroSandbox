@@ -113,19 +113,20 @@ def duhamel_integral_kussner(
     
     
     
-time = np.linspace(0,10,100)
-velocity = 10
+time = np.linspace(0,100,100)
+velocity = 0.2
 chord = 2
-reduced_time = calculate_reduced_time(time, velocity, chord)
+reduced_time = calculate_reduced_time(time, velocity, chord) 
 
 gust_velocity = np.zeros_like(reduced_time)
-gust_velocity[30:60] = 1 
+gust_velocity[30:60] = velocity 
+
 
 
 cl = duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
     
-plt.plot(gust_velocity)
-plt.plot(cl)
+plt.plot(reduced_time,gust_velocity)
+plt.plot(reduced_time,cl)
 
 
 
