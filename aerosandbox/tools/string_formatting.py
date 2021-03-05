@@ -45,10 +45,10 @@ def eng_string(x: float, format='%.3g', si=True):
 
 def hash_string(string: str) -> int:
     """
-    Hashes a string into an integer! (Quasi-random; based on an MD5 checksum algorithm.)
+    Hashes a string into a quasi-random 32-bit integer! (Based on an MD5 checksum algorithm.)
     """
     md5 = hashlib.md5(string.encode('utf-8'))
     hash_hex = md5.hexdigest()
     hash_int = int(hash_hex, 16)
-    hash_int64 = hash_int % (2 ** 32 - 1)
+    hash_int64 = hash_int % (2 ** 32)
     return hash_int64

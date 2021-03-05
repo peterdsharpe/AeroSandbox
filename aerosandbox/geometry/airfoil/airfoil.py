@@ -1,7 +1,6 @@
 from aerosandbox.geometry.common import *
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon, stack_coordinates
-from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
     get_kulfan_coordinates, get_file_coordinates
 from scipy.interpolate import interp1d
@@ -62,52 +61,6 @@ class Airfoil(Polygon):
 
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
-
-    # def populate_sectional_functions_from_xfoil_fits(self,
-    #                                                  parallel=True,
-    #                                                  verbose=True,
-    #                                                  ):  # TODO write docstring
-    #     if not self.has_xfoil_data(raise_exception_if_absent=False):
-    #         self.get_xfoil_data(
-    #             parallel=parallel,
-    #             verbose=verbose,
-    #         )
-    #
-    #     self.AirfoilFitter = AirfoilFitter(
-    #         airfoil=self,
-    #         parallel=parallel,
-    #         verbose=verbose,
-    #     )
-    #     self.AirfoilFitter.fit_xfoil_data_Cl(plot_fit=False)
-    #     self.AirfoilFitter.fit_xfoil_data_Cd(plot_fit=False)
-    #
-    #     def CL_function(
-    #             alpha, Re, mach=0, deflection=0,
-    #             fitter=self.AirfoilFitter
-    #     ):
-    #         return fitter.Cl_function(
-    #             alpha=alpha,
-    #             Re=Re,
-    #         )
-    #
-    #     def CDp_function(
-    #             alpha, Re, mach=0, deflection=0,
-    #             fitter=self.AirfoilFitter
-    #     ):
-    #         return fitter.Cd_function(
-    #             alpha=alpha,
-    #             Re=Re,
-    #         )
-    #
-    #     def Cm_function(
-    #             alpha, Re, mach=0, deflection=0,
-    #             fitter=self.AirfoilFitter
-    #     ):
-    #         return alpha * 0
-    #
-    #     self.CL_function = CL_function
-    #     self.CDp_function = CDp_function
-    #     self.Cm_function = Cm_function
 
     def has_sectional_functions(self, raise_exception_if_absent=True):
         """
@@ -196,7 +149,11 @@ class Airfoil(Polygon):
                     x=x,
                     y=y,
                     mode="lines+markers",
-                    name="Airfoil"
+                    name="Airfoil",
+                    fill="toself",
+                    line=dict(
+                        color="blue"
+                    )
                 ),
             )
             if draw_mcl:
@@ -205,7 +162,10 @@ class Airfoil(Polygon):
                         x=x_mcl,
                         y=y_mcl,
                         mode="lines+markers",
-                        name="Mean Camber Line (MCL)"
+                        name="Mean Camber Line (MCL)",
+                        line=dict(
+                            color="#28088744"
+                        )
                     )
                 )
             fig.update_layout(
@@ -302,6 +262,11 @@ class Airfoil(Polygon):
             cosspaced_points,
             1 + cosspaced_points[1:],
         ))
+
+        # Check that there are no duplicate points in the airfoil.
+        if np.any(np.diff(distances_from_TE_normalized) == 0):
+            raise ValueError(
+                "This airfoil has a duplicated point (i.e. two adjacent points with the same (x, y) coordinates), so you can't repanel it!")
 
         x = interp1d(
             distances_from_TE_normalized,

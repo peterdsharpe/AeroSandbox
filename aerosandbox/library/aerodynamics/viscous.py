@@ -1,3 +1,6 @@
+import aerosandbox as asb
+import aerosandbox.numpy as np
+
 def Cd_cylinder(
         Re_D,
         subcritical_only=False
@@ -326,8 +329,8 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
     :return: A tuple of (CLA, CDA) [m^2]
     """
     alpha_rad = alpha * np.pi / 180
-    sin_alpha = cas.sin(alpha_rad)
-    cos_alpha = cas.cos(alpha_rad)
+    sin_alpha = np.sin(alpha_rad)
+    cos_alpha = np.cos(alpha_rad)
 
     """
     Lift of a truncated fuselage, following slender body theory.
