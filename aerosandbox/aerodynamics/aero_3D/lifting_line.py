@@ -108,15 +108,20 @@ class LiftingLine(ImplicitAnalysis):
                 except AttributeError:
                     n_spanwise_panels = self.default_n_spanwise_panels
 
-                n_spanwise_coordinates = inner_xsec.spanwise_panels + 1
+                n_spanwise_coordinates = n_spanwise_panels + 1
 
-                # Get the spanwise coordinates # TODO resume here
-                if inner_xsec.spanwise_spacing == 'uniform':
+                # Get the spanwise coordinates
+                try:
+                    spanwise_spacing = inner_xsec.spanwise_spacing
+                except AttributeError:
+                    spanwise_spacing = self.default_spanwise_spacing
+
+                if spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif inner_xsec.spanwise_spacing == 'cosine':
-                    nondim_spanwise_coordinates = cosspace(0, 1, n_spanwise_coordinates)
+                elif spanwise_spacing == 'cosine':
+                    nondim_spanwise_coordinates = np.cosspace(0, 1, n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad value of section.spanwise_spacing!")
+                    raise Exception("Bad value of spanwise_spacing!") # TODO resume here
 
                 for nondim_spanwise_coordinate_inner, nondim_spanwise_coordinate_outer in zip(
                         nondim_spanwise_coordinates[:-1],
