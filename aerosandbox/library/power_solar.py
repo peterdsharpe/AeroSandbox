@@ -22,7 +22,7 @@ def declination_angle(day_of_year):
     """
     # Declination (seasonality)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/declination-angle
-    return -23.45 * np.cos(np.radians(360 / 365 * (day_of_year + 10)))  # in degrees
+    return -23.45 * np.cosd(360 / 365 * (day_of_year + 10))  # in degrees
 
 
 def solar_elevation_angle(latitude, day_of_year, time):
@@ -39,8 +39,8 @@ def solar_elevation_angle(latitude, day_of_year, time):
     declination = declination_angle(day_of_year)
 
     solar_elevation_angle = np.arcsind(
-        np.sin(np.radians(declination)) * np.sin(np.radians(latitude)) +
-        np.cos(np.radians(declination)) * np.cos(np.radians(latitude)) * np.cos(np.radians(time / 86400 * 360))
+        np.sind(declination) * np.sind(latitude) +
+        np.cosd(declination) * np.cosd(latitude) * np.cos(np.radians(time / 86400 * 360))
     )  # in degrees
     solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
@@ -63,7 +63,7 @@ def incidence_angle_function(latitude, day_of_year, time, scattering=True):
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
 
-    cosine_factor = np.cos(np.radians(theta))
+    cosine_factor = np.cosd(theta)
 
     if not scattering:
         return cosine_factor
@@ -101,7 +101,7 @@ def scattering_factor(elevation_angle):
     )
     scattering_factor = np.exp(
         c[0] * (
-                np.tan(np.radians(theta * 0.999)) + c[1] * np.radians(theta)
+                np.tand((theta * 0.999) + c[1] * np.radians(theta)
         )
     )
 
