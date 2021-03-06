@@ -101,7 +101,7 @@ def scattering_factor(elevation_angle):
     )
     scattering_factor = np.exp(
         c[0] * (
-                np.tand((theta * 0.999) + c[1] * np.radians(theta)
+                np.tand(theta * 0.999) + c[1] * np.radians(theta)
         )
     )
 
