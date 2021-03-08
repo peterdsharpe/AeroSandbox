@@ -271,7 +271,7 @@ class Airfoil(Polygon):
         ))
 
     def repanel(self,
-                n_points_per_side=80,
+                n_points_per_side=100,
                 ):
         """
         Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
