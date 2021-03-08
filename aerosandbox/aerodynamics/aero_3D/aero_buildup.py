@@ -101,7 +101,8 @@ class AeroBuildup(ExplicitAnalysis):
             if wing.symmetric:  # Only add lift force if the wing is symmetric; a surrogate for "horizontal".
                 self.lift_force += wing.lift_force
             self.drag_force += wing.drag_force
-            self.pitching_moment += wing.pitching_moment # TODO Add lift moment!
+            self.pitching_moment += wing.pitching_moment # Raw pitching moment
+            self.pitching_moment += -wing.aerodynamic_center()[0] * wing.lift_force # Pitching moment due to lift
 
         ### Calculate nondimensional forces
         qS = op_point.dynamic_pressure() * self.airplane.s_ref

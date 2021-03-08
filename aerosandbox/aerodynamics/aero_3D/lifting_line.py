@@ -150,10 +150,6 @@ class LiftingLine(ImplicitAnalysis):
                     back_left_vertices.append(back_left_vertex)
                     back_right_vertices.append(back_right_vertex)
 
-                    # Make sure airfoils have sectional functions!
-                    inner_xsec.airfoil.has_sectional_functions(raise_exception_if_absent=True)
-                    outer_xsec.airfoil.has_sectional_functions(raise_exception_if_absent=True)
-
                     CL_functions.append(
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
