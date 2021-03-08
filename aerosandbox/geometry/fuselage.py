@@ -23,7 +23,7 @@ class Fuselage(AeroSandboxObject):
                  # Number of circumferential panels to use in VLM and Panel analysis. Should be even.
                  ):
         self.name = name
-        self.xyz_le = cas.vertcat(x_le, y_le, z_le)
+        self.xyz_le = np.array([x_le, y_le, z_le])
         self.xsecs = xsecs
         self.symmetric = symmetric
         if not circumferential_panels % 2 == 0:
@@ -43,7 +43,7 @@ class Fuselage(AeroSandboxObject):
             this_radius = self.xsecs[i].radius
             next_radius = self.xsecs[i + 1].radius
             x_separation = self.xsecs[i + 1].x_c - self.xsecs[i].x_c
-            area += cas.pi * (this_radius + next_radius) * cas.sqrt(
+            area += np.pi * (this_radius + next_radius) * np.sqrt(
                 (this_radius - next_radius) ** 2 + x_separation ** 2)
         if self.symmetric:
             area *= 2
@@ -74,7 +74,7 @@ class Fuselage(AeroSandboxObject):
         of the leading and trailing cross sections.
         :return:
         """
-        return cas.fabs(self.xsecs[-1].x_c - self.xsecs[0].x_c)
+        return np.fabs(self.xsecs[-1].x_c - self.xsecs[0].x_c)
 
     def volume(self) -> float:
         """
@@ -112,11 +112,12 @@ class FuselageXSec(AeroSandboxObject):
 
         self.radius = radius
 
-        self.xyz_c = cas.vertcat(x_c, y_c, z_c)
+        self.xyz_c = np.array([x_c, y_c, z_c])
+
 
     def xsec_area(self):
         """
         Returns the FuselageXSec's cross-sectional (xsec) area.
         :return:
         """
-        return cas.pi * self.radius ** 2
+        return np.pi * self.radius ** 2

@@ -146,7 +146,7 @@ class Airplane(AeroSandboxObject):
             if not wing.is_entirely_symmetric():
                 return False
             for xsec in wing.xsecs:
-                if not (xsec.control_surface_is_symmetric or xsec.control_surface_deflection == 0):
+                if not (xsec.control_surface_type == "symmetric" or xsec.control_surface_deflection == 0):
                     return False
                 if not wing.symmetric:
                     if not xsec.xyz_le[1] == 0:

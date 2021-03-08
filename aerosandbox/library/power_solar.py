@@ -1,5 +1,4 @@
-from aerosandbox.optimization import *
-
+import aerosandbox.numpy as np
 
 def solar_flux_outside_atmosphere_normal(day_of_year):
     """
@@ -12,7 +11,7 @@ def solar_flux_outside_atmosphere_normal(day_of_year):
     # solar_flux_outside_atmosphere_normal = 1367 * (1 + 0.034 * cas.cos(2 * cas.pi * (day_of_year / 365.25)))  # W/m^2; variation due to orbital eccentricity
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/solar-radiation-outside-the-earths-atmosphere
     return 1366 * (
-            1 + 0.033 * cosd(360 * (day_of_year - 2) / 365))  # W/m^2; variation due to orbital eccentricity
+            1 + 0.033 * np.cosd(360 * (day_of_year - 2) / 365))  # W/m^2; variation due to orbital eccentricity
 
 
 def declination_angle(day_of_year):
@@ -23,7 +22,7 @@ def declination_angle(day_of_year):
     """
     # Declination (seasonality)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/declination-angle
-    return -23.45 * cosd(360 / 365 * (day_of_year + 10))  # in degrees
+    return -23.45 * np.cosd(360 / 365 * (day_of_year + 10))  # in degrees
 
 
 def solar_elevation_angle(latitude, day_of_year, time):
@@ -39,10 +38,10 @@ def solar_elevation_angle(latitude, day_of_year, time):
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/elevation-angle
     declination = declination_angle(day_of_year)
 
-    solar_elevation_angle = np.arcsin(
-        sind(declination) * sind(latitude) +
-        cosd(declination) * cosd(latitude) * cosd(time / 86400 * 360)
-    ) * 180 / pi  # in degrees
+    solar_elevation_angle = np.arcsind(
+        np.sind(declination) * np.sind(latitude) +
+        np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
+    )  # in degrees
     solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
 
@@ -64,7 +63,7 @@ def incidence_angle_function(latitude, day_of_year, time, scattering=True):
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
 
-    cosine_factor = cosd(theta)
+    cosine_factor = np.cosd(theta)
 
     if not scattering:
         return cosine_factor
@@ -79,7 +78,7 @@ def scattering_factor(elevation_angle):
     :param elevation_angle: Angle between the horizon and the sun [degrees]
     :return: Fraction of the light that is not lost to scattering.
     """
-    elevation_angle = clip(elevation_angle, 0, 90)
+    elevation_angle = np.clip(elevation_angle, 0, 90)
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
 
     # # Model 1
@@ -102,7 +101,7 @@ def scattering_factor(elevation_angle):
     )
     scattering_factor = np.exp(
         c[0] * (
-                tand(theta * 0.999) + c[1] * radians(theta)
+                np.tand(theta * 0.999) + c[1] * np.radians(theta)
         )
     )
 
@@ -184,7 +183,6 @@ def mass_MPPT(
 
 if __name__ == "__main__":
     # Run some checks
-    import numpy  as np
 
     latitudes = np.linspace(26, 49, 200)
     day_of_years = np.arange(0, 365) + 1
