@@ -1,21 +1,21 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from typing import Union,List
+from typing import Union
 
-def wagners_function(reduced_time: Union[List,float]):
+def wagners_function(reduced_time: Union[np.ndarray,float]):
     """ 
     A commonly used approximation to Wagner's function 
     (Jones, R.T. The Unsteady Lift of a Finite Wing; Technical Report NACA TN-682; NACA: Washington, DC, USA, 1939)
     
     Args:
-        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
     """
     return (1 - 0.165 * np.exp(-0.0455 * reduced_time) - 
                 0.335 * np.exp(-0.3 * reduced_time))
 
 
 def calculate_wagner_lift_coefficient(
-        reduced_time: Union[float,List] , 
+        reduced_time: Union[float,np.ndarray] , 
         angle_of_attack: float
 ):
     """
@@ -28,7 +28,7 @@ def calculate_wagner_lift_coefficient(
     Reduced_time = 0 corresponds to the instance the airfoil pitches/accelerates
     
         Args:
-        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
         angle_of_attack (float) 
 
     """
@@ -36,7 +36,7 @@ def calculate_wagner_lift_coefficient(
 
 
 def calculate_kussner_lift_coefficient(
-        reduced_time: Union[float,List] , 
+        reduced_time: Union[float,np.ndarray] , 
         gust_strength:float ,
         velocity: float
 ):
@@ -47,7 +47,7 @@ def calculate_kussner_lift_coefficient(
     (Leishman, Principles of Helicopter Aerodynamics, S8.10,S8.11)
     
     Args:
-        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
         gust_strength (float) : velocity in m/s of the top hat gust
         velocity (float) : velocity of the thin airfoil entering the gust
 
@@ -57,29 +57,29 @@ def calculate_kussner_lift_coefficient(
 
 
 
-def kussners_function(reduced_time: Union[List,float]):
+def kussners_function(reduced_time: Union[np.ndarray,float]):
     """ 
     A commonly used approximation to Kussner's function (Sears and Sparks 1941)
     
     Args:
-        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
     """
     return 1 - 0.5 * np.exp(-0.13 * reduced_time) - 0.5 * np.exp(-reduced_time) 
 
 
 def calculate_reduced_time(
-        time: Union[float,List],
-        velocity: Union[float,List],
+        time: Union[float,np.ndarray],
+        velocity: Union[float,np.ndarray],
         chord: float 
-) -> Union[float,List]:
+) -> Union[float,np.ndarray]:
     """ 
     Calculates reduced time from time in seconds and velocity history in m/s. For constant velocity it reduces to s = 2*U*t/c
     The reduced time is the number of semichords travelled by the airfoil/aircaft i.e. 2 / chord * integral from t0 to t of velocity dt  
     
     
     Args:
-        time (float,List) : Time in seconds 
-        velocity (float,List) : Either constant velocity or array of velocities at corresponding times
+        time (float,np.ndarray) : Time in seconds 
+        velocity (float,np.ndarray) : Either constant velocity or array of velocities at corresponding times
         chord (float) : The chord of the airfoil
         
     Returns:
@@ -97,8 +97,8 @@ def calculate_reduced_time(
     
     
 def duhamel_integral_kussner(
-        reduced_time: List,
-        gust_velocity: List,
+        reduced_time: np.ndarray,
+        gust_velocity: np.ndarray,
         velocity: float
 ): 
     """
@@ -108,12 +108,12 @@ def duhamel_integral_kussner(
     
     
     Args:
-        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        gust_velocity (List) : The transverse velocity profile that the flate plate experiences
+        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        gust_velocity (np.ndarray) : The transverse velocity profile that the flate plate experiences
         velocity (float) :The velocity by which the flat plate enters the gust
         
     Returns:
-        lift_coefficient (List) : The lift coefficient history of the flat plate 
+        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
     assert np.size(reduced_time) == np.size(gust_velocity),  "The velocity history and time must have the same length"
     
@@ -130,8 +130,8 @@ def duhamel_integral_kussner(
 
 
 def duhamel_integral_wagner(
-        reduced_time: List,
-        angle_of_attack: List
+        reduced_time: np.ndarray,
+        angle_of_attack: np.ndarray
 ): 
     """
     Calculates the duhamel superposition integral of Wagner's problem. 
@@ -140,10 +140,10 @@ def duhamel_integral_wagner(
     
     
     Args:
-        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        angle_of_attack (List) : The angle of attack as a function of reduced time of the flat plate
+        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        angle_of_attack (np.ndarray) : The angle of attack as a function of reduced time of the flat plate
     Returns:
-        lift_coefficient (List) : The lift coefficient history of the flat plate 
+        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
     assert np.size(reduced_time) == np.size(angle_of_attack),  "The pitching history and time must have the same length"
     
