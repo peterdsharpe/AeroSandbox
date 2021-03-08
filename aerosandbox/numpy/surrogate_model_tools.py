@@ -2,24 +2,44 @@ import aerosandbox.numpy as _np
 from typing import Tuple, Union
 
 
-def softmax(value1, value2, hardness=1):
+def softmax(*args, hardness=1):
     """
-    A smooth maximum between two functions. Also referred to as the logsumexp() function.
-    Useful because it's differentiable and preserves convexity!
+    An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
+
+    Useful for optimization because it's differentiable and preserves convexity!
+
     Great writeup by John D Cook here:
         https://www.johndcook.com/soft_maximum.pdf
-    :param value1: Value of function 1.
-    :param value2: Value of function 2.
-    :param hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
-    :return: Soft maximum of the two supplied values.
+
+    Args:
+        Provide any number of arguments as values to take the softmax of.
+
+        hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
+
+    Returns:
+        Soft maximum of the supplied values.
     """
     if hardness <= 0:
         raise ValueError("The value of `hardness` must be positive.")
-    value1 = value1 * hardness
-    value2 = value2 * hardness
-    max = _np.fmax(value1, value2)
-    min = _np.fmin(value1, value2)
-    out = max + _np.log(1 + _np.exp(min - max))
+
+    if len(args) <= 1:
+        raise ValueError("You must call softmax with the value of two or more arrays that you'd like to take the "
+                         "element-wise softmax of.")
+
+    ### Scale the args by hardness
+    args = [arg * hardness for arg in args]
+
+    ### Find the element-wise max and min of the arrays:
+    min = args[0]
+    max = args[0]
+    for arg in args[1:]:
+        min = _np.fmin(min, arg)
+        max = _np.fmax(max, arg)
+
+    out = max + _np.log(sum(
+            [_np.exp(array - max) for array in args]
+        )
+    )
     out = out / hardness
     return out
 

@@ -125,6 +125,8 @@ def get_kulfan_coordinates(
     x_lower = np.cosspace(0, 1, n_points_per_side)
     x_upper = x_lower[::-1]
 
+    x_lower = x_lower[1:] # Trim off the nose coordinate so there are no duplicates
+
     def shape(w, x):
         # Class function
         C = x ** N1 * (1 - x) ** N2

@@ -1,1 +1,2 @@
-from .fitting import *
+from .fitting import FittedModel
+from .interpolation import InterpolatedModel

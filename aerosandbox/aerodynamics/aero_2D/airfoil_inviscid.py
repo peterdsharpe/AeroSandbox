@@ -1,5 +1,6 @@
-from aerosandbox import ImplicitAnalysis, Opti
-from aerosandbox.geometry import *
+from aerosandbox.common import *
+from aerosandbox import Opti
+from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
 import aerosandbox.numpy as np
@@ -11,16 +12,19 @@ import seaborn as sns
 class AirfoilInviscid(ImplicitAnalysis):
     """
     An implicit analysis for inviscid analysis of an airfoil (or family of airfoils).
+
+    Key outputs:
+
+        * AirfoilInviscid.Cl
+
     """
 
+    @ImplicitAnalysis.initialize
     def __init__(self,
                  airfoil: Union[Airfoil, List[Airfoil]],
                  op_point: OperatingPoint,
-                 opti: Opti = None,
-                 ground_effect: bool = False
+                 ground_effect: bool = False,
                  ):
-        super().__init__()
-
         if isinstance(airfoil, Airfoil):
             self.airfoils = [airfoil]
         else:
@@ -33,8 +37,6 @@ class AirfoilInviscid(ImplicitAnalysis):
         self._setup_unknowns()
         self._enforce_governing_equations()
         self._calculate_forces()
-
-        super()._init_end()
 
     def _setup_unknowns(self):
         for airfoil in self.airfoils:
@@ -90,9 +92,9 @@ class AirfoilInviscid(ImplicitAnalysis):
                 ### Add in the influence of the vortices and sources on the airfoil surface
                 u_field_induced, v_field_induced = calculate_induced_velocity_line_singularities(
                     x_field=x_field,
-                    y_field=-y_field,
+                    y_field=y_field,
                     x_panels=airfoil.x(),
-                    y_panels=airfoil.y(),
+                    y_panels=-airfoil.y(),
                     gamma=-airfoil.gamma,
                     sigma=airfoil.sigma,
                 )
@@ -104,10 +106,10 @@ class AirfoilInviscid(ImplicitAnalysis):
                 if airfoil.TE_thickness() != 0:
                     u_field_induced_TE, v_field_induced_TE = calculate_induced_velocity_line_singularities(
                         x_field=x_field,
-                        y_field=-y_field,
+                        y_field=y_field,
                         x_panels=[airfoil.x()[0], airfoil.x()[-1]],
-                        y_panels=[airfoil.y()[0], airfoil.y()[-1]],
-                        gamma=-[0, 0],
+                        y_panels=-1 * np.array([airfoil.y()[0], airfoil.y()[-1]]),
+                        gamma=[0, 0],
                         sigma=[airfoil.gamma[0], airfoil.gamma[-1]]
                     )
 
@@ -265,3 +267,13 @@ if __name__ == '__main__':
     )
     a.draw_streamlines()
     a.draw_cp()
+
+    opti2 = Opti()
+    b = AirfoilInviscid(
+        airfoil=Airfoil("naca4408"),
+        op_point=OperatingPoint(
+            velocity=1,
+            alpha=5
+        ),
+        opti=opti2
+    )

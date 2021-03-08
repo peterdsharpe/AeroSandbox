@@ -1,4 +1,4 @@
-from aerosandbox.modeling.fitting import fit_model
+from aerosandbox.modeling.fitting import FittedModel
 import pytest
 import aerosandbox.numpy as np
 from dataset_temperature import time, measured_temperature
@@ -10,7 +10,7 @@ def get_fitted_model():
     def model(x, p):
         return p["m"] * x + p["b"]  # Linear regression
 
-    fitted_model = fit_model(
+    fitted_model = FittedModel(
         model=model,
         x_data=time,
         y_data=measured_temperature,
@@ -22,8 +22,8 @@ def get_fitted_model():
     return fitted_model
 
 
-def test_plot_fit(get_fitted_model):
-    get_fitted_model.plot_fit()
+def test_plot(get_fitted_model):
+    get_fitted_model.plot()
 
 
 if __name__ == '__main__':

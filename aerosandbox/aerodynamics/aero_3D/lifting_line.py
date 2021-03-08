@@ -1,4 +1,4 @@
-from aerosandbox import ImplicitAnalysis, Opti
+from aerosandbox import Opti, ImplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.visualization import Figure3D
@@ -18,11 +18,14 @@ class LiftingLine(ImplicitAnalysis):
 
     """
 
+    @ImplicitAnalysis.initialize
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
                  run_symmetric_if_possible=True,
-                 opti: Opti = None,
+                 verbose=True,
+                 default_n_spanwise_panels = 8, # TODO document
+                 default_spanwise_spacing = "cosine" # TODO document
                  ):
         """
         Initializes and conducts a LiftingLine analysis.
@@ -46,10 +49,12 @@ class LiftingLine(ImplicitAnalysis):
         """
 
         ### Initialize
-        super().__init__()
         self.airplane = airplane
         self.op_point = op_point
         self.run_symmetric_if_possible = run_symmetric_if_possible
+        self.verbose = verbose
+        self.default_n_spanwise_panels = default_n_spanwise_panels
+        self.default_spanwise_spacing = default_spanwise_spacing
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
@@ -69,8 +74,6 @@ class LiftingLine(ImplicitAnalysis):
         self._setup_operating_point()
         self._calculate_vortex_strengths()
         self._calculate_forces()
-
-        super()._init_end()
 
     def _make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
@@ -100,15 +103,25 @@ class LiftingLine(ImplicitAnalysis):
                 outer_xsec_xyz_te = outer_xsec.xyz_te() + wing.xyz_le
 
                 # Define number of spanwise points
-                n_spanwise_coordinates = inner_xsec.spanwise_panels + 1
+                try:
+                    n_spanwise_panels = inner_xsec.spanwise_panels
+                except AttributeError:
+                    n_spanwise_panels = self.default_n_spanwise_panels
 
-                # Get the spanwise coordinates # TODO resume here
-                if inner_xsec.spanwise_spacing == 'uniform':
+                n_spanwise_coordinates = n_spanwise_panels + 1
+
+                # Get the spanwise coordinates
+                try:
+                    spanwise_spacing = inner_xsec.spanwise_spacing
+                except AttributeError:
+                    spanwise_spacing = self.default_spanwise_spacing
+
+                if spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
-                elif inner_xsec.spanwise_spacing == 'cosine':
-                    nondim_spanwise_coordinates = cosspace(0, 1, n_spanwise_coordinates)
+                elif spanwise_spacing == 'cosine':
+                    nondim_spanwise_coordinates = np.cosspace(0, 1, n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad value of section.spanwise_spacing!")
+                    raise Exception("Bad value of spanwise_spacing!") # TODO resume here
 
                 for nondim_spanwise_coordinate_inner, nondim_spanwise_coordinate_outer in zip(
                         nondim_spanwise_coordinates[:-1],
@@ -136,10 +149,6 @@ class LiftingLine(ImplicitAnalysis):
                     front_right_vertices.append(front_right_vertex)
                     back_left_vertices.append(back_left_vertex)
                     back_right_vertices.append(back_right_vertex)
-
-                    # Make sure airfoils have sectional functions!
-                    inner_xsec.airfoil.has_sectional_functions(raise_exception_if_absent=True)
-                    outer_xsec.airfoil.has_sectional_functions(raise_exception_if_absent=True)
 
                     CL_functions.append(
                         lambda alpha, Re, mach,

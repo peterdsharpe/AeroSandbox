@@ -1,53 +1,56 @@
 # from inviscid_analysis import N, gamma
 import aerosandbox as asb
-from aerosandbox import cas
-import numpy as np
+import aerosandbox.numpy as np
 
-N = 100
-ue = cas.linspace(1, 1, N)
-x = cas.linspace(0, 1, N)
+
+N = 1000
+ue = np.linspace(1, 1, N)
+x = np.linspace(0, 1, N)
 nu = 1e-5
+theta_0 = 1e-3
+H_0 = 2.6
 
 opti = asb.Opti()
 
+
 theta = opti.variable(
+    init_guess=theta_0,
     n_vars=N,
-    init_guess=np.linspace(1e-3, 1e-3, N),
 )
 H = opti.variable(
+    H_0,
     n_vars=N,
-    init_guess=2,
 )
 
 Re_theta = ue * theta / nu
 
-H_star = cas.if_else(
+H_star = np.where(
     H < 4,
     1.515 + 0.076 * (H - 4) ** 2 / H,
     1.515 + 0.040 * (H - 4) ** 2 / H
 )  # From AVF Eq. 4.53
-c_f = 2 / Re_theta * cas.if_else(
+c_f = 2 / Re_theta * np.where(
     H < 6.2,
-    -0.066 + 0.066 * cas.fabs(6.2 - H) ** 1.5 / (H - 1),
+    -0.066 + 0.066 * np.abs(6.2 - H) ** 1.5 / (H - 1),
     -0.066 + 0.066 * (H - 6.2) ** 2 / (H - 4) ** 2
 )  # From AVF Eq. 4.54
-c_D = H_star / 2 / Re_theta * cas.if_else(
+c_D = H_star / 2 / Re_theta * np.where(
     H < 4,
-    0.207 + 0.00205 * cas.fabs(4 - H) ** 5.5,
+    0.207 + 0.00205 * np.abs(4 - H) ** 5.5,
     0.207 - 0.100 * (H - 4) ** 2 / H ** 2
 )  # From AVF Eq. 4.55
 Re_theta_o = 10 ** (
         2.492 / (H - 1) ** 0.43 +
         0.7 * (
-                cas.tanh(
+                np.tanh(
                     14 / (H - 1) - 9.24
                 ) + 1
         )
 )  # From AVF Eq. 6.38
 
-d_theta_dx = cas.diff(theta) / cas.diff(x)
-d_ue_dx = cas.diff(ue) / cas.diff(x)
-d_H_star_dx = cas.diff(H_star) / cas.diff(x)
+d_theta_dx = np.diff(theta) / np.diff(x)
+d_ue_dx = np.diff(ue) / np.diff(x)
+d_H_star_dx = np.diff(H_star) / np.diff(x)
 
 
 def int(x):
@@ -55,17 +58,17 @@ def int(x):
 
 def logint(x):
     # return int(x)
-    logx = cas.log(x)
-    return cas.exp(
+    logx = np.log(x)
+    return np.exp(
         (logx[1:] + logx[:-1]) / 2
     )
 
 
 ### Add governing equations
 opti.subject_to(
-    d_theta_dx == logint(c_f) / 2 - logint(
+    d_theta_dx == int(c_f) / 2 - int(
         (H + 2) * theta / ue
-    ) * d_ue_dx,
+    ) * d_ue_dx, # From AVF Eq. 4.51
 )
 opti.subject_to(
     logint(theta / H_star) * d_H_star_dx ==
@@ -77,8 +80,8 @@ opti.subject_to(
 
 ### Add initial conditions
 opti.subject_to([
-    theta[0] == 1e-3,
-    H[0] == 2.5824454903566063  # Equilibrium value
+    theta[0] == theta_0,
+    H[0] == H_0  # Equilibrium value
 ])
 
 ### Solve

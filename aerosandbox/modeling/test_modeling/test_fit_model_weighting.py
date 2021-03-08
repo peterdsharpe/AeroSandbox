@@ -1,4 +1,4 @@
-from aerosandbox.modeling.fitting import fit_model
+from aerosandbox.modeling.fitting import FittedModel
 import pytest
 import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ def test_fit_model_weighting():
     x = np.linspace(0, 10)
     y = np.sin(x)
 
-    fm = fit_model(
+    fm = FittedModel(
         model=lambda x, p: p["m"] * x + p["b"],
         x_data=x,
         y_data=y,
@@ -22,7 +22,7 @@ def test_fit_model_weighting():
 
     assert fm(10) != pytest.approx(5, abs=1) # Doesn't give a high value at x = 10
 
-    fm = fit_model(
+    fm = FittedModel(
         model=lambda x, p: p["m"] * x + p["b"],
         x_data=x,
         y_data=y,
@@ -35,7 +35,7 @@ def test_fit_model_weighting():
 
     assert fm(10) == pytest.approx(5, abs=1) # Gives a high value at x = 10
 
-    fm.plot_fit()
+    fm.plot()
 
 
 if __name__ == '__main__':

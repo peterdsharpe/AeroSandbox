@@ -6,6 +6,4 @@ __pycache__/
 *.asw
 .pytest_cache/
 .spyrpoject/
-AeroEnv/
-build/
-tutorial/2 - Design Optimization/.ipynb_checkpoints/
+*.DS_Store

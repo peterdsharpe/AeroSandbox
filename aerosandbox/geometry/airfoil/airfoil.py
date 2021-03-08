@@ -1,43 +1,89 @@
-from aerosandbox.geometry.common import *
+import aerosandbox.numpy as np
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon, stack_coordinates
-from aerosandbox.tools.airfoil_fitter.airfoil_fitter import AirfoilFitter
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
     get_kulfan_coordinates, get_file_coordinates
+from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_Cl_function, default_Cd_function, \
+    default_Cm_function
 from scipy.interpolate import interp1d
 from aerosandbox.visualization.matplotlib import plt
 from aerosandbox.visualization.plotly import go, px
+from typing import Callable, Union
 
 
 class Airfoil(Polygon):
     def __init__(self,
-                 name="Untitled",  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
-                 coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
-                 CL_function=None,  # lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
-                 # (alpha * np.pi / 180) * (2 * np.pi)
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 CDp_function=None,
-                 # lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
-                 # (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=None,  # lambda alpha, Re, mach, deflection: (
-                 # Moment coefficient function (about quarter-chord) (alpha in deg)
-                 # 0
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 name: str = "Untitled",
+                 coordinates: Union[None, str, np.ndarray] = None,
+                 CL_function: Callable[[float, float, float, float], float] = default_Cl_function,
+                 CDp_function: Callable[[float, float, float, float], float] = default_Cd_function,
+                 Cm_function: Callable[[float, float, float, float], float] = default_Cm_function,
                  ):
         """
         Creates an Airfoil object.
-        :param name: Name of the airfoil [string]
-        :param coordinates: Either:
-            a) None if "name" is a 4-digit NACA airfoil (e.g. "naca2412"),
-            a) None if "name" is the name of an airfoil in the UIUC airfoil database (must be the name of the .dat file, e.g. "s1223"),
-            b) a filepath to a .dat file (including the .dat) [string], or
-            c) an array of coordinates [Nx2 ndarray].
-        :param CL_function:
-        :param CDp_function:
-        :param Cm_function:
-        :param repanel: should we repanel this airfoil upon creation?
+
+        Args:
+
+            name: Name of the airfoil [string]. Can also be used to auto-generate coordinates; see docstring for
+            `coordinates` below.
+
+            coordinates: A representation of the coordinates that define the airfoil. Can be one of several types of
+            input; the following sequence of operations is used to interpret the meaning of the parameter:
+
+                If `coordinates` is an Nx2 array of the [x, y] coordinates that define the airfoil, these are used
+                as-is. Points are expected to be provided in standard airfoil order:
+
+                    * Points should start on the upper surface at the trailing edge, continue forward over the upper
+                    surface, wrap around the nose, continue aft over the lower surface, and then end at the trailing
+                    edge on the lower surface.
+
+                    * The trailing edge need not be closed, but many analyses implicitly assume that this gap is small.
+
+                    * Take care to ensure that the point at the leading edge of the airfoil, usually (0, 0),
+                    is not duplicated.
+
+                If `coordinates` is provided as a string, it assumed to be the filepath to a *.dat file containing
+                the coordinates; we attempt to load coordinates from this.
+
+                If the coordinates are not specified and instead left as None, the constructor will attempt to
+                auto-populate the coordinates based on the `name` parameter provided, in the following order of
+                priority:
+
+                    * If `name` is a 4-digit NACA airfoil (e.g. "naca2412"), coordinates will be created based on the
+                    analytical equation.
+
+                    * If `name` is the name of an airfoil in the UIUC airfoil database (e.g. "s1223", "e216",
+                    "dae11"), coordinates will be loaded from that. Note that the string you provide must be exactly
+                    the name of the associated *.dat file in the UIUC database.
+
+            CL_function: A function that gives the lift coefficient of the airfoil as a function of several parameters.
+
+                Must be a callable with the exact syntax:
+
+                >>> def my_function(alpha, Re, mach, deflection)
+
+                where:
+
+                    * `alpha` is the local angle of attack, in degrees
+
+                    * `Re` is the local Reynolds number
+
+                    * `mach` is the local mach number
+
+                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
+
+            CDp_function: A function that gives the (profile) drag coefficient of the airfoil as a function of
+            several parameters.
+
+                Has the exact same syntax as `CL_function`, see above.
+
+            Cm_function: A function that gives the moment coefficient of the airfoil (about the quarter-chord) as a
+            function of several parameters.
+
+                Has the exact same syntax as `CL_function`, see above.
+
         """
+
         ### Handle the airfoil name
         self.name = name
 
@@ -62,74 +108,6 @@ class Airfoil(Polygon):
 
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
-
-    # def populate_sectional_functions_from_xfoil_fits(self,
-    #                                                  parallel=True,
-    #                                                  verbose=True,
-    #                                                  ):  # TODO write docstring
-    #     if not self.has_xfoil_data(raise_exception_if_absent=False):
-    #         self.get_xfoil_data(
-    #             parallel=parallel,
-    #             verbose=verbose,
-    #         )
-    #
-    #     self.AirfoilFitter = AirfoilFitter(
-    #         airfoil=self,
-    #         parallel=parallel,
-    #         verbose=verbose,
-    #     )
-    #     self.AirfoilFitter.fit_xfoil_data_Cl(plot_fit=False)
-    #     self.AirfoilFitter.fit_xfoil_data_Cd(plot_fit=False)
-    #
-    #     def CL_function(
-    #             alpha, Re, mach=0, deflection=0,
-    #             fitter=self.AirfoilFitter
-    #     ):
-    #         return fitter.Cl_function(
-    #             alpha=alpha,
-    #             Re=Re,
-    #         )
-    #
-    #     def CDp_function(
-    #             alpha, Re, mach=0, deflection=0,
-    #             fitter=self.AirfoilFitter
-    #     ):
-    #         return fitter.Cd_function(
-    #             alpha=alpha,
-    #             Re=Re,
-    #         )
-    #
-    #     def Cm_function(
-    #             alpha, Re, mach=0, deflection=0,
-    #             fitter=self.AirfoilFitter
-    #     ):
-    #         return alpha * 0
-    #
-    #     self.CL_function = CL_function
-    #     self.CDp_function = CDp_function
-    #     self.Cm_function = Cm_function
-
-    def has_sectional_functions(self, raise_exception_if_absent=True):
-        """
-        Runs a quick check to see if this airfoil has sectional functions.
-        :param raise_exception_if_absent: Boolean flag to raise an Exception if sectional functions are not found.
-        :return: Boolean of whether or not sectional functions is present.
-        """
-        data_present = (
-                hasattr(self, 'CL_function') and callable(self.CL_function) and
-                hasattr(self, 'CDp_function') and callable(self.CDp_function) and
-                hasattr(self, 'Cm_function') and callable(self.Cm_function)
-        )
-        if not data_present and raise_exception_if_absent:
-            raise Exception(
-                """This Airfoil %s does not yet have sectional functions,
-                so you can't run the function you've called.
-                To get sectional functions, first call:
-                    Airfoil.populate_sectional_functions_from_xfoil_fits()
-                which will perform an in-place update that
-                provides the data.""" % self.name
-            )
-        return data_present
 
     def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
         """
@@ -196,7 +174,11 @@ class Airfoil(Polygon):
                     x=x,
                     y=y,
                     mode="lines+markers",
-                    name="Airfoil"
+                    name="Airfoil",
+                    fill="toself",
+                    line=dict(
+                        color="blue"
+                    )
                 ),
             )
             if draw_mcl:
@@ -205,7 +187,10 @@ class Airfoil(Polygon):
                         x=x_mcl,
                         y=y_mcl,
                         mode="lines+markers",
-                        name="Mean Camber Line (MCL)"
+                        name="Mean Camber Line (MCL)",
+                        line=dict(
+                            color="navy"
+                        )
                     )
                 )
             fig.update_layout(
@@ -233,28 +218,44 @@ class Airfoil(Polygon):
             else:
                 return fig, ax
 
-    def LE_index(self):
-        # Returns the index of the leading-edge point.
+    def LE_index(self) -> int:
+        """
+        Returns the index of the leading-edge point.
+        """
         return np.argmin(self.x())
 
-    def lower_coordinates(self):
-        # Returns a matrix (N by 2) of [x, y] coordinates that describe the lower surface of the airfoil.
-        # Order is from leading edge to trailing edge.
-        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
+    def lower_coordinates(self) -> np.ndarray:
+        """
+        Returns an Nx2 ndarray of [x, y] coordinates that describe the lower surface of the airfoil.
+
+        Order is from the leading edge to the trailing edge.
+
+        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
+        Airfoil.upper_coordinates().
+        """
         return self.coordinates[self.LE_index():, :]
 
-    def upper_coordinates(self):
-        # Returns a matrix (N by 2) of [x, y] coordinates that describe the upper surface of the airfoil.
-        # Order is from trailing edge to leading edge.
-        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
+    def upper_coordinates(self) -> np.ndarray:
+        """
+        Returns an Nx2 ndarray of [x, y] coordinates that describe the upper surface of the airfoil.
+
+        Order is from the trailing edge to the leading edge.
+
+        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
+        Airfoil.lower_coordinates().
+        """
         return self.coordinates[:self.LE_index() + 1, :]
 
-    def TE_thickness(self):
-        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
+    def TE_thickness(self) -> float:
+        """
+        Returns the thickness of the trailing edge of the airfoil.
+        """
         return self.local_thickness(x_over_c=1)
 
-    def TE_angle(self):
-        # Returns the trailing edge angle of the polygon, in degrees
+    def TE_angle(self) -> float:
+        """
+        Returns the trailing edge angle of the airfoil, in degrees
+        """
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
 
@@ -264,8 +265,8 @@ class Airfoil(Polygon):
         ))
 
     def repanel(self,
-                n_points_per_side=80,
-                ):
+                n_points_per_side: int = 100,
+                ) -> 'Airfoil':
         """
         Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
         :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
@@ -303,6 +304,11 @@ class Airfoil(Polygon):
             1 + cosspaced_points[1:],
         ))
 
+        # Check that there are no duplicate points in the airfoil.
+        if np.any(np.diff(distances_from_TE_normalized) == 0):
+            raise ValueError(
+                "This airfoil has a duplicated point (i.e. two adjacent points with the same (x, y) coordinates), so you can't repanel it!")
+
         x = interp1d(
             distances_from_TE_normalized,
             self.x(),
@@ -321,9 +327,9 @@ class Airfoil(Polygon):
 
     def add_control_surface(
             self,
-            deflection=0.,
-            hinge_point_x=0.75,
-    ):
+            deflection: float = 0.,
+            hinge_point_x: float = 0.75,
+    ) -> 'Airfoil':
         """
         Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
         :param deflection: deflection angle [degrees]. Downwards-positive.
@@ -356,9 +362,17 @@ class Airfoil(Polygon):
         )
 
     def scale(self,
-              scale_x=1,
-              scale_y=1,
-              ):
+              scale_x: float = 1.,
+              scale_y: float = 1.,
+              ) -> 'Airfoil':
+        """
+        Scales an Airfoil about the origin.
+        Args:
+            scale_x: Amount to scale in the x-direction.
+            scale_y: Amount to scale in the y-direction.
+
+        Returns: The scaled Airfoil.
+        """
         x = self.x() * scale_x
         y = self.y() * scale_y
 
@@ -372,9 +386,18 @@ class Airfoil(Polygon):
         )
 
     def translate(self,
-                  translate_x=0.,
-                  translate_y=0.,
-                  ):
+                  translate_x: float = 0.,
+                  translate_y: float = 0.,
+                  ) -> 'Airfoil':
+        """
+        Translates an Airfoil by a given amount.
+        Args:
+            translate_x: Amount to translate in the x-direction
+            translate_y: Amount to translate in the y-direction
+
+        Returns: The translated Airfoil.
+
+        """
         x = self.x() + translate_x
         y = self.y() + translate_y
 
@@ -384,18 +407,23 @@ class Airfoil(Polygon):
         )
 
     def rotate(self,
-               angle,
-               x_center=0.,
-               y_center=0.
-               ):
+               angle: float,
+               x_center: float = 0.,
+               y_center: float = 0.
+               ) -> 'Airfoil':
         """
         Rotates the airfoil clockwise by the specified amount, in radians.
 
-        Rotates about the point (x_center, y_center).
+        Rotates about the point (x_center, y_center), which is (0, 0) by default.
+
         Args:
             angle: Angle to rotate, counterclockwise, in radians.
 
-        Returns:
+            x_center: The x-coordinate of the center of rotation.
+
+            y_center: The y-coordinate of the center of rotation.
+
+        Returns: The rotated Airfoil.
 
         """
 

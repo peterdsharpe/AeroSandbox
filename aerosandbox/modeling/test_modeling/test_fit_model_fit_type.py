@@ -2,7 +2,7 @@
 An illustration of the various fit types that can be used during function regression, and what they look like.
 """
 
-from aerosandbox.modeling.fitting import fit_model
+from aerosandbox.modeling.fitting import FittedModel
 import pytest
 import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ def test_fit_model_fit_type(plot=False):
         return p["2"] * x ** 2 + p["1"] * x + p["0"]  # Quadratic regression
 
     def fit_model_with_fit_type(fit_type):
-        return fit_model(
+        return FittedModel(
             model=model,
             x_data=time,
             y_data=measured_temperature,
