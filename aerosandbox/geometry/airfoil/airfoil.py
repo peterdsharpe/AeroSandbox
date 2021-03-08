@@ -3,6 +3,8 @@ from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon, stack_coordinates
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
     get_kulfan_coordinates, get_file_coordinates
+from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_Cl_function, default_Cd_function, \
+    default_Cm_function
 from scipy.interpolate import interp1d
 from aerosandbox.visualization.matplotlib import plt
 from aerosandbox.visualization.plotly import go, px
@@ -12,14 +14,14 @@ class Airfoil(Polygon):
     def __init__(self,
                  name="Untitled",  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
                  coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
-                 CL_function=None,  # lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
+                 CL_function=default_Cl_function,  # lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
                  # (alpha * np.pi / 180) * (2 * np.pi)
                  # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 CDp_function=None,
+                 CDp_function=default_Cd_function,
                  # lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
                  # (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
                  # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=None,  # lambda alpha, Re, mach, deflection: (
+                 Cm_function=default_Cm_function,  # lambda alpha, Re, mach, deflection: (
                  # Moment coefficient function (about quarter-chord) (alpha in deg)
                  # 0
                  # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
@@ -35,7 +37,6 @@ class Airfoil(Polygon):
         :param CL_function:
         :param CDp_function:
         :param Cm_function:
-        :param repanel: should we repanel this airfoil upon creation?
         """
         ### Handle the airfoil name
         self.name = name
