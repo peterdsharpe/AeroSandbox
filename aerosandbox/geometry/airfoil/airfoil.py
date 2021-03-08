@@ -240,28 +240,44 @@ class Airfoil(Polygon):
             else:
                 return fig, ax
 
-    def LE_index(self):
-        # Returns the index of the leading-edge point.
+    def LE_index(self) -> int:
+        """
+        Returns the index of the leading-edge point.
+        """
         return np.argmin(self.x())
 
     def lower_coordinates(self):
-        # Returns a matrix (N by 2) of [x, y] coordinates that describe the lower surface of the airfoil.
-        # Order is from leading edge to trailing edge.
-        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
+        """
+        Returns an Nx2 ndarray of [x, y] coordinates that describe the lower surface of the airfoil.
+
+        Order is from the leading edge to the trailing edge.
+
+        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
+        Airfoil.upper_coordinates().
+        """
         return self.coordinates[self.LE_index():, :]
 
-    def upper_coordinates(self):
-        # Returns a matrix (N by 2) of [x, y] coordinates that describe the upper surface of the airfoil.
-        # Order is from trailing edge to leading edge.
-        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
+    def upper_coordinates(self) -> np.ndarray:
+        """
+        Returns an Nx2 ndarray of [x, y] coordinates that describe the upper surface of the airfoil.
+
+        Order is from the trailing edge to the leading edge.
+
+        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
+        Airfoil.lower_coordinates().
+        """
         return self.coordinates[:self.LE_index() + 1, :]
 
-    def TE_thickness(self):
-        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
+    def TE_thickness(self) -> float:
+        """
+        Returns the thickness of the trailing edge of the airfoil.
+        """
         return self.local_thickness(x_over_c=1)
 
-    def TE_angle(self):
-        # Returns the trailing edge angle of the polygon, in degrees
+    def TE_angle(self) -> float:
+        """
+        Returns the trailing edge angle of the airfoil, in degrees
+        """
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
 
@@ -271,8 +287,8 @@ class Airfoil(Polygon):
         ))
 
     def repanel(self,
-                n_points_per_side=100,
-                ):
+                n_points_per_side: int = 100,
+                ) -> 'Airfoil':
         """
         Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
         :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
@@ -333,9 +349,9 @@ class Airfoil(Polygon):
 
     def add_control_surface(
             self,
-            deflection=0.,
-            hinge_point_x=0.75,
-    ):
+            deflection: float = 0.,
+            hinge_point_x: float = 0.75,
+    ) -> 'Airfoil':
         """
         Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
         :param deflection: deflection angle [degrees]. Downwards-positive.
@@ -368,9 +384,17 @@ class Airfoil(Polygon):
         )
 
     def scale(self,
-              scale_x=1,
-              scale_y=1,
-              ):
+              scale_x: float = 1.,
+              scale_y: float = 1.,
+              ) -> 'Airfoil':
+        """
+        Scales an Airfoil about the origin.
+        Args:
+            scale_x: Amount to scale in the x-direction.
+            scale_y: Amount to scale in the y-direction.
+
+        Returns: The scaled Airfoil.
+        """
         x = self.x() * scale_x
         y = self.y() * scale_y
 
@@ -384,9 +408,18 @@ class Airfoil(Polygon):
         )
 
     def translate(self,
-                  translate_x=0.,
-                  translate_y=0.,
-                  ):
+                  translate_x: float = 0.,
+                  translate_y: float = 0.,
+                  ) -> 'Airfoil':
+        """
+        Translates an Airfoil by a given amount.
+        Args:
+            translate_x: Amount to translate in the x-direction
+            translate_y: Amount to translate in the y-direction
+
+        Returns: The translated Airfoil.
+
+        """
         x = self.x() + translate_x
         y = self.y() + translate_y
 
@@ -396,18 +429,23 @@ class Airfoil(Polygon):
         )
 
     def rotate(self,
-               angle,
-               x_center=0.,
-               y_center=0.
-               ):
+               angle: float,
+               x_center: float = 0.,
+               y_center: float = 0.
+               ) -> 'Airfoil':
         """
         Rotates the airfoil clockwise by the specified amount, in radians.
 
-        Rotates about the point (x_center, y_center).
+        Rotates about the point (x_center, y_center), which is (0, 0) by default.
+
         Args:
             angle: Angle to rotate, counterclockwise, in radians.
 
-        Returns:
+            x_center: The x-coordinate of the center of rotation.
+
+            y_center: The y-coordinate of the center of rotation.
+
+        Returns: The rotated Airfoil.
 
         """
 

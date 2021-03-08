@@ -1,20 +1,20 @@
 import aerosandbox.numpy as np
 from matplotlib import path
 from aerosandbox.common import AeroSandboxObject
-
+from typing import Union
 
 class Polygon(AeroSandboxObject):
     def __init__(self, coordinates):
         self.coordinates = coordinates  # Nx2 NumPy ndarray
 
-    def x(self):
+    def x(self) -> np.ndarray:
         """
         Returns the x coordinates of the polygon. Equivalent to Polygon.coordinates[:,0].
         :return: X coordinates as a vector
         """
         return self.coordinates[:, 0]
 
-    def y(self):
+    def y(self) -> np.ndarray:
         """
         Returns the y coordinates of the polygon. Equivalent to Polygon.coordinates[:,1].
         :return: Y coordinates as a vector
@@ -35,9 +35,19 @@ class Polygon(AeroSandboxObject):
                 return 0
 
     def contains_points(self,
-                        x,
-                        y,
-                        ):
+                        x: Union[float, np.ndarray],
+                        y: Union[float, np.ndarray],
+                        ) -> np.ndarray:
+        """
+        Returns a boolean array of whether or not some (x, y) point(s) are contained within the Polygon.
+
+        Args:
+            x: x-coordinate(s) of the query points.
+            y: y-coordinate(s) of the query points.
+
+        Returns: A boolean array of the same size as x and y.
+
+        """
         x = np.array(x)
         y = np.array(y)
         try:
@@ -59,8 +69,10 @@ class Polygon(AeroSandboxObject):
 
         return contained
 
-    def area(self):
-        # Returns the area of the polygon, in nondimensional (normalized to chord^2) units.
+    def area(self) -> float:
+        """
+        Returns the area of the polygon.
+        """
         x = self.x()
         y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -72,8 +84,10 @@ class Polygon(AeroSandboxObject):
 
         return A
 
-    def centroid(self):
-        # Returns the centroid of the polygon, in nondimensional (chord-normalized) units.
+    def centroid(self) -> np.ndarray:
+        """
+        Returns the centroid of the polygon as a 1D np.ndarray of length 2.
+        """
         x = self.x()
         y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -90,7 +104,9 @@ class Polygon(AeroSandboxObject):
         return centroid
 
     def Ixx(self):
-        # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
+        """
+        Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
+        """
         x = self.x()
         y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -111,7 +127,9 @@ class Polygon(AeroSandboxObject):
         return Iuu
 
     def Iyy(self):
-        # Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
+        """
+        Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
+        """
         x = self.x()
         y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -132,7 +150,9 @@ class Polygon(AeroSandboxObject):
         return Ivv
 
     def Ixy(self):
-        # Returns the nondimensionalized product of inertia, taken about the centroid.
+        """
+        Returns the nondimensionalized product of inertia, taken about the centroid.
+        """
         x = self.x()
         y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
@@ -153,7 +173,9 @@ class Polygon(AeroSandboxObject):
         return Iuv
 
     def J(self):
-        # Returns the nondimensionalized polar moment of inertia, taken about the centroid.
+        """
+        Returns the nondimensionalized polar moment of inertia, taken about the centroid.
+        """
         x = self.x()
         y = self.y()
         x_n = np.roll(x, -1)  # x_next, or x_i+1
