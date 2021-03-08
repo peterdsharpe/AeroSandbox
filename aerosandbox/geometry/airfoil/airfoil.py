@@ -211,7 +211,7 @@ class Airfoil(Polygon):
                         mode="lines+markers",
                         name="Mean Camber Line (MCL)",
                         line=dict(
-                            color="#28088744"
+                            color="navy"
                         )
                     )
                 )
