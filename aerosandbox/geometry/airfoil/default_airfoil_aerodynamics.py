@@ -4,7 +4,7 @@ from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
 
 def print_default_warning():
     warnings.warn("Warning: Using a default flat-plate aerodynamics model for this airfoil!\n"
-                  "To use a different one, specify functions in the Airfoil constructor.")
+                  "To use a better, more accurate one, specify functions in the Airfoil constructor.")
 
 
 def default_Cl_function(alpha, Re, mach, deflection):
