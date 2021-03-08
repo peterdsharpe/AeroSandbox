@@ -158,26 +158,34 @@ def duhamel_integral_wagner(
     return lift_coefficient
 
 
+
+
+
     
-    
-time = np.linspace(0,100,100)
+n = 1000
+n1 = int(n/3)
+n2 = int(2*n/3)
+time = np.linspace(0,100,n)
 velocity = 0.2
-chord = 2
+chord = 1
 reduced_time = calculate_reduced_time(time, velocity, chord) 
 
 gust_velocity = np.zeros_like(reduced_time)
-gust_velocity[30:60] = velocity 
+gust_velocity[n1:n2] = velocity 
 
-angle_of_attack = np.sin(reduced_time)
+angle_of_attack = np.zeros_like(reduced_time)
+angle_of_attack[n1:n2] = np.deg2rad(-20)
 
-cl = duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
+cl_k = duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
 cl_w = duhamel_integral_wagner(reduced_time,angle_of_attack)
     
 plt.figure(dpi=300)
-plt.plot(reduced_time,gust_velocity)
-plt.plot(reduced_time,cl)
+plt.plot(reduced_time,cl_w,label="wagner")
+plt.plot(reduced_time,cl_k,label="kussner")
+plt.plot(reduced_time,cl_k + cl_w,label="total")
+plt.xlabel("Reduced time, t*")
+plt.ylabel("$C_\ell$")
+plt.legend()
 
-plt.figure(dpi=300)
-plt.plot(reduced_time,angle_of_attack)
-plt.plot(reduced_time,cl_w)
+
 
