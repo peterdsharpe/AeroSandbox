@@ -1,5 +1,5 @@
 ### This file contains an assortment of random airfoils to use
-from aerosandbox.geometry import *
+from aerosandbox.geometry.airfoil import Airfoil
 from aerosandbox.library.aerodynamics.viscous import *
 
 generic_cambered_airfoil = Airfoil(

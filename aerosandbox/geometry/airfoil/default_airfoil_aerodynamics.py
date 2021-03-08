@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 import warnings
-import aerosandbox.library.aerodynamics as aero
+from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
 
 def print_default_warning():
     warnings.warn("Warning: Using a default flat-plate aerodynamics model for this airfoil!\n"
