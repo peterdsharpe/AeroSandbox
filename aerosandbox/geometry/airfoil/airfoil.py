@@ -246,7 +246,7 @@ class Airfoil(Polygon):
         """
         return np.argmin(self.x())
 
-    def lower_coordinates(self):
+    def lower_coordinates(self) -> np.ndarray:
         """
         Returns an Nx2 ndarray of [x, y] coordinates that describe the lower surface of the airfoil.
 
