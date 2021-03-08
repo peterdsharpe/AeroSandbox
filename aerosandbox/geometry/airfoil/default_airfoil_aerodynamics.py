@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 import warnings
-
+import aerosandbox.library.aerodynamics as aero
 
 def print_default_warning():
     warnings.warn("Warning: Using a default flat-plate aerodynamics model for this airfoil!\n"
@@ -24,7 +24,7 @@ def default_Cd_function(alpha, Re, mach, deflection):
     Drag coefficient.
     """
     print_default_warning()
-    Cf = 0.02666 * Re ** -0.139  # Schlichting's model, roughly accounts for laminar part ("Boundary Layer Theory" 7th Ed., pg. 644)
+    Cf = aero.Cf_flat_plate(Re_L = Re)
     Cd_inc = 2 * Cf * (
             1 + (alpha / 5) ** 2
     )
