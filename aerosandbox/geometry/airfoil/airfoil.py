@@ -1,4 +1,4 @@
-from aerosandbox.geometry.common import *
+import aerosandbox.numpy as np
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon, stack_coordinates
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
@@ -8,36 +8,82 @@ from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_Cl
 from scipy.interpolate import interp1d
 from aerosandbox.visualization.matplotlib import plt
 from aerosandbox.visualization.plotly import go, px
+from typing import Callable, Union
 
 
 class Airfoil(Polygon):
     def __init__(self,
-                 name="Untitled",  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
-                 coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
-                 CL_function=default_Cl_function,  # lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
-                 # (alpha * np.pi / 180) * (2 * np.pi)
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 CDp_function=default_Cd_function,
-                 # lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
-                 # (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=default_Cm_function,  # lambda alpha, Re, mach, deflection: (
-                 # Moment coefficient function (about quarter-chord) (alpha in deg)
-                 # 0
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 name: str = "Untitled",
+                 coordinates: Union[None, str, np.ndarray] = None,
+                 CL_function: Callable[[float, float, float, float], float] = default_Cl_function,
+                 CDp_function: Callable[[float, float, float, float], float] = default_Cd_function,
+                 Cm_function: Callable[[float, float, float, float], float] = default_Cm_function,
                  ):
         """
         Creates an Airfoil object.
-        :param name: Name of the airfoil [string]
-        :param coordinates: Either:
-            a) None if "name" is a 4-digit NACA airfoil (e.g. "naca2412"),
-            a) None if "name" is the name of an airfoil in the UIUC airfoil database (must be the name of the .dat file, e.g. "s1223"),
-            b) a filepath to a .dat file (including the .dat) [string], or
-            c) an array of coordinates [Nx2 ndarray].
-        :param CL_function:
-        :param CDp_function:
-        :param Cm_function:
+
+        Args:
+
+            name: Name of the airfoil [string]. Can also be used to auto-generate coordinates; see docstring for
+            `coordinates` below.
+
+            coordinates: A representation of the coordinates that define the airfoil. Can be one of several types of
+            input; the following sequence of operations is used to interpret the meaning of the parameter:
+
+                If `coordinates` is an Nx2 array of the [x, y] coordinates that define the airfoil, these are used
+                as-is. Points are expected to be provided in standard airfoil order:
+
+                    * Points should start on the upper surface at the trailing edge, continue forward over the upper
+                    surface, wrap around the nose, continue aft over the lower surface, and then end at the trailing
+                    edge on the lower surface.
+
+                    * The trailing edge need not be closed, but many analyses implicitly assume that this gap is small.
+
+                    * Take care to ensure that the point at the leading edge of the airfoil, usually (0, 0),
+                    is not duplicated.
+
+                If `coordinates` is provided as a string, it assumed to be the filepath to a *.dat file containing
+                the coordinates; we attempt to load coordinates from this.
+
+                If the coordinates are not specified and instead left as None, the constructor will attempt to
+                auto-populate the coordinates based on the `name` parameter provided, in the following order of
+                priority:
+
+                    * If `name` is a 4-digit NACA airfoil (e.g. "naca2412"), coordinates will be created based on the
+                    analytical equation.
+
+                    * If `name` is the name of an airfoil in the UIUC airfoil database (e.g. "s1223", "e216",
+                    "dae11"), coordinates will be loaded from that. Note that the string you provide must be exactly
+                    the name of the associated *.dat file in the UIUC database.
+
+            CL_function: A function that gives the lift coefficient of the airfoil as a function of several parameters.
+
+                Must be a callable with the exact syntax:
+
+                >>> def my_function(alpha, Re, mach, deflection)
+
+                where:
+
+                    * `alpha` is the local angle of attack, in degrees
+
+                    * `Re` is the local Reynolds number
+
+                    * `mach` is the local mach number
+
+                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
+
+            CDp_function: A function that gives the (profile) drag coefficient of the airfoil as a function of
+            several parameters.
+
+                Has the exact same syntax as `CL_function`, see above.
+
+            Cm_function: A function that gives the moment coefficient of the airfoil (about the quarter-chord) as a
+            function of several parameters.
+
+                Has the exact same syntax as `CL_function`, see above.
+
         """
+
         ### Handle the airfoil name
         self.name = name
 
