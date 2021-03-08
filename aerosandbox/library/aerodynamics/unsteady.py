@@ -9,7 +9,7 @@ def wagners_function(reduced_time: Union[List,float]):
     
     Args:
         reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        """
+    """
     return (1 - 0.165 * np.exp(-0.0455 * reduced_time) - 
                 0.335 * np.exp(-0.3 * reduced_time))
 
@@ -20,12 +20,16 @@ def calculate_wagner_lift_coefficient(
 ):
     """
     Computes the evolution of the lift coefficient in Wagner's problem which can be interpreted as follows
-    1) An impulsively started thin airfoil at consntant angle of attack
-    2) An impuslive change in the angle of attack of the the thin airfoil at constant velocity
+    1) An impulsively started flat plate at consntant angle of attack
+    2) An impuslive change in the angle of attack of a flat plate at constant velocity
    
     The model predicts infinite added mass at the first instant due to the infinite acceleration
     The delta function term (and therefore added mass) has been ommited in this case.
-    The way the function is set up right now, reduced_time = 0 corresponds to the instance the airfoil pitches/accelerates
+    Reduced_time = 0 corresponds to the instance the airfoil pitches/accelerates
+    
+        Args:
+        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        angle_of_attack (float) 
 
     """
     return 2 * np.pi * angle_of_attack * wagners_function(reduced_time)
@@ -37,8 +41,8 @@ def calculate_kussner_lift_coefficient(
         velocity: float
 ):
     """
-    Computes the evolution of the lift coefficient of a thin airfoil entering a sharp, transverse, top hat gust
-    The way the function is set up right now, reduced_time = 0 corresponds to the instance the gust is entered
+    Computes the evolution of the lift coefficient of a flat plate entering a sharp, transverse, top hat gust
+    Reduced_time = 0 corresponds to the instance the gust is entered
     
     (Leishman, Principles of Helicopter Aerodynamics, S8.10,S8.11)
     
@@ -62,6 +66,7 @@ def kussners_function(reduced_time: Union[List,float]):
     """
     return 1 - 0.5 * np.exp(-0.13 * reduced_time) - 0.5 * np.exp(-reduced_time) 
 
+
 def calculate_reduced_time(
         time: Union[float,List],
         velocity: Union[float,List],
@@ -84,7 +89,7 @@ def calculate_reduced_time(
     if type(velocity) == float or type(velocity) == int : 
         return 2 * velocity * time / chord
     else:
-        assert np.size(velocity) == np.size(time)
+        assert np.size(velocity) == np.size(time) , "The velocity history and time must have the same length"
         reduced_time = np.zeros_like(time)
         for i in range(len(time)-1):
             reduced_time[i+1] =  reduced_time[i] + (velocity[i+1] + velocity[i])/2 * (time[i+1]-time[i])        
@@ -96,8 +101,21 @@ def duhamel_integral_kussner(
         gust_velocity: List,
         velocity: float
 ): 
+    """
+    Calculates the duhamel superposition integral of Kussner's problem. 
+    Given some arbitrary transverse velocity profile, the lift coefficient 
+    of a flat plate can be computed using this function
     
-    assert np.size(reduced_time) == np.size(gust_velocity)
+    
+    Args:
+        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        gust_velocity (List) : The transverse velocity profile that the flate plate experiences
+        velocity (float) :The velocity by which the flat plate enters the gust
+        
+    Returns:
+        lift_coefficient (List) : The lift coefficient history of the flat plate 
+    """
+    assert np.size(reduced_time) == np.size(gust_velocity),  "The velocity history and time must have the same length"
     
     dw_ds = np.gradient(gust_velocity)
     
@@ -110,7 +128,36 @@ def duhamel_integral_kussner(
     
     return lift_coefficient
 
+
+def duhamel_integral_wagner(
+        reduced_time: List,
+        angle_of_attack: List
+): 
+    """
+    Calculates the duhamel superposition integral of Wagner's problem. 
+    Given some arbitrary pitching profile, the lift coefficient 
+    of a flat plate can be computed using this function
     
+    
+    Args:
+        reduced_time (float,List) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        angle_of_attack (List) : The angle of attack as a function of reduced time of the flat plate
+    Returns:
+        lift_coefficient (List) : The lift coefficient history of the flat plate 
+    """
+    assert np.size(reduced_time) == np.size(angle_of_attack),  "The pitching history and time must have the same length"
+    
+    da_ds = np.gradient(angle_of_attack)
+    lift_coefficient = np.zeros_like(reduced_time)
+    wagner = wagners_function(reduced_time)
+    ds =  np.gradient(reduced_time)
+    
+    for i,s in enumerate(reduced_time):
+        lift_coefficient[i] = 2 * np.pi * (angle_of_attack[0] * wagner[i] + np.sum([da_ds[j]  * wagner[i-j] * ds[j] for j in range(i)]))
+    
+    return lift_coefficient
+
+
     
     
 time = np.linspace(0,100,100)
@@ -121,12 +168,16 @@ reduced_time = calculate_reduced_time(time, velocity, chord)
 gust_velocity = np.zeros_like(reduced_time)
 gust_velocity[30:60] = velocity 
 
-
+angle_of_attack = np.sin(reduced_time)
 
 cl = duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
+cl_w = duhamel_integral_wagner(reduced_time,angle_of_attack)
     
+plt.figure(dpi=300)
 plt.plot(reduced_time,gust_velocity)
 plt.plot(reduced_time,cl)
 
-
+plt.figure(dpi=300)
+plt.plot(reduced_time,angle_of_attack)
+plt.plot(reduced_time,cl_w)
 
