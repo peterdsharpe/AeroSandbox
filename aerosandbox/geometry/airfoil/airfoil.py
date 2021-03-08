@@ -109,28 +109,6 @@ class Airfoil(Polygon):
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
-    def has_sectional_functions(self, raise_exception_if_absent=True):
-        """
-        Runs a quick check to see if this airfoil has sectional functions.
-        :param raise_exception_if_absent: Boolean flag to raise an Exception if sectional functions are not found.
-        :return: Boolean of whether or not sectional functions is present.
-        """
-        data_present = (
-                hasattr(self, 'CL_function') and callable(self.CL_function) and
-                hasattr(self, 'CDp_function') and callable(self.CDp_function) and
-                hasattr(self, 'Cm_function') and callable(self.Cm_function)
-        )
-        if not data_present and raise_exception_if_absent:
-            raise Exception(
-                """This Airfoil %s does not yet have sectional functions,
-                so you can't run the function you've called.
-                To get sectional functions, first call:
-                    Airfoil.populate_sectional_functions_from_xfoil_fits()
-                which will perform an in-place update that
-                provides the data.""" % self.name
-            )
-        return data_present
-
     def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
         """
         Returns the local camber of the airfoil at a given point or points.
