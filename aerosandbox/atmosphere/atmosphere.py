@@ -94,9 +94,9 @@ class Atmosphere(AeroSandboxObject):
         """
         Returns the pressure, in Pascals.
         """
-        if self.type == "isa":
+        if self.type.lower() == "isa":
             return self._pressure_isa()
-        elif self.type == "differentiable":
+        elif self.type.lower() == "differentiable":
             return self._pressure_differentiable()
         else:
             raise ValueError("Bad value of 'type'!")
@@ -105,9 +105,9 @@ class Atmosphere(AeroSandboxObject):
         """
         Returns the temperature, in Kelvin.
         """
-        if self.type == "isa":
+        if self.type.lower() == "isa":
             return self._temperature_isa()
-        elif self.type == "differentiable":
+        elif self.type.lower() == "differentiable":
             return self._temperature_differentiable()
         else:
             raise ValueError("Bad value of 'type'!")
