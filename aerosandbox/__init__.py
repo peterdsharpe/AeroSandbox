@@ -9,4 +9,4 @@ from .performance import *
 from .propulsion import *
 from .structures import *
 
-__version__ = "3.0.2"
+__version__ = "3.0.3"
