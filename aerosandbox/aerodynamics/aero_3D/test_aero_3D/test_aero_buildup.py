@@ -1,10 +1,10 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from conventional import airplane
+from aerosandbox.aerodynamics.aero_3D.test_aero_3D.conventional import airplane
 
 analysis = asb.AeroBuildup(
     airplane=airplane,
-    op_point = asb.OperatingPoint(
+    op_point=asb.OperatingPoint(
         atmosphere=asb.Atmosphere(altitude=0, type="ISA"),
         velocity=10,  # m/s
         alpha=5,  # In degrees
