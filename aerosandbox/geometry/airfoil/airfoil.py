@@ -3,8 +3,8 @@ from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon, stack_coordinates
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
     get_kulfan_coordinates, get_file_coordinates
-from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_Cl_function, default_Cd_function, \
-    default_Cm_function
+from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
+    default_CM_function
 from scipy.interpolate import interp1d
 from aerosandbox.visualization.matplotlib import plt
 from aerosandbox.visualization.plotly import go, px
@@ -18,9 +18,9 @@ class Airfoil(Polygon):
     def __init__(self,
                  name: str = "Untitled",
                  coordinates: Union[None, str, np.ndarray] = None,
-                 CL_function: Callable[[float, float, float, float], float] = default_Cl_function,
-                 CDp_function: Callable[[float, float, float, float], float] = default_Cd_function,
-                 Cm_function: Callable[[float, float, float, float], float] = default_Cm_function,
+                 CL_function: Callable[[float, float, float, float], float] = default_CL_function,
+                 CD_function: Callable[[float, float, float, float], float] = default_CD_function,
+                 CM_function: Callable[[float, float, float, float], float] = default_CM_function,
                  ):
         """
         Creates an Airfoil object.
@@ -59,7 +59,8 @@ class Airfoil(Polygon):
                     "dae11"), coordinates will be loaded from that. Note that the string you provide must be exactly
                     the name of the associated *.dat file in the UIUC database.
 
-            CL_function: A function that gives the lift coefficient of the airfoil as a function of several parameters.
+            CL_function: A function that gives the sectional lift coefficient of the airfoil as a function of several
+            parameters.
 
                 Must be a callable with the exact syntax:
 
@@ -75,13 +76,13 @@ class Airfoil(Polygon):
 
                     * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
 
-            CDp_function: A function that gives the (profile) drag coefficient of the airfoil as a function of
+            CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
             several parameters.
 
                 Has the exact same syntax as `CL_function`, see above.
 
-            Cm_function: A function that gives the moment coefficient of the airfoil (about the quarter-chord) as a
-            function of several parameters.
+            Cm_function: A function that gives the sectional moment coefficient of the airfoil (about the
+            quarter-chord) as a function of several parameters.
 
                 Has the exact same syntax as `CL_function`, see above.
 
@@ -106,8 +107,8 @@ class Airfoil(Polygon):
 
         ### Handle other arguments
         self.CL_function = CL_function
-        self.CDp_function = CDp_function
-        self.Cm_function = Cm_function
+        self.CD_function = CD_function
+        self.CM_function = CM_function
 
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
