@@ -122,7 +122,17 @@ class XFoil(ExplicitAnalysis):
 
     def _run_xfoil(self,
                    run_command: str,
-                   ) -> Dict[str, Union[np.ndarray, None]]:
+                   ) -> Dict[str, np.ndarray]:
+        """
+        Private function to run XFoil.
+
+        Args: run_command: A string with any XFoil inputs that you'd like. By default, you start off within the OPER
+        menu. All of the inputs indicated in the constructor have been set already, but you can override them here (for
+        this run only) if you want.
+
+        Returns: A dictionary containing all converged solutions obtained with your inputs.
+
+        """
         # Set up a temporary directory
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
@@ -174,7 +184,7 @@ class XFoil(ExplicitAnalysis):
                 "xtr_lower"
             ]
 
-            with open(directory/output_filename, "r") as f:
+            with open(directory / output_filename, "r") as f:
                 print(f.read())
 
             with warnings.catch_warnings():
@@ -188,13 +198,23 @@ class XFoil(ExplicitAnalysis):
             has_valid_inputs = len(output_data) != 0
 
             return {
-                k: output_data[:, index] if has_valid_inputs else None
+                k: output_data[:, index] if has_valid_inputs else np.array([])
                 for index, k in enumerate(columns)
             }
 
     def alpha(self,
               alpha: Union[float, np.ndarray]
-              ) -> Dict:
+              ) -> Dict[str, np.ndarray]:
+        """
+        Execute XFoil at a given angle of attack, or at a sequence of angles of attack.
+
+        Args:
+            alpha: The angle of attack [degrees]. Can be either a float or an iterable of floats, such as an array.
+
+        Returns: A dictionary with the XFoil results. Dictionary values are arrays; they may not be the same shape as
+        your input array if some points did not converge.
+
+        """
         alphas = np.array(alpha).reshape(-1)
 
         return self._run_xfoil(
@@ -206,7 +226,17 @@ class XFoil(ExplicitAnalysis):
 
     def cl(self,
            cl: Union[float, np.ndarray]
-           ) -> Dict:
+           ) -> Dict[str, np.ndarray]:
+        """
+        Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
+
+        Args:
+            cl: The lift coefficient [-]. Can be either a float or an iterable of floats, such as an array.
+
+        Returns: A dictionary with the XFoil results. Dictionary values are arrays; they may not be the same shape as
+        your input array if some points did not converge.
+
+        """
         cls = np.array(cl).reshape(-1)
 
         return self._run_xfoil(
