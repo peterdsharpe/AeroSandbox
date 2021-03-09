@@ -117,7 +117,7 @@ def duhamel_integral_kussner(
     """
     assert np.size(reduced_time) == np.size(gust_velocity),  "The velocity history and time must have the same length"
     
-    dw_ds = np.gradient(gust_velocity)
+    dw_ds = np.gradient(gust_velocity,reduced_time)
     
     lift_coefficient = np.zeros_like(reduced_time)
     kussner = kussners_function(reduced_time)
@@ -147,7 +147,7 @@ def duhamel_integral_wagner(
     """
     assert np.size(reduced_time) == np.size(angle_of_attack),  "The pitching history and time must have the same length"
     
-    da_ds = np.gradient(angle_of_attack)
+    da_ds = np.gradient(angle_of_attack,reduced_time)
     lift_coefficient = np.zeros_like(reduced_time)
     wagner = wagners_function(reduced_time)
     ds =  np.gradient(reduced_time)
@@ -160,8 +160,14 @@ def duhamel_integral_wagner(
 
 
 
+def added_mass_from_pitching():
+    pass
+
 
 if __name__ == "__main__":
+    
+    
+    
     n = 1000
     n1 = int(n/3)
     n2 = int(2*n/3)
@@ -170,11 +176,16 @@ if __name__ == "__main__":
     chord = 1
     reduced_time = calculate_reduced_time(time, velocity, chord) 
     
+     
+    angle_of_attack = 20*np.deg2rad(np.sin(reduced_time))
+    angle_of_attack[n1:n2] = np.deg2rad(-20)
+    
+    
     gust_velocity = np.zeros_like(reduced_time)
     gust_velocity[n1:n2] = velocity 
     
     angle_of_attack = 20*np.deg2rad(np.sin(reduced_time))
-    #angle_of_attack[n1:n2] = np.deg2rad(-20)
+    angle_of_attack[n1:n2] = np.deg2rad(-20)
     
     cl_k = duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
     cl_w = duhamel_integral_wagner(reduced_time,angle_of_attack)
