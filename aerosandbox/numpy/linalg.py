@@ -5,7 +5,11 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 
 
 def inner(x, y):
-    """Return the inner product of vectors x and y."""
+    """
+    Inner product of two arrays.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.inner.html
+    """
     if not is_casadi_type([x, y], recursive=True):
         return _onp.inner(x, y)
 
@@ -14,13 +18,16 @@ def inner(x, y):
 
 
 def outer(x, y):
-    """Return the outer product of vectors x and y."""
+    """
+    Compute the outer product of two vectors.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.outer.html
+    """
     if not is_casadi_type([x, y], recursive=True):
         return _onp.outer(x, y)
 
     else:
-        if len(y.shape) == 1:  # Force y to be transposable if it's not.
-            y = _onp.expand_dims(y, 1)
+        y = _cas.DM(y) # Force y to be transposable if it's not.
         return x @ y.T
 
 
