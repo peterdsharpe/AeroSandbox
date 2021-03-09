@@ -12,6 +12,9 @@ from typing import Callable, Union
 
 
 class Airfoil(Polygon):
+    """
+    An airfoil. See constructor docstring for usage details.
+    """
     def __init__(self,
                  name: str = "Untitled",
                  coordinates: Union[None, str, np.ndarray] = None,
