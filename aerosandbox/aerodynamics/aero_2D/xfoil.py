@@ -176,10 +176,10 @@ class XFoil(ExplicitAnalysis):
             ### Parse the polar
             columns = [
                 "alpha",
-                "Cl",
-                "Cd",
-                "Cdp",
-                "Cm",
+                "CL",
+                "CD",
+                "CDp",
+                "CM",
                 "xtr_upper",
                 "xtr_lower"
             ]
