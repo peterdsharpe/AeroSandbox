@@ -465,7 +465,7 @@ class Airfoil(Polygon):
         with open(filepath, "w+") as f:
             f.writelines(
                 [self.name + "\n"] +
-                [f"\t%f\t%f\n" % tuple(coordinate) for coordinate in self.coordinates]
+                [f"%f %f\n" % tuple(coordinate) for coordinate in self.coordinates]
             )
 
     def write_sldcrv(self,
