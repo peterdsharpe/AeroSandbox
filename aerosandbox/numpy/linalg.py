@@ -27,7 +27,8 @@ def outer(x, y):
         return _onp.outer(x, y)
 
     else:
-        y = _cas.DM(y) # Force y to be transposable if it's not.
+        if len(y.shape) == 1:  # Force y to be transposable if it's not.
+            y = _onp.expand_dims(y, 1)
         return x @ y.T
 
 
@@ -58,28 +59,48 @@ def norm(x, ord=None, axis=None):
         return _onp.linalg.norm(x, ord=ord, axis=axis)
 
     else:
-        is_vector = (
-                x.shape[0] == 1 or
-                x.shape[1] == 1
-        )
+
+        # Figure out which axis, if any, to take a vector norm about.
+        if axis is not None:
+            if not (
+                axis==0 or
+                axis==1 or
+                axis == -1
+            ):
+                raise ValueError("`axis` must be -1, 0, or 1 for CasADi types.")
+        elif x.shape[0] == 1:
+            axis = 1
+        elif x.shape[1] == 1:
+            axis = 0
 
         if ord is None:
-            if is_vector:
+            if axis is not None:
                 ord = 2
             else:
                 ord = 'fro'
 
         if ord == 1:
-            return _cas.norm_1(x)
+            # return _cas.norm_1(x)
+            return sum(
+                abs(x),
+                axis=axis
+            )
         elif ord == 2:
-            return _cas.norm_2(x)
+            # return _cas.norm_2(x)
+            return sum(
+                x ** 2,
+                axis=axis
+            ) ** 0.5
         elif ord == 'fro':
             return _cas.norm_fro(x)
-        elif ord == _onp.Inf:
+        elif np.isinf(ord):
             return _cas.norm_inf()
         else:
             try:
-                return sum(abs(x) ** ord) ** (1 / ord)
+                return sum(
+                    abs(x) ** ord,
+                    axis=axis
+                ) ** (1 / ord)
             except Exception as e:
                 print(e)
                 raise ValueError("Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "

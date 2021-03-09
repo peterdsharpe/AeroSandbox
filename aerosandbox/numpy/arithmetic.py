@@ -14,11 +14,12 @@ def sum(x, axis: int = None):
 
     else:
         if axis == 0:
-            return _cas.sum1(x)
+            return _cas.sum1(x).T
+
         elif axis == 1:
             return _cas.sum2(x)
         elif axis is None:
-            return sum(sum(x, axis=0), axis=1)
+            return sum(sum(x, axis=0), axis=0)
         else:
             raise ValueError("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
 
