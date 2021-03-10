@@ -1,5 +1,4 @@
-import casadi as cas
-
+import aerosandbox.numpy as np
 
 def propeller_shaft_power_from_thrust(
         thrust_force,
@@ -22,7 +21,7 @@ def propeller_shaft_power_from_thrust(
     :return: Shaft power [W]
     """
     return 0.5 * thrust_force * airspeed * (
-            cas.sqrt(
+            np.sqrt(
                 thrust_force / (area_propulsive * airspeed ** 2 * rho / 2) + 1
             ) + 1
     ) / propeller_coefficient_of_performance
@@ -41,13 +40,11 @@ def mass_hpa_propeller(
     :param include_variable_pitch_mechanism: boolean, does this propeller have a variable pitch mechanism?
     :return: estimated weight [kg]
     """
-    smoothmax = lambda value1, value2, hardness: cas.log(
-        cas.exp(hardness * value1) + cas.exp(hardness * value2)) / hardness  # soft maximum
 
     mass_propeller = (
             0.495 *
             (diameter / 1.25) ** 1.6 *
-            smoothmax(0.6, max_power / 14914, hardness=5) ** 2
+            np.softmax(0.6, max_power / 14914, hardness=5) ** 2
     )  # Baselining to a 125cm E-Props Top 80 Propeller for paramotor, with some sketchy scaling assumptions
     # Parameters on diameter exponent and min power were chosen such that Daedalus propeller is roughly on the curve.
 
@@ -93,7 +90,7 @@ def mass_gearbox(
     p1 = 1.0445171124733774
     p2 = 2.0083615496306910
 
-    mass_lb = 10 ** (p1 * cas.log10(beta) + p2)
+    mass_lb = 10 ** (p1 * np.log10(beta) + p2)
 
     mass = mass_lb / 2.20462262185
 

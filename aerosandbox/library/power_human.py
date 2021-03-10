@@ -1,4 +1,4 @@
-import casadi as cas
+import aerosandbox.numpy as np
 
 
 def power_human(
@@ -42,7 +42,7 @@ def power_human(
         raise ValueError("Bad value of 'dataset'!")
 
     duration_mins = duration / 60
-    log_duration_mins = cas.log10(duration_mins)
+    log_duration_mins = np.log10(duration_mins)
 
     return a * duration_mins ** (
             b0 +

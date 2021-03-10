@@ -40,7 +40,7 @@ def solar_elevation_angle(latitude, day_of_year, time):
 
     solar_elevation_angle = np.arcsind(
         np.sind(declination) * np.sind(latitude) +
-        np.cosd(declination) * np.cosd(latitude) * np.cos(np.radians(time / 86400 * 360))
+        np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
     )  # in degrees
     solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
@@ -183,7 +183,6 @@ def mass_MPPT(
 
 if __name__ == "__main__":
     # Run some checks
-    import numpy  as np
 
     latitudes = np.linspace(26, 49, 200)
     day_of_years = np.arange(0, 365) + 1
