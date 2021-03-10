@@ -342,7 +342,7 @@ class Airfoil(Polygon):
         """
 
         # Make the rotation matrix for the given angle.
-        rotation_matrix = rotation_matrix_2D(-cas.pi / 180 * deflection, backend='casadi')
+        rotation_matrix = np.rotations.rotation_matrix_2D(-np.pi / 180 * deflection)
 
         # Find the hinge point
         hinge_point_y = self.local_camber(hinge_point_x)

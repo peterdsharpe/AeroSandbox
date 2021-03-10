@@ -116,8 +116,8 @@ class Polygon(AeroSandboxObject):
 
         A = 0.5 * np.sum(a)  # area
 
-        x_c = 1 / (6 * A) * cas.sum1(a * (x + x_n))
-        y_c = 1 / (6 * A) * cas.sum1(a * (y + y_n))
+        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
+        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
         centroid = np.array([x_c, y_c])
 
         Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
