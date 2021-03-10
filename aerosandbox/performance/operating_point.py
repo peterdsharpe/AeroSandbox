@@ -30,7 +30,7 @@ class OperatingPoint(AeroSandboxObject):
         Returns:
             float: Dynamic pressure of the working fluid in .. math:: \frac{N}{m^2}
         """
-        return 0.5 * self.density * self.velocity ** 2
+        return 0.5 * self.atmosphere.density() * self.velocity ** 2
 
     def reynolds(self, reference_length):
         """
