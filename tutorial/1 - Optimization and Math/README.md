@@ -1,6 +1,6 @@
 # Optimization and Math
 
-Note that this folder a primer on the optimization syntax associated with AeroSandbox; some prior familiarity with mathematical optimization is assumed. For great primers on engineering design optimization as a field, consider the following excellent texts:
+Note that this folder is a primer on the optimization syntax associated with AeroSandbox; some prior familiarity with mathematical optimization is assumed. For great primers on engineering design optimization as a field, consider the following excellent texts:
 
 * **"Algorithms for Optimization" by Kochenderfer and Wheeler, 2019**: an amazingly readable and meticulously illustrated intro to optimization - really lovely read. Great details on related topics, like surrogate modeling and sampling plans, as well.
 

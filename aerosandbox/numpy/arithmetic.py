@@ -14,11 +14,12 @@ def sum(x, axis: int = None):
 
     else:
         if axis == 0:
-            return _cas.sum1(x)
+            return _cas.sum1(x).T
+
         elif axis == 1:
             return _cas.sum2(x)
         elif axis is None:
-            return sum(sum(x, axis=0), axis=1)
+            return sum(sum(x, axis=0), axis=0)
         else:
             raise ValueError("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
 
@@ -53,17 +54,17 @@ def abs(x):
 
 # TODO trace()
 
-def cumsum(x, axis: int = None):
-    """
-    Return the cumulative sum of the elements along a given axis.
-
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.cumsum.html
-    """
-
-    if not is_casadi_type(x):
-        return _onp.cumsum(x, axis=axis)
-
-    else:
-        raise NotImplementedError
-        if axis is None:
-            return _cas.cumsum(_onp.flatten(x))
+# def cumsum(x, axis: int = None):
+#     """
+#     Return the cumulative sum of the elements along a given axis.
+#
+#     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.cumsum.html
+#     """
+#
+#     if not is_casadi_type(x):
+#         return _onp.cumsum(x, axis=axis)
+#
+#     else:
+#         raise NotImplementedError
+#         if axis is None:
+#             return _cas.cumsum(_onp.flatten(x))

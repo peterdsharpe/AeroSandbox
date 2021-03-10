@@ -121,7 +121,7 @@ class LiftingLine(ImplicitAnalysis):
                 elif spanwise_spacing == 'cosine':
                     nondim_spanwise_coordinates = np.cosspace(0, 1, n_spanwise_coordinates)
                 else:
-                    raise Exception("Bad value of spanwise_spacing!") # TODO resume here
+                    raise Exception("Bad value of spanwise_spacing!")
 
                 for nondim_spanwise_coordinate_inner, nondim_spanwise_coordinate_outer in zip(
                         nondim_spanwise_coordinates[:-1],
@@ -150,15 +150,11 @@ class LiftingLine(ImplicitAnalysis):
                     back_left_vertices.append(back_left_vertex)
                     back_right_vertices.append(back_right_vertex)
 
-                    # Make sure airfoils have sectional functions!
-                    inner_xsec.airfoil.has_sectional_functions(raise_exception_if_absent=True)
-                    outer_xsec.airfoil.has_sectional_functions(raise_exception_if_absent=True)
-
                     CL_functions.append(
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
+                               nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.CL_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -174,7 +170,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
+                               nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.CDp_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -190,7 +186,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
+                               nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.Cm_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -215,19 +211,19 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
+                                   nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.CL_function(
                                         alpha=alpha, Re=Re, mach=mach,
-                                        deflection=(-inner_xsec.control_surface_deflection
-                                                    if inner_xsec.control_surface_type == "asymmetric" else
-                                                    inner_xsec.control_surface_deflection)
+                                        deflection=(inner_xsec.control_surface_deflection
+                                                    if inner_xsec.control_surface_is_symmetric else
+                                                    -inner_xsec.control_surface_deflection)
                                     ) * (1 - nondim_spanwise_coordinate) +
                                     outer_xsec.airfoil.CL_function(
                                         alpha=alpha, Re=Re, mach=mach,
-                                        deflection=(-inner_xsec.control_surface_deflection
-                                                    if inner_xsec.control_surface_type == "asymmetric" else
-                                                    inner_xsec.control_surface_deflection)
+                                        deflection=(inner_xsec.control_surface_deflection
+                                                    if inner_xsec.control_surface_is_symmetric else
+                                                    -inner_xsec.control_surface_deflection)
                                     ) * nondim_spanwise_coordinate
                             )
                         )
@@ -235,19 +231,19 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
+                                   nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.CDp_function(
                                         alpha=alpha, Re=Re, mach=mach,
-                                        deflection=(-inner_xsec.control_surface_deflection
-                                                    if inner_xsec.control_surface_type == "asymmetric" else
-                                                    inner_xsec.control_surface_deflection)
+                                        deflection=(inner_xsec.control_surface_deflection
+                                                    if inner_xsec.control_surface_is_symmetric else
+                                                    -inner_xsec.control_surface_deflection)
                                     ) * (1 - nondim_spanwise_coordinate) +
                                     outer_xsec.airfoil.CDp_function(
                                         alpha=alpha, Re=Re, mach=mach,
-                                        deflection=(-inner_xsec.control_surface_deflection
-                                                    if inner_xsec.control_surface_type == "asymmetric" else
-                                                    inner_xsec.control_surface_deflection)
+                                        deflection=(inner_xsec.control_surface_deflection
+                                                    if inner_xsec.control_surface_is_symmetric else
+                                                    -inner_xsec.control_surface_deflection)
                                     ) * nondim_spanwise_coordinate
                             )
                         )
@@ -255,29 +251,29 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=nondim_spanwise_coordinate_inner,
+                                   nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.Cm_function(
                                         alpha=alpha, Re=Re, mach=mach,
-                                        deflection=(-inner_xsec.control_surface_deflection
-                                                    if inner_xsec.control_surface_type == "asymmetric" else
-                                                    inner_xsec.control_surface_deflection)
+                                        deflection=(inner_xsec.control_surface_deflection
+                                                    if inner_xsec.control_surface_is_symmetric else
+                                                    -inner_xsec.control_surface_deflection)
                                     ) * (1 - nondim_spanwise_coordinate) +
                                     outer_xsec.airfoil.Cm_function(
                                         alpha=alpha, Re=Re, mach=mach,
-                                        deflection=(-inner_xsec.control_surface_deflection
-                                                    if inner_xsec.control_surface_type == "asymmetric" else
-                                                    inner_xsec.control_surface_deflection)
+                                        deflection=(inner_xsec.control_surface_deflection
+                                                    if inner_xsec.control_surface_is_symmetric else
+                                                    -inner_xsec.control_surface_deflection)
                                     ) * nondim_spanwise_coordinate
                             )
                         )
                         wing_id.append(wing_index)
 
         # Concatenate things (DX)
-        self.front_left_vertices = cas.transpose(cas.horzcat(*front_left_vertices))
-        self.front_right_vertices = cas.transpose(cas.horzcat(*front_right_vertices))
-        self.back_left_vertices = cas.transpose(cas.horzcat(*back_left_vertices))
-        self.back_right_vertices = cas.transpose(cas.horzcat(*back_right_vertices))
+        self.front_left_vertices = np.stack(front_left_vertices, axis=1).T
+        self.front_right_vertices = np.stack(front_right_vertices, axis=1).T
+        self.back_left_vertices = np.stack(back_left_vertices, axis=1).T
+        self.back_right_vertices = np.stack(back_right_vertices, axis=1).T
         self.CL_functions = CL_functions  # type: list # of callables
         self.CDp_functions = CDp_functions  # type: list # of callables
         self.Cm_functions = Cm_functions  # type: list # of callables
@@ -301,27 +297,28 @@ class LiftingLine(ImplicitAnalysis):
         self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2  # type: cas.MX
         self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)  # type: cas.MX
 
-        # Calculate areas
+        # Set up a helper function
+        def normalize_2D_array(array):
+            norm = np.linalg.norm(array, axis=1)
+            return norm, (array.T / norm).T
+
+        # Calculate areas and local normals
         diag1 = self.front_right_vertices - self.back_left_vertices
         diag2 = self.front_left_vertices - self.back_right_vertices
-        cross = cas.cross(diag1, diag2)
-        cross_norm = cas.sqrt(cross[:, 0] ** 2 + cross[:, 1] ** 2 + cross[:, 2] ** 2)
+        cross = np.cross(diag1, diag2)
+        cross_norm, self.normal_directions = normalize_2D_array(cross)
         self.areas = cross_norm / 2
 
         # Calculate local frame and chord at each station
-        self.normal_directions = cross / cross_norm
         chord_vectors = (
                 (self.back_left_vertices + self.back_right_vertices) / 2 -
                 (self.front_left_vertices + self.front_right_vertices) / 2
         )
-        self.chords = cas.sqrt(chord_vectors[:, 0] ** 2 + chord_vectors[:, 1] ** 2 + chord_vectors[:, 2] ** 2)
-        self.chordwise_directions = chord_vectors / self.chords
-        self.wing_directions = self.vortex_bound_leg / cas.sqrt(
-            self.vortex_bound_leg[:, 0] ** 2 +
-            self.vortex_bound_leg[:, 1] ** 2 +
-            self.vortex_bound_leg[:, 2] ** 2
-        )
-        self.local_forward_directions = cas.cross(self.normal_directions, self.wing_directions)
+        self.chords, self.chordwise_directions = normalize_2D_array(chord_vectors)
+
+        _, self.wing_directions = normalize_2D_array(self.vortex_bound_leg)
+
+        self.local_forward_directions = np.cross(self.normal_directions, self.wing_directions)
 
         # Do final processing for later use
         self.n_panels = self.front_left_vertices.shape[0]
@@ -335,15 +332,14 @@ class LiftingLine(ImplicitAnalysis):
 
             # Find the centerline points
             this_fuse_centerline_points = [xsec.xyz_c + fuse.xyz_le for xsec in fuse.xsecs]
-            this_fuse_centerline_points = cas.transpose(cas.horzcat(*this_fuse_centerline_points))
+            this_fuse_centerline_points = np.stack(this_fuse_centerline_points).T
 
             # Find the radii
-            this_fuse_radii = [xsec.radius for xsec in fuse.xsecs]
-            this_fuse_radii = cas.vertcat(*this_fuse_radii)
+            this_fuse_radii = np.array([xsec.radius for xsec in fuse.xsecs])
 
             fuse_centerline_points.append(
                 this_fuse_centerline_points)  # TODO handle fuselage symmetry (non-symmetric problem)
-            fuse_radii.append(this_fuse_radii)
+            fuse_radii.append(this_fuse_radii) # TODO resume here
             if (not self.run_symmetric) and fuse.symmetric:
                 fuse_centerline_points.append(reflect_over_XZ_plane(this_fuse_centerline_points))
                 fuse_radii.append(this_fuse_radii)
@@ -361,7 +357,7 @@ class LiftingLine(ImplicitAnalysis):
 
         if self.verbose:
             print("Calculating fuselage influences...")
-        self.beta = cas.sqrt(1 - self.op_point.mach)
+        self.beta = np.sqrt(1 - self.op_point.mach())
         self.fuselage_velocities = self.calculate_fuselage_influences(self.vortex_centers)
         # TODO do this
 
@@ -401,7 +397,7 @@ class LiftingLine(ImplicitAnalysis):
                     self.velocities[:, 2] * -self.local_forward_directions[:, 2]
             )
         ) * (180 / cas.pi)
-        self.velocity_magnitudes = cas.sqrt(
+        self.velocity_magnitudes = np.sqrt(
             self.velocities[:, 0] ** 2 +
             self.velocities[:, 1] ** 2 +
             self.velocities[:, 2] ** 2
@@ -450,7 +446,7 @@ class LiftingLine(ImplicitAnalysis):
             self.velocities[:, 2] * self.vortex_bound_leg[:, 0] - self.velocities[:, 0] * self.vortex_bound_leg[:, 2],
             self.velocities[:, 0] * self.vortex_bound_leg[:, 1] - self.velocities[:, 1] * self.vortex_bound_leg[:, 0],
         )
-        Vi_cross_li_magnitudes = cas.sqrt(
+        Vi_cross_li_magnitudes = np.sqrt(
             self.Vi_cross_li[:, 0] ** 2 +
             self.Vi_cross_li[:, 1] ** 2 +
             self.Vi_cross_li[:, 2] ** 2
@@ -672,8 +668,8 @@ class LiftingLine(ImplicitAnalysis):
         b_cross_u_z = b_x * u_y - b_y * u_x
         b_dot_u = b_x * u_x + b_y * u_y + b_z * u_z
 
-        norm_a = cas.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
-        norm_b = cas.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
+        norm_a = np.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
+        norm_b = np.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
         norm_a_inv = 1 / norm_a
         norm_b_inv = 1 / norm_b
 
@@ -749,8 +745,8 @@ class LiftingLine(ImplicitAnalysis):
             b_cross_u_z = b_x * u_y - b_y * u_x
             b_dot_u = b_x * u_x + b_y * u_y + b_z * u_z
 
-            norm_a = cas.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
-            norm_b = cas.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
+            norm_a = np.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
+            norm_b = np.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
             norm_a_inv = 1 / norm_a
             norm_b_inv = 1 / norm_b
 
@@ -903,7 +899,7 @@ class LiftingLine(ImplicitAnalysis):
         # Iterate
         for step_num in range(1, n_steps):
             update_amount = self.get_velocity_at_point(streamlines[-1])
-            norm_update_amount = cas.sqrt(
+            norm_update_amount = np.sqrt(
                 update_amount[:, 0] ** 2 + update_amount[:, 1] ** 2 + update_amount[:, 2] ** 2)
             update_amount = length_per_step * update_amount / norm_update_amount
             streamlines.append(streamlines[-1] + update_amount)

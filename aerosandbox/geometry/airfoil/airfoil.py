@@ -1,42 +1,93 @@
-from aerosandbox.geometry.common import *
+import aerosandbox.numpy as np
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon, stack_coordinates
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
     get_kulfan_coordinates, get_file_coordinates
+from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
+    default_CM_function
 from scipy.interpolate import interp1d
 from aerosandbox.visualization.matplotlib import plt
 from aerosandbox.visualization.plotly import go, px
+from typing import Callable, Union
 
 
 class Airfoil(Polygon):
+    """
+    An airfoil. See constructor docstring for usage details.
+    """
     def __init__(self,
-                 name="Untitled",  # Examples: 'naca0012', 'ag10', 's1223', or anything you want.
-                 coordinates=None,  # Treat this as an immutable, don't edit directly after initialization.
-                 CL_function=None,  # lambda alpha, Re, mach, deflection,: (  # Lift coefficient function (alpha in deg)
-                 # (alpha * np.pi / 180) * (2 * np.pi)
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 CDp_function=None,
-                 # lambda alpha, Re, mach, deflection: (  # Profile drag coefficient function (alpha in deg)
-                 # (1 + (alpha / 5) ** 2) * 2 * (0.074 / Re ** 0.2)
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
-                 Cm_function=None,  # lambda alpha, Re, mach, deflection: (
-                 # Moment coefficient function (about quarter-chord) (alpha in deg)
-                 # 0
-                 # ),  # type: callable # with exactly the arguments listed (no more, no fewer).
+                 name: str = "Untitled",
+                 coordinates: Union[None, str, np.ndarray] = None,
+                 CL_function: Callable[[float, float, float, float], float] = default_CL_function,
+                 CD_function: Callable[[float, float, float, float], float] = default_CD_function,
+                 CM_function: Callable[[float, float, float, float], float] = default_CM_function,
                  ):
         """
         Creates an Airfoil object.
-        :param name: Name of the airfoil [string]
-        :param coordinates: Either:
-            a) None if "name" is a 4-digit NACA airfoil (e.g. "naca2412"),
-            a) None if "name" is the name of an airfoil in the UIUC airfoil database (must be the name of the .dat file, e.g. "s1223"),
-            b) a filepath to a .dat file (including the .dat) [string], or
-            c) an array of coordinates [Nx2 ndarray].
-        :param CL_function:
-        :param CDp_function:
-        :param Cm_function:
-        :param repanel: should we repanel this airfoil upon creation?
+
+        Args:
+
+            name: Name of the airfoil [string]. Can also be used to auto-generate coordinates; see docstring for
+            `coordinates` below.
+
+            coordinates: A representation of the coordinates that define the airfoil. Can be one of several types of
+            input; the following sequence of operations is used to interpret the meaning of the parameter:
+
+                If `coordinates` is an Nx2 array of the [x, y] coordinates that define the airfoil, these are used
+                as-is. Points are expected to be provided in standard airfoil order:
+
+                    * Points should start on the upper surface at the trailing edge, continue forward over the upper
+                    surface, wrap around the nose, continue aft over the lower surface, and then end at the trailing
+                    edge on the lower surface.
+
+                    * The trailing edge need not be closed, but many analyses implicitly assume that this gap is small.
+
+                    * Take care to ensure that the point at the leading edge of the airfoil, usually (0, 0),
+                    is not duplicated.
+
+                If `coordinates` is provided as a string, it assumed to be the filepath to a *.dat file containing
+                the coordinates; we attempt to load coordinates from this.
+
+                If the coordinates are not specified and instead left as None, the constructor will attempt to
+                auto-populate the coordinates based on the `name` parameter provided, in the following order of
+                priority:
+
+                    * If `name` is a 4-digit NACA airfoil (e.g. "naca2412"), coordinates will be created based on the
+                    analytical equation.
+
+                    * If `name` is the name of an airfoil in the UIUC airfoil database (e.g. "s1223", "e216",
+                    "dae11"), coordinates will be loaded from that. Note that the string you provide must be exactly
+                    the name of the associated *.dat file in the UIUC database.
+
+            CL_function: A function that gives the sectional lift coefficient of the airfoil as a function of several
+            parameters.
+
+                Must be a callable with the exact syntax:
+
+                >>> def my_function(alpha, Re, mach, deflection)
+
+                where:
+
+                    * `alpha` is the local angle of attack, in degrees
+
+                    * `Re` is the local Reynolds number
+
+                    * `mach` is the local mach number
+
+                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
+
+            CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
+            several parameters.
+
+                Has the exact same syntax as `CL_function`, see above.
+
+            Cm_function: A function that gives the sectional moment coefficient of the airfoil (about the
+            quarter-chord) as a function of several parameters.
+
+                Has the exact same syntax as `CL_function`, see above.
+
         """
+
         ### Handle the airfoil name
         self.name = name
 
@@ -56,33 +107,11 @@ class Airfoil(Polygon):
 
         ### Handle other arguments
         self.CL_function = CL_function
-        self.CDp_function = CDp_function
-        self.Cm_function = Cm_function
+        self.CD_function = CD_function
+        self.CM_function = CM_function
 
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
-
-    def has_sectional_functions(self, raise_exception_if_absent=True):
-        """
-        Runs a quick check to see if this airfoil has sectional functions.
-        :param raise_exception_if_absent: Boolean flag to raise an Exception if sectional functions are not found.
-        :return: Boolean of whether or not sectional functions is present.
-        """
-        data_present = (
-                hasattr(self, 'CL_function') and callable(self.CL_function) and
-                hasattr(self, 'CDp_function') and callable(self.CDp_function) and
-                hasattr(self, 'Cm_function') and callable(self.Cm_function)
-        )
-        if not data_present and raise_exception_if_absent:
-            raise Exception(
-                """This Airfoil %s does not yet have sectional functions,
-                so you can't run the function you've called.
-                To get sectional functions, first call:
-                    Airfoil.populate_sectional_functions_from_xfoil_fits()
-                which will perform an in-place update that
-                provides the data.""" % self.name
-            )
-        return data_present
 
     def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
         """
@@ -164,7 +193,7 @@ class Airfoil(Polygon):
                         mode="lines+markers",
                         name="Mean Camber Line (MCL)",
                         line=dict(
-                            color="#28088744"
+                            color="navy"
                         )
                     )
                 )
@@ -193,28 +222,44 @@ class Airfoil(Polygon):
             else:
                 return fig, ax
 
-    def LE_index(self):
-        # Returns the index of the leading-edge point.
+    def LE_index(self) -> int:
+        """
+        Returns the index of the leading-edge point.
+        """
         return np.argmin(self.x())
 
-    def lower_coordinates(self):
-        # Returns a matrix (N by 2) of [x, y] coordinates that describe the lower surface of the airfoil.
-        # Order is from leading edge to trailing edge.
-        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.upper_coordinates().
+    def lower_coordinates(self) -> np.ndarray:
+        """
+        Returns an Nx2 ndarray of [x, y] coordinates that describe the lower surface of the airfoil.
+
+        Order is from the leading edge to the trailing edge.
+
+        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
+        Airfoil.upper_coordinates().
+        """
         return self.coordinates[self.LE_index():, :]
 
-    def upper_coordinates(self):
-        # Returns a matrix (N by 2) of [x, y] coordinates that describe the upper surface of the airfoil.
-        # Order is from trailing edge to leading edge.
-        # Includes the leading edge point; be careful about duplicates if using this method in conjunction with self.lower_coordinates().
+    def upper_coordinates(self) -> np.ndarray:
+        """
+        Returns an Nx2 ndarray of [x, y] coordinates that describe the upper surface of the airfoil.
+
+        Order is from the trailing edge to the leading edge.
+
+        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
+        Airfoil.lower_coordinates().
+        """
         return self.coordinates[:self.LE_index() + 1, :]
 
-    def TE_thickness(self):
-        # Returns the thickness of the trailing edge of the airfoil, in nondimensional (chord-normalized) units.
+    def TE_thickness(self) -> float:
+        """
+        Returns the thickness of the trailing edge of the airfoil.
+        """
         return self.local_thickness(x_over_c=1)
 
-    def TE_angle(self):
-        # Returns the trailing edge angle of the polygon, in degrees
+    def TE_angle(self) -> float:
+        """
+        Returns the trailing edge angle of the airfoil, in degrees
+        """
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
 
@@ -224,8 +269,8 @@ class Airfoil(Polygon):
         ))
 
     def repanel(self,
-                n_points_per_side=80,
-                ):
+                n_points_per_side: int = 100,
+                ) -> 'Airfoil':
         """
         Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
         :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
@@ -286,9 +331,9 @@ class Airfoil(Polygon):
 
     def add_control_surface(
             self,
-            deflection=0.,
-            hinge_point_x=0.75,
-    ):
+            deflection: float = 0.,
+            hinge_point_x: float = 0.75,
+    ) -> 'Airfoil':
         """
         Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
         :param deflection: deflection angle [degrees]. Downwards-positive.
@@ -297,7 +342,7 @@ class Airfoil(Polygon):
         """
 
         # Make the rotation matrix for the given angle.
-        rotation_matrix = rotation_matrix_2D(-cas.pi / 180 * deflection, backend='casadi')
+        rotation_matrix = np.rotations.rotation_matrix_2D(-np.pi / 180 * deflection)
 
         # Find the hinge point
         hinge_point_y = self.local_camber(hinge_point_x)
@@ -321,9 +366,17 @@ class Airfoil(Polygon):
         )
 
     def scale(self,
-              scale_x=1,
-              scale_y=1,
-              ):
+              scale_x: float = 1.,
+              scale_y: float = 1.,
+              ) -> 'Airfoil':
+        """
+        Scales an Airfoil about the origin.
+        Args:
+            scale_x: Amount to scale in the x-direction.
+            scale_y: Amount to scale in the y-direction.
+
+        Returns: The scaled Airfoil.
+        """
         x = self.x() * scale_x
         y = self.y() * scale_y
 
@@ -337,9 +390,18 @@ class Airfoil(Polygon):
         )
 
     def translate(self,
-                  translate_x=0.,
-                  translate_y=0.,
-                  ):
+                  translate_x: float = 0.,
+                  translate_y: float = 0.,
+                  ) -> 'Airfoil':
+        """
+        Translates an Airfoil by a given amount.
+        Args:
+            translate_x: Amount to translate in the x-direction
+            translate_y: Amount to translate in the y-direction
+
+        Returns: The translated Airfoil.
+
+        """
         x = self.x() + translate_x
         y = self.y() + translate_y
 
@@ -349,18 +411,23 @@ class Airfoil(Polygon):
         )
 
     def rotate(self,
-               angle,
-               x_center=0.,
-               y_center=0.
-               ):
+               angle: float,
+               x_center: float = 0.,
+               y_center: float = 0.
+               ) -> 'Airfoil':
         """
         Rotates the airfoil clockwise by the specified amount, in radians.
 
-        Rotates about the point (x_center, y_center).
+        Rotates about the point (x_center, y_center), which is (0, 0) by default.
+
         Args:
             angle: Angle to rotate, counterclockwise, in radians.
 
-        Returns:
+            x_center: The x-coordinate of the center of rotation.
+
+            y_center: The y-coordinate of the center of rotation.
+
+        Returns: The rotated Airfoil.
 
         """
 
@@ -402,7 +469,7 @@ class Airfoil(Polygon):
         with open(filepath, "w+") as f:
             f.writelines(
                 [self.name + "\n"] +
-                [f"\t%f\t%f\n" % tuple(coordinate) for coordinate in self.coordinates]
+                [f"%f %f\n" % tuple(coordinate) for coordinate in self.coordinates]
             )
 
     def write_sldcrv(self,
@@ -426,277 +493,6 @@ class Airfoil(Polygon):
                         f"\n"
                     )
 
-    # def xfoil_a(self,
-    #             alpha,
-    #             Re=0,
-    #             M=0,
-    #             n_crit=9,
-    #             xtr_bot=1,
-    #             xtr_top=1,
-    #             reset_bls=False,
-    #             repanel=False,
-    #             max_iter=20,
-    #             verbose=False,
-    #             ):
-    #     """
-    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-    #     Point analysis at a given alpha.
-    #     :param alpha: angle of attack [deg]
-    #     :param Re: Reynolds number
-    #     :param M: Mach number
-    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-    #     :param xtr_bot: Bottom trip location [x/c]
-    #     :param xtr_top: Top trip location [x/c]
-    #     :param reset_bls: Reset boundary layer parameters upon initialization?
-    #     :param repanel: Repanel airfoil within XFoil?
-    #     :param max_iter: Maximum number of global Newton iterations
-    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-    #     """
-    #     try:
-    #         xf = XFoil()
-    #     except NameError:
-    #         raise NameError(
-    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-    #
-    #     def run():
-    #         xf.airfoil = xfoil_model.Airfoil(
-    #             x=np.array(self.x()).reshape(-1),
-    #             y=np.array(self.y()).reshape(-1),
-    #         )
-    #         xf.Re = Re
-    #         xf.M = M
-    #         xf.n_crit = n_crit
-    #         xf.xtr = (xtr_top, xtr_bot)
-    #         if reset_bls:
-    #             xf.reset_bls()
-    #         if repanel:
-    #             xf.repanel()
-    #         xf.max_iter = max_iter
-    #         return xf.a(alpha)
-    #
-    #     if verbose:
-    #         cl, cd, cm, Cp_min = run()
-    #     else:
-    #         with stdout_redirected():
-    #             cl, cd, cm, Cp_min = run()
-    #     a = alpha
-    #
-    #     return {
-    #         "alpha" : a,
-    #         "Cl"    : cl,
-    #         "Cd"    : cd,
-    #         "Cm"    : cm,
-    #         "Cp_min": Cp_min
-    #     }
-    #
-    # def xfoil_cl(self,
-    #              cl,
-    #              Re=0,
-    #              M=0,
-    #              n_crit=9,
-    #              xtr_bot=1,
-    #              xtr_top=1,
-    #              reset_bls=False,
-    #              repanel=False,
-    #              max_iter=20,
-    #              verbose=False,
-    #              ):
-    #     """
-    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-    #     Point analysis at a given lift coefficient.
-    #     :param cl: Lift coefficient
-    #     :param Re: Reynolds number
-    #     :param M: Mach number
-    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-    #     :param xtr_bot: Bottom trip location [x/c]
-    #     :param xtr_top: Top trip location [x/c]
-    #     :param reset_bls: Reset boundary layer parameters upon initialization?
-    #     :param repanel: Repanel airfoil within XFoil?
-    #     :param max_iter: Maximum number of global Newton iterations
-    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-    #     """
-    #     try:
-    #         xf = XFoil()
-    #     except NameError:
-    #         raise NameError(
-    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-    #
-    #     def run():
-    #         xf.airfoil = xfoil_model.Airfoil(
-    #             x=np.array(self.x()).reshape(-1),
-    #             y=np.array(self.y()).reshape(-1),
-    #         )
-    #         xf.Re = Re
-    #         xf.M = M
-    #         xf.n_crit = n_crit
-    #         xf.xtr = (xtr_top, xtr_bot)
-    #         if reset_bls:
-    #             xf.reset_bls()
-    #         if repanel:
-    #             xf.repanel()
-    #         xf.max_iter = max_iter
-    #         return xf.cl(cl)
-    #
-    #     if verbose:
-    #         a, cd, cm, Cp_min = run()
-    #     else:
-    #         with stdout_redirected():
-    #             a, cd, cm, Cp_min = run()
-    #
-    #     cl = cl
-    #
-    #     return {
-    #         "alpha" : a,
-    #         "Cl"    : cl,
-    #         "Cd"    : cd,
-    #         "Cm"    : cm,
-    #         "Cp_min": Cp_min
-    #     }
-    #
-    # def xfoil_aseq(self,
-    #                a_start,
-    #                a_end,
-    #                a_step,
-    #                Re=0,
-    #                M=0,
-    #                n_crit=9,
-    #                xtr_bot=1,
-    #                xtr_top=1,
-    #                reset_bls=False,
-    #                repanel=False,
-    #                max_iter=20,
-    #                verbose=False,
-    #                ):
-    #     """
-    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-    #     Alpha sweep analysis.
-    #     :param a_start: First angle of attack [deg]
-    #     :param a_end: Last angle of attack [deg]
-    #     :param a_step: Amount to increment angle of attack by [deg]
-    #     :param Re: Reynolds number
-    #     :param M: Mach number
-    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-    #     :param xtr_bot: Bottom trip location [x/c]
-    #     :param xtr_top: Top trip location [x/c]
-    #     :param reset_bls: Reset boundary layer parameters upon initialization?
-    #     :param repanel: Repanel airfoil within XFoil?
-    #     :param max_iter: Maximum number of global Newton iterations
-    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-    #     """
-    #     try:
-    #         xf = XFoil()
-    #     except NameError:
-    #         raise NameError(
-    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-    #
-    #     def run():
-    #         xf.airfoil = xfoil_model.Airfoil(
-    #             x=np.array(self.x()).reshape(-1),
-    #             y=np.array(self.y()).reshape(-1),
-    #         )
-    #         xf.Re = Re
-    #         xf.M = M
-    #         xf.n_crit = n_crit
-    #         xf.xtr = (xtr_top, xtr_bot)
-    #         if reset_bls:
-    #             xf.reset_bls()
-    #         if repanel:
-    #             xf.repanel()
-    #         xf.max_iter = max_iter
-    #         return xf.aseq(a_start, a_end, a_step)
-    #
-    #     if verbose:
-    #         a, cl, cd, cm, Cp_min = run()
-    #     else:
-    #         with stdout_redirected():
-    #             a, cl, cd, cm, Cp_min = run()
-    #
-    #     return {
-    #         "alpha" : a,
-    #         "Cl"    : cl,
-    #         "Cd"    : cd,
-    #         "Cm"    : cm,
-    #         "Cp_min": Cp_min
-    #     }
-    #
-    # def xfoil_cseq(self,
-    #                cl_start,
-    #                cl_end,
-    #                cl_step,
-    #                Re=0,
-    #                M=0,
-    #                n_crit=9,
-    #                xtr_bot=1,
-    #                xtr_top=1,
-    #                reset_bls=False,
-    #                repanel=False,
-    #                max_iter=20,
-    #                verbose=False,
-    #                ):
-    #     """
-    #     Interface to XFoil, provided through the open-source xfoil Python library by DARcorporation.
-    #     Lift coefficient sweep analysis.
-    #     :param cl_start: First lift coefficient [unitless]
-    #     :param cl_end: Last lift coefficient [unitless]
-    #     :param cl_step: Amount to increment lift coefficient by [unitless]
-    #     :param Re: Reynolds number
-    #     :param M: Mach number
-    #     :param n_crit: Critical Tollmien-Schlichting wave amplification factor
-    #     :param xtr_bot: Bottom trip location [x/c]
-    #     :param xtr_top: Top trip location [x/c]
-    #     :param reset_bls: Reset boundary layer parameters upon initialization?
-    #     :param repanel: Repanel airfoil within XFoil?
-    #     :param max_iter: Maximum number of global Newton iterations
-    #     :param verbose: Choose whether you want to suppress output from xfoil [boolean]
-    #     :return: A dict of {alpha, Cl, Cd, Cm, Cp_min}
-    #     """
-    #     try:
-    #         xf = XFoil()
-    #     except NameError:
-    #         raise NameError(
-    #             "It appears that the XFoil-Python interface is not installed, so unfortunately you can't use this function!\n"
-    #             "To install it, run \"pip install xfoil\" in your terminal, or manually install it from: https://github.com/DARcorporation/xfoil-python .\n"
-    #             "Note: users on UNIX systems have reported errors with installing this (Windows seems fine).")
-    #
-    #     def run():
-    #         xf.airfoil = xfoil_model.Airfoil(
-    #             x=np.array(self.x()).reshape(-1),
-    #             y=np.array(self.y()).reshape(-1),
-    #         )
-    #         xf.Re = Re
-    #         xf.M = M
-    #         xf.n_crit = n_crit
-    #         xf.xtr = (xtr_top, xtr_bot)
-    #         if reset_bls:
-    #             xf.reset_bls()
-    #         if repanel:
-    #             xf.repanel()
-    #         xf.max_iter = max_iter
-    #         return xf.cseq(cl_start, cl_end, cl_step)
-    #
-    #     if verbose:
-    #         a, cl, cd, cm, Cp_min = run()
-    #     else:
-    #         with stdout_redirected():
-    #             a, cl, cd, cm, Cp_min = run()
-    #
-    #     return {
-    #         "alpha" : a,
-    #         "Cl"    : cl,
-    #         "Cd"    : cd,
-    #         "Cm"    : cm,
-    #         "Cp_min": Cp_min
-    #     }
-    #
     # def get_xfoil_data(self,
     #                    a_start=-6,  # type: float
     #                    a_end=12,  # type: float

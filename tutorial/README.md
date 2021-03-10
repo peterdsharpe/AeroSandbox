@@ -1,10 +1,8 @@
 # AeroSandbox Tutorial
-
-by Peter Sharpe
-
 -----
-
 Welcome to the AeroSandbox tutorial!
+
+The first tutorial section is [available here](1%20-%20Optimization%20and%20Math/1%20-%202D%20Rosenbrock.ipynb).
 
 Here's how this works: 
 * Read through the folders and files in ascending order. Read the `README.md` in each subfolder, if it exists.
