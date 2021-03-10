@@ -24,7 +24,7 @@ def default_CD_function(alpha, Re, mach, deflection):
     Drag coefficient.
     """
     print_default_warning()
-    Cf = aero.Cf_flat_plate(Re_L = Re)
+    Cf = Cf_flat_plate(Re_L = Re)
     Cd_inc = 2 * Cf * (
             1 + (alpha / 5) ** 2
     )
