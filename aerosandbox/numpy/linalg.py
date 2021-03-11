@@ -5,7 +5,11 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 
 
 def inner(x, y):
-    """Return the inner product of vectors x and y."""
+    """
+    Inner product of two arrays.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.inner.html
+    """
     if not is_casadi_type([x, y], recursive=True):
         return _onp.inner(x, y)
 
@@ -14,7 +18,11 @@ def inner(x, y):
 
 
 def outer(x, y):
-    """Return the outer product of vectors x and y."""
+    """
+    Compute the outer product of two vectors.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.outer.html
+    """
     if not is_casadi_type([x, y], recursive=True):
         return _onp.outer(x, y)
 
@@ -51,28 +59,48 @@ def norm(x, ord=None, axis=None):
         return _onp.linalg.norm(x, ord=ord, axis=axis)
 
     else:
-        is_vector = (
-                x.shape[0] == 1 or
-                x.shape[1] == 1
-        )
+
+        # Figure out which axis, if any, to take a vector norm about.
+        if axis is not None:
+            if not (
+                axis==0 or
+                axis==1 or
+                axis == -1
+            ):
+                raise ValueError("`axis` must be -1, 0, or 1 for CasADi types.")
+        elif x.shape[0] == 1:
+            axis = 1
+        elif x.shape[1] == 1:
+            axis = 0
 
         if ord is None:
-            if is_vector:
+            if axis is not None:
                 ord = 2
             else:
                 ord = 'fro'
 
         if ord == 1:
-            return _cas.norm_1(x)
+            # return _cas.norm_1(x)
+            return sum(
+                abs(x),
+                axis=axis
+            )
         elif ord == 2:
-            return _cas.norm_2(x)
+            # return _cas.norm_2(x)
+            return sum(
+                x ** 2,
+                axis=axis
+            ) ** 0.5
         elif ord == 'fro':
             return _cas.norm_fro(x)
-        elif ord == _onp.Inf:
+        elif np.isinf(ord):
             return _cas.norm_inf()
         else:
             try:
-                return sum(abs(x) ** ord) ** (1 / ord)
+                return sum(
+                    abs(x) ** ord,
+                    axis=axis
+                ) ** (1 / ord)
             except Exception as e:
                 print(e)
                 raise ValueError("Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "

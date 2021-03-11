@@ -45,23 +45,25 @@ class AeroBuildup(ExplicitAnalysis):
             wing.airfoil = wing.xsecs[0].airfoil
 
             ## Lift calculation
-            wing.Cl_incompressible = wing.airfoil.Cl_function(
+            wing.Cl_incompressible = wing.airfoil.CL_function(
                 alpha=wing.alpha,
                 Re=wing.Re,  # TODO finish
-                mach=0  # TODO revisit this - is this right?
+                mach=0,  # TODO revisit this - is this right?
+                deflection=0
             )
             CL_over_Cl = aero.CL_over_Cl(
                 aspect_ratio=wing.aspect_ratio(),
                 mach=op_point.mach(),
                 sweep=wing.mean_sweep_angle()
             )
-            wing.CL = wing.Cl_inc * CL_over_Cl
+            wing.CL = wing.Cl_incompressible * CL_over_Cl
 
             ## Drag calculation
-            wing.CD_profile = wing.airfoil.Cd_function(
+            wing.CD_profile = wing.airfoil.CD_function(
                 alpha=wing.alpha,
                 Re=wing.Re,
                 mach=op_point.mach(),
+                deflection=0
             )
 
             wing.oswalds_efficiency = aero.oswalds_efficiency(
@@ -72,10 +74,11 @@ class AeroBuildup(ExplicitAnalysis):
             wing.CD_induced = wing.CL ** 2 / (pi * wing.oswalds_efficiency * wing.aspect_ratio())
 
             ## Moment calculation
-            wing.Cm_incompressible = wing.airfoil.Cm_function(
+            wing.Cm_incompressible = wing.airfoil.CM_function(
                 alpha=wing.alpha,
                 Re=wing.Re,
-                mach=0  # TODO revisit this - is this right?
+                mach=0,  # TODO revisit this - is this right?
+                deflection=0,
             )
             wing.CM = wing.Cm_incompressible * CL_over_Cl
 

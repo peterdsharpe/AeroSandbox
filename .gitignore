@@ -6,4 +6,5 @@ __pycache__/
 *.asw
 .pytest_cache/
 .spyrpoject/
+<<<<<<< HEAD
 *.DS_Store
