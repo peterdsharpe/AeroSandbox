@@ -104,7 +104,7 @@ def duhamel_integral_kussner(
     """
     Calculates the duhamel superposition integral of Kussner's problem. 
     Given some arbitrary transverse velocity profile, the lift coefficient 
-    of a flat plate can be computed using this function
+    as a function of reduced time of a flat plate can be computed using this function
     
     
     Args:
@@ -118,13 +118,15 @@ def duhamel_integral_kussner(
     assert np.size(reduced_time) == np.size(gust_velocity),  "The velocity history and time must have the same length"
     
     dw_ds = np.gradient(gust_velocity,reduced_time)
-    
     lift_coefficient = np.zeros_like(reduced_time)
     kussner = kussners_function(reduced_time)
     ds =  np.gradient(reduced_time)
     
-    for i,s in enumerate(reduced_time):
-        lift_coefficient[i] = 2 * np.pi / velocity * (gust_velocity[0] * kussner[i] + np.sum([dw_ds[j]  * kussner[i-j] * ds[j] for j in range(i)]))
+    for i in range(len(reduced_time)):
+        integral_term = 0
+        for j in range(i):
+            integral_term += dw_ds[j]  * kussner[i-j] * ds[j]
+        lift_coefficient[i] = 2 * np.pi / velocity * (gust_velocity[0] * kussner[i] + integral_term)
     
     return lift_coefficient
 
@@ -135,8 +137,8 @@ def duhamel_integral_wagner(
 ): 
     """
     Calculates the duhamel superposition integral of Wagner's problem. 
-    Given some arbitrary pitching profile, the lift coefficient 
-    of a flat plate can be computed using this function
+    Given some arbitrary pitching profile, the lift coefficient as a function 
+    of reduced time of a flat plate can be computed using this function
     
     
     Args:
