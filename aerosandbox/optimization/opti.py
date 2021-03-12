@@ -197,12 +197,12 @@ class Opti(cas.Opti):
                 if scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
                     scale = 1
 
-                scale = np.fabs(
-                    np.where(
-                        init_guess != 0,
-                        init_guess,
-                        1
-                    ))
+                # scale = np.fabs(
+                #     np.where(
+                #         init_guess != 0,
+                #         init_guess,
+                #         1
+                #     ))
 
         # Validate the inputs
         if log_transform:
