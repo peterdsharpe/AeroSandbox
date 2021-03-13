@@ -177,7 +177,7 @@ def transverse_gust_lift2(
     """
     assert np.size(reduced_time) == np.size(gust_velocity_profile),  "The velocity history and time must have the same length"
     
-    
+    # HAVE TO FIX THIS FUNCTION THIS OFFSET IS NOT THE CORRECT
     cosine_angle_of_attack = np.cos(np.deg2rad(angle_of_attack))
     offset = chord / 2 * (1 - cosine_angle_of_attack)
     kussner = kussners_function(reduced_time)
@@ -185,7 +185,7 @@ def transverse_gust_lift2(
     lift_coefficient = np.zeros_like(reduced_time)
     ds =  np.gradient(reduced_time)
     
-    for i in range(len(reduced_time)):
+    for i,s in enumerate(reduced_time):
         integral_term = 0
         for j in range(i):
             integral_term += dK_ds[j]  * gust_velocity_profile[i-j-offset] * ds[j]
@@ -273,20 +273,13 @@ if __name__ == "__main__":
     reduced_time = calculate_reduced_time(time, velocity, chord) 
     
      
-    angle_of_attack = 20*np.deg2rad(np.sin(reduced_time))
-    angle_of_attack[n1:n2] = np.deg2rad(-20)
-    
     
     gust_velocity = np.zeros_like(reduced_time)
     gust_velocity[n1:n2] = velocity 
     
-    angle_of_attack = 20*np.deg2rad(np.sin(reduced_time))
-    angle_of_attack[n1:n2] = np.deg2rad(-20)
     
-    cl_k = duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
-    cl_k2 = modified_duhamel_integral_kussner(reduced_time,gust_velocity,velocity)
-
-    cl_w = duhamel_integral_wagner(reduced_time,angle_of_attack)
+    cl_k = transverse_gust_lift(reduced_time,gust_velocity,velocity)
+    cl_k2 = transverse_gust_lift2(reduced_time,gust_velocity,velocity)
         
     plt.figure(dpi=300)
     plt.plot(reduced_time,cl_k,label="kussner")
