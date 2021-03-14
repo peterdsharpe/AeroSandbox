@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from typing import Union
+from typing import Union, Callable
 
 def calculate_reduced_time(
         time: Union[float,np.ndarray],
@@ -89,7 +89,7 @@ def lift_due_to_impulsive_pitch(
     return 2 * np.pi * np.deg2rad(angle_of_attack) * wagners_function(reduced_time)
 
 
-def top_hat_gust_lift(
+def step_gust_lift(
         reduced_time: Union[float,np.ndarray] , 
         gust_velocity:float ,
         plate_velocity: float,
@@ -98,7 +98,7 @@ def top_hat_gust_lift(
 ):
     """
     Computes the evolution of the lift coefficient of a flat plate entering a 
-    sharp, transverse, top hat gust at a constant angle of attack
+    an infinitely long step gust (Heaveside function) at a constant angle of attack. 
     Reduced_time = 0 corresponds to the instance the gust is entered
     
     
@@ -123,7 +123,7 @@ def top_hat_gust_lift(
     
 def transverse_gust_lift(
         reduced_time: np.ndarray,
-        gust_velocity_profile: np.ndarray,
+        gust_velocity_profile: Callable[[float],float],
         plate_velocity: float
         
 ): 
@@ -140,7 +140,6 @@ def transverse_gust_lift(
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
-    assert np.size(reduced_time) == np.size(gust_velocity_profile),  "The velocity history and time must have the same length"
     
     dw_ds = np.gradient(gust_velocity_profile,reduced_time)
     lift_coefficient = np.zeros_like(reduced_time)
@@ -226,7 +225,12 @@ def duhamel_integral_wagner(
     
     return lift_coefficient
 
-
+def duhamel_superposition(
+        indicial_function : Callable[[float],float],
+        forcing_function: Callable[[float],float]     
+):
+    
+    pass
 
 
 def non_circulatory_lift_from_pitching(
@@ -262,31 +266,41 @@ def pitching_through_transverse_gust():
 
 if __name__ == "__main__":
     
-    
-    
-    n = 1000
-    n1 = int(n/3)
-    n2 = int(2*n/3)
-    time = np.linspace(0,100,n)
-    velocity = 0.2
-    chord = 1
-    reduced_time = calculate_reduced_time(time, velocity, chord) 
-    
-     
-    
-    gust_velocity = np.zeros_like(reduced_time)
-    gust_velocity[n1:n2] = velocity 
-    
-    
-    cl_k = transverse_gust_lift(reduced_time,gust_velocity,velocity)
-    cl_k2 = transverse_gust_lift2(reduced_time,gust_velocity,velocity)
+    def top_hat_gust(
+            reduced_time: float,
+            gust_strength: float):
+
+        if 0 <= reduced_time <= 3:
+            gust_velocity = gust_strength
+        else:
+            gust_velocity = 0
         
-    plt.figure(dpi=300)
-    plt.plot(reduced_time,cl_k,label="kussner")
-    plt.plot(reduced_time,cl_k2,label="kussner",ls="--")
-    plt.xlabel("Reduced time, t*")
-    plt.ylabel("$C_\ell$")
-    plt.legend()
-
-
-
+        return gust_velocity
+    
+    
+    time = np.linspace(-1,7,100)
+    wing_velocity = 1
+    chord = 1
+    reduced_time = calculate_reduced_time(time,wing_velocity,chord)
+    cl = transverse_gust_lift()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+            
