@@ -42,11 +42,15 @@ class InterpolatedModel(SurrogateModel):
 
             y_data_structured: # TODO
 
-            method: The method of interpolation to perform. If you want it to be differentiable, your options are:
+            method: The method of interpolation to perform. Options:
 
-                * "linear"
+                * "bspline" (Note: differentiable and suitable for optimization - made of piecewise-cubics. For other
+                applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot.)
 
-                * "bspline"
+                * "linear" (Note: differentiable, but not suitable for use in optimization w/o subgradient treatment due
+                to C1-discontinuity)
+
+                * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
 
             bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
             a ValueError is raised. If False, then fill_value is used.
