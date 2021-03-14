@@ -1,6 +1,7 @@
+from typing import Union, Dict
+
 import aerosandbox.numpy as np
 from aerosandbox.modeling.surrogate_model import SurrogateModel
-from typing import Union, Dict, List
 
 
 class InterpolatedModel(SurrogateModel):
@@ -36,11 +37,36 @@ class InterpolatedModel(SurrogateModel):
                  fill_value=np.NaN,  # Default behavior NaNs outside range
                  ):
         """
+        Create the interpolator. Note that data must be structured (i.e. gridded on a hypercube) for general
+        N-dimensional interpolation.
 
         Args:
-            x_data_coordinates: # TODO
+            x_data_coordinates: The coordinates of each axis of the cube; essentially, the independent variable(s):
 
-            y_data_structured: # TODO
+                * For the general N-dimensional case, this should be a dictionary where the keys are axis names [str]
+                and the values are 1D arrays.
+
+                * For the 1D case, you can optionally alternatively supply this as a single 1D array.
+
+            Usage example, along with `y_data_structured`:
+
+            >>> x1 = np.linspace(0, 5, 11)
+            >>> x2 = np.linspace(0, 10, 21)
+            >>> X1, X2 = np.meshgrid(x1, x2, indexing="ij")
+            >>>
+            >>> x_data_coordinates = {
+            >>>     "x1": x1, # 1D ndarray of length 11
+            >>>     "x2": x2, # 1D ndarray of length 21
+            >>> }
+            >>> y_data_structured = function_to_approximate(X1, X2) # 2D ndarray of shape (11, 21)
+
+            y_data_structured: The dependent variable, expressed as a structured data "cube":
+
+                * For the general N-dimensional case, this should be a single N-dimensional array with axis lengths
+                corresponding to the inputs in `x_data_coordinates`. In the 1-dimensional case, this naturally
+                reduces down to a single 1D ndarray.
+
+                See usage example along with `x_data_coordinates` above.
 
             method: The method of interpolation to perform. Options:
 
