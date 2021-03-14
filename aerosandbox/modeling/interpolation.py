@@ -93,6 +93,12 @@ class InterpolatedModel(SurrogateModel):
         self.y_data = np.ravel(y_data_structured, order="F")
 
     def __call__(self, x):
+        if isinstance(self.x_data_coordinates, dict):
+            x = np.stack(tuple(
+                x[k]
+                for k, v in self.x_data_coordinates.items()
+            ))
+
         return np.interpn(
             points=self.x_data_coordinates_values,
             values=self.y_data_structured,
