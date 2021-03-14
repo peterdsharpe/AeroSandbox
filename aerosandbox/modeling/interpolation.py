@@ -48,7 +48,7 @@ class InterpolatedModel(SurrogateModel):
 
                 * For the 1D case, you can optionally alternatively supply this as a single 1D array.
 
-            Usage example, along with `y_data_structured`:
+            Usage example for how you might generate this data, along with `y_data_structured`:
 
             >>> x1 = np.linspace(0, 5, 11)
             >>> x2 = np.linspace(0, 10, 21)
