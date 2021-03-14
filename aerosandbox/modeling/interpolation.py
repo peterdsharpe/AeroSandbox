@@ -81,8 +81,9 @@ class InterpolatedModel(SurrogateModel):
             bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
             a ValueError is raised. If False, then fill_value is used.
 
-            fill_value: If provided, the value to use for points outside of the interpolation domain. If None,
-            values outside the domain are extrapolated.
+            fill_value: Only used if `bounds_error` is False. If `fill_value` is provided, it is the value to use for
+            points outside of the interpolation domain. If None, values outside the domain are extrapolated,
+            if possible given the `method` chosen.
 
         """
         try:
