@@ -11,6 +11,30 @@ import warnings
 
 
 class XFoil(ExplicitAnalysis):
+    """
+
+    An interface to XFoil, a 2D airfoil analysis tool developed by Mark Drela at MIT.
+
+    Requires XFoil to be on your computer; XFoil is available here: https://web.mit.edu/drela/Public/web/xfoil/
+
+    It is recommended (but not required) that you add XFoil to your system PATH environment variable such that it can
+    be called with the command `xfoil`. If this is not the case, you need to specify the path to your XFoil
+    executable using the `xfoil_command` argument of the constructor.
+
+    Usage example:
+
+    >>> xf = XFoil(
+    >>>     airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
+    >>>     Re=1e6,
+    >>>     verbose=True
+    >>> )
+    >>>
+    >>> result_at_single_alpha = xf.alpha(5)
+    >>> result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
+    >>> result_at_multiple_alphas = xf.alpha([3, 5, 60]) # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
+
+
+    """
 
     def __init__(self,
                  airfoil: Airfoil,
