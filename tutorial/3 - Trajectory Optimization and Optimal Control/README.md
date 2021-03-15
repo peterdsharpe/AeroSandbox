@@ -48,7 +48,17 @@ This is a basic example of an idea called *multipoint optimization*, where we op
 
 ### Method 3: Full Dynamics
 
-For even more fidelity, we can directly simulate the system throughout its mission, without any kind of a priori segmentation. For an aircraft, this might involve prescribing a trajectory for the airspeed $V(t)$ and altitude $h(t)
+For even more fidelity, we can directly simulate the system throughout its mission, without any kind of a priori segmentation. For an aircraft, this might involve prescribing a trajectory for the airspeed $V(t)$ and altitude $h(t)$ and discretizing time $t$ by 100 discrete points or so.
+
+If we had our aircraft mission above (climb, cruise, loiter, cruise, descend), we could discretize this in two ways:
+
+* Multiphase optimization, where we discretize each mission segment into a series of points. This is good if the segments involve fundamentally different physics or discrete events (for example, an aircraft that drops a payload during the loiter phase)
+
+* Single-phase optimization, where we do away with all labels of climb/cruise/etc., and we just tell the vehicle to go from point A to point B. Phases like climb and cruise will naturally arise out of these dynamics, and often will give us more insight into how to optimal trajectories rather than prescribed dynamics.
+
+In either case, because the full trajectory is simulated, this is suitable not only for simulation but also trajectory optimization and optimal control.
+
+This method of "full dynamics" (along with applications to trajectory optimization and optimal control) is what we'll cover in this chapter.
 
 ## Guides
 
