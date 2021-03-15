@@ -6,7 +6,7 @@ def calculate_reduced_time(
         time: Union[float,np.ndarray],
         velocity: Union[float,np.ndarray],
         chord: float 
-) -> Union[float,np.ndarray]:
+        ) -> Union[float,np.ndarray]:
     """ 
     Calculates reduced time from time in seconds and velocity history in m/s. For constant velocity it reduces to s = 2*U*t/c
     The reduced time is the number of semichords travelled by the airfoil/aircaft i.e. 2 / chord * integral from t0 to t of velocity dt  
@@ -71,7 +71,7 @@ def kussners_function(reduced_time: Union[np.ndarray,float]):
 def lift_due_to_impulsive_pitch(
         reduced_time: Union[float,np.ndarray] , 
         angle_of_attack: float # In degrees
-):
+        ):
     """
     Computes the evolution of the lift coefficient in Wagner's problem which can be interpreted as follows
     1) An impulsively started flat plate at consntant angle of attack
@@ -95,7 +95,7 @@ def step_gust_lift(
         plate_velocity: float,
         angle_of_attack : float = 0, # In degrees
         chord: float = 1
-):
+        ):
     """
     Computes the evolution of the lift coefficient of a flat plate entering a 
     an infinitely long step gust (Heaveside function) at a constant angle of attack. 
@@ -126,7 +126,7 @@ def transverse_gust_lift(
         gust_velocity_profile: np.ndarray,
         plate_velocity: float
         
-): 
+        ): 
     """
     Calculates the lift (as a function of reduced time) caused by an arbitrary transverse gust profile
     by computing duhamel superposition integral of Kussner's problem. 
@@ -160,7 +160,7 @@ def transverse_gust_lift2(
         plate_velocity: float,
         angle_of_attack: float = 0, # In Degrees
         chord: float = 1 
-): 
+        ): 
     """
     Calculates the lift (as a function of reduced time) caused by an arbitrary transverse gust profile
     by computing duhamel superposition integral of Kussner's problem at a constant angle of attack
@@ -199,7 +199,7 @@ def transverse_gust_lift2(
 def duhamel_integral_wagner(
         reduced_time: np.ndarray,
         angle_of_attack: np.ndarray # In degrees
-): 
+        ): 
     """
     Calculates the duhamel superposition integral of Wagner's problem. 
     Given some arbitrary pitching profile, the lift coefficient as a function 
@@ -228,7 +228,7 @@ def duhamel_integral_wagner(
 def duhamel_superposition(
         indicial_function : Callable[[Union[float,np.ndarray]],Union[float,np.ndarray]],
         forcing_function: Callable[[Union[float,np.ndarray]],Union[float,np.ndarray]]
-):
+        ):
     
     def x(t: Union[float,np.ndarray]):
         if type(t) == float:
