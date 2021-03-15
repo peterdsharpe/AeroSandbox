@@ -13,7 +13,7 @@ import warnings
 # TODO: Check and document
 # TODO: Add large displacements check
 
-class Beam6DOF(ImplicitAnalysis):
+class Beam6DOF(asb.ImplicitAnalysis):
     """
     A Euler-Bernoulli 6 DOF FE beam.
     
@@ -957,11 +957,11 @@ if __name__ == '__main__':
         yield_stress = 3000000000,
         )
     
-    # BeamClass = RectBar
-    # geometry = {
-    #         'height': 1,
-    #         'width': 1,
-    #         }
+    BeamClass = RectBar
+    geometry = {
+            'height': 1,
+            'width': 1,
+            }
     
     # BeamClass = RectTube
     # geometry = {
@@ -971,11 +971,11 @@ if __name__ == '__main__':
     #         }
     
     
-    BeamClass = RoundTube
-    geometry = {
-            'diameter': 1,
-            'thickness': 0.01
-            }
+#    BeamClass = RoundTube
+#    geometry = {
+#            'diameter': 1,
+#            'thickness': 0.01
+#            }
     
     # Use default geometry guess
     beam = BeamClass(
@@ -1009,15 +1009,15 @@ if __name__ == '__main__':
     
     # Some sensible boundaries to avoid crazy beams
     opti.subject_to([
-        # beam.height < 1000,
-        # beam.width < 1000,
-        # beam.height > 0.01,
-        # beam.width > 0.01,
+         beam.height < 1000,
+         beam.width < 1000,
+         beam.height > 0.01,
+         beam.width > 0.01,
     
-        beam.diameter > 0.01,
-        beam.diameter > 0.01,
-        beam.thickness > 1E-5,
-        beam.thickness > 1E-5,
+#        beam.diameter > 0.01,
+#        beam.diameter > 0.01,
+#        beam.thickness > 1E-5,
+#        beam.thickness > 1E-5,
         ])
     
     # Some sensible boundaries to avoid crazy beams
@@ -1026,13 +1026,13 @@ if __name__ == '__main__':
     
     # Add some profile change constraints
     opti.subject_to([
-        # cas.diff(cas.diff(beam.height)) < 0.001,
-        # cas.diff(cas.diff(beam.height)) > -0.001,
-        # cas.diff(cas.diff(beam.width)) < 0.001,
-        # cas.diff(cas.diff(beam.width)) > -0.001,
+         cas.diff(cas.diff(beam.height)) < 0.001,
+         cas.diff(cas.diff(beam.height)) > -0.001,
+         cas.diff(cas.diff(beam.width)) < 0.001,
+         cas.diff(cas.diff(beam.width)) > -0.001,
         
-        cas.diff(cas.diff(beam.diameter)) < 0.001,
-        cas.diff(cas.diff(beam.diameter)) > -0.001,
+#        cas.diff(cas.diff(beam.diameter)) < 0.001,
+#        cas.diff(cas.diff(beam.diameter)) > -0.001,
     ])
 
     opti.minimize(beam.mass)
