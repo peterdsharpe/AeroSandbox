@@ -123,7 +123,7 @@ def step_gust_lift(
     
 def transverse_gust_lift(
         reduced_time: np.ndarray,
-        gust_velocity_profile: Callable[[float],float],
+        gust_velocity_profile: np.ndarray,
         plate_velocity: float
         
 ): 
@@ -226,11 +226,25 @@ def duhamel_integral_wagner(
     return lift_coefficient
 
 def duhamel_superposition(
-        indicial_function : Callable[[float],float],
-        forcing_function: Callable[[float],float]     
+        indicial_function : Callable[[Union[float,np.ndarray]],Union[float,np.ndarray]],
+        forcing_function: Callable[[Union[float,np.ndarray]],Union[float,np.ndarray]]
 ):
     
-    pass
+    def x(t: Union[float,np.ndarray]):
+        if type(t) == float:
+            dt = t/1000
+        elif type(t) == np.ndarray:
+            dt = np.gradient(np.linspace(0,))
+        else :
+            error("t must be either a float or a 1D ndarray")
+            
+        integral = 0
+        for 
+        indicial_function(0) * forcing_function(t)  
+        
+        
+    
+    
 
 
 def non_circulatory_lift_from_pitching(
