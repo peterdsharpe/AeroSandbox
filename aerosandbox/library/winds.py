@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
-
+import datetime
+from aerosandbox.modeling.interpolation import InterpolatedModel
 
 # ##### Winds
 # # Fixed value
@@ -68,3 +69,18 @@ def wind_speed_conus_summer_99(altitude, latitude):
 
     speed = s * 56 + 7
     return speed
+
+## worldwide interpolated function of 95th percentile wind from 10 years of aggregate data
+def wind_speed_world_95(altitude, latitude, day_of_year):
+
+    date = datetime.datetime(2020, 1, 1) + datetime.timedelta(day_of_year - 1)
+    month = date.month
+    latitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/latitudes.npy')
+    altitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/altitudes.npy')
+    wind_data = np.load(f'/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/wind_95_vs_latitudes_altitudes_in_{month}blurred.npy')
+    wind_data = np.flip(wind_data, axis=0)
+    wind_data = np.flip(wind_data, axis=1)
+    wind_function_95th = InterpolatedModel({"altitudes": np.flip(altitudes), "latitudes": np.flip(latitudes)},
+                                              wind_data, "bspline")
+
+    return wind_function_95th({"altitudes": altitude, "latitudes": latitude})

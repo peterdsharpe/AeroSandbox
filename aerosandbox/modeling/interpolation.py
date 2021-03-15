@@ -93,6 +93,8 @@ class InterpolatedModel(SurrogateModel):
         self.y_data = np.ravel(y_data_structured, order="F")
 
     def __call__(self, x):
+        if type(x) == dict:
+            x = np.array(list(x.values())) # I was getting an error bc x  was a dict and not an array? This created another problem so ???
         return np.interpn(
             points=self.x_data_coordinates_values,
             values=self.y_data_structured,
