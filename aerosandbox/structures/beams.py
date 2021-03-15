@@ -135,7 +135,16 @@ class Beam6DOF(AeroSandboxObject):
     
     @property
     def J(self):
-        return self.cross_section.J().T
+        """
+        Returns the torsional constant.
+        For steel, this may be a good reference: http://dir.cisc-icca.ca/files/technical/techdocs/updates/torsionprop.pdf
+        """
+        
+        # warnings.warn('Cross-sectional area not specified for beam of type {}, defaulting to {}. This may not be accurate.'.format(type(self), type(self.cross_section.J)))
+        # return self.cross_section.J().T
+        
+        # TODO: Is there a better way?
+        raise NotImplementedError('Please define the torsional constant in the geometry class.')
 
     @property
     def volume(self):
@@ -158,7 +167,7 @@ class Beam6DOF(AeroSandboxObject):
     def init_geometry(self, value):
         # Make sure all required variables are here
         for var in self.req_geometry_vars:
-            assert var in value.keys()
+            assert var in value.keys(), 'Missing input: ' + var
         
         self._init_geometry = value
         
@@ -452,7 +461,7 @@ class Beam6DOF(AeroSandboxObject):
         self.ddv = 0.01 * self.opti.variable(0, n_vars = self.n)
         self.dEIddv = 1 * self.opti.variable(0, n_vars = self.n)
 
-        # TODO: Add point moments
+        # TODO: Add moments
 
         # Define derivatives
         self.opti.subject_to([
@@ -497,24 +506,28 @@ class Beam6DOF(AeroSandboxObject):
         These might need to be specified  per geometry
         
         http://web.mit.edu/16.20/homepage/6_Torsion/Torsion_files/module_6_with_solutions.pdf
+        https://user.eng.umd.edu/~ccfu/ref/Design-Guide-9-torsion.pdf
         """  
         
         warnings.warn('Torsion has not been checked yet.')  # TODO: Check and remove
+        warnings.warn('Torsion not implemented properly.')
         
         # Set up derivatives
-        phi = 0.1 * self.opti.variable(0, n_vars = self.n)
-        dphi = 0.01 * self.opti.variable(0, n_vars = self.n)
+        self.phi = 0.1 * self.opti.variable(0, n_vars = self.n)
+        self.dphi = 0.01 * self.opti.variable(0, n_vars = self.n)
 
         # Add forcing term
-        ddphi = -self.torsional_moments_per_unit_length / (self.G * self.J)
+        self.ddphi = -self.torsional_moments_per_unit_length / (self.G * self.J)
         
+        # TODO: Check these relations
+        # TODO: Add warping constants
         # TODO: Add point moments
         # Define derivatives
         self.opti.subject_to([
             cas.diff(self.phi) == np.trapz(self.dphi) * self.dx,
             cas.diff(self.dphi) == np.trapz(self.ddphi) * self.dx,
-            cas.diff(self.G * self.J.T * self.ddv/self.dphi) == np.trapz(self.dGJddphi) * self.dx, # TODO: This formula is based on no real source
-            cas.diff(self.dGJddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx, # + self.point_torsional_moments,
+            cas.diff(self.G * self.J.T * self.dphi) == np.trapz(self.dGJddphi) * self.dx,
+            cas.diff(self.dGJddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx + self.point_torsional_moments,
         ])
         
         # Add BCs
@@ -535,7 +548,7 @@ class Beam6DOF(AeroSandboxObject):
             self.cross_section.y()**2
         )
             
-        stress = self.G * distance * self.dphi/self.dx
+        stress = self.G * distance * self.dphi
         
         # TODO: cas.sqrt might not work with AD, test cas.norm2?
         self._torsional_stress_vertices_x = 0
@@ -545,11 +558,7 @@ class Beam6DOF(AeroSandboxObject):
     
     def calc_stress(self):
         
-        # Find max Von Mises Stress
-        # TODO: Check this, shear component is wrong
-        
         axial_components = (
-                    # TODO: This below is not very clean, but works?
                     np.ones(self.cross_section.x().shape) * self.axial_stress.reshape((-1, 1))
                     +
                     (self._bending_stress_vertices_x if self.bending else 0)
@@ -565,6 +574,7 @@ class Beam6DOF(AeroSandboxObject):
                     (self._torsional_stress_vertices if self.torsion else 0)
                 )
         
+        # Find max Von Mises Stress
         self.stress = \
                 np.sqrt(
                     axial_components**2
@@ -763,7 +773,14 @@ class RoundTube(Beam6DOF):
             **kwargs)
     
     # Geometry vars
-    req_geometry_vars = ['thickness', 'diameter']    
+    req_geometry_vars = ['thickness', 'diameter']  
+    
+    @property
+    def J(self):
+        """
+        https://user.eng.umd.edu/~ccfu/ref/Design-Guide-9-torsion.pdf
+        """
+        return np.pi * (self.diameter**4 - (self.diameter-self.thickness)**4)/2
     
     @property
     def cross_section(self):
@@ -776,10 +793,10 @@ class RoundTube(Beam6DOF):
          
         xy = np.array([np.cos(angle), np.sin(angle)]).T
         
-        x1 = np.vstack([xy[:, 0]]*self.n) * (diameter - thickness)
-        y1 = np.vstack([xy[:, 1]]*self.n) * (diameter - thickness)
-        x2 = np.flip(np.vstack([xy[:, 0]]*self.n), axis=0) * diameter
-        y2 = np.flip(np.vstack([xy[:, 1]]*self.n), axis=1) * diameter
+        x1 = np.vstack([xy[:, 0]]*self.n) * (diameter.T/2 - thickness.T)
+        y1 = np.vstack([xy[:, 1]]*self.n) * (diameter.T/2 - thickness.T)
+        x2 = np.flip(np.vstack([xy[:, 0]]*self.n), axis=0) * diameter.T/2
+        y2 = np.flip(np.vstack([xy[:, 1]]*self.n), axis=1) * diameter.T/2
         
         x = cas.horzcat(x1, x2)
         y = cas.horzcat(y1, y2)
@@ -788,6 +805,25 @@ class RoundTube(Beam6DOF):
         poly = asb.Polygon(x, y)
         
         return poly
+    
+class RoundBar(RoundTube):
+    
+    def __init__(self, 
+                 *args, 
+                 init_geometry: dict = {
+                     'diameter': 100,
+                     'num_eval': 100
+                     },
+                 **kwargs):
+        
+        # It's the same as a tube, just thickness all the way through
+        init_geometry['thickness'] = init_geometry['diameter']/2
+        self.locked_geometry_vars.append('thickness')
+        
+        super().__init__(
+            *args, 
+            init_geometry = init_geometry,
+            **kwargs)
     
     
 class RectTube(Beam6DOF):
@@ -810,6 +846,26 @@ class RectTube(Beam6DOF):
     req_geometry_vars = ['thickness', 'height', 'width']    
     
     @property
+    def J(self):
+        """
+        https://user.eng.umd.edu/~ccfu/ref/Design-Guide-9-torsion.pdf
+        """
+        
+        if self.height > self.width:
+            b = self.width
+            h = self.height
+        else:
+            b = self.height
+            h = self.width
+        
+        t = self.thickness
+        
+        assert b/t >= 10, "Width/Height to Thickness ratio must be greater than 10. Add constraint to optimizer if needed."
+        # Auto-add constraint?
+        
+        return (2 * t*t *b**2 * h**2) / (b*t + h*t)
+    
+    @property
     def cross_section(self):
         height = self.height
         width = self.width
@@ -821,8 +877,8 @@ class RectTube(Beam6DOF):
             [0, 0]
             ]), axis=0)
         
-        x1 = np.vstack([xy[:, 0]]*self.n) * (width.T - 2 * thickness) +  thickness
-        y1 = np.vstack([xy[:, 1]]*self.n) * (height.T - 2 * thickness) +  thickness
+        x1 = np.vstack([xy[:, 0]]*self.n) * (width.T - 2 * thickness.T) +  thickness.T
+        y1 = np.vstack([xy[:, 1]]*self.n) * (height.T - 2 * thickness.T) +  thickness.T
         x2 = np.vstack([xy[:, 0]]*self.n) * width.T
         y2 = np.vstack([xy[:, 1]]*self.n) * height.T
         
@@ -849,7 +905,25 @@ class RectBar(Beam6DOF):
             **kwargs)
     
     # Geometry vars
-    req_geometry_vars = ['height', 'width']    
+    req_geometry_vars = ['height', 'width'] 
+    
+    @property
+    def J(self):
+        """
+        https://user.eng.umd.edu/~ccfu/ref/Design-Guide-9-torsion.pdf
+        """
+        
+        if self.height > self.width:
+            t = self.width
+            b = self.height
+        else:
+            t = self.height
+            b = self.width
+        
+        if b/2 >= 10:
+            return b*t**3/3
+        else:
+            return (1/3 - 0.2 * t / b) * b * t**3
     
     @property
     def cross_section(self):
@@ -876,13 +950,30 @@ if __name__ == '__main__':
     opti = asb.Opti()
     material = asb.structures.materials.AISI_1006_Steel_Cold_Drawn()
     
+    # BeamClass = RectBar
+    # geometry = {
+    #         'height': 1,
+    #         'width': 1,
+    #         }
+    
+    # BeamClass = RectTube
+    # geometry = {
+    #         'height': 1,
+    #         'width': 1,
+    #         'thickness': 0.01
+    #         }
+    
+    
+    BeamClass = RoundTube
+    geometry = {
+            'diameter': 1,
+            'thickness': 0.01
+            }
+    
     # Use default geometry guess
-    beam = RectBar(
+    beam = BeamClass(
         opti=opti,
-        init_geometry = {
-            'height': 1,
-            'width': 1,
-            },
+        init_geometry = geometry,
         material = material,
         length=60 / 2,
         points_per_point_load=50,
@@ -911,25 +1002,30 @@ if __name__ == '__main__':
     
     # Some sensible boundaries to avoid crazy beams
     opti.subject_to([
-        beam.height < 1000,
-        beam.width < 1000,
-        beam.height > 0.01,
-        beam.width > 0.01,
+        # beam.height < 1000,
+        # beam.width < 1000,
+        # beam.height > 0.01,
+        # beam.width > 0.01,
+    
+        beam.diameter > 0.01,
+        beam.diameter > 0.01,
+        beam.thickness > 1E-5,
+        beam.thickness > 1E-5,
+        ])
+    
+    # Some sensible boundaries to avoid crazy beams
+    opti.subject_to([
         ])
     
     # Add some profile change constraints
     opti.subject_to([
-        cas.diff(cas.diff(beam.height)) < 0.001,
-        cas.diff(cas.diff(beam.height)) > -0.001,
+        # cas.diff(cas.diff(beam.height)) < 0.001,
+        # cas.diff(cas.diff(beam.height)) > -0.001,
+        # cas.diff(cas.diff(beam.width)) < 0.001,
+        # cas.diff(cas.diff(beam.width)) > -0.001,
         
-        cas.diff(cas.diff(beam.width)) < 0.001,
-        cas.diff(cas.diff(beam.width)) > -0.001,
-        
-        # cas.diff(beam.height) < 0.1,
-        # cas.diff(beam.height) > -0.1,
-        
-        # cas.diff(beam.width) < 0.1,
-        # cas.diff(beam.width) > -0.1,
+        cas.diff(cas.diff(beam.diameter)) < 0.001,
+        cas.diff(cas.diff(beam.diameter)) > -0.001,
     ])
 
     opti.minimize(beam.mass)
