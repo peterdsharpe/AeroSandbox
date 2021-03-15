@@ -13,9 +13,15 @@ p_opts = {}
 s_opts = {}
 s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
 
-material = asb.structures.materials.AISI_1006_Steel_Cold_Drawn()
+material = asb.structures.materials.Material(
+        density = 79000,
+        G = 820000000000,
+        E = 2000000000000,
+        tensile_strength = 3800000000,
+        poisson_ratio = 0.29,
+        yield_stress = 3000000000,
+        )
 
-    
 # %% RectBar tests
 
 def test_rectbar_vars():
