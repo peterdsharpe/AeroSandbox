@@ -29,7 +29,7 @@ After reading that, here's what else you need to know before contributing:
       1. Never commit directly to `master`!
       2. Add features in new branches named `feature/insert-name-here`. Be sure to branch these features off of `develop`, not off of `master`!
       3. When your feature is ready in your feature branch:
-          1. First, rebase your feature branch on `develop` and check that all unit tests still pass (run `pytest` in terminal in the project root directory).
+          1. First, merge `develop` into your feature branch to get latest changes and check that all unit tests still pass (run `pytest` in terminal in the project root directory).
           2. Submit a pull request to merge it back into `develop` and wait for a core developer to approve.
 
 * Commit often. In general, commit after every "unit" of work or anytime the code base returns to a "working" (i.e.
