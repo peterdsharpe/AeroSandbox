@@ -13,7 +13,7 @@ import warnings
 # TODO: Check and document
 # TODO: Add large displacements check
 
-class Beam6DOF(AeroSandboxObject):
+class Beam6DOF(ImplicitAnalysis):
     """
     A Euler-Bernoulli 6 DOF FE beam.
     
@@ -948,7 +948,14 @@ class RectBar(Beam6DOF):
 if __name__ == '__main__':
     
     opti = asb.Opti()
-    material = asb.structures.materials.AISI_1006_Steel_Cold_Drawn()
+    material = asb.structures.materials.Material(
+        density = 79000,
+        G = 820000000000,
+        E = 2000000000000,
+        tensile_strength = 3800000000,
+        poisson_ratio = 0.29,
+        yield_stress = 3000000000,
+        )
     
     # BeamClass = RectBar
     # geometry = {
