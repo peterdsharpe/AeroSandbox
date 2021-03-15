@@ -13,6 +13,8 @@ p_opts = {}
 s_opts = {}
 s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
 
+material = asb.structures.materials.AISI_1006_Steel_Cold_Drawn()
+
     
 # %% RectBar tests
 
@@ -25,6 +27,7 @@ def test_rectbar_vars():
             'height': 1,
             'width': 1,
             },
+        material = material,
         length=10,
         points_per_point_load=50,
         bending=True,
@@ -62,6 +65,7 @@ def test_rectbar_runs():
             'height': 1,
             'width': 1,
             },
+        material = material,
         length=10,
         points_per_point_load=10,
         bending=True,
@@ -84,8 +88,8 @@ def test_rectbar_runs():
     try:
         sol = opti.solve()
         beam.substitute_solution(sol)
-        beam.plot3D()
-        beam.draw_geometry_vars()
+#        beam.plot3D()
+#        beam.draw_geometry_vars()
     except:
         print("Failed!")
         raise
@@ -102,6 +106,7 @@ def test_rectbar_axial():
             'height': 1,
             'width': 1,
             },
+        material = material,
         length=10,
         points_per_point_load=10,
         bending=False,
@@ -124,8 +129,8 @@ def test_rectbar_axial():
     try:
         sol = opti.solve()
         beam.substitute_solution(sol)
-        beam.plot3D()
-        beam.draw_geometry_vars()
+#        beam.plot3D()
+#        beam.draw_geometry_vars()
     except:
         print("Failed!")
         raise
@@ -145,6 +150,7 @@ def test_rectbar_shear():
             'height': 1,
             'width': 1,
             },
+        material = material,
         length=10,
         points_per_point_load=10,
         bending=False,
@@ -167,8 +173,8 @@ def test_rectbar_shear():
     try:
         sol = opti.solve()
         beam.substitute_solution(sol)
-        beam.plot3D()
-        beam.draw_geometry_vars()
+#        beam.plot3D()
+#        beam.draw_geometry_vars()
     except:
         print("Failed!")
         raise
