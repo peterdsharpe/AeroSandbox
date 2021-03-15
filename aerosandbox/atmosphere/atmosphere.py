@@ -2,6 +2,7 @@ from aerosandbox.common import AeroSandboxObject
 import aerosandbox.numpy as np
 import pandas as pd
 from pathlib import Path
+from aerosandbox.modeling.interpolation import InterpolatedModel
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
@@ -58,6 +59,32 @@ for i in range(len(isa_table) - 1):
         )
     )
 
+#creating differentiable temperature and pressure models
+        
+#defining desired altitutes
+altitude_inter = np.concatenate((np.linspace(-50e3, 9e3, 500),
+                                 np.linspace(13e3, 18e3, 100),
+                                 np.linspace(22e3, 30e3, 100),
+                                 np.linspace(34e3, 45e3, 100),
+                                 np.linspace(48e3, 50e3, 100),
+                                 np.linspace(53e3, 69e3, 100),
+                                 np.linspace(73e3, 85e3, 100),
+                                 np.linspace(89e3, 150e3, 500)), axis=0)
+scaled_altitude_inter=altitude_inter/10000
+
+#loads in temperature and pressure data
+temperature_isa_inter=np.load('isa_data/atmspheretemps_inter.npy')
+pressure_isa_inter=np.load('isa_data/atmspherepressures_inter.npy')
+
+#creates interpolated model for temperature and pressure
+fitted_model_inter_temp = InterpolatedModel(
+    x_data_coordinates=scaled_altitude_inter,
+    y_data_structured=temperature_isa_inter,
+)
+fitted_model_inter_pressure = InterpolatedModel(
+    x_data_coordinates=scaled_altitude_inter,
+    y_data_structured=np.log(pressure_isa_inter),
+)
 
 ### Define the Atmosphere class
 class Atmosphere(AeroSandboxObject):
@@ -182,37 +209,16 @@ class Atmosphere(AeroSandboxObject):
     # return 260 * np.ones_like(self.altitude)
 
     def _pressure_differentiable(self):
-        altitude_scaled = self.altitude / 40000
+        
 
-        p1 = -1.822942e+00
-        p2 = 5.366751e+00
-        p3 = -5.021452e+00
-        p4 = -4.424532e+00
-        p5 = 1.151986e+01
-
-        x = altitude_scaled
-        logP = p5 + x * (p4 + x * (p3 + x * (p2 + x * (p1))))
-
-        pressure = np.exp(logP)
+        pressure = np.exp(fitted_model_inter_pressure(self.altitude/10000))
 
         return pressure
 
     def _temperature_differentiable(self):
 
-        altitude_scaled = self.altitude / 40000
 
-        p1 = -2.122102e+01
-        p2 = 7.000812e+01
-        p3 = -8.759170e+01
-        p4 = 5.047893e+01
-        p5 = -1.176537e+01
-        p6 = -3.566535e-02
-        p7 = 5.649588e+00
-
-        x = altitude_scaled
-        logT = p7 + x * (p6 + x * (p5 + x * (p4 + x * (p3 + x * (p2 + x * (p1))))))
-
-        temperature = np.exp(logT)
+        temperature = fitted_model_inter_temp(self.altitude/10000)
 
         return temperature
 
