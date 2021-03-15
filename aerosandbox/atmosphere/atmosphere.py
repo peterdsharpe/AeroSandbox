@@ -62,14 +62,14 @@ for i in range(len(isa_table) - 1):
 #creating differentiable temperature and pressure models
         
 #defining desired altitutes
-altitude_inter = np.concatenate((np.linspace(-50e3, 9e3, 500),
-                                 np.linspace(13e3, 18e3, 100),
-                                 np.linspace(22e3, 30e3, 100),
-                                 np.linspace(34e3, 45e3, 100),
-                                 np.linspace(48e3, 50e3, 100),
-                                 np.linspace(53e3, 69e3, 100),
-                                 np.linspace(73e3, 85e3, 100),
-                                 np.linspace(89e3, 150e3, 500)), axis=0)
+altitude_inter = np.concatenate((np.linspace(-50e3, 9e3, 50),
+                                      np.linspace(13e3, 18e3, 10),
+                                      np.linspace(22e3, 30e3, 10),
+                                      np.linspace(34e3, 45e3, 10),
+                                      np.linspace(48e3, 50e3, 10),
+                                      np.linspace(53e3, 69e3, 10),
+                                      np.linspace(73e3, 85e3, 10)
+                                      ,np.linspace(89e3, 150e3, 40)), axis=0)
 scaled_altitude_inter=altitude_inter/10000
 
 #loads in temperature and pressure data
