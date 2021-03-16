@@ -141,6 +141,8 @@ One final point to note: as we're all sensible and civilized human beings here, 
 
 The fastest way to ensure that all dependencies are satisfied is by simply running "pip install AeroSandbox" in your command prompt. However, you can also install dependencies on your own if you'd like: see "requirements.txt" for the list.
 
+<!--
+
 ## Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
 
@@ -148,8 +150,6 @@ This package eventually seeks to develop the following:
 An aerodynamics tool that models flow around any general triangulated 3D shape (with non-separated flow) using strongly-coupled viscous/inviscid methods. If successful, this could be orders of magnitude faster than volume-mesh-based CFD while retaining high accuracy (XFoil is a 2D example of this).
 
 This code is made open-source in hopes that the aerospace community can benefit from this work. I've benefitted so much from open-source aerospace tools that came before me (XFoil, AVL, QProp, GPKit, XFLR5, OpenVSP, SU2, and SUAVE, just to name a few), so I hope to pay it forward, at least in small part!
-
-<!--
 
 ## Future Goals
 In descending order of priority/feasibility:
