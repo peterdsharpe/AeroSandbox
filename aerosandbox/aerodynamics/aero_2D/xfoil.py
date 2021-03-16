@@ -32,7 +32,6 @@ class XFoil(ExplicitAnalysis):
     >>> result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
     >>> result_at_multiple_alphas = xf.alpha([3, 5, 60]) # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
 
-
     """
 
     def __init__(self,
