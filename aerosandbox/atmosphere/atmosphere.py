@@ -2,14 +2,15 @@ from aerosandbox.common import AeroSandboxObject
 import aerosandbox.numpy as np
 import pandas as pd
 from pathlib import Path
+from aerosandbox.modeling.interpolation import InterpolatedModel
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
 molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
 gas_constant_air = gas_constant_universal / molecular_mass_air  # J/(kg*K); gas constant of air
 g = 9.81  # m/s^2, gravitational acceleration on earth
-effective_collision_diameter = 0.365e-9 # m, effective collision diameter of an air molecule
-ratio_of_specific_heats = 1.4 # unitless, ratio of specific heats of air
+effective_collision_diameter = 0.365e-9  # m, effective collision diameter of an air molecule
+ratio_of_specific_heats = 1.4  # unitless, ratio of specific heats of air
 
 ### Read ISA table data
 isa_table = pd.read_csv(Path(__file__).parent.absolute() / "isa_data/isa_table.csv")
@@ -57,6 +58,35 @@ for i in range(len(isa_table) - 1):
             h_b=isa_base_altitude[i]
         )
     )
+
+# creating differentiable temperature and pressure models
+
+# defining desired altitutes
+altitude_inter = np.concatenate((
+    np.linspace(-50e3, 9e3, 50),
+    np.linspace(13e3, 18e3, 10),
+    np.linspace(22e3, 30e3, 10),
+    np.linspace(34e3, 45e3, 10),
+    np.linspace(48e3, 50e3, 10),
+    np.linspace(53e3, 69e3, 10),
+    np.linspace(73e3, 85e3, 10),
+    np.linspace(89e3, 150e3, 40)
+))
+scaled_altitude_inter = altitude_inter / 10000
+
+# loads in temperature and pressure data
+temperature_isa_inter = np.load(Path(__file__).parent.absolute() / 'isa_data/atmspheretemps_inter.npy')
+pressure_isa_inter = np.load(Path(__file__).parent.absolute() / 'isa_data/atmspherepressures_inter.npy')
+
+# creates interpolated model for temperature and pressure
+interpolated_temperature = InterpolatedModel(
+    x_data_coordinates=scaled_altitude_inter,
+    y_data_structured=temperature_isa_inter,
+)
+interpolated_log_pressure = InterpolatedModel(
+    x_data_coordinates=scaled_altitude_inter,
+    y_data_structured=np.log(pressure_isa_inter),
+)
 
 
 ### Define the Atmosphere class
@@ -179,40 +209,15 @@ class Atmosphere(AeroSandboxObject):
 
         return temp
 
-    # return 260 * np.ones_like(self.altitude)
-
     def _pressure_differentiable(self):
-        altitude_scaled = self.altitude / 40000
 
-        p1 = -1.822942e+00
-        p2 = 5.366751e+00
-        p3 = -5.021452e+00
-        p4 = -4.424532e+00
-        p5 = 1.151986e+01
-
-        x = altitude_scaled
-        logP = p5 + x * (p4 + x * (p3 + x * (p2 + x * (p1))))
-
-        pressure = np.exp(logP)
+        pressure = np.exp(interpolated_log_pressure(self.altitude / 10000))
 
         return pressure
 
     def _temperature_differentiable(self):
 
-        altitude_scaled = self.altitude / 40000
-
-        p1 = -2.122102e+01
-        p2 = 7.000812e+01
-        p3 = -8.759170e+01
-        p4 = 5.047893e+01
-        p5 = -1.176537e+01
-        p6 = -3.566535e-02
-        p7 = 5.649588e+00
-
-        x = altitude_scaled
-        logT = p7 + x * (p6 + x * (p5 + x * (p4 + x * (p3 + x * (p2 + x * (p1))))))
-
-        temperature = np.exp(logT)
+        temperature = interpolated_temperature(self.altitude / 10000)
 
         return temperature
 
@@ -272,26 +277,25 @@ class Atmosphere(AeroSandboxObject):
 
 if __name__ == "__main__":
     # Make AeroSandbox Atmosphere
-    altitude = np.linspace(-5000, 100000, 500)
+    altitude = np.linspace(-5000, 100000, 1000)
     atmo_diff = Atmosphere(altitude=altitude)
     atmo_isa = Atmosphere(altitude=altitude, type="isa")
 
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    sns.set(palette=sns.color_palette("husl"))
+    sns.set(palette=sns.color_palette("husl", 2))
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-
 
     plt.semilogx(
         atmo_isa.pressure(),
-        atmo_isa.altitude/1e3,
+        atmo_isa.altitude / 1e3,
         label="ISA Ref."
     )
     lims = ax.get_xlim(), ax.get_ylim()
     plt.semilogx(
         atmo_diff.pressure(),
-        atmo_diff.altitude/1e3,
+        atmo_diff.altitude / 1e3,
         label="ASB Atmo."
     )
     ax.set_xlim(*lims[0])
@@ -306,13 +310,13 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.plot(
         atmo_isa.temperature(),
-        atmo_isa.altitude/1e3,
+        atmo_isa.altitude / 1e3,
         label="ISA Ref.",
     )
     lims = ax.get_xlim(), ax.get_ylim()
     plt.plot(
         atmo_diff.temperature(),
-        atmo_diff.altitude/1e3,
+        atmo_diff.altitude / 1e3,
         label="ASB Atmo."
     )
     ax.set_xlim(*lims[0])
@@ -323,4 +327,3 @@ if __name__ == "__main__":
     plt.legend()
     plt.tight_layout()
     plt.show()
-
