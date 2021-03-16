@@ -45,7 +45,7 @@ def test_interpn_linear():
     value = np.interpn(
         points, values, point
     )
-    assert value == pytest.approx(value_func_3d(point[0], point[1], point[2]))
+    assert value == pytest.approx(float(value_func_3d(point[0], point[1], point[2])))
 
 
 def test_interpn_linear_multiple_samples():
@@ -89,7 +89,7 @@ def test_interpn_linear_multiple_samples():
         ]
     )
     for i in range(len(value)):
-        assert value[i] == pytest.approx(value_actual[i])
+        assert value[i] == pytest.approx(float(value_actual[i]))
     assert value.shape == (2,)
 
 

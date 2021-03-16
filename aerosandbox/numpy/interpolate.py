@@ -141,7 +141,15 @@ def interpn(
 
         xi: The coordinates to sample the gridded data at.
 
-        method: The method of interpolation to perform.
+        method: The method of interpolation to perform. one of:
+
+            * "bspline" (Note: differentiable and suitable for optimization - made of piecewise-cubics. For other
+            applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot.)
+
+            * "linear" (Note: differentiable, but not suitable for use in optimization w/o subgradient treatment due
+            to C1-discontinuity)
+
+            * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
 
         bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
         a ValueError is raised. If False, then fill_value is used.

@@ -1,7 +1,10 @@
+import aerosandbox.numpy as np
+
+
 def Cd_cylinder(
-        Re_D,
+        Re_D: float,
         subcritical_only=False
-):
+) -> float:
     """
     Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number.
     :param Re_D: Reynolds number, referenced to diameter
@@ -36,17 +39,72 @@ def Cd_cylinder(
     return Cd
 
 
-def Cf_flat_plate(Re_L):
+def Cf_flat_plate(
+        Re_L: float,
+        method="hybrid-sharpe-convex"
+) -> float:
     """
-    Returns the mean skin friction coefficient over a flat plate. Don't forget to double it (two sides) if you want a drag coefficient.
-    :param Re_L: Reynolds number, normalized to the length of the flat plate.
-    :return: Mean skin friction coefficient over a flat plate.
+    Returns the mean skin friction coefficient over a flat plate.
+
+    Don't forget to double it (two sides) if you want a drag coefficient.
+
+    Args:
+
+        Re_L: Reynolds number, normalized to the length of the flat plate.
+
+        method: The method of computing the skin friction coefficient. One of:
+
+            * "blasius": Uses the Blasius solution. Citing Cengel and Cimbala, "Fluid Mechanics: Fundamentals and
+            Applications", Table 10-4.
+
+                Valid approximately for Re_L <= 5e5.
+
+            * "turbulent": Uses turbulent correlations for smooth plates. Citing Cengel and Cimbala,
+            "Fluid Mechanics: Fundamentals and Applications", Table 10-4.
+
+                Valid approximately for 5e5 <= Re_L <= 1e7.
+
+            * "hybrid-cengel": Uses turbulent correlations for smooth plates, but accounts for a
+            non-negligible laminar run at the beginning of the plate. Citing Cengel and Cimbala, "Fluid Mechanics:
+            Fundamentals and Applications", Table 10-4. Returns: Mean skin friction coefficient over a flat plate.
+
+                Valid approximately for 5e5 <= Re_L <= 1e7.
+
+            * "hybrid-schlichting": Schlichting's model, that roughly accounts for a non-negligtible laminar run.
+            Citing "Boundary Layer Theory" 7th Ed., pg. 644
+
+            * "hybrid-sharpe-convex": A hybrid model that blends the Blasius and Schlichting models. Convex in
+            log-log space; however, it may overlook some truly nonconvex behavior near transitional Reynolds numbers.
+
+            * "hybrid-sharpe-nonconvex": A hybrid model that blends the Blasius and Cengel models. Nonconvex in
+            log-log-space; however, it may capture some truly nonconvex behavior near transitional Reynolds numbers.
+
+    You can view all of these functions graphically using
+    `aerosandbox.library.aerodynamics.test_aerodynamics.test_Cf_flat_plate.py`
+
     """
     Re_L = np.fabs(Re_L)
-    # return 0.074 / Re_L ** 0.2  # Turbulent flat plate
-    # return 0.02666 * Re_L ** -0.139  # Schlichting's model, roughly accounts for laminar part ("Boundary Layer Theory" 7th Ed., pg. 644)
-    # return smoothmax(0.074 / Re_L ** 0.2 - 1742 / Re_L, 1.33 / Re_L ** 0.5, 1000)
-    return np.fmax(0.074 / Re_L ** 0.2 - 1742 / Re_L, 1.33 / Re_L ** 0.5)
+
+    if method == "blasius":
+        return 1.328 / Re_L ** 0.5
+    elif method == "turbulent":
+        return 0.074 / Re_L ** (1 / 5)
+    elif method == "hybrid-cengel":
+        return 0.074 / Re_L ** (1 / 5) - 1742 / Re_L
+    elif method == "hybrid-schlichting":
+        return 0.02666 * Re_L ** -0.139
+    elif method == "hybrid-sharpe-convex":
+        return np.softmax(
+            Cf_flat_plate(Re_L, method="blasius"),
+            Cf_flat_plate(Re_L, method="hybrid-schlichting"),
+            hardness=1e3
+        )
+    elif method == "hybrid-sharpe-nonconvex":
+        return np.softmax(
+            Cf_flat_plate(Re_L, method="blasius"),
+            Cf_flat_plate(Re_L, method="hybrid-cengel"),
+            hardness=1e3
+        )
 
 
 def Cl_flat_plate(alpha, Re_c):
@@ -326,8 +384,8 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
     :return: A tuple of (CLA, CDA) [m^2]
     """
     alpha_rad = alpha * np.pi / 180
-    sin_alpha = cas.sin(alpha_rad)
-    cos_alpha = cas.cos(alpha_rad)
+    sin_alpha = np.sin(alpha_rad)
+    cos_alpha = np.cos(alpha_rad)
 
     """
     Lift of a truncated fuselage, following slender body theory.
