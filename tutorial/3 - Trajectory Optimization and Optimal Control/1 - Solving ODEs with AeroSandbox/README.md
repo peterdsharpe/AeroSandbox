@@ -6,7 +6,7 @@ Before we get into examples, let's make some observations that will be helpful t
 
 ## All Higher-Order ODEs can be Decomposed into First-Order ODEs
 
-Let's realize that any ODE of higher order (such as our third-order ODE here) can be broken up into a system of first-order ODEs. For example, consider the Falkner-Skan ODE:
+Let's realize that any ODE of higher order (such as our third-order ODE here) can be broken up into a system of first-order ODEs. For example, consider the Falkner-Skan ODE, which is detailed [here](https://en.wikipedia.org/wiki/Falkner%E2%80%93Skan_boundary_layer):
 
 With $f(\eta)$ as a function of $\eta$, and $f' = \frac{df}{d\eta}$, and so on:
 
