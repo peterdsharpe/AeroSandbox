@@ -26,7 +26,6 @@ class XFoil(ExplicitAnalysis):
     >>> xf = XFoil(
     >>>     airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
     >>>     Re=1e6,
-    >>>     verbose=True
     >>> )
     >>>
     >>> result_at_single_alpha = xf.alpha(5)
@@ -187,7 +186,6 @@ class XFoil(ExplicitAnalysis):
 
             ### Set up the run command
             command = f'{self.xfoil_command} {airfoil_file} < {run_file}'
-            print(command)
 
             ### Execute
             subprocess.call(
@@ -207,9 +205,6 @@ class XFoil(ExplicitAnalysis):
                 "xtr_upper",
                 "xtr_lower"
             ]
-
-            with open(directory / output_filename, "r") as f:
-                print(f.read())
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -275,9 +270,7 @@ if __name__ == '__main__':
     xf = XFoil(
         airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
         Re=1e6,
-        verbose=True
     )
-
-    d = xf.alpha([5])
-    e = xf.cl([0.5, 0.7, 0.8, 0.9])
-    f = xf.alpha(60)
+    result_at_single_alpha = xf.alpha(5)
+    result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
+    result_at_multiple_alphas = xf.alpha([3, 5, 60])  # Note: if a result does
