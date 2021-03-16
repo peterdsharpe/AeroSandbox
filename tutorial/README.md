@@ -2,7 +2,7 @@
 -----
 Welcome to the AeroSandbox tutorial!
 
-tl;dr: the first tutorial section is [available here](1%20-%20Optimization%20and%20Math/01%20-%202D%20Rosenbrock.ipynb).
+tl;dr: the first tutorial section is [available here](01%20-%20Optimization%20and%20Math/01%20-%202D%20Rosenbrock.ipynb).
 
 Here's how this works: 
 
