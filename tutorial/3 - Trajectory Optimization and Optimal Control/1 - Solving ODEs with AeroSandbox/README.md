@@ -38,6 +38,8 @@ Furthermore, even functions with a finite domain are infinite-dimensional. Consi
 
 (Contrast this to the finite-dimensional design space of a rectangular prism - any member of the set of all rectangular prisms can be described with just three numbers for length, width, and height.)
 
+For more on the theory of infinite-dimensional function spaces, read up on [Hilbert spaces](https://en.wikipedia.org/wiki/Hilbert_space).
+
 Computers do not like infinities, so we need to find some finite-dimensional representation of $f(x)$ - we call this process "discretization", and it necessarily introduces error. (If you don't want to discretize, put down the computer and brush off your calculus of variations!)
 
 There are tons of ways to discretize functions; a few are detailed here:
@@ -67,4 +69,3 @@ One nice thing about spectral methods is that it can be quite easy to compute ex
 However, one tricky thing about spectral methods is path constraints. It can be quite difficult, if not impossible, to make any guarantees that a function discretely represented by orthogonal polynomials or sinusoids does not exceed some threshold in a given range of inputs. This is a root-finding problem, and indeed for the case of orthogonal polynomials with degree greater than 4, no solution exists (see Abel-Ruffini theorem, 1823) and only approximate iterative methods suffice - this is unacceptable for the purposes of implementing path constraints.
 
 So, we generally do not use spectral or pseudospectral methods to discretize functions in AeroSandbox (although that's not to say that it's not possible).
-
