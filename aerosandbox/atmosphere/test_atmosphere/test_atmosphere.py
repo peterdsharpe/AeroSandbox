@@ -41,9 +41,9 @@ def test_isa_atmosphere():
             assert atmo.speed_of_sound() == pytest.approx(speed_of_sound, abs=1), fail_message
 
 def test_diff_atmosphere():
-    altitudes=np.linspace(-50e3, 150e3, 1000)
-    atmo_isa=Atmosphere(altitude=altitudes, type='isa')
-    atmo_diff=Atmosphere(altitude=altitudes)
+    altitudes2=np.linspace(-50e2, 150e3, 1000)
+    atmo_isa=Atmosphere(altitude=altitudes2, type='isa')
+    atmo_diff=Atmosphere(altitude=altitudes2)
     temp_isa=atmo_isa.temperature()
     pressure_isa=atmo_isa.pressure()
     temp_diff=atmo_diff.temperature()
