@@ -73,8 +73,8 @@ altitude_inter = np.concatenate((np.linspace(-50e3, 9e3, 50),
 scaled_altitude_inter = altitude_inter / 10000
 
 # loads in temperature and pressure data
-temperature_isa_inter = np.load('isa_data/atmspheretemps_inter.npy')
-pressure_isa_inter = np.load('isa_data/atmspherepressures_inter.npy')
+temperature_isa_inter = np.load(Path(__file__).parent.absolute() / 'isa_data/atmspheretemps_inter.npy')
+pressure_isa_inter = np.load(Path(__file__).parent.absolute() / 'isa_data/atmspherepressures_inter.npy')
 
 # creates interpolated model for temperature and pressure
 fitted_model_inter_temp = InterpolatedModel(
