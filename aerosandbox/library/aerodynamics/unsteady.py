@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
+from aerosandbox.modeling.interpolation import InterpolatedModel
 from typing import Union, Callable
 
 def calculate_reduced_time(
@@ -8,13 +9,16 @@ def calculate_reduced_time(
         chord: float 
         ) -> Union[float,np.ndarray]:
     """ 
-    Calculates reduced time from time in seconds and velocity history in m/s. For constant velocity it reduces to s = 2*U*t/c
-    The reduced time is the number of semichords travelled by the airfoil/aircaft i.e. 2 / chord * integral from t0 to t of velocity dt  
+    Calculates reduced time from time in seconds and velocity history in m/s. 
+    For constant velocity it reduces to s = 2*U*t/c
+    The reduced time is the number of semichords travelled by the airfoil/aircaft 
+    i.e. 2 / chord * integral from t0 to t of velocity dt  
     
     
     Args:
         time (float,np.ndarray) : Time in seconds 
-        velocity (float,np.ndarray) : Either constant velocity or array of velocities at corresponding times
+        velocity (float,np.ndarray,Callable[[float],float]) : Either constant 
+        velocity or array of velocities at corresponding times
         chord (float) : The chord of the airfoil
         
     Returns:
@@ -235,13 +239,10 @@ def duhamel_superposition(
             dt = t/1000
         elif type(t) == np.ndarray:
             dt = np.gradient(np.linspace(0,))
-        else :
-            error("t must be either a float or a 1D ndarray")
+        else:
+            raise Exception("t must be either a float or a 1D ndarray")
             
         integral = 0
-        for 
-        indicial_function(0) * forcing_function(t)  
-        
         
     
     
@@ -292,11 +293,15 @@ if __name__ == "__main__":
         return gust_velocity
     
     
-    time = np.linspace(-1,7,100)
+    time = np.linspace(-5,10,100)
     wing_velocity = 1
     chord = 1
     reduced_time = calculate_reduced_time(time,wing_velocity,chord)
-    cl = transverse_gust_lift()
+    
+    cl = step_gust_lift(reduced_time,10,10,angle_of_attack=15.)
+    
+    plt.plot(reduced_time,cl)
+
     
     
     
