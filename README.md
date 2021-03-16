@@ -5,16 +5,10 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 [![Monthly Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox)
 ![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)
 
-### NEWS
-
-* AeroSandbox v3.0.0 is out in beta mode! 
-    * Install: `pip install --pre aerosandbox` (add the `--upgrade` flag as well to upgrade an existing installation).
-* Check out the new tutorials in `/tutorial/`!
-
 ## Overview
-AeroSandbox is a Python package for aircraft design optimization that leverages modern tools for reverse-mode automatic differentiation and large-scale design optimization.
+AeroSandbox (ASB) is a Python package for aircraft design optimization that leverages modern tools for reverse-mode automatic differentiation and large-scale design optimization.
 
-At its heart, AeroSandbox is a collection of end-to-end automatic-differentiable models and analysis tools for aircraft design applications. This property of automatic-differentiability dramatically improves performance on large problems; **design problems with thousands or tens of thousands of decision variables solve in seconds on a laptop**. Using AeroSandbox, you can **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.** 
+At its heart, ASB is a collection of end-to-end automatic-differentiable models and analysis tools for aircraft design applications. This property of automatic-differentiability dramatically improves performance on large problems; **design problems with thousands or tens of thousands of decision variables solve in seconds on a laptop**. Using AeroSandbox, you can **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.** 
 
 AeroSandbox has powerful aerodynamics solvers (VLM, 3D panel) written from the ground up, and AeroSandbox can also be used as a standalone aerodynamics solver if desired. Like all other modules, these solvers are end-to-end automatic-differentiable. Therefore, **in half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an arbitary number of design variables.**
 
@@ -26,13 +20,13 @@ AeroSandbox has powerful aerodynamics solvers (VLM, 3D panel) written from the g
 
 ## Getting Started
 
-### Installation
+### Installation and Tutorials
 
-Install with `pip install AeroSandbox`. Requires Python 3.7. Nearly all features work in Python 3.8+, although automated interfacing with XFoil for 2D aerodynamic analysis does not.
+Install with `pip install AeroSandbox`. Requires Python 3.7+.
 
-To get examples as well, clone from `master` on [GitHub](https://github.com/peterdsharpe/AeroSandbox). (Nightly builds available on `develop` branch.)
+Alternatively, clone from `master` on GitHub and install with `pip install .`.
 
-There are many example cases you can try out in the `/examples/` directory! A good place to start is `/examples/conventional/casll1_conventional_analysis_point.py`.
+To get started, check out the `tutorials` folder [here](./tutorial/)!
 
 ### Usage
 AeroSandbox is designed to have extremely intuitive, high-level, and human-readable code. You (yes, you!) can probably learn to analyze a simple airplane and visualize airflow around it within 5 minutes of downloading AeroSandbox. For example, here is all the code that is needed to design a glider, analyze its aerodynamics in flight, and visualize it (found in `/examples/conventional/casll1_conventional_analysis_point.py`):
@@ -146,10 +140,6 @@ One final point to note: as we're all sensible and civilized human beings here, 
 ### Dependencies
 
 The fastest way to ensure that all dependencies are satisfied is by simply running "pip install AeroSandbox" in your command prompt. However, you can also install dependencies on your own if you'd like: see "requirements.txt" for the list.
-
-## Current Features
-* User-friendly, concise, high-level, object-oriented structure for airplane geometry definition and analysis.
-* Fully reverse-mode AD compatible vortex-lattice method flow solver ("VLM3")! Very fast (~0.35s for typical problems) and fully compatible with arbitrary combinations of lifting surfaces. With this, you can get the gradient of a design space with arbitrary dimensionality almost instantly.
 
 ## Purpose
 The primary purpose for this repository is to explore existing methods for aerodynamic analysis and develop new methods within a unified code base.
