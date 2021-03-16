@@ -79,11 +79,11 @@ temperature_isa_inter = np.load(Path(__file__).parent.absolute() / 'isa_data/atm
 pressure_isa_inter = np.load(Path(__file__).parent.absolute() / 'isa_data/atmspherepressures_inter.npy')
 
 # creates interpolated model for temperature and pressure
-fitted_model_inter_temp = InterpolatedModel(
+interpolated_temperature = InterpolatedModel(
     x_data_coordinates=scaled_altitude_inter,
     y_data_structured=temperature_isa_inter,
 )
-fitted_model_inter_pressure = InterpolatedModel(
+interpolated_log_pressure = InterpolatedModel(
     x_data_coordinates=scaled_altitude_inter,
     y_data_structured=np.log(pressure_isa_inter),
 )
@@ -209,17 +209,15 @@ class Atmosphere(AeroSandboxObject):
 
         return temp
 
-    # return 260 * np.ones_like(self.altitude)
-
     def _pressure_differentiable(self):
 
-        pressure = np.exp(fitted_model_inter_pressure(self.altitude / 10000))
+        pressure = np.exp(interpolated_log_pressure(self.altitude / 10000))
 
         return pressure
 
     def _temperature_differentiable(self):
 
-        temperature = fitted_model_inter_temp(self.altitude / 10000)
+        temperature = interpolated_temperature(self.altitude / 10000)
 
         return temperature
 
@@ -286,7 +284,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    sns.set(palette=sns.color_palette("husl"))
+    sns.set(palette=sns.color_palette("husl", 2))
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 
     plt.semilogx(
