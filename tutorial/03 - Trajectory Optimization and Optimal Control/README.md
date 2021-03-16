@@ -20,9 +20,9 @@ Optimizing across all operating conditions that a system might experience is qui
 
 ### Method 1: Reduce Dynamics to a Point
 
-In the simplest form, we can reduce the dynamics down to a single operating point that is expected to be representative. This is what we did in the [Design Optimization chapter of this tutorial](../2%20-%20Design%20Optimization) - for example, we picked a single value of $\rho$ and $\mu$, assuming that the airplane exclusively operates there.
+In the simplest form, we can reduce the dynamics down to a single operating point that is expected to be representative. This is what we did in the [Design Optimization chapter of this tutorial](../02%20-%20Design%20Optimization) - for example, we picked a single value of $\rho$ and $\mu$, assuming that the airplane exclusively operates there.
 
-In the [SimPleAC example of that chapter](../2%20-%20Design%20Optimization/3%20-%20Aircraft%20Design%20-%20SimPleAC.ipynb), you will notice that the $L=W$ constraint is written as:
+In the [SimPleAC example of that chapter](../02%20-%20Design%20Optimization/03%20-%20Aircraft%20Design%20-%20SimPleAC.ipynb), you will notice that the $L=W$ constraint is written as:
 
 ```python
 W_0 + W_w + 0.5 * W_f <= 0.5 * rho * S * C_L * V ** 2,
