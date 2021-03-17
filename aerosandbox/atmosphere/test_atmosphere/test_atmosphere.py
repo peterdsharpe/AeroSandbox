@@ -42,14 +42,14 @@ def test_isa_atmosphere():
 
 
 def test_diff_atmosphere():
-    altitudes2 = np.linspace(-50e2, 150e3, 1000)
-    atmo_isa = Atmosphere(altitude=altitudes2, type='isa')
-    atmo_diff = Atmosphere(altitude=altitudes2)
+    altitudes = np.linspace(-50e2, 150e3, 1000)
+    atmo_isa = Atmosphere(altitude=altitudes, type='isa')
+    atmo_diff = Atmosphere(altitude=altitudes)
     temp_isa = atmo_isa.temperature()
     pressure_isa = atmo_isa.pressure()
     temp_diff = atmo_diff.temperature()
     pressure_diff = atmo_diff.pressure()
-    assert max(abs((temp_isa - temp_diff) / temp_isa)) < 0.02, "temperature failed for differentiable model"
+    assert max(abs((temp_isa - temp_diff) / temp_isa)) < 0.025, "temperature failed for differentiable model"
     assert max(abs((pressure_isa - pressure_diff) / pressure_isa)) < 0.01, "pressure failed for differentiable model"
 
 
