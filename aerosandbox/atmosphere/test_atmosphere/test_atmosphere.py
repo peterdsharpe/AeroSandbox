@@ -1,5 +1,6 @@
 from aerosandbox import Atmosphere
 import pytest
+import aerosandbox.numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -28,7 +29,7 @@ def test_isa_atmosphere():
             speeds_of_sound
     ):
 
-        atmo = Atmosphere(altitude=altitude, type='isa')
+        atmo = Atmosphere(altitude=altitude, method='isa')
 
         if altitude >= atmo._valid_altitude_range[0] and altitude <= atmo._valid_altitude_range[1]:
 
@@ -40,8 +41,20 @@ def test_isa_atmosphere():
             assert atmo.speed_of_sound() == pytest.approx(speed_of_sound, abs=1), fail_message
 
 
+def test_diff_atmosphere():
+    altitudes = np.linspace(-50e2, 150e3, 1000)
+    atmo_isa = Atmosphere(altitude=altitudes, method='isa')
+    atmo_diff = Atmosphere(altitude=altitudes)
+    temp_isa = atmo_isa.temperature()
+    pressure_isa = atmo_isa.pressure()
+    temp_diff = atmo_diff.temperature()
+    pressure_diff = atmo_diff.pressure()
+    assert max(abs((temp_isa - temp_diff) / temp_isa)) < 0.025, "temperature failed for differentiable model"
+    assert max(abs((pressure_isa - pressure_diff) / pressure_isa)) < 0.01, "pressure failed for differentiable model"
+
+
 def plot_isa_residuals():
-    atmo = Atmosphere(altitude=altitudes, type='isa')
+    atmo = Atmosphere(altitude=altitudes, method='isa')
 
     import matplotlib.pyplot as plt
     import seaborn as sns

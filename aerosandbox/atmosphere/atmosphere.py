@@ -2,62 +2,17 @@ from aerosandbox.common import AeroSandboxObject
 import aerosandbox.numpy as np
 import pandas as pd
 from pathlib import Path
+from aerosandbox.modeling.interpolation import InterpolatedModel
+from aerosandbox.atmosphere._isa_atmo_functions import pressure_isa, temperature_isa
+from aerosandbox.atmosphere._diff_atmo_functions import pressure_differentiable, temperature_differentiable
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
 molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
 gas_constant_air = gas_constant_universal / molecular_mass_air  # J/(kg*K); gas constant of air
 g = 9.81  # m/s^2, gravitational acceleration on earth
-effective_collision_diameter = 0.365e-9 # m, effective collision diameter of an air molecule
-ratio_of_specific_heats = 1.4 # unitless, ratio of specific heats of air
-
-### Read ISA table data
-isa_table = pd.read_csv(Path(__file__).parent.absolute() / "isa_data/isa_table.csv")
-isa_base_altitude = isa_table["Base Altitude [m]"].values
-isa_lapse_rate = isa_table["Lapse Rate [K/km]"].values / 1000
-isa_base_temperature = isa_table["Base Temperature [C]"].values + 273.15
-
-
-### Calculate pressure at each ISA level programmatically using the barometric pressure equation with linear temperature.
-def barometric_formula(
-        P_b,
-        T_b,
-        L_b,
-        h,
-        h_b,
-):
-    """
-    The barometric pressure equation, from here: https://en.wikipedia.org/wiki/Barometric_formula
-    Args:
-        P_b: Pressure at the base of the layer, in Pa
-        T_b: Temperature at the base of the layer, in K
-        L_b: Temperature lapse rate, in K/m
-        h: Altitude, in m
-        h_b:
-
-    Returns:
-
-    """
-    T = T_b + L_b * (h - h_b)
-    T = np.fmax(T, 0)  # Keep temperature nonnegative, no matter the inputs.
-    if L_b != 0:
-        return P_b * (T / T_b) ** (-g / (gas_constant_air * L_b))
-    else:
-        return P_b * np.exp(-g * (h - h_b) / (gas_constant_air * T_b))
-
-
-isa_pressure = [101325.]  # Pascals
-for i in range(len(isa_table) - 1):
-    isa_pressure.append(
-        barometric_formula(
-            P_b=isa_pressure[i],
-            T_b=isa_base_temperature[i],
-            L_b=isa_lapse_rate[i],
-            h=isa_base_altitude[i + 1],
-            h_b=isa_base_altitude[i]
-        )
-    )
-
+effective_collision_diameter = 0.365e-9  # m, effective collision diameter of an air molecule
+ratio_of_specific_heats = 1.4  # unitless, ratio of specific heats of air
 
 ### Define the Atmosphere class
 class Atmosphere(AeroSandboxObject):
@@ -70,7 +25,7 @@ class Atmosphere(AeroSandboxObject):
 
     def __init__(self,
                  altitude: float = 0.,  # meters
-                 type: str = "differentiable"
+                 method: str = "differentiable"
                  ):
         """
         Initialize a new Atmosphere.
@@ -79,13 +34,13 @@ class Atmosphere(AeroSandboxObject):
             
             altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
             
-            type: Type of atmosphere that you want. Either:
+            method: Method of atmosphere modeling to use. Either:
                 * "differentiable" - a C1-continuous fit to the International Standard Atmosphere
                 * "isa" - the International Standard Atmosphere
                 
         """
         self.altitude = altitude
-        self.type = type
+        self.method = method
         self._valid_altitude_range = (0, 80000)
 
     ### The two primary state variables, pressure and temperature, go here!
@@ -94,10 +49,10 @@ class Atmosphere(AeroSandboxObject):
         """
         Returns the pressure, in Pascals.
         """
-        if self.type.lower() == "isa":
-            return self._pressure_isa()
-        elif self.type.lower() == "differentiable":
-            return self._pressure_differentiable()
+        if self.method.lower() == "isa":
+            return pressure_isa(self.altitude)
+        elif self.method.lower() == "differentiable":
+            return pressure_differentiable(self.altitude)
         else:
             raise ValueError("Bad value of 'type'!")
 
@@ -105,116 +60,12 @@ class Atmosphere(AeroSandboxObject):
         """
         Returns the temperature, in Kelvin.
         """
-        if self.type.lower() == "isa":
-            return self._temperature_isa()
-        elif self.type.lower() == "differentiable":
-            return self._temperature_differentiable()
+        if self.method.lower() == "isa":
+            return temperature_isa(self.altitude)
+        elif self.method.lower() == "differentiable":
+            return temperature_differentiable(self.altitude)
         else:
             raise ValueError("Bad value of 'type'!")
-
-    ### Individual models for the two primary state variables, pressure and temperature, go here!
-
-    def _pressure_isa(self):
-        """
-        Computes the pressure at the Atmosphere's altitude based on the International Standard Atmosphere.
-
-        Uses the Barometric formula, as implemented here: https://en.wikipedia.org/wiki/Barometric_formula
-
-        Returns: Pressure [Pa]
-
-        """
-        alt = self.altitude
-        pressure = 0 * alt  # Initialize the pressure to all zeros.
-
-        for i in range(len(isa_table)):
-            pressure = np.where(
-                alt > isa_base_altitude[i],
-                barometric_formula(
-                    P_b=isa_pressure[i],
-                    T_b=isa_base_temperature[i],
-                    L_b=isa_lapse_rate[i],
-                    h=alt,
-                    h_b=isa_base_altitude[i]
-                ),
-                pressure
-            )
-
-        ### Add lower bound case
-        pressure = np.where(
-            alt <= isa_base_altitude[0],
-            barometric_formula(
-                P_b=isa_pressure[0],
-                T_b=isa_base_temperature[0],
-                L_b=isa_lapse_rate[0],
-                h=alt,
-                h_b=isa_base_altitude[0]
-            ),
-            pressure
-        )
-
-        return pressure
-
-    def _temperature_isa(self):
-        """
-        Computes the temperature at the Atmosphere's altitude based on the International Standard Atmosphere.
-        Returns: Temperature [K]
-
-        """
-        alt = self.altitude
-        temp = 0 * alt  # Initialize the temperature to all zeros.
-
-        for i in range(len(isa_table)):
-            temp = np.where(
-                alt > isa_base_altitude[i],
-                (alt - isa_base_altitude[i]) * isa_lapse_rate[i] + isa_base_temperature[i],
-                temp
-            )
-
-        ### Add lower bound case
-        temp = np.where(
-            alt <= isa_base_altitude[0],
-            (alt - isa_base_altitude[0]) * isa_lapse_rate[0] + isa_base_temperature[0],
-            temp
-        )
-
-        return temp
-
-    # return 260 * np.ones_like(self.altitude)
-
-    def _pressure_differentiable(self):
-        altitude_scaled = self.altitude / 40000
-
-        p1 = -1.822942e+00
-        p2 = 5.366751e+00
-        p3 = -5.021452e+00
-        p4 = -4.424532e+00
-        p5 = 1.151986e+01
-
-        x = altitude_scaled
-        logP = p5 + x * (p4 + x * (p3 + x * (p2 + x * (p1))))
-
-        pressure = np.exp(logP)
-
-        return pressure
-
-    def _temperature_differentiable(self):
-
-        altitude_scaled = self.altitude / 40000
-
-        p1 = -2.122102e+01
-        p2 = 7.000812e+01
-        p3 = -8.759170e+01
-        p4 = 5.047893e+01
-        p5 = -1.176537e+01
-        p6 = -3.566535e-02
-        p7 = 5.649588e+00
-
-        x = altitude_scaled
-        logT = p7 + x * (p6 + x * (p5 + x * (p4 + x * (p3 + x * (p2 + x * (p1))))))
-
-        temperature = np.exp(logT)
-
-        return temperature
 
     ### Everything else in this class is a derived quantity; all models of derived quantities go here.
 
@@ -272,26 +123,25 @@ class Atmosphere(AeroSandboxObject):
 
 if __name__ == "__main__":
     # Make AeroSandbox Atmosphere
-    altitude = np.linspace(-5000, 100000, 500)
+    altitude = np.linspace(-5e3, 100e3, 1000)
     atmo_diff = Atmosphere(altitude=altitude)
-    atmo_isa = Atmosphere(altitude=altitude, type="isa")
+    atmo_isa = Atmosphere(altitude=altitude, method="isa")
 
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    sns.set(palette=sns.color_palette("husl"))
+    sns.set(palette=sns.color_palette("husl", 2))
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-
 
     plt.semilogx(
         atmo_isa.pressure(),
-        atmo_isa.altitude/1e3,
+        atmo_isa.altitude / 1e3,
         label="ISA Ref."
     )
     lims = ax.get_xlim(), ax.get_ylim()
     plt.semilogx(
         atmo_diff.pressure(),
-        atmo_diff.altitude/1e3,
+        atmo_diff.altitude / 1e3,
         label="ASB Atmo."
     )
     ax.set_xlim(*lims[0])
@@ -306,13 +156,13 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.plot(
         atmo_isa.temperature(),
-        atmo_isa.altitude/1e3,
+        atmo_isa.altitude / 1e3,
         label="ISA Ref.",
     )
     lims = ax.get_xlim(), ax.get_ylim()
     plt.plot(
         atmo_diff.temperature(),
-        atmo_diff.altitude/1e3,
+        atmo_diff.altitude / 1e3,
         label="ASB Atmo."
     )
     ax.set_xlim(*lims[0])
@@ -323,4 +173,3 @@ if __name__ == "__main__":
     plt.legend()
     plt.tight_layout()
     plt.show()
-

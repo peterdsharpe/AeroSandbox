@@ -1,4 +1,4 @@
-from aerosandbox.optimization import Opti
+from aerosandbox.optimization.opti import Opti
 from abc import abstractmethod
 
 

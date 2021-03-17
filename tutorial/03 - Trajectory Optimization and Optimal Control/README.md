@@ -20,9 +20,9 @@ Optimizing across all operating conditions that a system might experience is qui
 
 ### Method 1: Reduce Dynamics to a Point
 
-In the simplest form, we can reduce the dynamics down to a single operating point that is expected to be representative. This is what we did in the [Design Optimization chapter of this tutorial](../2%20-%20Design%20Optimization) - for example, we picked a single value of $\rho$ and $\mu$, assuming that the airplane exclusively operates there.
+In the simplest form, we can reduce the dynamics down to a single operating point that is expected to be representative. This is what we did in the [Design Optimization chapter of this tutorial](../02%20-%20Design%20Optimization) - for example, we picked a single value of $\rho$ and $\mu$, assuming that the airplane exclusively operates there.
 
-In the [SimPleAC example of that chapter](../2%20-%20Design%20Optimization/3%20-%20Aircraft%20Design%20-%20SimPleAC.ipynb), you will notice that the $L=W$ constraint is written as:
+In the [SimPleAC example of that chapter](../02%20-%20Design%20Optimization/03%20-%20Aircraft%20Design%20-%20SimPleAC.ipynb), you will notice that the $L=W$ constraint is written as:
 
 ```python
 W_0 + W_w + 0.5 * W_f <= 0.5 * rho * S * C_L * V ** 2,
@@ -60,13 +60,13 @@ In either case, because the full trajectory is simulated, this is suitable not o
 
 This method of "full dynamics" (along with applications to trajectory optimization and optimal control) is what we'll cover in this chapter.
 
-## Guides
+## More Resources
 
-Before learning how to do trajectory optimization and optimal control in AeroSandbox, you should learn the math behind these concepts.
+Before learning how to do trajectory optimization and optimal control in AeroSandbox, you need to learn the math behind these concepts.
 
 Matthew Peter Kelly does an incredible job introducing these concepts. Copied from [his website](http://www.matthewpeterkelly.com/tutorials/trajectoryOptimization/index.html):
 
-* [Trajectory Optimization Tutorial: Video (YouTube)](https://youtu.be/wlkRYMVUZTs)
+* [Trajectory Optimization Tutorial: Video (YouTube)](https://youtu.be/wlkRYMVUZTs). **If you do nothing else, at least watch this video.**
 * [An Introduction to Trajectory Optimization (.pdf)](https://epubs.siam.org/doi/10.1137/16M1062569)
 
 Russ Tedrake also has an excellent presentation of trajectory optimization topics on his course website for MIT's Underactuated Robotics: [see here](http://underactuated.mit.edu/trajopt.html) (Really, this whole course webpage is gold.)
