@@ -25,7 +25,7 @@ class Atmosphere(AeroSandboxObject):
 
     def __init__(self,
                  altitude: float = 0.,  # meters
-                 type: str = "differentiable"
+                 method: str = "differentiable"
                  ):
         """
         Initialize a new Atmosphere.
@@ -34,13 +34,13 @@ class Atmosphere(AeroSandboxObject):
             
             altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
             
-            type: Type of atmosphere that you want. Either:
+            method: Method of atmosphere modeling to use. Either:
                 * "differentiable" - a C1-continuous fit to the International Standard Atmosphere
                 * "isa" - the International Standard Atmosphere
                 
         """
         self.altitude = altitude
-        self.type = type
+        self.method = method
         self._valid_altitude_range = (0, 80000)
 
     ### The two primary state variables, pressure and temperature, go here!
@@ -49,9 +49,9 @@ class Atmosphere(AeroSandboxObject):
         """
         Returns the pressure, in Pascals.
         """
-        if self.type.lower() == "isa":
+        if self.method.lower() == "isa":
             return pressure_isa(self.altitude)
-        elif self.type.lower() == "differentiable":
+        elif self.method.lower() == "differentiable":
             return pressure_differentiable(self.altitude)
         else:
             raise ValueError("Bad value of 'type'!")
@@ -60,9 +60,9 @@ class Atmosphere(AeroSandboxObject):
         """
         Returns the temperature, in Kelvin.
         """
-        if self.type.lower() == "isa":
+        if self.method.lower() == "isa":
             return temperature_isa(self.altitude)
-        elif self.type.lower() == "differentiable":
+        elif self.method.lower() == "differentiable":
             return temperature_differentiable(self.altitude)
         else:
             raise ValueError("Bad value of 'type'!")
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     # Make AeroSandbox Atmosphere
     altitude = np.linspace(-5e3, 100e3, 1000)
     atmo_diff = Atmosphere(altitude=altitude)
-    atmo_isa = Atmosphere(altitude=altitude, type="isa")
+    atmo_isa = Atmosphere(altitude=altitude, method="isa")
 
     import matplotlib.pyplot as plt
     import seaborn as sns

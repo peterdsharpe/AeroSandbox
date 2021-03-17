@@ -29,7 +29,7 @@ def test_isa_atmosphere():
             speeds_of_sound
     ):
 
-        atmo = Atmosphere(altitude=altitude, type='isa')
+        atmo = Atmosphere(altitude=altitude, method='isa')
 
         if altitude >= atmo._valid_altitude_range[0] and altitude <= atmo._valid_altitude_range[1]:
 
@@ -43,7 +43,7 @@ def test_isa_atmosphere():
 
 def test_diff_atmosphere():
     altitudes = np.linspace(-50e2, 150e3, 1000)
-    atmo_isa = Atmosphere(altitude=altitudes, type='isa')
+    atmo_isa = Atmosphere(altitude=altitudes, method='isa')
     atmo_diff = Atmosphere(altitude=altitudes)
     temp_isa = atmo_isa.temperature()
     pressure_isa = atmo_isa.pressure()
@@ -54,7 +54,7 @@ def test_diff_atmosphere():
 
 
 def plot_isa_residuals():
-    atmo = Atmosphere(altitude=altitudes, type='isa')
+    atmo = Atmosphere(altitude=altitudes, method='isa')
 
     import matplotlib.pyplot as plt
     import seaborn as sns

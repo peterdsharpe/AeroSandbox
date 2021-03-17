@@ -88,7 +88,7 @@ airplane.draw() # You can use this to quickly preview your geometry!
 analysis = asb.LiftingLine(  # Set up the AeroProblem
     airplane=airplane,
     op_point=asb.OperatingPoint(
-        atmosphere=asb.Atmosphere(altitude=0, type="ISA"),
+        atmosphere=asb.Atmosphere(altitude=0, method="ISA"),
         velocity=10,  # m/s
         alpha=5,  # In degrees
         beta=0,  # In degrees
