@@ -117,10 +117,10 @@ def step_gust_lift(
     """
     angle_of_attack_radians = np.deg2rad(angle_of_attack)
     offset = chord / 2 * (1 - np.cos(angle_of_attack_radians))
-    return (2 * np.pi * 
+    return (2 * np.pi * ( angle_of_attack_radians + 
             np.arctan(gust_velocity / plate_velocity) * 
             np.cos(angle_of_attack_radians) *
-            kussners_function(reduced_time - offset))
+            kussners_function(reduced_time - offset)))
 
 
   
@@ -180,7 +180,7 @@ def transverse_gust_lift2(
     """
     assert np.size(reduced_time) == np.size(gust_velocity_profile),  "The velocity history and time must have the same length"
     
-    # HAVE TO FIX THIS FUNCTION THIS OFFSET IS NOT THE CORRECT
+    profile_interpolation = InterpolatedModel(reduced_time,gust_velocity_profile)
     cosine_angle_of_attack = np.cos(np.deg2rad(angle_of_attack))
     offset = chord / 2 * (1 - cosine_angle_of_attack)
     kussner = kussners_function(reduced_time)
@@ -191,10 +191,10 @@ def transverse_gust_lift2(
     for i,s in enumerate(reduced_time):
         integral_term = 0
         for j in range(i):
-            integral_term += dK_ds[j]  * gust_velocity_profile[i-j-offset] * ds[j]
+            integral_term += dK_ds[j]  * profile_interpolation[i-j-offset] * ds[j]
         
         lift_coefficient[i] = (2 * np.pi / plate_velocity * cosine_angle_of_attack
-                              (gust_velocity_profile[i-offset] * kussner[0] + integral_term))
+                              + integral_term)
     
     return lift_coefficient
 
