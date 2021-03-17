@@ -20,7 +20,7 @@ altitude_knot_points = np.array(
         77e3,
         83e3, 87e3,
     ] +
-    list(87e3 + np.geomspace(5e3, 1000e3, 11)) +
+    list(87e3 + np.geomspace(5e3, 2000e3, 11)) +
     list(0 - np.geomspace(5e3, 5000e3, 11))
 )
 
