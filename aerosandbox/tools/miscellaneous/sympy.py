@@ -10,17 +10,21 @@ def simp(x):
 
 def show(
         rhs: s.Symbol,
-        lhs: str = None
+        lhs: str = None,
+        simplify=True,
 ):  # Display an equation
+    if simplify:
+        rhs = simp(rhs)
+
     if lhs is not None:
         display(
             s.Eq(
                 s.symbols(lhs),
-                simp(rhs),
+                rhs,
                 evaluate=False
             )
         )
     else:
         display(
-            simp(rhs)
+            rhs
         )
