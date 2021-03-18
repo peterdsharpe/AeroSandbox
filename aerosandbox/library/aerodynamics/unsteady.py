@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
 from typing import Union, Callable
 from scipy.integrate import quad
+from aerosandbox.modeling.interpolation import InterpolatedModel
+import aerosandbox as asb
 
 def calculate_reduced_time(
         time: Union[float,np.ndarray],
@@ -45,13 +47,7 @@ def wagners_function(reduced_time: Union[np.ndarray,float]):
         reduced_time (float,np.ndarray) : Equal to the number of semichords travelled. See function calculate_reduced_time
     """
     wagner = (1 - 0.165 * np.exp(-0.0455 * reduced_time) - 
-                0.335 * np.exp(-0.3 * reduced_time))
-    try:
-        wagner[reduced_time < 0] = 0
-    except:
-        if reduced_time < 0:
-            wagner = 0
-    
+                0.335 * np.exp(-0.3 * reduced_time)) * np.where(reduced_time >= 0,1,0)
     return wagner
 
 
@@ -62,14 +58,8 @@ def kussners_function(reduced_time: Union[np.ndarray,float]):
     Args:
         reduced_time (float,np.ndarray) : This is equal to the number of semichords travelled. See function calculate_reduced_time
     """
-    kussner = 1 - 0.5 * np.exp(-0.13 * reduced_time) - 0.5 * np.exp(-reduced_time) 
-    
-    try:
-        kussner[reduced_time < 0 ] = 0 
-    except:
-        if reduced_time < 0:
-            kussner = 0
-
+    kussner = (1 - 0.5 * np.exp(-0.13 * reduced_time) - 
+               0.5 * np.exp(-reduced_time)) * np.where(reduced_time>=0,1,0)
     return kussner 
 
 
@@ -190,6 +180,7 @@ def calculate_lift_due_to_pitching_profile(
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
     
+    assert (reduced_time >= 0).all(), "Please use positive time. Negative time not supported"
      
     if isinstance(angle_of_attack,float) or isinstance(angle_of_attack,int): 
         def AoA_function(reduced_time):
@@ -271,14 +262,22 @@ if __name__ == "__main__":
         return gust_velocity
     
     def angle_of_attack(reduced_time: float) -> float:
-        if 5 <= reduced_time <= 10:
-            AoA = -10
-        else:
-            AoA = 0 
-            
+        AoA = -25*np.exp(-((reduced_time-7.5)/3)**2)
+                   
         return AoA
     
-    reduced_time = np.linspace(0,20,200)
+# =============================================================================
+#     n = 100
+#     reduced_time = np.linspace(0,29,n)
+#     
+#     opti = asb.Opti()
+#     
+#     angle_of_attack = opti.variable(init_guess=np.ones(n))
+# =============================================================================
+        
+    
+    
+    reduced_time = np.linspace(0,20,100)
     plate_velocity = 2
     cl = pitching_through_transverse_gust(reduced_time,top_hat_gust,plate_velocity,angle_of_attack)
     cl1 = calculate_lift_due_to_transverse_gust(reduced_time,top_hat_gust,plate_velocity,angle_of_attack)
@@ -294,6 +293,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlabel("Reduced time")
     plt.ylabel("$C_\ell$")
+    
     
     
     
