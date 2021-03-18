@@ -173,10 +173,9 @@ def calculate_lift_due_to_transverse_gust(
     
     return lift_coefficient
 
-
 def calculate_lift_due_to_pitching_profile(
         reduced_time: np.ndarray,
-        angle_of_attack: np.ndarray # In degrees
+        angle_of_attack: Union[Callable[[float],float],float] # In degrees
         ): 
     """
     Calculates the duhamel superposition integral of Wagner's problem. 
@@ -186,33 +185,45 @@ def calculate_lift_due_to_pitching_profile(
     
     Args:
         reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        angle_of_attack (np.ndarray) : The angle of attack as a function of reduced time of the flat plate
+        angle_of_attack (Callable[[float],float]) : The angle of attack as a function of reduced time of the flat plate
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
-    assert np.size(reduced_time) == np.size(angle_of_attack),  "The pitching history and time must have the same length"
     
-    angle_of_attack = np.deg2rad(angle_of_attack)
-    da_ds = np.gradient(angle_of_attack,reduced_time)
+     
+    if isinstance(angle_of_attack,float) or isinstance(angle_of_attack,int): 
+        def AoA_function(reduced_time):
+            return np.deg2rad(angle_of_attack)
+    else:
+        def AoA_function(reduced_time):
+            return np.deg2rad(angle_of_attack(reduced_time))
+                
+    def dW_ds(reduced_time):
+         return (0.1005 * np.exp(-0.3 * reduced_time) + 
+                0.00750075 * np.exp(-0.0455 * reduced_time))
+     
+    def integrand(sigma,s):
+        if dW_ds(sigma) < 0:
+            dW_ds(sigma)
+        return dW_ds(sigma) * AoA_function(s-sigma)
+     
     lift_coefficient = np.zeros_like(reduced_time)
-    ds =  np.gradient(reduced_time)
-    
-    for i in range(len(reduced_time)):
-        integral_term = 0
-        for j in range(i):
-            integral_term += (da_ds[j]  * 
-            wagners_function(reduced_time[i] - reduced_time[j]) * ds[j])
-            
-        lift_coefficient[i] = 2 * np.pi * (angle_of_attack[0] * 
-                                           wagners_function(reduced_time[i]) +
-                                           integral_term)
+
+    for i,s in enumerate(reduced_time):
+        
+        I = quad(integrand, 0, s, args=s)[0]    
+        #print(I)                        
+        lift_coefficient[i] = 2 * np.pi * (AoA_function(s) * 
+                                           wagners_function(0) + 
+                                           I)
     
     return lift_coefficient
 
 
+
 def added_mass_due_to_pitching(
         reduced_time: np.ndarray,
-        angle_of_attack: np.ndarray # In degrees
+        angle_of_attack: Callable[[float],float] # In degrees
 ):
     
     """
@@ -221,38 +232,38 @@ def added_mass_due_to_pitching(
     
     Args:
         reduced_time (np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        angle_of_attack (np.ndarray) : The angle of attack as a function of reduced time of the flat plate
+        angle_of_attack (Callable[[float],float]) : The angle of attack as a function of reduced time of the flat plate
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
 
-    angle_of_attack = np.deg2rad(angle_of_attack)
-    da_ds = np.gradient(angle_of_attack,reduced_time)
+    AoA = np.array([np.deg2rad(angle_of_attack(s)) for s in reduced_time])
+    da_ds = np.gradient(AoA,reduced_time) 
     
     # TODO: generalize to all unsteady motion
     
-    return np.pi / 2 * np.cos(angle_of_attack)**2 * da_ds
+    return np.pi / 2 * np.cos(AoA)**2 * da_ds
     
     
 
 def pitching_through_transverse_gust(
         reduced_time: np.ndarray,
-        angle_of_attack: np.ndarray, # In degrees
-        gust_velocity_profile: np.ndarray,
+        gust_velocity_profile: Callable[[float],float],
         plate_velocity: float ,
+        angle_of_attack: Union[Callable[[float],float],float], # In degrees
         chord: float = 1 
         ):
-    """
-    This function calculates the lift coefficient history of a wing pitching 
-    through an arbitrary transverse gust
-    """
-    pass
 
+    gust_lift = calculate_lift_due_to_transverse_gust(reduced_time,gust_velocity_profile,plate_velocity,angle_of_attack,chord)
+    pitch_lift =calculate_lift_due_to_pitching_profile(reduced_time,angle_of_attack)
+    added_mass_lift = added_mass_due_to_pitching(reduced_time,angle_of_attack)
+    
+    return gust_lift + pitch_lift + added_mass_lift
 
 if __name__ == "__main__":
     
     def top_hat_gust(reduced_time: float) -> float:
-        if 0 <= reduced_time <= 5:
+        if 5 <= reduced_time <= 10:
             gust_velocity = 1
         else:
             gust_velocity = 0 
@@ -260,29 +271,29 @@ if __name__ == "__main__":
         return gust_velocity
     
     def angle_of_attack(reduced_time: float) -> float:
-        return 20*np.sin(reduced_time)
+        if 5 <= reduced_time <= 10:
+            AoA = -10
+        else:
+            AoA = 0 
+            
+        return AoA
     
-    n = 100
-    reduced_time = np.linspace(-5,10,n)
-    plate_velocity = 1
-    
-    profile = np.zeros(n)
-    profile[:35] = 1 
-    
-    #cl = lol(reduced_time,profile,plate_velocity)
-    
-    
-    
-    cl1 = calculate_lift_due_to_transverse_gust(reduced_time,top_hat_gust,plate_velocity)
-    cl2 = calculate_lift_due_to_transverse_gust(reduced_time,top_hat_gust,plate_velocity,angle_of_attack=angle_of_attack)
-    
-    
-    plt.plot(reduced_time,cl1,label="Constant")
-    plt.plot(reduced_time,cl2,label="AoA")
+    reduced_time = np.linspace(0,20,200)
+    plate_velocity = 2
+    cl = pitching_through_transverse_gust(reduced_time,top_hat_gust,plate_velocity,angle_of_attack)
+    cl1 = calculate_lift_due_to_transverse_gust(reduced_time,top_hat_gust,plate_velocity,angle_of_attack)
+    cl2 = calculate_lift_due_to_pitching_profile(reduced_time,angle_of_attack)
+    cl3 = added_mass_due_to_pitching(reduced_time, angle_of_attack)
+
+
+    plt.figure(dpi=300)
+    plt.plot(reduced_time,cl,label="Total Lift")
+    plt.plot(reduced_time,cl1,label="Gust Lift") 
+    plt.plot(reduced_time,cl2,label="Pitching Lift") 
+    plt.plot(reduced_time,cl3,label="Added Mass Lift") 
     plt.legend()
-    
-    
-    
+    plt.xlabel("Reduced time")
+    plt.ylabel("$C_\ell$")
     
     
     
