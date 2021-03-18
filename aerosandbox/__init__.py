@@ -10,3 +10,13 @@ from .propulsion import *
 from .structures import *
 
 __version__ = "3.0.10"
+
+import webbrowser
+
+def docs():
+    """
+    Opens the AeroSandbox documentation.
+    """
+    webbrowser.open_new(
+        "https://github.com/peterdsharpe/AeroSandbox"
+    ) # TODO: make this redirect to a hosted ReadTheDocs, or similar.
