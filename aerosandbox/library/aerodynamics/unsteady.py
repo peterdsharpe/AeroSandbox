@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from aerosandbox.modeling.interpolation import InterpolatedModel
 from typing import Union, Callable
+from scipy.integrate import quad
 
 def calculate_reduced_time(
         time: Union[float,np.ndarray],
@@ -119,17 +119,17 @@ def indicial_gust_response(
     """
     angle_of_attack_radians = np.deg2rad(angle_of_attack)
     offset = chord / 2 * (1 - np.cos(angle_of_attack_radians))
-    return (2 * np.pi * ( angle_of_attack_radians + 
-            np.arctan(gust_velocity / plate_velocity) * 
+    return (2 * np.pi * np.arctan(gust_velocity / plate_velocity) * 
             np.cos(angle_of_attack_radians) *
-            kussners_function(reduced_time - offset)))
+            kussners_function(reduced_time - offset))
+
 
 
 def calculate_lift_due_to_transverse_gust(
         reduced_time: np.ndarray,
-        gust_velocity_profile: np.ndarray,
+        gust_velocity_profile: Callable[[float],float],
         plate_velocity: float,
-        angle_of_attack: float = 0, # In Degrees
+        angle_of_attack: Union[float,Callable[[float],float]] = 0, # In Degrees
         chord: float = 1 
         ): 
     """
@@ -138,39 +138,43 @@ def calculate_lift_due_to_transverse_gust(
     
     Args:
         reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        gust_velocity_profile (np.ndarray) : The transverse velocity profile that the flate plate experiences
+        gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
         plate_velocity (float) :The velocity by which the flat plate enters the gust
-        angle_of_attack (float) : The angle of attack, in degrees
+        angle_of_attack (Union[float,Callable[[float],float]]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
         chord (float) : The chord of the plate in meters
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
-    assert np.size(reduced_time) == np.size(gust_velocity_profile),  "The velocity history and time must have the same length"
+    assert type(angle_of_attack) != np.ndarray, "Please provide either a Callable or a float for the angle of attack"
     
-    interpolated_velocity = InterpolatedModel(reduced_time,gust_velocity_profile) # Interpolate velocity to evaluate at arbitrary times
-    cosine_angle_of_attack = np.cos(np.deg2rad(angle_of_attack))
-    offset = chord / 2 * (1 - cosine_angle_of_attack) # Change in the gust entry location due to the angle of attack
-    kussner = kussners_function(reduced_time) # Indicial respone of system
-    dK_ds = np.gradient(kussner,reduced_time) # Derivative of indicial respone for duhamel integral
-    lift_coefficient = np.zeros_like(reduced_time) 
-    ds =  np.gradient(reduced_time) 
-    
-    for i in range(len(reduced_time)): # Duhamel Superposition quadrature
-        integral_term = 0
-        for j in range(i):
-            integral_term += (dK_ds[j]  * 
-                              interpolated_velocity(reduced_time[i]-reduced_time[j]-offset) * 
-                              cosine_angle_of_attack * ds[j])
+    if isinstance(angle_of_attack,float) or isinstance(angle_of_attack,int): 
+        def AoA_function(reduced_time):
+            return np.deg2rad(angle_of_attack)
+    else:
+        def AoA_function(reduced_time):
+            return np.deg2rad(angle_of_attack(reduced_time))
+                
         
-        lift_coefficient[i] = (2 * np.pi * (np.deg2rad(angle_of_attack) +
-                                           integral_term / plate_velocity))
-                               
+    def dK_ds(reduced_time):
+        return (0.065 * np.exp(-0.13 * reduced_time) +
+                0.5 * np.exp(-reduced_time))
+    
+    def integrand(sigma,s,chord):
+        offset = chord / 2 * (1 - np.cos(AoA_function(s - sigma)))
+        return (dK_ds(sigma) * 
+                gust_velocity_profile(s - sigma - offset) * 
+                np.cos(AoA_function(s - sigma)))
+                
+    lift_coefficient = np.zeros_like(reduced_time) 
+    for i,s in enumerate(reduced_time): 
+        I = quad(integrand, 0, s, args=(s,chord))[0]
+        lift_coefficient[i] = 2 * np.pi *  I / plate_velocity
+                            
     
     return lift_coefficient
 
 
-
-def calculate_lift_due_to_pitch_profile(
+def calculate_lift_due_to_pitching_profile(
         reduced_time: np.ndarray,
         angle_of_attack: np.ndarray # In degrees
         ): 
@@ -200,13 +204,13 @@ def calculate_lift_due_to_pitch_profile(
             wagners_function(reduced_time[i] - reduced_time[j]) * ds[j])
             
         lift_coefficient[i] = 2 * np.pi * (angle_of_attack[0] * 
-                                           wagners_function[reduced_time[i]] +
+                                           wagners_function(reduced_time[i]) +
                                            integral_term)
     
     return lift_coefficient
 
 
-def non_circulatory_lift_from_pitching(
+def added_mass_due_to_pitching(
         reduced_time: np.ndarray,
         angle_of_attack: np.ndarray # In degrees
 ):
@@ -224,6 +228,7 @@ def non_circulatory_lift_from_pitching(
 
     angle_of_attack = np.deg2rad(angle_of_attack)
     da_ds = np.gradient(angle_of_attack,reduced_time)
+    
     # TODO: generalize to all unsteady motion
     
     return np.pi / 2 * np.cos(angle_of_attack)**2 * da_ds
@@ -246,22 +251,39 @@ def pitching_through_transverse_gust(
 
 if __name__ == "__main__":
     
-   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    def top_hat_gust(reduced_time: float) -> float:
+        if 0 <= reduced_time <= 5:
+            gust_velocity = 1
+        else:
+            gust_velocity = 0 
             
+        return gust_velocity
+    
+    def angle_of_attack(reduced_time: float) -> float:
+        return 20*np.sin(reduced_time)
+    
+    n = 100
+    reduced_time = np.linspace(-5,10,n)
+    plate_velocity = 1
+    
+    profile = np.zeros(n)
+    profile[:35] = 1 
+    
+    #cl = lol(reduced_time,profile,plate_velocity)
+    
+    
+    
+    cl1 = calculate_lift_due_to_transverse_gust(reduced_time,top_hat_gust,plate_velocity)
+    cl2 = calculate_lift_due_to_transverse_gust(reduced_time,top_hat_gust,plate_velocity,angle_of_attack=angle_of_attack)
+    
+    
+    plt.plot(reduced_time,cl1,label="Constant")
+    plt.plot(reduced_time,cl2,label="AoA")
+    plt.legend()
+    
+    
+    
+    
+    
+    
+    
