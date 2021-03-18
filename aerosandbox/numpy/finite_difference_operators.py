@@ -1,25 +1,6 @@
 from aerosandbox.numpy.array import array, length
 import numpy as _onp
 
-# def derivative(
-#         variable: np.ndarray,
-#         with_respect_to: np.ndarray = None,
-#         derivative_degree: int = 1,
-#         accuracy_order: int = 1,
-#         mode="centered",
-# ):
-#     """
-#     Returns the finite-difference
-#     Args:
-#         array:
-#         derivative_degree:
-#         accuracy_order:
-#         mode:
-#
-#     Returns:
-#
-#     """
-
 
 def finite_difference_coefficients(
         x: _onp.ndarray,
