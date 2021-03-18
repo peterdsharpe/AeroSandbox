@@ -11,16 +11,12 @@ from .structures import *
 
 __version__ = "3.0.10"
 
-import webbrowser
-
 
 def docs():
     """
     Opens the AeroSandbox documentation.
     """
+    import webbrowser
     webbrowser.open_new(
         "https://github.com/peterdsharpe/AeroSandbox/tree/master/aerosandbox"
     )  # TODO: make this redirect to a hosted ReadTheDocs, or similar.
-
-
-del webbrowser
