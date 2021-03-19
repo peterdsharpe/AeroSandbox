@@ -1,6 +1,22 @@
 import plotly.graph_objects as go
 import aerosandbox.numpy as np
-from aerosandbox.geometry.common import reflect_over_XZ_plane
+
+
+def reflect_over_XZ_plane(input_vector):
+    """
+    Takes in a vector or an array and flips the y-coordinates.
+    :param input_vector: A vector or list of vectors to flip.
+    :return: Vector with flipped sign on y-coordinate.
+    """
+    shape = input_vector.shape
+    if len(shape) == 1:
+        return input_vector * np.array([1, -1, 1])
+    elif len(shape) == 2:
+        if not shape[1] == 3:
+            raise ValueError("The function expected either a 3-element vector or a Nx3 array!")
+        return input_vector * np.array([1, -1, 1])
+    else:
+        raise ValueError("The function expected either a 3-element vector or a Nx3 array!")
 
 
 class Figure3D:

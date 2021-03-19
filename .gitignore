@@ -7,3 +7,5 @@ __pycache__/
 .pytest_cache/
 .spyrpoject/
 *.DS_Store
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*

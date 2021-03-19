@@ -11,6 +11,28 @@ import warnings
 
 
 class XFoil(ExplicitAnalysis):
+    """
+
+    An interface to XFoil, a 2D airfoil analysis tool developed by Mark Drela at MIT.
+
+    Requires XFoil to be on your computer; XFoil is available here: https://web.mit.edu/drela/Public/web/xfoil/
+
+    It is recommended (but not required) that you add XFoil to your system PATH environment variable such that it can
+    be called with the command `xfoil`. If this is not the case, you need to specify the path to your XFoil
+    executable using the `xfoil_command` argument of the constructor.
+
+    Usage example:
+
+    >>> xf = XFoil(
+    >>>     airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
+    >>>     Re=1e6,
+    >>> )
+    >>>
+    >>> result_at_single_alpha = xf.alpha(5)
+    >>> result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
+    >>> result_at_multiple_alphas = xf.alpha([3, 5, 60]) # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
+
+    """
 
     def __init__(self,
                  airfoil: Airfoil,
@@ -22,6 +44,7 @@ class XFoil(ExplicitAnalysis):
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
                  verbose: bool = False,
+                 working_directory: str = None,
                  ):
         """
         Interface to XFoil.
@@ -70,6 +93,7 @@ class XFoil(ExplicitAnalysis):
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
         self.verbose = verbose
+        self.working_directory = working_directory
 
     def _default_run_file_contents(self) -> List[str]:
         run_file_contents = []
@@ -136,7 +160,10 @@ class XFoil(ExplicitAnalysis):
         # Set up a temporary directory
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
-            # directory = Path("C:/Users/User/Downloads")  # For debugging
+
+            ### Alternatively, work in another directory:
+            if self.working_directory is not None:
+                directory = Path(self.working_directory) # For debugging
 
             # Designate an intermediate file for file I/O
             output_filename = "output.txt"
@@ -163,7 +190,6 @@ class XFoil(ExplicitAnalysis):
 
             ### Set up the run command
             command = f'{self.xfoil_command} {airfoil_file} < {run_file}'
-            print(command)
 
             ### Execute
             subprocess.call(
@@ -183,9 +209,6 @@ class XFoil(ExplicitAnalysis):
                 "xtr_upper",
                 "xtr_lower"
             ]
-
-            with open(directory / output_filename, "r") as f:
-                print(f.read())
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -251,9 +274,7 @@ if __name__ == '__main__':
     xf = XFoil(
         airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
         Re=1e6,
-        verbose=True
     )
-
-    d = xf.alpha([5])
-    e = xf.cl([0.5, 0.7, 0.8, 0.9])
-    f = xf.alpha(60)
+    result_at_single_alpha = xf.alpha(5)
+    result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
+    result_at_multiple_alphas = xf.alpha([3, 5, 60])  # Note: if a result does
