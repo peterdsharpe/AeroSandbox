@@ -44,6 +44,7 @@ class XFoil(ExplicitAnalysis):
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
                  verbose: bool = False,
+                 working_directory: str = None,
                  ):
         """
         Interface to XFoil.
@@ -92,6 +93,7 @@ class XFoil(ExplicitAnalysis):
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
         self.verbose = verbose
+        self.working_directory = working_directory
 
     def _default_run_file_contents(self) -> List[str]:
         run_file_contents = []
@@ -158,7 +160,10 @@ class XFoil(ExplicitAnalysis):
         # Set up a temporary directory
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
-            # directory = Path("C:/Users/User/Downloads")  # For debugging
+
+            ### Alternatively, work in another directory:
+            if self.working_directory is not None:
+                directory = Path(self.working_directory) # For debugging
 
             # Designate an intermediate file for file I/O
             output_filename = "output.txt"
