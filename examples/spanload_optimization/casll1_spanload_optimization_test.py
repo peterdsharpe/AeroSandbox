@@ -180,4 +180,5 @@ CL_e = np.sqrt(1 - y_e ** 2) * ap_sol.CL_locals[0] * ap_sol.chords[0] / ap_sol.a
 plt.plot(y_e, CL_e, label="Elliptical Loading (Theory)")
 plt.grid(True)
 plt.legend()
+plt.tight_layout()
 plt.show()
