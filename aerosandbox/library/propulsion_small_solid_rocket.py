@@ -155,16 +155,16 @@ if __name__ == "__main__":
     import plotly.express as px
     import pandas as pd
 
-    # # Oxamide Function tests
-    # oxamides = np.linspace(-0.3,0.5,200)
-    # burn_rate_coefficients = burn_rate_coefficient(oxamides).toarray()
-    # c_stars = c_star(oxamides)
-    # min_combustion_pressures = dubious_min_combustion_pressure(oxamides)
-    # gammas = gamma(oxamides)
-    # px.scatter(x=oxamides,y=burn_rate_coefficients,labels={"x": "Oxamide", "y": "Burn Rate Coeff"}).show()
-    # px.scatter(x=oxamides,y=c_stars,labels={"x": "Oxamide", "y": "c_star"}).show()
-    # px.scatter(x=oxamides,y=min_combustion_pressures,labels={"x": "Oxamide", "y": "Min. Combustion Pressure"}).show()
-    # px.scatter(x=oxamides,y=gammas,labels={"x": "Oxamide", "y": "Gamma"}).show()
+    # Oxamide Function tests
+    oxamides = np.linspace(-0.3,0.5,200)
+    burn_rate_coefficients = burn_rate_coefficient(oxamides)
+    c_stars = c_star(oxamides)
+    min_combustion_pressures = dubious_min_combustion_pressure(oxamides)
+    gammas = gamma(oxamides)
+    px.scatter(x=oxamides,y=burn_rate_coefficients,labels={"x": "Oxamide", "y": "Burn Rate Coeff"}).show()
+    px.scatter(x=oxamides,y=c_stars,labels={"x": "Oxamide", "y": "c_star"}).show()
+    px.scatter(x=oxamides,y=min_combustion_pressures,labels={"x": "Oxamide", "y": "Min. Combustion Pressure"}).show()
+    px.scatter(x=oxamides,y=gammas,labels={"x": "Oxamide", "y": "Gamma"}).show()
 
     # # ER_from_P test
     chamber_pressure_inputs = np.logspace(5, 6, 200)
