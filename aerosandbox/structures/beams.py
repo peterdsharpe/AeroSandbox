@@ -1008,7 +1008,7 @@ if __name__ == '__main__':
         length = 30,
         points_per_point_load = 10,
         bending = True,
-        torsion = False
+        torsion = True
     )
     #beam.cross_section.plot()
     
@@ -1041,12 +1041,13 @@ if __name__ == '__main__':
     
         beam.diameter > 0.1,
         beam.diameter > 0.1,
-        beam.thickness > 1E-5,
-        beam.thickness > 1E-5,
+        beam.thickness > 1E-2,
+        beam.thickness > 1E-2,
         ])
     
+    # Limit torsion to a degree
     opti.subject_to([
-#            (beam.dphi * 180 / np.pi) < 10,
+            (beam.dphi * 180 / np.pi) < 5,
             ])
     
     # Some sensible boundaries to avoid crazy beams
