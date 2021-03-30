@@ -320,7 +320,9 @@ class Beam6DOF(asb.ImplicitAnalysis):
         # TODO: Don't add points if load location == length
         point_load_locations = [load["location"] for load in self.point_loads]
         point_load_locations.insert(0, 0)
-        point_load_locations.append(self.length)
+        
+        if self.length not in point_load_locations:
+            point_load_locations.append(self.length)
         
         splits = [
             np.linspace(
@@ -330,8 +332,7 @@ class Beam6DOF(asb.ImplicitAnalysis):
             for i in range(len(point_load_locations) - 1)
             ]
         
-        # Drop duplicates
-        self.x = np.unique(np.concatenate(splits))
+        self.x = np.concatenate(splits)
 
         #### Post-process the discretization
         self.n = self.x.shape[0]
@@ -385,7 +386,11 @@ class Beam6DOF(asb.ImplicitAnalysis):
         
         for i in range(len(self.point_loads)):
             load = self.point_loads[i]
-            idx = self.points_per_point_load * (i + 1) - 1  # discretized point index
+            
+            if self.length == load['location']:
+                idx = -1
+            else:
+                idx = self.points_per_point_load * (i + 1) - 1  # discretized point index
             
             self.point_forces_x[idx] = load["force"][0]
             self.point_forces_y[idx] = load["force"][1]
