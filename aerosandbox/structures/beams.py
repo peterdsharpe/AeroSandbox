@@ -541,6 +541,8 @@ class Beam6DOF(asb.ImplicitAnalysis):
         
         x = self.cross_section.x()
         y = self.cross_section.y()
+        x = x - np.ones(x.shape) * self.cross_section.centroid(return_split=True)[0].reshape((-1, 1))
+        y = y - np.ones(x.shape) * self.cross_section.centroid(return_split=True)[1].reshape((-1, 1))
         
         distance = np.sqrt( x**2 + y**2 )
         

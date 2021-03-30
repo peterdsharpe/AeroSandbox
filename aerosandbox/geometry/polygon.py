@@ -142,7 +142,7 @@ class Polygon(AeroSandboxObject):
 
         return A
 
-    def centroid(self):
+    def centroid(self, return_split=False):
         # Returns the centroid of the polygon, in nondimensional (chord-normalized) units.
         x = self.x()
         y = self.y()
@@ -157,7 +157,10 @@ class Polygon(AeroSandboxObject):
         y_c = 1 / (6 * A) * np.sum(a * (y + y_n), axis=axis)
         centroid = np.array([x_c, y_c])
 
-        return centroid
+        if return_split:
+            return x_c, y_c
+        else:
+            return centroid
 
     def Ixx(self):
         # Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
