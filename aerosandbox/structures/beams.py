@@ -174,7 +174,7 @@ class Beam6DOF(asb.ImplicitAnalysis):
         self.n = 1  # Init with 1 cross-section
         
         # make them properties so we can mess with setting
-        for key in self._init_geometry.keys():
+        for key in self.req_geometry_vars:
             
             # Use function factories to not mess up the keys
             def make_getter(key):
@@ -184,7 +184,8 @@ class Beam6DOF(asb.ImplicitAnalysis):
             
             def make_setter(key):
                 def setter(self, value):
-                    if len(value.shape) == 1:
+                    if ((type(value) not in [float, int]) and
+                        (len(value.shape) == 1)):
                         value = np.reshape(value, (1, -1))
                     setattr(self, "_"+key, value)
                 return setter
@@ -802,8 +803,8 @@ class RoundTube(Beam6DOF):
         x2 = np.flip(np.vstack([xy[:, 0]]*self.n), axis=0) * diameter.T/2
         y2 = np.flip(np.vstack([xy[:, 1]]*self.n), axis=1) * diameter.T/2
         
-        x = cas.horzcat(x1, x2)
-        y = cas.horzcat(y1, y2)
+        x = np.concatenate([x1.T, x2.T]).T
+        y = np.concatenate([y1.T, y2.T]).T
         
         # Probably quite inefficient for circles (high poly approx)
         poly = asb.Polygon(x, y)
@@ -811,6 +812,8 @@ class RoundTube(Beam6DOF):
         return poly
     
 class RoundBar(RoundTube):
+    
+    req_geometry_vars = ['diameter']  
     
     def __init__(self, 
                  *args, 
@@ -821,6 +824,8 @@ class RoundBar(RoundTube):
                  **kwargs):
         
         # It's the same as a tube, just thickness all the way through
+        # A bit hackish though
+        # TODO: Fix this, especially for torsion where it won't like it
         init_geometry['thickness'] = init_geometry['diameter']/2
         self.locked_geometry_vars.append('thickness')
         
@@ -891,8 +896,8 @@ class RectTube(Beam6DOF):
         x2 = np.vstack([xy[:, 0]]*self.n) * width.T
         y2 = np.vstack([xy[:, 1]]*self.n) * height.T
         
-        x = cas.horzcat(x1, x2)
-        y = cas.horzcat(y1, y2)
+        x = np.concatenate([x1.T, x2.T]).T
+        y = np.concatenate([y1.T, y2.T]).T
         
         poly = asb.Polygon(x, y)
         
@@ -974,11 +979,11 @@ if __name__ == '__main__':
         yield_stress = 3000000000,
         )
     
-    BeamClass = RectBar
-    geometry = {
-            'height': 1,
-            'width': 1,
-            }
+#    BeamClass = RectBar
+#    geometry = {
+#            'height': 1,
+#            'width': 1,
+#            }
     
     # BeamClass = RectTube
     # geometry = {
@@ -988,21 +993,22 @@ if __name__ == '__main__':
     #         }
     
     
-#    BeamClass = RoundTube
-#    geometry = {
-#            'diameter': 1,
-#            'thickness': 0.01
-#            }
+    BeamClass = RoundTube
+    geometry = {
+            'diameter': 1,
+            'thickness': 0.01,
+            'num_eval': 10
+            }
     
     # Use default geometry guess
     beam = BeamClass(
-        opti=opti,
+        opti = opti,
         init_geometry = geometry,
         material = material,
-        length=60 / 2,
-        points_per_point_load=10,
-        bending=True,
-        torsion=True
+        length = 30,
+        points_per_point_load = 10,
+        bending = True,
+        torsion = False
     )
     #beam.cross_section.plot()
     
@@ -1028,19 +1034,19 @@ if __name__ == '__main__':
     
     # Some sensible boundaries to avoid crazy beams
     opti.subject_to([
-         beam.height < 1000,
-         beam.width < 1000,
-         beam.height > 0.01,
-         beam.width > 0.01,
+#         beam.height < 1000,
+#         beam.width < 1000,
+#         beam.height > 0.01,
+#         beam.width > 0.01,
     
-#        beam.diameter > 0.01,
-#        beam.diameter > 0.01,
-#        beam.thickness > 1E-5,
-#        beam.thickness > 1E-5,
+        beam.diameter > 0.1,
+        beam.diameter > 0.1,
+        beam.thickness > 1E-5,
+        beam.thickness > 1E-5,
         ])
     
     opti.subject_to([
-#            (beam.dphi * 180 / np.pi) < 20,
+#            (beam.dphi * 180 / np.pi) < 10,
             ])
     
     # Some sensible boundaries to avoid crazy beams
@@ -1049,13 +1055,13 @@ if __name__ == '__main__':
     
     # Add some profile change constraints
     opti.subject_to([
-         cas.diff(cas.diff(beam.height)) < 0.001,
-         cas.diff(cas.diff(beam.height)) > -0.001,
-         cas.diff(cas.diff(beam.width)) < 0.001,
-         cas.diff(cas.diff(beam.width)) > -0.001,
+#         cas.diff(cas.diff(beam.height)) < 0.001,
+#         cas.diff(cas.diff(beam.height)) > -0.001,
+#         cas.diff(cas.diff(beam.width)) < 0.001,
+#         cas.diff(cas.diff(beam.width)) > -0.001,
         
-#        cas.diff(cas.diff(beam.diameter)) < 0.001,
-#        cas.diff(cas.diff(beam.diameter)) > -0.001,
+        cas.diff(cas.diff(beam.diameter)) < 0.001,
+        cas.diff(cas.diff(beam.diameter)) > -0.001,
     ])
 
     opti.minimize(beam.mass)
