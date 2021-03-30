@@ -225,6 +225,8 @@ class Beam6DOF(asb.ImplicitAnalysis):
         assert bending_moment.shape[0] == 2
         assert type(torsional_moment) in [int, float, cas.MX]
         
+        assert all(bending_moment == np.zeros((2,))), "Moments not implmented"
+        
         self.point_loads.append(
             {
                 "location"        : location,
@@ -423,7 +425,6 @@ class Beam6DOF(asb.ImplicitAnalysis):
         self.axial_stress = np.zeros(self.n)
         
         if self.bending_BC_type == 'cantilevered':
-            # TODO: Fix hstacks to support casadi types
             per_point_forces_z = self.forces_per_unit_length_z + np.hstack([0, self.point_forces_z])
             forces_z = np.cumsum(per_point_forces_z[::-1])[::-1]
             
@@ -447,8 +448,6 @@ class Beam6DOF(asb.ImplicitAnalysis):
     def calc_bending_stress(self):
         """Calculates stresses from bending loads"""
         
-        warnings.warn('Bending has not been checked yet.')  # TODO: Check and remove
-        
         # Set up derivatives
         # TODO: What are these factors before variables?
         self.u = 1 * self.opti.variable(0, n_vars = self.n)
@@ -467,12 +466,12 @@ class Beam6DOF(asb.ImplicitAnalysis):
         self.opti.subject_to([
             cas.diff(self.u) == np.trapz(self.du) * self.dx,
             cas.diff(self.du) == np.trapz(self.ddu) * self.dx,
-            cas.diff(self.E * self.Ixx.T * self.ddu) == np.trapz(self.dEIddu) * self.dx, # + self.point_moments_y,
+            cas.diff(self.E * self.Ixx.T * self.ddu) == np.trapz(self.dEIddu) * self.dx, # + self.point_moments_y + self.moments_per_unit_length_y * self.dx,
             cas.diff(self.dEIddu) == np.trapz(self.forces_per_unit_length_x) * self.dx + self.point_forces_x,
             
             cas.diff(self.v) == np.trapz(self.dv) * self.dx,
             cas.diff(self.dv) == np.trapz(self.ddv) * self.dx,
-            cas.diff(self.E * self.Iyy.T * self.ddv) == np.trapz(self.dEIddv) * self.dx, # + self.point_moments_y,
+            cas.diff(self.E * self.Iyy.T * self.ddv) == np.trapz(self.dEIddv) * self.dx, # + self.point_moments_y + self.moments_per_unit_length_y * self.dx,
             cas.diff(self.dEIddv) == np.trapz(self.forces_per_unit_length_y) * self.dx + self.point_forces_y,
         ])
 
@@ -492,7 +491,7 @@ class Beam6DOF(asb.ImplicitAnalysis):
         else:
             raise ValueError("Bad value of bending_BC_type!")
 
-        # TODO: Check if there's a better way, somewhat inefficient
+        # Check if there's a better way, somewhat inefficient. Makes for nice plots though
         # Find the stress at vertices based on radius of curvature ddx
         self._bending_stress_vertices_x = self.cross_section.x() * self.E * self.ddu
         self._bending_stress_vertices_y = self.cross_section.y() * self.E * self.ddv
@@ -503,31 +502,29 @@ class Beam6DOF(asb.ImplicitAnalysis):
         """
         Calculates stresses from torsional loads
         
-        These might need to be specified  per geometry
+        These might need to be specified per geometry for accurate values
         
         http://web.mit.edu/16.20/homepage/6_Torsion/Torsion_files/module_6_with_solutions.pdf
         https://user.eng.umd.edu/~ccfu/ref/Design-Guide-9-torsion.pdf
         """  
-        
-        warnings.warn('Torsion has not been checked yet.')  # TODO: Check and remove
-        warnings.warn('Torsion not implemented properly.')
         
         # Set up derivatives
         self.phi = 0.1 * self.opti.variable(0, n_vars = self.n)
         self.dphi = 0.01 * self.opti.variable(0, n_vars = self.n)
 
         # Add forcing term
-        self.ddphi = -self.torsional_moments_per_unit_length / (self.G * self.J)
+#        self.ddphi = -self.torsional_moments_per_unit_length / (self.G * self.J)
+        
+        self.dGJdphi = 1 * self.opti.variable(0, n_vars = self.n)
         
         # TODO: Check these relations
         # TODO: Add warping constants
-        # TODO: Add point moments
         # Define derivatives
         self.opti.subject_to([
             cas.diff(self.phi) == np.trapz(self.dphi) * self.dx,
-            cas.diff(self.dphi) == np.trapz(self.ddphi) * self.dx,
-            cas.diff(self.G * self.J.T * self.dphi) == np.trapz(self.dGJddphi) * self.dx,
-            cas.diff(self.dGJddphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx + self.point_torsional_moments,
+#            cas.diff(self.dphi) == np.trapz(self.ddphi) * self.dx,
+            cas.diff(self.G * self.J.T * self.dphi) == np.trapz(self.dGJdphi) * self.dx,
+            cas.diff(self.dGJdphi) == np.trapz(self.torsional_moments_per_unit_length) * self.dx + self.point_torsional_moments,
         ])
         
         # Add BCs
@@ -536,25 +533,23 @@ class Beam6DOF(asb.ImplicitAnalysis):
                 self.phi[0] == 0,
                 self.dphi[0] == 0,
                 self.dphi[-1] == 0,  # No tip moment
-                self.dEIddphi[-1] == 0,  # No tip higher order stuff
+                self.dGJdphi[-1] == 0,  # No tip higher order stuff
             ])
         else:
             raise ValueError("Bad value of bending_BC_type!")
 
         
-        # TODO: Add torsion formula
-        distance = np.sqrt(
-            self.cross_section.x()**2 +
-            self.cross_section.y()**2
-        )
-            
+        x = self.cross_section.x()
+        y = self.cross_section.y()
+        
+        distance = np.sqrt( x**2 + y**2 )
+        
+        # TODO: Check formula
         stress = self.G * distance * self.dphi
         
-        # TODO: cas.sqrt might not work with AD, test cas.norm2?
-        self._torsional_stress_vertices_x = 0
-        self._torsional_stress_vertices_y = 0
+        self._torsional_stress_vertices_x = stress * x / distance
+        self._torsional_stress_vertices_y = stress * y / distance
         
-        #self._max_torsional_stress = np.max(self._torsional_stress_vertices)  # TODO: check
     
     def calc_stress(self):
         
@@ -571,7 +566,9 @@ class Beam6DOF(asb.ImplicitAnalysis):
                     + 
                     np.ones(self.cross_section.x().shape) * self.shear_stress_y.reshape((-1, 1))
                     +
-                    (self._torsional_stress_vertices if self.torsion else 0)
+                    (self._torsional_stress_vertices_x if self.torsion else 0)
+                    +
+                    (self._torsional_stress_vertices_y if self.torsion else 0)
                 )
         
         # Find max Von Mises Stress
@@ -787,7 +784,6 @@ class RoundTube(Beam6DOF):
         diameter = self.diameter
         thickness = self.thickness
         
-        # TODO: Convert to Casadi
         angle = np.linspace( 0 , 2 * np.pi, 
                             self.init_geometry.get('num_eval', 100))   # Default to 100
          
@@ -801,7 +797,7 @@ class RoundTube(Beam6DOF):
         x = cas.horzcat(x1, x2)
         y = cas.horzcat(y1, y2)
         
-        #TODO: Probably quite inefficient for circles (high poly approx)
+        # Probably quite inefficient for circles (high poly approx)
         poly = asb.Polygon(x, y)
         
         return poly
@@ -851,12 +847,17 @@ class RectTube(Beam6DOF):
         https://user.eng.umd.edu/~ccfu/ref/Design-Guide-9-torsion.pdf
         """
         
-        if self.height > self.width:
-            b = self.width
-            h = self.height
-        else:
-            b = self.height
-            h = self.width
+        b = asb.cas.if_else(
+                self.height > self.width,
+                self.width,
+                self.height
+               )
+        
+        h = asb.cas.if_else(
+                self.height > self.width,
+                self.height,
+                self.width
+               )
         
         t = self.thickness
         
@@ -912,18 +913,26 @@ class RectBar(Beam6DOF):
         """
         https://user.eng.umd.edu/~ccfu/ref/Design-Guide-9-torsion.pdf
         """
+            
+        t = asb.cas.if_else(
+                self.height > self.width,
+                self.width,
+                self.height
+               )
         
-        if self.height > self.width:
-            t = self.width
-            b = self.height
-        else:
-            t = self.height
-            b = self.width
+        b =  asb.cas.if_else(
+                self.height > self.width,
+                self.height,
+                self.width
+               )
         
-        if b/2 >= 10:
-            return b*t**3/3
-        else:
-            return (1/3 - 0.2 * t / b) * b * t**3
+        J = asb.cas.if_else(
+                b/2 >= 10,
+                b*t**3/3,
+                (1/3 - 0.2 * t / b) * b * t**3
+               )
+        
+        return J
     
     @property
     def cross_section(self):
@@ -985,7 +994,7 @@ if __name__ == '__main__':
         length=60 / 2,
         points_per_point_load=50,
         bending=True,
-        torsion=False
+        torsion=True
     )
     #beam.cross_section.plot()
     
@@ -993,7 +1002,9 @@ if __name__ == '__main__':
     lift_force = 9.81 * 103.873 * 100
     load_location = 15
     
-    beam.add_point_load(load_location, np.array([-lift_force / 3, 0, 0]))
+    beam.add_point_load(load_location, 
+                        np.array([-lift_force / 3, 0, 0]),
+                        torsional_moment = 1)
     beam.add_distributed_load(force= np.array([0, lift_force / 2, 0]), load_type='uniform')
     beam.setup()
 
