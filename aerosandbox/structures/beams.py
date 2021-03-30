@@ -320,13 +320,17 @@ class Beam6DOF(asb.ImplicitAnalysis):
         point_load_locations = [load["location"] for load in self.point_loads]
         point_load_locations.insert(0, 0)
         point_load_locations.append(self.length)
-        self.x = cas.vertcat(*[
-            cas.linspace(
-                point_load_locations[i],
-                point_load_locations[i + 1],
-                self.points_per_point_load)
+        
+        splits = [
+            np.linspace(
+            point_load_locations[i],
+            point_load_locations[i + 1],
+            self.points_per_point_load)
             for i in range(len(point_load_locations) - 1)
-        ])
+            ]
+        
+        # Drop duplicates
+        self.x = np.unique(np.concatenate(splits))
 
         #### Post-process the discretization
         self.n = self.x.shape[0]
@@ -599,9 +603,9 @@ class Beam6DOF(asb.ImplicitAnalysis):
         
         assert x.shape == y.shape and self.x.shape[0] == x.shape[0]
         
-        x = x - np.ones(x.shape) * self.cross_section.centroid()[0].reshape(-1, 1)
-        y = y - np.ones(x.shape) * self.cross_section.centroid()[1].reshape(-1, 1)
-        z = np.ones(x.shape) * self.x.reshape(-1, 1)
+        x = x - np.ones(x.shape) * self.cross_section.centroid()[0].reshape((-1, 1))
+        y = y - np.ones(x.shape) * self.cross_section.centroid()[1].reshape((-1, 1))
+        z = np.ones(x.shape) * self.x.reshape((-1, 1))
         
         X = x.flatten()
         Y = y.flatten()
@@ -754,6 +758,8 @@ class Beam6DOF(asb.ImplicitAnalysis):
 
         plt.show() if show else None
         
+
+# %% Geometries
 
 class RoundTube(Beam6DOF):
     
@@ -955,7 +961,7 @@ class RectBar(Beam6DOF):
         return poly
     
   
-#### Main      
+# %% Main      
 if __name__ == '__main__':
     
     opti = asb.Opti()
@@ -994,7 +1000,7 @@ if __name__ == '__main__':
         init_geometry = geometry,
         material = material,
         length=60 / 2,
-        points_per_point_load=50,
+        points_per_point_load=10,
         bending=True,
         torsion=True
     )
@@ -1032,6 +1038,10 @@ if __name__ == '__main__':
 #        beam.thickness > 1E-5,
 #        beam.thickness > 1E-5,
         ])
+    
+    opti.subject_to([
+#            (beam.dphi * 180 / np.pi) < 20,
+            ])
     
     # Some sensible boundaries to avoid crazy beams
     opti.subject_to([
