@@ -2,6 +2,10 @@ import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
 from typing import Union, Callable
 from scipy.integrate import quad
+import aerosandbox as asb
+from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.modeling.interpolation import InterpolatedModel
+from aerosandbox.common import *
 
 #         Welcome to the unsteady aerodynamics library!
 # In here you will find analytical, time-domain models for the
@@ -26,74 +30,51 @@ from scipy.integrate import quad
 # top hat gust will be computed.
 
 
-def main():
-    def top_hat_gust(reduced_time: float) -> float:
-        """
-        A canonical example gust. 
-        Args:
-            reduced_time (float) 
-        Returns:
-            gust_velocity (float)
-        """
-        if 5 <= reduced_time <= 10:
-            gust_velocity = 1
-        else:
-            gust_velocity = 0 
-            
-        return gust_velocity
+
+class GustPitchControl(ImplicitAnalysis):
     
-    def sine_squared_gust(reduced_time: float) -> float:
-        """
-        A canonical gust of used by the FAA to show 'compliance with the 
-        requirements of Title 14, Code of Federal Regulations (14 CFR) 25.341, 
-        Gust and turbulence loads. Section 25.341 specifies the discrete gust 
-        and continuous turbulence dynamic load conditions that apply to the 
-        airplane and engines.'
-        Args:
-            reduced_time (float) 
-        Returns:
-            gust_velocity (float)
-        """
-        gust_strength = 1
-        start = 5
-        finish = 10
-        gust_width_to_chord_ratio = 5
-        if start <= reduced_time <= finish:
-            gust_velocity = (gust_strength * 
-            np.sin( (np.pi* reduced_time ) /
-                      gust_width_to_chord_ratio)**2)
-        else:
-            gust_velocity = 0 
-            
-        return gust_velocity
+     @ImplicitAnalysis.initialize
+     def __init__(self,
+                  reduced_time,
+                  gust_profile,
+                  wing_velocity
+                  ):
+         self.reduced_time = reduced_time
+         self.gust_profile = gust_profile
+         self.timesteps = len(reduced_time)
+         
+         self._setup_unknowns()
+         
+     def _setup_unknowns(self):
+        self.angles_of_attack = self.opti.variable(init_guess=1,n_vars=self.timesteps)
+    
+         
     
     
-    def gaussian_pitch(reduced_time: float) -> float:
-        """
-        A pitch maneuver resembling a guassian curve
-        Args:
-            reduced_time (float) 
-        Returns:
-            angle_of_attack (float) : in degrees
-        """
-        return -25*np.exp(-((reduced_time-7.5)/3)**2)
+
+
+def optimal_control():
+    opti = asb.Opti()
+    N = 100
+    time = np.linspace(0,10,N)
+    wing_velocity = 2 
+    chord = 2 
+    reduced_time = calculate_reduced_time(time,wing_velocity,chord) 
+    alphas = opti.variable(init_guess=np.ones(N))
+    print(alphas.shape)
+    #interp = InterpolatedModel(reduced_time, alphas)
     
-    def linear_ramp_pitch(reduced_time: float) -> float:
-        """
-        A pitch maneuver resembling a linear ramp
-        Args:
-            reduced_time (float) 
-        Returns:
-            angle_of_attack (float) : in degrees
-        """
-        if reduced_time < 7.5:
-            angle_of_attack = -3.3 * reduced_time
-        else:
-            angle_of_attack = 2 * reduced_time - 40
+    
+    #total_lift = pitching_through_transverse_gust(reduced_time,top_hat_gust,wing_velocity,gaussian_pitch) 
+    #total_lift_squared = total_lift**2
+    #lift_integral = trapz(total_lift_squared,reduced_time)
+    #print(lift_integral)
         
-        return angle_of_attack
-    
-    
+
+def trapz(y,x):
+        return 0.5*((x[1:]-x[:-1])*(y[1:]+y[:-1])).sum()
+
+def main():    
     
     time = np.linspace(0,10,100) # Time in seconds
     wing_velocity = 2 # Wing horizontal velocity in m/s
@@ -402,14 +383,82 @@ def pitching_through_transverse_gust(
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
     gust_lift = calculate_lift_due_to_transverse_gust(reduced_time,gust_velocity_profile,plate_velocity,angle_of_attack,chord)
-    pitch_lift =calculate_lift_due_to_pitching_profile(reduced_time,angle_of_attack)
+    pitch_lift = calculate_lift_due_to_pitching_profile(reduced_time,angle_of_attack)
     added_mass_lift = added_mass_due_to_pitching(reduced_time,angle_of_attack)
     
     return gust_lift + pitch_lift + added_mass_lift
 
+def top_hat_gust(reduced_time: float) -> float:
+    """
+    A canonical example gust. 
+    Args:
+        reduced_time (float) 
+    Returns:
+        gust_velocity (float)
+    """
+    if 5 <= reduced_time <= 10:
+        gust_velocity = 1
+    else:
+        gust_velocity = 0 
+        
+    return gust_velocity
+
+def sine_squared_gust(reduced_time: float) -> float:
+    """
+    A canonical gust of used by the FAA to show 'compliance with the 
+    requirements of Title 14, Code of Federal Regulations (14 CFR) 25.341, 
+    Gust and turbulence loads. Section 25.341 specifies the discrete gust 
+    and continuous turbulence dynamic load conditions that apply to the 
+    airplane and engines.'
+    Args:
+        reduced_time (float) 
+    Returns:
+        gust_velocity (float)
+    """
+    gust_strength = 1
+    start = 5
+    finish = 10
+    gust_width_to_chord_ratio = 5
+    if start <= reduced_time <= finish:
+        gust_velocity = (gust_strength * 
+        np.sin( (np.pi* reduced_time ) /
+                  gust_width_to_chord_ratio)**2)
+    else:
+        gust_velocity = 0 
+        
+    return gust_velocity
+
+
+def gaussian_pitch(reduced_time: float) -> float:
+    """
+    A pitch maneuver resembling a guassian curve
+    Args:
+        reduced_time (float) 
+    Returns:
+        angle_of_attack (float) : in degrees
+    """
+    return -25*np.exp(-((reduced_time-7.5)/3)**2)
+
+def linear_ramp_pitch(reduced_time: float) -> float:
+    """
+    A pitch maneuver resembling a linear ramp
+    Args:
+        reduced_time (float) 
+    Returns:
+        angle_of_attack (float) : in degrees
+    """
+    if reduced_time < 7.5:
+        angle_of_attack = -3.3 * reduced_time
+    else:
+        angle_of_attack = 2 * reduced_time - 40
+    
+    return angle_of_attack
+
+
 
 if __name__ == "__main__":
-    main()
+    #main()
+    optimal_control()
 
     
     
