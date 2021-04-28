@@ -2,9 +2,9 @@ from typing import Callable, Tuple, Union
 import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.style as style
-import seaborn as sns
-plt.ion()
-sns.set(font_scale=1)
+# import seaborn as sns
+# plt.ion()
+# sns.set(font_scale=1)
 
 def contour(
         func: Callable,
