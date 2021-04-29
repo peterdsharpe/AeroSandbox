@@ -2,12 +2,12 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 np.random.seed(0)
 
-x = np.linspace(0, 1, 10)
+x = np.linspace(0, 10, 10)
 
 def f(x):
-    return x ** 2 - x + 1
+    return np.sin(x)+2*x+3
 
-y_data = f(x) + 0.01 * np.random.randn(len(x))
+y_data = f(x) + 0.1 * np.random.randn(len(x))
 
 if __name__ == '__main__':
 
