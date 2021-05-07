@@ -48,6 +48,7 @@ class FittedModel(SurrogateModel):
                  fit_type: str = "best",
                  weights: np.ndarray = None,
                  put_residuals_in_logspace: bool = False,
+                 verbose=True,
                  ):
         """
         Fits an analytical model to n-dimensional unstructured data using an automatic-differentiable optimization approach.
@@ -125,6 +126,9 @@ class FittedModel(SurrogateModel):
             (useful for minimizing percent error).
 
             Note: If any model outputs or data are negative, this will raise an error!
+
+            verbose: Should the progress of the optimization solve that is part of the fitting be displayed? See
+            `aerosandbox.Opti.solve(verbose=)` syntax for more details.
 
         Returns: A model in the form of a FittedModel object. Some things you can do:
             >>> y = FittedModel(x) # evaluate the FittedModel at new x points
@@ -288,7 +292,7 @@ class FittedModel(SurrogateModel):
             raise ValueError("Bad input for the 'fit_type' parameter.")
 
         ### Solve
-        sol = opti.solve()
+        sol = opti.solve(verbose=verbose)
 
         ##### Construct a FittedModel
 
