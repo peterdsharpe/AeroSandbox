@@ -81,7 +81,7 @@ class AirfoilInviscid(ImplicitAnalysis):
                     x_panels=[airfoil.x()[0], airfoil.x()[-1]],
                     y_panels=[airfoil.y()[0], airfoil.y()[-1]],
                     gamma=[0, 0],
-                    sigma=[airfoil.gamma[0], airfoil.gamma[-1]]
+                    sigma=[airfoil.gamma[0], airfoil.gamma[0]]
                 )
 
                 u_field = u_field + u_field_induced_TE
@@ -110,7 +110,7 @@ class AirfoilInviscid(ImplicitAnalysis):
                         x_panels=[airfoil.x()[0], airfoil.x()[-1]],
                         y_panels=-1 * np.array([airfoil.y()[0], airfoil.y()[-1]]),
                         gamma=[0, 0],
-                        sigma=[airfoil.gamma[0], airfoil.gamma[-1]]
+                        sigma=[airfoil.gamma[0], airfoil.gamma[0]]
                     )
 
                     u_field = u_field + u_field_induced_TE
