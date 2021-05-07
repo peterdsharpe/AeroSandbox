@@ -3,7 +3,7 @@ import aerosandbox.numpy as np
 import hashlib
 
 
-def eng_string(x: float, format='%.3g', si=True):
+def eng_string(x: float, format='%.3g', si=True) -> str:
     '''
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
 
