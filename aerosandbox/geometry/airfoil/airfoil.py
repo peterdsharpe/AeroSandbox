@@ -6,7 +6,7 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, 
 from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
     default_CM_function
 from scipy.interpolate import interp1d
-from aerosandbox.visualization.matplotlib import plt
+import matplotlib.pyplot as plt
 from aerosandbox.visualization.plotly import go, px
 from typing import Callable, Union
 
