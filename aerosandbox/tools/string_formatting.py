@@ -22,8 +22,8 @@ def eng_string(x: float, format='%.3g', si=True) -> str:
       -1230000.0 -> -1.23e6
 
     and with si=True:
-          1230.0 -> 1.23k
-      -1230000.0 -> -1.23M
+          1230.0 -> "1.23k"
+      -1230000.0 -> "-1.23M"
     '''
     sign = ''
     if x < 0:
@@ -42,6 +42,16 @@ def eng_string(x: float, format='%.3g', si=True) -> str:
 
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
 
+# def latex_sci_notation_string(x: float):
+#     """
+#     Converts a floating-point number to a LaTeX-style formatted string. Does not include the `$$` wrapping to put you in math mode.
+#
+#     Does not use scientific notation if the base would be zero.
+#
+#     Examples:
+#
+#         "
+#     """
 
 def hash_string(string: str) -> int:
     """
