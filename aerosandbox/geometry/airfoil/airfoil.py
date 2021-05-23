@@ -208,10 +208,11 @@ class Airfoil(Polygon):
             else:
                 return fig
         elif backend == "matplotlib":
-            fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-            plt.plot(x, y, ".-", zorder=11, color='#280887')
+            color = '#280887'
+            plt.plot(x, y, ".-", zorder=11, color=color)
+            plt.fill(x, y, zorder=10, color=color, alpha=0.2)
             if draw_mcl:
-                plt.plot(x_mcl, y_mcl, "-", zorder=4, color='#28088744')
+                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha = 0.4)
             plt.axis("equal")
             plt.xlabel(r"$x/c$")
             plt.ylabel(r"$y/c$")
@@ -219,8 +220,6 @@ class Airfoil(Polygon):
             plt.tight_layout()
             if show:
                 plt.show()
-            else:
-                return fig, ax
 
     def LE_index(self) -> int:
         """
