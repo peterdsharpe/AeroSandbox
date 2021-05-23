@@ -1,8 +1,9 @@
 "Minimizes airplane drag for a simple drag and structure model."
 import numpy as np
 from gpkit import Variable, Model, SolutionArray
+import time
 
-def solve_gpkit():
+def solve():
     pi = np.pi
 
     # Constants
@@ -58,8 +59,14 @@ def solve_gpkit():
     m = Model(D, constraints)
     return m.solve(verbosity=0)
 
-import time
-start = time.time()
-sol = solve_gpkit()
-print(time.time() - start)
-print(sol['soltime'])
+def timeit():
+    start = time.time()
+    solve()
+    end = time.time()
+    return end - start
+
+if __name__ == '__main__':
+    times = np.array([
+        timeit() for i in range(10)
+    ])
+    print(np.mean(times))
