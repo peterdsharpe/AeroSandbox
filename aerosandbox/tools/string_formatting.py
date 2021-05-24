@@ -42,16 +42,24 @@ def eng_string(x: float, format='%.3g', si=True) -> str:
 
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
 
-# def latex_sci_notation_string(x: float):
-#     """
-#     Converts a floating-point number to a LaTeX-style formatted string. Does not include the `$$` wrapping to put you in math mode.
-#
-#     Does not use scientific notation if the base would be zero.
-#
-#     Examples:
-#
-#         "
-#     """
+
+def latex_sci_notation_string(x: float):
+    """
+    Converts a floating-point number to a LaTeX-style formatted string. Does not include the `$$` wrapping to put you in math mode.
+
+    Does not use scientific notation if the base would be zero.
+
+    Examples:
+
+        "
+    """
+    float_str = "{0:.2g}".format(f)
+    if "e" in float_str:
+        base, exponent = float_str.split("e")
+        return r"{0} \times 10^{{{1}}}".format(base, int(exponent))
+    else:
+        return float_str
+
 
 def hash_string(string: str) -> int:
     """
