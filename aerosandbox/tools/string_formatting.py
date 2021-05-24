@@ -53,7 +53,7 @@ def latex_sci_notation_string(x: float):
 
         "
     """
-    float_str = "{0:.2g}".format(f)
+    float_str = "{0:.2g}".format(x)
     if "e" in float_str:
         base, exponent = float_str.split("e")
         return r"{0} \times 10^{{{1}}}".format(base, int(exponent))
