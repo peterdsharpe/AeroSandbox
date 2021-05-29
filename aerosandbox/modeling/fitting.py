@@ -12,6 +12,7 @@ class FittedModel(SurrogateModel):
 
     You can evaluate this model at a given point by calling it just like a function, e.g.:
 
+    >>> my_fitted_model = FittedModel(...)  # See FittedModel.__init__ docstring for syntax
     >>> y = my_fitted_model(x)
 
     The input to the model (`x` in the example above) is of the type:
