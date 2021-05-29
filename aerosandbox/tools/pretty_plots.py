@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
+from typing import Union
+from matplotlib import ticker
 
 # plt.ion()
 
@@ -25,6 +27,21 @@ sns.set_theme(
 mpl.rcParams["figure.dpi"] = 200
 mpl.rcParams["axes.formatter.useoffset"] = False
 
+def set_ticks(
+        x_major: Union[float, int]=None,
+        x_minor: Union[float, int]=None,
+        y_major: Union[float, int]=None,
+        y_minor: Union[float, int]=None
+):
+    ax = plt.gca()
+    if x_major is not None:
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=x_major))
+    if x_minor is not None:
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(base=x_minor))
+    if y_major is not None:
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(base=y_major))
+    if y_minor is not None:
+        ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
 def show_plot(
         title: str = None,
