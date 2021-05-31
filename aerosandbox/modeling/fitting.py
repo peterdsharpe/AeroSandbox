@@ -93,7 +93,7 @@ class FittedModel(SurrogateModel):
 
                 * param_initial_guess is a float; note that only scalar parameters are allowed.
 
-            parameter_bounds: Optional: a dict of bounds on fit parameters. Syntax is {param_name:(min, max)}.
+            parameter_bounds: Optional: a dict of bounds on fit parameters. Syntax is {"param_name":(min, max)}.
 
                 * May contain only a subset of param_guesses if desired.
 
