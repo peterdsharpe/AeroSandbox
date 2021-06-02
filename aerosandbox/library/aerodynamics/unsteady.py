@@ -35,9 +35,9 @@ class GustPitchlControl(ImplicitAnalysis):
     
      @ImplicitAnalysis.initialize
      def __init__(self,
-                  reduced_time,
-                  gust_profile,
-                  wing_velocity
+                  reduced_time: np.ndarray,
+                  gust_profile: np.ndarray,
+                  wing_velocity: float
                   ):
          self.reduced_time = reduced_time
          self.gust_profile = gust_profile
@@ -52,6 +52,7 @@ class GustPitchlControl(ImplicitAnalysis):
         self.lift_coefficient = self.opti.variable(init_guess=1,n_vars=self.timesteps-1)
     
      def _enforce_governing_equations(self):
+        # Calculate unsteady lift due to pitching 
         wagner = wagners_function(self.reduced_time)
         ds = self.reduced_time[1:] - self.reduced_time[:-1]
         da_ds = (self.angles_of_attack[1:] - self.angles_of_attack[:-1])/ds
@@ -60,6 +61,7 @@ class GustPitchlControl(ImplicitAnalysis):
             integral_term = np.sum(da_ds[j] * wagner[i-j] * ds[j]  for j in range(i))
             self.lift_coefficient[i] = 2*np.pi* (integral_term + init_term[i])
     
+        # Calculate unsteady lift due to transverse gust 
         kussner = kussners_function(self.reduced_time)
         dw_ds = (self.gust_profile[1:] - self.gust_profile[:-1])/ds
         init_term = self.gust_profile[0]*kussner
@@ -70,10 +72,13 @@ class GustPitchlControl(ImplicitAnalysis):
                 integral_term += dw_ds[j] * kussner[i-j] * ds[j]
             self.lift_coefficient[i] += 2*np.pi/self.wing_velocity*(init_term[i] + integral_term)
         
+        # Calculate unsteady lift due to added mass
         self.lift_coefficient += np.pi / 2 * np.cos(self.angles_of_attack[:-1])**2 * da_ds
         
+        # Integral of lift is to be minimized
         lift_squared_integral = np.sum(self.lift_coefficient**2)
         
+        # Constraints and objective to minimize
         self.opti.subject_to(self.angles_of_attack[0]==0)
         self.opti.minimize(lift_squared_integral)
         
@@ -91,10 +96,6 @@ def optimal_control():
        
     plt.plot(reduced_time,np.rad2deg(optimal.opti.value(optimal.angles_of_attack)))
        
-    
-
-def trapz(y,x):
-        return 0.5*((x[1:]-x[:-1])*(y[1:]+y[:-1])).sum()
 
 def main():    
     
@@ -274,6 +275,19 @@ def indicial_gust_response(
             kussners_function(reduced_time - offset))
 
 def old_func_transverse(reduced_time,gust_profile,plate_velocity,angle_of_attack=0,chord=1):
+    """
+    Calculates the lift (as a function of reduced time) caused by an arbitrary transverse gust profile
+    by computing duhamel superposition integral of Kussner's problem at a constant angle of attack
+    
+    Args:
+        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
+        gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
+        plate_velocity (float) :The velocity by which the flat plate enters the gust
+        angle_of_attack (Union[float,Callable[[float],float]]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
+        chord (float) : The chord of the plate in meters
+    Returns:
+        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
+    """
     kussner = kussners_function(reduced_time)
     ds = reduced_time[1:] - reduced_time[:-1]
     dw_ds = (gust_profile[1:] - gust_profile[:-1])/ds
