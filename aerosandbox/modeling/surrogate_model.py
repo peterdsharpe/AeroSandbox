@@ -2,7 +2,7 @@ from aerosandbox.common import AeroSandboxObject
 from abc import abstractmethod
 from typing import Union, Dict, List, Tuple
 import aerosandbox.numpy as np
-from aerosandbox.visualization.matplotlib import plt
+import matplotlib.pyplot as plt
 
 
 class SurrogateModel(AeroSandboxObject):

@@ -12,6 +12,7 @@ class FittedModel(SurrogateModel):
 
     You can evaluate this model at a given point by calling it just like a function, e.g.:
 
+    >>> my_fitted_model = FittedModel(...)  # See FittedModel.__init__ docstring for syntax
     >>> y = my_fitted_model(x)
 
     The input to the model (`x` in the example above) is of the type:
@@ -48,6 +49,7 @@ class FittedModel(SurrogateModel):
                  fit_type: str = "best",
                  weights: np.ndarray = None,
                  put_residuals_in_logspace: bool = False,
+                 verbose=True,
                  ):
         """
         Fits an analytical model to n-dimensional unstructured data using an automatic-differentiable optimization approach.
@@ -91,7 +93,7 @@ class FittedModel(SurrogateModel):
 
                 * param_initial_guess is a float; note that only scalar parameters are allowed.
 
-            parameter_bounds: Optional: a dict of bounds on fit parameters. Syntax is {param_name:(min, max)}.
+            parameter_bounds: Optional: a dict of bounds on fit parameters. Syntax is {"param_name":(min, max)}.
 
                 * May contain only a subset of param_guesses if desired.
 
@@ -125,6 +127,9 @@ class FittedModel(SurrogateModel):
             (useful for minimizing percent error).
 
             Note: If any model outputs or data are negative, this will raise an error!
+
+            verbose: Should the progress of the optimization solve that is part of the fitting be displayed? See
+            `aerosandbox.Opti.solve(verbose=)` syntax for more details.
 
         Returns: A model in the form of a FittedModel object. Some things you can do:
             >>> y = FittedModel(x) # evaluate the FittedModel at new x points
@@ -288,7 +293,7 @@ class FittedModel(SurrogateModel):
             raise ValueError("Bad input for the 'fit_type' parameter.")
 
         ### Solve
-        sol = opti.solve()
+        sol = opti.solve(verbose=verbose)
 
         ##### Construct a FittedModel
 

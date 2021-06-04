@@ -3,7 +3,7 @@ import aerosandbox.numpy as np
 import hashlib
 
 
-def eng_string(x: float, format='%.3g', si=True):
+def eng_string(x: float, format='%.3g', si=True) -> str:
     '''
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
 
@@ -22,8 +22,8 @@ def eng_string(x: float, format='%.3g', si=True):
       -1230000.0 -> -1.23e6
 
     and with si=True:
-          1230.0 -> 1.23k
-      -1230000.0 -> -1.23M
+          1230.0 -> "1.23k"
+      -1230000.0 -> "-1.23M"
     '''
     sign = ''
     if x < 0:
@@ -41,6 +41,24 @@ def eng_string(x: float, format='%.3g', si=True):
         exp3_text = 'e%s' % exp3
 
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
+
+
+def latex_sci_notation_string(x: float):
+    """
+    Converts a floating-point number to a LaTeX-style formatted string. Does not include the `$$` wrapping to put you in math mode.
+
+    Does not use scientific notation if the base would be zero.
+
+    Examples:
+
+        "
+    """
+    float_str = "{0:.2g}".format(x)
+    if "e" in float_str:
+        base, exponent = float_str.split("e")
+        return r"{0} \times 10^{{{1}}}".format(base, int(exponent))
+    else:
+        return float_str
 
 
 def hash_string(string: str) -> int:

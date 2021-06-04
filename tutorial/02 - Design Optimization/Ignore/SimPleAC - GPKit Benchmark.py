@@ -1,7 +1,7 @@
 from __future__ import print_function
 from gpkit import Model, Variable, SignomialsEnabled, VarKey, units
 import numpy as np
-
+import time
 
 class SimPleAC(Model):
     def setup(self):
@@ -25,7 +25,7 @@ class SimPleAC(Model):
         p_labor = Variable('p_{labor}', 1., '1/min', 'cost of labor', pr=20.)
 
         # Dimensional constants
-        Range = Variable("Range", 3000, "km", "aircraft range")
+        Range = Variable("Range", 1000, "km", "aircraft range")
         TSFC = Variable("TSFC", 0.6, "1/hr", "thrust specific fuel consumption")
         V_min = Variable("V_{min}", 25, "m/s", "takeoff speed", pr=20.)
         W_0 = Variable("W_0", 6250, "N", "aircraft weight excluding wing", pr=20.)
@@ -90,11 +90,19 @@ class SimPleAC(Model):
 
         return constraints
 
-if __name__ == "__main__":
-    # Most basic way to execute the model
-
+def solve():
     m = SimPleAC()
-    m.substitutions["Range"] = 1000
     m.cost = m['W_f']
-    sol = m.localsolve(verbosity=1)
-    print(sol.table())
+    return m.localsolve()
+
+def timeit():
+    start = time.time()
+    solve()
+    end = time.time()
+    return end - start
+
+if __name__ == '__main__':
+    times = np.array([
+        timeit() for i in range(10)
+    ])
+    print(np.mean(times))

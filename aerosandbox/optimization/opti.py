@@ -666,7 +666,7 @@ class Opti(cas.Opti):
 
     def solve(self,
               parameter_mapping: Dict[cas.MX, float] = None,
-              max_iter: int = 3000,
+              max_iter: int = 1000,
               callback: Callable = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
@@ -697,8 +697,9 @@ class Opti(cas.Opti):
                 Useful for printing progress or displaying intermediate results.
 
                 The callback function `func` should have the syntax `func(iteration_number)`, where iteration_number
-                is an integer corresponding to the current iteration number. In order to access intermediate quantities
-                of optimization variables, use the `Opti.debug.value(x)` syntax for each variable `x`.
+                is an integer corresponding to the current iteration number. In order to access intermediate
+                quantities of optimization variables (e.g. for plotting), use the `Opti.debug.value(x)` syntax for
+                each variable `x`.
 
             verbose: Should we print the output of IPOPT?
 
@@ -736,7 +737,10 @@ class Opti(cas.Opti):
         ### Map any parameters to needed values
         for k, v in parameter_mapping.items():
             size_k = np.product(k.shape)
-            size_v = np.product(v.shape)
+            try:
+                size_v = np.product(v.shape)
+            except AttributeError:
+                size_v = 1
             if size_k != size_v:
                 raise RuntimeError("""Problem with loading cached solution: it looks like the length of a vectorized 
                 variable has changed since the cached solution was saved (or variables were defined in a different order). 
