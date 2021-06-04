@@ -2,10 +2,6 @@ import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
 from typing import Union, Callable
 from scipy.integrate import quad
-import aerosandbox as asb
-from aerosandbox.numpy.determine_type import is_casadi_type
-from aerosandbox.modeling.interpolation import InterpolatedModel
-from aerosandbox.common import *
 
 #         Welcome to the unsteady aerodynamics library!
 # In here you will find analytical, time-domain models for the
@@ -30,74 +26,9 @@ from aerosandbox.common import *
 # top hat gust will be computed.
 
 
-
-class GustPitchlControl(ImplicitAnalysis):
+def main():
     
-     @ImplicitAnalysis.initialize
-     def __init__(self,
-                  reduced_time: np.ndarray,
-                  gust_profile: np.ndarray,
-                  wing_velocity: float
-                  ):
-         self.reduced_time = reduced_time
-         self.gust_profile = gust_profile
-         self.timesteps = len(reduced_time)
-         self.wing_velocity = wing_velocity
-         
-         self._setup_unknowns()
-         self._enforce_governing_equations()
-         
-     def _setup_unknowns(self):
-        self.angles_of_attack = self.opti.variable(init_guess=1,n_vars=self.timesteps)
-        self.lift_coefficient = self.opti.variable(init_guess=1,n_vars=self.timesteps-1)
     
-     def _enforce_governing_equations(self):
-        # Calculate unsteady lift due to pitching 
-        wagner = wagners_function(self.reduced_time)
-        ds = self.reduced_time[1:] - self.reduced_time[:-1]
-        da_ds = (self.angles_of_attack[1:] - self.angles_of_attack[:-1])/ds
-        init_term = self.angles_of_attack[0]*wagner[:-1]
-        for i in range(self.timesteps-1):
-            integral_term = np.sum(da_ds[j] * wagner[i-j] * ds[j]  for j in range(i))
-            self.lift_coefficient[i] = 2*np.pi* (integral_term + init_term[i])
-    
-        # Calculate unsteady lift due to transverse gust 
-        kussner = kussners_function(self.reduced_time)
-        dw_ds = (self.gust_profile[1:] - self.gust_profile[:-1])/ds
-        init_term = self.gust_profile[0]*kussner
-        
-        for i in range(self.timesteps-1):
-            integral_term = 0
-            for j in range(i):
-                integral_term += dw_ds[j] * kussner[i-j] * ds[j]
-            self.lift_coefficient[i] += 2*np.pi/self.wing_velocity*(init_term[i] + integral_term)
-        
-        # Calculate unsteady lift due to added mass
-        self.lift_coefficient += np.pi / 2 * np.cos(self.angles_of_attack[:-1])**2 * da_ds
-        
-        # Integral of lift is to be minimized
-        lift_squared_integral = np.sum(self.lift_coefficient**2)
-        
-        # Constraints and objective to minimize
-        self.opti.subject_to(self.angles_of_attack[0]==0)
-        self.opti.minimize(lift_squared_integral)
-        
-def optimal_control():
-    opti = asb.Opti()
-    N = 100
-    time = np.linspace(0,10,N)
-    wing_velocity = 2 
-    chord = 2 
-    reduced_time = calculate_reduced_time(time,wing_velocity,chord) 
-    
-    profile = np.array([top_hat_gust(s) for s in reduced_time]) 
-
-    optimal = GustPitchlControl(reduced_time,profile,wing_velocity)
-       
-    plt.plot(reduced_time,np.rad2deg(optimal.opti.value(optimal.angles_of_attack)))
-       
-
-def main():    
     
     time = np.linspace(0,10,100) # Time in seconds
     wing_velocity = 2 # Wing horizontal velocity in m/s
@@ -139,33 +70,7 @@ def main():
 
 
 
-def test():
-    time = np.linspace(0,10,100) # Time in seconds
-    wing_velocity = 2 # Wing horizontal velocity in m/s
-    chord = 2 
-    reduced_time = calculate_reduced_time(time,wing_velocity,chord)
-    gust_lift = calculate_lift_due_to_transverse_gust(reduced_time,top_hat_gust,wing_velocity,angle_of_attack=5)
-    profile = np.array([top_hat_gust(s) for s in reduced_time]) 
-    old_gust = old_func_transverse(reduced_time,profile,wing_velocity,angle_of_attack=5)
-    
-    pitch_lift = calculate_lift_due_to_pitching_profile(reduced_time,gaussian_pitch)
-    aoa = np.deg2rad(np.array([gaussian_pitch(s) for s in reduced_time]))
-    old_pitch_lift = old_pitch(reduced_time,aoa)
-    
-    added_mass_lift = added_mass_due_to_pitching(reduced_time,gaussian_pitch)
-    old_added = old_added_mass(reduced_time,aoa)
 
-    
-    
-    
-    plt.plot(dpi=300)
-    plt.plot(reduced_time,gust_lift,label="gust lift",c="r")
-    plt.plot(reduced_time,old_gust,label="old gust lift",ls="--")
-    plt.plot(reduced_time,pitch_lift,label="pitch lift",c="g")
-    plt.plot(reduced_time,old_pitch_lift,label="old pitch lift",ls="--")
-    plt.plot(reduced_time,added_mass_lift,label="added mass lift",c="k")
-    plt.plot(reduced_time[:-1],old_added,label="old added mass lift",ls="--")
-    plt.legend()
 
 
 def calculate_reduced_time(
@@ -241,7 +146,6 @@ def indicial_pitch_response(
         Args:
         reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
         angle_of_attack (float) : The angle of attack, in degrees
-
     """
     return 2 * np.pi * np.deg2rad(angle_of_attack) * wagners_function(reduced_time)
 
@@ -274,34 +178,6 @@ def indicial_gust_response(
             np.cos(angle_of_attack_radians) *
             kussners_function(reduced_time - offset))
 
-def old_func_transverse(reduced_time,gust_profile,plate_velocity,angle_of_attack=0,chord=1):
-    """
-    Calculates the lift (as a function of reduced time) caused by an arbitrary transverse gust profile
-    by computing duhamel superposition integral of Kussner's problem at a constant angle of attack
-    
-    Args:
-        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
-        plate_velocity (float) :The velocity by which the flat plate enters the gust
-        angle_of_attack (Union[float,Callable[[float],float]]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
-        chord (float) : The chord of the plate in meters
-    Returns:
-        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
-    """
-    kussner = kussners_function(reduced_time)
-    ds = reduced_time[1:] - reduced_time[:-1]
-    dw_ds = (gust_profile[1:] - gust_profile[:-1])/ds
-    init_term = gust_profile[0]*kussner
-    
-    lift_ceofficient = np.zeros(len(reduced_time))
-    for i in range(len(reduced_time)):
-        integral_term = 0
-        for j in range(i):
-            integral_term += dw_ds[j] * kussner[i-j] * ds[j]
-        lift_ceofficient[i] = 2*np.pi/plate_velocity*(init_term[i] + integral_term)
-        
-    return lift_ceofficient
-            
 
 
 def calculate_lift_due_to_transverse_gust(
@@ -352,29 +228,6 @@ def calculate_lift_due_to_transverse_gust(
     
     return lift_coefficient
 
-def old_pitch(reduced_time,angle_of_attack,lift_coefficient):
-    wagner = wagners_function(reduced_time)
-    ds = reduced_time[1:] - reduced_time[:-1]
-    da_ds = (angle_of_attack[1:] - angle_of_attack[:-1])/ds
-    #da = angle_of_attack[1:] - angle_of_attack[:-1]
-    init_term = angle_of_attack[0]*wagner[:-1]
-    for i in range(len(reduced_time)-1):
-        
-        integral_term = np.sum(da_ds[j] * wagner[i-j] * ds[j] for j in range(i))
-        #integral_term = 0
-        #for j in range(i):
-            #integral_term += da_ds[j] * wagner[i-j] * ds[j]
-
-        #print("hello")
-        #print(integral_term)
-        #print(2*np.pi* integral_term)
-        lift_coefficient[i] = 2*np.pi* integral_term
-        
-    lift_coefficient += 2*np.pi*init_term
-    return lift_ceofficient
-    
-    
-
 def calculate_lift_due_to_pitching_profile(
         reduced_time: np.ndarray,
         angle_of_attack: Union[Callable[[float],float],float] # In degrees
@@ -420,12 +273,6 @@ def calculate_lift_due_to_pitching_profile(
                                            wagners_function(0) + 
                                            I)
     
-    return lift_coefficient
-
-def old_added_mass(reduced_time,angle_of_attack,lift_coefficient):
-    ds = reduced_time[1:] - reduced_time[:-1]
-    da_ds = (angle_of_attack[1:] - angle_of_attack[:-1])/ds
-    lift_coefficient = np.pi / 2 * np.cos(angle_of_attack[:-1])**2 * da_ds
     return lift_coefficient
 
 
@@ -489,26 +336,26 @@ def pitching_through_transverse_gust(
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate 
     """
     gust_lift = calculate_lift_due_to_transverse_gust(reduced_time,gust_velocity_profile,plate_velocity,angle_of_attack,chord)
-    pitch_lift = calculate_lift_due_to_pitching_profile(reduced_time,angle_of_attack)
+    pitch_lift =calculate_lift_due_to_pitching_profile(reduced_time,angle_of_attack)
     added_mass_lift = added_mass_due_to_pitching(reduced_time,angle_of_attack)
     
     return gust_lift + pitch_lift + added_mass_lift
 
 def top_hat_gust(reduced_time: float) -> float:
-    """
-    A canonical example gust. 
-    Args:
-        reduced_time (float) 
-    Returns:
-        gust_velocity (float)
-    """
-    if 5 <= reduced_time <= 10:
-        gust_velocity = 1
-    else:
-        gust_velocity = 0 
-        
-    return gust_velocity
-
+        """
+        A canonical example gust. 
+        Args:
+            reduced_time (float) 
+        Returns:
+            gust_velocity (float)
+        """
+        if 5 <= reduced_time <= 10:
+            gust_velocity = 1
+        else:
+            gust_velocity = 0 
+            
+        return gust_velocity
+    
 def sine_squared_gust(reduced_time: float) -> float:
     """
     A canonical gust of used by the FAA to show 'compliance with the 
@@ -559,64 +406,7 @@ def linear_ramp_pitch(reduced_time: float) -> float:
         angle_of_attack = 2 * reduced_time - 40
     
     return angle_of_attack
-
-
+    
 
 if __name__ == "__main__":
-    #main()
-    optimal_control()
-    #test()    
-    
-# =============================================================================
-#     opti = asb.Opti()
-#     N = 100
-#     time = np.linspace(0,10,N)
-#     wing_velocity = 2 
-#     chord = 2 
-#     reduced_time = calculate_reduced_time(time,wing_velocity,chord) 
-#     alphas = opti.variable(init_guess=np.ones(N))
-#     lift_ceofficient = opti.variable(init_guess=np.ones(N-1))
-#     
-#     profile = np.array([top_hat_gust(s) for s in reduced_time]) 
-#     old_gust = old_func_transverse(reduced_time,profile,wing_velocity)[:-1]
-#     
-#     #aoa = np.deg2rad(np.array([gaussian_pitch(s) for s in reduced_time]))
-#     old_pitch_lift = old_pitch(reduced_time,alphas,lift_ceofficient)
-#     
-#     old_added = old_added_mass(reduced_time,alphas,lift_ceofficient)
-#     
-#     total_lift = old_gust + old_pitch_lift + old_added
-#     
-#     squared_lift_sum = np.sum(total_lift**2)
-#     
-#     opti.minimize(squared_lift_sum)
-#     
-#     opti.subject_to(alphas[0] == 0)
-#     
-#     sol = opti.solve()  
-#     
-#     
-#     fig, ax1 = plt.subplots(dpi=300)
-#     ax2 = ax1.twinx()
-#     ax1.plot(reduced_time[:-1],opti.value(total_lift),label="Total Lift",lw=2,c="k")
-#     ax1.plot(reduced_time[:-1],opti.value(old_gust),label="Gust Lift",lw=2) 
-#     ax1.plot(reduced_time[:-1],opti.value(old_pitch_lift),label="Pitching Lift",lw=2) 
-#     ax1.plot(reduced_time[:-1],opti.value(old_added),label="Added Mass Lift",lw=2) 
-#     ax2.plot(reduced_time,np.rad2deg(opti.value(alphas)),label="Angle of attack",lw=2,ls="--") 
-#     
-#     ax2.set_ylim([-40,40])
-#     ax1.legend(loc="lower left")
-#     ax2.legend(loc="lower right")
-#     ax1.set_xlabel("Reduced time")
-#     ax1.set_ylabel("$C_\ell$")
-#     ax2.set_ylabel("Angle of attack, degrees")
-#     plt.title("Optimal Pitch Maneuver Through Top-Hat Gust")
-#     
-# =============================================================================
-    
-
-    
-    
-    
-    
-    
+    main()
