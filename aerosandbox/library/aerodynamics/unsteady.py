@@ -27,9 +27,7 @@ from scipy.integrate import quad
 
 
 def main():
-    
-    
-    
+       
     time = np.linspace(0,10,100) # Time in seconds
     wing_velocity = 2 # Wing horizontal velocity in m/s
     chord = 2 
