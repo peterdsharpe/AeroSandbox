@@ -79,15 +79,16 @@ def wind_speed_world_95(altitude, latitude, day_of_year):
         456.,  486.,  517.,  547.,  578.,  609.,  639.,  670.,  700.])
 
     latitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/latitudes.npy')
-    latitude = np.flip(latitudes)
+    latitudes = np.flip(latitudes)
     altitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/altitudes.npy')
     altitudes = np.flip(altitudes)
     wind_data = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/wind_speed_array.npy')
-    wind_data_array = np.stack(np.flip(wind_data), wind_data)
-    wind_data_array = np.stack(wind_data_array, np.flip(wind_data))
+    wind_data_array = np.dstack((np.flip(wind_data), wind_data))
+    wind_data_array = np.dstack((wind_data_array, np.flip(wind_data)))
     wind_function_95th = InterpolatedModel({"altitudes": altitudes, "latitudes": latitudes, "day_of_year":days},
                                               wind_data_array, "bspline")
     speed = wind_function_95th({"altitudes": altitude, "latitudes": latitude, "day_of_year":day_of_year})
 
     return speed
 
+speed = wind_speed_world_95(20000, -80, 1)
