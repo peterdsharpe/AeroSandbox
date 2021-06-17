@@ -734,13 +734,13 @@ class Opti(cas.Opti):
                 # "verbose": True
             }
 
-        options["ipopt.sb"] = 'yes'
+        options["ipopt.sb"] = 'yes'  # Hide the IPOPT banner.
 
         if verbose:
-            options["ipopt.print_level"] = 5
+            options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
         else:
-            options["print_time"] = False
-            options["ipopt.print_level"] = 0
+            options["print_time"] = False  # No time printing
+            options["ipopt.print_level"] = 0  # No printing from IPOPT
 
         # Set defaults, if not set
         if "ipopt.max_iter" not in options:
