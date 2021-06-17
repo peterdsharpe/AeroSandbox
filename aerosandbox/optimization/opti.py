@@ -313,7 +313,7 @@ class Opti(cas.Opti):
                   ) -> cas.MX:
         """
         Initializes a new parameter (or vector of parameters). You must pass a value (`value`) upon defining a new
-        parameter. Dimensionality is inferred from this valXPue, but it can be overridden; see below for syntax.
+        parameter. Dimensionality is inferred from this value, but it can be overridden; see below for syntax.
 
         Args:
 
