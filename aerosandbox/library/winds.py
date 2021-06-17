@@ -73,14 +73,21 @@ def wind_speed_conus_summer_99(altitude, latitude):
 ## worldwide interpolated function of 95th percentile wind from 10 years of aggregate data
 def wind_speed_world_95(altitude, latitude, day_of_year):
 
-    date = datetime.datetime(2020, 1, 1) + datetime.timedelta(day_of_year - 1)
-    month = date.month
-    latitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/latitudes.npy')
-    altitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/altitudes.npy')
-    wind_data = np.load(f'/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/wind_95_vs_latitudes_altitudes_in_{month}blurred.npy')
-    wind_data = np.flip(wind_data, axis=0)
-    wind_data = np.flip(wind_data, axis=1)
-    wind_function_95th = InterpolatedModel({"altitudes": np.flip(altitudes), "latitudes": np.flip(latitudes)},
-                                              wind_data, "bspline")
+    days = np.array([-365, -335., -305., -274., -244., -213., -182., -152., -121.,  -91.,
+        -60.,  -32.,   1.,   32.,   60.,   91.,  121.,  152.,
+        182.,  213.,  244.,  274.,  305.,  335.,  366.,  397.,  425.,
+        456.,  486.,  517.,  547.,  578.,  609.,  639.,  670.,  700.])
 
-    return wind_function_95th({"altitudes": altitude, "latitudes": latitude})
+    latitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/latitudes.npy')
+    latitude = np.flip(latitudes)
+    altitudes = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/altitudes.npy')
+    altitudes = np.flip(altitudes)
+    wind_data = np.load('/Users/annickdewald/Desktop/Thesis/DawnDesignTool/cache/wind_speed_array.npy')
+    wind_data_array = np.stack(np.flip(wind_data), wind_data)
+    wind_data_array = np.stack(wind_data_array, np.flip(wind_data))
+    wind_function_95th = InterpolatedModel({"altitudes": altitudes, "latitudes": latitudes, "day_of_year":days},
+                                              wind_data_array, "bspline")
+    speed = wind_function_95th({"altitudes": altitude, "latitudes": latitude, "day_of_year":day_of_year})
+
+    return speed
+
