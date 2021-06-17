@@ -27,11 +27,12 @@ sns.set_theme(
 mpl.rcParams["figure.dpi"] = 200
 mpl.rcParams["axes.formatter.useoffset"] = False
 
+
 def set_ticks(
-        x_major: Union[float, int]=None,
-        x_minor: Union[float, int]=None,
-        y_major: Union[float, int]=None,
-        y_minor: Union[float, int]=None
+        x_major: Union[float, int] = None,
+        x_minor: Union[float, int] = None,
+        y_major: Union[float, int] = None,
+        y_minor: Union[float, int] = None
 ):
     ax = plt.gca()
     if x_major is not None:
@@ -43,12 +44,25 @@ def set_ticks(
     if y_minor is not None:
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
+
+def adjust_lightness(color, amount=0.5):
+    import matplotlib.colors as mc
+    import colorsys
+    try:
+        c = mc.cnames[color]
+    except:
+        c = color
+    c = colorsys.rgb_to_hls(*mc.to_rgb(c))
+    return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
+
+
 def show_plot(
         title: str = None,
         xlabel: str = None,
         ylabel: str = None,
         tight_layout: bool = True,
         legend: bool = None,
+        legend_frame: bool = True,
         show: bool = True,
         pretty_grids: bool = True,
 ):
@@ -98,7 +112,7 @@ def show_plot(
     if tight_layout:
         plt.tight_layout()
     if legend:
-        plt.legend()
+        plt.legend(frameon=legend_frame)
     if show:
         plt.show()
 
