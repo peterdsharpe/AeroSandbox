@@ -14,6 +14,20 @@ def test_airfoil_with_TE_gap():
     assert a.Cl == pytest.approx(1.0754, abs=0.01)  # From XFoil
 
 
+def test_airfoil_symmetric_NACA():
+    a = asb.AirfoilInviscid(
+        airfoil=[
+            asb.Airfoil("naca0012")
+                .repanel(50)
+        ],
+        op_point=asb.OperatingPoint(
+            velocity=1,
+            alpha=0,
+        )
+    )
+    assert a.Cl == pytest.approx(0, abs=1e-8)
+
+
 def test_airfoil_without_TE_gap():
     a = asb.AirfoilInviscid(
         airfoil=asb.Airfoil("e423").repanel(100),

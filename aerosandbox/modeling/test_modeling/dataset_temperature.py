@@ -15,3 +15,12 @@ measured_temperature = actual_temperature + noise  # Measured temperature of the
 ### Add in a dropout measurement (say, the sensor wire randomly came loose and gave us a 0 reading)
 time = np.hstack((time, 90))
 measured_temperature = np.hstack((measured_temperature, 0))
+
+if __name__ == '__main__':
+    from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot
+    fig, ax = plt.subplots()
+    plt.plot(time, measured_temperature, ".")
+    show_plot(
+        xlabel="Time",
+        ylabel="Measured Temperature"
+    )

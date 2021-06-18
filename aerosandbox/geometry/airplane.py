@@ -109,7 +109,7 @@ class Airplane(AeroSandboxObject):
                 points_front = np.zeros((fuse.circumferential_panels, 3))
                 points_rear = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
-                    rot = rotation_matrix_angle_axis(
+                    rot = np.rotation_matrix_3D(
                         2 * pi * point_index / fuse.circumferential_panels,
                         [1, 0, 0],
                         _axis_already_normalized=True
