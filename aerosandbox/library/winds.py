@@ -91,4 +91,5 @@ def wind_speed_world_95(altitude, latitude, day_of_year):
 
     return speed
 
-speed = wind_speed_world_95(20000, -80, 1)
+if __name__ == '__main__':
+    speed = wind_speed_world_95(20000, -80, 1)
