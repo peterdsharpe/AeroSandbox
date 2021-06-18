@@ -8,29 +8,42 @@ After reading that, here's what else you need to know before contributing:
 
 ## On Installation and Git Conventions
 
-* If you're developing, install AeroSandbox in editable mode. In other words:
+If you're developing, install AeroSandbox in editable mode. In other words:
 
-    * For general developers (i.e. those that haven't yet been officially added as collaborators to the ASB repository):
-        * Fork the repository on GitHub.
-        * Clone your forked repository from GitHub to your computer.
-    * On your computer, open up a terminal in the AeroSandbox root directory. (To check that you're in the right place,
-      you should see a file called `setup.py` in the directory you're in.)
-    * If you already have an AeroSandbox installation on your computer, first uninstall
-      that (`pip uninstall aerosandbox`).
-    * Install the repository in editable mode (`pip install -e .`).
-    * Switch to the develop branch for normal use (`git checkout develop`)
-    * *While on the develop branch*, create a new branch if you want to make
-      changes (`git checkout -b feature/my-new-feature`)
+  1. First:
+      * For most developers (i.e. those that haven't yet been officially added as collaborators to the ASB
+        repository):
+          1. Fork the repository on GitHub.
+          2. Clone your forked repository from GitHub to your computer.
+      * For developers that have been officially added as collaborators to the ASB repository on GitHub:
+          1. Clone the AeroSandbox repository from GitHub to your computer.
+  2. Then, do these steps:
+      1. On your computer, open up a terminal in the AeroSandbox root directory. (To check that you're in the right
+         place, view your current directory with either `dir` or `ls` depending on your OS; you should see a file
+         called `setup.py`.)
+      2. If you already have an AeroSandbox installation on your computer, first uninstall
+         that (`pip uninstall aerosandbox`).
+      3. Install the cloned copy of your repository in editable mode (`pip install -e .`).
+      4. Switch to the develop branch for normal use (`git checkout develop`)
+      5. *While on the develop branch*, create a new branch if you want to make
+         changes (`git checkout -b feature/insert-your-feature-name-here`)
+  3. From here, you can make your changes. After you are finished:
+      1. Make sure that your branch passes tests by running PyTest from terminal (`pytest`).
+      2. Verify that your code (at least loosely) follows the coding standards in this document.
+      3. Make sure your work is committed and pushed.
+      4. Create a pull request on GitHub targeting the `develop` branch of the main ASB repository.
 
-* We use the Git branching model [posted here](https://nvie.com/posts/a-successful-git-branching-model/) (this is by far
+We use the Git branching model [posted here](https://nvie.com/posts/a-successful-git-branching-model/) (this is by far
   the most common model Git branching model, so if you've used Git before on a collaborative project, you probably
   already know this). Main points:
 
-      1. Never commit directly to `master`!
-      2. Add features in new branches named `feature/insert-name-here`. Be sure to branch these features off of `develop`, not off of `master`!
-      3. When your feature is ready in your feature branch:
-          1. First, merge `develop` into your feature branch to get latest changes and check that all unit tests still pass (run `pytest` in terminal in the project root directory).
-          2. Submit a pull request to merge it back into `develop` and wait for a core developer to approve.
+1. Never commit directly to `master`!
+2. Add features in new branches named `feature/insert-name-here`. Be sure to branch these features off of `develop`, not off of `master`!
+3. When your feature is ready in your feature branch:
+   1. First, merge `develop` into your feature branch to get latest changes and check that all unit tests still pass (run `pytest` in terminal in the project root directory).
+   2. Submit a pull request to merge it back into `develop` and wait for a core developer to approve.
+
+Some other guidelines:
 
 * Commit often. In general, commit after every "unit" of work or anytime the code base returns to a "working" (i.e.
   tests passing) state. If you find yourself working for more than an hour or writing >100 lines since your last commit,
@@ -38,14 +51,13 @@ After reading that, here's what else you need to know before contributing:
 
 * Write concise but descriptive commit messages - think "Google search" type language. Examples:
 
-    * "Add method is_red to class House in house.py" (preferred)
-    * "Add is_red to House" (acceptable)
-    * "Add methods to house.py" (acceptable)
-    * "Change default parameter x in geometry/polygon.py" (acceptable)
+    * "add method is_red to class House in house.py" (preferred)
+    * "add is_red to House" (acceptable)
+    * "add methods to house.py" (acceptable)
     * "blah" (not acceptable)
 
   One exception to the rule: if you're just adding/changing comments or documentation with no code changes, you can just
-  write "docs" as your commit message and be done.
+  write "docs" (or similar) as your commit message and be done.
 
 ## On Project Structure
 
@@ -58,7 +70,8 @@ After reading that, here's what else you need to know before contributing:
       of `aerosandbox/numpy/`. If for some reason you need to do CasADi-specific things, do them within a function
       inside `aerosandbox/numpy` - this keeps the split between engineering code and numerics code clean.
 
-    * AeroSandbox code is extensively documented; if you're ever not sure how to use something, call `help()` on it in console! E.g. `help(asb.Airplane)`.
+    * AeroSandbox code is extensively documented; if you're ever not sure how to use something, call `help()` on it in
+      console! E.g. `help(asb.Airplane)`.
 
 * All new classes should extend one of the classes in the top-level file `common.py`. In particular, all explicit
   analyses (e.g. workbook-style aero buildups) should extend `ExplicitAnalysis` and all implicit analyses (i.e. analyses
@@ -82,7 +95,9 @@ This is all pretty standard across all scientific computing in Python:
   with short variable names. Long variable names also force you to split complicated expressions onto multiple lines;
   this is a good thing (see the following point).
 
-* Spread expressions across multiple lines based on natural groupings of ideas. Generally, all functions with multiple input parameters should have each parameter on a new line unless it exceptionally short (something like `range(3,10)`, for example). Some examples of discouraged and encouraged coding standards:
+* Spread expressions across multiple lines based on natural groupings of ideas. Generally, all functions with multiple
+  input parameters should have each parameter on a new line unless it exceptionally short (something like `range(3,10)`,
+  for example). Some examples of discouraged and encouraged coding standards:
 
     ```python
     ### This is discouraged
@@ -94,7 +109,7 @@ This is all pretty standard across all scientific computing in Python:
     	(y_start - y_end) ** 2
     ) ** 0.5
     ```
-    
+
     ```python
     ### This is discouraged
     np.linspace(temperature_start, temperature_end, n_temperature_points)
@@ -108,17 +123,17 @@ This is all pretty standard across all scientific computing in Python:
     ```
 
 * All engineering quantities (i.e. quantities with units) used anywhere in AeroSandbox are expressed in base metric
-  units, or derived units thereof (meters, newtons, meters per second, kilograms, etc.). 
-  
-  * This is true even for
-  quantities that are traditionally expressed in non-base-metric units. Some common "gotchas":
-    * `battery_capacity` is in units of joules (not watt-hours)
-    * `temperature` is in Kelvin (not Celsius)
-    * `elastic_modulus` is in units of pascals (not GPa)
-    * `altitude` is in meters (not feet)
-    * `radio_frequency` is in Hz (not MHz)
-  
-  The only exception is when units are explicitly noted as a suffix in a variable name: for example `battery_capacity_watt_hours` is in units of watt-hours, and `altitude_ft` is in units of feet.
+  units, or derived units thereof (meters, newtons, meters per second, kilograms, etc.).
+
+    * This is true even for quantities that are traditionally expressed in non-base-metric units. Some common "gotchas":
+        * `battery_capacity` is in units of joules (not watt-hours)
+        * `temperature` is in Kelvin (not Celsius)
+        * `elastic_modulus` is in units of pascals (not GPa)
+        * `altitude` is in meters (not feet)
+        * `radio_frequency` is in Hz (not MHz)
+
+  The only exception is when units are explicitly noted as a suffix in a variable name: for
+  example `battery_capacity_watt_hours` is in units of watt-hours, and `altitude_ft` is in units of feet.
 
 * Every function is required to be documented by a docstring of some sort, with no
   exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are
@@ -127,31 +142,35 @@ This is all pretty standard across all scientific computing in Python:
 
     * Document the purpose, function, and expected input type(s) of every input parameter within this docstring.
     * [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.
-  
+
   We illustrate both of these requirements with the following example:
     ```python
     from typing import List, Tuple, Union  # Note: List, Tuple, Dict, Union, etc. need to be imported from the built-in "typing"
     
    
-    def my_function(
-        input_1: float,  # <-- this is a type hint for a parameter!
-        input_2: int,  # note that Python doesn't enforce the type you specify, they're just "hints" for the user
-        input_3: Union[List, Tuple]  # You can denote multiple acceptable inputs with "Union", imported from "typing"
+    def is_my_dog_happy(
+        temperature: float,  # <-- this is a type hint for a parameter!
+        n_boats: int,  # note that Python doesn't enforce the type you specify, they're just "hints" for the user
+        coffee_brands: Union[List[str], Tuple[str]]  # You can denote multiple acceptable inputs with "Union", imported from "typing"
     ) -> bool:  # <-- this is a type hint for a return!
         """
         This function tells me if my dog is happy today.
   
+        Example:
+        >>> if is_my_dog_happy(300, 10, ["Illy", "Peet's"]):
+        >>>     celebrate()
+  
         Args:
-            input_1: The temperature outside, in Kelvin [float]
-            input_2: The number of boats I see on the Charles River [int]
-            input_3: An iterable of the names of various brands of coffee [List[str]]
+            temperature: The temperature outside, in Kelvin [float]
+            n_boats: The number of boats I see on the Charles River [int]
+            coffee_brands: An iterable of the names of various brands of coffee [List[str]]
   
         Returns:
             Whether or not my dog is happy [bool]
         """
-        return True # Of course my dog is always happy!
+        return True  # Of course my dog is always happy!
     ```
-    * Also notice that in this example above, we put each parameter on its own line. Do this; see point #9.
+    * Also notice that in this example above, we put each parameter on its own line. Generally, do this.
     * Include usage examples in runnable Python in for each function in its docstring (demarcated by `>>>`)
 
 * With *very* rare exceptions, do not type the same sequence of characters more than twice. For example:
