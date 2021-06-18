@@ -313,7 +313,7 @@ class Opti(cas.Opti):
                   ) -> cas.MX:
         """
         Initializes a new parameter (or vector of parameters). You must pass a value (`value`) upon defining a new
-        parameter. Dimensionality is inferred from this valXPue, but it can be overridden; see below for syntax.
+        parameter. Dimensionality is inferred from this value, but it can be overridden; see below for syntax.
 
         Args:
 
@@ -376,7 +376,6 @@ class Opti(cas.Opti):
                       derivative_init_guess: Union[float, np.ndarray],  # TODO add default
                       derivative_scale: float = None,
                       method: str = "midpoint",
-                      regularize: bool = False,
                       explicit: bool = False  # TODO implement explicit
                       ) -> cas.MX:
         """
@@ -439,11 +438,6 @@ class Opti(cas.Opti):
                     Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
                     Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
 
-            regularize: Most of these integration methods result in N-1 constraints for a problem with N state
-            variables. This makes the problem ill-posed, as there is an extra degree of freedom added to the problem.
-            If the regularize flag is set True, we will automatically add one more constraint to make the problem
-            well-posed. The specific constraint that is added depends on the integration method used.
-
             explicit: If true, returns an explicit derivative rather than an implicit one. In other words,
             this *defines* the output to be a derivative of the input rather than *constraining* the output to the a
             derivative of the input.
@@ -488,7 +482,6 @@ class Opti(cas.Opti):
                 variable=variable,
                 with_respect_to=with_respect_to,
                 method=method,
-                regularize=regularize
             )
 
         else:
@@ -501,7 +494,6 @@ class Opti(cas.Opti):
                              variable: cas.MX,
                              with_respect_to: Union[np.ndarray, cas.MX],
                              method: str = "midpoint",
-                             regularize: bool = False,
                              ) -> None:
         """
         Adds a constraint to the optimization problem such that:
@@ -558,11 +550,6 @@ class Opti(cas.Opti):
             world, this is analogous to using finite volume methods rather than finite difference methods to allow
             shock capturing.)
 
-            regularize: Most of these integration methods result in N-1 constraints for a problem with N state
-            variables. This makes the problem ill-posed, as there is an extra degree of freedom added to the problem.
-            If the regularize flag is set True, we will automatically add one more constraint to make the problem
-            well-posed. The specific constraint that is added depends on the integration method used.
-
         Returns: None (adds constraint in-place).
 
         """
@@ -572,40 +559,23 @@ class Opti(cas.Opti):
         # TODO scale constraints by variable scale?
         # TODO make
 
-        if method == "forward euler":
-            raise NotImplementedError
+        if method == "forward euler" or method == "forward" or method == "forwards":
+            # raise NotImplementedError
             self.subject_to(
                 d_var == derivative[:-1] * d_time
             )
-            self.subject_to(
-                derivative[-1] == derivative[-2]  # First-order constraint at last point
-            )
 
 
-        elif method == "backward euler":
-            raise NotImplementedError
+        elif method == "backward euler" or method == "backward" or method == "backwards":
+            # raise NotImplementedError
             self.subject_to(
                 d_var == derivative[1:] * d_time
             )
-            self.subject_to(
-                derivative[0] == derivative[1]  # First-order constraint at first point
-            )
 
-        elif method == "midpoint" or method == "trapezoid":
+        elif method == "midpoint" or method == "trapezoid" or method == "trapezoidal":
             self.subject_to(
                 d_var == np.trapz(derivative) * d_time,
             )
-            if regularize:
-                # Apply a second-order constraint at the first point
-                coefficients = np.finite_difference_coefficients(
-                    x=with_respect_to[:3],
-                    x0=with_respect_to[0],
-                    derivative_degree=1
-                )
-                derivative_value = np.sum(variable[:3] * coefficients)
-                self.subject_to(
-                    derivative[0] == derivative_value
-                )
 
 
         elif method == "simpson":
@@ -616,6 +586,9 @@ class Opti(cas.Opti):
 
         elif method == "runge-kutta-3/8":
             raise NotImplementedError
+
+        else:
+            raise ValueError("Bad value of `method`!")
 
     def save_solution(self):
         if self.cache_filename is None:
@@ -666,7 +639,7 @@ class Opti(cas.Opti):
 
     def solve(self,
               parameter_mapping: Dict[cas.MX, float] = None,
-              max_iter: int = 3000,
+              max_iter: int = 1000,
               callback: Callable = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
@@ -697,8 +670,9 @@ class Opti(cas.Opti):
                 Useful for printing progress or displaying intermediate results.
 
                 The callback function `func` should have the syntax `func(iteration_number)`, where iteration_number
-                is an integer corresponding to the current iteration number. In order to access intermediate quantities
-                of optimization variables, use the `Opti.debug.value(x)` syntax for each variable `x`.
+                is an integer corresponding to the current iteration number. In order to access intermediate
+                quantities of optimization variables (e.g. for plotting), use the `Opti.debug.value(x)` syntax for
+                each variable `x`.
 
             verbose: Should we print the output of IPOPT?
 
@@ -736,7 +710,10 @@ class Opti(cas.Opti):
         ### Map any parameters to needed values
         for k, v in parameter_mapping.items():
             size_k = np.product(k.shape)
-            size_v = np.product(v.shape)
+            try:
+                size_v = np.product(v.shape)
+            except AttributeError:
+                size_v = 1
             if size_k != size_v:
                 raise RuntimeError("""Problem with loading cached solution: it looks like the length of a vectorized 
                 variable has changed since the cached solution was saved (or variables were defined in a different order). 
@@ -757,13 +734,13 @@ class Opti(cas.Opti):
                 # "verbose": True
             }
 
-        options["ipopt.sb"] = 'yes'
+        options["ipopt.sb"] = 'yes'  # Hide the IPOPT banner.
 
         if verbose:
-            options["ipopt.print_level"] = 5
+            options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
         else:
-            options["print_time"] = False
-            options["ipopt.print_level"] = 0
+            options["print_time"] = False  # No time printing
+            options["ipopt.print_level"] = 0  # No printing from IPOPT
 
         # Set defaults, if not set
         if "ipopt.max_iter" not in options:
