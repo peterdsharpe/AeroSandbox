@@ -181,8 +181,8 @@ if __name__ == '__main__':
     def plot_winds_at_altitude(altitude=18000):
         fig, ax = plt.subplots()
 
-        day_of_years = np.linspace(0, 365, 80)
-        latitudes = np.linspace(-80, 80, 100)
+        day_of_years = np.linspace(0, 365, 150)
+        latitudes = np.linspace(-80, 80, 120)
         Day_of_years, Latitudes = np.meshgrid(day_of_years, latitudes)
 
         winds = wind_speed_world_95(
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     def plot_winds_at_day(day_of_year=0):
         fig, ax = plt.subplots()
 
-        altitudes = np.linspace(9200, 30000, 100)
+        altitudes = np.linspace(0, 30000, 100)
         latitudes = np.linspace(-80, 80, 80)
         Altitudes, Latitudes = np.meshgrid(altitudes, latitudes)
 
