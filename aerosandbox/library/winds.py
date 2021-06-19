@@ -142,7 +142,7 @@ tropopause_altitude_model = InterpolatedModel(
         "latitude"   : latitudes_trop,
         "day of year": day_of_year_trop
     },
-    y_data_structured=tropopause_altitude_km
+    y_data_structured=tropopause_altitude_km * 1e3
 )
 
 
@@ -244,8 +244,8 @@ if __name__ == '__main__':
     def plot_winds_at_day(day_of_year=0):
         fig, ax = plt.subplots()
 
-        altitudes = np.linspace(0, 30000, 100)
-        latitudes = np.linspace(-80, 80, 80)
+        altitudes = np.linspace(0, 30000, 150)
+        latitudes = np.linspace(-80, 80, 120)
         Altitudes, Latitudes = np.meshgrid(altitudes, latitudes)
 
         winds = wind_speed_world_95(
@@ -284,6 +284,49 @@ if __name__ == '__main__':
             ylabel="Latitude",
         )
 
+    def plot_tropopause_altitude():
+        fig, ax = plt.subplots()
 
-    plot_winds_at_altitude(altitude=18000)
-    plot_winds_at_day(day_of_year=0)
+        day_of_years = np.linspace(0, 365, 150)
+        latitudes = np.linspace(-80, 80, 120)
+        Day_of_years, Latitudes = np.meshgrid(day_of_years, latitudes)
+
+        trop_alt = tropopause_altitude(
+            Latitudes.flatten(),
+            Day_of_years.flatten()
+        ).reshape(Latitudes.shape)
+
+        args = [
+            day_of_years,
+            latitudes,
+            trop_alt / 1e3
+        ]
+
+        levels = np.arange(10, 20.1, 1)
+        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7, extend='both')
+        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend='both')
+        cbar = plt.colorbar()
+        ax.clabel(CS, inline=1, fontsize=10, fmt="%.0f km")
+
+        lat_label_vals = np.arange(-80, 80.1, 20)
+        lat_labels = []
+        for lat in lat_label_vals:
+            if lat >= 0:
+                lat_labels.append(f"{lat:.0f}N")
+            else:
+                lat_labels.append(f"{-lat:.0f}S")
+        plt.yticks(
+            lat_label_vals,
+            lat_labels
+        )
+
+        show_plot(
+            f"Tropopause Altitude",
+            xlabel="Day of Year",
+            ylabel="Latitude",
+        )
+
+
+    # plot_winds_at_altitude(altitude=18000)
+    # plot_winds_at_day(day_of_year=0)
+    plot_tropopause_altitude()
