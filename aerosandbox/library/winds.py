@@ -198,10 +198,10 @@ if __name__ == '__main__':
         ]
 
         levels = np.arange(0, 80.1, 5)
-        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7, extend='both')
-        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend='both')
-        cbar = plt.colorbar()
-        ax.clabel(CS, inline=1, fontsize=10, fmt="%.0f m/s")
+        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
+        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend="max")
+        cbar = plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
+        ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 
         plt.xticks(
             np.linspace(0, 365, 13)[:-1],
@@ -255,16 +255,16 @@ if __name__ == '__main__':
         ).reshape(Altitudes.shape)
 
         args = [
-            altitudes,
+            altitudes / 1e3,
             latitudes,
             winds
         ]
 
         levels = np.arange(0, 80.1, 5)
-        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7, extend='both')
-        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend='both')
-        cbar = plt.colorbar()
-        ax.clabel(CS, inline=1, fontsize=10, fmt="%.0f m/s")
+        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
+        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend="max")
+        cbar = plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
+        ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 
         lat_label_vals = np.arange(-80, 80.1, 20)
         lat_labels = []
@@ -280,15 +280,15 @@ if __name__ == '__main__':
 
         show_plot(
             f"95th-Percentile Wind Speeds at Day {day_of_year:.0f}",
-            xlabel="Altitude",
+            xlabel="Altitude [km]",
             ylabel="Latitude",
         )
 
     def plot_tropopause_altitude():
         fig, ax = plt.subplots()
 
-        day_of_years = np.linspace(0, 365, 150)
-        latitudes = np.linspace(-80, 80, 120)
+        day_of_years = np.linspace(0, 365, 250)
+        latitudes = np.linspace(-80, 80, 200)
         Day_of_years, Latitudes = np.meshgrid(day_of_years, latitudes)
 
         trop_alt = tropopause_altitude(
@@ -303,10 +303,29 @@ if __name__ == '__main__':
         ]
 
         levels = np.arange(10, 20.1, 1)
-        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7, extend='both')
-        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend='both')
-        cbar = plt.colorbar()
-        ax.clabel(CS, inline=1, fontsize=10, fmt="%.0f km")
+        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
+        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend="both")
+        cbar = plt.colorbar(label="Tropopause Altitude [km]", extendrect=True)
+        ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f km")
+
+        plt.xticks(
+            np.linspace(0, 365, 13)[:-1],
+            (
+                "Jan. 1",
+                "Feb. 1",
+                "Mar. 1",
+                "Apr. 1",
+                "May 1",
+                "June 1",
+                "July 1",
+                "Aug. 1",
+                "Sep. 1",
+                "Oct. 1",
+                "Nov. 1",
+                "Dec. 1"
+            ),
+            rotation=40
+        )
 
         lat_label_vals = np.arange(-80, 80.1, 20)
         lat_labels = []
@@ -321,12 +340,12 @@ if __name__ == '__main__':
         )
 
         show_plot(
-            f"Tropopause Altitude",
+            f"Tropopause Altitude by Season and Latitude",
             xlabel="Day of Year",
             ylabel="Latitude",
         )
 
 
-    # plot_winds_at_altitude(altitude=18000)
-    # plot_winds_at_day(day_of_year=0)
+    plot_winds_at_altitude(altitude=18000)
+    plot_winds_at_day(day_of_year=0)
     plot_tropopause_altitude()
