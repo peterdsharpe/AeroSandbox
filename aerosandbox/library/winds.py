@@ -1,36 +1,10 @@
 import aerosandbox.numpy as np
+import datetime
+from aerosandbox.modeling.interpolation import InterpolatedModel
+from pathlib import Path
+import os
 
 
-# ##### Winds
-# # Fixed value
-# wind_speed = 0  # m/s (19.5 m/s is 99% wind speed @ 60000 ft)
-# wind_speed_midpoints = wind_speed
-#
-# ## 2D differentiable interpolant
-# winds_altitudes = np.load("altitudes.npy")
-# winds_latitudes = np.load("latitudes.npy")
-# winds_speeds = np.load("wind_99_vs_latitudes_altitudes.npy")
-#
-# winds_altitudes = winds_altitudes[::-1]
-# winds_latitudes = winds_latitudes[::-1]
-# winds_speeds = winds_speeds[::-1, ::-1].ravel(order="F")
-#
-# wind_speed_func = cas.interpolant('name', 'linear', [winds_altitudes, winds_latitudes], winds_speeds.ravel(order="F"))
-#
-# wind_speed_inputs = cas.transpose(cas.horzcat(
-#     y,
-#     latitude * cas.GenDM_ones(n_timesteps)
-# ))
-# wind_speed_inputs_trapz = cas.transpose(cas.horzcat(
-#     trapz(y),
-#     latitude * cas.GenDM_ones(n_timesteps - 1)
-# ))
-# assert latitude >= winds_latitudes[0]
-# assert latitude <= winds_latitudes[-1]
-# wind_speed = cas.transpose(wind_speed_func(wind_speed_inputs))
-# wind_speed_midpoints = cas.transpose(wind_speed_func(wind_speed_inputs_trapz))
-
-## Curve fit
 def wind_speed_conus_summer_99(altitude, latitude):
     """
     Returns the 99th-percentile wind speed magnitude over the continental United States (CONUS) in July-Aug. Aggregate of data from 1972 to 2019.
@@ -63,8 +37,253 @@ def wind_speed_conus_summer_99(altitude, latitude):
 
     s = c0 + cql * (l - lqc) ** 2 + cqa * (a - aqc) ** 2 + cqla * a * l + cg * np.exp(
         -(np.fabs(l - lgc) ** lgh / (2 * lgs ** 2) + np.fabs(a - agc) ** agh / (
-                    2 * ags ** 2) + cgc * a * l)) + c4a * (
+                2 * ags ** 2) + cgc * a * l)) + c4a * (
                 a - c4c) ** 4 + c12 * l * a ** 2 + c21 * l ** 2 * a
 
     speed = s * 56 + 7
     return speed
+
+
+### Prep data for global wind speed function
+# Import data
+root = Path(os.path.abspath(__file__)).parent
+altitudes_world = np.load(root / "datasets" / "winds_and_tropopause_global" / "altitudes.npy")
+latitudes_world = np.load(root / "datasets" / "winds_and_tropopause_global" / "latitudes.npy")
+day_of_year_world_boundaries = np.linspace(0, 365, 13)
+day_of_year_world = (day_of_year_world_boundaries[1:] + day_of_year_world_boundaries[:-1]) / 2
+winds_95_world = np.load(root / "datasets" / "winds_and_tropopause_global" / "winds_95_vs_altitude_latitude_day.npy")
+
+# Trim the poles
+latitudes_world = latitudes_world[1:-1]
+winds_95_world = winds_95_world[:, 1:-1, :]
+
+# Flip data appropriately
+altitudes_world = np.flip(altitudes_world)
+latitudes_world = np.flip(latitudes_world)
+### NOTE: winds_95_world has *already* been flipped appropriately
+
+# Downsample
+latitudes_world = latitudes_world[::5]
+winds_95_world = winds_95_world[:, ::5, :]
+
+# Extend boundaries so that cubic spline interpolates around day_of_year appropriately.
+extend_bounds = 3
+day_of_year_world = np.hstack((
+    day_of_year_world[-extend_bounds:] - 365,
+    day_of_year_world,
+    day_of_year_world[:extend_bounds] + 365
+))
+winds_95_world = np.dstack((
+    winds_95_world[:, :, -extend_bounds:],
+    winds_95_world,
+    winds_95_world[:, :, :extend_bounds]
+))
+
+# Make the model
+winds_95_world_model = InterpolatedModel(
+    x_data_coordinates={
+        "altitude"   : altitudes_world,
+        "latitude"   : latitudes_world,
+        "day of year": day_of_year_world,
+    },
+    y_data_structured=winds_95_world,
+)
+
+
+def wind_speed_world_95(
+        altitude,
+        latitude,
+        day_of_year
+):
+    """
+    Gives the 95th-percentile wind speed as a function of altitude, latitude, and day of year.
+    Args:
+        altitude: Altitude, in meters
+        latitude: Latitude, in degrees north
+        day_of_year: Day of year (Julian day), in range 0 to 365
+
+    Returns: The 95th-percentile wind speed, in meters per second.
+
+    """
+
+    return winds_95_world_model({
+        "altitude"   : altitude,
+        "latitude"   : latitude,
+        "day of year": day_of_year
+    })
+
+
+### Prep data for tropopause altitude function
+# Import data
+latitudes_trop = np.linspace(-80, 80, 50)
+day_of_year_trop_boundaries = np.linspace(0, 365, 13)
+day_of_year_trop = (day_of_year_trop_boundaries[1:] + day_of_year_trop_boundaries[:-1]) / 2
+tropopause_altitude_km = np.genfromtxt(
+    root / "datasets" / "winds_and_tropopause_global" / "strat-height-monthly.csv",
+    delimiter=","
+)
+
+# Extend boundaries
+extend_bounds = 3
+day_of_year_trop = np.hstack((
+    day_of_year_trop[-extend_bounds:] - 365,
+    day_of_year_trop,
+    day_of_year_trop[:extend_bounds] + 365
+))
+tropopause_altitude_km = np.hstack((
+    tropopause_altitude_km[:, -extend_bounds:],
+    tropopause_altitude_km,
+    tropopause_altitude_km[:, :extend_bounds]
+))
+
+# Make the model
+tropopause_altitude_model = InterpolatedModel(
+    x_data_coordinates={
+        "latitude"   : latitudes_trop,
+        "day of year": day_of_year_trop
+    },
+    y_data_structured=tropopause_altitude_km
+)
+
+
+def tropopause_altitude(
+        latitude,
+        day_of_year
+):
+    """
+    Gives the altitude of the tropopause (as determined by the altitude where lapse rate >= 2 C/km) as a function of
+    latitude and day of year.
+
+    Args:
+        altitude: Altitude, in meters
+        day_of_year: Day of year (Julian day), in range 0 to 365
+
+    Returns: The tropopause altitude, in meters.
+
+    """
+    return tropopause_altitude_model({
+        "latitude"   : latitude,
+        "day of year": day_of_year
+    })
+
+
+if __name__ == '__main__':
+    # from time import time
+    #
+    # start = time()
+    # print(wind_speed_world_95(20000, 0, 0))
+    # print(wind_speed_world_95(20000, 0, 365))
+    # print(f"Runtime: {time() - start} sec")
+
+    from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot
+
+
+    def plot_winds_at_altitude(altitude=18000):
+        fig, ax = plt.subplots()
+
+        day_of_years = np.linspace(0, 365, 150)
+        latitudes = np.linspace(-80, 80, 120)
+        Day_of_years, Latitudes = np.meshgrid(day_of_years, latitudes)
+
+        winds = wind_speed_world_95(
+            altitude=altitude * np.ones_like(Latitudes.flatten()),
+            latitude=Latitudes.flatten(),
+            day_of_year=Day_of_years.flatten(),
+        ).reshape(Latitudes.shape)
+
+        args = [
+            day_of_years,
+            latitudes,
+            winds
+        ]
+
+        levels = np.arange(0, 80.1, 5)
+        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7, extend='both')
+        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend='both')
+        cbar = plt.colorbar()
+        ax.clabel(CS, inline=1, fontsize=10, fmt="%.0f m/s")
+
+        plt.xticks(
+            np.linspace(0, 365, 13)[:-1],
+            (
+                "Jan. 1",
+                "Feb. 1",
+                "Mar. 1",
+                "Apr. 1",
+                "May 1",
+                "June 1",
+                "July 1",
+                "Aug. 1",
+                "Sep. 1",
+                "Oct. 1",
+                "Nov. 1",
+                "Dec. 1"
+            ),
+            rotation=40
+        )
+
+        lat_label_vals = np.arange(-80, 80.1, 20)
+        lat_labels = []
+        for lat in lat_label_vals:
+            if lat >= 0:
+                lat_labels.append(f"{lat:.0f}N")
+            else:
+                lat_labels.append(f"{-lat:.0f}S")
+        plt.yticks(
+            lat_label_vals,
+            lat_labels
+        )
+
+        show_plot(
+            f"95th-Percentile Wind Speeds at {altitude / 1e3:.0f} km Altitude",
+            xlabel="Day of Year",
+            ylabel="Latitude",
+        )
+
+
+    def plot_winds_at_day(day_of_year=0):
+        fig, ax = plt.subplots()
+
+        altitudes = np.linspace(0, 30000, 100)
+        latitudes = np.linspace(-80, 80, 80)
+        Altitudes, Latitudes = np.meshgrid(altitudes, latitudes)
+
+        winds = wind_speed_world_95(
+            altitude=Altitudes.flatten(),
+            latitude=Latitudes.flatten(),
+            day_of_year=day_of_year * np.ones_like(Altitudes.flatten()),
+        ).reshape(Altitudes.shape)
+
+        args = [
+            altitudes,
+            latitudes,
+            winds
+        ]
+
+        levels = np.arange(0, 80.1, 5)
+        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7, extend='both')
+        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend='both')
+        cbar = plt.colorbar()
+        ax.clabel(CS, inline=1, fontsize=10, fmt="%.0f m/s")
+
+        lat_label_vals = np.arange(-80, 80.1, 20)
+        lat_labels = []
+        for lat in lat_label_vals:
+            if lat >= 0:
+                lat_labels.append(f"{lat:.0f}N")
+            else:
+                lat_labels.append(f"{-lat:.0f}S")
+        plt.yticks(
+            lat_label_vals,
+            lat_labels
+        )
+
+        show_plot(
+            f"95th-Percentile Wind Speeds at Day {day_of_year:.0f}",
+            xlabel="Altitude",
+            ylabel="Latitude",
+        )
+
+
+    plot_winds_at_altitude(altitude=18000)
+    plot_winds_at_day(day_of_year=0)
