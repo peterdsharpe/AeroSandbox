@@ -5,36 +5,6 @@ from pathlib import Path
 import os
 
 
-# ##### Winds
-# # Fixed value
-# wind_speed = 0  # m/s (19.5 m/s is 99% wind speed @ 60000 ft)
-# wind_speed_midpoints = wind_speed
-#
-# ## 2D differentiable interpolant
-# winds_altitudes = np.load("altitudes.npy")
-# winds_latitudes = np.load("latitudes.npy")
-# winds_speeds = np.load("wind_99_vs_latitudes_altitudes.npy")
-#
-# winds_altitudes = winds_altitudes[::-1]
-# winds_latitudes = winds_latitudes[::-1]
-# winds_speeds = winds_speeds[::-1, ::-1].ravel(order="F")
-#
-# wind_speed_func = cas.interpolant('name', 'linear', [winds_altitudes, winds_latitudes], winds_speeds.ravel(order="F"))
-#
-# wind_speed_inputs = cas.transpose(cas.horzcat(
-#     y,
-#     latitude * cas.GenDM_ones(n_timesteps)
-# ))
-# wind_speed_inputs_trapz = cas.transpose(cas.horzcat(
-#     trapz(y),
-#     latitude * cas.GenDM_ones(n_timesteps - 1)
-# ))
-# assert latitude >= winds_latitudes[0]
-# assert latitude <= winds_latitudes[-1]
-# wind_speed = cas.transpose(wind_speed_func(wind_speed_inputs))
-# wind_speed_midpoints = cas.transpose(wind_speed_func(wind_speed_inputs_trapz))
-
-## Curve fit
 def wind_speed_conus_summer_99(altitude, latitude):
     """
     Returns the 99th-percentile wind speed magnitude over the continental United States (CONUS) in July-Aug. Aggregate of data from 1972 to 2019.
@@ -108,6 +78,8 @@ winds_95_world = np.dstack((
     winds_95_world,
     winds_95_world[:, :, :extend_bounds]
 ))
+
+# Make the model
 winds_95_world_model = InterpolatedModel(
     x_data_coordinates={
         "altitude"   : altitudes_world,
@@ -163,6 +135,8 @@ tropopause_altitude_km = np.hstack((
     tropopause_altitude_km,
     tropopause_altitude_km[:, :extend_bounds]
 ))
+
+# Make the model
 tropopause_altitude_model = InterpolatedModel(
     x_data_coordinates={
         "latitude"   : latitudes_trop,
