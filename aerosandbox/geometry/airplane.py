@@ -116,8 +116,8 @@ class Airplane(AeroSandboxObject):
                     )
                     points_front[point_index, :] = rot @ np.array([0, 0, r_front])
                     points_rear[point_index, :] = rot @ np.array([0, 0, r_back])
-                points_front = points_front + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
-                points_rear = points_rear + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
+                points_front = points_front + np.array(fuse.xyz_le).reshape(-1) + np.array(front_xsec.xyz_c).reshape(-1)
+                points_rear = points_rear + np.array(fuse.xyz_le).reshape(-1) + np.array(back_xsec.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
 
