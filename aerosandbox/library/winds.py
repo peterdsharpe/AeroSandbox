@@ -168,12 +168,6 @@ def tropopause_altitude(
 
 
 if __name__ == '__main__':
-    # from time import time
-    #
-    # start = time()
-    # print(wind_speed_world_95(20000, 0, 0))
-    # print(wind_speed_world_95(20000, 0, 365))
-    # print(f"Runtime: {time() - start} sec")
 
     from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot
 
@@ -284,6 +278,7 @@ if __name__ == '__main__':
             ylabel="Latitude",
         )
 
+
     def plot_tropopause_altitude():
         fig, ax = plt.subplots()
 
@@ -346,6 +341,70 @@ if __name__ == '__main__':
         )
 
 
-    plot_winds_at_altitude(altitude=18000)
-    plot_winds_at_day(day_of_year=0)
-    plot_tropopause_altitude()
+    def plot_winds_at_tropopause_altitude():
+        fig, ax = plt.subplots()
+
+        day_of_years = np.linspace(0, 365, 150)
+        latitudes = np.linspace(-80, 80, 120)
+        Day_of_years, Latitudes = np.meshgrid(day_of_years, latitudes)
+
+        winds = wind_speed_world_95(
+            altitude=tropopause_altitude(Latitudes.flatten(), Day_of_years.flatten()),
+            latitude=Latitudes.flatten(),
+            day_of_year=Day_of_years.flatten(),
+        ).reshape(Latitudes.shape)
+
+        args = [
+            day_of_years,
+            latitudes,
+            winds
+        ]
+
+        levels = np.arange(0, 80.1, 5)
+        CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
+        CF = plt.contourf(*args, levels=levels, cmap='viridis_r', alpha=0.7, extend="max")
+        cbar = plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
+        ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
+
+        plt.xticks(
+            np.linspace(0, 365, 13)[:-1],
+            (
+                "Jan. 1",
+                "Feb. 1",
+                "Mar. 1",
+                "Apr. 1",
+                "May 1",
+                "June 1",
+                "July 1",
+                "Aug. 1",
+                "Sep. 1",
+                "Oct. 1",
+                "Nov. 1",
+                "Dec. 1"
+            ),
+            rotation=40
+        )
+
+        lat_label_vals = np.arange(-80, 80.1, 20)
+        lat_labels = []
+        for lat in lat_label_vals:
+            if lat >= 0:
+                lat_labels.append(f"{lat:.0f}N")
+            else:
+                lat_labels.append(f"{-lat:.0f}S")
+        plt.yticks(
+            lat_label_vals,
+            lat_labels
+        )
+
+        show_plot(
+            f"95th-Percentile Wind Speeds at Tropopause Altitude",
+            xlabel="Day of Year",
+            ylabel="Latitude",
+        )
+
+
+    # plot_winds_at_altitude(altitude=18000)
+    # plot_winds_at_day(day_of_year=0)
+    # plot_tropopause_altitude()
+    plot_winds_at_tropopause_altitude()
