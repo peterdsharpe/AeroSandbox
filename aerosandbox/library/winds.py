@@ -62,6 +62,23 @@ altitudes_world = np.flip(altitudes_world)
 latitudes_world = np.flip(latitudes_world)
 ### NOTE: winds_95_world has *already* been flipped appropriately
 
+# # Extend altitude range down to the ground # TODO review and redo properly
+# altitudes_world_to_extend = [-1000, 0, 5000]
+# altitudes_world = np.hstack((
+#     altitudes_world_to_extend,
+#     altitudes_world
+# ))
+# winds_95_world = np.concatenate(
+#     (
+#         np.tile(
+#             winds_95_world[0, :, :],
+#             (3, 1, 1)
+#         ),
+#         winds_95_world
+#     ),
+#     axis=0
+# )
+
 # Downsample
 latitudes_world = latitudes_world[::5]
 winds_95_world = winds_95_world[:, ::5, :]
