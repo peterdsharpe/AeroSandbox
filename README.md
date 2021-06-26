@@ -216,7 +216,7 @@ If you find AeroSandbox useful in a research publication, please cite using the 
 @masterthesis{aerosandbox,
     title = {AeroSandbox: A Differentiable Framework for Aircraft Design Optimization},
     author = {Sharpe, Peter D.},
-    school = {Massachusetts Instittue of Technology},
+    school = {Massachusetts Institute of Technology},
     year = {2021}
 }
 ```
