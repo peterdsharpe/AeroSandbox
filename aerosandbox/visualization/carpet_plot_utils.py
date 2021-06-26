@@ -9,9 +9,6 @@ from contextlib import contextmanager
 import sys
 
 
-class TimeoutException(Exception): pass
-
-
 @contextmanager
 def time_limit(seconds):
     """
@@ -36,7 +33,7 @@ def time_limit(seconds):
     """
 
     def signal_handler(signum, frame):
-        raise TimeoutException("Timed out!")
+        raise TimeoutError()
 
     try:
         signal.signal(signal.SIGALRM, signal_handler)
@@ -165,3 +162,20 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
                     array[i, j] = np.mean(valid_neighbors)
 
     return array
+
+if __name__ == '__main__':
+    import time
+    import numpy as np
+    from numpy import linalg
+
+    def complicated_function():
+        print("Starting...")
+        n=10000
+        linalg.solve(np.random.randn(n, n), np.random.randn(n))
+        print("Finished")
+        return True
+    try:
+        with time_limit(1):
+            complicated_function()
+    except TimeoutError:
+        print("Timed out.")

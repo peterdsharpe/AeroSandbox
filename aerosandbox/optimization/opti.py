@@ -640,6 +640,7 @@ class Opti(cas.Opti):
     def solve(self,
               parameter_mapping: Dict[cas.MX, float] = None,
               max_iter: int = 1000,
+              max_runtime: float = 1e20,
               callback: Callable = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
@@ -665,6 +666,8 @@ class Opti(cas.Opti):
                     >>> )
 
             max_iter: [Optional] The maximum number of iterations allowed before giving up.
+
+            max_runtime: [Optional] Gives the maximum allowable runtime before giving up.
 
             callback: [Optional] A function to be called at each iteration of the optimization algorithm.
                 Useful for printing progress or displaying intermediate results.
@@ -745,6 +748,8 @@ class Opti(cas.Opti):
         # Set defaults, if not set
         if "ipopt.max_iter" not in options:
             options["ipopt.max_iter"] = max_iter
+        if "ipopt.max_cpu_time" not in options:
+            options["ipopt.max_cpu_time"] = max_runtime
         if "ipopt.mu_strategy" not in options:
             options["ipopt.mu_strategy"] = "adaptive"
 
