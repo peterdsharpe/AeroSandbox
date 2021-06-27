@@ -3,7 +3,7 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
 [![Downloads](https://pepy.tech/badge/aerosandbox)](https://pepy.tech/project/aerosandbox)
 [![Monthly Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox)
-![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)
+[![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)](https://github.com/peterdsharpe/AeroSandbox/actions/workflows/run-pytest.yml)
 
 ## Overview
 AeroSandbox (ASB) is a Python package for aircraft design optimization that leverages modern tools for reverse-mode automatic differentiation and large-scale design optimization.
