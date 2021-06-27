@@ -213,7 +213,7 @@ If you've already made several additions and would like to be involved in a more
 If you find AeroSandbox useful in a research publication, please cite using the following BibTeX snippet:
 
 ```bibtex
-@masterthesis{aerosandbox,
+@mastersthesis{aerosandbox,
     title = {AeroSandbox: A Differentiable Framework for Aircraft Design Optimization},
     author = {Sharpe, Peter D.},
     school = {Massachusetts Institute of Technology},
