@@ -504,6 +504,26 @@ class Opti(cas.Opti):
 
     ### Advanced Methods
 
+    def set_initial_from_sol(self,
+                             sol: cas.OptiSol,
+                             initialize_primals=True,
+                             initialize_duals=True,
+                             ) -> None:
+        """
+        Sets the initial value of all variables in the Opti object to the solution of another Opti instance. Useful
+        for warm-starting an Opti instance based on the result of another instance.
+
+        Args: sol: Takes in the solution object. Assumes that sol corresponds to exactly the same optimization
+        problem as this Opti instance, perhaps with different parameter values.
+
+        Returns: None (in-place)
+
+        """
+        if initialize_primals:
+            self.set_initial(self.x, sol.value(self.x))
+        if initialize_duals:
+            self.set_initial(self.lam_g, sol.value(self.lam_g))
+
     def derivative_of(self,
                       variable: cas.MX,
                       with_respect_to: Union[np.ndarray, cas.MX],
