@@ -44,6 +44,8 @@ class Opti(cas.Opti):
         # Start tracking variables and categorize them.
         self.variables_categorized = {}  # key: value :: category name [str] : list of variables [list]
 
+    ### Primary Methods
+
     def variable(self,
                  init_guess: Union[float, np.ndarray],
                  n_vars: int = None,
@@ -499,6 +501,8 @@ class Opti(cas.Opti):
             self.save_solution()
 
         return sol
+
+    ### Advanced Methods
 
     def derivative_of(self,
                       variable: cas.MX,
