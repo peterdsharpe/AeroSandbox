@@ -325,6 +325,7 @@ def calculate_induced_velocity_line_singularities(
 
 
 if __name__ == '__main__':
+
     X, Y = np.meshgrid(
         np.linspace(-1, 1, 50),
         np.linspace(-1, 1, 50),
@@ -346,13 +347,14 @@ if __name__ == '__main__':
     import seaborn as sns
 
     sns.set(palette=sns.color_palette("husl"))
-    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    fig, ax = plt.subplots(1, 1, figsize=(6, 6), dpi=200)
 
     plt.quiver(
         X, Y, U, V,
         (U ** 2 + V ** 2) ** 0.5,
         scale=10
     )
+    plt.axis("equal")
     plt.xlabel(r"$x$")
     plt.ylabel(r"$z$")
     plt.title(r"Linear-Strength Vortex: Induced Velocity")
