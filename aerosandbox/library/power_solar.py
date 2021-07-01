@@ -85,7 +85,7 @@ def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
     # Sharma: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611928/
 
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
-    theta = 0 - elevation_angle  # Angle between panel normal and the sun, in degrees
+    theta = 90 - elevation_angle - 90  # Angle between panel normal and the sun, in degrees
 
     cosine_factor = np.cosd(theta)
 
@@ -152,7 +152,7 @@ def scattering_factor_vert(elevation_angle):
     :return: Fraction of the light that is not lost to scattering.
     """
     elevation_angle = np.clip(elevation_angle, 0, 90)
-    theta = 0 - elevation_angle  # Angle between panel normal and the sun, in degrees
+    theta = 90 - elevation_angle - 90 # Angle between panel normal and the sun, in degrees
 
     # # Model 1
     # c = (
@@ -226,11 +226,8 @@ def solar_flux_on_vertical(
     :param scattering: Boolean: include scattering effects at very low angles?
     :return:
     """
-    return (
-            solar_flux_outside_atmosphere_normal(day_of_year) *
-            incidence_angle_function_vert(latitude, day_of_year, time, scattering)
-    )
-
+    S_horz = solar_flux_outside_atmosphere_normal(day_of_year) * (incidence_angle_function(latitude, day_of_year, time, scattering))
+    return S_horz * np.sind(solar_elevation_angle(latitude, day_of_year, time) + 90) / np.sind(solar_elevation_angle(latitude, day_of_year, time))
 
 def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True):
     """
@@ -330,6 +327,30 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
 
+    # sns.set(font_scale=1)
+    #
+    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    # lats_to_plot = [26, 49]
+    # lats_to_plot = np.linspace(0, 90, 7)
+    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
+    # [
+    #     plt.plot(
+    #         times / 3600,
+    #         solar_flux_on_horizontal(lats_to_plot[i], 244, times),
+    #         label="%iN Latitude" % lats_to_plot[i],
+    #         color=colors[i],
+    #         linewidth=3
+    #     ) for i in range(len(lats_to_plot))
+    # ]
+    # plt.grid(True)
+    # plt.legend()
+    # plt.title("Solar Flux on a Horizontal Surface (Aug. 31)")
+    # plt.xlabel("Time after Solar Noon [hours]")
+    # plt.ylabel(r"Solar Flux [W/m$^2$]")
+    # plt.tight_layout()
+    # # plt.savefig("C:/Users/User/Downloads/temp.png")
+    # plt.show()
+
     sns.set(font_scale=1)
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
@@ -339,7 +360,7 @@ if __name__ == "__main__":
     [
         plt.plot(
             times / 3600,
-            solar_flux_on_horizontal(lats_to_plot[i], 244, times),
+            solar_flux_on_vertical(lats_to_plot[i], 244, times),
             label="%iN Latitude" % lats_to_plot[i],
             color=colors[i],
             linewidth=3
@@ -347,11 +368,11 @@ if __name__ == "__main__":
     ]
     plt.grid(True)
     plt.legend()
-    plt.title("Solar Flux on a Horizontal Surface (Aug. 31)")
+    plt.title("Solar Flux on a Vertical Surface (Aug. 31)")
     plt.xlabel("Time after Solar Noon [hours]")
     plt.ylabel(r"Solar Flux [W/m$^2$]")
     plt.tight_layout()
-    plt.savefig("C:/Users/User/Downloads/temp.png")
+    # plt.savefig("C:/Users/User/Downloads/temp.png")
     plt.show()
 
     # # Check scattering factor
