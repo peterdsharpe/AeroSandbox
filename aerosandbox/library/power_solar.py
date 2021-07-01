@@ -70,6 +70,30 @@ def incidence_angle_function(latitude, day_of_year, time, scattering=True):
     else:
         return cosine_factor * scattering_factor(elevation_angle)
 
+def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
+    """
+    What is the fraction of insolation that a horizontal surface will receive as a function of sun position in the sky?
+    :param latitude: Latitude [degrees]
+    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    :param time: Time since (local) solar noon [seconds]
+    :param scattering: Boolean: include scattering effects at very low angles?
+    """
+    # Old description:
+    # To first-order, this is true. In class, Kevin Uleck claimed that you have higher-than-cosine losses at extreme angles,
+    # since you get reflection losses. However, an experiment by Sharma appears to not reproduce this finding, showing only a
+    # 0.4-percentage-point drop in cell efficiency from 0 to 60 degrees. So, for now, we'll just say it's a cosine loss.
+    # Sharma: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611928/
+
+    elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
+    theta = 0 - elevation_angle  # Angle between panel normal and the sun, in degrees
+
+    cosine_factor = np.cosd(theta)
+
+    if not scattering:
+        return cosine_factor
+    else:
+        return cosine_factor * scattering_factor_vert(elevation_angle)
+
 
 def scattering_factor(elevation_angle):
     """
@@ -80,6 +104,55 @@ def scattering_factor(elevation_angle):
     """
     elevation_angle = np.clip(elevation_angle, 0, 90)
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
+
+    # # Model 1
+    # c = (
+    #     0.27891510500505767300438719757949,
+    #     -0.015994330894744987481281839336589,
+    #     -19.707332432605799255043166340329,
+    #     -0.66260979582573353852126274432521
+    # )
+    # scattering_factor = c[0] + c[3] * theta_rad + cas.exp(
+    #     c[1] * (
+    #             cas.tan(theta_rad) + c[2] * theta_rad
+    #     )
+    # )
+
+    # Model 2
+    c = (
+        -0.04636,
+        -0.3171
+    )
+    scattering_factor = np.exp(
+        c[0] * (
+                np.tand(theta * 0.999) + c[1] * np.radians(theta)
+        )
+    )
+
+    # # Model 3
+    # p1 = -21.74
+    # p2 = 282.6
+    # p3 = -1538
+    # p4 = 1786
+    # q1 = -923.2
+    # q2 = 1456
+    # x = theta_rad
+    # scattering_factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
+    #            (x**2 + q1*x + q2))
+
+    # Keep this:
+    # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
+    return scattering_factor
+
+def scattering_factor_vert(elevation_angle):
+    """
+    Calculates a scattering factor (a factor that gives losses due to atmospheric scattering at low elevation angles).
+    Source: AeroSandbox/studies/SolarPanelScattering
+    :param elevation_angle: Angle between the horizon and the sun [degrees]
+    :return: Fraction of the light that is not lost to scattering.
+    """
+    elevation_angle = np.clip(elevation_angle, 0, 90)
+    theta = 0 - elevation_angle  # Angle between panel normal and the sun, in degrees
 
     # # Model 1
     # c = (
@@ -138,6 +211,24 @@ def solar_flux_on_horizontal(
     return (
             solar_flux_outside_atmosphere_normal(day_of_year) *
             incidence_angle_function(latitude, day_of_year, time, scattering)
+    )
+def solar_flux_on_vertical(
+        latitude: float,
+        day_of_year: float,
+        time: float,
+        scattering: bool = True
+) -> float:
+    """
+    What is the solar flux on a vertical surface for some given conditions?
+    :param latitude: Latitude [degrees]
+    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    :param time: Time since (local) solar noon [seconds]
+    :param scattering: Boolean: include scattering effects at very low angles?
+    :return:
+    """
+    return (
+            solar_flux_outside_atmosphere_normal(day_of_year) *
+            incidence_angle_function_vert(latitude, day_of_year, time, scattering)
     )
 
 
