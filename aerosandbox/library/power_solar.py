@@ -227,7 +227,8 @@ def solar_flux_on_vertical(
     :return:
     """
     S_horz = solar_flux_outside_atmosphere_normal(day_of_year) * (incidence_angle_function(latitude, day_of_year, time, scattering))
-    return S_horz * np.sind(solar_elevation_angle(latitude, day_of_year, time) + 90) / np.sind(solar_elevation_angle(latitude, day_of_year, time))
+    S_vert =  S_horz * np.sind(solar_elevation_angle(latitude, day_of_year, time) + 90) / np.fmax(np.sind(solar_elevation_angle(latitude, day_of_year, time)), 0.0000001)
+    return S_vert
 
 def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True):
     """
