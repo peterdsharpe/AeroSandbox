@@ -139,6 +139,41 @@ def contour(
         colorbar_kwargs: Dict = None,
         linelabels_kwargs: Dict = None,
 ):
+    """
+    An analogue for plt.contour and plt.tricontour and friends that produces a much prettier default graph.
+
+    Can take inputs with either contour or tricontour syntax.
+
+    See syntax here:
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contour.html
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contourf.html
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontour.html
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontourf.html
+
+    Args:
+        X: See contour docs.
+        Y: See contour docs.
+        Z: See contour docs.
+        levels: See contour docs.
+        colorbar: Should we draw a colorbar?
+        linelabels: Should we add line labels?
+        cmap: What colormap should we use?
+        alpha: What transparency should all plot elements be?
+        extend: See contour docs.
+        linecolor: What color should the line labels be?
+        linewidths: See contour docs.
+        extendrect: See colorbar docs.
+        linelabels_format: See ax.clabel docs.
+        linelabels_fontsize: See ax.clabel docs.
+        contour_kwargs: Additional keyword arguments for contour.
+        contourf_kwargs: Additional keyword arguments for contourf.
+        colorbar_kwargs: Additional keyword arguments for colorbar.
+        linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
+
+    Returns: A tuple of (contour, contourf, colorbar) objects.
+
+    """
+
     if contour_kwargs is None:
         contour_kwargs = {}
     if contourf_kwargs is None:
@@ -184,10 +219,23 @@ def contour(
         **linelabels_kwargs
     }
 
-    CS = plt.contour(*args, **contour_kwargs)
-    CF = plt.contourf(*args, **contourf_kwargs)
-    cbar = plt.colorbar(**colorbar_kwargs)
-    plt.gca().clabel(CS, **linelabels_kwargs)
+    try:
+        CS = plt.contour(*args, **contour_kwargs)
+        CF = plt.contourf(*args, **contourf_kwargs)
+    except TypeError as e:
+        try:
+            CS = plt.tricontour(*args, **contour_kwargs)
+            CF = plt.tricontourf(*args, **contourf_kwargs)
+        except TypeError:
+            raise e
+
+    if colorbar:
+        cbar = plt.colorbar(**colorbar_kwargs)
+    else:
+        cbar = None
+
+    if linelabels:
+        plt.gca().clabel(CS, **linelabels_kwargs)
 
     return CS, CF, cbar
 
