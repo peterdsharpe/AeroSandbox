@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
-from typing import Union
+from typing import Union, Dict, List, Callable
 from matplotlib import ticker
+import aerosandbox.numpy as np
+from aerosandbox.tools.string_formatting import eng_string
 
 # plt.ion()
 
@@ -115,6 +117,79 @@ def show_plot(
         plt.legend(frameon=legend_frame)
     if show:
         plt.show()
+
+
+def contour(
+        X,
+        Y,
+        Z,
+        levels: Union[int, List, np.ndarray] = None,
+        colorbar=True,
+        linelabels=True,
+        cmap=mpl.cm.get_cmap('viridis'),
+        alpha: float = 0.7,
+        extend="both",
+        linecolor="k",
+        linewidths=0.5,
+        extendrect=True,
+        linelabels_format: Union[str, Callable[[float], str]] = eng_string,
+        linelabels_fontsize=10,
+        contour_kwargs: Dict = None,
+        contourf_kwargs: Dict = None,
+        colorbar_kwargs: Dict = None,
+        linelabels_kwargs: Dict = None,
+):
+    if contour_kwargs is None:
+        contour_kwargs = {}
+    if contourf_kwargs is None:
+        contourf_kwargs = {}
+    if colorbar_kwargs is None:
+        colorbar_kwargs = {}
+    if linelabels_kwargs is None:
+        linelabels_kwargs = {}
+
+    args = [
+        X,
+        Y,
+        Z,
+    ]
+
+    shared_kwargs = {}
+    if levels is not None:
+        shared_kwargs["levels"] = levels
+    shared_kwargs["alpha"] = alpha
+    shared_kwargs["extend"] = extend
+
+    contour_kwargs = {
+        "colors"    : linecolor,
+        "linewidths": linewidths,
+        **shared_kwargs,
+        **contour_kwargs
+    }
+    contourf_kwargs = {
+        "cmap": cmap,
+        **shared_kwargs,
+        **contourf_kwargs
+    }
+
+    colorbar_kwargs = {
+        "extendrect": extendrect,
+        **colorbar_kwargs
+    }
+
+    linelabels_kwargs = {
+        "inline"  : 1,
+        "fontsize": linelabels_fontsize,
+        "fmt"     : linelabels_format,
+        **linelabels_kwargs
+    }
+
+    CS = plt.contour(*args, **contour_kwargs)
+    CF = plt.contourf(*args, **contourf_kwargs)
+    cbar = plt.colorbar(**colorbar_kwargs)
+    plt.gca().clabel(CS, **linelabels_kwargs)
+
+    return CS, CF, cbar
 
 # def contour(
 #         func: Callable,
