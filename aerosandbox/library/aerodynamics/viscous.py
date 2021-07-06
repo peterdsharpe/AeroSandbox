@@ -374,7 +374,7 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
 ):
     """
     Estimated equiv. lift area and equiv. drag area of the Firefly fuselage, component buildup.
-    :param fuse_fineness_ratio: Fineness ratio of the fuselage nose (length / diameter)
+    :param fuse_fineness_ratio: Fineness ratio of the fuselage nose (length / diameter). 0.5 is hemispherical.
     :param fuse_boattail_angle: Boattail half-angle [deg]
     :param fuse_TE_diameter: Diameter of the fuselage's base at the "trailing edge" [m]
     :param fuse_length: Length of the fuselage [m]
