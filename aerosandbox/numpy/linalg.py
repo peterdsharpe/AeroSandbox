@@ -76,6 +76,19 @@ def pinv(A):
         return _cas.pinv(A)
 
 
+def det(A):
+    """
+    Returns the determinant of the matrix A.
+
+    See: https://numpy.org/doc/stable/reference/generated/numpy.linalg.det.html
+    """
+    if not is_casadi_type(A):
+        return _onp.linalg.det(A)
+
+    else:
+        return _cas.det(A)
+
+
 def norm(x, ord=None, axis=None):
     """
     Matrix or vector norm.
