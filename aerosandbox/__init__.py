@@ -1,6 +1,7 @@
 from .common import *
 from .atmosphere import *
 from .aerodynamics import *
+from .dynamics import *
 from .geometry import *
 import aerosandbox.numpy as numpy
 from .modeling import *
