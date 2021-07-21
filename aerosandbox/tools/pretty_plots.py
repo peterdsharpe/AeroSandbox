@@ -47,7 +47,7 @@ def set_ticks(
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
 
-def adjust_lightness(color, amount=0.5):
+def adjust_lightness(color, amount=1):
     import matplotlib.colors as mc
     import colorsys
     try:
