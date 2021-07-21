@@ -1,7 +1,10 @@
-from typing import Union, List, Dict, Callable
+from typing import Union, List, Dict, Callable, Tuple
 import json
 import casadi as cas
 import aerosandbox.numpy as np
+from pathlib import Path
+import tempfile
+import multiprocessing as mp
 
 
 class Opti(cas.Opti):
@@ -790,6 +793,93 @@ class Opti(cas.Opti):
                 solution_dict[category][i] = np.array(var)
 
         return solution_dict
+
+    def sweep(self,
+              pool,
+              parameter_mapping: Dict[cas.MX, Union[List[float], np.ndarray]],
+              outputs: List[cas.MX],
+              filename: Union[str, Path] = None,
+              reset_init_guess_on_solve=True,
+              parallel=False,
+              solve_kwargs=None,
+              ):
+
+        ### Handle solve_kwargs
+        if solve_kwargs is None:
+            solve_kwargs = {}
+        solve_kwargs = {
+            "verbose": False,
+            **solve_kwargs
+        }
+
+        ### Assert the length of all parameter mappings to be equal
+        parameter_mapping_lengths = [
+            len(v) for v in parameter_mapping.values()
+        ]
+        n_runs = parameter_mapping_lengths[0]
+        if not len(np.unique(parameter_mapping_lengths)) == 1:
+            raise ValueError("All parameter mappings must be iterables of the same length!")
+
+        parameters = parameter_mapping.keys()
+        values = [
+            [
+                v[i]
+                for v in parameter_mapping.values()
+            ]
+            for i in range(n_runs)
+        ]
+
+        ### Define a runnable solve
+        def run(
+                input_vals: List[float]
+        ):
+            try:
+                sol = self.solve(
+                    parameter_mapping={
+                        k: v
+                        for k, v in zip(parameters, input_vals)
+                    },
+                    **solve_kwargs
+                )
+                output_vals = {
+                    x: sol.value(x)
+                    for x in outputs
+                }
+            except RuntimeError:
+                output_vals = {
+                    x: np.NaN
+                    for x in outputs
+                }
+            input_vals = None
+            output_vals = None
+            return input_vals, output_vals
+
+        ### Make the run inputs
+        # inputs = [
+        #     {
+        #         k: v[i]
+        #         for k, v in parameter_mapping.items()
+        #     }
+        #     for i in range(n_runs)
+        # ]
+
+        ### Do the runnable solve
+        if not parallel:
+            runs_data = [run(i) for i in values]
+        else:
+            runs_data = []
+            for run_data in pool.imap_unordered(
+                    func=run,
+                    iterable=values
+            ):
+                runs_data.append(run_data)
+
+        return runs_data
+
+    # @staticmethod
+    # def _sweep_run(
+    #
+    # ):
 
 
 if __name__ == '__main__':
