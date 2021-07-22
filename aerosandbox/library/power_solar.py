@@ -328,29 +328,29 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    # sns.set(font_scale=1)
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # lats_to_plot = [26, 49]
-    # lats_to_plot = np.linspace(0, 90, 7)
-    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    # [
-    #     plt.plot(
-    #         times / 3600,
-    #         solar_flux_on_horizontal(lats_to_plot[i], 244, times),
-    #         label="%iN Latitude" % lats_to_plot[i],
-    #         color=colors[i],
-    #         linewidth=3
-    #     ) for i in range(len(lats_to_plot))
-    # ]
-    # plt.grid(True)
-    # plt.legend()
-    # plt.title("Solar Flux on a Horizontal Surface (Aug. 31)")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # # plt.savefig("C:/Users/User/Downloads/temp.png")
-    # plt.show()
+    sns.set(font_scale=1)
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    lats_to_plot = [26, 49]
+    lats_to_plot = np.linspace(0, 90, 7)
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
+    [
+        plt.plot(
+            times / 3600,
+            solar_flux_on_horizontal(lats_to_plot[i], 173, times),
+            label="%iN Latitude" % lats_to_plot[i],
+            color=colors[i],
+            linewidth=3
+        ) for i in range(len(lats_to_plot))
+    ]
+    plt.grid(True)
+    plt.legend()
+    plt.title("Solar Flux on a Horizontal Surface (Summer Solstice)")
+    plt.xlabel("Time after Solar Noon [hours]")
+    plt.ylabel(r"Solar Flux [W/m$^2$]")
+    plt.tight_layout()
+    plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
+    plt.show()
 
     sns.set(font_scale=1)
 
@@ -361,7 +361,7 @@ if __name__ == "__main__":
     [
         plt.plot(
             times / 3600,
-            solar_flux_on_vertical(lats_to_plot[i], 244, times),
+            solar_flux_on_vertical(lats_to_plot[i], 173, times),
             label="%iN Latitude" % lats_to_plot[i],
             color=colors[i],
             linewidth=3
@@ -369,27 +369,27 @@ if __name__ == "__main__":
     ]
     plt.grid(True)
     plt.legend()
-    plt.title("Solar Flux on a Vertical Surface (Aug. 31)")
+    plt.title("Solar Flux on a Vertical Surface (Summer Solstice)")
     plt.xlabel("Time after Solar Noon [hours]")
     plt.ylabel(r"Solar Flux [W/m$^2$]")
     plt.tight_layout()
-    # plt.savefig("C:/Users/User/Downloads/temp.png")
+    plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_vertical")
     plt.show()
 
-    # # Check scattering factor
-    # elevations = np.linspace(-10,90,800)
-    # scatter_factors = scattering_factor(elevations)
-    #
-    # import matplotlib.pyplot as plt
-    # import matplotlib.style as style
-    # import seaborn as sns
-    # sns.set(font_scale=1)
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # plt.plot(elevations, scatter_factors,'.-')
-    # plt.xlabel(r"Elevation Angle [deg]")
-    # plt.ylabel(r"Scattering Factor")
-    # plt.title(r"Scattering Factor")
-    # plt.tight_layout()
-    # # plt.legend()
-    # # plt.savefig("C:/Users/User/Downloads/temp.svg")
-    # plt.show()
+    # Check scattering factor
+    elevations = np.linspace(-10,90,800)
+    scatter_factors = scattering_factor(elevations)
+
+    import matplotlib.pyplot as plt
+    import matplotlib.style as style
+    import seaborn as sns
+    sns.set(font_scale=1)
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    plt.plot(elevations, scatter_factors,'.-')
+    plt.xlabel(r"Elevation Angle [deg]")
+    plt.ylabel(r"Scattering Factor")
+    plt.title(r"Scattering Factor")
+    plt.tight_layout()
+    # plt.legend()
+    # plt.savefig("C:/Users/User/Downloads/temp.svg")
+    plt.show()
