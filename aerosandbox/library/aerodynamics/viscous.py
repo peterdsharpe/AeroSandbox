@@ -83,7 +83,7 @@ def Cf_flat_plate(
     `aerosandbox.library.aerodynamics.test_aerodynamics.test_Cf_flat_plate.py`
 
     """
-    Re_L = np.fabs(Re_L)
+    Re_L = np.abs(Re_L)
 
     if method == "blasius":
         return 1.328 / Re_L ** 0.5
@@ -114,7 +114,7 @@ def Cl_flat_plate(alpha, Re_c):
     :param Re_c: Reynolds number, normalized to the length of the flat plate.
     :return: Approximate lift coefficient.
     """
-    Re_c = np.fabs(Re_c)
+    Re_c = np.abs(Re_c)
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
 
@@ -130,7 +130,7 @@ def Cd_profile_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil in incompressible flow.
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9713
 
-    Re_c = np.fmax(Re_c, 1)
+    Re_c = np.maximum(Re_c, 1)
     log_Re = np.log(Re_c)
 
     CD0 = -5.249
@@ -351,8 +351,11 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     mach = np.fmax(mach, 0)
     Mdd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - Cl / (10 * np.cosd(sweep) ** 3)
     Mcrit = Mdd - (0.1 / 80) ** (1 / 3)
-    # Cd_wave = 20 * cas.ramp(mach - Mcrit) ** 4
-    Cd_wave = 20 * np.where(mach > Mcrit, mach - Mcrit, 0) ** 4
+    Cd_wave = 20 * np.where(
+        mach > Mcrit,
+        mach - Mcrit,
+        0
+    ) ** 4
 
     return Cd_wave
 
@@ -371,7 +374,7 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
 ):
     """
     Estimated equiv. lift area and equiv. drag area of the Firefly fuselage, component buildup.
-    :param fuse_fineness_ratio: Fineness ratio of the fuselage nose (length / diameter)
+    :param fuse_fineness_ratio: Fineness ratio of the fuselage nose (length / diameter). 0.5 is hemispherical.
     :param fuse_boattail_angle: Boattail half-angle [deg]
     :param fuse_TE_diameter: Diameter of the fuselage's base at the "trailing edge" [m]
     :param fuse_length: Length of the fuselage [m]
@@ -400,12 +403,12 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
     Crossflow force, following the method of Jorgensen, 1977: "Prediction of Static Aero. Chars. for Slender..."
     """
     V_crossflow = V * sin_alpha
-    Re_crossflow = rho * cas.fabs(V_crossflow) * fuse_diameter / mu
-    mach_crossflow = mach * cas.fabs(sin_alpha)
+    Re_crossflow = rho * np.abs(V_crossflow) * fuse_diameter / mu
+    mach_crossflow = mach * np.abs(sin_alpha)
     eta = 1  # TODO make this a function of overall fineness ratio
     Cdn = 0.2  # Taken from suggestion for supercritical cylinders in Hoerner's Fluid Dynamic Drag, pg. 3-11
     S_planform = fuse_diameter * fuse_length
-    CNA = eta * Cdn * S_planform * sin_alpha * cas.fabs(sin_alpha)
+    CNA = eta * Cdn * S_planform * sin_alpha * np.abs(sin_alpha)
     CLA_crossflow = CNA * cos_alpha
     CDA_crossflow = CNA * sin_alpha
 
@@ -425,10 +428,10 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
                   3073258.204571904614567756652832,
                   0.0299,
                   ])  # coefficients
-    fuse_Re = rho * cas.fabs(V) * fuse_length / mu
+    fuse_Re = rho * np.abs(V) * fuse_length / mu
     CDA_zero_lift = (
             (
-                    c[0] * cas.exp(c[1] * fuse_fineness_ratio) +
+                    c[0] * np.exp(c[1] * fuse_fineness_ratio) +
                     c[2] * fuse_boattail_angle +
                     c[3] * fuse_boattail_angle ** 2 +
                     c[4] * fuse_TE_diameter ** 2 +

@@ -29,6 +29,8 @@ def eng_string(x: float, format='%.3g', si=True) -> str:
     if x < 0:
         x = -x
         sign = '-'
+    elif x == 0:
+        return format % 0
     exp = int(math.floor(math.log10(x)))
     exp3 = exp - (exp % 3)
     x3 = x / (10 ** exp3)

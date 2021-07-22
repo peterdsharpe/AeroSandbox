@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
-from typing import Union
+from typing import Union, Dict, List, Callable
 from matplotlib import ticker
+import aerosandbox.numpy as np
+from aerosandbox.tools.string_formatting import eng_string
 
 # plt.ion()
 
@@ -45,7 +47,7 @@ def set_ticks(
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
 
-def adjust_lightness(color, amount=0.5):
+def adjust_lightness(color, amount=1):
     import matplotlib.colors as mc
     import colorsys
     try:
@@ -115,6 +117,127 @@ def show_plot(
         plt.legend(frameon=legend_frame)
     if show:
         plt.show()
+
+
+def contour(
+        X,
+        Y,
+        Z,
+        levels: Union[int, List, np.ndarray] = None,
+        colorbar=True,
+        linelabels=True,
+        cmap=mpl.cm.get_cmap('viridis'),
+        alpha: float = 0.7,
+        extend="both",
+        linecolor="k",
+        linewidths=0.5,
+        extendrect=True,
+        linelabels_format: Union[str, Callable[[float], str]] = eng_string,
+        linelabels_fontsize=10,
+        contour_kwargs: Dict = None,
+        contourf_kwargs: Dict = None,
+        colorbar_kwargs: Dict = None,
+        linelabels_kwargs: Dict = None,
+):
+    """
+    An analogue for plt.contour and plt.tricontour and friends that produces a much prettier default graph.
+
+    Can take inputs with either contour or tricontour syntax.
+
+    See syntax here:
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contour.html
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contourf.html
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontour.html
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontourf.html
+
+    Args:
+        X: See contour docs.
+        Y: See contour docs.
+        Z: See contour docs.
+        levels: See contour docs.
+        colorbar: Should we draw a colorbar?
+        linelabels: Should we add line labels?
+        cmap: What colormap should we use?
+        alpha: What transparency should all plot elements be?
+        extend: See contour docs.
+        linecolor: What color should the line labels be?
+        linewidths: See contour docs.
+        extendrect: See colorbar docs.
+        linelabels_format: See ax.clabel docs.
+        linelabels_fontsize: See ax.clabel docs.
+        contour_kwargs: Additional keyword arguments for contour.
+        contourf_kwargs: Additional keyword arguments for contourf.
+        colorbar_kwargs: Additional keyword arguments for colorbar.
+        linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
+
+    Returns: A tuple of (contour, contourf, colorbar) objects.
+
+    """
+
+    if contour_kwargs is None:
+        contour_kwargs = {}
+    if contourf_kwargs is None:
+        contourf_kwargs = {}
+    if colorbar_kwargs is None:
+        colorbar_kwargs = {}
+    if linelabels_kwargs is None:
+        linelabels_kwargs = {}
+
+    args = [
+        X,
+        Y,
+        Z,
+    ]
+
+    shared_kwargs = {}
+    if levels is not None:
+        shared_kwargs["levels"] = levels
+    shared_kwargs["alpha"] = alpha
+    shared_kwargs["extend"] = extend
+
+    contour_kwargs = {
+        "colors"    : linecolor,
+        "linewidths": linewidths,
+        **shared_kwargs,
+        **contour_kwargs
+    }
+    contourf_kwargs = {
+        "cmap": cmap,
+        **shared_kwargs,
+        **contourf_kwargs
+    }
+
+    colorbar_kwargs = {
+        "extendrect": extendrect,
+        **colorbar_kwargs
+    }
+
+    linelabels_kwargs = {
+        "inline"  : 1,
+        "fontsize": linelabels_fontsize,
+        "fmt"     : linelabels_format,
+        **linelabels_kwargs
+    }
+
+    try:
+        CS = plt.contour(*args, **contour_kwargs)
+        CF = plt.contourf(*args, **contourf_kwargs)
+    except TypeError as e:
+        try:
+            CS = plt.tricontour(*args, **contour_kwargs)
+            CF = plt.tricontourf(*args, **contourf_kwargs)
+        except TypeError:
+            raise e
+
+    if colorbar:
+        cbar = plt.colorbar(**colorbar_kwargs)
+    else:
+        cbar = None
+
+    if linelabels:
+        plt.gca().clabel(CS, **linelabels_kwargs)
+
+    return CS, CF, cbar
 
 # def contour(
 #         func: Callable,
