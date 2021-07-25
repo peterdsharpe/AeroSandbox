@@ -11,24 +11,23 @@ class Fuselage(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled Fuselage",  # It can help when debugging to give each fuselage a sensible name.
-                 x_le: float = 0,
-                 # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 y_le: float = 0,
-                 # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
-                 z_le: float = 0,
-                 # Will translate all of the xsecs of the fuselage. Useful for moving the fuselage around.
+                 xyz_le: np.ndarray = np.array([0, 0, 0]),
                  xsecs: List['FuselageXSec'] = [],  # This should be a list of FuselageXSec objects.
                  symmetric: bool = False,  # Is the fuselage symmetric across the XZ plane?
-                 circumferential_panels: int = 24,
-                 # Number of circumferential panels to use in VLM and Panel analysis. Should be even.
                  ):
+        """
+        Initialize a new fuselage.
+        Args:
+            name: Name of the fuselage [optional]. It can help when debugging to give each fuselage a sensible name.
+            xyz_le: xyz-coordinates of the datum point (typically the nose) of the fuselage.
+            xsecs: A list of fuselage cross ("X") sections in the form of FuselageXSec objects.
+            symmetric: Is the fuselage to be mirrored across the XZ plane (e.g. for wing-mounted pods).
+            circumferential_panels:
+        """
         self.name = name
-        self.xyz_le = np.array([x_le, y_le, z_le])
+        self.xyz_le = np.array(xyz_le)
         self.xsecs = xsecs
         self.symmetric = symmetric
-        if not circumferential_panels % 2 == 0:
-            raise ValueError("You should use an even number of circumferential panels to avoid symmetry problems.")
-        self.circumferential_panels = circumferential_panels
 
     def area_wetted(self) -> float:
         """
@@ -101,19 +100,11 @@ class FuselageXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 x_c=0,
-                 y_c=0,
-                 z_c=0,
-                 radius=0,
+                 xyz_c: np.ndarray = np.array([0, 0, 0]),
+                 radius: float = 0,
                  ):
-        self.x_c = x_c
-        self.y_c = y_c
-        self.z_c = z_c
-
+        self.xyz_c = np.array(xyz_c)
         self.radius = radius
-
-        self.xyz_c = np.array([x_c, y_c, z_c])
-
 
     def xsec_area(self):
         """
