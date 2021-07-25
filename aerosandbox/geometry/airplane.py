@@ -63,6 +63,7 @@ class Airplane(AeroSandboxObject):
              colorscale="mint",  # type: str
              colorbar_title="Component ID",
              draw_quarter_chord=True,  # type: bool
+             fuselage_circumferential_panels: int = 24,
              ):
         """
         Draws the airplane using a Plotly interface.
@@ -106,11 +107,11 @@ class Airplane(AeroSandboxObject):
             for front_xsec, back_xsec in zip(fuse.xsecs[:-1], fuse.xsecs[1:]):
                 r_front = front_xsec.radius
                 r_back = back_xsec.radius
-                points_front = np.zeros((fuse.circumferential_panels, 3))
-                points_rear = np.zeros((fuse.circumferential_panels, 3))
-                for point_index in range(fuse.circumferential_panels):
+                points_front = np.zeros((fuselage_circumferential_panels, 3))
+                points_rear = np.zeros((fuselage_circumferential_panels, 3))
+                for point_index in range(fuselage_circumferential_panels):
                     rot = np.rotation_matrix_3D(
-                        2 * pi * point_index / fuse.circumferential_panels,
+                        2 * pi * point_index / fuselage_circumferential_panels,
                         [1, 0, 0],
                         _axis_already_normalized=True
                     )
@@ -119,13 +120,13 @@ class Airplane(AeroSandboxObject):
                 points_front = points_front + np.array(fuse.xyz_le).reshape(-1) + np.array(front_xsec.xyz_c).reshape(-1)
                 points_rear = points_rear + np.array(fuse.xyz_le).reshape(-1) + np.array(back_xsec.xyz_c).reshape(-1)
 
-                for point_index in range(fuse.circumferential_panels):
+                for point_index in range(fuselage_circumferential_panels):
 
                     fig.add_quad(points=[
-                        points_front[(point_index) % fuse.circumferential_panels, :],
-                        points_front[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_rear[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_rear[(point_index) % fuse.circumferential_panels, :],
+                        points_front[(point_index) % fuselage_circumferential_panels, :],
+                        points_front[(point_index + 1) % fuselage_circumferential_panels, :],
+                        points_rear[(point_index + 1) % fuselage_circumferential_panels, :],
+                        points_rear[(point_index) % fuselage_circumferential_panels, :],
                     ],
                         intensity=fuse_id,
                         mirror=fuse.symmetric,
