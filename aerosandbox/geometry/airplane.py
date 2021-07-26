@@ -209,6 +209,7 @@ class Airplane(AeroSandboxObject):
         Returns: None
 
         """
+
         def clean(s):
             """
             Cleans up a multi-line string.
@@ -216,7 +217,7 @@ class Airplane(AeroSandboxObject):
             # return dedent(s)
             return "\n".join([line.strip() for line in s.split("\n")])
 
-        string=""
+        string = ""
 
         string += clean(f"""\
         {self.name}
@@ -244,6 +245,8 @@ class Airplane(AeroSandboxObject):
             #
             {symmetry_line}
             #
+            TRANSLATE
+            {wing.xyz_le[0]} {wing.xyz_le[1]} {wing.xyz_le[2]}
             ANGLE
             0
             """)
@@ -257,7 +260,7 @@ class Airplane(AeroSandboxObject):
                 {xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}
                 
                 AIRFOIL
-                {xsec.airfoil.write_dat(filepath=None, include_name=False)}
+                {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
                 
                 #Cname   Cgain  Xhinge  HingeVec     SgnDup
                 #CONTROL
