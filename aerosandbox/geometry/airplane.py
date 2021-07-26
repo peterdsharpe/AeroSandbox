@@ -194,8 +194,8 @@ class Airplane(AeroSandboxObject):
         return aerodynamic_center
 
     def write_avl(self,
-                  filepath: str
-                  ):
+                  filepath: str = None,
+                  ) -> str:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
 
@@ -204,6 +204,7 @@ class Airplane(AeroSandboxObject):
 
         Args:
             filepath: filepath (including the filename and .avl extension) [string]
+                If None, this function returns the .avl file as a string.
 
         Returns: None
 
@@ -241,7 +242,6 @@ class Airplane(AeroSandboxObject):
             """)
 
             for xsec in wing.xsecs:
-                airfoil_lines = airfoil.write_dat(filepath=None)
 
                 string += dedent(f"""\
                 #{"-" * 50}
@@ -250,36 +250,18 @@ class Airplane(AeroSandboxObject):
                 {xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}
                 
                 AIRFOIL
-                {self.airfoil.write_dat(file)}
+                {self.airfoil.write_dat(filepath=None, include_name=False)}
                 
                 #Cname   Cgain  Xhinge  HingeVec     SgnDup
-                CONTROL
-                flap     1.0   0.75    0.0 0.0 0.0   1.0
-                
-                CONTROL
-                aileron  -1.0   0.75    0.0 0.0 0.0  -1.0
+                #CONTROL
+                #csurf     1.0   0.75    0.0 0.0 0.0   1.0
                 
                 CLAF
-                1.0
+                {1 + 0.77 * airfoil.max_thickness()} # Computed using rule from avl_doc.txt
                 """)
 
-        with open(filepath, "w+") as f:
-            f.writelines(
-                [
-                    textwrap.dedent(
-                        f"""\
-                        {self.name}
-                        #Mach
-                        0
-                        #IYsym   IZsym   Zsym
-                         0       0       0.0
-                        #Sref    Cref    Bref
-                        {self.s_ref} {self.c_ref} {self.b_ref}
-                        #Xref    Yref    Zref
-                        {self.xyz_ref[0]} {self.xyz_ref[1]} {self.xyz_ref[2]}
-                        #
-                        #
-                        """
-                    )
-                ]
-            )
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+        else:
+            return string
