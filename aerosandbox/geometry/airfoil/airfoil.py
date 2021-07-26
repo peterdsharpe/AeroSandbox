@@ -454,43 +454,54 @@ class Airfoil(Polygon):
     #     pass  # TODO finish me
 
     def write_dat(self,
-                  filepath: str
-                  ):
+                  filepath: str = None
+                  ) -> str:
         """
         Writes a .dat file corresponding to this airfoil to a filepath.
 
         Args:
             filepath: filepath (including the filename and .dat extension) [string]
+                If None, this function returns the .dat file as a string.
 
         Returns: None
 
         """
-        with open(filepath, "w+") as f:
-            f.writelines(
-                [self.name + "\n"] +
-                [f"%f %f\n" % tuple(coordinate) for coordinate in self.coordinates]
-            )
+        string = "\n".join(
+            [self.name] +
+            ["%f %f" % tuple(coordinate) for coordinate in self.coordinates]
+        )
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+        else:
+            return string
 
     def write_sldcrv(self,
-                     filepath: str
+                     filepath: str = None
                      ):
         """
         Writes a .sldcrv (SolidWorks curve) file corresponding to this airfoil to a filepath.
+
         Args:
             filepath: A filepath (including the filename and .sldcrv extension) [string]
+                if None, this function returns the .sldcrv file as a string.
 
         Returns: None
 
         """
-        with open(filepath, "w+") as f:
-            for i, coordinate in enumerate(self.coordinates):
-                f.write(
-                    f"{coordinate[0]} {coordinate[1]} 0"
-                )
-                if i < self.n_points() - 1:
-                    f.write(
-                        f"\n"
-                    )
+        string = "\n".join(
+            [
+                "%f %f 0" % tuple(coordinate)
+                for coordinate in self.coordinates
+            ]
+        )
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+        else:
+            return string
 
     # def get_xfoil_data(self,
     #                    a_start=-6,  # type: float
