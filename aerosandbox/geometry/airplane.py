@@ -3,6 +3,7 @@ from aerosandbox.geometry.common import *
 from typing import List
 from aerosandbox.visualization.plotly_Figure3D import Figure3D
 from numpy import pi
+from textwrap import dedent
 
 
 class Airplane(AeroSandboxObject):
@@ -191,3 +192,94 @@ class Airplane(AeroSandboxObject):
         aerodynamic_center = sum(wing_AC_area_products) / sum(wing_areas)
 
         return aerodynamic_center
+
+    def write_avl(self,
+                  filepath: str
+                  ):
+        """
+        Writes a .avl file corresponding to this airplane to a filepath.
+
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
+        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+
+        Args:
+            filepath: filepath (including the filename and .avl extension) [string]
+
+        Returns: None
+
+        """
+        string = ""
+
+        string += dedent(f"""\
+        {self.name}
+        #Mach
+        0
+        #IYsym   IZsym   Zsym
+         0       0       0.0
+        #Sref    Cref    Bref
+        {self.s_ref} {self.c_ref} {self.b_ref}
+        #Xref    Yref    Zref
+        {self.xyz_ref[0]} {self.xyz_ref[1]} {self.xyz_ref[2]}
+        # CDp
+        0
+        """)
+
+        for wing in self.wings:
+            symmetry_line = "YDUPLICATE\n0" if wing.symmetric else ""
+
+            string += dedent(f"""\
+            #{"=" * 50}
+            SURFACE
+            {wing.name}
+            #Nchordwise  Cspace   Nspanwise   Sspace
+            12            1.0       12         1.0
+            #
+            {symmetry_line}
+            #
+            ANGLE
+            0
+            """)
+
+            for xsec in wing.xsecs:
+                airfoil_lines = airfoil.write_dat(filepath=None)
+
+                string += dedent(f"""\
+                #{"-" * 50}
+                SECTION
+                #Xle    Yle    Zle     Chord   Ainc
+                {xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}
+                
+                AIRFOIL
+                {self.airfoil.write_dat(file)}
+                
+                #Cname   Cgain  Xhinge  HingeVec     SgnDup
+                CONTROL
+                flap     1.0   0.75    0.0 0.0 0.0   1.0
+                
+                CONTROL
+                aileron  -1.0   0.75    0.0 0.0 0.0  -1.0
+                
+                CLAF
+                1.0
+                """)
+
+        with open(filepath, "w+") as f:
+            f.writelines(
+                [
+                    textwrap.dedent(
+                        f"""\
+                        {self.name}
+                        #Mach
+                        0
+                        #IYsym   IZsym   Zsym
+                         0       0       0.0
+                        #Sref    Cref    Bref
+                        {self.s_ref} {self.c_ref} {self.b_ref}
+                        #Xref    Yref    Zref
+                        {self.xyz_ref[0]} {self.xyz_ref[1]} {self.xyz_ref[2]}
+                        #
+                        #
+                        """
+                    )
+                ]
+            )
