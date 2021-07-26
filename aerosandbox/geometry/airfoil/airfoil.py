@@ -114,13 +114,14 @@ class Airfoil(Polygon):
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
-    def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
+    def local_camber(self,
+                     x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
+                     ) -> Union[float, np.ndarray]:
         """
         Returns the local camber of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
         :return: Local camber of the airfoil (y/c) [1D array].
         """
-        # TODO casadify?
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
 
@@ -137,13 +138,14 @@ class Airfoil(Polygon):
 
         return (upper_interpolated + lower_interpolated) / 2
 
-    def local_thickness(self, x_over_c=np.linspace(0, 1, 101)):
+    def local_thickness(self,
+                        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
+                        ) -> Union[float, np.ndarray]:
         """
         Returns the local thickness of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
         :return: Local thickness of the airfoil (y/c) [1D array].
         """
-        # TODO casadify?
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
 
@@ -159,6 +161,34 @@ class Airfoil(Polygon):
         )
 
         return upper_interpolated - lower_interpolated
+
+    def max_camber(self,
+                   x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)
+                   ) -> float:
+        """
+        Returns the maximum camber of the airfoil.
+
+        Args:
+            x_over_c_sample: Where should the airfoil be sampled to determine the max camber?
+
+        Returns: The maximum thickness, as a fraction of chord.
+
+        """
+        return np.max(self.local_camber(x_over_c=x_over_c_sample))
+
+    def max_thickness(self,
+                      x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)
+                      ) -> float:
+        """
+        Returns the maximum thickness of the airfoil.
+
+        Args:
+            x_over_c_sample: Where should the airfoil be sampled to determine the max thickness?
+
+        Returns: The maximum thickness, as a fraction of chord.
+
+        """
+        return np.max(self.local_thickness(x_over_c=x_over_c_sample))
 
     def draw(self, draw_mcl=True, backend="plotly", show=True):
         """
