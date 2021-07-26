@@ -512,8 +512,8 @@ class Airfoil(Polygon):
         if filepath is not None:
             with open(filepath, "w+") as f:
                 f.write(string)
-        else:
-            return string
+
+        return string
 
     def write_sldcrv(self,
                      filepath: str = None
@@ -538,8 +538,8 @@ class Airfoil(Polygon):
         if filepath is not None:
             with open(filepath, "w+") as f:
                 f.write(string)
-        else:
-            return string
+
+        return string
 
     # def get_xfoil_data(self,
     #                    a_start=-6,  # type: float

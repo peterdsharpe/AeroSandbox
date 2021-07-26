@@ -270,5 +270,5 @@ class Airplane(AeroSandboxObject):
         if filepath is not None:
             with open(filepath, "w+") as f:
                 f.write(string)
-        else:
-            return string
+
+        return string
