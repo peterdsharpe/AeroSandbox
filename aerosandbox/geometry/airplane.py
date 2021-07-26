@@ -209,9 +209,16 @@ class Airplane(AeroSandboxObject):
         Returns: None
 
         """
-        string = ""
+        def clean(s):
+            """
+            Cleans up a multi-line string.
+            """
+            # return dedent(s)
+            return "\n".join([line.strip() for line in s.split("\n")])
 
-        string += dedent(f"""\
+        string=""
+
+        string += clean(f"""\
         {self.name}
         #Mach
         0
@@ -228,7 +235,7 @@ class Airplane(AeroSandboxObject):
         for wing in self.wings:
             symmetry_line = "YDUPLICATE\n0" if wing.symmetric else ""
 
-            string += dedent(f"""\
+            string += clean(f"""\
             #{"=" * 50}
             SURFACE
             {wing.name}
@@ -243,21 +250,21 @@ class Airplane(AeroSandboxObject):
 
             for xsec in wing.xsecs:
 
-                string += dedent(f"""\
+                string += clean(f"""\
                 #{"-" * 50}
                 SECTION
                 #Xle    Yle    Zle     Chord   Ainc
                 {xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}
                 
                 AIRFOIL
-                {self.airfoil.write_dat(filepath=None, include_name=False)}
+                {xsec.airfoil.write_dat(filepath=None, include_name=False)}
                 
                 #Cname   Cgain  Xhinge  HingeVec     SgnDup
                 #CONTROL
                 #csurf     1.0   0.75    0.0 0.0 0.0   1.0
                 
                 CLAF
-                {1 + 0.77 * airfoil.max_thickness()} # Computed using rule from avl_doc.txt
+                {1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt
                 """)
 
         if filepath is not None:
