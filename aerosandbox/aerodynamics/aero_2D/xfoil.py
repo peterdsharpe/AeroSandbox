@@ -1,7 +1,5 @@
 from aerosandbox.common import ExplicitAnalysis
 import aerosandbox.numpy as np
-from aerosandbox.performance import OperatingPoint
-import os
 import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
