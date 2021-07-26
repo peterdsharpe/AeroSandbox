@@ -455,7 +455,8 @@ class Airfoil(Polygon):
     #     pass  # TODO finish me
 
     def write_dat(self,
-                  filepath: str = None
+                  filepath: str = None,
+                  include_name: bool = True,
                   ) -> str:
         """
         Writes a .dat file corresponding to this airfoil to a filepath.
@@ -464,13 +465,19 @@ class Airfoil(Polygon):
             filepath: filepath (including the filename and .dat extension) [string]
                 If None, this function returns the .dat file as a string.
 
+            include_name: Should the name be included in the .dat file? (In a standard *.dat file, it usually is.)
+
         Returns: None
 
         """
-        string = "\n".join(
-            [self.name] +
-            ["%f %f" % tuple(coordinate) for coordinate in self.coordinates]
-        )
+        contents = []
+
+        if include_name:
+            contents += [self.name]
+
+        contents += ["%f %f" % tuple(coordinate) for coordinate in self.coordinates]
+
+        string = "\n".join(contents)
 
         if filepath is not None:
             with open(filepath, "w+") as f:
