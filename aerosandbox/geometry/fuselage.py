@@ -93,6 +93,52 @@ class Fuselage(AeroSandboxObject):
             )
         return volume
 
+    def write_avl_bfile(self,
+                        filepath: str = None,
+                        include_name: bool = True,
+                        ) -> str:
+        """
+        Writes an AVL-compatible BFILE corresponding to this fuselage to a filepath.
+
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
+        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+
+        Args:
+            filepath: filepath (including the filename and .avl extension) [string]
+                If None, this function returns the would-be file contents as a string.
+
+            include_name: Should the name be included in the .dat file? (This should be True for use with AVL.)
+
+        Returns:
+
+        """
+        contents = []
+
+        if include_name:
+            contents += [self.name]
+
+        contents += [
+            f"{xyz_c[0]} {xyz_c[2]+r}"
+            for xyz_c, r in zip(
+                [xsec.xyz_c for xsec in self.xsecs][::-1],
+                [xsec.radius for xsec in self.xsecs][::-1]
+            )
+        ] + [
+            f"{xyz_c[0]} {xyz_c[2]-r}"
+            for xyz_c, r in zip(
+                [xsec.xyz_c for xsec in self.xsecs][1:],
+                [xsec.radius for xsec in self.xsecs][1:]
+            )
+        ]
+
+        string = "\n".join(contents)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
+
 
 class FuselageXSec(AeroSandboxObject):
     """
