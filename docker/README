@@ -1,8 +1,11 @@
 
-Docker build of jupyter with Aero design software installed:
+Docker build of jupyterlab with Aero design software installed:
 
-Xfoil - compiled with intel fortran compiler.  compiler docker image is 6gb so make sure you have space
+Xfoil -  https://web.mit.edu/drela/Public/web/xfoil/
+   compiled with intel fortran compiler.  compiler docker image is 6gb so make sure you have space
    I tried the gnu fortran compiler but compiled program was unstable.
+AVL -  https://web.mit.edu/drela/Public/web/avl/
+   compiled with intel fortran compiler
 AeroSandbox - latest released version
 (more softwares can be added)
 
@@ -13,6 +16,9 @@ docker build -t aerodesign ./
 
 Running
 -------
+
+Prerequisite: docker  For example:  https://docs.docker.com/docker-for-windows/install/
+
 docker run -p 8888:8888 aerodesign
 
 When running, you will see output on how to connect to the jupyerlab using a browser.  It will look something like:
