@@ -78,7 +78,7 @@ class XFoil(ExplicitAnalysis):
                     "Command 'xfoil' not found, did you mean...", then it is not on your PATH and you'll need to
                     specify the location of your XFoil executable as a string.
 
-                To add XFoil to your path, modify your system's environmental variables. (Google how to do this for
+                To add XFoil to your path, modify your system's environment variables. (Google how to do this for
                 your OS.)
 
         """
