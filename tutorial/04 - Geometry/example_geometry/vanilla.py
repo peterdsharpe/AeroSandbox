@@ -59,3 +59,6 @@ airplane = asb.Airplane(
         )
     ]
 )
+
+if __name__ == '__main__':
+    airplane.draw()
