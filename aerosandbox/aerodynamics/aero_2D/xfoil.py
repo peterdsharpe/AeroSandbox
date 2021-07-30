@@ -148,7 +148,7 @@ class XFoil(ExplicitAnalysis):
         """
         Private function to run XFoil.
 
-        Args: run_command: A string with any XFoil inputs that you'd like. By default, you start off within the OPER
+        Args: run_command: A string with any XFoil keystroke inputs that you'd like. By default, you start off within the OPER
         menu. All of the inputs indicated in the constructor have been set already, but you can override them here (for
         this run only) if you want.
 

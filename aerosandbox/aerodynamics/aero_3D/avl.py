@@ -66,6 +66,74 @@ class AVL(ExplicitAnalysis):
         self.airplane = airplane
         self.op_point = op_point
 
+    def _default_keystroke_file_contents(self) -> List[str]:
+
+        run_file_contents = []
+
+        # Disable graphics
+        run_file_contents += [
+            "plop",
+            "g",
+            "",
+        ]
+
+        # Enter oper mode
+        run_file_contents += [
+            "oper",
+        ]
+
+        # Set parameters
+        run_file_contents += [
+            "m"
+            f"mn {self.op_point.mach()}",
+            f"v {self.op_point.velocity}",
+            f"d {self.op_point.atmosphere.density()}",
+            "g 9.81",
+            ""
+        ]
+
+        # Set analysis state
+        p_bar = self.op_point.p * self.airplane.b_ref / (2 * self.op_point.velocity)
+        q_bar = self.op_point.p * self.airplane.c_ref / (2 * self.op_point.velocity)
+        r_bar = self.op_point.p * self.airplane.b_ref / (2 * self.op_point.velocity)
+
+        run_file_contents += [
+            f"a a {self.op_point.alpha}",
+            f"b b {self.op_point.beta}",
+            f"r r {p_bar}",
+            f"p p {q_bar}",
+            f"y y {r_bar}"
+        ]
+
+    def _run_avl(self,
+                 run_command: str,
+                 ) -> Dict[str, np.ndarray]:
+        """
+        Private function to run AVL.
+
+        Args: run_command: A string with any AVL keystroke inputs that you'd like. By default, you start off within the OPER
+        menu. All of the inputs indicated in the constructor have been set already, but you can override them here (
+        for this run only) if you want.
+
+        Returns: A dictionary containing all of your results.
+
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+
+            ### Alternatively, work in another directory:
+            if self.working_directory is not None:
+                directory = Path(self.working_directory)  # For debugging
+
+            # Designate an intermediate file for file I/O
+            output_filename = "output.txt"
+
+            # Handle the airplane file
+            airplane_file = "airplane.avl"
+            self.airplane.write_avl(directory / airplane_file)
+
+            # Handle the run file
+            keystroke_file_contents = self._default_keystroke_file_contents()
 
 if __name__ == '__main__':
 
@@ -93,5 +161,8 @@ if __name__ == '__main__':
             p=0,
             q=0,
             r=0,
-        )
+        ),
+        working_directory="C:/Users/peter/Downloads/test/test.avl"
     )
+
+    vanilla.write_avl("C:/Users/peter/Downloads/test/test.avl")
