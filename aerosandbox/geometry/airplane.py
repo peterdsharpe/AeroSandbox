@@ -196,6 +196,8 @@ class Airplane(AeroSandboxObject):
 
     def write_avl(self,
                   filepath: Union[Path, str] = None,
+                  spanwise_panel_resolution: int = 12,
+                  chordwise_panel_resolution: int = 12,
                   ) -> str:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
@@ -243,7 +245,7 @@ class Airplane(AeroSandboxObject):
             SURFACE
             {wing.name}
             #Nchordwise  Cspace   Nspanwise   Sspace
-            12            1.0       12         1.0
+            {chordwise_panel_resolution}   1.0   {spanwise_panel_resolution}   1.0
             #
             {symmetry_line}
             #
