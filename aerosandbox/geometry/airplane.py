@@ -198,6 +198,7 @@ class Airplane(AeroSandboxObject):
                   filepath: Union[Path, str] = None,
                   spanwise_panel_resolution: int = 12,
                   chordwise_panel_resolution: int = 12,
+                  fuse_panel_resolution: int = 24,
                   ) -> str:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
@@ -266,7 +267,7 @@ class Airplane(AeroSandboxObject):
                 AIRFOIL
                 {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
                 
-                #Cname   Cgain  Xhinge  HingeVec     SgnDup
+                #Cname   Cgain  Xhinge  HingeVec     SgnDup # TODO
                 #CONTROL
                 #csurf     1.0   0.75    0.0 0.0 0.0   1.0
                 
@@ -274,10 +275,24 @@ class Airplane(AeroSandboxObject):
                 {1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt
                 """)
 
-        for fuse in self.fuselages:
+        for i, fuse in enumerate(self.fuselages):
+            fuse_filepath = Path(str(filepath) + f".fuse{i}")
             fuse.write_avl_bfile(
-                filepath=
+                filepath=fuse_filepath
             )
+            string += clean(f"""\
+            #{"=" * 50}
+            BODY
+            {fuse.name}
+            {fuse_panel_resolution} 1
+            
+            TRANSLATE
+            {fuse.xyz_le[0]} {fuse.xyz_le[1]} {fuse.xyz_le[2]}
+            
+            BFIL
+            {fuse_filepath}
+            
+            """)
 
         if filepath is not None:
             with open(filepath, "w+") as f:
