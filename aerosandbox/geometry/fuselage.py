@@ -1,6 +1,7 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List
+from typing import List, Union
+from pathlib import Path
 
 
 class Fuselage(AeroSandboxObject):
@@ -94,7 +95,7 @@ class Fuselage(AeroSandboxObject):
         return volume
 
     def write_avl_bfile(self,
-                        filepath: str = None,
+                        filepath: Union[Path, str] = None,
                         include_name: bool = True,
                         ) -> str:
         """
@@ -112,24 +113,26 @@ class Fuselage(AeroSandboxObject):
         Returns:
 
         """
+        filepath = Path(filepath)
+
         contents = []
 
         if include_name:
             contents += [self.name]
 
         contents += [
-            f"{xyz_c[0]} {xyz_c[2]+r}"
-            for xyz_c, r in zip(
+                        f"{xyz_c[0]} {xyz_c[2] + r}"
+                        for xyz_c, r in zip(
                 [xsec.xyz_c for xsec in self.xsecs][::-1],
                 [xsec.radius for xsec in self.xsecs][::-1]
             )
-        ] + [
-            f"{xyz_c[0]} {xyz_c[2]-r}"
-            for xyz_c, r in zip(
+                    ] + [
+                        f"{xyz_c[0]} {xyz_c[2] - r}"
+                        for xyz_c, r in zip(
                 [xsec.xyz_c for xsec in self.xsecs][1:],
                 [xsec.radius for xsec in self.xsecs][1:]
             )
-        ]
+                    ]
 
         string = "\n".join(contents)
 

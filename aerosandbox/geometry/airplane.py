@@ -1,9 +1,10 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List
+from typing import List, Union
 from aerosandbox.visualization.plotly_Figure3D import Figure3D
 from numpy import pi
 from textwrap import dedent
+from pathlib import Path
 
 
 class Airplane(AeroSandboxObject):
@@ -194,7 +195,7 @@ class Airplane(AeroSandboxObject):
         return aerodynamic_center
 
     def write_avl(self,
-                  filepath: str = None,
+                  filepath: Union[Path, str] = None,
                   ) -> str:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
@@ -209,6 +210,7 @@ class Airplane(AeroSandboxObject):
         Returns: None
 
         """
+        filepath = Path(filepath)
 
         def clean(s):
             """
@@ -269,6 +271,11 @@ class Airplane(AeroSandboxObject):
                 CLAF
                 {1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt
                 """)
+
+        for fuse in self.fuselages:
+            fuse.write_avl_bfile(
+                filepath=
+            )
 
         if filepath is not None:
             with open(filepath, "w+") as f:
