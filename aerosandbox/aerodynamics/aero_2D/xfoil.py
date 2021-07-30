@@ -93,7 +93,7 @@ class XFoil(ExplicitAnalysis):
         self.verbose = verbose
         self.working_directory = working_directory
 
-    def _default_run_file_contents(self) -> List[str]:
+    def _default_keystroke_file_contents(self) -> List[str]:
         run_file_contents = []
 
         # Disable graphics
@@ -170,24 +170,24 @@ class XFoil(ExplicitAnalysis):
             airfoil_file = "airfoil.dat"
             self.airfoil.write_dat(directory / airfoil_file)
 
-            # Handle the run file
-            run_file_contents = self._default_run_file_contents()
-            run_file_contents += [run_command]
-            run_file_contents += [
+            # Handle the keystroke file
+            keystroke_file_contents = self._default_keystroke_file_contents()
+            keystroke_file_contents += [run_command]
+            keystroke_file_contents += [
                 "pwrt",
                 f"{output_filename}",
                 "y",
                 "",
                 "quit"
             ]
-            run_file = "run_file.txt"
-            with open(directory / run_file, "w+") as f:
+            keystroke_file = "keystroke_file.txt"
+            with open(directory / keystroke_file, "w+") as f:
                 f.write(
-                    "\n".join(run_file_contents)
+                    "\n".join(keystroke_file_contents)
                 )
 
             ### Set up the run command
-            command = f'{self.xfoil_command} {airfoil_file} < {run_file}'
+            command = f'{self.xfoil_command} {airfoil_file} < {keystroke_file}'
 
             ### Execute
             subprocess.call(
