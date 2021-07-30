@@ -65,6 +65,9 @@ class AVL(ExplicitAnalysis):
         """
         self.airplane = airplane
         self.op_point = op_point
+        self.avl_command = avl_command
+        self.verbose = verbose
+        self.working_directory = working_directory
 
     def _default_keystroke_file_contents(self) -> List[str]:
 
@@ -105,8 +108,10 @@ class AVL(ExplicitAnalysis):
             f"y y {r_bar}"
         ]
 
+        return run_file_contents
+
     def _run_avl(self,
-                 run_command: str,
+                 run_command: str = None,
                  ) -> Dict[str, np.ndarray]:
         """
         Private function to run AVL.
@@ -134,6 +139,33 @@ class AVL(ExplicitAnalysis):
 
             # Handle the run file
             keystroke_file_contents = self._default_keystroke_file_contents()
+            if run_command is not None:
+                keystroke_file_contents += [run_command]
+            keystroke_file_contents += [
+                "x",
+                "st",
+                f"{output_filename}",
+                "o",
+                "",
+                "",
+                "quit"
+            ]
+            keystroke_file = "keystroke_file.txt"
+            with open(directory / keystroke_file, "w+") as f:
+                f.write(
+                    "\n".join(keystroke_file_contents)
+                )
+
+            command = f'{self.avl_command} {airplane_file} < {keystroke_file}'
+
+            ### Execute
+            subprocess.call(
+                command,
+                shell=True,
+                cwd=directory,
+                stdout=None if self.verbose else subprocess.DEVNULL
+            )
+
 
 if __name__ == '__main__':
 
@@ -162,7 +194,8 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        working_directory="C:/Users/peter/Downloads/test/test.avl"
+        verbose=True,
+        working_directory="C:/Users/peter/Downloads/test/"
     )
 
-    vanilla.write_avl("C:/Users/peter/Downloads/test/test.avl")
+    avl._run_avl()
