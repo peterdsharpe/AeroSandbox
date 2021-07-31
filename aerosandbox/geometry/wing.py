@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List
+from typing import List, Tuple
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
@@ -275,7 +275,7 @@ class Wing(AeroSandboxObject):
                     (1 + 2 * section_taper_ratio) /
                     (3 + 3 * section_taper_ratio)
             )
-            section_AC = section_MAC_le + np.array([ # TODO rotate this vector by the local twist angle
+            section_AC = section_MAC_le + np.array([  # TODO rotate this vector by the local twist angle
                 chord_fraction * section_MAC_length,
                 0,
                 0
@@ -310,6 +310,89 @@ class Wing(AeroSandboxObject):
         """
         return self.xsecs[-1].chord / self.xsecs[0].chord
 
+    def mesh_body(self,
+                  method="tri",
+                  chordwise_resolution: int = 50,
+                  spanwise_resolution: int = 6,
+                  mesh_tips: bool = True,
+                  ) -> Tuple[np.ndarray, np.ndarray]:
+
+        airfoils = [
+            airfoil.repanel(n_points_per_side=n_points_per_side)
+            for airfoil in self.airfoils
+        ]
+        airfoil_nondim_coordinates = [
+            airfoil.coordinates
+            for airfoil in airfoils
+        ]
+
+        for i in range(len(self.xsecs) - 1):
+            sect_points = np.linspace()
+
+    def mesh_surface(self,
+                     method="tri",
+                     follow_camber: bool = False,
+                     ):
+        pass
+
+    def mesh_line(self,
+                  x_nondim=0.25,
+                  y_nondim=0,
+                  spanwise_resolution: int = 1,
+                  ) -> np.ndarray:
+        xsec_points = []
+
+        for i, xsec in enumerate(self.xsecs):
+
+            origin = self._compute_xyz_le_of_WingXSec(i)
+            xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(i)
+
+            rot = np.rotation_matrix_3D(
+                xsec.twist * pi / 180,
+                yg_local
+            )
+            xsec_point = origin + rot @ (
+                    x_nondim * xsec.chord * xg_local +
+                    y_nondim * xsec.chord * zg_local
+            )
+            xsec_points.append(xsec_point)
+
+        mesh_sections = []
+        for i in range(len(xsec_points) - 1):
+            mesh_section = np.linspace(
+                xsec_points[i],
+                xsec_points[i + 1],
+                spanwise_resolution + 1
+            )
+            if not i == len(xsec_points) - 2:
+                mesh_section = mesh_section[:-1]
+
+            mesh_sections.append(mesh_section)
+
+        mesh = np.concatenate(mesh_sections)
+
+        return mesh
+
+    def _compute_xyz_le_of_WingXSec(self, index: int):
+        return self.xyz_le + self.xsecs[index].xyz_le
+
+    def _compute_frame_of_WingXSec(self, index: int):
+
+        if index == len(self.xsecs) - 1:
+            index = len(self.xsecs) - 2  # The last WingXSec has the same frame as the last section.
+
+        xg_local = np.array([1, 0, 0])
+
+        xyz_le_a = self.xsecs[index].xyz_le
+        xyz_le_b = self.xsecs[index + 1].xyz_le
+        vector_between = xyz_le_b - xyz_le_a
+        vector_between[0] = 0  # Project it onto the YZ plane.
+        yg_local = vector_between / np.linalg.norm(vector_between)
+
+        zg_local = np.cross(xg_local, yg_local)
+
+        return xg_local, yg_local, zg_local
+
 
 class WingXSec(AeroSandboxObject):
     """
@@ -319,8 +402,8 @@ class WingXSec(AeroSandboxObject):
     def __init__(self,
                  xyz_le: np.ndarray = np.array([0, 0, 0]),
                  chord: float = 1.,
-                 twist_angle: float = 0,
-                 twist_axis: np.ndarray = np.array([0, 1, 0]),
+                 twist: float = 0,
+                 twist_angle=None,  # TODO Deprecate
                  airfoil: Airfoil = Airfoil("naca0012"),
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
@@ -331,18 +414,25 @@ class WingXSec(AeroSandboxObject):
         Args:
             xyz_le: xyz-coordinates of the leading edge of the cross section, relative to the wing's datum.
             chord: Chord of the wing at this cross section
-            twist_angle: Twist angle, in degrees, as defined about the leading edge.
-            twist_axis: The twist axis vector, used if twist_angle != 0.
+            twist: Twist angle, in degrees, as defined about the leading edge.
+                The twist axis is computed with the following procedure:
+                    * The quarter-chord point of this WingXSec and the following one are identified.
+                    * A line is drawn connecting them, and it is converted into a direction vector.
+                    * That direction vector is projected onto the Y-Z plane.
+                    * That direction vector is now the twist axis.
             airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
             control_surface_is_symmetric: Is the control surface symmetric? (e.g. True for flaps, False for ailerons.)
             control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
             control_surface_deflection: Control deflection, in degrees. Downwards-positive.
         """
+        if twist_angle is not None:
+            import warnings
+            warnings.warn("DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.")
+            twist = twist_angle
 
         self.xyz_le = np.array(xyz_le)
         self.chord = chord
-        self.twist = twist_angle
-        self.twist_axis = np.array(twist_axis)
+        self.twist = twist
         self.airfoil = airfoil
         self.control_surface_is_symmetric = control_surface_is_symmetric
         self.control_surface_hinge_point = control_surface_hinge_point
@@ -351,16 +441,16 @@ class WingXSec(AeroSandboxObject):
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
 
-    def quarter_chord(self) -> np.ndarray:
-        """
-        Returns the (wing-relative) coordinates of the quarter chord of the cross section.
-        """
-        return 0.75 * self.xyz_le + 0.25 * self.xyz_te()
-
-    def xyz_te(self) -> np.ndarray:
-        """
-        Returns the (wing-relative) coordinates of the trailing edge of the cross section.
-        """
-        rot = np.rotation_matrix_3D(self.twist * pi / 180, self.twist_axis)
-        xyz_te = self.xyz_le + rot @ np.array([self.chord, 0, 0])
-        return xyz_te
+    # def quarter_chord(self) -> np.ndarray:
+    #     """
+    #     Returns the (wing-relative) coordinates of the quarter chord of the cross section.
+    #     """
+    #     return 0.75 * self.xyz_le + 0.25 * self.xyz_te()
+    #
+    # def xyz_te(self) -> np.ndarray:
+    #     """
+    #     Returns the (wing-relative) coordinates of the trailing edge of the cross section.
+    #     """
+    #     rot = np.rotation_matrix_3D(self.twist * pi / 180, self.twist_axis)
+    #     xyz_te = self.xyz_le + rot @ np.array([self.chord, 0, 0])
+    #     return xyz_te
