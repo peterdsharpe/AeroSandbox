@@ -251,12 +251,12 @@ class AVL(ExplicitAnalysis):
                 "Clb Cnr / Clr Cnb"
             ]
 
-            # if len(keys) != len(values):
-            #     raise RuntimeError(
-            #         "AVL could not run for some reason!\n"
-            #         "Investigate by turning on the `verbose` flag and looking at the output.\n"
-            #         "(Common culprit: angular rates too high.)"
-            #     )
+            if len(keys) != len(values):
+                raise RuntimeError(
+                    "AVL could not run for some reason!\n"
+                    "Investigate by turning on the `verbose` flag and looking at the output.\n"
+                    "(Common culprit: angular rates too high.)"
+                )
 
             res = {
                 k: v
@@ -297,11 +297,9 @@ if __name__ == '__main__':
             alpha=0.433476,
             beta=0,
             p=0,
-            q=0.0,
+            q=0,
             r=0,
         ),
-        verbose=True,
-        working_directory="C:/Users/peter/Downloads/test/"
     )
 
     res = avl.run()
