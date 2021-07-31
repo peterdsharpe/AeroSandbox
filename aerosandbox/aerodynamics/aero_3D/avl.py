@@ -204,16 +204,16 @@ class AVL(ExplicitAnalysis):
                 "mach",
                 "rb/2V",
                 "r'b/2V",
-                "CXtot",
-                "Cltot",
-                "Cl'tot",
-                "CYtot",
-                "Cmtot",
-                "CZtot",
-                "Cntot",
-                "Cn'tot",
-                "CLtot",
-                "CDtot",
+                "CX",  # Note: these refer to "CXtot", etc. in AVL, but the "tot" is redundant.
+                "Cl",
+                "Cl'",
+                "CY",
+                "Cm",
+                "CZ",
+                "Cn",
+                "Cn'",
+                "CL",
+                "CD",
                 "CDvis",
                 "CDind",
                 "CLff",
@@ -286,4 +286,4 @@ if __name__ == '__main__':
         ),
     )
 
-    res=avl.run()
+    res = avl.run()
