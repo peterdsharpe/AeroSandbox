@@ -4,7 +4,7 @@ from typing import List, Tuple, Union
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
-
+from aerosandbox.geometry.mesh_utilities import *
 
 class Wing(AeroSandboxObject):
     """
@@ -316,7 +316,6 @@ class Wing(AeroSandboxObject):
                   spanwise_resolution: int = 12,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
-                  use_polydata_format: bool = False,
                   ) -> Tuple[np.ndarray, np.ndarray]:
 
         airfoil_nondim_coordinates = np.array([
@@ -348,10 +347,7 @@ class Wing(AeroSandboxObject):
             return jloc + iloc * (spanwise_resolution + 1)
 
         def add_face(*indices):
-            if not use_polydata_format:
-                entry = list(indices)
-            else:
-                entry = [len(indices), *indices]
+            entry = [len(indices), *indices]
             faces.append(entry)
 
         for i in range(len(spanwise_strips) - 1):
@@ -383,16 +379,10 @@ class Wing(AeroSandboxObject):
             flipped_points[:, 1] = flipped_points[:, 1] * -1
 
             flipped_faces = np.array(faces)
-            if not use_polydata_format:
-                flipped_faces += len(points)
-            else:
-                flipped_faces[:, 1:] += len(points)
+            flipped_faces += len(points)
 
             points = np.concatenate((points, flipped_points), axis=0)
             faces = np.concatenate((faces, flipped_faces), axis=0)
-
-        if use_polydata_format:
-            faces = np.reshape(faces, -1)
 
         return points, faces
 
@@ -401,7 +391,6 @@ class Wing(AeroSandboxObject):
                           chordwise_resolution: int = 1,
                           spanwise_resolution: int = 1,
                           add_camber: bool = False,
-                          use_polydata_format: bool = False,
                           ) -> Tuple[np.ndarray, List[List[int]]]:
         x_nondim = np.cosspace(
             0,
@@ -428,10 +417,7 @@ class Wing(AeroSandboxObject):
             return jloc + iloc * (spanwise_resolution + 1)
 
         def add_face(*indices):
-            if not use_polydata_format:
-                entry = list(indices)
-            else:
-                entry = [len(indices), *indices]
+            entry = [len(indices), *indices]
             faces.append(entry)
 
         for i in range(len(spanwise_strips) - 1):
@@ -462,17 +448,10 @@ class Wing(AeroSandboxObject):
             flipped_points = np.array(points)
             flipped_points[:, 1] = flipped_points[:, 1] * -1
 
-            flipped_faces = np.array(faces)
-            if not use_polydata_format:
-                flipped_faces += len(points)
-            else:
-                flipped_faces[1:] += len(points)
-
-            points = np.concatenate((points, flipped_points), axis=0)
-            faces = np.concatentate((faces, flipped_faces), axis=0)
-
-        if use_polydata_format:
-            faces = np.reshape(faces, -1)
+            points, faces = combine_meshes(
+                (points, faces),
+                (flipped_points, faces)
+            )
 
         return points, faces
 

@@ -2,7 +2,7 @@ from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Union, Tuple
 from pathlib import Path
-
+from aerosandbox.geometry.mesh_utilities import *
 
 class Fuselage(AeroSandboxObject):
     """
@@ -146,7 +146,6 @@ class Fuselage(AeroSandboxObject):
                   method="tri",
                   chordwise_resolution: int = 6,
                   spanwise_resolution: int = 36,
-                  use_polydata_format: bool = False,
                   ) -> Tuple[np.ndarray, np.ndarray]:
 
         theta = np.linspace(
@@ -184,18 +183,15 @@ class Fuselage(AeroSandboxObject):
             return jloc + (iloc % spanwise_resolution) * len(chordwise_strips[0])
 
         def add_face(*indices):
-            if not use_polydata_format:
-                entry = list(indices)
-            else:
-                entry = [len(indices), *indices]
+            entry = [len(indices), *indices]
             faces.append(entry)
 
-        for i in range( # Number of circumferential points
+        for i in range(  # Number of circumferential points
                 len(chordwise_strips)
         ):
-            for j in range( # Number of axial points
+            for j in range(  # Number of axial points
                     (len(self.xsecs) - 1) * chordwise_resolution
-                    ):
+            ):
 
                 if method == "tri":
                     pass
@@ -224,16 +220,10 @@ class Fuselage(AeroSandboxObject):
             flipped_points[:, 1] = flipped_points[:, 1] * -1
 
             flipped_faces = np.array(faces)
-            if not use_polydata_format:
-                flipped_faces += len(points)
-            else:
-                flipped_faces[:, 1:] += len(points)
+            flipped_faces += len(points)
 
             points = np.concatenate((points, flipped_points), axis=0)
             faces = np.concatenate((faces, flipped_faces), axis=0)
-
-        if use_polydata_format:
-            faces = np.reshape(faces, -1)
 
         return points, faces
 
