@@ -11,7 +11,7 @@ def combine_meshes(
         points1, faces1 = meshes[0]
         points2, faces2 = meshes[1]
 
-        faces2 += len(points1)
+        faces2 = faces2 + len(points1)
 
         points = np.concatenate((points1, points2))
         faces = np.concatenate((faces1, faces2))

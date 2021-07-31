@@ -320,7 +320,7 @@ class Wing(AeroSandboxObject):
 
         airfoil_nondim_coordinates = np.array([
             xsec.airfoil
-                .repanel(n_points_per_side=chordwise_resolution)
+                .repanel(n_points_per_side=chordwise_resolution+1)
                 .coordinates
             for xsec in self.xsecs
         ])
@@ -344,14 +344,18 @@ class Wing(AeroSandboxObject):
         faces = []
 
         def index_of(iloc, jloc):
-            return jloc + iloc * (spanwise_resolution + 1)
+            return iloc + jloc * spanwise_strips[0].shape[0]
 
         def add_face(*indices):
-            entry = [len(indices), *indices]
+            entry = list(indices)
             faces.append(entry)
 
-        for i in range(len(spanwise_strips) - 1):
-            for j in range(spanwise_resolution):
+        for i in range( # Number of spanwise points
+                spanwise_resolution * (len(self.xsecs)-1)
+        ):
+            for j in range(
+                    len(spanwise_strips) - 1
+            ):
 
                 if method == "tri":
                     add_face(
@@ -378,11 +382,10 @@ class Wing(AeroSandboxObject):
             flipped_points = np.array(points)
             flipped_points[:, 1] = flipped_points[:, 1] * -1
 
-            flipped_faces = np.array(faces)
-            flipped_faces += len(points)
-
-            points = np.concatenate((points, flipped_points), axis=0)
-            faces = np.concatenate((faces, flipped_faces), axis=0)
+            points, faces = combine_meshes(
+                (points, faces),
+                (flipped_points, faces)
+            )
 
         return points, faces
 
@@ -414,14 +417,18 @@ class Wing(AeroSandboxObject):
         faces = []
 
         def index_of(iloc, jloc):
-            return jloc + iloc * (spanwise_resolution + 1)
+            return iloc + jloc * spanwise_strips[0].shape[0]
 
         def add_face(*indices):
-            entry = [len(indices), *indices]
+            entry = list(indices)
             faces.append(entry)
 
-        for i in range(len(spanwise_strips) - 1):
-            for j in range(spanwise_resolution):
+        for i in range( # Number of spanwise points
+            spanwise_resolution * (len(self.xsecs)-1)
+        ):
+            for j in range(
+                    len(spanwise_strips) - 1
+            ):
 
                 if method == "tri":
                     add_face(
