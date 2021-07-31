@@ -100,8 +100,8 @@ class AVL(ExplicitAnalysis):
 
         # Set analysis state
         p_bar = self.op_point.p * self.airplane.b_ref / (2 * self.op_point.velocity)
-        q_bar = self.op_point.p * self.airplane.c_ref / (2 * self.op_point.velocity)
-        r_bar = self.op_point.p * self.airplane.b_ref / (2 * self.op_point.velocity)
+        q_bar = self.op_point.q * self.airplane.c_ref / (2 * self.op_point.velocity)
+        r_bar = self.op_point.r * self.airplane.b_ref / (2 * self.op_point.velocity)
 
         run_file_contents += [
             f"a a {self.op_point.alpha}",
@@ -135,6 +135,8 @@ class AVL(ExplicitAnalysis):
 
             # Designate an intermediate file for file I/O
             output_filename = "output.txt"
+            with open(directory / output_filename, "w+") as f:
+                pass
 
             # Handle the airplane file
             airplane_file = "airplane.avl"
@@ -227,7 +229,7 @@ class AVL(ExplicitAnalysis):
                 "Cla",
                 "Clb",
                 "Cma",
-                "Cmb"
+                "Cmb",
                 "Cna",
                 "Cnb",
                 "CLp",
@@ -249,12 +251,26 @@ class AVL(ExplicitAnalysis):
                 "Clb Cnr / Clr Cnb"
             ]
 
-            return {
+            # if len(keys) != len(values):
+            #     raise RuntimeError(
+            #         "AVL could not run for some reason!\n"
+            #         "Investigate by turning on the `verbose` flag and looking at the output.\n"
+            #         "(Common culprit: angular rates too high.)"
+            #     )
+
+            res = {
                 k: v
                 for k, v in zip(
                     keys, values
                 )
             }
+
+            ##### Add a few more outputs for ease of use
+            res["p"] = res["pb/2V"] * (2 * self.op_point.velocity / self.airplane.b_ref)
+            res["q"] = res["qc/2V"] * (2 * self.op_point.velocity / self.airplane.c_ref)
+            res["r"] = res["rb/2V"] * (2 * self.op_point.velocity / self.airplane.b_ref)
+
+            return res
 
 
 if __name__ == '__main__':
@@ -281,9 +297,14 @@ if __name__ == '__main__':
             alpha=0.433476,
             beta=0,
             p=0,
-            q=0,
+            q=0.0,
             r=0,
         ),
+        verbose=True,
+        working_directory="C:/Users/peter/Downloads/test/"
     )
 
     res = avl.run()
+
+    for k, v in res.items():
+        print(f"{str(k).rjust(10)} : {v}")
