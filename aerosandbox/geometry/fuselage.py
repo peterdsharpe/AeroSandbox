@@ -183,7 +183,7 @@ class Fuselage(AeroSandboxObject):
             return jloc + (iloc % spanwise_resolution) * chordwise_strips[0].shape[0]
 
         def add_face(*indices):
-            entry = [len(indices), *indices]
+            entry = indices
             faces.append(entry)
 
         for i in range(  # Number of circumferential points

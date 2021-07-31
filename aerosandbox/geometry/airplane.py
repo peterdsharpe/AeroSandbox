@@ -5,7 +5,7 @@ from aerosandbox.visualization.plotly_Figure3D import Figure3D
 from numpy import pi
 from textwrap import dedent
 from pathlib import Path
-
+from aerosandbox.geometry.mesh_utilities import *
 
 class Airplane(AeroSandboxObject):
     """
@@ -59,6 +59,25 @@ class Airplane(AeroSandboxObject):
         return f"Airplane '{self.name}' " \
                f"({n_wings} {'wing' if n_wings == 1 else 'wings'}, " \
                f"{n_fuselages} {'fuselage' if n_fuselages == 1 else 'fuselages'})"
+
+    def mesh_body(self,
+                  method="quad",
+                  ):
+        meshes = [
+            wing.mesh_body(
+                method=method
+            )
+            for wing in self.wings
+        ] + [
+            fuse.mesh_body(
+                method=method
+            )
+            for fuse in self.fuselages
+        ]
+
+        points, faces = combine_meshes(*meshes)
+
+        return points, faces
 
     def draw(self,
              show=True,  # type: bool
