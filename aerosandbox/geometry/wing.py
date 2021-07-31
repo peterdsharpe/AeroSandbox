@@ -315,29 +315,80 @@ class Wing(AeroSandboxObject):
                   chordwise_resolution: int = 50,
                   spanwise_resolution: int = 6,
                   mesh_tips: bool = True,
+                  mesh_trailing_edge: bool = True,
+                  use_polydata_format: bool = False,
                   ) -> Tuple[np.ndarray, np.ndarray]:
 
-        airfoils = [
-            airfoil.repanel(n_points_per_side=n_points_per_side)
-            for airfoil in self.airfoils
-        ]
-        airfoil_nondim_coordinates = [
-            airfoil.coordinates
-            for airfoil in airfoils
-        ]
+        airfoil_nondim_coordinates = np.array([
+            xsec.airfoil
+                .repanel(n_points_per_side=chordwise_resolution)
+                .coordinates
+            for xsec in self.xsecs
+        ])
 
-        for i in range(len(self.xsecs) - 1):
-            sect_points = np.linspace()
+        x_nondim = airfoil_nondim_coordinates[:, :, 0].T
+        y_nondim = airfoil_nondim_coordinates[:, :, 1].T
+
+        spanwise_strips = []
+        for x_n, y_n in zip(x_nondim, y_nondim):
+            spanwise_strips.append(
+                self.mesh_line(
+                    x_nondim=x_n,
+                    y_nondim=y_n,
+                    add_camber=False,
+                    spanwise_resolution=spanwise_resolution
+                )
+            )
+
+        points = np.concatenate(spanwise_strips)
+
+        faces = []
+
+        def index_of(iloc, jloc):
+            return jloc + iloc * (spanwise_resolution + 1)
+
+        def add_face(*indices):
+            if not use_polydata_format:
+                entry = list(indices)
+            else:
+                entry = [len(indices), *indices]
+            faces.append(entry)
+
+        for i in range(len(spanwise_strips) - 1):
+            for j in range(spanwise_resolution):
+
+                if method == "tri":
+                    add_face(
+                        index_of(i, j),
+                        index_of(i + 1, j),
+                        index_of(i, j + 1),
+                    )
+                    add_face(
+                        index_of(i + 1, j),
+                        index_of(i + 1, j + 1),
+                        index_of(i, j + 1),
+                    )
+                if method == "quad":
+                    add_face(
+                        index_of(i, j),
+                        index_of(i + 1, j),
+                        index_of(i + 1, j + 1),
+                        index_of(i, j + 1),
+                    )
+
+        faces = np.array(faces)
+        if use_polydata_format:
+            faces = np.reshape(faces, -1)
+
+        return points, faces
 
     def mesh_thin_surface(self,
                           method="tri",
-                          add_camber: bool = False,
                           chordwise_resolution: int = 1,
                           spanwise_resolution: int = 1,
+                          add_camber: bool = False,
                           use_polydata_format: bool = False,
                           ) -> Tuple[np.ndarray, List[List[int]]]:
-        xsec_points = []
-
         x_nondim = np.cosspace(
             0,
             1,
@@ -369,7 +420,7 @@ class Wing(AeroSandboxObject):
                 entry = [len(indices), *indices]
             faces.append(entry)
 
-        for i in range(chordwise_resolution):
+        for i in range(len(spanwise_strips) - 1):
             for j in range(spanwise_resolution):
 
                 if method == "tri":
