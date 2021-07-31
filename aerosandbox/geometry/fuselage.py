@@ -145,15 +145,102 @@ class Fuselage(AeroSandboxObject):
     def mesh_body(self,
                   method="tri",
                   chordwise_resolution: int = 6,
-                  spanwise_resolution:int = 36,
+                  spanwise_resolution: int = 36,
                   use_polydata_format: bool = False,
                   ) -> Tuple[np.ndarray, np.ndarray]:
-        pass
+
+        theta = np.linspace(
+            0,
+            2 * np.pi,
+            spanwise_resolution + 1,
+        )[:-1]
+
+        shape_nondim_coordinates = np.array([
+            np.stack((
+                np.sin(theta),
+                np.cos(theta),
+            )).T
+            for xsec in self.xsecs
+        ])
+
+        x_nondim = shape_nondim_coordinates[:, :, 0].T
+        y_nondim = shape_nondim_coordinates[:, :, 1].T
+
+        chordwise_strips = []
+        for x_n, y_n in zip(x_nondim, y_nondim):
+            chordwise_strips.append(
+                self.mesh_line(
+                    x_nondim=x_n,
+                    y_nondim=y_n,
+                    chordwise_resolution=chordwise_resolution
+                )
+            )
+
+        points = np.concatenate(chordwise_strips)
+
+        faces = []
+
+        def index_of(iloc, jloc):
+            return jloc + (iloc % spanwise_resolution) * len(chordwise_strips[0])
+
+        def add_face(*indices):
+            if not use_polydata_format:
+                entry = list(indices)
+            else:
+                entry = [len(indices), *indices]
+            faces.append(entry)
+
+        for i in range( # Number of circumferential points
+                len(chordwise_strips)
+        ):
+            for j in range( # Number of axial points
+                    (len(self.xsecs) - 1) * chordwise_resolution
+                    ):
+
+                if method == "tri":
+                    pass
+                    add_face(
+                        index_of(i, j),
+                        index_of(i, j + 1),
+                        index_of(i + 1, j),
+                    )
+                    add_face(
+                        index_of(i, j + 1),
+                        index_of(i + 1, j + 1),
+                        index_of(i + 1, j),
+                    )
+                if method == "quad":
+                    add_face(
+                        index_of(i, j),
+                        index_of(i, j + 1),
+                        index_of(i + 1, j + 1),
+                        index_of(i + 1, j),
+                    )
+
+        faces = np.array(faces)
+
+        if self.symmetric:
+            flipped_points = np.array(points)
+            flipped_points[:, 1] = flipped_points[:, 1] * -1
+
+            flipped_faces = np.array(faces)
+            if not use_polydata_format:
+                flipped_faces += len(points)
+            else:
+                flipped_faces[:, 1:] += len(points)
+
+            points = np.concatenate((points, flipped_points), axis=0)
+            faces = np.concatenate((faces, flipped_faces), axis=0)
+
+        if use_polydata_format:
+            faces = np.reshape(faces, -1)
+
+        return points, faces
 
     def mesh_line(self,
                   x_nondim: Union[float, List[float]] = 0,
                   y_nondim: Union[float, List[float]] = 0,
-                  spanwise_resolution: int = 1,
+                  chordwise_resolution: int = 1,
                   ) -> np.ndarray:
         xsec_points = []
 
@@ -199,7 +286,7 @@ class Fuselage(AeroSandboxObject):
             mesh_section = np.linspace(
                 xsec_points[i],
                 xsec_points[i + 1],
-                spanwise_resolution + 1
+                chordwise_resolution + 1
             )
             if not i == len(xsec_points) - 2:
                 mesh_section = mesh_section[:-1]
