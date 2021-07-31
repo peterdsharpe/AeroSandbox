@@ -119,29 +119,31 @@ def test_min():
     assert int(np.min(a)) == int(np.min(b))
 
 
-# def test_reshape():
-a = np.array([
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9],
-])
-b = cas.DM(a)
+def test_reshape():
+    a = np.array([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+        [10, 11, 12],
+    ])
+    b = cas.DM(a)
 
-test_inputs = [
-    -1,
-    (3, 3),
-    (9, 1),
-    (1, 9),
-    (-1),
-]
+    test_inputs = [
+        -1,
+        (4, 3),
+        (3, 4),
+        (12, 1),
+        (1, 12),
+        (-1),
+    ]
 
-for i in test_inputs:
-    ra = np.reshape(a, i)
-    rb = np.reshape(b, i)
-    if len(ra.shape) == 1:
-        ra = ra.reshape(-1, 1)
+    for i in test_inputs:
+        ra = np.reshape(a, i)
+        rb = np.reshape(b, i)
+        if len(ra.shape) == 1:
+            ra = ra.reshape(-1, 1)
 
-    assert np.all(ra == rb)
+        assert np.all(ra == rb)
 
-# if __name__ == '__main__':
-# pytest.main()
+if __name__ == '__main__':
+    pytest.main()
