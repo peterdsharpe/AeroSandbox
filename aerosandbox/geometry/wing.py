@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
@@ -329,33 +329,121 @@ class Wing(AeroSandboxObject):
         for i in range(len(self.xsecs) - 1):
             sect_points = np.linspace()
 
-    def mesh_surface(self,
-                     method="tri",
-                     follow_camber: bool = False,
-                     chordwise_resolution: int = 1,
-                     spanwise_resolution: int = 1,
-                     ):
-        pass
+    def mesh_thin_surface(self,
+                          method="tri",
+                          add_camber: bool = False,
+                          chordwise_resolution: int = 1,
+                          spanwise_resolution: int = 1,
+                          use_polydata_format: bool = False,
+                          ) -> Tuple[np.ndarray, List[List[int]]]:
+        xsec_points = []
+
+        x_nondim = np.cosspace(
+            0,
+            1,
+            chordwise_resolution + 1
+        )
+
+        spanwise_strips = []
+        for x_n in x_nondim:
+            spanwise_strips.append(
+                self.mesh_line(
+                    x_nondim=x_n,
+                    y_nondim=0,
+                    add_camber=add_camber,
+                    spanwise_resolution=spanwise_resolution
+                )
+            )
+
+        points = np.concatenate(spanwise_strips)
+
+        faces = []
+
+        def index_of(iloc, jloc):
+            return jloc + iloc * (spanwise_resolution + 1)
+
+        def add_face(*indices):
+            if not use_polydata_format:
+                entry = list(indices)
+            else:
+                entry = [len(indices), *indices]
+            faces.append(entry)
+
+        for i in range(chordwise_resolution):
+            for j in range(spanwise_resolution):
+
+                if method == "tri":
+                    add_face(
+                        index_of(i, j),
+                        index_of(i + 1, j),
+                        index_of(i, j + 1),
+                    )
+                    add_face(
+                        index_of(i + 1, j),
+                        index_of(i + 1, j + 1),
+                        index_of(i, j + 1),
+                    )
+                if method == "quad":
+                    add_face(
+                        index_of(i, j),
+                        index_of(i + 1, j),
+                        index_of(i + 1, j + 1),
+                        index_of(i, j + 1),
+                    )
+
+        faces = np.array(faces)
+        if use_polydata_format:
+            faces = np.reshape(faces, -1)
+
+        return points, faces
 
     def mesh_line(self,
-                  x_nondim=0.25,
-                  y_nondim=0,
+                  x_nondim: Union[float, List[float]] = 0.25,
+                  y_nondim: Union[float, List[float]] = 0,
+                  add_camber: bool = True,
                   spanwise_resolution: int = 1,
                   ) -> np.ndarray:
         xsec_points = []
+
+        try:
+            if len(x_nondim) != len(self.xsecs):
+                raise ValueError(
+                    "If x_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs.")
+        except TypeError:
+            pass
+
+        try:
+            if len(y_nondim) != len(self.xsecs):
+                raise ValueError(
+                    "If y_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs.")
+        except TypeError:
+            pass
 
         for i, xsec in enumerate(self.xsecs):
 
             origin = self._compute_xyz_le_of_WingXSec(i)
             xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(i)
 
+            try:
+                xsec_x_nondim = x_nondim[i]
+            except (TypeError, IndexError):
+                xsec_x_nondim = x_nondim
+
+            try:
+                xsec_y_nondim = y_nondim[i]
+            except (TypeError, IndexError):
+                xsec_y_nondim = y_nondim
+
+            if add_camber:
+                xsec_y_nondim = xsec_y_nondim + xsec.airfoil.local_camber(x_over_c=x_nondim)
+
             rot = np.rotation_matrix_3D(
                 xsec.twist * pi / 180,
                 yg_local
             )
             xsec_point = origin + rot @ (
-                    x_nondim * xsec.chord * xg_local +
-                    y_nondim * xsec.chord * zg_local
+                    xsec_x_nondim * xsec.chord * xg_local +
+                    xsec_y_nondim * xsec.chord * zg_local
             )
             xsec_points.append(xsec_point)
 
