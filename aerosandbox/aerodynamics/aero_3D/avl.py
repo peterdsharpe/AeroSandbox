@@ -69,6 +69,9 @@ class AVL(ExplicitAnalysis):
         self.verbose = verbose
         self.working_directory = working_directory
 
+    def run(self):
+        return self._run_avl()
+
     def _default_keystroke_file_contents(self) -> List[str]:
 
         run_file_contents = []
@@ -166,6 +169,93 @@ class AVL(ExplicitAnalysis):
                 stdout=None if self.verbose else subprocess.DEVNULL
             )
 
+            ##### Parse the output file
+            # Read the file
+            with open(directory / output_filename, "r") as f:
+                output_data = f.read()
+
+            # Trim off the first few lines that contain name, # of panels, etc.
+            output_data = "\n".join(output_data.split("\n")[8:])
+
+            ### Iterate through the string to find all the numeric values, based on where "=" appears.
+            values = []
+            index = output_data.find("=")
+            while index != -1:
+                output_data = output_data[index + 1:]
+                number = output_data[:12].split("\n")[0]
+                number = float(number)
+                values.append(number)
+
+                index = output_data.find("=")
+
+            ### Record the keys associated with those values:
+            keys = [
+                "Sref",
+                "Cref",
+                "Bref",
+                "Xref",
+                "Yref",
+                "Zref",
+                "alpha",
+                "pb/2V",
+                "p'b/2V",
+                "beta",
+                "qc/2V",
+                "mach",
+                "rb/2V",
+                "r'b/2V",
+                "CXtot",
+                "Cltot",
+                "Cl'tot",
+                "CYtot",
+                "Cmtot",
+                "CZtot",
+                "Cntot",
+                "Cn'tot",
+                "CLtot",
+                "CDtot",
+                "CDvis",
+                "CDind",
+                "CLff",
+                "CDff",
+                "Cyff",
+                "e",
+                "CLa",
+                "CLb",
+                "CYa",
+                "CYb",
+                "Cla",
+                "Clb",
+                "Cma",
+                "Cmb"
+                "Cna",
+                "Cnb",
+                "CLp",
+                "CLq",
+                "CLr",
+                "CYp",
+                "CYq",
+                "CYr",
+                "Clp",
+                "Clq",
+                "Clr",
+                "Cmp",
+                "Cmq",
+                "Cmr",
+                "Cnp",
+                "Cnq",
+                "Cnr",
+                "Xnp",
+                "Clb Cnr / Clr Cnb"
+            ]
+
+            return {
+                k: v
+                for k, v in zip(
+                    keys, values
+                )
+            }
+
 
 if __name__ == '__main__':
 
@@ -194,8 +284,6 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        verbose=True,
-        working_directory="C:/Users/peter/Downloads/test/"
     )
 
-    avl._run_avl()
+    res=avl.run()
