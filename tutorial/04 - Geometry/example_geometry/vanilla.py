@@ -61,7 +61,7 @@ airplane = asb.Airplane(
     fuselages=[
         asb.Fuselage(
             name="Fuselage",
-            xyz_le=[0,0,0],
+            xyz_le=[0, 0, 0],
             xsecs=[
                 asb.FuselageXSec(
                     xyz_c=[xi * 5 - 0.5, 0, 0],

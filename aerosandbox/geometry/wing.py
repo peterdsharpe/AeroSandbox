@@ -332,6 +332,8 @@ class Wing(AeroSandboxObject):
     def mesh_surface(self,
                      method="tri",
                      follow_camber: bool = False,
+                     chordwise_resolution: int = 1,
+                     spanwise_resolution: int = 1,
                      ):
         pass
 
