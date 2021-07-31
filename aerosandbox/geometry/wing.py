@@ -312,8 +312,8 @@ class Wing(AeroSandboxObject):
 
     def mesh_body(self,
                   method="tri",
-                  chordwise_resolution: int = 50,
-                  spanwise_resolution: int = 6,
+                  chordwise_resolution: int = 36,
+                  spanwise_resolution: int = 12,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
                   use_polydata_format: bool = False,
@@ -390,7 +390,6 @@ class Wing(AeroSandboxObject):
 
             points = np.concatenate((points, flipped_points), axis=0)
             faces = np.concatenate((faces, flipped_faces), axis=0)
-
 
         if use_polydata_format:
             faces = np.reshape(faces, -1)
@@ -488,14 +487,16 @@ class Wing(AeroSandboxObject):
         try:
             if len(x_nondim) != len(self.xsecs):
                 raise ValueError(
-                    "If x_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs.")
+                    "If x_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs."
+                )
         except TypeError:
             pass
 
         try:
             if len(y_nondim) != len(self.xsecs):
                 raise ValueError(
-                    "If y_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs.")
+                    "If y_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs."
+                )
         except TypeError:
             pass
 

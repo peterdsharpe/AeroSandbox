@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Union
+from typing import List, Union, Tuple
 from pathlib import Path
 
 
@@ -141,6 +141,93 @@ class Fuselage(AeroSandboxObject):
                 f.write(string)
 
         return string
+
+    def mesh_body(self,
+                  method="tri",
+                  chordwise_resolution: int = 6,
+                  spanwise_resolution:int = 36,
+                  use_polydata_format: bool = False,
+                  ) -> Tuple[np.ndarray, np.ndarray]:
+        pass
+
+    def mesh_line(self,
+                  x_nondim: Union[float, List[float]] = 0,
+                  y_nondim: Union[float, List[float]] = 0,
+                  spanwise_resolution: int = 1,
+                  ) -> np.ndarray:
+        xsec_points = []
+
+        try:
+            if len(x_nondim) != len(self.xsecs):
+                raise ValueError(
+                    "If x_nondim is going to be an iterable, it needs to be the same length as Fuselage.xsecs."
+                )
+        except TypeError:
+            pass
+
+        try:
+            if len(y_nondim) != len(self.xsecs):
+                raise ValueError(
+                    "If y_nondim is going to be an iterable, it needs to be the same length as Fuselage.xsecs."
+                )
+        except TypeError:
+            pass
+
+        for i, xsec in enumerate(self.xsecs):
+
+            origin = self._compute_xyz_le_of_FuselageXSec(i)
+            xg_local, yg_local, zg_local = self._compute_frame_of_FuselageXSec(i)
+
+            try:
+                xsec_x_nondim = x_nondim[i]
+            except (TypeError, IndexError):
+                xsec_x_nondim = x_nondim
+
+            try:
+                xsec_y_nondim = y_nondim[i]
+            except (TypeError, IndexError):
+                xsec_y_nondim = y_nondim
+
+            xsec_point = origin + (
+                    xsec_x_nondim * xsec.radius * yg_local +
+                    xsec_y_nondim * xsec.radius * zg_local
+            )
+            xsec_points.append(xsec_point)
+
+        mesh_sections = []
+        for i in range(len(xsec_points) - 1):
+            mesh_section = np.linspace(
+                xsec_points[i],
+                xsec_points[i + 1],
+                spanwise_resolution + 1
+            )
+            if not i == len(xsec_points) - 2:
+                mesh_section = mesh_section[:-1]
+
+            mesh_sections.append(mesh_section)
+
+        mesh = np.concatenate(mesh_sections)
+
+        return mesh
+
+    def _compute_xyz_le_of_FuselageXSec(self, index: int):
+        return self.xyz_le + self.xsecs[index].xyz_c
+
+    def _compute_frame_of_FuselageXSec(self, index: int):
+
+        if index == len(self.xsecs) - 1:
+            index = len(self.xsecs) - 2  # The last FuselageXSec has the same frame as the last section.
+
+        xyz_c_a = self.xsecs[index].xyz_c
+        xyz_c_b = self.xsecs[index + 1].xyz_c
+        vector_between = xyz_c_b - xyz_c_a
+        xg_local = vector_between / np.linalg.norm(vector_between)
+
+        zg_local = np.array([0, 0, 1])  # TODO
+
+        yg_local = np.cross(zg_local, xg_local)
+
+        return xg_local, yg_local, zg_local
 
 
 class FuselageXSec(AeroSandboxObject):
