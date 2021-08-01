@@ -5,7 +5,8 @@ from aerosandbox.performance import OperatingPoint
 
 class LiftingLine(ImplicitAnalysis):
     """
-    An implicit analysis based on lifting line theory, with modifications for nonzero sweep and dihedral + multiple wings.
+    An implicit analysis based on lifting line theory, with modifications for nonzero sweep and dihedral + multiple
+    wings.
 
     Key outputs:
 
