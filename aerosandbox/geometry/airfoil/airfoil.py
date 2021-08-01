@@ -73,7 +73,7 @@ class Airfoil(Polygon):
 
                     * `Re` is the local Reynolds number
 
-                    * `mach` is the local mach number
+                    * `mach` is the local Mach number
 
                     * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
 
