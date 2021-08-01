@@ -8,3 +8,4 @@ pytest~=6.2.3
 plotly~=5.1.0
 pyvista~=0.31.3
 trimesh~=3.9.24
+sympy~=1.8
