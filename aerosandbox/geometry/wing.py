@@ -660,17 +660,3 @@ class WingXSec(AeroSandboxObject):
 
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
-
-    # def quarter_chord(self) -> np.ndarray:
-    #     """
-    #     Returns the (wing-relative) coordinates of the quarter chord of the cross section.
-    #     """
-    #     return 0.75 * self.xyz_le + 0.25 * self.xyz_te()
-    #
-    # def xyz_te(self) -> np.ndarray:
-    #     """
-    #     Returns the (wing-relative) coordinates of the trailing edge of the cross section.
-    #     """
-    #     rot = np.rotation_matrix_3D(self.twist * pi / 180, self.twist_axis)
-    #     xyz_te = self.xyz_le + rot @ np.array([self.chord, 0, 0])
-    #     return xyz_te
