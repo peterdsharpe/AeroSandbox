@@ -41,7 +41,7 @@ airplane = asb.Airplane(
         ),
         asb.Wing(
             name="Horizontal Stabilizer",
-            xyz_le=[0.6, 0, 0.1],
+            xyz_le=[0.6, 0, 0.06],
             symmetric=True,
             xsecs=[
                 asb.WingXSec(  # root
@@ -62,7 +62,7 @@ airplane = asb.Airplane(
         ),
         asb.Wing(
             name="Vertical Stabilizer",
-            xyz_le=[0.6, 0, 0.15],
+            xyz_le=[0.6, 0, 0.07],
             symmetric=False,
             xsecs=[
                 asb.WingXSec(
@@ -79,6 +79,19 @@ airplane = asb.Airplane(
                     twist=0,
                     airfoil=airfoil
                 )
+            ]
+        )
+    ],
+    fuselages=[
+        asb.Fuselage(
+            name="Fuselage",
+            xyz_le=[0, 0, 0],
+            xsecs=[
+                asb.FuselageXSec(
+                    xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi-0.03],
+                    radius=0.6 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
+                )
+                for xi in np.cosspace(0, 1, 30)
             ]
         )
     ]
