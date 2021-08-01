@@ -55,7 +55,7 @@ def test_mean_twist_angle(w):
 
 
 def test_mean_sweep_angle(w):
-    assert w.mean_sweep_angle() == pytest.approx(45)
+    assert w.mean_sweep_angle() == pytest.approx(44.993201)
 
 
 def test_aerodynamic_center(w):
