@@ -33,7 +33,7 @@ class AVL(ExplicitAnalysis):
         >>>        r=0.03, # rad/sec
         >>>    )
         >>>)
-        >>>avl_outputs = avl.run()
+        >>>outputs = avl.run()
 
     """
 

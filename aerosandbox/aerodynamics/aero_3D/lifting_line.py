@@ -8,13 +8,20 @@ class LiftingLine(ImplicitAnalysis):
     An implicit aerodynamics analysis based on lifting line theory, with modifications for nonzero sweep and dihedral
     + multiple wings.
 
-    Key outputs:
+    Usage example:
+        >>>analysis = asb.LiftingLine(
+        >>>    airplane=my_airplane,
+        >>>    op_point=asb.OperatingPoint(
+        >>>        velocity=100, # m/s
+        >>>        alpha=5, # deg
+        >>>        beta=4, # deg
+        >>>        p=0.01, # rad/sec
+        >>>        q=0.02, # rad/sec
+        >>>        r=0.03, # rad/sec
+        >>>    )
+        >>>)
+        >>>outputs = analysis.run()
 
-        * LiftingLine.CL
-        * LiftingLine.CD
-        * LiftingLine.Cm
-        * LiftingLine.lift_force
-        * LiftingLine.drag_force
 
     """
 
