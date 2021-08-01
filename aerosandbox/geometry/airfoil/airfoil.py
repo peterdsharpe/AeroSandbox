@@ -83,7 +83,7 @@ class Airfoil(Polygon):
 
                 Has the exact same syntax as `CL_function`, see above.
 
-            Cm_function: A function that gives the sectional moment coefficient of the airfoil (about the
+            CM_function: A function that gives the sectional moment coefficient of the airfoil (about the
             quarter-chord) as a function of several parameters.
 
                 Has the exact same syntax as `CL_function`, see above.
