@@ -508,9 +508,10 @@ class Wing(AeroSandboxObject):
             if add_camber:
                 xsec_y_nondim = xsec_y_nondim + xsec.airfoil.local_camber(x_over_c=x_nondim)
 
-            xsec_point = origin + (
-                    xsec_x_nondim * xsec.chord * xg_local +
-                    xsec_y_nondim * xsec.chord * zg_local
+            xsec_point = self._compute_xyz_of_WingXSec(
+                i,
+                x_nondim=xsec_x_nondim,
+                y_nondim=xsec_y_nondim,
             )
             xsec_points.append(xsec_point)
 
@@ -531,13 +532,31 @@ class Wing(AeroSandboxObject):
         return mesh
 
     def _compute_xyz_le_of_WingXSec(self, index: int):
-        return self.xyz_le + self.xsecs[index].xyz_le
+        return self._compute_xyz_of_WingXSec(
+            index,
+            x_nondim=0,
+            y_nondim=0,
+        )
 
     def _compute_xyz_te_of_WingXSec(self, index: int):
+        return self._compute_xyz_of_WingXSec(
+            index,
+            x_nondim=1,
+            y_nondim=0,
+        )
+
+    def _compute_xyz_of_WingXSec(self,
+                                 index,
+                                 x_nondim,
+                                 y_nondim,
+                                 ):
         xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(index)
-        return self.xyz_le + \
-               self.xsecs[index].xyz_le + \
-               self.xsecs[index].chord * xg_local
+        origin = self.xyz_le + self.xsecs[index].xyz_le
+        xsec = self.xsecs[index]
+        return origin + (
+                x_nondim * xsec.chord * xg_local +
+                y_nondim * xsec.chord * zg_local
+        )
 
     def _compute_frame_of_WingXSec(self, index: int):
 
