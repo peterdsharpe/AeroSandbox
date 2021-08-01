@@ -5,7 +5,7 @@ from aerosandbox.visualization.plotly_Figure3D import Figure3D
 from numpy import pi
 from textwrap import dedent
 from pathlib import Path
-from aerosandbox.geometry.mesh_utilities import *
+import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 class Airplane(AeroSandboxObject):
     """
@@ -62,6 +62,7 @@ class Airplane(AeroSandboxObject):
 
     def mesh_body(self,
                   method="quad",
+                  stack_meshes = True,
                   ):
         meshes = [
             wing.mesh_body(
@@ -75,9 +76,11 @@ class Airplane(AeroSandboxObject):
             for fuse in self.fuselages
         ]
 
-        points, faces = combine_meshes(*meshes)
-
-        return points, faces
+        if stack_meshes:
+            points, faces = mesh_utils.stack_meshes(*meshes)
+            return points, faces
+        else:
+            return meshes
 
     def draw(self,
              show=True,  # type: bool

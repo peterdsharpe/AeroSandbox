@@ -4,7 +4,7 @@ from typing import List, Tuple, Union
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
-from aerosandbox.geometry.mesh_utilities import *
+import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 class Wing(AeroSandboxObject):
     """
@@ -375,7 +375,20 @@ class Wing(AeroSandboxObject):
                     index_of(0, j+1),
                     index_of(0, num_j - j - 1),
                 )
-            ### Mesh tip face
+                add_face(
+                    index_of(num_i, j),
+                    index_of(num_i, j+1),
+                    index_of(num_i, num_j - j - 1),
+                    index_of(num_i, num_j - j),
+                )
+        if mesh_trailing_edge:
+            for i in range(num_i):
+                add_face(
+                    index_of(i + 1, 0),
+                    index_of(i+1, num_j),
+                    index_of(i, num_j),
+                    index_of(i, 0),
+                )
 
         faces = np.array(faces)
 
@@ -383,7 +396,7 @@ class Wing(AeroSandboxObject):
             flipped_points = np.array(points)
             flipped_points[:, 1] = flipped_points[:, 1] * -1
 
-            points, faces = combine_meshes(
+            points, faces = mesh_utils.stack_meshes(
                 (points, faces),
                 (flipped_points, faces)
             )
@@ -446,7 +459,7 @@ class Wing(AeroSandboxObject):
             flipped_points = np.array(points)
             flipped_points[:, 1] = flipped_points[:, 1] * -1
 
-            points, faces = combine_meshes(
+            points, faces = mesh_utils.stack_meshes(
                 (points, faces),
                 (flipped_points, faces)
             )

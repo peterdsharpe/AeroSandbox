@@ -2,7 +2,7 @@ import aerosandbox.numpy as np
 from typing import Tuple
 
 
-def combine_meshes(
+def stack_meshes(
         *meshes: Tuple[np.ndarray, np.ndarray]
 ):
     if len(meshes) == 1:
@@ -18,11 +18,11 @@ def combine_meshes(
 
         return points, faces
     else:
-        points, faces = combine_meshes(
+        points, faces = stack_meshes(
             meshes[0],
             meshes[1]
         )
-        return combine_meshes(
+        return stack_meshes(
             (points, faces),
             *meshes[2:]
         )

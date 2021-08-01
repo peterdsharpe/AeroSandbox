@@ -2,7 +2,7 @@ from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Union, Tuple
 from pathlib import Path
-from aerosandbox.geometry.mesh_utilities import *
+import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 
 class Fuselage(AeroSandboxObject):
@@ -209,7 +209,7 @@ class Fuselage(AeroSandboxObject):
             flipped_points = np.array(points)
             flipped_points[:, 1] = flipped_points[:, 1] * -1
 
-            points, faces = combine_meshes(
+            points, faces = mesh_utils.stack_meshes(
                 (points, faces),
                 (flipped_points, faces)
             )
