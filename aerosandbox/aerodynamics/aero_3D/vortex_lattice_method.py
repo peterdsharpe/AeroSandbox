@@ -30,21 +30,15 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.airplane = airplane
         self.op_point = op_point
 
-    def run(self, verbose=True):
+    def run(self):
         # Runs a point analysis at the specified op-point.
         self.verbose = verbose
-
-        if self.verbose:
-            print("Setting up casVLM1 calculation...")
 
         self.make_panels()
         self.setup_geometry()
         self.setup_operating_point()
         self.calculate_vortex_strengths()
         self.calculate_forces()
-
-        if self.verbose:
-            print("casVLM1 setup complete! Ready to pass into the solver...")
 
     def make_panels(self):
         # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
