@@ -7,7 +7,6 @@ from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL
     default_CM_function
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
-from aerosandbox.visualization.plotly import go, px
 from typing import Callable, Union
 
 
@@ -15,6 +14,7 @@ class Airfoil(Polygon):
     """
     An airfoil. See constructor docstring for usage details.
     """
+
     def __init__(self,
                  name: str = "Untitled",
                  coordinates: Union[None, str, np.ndarray] = None,
@@ -72,16 +72,17 @@ class Airfoil(Polygon):
 
                     * `Re` is the local Reynolds number
 
-                    * `mach` is the local mach number
+                    * `mach` is the local Mach number
 
-                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
+                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees. By
+                    default, a positive control surface deflections corresponds to a downwards deflection.
 
             CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
             several parameters.
 
                 Has the exact same syntax as `CL_function`, see above.
 
-            Cm_function: A function that gives the sectional moment coefficient of the airfoil (about the
+            CM_function: A function that gives the sectional moment coefficient of the airfoil (about the
             quarter-chord) as a function of several parameters.
 
                 Has the exact same syntax as `CL_function`, see above.
@@ -113,13 +114,14 @@ class Airfoil(Polygon):
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
-    def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
+    def local_camber(self,
+                     x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
+                     ) -> Union[float, np.ndarray]:
         """
         Returns the local camber of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
         :return: Local camber of the airfoil (y/c) [1D array].
         """
-        # TODO casadify?
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
 
@@ -136,13 +138,14 @@ class Airfoil(Polygon):
 
         return (upper_interpolated + lower_interpolated) / 2
 
-    def local_thickness(self, x_over_c=np.linspace(0, 1, 101)):
+    def local_thickness(self,
+                        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
+                        ) -> Union[float, np.ndarray]:
         """
         Returns the local thickness of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
         :return: Local thickness of the airfoil (y/c) [1D array].
         """
-        # TODO casadify?
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
 
@@ -159,7 +162,39 @@ class Airfoil(Polygon):
 
         return upper_interpolated - lower_interpolated
 
-    def draw(self, draw_mcl=True, backend="plotly", show=True):
+    def max_camber(self,
+                   x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)
+                   ) -> float:
+        """
+        Returns the maximum camber of the airfoil.
+
+        Args:
+            x_over_c_sample: Where should the airfoil be sampled to determine the max camber?
+
+        Returns: The maximum thickness, as a fraction of chord.
+
+        """
+        return np.max(self.local_camber(x_over_c=x_over_c_sample))
+
+    def max_thickness(self,
+                      x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)
+                      ) -> float:
+        """
+        Returns the maximum thickness of the airfoil.
+
+        Args:
+            x_over_c_sample: Where should the airfoil be sampled to determine the max thickness?
+
+        Returns: The maximum thickness, as a fraction of chord.
+
+        """
+        return np.max(self.local_thickness(x_over_c=x_over_c_sample))
+
+    def draw(self,
+             draw_mcl=True,
+             backend="matplotlib",
+             show=True
+             ):
         """
         Draw the airfoil object.
         :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
@@ -171,7 +206,23 @@ class Airfoil(Polygon):
         if draw_mcl:
             x_mcl = np.linspace(np.min(x), np.max(x), len(x))
             y_mcl = self.local_camber(x_mcl)
-        if backend == "plotly":
+
+        if backend == "matplotlib":
+            color = '#280887'
+            plt.plot(x, y, ".-", zorder=11, color=color)
+            plt.fill(x, y, zorder=10, color=color, alpha=0.2)
+            if draw_mcl:
+                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
+            plt.axis("equal")
+            plt.xlabel(r"$x/c$")
+            plt.ylabel(r"$y/c$")
+            plt.title("%s Airfoil" % self.name)
+            plt.tight_layout()
+            if show:
+                plt.show()
+
+        elif backend == "plotly":
+            from aerosandbox.visualization.plotly import go
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
@@ -207,19 +258,6 @@ class Airfoil(Polygon):
                 fig.show()
             else:
                 return fig
-        elif backend == "matplotlib":
-            color = '#280887'
-            plt.plot(x, y, ".-", zorder=11, color=color)
-            plt.fill(x, y, zorder=10, color=color, alpha=0.2)
-            if draw_mcl:
-                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha = 0.4)
-            plt.axis("equal")
-            plt.xlabel(r"$x/c$")
-            plt.ylabel(r"$y/c$")
-            plt.title("%s Airfoil" % self.name)
-            plt.tight_layout()
-            if show:
-                plt.show()
 
     def LE_index(self) -> int:
         """
@@ -454,43 +492,61 @@ class Airfoil(Polygon):
     #     pass  # TODO finish me
 
     def write_dat(self,
-                  filepath: str
-                  ):
+                  filepath: str = None,
+                  include_name: bool = True,
+                  ) -> str:
         """
         Writes a .dat file corresponding to this airfoil to a filepath.
 
         Args:
             filepath: filepath (including the filename and .dat extension) [string]
+                If None, this function returns the .dat file as a string.
+
+            include_name: Should the name be included in the .dat file? (In a standard *.dat file, it usually is.)
 
         Returns: None
 
         """
-        with open(filepath, "w+") as f:
-            f.writelines(
-                [self.name + "\n"] +
-                [f"%f %f\n" % tuple(coordinate) for coordinate in self.coordinates]
-            )
+        contents = []
+
+        if include_name:
+            contents += [self.name]
+
+        contents += ["%f %f" % tuple(coordinate) for coordinate in self.coordinates]
+
+        string = "\n".join(contents)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
 
     def write_sldcrv(self,
-                     filepath: str
+                     filepath: str = None
                      ):
         """
         Writes a .sldcrv (SolidWorks curve) file corresponding to this airfoil to a filepath.
+
         Args:
             filepath: A filepath (including the filename and .sldcrv extension) [string]
+                if None, this function returns the .sldcrv file as a string.
 
         Returns: None
 
         """
-        with open(filepath, "w+") as f:
-            for i, coordinate in enumerate(self.coordinates):
-                f.write(
-                    f"{coordinate[0]} {coordinate[1]} 0"
-                )
-                if i < self.n_points() - 1:
-                    f.write(
-                        f"\n"
-                    )
+        string = "\n".join(
+            [
+                "%f %f 0" % tuple(coordinate)
+                for coordinate in self.coordinates
+            ]
+        )
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
 
     # def get_xfoil_data(self,
     #                    a_start=-6,  # type: float

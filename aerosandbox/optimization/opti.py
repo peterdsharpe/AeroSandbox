@@ -44,6 +44,8 @@ class Opti(cas.Opti):
         # Start tracking variables and categorize them.
         self.variables_categorized = {}  # key: value :: category name [str] : list of variables [list]
 
+    ### Primary Methods
+
     def variable(self,
                  init_guess: Union[float, np.ndarray],
                  n_vars: int = None,
@@ -370,6 +372,158 @@ class Opti(cas.Opti):
 
         return param
 
+    def solve(self,
+              parameter_mapping: Dict[cas.MX, float] = None,
+              max_iter: int = 1000,
+              max_runtime: float = 1e20,
+              callback: Callable = None,
+              verbose: bool = True,
+              jit: bool = False,  # TODO document, add unit tests for jit
+              options: Dict = None,  # TODO document
+              ) -> cas.OptiSol:
+        """
+        Solve the optimization problem using CasADi with IPOPT backend.
+
+        Args:
+            parameter_mapping: [Optional] Allows you to specify values for parameters.
+                Dictionary where the key is the parameter and the value is the value to be set to.
+
+                Example: # TODO update syntax for required init_guess
+                    >>> opti = asb.Opti()
+                    >>> x = opti.variable()
+                    >>> p = opti.parameter()
+                    >>> opti.minimize(x ** 2)
+                    >>> opti.subject_to(x >= p)
+                    >>> sol = opti.solve(
+                    >>>     {
+                    >>>         p: 5 # Sets the value of parameter p to 5, then solves.
+                    >>>     }
+                    >>> )
+
+            max_iter: [Optional] The maximum number of iterations allowed before giving up.
+
+            max_runtime: [Optional] Gives the maximum allowable runtime before giving up.
+
+            callback: [Optional] A function to be called at each iteration of the optimization algorithm.
+                Useful for printing progress or displaying intermediate results.
+
+                The callback function `func` should have the syntax `func(iteration_number)`, where iteration_number
+                is an integer corresponding to the current iteration number. In order to access intermediate
+                quantities of optimization variables (e.g. for plotting), use the `Opti.debug.value(x)` syntax for
+                each variable `x`.
+
+            verbose: Should we print the output of IPOPT?
+
+        Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
+            OptiSol.value(variable).
+
+            Example:
+                >>> sol = opti.solve()
+                >>> x_opt = sol.value(x) # Get the value of variable x at the optimum.
+
+        """
+        if parameter_mapping is None:
+            parameter_mapping = {}
+
+        ### If you're loading frozen variables from cache, do it here:
+        if self.load_frozen_variables_from_cache:
+            solution_dict = self.get_solution_dict_from_cache()
+            for category in self.variable_categories_to_freeze:
+                category_variables = self.variables_categorized[category]
+                category_values = solution_dict[category]
+
+                if len(category_variables) != len(category_values):
+                    raise RuntimeError("""Problem with loading cached solution: it looks like new variables have been
+                    defined since the cached solution was saved (or variables were defined in a different order). 
+                    Because of this, the cache cannot be loaded. 
+                    Re-run the original optimization study to regenerate the cached solution.""")
+
+                for var, val in zip(category_variables, category_values):
+                    if not var.is_manually_frozen:
+                        parameter_mapping = {
+                            **parameter_mapping,
+                            var: val
+                        }
+
+        ### Map any parameters to needed values
+        for k, v in parameter_mapping.items():
+            size_k = np.product(k.shape)
+            try:
+                size_v = np.product(v.shape)
+            except AttributeError:
+                size_v = 1
+            if size_k != size_v:
+                raise RuntimeError("""Problem with loading cached solution: it looks like the length of a vectorized 
+                variable has changed since the cached solution was saved (or variables were defined in a different order). 
+                Because of this, the cache cannot be loaded. 
+                Re-run the original optimization study to regenerate the cached solution.""")
+
+            self.set_value(k, v)
+
+        ### Set solver settings.
+        if options is None:
+            options = {}
+
+        if jit:
+            options["jit"] = True
+            # options["compiler"] = "shell"  # Recommended by CasADi devs, but doesn't work on my machine
+            options["jit_options"] = {
+                "flags": ["-O3"],
+                # "verbose": True
+            }
+
+        options["ipopt.sb"] = 'yes'  # Hide the IPOPT banner.
+
+        if verbose:
+            options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
+        else:
+            options["print_time"] = False  # No time printing
+            options["ipopt.print_level"] = 0  # No printing from IPOPT
+
+        # Set defaults, if not set
+        if "ipopt.max_iter" not in options:
+            options["ipopt.max_iter"] = max_iter
+        if "ipopt.max_cpu_time" not in options:
+            options["ipopt.max_cpu_time"] = max_runtime
+        if "ipopt.mu_strategy" not in options:
+            options["ipopt.mu_strategy"] = "adaptive"
+
+        self.solver('ipopt', options)
+
+        # Set the callback
+        if callback is not None:
+            self.callback(callback)
+
+        # Do the actual solve
+        sol = super().solve()
+
+        if self.save_to_cache_on_solve:
+            self.save_solution()
+
+        return sol
+
+    ### Advanced Methods
+
+    def set_initial_from_sol(self,
+                             sol: cas.OptiSol,
+                             initialize_primals=True,
+                             initialize_duals=True,
+                             ) -> None:
+        """
+        Sets the initial value of all variables in the Opti object to the solution of another Opti instance. Useful
+        for warm-starting an Opti instance based on the result of another instance.
+
+        Args: sol: Takes in the solution object. Assumes that sol corresponds to exactly the same optimization
+        problem as this Opti instance, perhaps with different parameter values.
+
+        Returns: None (in-place)
+
+        """
+        if initialize_primals:
+            self.set_initial(self.x, sol.value(self.x))
+        if initialize_duals:
+            self.set_initial(self.lam_g, sol.value(self.lam_g))
+
     def derivative_of(self,
                       variable: cas.MX,
                       with_respect_to: Union[np.ndarray, cas.MX],
@@ -636,136 +790,6 @@ class Opti(cas.Opti):
                 solution_dict[category][i] = np.array(var)
 
         return solution_dict
-
-    def solve(self,
-              parameter_mapping: Dict[cas.MX, float] = None,
-              max_iter: int = 1000,
-              max_runtime: float = 1e20,
-              callback: Callable = None,
-              verbose: bool = True,
-              jit: bool = False,  # TODO document, add unit tests for jit
-              options: Dict = None,  # TODO document
-              ) -> cas.OptiSol:
-        """
-        Solve the optimization problem using CasADi with IPOPT backend.
-
-        Args:
-            parameter_mapping: [Optional] Allows you to specify values for parameters.
-                Dictionary where the key is the parameter and the value is the value to be set to.
-
-                Example: # TODO update syntax for required init_guess
-                    >>> opti = asb.Opti()
-                    >>> x = opti.variable()
-                    >>> p = opti.parameter()
-                    >>> opti.minimize(x ** 2)
-                    >>> opti.subject_to(x >= p)
-                    >>> sol = opti.solve(
-                    >>>     {
-                    >>>         p: 5 # Sets the value of parameter p to 5, then solves.
-                    >>>     }
-                    >>> )
-
-            max_iter: [Optional] The maximum number of iterations allowed before giving up.
-
-            max_runtime: [Optional] Gives the maximum allowable runtime before giving up.
-
-            callback: [Optional] A function to be called at each iteration of the optimization algorithm.
-                Useful for printing progress or displaying intermediate results.
-
-                The callback function `func` should have the syntax `func(iteration_number)`, where iteration_number
-                is an integer corresponding to the current iteration number. In order to access intermediate
-                quantities of optimization variables (e.g. for plotting), use the `Opti.debug.value(x)` syntax for
-                each variable `x`.
-
-            verbose: Should we print the output of IPOPT?
-
-        Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
-            OptiSol.value(variable).
-
-            Example:
-                >>> sol = opti.solve()
-                >>> x_opt = sol.value(x) # Get the value of variable x at the optimum.
-
-        """
-        if parameter_mapping is None:
-            parameter_mapping = {}
-
-        ### If you're loading frozen variables from cache, do it here:
-        if self.load_frozen_variables_from_cache:
-            solution_dict = self.get_solution_dict_from_cache()
-            for category in self.variable_categories_to_freeze:
-                category_variables = self.variables_categorized[category]
-                category_values = solution_dict[category]
-
-                if len(category_variables) != len(category_values):
-                    raise RuntimeError("""Problem with loading cached solution: it looks like new variables have been
-                    defined since the cached solution was saved (or variables were defined in a different order). 
-                    Because of this, the cache cannot be loaded. 
-                    Re-run the original optimization study to regenerate the cached solution.""")
-
-                for var, val in zip(category_variables, category_values):
-                    if not var.is_manually_frozen:
-                        parameter_mapping = {
-                            **parameter_mapping,
-                            var: val
-                        }
-
-        ### Map any parameters to needed values
-        for k, v in parameter_mapping.items():
-            size_k = np.product(k.shape)
-            try:
-                size_v = np.product(v.shape)
-            except AttributeError:
-                size_v = 1
-            if size_k != size_v:
-                raise RuntimeError("""Problem with loading cached solution: it looks like the length of a vectorized 
-                variable has changed since the cached solution was saved (or variables were defined in a different order). 
-                Because of this, the cache cannot be loaded. 
-                Re-run the original optimization study to regenerate the cached solution.""")
-
-            self.set_value(k, v)
-
-        ### Set solver settings.
-        if options is None:
-            options = {}
-
-        if jit:
-            options["jit"] = True
-            # options["compiler"] = "shell"  # Recommended by CasADi devs, but doesn't work on my machine
-            options["jit_options"] = {
-                "flags": ["-O3"],
-                # "verbose": True
-            }
-
-        options["ipopt.sb"] = 'yes'  # Hide the IPOPT banner.
-
-        if verbose:
-            options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
-        else:
-            options["print_time"] = False  # No time printing
-            options["ipopt.print_level"] = 0  # No printing from IPOPT
-
-        # Set defaults, if not set
-        if "ipopt.max_iter" not in options:
-            options["ipopt.max_iter"] = max_iter
-        if "ipopt.max_cpu_time" not in options:
-            options["ipopt.max_cpu_time"] = max_runtime
-        if "ipopt.mu_strategy" not in options:
-            options["ipopt.mu_strategy"] = "adaptive"
-
-        self.solver('ipopt', options)
-
-        # Set the callback
-        if callback is not None:
-            self.callback(callback)
-
-        # Do the actual solve
-        sol = super().solve()
-
-        if self.save_to_cache_on_solve:
-            self.save_solution()
-
-        return sol
 
 
 if __name__ == '__main__':

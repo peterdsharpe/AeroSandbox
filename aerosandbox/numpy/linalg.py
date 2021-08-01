@@ -2,6 +2,7 @@ import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.arithmetic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
+from numpy.linalg import *
 
 
 def inner(x, y):
@@ -49,6 +50,45 @@ def solve(A, b):  # TODO get this working
         return _cas.solve(A, b)
 
 
+def inv(A):
+    """
+    Returns the inverse of the matrix A.
+
+    See: https://numpy.org/doc/stable/reference/generated/numpy.linalg.inv.html
+    """
+    if not is_casadi_type(A):
+        return _onp.linalg.inv(A)
+
+    else:
+        return _cas.inv(A)
+
+
+def pinv(A):
+    """
+    Returns the Moore-Penrose pseudoinverse of the matrix A.
+
+    See: https://numpy.org/doc/stable/reference/generated/numpy.linalg.pinv.html
+    """
+    if not is_casadi_type(A):
+        return _onp.linalg.pinv(A)
+
+    else:
+        return _cas.pinv(A)
+
+
+def det(A):
+    """
+    Returns the determinant of the matrix A.
+
+    See: https://numpy.org/doc/stable/reference/generated/numpy.linalg.det.html
+    """
+    if not is_casadi_type(A):
+        return _onp.linalg.det(A)
+
+    else:
+        return _cas.det(A)
+
+
 def norm(x, ord=None, axis=None):
     """
     Matrix or vector norm.
@@ -63,9 +103,9 @@ def norm(x, ord=None, axis=None):
         # Figure out which axis, if any, to take a vector norm about.
         if axis is not None:
             if not (
-                axis==0 or
-                axis==1 or
-                axis == -1
+                    axis == 0 or
+                    axis == 1 or
+                    axis == -1
             ):
                 raise ValueError("`axis` must be -1, 0, or 1 for CasADi types.")
         elif x.shape[0] == 1:

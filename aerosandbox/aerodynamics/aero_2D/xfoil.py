@@ -1,7 +1,5 @@
 from aerosandbox.common import ExplicitAnalysis
 import aerosandbox.numpy as np
-from aerosandbox.performance import OperatingPoint
-import os
 import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
@@ -80,7 +78,7 @@ class XFoil(ExplicitAnalysis):
                     "Command 'xfoil' not found, did you mean...", then it is not on your PATH and you'll need to
                     specify the location of your XFoil executable as a string.
 
-                To add XFoil to your path, modify your system's environmental variables. (Google how to do this for
+                To add XFoil to your path, modify your system's environment variables. (Google how to do this for
                 your OS.)
 
         """
@@ -95,7 +93,7 @@ class XFoil(ExplicitAnalysis):
         self.verbose = verbose
         self.working_directory = working_directory
 
-    def _default_run_file_contents(self) -> List[str]:
+    def _default_keystroke_file_contents(self) -> List[str]:
         run_file_contents = []
 
         # Disable graphics
@@ -150,7 +148,7 @@ class XFoil(ExplicitAnalysis):
         """
         Private function to run XFoil.
 
-        Args: run_command: A string with any XFoil inputs that you'd like. By default, you start off within the OPER
+        Args: run_command: A string with any XFoil keystroke inputs that you'd like. By default, you start off within the OPER
         menu. All of the inputs indicated in the constructor have been set already, but you can override them here (for
         this run only) if you want.
 
@@ -172,24 +170,24 @@ class XFoil(ExplicitAnalysis):
             airfoil_file = "airfoil.dat"
             self.airfoil.write_dat(directory / airfoil_file)
 
-            # Handle the run file
-            run_file_contents = self._default_run_file_contents()
-            run_file_contents += [run_command]
-            run_file_contents += [
+            # Handle the keystroke file
+            keystroke_file_contents = self._default_keystroke_file_contents()
+            keystroke_file_contents += [run_command]
+            keystroke_file_contents += [
                 "pwrt",
                 f"{output_filename}",
                 "y",
                 "",
                 "quit"
             ]
-            run_file = "run_file.txt"
-            with open(directory / run_file, "w+") as f:
+            keystroke_file = "keystroke_file.txt"
+            with open(directory / keystroke_file, "w+") as f:
                 f.write(
-                    "\n".join(run_file_contents)
+                    "\n".join(keystroke_file_contents)
                 )
 
             ### Set up the run command
-            command = f'{self.xfoil_command} {airfoil_file} < {run_file}'
+            command = f'{self.xfoil_command} {airfoil_file} < {keystroke_file}'
 
             ### Execute
             subprocess.call(

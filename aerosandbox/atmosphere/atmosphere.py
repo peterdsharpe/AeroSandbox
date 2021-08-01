@@ -14,6 +14,7 @@ g = 9.81  # m/s^2, gravitational acceleration on earth
 effective_collision_diameter = 0.365e-9  # m, effective collision diameter of an air molecule
 ratio_of_specific_heats = 1.4  # unitless, ratio of specific heats of air
 
+
 ### Define the Atmosphere class
 class Atmosphere(AeroSandboxObject):
     r"""
@@ -127,49 +128,33 @@ if __name__ == "__main__":
     atmo_diff = Atmosphere(altitude=altitude)
     atmo_isa = Atmosphere(altitude=altitude, method="isa")
 
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+    from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot, set_ticks
 
-    sns.set(palette=sns.color_palette("husl", 2))
-    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    fig, ax = plt.subplots()
 
-    plt.semilogx(
-        atmo_isa.pressure(),
-        atmo_isa.altitude / 1e3,
-        label="ISA Ref."
-    )
-    lims = ax.get_xlim(), ax.get_ylim()
-    plt.semilogx(
-        atmo_diff.pressure(),
-        atmo_diff.altitude / 1e3,
-        label="ASB Atmo."
-    )
-    ax.set_xlim(*lims[0])
-    ax.set_ylim(*lims[1])
-    plt.xlabel("Pressure [Pa]")
-    plt.ylabel("Altitude [km]")
-    plt.title("AeroSandbox Atmosphere vs. ISA Atmosphere")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
-    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.plot(
-        atmo_isa.temperature(),
-        atmo_isa.altitude / 1e3,
-        label="ISA Ref.",
+        (
+                (atmo_diff.pressure() - atmo_isa.pressure()) / atmo_isa.pressure()
+        ) * 100,
+        altitude / 1e3,
     )
-    lims = ax.get_xlim(), ax.get_ylim()
+    set_ticks(0.2, 0.1, 20, 10)
+    plt.xlim(-1, 1)
+    show_plot(
+        "AeroSandbox Atmosphere vs. ISA Atmosphere",
+        "Pressure, Relative Error [%]",
+        "Altitude [km]"
+    )
+
+    fig, ax = plt.subplots()
     plt.plot(
-        atmo_diff.temperature(),
-        atmo_diff.altitude / 1e3,
-        label="ASB Atmo."
+        atmo_diff.temperature() - atmo_isa.temperature(),
+        altitude / 1e3,
     )
-    ax.set_xlim(*lims[0])
-    ax.set_ylim(*lims[1])
-    plt.xlabel("Temperature [K]")
-    plt.ylabel("Altitude [km]")
-    plt.title("AeroSandbox Atmosphere vs. ISA Atmosphere")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    set_ticks(1, 0.5, 20, 10)
+    plt.xlim(-5, 5)
+    show_plot(
+        "AeroSandbox Atmosphere vs. ISA Atmosphere",
+        "Temperature, Absolute Error [K]",
+        "Altitude [km]"
+    )

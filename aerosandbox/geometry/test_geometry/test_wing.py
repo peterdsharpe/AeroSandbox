@@ -11,13 +11,13 @@ def w():
             WingXSec(
                 xyz_le=np.array([1, 1, 0]),
                 chord=0.5,
-                twist_angle=5,
+                twist=5,
                 control_surface_is_symmetric=True
             ),
             WingXSec(
                 xyz_le=np.array([2, 2, 0]),
                 chord=0.5,
-                twist_angle=5,
+                twist=5,
                 control_surface_is_symmetric=True
             )
         ],
@@ -55,7 +55,7 @@ def test_mean_twist_angle(w):
 
 
 def test_mean_sweep_angle(w):
-    assert w.mean_sweep_angle() == pytest.approx(45)
+    assert w.mean_sweep_angle() == pytest.approx(44.993201)
 
 
 def test_aerodynamic_center(w):

@@ -213,4 +213,10 @@ def reshape(a, newshape):
     if not is_casadi_type(a):
         return _onp.reshape(a, newshape)
     else:
-        return _cas.reshape(a, newshape)
+        if isinstance(newshape, int):
+            newshape = (newshape, 1)
+
+        if len(newshape) > 2:
+            raise ValueError("CasADi data types are limited to no more than 2 dimensions.")
+
+        return _cas.reshape(a.T, newshape[::-1]).T
