@@ -508,11 +508,7 @@ class Wing(AeroSandboxObject):
             if add_camber:
                 xsec_y_nondim = xsec_y_nondim + xsec.airfoil.local_camber(x_over_c=x_nondim)
 
-            rot = np.rotation_matrix_3D(
-                xsec.twist * pi / 180,
-                yg_local
-            )
-            xsec_point = origin + rot @ (
+            xsec_point = origin + (
                     xsec_x_nondim * xsec.chord * xg_local +
                     xsec_y_nondim * xsec.chord * zg_local
             )
@@ -545,6 +541,8 @@ class Wing(AeroSandboxObject):
 
     def _compute_frame_of_WingXSec(self, index: int):
 
+        twist = self.xsecs[index].twist
+
         if index == len(self.xsecs) - 1:
             index = len(self.xsecs) - 2  # The last WingXSec has the same frame as the last section.
 
@@ -561,6 +559,12 @@ class Wing(AeroSandboxObject):
         zg_local = np.cross(xg_local, yg_local)
 
         ### Twist the reference frame
+        rot = np.rotation_matrix_3D(
+            twist * pi / 180,
+            yg_local
+        )
+        xg_local = rot @ xg_local
+        zg_local = rot @ zg_local
 
         return xg_local, yg_local, zg_local
 
