@@ -59,7 +59,7 @@ setup(
         'casadi >= 3.5.5',
         'pandas >= 1',
         'matplotlib >= 3',
-        'seaborn >= 0.10',
+        'seaborn >= 0.11',
     ],
     include_package_data=True,
     package_data={
