@@ -341,6 +341,7 @@ class Wing(AeroSandboxObject):
                   method="tri",
                   chordwise_resolution: int = 32,
                   spanwise_resolution: int = 16,
+                  spanwise_spacing: str = "cosine",
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
                   ) -> Tuple[np.ndarray, np.ndarray]:
@@ -362,7 +363,8 @@ class Wing(AeroSandboxObject):
                     x_nondim=x_n,
                     y_nondim=y_n,
                     add_camber=False,
-                    spanwise_resolution=spanwise_resolution
+                    spanwise_resolution=spanwise_resolution,
+                    spanwise_spacing=spanwise_spacing,
                 )
             )
 
@@ -433,9 +435,18 @@ class Wing(AeroSandboxObject):
                           method="tri",
                           chordwise_resolution: int = 1,
                           spanwise_resolution: int = 1,
+                          chordwise_spacing: str = "cosine",
+                          spanwise_spacing: str = "uniform",
                           add_camber: bool = True,
                           ) -> Tuple[np.ndarray, List[List[int]]]:
-        x_nondim = np.cosspace(
+        if chordwise_spacing == "cosine":
+            space = np.cosspace
+        elif chordwise_spacing == "uniform":
+            space = np.linspace
+        else:
+            raise ValueError("Bad value of 'chordwise_spacing'")
+
+        x_nondim = space(
             0,
             1,
             chordwise_resolution + 1
@@ -448,7 +459,8 @@ class Wing(AeroSandboxObject):
                     x_nondim=x_n,
                     y_nondim=0,
                     add_camber=add_camber,
-                    spanwise_resolution=spanwise_resolution
+                    spanwise_resolution=spanwise_resolution,
+                    spanwise_spacing=spanwise_spacing
                 )
             )
 
@@ -497,7 +509,15 @@ class Wing(AeroSandboxObject):
                   y_nondim: Union[float, List[float]] = 0,
                   add_camber: bool = True,
                   spanwise_resolution: int = 1,
+                  spanwise_spacing: str = "cosine"
                   ) -> np.ndarray:
+        if spanwise_spacing == "cosine":
+            space = np.cosspace
+        elif spanwise_spacing == "uniform":
+            space = np.linspace
+        else:
+            raise ValueError("Bad value of 'spanwise_spacing'")
+
         xsec_points = []
 
         try:
@@ -543,7 +563,7 @@ class Wing(AeroSandboxObject):
 
         mesh_sections = []
         for i in range(len(xsec_points) - 1):
-            mesh_section = np.linspace(
+            mesh_section = space(
                 xsec_points[i],
                 xsec_points[i + 1],
                 spanwise_resolution + 1
