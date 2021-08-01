@@ -38,7 +38,7 @@ def cosspace(
     """
     mean = (stop + start) / 2
     amp = (stop - start) / 2
-    ones = _onp.ones_like(start)
+    ones = 0 * start + 1
     return mean + amp * _onp.cos(
         linspace(
             _onp.pi * ones,
