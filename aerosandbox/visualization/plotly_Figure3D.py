@@ -1,7 +1,6 @@
 import plotly.graph_objects as go
 import aerosandbox.numpy as np
 
-
 def reflect_over_XZ_plane(input_vector):
     """
     Takes in a vector or an array and flips the y-coordinates.
