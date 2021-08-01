@@ -343,19 +343,18 @@ class Wing(AeroSandboxObject):
 
         faces = []
 
+        num_i = spanwise_resolution * (len(self.xsecs) - 1)
+        num_j = len(spanwise_strips) - 1
+
         def index_of(iloc, jloc):
-            return iloc + jloc * spanwise_strips[0].shape[0]
+            return iloc + jloc * (num_i + 1)
 
         def add_face(*indices):
             entry = list(indices)
             faces.append(entry)
 
-        for i in range( # Number of spanwise points
-                spanwise_resolution * (len(self.xsecs)-1)
-        ):
-            for j in range(
-                    len(spanwise_strips) - 1
-            ):
+        for i in range(num_i):
+            for j in range(num_j):
 
                 if method == "tri":
                     add_face(
@@ -376,6 +375,9 @@ class Wing(AeroSandboxObject):
                         index_of(i, j + 1),
                     )
 
+        # if mesh_tips:
+
+
         faces = np.array(faces)
 
         if self.symmetric:
@@ -393,7 +395,7 @@ class Wing(AeroSandboxObject):
                           method="tri",
                           chordwise_resolution: int = 1,
                           spanwise_resolution: int = 1,
-                          add_camber: bool = False,
+                          add_camber: bool = True,
                           ) -> Tuple[np.ndarray, List[List[int]]]:
         x_nondim = np.cosspace(
             0,
@@ -416,19 +418,18 @@ class Wing(AeroSandboxObject):
 
         faces = []
 
+        num_i = spanwise_resolution * (len(self.xsecs) - 1)
+        num_j = len(spanwise_strips) - 1
+
         def index_of(iloc, jloc):
-            return iloc + jloc * spanwise_strips[0].shape[0]
+            return iloc + jloc * (num_i + 1)
 
         def add_face(*indices):
             entry = list(indices)
             faces.append(entry)
 
-        for i in range( # Number of spanwise points
-            spanwise_resolution * (len(self.xsecs)-1)
-        ):
-            for j in range(
-                    len(spanwise_strips) - 1
-            ):
+        for i in range(num_i):
+            for j in range(num_j):
 
                 if method == "tri":
                     add_face(

@@ -4,6 +4,7 @@ from typing import List, Union, Tuple
 from pathlib import Path
 from aerosandbox.geometry.mesh_utilities import *
 
+
 class Fuselage(AeroSandboxObject):
     """
     Definition for a fuselage or other slender body (pod, etc.).
@@ -179,19 +180,18 @@ class Fuselage(AeroSandboxObject):
 
         faces = []
 
+        num_i = len(chordwise_strips)
+        num_j = chordwise_resolution * (len(self.xsecs) - 1)
+
         def index_of(iloc, jloc):
-            return jloc + (iloc % spanwise_resolution) * chordwise_strips[0].shape[0]
+            return jloc + (iloc % spanwise_resolution) * (num_j + 1)
 
         def add_face(*indices):
             entry = indices
             faces.append(entry)
 
-        for i in range(  # Number of circumferential points
-                len(chordwise_strips)
-        ):
-            for j in range(  # Number of axial points
-                    (len(self.xsecs) - 1) * chordwise_resolution
-            ):
+        for i in range(num_i):
+            for j in range(num_j):
 
                 if method == "tri":
                     pass
