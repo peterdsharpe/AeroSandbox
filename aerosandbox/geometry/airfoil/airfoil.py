@@ -7,7 +7,6 @@ from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL
     default_CM_function
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
-from aerosandbox.visualization.plotly import go, px
 from typing import Callable, Union
 
 
@@ -191,7 +190,11 @@ class Airfoil(Polygon):
         """
         return np.max(self.local_thickness(x_over_c=x_over_c_sample))
 
-    def draw(self, draw_mcl=True, backend="plotly", show=True):
+    def draw(self,
+             draw_mcl=True,
+             backend="matplotlib",
+             show=True
+             ):
         """
         Draw the airfoil object.
         :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
@@ -203,7 +206,23 @@ class Airfoil(Polygon):
         if draw_mcl:
             x_mcl = np.linspace(np.min(x), np.max(x), len(x))
             y_mcl = self.local_camber(x_mcl)
-        if backend == "plotly":
+
+        if backend == "matplotlib":
+            color = '#280887'
+            plt.plot(x, y, ".-", zorder=11, color=color)
+            plt.fill(x, y, zorder=10, color=color, alpha=0.2)
+            if draw_mcl:
+                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
+            plt.axis("equal")
+            plt.xlabel(r"$x/c$")
+            plt.ylabel(r"$y/c$")
+            plt.title("%s Airfoil" % self.name)
+            plt.tight_layout()
+            if show:
+                plt.show()
+
+        elif backend == "plotly":
+            from aerosandbox.visualization.plotly import go
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
@@ -239,19 +258,6 @@ class Airfoil(Polygon):
                 fig.show()
             else:
                 return fig
-        elif backend == "matplotlib":
-            color = '#280887'
-            plt.plot(x, y, ".-", zorder=11, color=color)
-            plt.fill(x, y, zorder=10, color=color, alpha=0.2)
-            if draw_mcl:
-                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
-            plt.axis("equal")
-            plt.xlabel(r"$x/c$")
-            plt.ylabel(r"$y/c$")
-            plt.title("%s Airfoil" % self.name)
-            plt.tight_layout()
-            if show:
-                plt.show()
 
     def LE_index(self) -> int:
         """
