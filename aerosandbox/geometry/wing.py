@@ -61,12 +61,30 @@ class Wing(AeroSandboxObject):
         if type == "y-full":
             if _sectional:
                 raise ValueError("Cannot use `_sectional` with the parameter type as `y-full`!")
-            return self.xsecs[-1].quarter_chord()[1]
+            return self._compute_xyz_of_WingXSec(
+                -1,
+                x_nondim=0.25,
+                y_nondim=0.25
+            )[1]
 
         sectional_spans = []
 
-        for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
-            quarter_chord_vector = outer_xsec.quarter_chord() - inner_xsec.quarter_chord()
+        i_range = range(len(self.xsecs))
+
+        quarter_chord_vectors = [
+            self._compute_xyz_of_WingXSec(
+                i,
+                x_nondim=0.25,
+                y_nondim=0,
+            )
+            for i in i_range
+        ]
+
+        for inner_i, outer_i in zip(i_range[:-1], i_range[1:]):
+            quarter_chord_vector = (
+                    quarter_chord_vectors[outer_i] -
+                    quarter_chord_vectors[inner_i]
+            )
 
             if type == "wetted":
                 section_span = (
@@ -232,8 +250,16 @@ class Wing(AeroSandboxObject):
         Positive sweep is backwards, negative sweep is forward.
         :return:
         """
-        root_quarter_chord = self.xsecs[0].quarter_chord()
-        tip_quarter_chord = self.xsecs[-1].quarter_chord()
+        root_quarter_chord = self._compute_xyz_of_WingXSec(
+            0,
+            x_nondim=0.25,
+            y_nondim=0
+        )
+        tip_quarter_chord = self._compute_xyz_of_WingXSec(
+            -1,
+            x_nondim=0.25,
+            y_nondim=0
+        )
 
         vec = tip_quarter_chord - root_quarter_chord
         vec_norm = vec / np.linalg.norm(vec)
