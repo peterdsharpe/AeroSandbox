@@ -21,8 +21,6 @@ class LiftingLine(ImplicitAnalysis):
         >>>    )
         >>>)
         >>>outputs = analysis.run()
-
-
     """
 
     @ImplicitAnalysis.initialize
@@ -83,7 +81,6 @@ class LiftingLine(ImplicitAnalysis):
         self._calculate_forces()
 
     def _make_panels(self):
-        # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
 
         if self.verbose:
             print("Meshing...")
