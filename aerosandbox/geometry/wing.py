@@ -537,10 +537,18 @@ class Wing(AeroSandboxObject):
     def _compute_xyz_le_of_WingXSec(self, index: int):
         return self.xyz_le + self.xsecs[index].xyz_le
 
+    def _compute_xyz_te_of_WingXSec(self, index: int):
+        xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(index)
+        return self.xyz_le + \
+               self.xsecs[index].xyz_le + \
+               self.xsecs[index].chord * xg_local
+
     def _compute_frame_of_WingXSec(self, index: int):
 
         if index == len(self.xsecs) - 1:
             index = len(self.xsecs) - 2  # The last WingXSec has the same frame as the last section.
+
+        ### Compute the untwisted reference frame
 
         xg_local = np.array([1, 0, 0])
 
@@ -551,6 +559,8 @@ class Wing(AeroSandboxObject):
         yg_local = vector_between / np.linalg.norm(vector_between)
 
         zg_local = np.cross(xg_local, yg_local)
+
+        ### Twist the reference frame
 
         return xg_local, yg_local, zg_local
 

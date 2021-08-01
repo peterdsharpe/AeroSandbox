@@ -30,13 +30,13 @@ class Airplane(AeroSandboxObject):
         if wings is not None:
             self.wings = wings
         else:
-            self.wings = []
+            self.wings: List['Wing'] = []
 
         ## Add the fuselage objects
         if fuselages is not None:
             self.fuselages = fuselages
         else:
-            self.fuselages = []
+            self.fuselages: List['Fuselage'] = []
 
         ## Assign reference values
         try:
