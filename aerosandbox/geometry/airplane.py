@@ -95,63 +95,14 @@ class Airplane(AeroSandboxObject):
         """
         fig = Figure3D()
 
-        # Wings
-        for wing_id, wing in enumerate(self.wings):
-            for inner_xsec, outer_xsec in zip(wing.xsecs[:-1], wing.xsecs[1:]):
+        points, faces = self.mesh_body(method="tri")
 
-                le_inner = inner_xsec.xyz_le + wing.xyz_le
-                te_inner = inner_xsec.xyz_te() + wing.xyz_le
-                le_outer = outer_xsec.xyz_le + wing.xyz_le
-                te_outer = outer_xsec.xyz_te() + wing.xyz_le
-
-                fig.add_quad(points=[
-                    le_inner,
-                    le_outer,
-                    te_outer,
-                    te_inner
-                ],
-                    intensity=wing_id,
-                    mirror=wing.symmetric,
-                )
-                if draw_quarter_chord:
-                    fig.add_line(  # draw the quarter-chord line
-                        points=[
-                            0.75 * le_inner + 0.25 * te_inner,
-                            0.75 * le_outer + 0.25 * te_outer,
-                        ],
-                        mirror=wing.symmetric
-                    )
-
-        # Fuselages
-        for fuse_id, fuse in enumerate(self.fuselages):
-
-            for front_xsec, back_xsec in zip(fuse.xsecs[:-1], fuse.xsecs[1:]):
-                r_front = front_xsec.radius
-                r_back = back_xsec.radius
-                points_front = np.zeros((fuselage_circumferential_panels, 3))
-                points_rear = np.zeros((fuselage_circumferential_panels, 3))
-                for point_index in range(fuselage_circumferential_panels):
-                    rot = np.rotation_matrix_3D(
-                        2 * pi * point_index / fuselage_circumferential_panels,
-                        [1, 0, 0],
-                        _axis_already_normalized=True
-                    )
-                    points_front[point_index, :] = rot @ np.array([0, 0, r_front])
-                    points_rear[point_index, :] = rot @ np.array([0, 0, r_back])
-                points_front = points_front + np.array(fuse.xyz_le).reshape(-1) + np.array(front_xsec.xyz_c).reshape(-1)
-                points_rear = points_rear + np.array(fuse.xyz_le).reshape(-1) + np.array(back_xsec.xyz_c).reshape(-1)
-
-                for point_index in range(fuselage_circumferential_panels):
-
-                    fig.add_quad(points=[
-                        points_front[(point_index) % fuselage_circumferential_panels, :],
-                        points_front[(point_index + 1) % fuselage_circumferential_panels, :],
-                        points_rear[(point_index + 1) % fuselage_circumferential_panels, :],
-                        points_rear[(point_index) % fuselage_circumferential_panels, :],
-                    ],
-                        intensity=fuse_id,
-                        mirror=fuse.symmetric,
-                    )
+        for f in faces:
+            fig.add_tri((
+                points[f[0]],
+                points[f[1]],
+                points[f[2]],
+            ), outline=True)
 
         return fig.draw(
             show=show,
