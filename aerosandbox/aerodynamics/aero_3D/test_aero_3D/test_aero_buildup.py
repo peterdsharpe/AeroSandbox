@@ -1,6 +1,5 @@
 import aerosandbox as asb
-import aerosandbox.numpy as np
-from aerosandbox.aerodynamics.aero_3D.test_aero_3D.conventional import airplane
+from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
 
 analysis = asb.AeroBuildup(
     airplane=airplane,
