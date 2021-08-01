@@ -2,26 +2,35 @@ from aerosandbox import ImplicitAnalysis
 from aerosandbox.geometry import *
 
 
-class VortexLatticeMethod(ImplicitAnalysis):
-    # Usage:
-    #   # Set up a problem using the syntax in the AeroProblem constructor (e.g. "Casvlm1(airplane = a, op_point = op)" for some Airplane a and OperatingPoint op)
-    #   # Call the run() method on the vlm3 object to run the problem.
-    #   # Access results in the command line, or through properties of the Casvlm1 class.
-    #   #   # In a future update, this will be done through a standardized AeroData class.
+class VortexLatticeMethod(ExplicitAnalysis):
+    """
+    An explicit vortex-lattice-method aerodynamics analysis.
+
+    Usage example:
+        >>>analysis = asb.VortexLatticeMethod(
+        >>>    airplane=my_airplane,
+        >>>    op_point=asb.OperatingPoint(
+        >>>        velocity=100, # m/s
+        >>>        alpha=5, # deg
+        >>>        beta=4, # deg
+        >>>        p=0.01, # rad/sec
+        >>>        q=0.02, # rad/sec
+        >>>        r=0.03, # rad/sec
+        >>>    )
+        >>>)
+        >>>outputs = analysis.run()
+    """
 
     def __init__(self,
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
-                 opti,  # type: cas.Opti
-                 run_setup=True,
                  ):
-        super().__init__(airplane, op_point)
-        self.opti = opti
+        super().__init__()
 
-        if run_setup:
-            self.setup()
+        self.airplane = airplane
+        self.op_point = op_point
 
-    def setup(self, verbose=True):
+    def run(self, verbose=True):
         # Runs a point analysis at the specified op-point.
         self.verbose = verbose
 
