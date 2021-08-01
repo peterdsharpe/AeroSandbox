@@ -11,13 +11,13 @@ def w():
             WingXSec(
                 xyz_le=np.array([1, 1, 0]),
                 chord=0.5,
-                twist_angle=5,
+                twist=5,
                 control_surface_is_symmetric=True
             ),
             WingXSec(
                 xyz_le=np.array([2, 2, 0]),
                 chord=0.5,
-                twist_angle=5,
+                twist=5,
                 control_surface_is_symmetric=True
             )
         ],
