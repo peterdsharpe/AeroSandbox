@@ -28,7 +28,7 @@ class AVL(ExplicitAnalysis):
 
     def __init__(self,
                  airplane: Airplane,
-                 op_point: OperatingPoint,
+                 op_point: OperatingPoint = OperatingPoint(),
                  avl_command: str = "avl",
                  verbose: bool = False,
                  working_directory: str = None,
