@@ -61,6 +61,13 @@ setup(
         'matplotlib >= 3',
         'seaborn >= 0.11',
     ],
+    extras_require={
+        "full": [
+            'plotly >= 5',
+            'pyvista >= 0.31',
+            'trimesh >= 3'
+        ]
+    },
     include_package_data=True,
     package_data={
         'Airfoil database': ['*.dat'],  # include all airfoil *.dat files
