@@ -7,6 +7,7 @@ from textwrap import dedent
 from pathlib import Path
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 
+
 class Airplane(AeroSandboxObject):
     """
     Definition for an airplane.
@@ -62,19 +63,19 @@ class Airplane(AeroSandboxObject):
 
     def mesh_body(self,
                   method="quad",
-                  stack_meshes = True,
+                  stack_meshes=True,
                   ):
         meshes = [
-            wing.mesh_body(
-                method=method
-            )
-            for wing in self.wings
-        ] + [
-            fuse.mesh_body(
-                method=method
-            )
-            for fuse in self.fuselages
-        ]
+                     wing.mesh_body(
+                         method=method
+                     )
+                     for wing in self.wings
+                 ] + [
+                     fuse.mesh_body(
+                         method=method
+                     )
+                     for fuse in self.fuselages
+                 ]
 
         if stack_meshes:
             points, faces = mesh_utils.stack_meshes(*meshes)
