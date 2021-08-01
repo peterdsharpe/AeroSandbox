@@ -351,32 +351,31 @@ class Wing(AeroSandboxObject):
 
         def add_face(*indices):
             entry = list(indices)
-            faces.append(entry)
+            if method == "quad":
+                faces.append(entry)
+            elif method == "tri":
+                faces.append([entry[0], entry[1], entry[3]])
+                faces.append([entry[1], entry[2], entry[3]])
 
         for i in range(num_i):
             for j in range(num_j):
+                add_face(
+                    index_of(i, j),
+                    index_of(i + 1, j),
+                    index_of(i + 1, j + 1),
+                    index_of(i, j + 1),
+                )
 
-                if method == "tri":
-                    add_face(
-                        index_of(i, j),
-                        index_of(i + 1, j),
-                        index_of(i, j + 1),
-                    )
-                    add_face(
-                        index_of(i + 1, j),
-                        index_of(i + 1, j + 1),
-                        index_of(i, j + 1),
-                    )
-                if method == "quad":
-                    add_face(
-                        index_of(i, j),
-                        index_of(i + 1, j),
-                        index_of(i + 1, j + 1),
-                        index_of(i, j + 1),
-                    )
-
-        # if mesh_tips:
-
+        if mesh_tips:
+            ### Mesh root face
+            for j in range(num_j // 2):
+                add_face(
+                    index_of(0, num_j - j),
+                    index_of(0, j),
+                    index_of(0, j+1),
+                    index_of(0, num_j - j - 1),
+                )
+            ### Mesh tip face
 
         faces = np.array(faces)
 
@@ -426,29 +425,20 @@ class Wing(AeroSandboxObject):
 
         def add_face(*indices):
             entry = list(indices)
-            faces.append(entry)
+            if method == "quad":
+                faces.append(entry)
+            elif method == "tri":
+                faces.append([entry[0], entry[1], entry[3]])
+                faces.append([entry[1], entry[2], entry[3]])
 
         for i in range(num_i):
             for j in range(num_j):
-
-                if method == "tri":
-                    add_face(
-                        index_of(i, j),
-                        index_of(i + 1, j),
-                        index_of(i, j + 1),
-                    )
-                    add_face(
-                        index_of(i + 1, j),
-                        index_of(i + 1, j + 1),
-                        index_of(i, j + 1),
-                    )
-                if method == "quad":
-                    add_face(
-                        index_of(i, j),
-                        index_of(i + 1, j),
-                        index_of(i + 1, j + 1),
-                        index_of(i, j + 1),
-                    )
+                add_face(
+                    index_of(i, j),
+                    index_of(i + 1, j),
+                    index_of(i + 1, j + 1),
+                    index_of(i, j + 1),
+                )
 
         faces = np.array(faces)
 

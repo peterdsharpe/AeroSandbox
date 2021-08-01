@@ -187,31 +187,21 @@ class Fuselage(AeroSandboxObject):
             return jloc + (iloc % spanwise_resolution) * (num_j + 1)
 
         def add_face(*indices):
-            entry = indices
-            faces.append(entry)
+            entry = list(indices)
+            if method == "quad":
+                faces.append(entry)
+            elif method == "tri":
+                faces.append([entry[0], entry[1], entry[3]])
+                faces.append([entry[1], entry[2], entry[3]])
 
         for i in range(num_i):
             for j in range(num_j):
-
-                if method == "tri":
-                    pass
-                    add_face(
-                        index_of(i, j),
-                        index_of(i, j + 1),
-                        index_of(i + 1, j),
-                    )
-                    add_face(
-                        index_of(i, j + 1),
-                        index_of(i + 1, j + 1),
-                        index_of(i + 1, j),
-                    )
-                if method == "quad":
-                    add_face(
-                        index_of(i, j),
-                        index_of(i, j + 1),
-                        index_of(i + 1, j + 1),
-                        index_of(i + 1, j),
-                    )
+                add_face(
+                    index_of(i, j),
+                    index_of(i, j + 1),
+                    index_of(i + 1, j + 1),
+                    index_of(i + 1, j),
+                )
 
         faces = np.array(faces)
 
