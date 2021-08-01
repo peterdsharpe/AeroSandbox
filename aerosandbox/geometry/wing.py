@@ -6,6 +6,7 @@ from numpy import pi
 import aerosandbox.numpy as np
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 
+
 class Wing(AeroSandboxObject):
     """
     Definition for a wing.
@@ -320,7 +321,7 @@ class Wing(AeroSandboxObject):
 
         airfoil_nondim_coordinates = np.array([
             xsec.airfoil
-                .repanel(n_points_per_side=chordwise_resolution+1)
+                .repanel(n_points_per_side=chordwise_resolution + 1)
                 .coordinates
             for xsec in self.xsecs
         ])
@@ -367,17 +368,16 @@ class Wing(AeroSandboxObject):
                 )
 
         if mesh_tips:
-            ### Mesh root face
             for j in range(num_j // 2):
-                add_face(
+                add_face(  # Mesh the root face
                     index_of(0, num_j - j),
                     index_of(0, j),
-                    index_of(0, j+1),
+                    index_of(0, j + 1),
                     index_of(0, num_j - j - 1),
                 )
-                add_face(
+                add_face(  # Mesh the tip face
                     index_of(num_i, j),
-                    index_of(num_i, j+1),
+                    index_of(num_i, j + 1),
                     index_of(num_i, num_j - j - 1),
                     index_of(num_i, num_j - j),
                 )
@@ -385,7 +385,7 @@ class Wing(AeroSandboxObject):
             for i in range(num_i):
                 add_face(
                     index_of(i + 1, 0),
-                    index_of(i+1, num_j),
+                    index_of(i + 1, num_j),
                     index_of(i, num_j),
                     index_of(i, 0),
                 )
