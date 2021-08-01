@@ -1,7 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Union
-from aerosandbox.visualization.plotly_Figure3D import Figure3D
 from numpy import pi
 from textwrap import dedent
 from pathlib import Path
@@ -84,35 +83,48 @@ class Airplane(AeroSandboxObject):
             return meshes
 
     def draw(self,
+             backend: str = "pyvista",
              show=True,  # type: bool
-             colorscale="mint",  # type: str
-             colorbar_title="Component ID",
-             draw_quarter_chord=True,  # type: bool
-             fuselage_circumferential_panels: int = 24,
              ):
         """
-        Draws the airplane using a Plotly interface.
-        :param show: Do you want to show the figure? [boolean]
-        :param colorscale: Which colorscale do you want to use? ("viridis", "plasma", mint", etc.)
-        :param draw_quarter_chord: Do you want to draw the quarter-chord? [boolean]
-        :return: A plotly figure object [go.Figure]
+
+        Args:
+            backend: One of:
+                * "plotly" for a Plot.ly backend
+                * "pyvista" for a PyVista backend
+                * "trimesh" for a trimesh backend
+            show: Should we show the visualization, or just return it?
+
+        Returns:
+
         """
-        fig = Figure3D()
 
         points, faces = self.mesh_body(method="tri")
 
-        for f in faces:
-            fig.add_tri((
-                points[f[0]],
-                points[f[1]],
-                points[f[2]],
-            ), outline=True)
-
-        return fig.draw(
-            show=show,
-            colorscale=colorscale,
-            colorbar_title=colorbar_title,
-        )
+        if backend == "plotly":
+            from aerosandbox.visualization.plotly_Figure3D import Figure3D
+            fig = Figure3D()
+            for f in faces:
+                fig.add_tri((
+                    points[f[0]],
+                    points[f[1]],
+                    points[f[2]],
+                ), outline=True)
+            return fig.draw(show=show)
+        elif backend == "pyvista":
+            import pyvista as pv
+            fig = pv.PolyData(
+                *mesh_utils.convert_mesh_to_polydata_format(points, faces)
+            )
+            if show:
+                fig.plot(show_edges=True)
+            return fig
+        elif backend == "trimesh":
+            import trimesh as tri
+            fig = tri.Trimesh(points, faces)
+            if show:
+                fig.show()
+            return fig
 
     def is_entirely_symmetric(self):
         """
