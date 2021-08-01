@@ -1,8 +1,10 @@
 numpy~=1.19.1
 scipy~=1.6.0
 casadi~=3.5.5
-plotly~=4.14.3
 pandas~=1.2.2
 matplotlib~=3.3.3
 seaborn~=0.11.1
 pytest~=6.2.2
+plotly~=5.1.0
+pyvista~=0.31.3
+trimesh~=3.9.24
