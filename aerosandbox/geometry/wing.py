@@ -341,7 +341,7 @@ class Wing(AeroSandboxObject):
                   method="tri",
                   chordwise_resolution: int = 32,
                   spanwise_resolution: int = 16,
-                  spanwise_spacing: str = "cosine",
+                  spanwise_spacing: str = "uniform",
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
                   ) -> Tuple[np.ndarray, np.ndarray]:
