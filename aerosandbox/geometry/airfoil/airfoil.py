@@ -75,7 +75,8 @@ class Airfoil(Polygon):
 
                     * `mach` is the local Mach number
 
-                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
+                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees. By
+                    default, a positive control surface deflections corresponds to a downwards deflection.
 
             CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
             several parameters.
