@@ -558,7 +558,7 @@ class Wing(AeroSandboxObject):
 
         zg_local = np.cross(xg_local, yg_local)
 
-        ### Twist the reference frame
+        ### Twist the reference frame by the WingXSec twist angle
         rot = np.rotation_matrix_3D(
             twist * pi / 180,
             yg_local
