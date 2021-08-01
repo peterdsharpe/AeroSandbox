@@ -312,8 +312,8 @@ class Wing(AeroSandboxObject):
 
     def mesh_body(self,
                   method="tri",
-                  chordwise_resolution: int = 36,
-                  spanwise_resolution: int = 12,
+                  chordwise_resolution: int = 32,
+                  spanwise_resolution: int = 16,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
                   ) -> Tuple[np.ndarray, np.ndarray]:
