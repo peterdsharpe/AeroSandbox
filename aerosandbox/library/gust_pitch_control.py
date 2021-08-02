@@ -127,7 +127,7 @@ if __name__ == "__main__":
     ax1.set_ylabel("$C_\ell$")
     ax2.set_ylabel("Angle of attack, degrees")
     plt.title("Optimal Pitch Maneuver Through Top-Hat Gust")
-       
+    plt.show()
 
     
     
