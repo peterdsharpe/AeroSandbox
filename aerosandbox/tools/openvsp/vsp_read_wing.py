@@ -77,7 +77,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
         
     #More top level parameters
     total_proj_span      = vsp.GetParmVal(wing_id, 'TotalProjectedSpan', 'WingGeom')
-    aspect_ratio    = vsp.GetParmVal(wing_id, 'TotalAR', 'WingGeom')
+    aspect_ratio    = vsp.GetParmVal(wing_id, 'Totalaspect_ratio', 'WingGeom')
     area = vsp.GetParmVal(wing_id, 'TotalArea', 'WingGeom')
  
     # Check if this is a single segment wing
@@ -110,7 +110,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     if single_seg == False:
         # Convert VSP XSecs to aerosandbox segments.
         for increment in range(start, segment_num+1):    
-            xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, xsec_root_id, x_rot, segment_num, increment)
+            xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, x_rot, segment_num, increment)
             xsec.append(xsec_next)
     else:
         # Single segment
@@ -166,35 +166,19 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     wing = Wing(tag, xyz_le, xsecs, symmetric)
     return wing
 
-def getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, xsec_root_id, x_rot, segment_num, increment):
+def getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, x_rot, segment_num, increment):
+    xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xyz_le = np.array([0, 0, 0])
-    chord = 0
-    twist = 0
-    twist_angle = 0
-    tag                   = 'Section_' + str(increment)
-    thick_cord            = vsp.GetParmVal(wing_id, 'ThickChord', 'XSecCurve_' + str(increment))
-    segment_root_chord    = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
-    root_chord_percent    = segment_root_chord / root_chord
-    percent_span_location = proj_span_sum / (total_proj_span/(1+symmetric))
-    twist                 = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
+    thick_cord = vsp.GetParmVal(wing_id, 'ThickChord', 'XSecCurve_' + str(increment))
+    chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
+    twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
             
-    if increment < segment_num:      # This excludes the tip xsec.
-        sweep     = vsp.GetParmVal(wing_id, 'Sweep', 'XSec_' + str(increment))
-        sweep_loc = vsp.GetParmVal(wing_id, 'Sweep_Location', 'XSec_' + str(increment))
-        AR        = 2*vsp.GetParmVal(wing_id, 'Aspect', 'XSec_' + str(increment))
-        taper     = vsp.GetParmVal(wing_id, 'Taper', 'XSec_' + str(increment))
-        segment_sweeps_quarter_chord = convert_sweep(sweep,sweep_loc,0.25,AR,taper)
-        # Used for dihedral computation, below.
-        segment_dihedral        = vsp.GetParmVal(wing_id, 'Dihedral', 'XSec_' + str(increment))
-        # segment_dihedral        = vsp.GetParmVal(wing_id, 'Dihedral', 'XSec_' + str(increment))*1.0 + x_rot
-        segment_spans           = vsp.GetParmVal(wing_id, 'Span', 'XSec_' + str(increment))
-        #proj_span_sum += segment_spans[i] * np.cos(segment_dihedral[i])    
-        #span_sum      += segment_spans[i]
-    else:
-        root_chord_percent    = (vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment-1))) /root_chord
-        
-
     xsec_id = str(vsp.GetXSec(xsec_root_id, increment))
+    airfoil = getXsecAirfoil(wing_id, xsec_id):
+    xsec = WingXSec(xyz_le, chord, twist, airfoil=airfoil)
+    return xsec
+
+def getXsecAirfoil(wing_id, xsec_id, thick_cord):
     if vsp.GetXSecShape(xsec_id) == vsp.XS_FOUR_SERIES:     # XSec shape: NACA 4-series
          camber = vsp.GetParmVal(wing_id, 'Camber', 'XSecCurve_' + str(increment)) 
          if camber == 0.:
@@ -216,9 +200,8 @@ def getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, 
          airfoil.tag      = 'NACA ' + series + str(ideal_CL) + str(thick_cord_round) + ' a=' + str(np.around(a_value,1))            
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_FILE_AIRFOIL:    # XSec shape: 12 is type AF_FILE
          thickness_to_chord = thick_cord
-                
-    xsec = WingXSec(xyz_le, chord, twist, twist_angle, airfoil=Airfoil("naca0012"))
-    return xsec
+    airfoil=Airfoil("naca0012")
+    return airfoil                
 
 def getXSecSpans(wing_id):
     xsec_spans = []
