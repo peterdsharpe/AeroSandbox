@@ -169,22 +169,22 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
 def getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, x_rot, segment_num, increment):
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xyz_le = np.array([0, 0, 0])
-    thick_cord = vsp.GetParmVal(wing_id, 'ThickChord', 'XSecCurve_' + str(increment))
     chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
             
     xsec_id = str(vsp.GetXSec(xsec_root_id, increment))
-    airfoil = getXsecAirfoil(wing_id, xsec_id):
+    airfoil = getXsecAirfoil(wing_id, xsec_id, increment):
     xsec = WingXSec(xyz_le, chord, twist, airfoil=airfoil)
     return xsec
 
-def getXsecAirfoil(wing_id, xsec_id, thick_cord):
+def getXsecAirfoil(wing_id, xsec_id, xsec_num):
     if vsp.GetXSecShape(xsec_id) == vsp.XS_FOUR_SERIES:     # XSec shape: NACA 4-series
-         camber = vsp.GetParmVal(wing_id, 'Camber', 'XSecCurve_' + str(increment)) 
+         thick_cord = vsp.GetParmVal(wing_id, 'ThickChord', 'XSecCurve_' + str(xsec_num))
+         camber = vsp.GetParmVal(wing_id, 'Camber', 'XSecCurve_' + str(xsec_num)) 
          if camber == 0.:
              camber_loc = 0.
          else:
-             camber_loc = vsp.GetParmVal(wing_id, 'CamberLoc', 'XSecCurve_' + str(increment))
+             camber_loc = vsp.GetParmVal(wing_id, 'CamberLoc', 'XSecCurve_' + str(xsec_num))
          thickness_to_chord = thick_cord
          camber_round               = int(np.around(camber*100))
          camber_loc_round           = int(np.around(camber_loc*10)) 
@@ -192,9 +192,9 @@ def getXsecAirfoil(wing_id, xsec_id, thick_cord):
          tag                = 'NACA ' + str(camber_round) + str(camber_loc_round) + str(thick_cord_round)    
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_SIX_SERIES:     # XSec shape: NACA 6-series
          thick_cord_round = int(np.around(thick_cord*100))
-         a_value          = vsp.GetParmVal(wing_id, 'A', 'XSecCurve_' + str(increment))
-         ideal_CL         = int(np.around(vsp.GetParmVal(wing_id, 'IdealCl', 'XSecCurve_' + str(increment))*10))
-         series_vsp       = int(vsp.GetParmVal(wing_id, 'Series', 'XSecCurve_' + str(increment)))
+         a_value          = vsp.GetParmVal(wing_id, 'A', 'XSecCurve_' + str(xsec_num))
+         ideal_CL         = int(np.around(vsp.GetParmVal(wing_id, 'IdealCl', 'XSecCurve_' + str(xsec_num))*10))
+         series_vsp       = int(vsp.GetParmVal(wing_id, 'Series', 'XSecCurve_' + str(xsec_num)))
          series_dict      = {0:'63',1:'64',2:'65',3:'66',4:'67',5:'63A',6:'64A',7:'65A'} # VSP series values.
          series           = series_dict[series_vsp]
          airfoil.tag      = 'NACA ' + series + str(ideal_CL) + str(thick_cord_round) + ' a=' + str(np.around(a_value,1))            
