@@ -23,7 +23,7 @@ import openvsp as vsp
 
 
 ## @ingroup Input_Output-OpenVSP
-def vsp_read(tag, units_type='SI'): 	
+def vsp_read(tag): 	
 	"""This reads an OpenVSP vehicle geometry and writes it into a Aerosandbox vehicle format.
 	Includes wings, fuselages, and propellers.
 
@@ -46,69 +46,8 @@ def vsp_read(tag, units_type='SI'):
 	2. Units_type set to 'SI' (default) or 'Imperial'
 
 	Outputs:
-	Writes Aerosandbox vehicle with these geometries from VSP:    (All values default to SI. Any other 2nd argument outputs Imperial.)
-		Wings.Wing.    (* is all keys)
-			origin                                  [m] in all three dimensions
-			spans.projected                         [m]
-			chords.root                             [m]
-			chords.tip                              [m]
-			aspect_ratio                            [-]
-			sweeps.quarter_chord                    [radians]
-			twists.root                             [radians]
-			twists.tip                              [radians]
-			thickness_to_chord                      [-]
-			dihedral                                [radians]
-			symmetric                               <boolean>
-			tag                                     <string>
-			areas.exposed                           [m^2]
-			areas.reference                         [m^2]
-			areas.wetted                            [m^2]
-			Segments.
-			  tag                                   <string>
-			  twist                                 [radians]
-			  percent_span_location                 [-]  .1 is 10%
-			  root_chord_percent                    [-]  .1 is 10%
-			  dihedral_outboard                     [radians]
-			  sweeps.quarter_chord                  [radians]
-			  thickness_to_chord                    [-]
-			  airfoil                               <NACA 4-series, 6 series, or airfoil file>
-			
-		Fuselages.Fuselage.			
-			origin                                  [m] in all three dimensions
-			width                                   [m]
-			lengths.
-			  total                                 [m]
-			  nose                                  [m]
-			  tail                                  [m]
-			heights.
-			  maximum                               [m]
-			  at_quarter_length                     [m]
-			  at_three_quarters_length              [m]
-			effective_diameter                      [m]
-			fineness.nose                           [-] ratio of nose section length to fuselage effective diameter
-			fineness.tail                           [-] ratio of tail section length to fuselage effective diameter
-			areas.wetted                            [m^2]
-			tag                                     <string>
-			segment[].   (segments are in ordered container and callable by number)
-			  vsp.shape                               [point,circle,round_rect,general_fuse,fuse_file]
-			  vsp.xsec_id                             <10 digit string>
-			  percent_x_location
-			  percent_z_location
-			  height
-			  width
-			  length
-			  effective_diameter
-			  tag
-			vsp.xsec_num                              <integer of fuselage segment quantity>
-			vsp.xsec_surf_id                          <10 digit string>
-	
-		Propellers.Propeller.
-			location[X,Y,Z]                            [radians]
-			rotation[X,Y,Z]                            [radians]
-			tip_radius                                 [m]
-		        hub_radius                                 [m]
-			thrust_angle                               [radians]
-	
+	Writes Aerosandbox vehicle
+
 	Properties Used:
 	N/A
 	"""  	
@@ -125,13 +64,6 @@ def vsp_read(tag, units_type='SI'):
 
 	vehicle     = aerosandbox.Airplane()
 	vehicle.tag = tag
-
-	if units_type == 'SI':
-		units_type = 'SI' 
-	elif units_type == 'inches':
-		units_type = 'inches'	
-	else:
-		units_type = 'imperial'	
 
 	# The two for-loops below are in anticipation of an OpenVSP API update with a call for GETGEOMTYPE.
 	# This print function allows user to enter VSP GeomID manually as first argument in vsp_read functions.
@@ -163,11 +95,11 @@ def vsp_read(tag, units_type='SI'):
 	#Read VSP geoms and store in Aerosandbox components
 	
 	for fuselage_id in vsp_fuselages:
-		fuselage = vsp_read_fuselage(fuselage_id, units_type)
+		fuselage = vsp_read_fuselage(fuselage_id)
 		#vehicle.append_component(fuselage)
 	
 	for wing_id in vsp_wings:
-		wing = vsp_read_wing(wing_id, units_type)
+		wing = vsp_read_wing(wing_id)
 		#vehicle.append_component(wing)		
 	
 	return vehicle

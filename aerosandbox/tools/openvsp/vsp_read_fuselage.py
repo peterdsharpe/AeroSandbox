@@ -12,6 +12,7 @@
 
 import aerosandbox
 from aerosandbox.geometry import Fuselage
+from aerosandbox.geometry import FuselageXSec
 import openvsp as vsp
 import aerosandbox.numpy as np
 
@@ -43,13 +44,16 @@ def vsp_read_fuselage(fuselage_id, units_type='SI'):
     aerosandbox fuselage   
 
         """      
+    
+    # get total length of fuselage
+    total_length = vsp.GetParmVal(fuselage_id, 'Length', 'Design')
 
     # read the xsec data
     xsec_root_id = vsp.GetXSecSurf(fuselage_id, 0)
     xsec_num = vsp.GetNumXSec(xsec_root_id)
     xsec = []
     for increment in range(0, xsec_num):
-        xsec.append(getVspXSec(increment))
+        xsec.append(getVspXSec(xsec_root_id, xsec_num, total_length, increment))
     # get the name
     if vsp.GetGeomName(fuselage_id):
         tag = vsp.GetGeomName(fuselage_id)
@@ -64,28 +68,27 @@ def vsp_read_fuselage(fuselage_id, units_type='SI'):
     fuselage = aerosandbox.geometry.Fuselage(tag, xyz_le, xsec)    
     
 # Get Fuselage segments
-def getVspXSec(xsec_root_id, increment):
+def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     # Create the segment
     xyz_c = np.array([0, 0, 0])
-    x_sec   = vsp.GetXSec(xsec_root_id, increment) # VSP XSec ID.
-    X_Loc_P = vsp.GetXSecParm(x_sec, 'XLocPercent')
-    Z_Loc_P = vsp.GetXSecParm(x_sec, 'ZLocPercent')
-    radius = vsp.GetXSecParm(x_sec, 'Circle_Diameter')/2
+    xsec   = vsp.GetXSec(xsec_root_id, increment) # VSP XSec ID.
+    X_Loc_P = vsp.GetXSecParm(xsec, 'XLocPercent')
+    Z_Loc_P = vsp.GetXSecParm(xsec, 'ZLocPercent')
     
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.
-    height             = vsp.GetXSecHeight(segment.vsp_data.xsec_id)
-    width              = vsp.GetXSecWidth(segment.vsp_data.xsec_id)
+    height             = vsp.GetXSecHeight(xsec)
+    width              = vsp.GetXSecWidth(xsec)
     effective_diameter = (height+width)/2. 
+    radius = effective_diameter/2.
         
-    if ii != (fuselage.vsp_data.xsec_num-1): # Segment length: stored as length since previous segment. (last segment will have length 0.0.)
-        next_xsec = vsp.GetXSec(fuselage.vsp_data.xsec_surf_id, ii+1)
+    if increment != (xsec_num-1): # Segment length: stored as length since previous segment. (last segment will have length 0.0.)
+        next_xsec = vsp.GetXSec(xsec_root_id, increment+1)
         X_Loc_P_p = vsp.GetXSecParm(next_xsec, 'XLocPercent')
         percent_x_loc_p1 = vsp.GetParmVal(X_Loc_P_p) 
-        segment.length = fuselage.lengths.total*(percent_x_loc_p1 - segment.percent_x_location)
+        length = total_length*(percent_x_loc_p1 - percent_x_location)
     else:
-        segment.length = 0.0
-    lengths.append(length)
+        length = 0.0
     
     #xsec shape not supported for aerosandbox FuselageXSec
     #shape       = vsp.GetXSecShape(segment.vsp_data.xsec_id)
