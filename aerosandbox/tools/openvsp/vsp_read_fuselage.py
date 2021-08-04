@@ -45,6 +45,7 @@ def vsp_read_fuselage(fuselage_id, units_type='SI'):
 
         """      
     
+    print("Converting fuselage: " + fuselage_id)
     # get total length of fuselage
     total_length = vsp.GetParmVal(fuselage_id, 'Length', 'Design')
 
