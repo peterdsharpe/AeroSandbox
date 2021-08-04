@@ -52,9 +52,9 @@ def vsp_read_fuselage(fuselage_id, units_type='SI'):
     # read the xsec data
     xsec_root_id = vsp.GetXSecSurf(fuselage_id, 0)
     xsec_num = vsp.GetNumXSec(xsec_root_id)
-    xsec = []
+    xsecs = []
     for increment in range(0, xsec_num):
-        xsec.append(getVspXSec(xsec_root_id, xsec_num, total_length, increment))
+        xsecs.append(getVspXSec(xsec_root_id, xsec_num, total_length, increment))
     # get the name
     if vsp.GetGeomName(fuselage_id):
         tag = vsp.GetGeomName(fuselage_id)
@@ -66,7 +66,7 @@ def vsp_read_fuselage(fuselage_id, units_type='SI'):
     xyz_le[1] = vsp.GetParmVal(fuselage_id, 'Y_Location', 'XForm')
     xyz_le[2] = vsp.GetParmVal(fuselage_id, 'Z_Location', 'XForm')
     # create the fuselage
-    fuselage = aerosandbox.geometry.Fuselage(tag, xyz_le, xsec)    
+    fuselage = aerosandbox.geometry.Fuselage(tag, xyz_le, xsecs)    
     
 # Get Fuselage segments
 def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
@@ -78,7 +78,12 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     Z_Loc_P = vsp.GetXSecParm(xsec, 'ZLocPercent')
     
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
+    y_location =  vsp.GetXSecParm(xsec,'X_Location')
+    print(y_location)
+    xyz_c[0] = percent_x_location*total_length
+    print("      percent x location: " + str(percent_x_location) + " xloc: " + str(xyz_c[0]))
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.
+    print("      percent z location: " + str(percent_z_location))
     height             = vsp.GetXSecHeight(xsec)
     width              = vsp.GetXSecWidth(xsec)
     effective_diameter = (height+width)/2. 
