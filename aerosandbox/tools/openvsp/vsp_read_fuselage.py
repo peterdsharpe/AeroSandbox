@@ -76,16 +76,12 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
     xyz_c[0] = percent_x_location*total_length
-    print("      percent x location: " + str(percent_x_location) + " xloc: " + str(xyz_c[0]))
     percent_y_location = vsp.GetParmVal(Y_Loc_P)
-    print("      percent y location: " + str(percent_y_location))
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.
-    print("      percent z location: " + str(percent_z_location))
     height             = vsp.GetXSecHeight(xsec)
     width              = vsp.GetXSecWidth(xsec)
     effective_diameter = (height+width)/2. 
     radius = effective_diameter/2.
-    print("      radius: " + str(radius))
         
     #xsec shape not supported for aerosandbox FuselageXSec
     #shape       = vsp.GetXSecShape(segment.vsp_data.xsec_id)

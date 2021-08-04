@@ -96,7 +96,6 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     for increment in range(start, segment_num):    
         xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, symmetric, segment_num, increment)
         xsecs.append(xsec_next)
-    print(xsecs)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
 def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, segment_num, increment):
