@@ -101,14 +101,13 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     total_xsec = vsp.GetNumXSec(xsec_root_id)
     print("   Processing airfoil: " + str(xsec_num) + " for wing: " + wing_id)
+    thick_cord = vsp.GetParmVal(wing_id, 'ThickChord', 'XSecCurve_' + str(xsec_num))
     if vsp.GetXSecShape(xsec_id) == vsp.XS_FOUR_SERIES:     # XSec shape: NACA 4-series
-         thick_cord = vsp.GetParmVal(wing_id, 'ThickChord', 'XSecCurve_' + str(xsec_num))
          camber = vsp.GetParmVal(wing_id, 'Camber', 'XSecCurve_' + str(xsec_num)) 
          if camber == 0.:
              camber_loc = 0.
          else:
              camber_loc = vsp.GetParmVal(wing_id, 'CamberLoc', 'XSecCurve_' + str(xsec_num))
-         thickness_to_chord = thick_cord
          camber_round               = int(np.around(camber*100))
          camber_loc_round           = int(np.around(camber_loc*10)) 
          thick_cord_round           = int(np.around(thick_cord*100))
