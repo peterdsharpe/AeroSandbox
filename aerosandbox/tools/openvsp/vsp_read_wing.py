@@ -16,8 +16,10 @@ from aerosandbox.geometry.airfoil import Airfoil
 from aerosandbox.geometry import Wing
 from aerosandbox.geometry import WingXSec
 import openvsp as vsp
-import aerosandbox.numpy as np
+#import aerosandbox.numpy as np
+import numpy as np
 import string
+from ctypes import *
 
 # This enforces lowercase names
 chars = string.punctuation + string.whitespace
@@ -92,17 +94,20 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     xsecs = []
     # Convert VSP XSecs to aerosandbox segments.
     for increment in range(start, segment_num):    
-        xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_num, increment)
+        xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, symmetric, segment_num, increment)
         xsecs.append(xsec_next)
+    print(xsecs)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
-def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_num, increment):
+def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, segment_num, increment):
     print("   Processing xsec: " + str(increment) + " for wing: " + wing_id)
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
-    xyz_le = np.array([0, 0, 0])
+    xsec = vsp.GetXSec(xsec_root_id, increment)
+    point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge
+    p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    xyz_le =  np.array(list(p))
     chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
-    xsec = vsp.GetXSec(xsec_root_id, increment)
     airfoil = getXsecAirfoil(wing_id, xsec, increment)
     return WingXSec(xyz_le, chord, twist, airfoil=airfoil)
 
