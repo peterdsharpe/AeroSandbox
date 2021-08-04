@@ -126,7 +126,7 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
          camber_round               = int(np.around(camber*100))
          camber_loc_round           = int(np.around(camber_loc*10)) 
          thick_cord_round           = int(np.around(thick_cord*100))
-         tag                = 'NACA ' + str(camber_round) + str(camber_loc_round) + str(thick_cord_round)    
+         tag                = 'naca' + str(camber_round) + str(camber_loc_round) + str(thick_cord_round)    
          print("   Airfoil is XS_FOUR_SERIES: " + tag)
          return Airfoil(name=tag)
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_SIX_SERIES:     # XSec shape: NACA 6-series
@@ -136,16 +136,16 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
          series_vsp       = int(vsp.GetParmVal(wing_id, 'Series', 'XSecCurve_' + str(xsec_num)))
          series_dict      = {0:'63',1:'64',2:'65',3:'66',4:'67',5:'63A',6:'64A',7:'65A'} # VSP series values.
          series           = series_dict[series_vsp]
-         tag      = 'NACA ' + series + str(ideal_CL) + str(thick_cord_round) + ' a=' + str(np.around(a_value,1))            
+         tag      = 'naca' + series + str(ideal_CL) + str(thick_cord_round) + ' a=' + str(np.around(a_value,1))            
          print("   Airfoil is XS_SIX_SERIES: " + tag)
          return Airfoil(name=tag)
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_FILE_AIRFOIL:    # XSec shape: 12 is type AF_FILE
          print("   Airfoil is XS_FILE_AIRFOIL")
-         vsp.WriteSeligAirfoil(str(wing_id) + '_airfoil_XSec_' + str(xsec_num) +'.dat', wing_id, float(xsec_num/total_xsec))
-         return Airfoil(name="str(wing_id) + '_airfoil_XSec_' + str(xsec_num)", coordinates=str(wing_id) + '_airfoil_XSec_' + str(xsec_num) +'.dat')
+         name=str(wing_id) + '_airfoil_XSec_' + str(xsec_num)
+         vsp.WriteSeligAirfoil(name +'.dat', wing_id, float(xsec_num/total_xsec))
+         return Airfoil(name=name, coordinates=name +'.dat')
     else:
          print("   Error:  Could not determine airfoil")
-         return Airfoil("naca0012")
 
 def getXSecSpans(wing_id):
     xsec_spans = []
