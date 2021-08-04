@@ -70,6 +70,7 @@ def vsp_read_fuselage(fuselage_id, units_type='SI'):
     
 # Get Fuselage segments
 def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
+    print("   Processing xsec: " + str(increment))
     # Create the segment
     xyz_c = np.array([0, 0, 0])
     xsec   = vsp.GetXSec(xsec_root_id, increment) # VSP XSec ID.

@@ -77,14 +77,12 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
         symmetric = False
         
     #More top level parameters
-    total_proj_span      = vsp.GetParmVal(wing_id, 'TotalProjectedSpan', 'WingGeom')
-    aspect_ratio    = vsp.GetParmVal(wing_id, 'Totalaspect_ratio', 'WingGeom')
-    area = vsp.GetParmVal(wing_id, 'TotalArea', 'WingGeom')
-    xsec_root_id      = vsp.GetXSecSurf(wing_id, 0)   # This is how VSP stores surfaces.
-    segment_num       = vsp.GetNumXSec(xsec_root_id)    # Get number of wing segments (is one more than the VSP GUI shows).
-    x_sec             = vsp.GetXSec(xsec_root_id, 0)
-    chord_parm        = vsp.GetXSecParm(x_sec,'Root_Chord')
-    total_chord      = vsp.GetParmVal(chord_parm) 
+    total_proj_span = vsp.GetParmVal(wing_id, 'TotalProjectedSpan', 'WingGeom')
+    xsec_root_id = vsp.GetXSecSurf(wing_id, 0)   # This is how VSP stores surfaces.
+    segment_num = vsp.GetNumXSec(xsec_root_id)    # Get number of wing segments (is one more than the VSP GUI shows).
+    x_sec = vsp.GetXSec(xsec_root_id, 0)
+    chord_parm = vsp.GetXSecParm(x_sec,'Root_Chord')
+    total_chord = vsp.GetParmVal(chord_parm) 
     
     # -------------
     # Wing segments
@@ -93,13 +91,14 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     root_chord = total_chord 
     xsecs = []
     # Convert VSP XSecs to aerosandbox segments.
-    for increment in range(start, segment_num+1):    
-        xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, x_rot, segment_num, increment)
+    for increment in range(start, segment_num):    
+        xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_num, increment)
         xsecs.append(xsec_next)
     wing = Wing(tag, xyz_le, xsecs, symmetric)
     return wing
 
-def getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, x_rot, segment_num, increment):
+def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_num, increment):
+    print("   Processing xsec: " + str(increment) + " for wing: " + wing_id)
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xyz_le = np.array([0, 0, 0])
     chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
@@ -111,6 +110,9 @@ def getWingXsec(wing_id, root_chord, total_proj_span, proj_span_sum, symmetric, 
     return xsec
 
 def getXsecAirfoil(wing_id, xsec_id, xsec_num):
+    xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
+    total_xsec = vsp.GetNumXSec(xsec_root_id)
+    print("   Processing airfoil: " + str(xsec_num) + " for wing: " + wing_id)
     if vsp.GetXSecShape(xsec_id) == vsp.XS_FOUR_SERIES:     # XSec shape: NACA 4-series
          thick_cord = vsp.GetParmVal(wing_id, 'ThickChord', 'XSecCurve_' + str(xsec_num))
          camber = vsp.GetParmVal(wing_id, 'Camber', 'XSecCurve_' + str(xsec_num)) 
@@ -123,6 +125,8 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
          camber_loc_round           = int(np.around(camber_loc*10)) 
          thick_cord_round           = int(np.around(thick_cord*100))
          tag                = 'NACA ' + str(camber_round) + str(camber_loc_round) + str(thick_cord_round)    
+         print("   Airfoil is XS_FOUR_SERIES: " + tag)
+         return Airfoil(name=tag)
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_SIX_SERIES:     # XSec shape: NACA 6-series
          thick_cord_round = int(np.around(thick_cord*100))
          a_value          = vsp.GetParmVal(wing_id, 'A', 'XSecCurve_' + str(xsec_num))
@@ -130,11 +134,16 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
          series_vsp       = int(vsp.GetParmVal(wing_id, 'Series', 'XSecCurve_' + str(xsec_num)))
          series_dict      = {0:'63',1:'64',2:'65',3:'66',4:'67',5:'63A',6:'64A',7:'65A'} # VSP series values.
          series           = series_dict[series_vsp]
-         airfoil.tag      = 'NACA ' + series + str(ideal_CL) + str(thick_cord_round) + ' a=' + str(np.around(a_value,1))            
+         tag      = 'NACA ' + series + str(ideal_CL) + str(thick_cord_round) + ' a=' + str(np.around(a_value,1))            
+         print("   Airfoil is XS_SIX_SERIES: " + tag)
+         return Airfoil(name=tag)
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_FILE_AIRFOIL:    # XSec shape: 12 is type AF_FILE
-         thickness_to_chord = thick_cord
-    airfoil=Airfoil("naca0012")
-    return airfoil                
+         print("   Airfoil is XS_FILE_AIRFOIL")
+         vsp.WriteSeligAirfoil(str(wing.tag) + '_airfoil_XSec_' + str(xsec_num) +'.dat', wing_id, float(xsec_num/total_xsec))
+         return Airfoil(name="str(wing.tag) + '_airfoil_XSec_' + str(xsec_num)", coordinates=str(wing.tag) + '_airfoil_XSec_' + str(xsec_num) +'.dat')
+    else:
+         print("   Error:  Could not determine airfoil")
+         return Airfoil("naca0012")
 
 def getXSecSpans(wing_id):
     xsec_spans = []
