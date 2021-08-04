@@ -2,7 +2,8 @@
 # vsp_read.py
 
 # Created:  Jun 2018, T. St Francis
-# Modified: Aug 2018, T. St Francis
+# Modified: Aug 2021  Michael Shamberger
+#           Aug 2018, T. St Francis
 #           Jan 2020, T. MacDonald
 #           Jul 2020, E. Botero
 
@@ -45,7 +46,6 @@ def vsp_read(tag):
 
     Inputs:
     1. A tag for an XML file in format .vsp3.
-    2. Units_type set to 'SI' (default) or 'Imperial'
 
     Outputs:
     Writes Aerosandbox vehicle
@@ -83,7 +83,7 @@ def vsp_read(tag):
             vsp_fuselages.append(geom)
         if geom_name == 'Wing':
             vsp_wings.append(geom)
-                # No propeller geometry class available
+        # No propeller geometry class available
         #if geom_name == 'Propeller':
         #    vsp_props.append(geom)
     

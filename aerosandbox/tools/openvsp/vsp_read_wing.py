@@ -1,16 +1,3 @@
-## @ingroup Input_Output-OpenVSP
-# vsp_read_wing.py
-
-# Created:  Jun 2018, T. St Francis
-# Modified: Aug 2018, T. St Francis
-#           Jan 2020, T. MacDonald
-#           Jul 2020, E. Botero
-#           May 2021, E. Botero
-
-# ----------------------------------------------------------------------
-#  Imports
-# ----------------------------------------------------------------------
-
 import aerosandbox
 from aerosandbox.geometry.airfoil import Airfoil 
 from aerosandbox.geometry import Wing
