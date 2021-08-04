@@ -94,8 +94,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     for increment in range(start, segment_num):    
         xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_num, increment)
         xsecs.append(xsec_next)
-    wing = Wing(tag, xyz_le, xsecs, symmetric)
-    return wing
+    return Wing(tag, xyz_le, xsecs, symmetric)
 
 def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_num, increment):
     print("   Processing xsec: " + str(increment) + " for wing: " + wing_id)
@@ -105,8 +104,7 @@ def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
     xsec = vsp.GetXSec(xsec_root_id, increment)
     airfoil = getXsecAirfoil(wing_id, xsec, increment)
-    xsec = WingXSec(xyz_le, chord, twist, airfoil=airfoil)
-    return xsec
+    return WingXSec(xyz_le, chord, twist, airfoil=airfoil)
 
 def getXsecAirfoil(wing_id, xsec_id, xsec_num):
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
