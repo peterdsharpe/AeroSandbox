@@ -75,11 +75,10 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     xyz_c = np.array([0, 0, 0])
     xsec   = vsp.GetXSec(xsec_root_id, increment) # VSP XSec ID.
     X_Loc_P = vsp.GetXSecParm(xsec, 'XLocPercent')
+    Y_Loc_P = vsp.GetXSecParm(xsec, 'YLocPercent')
     Z_Loc_P = vsp.GetXSecParm(xsec, 'ZLocPercent')
     
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
-    y_location =  vsp.GetXSecParm(xsec,'X_Location')
-    print(y_location)
     xyz_c[0] = percent_x_location*total_length
     print("      percent x location: " + str(percent_x_location) + " xloc: " + str(xyz_c[0]))
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.

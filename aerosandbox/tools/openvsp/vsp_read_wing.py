@@ -103,9 +103,8 @@ def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, x_rot, segment_
     xyz_le = np.array([0, 0, 0])
     chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
-            
-    xsec_id = str(vsp.GetXSec(xsec_root_id, increment))
-    airfoil = getXsecAirfoil(wing_id, xsec_id, increment)
+    xsec = vsp.GetXSec(xsec_root_id, increment)
+    airfoil = getXsecAirfoil(wing_id, xsec, increment)
     xsec = WingXSec(xyz_le, chord, twist, airfoil=airfoil)
     return xsec
 
@@ -139,8 +138,8 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
          return Airfoil(name=tag)
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_FILE_AIRFOIL:    # XSec shape: 12 is type AF_FILE
          print("   Airfoil is XS_FILE_AIRFOIL")
-         vsp.WriteSeligAirfoil(str(wing.tag) + '_airfoil_XSec_' + str(xsec_num) +'.dat', wing_id, float(xsec_num/total_xsec))
-         return Airfoil(name="str(wing.tag) + '_airfoil_XSec_' + str(xsec_num)", coordinates=str(wing.tag) + '_airfoil_XSec_' + str(xsec_num) +'.dat')
+         vsp.WriteSeligAirfoil(str(wing_id) + '_airfoil_XSec_' + str(xsec_num) +'.dat', wing_id, float(xsec_num/total_xsec))
+         return Airfoil(name="str(wing_id) + '_airfoil_XSec_' + str(xsec_num)", coordinates=str(wing_id) + '_airfoil_XSec_' + str(xsec_num) +'.dat')
     else:
          print("   Error:  Could not determine airfoil")
          return Airfoil("naca0012")
