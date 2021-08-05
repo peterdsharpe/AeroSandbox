@@ -121,7 +121,7 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
          series_vsp       = int(vsp.GetParmVal(wing_id, 'Series', 'XSecCurve_' + str(xsec_num)))
          series_dict      = {0:'63',1:'64',2:'65',3:'66',4:'67',5:'63A',6:'64A',7:'65A'} # VSP series values.
          series           = series_dict[series_vsp]
-         tag      = 'naca' + series + str(ideal_CL) + str(thick_cord_round) + ' a=' + str(np.around(a_value,1))            
+         tag      = 'naca' + series + str(ideal_CL) + str(thick_cord_round)            
          print("   Airfoil is XS_SIX_SERIES: " + tag)
          return Airfoil(name=tag)
     elif vsp.GetXSecShape(xsec_id) == vsp.XS_FILE_AIRFOIL:    # XSec shape: 12 is type AF_FILE
