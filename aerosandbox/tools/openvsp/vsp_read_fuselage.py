@@ -65,14 +65,19 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     Y_Loc_P = vsp.GetXSecParm(xsec, 'YLocPercent')
     Z_Loc_P = vsp.GetXSecParm(xsec, 'ZLocPercent')
     
+    height             = vsp.GetXSecHeight(xsec)
+    width              = vsp.GetXSecWidth(xsec)
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
     xyz_c[0] = percent_x_location*total_length
     percent_y_location = vsp.GetParmVal(Y_Loc_P)
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.
-    height             = vsp.GetXSecHeight(xsec)
-    width              = vsp.GetXSecWidth(xsec)
     effective_diameter = (height+width)/2. 
     radius = effective_diameter/2.
+
+    point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
+    p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    test =  np.array(list(p))
+    print("   fuse test: " + str(test))
         
     #xsec shape not supported for aerosandbox FuselageXSec
     #shape       = vsp.GetXSecShape(segment.vsp_data.xsec_id)
