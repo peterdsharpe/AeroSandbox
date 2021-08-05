@@ -69,12 +69,10 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     total_proj_span = vsp.GetParmVal(wing_id, 'TotalProjectedSpan', 'WingGeom')
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)   # This is how VSP stores surfaces.
     segment_num = vsp.GetNumXSec(xsec_root_id)    # Get number of wing segments (is one more than the VSP GUI shows).
-    x_sec = vsp.GetXSec(xsec_root_id, 0)
-    chord_parm = vsp.GetXSecParm(x_sec,'Root_Chord')
-    total_chord = vsp.GetParmVal(chord_parm) 
     x_rot = vsp.GetParmVal( wing_id,'X_Rotation','XForm')
     vertical = False
-    if x_rot > 70:
+    print("   x_rot: " + str(x_rot))
+    if x_rot > 70 or x_rot > -70:
         vertical = True
     
     # -------------
