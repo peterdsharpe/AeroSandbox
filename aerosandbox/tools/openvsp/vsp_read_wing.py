@@ -72,7 +72,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     x_rot = vsp.GetParmVal( wing_id,'X_Rotation','XForm')
     vertical = False
     print("   x_rot: " + str(x_rot))
-    if x_rot > 70 or x_rot > -70:
+    if x_rot > 70 or x_rot < -70:
         vertical = True
     
     # -------------
