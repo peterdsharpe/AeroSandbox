@@ -85,11 +85,11 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
         #    print("   Adding tip xsec")
         #    xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
         #    xsecs.append(xsec_next)
-        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
+        xsec_next = getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, vertical, "tip")
         xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
-def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, chord_type):
+def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, vertical, chord_type):
     print("   Processing xsec: " + str(increment) + " for wing: " + wing_id + " chord type: " + str(chord_type))
     chord_root = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     print("      Root_Chord_Xsec: " + str(chord_root))
@@ -104,13 +104,24 @@ def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, ver
         point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
         chord = vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment))
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
-    if vertical:
-        xyz_le = np.array([0, 0, 0])
-        xyz_le[0] = p[0]
-        xyz_le[1] = p[2]
-        xyz_le[2] = p[1]
-    else:
-        xyz_le =  np.array(list(p))
+
+    # transform point using the wing rotation matrix
+    xyz_le = np.array(list(p))
+    xyz_le = x_rotation(xyz_le, math.radians(xyz_rot[0]
+    print("       xyz_le after x rotation: " + str(xyz_le))
+    xyz_le = y_rotation(xyz_le, math.radians(xyz_rot[1]
+    print("       xyz_le after y rotation: " + str(xyz_le))
+    xyz_le = z_rotation(xyz_le, math.radians(xyz_rot[2]
+    print("       xyz_le after z rotation: " + str(xyz_le))
+
+    #if vertical:
+    #    xyz_le = np.array([0, 0, 0])
+    #    xyz_le[0] = p[0]
+    #    xyz_le[1] = p[2]
+    #    xyz_le[2] = p[1]
+    #else:
+    #    xyz_le =  np.array(list(p))
+
     print("      xyz_le: " + str(xyz_le))
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
     print("      Twist: " + str(twist))
@@ -151,6 +162,21 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
          return Airfoil(name=name, coordinates=name +'.dat')
     else:
          print("   Error:  Could not determine airfoil")
+
+def x_rotation(vector,theta):
+    """Rotates 3-D vector around x-axis"""
+    R = np.array([[1,0,0],[0,np.cos(theta),-np.sin(theta)],[0, np.sin(theta), np.cos(theta)]])
+    return np.dot(R,vector)
+
+def y_rotation(vector,theta):
+    """Rotates 3-D vector around y-axis"""
+    R = np.array([[np.cos(theta),0,np.sin(theta)],[0,1,0],[-np.sin(theta), 0, np.cos(theta)]])
+    return np.dot(R,vector)
+
+def z_rotation(vector,theta):
+    """Rotates 3-D vector around z-axis"""
+    R = np.array([[np.cos(theta), -np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])
+    return np.dot(R,vector)
 
 def getXSecSpans(wing_id):
     xsec_spans = []
