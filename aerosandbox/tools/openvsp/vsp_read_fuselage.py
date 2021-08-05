@@ -67,7 +67,7 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
     xyz_c =  np.array(list(p))
-    print("   fuse test: " + str(xyz_c))
+    print("   fuse coordinate: " + str(xyz_c))
 
     X_Loc_P = vsp.GetXSecParm(xsec, 'XLocPercent')
     Y_Loc_P = vsp.GetXSecParm(xsec, 'YLocPercent')
@@ -76,9 +76,11 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     height             = vsp.GetXSecHeight(xsec)
     width              = vsp.GetXSecWidth(xsec)
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
-    #xyz_c[0] = percent_x_location*total_length
+    print("   percent x location", percent_x_location))
     percent_y_location = vsp.GetParmVal(Y_Loc_P)
+    print("   percent y location", percent_y_location))
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.
+    print("   percent z location", percent_z_location))
     effective_diameter = (height+width)/2. 
     radius = effective_diameter/2.
 
