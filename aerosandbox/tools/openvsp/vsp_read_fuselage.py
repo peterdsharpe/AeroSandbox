@@ -61,13 +61,14 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     print("   Processing xsec: " + str(increment))
     # Create the segment
     #
+    xsec   = vsp.GetXSec(xsec_root_id, increment) # VSP XSec ID.
+
     # this is a point on the fuse and not the center point so entire geometry is shifted for now
     point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
     xyz_c =  np.array(list(p))
     print("   fuse test: " + str(xyz_c))
 
-    xsec   = vsp.GetXSec(xsec_root_id, increment) # VSP XSec ID.
     X_Loc_P = vsp.GetXSecParm(xsec, 'XLocPercent')
     Y_Loc_P = vsp.GetXSecParm(xsec, 'YLocPercent')
     Z_Loc_P = vsp.GetXSecParm(xsec, 'ZLocPercent')
