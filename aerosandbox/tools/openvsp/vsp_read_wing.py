@@ -107,11 +107,11 @@ def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, vertical, c
 
     # transform point using the wing rotation matrix
     xyz_le = np.array(list(p))
-    xyz_le = x_rotation(xyz_le, math.radians(xyz_rot[0]
+    xyz_le = x_rotation(xyz_le, math.radians(xyz_rot[0]))
     print("       xyz_le after x rotation: " + str(xyz_le))
-    xyz_le = y_rotation(xyz_le, math.radians(xyz_rot[1]
+    xyz_le = y_rotation(xyz_le, math.radians(xyz_rot[1]))
     print("       xyz_le after y rotation: " + str(xyz_le))
-    xyz_le = z_rotation(xyz_le, math.radians(xyz_rot[2]
+    xyz_le = z_rotation(xyz_le, math.radians(xyz_rot[2]))
     print("       xyz_le after z rotation: " + str(xyz_le))
 
     #if vertical:
