@@ -84,11 +84,11 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     # if there are x xsec segments in openvsp, there will be x+1 in aerosandbox
     # for the last xsec, get both the root and tip
     for increment in range(start, segment_num):    
-        if increment == 0:
-            print("   Adding tip xsec")
-            xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
-            xsecs.append(xsec_next)
-        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "root")
+        #if increment == 0:
+        #    print("   Adding tip xsec")
+        #    xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
+        #    xsecs.append(xsec_next)
+        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
         xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
@@ -101,7 +101,7 @@ def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, ver
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xsec = vsp.GetXSec(xsec_root_id, increment)
     if chord_type == "root":
-        point = vsp.ComputeXSecPnt(xsec, 1.0)    # get xsec point at leading edge of root chord
+        point = vsp.ComputeXSecPnt(xsec, 9.0)    # get xsec point at leading edge of root chord
         chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     else: #chord type is tip
         point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
