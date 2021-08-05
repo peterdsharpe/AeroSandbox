@@ -73,7 +73,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)   # This is how VSP stores surfaces.
     segment_num = vsp.GetNumXSec(xsec_root_id)    # Get number of wing segments (is one more than the VSP GUI shows).
     vertical = False
-    print("   x_rot: " + str(x_rot))
+    print("   x_rot: " + str(xyz_rot[0]))
     if xyz_rot[0] > 70 or xyz_rot[0] < -70:
         vertical = True
     
