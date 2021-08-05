@@ -3,6 +3,7 @@ from aerosandbox.geometry import Fuselage
 from aerosandbox.geometry import FuselageXSec
 import openvsp as vsp
 import aerosandbox.numpy as np
+from ctypes import *
 
 # ----------------------------------------------------------------------
 #  vsp read fuselage
