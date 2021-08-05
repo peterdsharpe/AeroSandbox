@@ -1,3 +1,4 @@
+import math
 import aerosandbox
 from aerosandbox.geometry.airfoil import Airfoil 
 from aerosandbox.geometry import Wing
