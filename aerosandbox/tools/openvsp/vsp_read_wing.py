@@ -77,15 +77,14 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     # Wing segments
     # -------------
     start = 0
-    root_chord = total_chord 
     xsecs = []
     # Convert VSP XSecs to aerosandbox segments.
     for increment in range(start, segment_num):    
-        xsec_next = getWingXsec(wing_id, root_chord, total_proj_span, symmetric, segment_num, increment)
+        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment)
         xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
-def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, segment_num, increment):
+def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment):
     print("   Processing xsec: " + str(increment) + " for wing: " + wing_id)
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xsec = vsp.GetXSec(xsec_root_id, increment)
@@ -94,10 +93,9 @@ def getWingXsec(wing_id, root_chord, total_proj_span, symmetric, segment_num, in
     xyz_le =  np.array(list(p))
     print("      xyz_le: " + str(xyz_le))
     chord_root = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
-    print("      Root_Chord_Wing: " + str(root_chord))
-    print("      Root_Chord_Xsec: " + str(chord))
+    print("      Root_Chord_Xsec: " + str(chord_root))
     chord = vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment))
-    print("      Tip_Chord_Xsec: " + str(chord_tip))
+    print("      Tip_Chord_Xsec: " + str(chord))
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
     print("      Twist: " + str(twist))
     airfoil = getXsecAirfoil(wing_id, xsec, increment)
