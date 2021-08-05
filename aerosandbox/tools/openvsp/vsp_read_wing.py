@@ -80,17 +80,32 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     # -------------
     start = 0
     xsecs = []
-    # Convert VSP XSecs to aerosandbox segments.
+    # Convert VSP XSecs to aerosandbox segments. 
+    # if there are x xsec segments in openvsp, there will be x+1 in aerosandbox
+    # for the last xsec, get both the root and tip
     for increment in range(start, segment_num):    
-        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical)
+        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "root")
         xsecs.append(xsec_next)
+        if increment == segment_num-1:
+            print("Adding tip xsec")
+            xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
+            xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
-def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical):
-    print("   Processing xsec: " + str(increment) + " for wing: " + wing_id)
+def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, chord_type):
+    print("   Processing xsec: " + str(increment) + " for wing: " + wing_id + "chord type: " + str(chord_type)
+    chord_root = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
+    print("      Root_Chord_Xsec: " + str(chord_root))
+    chord = vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment))
+    print("      Tip_Chord_Xsec: " + str(chord))
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xsec = vsp.GetXSec(xsec_root_id, increment)
-    point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge
+    if chord_type = "root":
+        point = vsp.ComputeXSecPnt(xsec, 1.0)    # get xsec point at leading edge of root chord
+        chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
+    else #chord type is tip
+        point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
+        chord = vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment))
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
     if vertical:
         xyz_le = np.array([0, 0, 0])
@@ -100,10 +115,6 @@ def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, ver
     else:
         xyz_le =  np.array(list(p))
     print("      xyz_le: " + str(xyz_le))
-    chord_root = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
-    print("      Root_Chord_Xsec: " + str(chord_root))
-    chord = vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment))
-    print("      Tip_Chord_Xsec: " + str(chord))
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
     print("      Twist: " + str(twist))
     airfoil = getXsecAirfoil(wing_id, xsec, increment)
