@@ -60,7 +60,13 @@ def vsp_read_fuselage(fuselage_id):
 def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     print("   Processing xsec: " + str(increment))
     # Create the segment
-    xyz_c = np.array([0, 0, 0])
+    #
+    # this is a point on the fuse and not the center point so entire geometry is shifted for now
+    point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
+    p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    xyz_c =  np.array(list(p))
+    print("   fuse test: " + str(xyz_c))
+
     xsec   = vsp.GetXSec(xsec_root_id, increment) # VSP XSec ID.
     X_Loc_P = vsp.GetXSecParm(xsec, 'XLocPercent')
     Y_Loc_P = vsp.GetXSecParm(xsec, 'YLocPercent')
@@ -69,17 +75,12 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     height             = vsp.GetXSecHeight(xsec)
     width              = vsp.GetXSecWidth(xsec)
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
-    xyz_c[0] = percent_x_location*total_length
+    #xyz_c[0] = percent_x_location*total_length
     percent_y_location = vsp.GetParmVal(Y_Loc_P)
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.
     effective_diameter = (height+width)/2. 
     radius = effective_diameter/2.
 
-    point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
-    p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
-    test =  np.array(list(p))
-    print("   fuse test: " + str(test))
-        
     #xsec shape not supported for aerosandbox FuselageXSec
     #shape       = vsp.GetXSecShape(segment.vsp_data.xsec_id)
     #shape_dict = {0:'point',1:'circle',2:'ellipse',3:'super ellipse',4:'rounded rectangle',5:'general fuse',6:'fuse file'}
