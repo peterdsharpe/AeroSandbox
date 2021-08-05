@@ -33,14 +33,9 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     1. VSP 10-digit geom ID for wing.
 
     Outputs:
-    Writes aerosandbox wing object
-
-    Properties Used:
-    N/A
+    returns aerosandbox wing object
     """  
     print("Converting wing: " + wing_id)
-    x_rot = vsp.GetParmVal(wing_id,'X_Rotation','XForm')
-    
     # Apply a tag to the wing
     if vsp.GetGeomName(wing_id):
         tag = vsp.GetGeomName(wing_id)
@@ -48,12 +43,20 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
         tag = tag
     else: 
         tag = 'winggeom'
+
+    # Wing rotation
+    xyz_rot = np.array([0, 0, 0])
+    xyz_rot[0] = vsp.GetParmVal(wing_id,'X_Rotation','XForm')
+    xyz_rot[1] = vsp.GetParmVal(wing_id,'Y_Rotation','XForm')
+    xyz_rot[2] = vsp.GetParmVal(wing_id,'Z_Rotation','XForm')
+    print("   wing xyz_rot: " + str(xyz_rot))
     
     # Wing origin
     xyz_le = np.array([0, 0, 0])
     xyz_le[0] = vsp.GetParmVal(wing_id, 'X_Location', 'XForm')
     xyz_le[1] = vsp.GetParmVal(wing_id, 'Y_Location', 'XForm')
     xyz_le[2] = vsp.GetParmVal(wing_id, 'Z_Location', 'XForm')
+    print("   wing xyz_le: " + str(xyz_le))
     
     # Wing Symmetry
     sym_planar = vsp.GetParmVal(wing_id, 'Sym_Planar_Flag', 'Sym')
@@ -69,21 +72,15 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     total_proj_span = vsp.GetParmVal(wing_id, 'TotalProjectedSpan', 'WingGeom')
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)   # This is how VSP stores surfaces.
     segment_num = vsp.GetNumXSec(xsec_root_id)    # Get number of wing segments (is one more than the VSP GUI shows).
-    x_rot = vsp.GetParmVal( wing_id,'X_Rotation','XForm')
     vertical = False
     print("   x_rot: " + str(x_rot))
-    if x_rot > 70 or x_rot < -70:
+    if xyz_rot[0] > 70 or xyz_rot[0] < -70:
         vertical = True
     
-    # -------------
-    # Wing segments
-    # -------------
-    start = 0
+    # wing segments
     xsecs = []
     # Convert VSP XSecs to aerosandbox segments. 
-    # if there are x xsec segments in openvsp, there will be x+1 in aerosandbox
-    # for the last xsec, get both the root and tip
-    for increment in range(start, segment_num):    
+    for increment in range(0, segment_num):    
         #if increment == 0:
         #    print("   Adding tip xsec")
         #    xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
