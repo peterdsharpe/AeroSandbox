@@ -72,6 +72,10 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     x_sec = vsp.GetXSec(xsec_root_id, 0)
     chord_parm = vsp.GetXSecParm(x_sec,'Root_Chord')
     total_chord = vsp.GetParmVal(chord_parm) 
+    x_rot = vsp.GetParmVal( wing_id,'X_Rotation','XForm')
+    vertical = False
+    if x_rot > 70:
+        vertical = True
     
     # -------------
     # Wing segments
@@ -80,17 +84,22 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     xsecs = []
     # Convert VSP XSecs to aerosandbox segments.
     for increment in range(start, segment_num):    
-        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment)
+        xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical)
         xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
-def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment):
+def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical):
     print("   Processing xsec: " + str(increment) + " for wing: " + wing_id)
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xsec = vsp.GetXSec(xsec_root_id, increment)
     point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
-    xyz_le =  np.array(list(p))
+    if vertical:
+        xyz_le[0] = p[0]
+        xyz_le[1] = p[2]
+        xyz_le[2] = p[1]
+    else:
+        xyz_le =  np.array(list(p))
     print("      xyz_le: " + str(xyz_le))
     chord_root = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     print("      Root_Chord_Xsec: " + str(chord_root))
