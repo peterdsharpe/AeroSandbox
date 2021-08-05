@@ -68,6 +68,8 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
     xyz_c =  np.array(list(p))
     print("   fuse coordinate: " + str(xyz_c))
+    test = getXsecCenter(xsec)
+    print("   test center: " + str(test))
 
     X_Loc_P = vsp.GetXSecParm(xsec, 'XLocPercent')
     Y_Loc_P = vsp.GetXSecParm(xsec, 'YLocPercent')
@@ -90,6 +92,18 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     #vsp_data.shape = shape_dict[shape]    
     return FuselageXSec(xyz_c, radius)
     
+def getXsecCenter(xsec):
+    x = []
+    y = []
+    z = []
+    for increment in np.linspace(0,1,100):
+        point = vsp.ComputeXSecPnt(xsec, increment)    # get xsec point at leading edge of tip chord
+        p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+        x.append(p[0])
+        y.append(p[1])
+        z.append(p[2])
+    return  np.array([sum(x) / len(x), sum(y) / len(y), sum(z) / len(z))
+
 
 def get_fuselage_height(fuselage, location):
     """This linearly estimates fuselage height at any percentage point (0,100) along fuselage length.
