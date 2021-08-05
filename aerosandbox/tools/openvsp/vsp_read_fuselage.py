@@ -102,7 +102,7 @@ def getXsecCenter(xsec):
         x.append(p[0])
         y.append(p[1])
         z.append(p[2])
-    return  np.array([sum(x) / len(x), sum(y) / len(y), sum(z) / len(z))
+    return  np.array([sum(x) / len(x), sum(y) / len(y), sum(z) / len(z)])
 
 
 def get_fuselage_height(fuselage, location):
