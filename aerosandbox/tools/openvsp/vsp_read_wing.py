@@ -95,6 +95,7 @@ def getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, ver
     point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
     if vertical:
+        xyz_le = np.array([0, 0, 0])
         xyz_le[0] = p[0]
         xyz_le[1] = p[2]
         xyz_le[2] = p[1]
