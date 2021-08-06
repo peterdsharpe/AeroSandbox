@@ -70,7 +70,6 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
         symmetric = False
         
     #More top level parameters
-    total_proj_span = vsp.GetParmVal(wing_id, 'TotalProjectedSpan', 'WingGeom')
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)   # This is how VSP stores surfaces.
     segment_num = vsp.GetNumXSec(xsec_root_id)    # Get number of wing segments (is one more than the VSP GUI shows).
     
@@ -78,10 +77,6 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     xsecs = []
     # Convert VSP XSecs to aerosandbox segments. 
     for increment in range(0, segment_num):    
-        #if increment == 0:
-        #    print("   Adding tip xsec")
-        #    xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, "tip")
-        #    xsecs.append(xsec_next)
         xsec_next = getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, "tip")
         xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
@@ -102,35 +97,12 @@ def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, chord_type)
         chord = vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment))
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
 
-    surfacepoint =vsp.ComputeXSecPnt(xsec, .5)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
-    surfacetest = np.array(list(surfacep))
-    print("      xsec test surface point: " + str(surfacetest))
-
-    surfacepoint = vsp.CompPnt01(wing_id, 0, 0.0, 0.0)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
-    surfacetest = np.array(list(surfacep))
-    print("      xsec test surface point: " + str(surfacetest))
-
-    surfacepoint = vsp.CompPnt01(wing_id, 0, .5, 0.0)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
-    surfacetest = np.array(list(surfacep))
-    print("      xsec test surface point: " + str(surfacetest))
-
-    surfacepoint = vsp.CompPnt01(wing_id, 0, 0.0, .5)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
-    surfacetest = np.array(list(surfacep))
-    print("      xsec test surface point: " + str(surfacetest))
-
     # transform point using the wing rotation matrix
     xyz_le = np.array(list(p))
-    print("      xyz_le before rotation: " + str(xyz_le))
     xyz_le = x_rotation(xyz_le, math.radians(xyz_rot[0]))
-    print("      xyz_le after x rotation: " + str(xyz_le))
     xyz_le = y_rotation(xyz_le, math.radians(xyz_rot[1]))
-    print("      xyz_le after y rotation: " + str(xyz_le))
     xyz_le = z_rotation(xyz_le, math.radians(xyz_rot[2]))
-    print("      xyz_le after z rotation: " + str(xyz_le))
+    print("      xyz_le after rotation: " + str(xyz_le))
 
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
     print("      Twist: " + str(twist))
