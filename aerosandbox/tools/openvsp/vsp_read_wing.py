@@ -103,22 +103,22 @@ def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, chord_type)
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
 
     surfacepoint =vsp.ComputeXSecPnt(xsec, .5)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
     surfacetest = np.array(list(surfacep))
     print("      xsec test surface point: " + str(surfacetest))
 
     surfacepoint = vsp.CompPnt01(wing_id, 0, 0.0, 0.0)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
     surfacetest = np.array(list(surfacep))
     print("      xsec test surface point: " + str(surfacetest))
 
     surfacepoint = vsp.CompPnt01(wing_id, 0, .5, 0.0)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
     surfacetest = np.array(list(surfacep))
     print("      xsec test surface point: " + str(surfacetest))
 
     surfacepoint = vsp.CompPnt01(wing_id, 0, 0.0, .5)
-    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(surfacepoint.data())))
     surfacetest = np.array(list(surfacep))
     print("      xsec test surface point: " + str(surfacetest))
 
