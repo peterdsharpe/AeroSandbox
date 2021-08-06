@@ -82,11 +82,11 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
         #    print("   Adding tip xsec")
         #    xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, "tip")
         #    xsecs.append(xsec_next)
-        xsec_next = getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, vertical, "tip")
+        xsec_next = getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, "tip")
         xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
-def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, vertical, chord_type):
+def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, chord_type):
     print("   Processing xsec: " + str(increment) + " for wing: " + wing_id + " chord type: " + str(chord_type))
     chord_root = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     print("      Root_Chord_Xsec: " + str(chord_root))
