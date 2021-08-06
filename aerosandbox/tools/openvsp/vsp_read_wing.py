@@ -51,8 +51,6 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     xyz_rot[1] = vsp.GetParmVal(wing_id,'Y_Rotation','XForm')
     xyz_rot[2] = vsp.GetParmVal(wing_id,'Z_Rotation','XForm')
     print("   wing xyz_rot: " + str(xyz_rot))
-    xyz_rot = xyz_rot * (-1)
-    print("   wing xyz_rot reversed: " + str(xyz_rot))
     
     # Wing origin
     xyz_le = np.array([0, 0, 0])
@@ -111,6 +109,7 @@ def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, chord_type)
 
     # transform point using the wing rotation matrix
     xyz_le = np.array(list(p))
+    print("      xyz_le before rotation: " + str(xyz_le))
     xyz_le = x_rotation(xyz_le, math.radians(xyz_rot[0]))
     print("      xyz_le after x rotation: " + str(xyz_le))
     xyz_le = y_rotation(xyz_le, math.radians(xyz_rot[1]))
