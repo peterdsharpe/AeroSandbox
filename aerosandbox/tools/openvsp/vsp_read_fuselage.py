@@ -22,9 +22,6 @@ def vsp_read_fuselage(fuselage_id):
        of the vehicle or in front (to make all X-coordinates of vehicle positive).
     5. Written for OpenVSP 3.24
     
-    Source:
-    N/A
-
     Inputs:
     0. Pre-loaded VSP vehicle in memory, via vsp_read.
     1. VSP 10-digit geom ID for fuselage.
@@ -72,11 +69,8 @@ def getVspXSec(xsec_root_id, xsec_num, total_length, increment):
     height             = vsp.GetXSecHeight(xsec)
     width              = vsp.GetXSecWidth(xsec)
     percent_x_location = vsp.GetParmVal(X_Loc_P) # Along fuselage length.
-    print("   percent x location", str(percent_x_location))
     percent_y_location = vsp.GetParmVal(Y_Loc_P)
-    print("   percent y location", str(percent_y_location))
     percent_z_location = vsp.GetParmVal(Z_Loc_P ) # Vertical deviation of fuselage center.
-    print("   percent z location", str(percent_z_location))
     effective_diameter = (height+width)/2. 
     radius = effective_diameter/2.
 
@@ -102,12 +96,6 @@ def getXsecCenter(xsec):
 def get_fuselage_height(fuselage, location):
     """This linearly estimates fuselage height at any percentage point (0,100) along fuselage length.
     
-    Assumptions:
-    Written for OpenVSP 3.16.1
-    
-    Source:
-    N/A
-
     Inputs:
     0. Pre-loaded VSP vehicle in memory, via vsp_read.
     1. Suave fuselage [object], containing fuselage.vsp_data.xsec_num in its data structure.

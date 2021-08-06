@@ -88,7 +88,7 @@ def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, chord_type)
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xsec = vsp.GetXSec(xsec_root_id, increment)
     if chord_type == "root":
-        point = vsp.ComputeXSecPnt(xsec, 0.5)    # get xsec point at leading edge of root chord
+        point = vsp.ComputeXSecPnt(xsec, 0.5)    # get xsec point at leading edge of root chord. (0/1 are trailing edge)
         chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     else: #chord type is tip
         point = vsp.ComputeXSecPnt(xsec, 0.5)    # get xsec point at leading edge of tip chord
