@@ -20,7 +20,7 @@ def vsp_read_fuselage(fuselage_id):
        is a separate geometry and will NOT be processed.
     4. Fuselage origin is located at nose. VSP file origin can be located anywhere, preferably at the forward tip
        of the vehicle or in front (to make all X-coordinates of vehicle positive).
-    5. Written for OpenVSP 3.21.1
+    5. Written for OpenVSP 3.24
     
     Source:
     N/A

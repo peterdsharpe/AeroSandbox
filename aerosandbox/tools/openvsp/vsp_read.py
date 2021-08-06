@@ -1,15 +1,9 @@
-## @ingroup Input_Output-OpenVSP
-# vsp_read.py
-
 # Created:  Jun 2018, T. St Francis
 # Modified: Aug 2021  Michael Shamberger
 #           Aug 2018, T. St Francis
 #           Jan 2020, T. MacDonald
 #           Jul 2020, E. Botero
-
-# ----------------------------------------------------------------------
-#  Imports
-# ----------------------------------------------------------------------
+# Original code taken from Suave project and modified for AeroSandbox
 
 import aerosandbox
 from aerosandbox.geometry import Airplane
@@ -23,9 +17,6 @@ import openvsp as vsp
 # ----------------------------------------------------------------------
 #  vsp read
 # ----------------------------------------------------------------------
-
-
-## @ingroup Input_Output-OpenVSP
 def vsp_read(tag):     
     """This reads an OpenVSP vehicle geometry and writes it into a Aerosandbox vehicle format.
     Includes wings, fuselages, and propellers.
@@ -39,7 +30,7 @@ def vsp_read(tag):
        is a separate geometry and will NOT be processed.
     2. Fuselage origin is located at nose. VSP file origin can be located anywhere, preferably at the forward tip
        of the vehicle or in front (to make all X-coordinates of vehicle positive).
-    3. Written for OpenVSP 3.21.1
+    3. Written for OpenVSP 3.24
     
     Source:
     N/A
@@ -83,7 +74,7 @@ def vsp_read(tag):
             vsp_fuselages.append(geom)
         if geom_name == 'Wing':
             vsp_wings.append(geom)
-        # No propeller geometry class available
+        # No aerosandbox propeller geometry class available
         #if geom_name == 'Propeller':
         #    vsp_props.append(geom)
     

@@ -24,10 +24,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
 
     Assumptions:
     1. OpenVSP wing is divided into segments ("XSecs" in VSP).
-    2. Written for OpenVSP 3.21.1
-
-    Source:
-    N/A
+    2. Written for OpenVSP 3.24
 
     Inputs:
     0. Pre-loaded VSP vehicle in memory, via vsp_read.
@@ -81,6 +78,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
         xsecs.append(xsec_next)
     return Wing(tag, xyz_le, xsecs, symmetric)
 
+# create a aerosandbox xsec by looking at the openvsp xsec
 def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, chord_type):
     print("   Processing xsec: " + str(increment) + " for wing: " + wing_id + " chord type: " + str(chord_type))
     chord_root = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
@@ -109,6 +107,7 @@ def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, chord_type)
     airfoil = getXsecAirfoil(wing_id, xsec, increment)
     return WingXSec(xyz_le, chord, twist, airfoil=airfoil)
 
+# determine the airfoil type
 def getXsecAirfoil(wing_id, xsec_id, xsec_num):
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     total_xsec = vsp.GetNumXSec(xsec_root_id)
@@ -144,16 +143,19 @@ def getXsecAirfoil(wing_id, xsec_id, xsec_num):
     else:
          print("   Error:  Could not determine airfoil")
 
+# x rotation of a point
 def x_rotation(vector,theta):
     """Rotates 3-D vector around x-axis"""
     R = np.array([[1,0,0],[0,np.cos(theta),-np.sin(theta)],[0, np.sin(theta), np.cos(theta)]])
     return np.dot(R,vector)
 
+# y rotation of a point
 def y_rotation(vector,theta):
     """Rotates 3-D vector around y-axis"""
     R = np.array([[np.cos(theta),0,np.sin(theta)],[0,1,0],[-np.sin(theta), 0, np.cos(theta)]])
     return np.dot(R,vector)
 
+# z rotation of a point
 def z_rotation(vector,theta):
     """Rotates 3-D vector around z-axis"""
     R = np.array([[np.cos(theta), -np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])
