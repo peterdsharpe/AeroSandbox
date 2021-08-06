@@ -73,10 +73,6 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     total_proj_span = vsp.GetParmVal(wing_id, 'TotalProjectedSpan', 'WingGeom')
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)   # This is how VSP stores surfaces.
     segment_num = vsp.GetNumXSec(xsec_root_id)    # Get number of wing segments (is one more than the VSP GUI shows).
-    vertical = False
-    print("   x_rot: " + str(xyz_rot[0]))
-    if xyz_rot[0] > 70 or xyz_rot[0] < -70:
-        vertical = True
     
     # wing segments
     xsecs = []
@@ -84,7 +80,7 @@ def vsp_read_wing(wing_id, write_airfoil_file=True):
     for increment in range(0, segment_num):    
         #if increment == 0:
         #    print("   Adding tip xsec")
-        #    xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, vertical, "tip")
+        #    xsec_next = getWingXsec(wing_id, total_proj_span, symmetric, segment_num, increment, "tip")
         #    xsecs.append(xsec_next)
         xsec_next = getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, vertical, "tip")
         xsecs.append(xsec_next)
@@ -99,31 +95,28 @@ def getWingXsec(wing_id, xyz_rot, symmetric, segment_num, increment, vertical, c
     xsec_root_id = vsp.GetXSecSurf(wing_id, 0)
     xsec = vsp.GetXSec(xsec_root_id, increment)
     if chord_type == "root":
-        point = vsp.ComputeXSecPnt(xsec, 9.0)    # get xsec point at leading edge of root chord
+        point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of root chord
         chord = vsp.GetParmVal(wing_id, 'Root_Chord', 'XSec_' + str(increment))
     else: #chord type is tip
         point = vsp.ComputeXSecPnt(xsec, 0.0)    # get xsec point at leading edge of tip chord
         chord = vsp.GetParmVal(wing_id, 'Tip_Chord', 'XSec_' + str(increment))
     p = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
 
+    xsecsurface = vsp.GetXSecSurf(wing_id, increment)
+    surfacepoint = vsp.CompPnt01(wing_id, xsecsurface, 0.0, 0.0)
+    surfacep = (c_double * 3).from_address(int(np.ctypeslib.as_array(point.data())))
+    surfacetest = np.array(list(surfacep))
+    print("      xsec surface point: " + str(surfacetest))
+
     # transform point using the wing rotation matrix
     xyz_le = np.array(list(p))
     xyz_le = x_rotation(xyz_le, math.radians(xyz_rot[0]))
-    print("       xyz_le after x rotation: " + str(xyz_le))
+    print("      xyz_le after x rotation: " + str(xyz_le))
     xyz_le = y_rotation(xyz_le, math.radians(xyz_rot[1]))
-    print("       xyz_le after y rotation: " + str(xyz_le))
+    print("      xyz_le after y rotation: " + str(xyz_le))
     xyz_le = z_rotation(xyz_le, math.radians(xyz_rot[2]))
-    print("       xyz_le after z rotation: " + str(xyz_le))
+    print("      xyz_le after z rotation: " + str(xyz_le))
 
-    #if vertical:
-    #    xyz_le = np.array([0, 0, 0])
-    #    xyz_le[0] = p[0]
-    #    xyz_le[1] = p[2]
-    #    xyz_le[2] = p[1]
-    #else:
-    #    xyz_le =  np.array(list(p))
-
-    print("      xyz_le: " + str(xyz_le))
     twist = vsp.GetParmVal(wing_id, 'Twist', 'XSec_' + str(increment))
     print("      Twist: " + str(twist))
     airfoil = getXsecAirfoil(wing_id, xsec, increment)
