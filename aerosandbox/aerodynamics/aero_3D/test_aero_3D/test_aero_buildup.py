@@ -4,7 +4,7 @@ from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional impor
 analysis = asb.AeroBuildup(
     airplane=airplane,
     op_point=asb.OperatingPoint(
-        atmosphere=asb.Atmosphere(altitude=0, method="ISA"),
+        atmosphere=asb.Atmosphere(altitude=0),
         velocity=10,  # m/s
         alpha=5,  # In degrees
         beta=0,  # In degrees
