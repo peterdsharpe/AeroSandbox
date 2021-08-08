@@ -338,7 +338,7 @@ class Wing(AeroSandboxObject):
         return self.xsecs[-1].chord / self.xsecs[0].chord
 
     def mesh_body(self,
-                  method="tri",
+                  method="quad",
                   chordwise_resolution: int = 32,
                   spanwise_resolution: int = 16,
                   spanwise_spacing: str = "uniform",
