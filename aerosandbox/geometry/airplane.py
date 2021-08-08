@@ -99,19 +99,24 @@ class Airplane(AeroSandboxObject):
 
         """
 
-        points, faces = self.mesh_body(method="tri")
-
         if backend == "plotly":
+
+            points, faces = self.mesh_body(method="quad")
+
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
             fig = Figure3D()
             for f in faces:
-                fig.add_tri((
+                fig.add_quad((
                     points[f[0]],
                     points[f[1]],
                     points[f[2]],
+                    points[f[3]],
                 ), outline=True)
             return fig.draw(show=show)
         elif backend == "pyvista":
+
+            points, faces = self.mesh_body(method="quad")
+
             import pyvista as pv
             fig = pv.PolyData(
                 *mesh_utils.convert_mesh_to_polydata_format(points, faces)
@@ -120,6 +125,9 @@ class Airplane(AeroSandboxObject):
                 fig.plot(show_edges=True)
             return fig
         elif backend == "trimesh":
+
+            points, faces = self.mesh_body(method="tri")
+
             import trimesh as tri
             fig = tri.Trimesh(points, faces)
             if show:
