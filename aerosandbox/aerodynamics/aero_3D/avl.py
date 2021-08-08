@@ -80,7 +80,7 @@ class AVL(ExplicitAnalysis):
         self.verbose = verbose
         self.working_directory = working_directory
 
-    def run(self):
+    def run(self) -> Dict:
         return self._run_avl()
 
     def _default_keystroke_file_contents(self) -> List[str]:

@@ -1,6 +1,7 @@
 from aerosandbox import Opti, ImplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
+from typing import Dict
 
 
 class LiftingLine(ImplicitAnalysis):
@@ -75,6 +76,8 @@ class LiftingLine(ImplicitAnalysis):
                 )
             except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
                 pass
+
+    def run(self) -> Dict:
 
         self._make_panels()
         self._setup_geometry()
