@@ -43,7 +43,7 @@ class Fuselage(AeroSandboxObject):
         for i in range(len(self.xsecs) - 1):
             this_radius = self.xsecs[i].radius
             next_radius = self.xsecs[i + 1].radius
-            x_separation = self.xsecs[i + 1].x_c - self.xsecs[i].x_c
+            x_separation = self.xsecs[i + 1].xyz_c[0] - self.xsecs[i].xyz_c[0]
             area += np.pi * (this_radius + next_radius) * np.sqrt(
                 (this_radius - next_radius) ** 2 + x_separation ** 2)
         if self.symmetric:
