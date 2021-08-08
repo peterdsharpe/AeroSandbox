@@ -41,7 +41,7 @@ class AeroBuildup(ExplicitAnalysis):
 
         ### Wings
         for wing in self.airplane.wings:
-            wing.alpha = op_point.alpha + wing.mean_twist_angle()  # TODO add in allmoving deflections
+            wing.alpha = self.op_point.alpha + wing.mean_twist_angle()  # TODO add in allmoving deflections
             wing.Re = self.op_point.reynolds(wing.mean_aerodynamic_chord())
             wing.airfoil = wing.xsecs[0].airfoil
 
@@ -54,7 +54,7 @@ class AeroBuildup(ExplicitAnalysis):
             )
             CL_over_Cl = aero.CL_over_Cl(
                 aspect_ratio=wing.aspect_ratio(),
-                mach=op_point.mach(),
+                mach=self.op_point.mach(),
                 sweep=wing.mean_sweep_angle()
             )
             wing.CL = wing.Cl_incompressible * CL_over_Cl
@@ -63,7 +63,7 @@ class AeroBuildup(ExplicitAnalysis):
             wing.CD_profile = wing.airfoil.CD_function(
                 alpha=wing.alpha,
                 Re=wing.Re,
-                mach=op_point.mach(),
+                mach=self.op_point.mach(),
                 deflection=0
             )
 
@@ -84,7 +84,7 @@ class AeroBuildup(ExplicitAnalysis):
             wing.Cm = wing.Cm_incompressible * CL_over_Cl
 
             ## Force and moment calculation
-            qS = op_point.dynamic_pressure() * wing.area()
+            qS = self.op_point.dynamic_pressure() * wing.area()
             wing.lift_force = wing.CL * qS
             wing.drag_force_profile = wing.CD_profile * qS
             wing.drag_force_induced = wing.CD_induced * qS
@@ -105,21 +105,21 @@ class AeroBuildup(ExplicitAnalysis):
             if wing.symmetric:  # Only add lift force if the wing is symmetric; a surrogate for "horizontal".
                 self.lift_force += wing.lift_force
             self.drag_force += wing.drag_force
-            self.pitching_moment += wing.pitching_moment # Raw pitching moment
-            self.pitching_moment += -wing.aerodynamic_center()[0] * wing.lift_force # Pitching moment due to lift
+            self.pitching_moment += wing.pitching_moment  # Raw pitching moment
+            self.pitching_moment += -wing.aerodynamic_center()[0] * wing.lift_force  # Pitching moment due to lift
 
         ### Calculate nondimensional forces
-        qS = op_point.dynamic_pressure() * self.airplane.s_ref
+        qS = self.op_point.dynamic_pressure() * self.airplane.s_ref
 
         self.CL = self.lift_force / qS
         self.CD = self.drag_force / qS
         self.Cm = self.pitching_moment / qS / self.airplane.c_ref
 
         return {
-            "CL" : self.CL,
-            "CD" : self.CD,
-            "CY" :
-            "Cl" : 0,
-            "Cm" : self.Cm
-            "Cn" : 0,
+            "CL": self.CL,
+            "CD": self.CD,
+            "CY": 0,
+            "Cl": 0,
+            "Cm": self.Cm,
+            "Cn": 0,
         }
