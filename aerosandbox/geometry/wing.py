@@ -342,6 +342,7 @@ class Wing(AeroSandboxObject):
                   chordwise_resolution: int = 32,
                   spanwise_resolution: int = 16,
                   spanwise_spacing: str = "uniform",
+                  mesh_surface: bool = True,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
                   ) -> Tuple[np.ndarray, np.ndarray]:
@@ -386,14 +387,15 @@ class Wing(AeroSandboxObject):
                 faces.append([entry[0], entry[1], entry[3]])
                 faces.append([entry[1], entry[2], entry[3]])
 
-        for i in range(num_i):
-            for j in range(num_j):
-                add_face(
-                    index_of(i, j),
-                    index_of(i + 1, j),
-                    index_of(i + 1, j + 1),
-                    index_of(i, j + 1),
-                )
+        if mesh_surface:
+            for i in range(num_i):
+                for j in range(num_j):
+                    add_face(
+                        index_of(i, j),
+                        index_of(i + 1, j),
+                        index_of(i + 1, j + 1),
+                        index_of(i, j + 1),
+                    )
 
         if mesh_tips:
             for j in range(num_j // 2):
