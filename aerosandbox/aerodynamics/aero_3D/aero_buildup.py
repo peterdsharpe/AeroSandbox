@@ -27,6 +27,7 @@ class AeroBuildup(ExplicitAnalysis):
         if not assumptions.all():
             raise ValueError("The assumptions to use an aero buildup method are not met!")
 
+    def run(self):
         ### Fuselages
         for fuselage in self.airplane.fuselages:
             fuselage.Re = self.op_point.reynolds(fuselage.length())
@@ -80,7 +81,7 @@ class AeroBuildup(ExplicitAnalysis):
                 mach=0,  # TODO revisit this - is this right?
                 deflection=0,
             )
-            wing.CM = wing.Cm_incompressible * CL_over_Cl
+            wing.Cm = wing.Cm_incompressible * CL_over_Cl
 
             ## Force and moment calculation
             qS = op_point.dynamic_pressure() * wing.area()
@@ -88,7 +89,7 @@ class AeroBuildup(ExplicitAnalysis):
             wing.drag_force_profile = wing.CD_profile * qS
             wing.drag_force_induced = wing.CD_induced * qS
             wing.drag_force = wing.drag_force_profile + wing.drag_force_induced
-            wing.pitching_moment = wing.CM * qS * wing.mean_aerodynamic_chord()
+            wing.pitching_moment = wing.Cm * qS * wing.mean_aerodynamic_chord()
 
         ### Total the forces
         self.lift_force = 0
@@ -112,4 +113,13 @@ class AeroBuildup(ExplicitAnalysis):
 
         self.CL = self.lift_force / qS
         self.CD = self.drag_force / qS
-        self.CM = self.pitching_moment / qS / self.airplane.c_ref
+        self.Cm = self.pitching_moment / qS / self.airplane.c_ref
+
+        return {
+            "CL" : self.CL,
+            "CD" : self.CD,
+            "CY" :
+            "Cl" : 0,
+            "Cm" : self.Cm
+            "Cn" : 0,
+        }
