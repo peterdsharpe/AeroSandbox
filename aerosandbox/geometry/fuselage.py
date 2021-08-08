@@ -75,7 +75,7 @@ class Fuselage(AeroSandboxObject):
         of the leading and trailing cross sections.
         :return:
         """
-        return np.fabs(self.xsecs[-1].x_c - self.xsecs[0].x_c)
+        return np.fabs(self.xsecs[-1].xyz_c[0] - self.xsecs[0].xyz_c[0])
 
     def volume(self) -> float:
         """
