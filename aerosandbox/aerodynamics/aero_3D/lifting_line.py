@@ -5,8 +5,10 @@ from aerosandbox.performance import OperatingPoint
 
 class LiftingLine(ImplicitAnalysis):
     """
-    An implicit aerodynamics analysis based on nonlinear lifting line theory, with modifications for nonzero sweep
+    An implicit aerodynamics analysis based on lifting line theory, with modifications for nonzero sweep
     and dihedral + multiple wings.
+
+    Nonlinear, and includes viscous effects based on 2D data.
 
     Usage example:
         >>>analysis = asb.LiftingLine(
@@ -29,8 +31,8 @@ class LiftingLine(ImplicitAnalysis):
                  op_point: OperatingPoint,
                  run_symmetric_if_possible=True,
                  verbose=True,
-                 default_n_spanwise_panels=8,  # TODO document
-                 default_spanwise_spacing="cosine"  # TODO document
+                 spanwise_resolution=8,  # TODO document
+                 spanwise_spacing="cosine"  # TODO document
                  ):
         """
         Initializes and conducts a LiftingLine analysis.
@@ -58,8 +60,8 @@ class LiftingLine(ImplicitAnalysis):
         self.op_point = op_point
         self.run_symmetric_if_possible = run_symmetric_if_possible
         self.verbose = verbose
-        self.default_n_spanwise_panels = default_n_spanwise_panels
-        self.default_spanwise_spacing = default_spanwise_spacing
+        self.spanwise_resolution = spanwise_resolution
+        self.spanwise_spacing = spanwise_spacing
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
@@ -110,7 +112,7 @@ class LiftingLine(ImplicitAnalysis):
                 try:
                     n_spanwise_panels = inner_xsec.spanwise_panels
                 except AttributeError:
-                    n_spanwise_panels = self.default_n_spanwise_panels
+                    n_spanwise_panels = self.spanwise_resolution
 
                 n_spanwise_coordinates = n_spanwise_panels + 1
 
@@ -118,7 +120,7 @@ class LiftingLine(ImplicitAnalysis):
                 try:
                     spanwise_spacing = inner_xsec.spanwise_spacing
                 except AttributeError:
-                    spanwise_spacing = self.default_spanwise_spacing
+                    spanwise_spacing = self.spanwise_spacing
 
                 if spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
