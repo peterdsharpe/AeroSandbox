@@ -563,21 +563,21 @@ class Wing(AeroSandboxObject):
             )
             xsec_points.append(xsec_point)
 
-        mesh_sections = []
+        points_sections = []
         for i in range(len(xsec_points) - 1):
-            mesh_section = space(
+            points_section = space(
                 xsec_points[i],
                 xsec_points[i + 1],
                 spanwise_resolution + 1
             )
             if not i == len(xsec_points) - 2:
-                mesh_section = mesh_section[:-1]
+                points_section = points_section[:-1]
 
-            mesh_sections.append(mesh_section)
+            points_sections.append(points_section)
 
-        mesh = np.concatenate(mesh_sections)
+        points = np.concatenate(points_sections)
 
-        return mesh
+        return points
 
     def _compute_xyz_le_of_WingXSec(self, index: int):
         return self._compute_xyz_of_WingXSec(
