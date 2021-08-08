@@ -11,3 +11,4 @@ def test_aero_buildup():
 
 if __name__ == '__main__':
     test_aero_buildup()
+    # pytest.main()
