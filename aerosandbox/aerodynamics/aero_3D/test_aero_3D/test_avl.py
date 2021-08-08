@@ -1,78 +1,8 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
+from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
 
-sd7037 = asb.Airfoil("sd7037")
-
-airplane = asb.Airplane(
-    name="Vanilla",
-    xyz_ref=[0.25, 0, 0],
-    s_ref=9,
-    c_ref=0.9,
-    b_ref=10,
-    wings=[
-        asb.Wing(
-            name="Wing",
-            symmetric=True,
-            xsecs=[
-                asb.WingXSec(
-                    xyz_le=[0, 0, 0],
-                    chord=1,
-                    twist=2,
-                    airfoil=sd7037,
-                ),
-                asb.WingXSec(
-                    xyz_le=[0.2, 5, 0],
-                    chord=0.6,
-                    twist=2,
-                    airfoil=sd7037,
-                ),
-            ]
-        ),
-        asb.Wing(
-            name="H-stab",
-            symmetric=True,
-            xyz_le=[4, 0, 0],
-            xsecs=[
-                asb.WingXSec(
-                    xyz_le=[0, 0, 0],
-                    chord=0.7,
-                ),
-                asb.WingXSec(
-                    xyz_le=[0.14, 1.25, 0],
-                    chord=0.42
-                ),
-            ]
-        ),
-        asb.Wing(
-            name="V-stab",
-            xyz_le=[4, 0, 0],
-            xsecs=[
-                asb.WingXSec(
-                    xyz_le=[0, 0, 0],
-                    chord=0.7,
-                ),
-                asb.WingXSec(
-                    xyz_le=[0.14, 0, 1],
-                    chord=0.42
-                )
-            ]
-        )
-    ],
-    fuselages=[
-        asb.Fuselage(
-            name="Fuselage",
-            xyz_le=[0, 0, 0],
-            xsecs=[
-                asb.FuselageXSec(
-                    xyz_c=[xi * 5 - 0.5, 0, 0],
-                    radius=4 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
-                )
-                for xi in np.cosspace(0, 1, 30)
-            ]
-        )
-    ]
-)
 
 def test_avl():
     avl = asb.AVL(
@@ -81,5 +11,7 @@ def test_avl():
     )
     return avl.run()
 
+
 if __name__ == '__main__':
-    pytest.main()
+    test_avl()
+    # pytest.main()
