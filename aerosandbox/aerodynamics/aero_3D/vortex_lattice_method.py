@@ -4,7 +4,7 @@ from aerosandbox.geometry import *
 
 class VortexLatticeMethod(ExplicitAnalysis):
     """
-    An explicit vortex-lattice-method aerodynamics analysis.
+    An explicit (linear) vortex-lattice-method aerodynamics analysis.
 
     Usage example:
         >>>analysis = asb.VortexLatticeMethod(
