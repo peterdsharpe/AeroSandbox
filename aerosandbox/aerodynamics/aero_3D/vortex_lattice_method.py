@@ -28,7 +28,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
                  run_symmetric_if_possible=True,
-                 verbose=True,
+                 verbose=False,
                  spanwise_resolution=10,
                  spanwise_spacing="cosine",
                  chordwise_resolution=10,
@@ -98,7 +98,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         left_vortex_vertices = 0.75 * front_left_vertices + 0.25 * back_left_vertices
         right_vortex_vertices = 0.75 * front_right_vertices + 0.25 * back_right_vertices
         vortex_centers = (left_vortex_vertices + right_vortex_vertices) / 2
-        vortex_bound_leg = (right_vortex_vertices - left_vortex_vertices)
+        vortex_bound_leg = right_vortex_vertices - left_vortex_vertices
         collocation_points = 0.5 * (
                 0.25 * front_left_vertices + 0.75 * back_left_vertices
         ) + 0.5 * (
@@ -137,15 +137,15 @@ class VortexLatticeMethod(ExplicitAnalysis):
             return np.reshape(array, (-1, 1))
 
         u_collocations_unit, v_collocations_unit, w_collocations_unit = calculate_induced_velocity_horseshoe(
-            x_field=tall(collocation_points[:, 0]),
-            y_field=tall(collocation_points[:, 1]),
-            z_field=tall(collocation_points[:, 2]),
-            x_left=wide(left_vortex_vertices[:, 0]),
-            y_left=wide(left_vortex_vertices[:, 1]),
-            z_left=wide(left_vortex_vertices[:, 2]),
-            x_right=wide(right_vortex_vertices[:, 0]),
-            y_right=wide(right_vortex_vertices[:, 1]),
-            z_right=wide(right_vortex_vertices[:, 2]),
+            x_field=wide(collocation_points[:, 0]),
+            y_field=wide(collocation_points[:, 1]),
+            z_field=wide(collocation_points[:, 2]),
+            x_left=tall(left_vortex_vertices[:, 0]),
+            y_left=tall(left_vortex_vertices[:, 1]),
+            z_left=tall(left_vortex_vertices[:, 2]),
+            x_right=tall(right_vortex_vertices[:, 0]),
+            y_right=tall(right_vortex_vertices[:, 1]),
+            z_right=tall(right_vortex_vertices[:, 2]),
             trailing_vortex_direction=steady_freestream_direction,
             gamma=1,
         )
@@ -172,15 +172,15 @@ class VortexLatticeMethod(ExplicitAnalysis):
             print("Calculating forces on each panel...")
         # Calculate the induced velocity at the center of each bound leg
         u_centers_induced, v_centers_induced, w_centers_induced = calculate_induced_velocity_horseshoe(
-            x_field=tall(vortex_centers[:, 0]),
-            y_field=tall(vortex_centers[:, 1]),
-            z_field=tall(vortex_centers[:, 2]),
-            x_left=wide(left_vortex_vertices[:, 0]),
-            y_left=wide(left_vortex_vertices[:, 1]),
-            z_left=wide(left_vortex_vertices[:, 2]),
-            x_right=wide(right_vortex_vertices[:, 0]),
-            y_right=wide(right_vortex_vertices[:, 1]),
-            z_right=wide(right_vortex_vertices[:, 2]),
+            x_field=wide(collocation_points[:, 0]),
+            y_field=wide(collocation_points[:, 1]),
+            z_field=wide(collocation_points[:, 2]),
+            x_left=tall(left_vortex_vertices[:, 0]),
+            y_left=tall(left_vortex_vertices[:, 1]),
+            z_left=tall(left_vortex_vertices[:, 2]),
+            x_right=tall(right_vortex_vertices[:, 0]),
+            y_right=tall(right_vortex_vertices[:, 1]),
+            z_right=tall(right_vortex_vertices[:, 2]),
             trailing_vortex_direction=steady_freestream_direction,
             gamma=gamma,
         )
