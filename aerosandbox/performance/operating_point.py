@@ -58,12 +58,12 @@ class OperatingPoint(AeroSandboxObject):
         """
 
         alpha_rotation = np.rotation_matrix_3D(
-            angle=np.radians(self.alpha),
+            angle=np.radians(-self.alpha),
             axis=np.array([0, 1, 0]),
             _axis_already_normalized=True
         )
         beta_rotation = np.rotation_matrix_3D(
-            angle=np.radians(self.beta),
+            angle=np.radians(-self.beta),
             axis=np.array([0, 0, 1]),
             _axis_already_normalized=True
         )
