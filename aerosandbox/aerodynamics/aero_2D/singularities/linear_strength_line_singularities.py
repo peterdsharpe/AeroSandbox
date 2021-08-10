@@ -2,6 +2,7 @@ import aerosandbox.numpy as np
 from typing import Union
 import casadi as cas
 
+
 def _calculate_induced_velocity_line_singularity_panel_coordinates(
         xp_field: Union[float, np.ndarray],
         yp_field: Union[float, np.ndarray],
@@ -129,7 +130,6 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
 
         # Calculate v_vortex
         v_vortex_term_1 = u_vortex_term_2_quantity * ln_r_2_r_1
-
 
         v_vortex_term_2 = np.where(
             is_on_panel,
