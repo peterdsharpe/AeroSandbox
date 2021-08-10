@@ -29,9 +29,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
                  op_point,  # type: op_point
                  run_symmetric_if_possible=True,
                  verbose=True,
-                 spanwise_resolution=12,
+                 spanwise_resolution=10,
                  spanwise_spacing="cosine",
-                 chordwise_resolution=12,
+                 chordwise_resolution=10,
                  chordwise_spacing="cosine",
                  ):
         super().__init__()
@@ -77,9 +77,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 add_camber=True
             )
             front_left_vertices.append(points[faces[:, 0], :])
-            back_left_vertices.append(points[faces[:, 1], :])
+            front_right_vertices.append(points[faces[:, 1], :])
+            back_left_vertices.append(points[faces[:, 3], :])
             back_right_vertices.append(points[faces[:, 2], :])
-            front_right_vertices.append(points[faces[:, 3], :])
 
         front_left_vertices = np.concatenate(front_left_vertices)
         front_right_vertices = np.concatenate(front_right_vertices)

@@ -67,7 +67,9 @@ def calculate_induced_velocity_horseshoe(
     u_z = trailing_vortex_direction[2]
 
     # Handle the special case where the field point is on one of the legs
-    r = 1e-100
+    def smoothed_inv(x):
+        "Approximates 1/x with a function that sharply goes to 0 in the x -> 0 limit."
+        return x / (x ** 2 + 1e-100)
 
     ### Do some useful arithmetic
 
@@ -88,13 +90,14 @@ def calculate_induced_velocity_horseshoe(
 
     norm_a = (a_x ** 2 + a_y ** 2 + a_z ** 2) ** 0.5
     norm_b = (b_x ** 2 + b_y ** 2 + b_z ** 2) ** 0.5
-    norm_a_inv = 1 / (norm_a + r)
-    norm_b_inv = 1 / (norm_b + r)
+    norm_a_inv = smoothed_inv(norm_a)
+    norm_b_inv = smoothed_inv(norm_b)
 
     ### Calculate Vij
-    term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b + r)
-    term2 = norm_a_inv / (norm_a - a_dot_u + r)
-    term3 = norm_b_inv / (norm_b - b_dot_u + r)
+
+    term1 = (norm_a_inv + norm_b_inv) * smoothed_inv(norm_a * norm_b + a_dot_b)
+    term2 = norm_a_inv * smoothed_inv(norm_a - a_dot_u)
+    term3 = norm_b_inv * smoothed_inv(norm_b - b_dot_u)
 
     constant = gamma / (4 * np.pi)
 
