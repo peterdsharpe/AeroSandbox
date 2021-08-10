@@ -99,11 +99,4 @@ airplane = asb.Airplane(
 )
 
 if __name__ == '__main__':
-    points, faces = airplane.mesh_body()
-    import pyvista as pv
-    mesh = pv.PolyData(
-        *asb.mesh_utils.convert_mesh_to_polydata_format(
-            points, faces
-        )
-    )
-    mesh.plot(show_edges=True)
+    airplane.draw()
