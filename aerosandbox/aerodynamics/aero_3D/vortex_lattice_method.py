@@ -1,5 +1,8 @@
+import numpy as np
 from aerosandbox import ExplicitAnalysis
 from aerosandbox.geometry import *
+from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
+    calculate_induced_velocity_horseshoe
 
 
 class VortexLatticeMethod(ExplicitAnalysis):
@@ -24,28 +27,41 @@ class VortexLatticeMethod(ExplicitAnalysis):
     def __init__(self,
                  airplane,  # type: Airplane
                  op_point,  # type: op_point
+                 run_symmetric_if_possible=True,
+                 verbose=True,
+                 spanwise_resolution=12,
+                 spanwise_spacing="cosine",
+                 chordwise_resolution=12,
+                 chordwise_spacing="cosine",
                  ):
         super().__init__()
 
         self.airplane = airplane
         self.op_point = op_point
+        self.verbose = verbose
+        self.spanwise_resolution = spanwise_resolution
+        self.spanwise_spacing = spanwise_spacing
+        self.chordwise_resolution = chordwise_resolution
+        self.chordwise_spacing = chordwise_spacing
+
+        ### Determine whether you should run the problem as symmetric
+        self.run_symmetric = False
+        if run_symmetric_if_possible:
+            try:
+                self.run_symmetric = (  # Satisfies assumptions
+                        self.op_point.beta == 0 and
+                        self.op_point.p == 0 and
+                        self.op_point.r == 0 and
+                        self.airplane.is_entirely_symmetric()
+                )
+            except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
+                pass
 
     def run(self):
-        # Runs a point analysis at the specified op-point.
-        self.verbose = verbose
-
-        self.make_panels()
-        self.setup_geometry()
-        self.setup_operating_point()
-        self.calculate_vortex_strengths()
-        self.calculate_forces()
-
-    def make_panels(self):
-        # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
-
         if self.verbose:
             print("Meshing...")
 
+        ##### Make Panels
         front_left_vertices = []
         front_right_vertices = []
         back_left_vertices = []
@@ -54,87 +70,97 @@ class VortexLatticeMethod(ExplicitAnalysis):
         for wing in self.airplane.wings:
             points, faces = wing.mesh_thin_surface(
                 method="quad",
-                chordwise_resolution=10,  # TODO add function inputs for this
-                spanwise_resolution=10,
-                chordwise_spacing="cosine",
-                spanwise_spacing="cosine",
+                chordwise_resolution=self.chordwise_resolution,
+                chordwise_spacing=self.chordwise_spacing,
+                spanwise_resolution=self.spanwise_resolution,
+                spanwise_spacing=self.spanwise_spacing,
+                add_camber=True
             )
             front_left_vertices.append(points[faces[:, 0], :])
             back_left_vertices.append(points[faces[:, 1], :])
             back_right_vertices.append(points[faces[:, 2], :])
             front_right_vertices.append(points[faces[:, 3], :])
 
-        # Concatenate things (MX)
-        self.front_left_vertices = cas.MX(cas.transpose(cas.horzcat(*front_left_vertices)))
-        self.front_right_vertices = cas.MX(cas.transpose(cas.horzcat(*front_right_vertices)))
-        self.back_left_vertices = cas.MX(cas.transpose(cas.horzcat(*back_left_vertices)))
-        self.back_right_vertices = cas.MX(cas.transpose(cas.horzcat(*back_right_vertices)))
-        self.normal_directions = cas.MX(cas.transpose(cas.horzcat(*normal_directions)))
-        self.is_trailing_edge = is_trailing_edge
+        front_left_vertices = np.concatenate(front_left_vertices)
+        front_right_vertices = np.concatenate(front_right_vertices)
+        back_left_vertices = np.concatenate(back_left_vertices)
+        back_right_vertices = np.concatenate(back_right_vertices)
 
-        # Calculate areas
-        diag1 = self.front_right_vertices - self.back_left_vertices
-        diag2 = self.front_left_vertices - self.back_right_vertices
-        cross = cas.cross(diag1, diag2)
-        cross_norm = cas.sqrt(cross[:, 0] ** 2 + cross[:, 1] ** 2 + cross[:, 2] ** 2)
-        self.areas = cross_norm / 2
+        ### Compute panel statistics
+        diag1 = front_right_vertices - back_left_vertices
+        diag2 = front_left_vertices - back_right_vertices
+        cross = np.cross(diag1, diag2)
+        cross_norm = (cross[:, 0] ** 2 + cross[:, 1] ** 2 + cross[:, 2] ** 2) ** 0.5
+        normal_directions = cross / np.reshape(cross_norm, (-1, 1))
+        areas = cross_norm / 2
 
         # Do the vortex math
-        self.left_vortex_vertices = 0.75 * self.front_left_vertices + 0.25 * self.back_left_vertices
-        self.right_vortex_vertices = 0.75 * self.front_right_vertices + 0.25 * self.back_right_vertices
-        self.vortex_centers = (self.left_vortex_vertices + self.right_vortex_vertices) / 2
-        self.vortex_bound_leg = (self.right_vortex_vertices - self.left_vortex_vertices)
-        self.collocation_points = (
-                0.5 * (
-                0.25 * self.front_left_vertices + 0.75 * self.back_left_vertices
-        ) +
-                0.5 * (
-                        0.25 * self.front_right_vertices + 0.75 * self.back_right_vertices
-                )
-        )
-
-        # Do final processing for later use
-        self.n_panels = self.collocation_points.shape[0]
+        left_vortex_vertices = 0.75 * front_left_vertices + 0.25 * back_left_vertices
+        right_vortex_vertices = 0.75 * front_right_vertices + 0.25 * back_right_vertices
+        vortex_centers = (left_vortex_vertices + right_vortex_vertices) / 2
+        vortex_bound_leg = (right_vortex_vertices - left_vortex_vertices)
+        collocation_points = 0.5 * (
+                0.25 * front_left_vertices + 0.75 * back_left_vertices
+        ) + 0.5 * (
+                                     0.25 * front_right_vertices + 0.75 * back_right_vertices
+                             )
+        n_panels = collocation_points.shape[0]
 
         if self.verbose:
             print("Meshing complete!")
 
-    def setup_geometry(self):
-        # # Calculate AIC matrix
-        # ----------------------
-        if self.verbose:
-            print("Calculating the collocation influence matrix...")
-        self.Vij_collocations_x, self.Vij_collocations_y, self.Vij_collocations_z = self.calculate_Vij(
-            self.collocation_points)
-
-        # AIC = (Vij * normal vectors)
-        self.AIC = (
-                self.Vij_collocations_x * self.normal_directions[:, 0] +
-                self.Vij_collocations_y * self.normal_directions[:, 1] +
-                self.Vij_collocations_z * self.normal_directions[:, 2]
-        )
-
-        # # Calculate Vij at vortex centers for force calculation
-        # -------------------------------------------------------
-        if self.verbose:
-            print("Calculating the vortex center influence matrix...")
-        self.Vij_centers_x, self.Vij_centers_y, self.Vij_centers_z = self.calculate_Vij(self.vortex_centers)
-
-    def setup_operating_point(self):
+        ##### Setup Operating Point
         if self.verbose:
             print("Calculating the freestream influence...")
-        self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
-        self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            self.collocation_points)
+        steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
+        rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
+            collocation_points)
 
-        self.freestream_velocities = cas.transpose(self.steady_freestream_velocity + cas.transpose(
-            self.rotation_freestream_velocities))  # Nx3, represents the freestream velocity at each panel collocation point (c)
+        freestream_velocities = np.transpose(steady_freestream_velocity + np.transpose(
+            rotation_freestream_velocities))  # Nx3, represents the freestream velocity at each panel collocation point (c)
 
-        self.freestream_influences = (
-                self.freestream_velocities[:, 0] * self.normal_directions[:, 0] +
-                self.freestream_velocities[:, 1] * self.normal_directions[:, 1] +
-                self.freestream_velocities[:, 2] * self.normal_directions[:, 2]
+        freestream_influences = (
+                freestream_velocities[:, 0] * normal_directions[:, 0] +
+                freestream_velocities[:, 1] * normal_directions[:, 1] +
+                freestream_velocities[:, 2] * normal_directions[:, 2]
         )
+
+        ##### Setup Geometry
+        ### Calculate AIC matrix
+        if self.verbose:
+            print("Calculating the collocation influence matrix...")
+
+        def wide(array):
+            return np.reshape(array, (1, -1))
+
+        def tall(array):
+            return np.reshape(array, (-1, 1))
+
+        u_collocations_unit, v_collocations_unit, w_collocations_unit = calculate_induced_velocity_horseshoe(
+            x_field=tall(collocation_points[:, 0]),
+            y_field=tall(collocation_points[:, 1]),
+            z_field=tall(collocation_points[:, 2]),
+            x_left=wide(left_vortex_vertices[:, 0]),
+            y_left=wide(left_vortex_vertices[:, 1]),
+            z_left=wide(left_vortex_vertices[:, 2]),
+            x_right=wide(right_vortex_vertices[:, 0]),
+            y_right=wide(right_vortex_vertices[:, 1]),
+            z_right=wide(right_vortex_vertices[:, 2]),
+            trailing_vortex_direction=steady_freestream_velocity,
+            gamma=1,
+        )
+
+        AIC = (
+                u_collocations_unit * normal_directions[:, 0] +
+                v_collocations_unit * normal_directions[:, 1] +
+                w_collocations_unit * normal_directions[:, 2]
+        )
+
+    # self.make_panels()
+    # self.setup_geometry()
+    # self.setup_operating_point()
+    # self.calculate_vortex_strengths()
+    # self.calculate_forces()
 
     def calculate_vortex_strengths(self):
         # # Calculate Vortex Strengths
@@ -377,7 +403,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
                               n_steps=100,  # minimum of 2
                               length=None  # will be auto-calculated if not specified
                               ):
-
         if length is None:
             length = self.airplane.c_ref * 5
         if seed_points is None:
@@ -514,3 +539,37 @@ class VortexLatticeMethod(ExplicitAnalysis):
             show=show,
             colorbar_title=data_name
         )
+
+
+if __name__ == '__main__':
+    ### Import Vanilla Airplane
+    import aerosandbox as asb
+
+    from pathlib import Path
+
+    geometry_folder = Path(asb.__file__).parent.parent / "tutorial" / "04 - Geometry" / "example_geometry"
+
+    import sys
+
+    sys.path.insert(0, str(geometry_folder))
+
+    from vanilla import airplane as vanilla
+
+    ### Do the AVL run
+    avl = VortexLatticeMethod(
+        airplane=vanilla,
+        op_point=asb.OperatingPoint(
+            atmosphere=asb.Atmosphere(altitude=0),
+            velocity=1,
+            alpha=0.433476,
+            beta=0,
+            p=0,
+            q=0,
+            r=0,
+        ),
+    )
+
+    res = avl.run()
+
+    for k, v in res.items():
+        print(f"{str(k).rjust(10)} : {v}")
