@@ -327,20 +327,23 @@ def calculate_induced_velocity_line_singularities(
 if __name__ == '__main__':
 
     X, Y = np.meshgrid(
-        np.linspace(-1, 1, 50),
-        np.linspace(-1, 1, 50),
+        np.linspace(-2, 2, 50),
+        np.linspace(-2, 2, 50),
         indexing='ij',
     )
     X = X.flatten()
     Y = Y.flatten()
 
+    x_panels = np.array([1, -1, -1, 1, 1])
+    y_panels = np.array([1, 1, -1, -1, 1])
+
     U, V = calculate_induced_velocity_line_singularities(
         x_field=X,
         y_field=Y,
-        x_panels=np.array([-0.5, 0.5, 0.5, -0.5, -0.5]),
-        y_panels=np.array([-0.5, -0.5, 0.5, 0.5, -0.5]),
-        gamma=np.array([0, 0, 0, 0, 0]),
-        sigma=np.array([1, 1, 1, 1, 1])
+        x_panels=x_panels,
+        y_panels=y_panels,
+        gamma=np.ones_like(x_panels),
+        sigma=np.ones_like(x_panels)
     )
 
     import matplotlib.pyplot as plt
