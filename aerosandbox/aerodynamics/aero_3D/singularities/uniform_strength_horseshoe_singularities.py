@@ -67,6 +67,9 @@ def calculate_induced_velocity_horseshoe(
     u_y = trailing_vortex_direction[1]
     u_z = trailing_vortex_direction[2]
 
+    # Handle the special case where the field point is on one of the legs
+    r = 1e-100 if regularize else 0
+
     ### Do some useful arithmetic
 
     a_cross_b_x = a_y * b_z - a_z * b_y
@@ -86,11 +89,8 @@ def calculate_induced_velocity_horseshoe(
 
     norm_a = (a_x ** 2 + a_y ** 2 + a_z ** 2) ** 0.5
     norm_b = (b_x ** 2 + b_y ** 2 + b_z ** 2) ** 0.5
-    norm_a_inv = 1 / norm_a
-    norm_b_inv = 1 / norm_b
-
-    # Handle the special case where the field point is on one of the legs
-    r = 1e-100 if regularize else 0
+    norm_a_inv = 1 / (norm_a + r)
+    norm_b_inv = 1 / (norm_b + r)
 
     ### Calculate Vij
     term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b + r)
@@ -121,7 +121,7 @@ def calculate_induced_velocity_horseshoe(
 if __name__ == '__main__':
     u, v, w = calculate_induced_velocity_horseshoe(
         x_field=-1,
-        y_field=0,
+        y_field=-1,
         z_field=0,
         x_left=-1,
         y_left=-1,
