@@ -113,6 +113,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if self.verbose:
             print("Calculating the freestream influence...")
         steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
+        steady_freestream_direction = steady_freestream_velocity / np.linalg.norm(steady_freestream_velocity)
         rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             collocation_points)
 
@@ -145,7 +146,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(right_vortex_vertices[:, 0]),
             y_right=wide(right_vortex_vertices[:, 1]),
             z_right=wide(right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=steady_freestream_velocity,
+            trailing_vortex_direction=steady_freestream_direction,
             gamma=1,
         )
 
@@ -180,7 +181,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(right_vortex_vertices[:, 0]),
             y_right=wide(right_vortex_vertices[:, 1]),
             z_right=wide(right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=steady_freestream_velocity,
+            trailing_vortex_direction=steady_freestream_direction,
             gamma=gamma,
         )
         u_centers_induced = np.sum(u_centers_induced, axis=1)
@@ -451,7 +452,7 @@ if __name__ == '__main__':
         airplane=vanilla,
         op_point=asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=0),
-            velocity=1,
+            velocity=10,
             alpha=0,
             beta=0,
             p=0,
