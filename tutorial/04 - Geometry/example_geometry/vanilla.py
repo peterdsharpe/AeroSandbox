@@ -17,13 +17,13 @@ airplane = asb.Airplane(
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=1,
-                    twist_angle=2,
+                    twist=2,
                     airfoil=sd7037,
                 ),
                 asb.WingXSec(
                     xyz_le=[0.2, 5, 1],
                     chord=0.6,
-                    twist_angle=2,
+                    twist=2,
                     airfoil=sd7037,
                 )
             ]
