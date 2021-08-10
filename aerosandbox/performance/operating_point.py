@@ -98,11 +98,11 @@ class OperatingPoint(AeroSandboxObject):
         a = angular_velocity_vector_geometry_axes
         b = points
 
-        rotation_velocity_geometry_axes = np.array([
+        rotation_velocity_geometry_axes = np.transpose(np.array([
             a[1] * b[:, 2] - a[2] * b[:, 1],
             a[2] * b[:, 0] - a[0] * b[:, 2],
             a[0] * b[:, 1] - a[1] * b[:, 0]
-        ])
+        ]))
 
         rotation_velocity_geometry_axes = -rotation_velocity_geometry_axes  # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
 
