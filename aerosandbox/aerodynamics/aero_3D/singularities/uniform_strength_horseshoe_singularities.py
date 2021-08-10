@@ -41,6 +41,20 @@ def calculate_induced_velocity_horseshoe(
     Returns:
 
     """
+    np.assert_equal_shape({
+        "x_field": x_field,
+        "y_field": y_field,
+        "z_field": z_field,
+    })
+    np.assert_equal_shape({
+        "x_left" : x_left,
+        "y_left" : y_left,
+        "z_left" : z_left,
+        "x_right": x_right,
+        "y_right": y_right,
+        "z_right": z_right,
+    })
+
     a_x = x_field - x_left
     a_y = y_field - y_left
     a_z = z_field - z_left
@@ -109,7 +123,7 @@ if __name__ == '__main__':
     u, v, w = calculate_induced_velocity_horseshoe(
         x_field=0,
         y_field=0,
-        z_field=10,
+        z_field=0,
         x_left=-1,
         y_left=-1,
         z_left=0,
