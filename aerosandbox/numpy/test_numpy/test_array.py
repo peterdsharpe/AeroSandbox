@@ -169,7 +169,11 @@ def test_assert_equal_shape():
             "thing1": np.array([1, 2, 3]),
             "thing2": np.array([1, 2, 3, 4])
         })
-
+    np.assert_equal_shape([
+        2,
+        3,
+        4
+    ])
 
 if __name__ == '__main__':
     pytest.main()
