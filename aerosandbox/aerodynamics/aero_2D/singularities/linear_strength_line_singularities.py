@@ -292,7 +292,7 @@ def calculate_induced_velocity_line_singularities(
 
     Function returns the 2D velocity u, v in the global coordinate system (x, y).
 
-    Inputs x and y can be 1D ndarrays representing various field points,
+    Inputs x_field and y_field can be 1D ndarrays representing various field points,
     in which case the resulting velocities u and v have the corresponding dimensionality.
 
     """
