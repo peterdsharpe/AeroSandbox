@@ -206,8 +206,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
             print("Calculating total forces and moments...")
         force_geometry = np.sum(forces_geometry, axis=0)
         # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        if self.verbose:
-            print("Total aerodynamic forces (geometry axes): ", force_geometry)
 
         force_wind = np.transpose(
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_geometry
@@ -454,7 +452,7 @@ if __name__ == '__main__':
         op_point=asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=0),
             velocity=1,
-            alpha=0.433476,
+            alpha=0,
             beta=0,
             p=0,
             q=0,
@@ -465,4 +463,4 @@ if __name__ == '__main__':
     res = analysis.run()
 
     for k, v in res.items():
-        print(f"{str(k).rjust(10)} : {v}")
+        print(f"{str(k).rjust(10)} : {v:.4f}")
