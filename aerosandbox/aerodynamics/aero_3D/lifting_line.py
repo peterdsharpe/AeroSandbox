@@ -79,13 +79,7 @@ class LiftingLine(ImplicitAnalysis):
 
     def run(self) -> Dict:
 
-        self._make_panels()
-        self._setup_geometry()
-        self._setup_operating_point()
-        self._calculate_vortex_strengths()
-        self._calculate_forces()
-
-    def _make_panels(self):
+        ### Make Panels
 
         if self.verbose:
             print("Meshing...")
@@ -99,11 +93,28 @@ class LiftingLine(ImplicitAnalysis):
         Cm_functions = []
         wing_id = []
 
-        for wing_index, wing in enumerate(self.airplane.wings):  # Iterate through wings
+        for wing in self.airplane.wings:  # Iterate through wings
             for inner_xsec, outer_xsec in zip(
                     wing.xsecs[:-1],
                     wing.xsecs[1:]
             ):  # Iterate through pairs of wing cross sections
+
+                wing_section = Wing(
+                    xyz_le=wing.xyz_le,
+                    xsecs=[
+                        inner_xsec,
+                        outer_xsec
+                    ],
+                    symmetric=wing.symmetric
+                )
+
+                points, faces = wing_section.mesh_thin_surface(
+                    method="quad",
+                    chordwise_resolution=1,
+                    spanwise_resolution=self.spanwise_resolution,
+                    spanwise_spacing=spanwise_spacing,
+                    add_camber=False
+                )
 
                 # Find the corners
                 inner_xsec_xyz_le = inner_xsec.xyz_le + wing.xyz_le
