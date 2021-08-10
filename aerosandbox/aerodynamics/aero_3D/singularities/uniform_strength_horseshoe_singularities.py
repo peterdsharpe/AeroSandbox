@@ -14,7 +14,6 @@ def calculate_induced_velocity_horseshoe(
         z_right: Union[float, np.ndarray],
         gamma: np.ndarray,
         trailing_vortex_direction: np.ndarray = np.array([1, 0, 0]),
-        regularize: bool = True,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -68,7 +67,7 @@ def calculate_induced_velocity_horseshoe(
     u_z = trailing_vortex_direction[2]
 
     # Handle the special case where the field point is on one of the legs
-    r = 1e-100 if regularize else 0
+    r = 1e-100
 
     ### Do some useful arithmetic
 
@@ -130,6 +129,5 @@ if __name__ == '__main__':
         y_right=1,
         z_right=0,
         gamma=1,
-        # regularize=False
     )
     print(u, v, w)
