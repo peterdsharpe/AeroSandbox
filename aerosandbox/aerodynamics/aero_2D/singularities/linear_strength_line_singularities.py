@@ -342,8 +342,8 @@ if __name__ == '__main__':
         y_field=Y,
         x_panels=x_panels,
         y_panels=y_panels,
-        gamma=np.ones_like(x_panels),
-        sigma=np.ones_like(x_panels)
+        gamma=0 * np.ones_like(x_panels),
+        sigma=1 * np.ones_like(x_panels)
     )
 
     import matplotlib.pyplot as plt
