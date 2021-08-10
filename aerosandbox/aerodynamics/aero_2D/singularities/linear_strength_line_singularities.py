@@ -283,10 +283,10 @@ def calculate_induced_velocity_line_singularities(
     Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
 
     In this flowfield, the following singularity elements are assumed: # TODO update paragraph
-        A line vortex that passes through the coordinates specified in (x_panel, y_panel). Each of these vertices is
+        * A line vortex that passes through the coordinates specified in (x_panel, y_panel). Each of these vertices is
         called a "node".
-        The vorticity of this line vortex per unit length varies linearly between subsequent nodes.
-        The vorticity at each node is specified by the parameter gamma.
+        * The vorticity of this line vortex per unit length varies linearly between subsequent nodes.
+        * The vorticity at each node is specified by the parameter gamma.
 
     By convention here, positive gamma induces clockwise swirl in the flow field.
 
@@ -329,7 +329,6 @@ if __name__ == '__main__':
     X, Y = np.meshgrid(
         np.linspace(-2, 2, 50),
         np.linspace(-2, 2, 50),
-        indexing='ij',
     )
     X = X.flatten()
     Y = Y.flatten()
@@ -342,7 +341,7 @@ if __name__ == '__main__':
         y_field=Y,
         x_panels=x_panels,
         y_panels=y_panels,
-        gamma=0 * np.ones_like(x_panels),
+        gamma=1 * np.ones_like(x_panels),
         sigma=1 * np.ones_like(x_panels)
     )
 
