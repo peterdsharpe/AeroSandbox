@@ -459,8 +459,8 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        spanwise_resolution=1,
-        chordwise_resolution=1,
+        spanwise_resolution=12,
+        chordwise_resolution=12,
     )
 
     res = analysis.run()
