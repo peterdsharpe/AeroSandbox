@@ -55,6 +55,7 @@ class LiftingLine(ImplicitAnalysis):
                 If not provided, creates and solves the governing equations in a new instance.
 
         """
+        super().__init__()
 
         ### Initialize
         self.airplane = airplane
