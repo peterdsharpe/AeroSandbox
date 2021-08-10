@@ -14,7 +14,7 @@ def calculate_induced_velocity_horseshoe(
         z_right: Union[float, np.ndarray],
         gamma: np.ndarray,
         trailing_vortex_direction: np.ndarray = np.array([1, 0, 0]),
-        regularize_dot_product: bool = True,
+        regularize: bool = True,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -89,14 +89,13 @@ def calculate_induced_velocity_horseshoe(
     norm_a_inv = 1 / norm_a
     norm_b_inv = 1 / norm_b
 
-    # Handle the special case where the field point is on the bound leg
-    if regularize_dot_product:
-        a_dot_b -= 1e-8
+    # Handle the special case where the field point is on one of the legs
+    r = 1e-100 if regularize else 0
 
     ### Calculate Vij
-    term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
-    term2 = norm_a_inv / (norm_a - a_dot_u)
-    term3 = norm_b_inv / (norm_b - b_dot_u)
+    term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b + r)
+    term2 = norm_a_inv / (norm_a - a_dot_u + r)
+    term3 = norm_b_inv / (norm_b - b_dot_u + r)
 
     constant = gamma / (4 * np.pi)
 
@@ -121,7 +120,7 @@ def calculate_induced_velocity_horseshoe(
 
 if __name__ == '__main__':
     u, v, w = calculate_induced_velocity_horseshoe(
-        x_field=0,
+        x_field=-1,
         y_field=0,
         z_field=0,
         x_left=-1,
@@ -131,6 +130,6 @@ if __name__ == '__main__':
         y_right=1,
         z_right=0,
         gamma=1,
-        regularize_dot_product=False
+        # regularize=False
     )
     print(u, v, w)
