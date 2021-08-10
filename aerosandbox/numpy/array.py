@@ -245,10 +245,16 @@ def assert_equal_shape(
     except AttributeError:
         names = None
 
-    shape = arrays[0].shape
+    def get_shape(array):
+        try:
+            return array.shape
+        except AttributeError:  # If it's a float/int
+            return ()
+
+        shape = get_shape(arrays[0])
 
     for array in arrays[1:]:
-        if not array.shape == shape:
+        if not get_shape(arrays[0]) == shape:
             if names is None:
                 raise ValueError("The given arrays do not have the same shape!")
             else:
