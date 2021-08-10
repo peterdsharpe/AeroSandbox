@@ -135,6 +135,8 @@ def test_reshape():
         (12, 1),
         (1, 12),
         (-1),
+        (12, -1),
+        (-1, 12),
     ]
 
     for i in test_inputs:
@@ -144,6 +146,30 @@ def test_reshape():
             ra = ra.reshape(-1, 1)
 
         assert np.all(ra == rb)
+
+
+def test_assert_equal_shape():
+    a = np.array([1, 2, 3])
+    b = cas.DM(a)
+
+    np.assert_equal_shape([
+        a,
+        a
+    ])
+    np.assert_equal_shape({
+        "thing1": a,
+        "thing2": a,
+    })
+    with pytest.raises(ValueError):
+        np.assert_equal_shape([
+            np.array([1, 2, 3]),
+            np.array([1, 2, 3, 4])
+        ])
+        np.assert_equal_shape({
+            "thing1": np.array([1, 2, 3]),
+            "thing2": np.array([1, 2, 3, 4])
+        })
+
 
 if __name__ == '__main__':
     pytest.main()

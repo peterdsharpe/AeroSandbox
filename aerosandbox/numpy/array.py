@@ -1,6 +1,6 @@
 import numpy as _onp
 import casadi as _cas
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Union
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
@@ -187,7 +187,7 @@ def roll(a, shift, axis: int = None):
 
 def max(a):
     """
-    Returns the maximum value of an array
+    Returns the maximum value of an array.
     """
 
     try:
@@ -198,7 +198,7 @@ def max(a):
 
 def min(a):
     """
-    Returns the minimum value of an array
+    Returns the minimum value of an array.
     """
 
     try:
@@ -220,3 +220,37 @@ def reshape(a, newshape):
             raise ValueError("CasADi data types are limited to no more than 2 dimensions.")
 
         return _cas.reshape(a.T, newshape[::-1]).T
+
+
+def assert_equal_shape(
+        arrays: Union[List[_onp.ndarray], Dict[str, _onp.ndarray]],
+) -> None:
+    """
+    Assert that all of the given arrays are the same shape. If this is not true, raise a ValueError.
+
+    Args: arrays: The arrays to be evaluated.
+
+            Can be provided as a:
+
+                * List, in which case a generic ValueError is thrown
+
+                * Dictionary consisting of name:array pairs for key:value, in which case the names are given in the ValueError.
+
+    Returns: None. Throws an error if leng
+
+    """
+    try:
+        names = arrays.keys()
+        arrays = list(arrays.values())
+    except AttributeError:
+        names = None
+
+    shape = arrays[0].shape
+
+    for array in arrays[1:]:
+        if not array.shape == shape:
+            if names is None:
+                raise ValueError("The given arrays do not have the same shape!")
+            else:
+                namelist = ", ".join(names)
+                raise ValueError(f"The given arrays {namelist} do not have the same shape!")
