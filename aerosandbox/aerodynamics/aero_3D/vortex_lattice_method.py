@@ -116,8 +116,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             collocation_points)
 
-        freestream_velocities = np.transpose(steady_freestream_velocity + np.transpose(
-            rotation_freestream_velocities))  # Nx3, represents the freestream velocity at each panel collocation point (c)
+        freestream_velocities = steady_freestream_velocity + rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         freestream_influences = (
                 freestream_velocities[:, 0] * normal_directions[:, 0] +
@@ -156,214 +155,108 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 w_collocations_unit * normal_directions[:, 2]
         )
 
-    # self.make_panels()
-    # self.setup_geometry()
-    # self.setup_operating_point()
-    # self.calculate_vortex_strengths()
-    # self.calculate_forces()
-
-    def calculate_vortex_strengths(self):
-        # # Calculate Vortex Strengths
-        # ----------------------------
-        # Governing Equation: AIC @ Gamma + freestream_influence = 0
+        ##### Calculate Vortex Strengths
         if self.verbose:
             print("Calculating vortex strengths...")
 
-        # Explicit solve
-        self.vortex_strengths = cas.solve(self.AIC, -self.freestream_influences)
+        gamma = np.linalg.solve(AIC, -freestream_influences)
 
-        # # Implicit solve
-        # self.vortex_strengths = self.opti.variable(self.n_panels)
-        # self.opti.set_initial(self.vortex_strengths, 1)
-        # self.opti.subject_to([
-        #     self.AIC @ self.vortex_strengths == -self.freestream_influences
-        # ])
-
-    def calculate_forces(self):
-        # # Calculate Near-Field Forces and Moments
-        # -----------------------------------------
+        ##### Calculate forces
+        ### Calculate Near-Field Forces and Moments
         # Governing Equation: The force on a straight, small vortex filament is F = rho * V p l * gamma,
         # where rho is density, V is the velocity vector, p is the cross product operator,
         # l is the vector of the filament itself, and gamma is the circulation.
 
         if self.verbose:
             print("Calculating forces on each panel...")
-        # Calculate Vi (local velocity at the ith vortex center point)
-        Vi_x = self.Vij_centers_x @ self.vortex_strengths + self.freestream_velocities[:, 0]
-        Vi_y = self.Vij_centers_y @ self.vortex_strengths + self.freestream_velocities[:, 1]
-        Vi_z = self.Vij_centers_z @ self.vortex_strengths + self.freestream_velocities[:, 2]
-        Vi = cas.horzcat(Vi_x, Vi_y, Vi_z)
+        # Calculate the induced velocity at the center of each bound leg
+        u_centers_induced, v_centers_induced, w_centers_induced = calculate_induced_velocity_horseshoe(
+            x_field=tall(vortex_centers[:, 0]),
+            y_field=tall(vortex_centers[:, 1]),
+            z_field=tall(vortex_centers[:, 2]),
+            x_left=wide(left_vortex_vertices[:, 0]),
+            y_left=wide(left_vortex_vertices[:, 1]),
+            z_left=wide(left_vortex_vertices[:, 2]),
+            x_right=wide(right_vortex_vertices[:, 0]),
+            y_right=wide(right_vortex_vertices[:, 1]),
+            z_right=wide(right_vortex_vertices[:, 2]),
+            trailing_vortex_direction=steady_freestream_velocity,
+            gamma=gamma,
+        )
+        u_centers_induced = np.sum(u_centers_induced, axis=1)
+        v_centers_induced = np.sum(v_centers_induced, axis=1)
+        w_centers_induced = np.sum(w_centers_induced, axis=1)
+
+        u_centers = u_centers_induced + freestream_velocities[:, 0]
+        v_centers = v_centers_induced + freestream_velocities[:, 1]
+        w_centers = w_centers_induced + freestream_velocities[:, 2]
 
         # Calculate forces_inviscid_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES,
         # not WIND AXES or BODY AXES.
-        density = self.op_point.density
         # Vi_cross_li = np.cross(Vi, self.vortex_bound_leg, axis=1)
-        Vi_cross_li = cas.horzcat(
-            Vi_y * self.vortex_bound_leg[:, 2] - Vi_z * self.vortex_bound_leg[:, 1],
-            Vi_z * self.vortex_bound_leg[:, 0] - Vi_x * self.vortex_bound_leg[:, 2],
-            Vi_x * self.vortex_bound_leg[:, 1] - Vi_y * self.vortex_bound_leg[:, 0],
-        )
-        # vortex_strengths_expanded = np.expand_dims(self.vortex_strengths, axis=1)
-        self.forces_geometry = density * Vi_cross_li * self.vortex_strengths
+        Vi_cross_li = np.stack((
+            v_centers * vortex_bound_leg[:, 2] - w_centers * vortex_bound_leg[:, 1],
+            w_centers * vortex_bound_leg[:, 0] - u_centers * vortex_bound_leg[:, 2],
+            u_centers * vortex_bound_leg[:, 1] - v_centers * vortex_bound_leg[:, 0],
+        ), axis=1)
+        forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * np.reshape(gamma, (-1, 1))
 
         # Calculate total forces and moments
         if self.verbose:
             print("Calculating total forces and moments...")
-        self.force_total_geometry = cas.vertcat(
-            cas.sum1(self.forces_geometry[:, 0]),
-            cas.sum1(self.forces_geometry[:, 1]),
-            cas.sum1(self.forces_geometry[:, 2]),
-        )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        # if self.verbose: print("Total aerodynamic forces (geometry axes): ", self.force_total_inviscid_geometry)
+        force_geometry = np.sum(forces_geometry, axis=0)
+        # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
+        if self.verbose:
+            print("Total aerodynamic forces (geometry axes): ", force_geometry)
 
-        self.force_total_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.force_total_geometry
+        force_wind = np.transpose(
+            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_geometry
         # if self.verbose: print("Total aerodynamic forces (wind axes):", self.force_total_inviscid_wind)
 
-        self.moments_geometry = cas.cross(
-            cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
-            self.forces_geometry
+        moments_geometry = np.cross(
+            vortex_centers - np.reshape(self.airplane.xyz_ref, (1, -1)),
+            forces_geometry
         )
 
-        self.Mtotal_geometry = cas.vertcat(
-            cas.sum1(self.moments_geometry[:, 0]),
-            cas.sum1(self.moments_geometry[:, 1]),
-            cas.sum1(self.moments_geometry[:, 2]),
-        )
+        moment_geometry = np.sum(moments_geometry, axis=0)
 
-        self.moment_total_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ self.Mtotal_geometry
+        moment_wind = np.transpose(
+            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_geometry
 
         # Calculate dimensional forces
-        self.lift_force = -self.force_total_wind[2]
-        self.drag_force_induced = -self.force_total_wind[0]
-        self.side_force = self.force_total_wind[1]
+        L = -force_wind[2]
+        D = -force_wind[0]
+        Y = force_wind[1]
+        l = moment_wind[0]  # TODO review axes
+        m = moment_wind[1]
+        n = moment_wind[2]
 
         # Calculate nondimensional forces
         q = self.op_point.dynamic_pressure()
         s_ref = self.airplane.s_ref
         b_ref = self.airplane.b_ref
         c_ref = self.airplane.c_ref
-        self.CL = self.lift_force / q / s_ref
-        self.CDi = self.drag_force_induced / q / s_ref
-        self.CY = self.side_force / q / s_ref
-        self.Cl = self.moment_total_wind[0] / q / s_ref / b_ref
-        self.Cm = self.moment_total_wind[1] / q / s_ref / c_ref
-        self.Cn = self.moment_total_wind[2] / q / s_ref / b_ref
+        CL = L / q / s_ref
+        CD = D / q / s_ref
+        CY = Y / q / s_ref
+        Cl = l / q / s_ref / b_ref
+        Cm = m / q / s_ref / c_ref
+        Cn = n / q / s_ref / b_ref
 
-        # Solves divide by zero error
-        self.CL_over_CDi = cas.if_else(self.CDi == 0, 0, self.CL / self.CDi)
-
-    def calculate_Vij(self,
-                      points,  # type: cas.MX
-                      align_trailing_vortices_with_freestream=False,  # Otherwise, aligns with x-axis
-                      ):
-        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
-        # points: the list of points (Nx3) to calculate the velocity influence at.
-
-        n_points = points.shape[0]
-
-        # Make a and b vectors.
-        # a: Vector from all collocation points to all horseshoe vortex left vertices.
-        #   # First index is collocation point #, second is vortex #.
-        # b: Vector from all collocation points to all horseshoe vortex right vertices.
-        #   # First index is collocation point #, second is vortex #.
-        a_x = points[:, 0] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 0]), n_points, 1)
-        a_y = points[:, 1] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 1]), n_points, 1)
-        a_z = points[:, 2] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 2]), n_points, 1)
-        b_x = points[:, 0] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 0]), n_points, 1)
-        b_y = points[:, 1] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 1]), n_points, 1)
-        b_z = points[:, 2] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 2]), n_points, 1)
-
-        if align_trailing_vortices_with_freestream:
-            freestream_direction = self.op_point.compute_freestream_direction_geometry_axes()
-            u_x = freestream_direction[0]
-            u_y = freestream_direction[1]
-            u_z = freestream_direction[2]
-        else:
-            u_x = 1
-            u_y = 0
-            u_z = 0
-
-        # Do some useful arithmetic
-        a_cross_b_x = a_y * b_z - a_z * b_y
-        a_cross_b_y = a_z * b_x - a_x * b_z
-        a_cross_b_z = a_x * b_y - a_y * b_x
-        a_dot_b = a_x * b_x + a_y * b_y + a_z * b_z
-
-        a_cross_u_x = a_y * u_z - a_z * u_y
-        a_cross_u_y = a_z * u_x - a_x * u_z
-        a_cross_u_z = a_x * u_y - a_y * u_x
-        a_dot_u = a_x * u_x + a_y * u_y + a_z * u_z
-
-        b_cross_u_x = b_y * u_z - b_z * u_y
-        b_cross_u_y = b_z * u_x - b_x * u_z
-        b_cross_u_z = b_x * u_y - b_y * u_x
-        b_dot_u = b_x * u_x + b_y * u_y + b_z * u_z
-
-        norm_a = cas.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
-        norm_b = cas.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
-        norm_a_inv = 1 / norm_a
-        norm_b_inv = 1 / norm_b
-
-        # # Handle the special case where the collocation point is along a bound vortex leg
-        # a_cross_b_squared = (
-        #         a_cross_b_x ** 2 +
-        #         a_cross_b_y ** 2 +
-        #         a_cross_b_z ** 2
-        # )
-        # a_dot_b = cas.if_else(a_cross_b_squared < 1e-8, a_dot_b + 1, a_dot_b)
-        # a_cross_u_squared = (
-        #         a_cross_u_x ** 2 +
-        #         a_cross_u_y ** 2 +
-        #         a_cross_u_z ** 2
-        # )
-        # a_dot_u = cas.if_else(a_cross_u_squared < 1e-8, a_dot_u + 1, a_dot_u)
-        # b_cross_u_squared = (
-        #         b_cross_u_x ** 2 +
-        #         b_cross_u_y ** 2 +
-        #         b_cross_u_z ** 2
-        # )
-        # b_dot_u = cas.if_else(b_cross_u_squared < 1e-8, b_dot_u + 1, b_dot_u)
-
-        # Handle the special case where the collocation point is along the bound vortex leg
-        a_dot_b -= 1e-8
-        # a_dot_xhat += 1e-8
-        # b_dot_xhat += 1e-8
-
-        # Calculate Vij
-        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
-        term2 = norm_a_inv / (norm_a - a_dot_u)
-        term3 = norm_b_inv / (norm_b - b_dot_u)
-
-        Vij_x = 1 / (4 * np.pi) * (
-                a_cross_b_x * term1 +
-                a_cross_u_x * term2 -
-                b_cross_u_x * term3
-        )
-        Vij_y = 1 / (4 * np.pi) * (
-                a_cross_b_y * term1 +
-                a_cross_u_y * term2 -
-                b_cross_u_y * term3
-        )
-        Vij_z = 1 / (4 * np.pi) * (
-                a_cross_b_z * term1 +
-                a_cross_u_z * term2 -
-                b_cross_u_z * term3
-        )
-
-        return Vij_x, Vij_y, Vij_z
-
-    # def calculate_delta_cp(self):
-    #     # Find the area of each panel ()
-    #     diag1 = self.front_left_vertices - self.back_right_vertices
-    #     diag2 = self.front_right_vertices - self.back_left_vertices
-    #     self.areas = np.linalg.norm(np.cross(diag1, diag2, axis=1), axis=1) / 2
-    #
-    #     # Calculate panel data
-    #     self.Fi_normal = np.einsum('ij,ij->i', self.forces_inviscid_geometry, self.normal_directions)
-    #     self.pressure_normal = self.Fi_normal / self.areas
-    #     self.delta_cp = self.pressure_normal / self.op_point.dynamic_pressure()
+        return {
+            "L" : L,
+            "D" : D,
+            "Y" : Y,
+            "l" : l,
+            "m" : m,
+            "n" : n,
+            "CL": CL,
+            "CD": CD,
+            "CY": CY,
+            "Cl": Cl,
+            "Cm": Cm,
+            "Cn": Cn
+        }
 
     def get_induced_velocity_at_point(self, point):
         if not self.opti.return_status() == 'Solve_Succeeded':
@@ -556,7 +449,7 @@ if __name__ == '__main__':
     from vanilla import airplane as vanilla
 
     ### Do the AVL run
-    avl = VortexLatticeMethod(
+    analysis = VortexLatticeMethod(
         airplane=vanilla,
         op_point=asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=0),
@@ -569,7 +462,7 @@ if __name__ == '__main__':
         ),
     )
 
-    res = avl.run()
+    res = analysis.run()
 
     for k, v in res.items():
         print(f"{str(k).rjust(10)} : {v}")
