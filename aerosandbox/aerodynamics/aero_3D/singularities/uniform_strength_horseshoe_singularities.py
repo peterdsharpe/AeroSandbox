@@ -69,7 +69,7 @@ def calculate_induced_velocity_horseshoe(
     # Handle the special case where the field point is on one of the legs
     def smoothed_inv(x):
         "Approximates 1/x with a function that sharply goes to 0 in the x -> 0 limit."
-        return x / (x ** 2 + 1e-100)
+        return x / (x ** 2 + 1e-8)
 
     ### Do some useful arithmetic
 
@@ -121,9 +121,10 @@ def calculate_induced_velocity_horseshoe(
 
 
 if __name__ == '__main__':
+    ### Check simple
     u, v, w = calculate_induced_velocity_horseshoe(
-        x_field=-1,
-        y_field=-1,
+        x_field=0,
+        y_field=0,
         z_field=0,
         x_left=-1,
         y_left=-1,
@@ -134,3 +135,53 @@ if __name__ == '__main__':
         gamma=1,
     )
     print(u, v, w)
+
+    ### Plot grid
+    args = (-2, 2, 30)
+    x = np.linspace(*args)
+    y = np.linspace(*args)
+    z = np.linspace(*args)
+    X, Y, Z = np.meshgrid(x, y, z)
+
+    Xf = X.flatten()
+    Yf = Y.flatten()
+    Zf = Z.flatten()
+
+    Uf, Vf, Wf = calculate_induced_velocity_horseshoe(
+        x_field=Xf,
+        y_field=Yf,
+        z_field=Zf,
+        x_left=0,
+        y_left=-1,
+        z_left=0,
+        x_right=0,
+        y_right=1,
+        z_right=0,
+        gamma=1,
+    )
+
+    pos = np.stack((Xf,Yf,Zf)).T
+    dir = np.stack((Uf,Vf,Wf)).T
+
+    dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
+
+    dir = dir / dir_norm * dir_norm ** 0.2
+
+    import pyvista as pv
+    pv.set_plot_theme('dark')
+    plotter = pv.Plotter()
+    plotter.add_arrows(
+        cent=pos,
+        direction=dir,
+        mag=0.15
+    )
+    plotter.add_lines(
+        lines=np.array([
+            [2, -1, 0],
+            [0, -1, 0],
+            [0, 1, 0],
+            [2, 1, 0]
+        ])
+    )
+    plotter.show_grid()
+    plotter.show()
