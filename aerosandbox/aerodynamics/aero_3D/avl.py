@@ -262,7 +262,7 @@ class AVL(ExplicitAnalysis):
                 "Clb Cnr / Clr Cnb"
             ]
 
-            if len(keys) != len(values):
+            if len(values) != 57 and len(values) != 56: # Sometimes the spiral mode term is inexplicably not displayed by AVL
                 raise RuntimeError(
                     "AVL could not run for some reason!\n"
                     "Investigate by turning on the `verbose` flag and looking at the output.\n"
