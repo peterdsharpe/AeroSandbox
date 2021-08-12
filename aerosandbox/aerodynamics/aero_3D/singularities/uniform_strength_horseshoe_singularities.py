@@ -147,27 +147,31 @@ if __name__ == '__main__':
     Yf = Y.flatten()
     Zf = Z.flatten()
 
+    left = [0, -1, 0]
+    right = [0, 1, 0]
+
     Uf, Vf, Wf = calculate_induced_velocity_horseshoe(
         x_field=Xf,
         y_field=Yf,
         z_field=Zf,
-        x_left=0,
-        y_left=-1,
-        z_left=0,
-        x_right=0,
-        y_right=1,
-        z_right=0,
+        x_left=left[0],
+        y_left=left[1],
+        z_left=left[2],
+        x_right=right[0],
+        y_right=right[1],
+        z_right=right[2],
         gamma=1,
     )
 
-    pos = np.stack((Xf,Yf,Zf)).T
-    dir = np.stack((Uf,Vf,Wf)).T
+    pos = np.stack((Xf, Yf, Zf)).T
+    dir = np.stack((Uf, Vf, Wf)).T
 
     dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
 
     dir = dir / dir_norm * dir_norm ** 0.2
 
     import pyvista as pv
+
     pv.set_plot_theme('dark')
     plotter = pv.Plotter()
     plotter.add_arrows(
@@ -177,10 +181,10 @@ if __name__ == '__main__':
     )
     plotter.add_lines(
         lines=np.array([
-            [2, -1, 0],
-            [0, -1, 0],
-            [0, 1, 0],
-            [2, 1, 0]
+            [2, left[1], left[2]],
+            left,
+            right,
+            [2, right[1], right[2]]
         ])
     )
     plotter.show_grid()
