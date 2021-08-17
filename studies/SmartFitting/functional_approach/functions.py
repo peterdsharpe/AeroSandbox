@@ -11,4 +11,7 @@ def square(x):
     return x ** 2
 
 def ln(x):
-    return np.log(x)
+    return np.log(np.abs(x))
+
+def sin(x):
+    return np.sin(x)
