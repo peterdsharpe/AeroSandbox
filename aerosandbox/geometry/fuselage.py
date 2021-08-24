@@ -287,7 +287,11 @@ class Fuselage(AeroSandboxObject):
         xyz_c_a = self.xsecs[index].xyz_c
         xyz_c_b = self.xsecs[index + 1].xyz_c
         vector_between = xyz_c_b - xyz_c_a
-        xg_local = vector_between / np.linalg.norm(vector_between)
+        xg_local_norm = np.linalg.norm(vector_between)
+        if xg_local_norm != 0:
+            xg_local = vector_between / xg_local_norm
+        else:
+            xg_local = np.array([1, 0, 0])
 
         zg_local = np.array([0, 0, 1])  # TODO
 
