@@ -22,7 +22,7 @@ airplane = asb.Airplane(
                     chord=1,
                     twist=0,
                     airfoil=airfoil,
-                )
+                ),
             ]
         )
     ]
