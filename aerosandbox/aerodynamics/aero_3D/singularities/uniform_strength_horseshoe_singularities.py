@@ -140,58 +140,58 @@ if __name__ == '__main__':
     print(u, v, w)
 
     ##### Plot grid of single vortex
-    # args = (-2, 2, 30)
-    # x = np.linspace(*args)
-    # y = np.linspace(*args)
-    # z = np.linspace(*args)
-    # X, Y, Z = np.meshgrid(x, y, z)
-    #
-    # Xf = X.flatten()
-    # Yf = Y.flatten()
-    # Zf = Z.flatten()
-    #
-    # left = [0, -1, 0]
-    # right = [0, 1, 0]
-    #
-    # Uf, Vf, Wf = calculate_induced_velocity_horseshoe(
-    #     x_field=Xf,
-    #     y_field=Yf,
-    #     z_field=Zf,
-    #     x_left=left[0],
-    #     y_left=left[1],
-    #     z_left=left[2],
-    #     x_right=right[0],
-    #     y_right=right[1],
-    #     z_right=right[2],
-    #     gamma=1,
-    # )
-    #
-    # pos = np.stack((Xf, Yf, Zf)).T
-    # dir = np.stack((Uf, Vf, Wf)).T
-    #
-    # dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
-    #
-    # dir = dir / dir_norm * dir_norm ** 0.2
-    #
-    # import pyvista as pv
-    #
-    # pv.set_plot_theme('dark')
-    # plotter = pv.Plotter()
-    # plotter.add_arrows(
-    #     cent=pos,
-    #     direction=dir,
-    #     mag=0.15
-    # )
-    # plotter.add_lines(
-    #     lines=np.array([
-    #         [Xf.max(), left[1], left[2]],
-    #         left,
-    #         right,
-    #         [Xf.max(), right[1], right[2]]
-    #     ])
-    # )
-    # plotter.show_grid()
-    # plotter.show()
+    args = (-2, 2, 30)
+    x = np.linspace(*args)
+    y = np.linspace(*args)
+    z = np.linspace(*args)
+    X, Y, Z = np.meshgrid(x, y, z)
+
+    Xf = X.flatten()
+    Yf = Y.flatten()
+    Zf = Z.flatten()
+
+    left = [0, -1, 0]
+    right = [0, 1, 0]
+
+    Uf, Vf, Wf = calculate_induced_velocity_horseshoe(
+        x_field=Xf,
+        y_field=Yf,
+        z_field=Zf,
+        x_left=left[0],
+        y_left=left[1],
+        z_left=left[2],
+        x_right=right[0],
+        y_right=right[1],
+        z_right=right[2],
+        gamma=1,
+    )
+
+    pos = np.stack((Xf, Yf, Zf)).T
+    dir = np.stack((Uf, Vf, Wf)).T
+
+    dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
+
+    dir = dir / dir_norm * dir_norm ** 0.2
+
+    import pyvista as pv
+
+    pv.set_plot_theme('dark')
+    plotter = pv.Plotter()
+    plotter.add_arrows(
+        cent=pos,
+        direction=dir,
+        mag=0.15
+    )
+    plotter.add_lines(
+        lines=np.array([
+            [Xf.max(), left[1], left[2]],
+            left,
+            right,
+            [Xf.max(), right[1], right[2]]
+        ])
+    )
+    plotter.show_grid()
+    plotter.show()
 
     ##### Check multiple vortices
     args = (-2, 2, 30)
