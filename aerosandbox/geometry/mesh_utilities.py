@@ -5,6 +5,14 @@ from typing import Tuple
 def stack_meshes(
         *meshes: Tuple[np.ndarray, np.ndarray]
 ):
+    """
+    # TODO document mesh format
+    Args:
+        *meshes:
+
+    Returns:
+
+    """
     if len(meshes) == 1:
         return meshes[0]
     elif len(meshes) == 2:
