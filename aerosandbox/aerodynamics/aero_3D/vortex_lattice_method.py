@@ -172,9 +172,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
             print("Calculating forces on each panel...")
         # Calculate the induced velocity at the center of each bound leg
         u_centers_induced, v_centers_induced, w_centers_induced = calculate_induced_velocity_horseshoe(
-            x_field=wide(collocation_points[:, 0]),
-            y_field=wide(collocation_points[:, 1]),
-            z_field=wide(collocation_points[:, 2]),
+            x_field=wide(vortex_centers[:, 0]),
+            y_field=wide(vortex_centers[:, 1]),
+            z_field=wide(vortex_centers[:, 2]),
             x_left=tall(left_vortex_vertices[:, 0]),
             y_left=tall(left_vortex_vertices[:, 1]),
             z_left=tall(left_vortex_vertices[:, 2]),
@@ -182,7 +182,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             y_right=tall(right_vortex_vertices[:, 1]),
             z_right=tall(right_vortex_vertices[:, 2]),
             trailing_vortex_direction=steady_freestream_direction,
-            gamma=gamma,
+            gamma=tall(gamma),
         )
         u_centers_induced = np.sum(u_centers_induced, axis=1)
         v_centers_induced = np.sum(v_centers_induced, axis=1)
