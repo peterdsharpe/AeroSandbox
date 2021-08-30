@@ -94,7 +94,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         normal_directions = cross / np.reshape(cross_norm, (-1, 1))
         areas = cross_norm / 2
 
-        # Do the vortex math
+        # Compute the location of points of interest on each panel
         left_vortex_vertices = 0.75 * front_left_vertices + 0.25 * back_left_vertices
         right_vortex_vertices = 0.75 * front_right_vertices + 0.25 * back_right_vertices
         vortex_centers = (left_vortex_vertices + right_vortex_vertices) / 2
