@@ -13,7 +13,7 @@ def calculate_induced_velocity_horseshoe(
         y_right: Union[float, np.ndarray],
         z_right: Union[float, np.ndarray],
         gamma: np.ndarray,
-        trailing_vortex_direction: np.ndarray = np.array([1, 0, 0]),
+        trailing_vortex_direction: np.ndarray = None,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -40,6 +40,9 @@ def calculate_induced_velocity_horseshoe(
     Returns:
 
     """
+    if trailing_vortex_direction is None:
+        trailing_vortex_direction = np.array([1, 0, 0])
+
     np.assert_equal_shape({
         "x_field": x_field,
         "y_field": y_field,
@@ -121,7 +124,7 @@ def calculate_induced_velocity_horseshoe(
 
 
 if __name__ == '__main__':
-    ### Check simple
+    ##### Check single vortex
     u, v, w = calculate_induced_velocity_horseshoe(
         x_field=0,
         y_field=0,
@@ -136,7 +139,61 @@ if __name__ == '__main__':
     )
     print(u, v, w)
 
-    ### Plot grid
+    ##### Plot grid of single vortex
+    # args = (-2, 2, 30)
+    # x = np.linspace(*args)
+    # y = np.linspace(*args)
+    # z = np.linspace(*args)
+    # X, Y, Z = np.meshgrid(x, y, z)
+    #
+    # Xf = X.flatten()
+    # Yf = Y.flatten()
+    # Zf = Z.flatten()
+    #
+    # left = [0, -1, 0]
+    # right = [0, 1, 0]
+    #
+    # Uf, Vf, Wf = calculate_induced_velocity_horseshoe(
+    #     x_field=Xf,
+    #     y_field=Yf,
+    #     z_field=Zf,
+    #     x_left=left[0],
+    #     y_left=left[1],
+    #     z_left=left[2],
+    #     x_right=right[0],
+    #     y_right=right[1],
+    #     z_right=right[2],
+    #     gamma=1,
+    # )
+    #
+    # pos = np.stack((Xf, Yf, Zf)).T
+    # dir = np.stack((Uf, Vf, Wf)).T
+    #
+    # dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
+    #
+    # dir = dir / dir_norm * dir_norm ** 0.2
+    #
+    # import pyvista as pv
+    #
+    # pv.set_plot_theme('dark')
+    # plotter = pv.Plotter()
+    # plotter.add_arrows(
+    #     cent=pos,
+    #     direction=dir,
+    #     mag=0.15
+    # )
+    # plotter.add_lines(
+    #     lines=np.array([
+    #         [Xf.max(), left[1], left[2]],
+    #         left,
+    #         right,
+    #         [Xf.max(), right[1], right[2]]
+    #     ])
+    # )
+    # plotter.show_grid()
+    # plotter.show()
+
+    ##### Check multiple vortices
     args = (-2, 2, 30)
     x = np.linspace(*args)
     y = np.linspace(*args)
@@ -148,20 +205,35 @@ if __name__ == '__main__':
     Zf = Z.flatten()
 
     left = [0, -1, 0]
+    center = [0, 0, 0]
     right = [0, 1, 0]
 
-    Uf, Vf, Wf = calculate_induced_velocity_horseshoe(
-        x_field=Xf,
-        y_field=Yf,
-        z_field=Zf,
-        x_left=left[0],
-        y_left=left[1],
-        z_left=left[2],
-        x_right=right[0],
-        y_right=right[1],
-        z_right=right[2],
-        gamma=1,
+    lefts = np.array([left, center])
+    rights = np.array([center, right])
+    strengths = np.array([2, 1])
+
+    def wide(array):
+        return np.reshape(array, (1, -1))
+
+    def tall(array):
+        return np.reshape(array, (-1, 1))
+
+    Uf_each, Vf_each, Wf_each = calculate_induced_velocity_horseshoe(
+        x_field=wide(Xf),
+        y_field=wide(Yf),
+        z_field=wide(Zf),
+        x_left=tall(lefts[:, 0]),
+        y_left=tall(lefts[:, 1]),
+        z_left=tall(lefts[:, 2]),
+        x_right=tall(rights[:, 0]),
+        y_right=tall(rights[:, 1]),
+        z_right=tall(rights[:, 2]),
+        gamma=tall(strengths),
     )
+
+    Uf = np.sum(Uf_each, axis=0)
+    Vf = np.sum(Vf_each, axis=0)
+    Wf = np.sum(Wf_each, axis=0)
 
     pos = np.stack((Xf, Yf, Zf)).T
     dir = np.stack((Uf, Vf, Wf)).T
@@ -181,10 +253,13 @@ if __name__ == '__main__':
     )
     plotter.add_lines(
         lines=np.array([
-            [2, left[1], left[2]],
+            [Xf.max(), left[1], left[2]],
             left,
+            center,
+            [Xf.max(), center[1], center[2]],
+            center,
             right,
-            [2, right[1], right[2]]
+            [Xf.max(), right[1], right[2]]
         ])
     )
     plotter.show_grid()
