@@ -1,8 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
-airfoil = asb.Airfoil("naca8408")
-# airfoil = asb.Airfoil("naca0008")
+airfoil = asb.Airfoil("naca0008")
 
 airplane = asb.Airplane(
     name="Flat Plate",
