@@ -137,15 +137,15 @@ class VortexLatticeMethod(ExplicitAnalysis):
             return np.reshape(array, (-1, 1))
 
         u_collocations_unit, v_collocations_unit, w_collocations_unit = calculate_induced_velocity_horseshoe(
-            x_field=wide(collocation_points[:, 0]),
-            y_field=wide(collocation_points[:, 1]),
-            z_field=wide(collocation_points[:, 2]),
-            x_left=tall(left_vortex_vertices[:, 0]),
-            y_left=tall(left_vortex_vertices[:, 1]),
-            z_left=tall(left_vortex_vertices[:, 2]),
-            x_right=tall(right_vortex_vertices[:, 0]),
-            y_right=tall(right_vortex_vertices[:, 1]),
-            z_right=tall(right_vortex_vertices[:, 2]),
+            x_field=tall(collocation_points[:, 0]),
+            y_field=tall(collocation_points[:, 1]),
+            z_field=tall(collocation_points[:, 2]),
+            x_left=wide(left_vortex_vertices[:, 0]),
+            y_left=wide(left_vortex_vertices[:, 1]),
+            z_left=wide(left_vortex_vertices[:, 2]),
+            x_right=wide(right_vortex_vertices[:, 0]),
+            y_right=wide(right_vortex_vertices[:, 1]),
+            z_right=wide(right_vortex_vertices[:, 2]),
             trailing_vortex_direction=steady_freestream_direction,
             gamma=1,
         )
@@ -172,17 +172,17 @@ class VortexLatticeMethod(ExplicitAnalysis):
             print("Calculating forces on each panel...")
         # Calculate the induced velocity at the center of each bound leg
         u_centers_induced, v_centers_induced, w_centers_induced = calculate_induced_velocity_horseshoe(
-            x_field=wide(vortex_centers[:, 0]),
-            y_field=wide(vortex_centers[:, 1]),
-            z_field=wide(vortex_centers[:, 2]),
-            x_left=tall(left_vortex_vertices[:, 0]),
-            y_left=tall(left_vortex_vertices[:, 1]),
-            z_left=tall(left_vortex_vertices[:, 2]),
-            x_right=tall(right_vortex_vertices[:, 0]),
-            y_right=tall(right_vortex_vertices[:, 1]),
-            z_right=tall(right_vortex_vertices[:, 2]),
+            x_field=tall(vortex_centers[:, 0]),
+            y_field=tall(vortex_centers[:, 1]),
+            z_field=tall(vortex_centers[:, 2]),
+            x_left=wide(left_vortex_vertices[:, 0]),
+            y_left=wide(left_vortex_vertices[:, 1]),
+            z_left=wide(left_vortex_vertices[:, 2]),
+            x_right=wide(right_vortex_vertices[:, 0]),
+            y_right=wide(right_vortex_vertices[:, 1]),
+            z_right=wide(right_vortex_vertices[:, 2]),
             trailing_vortex_direction=steady_freestream_direction,
-            gamma=tall(gamma),
+            gamma=wide(gamma),
         )
         u_centers_induced = np.sum(u_centers_induced, axis=1)
         v_centers_induced = np.sum(v_centers_induced, axis=1)
