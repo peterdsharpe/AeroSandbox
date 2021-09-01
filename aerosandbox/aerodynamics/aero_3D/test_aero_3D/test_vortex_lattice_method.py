@@ -22,10 +22,16 @@ def test_flat_plate():
     analysis = asb.VortexLatticeMethod(
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
-        spanwise_resolution=10,
-        # spanwise_spacing="uniform",
-        chordwise_resolution=10,
-        # chordwise_spacing="uniform"
+    )
+    return analysis.run()
+
+def test_flat_plate_mirrored():
+    from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.flat_plate_mirrored import airplane
+    analysis = asb.VortexLatticeMethod(
+        airplane=airplane,
+        op_point=asb.OperatingPoint(alpha=10),
+        spanwise_resolution=1,
+        chordwise_resolution=3,
     )
     return analysis.run()
 
@@ -33,5 +39,6 @@ def test_flat_plate():
 if __name__ == '__main__':
     # test_conventional()
     # test_vanilla()
-    print(test_flat_plate()['CL'])
+    # test_flat_plate()['CL']
+    test_flat_plate_mirrored()
     # pytest.main()
