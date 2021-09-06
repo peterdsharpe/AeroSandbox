@@ -35,5 +35,6 @@ jobs:
         python -m pip install .
         pytest aerosandbox
     - name: Test with pytest (with extras; package + tutorials)
+      run: |
         python -m pip install .[full]
         pytest .
