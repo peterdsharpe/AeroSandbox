@@ -36,6 +36,6 @@ jobs:
         pytest aerosandbox
     - name: Test with pytest (with extras; package + tutorials)
       run: |
-        python -m pip uninstall aerosandbox
+        python -m pip uninstall -y aerosandbox
         python -m pip install .[full]
         pytest .
