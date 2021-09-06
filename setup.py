@@ -65,7 +65,7 @@ setup(
         "full": [
             'plotly >= 5',
             'pyvista >= 0.31',
-            'ipyvtklink >= 0.2'
+            'ipyvtklink >= 0.2',
             'trimesh >= 3',
             'sympy >= 1'
         ]
