@@ -85,6 +85,7 @@ class Airplane(AeroSandboxObject):
     def draw(self,
              backend: str = "pyvista",
              show=True,  # type: bool
+             show_kwargs=None,
              ):
         """
 
@@ -98,6 +99,8 @@ class Airplane(AeroSandboxObject):
         Returns:
 
         """
+        if show_kwargs is None:
+            show_kwargs = {}
 
         if backend == "plotly":
 
@@ -112,7 +115,11 @@ class Airplane(AeroSandboxObject):
                     points[f[2]],
                     points[f[3]],
                 ), outline=True)
-            return fig.draw(show=show)
+                show_kwargs = {
+                    "show": show,
+                    **show_kwargs
+                }
+            return fig.draw(**show_kwargs)
         elif backend == "pyvista":
 
             points, faces = self.mesh_body(method="quad")
@@ -121,8 +128,13 @@ class Airplane(AeroSandboxObject):
             fig = pv.PolyData(
                 *mesh_utils.convert_mesh_to_polydata_format(points, faces)
             )
+            show_kwargs = {
+                "show_edges": True,
+                "show_grid": True,
+                **show_kwargs,
+            }
             if show:
-                fig.plot(show_edges=True)
+                fig.plot(**show_kwargs)
             return fig
         elif backend == "trimesh":
 
@@ -131,7 +143,7 @@ class Airplane(AeroSandboxObject):
             import trimesh as tri
             fig = tri.Trimesh(points, faces)
             if show:
-                fig.show()
+                fig.show(**show_kwargs)
             return fig
 
     def is_entirely_symmetric(self):
