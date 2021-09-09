@@ -1,5 +1,4 @@
 from aerosandbox.common import *
-from aerosandbox import Opti
 from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
@@ -267,6 +266,8 @@ if __name__ == '__main__':
     )
     a.draw_streamlines()
     a.draw_cp()
+
+    from aerosandbox import Opti
 
     opti2 = Opti()
     b = AirfoilInviscid(
