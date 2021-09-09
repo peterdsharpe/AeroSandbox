@@ -68,7 +68,7 @@ def equations_of_motion(
         Ixy=0,
         Iyz=0,
         Ixz=0,
-        g=9.81,
+        g=0,
         hx=0,
         hy=0,
         hz=0,
