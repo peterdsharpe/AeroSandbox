@@ -26,7 +26,7 @@ class AeroSandboxObject:
                 continue
             try:
                 setattr(self, attrib_name, sol.value(attrib_orig))
-            except NotImplementedError:
+            except (NotImplementedError, AttributeError):
                 pass
             if isinstance(attrib_orig, list):
                 try:
