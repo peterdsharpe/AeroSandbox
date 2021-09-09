@@ -71,26 +71,21 @@ def equations_of_motion(
         hz: z-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
 
     Returns:
-        Time derivatives of each of the 12 state variables, given in the following order:
-            d_xe,
-            d_ye,
-            d_ze,
-            d_u,
-            d_v,
-            d_w,
-            d_phi,
-            d_theta,
-            d_psi,
-            d_p,
-            d_q,
-            d_r,
-            d_X,
-            d_Y,
-            d_Z,
-            d_L,
-            d_M,
-            d_N,
-
+        Time derivatives of each of the 12 state variables, given in a dictionary:
+            {
+                "xe"   : d_xe,
+                "ye"   : d_ye,
+                "ze"   : d_ze,
+                "u"    : d_u,
+                "v"    : d_v,
+                "w"    : d_w,
+                "phi"  : d_phi,
+                "theta": d_theta,
+                "psi"  : d_psi,
+                "p"    : d_p,
+                "q"    : d_q,
+                "r"    : d_r,
+            }
     """
 
     ### Trig Shorthands
@@ -183,4 +178,17 @@ def equations_of_motion(
     d_q = i12 * RHS_L + i22 * RHS_M + i23 * RHS_N
     d_r = i13 * RHS_L + i23 * RHS_M + i33 * RHS_N
 
-    return d_xe, d_ye, d_ze, d_u, d_v, d_w, d_phi, d_theta, d_psi, d_p, d_q, d_r
+    return {
+        "xe"   : d_xe,
+        "ye"   : d_ye,
+        "ze"   : d_ze,
+        "u"    : d_u,
+        "v"    : d_v,
+        "w"    : d_w,
+        "phi"  : d_phi,
+        "theta": d_theta,
+        "psi"  : d_psi,
+        "p"    : d_p,
+        "q"    : d_q,
+        "r"    : d_r,
+    }
