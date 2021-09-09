@@ -227,7 +227,7 @@ def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
     if not is_casadi_type(a):
         return _onp.zeros_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.zeros(shape=a.shape)
+        return _onp.zeros(shape=length(a))
 
 
 def ones_like(a, dtype=None, order='K', subok=True, shape=None):
@@ -235,7 +235,7 @@ def ones_like(a, dtype=None, order='K', subok=True, shape=None):
     if not is_casadi_type(a):
         return _onp.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.ones(shape=a.shape)
+        return _onp.ones(shape=length(a))
 
 
 def empty_like(prototype, dtype=None, order='K', subok=True, shape=None):
