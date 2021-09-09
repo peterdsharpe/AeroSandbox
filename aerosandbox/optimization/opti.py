@@ -707,7 +707,16 @@ class Opti(cas.Opti):
         Returns: None (adds constraint in-place).
 
         """
-        d_var = np.diff(variable)
+        try:
+            d_var = np.diff(variable)
+        except ValueError:
+            d_var = np.diff(np.zeros_like(with_respect_to))
+
+        try:
+            derivative[0]
+        except (TypeError, IndexError):
+            derivative = np.full_like(with_respect_to, fill_value=derivative)
+
         d_time = np.diff(with_respect_to)  # Calculate the timestep
 
         # TODO scale constraints by variable scale?
