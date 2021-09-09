@@ -1,45 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-
-
-def inv_symmetric_3x3(
-        m11,
-        m22,
-        m33,
-        m12,
-        m23,
-        m13,
-):
-    """
-    Computes the inverse of a symmetric 3x3 matrix.
-
-    From https://math.stackexchange.com/questions/233378/inverse-of-a-3-x-3-covariance-matrix-or-any-positive-definite-pd-matrix
-
-
-
-    """
-    det = (
-            m11 * (m33 * m22 - m23 ** 2) -
-            m12 * (m33 * m12 - m23 * m13) +
-            m13 * (m23 * m12 - m22 * m13)
-    )
-    a11 = m33 * m22 - m23 ** 2
-    a12 = m13 * m23 - m33 * m12
-    a13 = m12 * m23 - m13 * m22
-
-    a22 = m33 * m11 - m13 ** 2
-    a23 = m12 * m13 - m11 * m23
-
-    a33 = m11 * m22 - m12 ** 2
-
-    a11 = a11 / det
-    a12 = a12 / det
-    a13 = a13 / det
-    a22 = a22 / det
-    a23 = a23 / det
-    a33 = a33 / det
-
-    return a11, a22, a33, a12, a23, a13
+from aerosandbox.dynamics.utilities import inv_symmetric_3x3
 
 
 def equations_of_motion(

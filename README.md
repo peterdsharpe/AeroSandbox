@@ -6,17 +6,20 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 [![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)](https://github.com/peterdsharpe/AeroSandbox/actions/workflows/run-pytest.yml)
 
 ## Overview
-AeroSandbox (ASB) is a Python package for aircraft design optimization that leverages modern tools for reverse-mode automatic differentiation and large-scale design optimization.
 
-At its heart, ASB is a collection of end-to-end automatic-differentiable models and analysis tools for aircraft design applications. This property of automatic-differentiability dramatically improves performance on large problems; **design problems with thousands or tens of thousands of decision variables solve in seconds on a laptop**. Using AeroSandbox, you can **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.** 
+**AeroSandbox is a Python package for design optimization of engineered systems, with additional tools for aircraft design applications.**
+
+
+
+ASB has  collection of end-to-end automatic-differentiable models and analysis tools for aircraft design applications. This property of automatic-differentiability dramatically improves performance on large problems; **design problems with thousands or tens of thousands of decision variables solve in seconds on a laptop**. Using AeroSandbox, you can **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.** 
 
 AeroSandbox has powerful aerodynamics solvers (VLM, 3D panel) written from the ground up, and AeroSandbox can also be used as a standalone aerodynamics solver if desired. Like all other modules, these solvers are end-to-end automatic-differentiable. Therefore, **in half a second, you can calculate not only the aerodynamic performance of an airplane, but also the sensitivity of aerodynamic performance with respect to an arbitary number of design variables.**
 
-![VLM3 Image](media/images/vlm3_with_control_surfaces.png)
-*VLM3 simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
+![VLM Image](media/images/vlm3_with_control_surfaces.png)
+*VLM simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
 
-![PANEL1 Image](media/images/panel1_naca4412.png)
-*PANEL1 simulation of a wing (extruded NACA2412, α=15°, AR=4). Note the strong three-dimensionality of the flow near the tip.*
+![PANEL Image](media/images/panel1_naca4412.png)
+*Panel simulation of a wing (extruded NACA2412, α=15°, AR=4). Note the strong three-dimensionality of the flow near the tip.*
 
 ## Getting Started
 
@@ -37,8 +40,6 @@ If you like this software, please consider donating to support development [via 
 
 ## Bugs
 Please, please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
-
-Please note that, while the entirety of the codebase should be cross-platform compatible, AeroSandbox has only been tested on Windows 10 in Python 3.7 via the [Anaconda distribution](https://www.anaconda.com/distribution/#download-section).
 
 ## Details
 One final point to note: as we're all sensible and civilized human beings here, **all inputs and outputs to AeroSandbox are expressed in base metric units, or derived units thereof** (meters, newtons, meters per second, kilograms, etc.). The only exception to this rule is when units are explicitly noted in a variable name: for example, `battery_capacity` would be in units of joules, `elastic_modulus` would be in units of pascals, and `battery_capacity_watt_hours` would be in units of watt-hours.
