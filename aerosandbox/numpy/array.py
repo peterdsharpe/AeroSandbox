@@ -222,6 +222,38 @@ def reshape(a, newshape):
         return _cas.reshape(a.T, newshape[::-1]).T
 
 
+def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
+    """Return an array of zeros with the same shape and type as a given array."""
+    if not is_casadi_type(a):
+        return _onp.zeros_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return _onp.zeros(shape=a.shape)
+
+
+def ones_like(a, dtype=None, order='K', subok=True, shape=None):
+    """Return an array of ones with the same shape and type as a given array."""
+    if not is_casadi_type(a):
+        return _onp.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return _onp.ones(shape=a.shape)
+
+
+def empty_like(prototype, dtype=None, order='K', subok=True, shape=None):
+    """Return a new array with the same shape and type as a given array."""
+    if not is_casadi_type(prototype):
+        return _onp.empty_like(prototype, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return zeros_like(prototype)
+
+
+def full_like(a, fill_value, dtype=None, order='K', subok=True, shape=None):
+    """Return a full array with the same shape and type as a given array."""
+    if not is_casadi_type(a):
+        return _onp.full_like(a, fill_value, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return fill_value * ones_like(a)
+
+
 def assert_equal_shape(
         arrays: Union[List[_onp.ndarray], Dict[str, _onp.ndarray]],
 ) -> None:
