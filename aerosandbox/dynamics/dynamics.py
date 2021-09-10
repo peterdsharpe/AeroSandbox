@@ -2,6 +2,7 @@ from aerosandbox.common import *
 import aerosandbox.numpy as np
 from aerosandbox.dynamics.equations_of_motion import equations_of_motion
 from aerosandbox import OperatingPoint, Atmosphere
+import warnings
 
 class FreeBodyDynamics(ImplicitAnalysis):
     @ImplicitAnalysis.initialize
@@ -71,14 +72,17 @@ class FreeBodyDynamics(ImplicitAnalysis):
         self.hz = hz
 
         if add_constraints:
-            state = self.state
-            state_derivatives = self.state_derivatives()
-            for k in state.keys():
-                self.opti.constrain_derivative(
-                    derivative=state_derivatives[k],
-                    variable=state[k],
-                    with_respect_to=self.time,
-                )
+            if not self.opti_provided:
+                warnings.warn("Can't add physics constraints to your dynamics environment, since no `opti` instance was provided. Skipping...")
+            else:
+                state = self.state
+                state_derivatives = self.state_derivatives()
+                for k in state.keys():
+                    self.opti.constrain_derivative(
+                        derivative=state_derivatives[k],
+                        variable=state[k],
+                        with_respect_to=self.time,
+                    )
 
     @property
     def state(self):
