@@ -248,7 +248,7 @@ class Opti(cas.Opti):
 
     def subject_to(self,
                    constraint: Union[cas.MX, bool, List],  # TODO add scale
-                   ) -> cas.MX:
+                   ) -> Union[cas.MX, None, List[cas.MX]]:
         """
         Initialize a new equality or inequality constraint(s).
 
