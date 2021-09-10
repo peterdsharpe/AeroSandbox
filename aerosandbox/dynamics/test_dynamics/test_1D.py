@@ -150,7 +150,8 @@ def test_rocket():
     ### Solve
     sol = opti.solve()
 
+    assert sol.value(dyn.mass[-1]) == pytest.approx(290049.81034472014, rel=0.05)
+    assert sol.value(dyn.u).max() == pytest.approx(1448, rel=0.05)
 
 if __name__ == '__main__':
-    test_rocket()
     pytest.main()
