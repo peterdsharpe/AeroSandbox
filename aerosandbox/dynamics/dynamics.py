@@ -77,7 +77,7 @@ class FreeBodyDynamics(ImplicitAnalysis):
             else:
                 state = self.state
                 state_derivatives = self.state_derivatives()
-                for k in state.keys():
+                for k in state.keys(): # TODO default to second-order integration for position, angles
                     self.opti.constrain_derivative(
                         derivative=state_derivatives[k],
                         variable=state[k],
