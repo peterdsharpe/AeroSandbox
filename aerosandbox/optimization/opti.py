@@ -292,11 +292,22 @@ class Opti(cas.Opti):
             return dual
         else:  # Constraint is not valid because it is not MX type or is parametric.
             try:
-                constraint_satisfied = np.all(self.value(constraint))
+                constraint_satisfied = np.all(self.value(constraint)) # Determine if the constraint is true
             except:
                 raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
                     doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
                     {constraint}""")
+
+            if not constraint_satisfied: # Determine if the constraint is *almost* true
+                try:
+                    LHS = constraint.dep(0)
+                    RHS = constraint.dep(1)
+                    LHS_value = self.value(LHS)
+                    RHS_value = self.value(RHS)
+                except:
+                    raise ValueError("""Could not evaluate the LHS and RHS of the constraint - are you sure you passed in a comparative expression?""")
+
+                constraint_satisfied = np.allclose(LHS_value, RHS_value) # Call the constraint satisfied if it is *almost* true.
 
             if constraint_satisfied or self.ignore_violated_parametric_constraints:
                 # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
