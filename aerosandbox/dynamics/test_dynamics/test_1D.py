@@ -28,8 +28,13 @@ def test_block_move_fixed_time():
         dyn.u[-1] == 0,
     ])
 
-    effort = np.sum(
-        np.trapz(dyn.X ** 2) * np.diff(time)
+    # effort = np.sum(
+    #     np.trapz(dyn.X ** 2) * np.diff(time)
+    # )
+
+    effort = np.sum( # More sophisticated integral-of-squares integration (closed form correct)
+            np.diff(time) / 3 *
+            (dyn.X[:-1] ** 2 + dyn.X[:-1] * dyn.X[1:] + dyn.X[1:] ** 2)
     )
 
     opti.minimize(effort)
