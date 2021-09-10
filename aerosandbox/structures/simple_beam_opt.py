@@ -162,10 +162,6 @@ if __name__ == '__main__':
         sol = opti.debug
 
     import matplotlib.pyplot as plt
-    import matplotlib.style as style
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import dash
     import seaborn as sns
 
     sns.set(font_scale=1)

@@ -5,7 +5,6 @@ from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_vel
 import aerosandbox.numpy as np
 from typing import Union, List
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 class AirfoilInviscid(ImplicitAnalysis):

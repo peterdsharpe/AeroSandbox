@@ -74,7 +74,6 @@ opti.set_initial(sol.value_variables())
 beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
 import matplotlib.pyplot as plt
-import matplotlib.style as style
 import seaborn as sns
 sns.set(font_scale=1)
 beam_sol.draw_bending(for_print=True, show=False)

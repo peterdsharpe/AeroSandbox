@@ -1,8 +1,6 @@
 from aerosandbox.modeling.fitting import FittedModel
 import pytest
 import aerosandbox.numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def test_fit_model_weighting():
