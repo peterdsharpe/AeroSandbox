@@ -17,8 +17,7 @@ with the ease-of-use of [familiar NumPy syntax](aerosandbox/numpy).
 This differentiability dramatically improves optimization performance on large problems: **design problems with tens of
 thousands of decision variables solve in seconds on a laptop**.
 
-AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physics models, allowing you to **
-simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.**
+AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physics models, allowing you to **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.**
 
 ![VLM Image](media/images/vlm3_with_control_surfaces.png)
 *VLM simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
