@@ -42,22 +42,20 @@ and interfaces are not installed.
 To get started, [check out the tutorials folder here](./tutorial/)! All tutorials are viewable in-browser, or you can
 open them as Jupyter notebooks by cloning this repository.
 
-For a more detailed and theory-heavy introduction to AeroSandbox, [please see
-this thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf).
+For a more detailed and theory-heavy introduction to AeroSandbox, [please see this thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf).
 
-For a yet-more-detailed developer-level description of AeroSandbox modules, [please
-see the developer README](aerosandbox/README.md). 
+For a yet-more-detailed developer-level description of AeroSandbox modules, [please see the developer README](aerosandbox/README.md).
 
 You can print documentation and examples for any AeroSandbox object by using the built-in `help()` function (e.g., `help(asb.Airplane)`). AeroSandbox code is also documented *extensively* in the source and contains hundreds of unit test examples, so examining the source code can also be useful.
 
 ### Usage Details
 
-One final point to note: as we're all sensible and civilized here, **all inputs and outputs to AeroSandbox
-are expressed in base SI units, or derived units thereof** (e.g, m, N, kg, m/s, J, Pa).
+One final point to note: as we're all sensible and civilized here, **all inputs and outputs to AeroSandbox are expressed in base SI units, or derived units thereof** (e.g, m, N, kg, m/s, J, Pa).
 
-The only exception to this rule is when units are explicitly noted via variable name suffix. For example: 
+The only exception to this rule is when units are explicitly noted via variable name suffix. For example:
+
 * `battery_capacity` -> Joules
-* `battery_capacity_watt_hours` -> Watt-hours. 
+* `battery_capacity_watt_hours` -> Watt-hours.
 
 All angles are in radians, except for α and β which are in degrees due to long-standing aerospace convention. (In any case, units are marked on all inputs.)
 
