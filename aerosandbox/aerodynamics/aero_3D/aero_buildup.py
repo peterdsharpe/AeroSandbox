@@ -25,7 +25,10 @@ class AeroBuildup(ExplicitAnalysis):
             self.op_point.q == 0,
             self.op_point.r == 0,
         ])
-        all_assumptions_met = np.all(assumptions)
+        try:
+            all_assumptions_met = np.all(assumptions)
+        except NotImplementedError:
+            all_assumptions_met = False
         if not all_assumptions_met:
             raise ValueError("The assumptions to use an aero buildup method are not met!")
 
