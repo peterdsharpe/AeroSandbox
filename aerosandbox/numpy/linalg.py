@@ -131,9 +131,9 @@ def norm(x, ord=None, axis=None):
                 x ** 2,
                 axis=axis
             ) ** 0.5
-        elif ord == 'fro':
+        elif ord.lower() == 'fro' or ord.lower() == "frobenius":
             return _cas.norm_fro(x)
-        elif np.isinf(ord):
+        elif ord.lower() == 'inf' or np.isinf(ord):
             return _cas.norm_inf()
         else:
             try:
