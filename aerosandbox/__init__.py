@@ -10,7 +10,7 @@ from .performance import *
 from .propulsion import *
 from .structures import *
 
-__version__ = "3.1.10"
+__version__ = "3.1.11"
 
 
 def docs():
