@@ -2,6 +2,7 @@ from aerosandbox import ExplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 import aerosandbox.library.aerodynamics as aero
+import aerosandbox.numpy as np
 
 
 class AeroBuildup(ExplicitAnalysis):
@@ -24,7 +25,8 @@ class AeroBuildup(ExplicitAnalysis):
             self.op_point.q == 0,
             self.op_point.r == 0,
         ])
-        if not assumptions.all():
+        all_assumptions_met = np.all(assumptions)
+        if not all_assumptions_met:
             raise ValueError("The assumptions to use an aero buildup method are not met!")
 
     def run(self):
