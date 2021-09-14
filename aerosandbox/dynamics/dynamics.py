@@ -4,6 +4,7 @@ from aerosandbox.dynamics.equations_of_motion import equations_of_motion
 from aerosandbox import OperatingPoint, Atmosphere
 import warnings
 
+
 class FreeBodyDynamics(ImplicitAnalysis):
     @ImplicitAnalysis.initialize
     def __init__(self,
@@ -73,16 +74,59 @@ class FreeBodyDynamics(ImplicitAnalysis):
 
         if add_constraints:
             if not self.opti_provided:
-                warnings.warn("Can't add physics constraints to your dynamics environment, since no `opti` instance was provided. Skipping...")
+                warnings.warn(
+                    "Can't add physics constraints to your dynamics environment, since no `opti` instance was provided. Skipping...")
             else:
                 state = self.state
                 state_derivatives = self.state_derivatives()
-                for k in state.keys(): # TODO default to second-order integration for position, angles
+                for k in state.keys():  # TODO default to second-order integration for position, angles
                     self.opti.constrain_derivative(
                         derivative=state_derivatives[k],
                         variable=state[k],
                         with_respect_to=self.time,
                     )
+
+    def __repr__(self):
+        repr = []
+        repr.append("Dynamics instance:")
+
+        def trim(string, width=40):
+            string = string.strip()
+            if len(string) > width:
+                return string[:width - 3] + "..."
+            else:
+                return string
+
+        def makeline(k, v):
+            name = trim(str(k), width=6).rjust(6)
+            item = trim(str(v), width=40).ljust(40)
+
+            try:
+                value = str(self.opti.value(v))
+            except:
+                value = None
+
+            if str(value.strip()) == str(item.strip()):
+                value = None
+
+            if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.ndarray):
+                value = None
+
+            if value is not None:
+                value = trim(value, width=40).ljust(40)
+                return f"\t\t{name}: {item} ({value})"
+            else:
+                return f"\t\t{name}: {item}"
+
+        repr.append("\tState variables:")
+        for k, v in self.state.items():
+            repr.append(makeline(k, v))
+
+        repr.append("\tControl/other variables:")
+        for k, v in self.control_variables.items():
+            repr.append(makeline(k, v))
+
+        return "\n".join(repr)
 
     @property
     def state(self):
@@ -135,6 +179,28 @@ class FreeBodyDynamics(ImplicitAnalysis):
         )
 
     @property
+    def control_variables(self):
+        return {
+            "X"   : self.X,
+            "Y"   : self.Y,
+            "Z"   : self.Z,
+            "L"   : self.L,
+            "M"   : self.M,
+            "N"   : self.N,
+            "mass": self.mass,
+            "Ixx" : self.Ixx,
+            "Iyy" : self.Iyy,
+            "Izz" : self.Izz,
+            "Ixy" : self.Ixy,
+            "Iyz" : self.Iyz,
+            "Ixz" : self.Ixz,
+            "g"   : self.g,
+            "hx"  : self.hx,
+            "hy"  : self.hy,
+            "hz"  : self.hz,
+        }
+
+    @property
     def alpha(self):
         """The angle of attack, in degrees."""
         return np.arctan2d(
@@ -154,10 +220,10 @@ class FreeBodyDynamics(ImplicitAnalysis):
     def speed(self):
         """The speed of the object, expressed as a scalar."""
         return (
-            self.u ** 2 +
-            self.v ** 2 +
-            self.w ** 2
-        ) ** 0.5
+                       self.u ** 2 +
+                       self.v ** 2 +
+                       self.w ** 2
+               ) ** 0.5
 
     @property
     def op_point(self):
@@ -177,14 +243,14 @@ if __name__ == '__main__':
 
     opti = asb.Opti()
 
-    n_timesteps=300
+    n_timesteps = 300
 
     time = np.linspace(0, 1, n_timesteps)
 
     dyn = FreeBodyDynamics(
-        opti = opti,
-        time = time,
-        xe = opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
+        opti=opti,
+        time=time,
+        xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
         u=opti.variable(init_guess=1, n_vars=n_timesteps),
         X=opti.variable(init_guess=np.linspace(1, -1, n_timesteps)),
     )
