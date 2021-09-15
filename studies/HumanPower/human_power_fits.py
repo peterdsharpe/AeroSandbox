@@ -29,7 +29,7 @@ for dataset in datasets:
                 p["a"] * d ** (
                 p["b0"] + p["b1"] * logd + p["b2"] * logd ** 2
         )
-        ) # essentially, a cubic in log-log space
+        )  # essentially, a cubic in log-log space
 
 
     params = fit(

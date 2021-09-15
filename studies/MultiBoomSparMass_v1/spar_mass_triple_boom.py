@@ -28,7 +28,7 @@ beam = TubeBeam1(
 )
 lift_force = 9.81 * mass
 beam.add_point_load(
-    location=span / 2 * (2/3) + 1,
+    location=span / 2 * (2 / 3) + 1,
     force=-lift_force / 3
 )
 beam.add_uniform_load(force=lift_force / 2)

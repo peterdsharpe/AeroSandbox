@@ -1,6 +1,7 @@
 from aerosandbox.modeling.fitting import *
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 sns.set(font_scale=1)
 
 datasets = [
@@ -12,14 +13,14 @@ datasets = [
 fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 for dataset in datasets:
     data = np.genfromtxt(
-        "data/"+dataset+".csv",
+        "data/" + dataset + ".csv",
         delimiter=","
     )
-    data = data[data[:,0].argsort()]
+    data = data[data[:, 0].argsort()]
     plt.semilogx(
-    # plt.loglog(
-        data[:,0],
-        data[:,1],
+        # plt.loglog(
+        data[:, 0],
+        data[:, 1],
         ".",
         label=dataset
     )

@@ -1,4 +1,5 @@
 # GearboxMassFits
+
 By Peter Sharpe
 
 ## Overview
@@ -20,16 +21,20 @@ Data from NASATM—2009-215680.
 The following model is found, where `x = log10(Re)`:
 
 The model:
+
 ```python
 log10(mass_lbs) = 
 p1 * log10(beta) + p2
 ```
+
 where:
+
 ```
 beta = (power_hp / rpm_out) ** 0.75 * (rpm_in / rpm_out) ** 0.15
 ```
 
 Constants:
+
 ```
 p1 = 1.0445171124733774
 p2 = 2.0083615496306910
