@@ -22,7 +22,7 @@ def diff(a, n=1, axis=-1):
         return result
 
 
-def trapz(x, modify_endpoints=False): # TODO unify with NumPy trapz, this is different
+def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is different
     """
     Computes each piece of the approximate integral of `x` via the trapezoidal method with unit spacing.
     Can be viewed as the opposite of diff().

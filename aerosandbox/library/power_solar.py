@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
 
+
 def solar_flux_outside_atmosphere_normal(day_of_year):
     """
     Normal solar flux at the top of the atmosphere (variation due to orbital eccentricity)

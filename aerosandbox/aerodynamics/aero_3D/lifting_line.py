@@ -176,7 +176,7 @@ class LiftingLine(ImplicitAnalysis):
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
                                nondim_spanwise_coordinate=(
-                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                                                  nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.CL_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -193,7 +193,7 @@ class LiftingLine(ImplicitAnalysis):
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
                                nondim_spanwise_coordinate=(
-                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                                                  nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.CDp_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -210,7 +210,7 @@ class LiftingLine(ImplicitAnalysis):
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
                                nondim_spanwise_coordinate=(
-                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                                                  nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.Cm_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -236,7 +236,7 @@ class LiftingLine(ImplicitAnalysis):
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
                                    nondim_spanwise_coordinate=(
-                                                                          nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.CL_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -257,7 +257,7 @@ class LiftingLine(ImplicitAnalysis):
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
                                    nondim_spanwise_coordinate=(
-                                                                          nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.CDp_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -278,7 +278,7 @@ class LiftingLine(ImplicitAnalysis):
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
                                    nondim_spanwise_coordinate=(
-                                                                          nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.Cm_function(
                                         alpha=alpha, Re=Re, mach=mach,

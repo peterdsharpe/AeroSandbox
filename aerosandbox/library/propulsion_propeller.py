@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
 
+
 def propeller_shaft_power_from_thrust(
         thrust_force,
         area_propulsive,

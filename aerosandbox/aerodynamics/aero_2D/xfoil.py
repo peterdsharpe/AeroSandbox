@@ -161,7 +161,7 @@ class XFoil(ExplicitAnalysis):
 
             ### Alternatively, work in another directory:
             if self.working_directory is not None:
-                directory = Path(self.working_directory) # For debugging
+                directory = Path(self.working_directory)  # For debugging
 
             # Designate an intermediate file for file I/O
             output_filename = "output.txt"

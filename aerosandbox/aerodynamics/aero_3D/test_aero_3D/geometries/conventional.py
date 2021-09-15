@@ -14,18 +14,18 @@ airplane = asb.Airplane(
         asb.Wing(
             name="Main Wing",
             xyz_le=[0, 0, 0],  # Coordinates of the wing's leading edge
-            symmetric=True, # Should this wing be mirrored across the XZ plane?
+            symmetric=True,  # Should this wing be mirrored across the XZ plane?
             xsecs=[  # The wing's cross ("X") sections
                 asb.WingXSec(  # Root
-                    xyz_le=[0,0,0],  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
+                    xyz_le=[0, 0, 0],  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
                     twist=2,  # degrees
                     airfoil=wing_airfoil,  # Airfoils are blended between a given XSec and the next one.
-                    control_surface_is_symmetric=True, # Flap (ctrl. surfs. applied between this XSec and the next one.)
+                    control_surface_is_symmetric=True,  # Flap (ctrl. surfs. applied between this XSec and the next one.)
                     control_surface_deflection=0,  # degrees
                 ),
                 asb.WingXSec(  # Mid
-                    xyz_le = [0.01, 0.5, 0],
+                    xyz_le=[0.01, 0.5, 0],
                     chord=0.16,
                     twist=0,
                     airfoil=wing_airfoil,
@@ -67,7 +67,7 @@ airplane = asb.Airplane(
             symmetric=False,
             xsecs=[
                 asb.WingXSec(
-                    xyz_le=[0,0,0],
+                    xyz_le=[0, 0, 0],
                     chord=0.1,
                     twist=0,
                     airfoil=tail_airfoil,
@@ -89,7 +89,7 @@ airplane = asb.Airplane(
             xyz_le=[0, 0, 0],
             xsecs=[
                 asb.FuselageXSec(
-                    xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi-0.03],
+                    xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi - 0.03],
                     radius=0.6 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
                 )
                 for xi in np.cosspace(0, 1, 30)

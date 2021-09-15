@@ -32,9 +32,9 @@ def test_block_move_fixed_time():
     #     np.trapz(dyn.X ** 2) * np.diff(time)
     # )
 
-    effort = np.sum( # More sophisticated integral-of-squares integration (closed form correct)
-            np.diff(time) / 3 *
-            (dyn.X[:-1] ** 2 + dyn.X[:-1] * dyn.X[1:] + dyn.X[1:] ** 2)
+    effort = np.sum(  # More sophisticated integral-of-squares integration (closed form correct)
+        np.diff(time) / 3 *
+        (dyn.X[:-1] ** 2 + dyn.X[:-1] * dyn.X[1:] + dyn.X[1:] ** 2)
     )
 
     opti.minimize(effort)
@@ -152,6 +152,7 @@ def test_rocket():
 
     assert sol.value(dyn.mass[-1]) == pytest.approx(290049.81034472014, rel=0.05)
     assert sol.value(dyn.u).max() == pytest.approx(1448, rel=0.05)
+
 
 if __name__ == '__main__':
     pytest.main()

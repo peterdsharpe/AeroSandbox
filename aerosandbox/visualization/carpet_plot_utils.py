@@ -144,7 +144,7 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
     assert last_nanfrac == 0, "Could not patch all NaNs!"
 
     # Diffusing
-    print_title("Diffusing") # TODO Perhaps use skimage gaussian blur kernel or similar instead of "+" stencil?
+    print_title("Diffusing")  # TODO Perhaps use skimage gaussian blur kernel or similar instead of "+" stencil?
     for iter in range(50):
         print(f"{iter + 1:4}")
         for i in range(array.shape[0]):
@@ -163,17 +163,21 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
 
     return array
 
+
 if __name__ == '__main__':
     import time
     import numpy as np
     from numpy import linalg
 
+
     def complicated_function():
         print("Starting...")
-        n=10000
+        n = 10000
         linalg.solve(np.random.randn(n, n), np.random.randn(n))
         print("Finished")
         return True
+
+
     try:
         with time_limit(1):
             complicated_function()

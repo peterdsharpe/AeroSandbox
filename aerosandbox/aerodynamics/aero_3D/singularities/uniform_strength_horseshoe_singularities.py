@@ -212,11 +212,14 @@ if __name__ == '__main__':
     rights = np.array([center, right])
     strengths = np.array([2, 1])
 
+
     def wide(array):
         return np.reshape(array, (1, -1))
 
+
     def tall(array):
         return np.reshape(array, (-1, 1))
+
 
     Uf_each, Vf_each, Wf_each = calculate_induced_velocity_horseshoe(
         x_field=wide(Xf),

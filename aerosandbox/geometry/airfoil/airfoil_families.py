@@ -125,7 +125,7 @@ def get_kulfan_coordinates(
     x_lower = np.cosspace(0, 1, n_points_per_side)
     x_upper = x_lower[::-1]
 
-    x_lower = x_lower[1:] # Trim off the nose coordinate so there are no duplicates
+    x_lower = x_lower[1:]  # Trim off the nose coordinate so there are no duplicates
 
     def shape(w, x):
         # Class function
@@ -141,7 +141,7 @@ def get_kulfan_coordinates(
                 np.expand_dims(1 - x, 1) ** (n - np.arange(n + 1))
         )  # Polynomial coefficient * weight matrix
         # S = np.sum(S_matrix, axis=1)
-        S = np.array([np.sum(S_matrix[i,:]) for i in range(S_matrix.shape[0])])
+        S = np.array([np.sum(S_matrix[i, :]) for i in range(S_matrix.shape[0])])
 
         # Calculate y output
         y = C * S
@@ -245,4 +245,3 @@ def get_UIUC_coordinates(
             ) from e
 
     return get_coordinates_from_raw_dat(raw_text)
-

@@ -46,6 +46,7 @@ def test_flat_plate():
     )
     return analysis.run()
 
+
 def test_flat_plate_mirrored():
     if not avl_present:
         return

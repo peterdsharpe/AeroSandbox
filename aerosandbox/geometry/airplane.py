@@ -130,7 +130,7 @@ class Airplane(AeroSandboxObject):
             )
             show_kwargs = {
                 "show_edges": True,
-                "show_grid": True,
+                "show_grid" : True,
                 **show_kwargs,
             }
             if show:

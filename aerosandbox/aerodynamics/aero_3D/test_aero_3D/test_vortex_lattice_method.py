@@ -1,6 +1,7 @@
 import aerosandbox as asb
 import pytest
 
+
 def test_conventional():
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
     analysis = asb.VortexLatticeMethod(
@@ -8,6 +9,7 @@ def test_conventional():
         op_point=asb.OperatingPoint(alpha=10),
     )
     return analysis.run()
+
 
 def test_vanilla():
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.vanilla import airplane
@@ -17,6 +19,7 @@ def test_vanilla():
     )
     return analysis.run()
 
+
 def test_flat_plate():
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.flat_plate import airplane
     analysis = asb.VortexLatticeMethod(
@@ -24,6 +27,7 @@ def test_flat_plate():
         op_point=asb.OperatingPoint(alpha=10),
     )
     return analysis.run()
+
 
 def test_flat_plate_mirrored():
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.flat_plate_mirrored import airplane

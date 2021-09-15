@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 
-np.random.seed(0) # Fix a seed for reproducibility
+np.random.seed(0)  # Fix a seed for reproducibility
 
 ### Create some data (some fictional system where temperature is a function of time, and we're measuring it)
 n = 20
@@ -18,6 +18,7 @@ measured_temperature = np.hstack((measured_temperature, 0))
 
 if __name__ == '__main__':
     from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot
+
     fig, ax = plt.subplots()
     plt.plot(time, measured_temperature, ".")
     show_plot(

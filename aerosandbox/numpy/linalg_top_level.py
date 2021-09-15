@@ -3,6 +3,7 @@ import casadi as _cas
 from aerosandbox.numpy.arithmetic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
 
+
 def dot(a, b):
     """
     Dot product of two arrays.
@@ -14,6 +15,7 @@ def dot(a, b):
 
     else:
         return _cas.dot(a, b)
+
 
 def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None):
     """
@@ -27,15 +29,14 @@ def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None):
     else:
         if axis is not None:
             if not (
-                axis == -1 or
-                axis == 0 or
-                axis == 1
+                    axis == -1 or
+                    axis == 0 or
+                    axis == 1
             ):
                 raise ValueError("`axis` must be -1, 0, or 1.")
             axisa = axis
             axisb = axis
             axisc = axis
-
 
         if axisa == -1 or axisa == 1:
             if not is_casadi_type(a):
