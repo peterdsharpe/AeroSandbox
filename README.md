@@ -30,7 +30,7 @@ Install with `pip install aerosandbox[full]` for a complete install.
 
 For a lightweight installation with minimal dependencies, install with `pip install aerosandbox`. All optimization, numerics, and physics models will work with this lightweight install, but dependencies for visualization/GUI features and interfaces are not installed.
 
-### Tutorials and Documentation
+### Tutorials, Examples, and Documentation
 
 To get started, [check out the tutorials folder here](./tutorial/)! All tutorials are viewable in-browser, or you can open them as Jupyter notebooks by cloning this repository.
 
