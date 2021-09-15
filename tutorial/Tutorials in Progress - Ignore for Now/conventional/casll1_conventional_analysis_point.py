@@ -1,7 +1,7 @@
 from aerosandbox import *
 import dill as pickle
 
-if __name__ == '__main__': # If you're a Windows user, you must run within a main block if you want to use any parallel functions.
+if __name__ == '__main__':  # If you're a Windows user, you must run within a main block if you want to use any parallel functions.
 
     ########## First, define the airfoils that you want to use. ##########
     # For a lifting line analysis like CasLL1, you need differentiable 2D sectional data for the airfoils.
@@ -16,19 +16,23 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
 
     # I've wrapped these in a simple caching script, since the XFoil runs are slow!
     try:
-        with open("e216.pkl", "rb") as f: e216 = pickle.load(f)
+        with open("e216.pkl", "rb") as f:
+            e216 = pickle.load(f)
     except:
-        e216 = Airfoil("e216") # You can use the string of any airfoil from the UIUC database here!
+        e216 = Airfoil("e216")  # You can use the string of any airfoil from the UIUC database here!
         e216.populate_sectional_functions_from_xfoil_fits()
-        with open("e216.pkl", "wb+") as f: pickle.dump(e216, f)
+        with open("e216.pkl", "wb+") as f:
+            pickle.dump(e216, f)
 
     try:
-        with open("naca0008.pkl", "rb") as f: naca0008 = pickle.load(f)
+        with open("naca0008.pkl", "rb") as f:
+            naca0008 = pickle.load(f)
     except:
-        naca0008 = Airfoil("naca0008") # You can also give NACA airfoils!
+        naca0008 = Airfoil("naca0008")  # You can also give NACA airfoils!
         # You can also load from a .dat file (see Airfoil constructor docstring for syntax)!
         naca0008.populate_sectional_functions_from_xfoil_fits()
-        with open("naca0008.pkl", "wb+") as f: pickle.dump(naca0008, f)
+        with open("naca0008.pkl", "wb+") as f:
+            pickle.dump(naca0008, f)
 
     ### Method 2: Explicit fits (look here in the library to see what these look like)
     # These will be generally faster to run, and probably more accurate. They can also tell you things about
@@ -53,7 +57,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                 x_le=0,  # Coordinates of the wing's leading edge
                 y_le=0,  # Coordinates of the wing's leading edge
                 z_le=0,  # Coordinates of the wing's leading edge
-                symmetric=True, # Should this wing be mirrored across the XZ plane?
+                symmetric=True,  # Should this wing be mirrored across the XZ plane?
                 xsecs=[  # The wing's cross ("X") sections
                     WingXSec(  # Root
                         x_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
@@ -62,7 +66,7 @@ if __name__ == '__main__': # If you're a Windows user, you must run within a mai
                         chord=0.18,
                         twist_angle=2,  # degrees
                         airfoil=e216,  # Airfoils are blended between a given XSec and the next one.
-                        control_surface_type='symmetric', # Flap (ctrl. surfs. applied between this XSec and the next one.)
+                        control_surface_type='symmetric',  # Flap (ctrl. surfs. applied between this XSec and the next one.)
                         control_surface_deflection=0,  # degrees
                     ),
                     WingXSec(  # Mid

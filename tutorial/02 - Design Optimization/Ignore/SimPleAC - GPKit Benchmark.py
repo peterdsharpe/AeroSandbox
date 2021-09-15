@@ -3,6 +3,7 @@ from gpkit import Model, Variable, SignomialsEnabled, VarKey, units
 import numpy as np
 import time
 
+
 class SimPleAC(Model):
     def setup(self):
         # Env. constants
@@ -19,7 +20,7 @@ class SimPleAC(Model):
         S_wetratio = Variable("(\\frac{S}{S_{wet}})", 2.075, "-", "wetted area ratio", pr=3.)
         tau = Variable("\\tau", 0.12, "-", "airfoil thickness to chord ratio", pr=10.)
         W_W_coeff1 = Variable("W_{W_{coeff1}}", 2e-5, "1/m",
-                              "wing weight coefficent 1", pr=30.)  #orig  12e-5
+                              "wing weight coefficent 1", pr=30.)  # orig  12e-5
         W_W_coeff2 = Variable("W_{W_{coeff2}}", 60., "Pa",
                               "wing weight coefficent 2", pr=10.)
         p_labor = Variable('p_{labor}', 1., '1/min', 'cost of labor', pr=20.)
@@ -36,7 +37,7 @@ class SimPleAC(Model):
         V = Variable("V", "m/s", "cruising speed")
         W = Variable("W", "N", "total aircraft weight")
         Re = Variable("Re", "-", "Reynold's number")
-        CDA0 = Variable("(CDA0)", "m^2", "fuselage drag area")  #0.035 originally
+        CDA0 = Variable("(CDA0)", "m^2", "fuselage drag area")  # 0.035 originally
         C_D = Variable("C_D", "-", "drag coefficient")
         C_L = Variable("C_L", "-", "lift coefficient of wing")
         C_f = Variable("C_f", "-", "skin friction coefficient")
@@ -48,7 +49,7 @@ class SimPleAC(Model):
         # Free variables (fixed for performance eval.)
         A = Variable("A", "-", "aspect ratio", fix=True)
         S = Variable("S", "m^2", "total wing area", fix=True)
-        W_w = Variable("W_w", "N", "wing weight")  #, fix = True)
+        W_w = Variable("W_w", "N", "wing weight")  # , fix = True)
         W_w_strc = Variable('W_w_strc', 'N', 'wing structural weight', fix=True)
         W_w_surf = Variable('W_w_surf', 'N', 'wing skin weight', fix=True)
         V_f_wing = Variable("V_f_wing", 'm^3', 'fuel volume in the wing', fix=True)
@@ -78,7 +79,7 @@ class SimPleAC(Model):
             constraints += [V_f == W_f / g / rho_f,
                             V_f_wing ** 2 <= 0.0009 * S ** 3 / A * tau ** 2,
                             # linear with b and tau, quadratic with chord
-                            V_f_avail <= V_f_wing + V_f_fuse,  #[SP]
+                            V_f_avail <= V_f_wing + V_f_fuse,  # [SP]
                             V_f_avail >= V_f
                             ]
 
@@ -90,16 +91,19 @@ class SimPleAC(Model):
 
         return constraints
 
+
 def solve():
     m = SimPleAC()
     m.cost = m['W_f']
     return m.localsolve()
+
 
 def timeit():
     start = time.time()
     solve()
     end = time.time()
     return end - start
+
 
 if __name__ == '__main__':
     times = np.array([

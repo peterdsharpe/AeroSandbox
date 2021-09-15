@@ -53,8 +53,8 @@ airplane = Airplane(
                     x_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
-                    chord=variable(0.18,0,1),#0.18,
-                    twist_angle=0,#variable(0,-10,10),  # degrees
+                    chord=variable(0.18, 0, 1),  # 0.18,
+                    twist_angle=0,  # variable(0,-10,10),  # degrees
                     airfoil=Airfoil(name="naca4412"),
                     control_surface_type='symmetric',
                     # Flap # Control surfaces are applied between attrib_name given XSec and the next one.
@@ -65,19 +65,19 @@ airplane = Airplane(
                     x_le=0.01,
                     y_le=0.5,
                     z_le=0,
-                    chord=variable(0.16,0,1),#0.16,
-                    twist_angle=0,#variable(0,-10,10),
+                    chord=variable(0.16, 0, 1),  # 0.16,
+                    twist_angle=0,  # variable(0,-10,10),
                     airfoil=Airfoil(name="naca4412"),
                     control_surface_type='asymmetric',  # Aileron
                     control_surface_deflection=0,
                     control_surface_hinge_point=0.75
                 ),
                 WingXSec(  # Tip
-                    x_le=0.08,#variable(0.08, 0, 0.16),
-                    y_le=1,#variable(1, 0.5, 1.25),
-                    z_le=0.1,#variable(0.1, 0, 0.2),
-                    chord=variable(0.08,0,1),#0.08,#variable(0.08, 0.01, 1),
-                    twist_angle=0,#variable(0,-10,10),
+                    x_le=0.08,  # variable(0.08, 0, 0.16),
+                    y_le=1,  # variable(1, 0.5, 1.25),
+                    z_le=0.1,  # variable(0.1, 0, 0.2),
+                    chord=variable(0.08, 0, 1),  # 0.08,#variable(0.08, 0.01, 1),
+                    twist_angle=0,  # variable(0,-10,10),
                     airfoil=Airfoil(name="naca4412"),
                 )
             ]

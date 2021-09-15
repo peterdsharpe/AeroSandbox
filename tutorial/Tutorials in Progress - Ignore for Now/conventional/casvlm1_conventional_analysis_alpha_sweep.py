@@ -145,10 +145,10 @@ ap = Casvlm1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
         velocity=10,
-        alpha=opti.parameter(),#quasi_variable(5),
+        alpha=opti.parameter(),  # quasi_variable(5),
         beta=0,
         p=0,
-        q=0,#quasi_variable(0),
+        q=0,  # quasi_variable(0),
         r=0,
     ),
     opti=opti
@@ -173,7 +173,7 @@ s_opts["mu_strategy"] = "adaptive"
 opti.solver('ipopt', p_opts, s_opts)
 
 # Solve
-alphas = np.linspace(-15,15,31)
+alphas = np.linspace(-15, 15, 31)
 ap_sols = []
 
 for alpha in alphas:

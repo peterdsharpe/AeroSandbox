@@ -145,10 +145,10 @@ ap = Casvlm1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
         velocity=10,
-        alpha=5,#quasi_variable(5),
+        alpha=5,  # quasi_variable(5),
         beta=0,
         p=0,
-        q=0,#quasi_variable(0),
+        q=0,  # quasi_variable(0),
         r=0,
     ),
     opti=opti

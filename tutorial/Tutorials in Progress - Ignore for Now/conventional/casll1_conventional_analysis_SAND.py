@@ -193,12 +193,12 @@ ap_sol.substitute_solution(sol)
 
 ap_sol.draw()
 
-print("CL:",ap_sol.CL)
-print("CD:",ap_sol.CD)
-print("CY:",ap_sol.CY)
-print("Cl:",ap_sol.Cl)
-print("Cm:",ap_sol.Cm)
-print("Cn:",ap_sol.Cn)
+print("CL:", ap_sol.CL)
+print("CD:", ap_sol.CD)
+print("CY:", ap_sol.CY)
+print("Cl:", ap_sol.Cl)
+print("Cm:", ap_sol.Cm)
+print("Cn:", ap_sol.Cn)
 
 # Answer you should get: (XFLR5)
 # CL = 0.797

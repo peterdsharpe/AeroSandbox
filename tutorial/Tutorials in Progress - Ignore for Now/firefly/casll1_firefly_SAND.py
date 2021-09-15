@@ -35,6 +35,7 @@ def quasi_variable(val):
     opti.subject_to(var == val)
     return var
 
+
 # Airfoils
 generic_cambered_airfoil = Airfoil(
     CL_function=lambda alpha, Re, mach, deflection,: (  # Lift coefficient function
@@ -70,7 +71,7 @@ y = 0.065 / 2 * 10 * (
         - 0.3516 * ((x - x0) / c) ** 2
         + 0.2843 * ((x - x0) / c) ** 3
         - 0.1036 * ((x - x0) / c) ** 4
-) + 0.024 / 2 * ((x-x0) / c)
+) + 0.024 / 2 * ((x - x0) / c)
 
 airplane = Airplane(
     name="Firefly",
@@ -80,16 +81,16 @@ airplane = Airplane(
     fuselages=[
         Fuselage(
             name="Fuselage",
-            x_le = 0,
-            y_le = 0,
-            z_le = 0,
+            x_le=0,
+            y_le=0,
+            z_le=0,
             symmetric=False,
-            xsecs = [
+            xsecs=[
                 FuselageXSec(
-                    x_c = x[i],
-                    y_c = 0,
-                    z_c = 0,
-                    radius = y[i]
+                    x_c=x[i],
+                    y_c=0,
+                    z_c=0,
+                    radius=y[i]
                 ) for i in range(x.shape[0])
             ]
         )
