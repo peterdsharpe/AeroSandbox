@@ -10,12 +10,10 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 
 **AeroSandbox is a Python package for design optimization of engineered systems such as aircraft.**
 
-At its heart, AeroSandbox is an optimization suite that combines the power
-of [modern automatic differentiation](./tutorial/10%20-%20Miscellaneous/03%20-%20Resources%20on%20Automatic%20Differentiation.md)
+At its heart, AeroSandbox is an optimization suite that combines the power of [modern automatic differentiation](./tutorial/10%20-%20Miscellaneous/03%20-%20Resources%20on%20Automatic%20Differentiation.md)
 with the ease-of-use of [familiar NumPy syntax](aerosandbox/numpy).
 
-This differentiability dramatically improves optimization performance on large problems: **design problems with tens of
-thousands of decision variables solve in seconds on a laptop**.
+This differentiability dramatically improves optimization performance on large problems: **design problems with tens of thousands of decision variables solve in seconds on a laptop**.
 
 AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physics models, allowing you to **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.**
 
@@ -23,8 +21,7 @@ AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physic
 *VLM simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
 
 ![PANEL Image](media/images/panel1_naca4412.png)
-*Panel simulation of a wing (extruded NACA2412, α=15°, AR=4). Note the strong three-dimensionality of the flow near the
-tip.*
+*Panel simulation of a wing (extruded NACA2412, α=15°, AR=4). Note the strong three-dimensionality of the flow near the tip.*
 
 ## Getting Started
 
@@ -32,14 +29,11 @@ tip.*
 
 Install with `pip install aerosandbox[full]` for a complete install.
 
-For a lightweight installation with minimal dependencies, install with `pip install aerosandbox`. All optimization,
-numerics, and physics models will work with this lightweight install, but dependencies for visualization/GUI features
-and interfaces are not installed.
+For a lightweight installation with minimal dependencies, install with `pip install aerosandbox`. All optimization, numerics, and physics models will work with this lightweight install, but dependencies for visualization/GUI features and interfaces are not installed.
 
 ### Tutorials and Documentation
 
-To get started, [check out the tutorials folder here](./tutorial/)! All tutorials are viewable in-browser, or you can
-open them as Jupyter notebooks by cloning this repository.
+To get started, [check out the tutorials folder here](./tutorial/)! All tutorials are viewable in-browser, or you can open them as Jupyter notebooks by cloning this repository.
 
 For a more detailed and theory-heavy introduction to AeroSandbox, [please see this thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf).
 
@@ -62,8 +56,7 @@ All angles are in radians, except for α and β which are in degrees due to long
 
 ### Contributing
 
-Please feel free to join the development of AeroSandbox - contributions are always so welcome! If you have a change
-you'd like to make, the easiest way to do that is by submitting a pull request.
+Please feel free to join the development of AeroSandbox - contributions are always so welcome! If you have a change you'd like to make, the easiest way to do that is by submitting a pull request.
 
 The text file [`CONTRIBUTING.md`](./CONTRIBUTING.md) has more details for developers and power users.
 
@@ -73,21 +66,15 @@ Contact information can be found next to my name near the top of this README.
 ### Donating
 
 If you like this software, please consider donating to support development [via PayPal](https://paypal.me/peterdsharpe)
-or [GitHub Sponsors](https://github.com/sponsors/peterdsharpe/)! I'm a grad student, so every dollar that you donate
-helps wean me off my diet of instant coffee and microwaved ramen noodles.
+or [GitHub Sponsors](https://github.com/sponsors/peterdsharpe/)! I'm a grad student, so every dollar that you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
 
 ### Bugs
 
-Please, please report all bugs by creating a new issue
-at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
+Please, please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
 
 ### Versioning
 
-AeroSandbox loosely uses [semantic versioning](https://semver.org/), which should give you an idea of whether or not you
-can probably expect backward-compatibility and/or new features from any given update. However, the code is a work in
-progress and things change rapidly - for the time being, please freeze your version of AeroSandbox for any serious
-deployments. Commercial users: I'm more than happy to discuss consulting work for active AeroSandbox support if this
-package proves helpful!
+AeroSandbox loosely uses [semantic versioning](https://semver.org/), which should give you an idea of whether or not you can probably expect backward-compatibility and/or new features from any given update. However, the code is a work in progress and things change rapidly - for the time being, please freeze your version of AeroSandbox for any serious deployments. Commercial users: I'm more than happy to discuss consulting work for active AeroSandbox support if this package proves helpful!
 
 ### Citation
 
