@@ -2,7 +2,7 @@ theme: jekyll-theme-cayman
 
 title: <img src="media/images/asb-logo-light.png" alt="AeroSandbox Logo" width="600px">
 description: Aircraft design optimization made fast thanks to reverse-mode automatic differentiation. Written in Python, work in progress.
-google_analytics: 
+google_analytics:
 show_downloads: true
 
 github:
