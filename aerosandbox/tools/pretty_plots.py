@@ -47,7 +47,17 @@ def set_ticks(
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
 
-def adjust_lightness(color, amount=1):
+def adjust_lightness(color, amount=1.0):
+    """
+    Converts a color to HLS space, then mulitplies the lightness by `amount`, then converts back to RGB.
+
+    Args:
+        color: A color, in any format that matplotlib understands.
+        amount: The amount to multiply the lightness by. Valid range is 0 to infinity.
+
+    Returns: A color, as an RGB tuple.
+
+    """
     import matplotlib.colors as mc
     import colorsys
     try:
@@ -138,6 +148,7 @@ def contour(
         contourf_kwargs: Dict = None,
         colorbar_kwargs: Dict = None,
         linelabels_kwargs: Dict = None,
+        **kwargs,
 ):
     """
     An analogue for plt.contour and plt.tricontour and friends that produces a much prettier default graph.
@@ -169,6 +180,7 @@ def contour(
         contourf_kwargs: Additional keyword arguments for contourf.
         colorbar_kwargs: Additional keyword arguments for colorbar.
         linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
+        **kwargs: Additional keywords, assumed to be for both contour and contourf.
 
     Returns: A tuple of (contour, contourf, colorbar) objects.
 
@@ -189,7 +201,7 @@ def contour(
         Z,
     ]
 
-    shared_kwargs = {}
+    shared_kwargs = kwargs
     if levels is not None:
         shared_kwargs["levels"] = levels
     shared_kwargs["alpha"] = alpha
@@ -220,12 +232,12 @@ def contour(
     }
 
     try:
-        CS = plt.contour(*args, **contour_kwargs)
-        CF = plt.contourf(*args, **contourf_kwargs)
+        cont = plt.contour(*args, **contour_kwargs)
+        contf = plt.contourf(*args, **contourf_kwargs)
     except TypeError as e:
         try:
-            CS = plt.tricontour(*args, **contour_kwargs)
-            CF = plt.tricontourf(*args, **contourf_kwargs)
+            cont = plt.tricontour(*args, **contour_kwargs)
+            contf = plt.tricontourf(*args, **contourf_kwargs)
         except TypeError:
             raise e
 
@@ -235,9 +247,9 @@ def contour(
         cbar = None
 
     if linelabels:
-        plt.gca().clabel(CS, **linelabels_kwargs)
+        plt.gca().clabel(cont, **linelabels_kwargs)
 
-    return CS, CF, cbar
+    return cont, contf, cbar
 
 # def contour(
 #         func: Callable,
