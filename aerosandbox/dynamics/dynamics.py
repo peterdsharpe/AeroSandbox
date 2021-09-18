@@ -103,7 +103,7 @@ class FreeBodyDynamics(ImplicitAnalysis):
                 return string
 
         def makeline(k, v):
-            name = trim(str(k), width=6).rjust(6)
+            name = trim(str(k), width=8).rjust(8)
             item = trim(str(v), width=40).ljust(40)
 
             try:
@@ -206,6 +206,7 @@ class FreeBodyDynamics(ImplicitAnalysis):
             "alpha": self.alpha,
             "beta" : self.beta,
             "speed": self.speed,
+            "altitude": self.altitude
         }
 
     @property
@@ -232,6 +233,10 @@ class FreeBodyDynamics(ImplicitAnalysis):
                        self.v ** 2 +
                        self.w ** 2
                ) ** 0.5
+
+    @property
+    def altitude(self):
+        return -self.ze
 
     @property
     def op_point(self):
