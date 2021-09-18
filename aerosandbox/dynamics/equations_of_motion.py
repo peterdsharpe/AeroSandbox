@@ -89,12 +89,35 @@ def equations_of_motion(
     """
 
     ### Trig Shorthands
-    sphi = np.sin(phi)
-    cphi = np.cos(phi)
-    sthe = np.sin(theta)
-    cthe = np.cos(theta)
-    spsi = np.sin(psi)
-    cpsi = np.cos(psi)
+    def sincos(x):
+        try:
+            x = np.mod(x, 2 * np.pi)
+            one = np.ones_like(x)
+            zero = np.zeros_like(x)
+
+            if np.allclose(x, 0) or np.allclose(x, 2 * np.pi):
+                sin = zero
+                cos = one
+            elif np.allclose(x, np.pi / 2):
+                sin = one
+                cos = zero
+            elif np.allclose(x, np.pi):
+                sin = zero
+                cos = -one
+            elif np.allclose(x, 3 * np.pi / 2):
+                sin = -one
+                cos = zero
+            else:
+                raise ValueError()
+        except:
+            sin = np.sin(x)
+            cos = np.cos(x)
+        return sin, cos
+
+    # Do the trig
+    sphi, cphi = sincos(phi)
+    sthe, cthe = sincos(theta)
+    spsi, cpsi = sincos(psi)
 
     ##### Equations of Motion
 
