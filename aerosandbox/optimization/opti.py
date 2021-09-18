@@ -298,7 +298,7 @@ class Opti(cas.Opti):
                     doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
                     {constraint}""")
 
-            if not constraint_satisfied:  # Determine if the constraint is *almost* true
+            if isinstance(constraint, cas.MX) and not constraint_satisfied:  # Determine if the constraint is *almost* true
                 try:
                     LHS = constraint.dep(0)
                     RHS = constraint.dep(1)
