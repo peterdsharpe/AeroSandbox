@@ -1,7 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.dynamics.utilities import inv_symmetric_3x3
-
+import warnings
 
 def equations_of_motion(
         xe=0,
@@ -154,19 +154,25 @@ def equations_of_motion(
             q * u
     )
     ### Angle derivatives
-    d_phi = (
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore')
+        d_phi = np.where(
+            cthe != 0,
             p +
             q * sphi * sthe / cthe +
-            r * cphi * sthe / cthe
-    )
-    d_theta = (
-            q * cphi -
-            r * sphi
-    )
-    d_psi = (
+            r * cphi * sthe / cthe,
+            0
+        )
+        d_theta = (
+                q * cphi -
+                r * sphi
+        )
+        d_psi = np.where(
+            cthe != 0,
             q * sphi / cthe +
-            r * cphi / cthe
-    )
+            r * cphi / cthe,
+            0
+        )
     ### Angular velocity derivatives
     RHS_L = (
             L -
