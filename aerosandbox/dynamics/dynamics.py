@@ -133,6 +133,8 @@ class FreeBodyDynamics(ImplicitAnalysis):
 
         return "\n".join(repr)
 
+    # TODO add __getitem__ for dynamic state at instant in time
+
     @property
     def state(self):
         return {
