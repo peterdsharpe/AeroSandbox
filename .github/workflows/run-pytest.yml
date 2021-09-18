@@ -38,4 +38,4 @@ jobs:
         run: |
           python -m pip uninstall -y aerosandbox
           python -m pip install .[full]
-          pytest .
+          pytest tutorial
