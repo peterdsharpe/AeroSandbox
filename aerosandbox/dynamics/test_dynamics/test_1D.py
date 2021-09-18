@@ -97,7 +97,7 @@ def test_block_move_minimum_time():
     assert np.mean(np.abs(dyn.X)) == pytest.approx(1, abs=0.01)
 
 
-def test_rocket():
+def test_rocket_primitive():
     ### Parameters
     N = 100  # Number of discretization points
     time_final = 100  # seconds
@@ -153,6 +153,62 @@ def test_rocket():
     assert sol.value(dyn.mass[-1]) == pytest.approx(290049.81034472014, rel=0.05)
     assert sol.value(dyn.u).max() == pytest.approx(1448, rel=0.05)
 
+def test_rocket_with_data_structures():
+
+    ### Environment
+    opti = asb.Opti()
+
+    ### Time discretization
+    N = 100  # Number of discretization points
+    time_final = 100  # seconds
+    time = np.linspace(0, time_final, N)
+
+    ### Constants
+    mass_initial = 500e3  # Initial mass, 500 metric tons
+    ze_final = -100e3  # Final altitude, 100 km
+    g = 9.81  # Gravity, m/s^2
+    alpha = 1 / (300 * g)  # kg/(N*s), Inverse of specific impulse, basically - don't worry about this
+
+    dyn = FreeBodyDynamics(
+        opti=opti,
+        time=time,
+        ze=opti.variable(init_guess=np.linspace(0, ze_final, N)),  # Altitude (negative due to Earth-axes convention)
+        u=opti.variable(init_guess=-ze_final / time_final, n_vars=N),  # Velocity
+        theta=np.pi / 2,
+        X=opti.variable(init_guess=g * mass_initial, n_vars=N),  # Mass
+        mass=opti.variable(init_guess=mass_initial, n_vars=N),  # Control vector
+        g=9.81,
+    )
+
+    opti.constrain_derivative(
+        derivative=-alpha * dyn.X,
+        variable=dyn.mass,
+        with_respect_to=dyn.time,
+    )
+
+    ### Boundary conditions
+    opti.subject_to([
+        dyn.ze[0] == 0,
+        dyn.u[0] == 0,
+        dyn.mass[0] == mass_initial,
+        dyn.ze[-1] == ze_final,
+        ])
+
+    ### Path constraints
+    opti.subject_to([
+        dyn.mass >= 0,
+        dyn.X >= 0
+    ])
+
+    ### Objective
+    opti.minimize(-dyn.mass[-1])  # Maximize the final mass == minimize fuel expenditure
+
+    ### Solve
+    sol = opti.solve(verbose=False)
+    print(f"Solved in {sol.stats()['iter_count']} iterations.")
+
+    assert sol.value(dyn.mass[-1]) == pytest.approx(290049.81034472014, rel=0.05)
+    assert sol.value(dyn.u).max() == pytest.approx(1448, rel=0.05)
 
 if __name__ == '__main__':
     pytest.main()
