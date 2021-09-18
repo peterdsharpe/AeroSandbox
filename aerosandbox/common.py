@@ -100,7 +100,7 @@ class ImplicitAnalysis(AeroSandboxObject):
 
             init_method(self, *args, **kwargs)
 
-            if not self.opti_provided:
+            if not self.opti_provided and not opti.x.shape==(0, 1):
                 sol = self.opti.solve()
                 self.substitute_solution(sol)
 
