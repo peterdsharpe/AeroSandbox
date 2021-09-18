@@ -9,18 +9,18 @@ class FreeBodyDynamics(ImplicitAnalysis):
     @ImplicitAnalysis.initialize
     def __init__(self,
                  time: np.ndarray,
-                 xe=0,
-                 ye=0,
-                 ze=0,
-                 u=0,
-                 v=0,
-                 w=0,
-                 phi=0,
-                 theta=0,
-                 psi=0,
-                 p=0,
-                 q=0,
-                 r=0,
+                 xe: np.ndarray = None,
+                 ye: np.ndarray = None,
+                 ze: np.ndarray = None,
+                 u: np.ndarray = None,
+                 v: np.ndarray = None,
+                 w: np.ndarray = None,
+                 phi: np.ndarray = None,
+                 theta: np.ndarray = None,
+                 psi: np.ndarray = None,
+                 p: np.ndarray = None,
+                 q: np.ndarray = None,
+                 r: np.ndarray = None,
                  X=0,
                  Y=0,
                  Z=0,
@@ -42,18 +42,18 @@ class FreeBodyDynamics(ImplicitAnalysis):
                  ):
 
         self.time = time
-        self.xe = xe
-        self.ye = ye
-        self.ze = ze
-        self.u = u
-        self.v = v
-        self.w = w
-        self.phi = phi
-        self.theta = theta
-        self.psi = psi
-        self.p = p
-        self.q = q
-        self.r = r
+        self.xe = 0 if xe is None else xe
+        self.ye = 0 if ye is None else ye
+        self.ze = 0 if ze is None else ze
+        self.u = 0 if u is None else u
+        self.v = 0 if v is None else v
+        self.w = 0 if w is None else w
+        self.phi = 0 if phi is None else phi
+        self.theta = 0 if theta is None else theta
+        self.psi = 0 if psi is None else psi
+        self.p = 0 if p is None else p
+        self.q = 0 if q is None else q
+        self.r = 0 if r is None else r
         self.X = X
         self.Y = Y
         self.Z = Z
@@ -80,11 +80,16 @@ class FreeBodyDynamics(ImplicitAnalysis):
                 state = self.state
                 state_derivatives = self.state_derivatives()
                 for k in state.keys():  # TODO default to second-order integration for position, angles
-                    self.opti.constrain_derivative(
-                        derivative=state_derivatives[k],
-                        variable=state[k],
-                        with_respect_to=self.time,
-                    )
+                    if eval(k) is None: # Don't constrain states that haven't been defined by the user.
+                        continue
+                    try:
+                        self.opti.constrain_derivative(
+                            derivative=state_derivatives[k],
+                            variable=state[k],
+                            with_respect_to=self.time,
+                        )
+                    except Exception as e:
+                        raise ValueError(f"Error while constraining state variable `{k}`: \n{e}")
 
     def __repr__(self):
         repr = []
@@ -106,7 +111,7 @@ class FreeBodyDynamics(ImplicitAnalysis):
             except:
                 value = None
 
-            if str(value.strip()) == str(item.strip()):
+            if str(value).strip() == str(item).strip():
                 value = None
 
             if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.ndarray):
