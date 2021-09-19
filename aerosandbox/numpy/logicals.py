@@ -70,7 +70,10 @@ def all(a):  # TODO add axis functionality
         return _onp.all(a)
 
     else:
-        return _cas.logic_all(a)
+        try:
+            return _cas.logic_all(a)
+        except NotImplementedError:
+            return False
 
 
 def any(a):  # TODO add axis functionality
@@ -83,4 +86,7 @@ def any(a):  # TODO add axis functionality
         return _onp.any(a)
 
     else:
-        return _cas.logic_any(a)
+        try:
+            return _cas.logic_any(a)
+        except NotImplementedError:
+            return False
