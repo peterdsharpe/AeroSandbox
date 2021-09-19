@@ -6,13 +6,25 @@ import aerosandbox.numpy as np
 class OperatingPoint(AeroSandboxObject):
     def __init__(self,
                  atmosphere: Atmosphere = Atmosphere(altitude=0),
-                 velocity: float = 1.,  # m/s
-                 alpha: float = 0.,  # In degrees
-                 beta: float = 0.,  # In degrees
-                 p: float = 0.,  # About the body x-axis, in rad/sec
-                 q: float = 0.,  # About the body y-axis, in rad/sec
-                 r: float = 0.,  # About the body z-axis, in rad/sec
+                 velocity: float = 1.,
+                 alpha: float = 0.,
+                 beta: float = 0.,
+                 p: float = 0.,
+                 q: float = 0.,
+                 r: float = 0.,
                  ):
+        """
+        An object that represents the instantaneous flight conditions of an aircraft.
+
+        Args:
+            atmosphere:
+            velocity: The flight velocity, expressed in true airspeed. [m/s]
+            alpha: The angle of attack. [degrees]
+            beta: The sideslip angle. (Reminder: convention that a positive beta implies that the oncoming air comes from the pilot's right-hand side.) [degrees]
+            p: The roll rate about the x_b axis. [rad/sec]
+            q: The pitch rate about the y_b axis. [rad/sec]
+            r: The yaw rate about the z_b axis. [rad/sec]
+        """
         self.atmosphere = atmosphere
         self.velocity = velocity
         self.alpha = alpha
@@ -87,7 +99,9 @@ class OperatingPoint(AeroSandboxObject):
         """
         Returns the indicated airspeed associated with the current flight condition, in meters per second.
         """
-        return
+        return np.sqrt(
+            2 * (self.total_pressure() - self.atmosphere.pressure()) / self.atmosphere.density()
+        )
 
     def compute_rotation_matrix_wind_to_geometry(self) -> np.ndarray:
         """
