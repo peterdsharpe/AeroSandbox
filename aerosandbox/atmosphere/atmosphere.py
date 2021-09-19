@@ -115,11 +115,18 @@ class Atmosphere(AeroSandboxObject):
     #
     #     """
     #
-    # def mean_free_path(self): # TODO finish implementing methods for our hypersonics friends
-    #     """Returns the mean free path of an air molecule, in meters."""
-    #     return 1/(
-    #         2 ** 0.5 * np.pi *
-    #     )
+    def mean_free_path(self):
+        """
+        Returns the mean free path of an air molecule, in meters.
+
+        To find the collision radius, assumes "a hard-sphere gas that has the same viscosity as the actual gas being considered".
+
+        From Vincenti, W. G. and Kruger, C. H. (1965). Introduction to physical gas dynamics. Krieger Publishing Company. p. 414.
+
+        """
+        return self.dynamic_viscosity() / self.pressure() * np.sqrt(
+            np.pi * gas_constant_universal * self.temperature() / (2 * molecular_mass_air)
+        )
 
 
 if __name__ == "__main__":
