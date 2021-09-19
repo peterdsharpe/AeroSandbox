@@ -103,6 +103,14 @@ class OperatingPoint(AeroSandboxObject):
             2 * (self.total_pressure() - self.atmosphere.pressure()) / self.atmosphere.density()
         )
 
+    def equivalent_airspeed(self):
+        """
+        Returns the equivalent airspeed associated with the current flight condition, in meters per second.
+        """
+        return self.velocity * np.sqrt(
+            self.atmosphere.density() / Atmosphere(altitude=0, method="isa").density()
+        )
+
     def compute_rotation_matrix_wind_to_geometry(self) -> np.ndarray:
         """
         Computes the 3x3 rotation matrix that transforms from wind axes to geometry axes.
