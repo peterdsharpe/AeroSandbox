@@ -1,8 +1,5 @@
 from aerosandbox.common import AeroSandboxObject
 import aerosandbox.numpy as np
-import pandas as pd
-from pathlib import Path
-from aerosandbox.modeling.interpolation import InterpolatedModel
 from aerosandbox.atmosphere._isa_atmo_functions import pressure_isa, temperature_isa
 from aerosandbox.atmosphere._diff_atmo_functions import pressure_differentiable, temperature_differentiable
 
@@ -20,7 +17,6 @@ class Atmosphere(AeroSandboxObject):
     All models here are smoothed fits to the 1976 COESA model;
     see AeroSandbox\studies\Atmosphere Fitting for details.
 
-    All models considered valid from 0 to 40 km.
     """
 
     def __init__(self,
