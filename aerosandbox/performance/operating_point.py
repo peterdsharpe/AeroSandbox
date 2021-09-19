@@ -26,7 +26,7 @@ class OperatingPoint(AeroSandboxObject):
             r: The yaw rate about the z_b axis. [rad/sec]
         """
         self.atmosphere = atmosphere
-        self.velocity = velocity # TODO rename "airspeed"?
+        self.velocity = velocity  # TODO rename "airspeed"?
         self.alpha = alpha
         self.beta = beta
         self.p = p
@@ -172,6 +172,4 @@ class OperatingPoint(AeroSandboxObject):
 
 
 if __name__ == '__main__':
-    op_point = OperatingPoint(
-
-    )
+    op_point = OperatingPoint()
