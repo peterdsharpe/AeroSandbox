@@ -22,15 +22,49 @@ class OperatingPoint(AeroSandboxObject):
         self.r = r
 
     def dynamic_pressure(self):
-        """ Dynamic pressure of the working fluid
-        .. math:: p = \frac{\\rho u^2}{2}
-        Args:
-            self.density (float): Density of the working fluid in .. math:: \frac{kg}{m^3}
-            self.velocity (float): Velocity of the working fluid in .. math:: \frac{m}{s}
+        """
+        Dynamic pressure of the working fluid
         Returns:
-            float: Dynamic pressure of the working fluid in .. math:: \frac{N}{m^2}
+            float: Dynamic pressure of the working fluid. [Pa]
         """
         return 0.5 * self.atmosphere.density() * self.velocity ** 2
+
+    def total_pressure(self):
+        """
+        Total (stagnation) pressure of the working fluid.
+
+        Assumes a calorically perfect gas (i.e. specific heats do not change across the isentropic deceleration).
+
+        Note that `total pressure != static pressure + dynamic pressure`, due to compressibility effects.
+
+        Returns: Total pressure of the working fluid. [Pa]
+
+        """
+        gamma = self.atmosphere.ratio_of_specific_heats()
+        return self.atmosphere.pressure() * (
+                1 + (gamma - 1) / 2 * self.mach() ** 2
+        ) ** (
+                       gamma / (gamma - 1)
+               )
+
+    def total_temperature(self):
+        """
+        Total (stagnation) temperature of the working fluid.
+
+        Assumes a calorically perfect gas (i.e. specific heats do not change across the isentropic deceleration).
+
+        Returns: Total temperature of the working fluid [K]
+
+        """
+        gamma = self.atmosphere.ratio_of_specific_heats()
+        # return self.atmosphere.temperature() * (
+        #         self.total_pressure() / self.atmosphere.pressure()
+        # ) ** (
+        #                (gamma - 1) / gamma
+        #        )
+        return self.atmosphere.temperature() * (
+                1 + (gamma - 1) / 2 * self.mach() ** 2
+        )
 
     def reynolds(self, reference_length):
         """
@@ -45,9 +79,15 @@ class OperatingPoint(AeroSandboxObject):
 
     def mach(self):
         """
-        Return the mach number associated with the current flight condition.
+        Returns the Mach number associated with the current flight condition.
         """
         return self.velocity / self.atmosphere.speed_of_sound()
+
+    def indicated_airspeed(self):
+        """
+        Returns the indicated airspeed associated with the current flight condition, in meters per second.
+        """
+        return
 
     def compute_rotation_matrix_wind_to_geometry(self) -> np.ndarray:
         """
@@ -107,3 +147,9 @@ class OperatingPoint(AeroSandboxObject):
         rotation_velocity_geometry_axes = -rotation_velocity_geometry_axes  # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
 
         return rotation_velocity_geometry_axes
+
+
+if __name__ == '__main__':
+    op_point = OperatingPoint(
+
+    )

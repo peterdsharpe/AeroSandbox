@@ -12,7 +12,6 @@ molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
 gas_constant_air = gas_constant_universal / molecular_mass_air  # J/(kg*K); gas constant of air
 g = 9.81  # m/s^2, gravitational acceleration on earth
 effective_collision_diameter = 0.365e-9  # m, effective collision diameter of an air molecule
-ratio_of_specific_heats = 1.4  # unitless, ratio of specific heats of air
 
 
 ### Define the Atmosphere class
@@ -83,7 +82,7 @@ class Atmosphere(AeroSandboxObject):
         Returns the speed of sound, in m/s.
         """
         temperature = self.temperature()
-        return (ratio_of_specific_heats * gas_constant_air * temperature) ** 0.5
+        return (self.ratio_of_specific_heats() * gas_constant_air * temperature) ** 0.5
 
     def dynamic_viscosity(self):
         """
@@ -107,6 +106,9 @@ class Atmosphere(AeroSandboxObject):
         mu = C1 * temperature ** 1.5 / (temperature + S)
 
         return mu
+
+    def ratio_of_specific_heats(self):
+        return 1.4 # TODO model temperature variation
 
     # def thermal_velocity(self):
     #     """
