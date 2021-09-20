@@ -79,6 +79,10 @@ def Cf_flat_plate(
             * "hybrid-sharpe-nonconvex": A hybrid model that blends the Blasius and Cengel models. Nonconvex in
             log-log-space; however, it may capture some truly nonconvex behavior near transitional Reynolds numbers.
 
+    Returns:
+
+        C_f: The skin friction coefficient, normalized to the length of the plate.
+
     You can view all of these functions graphically using
     `aerosandbox.library.aerodynamics.test_aerodynamics.test_Cf_flat_plate.py`
 
