@@ -5,6 +5,7 @@ from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
 import aerosandbox.geometry.mesh_utilities as mesh_utils
+import copy
 
 
 class Wing(AeroSandboxObject):
@@ -19,27 +20,52 @@ class Wing(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled Wing",
-                 xyz_le: np.ndarray = np.array([0, 0, 0]),  # TODO deprecate in favor of a ".translate()"-like method.
                  xsecs: List['WingXSec'] = [],
                  symmetric: bool = False,
+                 xyz_le: np.ndarray = None,  # TODO deprecate in favor of a ".translate()"-like method.
                  ):
         """
         Initialize a new wing.
         Args:
             name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
-            xyz_le: xyz-coordinates of the datum point (typically the root leading edge) of the wing.
             xsecs: A list of wing cross ("X") sections in the form of WingXSec objects.
             symmetric: Is the wing symmetric across the XZ plane?
         """
         self.name = name
-        self.xyz_le = np.array(xyz_le)  # TODO deprecate in favor of a ".translate()"-like method.
         self.xsecs = xsecs
         self.symmetric = symmetric
+        if xyz_le is not None:
+            import warnings
+            warnings.warn(
+                "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.")
+            self.xsecs = [
+                xsec.translate(xyz_le)
+                for xsec in xsecs
+            ]
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
         symmetry_description = "symmetric" if self.symmetric else "asymmetric"
         return f"Wing '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'}, {symmetry_description})"
+
+    def translate(self,
+                  xyz: np.ndarray
+                  ):
+        """
+        Translates the entire Wing by a certain amount.
+
+        Args:
+            xyz:
+
+        Returns: self
+
+        """
+        new_wing = copy.copy(self)
+        new_wing.xsecs = [
+            xsec.translate(xyz)
+            for xsec in new_wing.xsecs
+        ]
+        return new_wing
 
     def span(self,
              type: str = "wetted",
@@ -319,8 +345,6 @@ class Wing(AeroSandboxObject):
 
         aerodynamic_center = sum(sectional_AC_area_products) / sum(sectional_areas)
 
-        aerodynamic_center += self.xyz_le
-
         if self.symmetric:
             aerodynamic_center[1] = 0
 
@@ -598,7 +622,7 @@ class Wing(AeroSandboxObject):
                                  y_nondim,
                                  ):
         xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(index)
-        origin = self.xyz_le + self.xsecs[index].xyz_le
+        origin = self.xsecs[index].xyz_le
         xsec = self.xsecs[index]
         return origin + (
                 x_nondim * xsec.chord * xg_local +
@@ -692,6 +716,22 @@ class WingXSec(AeroSandboxObject):
 
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
+
+    def translate(self,
+                  xyz: np.ndarray
+                  ) -> "WingXSec":
+        """
+        Returns a copy of this WingXSec that has been translated by `xyz`.
+
+        Args:
+            xyz: The amount to translate the WingXSec. Given as a 3-element NumPy vector.
+
+        Returns: A new WingXSec object.
+
+        """
+        new_xsec = copy.copy(self)
+        new_xsec.xyz_le = new_xsec.xyz_le + np.array(xyz)
+        return new_xsec
 
 
 if __name__ == '__main__':

@@ -393,8 +393,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
                     ).toarray()
                     points_1[point_index, :] = rot @ np.array([0, 0, r1])
                     points_2[point_index, :] = rot @ np.array([0, 0, r2])
-                points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
-                points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
+                points_1 = points_1 + np.array(xsec_1.xyz_c).reshape(-1)
+                points_2 = points_2 + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
 

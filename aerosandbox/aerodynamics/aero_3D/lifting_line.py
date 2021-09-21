@@ -101,7 +101,6 @@ class LiftingLine(ImplicitAnalysis):
             ):  # Iterate through pairs of wing cross sections
 
                 wing_section = Wing(
-                    xyz_le=wing.xyz_le,
                     xsecs=[
                         inner_xsec,
                         outer_xsec
@@ -118,10 +117,10 @@ class LiftingLine(ImplicitAnalysis):
                 )
 
                 # Find the corners
-                inner_xsec_xyz_le = inner_xsec.xyz_le + wing.xyz_le
-                inner_xsec_xyz_te = inner_xsec.xyz_te() + wing.xyz_le
-                outer_xsec_xyz_le = outer_xsec.xyz_le + wing.xyz_le
-                outer_xsec_xyz_te = outer_xsec.xyz_te() + wing.xyz_le
+                inner_xsec_xyz_le = inner_xsec.xyz_le
+                inner_xsec_xyz_te = inner_xsec.xyz_te()
+                outer_xsec_xyz_le = outer_xsec.xyz_le
+                outer_xsec_xyz_te = outer_xsec.xyz_te()
 
                 # Define number of spanwise points
                 try:
@@ -358,7 +357,7 @@ class LiftingLine(ImplicitAnalysis):
             fuse = self.airplane.fuselages[fuse_num]  # type: Fuselage
 
             # Find the centerline points
-            this_fuse_centerline_points = [xsec.xyz_c + fuse.xyz_le for xsec in fuse.xsecs]
+            this_fuse_centerline_points = [xsec.xyz_c for xsec in fuse.xsecs]
             this_fuse_centerline_points = np.stack(this_fuse_centerline_points).T
 
             # Find the radii
@@ -1018,8 +1017,8 @@ class LiftingLine(ImplicitAnalysis):
                     ).toarray()
                     points_1[point_index, :] = rot @ np.array([0, 0, r1])
                     points_2[point_index, :] = rot @ np.array([0, 0, r2])
-                points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
-                points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
+                points_1 = points_1 + np.array(xsec_1.xyz_c).reshape(-1)
+                points_2 = points_2 + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
 

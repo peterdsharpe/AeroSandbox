@@ -258,8 +258,6 @@ class Airplane(AeroSandboxObject):
             #
             {symmetry_line}
             #
-            TRANSLATE
-            {wing.xyz_le[0]} {wing.xyz_le[1]} {wing.xyz_le[2]}
             ANGLE
             0
             """)
@@ -293,9 +291,6 @@ class Airplane(AeroSandboxObject):
             BODY
             {fuse.name}
             {fuse_panel_resolution} 1
-            
-            TRANSLATE
-            {fuse.xyz_le[0]} {fuse.xyz_le[1]} {fuse.xyz_le[2]}
             
             BFIL
             {fuse_filepath}

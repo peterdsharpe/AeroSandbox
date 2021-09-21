@@ -3,6 +3,7 @@ from aerosandbox.geometry.common import *
 from typing import List, Union, Tuple
 from pathlib import Path
 import aerosandbox.geometry.mesh_utilities as mesh_utils
+import copy
 
 
 class Fuselage(AeroSandboxObject):
@@ -13,9 +14,9 @@ class Fuselage(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled Fuselage",  # It can help when debugging to give each fuselage a sensible name.
-                 xyz_le: np.ndarray = np.array([0, 0, 0]),
                  xsecs: List['FuselageXSec'] = [],  # This should be a list of FuselageXSec objects.
                  symmetric: bool = False,
+                 xyz_le: np.ndarray = None,
                  ):
         """
         Initialize a new fuselage.
@@ -27,14 +28,46 @@ class Fuselage(AeroSandboxObject):
             circumferential_panels:
         """
         self.name = name
-        self.xyz_le = np.array(xyz_le)
         self.xsecs = xsecs
 
         if symmetric:
             import warnings
-            warning.warn("The `symmetric` argument for Fuselage objects will be deprecated soon. Make your fuselages separate instead!")
+            warnings.warn(
+                "The `symmetric` argument for Fuselage objects will be deprecated soon. Make your fuselages separate instead!")
 
         self.symmetric = symmetric
+
+        if xyz_le is not None:
+            import warnings
+            warnings.warn(
+                "The `xyz_le` input for Fuselage is DEPRECATED and will be removed in a future version. Use Fuselage().translate(xyz) instead.")
+            self.xsecs = [
+                xsec.translate(xyz_le)
+                for xsec in xsecs
+            ]
+
+    def __repr__(self) -> str:
+        n_xsecs = len(self.xsecs)
+        return f"Fuselage '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'})"
+
+    def translate(self,
+                  xyz: np.ndarray
+                  ):
+        """
+        Translates the entire Fuselage by a certain amount.
+
+        Args:
+            xyz:
+
+        Returns: self
+
+        """
+        new_fuse = copy.copy(self)
+        new_fuse.xsecs = [
+            xsec.translate(xyz)
+            for xsec in new_fuse.xsecs
+        ]
+        return new_fuse
 
     def area_wetted(self) -> float:
         """
@@ -55,7 +88,6 @@ class Fuselage(AeroSandboxObject):
             area *= 2
         return area
 
-    #
     def area_projected(self) -> float:
         """
         Returns the area of the fuselage as projected onto the XY plane (top-down view).
@@ -129,7 +161,7 @@ class Fuselage(AeroSandboxObject):
         """
 
         total_x_area_product = 0
-        total_area=0
+        total_area = 0
         for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
             x = (xsec_a.xyz_c[0] + xsec_b.xyz_c[0]) / 2
             area = (xsec_a.radius + xsec_b.radius) / 2 * np.abs(xsec_b.xyz_c[0] - xsec_a.xyz_c[0])
@@ -284,7 +316,7 @@ class Fuselage(AeroSandboxObject):
 
         for i, xsec in enumerate(self.xsecs):
 
-            origin = self._compute_xyz_le_of_FuselageXSec(i)
+            origin = xsec.xyz_c
             xg_local, yg_local, zg_local = self._compute_frame_of_FuselageXSec(i)
 
             try:
@@ -318,9 +350,6 @@ class Fuselage(AeroSandboxObject):
         mesh = np.concatenate(mesh_sections)
 
         return mesh
-
-    def _compute_xyz_le_of_FuselageXSec(self, index: int):
-        return self.xyz_le + self.xsecs[index].xyz_c
 
     def _compute_frame_of_FuselageXSec(self, index: int):
 
@@ -378,12 +407,13 @@ class FuselageXSec(AeroSandboxObject):
 
         """
         new_xsec = copy.copy(self)
-        new_xsec.xyz_le = new_xsec.xyz_le + np.array(xyz)
+        new_xsec.xyz_c = new_xsec.xyz_c + np.array(xyz)
         return new_xsec
 
 
 if __name__ == '__main__':
     fuse = Fuselage(
+        xyz_le=[0, 0, 2],
         xsecs=[
             FuselageXSec(
                 xyz_c=[0, 0, 1],
