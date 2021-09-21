@@ -355,6 +355,9 @@ class FuselageXSec(AeroSandboxObject):
         self.xyz_c = np.array(xyz_c)
         self.radius = radius
 
+    def __repr__(self) -> str:
+        return f"FuselageXSec (xyz_c: {self.xyz_c}, radius: {self.radius})"
+
     def xsec_area(self):
         """
         Returns the FuselageXSec's cross-sectional (xsec) area.
