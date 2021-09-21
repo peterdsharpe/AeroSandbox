@@ -23,7 +23,11 @@ def Cd_cylinder(
     csuph = 9.9999999999999787
     csupscl = -0.4570690347113859
 
-    x = np.log10(Re_D)
+    x = np.where(
+        Re_D == 0,
+        0,
+        np.log10(np.abs(Re_D))
+    )
 
     if subcritical_only:
         Cd = 10 ** (csub0 * x + csub1) + csub2 + csub3 * x

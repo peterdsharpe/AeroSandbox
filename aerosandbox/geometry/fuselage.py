@@ -123,6 +123,21 @@ class Fuselage(AeroSandboxObject):
             )
         return volume
 
+    def x_centroid_projected(self) -> float:
+        """
+        Returns the x_g coordinate of the centroid of the planform area.
+        """
+
+        total_x_area_product = 0
+        total_area=0
+        for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
+            x = (xsec_a.xyz_c[0] + xsec_b.xyz_c[0]) / 2
+            area = (xsec_a.radius + xsec_b.radius) / 2 * np.abs(xsec_b.xyz_c[0] - xsec_a.xyz_c[0])
+            total_area += area
+            total_x_area_product += x * area
+        x_centroid = total_x_area_product / total_area
+        return x_centroid
+
     def write_avl_bfile(self,
                         filepath: Union[Path, str] = None,
                         include_name: bool = True,
