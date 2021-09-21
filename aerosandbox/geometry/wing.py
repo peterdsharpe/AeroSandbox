@@ -220,7 +220,6 @@ class Wing(AeroSandboxObject):
     def mean_twist_angle(self) -> float:
         r"""
         Returns the mean twist angle (in degrees) of the wing, weighted by area.
-        WARNING: This function's output is only exact in the case where all of the cross sections have the same twist axis!
         :return: mean twist angle (in degrees)
         """
 
@@ -617,16 +616,16 @@ class Wing(AeroSandboxObject):
             span_vector[0] = 0
             yg_local = span_vector / np.linalg.norm(span_vector)
             z_scale = 1
-        elif index == len(self.xsecs)-1:
+        elif index == len(self.xsecs) - 1 or index == -1:
             span_vector = self.xsecs[-1].xyz_le - self.xsecs[-2].xyz_le
             span_vector[0] = 0
             yg_local = span_vector / np.linalg.norm(span_vector)
             z_scale = 1
         else:
-            vector_before = self.xsecs[index].xyz_le - self.xsecs[index-1].xyz_le
-            vector_after = self.xsecs[index+1].xyz_le - self.xsecs[index].xyz_le
-            vector_before[0] = 0 # Project onto YZ plane.
-            vector_after[0] = 0 # Project onto YZ plane.
+            vector_before = self.xsecs[index].xyz_le - self.xsecs[index - 1].xyz_le
+            vector_after = self.xsecs[index + 1].xyz_le - self.xsecs[index].xyz_le
+            vector_before[0] = 0  # Project onto YZ plane.
+            vector_after[0] = 0  # Project onto YZ plane.
             vector_before = vector_before / np.linalg.norm(vector_before)
             vector_after = vector_after / np.linalg.norm(vector_after)
             span_vector = (vector_before + vector_after) / 2
@@ -694,6 +693,7 @@ class WingXSec(AeroSandboxObject):
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
 
+
 if __name__ == '__main__':
     wing = Wing(
         xyz_le=[1, 0, 0],
@@ -719,4 +719,5 @@ if __name__ == '__main__':
         ]
     )
     from aerosandbox import Airplane
+
     Airplane(wings=[wing]).draw()
