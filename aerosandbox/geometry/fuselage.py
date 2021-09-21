@@ -114,13 +114,12 @@ class Fuselage(AeroSandboxObject):
             Fuselage volume.
         """
         volume = 0
-        for i in range(len(self.xsecs) - 1):
-            xsec_a, xsec_b = self.xsecs[i], self.xsecs[i + 1]
+        for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
             h = np.abs(xsec_b.xyz_c[0] - xsec_a.xyz_c[0])
-            radius_a = xsec_a.radius
-            radius_b = xsec_b.radius
+            r_a = xsec_a.radius
+            r_b = xsec_b.radius
             volume += np.pi * h / 3 * (
-                    radius_a ** 2 + radius_a * radius_b + radius_b ** 2
+                    r_a ** 2 + r_a * r_b + r_b ** 2
             )
         return volume
 
