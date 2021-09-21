@@ -26,3 +26,4 @@ def wing_aerodynamics(
     Returns:
 
     """
+    pass
