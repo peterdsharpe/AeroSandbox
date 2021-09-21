@@ -364,3 +364,41 @@ class FuselageXSec(AeroSandboxObject):
         :return:
         """
         return np.pi * self.radius ** 2
+
+    def translate(self,
+                  xyz: np.ndarray
+                  ) -> "FuselageXSec":
+        """
+        Returns a copy of this FuselageXSec that has been translated by `xyz`.
+
+        Args:
+            xyz: The amount to translate the FuselageXSec. Given as a 3-element NumPy vector.
+
+        Returns: A new FuselageXSec object.
+
+        """
+        new_xsec = copy.copy(self)
+        new_xsec.xyz_le = new_xsec.xyz_le + np.array(xyz)
+        return new_xsec
+
+
+if __name__ == '__main__':
+    fuse = Fuselage(
+        xsecs=[
+            FuselageXSec(
+                xyz_c=[0, 0, 1],
+                radius=0,
+            ),
+            FuselageXSec(
+                xyz_c=[1, 0, 1],
+                radius=0.3,
+            ),
+            FuselageXSec(
+                xyz_c=[2, 0, 1],
+                radius=0.2,
+            )
+        ]
+    )
+    from aerosandbox import Airplane
+
+    Airplane(fuselages=[fuse]).draw()
