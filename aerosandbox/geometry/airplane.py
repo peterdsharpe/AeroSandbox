@@ -145,6 +145,8 @@ class Airplane(AeroSandboxObject):
             if show:
                 fig.show(**show_kwargs)
             return fig
+        else:
+            raise ValueError("Bad value of `backend`!")
 
     def is_entirely_symmetric(self):
         """
