@@ -9,7 +9,7 @@ def fuselage_aerodynamics(
         op_point: OperatingPoint,
 ):
     """
-    Estimates the aerodynamic forces, moments, and derivatives on a fuselage.
+    Estimates the aerodynamic forces, moments, and derivatives on a fuselage in isolation.
 
     Assumes:
         * The fuselage is a body of revolution aligned with the x_b axis.
@@ -22,7 +22,7 @@ def fuselage_aerodynamics(
 
     Args:
 
-        fuselage: A fuselage object that you wish to analyze.
+        fuselage: A Fuselage object that you wish to analyze.
 
         op_point: The OperatingPoint that you wish to analyze the fuselage at.
 
