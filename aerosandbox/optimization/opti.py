@@ -479,10 +479,11 @@ class Opti(cas.Opti):
             options = {}
 
         default_options = {
-            "ipopt.sb"          : 'yes',  # Hide the IPOPT banner.
-            "ipopt.max_iter"    : max_iter,
-            "ipopt.max_cpu_time": max_runtime,
-            "ipopt.mu_strategy" : "adaptive",
+            "ipopt.sb"                        : 'yes',  # Hide the IPOPT banner.
+            "ipopt.max_iter"                  : max_iter,
+            "ipopt.max_cpu_time"              : max_runtime,
+            "ipopt.mu_strategy"               : "adaptive",
+            "ipopt.limited_memory_max_history": 10,  # 6 by default
         }
 
         if jit:
