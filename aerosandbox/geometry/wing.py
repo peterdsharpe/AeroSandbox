@@ -645,11 +645,11 @@ class WingXSec(AeroSandboxObject):
                  xyz_le: np.ndarray = np.array([0, 0, 0]),
                  chord: float = 1.,
                  twist: float = 0,
-                 twist_angle=None,  # TODO Deprecate
                  airfoil: Airfoil = Airfoil("naca0012"),
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
                  control_surface_deflection: float = 0.,
+                 twist_angle=None,  # TODO Deprecate
                  ):
         """
         Initialize a new wing cross section.
