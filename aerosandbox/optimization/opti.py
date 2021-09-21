@@ -298,7 +298,8 @@ class Opti(cas.Opti):
                     doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
                     {constraint}""")
 
-            if isinstance(constraint, cas.MX) and not constraint_satisfied:  # Determine if the constraint is *almost* true
+            if isinstance(constraint,
+                          cas.MX) and not constraint_satisfied:  # Determine if the constraint is *almost* true
                 try:
                     LHS = constraint.dep(0)
                     RHS = constraint.dep(1)
@@ -478,10 +479,10 @@ class Opti(cas.Opti):
             options = {}
 
         default_options = {
-            "ipopt.sb": 'yes', # Hide the IPOPT banner.
-            "ipopt.max_iter": max_iter,
+            "ipopt.sb"          : 'yes',  # Hide the IPOPT banner.
+            "ipopt.max_iter"    : max_iter,
             "ipopt.max_cpu_time": max_runtime,
-            "ipopt.mu_strategy": "adaptive",
+            "ipopt.mu_strategy" : "adaptive",
         }
 
         if jit:
