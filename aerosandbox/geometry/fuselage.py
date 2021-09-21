@@ -79,11 +79,9 @@ class Fuselage(AeroSandboxObject):
         Returns the area of the base (i.e. "trailing edge") of the fuselage. Useful for certain types of drag
         calculation.
 
-        If the Fuselage is symmetric (i.e. two symmetric
-
         Returns:
-
         """
+        return np.pi * self.xsecs[-1].radius ** 2
 
     def length(self) -> float:
         """
