@@ -1,3 +1,7 @@
+"""
+A set of tools used for making prettier Matplotlib plots.
+"""
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
@@ -46,6 +50,8 @@ def set_ticks(
     if y_minor is not None:
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
+def equal():
+    plt.gca().set_aspect("equal", adjustable='box')
 
 def adjust_lightness(color, amount=1.0):
     """
