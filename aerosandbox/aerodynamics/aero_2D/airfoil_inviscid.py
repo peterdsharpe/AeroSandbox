@@ -199,8 +199,6 @@ class AirfoilInviscid(ImplicitAnalysis):
         for airfoil in self.airfoils:
             plt.fill(airfoil.x(), airfoil.y(), "k", linewidth=0, zorder=4)
 
-        from palettable.colorbrewer.diverging import RdBu_4 as colormap
-
         plt.streamplot(
             x,
             y,
@@ -209,7 +207,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             color=speed,
             density=2.5,
             arrowsize=0,
-            cmap=colormap.mpl_colormap,
+            cmap=plt.get_cmap('coolwarm_r'),
         )
         CB = plt.colorbar(
             orientation="horizontal",
@@ -217,7 +215,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             aspect=40,
         )
         CB.set_label(r"Relative Airspeed ($U/U_\infty$)")
-        plt.clim(0.4, 1.6)
+        plt.clim(0.6, 1.4)
 
         plt.gca().set_aspect('equal', adjustable='box')
         plt.xlabel(r"$x/c$")
