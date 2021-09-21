@@ -702,7 +702,7 @@ if __name__ == '__main__':
                 xyz_le=[0, 0, 0],
                 chord=1,
                 airfoil=Airfoil("naca0012"),
-                twist=10,
+                twist=0,
             ),
             WingXSec(
                 xyz_le=[0.5, 1, 0],
