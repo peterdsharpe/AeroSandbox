@@ -610,20 +610,31 @@ class Wing(AeroSandboxObject):
 
         twist = self.xsecs[index].twist
 
-        if index == len(self.xsecs) - 1:
-            index = len(self.xsecs) - 2  # The last WingXSec has the same frame as the last section.
-
         ### Compute the untwisted reference frame
-
         xg_local = np.array([1, 0, 0])
+        if index == 0:
+            span_vector = self.xsecs[1].xyz_le - self.xsecs[0].xyz_le
+            span_vector[0] = 0
+            yg_local = span_vector / np.linalg.norm(span_vector)
+            z_scale = 1
+        elif index == len(self.xsecs)-1:
+            span_vector = self.xsecs[-1].xyz_le - self.xsecs[-2].xyz_le
+            span_vector[0] = 0
+            yg_local = span_vector / np.linalg.norm(span_vector)
+            z_scale = 1
+        else:
+            vector_before = self.xsecs[index].xyz_le - self.xsecs[index-1].xyz_le
+            vector_after = self.xsecs[index+1].xyz_le - self.xsecs[index].xyz_le
+            vector_before[0] = 0 # Project onto YZ plane.
+            vector_after[0] = 0 # Project onto YZ plane.
+            vector_before = vector_before / np.linalg.norm(vector_before)
+            vector_after = vector_after / np.linalg.norm(vector_after)
+            span_vector = (vector_before + vector_after) / 2
+            yg_local = span_vector / np.linalg.norm(span_vector)
+            cos_vectors = np.linalg.inner(vector_before, vector_after)
+            z_scale = np.sqrt(2 / (cos_vectors + 1))
 
-        xyz_le_a = self.xsecs[index].xyz_le
-        xyz_le_b = self.xsecs[index + 1].xyz_le
-        vector_between = xyz_le_b - xyz_le_a
-        vector_between[0] = 0  # Project it onto the YZ plane.
-        yg_local = vector_between / np.linalg.norm(vector_between)
-
-        zg_local = np.cross(xg_local, yg_local)
+        zg_local = np.cross(xg_local, yg_local) * z_scale
 
         ### Twist the reference frame by the WingXSec twist angle
         rot = np.rotation_matrix_3D(
@@ -682,3 +693,30 @@ class WingXSec(AeroSandboxObject):
 
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
+
+if __name__ == '__main__':
+    wing = Wing(
+        xyz_le=[1, 0, 0],
+        xsecs=[
+            WingXSec(
+                xyz_le=[0, 0, 0],
+                chord=1,
+                airfoil=Airfoil("naca0012"),
+                twist=10,
+            ),
+            WingXSec(
+                xyz_le=[0.5, 1, 0],
+                chord=0.5,
+                airfoil=Airfoil("naca0012"),
+                twist=0,
+            ),
+            WingXSec(
+                xyz_le=[0.7, 1, 0.3],
+                chord=0.3,
+                airfoil=Airfoil("naca0012"),
+                twist=0,
+            )
+        ]
+    )
+    from aerosandbox import Airplane
+    Airplane(wings=[wing]).draw()
