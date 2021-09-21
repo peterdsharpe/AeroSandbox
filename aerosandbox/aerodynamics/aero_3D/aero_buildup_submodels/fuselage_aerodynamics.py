@@ -55,12 +55,14 @@ def fuselage_aerodynamics(
     ####### Jorgensen model
 
     ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
-    generalized_alpha = np.sqrt(  # Strictly-speaking only valid for small alpha, beta. TODO update to be rigorous.
+    generalized_alpha = np.sqrt(  # Strictly-speaking only valid for small alpha, beta. TODO update to be rigorous in 3D.
         op_point.alpha ** 2 +
         op_point.beta ** 2
     )
     alpha_fractional_component = op_point.alpha / generalized_alpha  # The fraction of any "generalized lift" to be in the direction of alpha
     beta_fractional_component = op_point.beta / generalized_alpha  # The fraction of any "generalized lift" to be in the direction of beta
+
+    generalized_alpha = np.clip(generalized_alpha, -90, 90) # TODO make the drag/moment functions not give negative results for alpha > 90.
 
     ### Compute normal quantities
     ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
@@ -162,7 +164,7 @@ if __name__ == '__main__':
     from aerosandbox.tools.pretty_plots import plt, show_plot
 
     fig, ax = plt.subplots(1,2)
-    alpha = np.linspace(0, 60, 1000)
+    alpha = np.linspace(-60, 60, 1000)
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
         op_point=OperatingPoint(
