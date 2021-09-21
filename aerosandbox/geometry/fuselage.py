@@ -83,6 +83,21 @@ class Fuselage(AeroSandboxObject):
         """
         return np.pi * self.xsecs[-1].radius ** 2
 
+    def fineness_ratio(self) -> float:
+        """
+        Approximates the fineness ratio using the volume and length.
+
+        Formula derived from a generalization of the relation from a cylindrical fuselage.
+
+        For a cylindrical fuselage, FR = l/d, where l is the length and d is the diameter.
+
+        Returns:
+
+        """
+        return np.sqrt(
+            self.length() ** 3 / self.volume() * np.pi / 4
+        )
+
     def length(self) -> float:
         """
         Returns the total front-to-back length of the fuselage. Measured as the difference between the x-coordinates
