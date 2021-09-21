@@ -19,7 +19,7 @@ class Wing(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled Wing",
-                 xyz_le: np.ndarray = np.array([0, 0, 0]),
+                 xyz_le: np.ndarray = np.array([0, 0, 0]),  # TODO deprecate in favor of a ".translate()"-like method.
                  xsecs: List['WingXSec'] = [],
                  symmetric: bool = False,
                  ):
@@ -32,7 +32,7 @@ class Wing(AeroSandboxObject):
             symmetric: Is the wing symmetric across the XZ plane?
         """
         self.name = name
-        self.xyz_le = np.array(xyz_le)
+        self.xyz_le = np.array(xyz_le)  # TODO deprecate in favor of a ".translate()"-like method.
         self.xsecs = xsecs
         self.symmetric = symmetric
 
