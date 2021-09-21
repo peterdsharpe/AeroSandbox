@@ -3,7 +3,7 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 import aerosandbox.library.aerodynamics as aero
 import aerosandbox.numpy as np
-
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels import *
 
 class AeroBuildup(ExplicitAnalysis):
     """
@@ -11,8 +11,8 @@ class AeroBuildup(ExplicitAnalysis):
     """
 
     def __init__(self,
-                 airplane,  # type: Airplane
-                 op_point,  # type: OperatingPoint
+                 airplane: Airplane,
+                 op_point: OperatingPoint,
                  ):
         ### Initialize
         self.airplane = airplane
@@ -34,15 +34,15 @@ class AeroBuildup(ExplicitAnalysis):
 
     def run(self):
         ### Fuselages
-        for fuselage in self.airplane.fuselages:
-            fuselage.Re = self.op_point.reynolds(fuselage.length())
-            fuselage.CLA = 0
-            fuselage.CDA = aero.Cf_flat_plate(
-                fuselage.Re * fuselage.area_wetted()) * 1.2  # wetted area with form factor
+        for fuse in self.airplane.fuselages:
+            fuse.Re = self.op_point.reynolds(fuse.length())
+            fuse.CLA = 0
+            fuse.CDA = aero.Cf_flat_plate(
+                fuse.Re * fuse.area_wetted()) * 1.2  # wetted area with form factor
 
-            fuselage.lift_force = fuselage.CLA * self.op_point.dynamic_pressure()
-            fuselage.drag_force = fuselage.CDA * self.op_point.dynamic_pressure()
-            fuselage.pitching_moment = 0
+            fuse.lift_force = fuse.CLA * self.op_point.dynamic_pressure()
+            fuse.drag_force = fuse.CDA * self.op_point.dynamic_pressure()
+            fuse.pitching_moment = 0
 
         ### Wings
         for wing in self.airplane.wings:
@@ -101,10 +101,10 @@ class AeroBuildup(ExplicitAnalysis):
         self.drag_force = 0
         self.pitching_moment = 0
 
-        for fuselage in self.airplane.fuselages:
-            self.lift_force += fuselage.lift_force
-            self.drag_force += fuselage.drag_force
-            self.pitching_moment += fuselage.pitching_moment
+        for fuse in self.airplane.fuselages:
+            self.lift_force += fuse.lift_force
+            self.drag_force += fuse.drag_force
+            self.pitching_moment += fuse.pitching_moment
 
         for wing in self.airplane.wings:
             if wing.symmetric:  # Only add lift force if the wing is symmetric; a surrogate for "horizontal".
@@ -121,10 +121,22 @@ class AeroBuildup(ExplicitAnalysis):
         self.Cm = self.pitching_moment / qS / self.airplane.c_ref
 
         return {
-            "CL": self.CL,
-            "CD": self.CD,
-            "CY": 0,
-            "Cl": 0,
-            "Cm": self.Cm,
-            "Cn": 0,
+            "Sref": None,
+            "Cref": None,
+            "Bref": None,
+            "Xref": None,
+            "Yref": None,
+            "Zref": None,
+            "L": None,
+            "D": None,
+            "Y": None,
+            "l": None,
+            "m": None,
+            "n": None,
+            "CL"  : self.CL,
+            "CD"  : self.CD,
+            "CY"  : 0,
+            "Cl"  : 0,
+            "Cm"  : self.Cm,
+            "Cn"  : 0,
         }
