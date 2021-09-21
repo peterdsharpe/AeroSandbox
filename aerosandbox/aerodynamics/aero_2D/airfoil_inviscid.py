@@ -220,7 +220,7 @@ class AirfoilInviscid(ImplicitAnalysis):
         plt.gca().set_aspect('equal', adjustable='box')
         plt.xlabel(r"$x/c$")
         plt.ylabel(r"$y/c$")
-        plt.title(rf"Invisicid Airfoil: Flow Field")
+        plt.title(rf"Inviscid Airfoil: Flow Field")
         plt.tight_layout()
         if show:
             plt.show()
