@@ -15,7 +15,7 @@ class Fuselage(AeroSandboxObject):
                  name: str = "Untitled Fuselage",  # It can help when debugging to give each fuselage a sensible name.
                  xyz_le: np.ndarray = np.array([0, 0, 0]),
                  xsecs: List['FuselageXSec'] = [],  # This should be a list of FuselageXSec objects.
-                 symmetric: bool = False,  # Is the fuselage symmetric across the XZ plane?
+                 symmetric: bool = False,
                  ):
         """
         Initialize a new fuselage.
@@ -23,12 +23,17 @@ class Fuselage(AeroSandboxObject):
             name: Name of the fuselage [optional]. It can help when debugging to give each fuselage a sensible name.
             xyz_le: xyz-coordinates of the datum point (typically the nose) of the fuselage.
             xsecs: A list of fuselage cross ("X") sections in the form of FuselageXSec objects.
-            symmetric: Is the fuselage to be mirrored across the XZ plane (e.g. for wing-mounted pods).
+            symmetric: DEPRECATED. Is the fuselage to be mirrored across the XZ plane (e.g. for wing-mounted pods).
             circumferential_panels:
         """
         self.name = name
         self.xyz_le = np.array(xyz_le)
         self.xsecs = xsecs
+
+        if symmetric:
+            import warnings
+            warning.warn("The `symmetric` argument for Fuselage objects will be deprecated soon. Make your fuselages separate instead!")
+
         self.symmetric = symmetric
 
     def area_wetted(self) -> float:
@@ -68,6 +73,17 @@ class Fuselage(AeroSandboxObject):
         if self.symmetric:
             area *= 2
         return area
+
+    def area_base(self) -> float:
+        """
+        Returns the area of the base (i.e. "trailing edge") of the fuselage. Useful for certain types of drag
+        calculation.
+
+        If the Fuselage is symmetric (i.e. two symmetric
+
+        Returns:
+
+        """
 
     def length(self) -> float:
         """
