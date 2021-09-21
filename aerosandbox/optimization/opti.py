@@ -477,31 +477,31 @@ class Opti(cas.Opti):
         if options is None:
             options = {}
 
+        default_options = {
+            "ipopt.sb": 'yes', # Hide the IPOPT banner.
+            "ipopt.max_iter": max_iter,
+            "ipopt.max_cpu_time": max_runtime,
+            "ipopt.mu_strategy": "adaptive",
+        }
+
         if jit:
-            options["jit"] = True
+            default_options["jit"] = True
             # options["compiler"] = "shell"  # Recommended by CasADi devs, but doesn't work on my machine
-            options["jit_options"] = {
+            default_options["jit_options"] = {
                 "flags": ["-O3"],
                 # "verbose": True
             }
 
-        options["ipopt.sb"] = 'yes'  # Hide the IPOPT banner.
-
         if verbose:
-            options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
+            default_options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
         else:
-            options["print_time"] = False  # No time printing
-            options["ipopt.print_level"] = 0  # No printing from IPOPT
+            default_options["print_time"] = False  # No time printing
+            default_options["ipopt.print_level"] = 0  # No printing from IPOPT
 
-        # Set defaults, if not set
-        if "ipopt.max_iter" not in options:
-            options["ipopt.max_iter"] = max_iter
-        if "ipopt.max_cpu_time" not in options:
-            options["ipopt.max_cpu_time"] = max_runtime
-        if "ipopt.mu_strategy" not in options:
-            options["ipopt.mu_strategy"] = "adaptive"
-
-        self.solver('ipopt', options)
+        self.solver('ipopt', {
+            **default_options,
+            **options,
+        })
 
         # Set the callback
         if callback is not None:
