@@ -4,6 +4,31 @@ import aerosandbox.numpy as np
 from aerosandbox.library.aerodynamics import Cf_flat_plate, Cd_cylinder
 
 
+def jorgensen_eta(fineness_ratio: float) -> float:
+    """
+    A fit for the eta parameter (crossflow lift multiplier) of a fuselage, as described in:
+
+    Jorgensen, Leland Howard. "Prediction of Static Aerodynamic Characteristics for Slender Bodies
+    Alone and with Lifting Surfaces to Very High Angles of Attack". NASA TR R-474. 1977.
+
+    Fits performed in /studies/JorgensenEtaFitting/
+
+    Args:
+        fineness_ratio: The fineness ratio of the fuselage.
+
+    Returns: An estimate of eta.
+
+    """
+    x = fineness_ratio
+    p = {
+        '1scl': 23.009059965179222,
+        '1cen': -122.76900250914575,
+        '2scl': 13.006453125841258,
+        '2cen': -24.367562906887436
+    }
+    return 1 - p["1scl"] / (x - p["1cen"]) - (p["2scl"] / (x - p["2cen"])) ** 2
+
+
 def fuselage_aerodynamics(
         fuselage: Fuselage,
         op_point: OperatingPoint,
@@ -55,14 +80,16 @@ def fuselage_aerodynamics(
     ####### Jorgensen model
 
     ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
-    generalized_alpha = np.sqrt(  # Strictly-speaking only valid for small alpha, beta. TODO update to be rigorous in 3D.
+    generalized_alpha = np.sqrt(
+        # Strictly-speaking only valid for small alpha, beta. TODO update to be rigorous in 3D.
         op_point.alpha ** 2 +
         op_point.beta ** 2
     )
     alpha_fractional_component = op_point.alpha / generalized_alpha  # The fraction of any "generalized lift" to be in the direction of alpha
     beta_fractional_component = op_point.beta / generalized_alpha  # The fraction of any "generalized lift" to be in the direction of beta
 
-    generalized_alpha = np.clip(generalized_alpha, -90, 90) # TODO make the drag/moment functions not give negative results for alpha > 90.
+    generalized_alpha = np.clip(generalized_alpha, -90,
+                                90)  # TODO make the drag/moment functions not give negative results for alpha > 90.
 
     ### Compute normal quantities
     ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
@@ -93,7 +120,7 @@ def fuselage_aerodynamics(
         Cd_cylinder(Re_D=Re_n),  # Replace with 1.20 from Jorgensen Table 1 if not working well
         0
     )
-    eta = 0.7  # TODO make this a function of fineness ratio, per Figure 4 of Jorgensen
+    eta = jorgensen_eta(fuselage.fineness_ratio())
 
     C_N_v = (  # Normal force coefficient due to viscous crossflow. (Jorgensen Eq. 2.12, part 2)
             eta * C_d_n * fuselage.area_projected() / S_ref * np.sind(generalized_alpha) ** 2
@@ -163,7 +190,7 @@ if __name__ == '__main__':
 
     from aerosandbox.tools.pretty_plots import plt, show_plot
 
-    fig, ax = plt.subplots(1,2)
+    fig, ax = plt.subplots(1, 2)
     alpha = np.linspace(-60, 60, 1000)
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
