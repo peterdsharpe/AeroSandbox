@@ -90,9 +90,9 @@ H = sol.value(H)
 
 ### Plot
 from aerosandbox.tools.pretty_plots import plt, show_plot
-fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+fig, ax = plt.subplots()
 plt.plot(x, theta)
 show_plot(r"$\theta$", "$x$", r"$\theta$")
-fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+fig, ax = plt.subplots()
 plt.plot(x, H)
 show_plot("$H$", "$x$", "$H$")
