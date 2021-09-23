@@ -45,6 +45,10 @@ def test_cycle():
         "geometry",
         "stability",
         "wind",
+        "body",
+        "wind",
+        "stability",
+        "geometry",
         "body"
     ])
 
