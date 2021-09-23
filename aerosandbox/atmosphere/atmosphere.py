@@ -82,7 +82,7 @@ class Atmosphere(AeroSandboxObject):
 
     def dynamic_viscosity(self):
         """
-        Returns the dynamic viscosity, in kg/(m*s).
+        Returns the dynamic viscosity (mu), in kg/(m*s).
 
         Based on Sutherland's Law, citing `https://www.cfd-online.com/Wiki/Sutherland's_law`.
 
@@ -102,6 +102,14 @@ class Atmosphere(AeroSandboxObject):
         mu = C1 * temperature ** 1.5 / (temperature + S)
 
         return mu
+
+    def kinematic_viscosity(self):
+        """
+        Returns the kinematic viscosity (nu), in m^2/s.
+
+        Definitional.
+        """
+        return self.dynamic_viscosity() / self.density()
 
     def ratio_of_specific_heats(self):
         return 1.4 # TODO model temperature variation
