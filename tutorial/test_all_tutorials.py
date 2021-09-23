@@ -48,6 +48,7 @@ def run_python_file(path: Path):
     Returns: None
 
     """
+    print(f"##### Running: {path}")
     sys.path.append(str(path.parent))
     __import__(os.path.splitext(path.name)[0])
 
