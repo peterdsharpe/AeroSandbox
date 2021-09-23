@@ -58,6 +58,7 @@ def fuselage_aerodynamics(
     fuselage.Re = op_point.reynolds(reference_length=fuselage.length())
 
     ####### Reference quantities (Set these 1 here, just so we can follow Jorgensen syntax.)
+    # Outputs of this function should be invariant of these quantities, if normalization has been done correctly.
     S_ref = 1  # m^2
     c_ref = 1  # m
 
