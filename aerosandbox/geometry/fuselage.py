@@ -146,7 +146,7 @@ class Fuselage(AeroSandboxObject):
             Fuselage volume.
         """
         volume = 0
-        for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
+        for xsec_a, xsec_b in zip(self.xsecs, self.xsecs[1:]):
             h = np.abs(xsec_b.xyz_c[0] - xsec_a.xyz_c[0])
             r_a = xsec_a.radius
             r_b = xsec_b.radius
@@ -162,7 +162,7 @@ class Fuselage(AeroSandboxObject):
 
         total_x_area_product = 0
         total_area = 0
-        for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
+        for xsec_a, xsec_b in zip(self.xsecs, self.xsecs[1:]):
             x = (xsec_a.xyz_c[0] + xsec_b.xyz_c[0]) / 2
             area = (xsec_a.radius + xsec_b.radius) / 2 * np.abs(xsec_b.xyz_c[0] - xsec_a.xyz_c[0])
             total_area += area

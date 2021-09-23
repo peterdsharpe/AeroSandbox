@@ -106,7 +106,7 @@ class Wing(AeroSandboxObject):
             for i in i_range
         ]
 
-        for inner_i, outer_i in zip(i_range[:-1], i_range[1:]):
+        for inner_i, outer_i in zip(i_range, i_range[1:]):
             quarter_chord_vector = (
                     quarter_chord_vectors[outer_i] -
                     quarter_chord_vectors[inner_i]
