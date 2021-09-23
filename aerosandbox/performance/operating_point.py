@@ -129,7 +129,7 @@ class OperatingPoint(AeroSandboxObject):
             ca = np.cosd(self.alpha)
             sb = np.sind(self.beta)
             cb = np.cosd(self.beta)
-            x_b = (cb * ca) * x_from + (sb * ca) * y_from + (-sb) * z_from
+            x_b = (cb * ca) * x_from + (sb * ca) * y_from + (-sa) * z_from
             y_b = (-sb) * x_from + (cb) * y_from  # Note: z term is 0; not forgotten.
             z_b = (cb * sa) * x_from + (sb * sa) * y_from + (ca) * z_from
         elif from_axes == "stability":
