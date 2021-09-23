@@ -4,7 +4,7 @@ from typing import List
 import copy
 import pytest
 
-vector = [1, 0, 0]
+vector = [1, 2, 3]
 op_point = asb.OperatingPoint(alpha=10, beta=5)
 
 
@@ -20,7 +20,7 @@ def chain_conversion(
             from_axes=from_axes,
             to_axes=to_axes
         )
-    return [x, y, z] == pytest.approx(vector)
+    return np.array(vector) == pytest.approx(np.array([x, y, z]))
 
 
 def test_basic():
@@ -50,6 +50,5 @@ def test_cycle():
 
 
 if __name__ == '__main__':
-    print(chain_conversion(["body", "wind"]))
     pytest.main()
     chain_conversion()
