@@ -111,6 +111,63 @@ class OperatingPoint(AeroSandboxObject):
             self.atmosphere.density() / Atmosphere(altitude=0, method="isa").density()
         )
 
+    def convert_axes(self,
+                     x_from, y_from, z_from,
+                     from_axes: str,
+                     to_axes: str,
+                     ):
+        if from_axes == "geometry":
+            x_b = -x_from
+            y_b = y_from
+            z_b = -z_from
+        elif from_axes == "body":
+            x_b = x_from
+            y_b = y_from
+            z_b = z_from
+        elif from_axes == "wind":
+            sa = np.sind(self.alpha)
+            ca = np.cosd(self.alpha)
+            sb = np.sind(self.beta)
+            cb = np.cosd(self.beta)
+            x_b = (cb * ca) * x_from + (sb * ca) * y_from + (-sb) * z_from
+            y_b = (-sb) * x_from + (cb) * y_from  # Note: z term is 0; not forgotten.
+            z_b = (cb * sa) * x_from + (sb * sa) * y_from + (ca) * z_from
+        elif from_axes == "stability":
+            sa = np.sind(self.alpha)
+            ca = np.cosd(self.alpha)
+            x_b = ca * x_from - sa * z_from
+            y_b = y_from
+            z_b = sa * x_from + ca * z_from
+        else:
+            raise ValueError("Bad value of `from_axes`!")
+
+        if to_axes == "geometry":
+            x_to = -x_b
+            y_to = y_b
+            z_to = -z_b
+        elif to_axes == "body":
+            x_to = x_b
+            y_to = y_b
+            z_to = z_b
+        elif to_axes == "wind":
+            sa = np.sind(self.alpha)
+            ca = np.cosd(self.alpha)
+            sb = np.sind(self.beta)
+            cb = np.cosd(self.beta)
+            x_to = (cb * ca) * x_b + (-sb) * y_b + (cb * sa) * z_b
+            y_to = (sb * ca) * x_b + (cb) * y_b + (sb * sa) * z_b
+            z_to = (-sa) * x_b + (ca) * z_b  # Note: y term is 0; not forgotten.
+        elif to_axes == "stability":
+            sa = np.sind(self.alpha)
+            ca = np.cosd(self.alpha)
+            x_to = ca * x_b + sa * z_b
+            y_to = y_b
+            z_to = -sa * x_b + ca * z_b
+        else:
+            raise ValueError("Bad value of `to_axes`!")
+
+        return x_to, y_to, z_to
+
     def compute_rotation_matrix_wind_to_geometry(self) -> np.ndarray:
         """
         Computes the 3x3 rotation matrix that transforms from wind axes to geometry axes.
