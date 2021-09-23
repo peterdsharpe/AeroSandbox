@@ -134,6 +134,12 @@ class Atmosphere(AeroSandboxObject):
             np.pi * gas_constant_universal * self.temperature() / (2 * molecular_mass_air)
         )
 
+    def knudsen(self, length):
+        """
+        Computes the Knudsen number for a given length.
+        """
+        return self.mean_free_path() / length
+
 
 if __name__ == "__main__":
     # Make AeroSandbox Atmosphere
