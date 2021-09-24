@@ -14,20 +14,32 @@ def eng_string(
     Returns float/int value <x> formatted in a simplified engineering format -
     using an exponent that is a multiple of 3.
 
-    format: printf-style string used to format the value before the exponent.
+    Args:
 
-    si: if true, use SI suffix for exponent, e.g. k instead of e3, n instead of
-    e-9 etc.
+        x: The value to be formatted. Float or int.
 
-    E.g. with format='%.2f':
+        unit: A unit of the quantity to be expressed, given as a string. Example: Newtons -> "N"
+
+        format: A printf-style string used to format the value before the exponent.
+
+        si: if true, use SI suffix for exponent. (k instead of e3, n instead of
+            e-9, etc.)
+
+    Examples:
+
+    With format='%.2f':
         1.23e-08 -> 12.30e-9
              123 -> 123.00
           1230.0 -> 1.23e3
       -1230000.0 -> -1.23e6
 
-    and with si=True:
+    With si=True:
           1230.0 -> "1.23k"
       -1230000.0 -> "-1.23M"
+
+    With unit="N" and si=True:
+          1230.0 -> "1.23 kN"
+      -1230000.0 -> "-1.23 MN"
     '''
     sign = ''
     if x < 0:
@@ -47,7 +59,10 @@ def eng_string(
         exp3_text = 'e%s' % exp3
 
     if unit is not None:
-        exp3_text = " " + exp3_text + unit
+        if si:
+            exp3_text = " " + exp3_text + unit
+        else:
+            exp3_text = exp3_text + " " + unit
 
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
 
