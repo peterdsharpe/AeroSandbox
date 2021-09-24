@@ -189,7 +189,7 @@ if __name__ == '__main__':
     )
     print(aero)
 
-    from aerosandbox.tools.pretty_plots import plt, show_plot
+    from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal
 
     fig, ax = plt.subplots(1, 2)
     alpha = np.linspace(-60, 60, 1000)
@@ -213,3 +213,17 @@ if __name__ == '__main__':
     show_plot(
         "Fuselage Aerodynamics"
     )
+
+    fig, ax = plt.subplots(figsize=(7,6))
+    Beta, Alpha = np.meshgrid(np.linspace(-60, 60, 300), np.linspace(-60, 60, 300))
+    aero = fuselage_aerodynamics(
+        fuselage=fuselage,
+        op_point=OperatingPoint(
+            velocity=10,
+            alpha=Alpha,
+            beta=Beta,
+        )
+    )
+    contour(Beta, Alpha, aero["L"], levels=40, colorbar_label="$L$ [N]")
+    equal()
+    show_plot("Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")
