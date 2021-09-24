@@ -66,6 +66,8 @@ def latex_sci_notation_string(x: float):
 def hash_string(string: str) -> int:
     """
     Hashes a string into a quasi-random 32-bit integer! (Based on an MD5 checksum algorithm.)
+
+    Usual warnings apply: it's MD5, don't use this for anything intended to be cryptographically secure.
     """
     md5 = hashlib.md5(string.encode('utf-8'))
     hash_hex = md5.hexdigest()
