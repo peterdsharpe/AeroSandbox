@@ -4,7 +4,7 @@ import hashlib
 
 def eng_string(
         x: float,
-        unit:str = None,
+        unit: str = None,
         format='%.3g',
         si=True
 ) -> str:
