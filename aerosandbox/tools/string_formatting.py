@@ -2,7 +2,12 @@ import math
 import hashlib
 
 
-def eng_string(x: float, format='%.3g', si=True) -> str:
+def eng_string(
+        x: float,
+        unit:str = None,
+        format='%.3g',
+        si=True
+) -> str:
     '''
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
 
@@ -40,6 +45,9 @@ def eng_string(x: float, format='%.3g', si=True) -> str:
         exp3_text = ''
     else:
         exp3_text = 'e%s' % exp3
+
+    if unit is not None:
+        exp3_text = " " + exp3_text + unit
 
     return ('%s' + format + '%s') % (sign, x3, exp3_text)
 
