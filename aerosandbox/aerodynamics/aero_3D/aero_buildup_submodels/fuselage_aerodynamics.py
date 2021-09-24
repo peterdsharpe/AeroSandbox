@@ -81,20 +81,20 @@ def fuselage_aerodynamics(
     ####### Jorgensen model
 
     ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
-    generalized_alpha = np.sqrt(
-        # Strictly-speaking only valid for small alpha, beta. TODO update to be rigorous in 3D.
-        op_point.alpha ** 2 +
-        op_point.beta ** 2
+    x_w, y_w, z_w = op_point.convert_axes(
+        1, 0, 0, from_axes="body", to_axes="wind"
     )
-    alpha_fractional_component = op_point.alpha / generalized_alpha  # The fraction of any "generalized lift" to be in the direction of alpha
-    beta_fractional_component = op_point.beta / generalized_alpha  # The fraction of any "generalized lift" to be in the direction of beta
+    generalized_alpha = np.arccosd(x_w)
 
-    generalized_alpha = np.clip(generalized_alpha, -90,
-                                90)  # TODO make the drag/moment functions not give negative results for alpha > 90.
+    alpha_fractional_component = -z_w / np.sqrt(y_w ** 2 + z_w ** 2)  # The fraction of any "generalized lift" to be in the direction of alpha
+    beta_fractional_component = y_w / np.sqrt(y_w ** 2 + z_w ** 2)  # The fraction of any "generalized lift" to be in the direction of beta
+
+    # generalized_alpha = np.clip(generalized_alpha, -90,
+    #                             90)  # TODO make the drag/moment functions not give negative results for alpha > 90.
 
     ### Compute normal quantities
     ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
-    sina = np.abs(np.sind(generalized_alpha))
+    sina = np.sind(generalized_alpha)
     M_n = sina * op_point.mach()
     Re_n = sina * fuselage.Re
     V_n = sina * op_point.velocity
@@ -135,7 +135,7 @@ def fuselage_aerodynamics(
     C_m_generalized = C_m_p + C_m_v
 
     ##### Total C_A model
-    C_A = C_D_zero_lift * np.cosd(generalized_alpha) ** 2
+    C_A = C_D_zero_lift * np.cosd(generalized_alpha) * np.abs(np.cosd(generalized_alpha))
 
     ##### Convert to lift, drag
     C_L_generalized = C_N * np.cosd(generalized_alpha) - C_A * np.sind(generalized_alpha)
@@ -183,8 +183,8 @@ if __name__ == '__main__':
         fuselage=fuselage,
         op_point=OperatingPoint(
             velocity=10,
-            alpha=-5,
-            beta=-5
+            alpha=10,
+            beta=5
         )
     )
     print(aero)
