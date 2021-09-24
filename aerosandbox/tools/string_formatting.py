@@ -36,7 +36,7 @@ def eng_string(x: float, format='%.3g', si=True) -> str:
     x3 = x / (10 ** exp3)
 
     if si and exp3 >= -24 and exp3 <= 24 and exp3 != 0:
-        exp3_text = 'yzafpnum kMGTPEZY'[(exp3 + 24) // 3]
+        exp3_text = 'yzafpnμm kMGTPEZY'[(exp3 + 24) // 3]
     elif exp3 == 0:
         exp3_text = ''
     else:
