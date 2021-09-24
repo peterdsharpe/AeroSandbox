@@ -169,7 +169,6 @@ def fuselage_aerodynamics(
 
 if __name__ == '__main__':
     fuselage = Fuselage(
-        xyz_le=np.array([0, 0, 0]),
         xsecs=[
             FuselageXSec(
                 xyz_c=[s, 0, 0],
@@ -215,7 +214,7 @@ if __name__ == '__main__':
     )
 
     fig, ax = plt.subplots(figsize=(7,6))
-    Beta, Alpha = np.meshgrid(np.linspace(-60, 60, 300), np.linspace(-60, 60, 300))
+    Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 300), np.linspace(-90, 90, 300))
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
         op_point=OperatingPoint(
