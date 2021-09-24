@@ -1,5 +1,4 @@
 import math
-import aerosandbox.numpy as np
 import hashlib
 
 
