@@ -150,6 +150,7 @@ def contour(
         extendrect=True,
         linelabels_format: Union[str, Callable[[float], str]] = eng_string,
         linelabels_fontsize=8,
+        colorbar_label=None,
         contour_kwargs: Dict = None,
         contourf_kwargs: Dict = None,
         colorbar_kwargs: Dict = None,
@@ -212,6 +213,9 @@ def contour(
         shared_kwargs["levels"] = levels
     shared_kwargs["alpha"] = alpha
     shared_kwargs["extend"] = extend
+
+    if colorbar_label is not None:
+        colorbar_kwargs["label"] = colorbar_label
 
     contour_kwargs = {
         "colors"    : linecolor,
