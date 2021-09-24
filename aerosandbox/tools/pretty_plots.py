@@ -149,7 +149,7 @@ def contour(
         linewidths=0.5,
         extendrect=True,
         linelabels_format: Union[str, Callable[[float], str]] = eng_string,
-        linelabels_fontsize=10,
+        linelabels_fontsize=8,
         contour_kwargs: Dict = None,
         contourf_kwargs: Dict = None,
         colorbar_kwargs: Dict = None,
