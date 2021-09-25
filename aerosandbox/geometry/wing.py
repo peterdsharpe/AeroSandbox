@@ -563,9 +563,6 @@ class Wing(AeroSandboxObject):
 
         for i, xsec in enumerate(self.xsecs):
 
-            origin = self._compute_xyz_le_of_WingXSec(i)
-            xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(i)
-
             try:
                 xsec_x_nondim = x_nondim[i]
             except (TypeError, IndexError):
@@ -603,11 +600,7 @@ class Wing(AeroSandboxObject):
         return points
 
     def _compute_xyz_le_of_WingXSec(self, index: int):
-        return self._compute_xyz_of_WingXSec(
-            index,
-            x_nondim=0,
-            y_nondim=0,
-        )
+        return self.xsecs[index].xyz_le
 
     def _compute_xyz_te_of_WingXSec(self, index: int):
         return self._compute_xyz_of_WingXSec(
