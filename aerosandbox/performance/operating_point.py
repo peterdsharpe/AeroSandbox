@@ -129,6 +129,9 @@ class OperatingPoint(AeroSandboxObject):
         This whole function is vectorized, both over the vector and the OperatingPoint (e.g., a vector of
         `OperatingPoint.alpha` values)
 
+        Wind axes rotations are taken from Eq. 6.7 in Sect. 6.2.2 of Drela's Flight Vehicle Aerodynamics textbook,
+        with axes corrections to go from [D, Y, L] to true wind axes (and same for geometry to body axes).
+
         Args:
             x_from: x-component of the vector, in `from_axes` frame.
             y_from: y-component of the vector, in `from_axes` frame.
@@ -152,9 +155,9 @@ class OperatingPoint(AeroSandboxObject):
             ca = np.cosd(self.alpha)
             sb = np.sind(self.beta)
             cb = np.cosd(self.beta)
-            x_b = (cb * ca) * x_from + (sb * ca) * y_from + (-sa) * z_from
-            y_b = (-sb) * x_from + (cb) * y_from  # Note: z term is 0; not forgotten.
-            z_b = (cb * sa) * x_from + (sb * sa) * y_from + (ca) * z_from
+            x_b = (cb * ca) * x_from + (-sb * ca) * y_from + (-sa) * z_from
+            y_b = (sb) * x_from + (cb) * y_from  # Note: z term is 0; not forgotten.
+            z_b = (cb * sa) * x_from + (-sb * sa) * y_from + (ca) * z_from
         elif from_axes == "stability":
             sa = np.sind(self.alpha)
             ca = np.cosd(self.alpha)
@@ -177,8 +180,8 @@ class OperatingPoint(AeroSandboxObject):
             ca = np.cosd(self.alpha)
             sb = np.sind(self.beta)
             cb = np.cosd(self.beta)
-            x_to = (cb * ca) * x_b + (-sb) * y_b + (cb * sa) * z_b
-            y_to = (sb * ca) * x_b + (cb) * y_b + (sb * sa) * z_b
+            x_to = (cb * ca) * x_b + (sb) * y_b + (cb * sa) * z_b
+            y_to = (-sb * ca) * x_b + (cb) * y_b + (-sb * sa) * z_b
             z_to = (-sa) * x_b + (ca) * z_b  # Note: y term is 0; not forgotten.
         elif to_axes == "stability":
             sa = np.sind(self.alpha)

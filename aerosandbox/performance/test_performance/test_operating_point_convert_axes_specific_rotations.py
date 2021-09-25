@@ -57,8 +57,8 @@ def test_beta_stability_body():
         "body",
         "stability"
     )
-    assert x == pytest.approx(1)
-    assert y == pytest.approx(0)
+    assert x == pytest.approx(0)
+    assert y == pytest.approx(1)
     assert z == pytest.approx(0)
 
 
