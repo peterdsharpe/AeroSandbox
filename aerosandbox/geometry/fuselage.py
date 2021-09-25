@@ -366,6 +366,20 @@ class Fuselage(AeroSandboxObject):
 
         return mesh
 
+    def draw(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw()
+            **kwargs: Keyword arguments to pass through to Airplane.draw()
+
+        Returns: Same return as Airplane.draw()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(fuselages=[self]).draw(*args, **kwargs)
+
     def _compute_frame_of_FuselageXSec(self, index: int):
 
         if index == len(self.xsecs) - 1:

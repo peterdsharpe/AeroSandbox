@@ -677,6 +677,20 @@ class Wing(AeroSandboxObject):
 
         return points
 
+    def draw(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw()
+            **kwargs: Keyword arguments to pass through to Airplane.draw()
+
+        Returns: Same return as Airplane.draw()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(wings=[self]).draw(*args, **kwargs)
+
     def _compute_xyz_le_of_WingXSec(self, index: int):
         return self.xsecs[index].xyz_le
 
@@ -811,8 +825,8 @@ class WingXSec(AeroSandboxObject):
         """
         Initialize a new wing cross section.
         Args:
-            xyz_le: xyz-coordinates of the leading edge of the cross section, relative to the wing's datum.
-            chord: Chord of the wing at this cross section
+            xyz_le: xyz-coordinates of the leading edge of the cross section. In geometry axes.
+            chord: Chord of the wing at this cross section.
             twist: Twist angle, in degrees, as defined about the leading edge.
                 The twist axis is computed with the following procedure:
                     * The quarter-chord point of this WingXSec and the following one are identified.
