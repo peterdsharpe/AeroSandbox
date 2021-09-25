@@ -895,6 +895,4 @@ if __name__ == '__main__':
             )
         ]
     )
-    from aerosandbox import Airplane
-
-    Airplane(wings=[wing]).draw()
+    wing.draw()

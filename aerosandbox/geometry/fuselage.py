@@ -458,6 +458,4 @@ if __name__ == '__main__':
             )
         ]
     )
-    from aerosandbox import Airplane
-
-    Airplane(fuselages=[fuse]).draw()
+    fuse.draw()
