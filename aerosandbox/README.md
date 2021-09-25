@@ -24,7 +24,7 @@ These are the two key pieces of AeroSandbox to understand - once you get these, 
 
 * `/numpy/`: One of the coolest things about the `Opti` stack is that it's fast - really, **really** fast. You can solve nonlinear, nonconvex optimization problems with thousands of variables in mere seconds on a laptop, thanks to automatic differentiation (AD) provided by CasADi and modern optimization methods via IPOPT.
 
-  In order for AD to work, we need to be able to make a list (more precisely, a directed graph) of each mathematical operation (think +, -, *, /, **, log(), fabs(), etc.) that's applied throughout our optimization formulation (some call this list a "trace" in the literature). This means we can't just use NumPy out of the box like we'd like to, because some of its functions break our trace.
+  In order for AD to work, we need to be able to make a list (more precisely, a directed graph) of each mathematical operation (think `+`, `-`, `*`, `/`, `**`, `log()`, `fabs()`, etc.) that's applied throughout our optimization formulation (some call this list a "trace" in the literature). This means we can't just use NumPy out of the box like we'd like to, because some of its functions break our trace.
 
   Instead, we need to use a custom math library, which sounds scary at first. However, the AeroSandbox development team has tried to make this as seamless to you as possible - by writing our own NumPy with identical syntax! Here's how this works:
 
