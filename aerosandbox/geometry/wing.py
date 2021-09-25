@@ -312,7 +312,7 @@ class Wing(AeroSandboxObject):
 
         return sweep_deg
 
-    def aerodynamic_center(self, chord_fraction: float = 0.25) -> np.ndarray:
+    def aerodynamic_center(self, chord_fraction: float = 0.25, _sectional=False) -> np.ndarray:
         """
         Computes the location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:
@@ -351,6 +351,9 @@ class Wing(AeroSandboxObject):
             ])
 
             sectional_ACs.append(section_AC)
+
+        if _sectional:
+            return sectional_ACs
 
         sectional_AC_area_products = [
             AC * area
