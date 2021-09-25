@@ -223,6 +223,6 @@ if __name__ == '__main__':
             beta=Beta,
         )
     )
-    contour(Beta, Alpha, aero["L"], levels=40, colorbar_label="$L$ [N]")
+    contour(Beta, Alpha, aero["L"], levels=30, colorbar_label="$L$ [N]")
     equal()
     show_plot("Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")
