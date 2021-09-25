@@ -17,12 +17,18 @@ def dot(a, b):
         return _cas.dot(a, b)
 
 
-def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None):
+def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None, manual=False):
     """
     Return the cross product of two (arrays of) vectors.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.cross.html
     """
+    if manual:
+        cross_x = a[1] * b[2] - a[2] * b[1]
+        cross_y = a[2] * b[0] - a[0] * b[2]
+        cross_z = a[0] * b[1] - a[1] * b[0]
+        return cross_x, cross_y, cross_z
+    
     if not is_casadi_type([a, b], recursive=True):
         return _onp.cross(a, b, axisa=axisa, axisb=axisb, axisc=axisc, axis=axis)
 
