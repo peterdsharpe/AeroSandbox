@@ -116,6 +116,29 @@ class OperatingPoint(AeroSandboxObject):
                      from_axes: str,
                      to_axes: str,
                      ):
+        """
+        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
+        y_to, z_to], as given in the `to_axes` frame.
+
+        Both `from_axes` and `to_axes` should be a string, one of:
+            * "geometry"
+            * "body"
+            * "wind"
+            * "stability"
+
+        This whole function is vectorizable, both over the vector and the OperatingPoint (e.g., a vector of
+        `OperatingPoint.alpha` values)
+
+        Args:
+            x_from: x-component of the vector, in `from_axes` frame.
+            y_from: y-component of the vector, in `from_axes` frame.
+            z_from: z-component of the vector, in `from_axes` frame.
+            from_axes: The axes to convert from.
+            to_axes: The axes to convert to.
+
+        Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
+
+        """
         if from_axes == "geometry":
             x_b = -x_from
             y_b = y_from
