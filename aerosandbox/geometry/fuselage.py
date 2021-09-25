@@ -223,6 +223,21 @@ class Fuselage(AeroSandboxObject):
                   chordwise_resolution: int = 6,
                   spanwise_resolution: int = 36,
                   ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Meshes the fuselage as a solid (thickened) body.
+
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
+        `aerosandbox.geometry.mesh_utilities`.
+
+        Args:
+            method: Allows choice between "tri" and "quad" meshing.
+            chordwise_resolution: Controls the chordwise resolution of the meshing.
+            spanwise_resolution: Controls the spanwise resolution of the meshing.
+            TODO add mesh_trailing_edge argument.
+
+        Returns: (points, faces) in standard mesh format.
+
+        """
 
         theta = np.linspace(
             0,

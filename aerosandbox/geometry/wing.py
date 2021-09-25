@@ -282,20 +282,24 @@ class Wing(AeroSandboxObject):
 
         return mean_twist
 
-    def mean_sweep_angle(self) -> float:
+    def mean_sweep_angle(self, x_nondim=0.25) -> float:
         """
-        Returns the mean quarter-chord sweep angle (in degrees) of the wing, relative to the x-axis.
+        Returns the mean sweep angle (in degrees) of the wing, relative to the x-axis.
         Positive sweep is backwards, negative sweep is forward.
-        :return:
+
+        By changing `x_nondim`, you can change whether it's leading-edge sweep (0), quarter-chord sweep (0.25),
+        trailing-edge sweep (1), or anything else.
+
+        :return: The mean sweep angle, in degrees.
         """
         root_quarter_chord = self._compute_xyz_of_WingXSec(
             0,
-            x_nondim=0.25,
+            x_nondim=x_nondim,
             y_nondim=0
         )
         tip_quarter_chord = self._compute_xyz_of_WingXSec(
             -1,
-            x_nondim=0.25,
+            x_nondim=x_nondim,
             y_nondim=0
         )
 
@@ -382,6 +386,24 @@ class Wing(AeroSandboxObject):
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
                   ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Meshes the wing as a solid (thickened) body.
+
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
+        `aerosandbox.geometry.mesh_utilities`.
+
+        Args:
+            method: Allows choice between "tri" and "quad" meshing.
+            chordwise_resolution: Controls the chordwise resolution of the meshing.
+            spanwise_resolution: Controls the spanwise resolution of the meshing.
+            spanwise_spacing: Controls the spanwise spacing of the meshing. Can be "uniform" or "cosine".
+            mesh_surface: Controls whether the actual wing surface is meshed.
+            mesh_tips: Control whether the wing tips (both outside and inside) are meshed.
+            mesh_trailing_edge: Controls whether the wing trailing edge is meshed, in the case of open-TE airfoils.
+
+        Returns: (points, faces) in standard mesh format.
+
+        """
 
         airfoil_nondim_coordinates = np.array([
             xsec.airfoil
@@ -471,12 +493,29 @@ class Wing(AeroSandboxObject):
 
     def mesh_thin_surface(self,
                           method="tri",
-                          chordwise_resolution: int = 1,
-                          spanwise_resolution: int = 1,
+                          chordwise_resolution: int = 32,
+                          spanwise_resolution: int = 16,
                           chordwise_spacing: str = "cosine",
                           spanwise_spacing: str = "uniform",
                           add_camber: bool = True,
                           ) -> Tuple[np.ndarray, List[List[int]]]:
+        """
+        Meshes the mean camber line of the wing as a thin-sheet body.
+
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
+        `aerosandbox.geometry.mesh_utilities`.
+
+        Args:
+            method: Allows choice between "tri" and "quad" meshing.
+            chordwise_resolution: Controls the chordwise resolution of the meshing.
+            spanwise_resolution: Controls the spanwise resolution of the meshing.
+            chordwise_spacing: Controls the chordwise spacing of the meshing. Can be "uniform" or "cosine".
+            spanwise_spacing: Controls the spanwise spacing of the meshing. Can be "uniform" or "cosine".
+            add_camber: Controls whether to mesh the thin surface with camber (i.e., mean camber line), or just the flat planform.
+
+        Returns: (points, faces) in standard mesh format.
+
+        """
         if chordwise_spacing == "cosine":
             space = np.cosspace
         elif chordwise_spacing == "uniform":
@@ -549,6 +588,32 @@ class Wing(AeroSandboxObject):
                   spanwise_resolution: int = 1,
                   spanwise_spacing: str = "cosine"
                   ) -> np.ndarray:
+        """
+        Meshes a line that goes through each of the WingXSec objects in this wing.
+
+        Args:
+
+            x_nondim: The nondimensional (chord-normalized) x-coordinate that the line should go through. Can either
+            be a single value used at all cross sections, or can be an iterable of values to be used at the
+            respective cross sections.
+
+            y_nondim: The nondimensional (chord-normalized) y-coordinate that the line should go through. Here,
+            y-coordinate means the "vertical" component (think standard 2D airfoil axes). Can either be a single
+            value used at all cross sections, or can be an iterable of values to be used at the respective cross
+            sections.
+
+            add_camber: Controls whether camber should be added to the line or not.
+
+            spanwise_resolution: Controls the number of times each WingXSec is subdivided.
+
+            spanwise_spacing: Controls the spanwise spacing. Either "cosine" or "uniform".
+
+        Returns:
+
+            points: a Nx3 np.ndarray that gives the coordinates of each point on the meshed line. Goes from the root to the tip.
+
+        """
+
         if spanwise_spacing == "cosine":
             space = np.cosspace
         elif spanwise_spacing == "uniform":
@@ -635,7 +700,8 @@ class Wing(AeroSandboxObject):
                 y_nondim * xsec.chord * zg_local
         )
 
-    def _compute_frame_of_WingXSec(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _compute_frame_of_WingXSec(
+            self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the local reference frame associated with a particular cross section (XSec) of this wing.
 
@@ -646,7 +712,7 @@ class Wing(AeroSandboxObject):
         Returns:
 
             A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis of
-            the local reference frame of the WingXSec.
+            the local reference frame of the WingXSec. Given in geometry axes.
 
         """
         ### Compute the untwisted reference frame
@@ -699,11 +765,32 @@ class Wing(AeroSandboxObject):
         Returns:
 
             A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis
-            of the local reference frame of the section.
+            of the local reference frame of the section. Given in geometry axes.
 
         """
+        in_front = self._compute_xyz_le_of_WingXSec(index)
+        in_back = self._compute_xyz_te_of_WingXSec(index)
+        out_front = self._compute_xyz_le_of_WingXSec(index + 1)
+        out_back = self._compute_xyz_te_of_WingXSec(index + 1)
 
+        diag1 = out_back - in_front
+        diag2 = out_front - in_back
+        cross = np.cross(diag1, diag2)
 
+        zg_local = cross / np.linalg.norm(cross)
+
+        quarter_chord_vector = (
+                                       0.75 * out_front + 0.25 * out_back
+                               ) - (
+                                       0.75 * in_front + 0.25 * in_back
+                               )
+        quarter_chord_vector[0] = 0
+
+        yg_local = quarter_chord_vector / np.linalg.norm(quarter_chord_vector)
+
+        xg_local = np.cross(yg_local, zg_local)
+
+        return xg_local, yg_local, zg_local
 
 
 class WingXSec(AeroSandboxObject):

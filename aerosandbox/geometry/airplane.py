@@ -62,19 +62,51 @@ class Airplane(AeroSandboxObject):
 
     def mesh_body(self,
                   method="quad",
+                  thin_wings=False,
                   stack_meshes=True,
                   ):
-        meshes = [
-                     wing.mesh_body(
-                         method=method
-                     )
-                     for wing in self.wings
-                 ] + [
-                     fuse.mesh_body(
-                         method=method
-                     )
-                     for fuse in self.fuselages
-                 ]
+        """
+        Returns a surface mesh of the Airplane, in (points, faces) format. For reference on this format,
+        see the documentation in `aerosandbox.geometry.mesh_utilities`.
+
+        Args:
+
+            method:
+
+            thin_wings: Controls whether wings should be meshed as thin surfaces, rather than full 3D bodies.
+
+            stack_meshes: Controls whether the meshes should be merged into a single mesh or not.
+
+                * If True, returns a (points, faces) tuple in standard mesh format.
+
+                * If False, returns a list of (points, faces) tuples in standard mesh format.
+
+        Returns:
+
+        """
+        if thin_wings:
+            wing_meshes = [
+                wing.mesh_thin_surface(
+                    method=method,
+                )
+                for wing in self.wings
+            ]
+        else:
+            wing_meshes = [
+                wing.mesh_body(
+                    method=method,
+                )
+                for wing in self.wings
+            ]
+
+        fuse_meshes = [
+            fuse.mesh_body(
+                method=method
+            )
+            for fuse in self.fuselages
+        ]
+
+        meshes = wing_meshes + fuse_meshes
 
         if stack_meshes:
             points, faces = mesh_utils.stack_meshes(*meshes)
@@ -84,19 +116,25 @@ class Airplane(AeroSandboxObject):
 
     def draw(self,
              backend: str = "pyvista",
-             show=True,  # type: bool
+             thin_wings: bool = False,
+             show: bool = True,
              show_kwargs=None,
              ):
         """
 
         Args:
+
             backend: One of:
                 * "plotly" for a Plot.ly backend
                 * "pyvista" for a PyVista backend
                 * "trimesh" for a trimesh backend
+
+            thin_wings: A boolean that determines whether to draw the full airplane (i.e. thickened, 3D bodies), or to use a
+            thin-surface representation for any Wing objects.
+
             show: Should we show the visualization, or just return it?
 
-        Returns:
+        Returns: The plotted object, in its associated backend format. Also displays the object if `show` is True.
 
         """
         if show_kwargs is None:
@@ -104,7 +142,7 @@ class Airplane(AeroSandboxObject):
 
         if backend == "plotly":
 
-            points, faces = self.mesh_body(method="quad")
+            points, faces = self.mesh_body(method="quad", thin_wings=thin_wings)
 
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
             fig = Figure3D()
