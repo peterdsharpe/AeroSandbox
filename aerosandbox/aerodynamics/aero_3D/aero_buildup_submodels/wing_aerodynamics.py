@@ -281,6 +281,9 @@ def wing_aerodynamics(
         "L"  : -F_w[2],
         "Y"  : F_w[1],
         "D"  : -F_w[0],
+        "l_b": M_b[0],
+        "m_b": M_b[1],
+        "n_b": M_b[2]
     }
 
 
@@ -317,3 +320,4 @@ if __name__ == '__main__':
             beta=0
         )
     )
+    print(aero)

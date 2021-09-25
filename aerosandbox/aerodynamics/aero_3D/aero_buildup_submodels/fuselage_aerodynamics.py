@@ -86,8 +86,10 @@ def fuselage_aerodynamics(
     )
     generalized_alpha = np.arccosd(x_w)
 
-    alpha_fractional_component = -z_w / np.sqrt(y_w ** 2 + z_w ** 2)  # The fraction of any "generalized lift" to be in the direction of alpha
-    beta_fractional_component = y_w / np.sqrt(y_w ** 2 + z_w ** 2)  # The fraction of any "generalized lift" to be in the direction of beta
+    alpha_fractional_component = -z_w / np.sqrt(
+        y_w ** 2 + z_w ** 2)  # The fraction of any "generalized lift" to be in the direction of alpha
+    beta_fractional_component = y_w / np.sqrt(
+        y_w ** 2 + z_w ** 2)  # The fraction of any "generalized lift" to be in the direction of beta
 
     # generalized_alpha = np.clip(generalized_alpha, -90,
     #                             90)  # TODO make the drag/moment functions not give negative results for alpha > 90.
@@ -153,17 +155,39 @@ def fuselage_aerodynamics(
     L = C_L * q * S_ref
     Y = C_Y * q * S_ref
     D = C_D * q * S_ref
-    l = C_l * q * S_ref * c_ref
-    m = C_m * q * S_ref * c_ref
-    n = C_n * q * S_ref * c_ref
+    l_w = C_l * q * S_ref * c_ref
+    m_w = C_m * q * S_ref * c_ref
+    n_w = C_n * q * S_ref * c_ref
+
+    ### Convert to axes coordinates for reporting
+    F_w = (
+        -D,
+        0,
+        -L
+    )
+    F_b = op_point.convert_axes(*F_w, from_axes="wind", to_axes="body")
+    F_g = op_point.convert_axes(*F_b, from_axes="body", to_axes="geometry")
+    M_w = (
+        l_w,
+        m_w,
+        n_w,
+    )
+    M_b = op_point.convert_axes(*M_w, from_axes="wind", to_axes="body")
+    M_g = op_point.convert_axes(*M_b, from_axes="body", to_axes="geometry")
 
     return {
-        "L": L,
-        "Y": Y,
-        "D": D,
-        "l": l,
-        "m": m,
-        "n": n
+        "F_g": F_g,
+        "F_b": F_b,
+        "F_w": F_w,
+        "M_g": M_g,
+        "M_b": M_b,
+        "M_w": M_w,
+        "L"  : -F_w[2],
+        "Y"  : F_w[1],
+        "D"  : -F_w[0],
+        "l_b": M_b[0],
+        "m_b": M_b[1],
+        "n_b": M_b[2]
     }
 
 
@@ -213,7 +237,7 @@ if __name__ == '__main__':
         "Fuselage Aerodynamics"
     )
 
-    fig, ax = plt.subplots(figsize=(7,6))
+    fig, ax = plt.subplots(figsize=(7, 6))
     Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 300), np.linspace(-90, 90, 300))
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
