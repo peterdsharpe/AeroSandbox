@@ -692,7 +692,7 @@ class Airfoil(Polygon):
     #         )
     #     return data_present
     #
-    # def plot_xfoil_data_contours(self):  # TODO add docstring
+    # def plot_xfoil_data_contours(self):
     #     self.has_xfoil_data()  # Ensure data is present.
     #     from matplotlib import colors
     #

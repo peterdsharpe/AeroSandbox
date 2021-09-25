@@ -18,11 +18,13 @@ def stack_meshes(
         *meshes: Tuple[np.ndarray, np.ndarray]
 ):
     """
-    # TODO document mesh format
-    Args:
-        *meshes:
+    Takes in a series of tuples (points, faces) and merges them into a single tuple (points, faces). All (points,
+    faces) tuples are meshes given in standard format.
 
-    Returns:
+    Args:
+        *meshes: Any number of mesh tuples in standard (points, faces) format.
+
+    Returns: (points, faces) of the combined mesh.
 
     """
     if len(meshes) == 1:

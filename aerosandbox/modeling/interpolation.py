@@ -138,5 +138,3 @@ class InterpolatedModel(SurrogateModel):
             bounds_error=False,  # Can't be set true if general MX-type inputs are to be expected.
             fill_value=self.fill_value
         )
-
-        # TODO finish

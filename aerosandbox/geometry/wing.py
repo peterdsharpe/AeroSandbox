@@ -35,7 +35,7 @@ class Wing(AeroSandboxObject):
                  name: str = "Untitled Wing",
                  xsecs: List['WingXSec'] = [],
                  symmetric: bool = False,
-                 xyz_le: np.ndarray = None,  # TODO deprecate in favor of a ".translate()"-like method.
+                 xyz_le: np.ndarray = None,  # Note: deprecated.
                  ):
         """
         Initialize a new wing.
@@ -823,7 +823,7 @@ class WingXSec(AeroSandboxObject):
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
                  control_surface_deflection: float = 0.,
-                 twist_angle=None,  # TODO Deprecate
+                 twist_angle=None,  # Note: deprecated.
                  ):
         """
         Initialize a new wing cross section.
