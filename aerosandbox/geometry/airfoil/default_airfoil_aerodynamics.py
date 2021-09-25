@@ -8,7 +8,7 @@ def print_default_warning():
                   "To use a better, more accurate one, specify functions in the Airfoil constructor.")
 
 
-def default_CL_function(alpha, Re, mach, deflection):
+def default_CL_function(alpha, Re, mach=0, deflection=0):
     """
     Lift coefficient.
     """
@@ -20,7 +20,7 @@ def default_CL_function(alpha, Re, mach, deflection):
     return Cl
 
 
-def default_CD_function(alpha, Re, mach, deflection):
+def default_CD_function(alpha, Re, mach=0, deflection=0):
     """
     Drag coefficient.
     """
@@ -35,7 +35,7 @@ def default_CD_function(alpha, Re, mach, deflection):
     return Cd
 
 
-def default_CM_function(alpha, Re, mach, deflection):
+def default_CM_function(alpha, Re, mach=0, deflection=0):
     """
     Pitching moment coefficient, as measured about quarter-chord.
     """
