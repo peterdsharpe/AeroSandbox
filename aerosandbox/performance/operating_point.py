@@ -126,7 +126,7 @@ class OperatingPoint(AeroSandboxObject):
             * "wind"
             * "stability"
 
-        This whole function is vectorizable, both over the vector and the OperatingPoint (e.g., a vector of
+        This whole function is vectorized, both over the vector and the OperatingPoint (e.g., a vector of
         `OperatingPoint.alpha` values)
 
         Args:
