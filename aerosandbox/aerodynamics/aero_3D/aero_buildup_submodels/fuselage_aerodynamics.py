@@ -1,7 +1,7 @@
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 import aerosandbox.numpy as np
-from aerosandbox.library.aerodynamics import Cf_flat_plate, Cd_cylinder
+import aerosandbox.library.aerodynamics as aerolib
 
 
 def jorgensen_eta(fineness_ratio: float) -> float:
@@ -65,7 +65,7 @@ def fuselage_aerodynamics(
     ####### Fuselage zero-lift drag estimation
 
     ### Forebody drag
-    C_f_forebody = Cf_flat_plate(
+    C_f_forebody = aerolib.Cf_flat_plate(
         Re_L=fuselage.Re
     )
 
@@ -118,7 +118,7 @@ def fuselage_aerodynamics(
     ##### Viscous crossflow model
     C_d_n = np.where(
         Re_n != 0,
-        Cd_cylinder(Re_D=Re_n),  # Replace with 1.20 from Jorgensen Table 1 if not working well
+        aerolib.Cd_cylinder(Re_D=Re_n),  # Replace with 1.20 from Jorgensen Table 1 if not working well
         0
     )
     eta = jorgensen_eta(fuselage.fineness_ratio())
