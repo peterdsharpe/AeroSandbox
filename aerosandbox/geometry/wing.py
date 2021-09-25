@@ -629,8 +629,20 @@ class Wing(AeroSandboxObject):
                 y_nondim * xsec.chord * zg_local
         )
 
-    def _compute_frame_of_WingXSec(self, index: int):
+    def _compute_frame_of_WingXSec(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Computes the local reference frame associated with a particular cross section (XSec) of this wing.
 
+        Args:
+
+            index: Which cross section (as indexed in Wing.xsecs) should we get the frame of?
+
+        Returns:
+
+            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis of
+            the local reference frame of the WingXSec.
+
+        """
         twist = self.xsecs[index].twist
 
         ### Compute the untwisted reference frame
