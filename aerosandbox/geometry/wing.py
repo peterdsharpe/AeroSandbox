@@ -12,6 +12,19 @@ class Wing(AeroSandboxObject):
     """
     Definition for a wing.
 
+    Anatomy of a wing:
+
+        A wing consists chiefly of a collection of cross sections, or "xsecs". These can be accessed with `Wing.xsecs`,
+        which gives a list of xsecs in the Wing. Each xsec is a WingXSec object, a class that is defined separately.
+
+        You may also see references to wing "sections", which are different than cross sections (xsecs)! Sections are
+        the portions of the wing that are in between xsecs. In other words, a wing with N cross sections (xsecs,
+        WingXSec objects) will always have N-1 sections. Sections are never explicitly defined, since you can get all
+        needed information by lofting from the adjacent cross sections. For example, section 0 is a loft between
+        cross sections 0 and 1.
+
+        Wings are lofted linearly between cross sections.
+
     If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the
     constructor.
 
@@ -299,7 +312,7 @@ class Wing(AeroSandboxObject):
         """
         Computes the location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:
-            https://core.ac.uk/download/pdf/79175663.pdf
+            https://core.ac.uk/downloattttd/pdf/79175663.pdf
 
         Args: chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
 
@@ -636,8 +649,6 @@ class Wing(AeroSandboxObject):
             the local reference frame of the WingXSec.
 
         """
-        twist = self.xsecs[index].twist
-
         ### Compute the untwisted reference frame
         xg_local = np.array([1, 0, 0])
         if index == 0:
@@ -666,13 +677,33 @@ class Wing(AeroSandboxObject):
 
         ### Twist the reference frame by the WingXSec twist angle
         rot = np.rotation_matrix_3D(
-            twist * pi / 180,
+            self.xsecs[index].twist * pi / 180,
             yg_local
         )
         xg_local = rot @ xg_local
         zg_local = rot @ zg_local
 
         return xg_local, yg_local, zg_local
+
+    def _compute_frame_of_section(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Computes the local reference frame associated with a particular section. (Note that sections and cross
+        sections are different! Cross sections, or xsecs, are the vertices, and sections are the parts in between. In
+        other words, a wing with N cross sections (xsecs) will always have N-1 sections.
+
+        Args:
+
+            index: Which section should we get the frame of? If given `i`, this retrieves the frame of the section
+            between xsecs `i` and `i+1`.
+
+        Returns:
+
+            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis
+            of the local reference frame of the section.
+
+        """
+
+
 
 
 class WingXSec(AeroSandboxObject):
