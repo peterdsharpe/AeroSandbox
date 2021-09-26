@@ -24,6 +24,7 @@ def wing_aerodynamics(
         op_point: The OperatingPoint that you wish to analyze the fuselage at.
 
     TODO account for wing airfoil pitching moment
+    TODO account for p, q, r
 
     Returns:
 
