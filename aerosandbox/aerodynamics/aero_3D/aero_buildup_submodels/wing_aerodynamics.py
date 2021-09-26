@@ -251,7 +251,7 @@ def wing_aerodynamics(
 
             sym_sect_M_g = np.cross(
                 sym_sect_aerodynamic_center,
-                sect_F_g,
+                sym_sect_F_g,
                 manual=True
             )
 
