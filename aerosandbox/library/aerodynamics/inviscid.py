@@ -48,6 +48,7 @@ def oswalds_efficiency(
     Returns: Oswald's efficiency factor [-]
 
     """
+    sweep = np.clip(sweep, 0, 90) # TODO input proper analytic continuation
 
     def f(l):  # f(lambda), given as Eq. 36 in the Nita and Scholz paper (see parent docstring).
         return (
@@ -91,6 +92,7 @@ def optimal_taper_ratio(
     Returns: Optimal taper ratio
 
     """
+    sweep = np.clip(sweep, 0, 90) # TODO input proper analytic continuation
     return 0.45 * np.exp(-0.0375 * sweep)
 
 
