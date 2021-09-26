@@ -19,20 +19,6 @@ class AeroBuildup(ExplicitAnalysis):
         self.airplane = airplane
         self.op_point = op_point
 
-        ### Check assumptions
-        assumptions = np.array([
-            self.op_point.beta == 0,
-            self.op_point.p == 0,
-            self.op_point.q == 0,
-            self.op_point.r == 0,
-        ])
-        try:
-            all_assumptions_met = np.all(assumptions)
-        except NotImplementedError:
-            all_assumptions_met = False
-        if not all_assumptions_met:
-            raise ValueError("The assumptions to use an aero buildup method are not met!")
-
     def run(self):
         aero_components = []
 
@@ -86,6 +72,6 @@ if __name__ == '__main__':
 
     analysis = AeroBuildup(
         airplane=airplane,
-        op_point=OperatingPoint(alpha=0),
+        op_point=OperatingPoint(alpha=0, beta=1),
     )
     out = analysis.run()
