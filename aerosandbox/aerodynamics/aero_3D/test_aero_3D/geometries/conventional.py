@@ -13,7 +13,6 @@ airplane = asb.Airplane(
     wings=[
         asb.Wing(
             name="Main Wing",
-            xyz_le=[0, 0, 0],  # Coordinates of the wing's leading edge
             symmetric=True,  # Should this wing be mirrored across the XZ plane?
             xsecs=[  # The wing's cross ("X") sections
                 asb.WingXSec(  # Root
@@ -42,7 +41,6 @@ airplane = asb.Airplane(
         ),
         asb.Wing(
             name="Horizontal Stabilizer",
-            xyz_le=[0.6, 0, 0.06],
             symmetric=True,
             xsecs=[
                 asb.WingXSec(  # root
@@ -60,10 +58,9 @@ airplane = asb.Airplane(
                     airfoil=tail_airfoil
                 )
             ]
-        ),
+        ).translate([0.6, 0, 0.06]),
         asb.Wing(
             name="Vertical Stabilizer",
-            xyz_le=[0.6, 0, 0.07],
             symmetric=False,
             xsecs=[
                 asb.WingXSec(
@@ -81,12 +78,11 @@ airplane = asb.Airplane(
                     airfoil=tail_airfoil
                 )
             ]
-        )
+        ).translate([0.6, 0, 0.07])
     ],
     fuselages=[
         asb.Fuselage(
             name="Fuselage",
-            xyz_le=[0, 0, 0],
             xsecs=[
                 asb.FuselageXSec(
                     xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi - 0.03],
