@@ -24,14 +24,14 @@ class AeroBuildup(ExplicitAnalysis):
 
         for wing in self.airplane.wings:
             aero = wing_aerodynamics(
-                wing=wing,
+                wing=wing.translate(-airplane.xyz_ref),
                 op_point=self.op_point
             )
             aero_components.append(aero)
 
         for fuselage in self.airplane.fuselages:
             aero = fuselage_aerodynamics(
-                fuselage=fuselage,
+                fuselage=fuselage.translate(-airplane.xyz_ref),
                 op_point=self.op_point
             )
             aero_components.append(aero)
@@ -70,8 +70,46 @@ class AeroBuildup(ExplicitAnalysis):
 if __name__ == '__main__':
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
 
-    analysis = AeroBuildup(
+    aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(alpha=0, beta=1),
+    ).run()
+
+    from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal
+
+    fig, ax = plt.subplots(1, 2)
+    alpha = np.linspace(-10, 10, 1000)
+    aero = AeroBuildup(
+        airplane=airplane,
+        op_point=OperatingPoint(
+            alpha=alpha,
+            beta=0
+        ),
+    ).run()
+
+    plt.sca(ax[0])
+    plt.plot(alpha, aero["CL"])
+    plt.xlabel("Angle of Attack [deg]")
+    plt.ylabel("Lift Coefficient")
+
+    plt.sca(ax[1])
+    plt.plot(alpha, aero["CD"])
+    plt.xlabel("Angle of Attack [deg]")
+    plt.ylabel("Drag Coefficient")
+
+    show_plot(
+        "Fuselage Aerodynamics"
     )
-    out = analysis.run()
+
+    fig, ax = plt.subplots(figsize=(7, 6))
+    Beta, Alpha = np.meshgrid(np.linspace(-10, 10, 300), np.linspace(-10, 10, 300))
+    aero = AeroBuildup(
+        airplane=airplane,
+        op_point=OperatingPoint(
+            alpha=Alpha,
+            beta=Beta
+        ),
+    ).run()
+    contour(Beta, Alpha, aero["Cn"], levels=30)
+    equal()
+    show_plot("AeroBuildup", r"$\beta$ [deg]", r"$\alpha$ [deg]")
