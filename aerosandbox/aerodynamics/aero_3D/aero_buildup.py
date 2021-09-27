@@ -24,14 +24,14 @@ class AeroBuildup(ExplicitAnalysis):
 
         for wing in self.airplane.wings:
             aero = wing_aerodynamics(
-                wing=wing.translate(-airplane.xyz_ref),
+                wing=wing.translate(-self.airplane.xyz_ref),
                 op_point=self.op_point
             )
             aero_components.append(aero)
 
         for fuselage in self.airplane.fuselages:
             aero = fuselage_aerodynamics(
-                fuselage=fuselage.translate(-airplane.xyz_ref),
+                fuselage=fuselage.translate(-self.airplane.xyz_ref),
                 op_point=self.op_point
             )
             aero_components.append(aero)
