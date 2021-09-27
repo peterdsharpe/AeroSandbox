@@ -11,6 +11,8 @@ def Cd_cylinder(
     :param subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows. Useful, since
     this model is now convex and can be more well-behaved.
     :return: Drag coefficient
+
+    # TODO rework this function to use tanh blending, which will mitigate overflows
     """
     csigc = 5.5766722118597247
     csigh = 23.7460859935990563
