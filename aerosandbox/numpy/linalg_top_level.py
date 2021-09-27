@@ -4,12 +4,15 @@ from aerosandbox.numpy.arithmetic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
-def dot(a, b):
+def dot(a, b, manual=False):
     """
     Dot product of two arrays.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.dot.html
     """
+    if manual:
+        return sum([ai * bi for ai, bi in zip(a, b)])
+
     if not is_casadi_type([a, b], recursive=True):
         return _onp.dot(a, b)
 
