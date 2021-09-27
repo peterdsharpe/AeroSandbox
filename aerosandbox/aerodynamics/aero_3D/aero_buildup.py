@@ -77,39 +77,51 @@ if __name__ == '__main__':
 
     from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal
 
-    fig, ax = plt.subplots(1, 2)
+    fig, ax = plt.subplots(2, 2)
     alpha = np.linspace(-10, 10, 1000)
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(
+            velocity=100,
             alpha=alpha,
             beta=0
         ),
     ).run()
 
-    plt.sca(ax[0])
+    plt.sca(ax[0,0])
     plt.plot(alpha, aero["CL"])
-    plt.xlabel("Angle of Attack [deg]")
-    plt.ylabel("Lift Coefficient")
+    plt.xlabel(r"$\alpha$ [deg]")
+    plt.ylabel(r"$C_L$")
 
-    plt.sca(ax[1])
+    plt.sca(ax[0,1])
     plt.plot(alpha, aero["CD"])
-    plt.xlabel("Angle of Attack [deg]")
-    plt.ylabel("Drag Coefficient")
+    plt.xlabel(r"$\alpha$ [deg]")
+    plt.ylabel(r"$C_D$")
+
+    plt.sca(ax[1,0])
+    plt.plot(alpha, aero["Cm"])
+    plt.xlabel(r"$\alpha$ [deg]")
+    plt.ylabel(r"$C_m$")
+
+    plt.sca(ax[1,1])
+    plt.plot(alpha, aero["CL"] / aero["CD"])
+    plt.xlabel(r"$\alpha$ [deg]")
+    plt.ylabel(r"$C_L/C_D$")
 
     show_plot(
         "Fuselage Aerodynamics"
     )
 
     fig, ax = plt.subplots(figsize=(7, 6))
-    Beta, Alpha = np.meshgrid(np.linspace(-10, 10, 300), np.linspace(-10, 10, 300))
+    Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 200), np.linspace(-90, 90, 200))
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(
+            velocity=10,
             alpha=Alpha,
             beta=Beta
         ),
     ).run()
-    contour(Beta, Alpha, aero["Cn"], levels=30)
+    contour(Beta, Alpha, aero["CL"], levels=60)
     equal()
     show_plot("AeroBuildup", r"$\beta$ [deg]", r"$\alpha$ [deg]")
