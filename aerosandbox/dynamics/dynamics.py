@@ -215,7 +215,7 @@ class FreeBodyDynamics(ImplicitAnalysis):
     def alpha(self):
         """The angle of attack, in degrees."""
         return np.arctan2d(
-            -self.w,
+            self.w,
             self.u
         )
 
