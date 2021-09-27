@@ -96,7 +96,7 @@ def wing_aerodynamics(
             from_axes="geometry",
             to_axes="body",
         )
-        vel_dot_normal = np.dot(velocity_dir_b, sect_z_b)
+        vel_dot_normal = np.dot(velocity_dir_b, sect_z_b, manual=True)
 
         sect_alpha_generalized = 90 - np.arccosd(vel_dot_normal)
 
@@ -226,7 +226,7 @@ def wing_aerodynamics(
                 from_axes="geometry",
                 to_axes="body",
             )
-            sym_vel_dot_normal = np.dot(sym_velocity_dir_b, sym_sect_z_b)
+            sym_vel_dot_normal = np.dot(sym_velocity_dir_b, sym_sect_z_b, manual=True)
     
             sym_sect_alpha_generalized = 90 - np.arccosd(sym_vel_dot_normal)
 
