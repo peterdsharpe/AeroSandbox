@@ -24,7 +24,7 @@ class Airplane(AeroSandboxObject):
         ### Initialize
         self.name = name
 
-        self.xyz_ref = xyz_ref
+        self.xyz_ref = np.array(xyz_ref)
 
         ## Add the wing objects
         if wings is not None:
