@@ -4,7 +4,7 @@ from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
 
 
 def print_default_warning():
-    warnings.warn("Warning: Using a default flat-plate aerodynamics model for this airfoil!\n"
+    warnings.warn("Warning: Using a default NACA0012 aerodynamics model for this airfoil!\n"
                   "To use a better, more accurate one, specify functions in the Airfoil constructor.")
 
 
@@ -25,7 +25,7 @@ def default_CD_function(alpha, Re, mach=0, deflection=0):
     Drag coefficient.
     """
     print_default_warning()
-    Cf = Cf_flat_plate(Re_L=Re)
+    Cf = Cf_flat_plate(Re_L=Re, method="hybrid-sharpe-convex")
     Cd_inc = 2 * Cf * (
             1 + (alpha / 5) ** 2
     )
