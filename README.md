@@ -26,9 +26,9 @@ AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physic
 
 ### Installation
 
-Install with `pip install aerosandbox[full]` for a complete install.
+Use `pip install aerosandbox[full]` for a complete install.
 
-For a lightweight installation with minimal dependencies, install with `pip install aerosandbox`. All optimization, numerics, and physics models will work with this lightweight install, but dependencies for visualization/GUI features and interfaces are not installed.
+For a lightweight installation with minimal dependencies, use `pip install aerosandbox`. All optimization, numerics, and physics models will work with this lightweight install, but dependencies for visualization/GUI features and interfaces are not installed.
 
 ### Tutorials, Examples, and Documentation
 
