@@ -13,7 +13,7 @@ def default_CL_function(alpha, Re, mach=0, deflection=0):
     Lift coefficient.
     """
     print_default_warning()
-    Cl_inc = 2 * np.pi * np.radians(alpha)
+    Cl_inc = np.pi * np.sind(2 * alpha)
     beta = (1 - mach) ** 2
 
     Cl = Cl_inc * beta
@@ -27,7 +27,7 @@ def default_CD_function(alpha, Re, mach=0, deflection=0):
     print_default_warning()
     Cf = Cf_flat_plate(Re_L=Re, method="hybrid-sharpe-convex")
     Cd_inc = 2 * Cf * (
-            1 + (alpha / 5) ** 2
+            1 + (np.sind(alpha) * 180 / np.pi / 5) ** 2
     )
     beta = (1 - mach) ** 2
 
