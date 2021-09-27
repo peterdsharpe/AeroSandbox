@@ -1,6 +1,5 @@
 import numpy as _onp
 import casadi as _cas
-from aerosandbox.numpy.arithmetic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
