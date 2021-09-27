@@ -122,7 +122,6 @@ def Cl_flat_plate(alpha, Re_c):
     :param Re_c: Reynolds number, normalized to the length of the flat plate.
     :return: Approximate lift coefficient.
     """
-    Re_c = np.abs(Re_c)
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
 
