@@ -162,7 +162,7 @@ def fuselage_aerodynamics(
     ### Convert to axes coordinates for reporting
     F_w = (
         -D,
-        0,
+        Y,
         -L
     )
     F_b = op_point.convert_axes(*F_w, from_axes="wind", to_axes="body")
