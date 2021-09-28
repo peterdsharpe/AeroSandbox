@@ -38,7 +38,6 @@ class AeroSandboxObject:
             return item
 
         for attrib_name in self.__dict__.keys():
-            print(attrib_name)
             attrib_value = getattr(self, attrib_name)
 
             if isinstance(attrib_value, bool) or isinstance(attrib_value, int) or isinstance(attrib_value, float):
