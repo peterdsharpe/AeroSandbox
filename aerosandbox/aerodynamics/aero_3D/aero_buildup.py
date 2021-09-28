@@ -8,7 +8,7 @@ from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels import *
 
 class AeroBuildup(ExplicitAnalysis):
     """
-    A workbook-style aerodynamics buildup
+    A workbook-style aerodynamics buildup.
     """
 
     def __init__(self,
@@ -90,26 +90,26 @@ if __name__ == '__main__':
         ),
     ).run()
 
-    plt.sca(ax[0,0])
+    plt.sca(ax[0, 0])
     plt.plot(alpha, aero["CL"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L$")
     set_ticks(5, 1, 0.5, 0.1)
 
-    plt.sca(ax[0,1])
+    plt.sca(ax[0, 1])
     plt.plot(alpha, aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_D$")
     set_ticks(5, 1, 0.05, 0.01)
     plt.ylim(bottom=0)
 
-    plt.sca(ax[1,0])
+    plt.sca(ax[1, 0])
     plt.plot(alpha, aero["Cm"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_m$")
     set_ticks(5, 1, 0.5, 0.1)
 
-    plt.sca(ax[1,1])
+    plt.sca(ax[1, 1])
     plt.plot(alpha, aero["CL"] / aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L/C_D$")
