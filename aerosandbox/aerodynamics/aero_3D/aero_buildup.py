@@ -77,7 +77,7 @@ if __name__ == '__main__':
         op_point=OperatingPoint(alpha=0, beta=1),
     ).run()
 
-    from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal
+    from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal, set_ticks
 
     fig, ax = plt.subplots(2, 2)
     alpha = np.linspace(-10, 10, 1000)
@@ -94,24 +94,29 @@ if __name__ == '__main__':
     plt.plot(alpha, aero["CL"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L$")
+    set_ticks(5, 1, 0.5, 0.1)
 
     plt.sca(ax[0,1])
     plt.plot(alpha, aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_D$")
+    set_ticks(5, 1, 0.05, 0.01)
+    plt.ylim(bottom=0)
 
     plt.sca(ax[1,0])
     plt.plot(alpha, aero["Cm"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_m$")
+    set_ticks(5, 1, 0.5, 0.1)
 
     plt.sca(ax[1,1])
     plt.plot(alpha, aero["CL"] / aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L/C_D$")
+    set_ticks(5, 1, 10, 2)
 
     show_plot(
-        "Fuselage Aerodynamics"
+        "`asb.AeroBuildup` Aircraft Aerodynamics"
     )
 
     fig, ax = plt.subplots(figsize=(7, 6))
@@ -124,6 +129,6 @@ if __name__ == '__main__':
             beta=Beta
         ),
     ).run()
-    contour(Beta, Alpha, aero["CL"], levels=60)
+    contour(Beta, Alpha, aero["CL"], levels=30)
     equal()
     show_plot("AeroBuildup", r"$\beta$ [deg]", r"$\alpha$ [deg]")
