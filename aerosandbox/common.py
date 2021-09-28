@@ -21,23 +21,23 @@ class AeroSandboxObject:
         :return:
         """
         for attrib_name in dir(self):
-            attrib_orig = getattr(self, attrib_name)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
+            attrib_value = getattr(self, attrib_name)
+            if isinstance(attrib_value, bool) or isinstance(attrib_value, int) or isinstance(attrib_value, float):
                 continue
             try:
-                setattr(self, attrib_name, sol.value(attrib_orig))
+                setattr(self, attrib_name, sol.value(attrib_value))
             except (NotImplementedError, AttributeError):
                 pass
-            if isinstance(attrib_orig, list):
+            if isinstance(attrib_value, list):
                 try:
                     new_attrib_orig = []
-                    for item in attrib_orig:
+                    for item in attrib_value:
                         new_attrib_orig.append(item.substitute_solution(sol))
                     setattr(self, attrib_name, new_attrib_orig)
                 except:
                     pass
             try:
-                setattr(self, attrib_name, attrib_orig.substitute_solution(sol))
+                setattr(self, attrib_name, attrib_value.substitute_solution(sol))
             except:
                 pass
         return self
