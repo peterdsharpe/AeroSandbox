@@ -238,7 +238,7 @@ if __name__ == '__main__':
     )
 
     fig, ax = plt.subplots(figsize=(7, 6))
-    Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 300), np.linspace(-90, 90, 300))
+    Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 500), np.linspace(-90, 90, 500))
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
         op_point=OperatingPoint(
@@ -247,6 +247,7 @@ if __name__ == '__main__':
             beta=Beta,
         )
     )
-    contour(Beta, Alpha, aero["L"], levels=30, colorbar_label="$L$ [N]")
+    from aerosandbox.tools.string_formatting import eng_string
+    contour(Beta, Alpha, aero["L"], levels=30, colorbar_label="Lift $L$ [N]", linelabels_format=lambda s: eng_string(s, unit="N"))
     equal()
-    show_plot("Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")
+    show_plot("3D Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")
