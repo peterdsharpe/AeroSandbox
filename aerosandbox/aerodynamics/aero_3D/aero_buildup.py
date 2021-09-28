@@ -64,6 +64,8 @@ class AeroBuildup(ExplicitAnalysis):
         aero_total["Cm"] = aero_total["m_b"] / qS / self.airplane.c_ref
         aero_total["Cn"] = aero_total["n_b"] / qS / self.airplane.b_ref
 
+        self.output = aero_total
+
         return aero_total
 
 
