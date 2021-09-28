@@ -48,7 +48,7 @@ def oswalds_efficiency(
     Returns: Oswald's efficiency factor [-]
 
     """
-    sweep = np.clip(sweep, 0, 90) # TODO input proper analytic continuation
+    sweep = np.clip(sweep, 0, 90)  # TODO input proper analytic continuation
 
     def f(l):  # f(lambda), given as Eq. 36 in the Nita and Scholz paper (see parent docstring).
         return (
@@ -92,7 +92,7 @@ def optimal_taper_ratio(
     Returns: Optimal taper ratio
 
     """
-    sweep = np.clip(sweep, 0, 90) # TODO input proper analytic continuation
+    sweep = np.clip(sweep, 0, 90)  # TODO input proper analytic continuation
     return 0.45 * np.exp(-0.0375 * sweep)
 
 
@@ -108,17 +108,19 @@ def CL_over_Cl(
     :param sweep: Sweep angle [deg]
     :return:
     """
-    beta = np.where(
-        1 - mach ** 2 >= 0,
-        np.fmax(1 - mach ** 2, 0) ** 0.5,
-        0
+    beta_squared = np.sqrt(
+        (1 - mach) ** 2 + 0.02
     )
     # return aspect_ratio / (aspect_ratio + 2) # Equivalent to equation in Drela's FVA in incompressible, 2*pi*alpha limit.
-    # return aspect_ratio / (2 + cas.sqrt(4 + aspect_ratio ** 2))  # more theoretically sound at low aspect_ratio
+    # return aspect_ratio / (2 + np.sqrt(4 + aspect_ratio ** 2))  # more theoretically sound at low aspect_ratio
     eta = 0.95
     return aspect_ratio / (
             2 + np.sqrt(
-        4 + (aspect_ratio * beta / eta) ** 2 * (1 + (np.tand(sweep) / beta) ** 2)
+        4 + (
+                aspect_ratio ** 2 * beta_squared / eta ** 2
+        ) * (
+                1 + np.tand(sweep) ** 2 / beta_squared
+        )
     )
     )  # From Raymer, Sect. 12.4.1; citing DATCOM
 
