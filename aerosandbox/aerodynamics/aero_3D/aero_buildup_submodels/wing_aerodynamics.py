@@ -78,7 +78,11 @@ def wing_aerodynamics(
             to_axes="body"
         )
         velocity_vector_b_from_rotation = np.cross(
-            op_point.convert_axes(*sect_aerodynamic_center, from_axes="geometry", to_axes="body"),
+            op_point.convert_axes(
+                sect_aerodynamic_center[0], sect_aerodynamic_center[1], sect_aerodynamic_center[2],
+                from_axes="geometry",
+                to_axes="body"
+            ),
             [op_point.p, op_point.q, op_point.r],
             manual=True
         )
@@ -208,7 +212,11 @@ def wing_aerodynamics(
                 to_axes="body"
             )
             sym_velocity_vector_b_from_rotation = np.cross(
-                op_point.convert_axes(*sym_sect_aerodynamic_center, from_axes="geometry", to_axes="body"),
+                op_point.convert_axes(
+                    sym_sect_aerodynamic_center[0], sym_sect_aerodynamic_center[1], sym_sect_aerodynamic_center[2],
+                    from_axes="geometry",
+                    to_axes="body"
+                ),
                 [op_point.p, op_point.q, op_point.r],
                 manual=True
             )
@@ -227,7 +235,7 @@ def wing_aerodynamics(
                 to_axes="body",
             )
             sym_vel_dot_normal = np.dot(sym_velocity_dir_b, sym_sect_z_b, manual=True)
-    
+
             sym_sect_alpha_generalized = 90 - np.arccosd(sym_vel_dot_normal)
 
             ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
