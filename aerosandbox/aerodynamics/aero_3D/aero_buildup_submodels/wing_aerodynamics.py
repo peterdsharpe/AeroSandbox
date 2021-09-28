@@ -11,10 +11,6 @@ def wing_aerodynamics(
     """
     Estimates the aerodynamic forces, moments, and derivatives on a wing in isolation.
 
-    Assumes:
-        * The fuselage is a body of revolution aligned with the x_b axis.
-        * The angle between the nose and the freestream is less than 90 degrees.
-
     Moments are given with the reference at Wing [0, 0, 0].
 
     Args:
