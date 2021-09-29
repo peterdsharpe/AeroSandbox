@@ -24,7 +24,8 @@ fit = asb.FittedModel(
         "span_exp": 1,
         "mass_exp": 1,
     },
-    put_residuals_in_logspace=True
+    put_residuals_in_logspace=True,
+    verbose=False
 )
 print("\nMODEL\n-----")
 for k, v in fit.parameters.items():
