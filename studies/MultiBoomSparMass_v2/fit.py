@@ -33,5 +33,5 @@ for k, v in fit.parameters.items():
         "%s = %.16f" % (k, v)
     )
 print(
-    "spar_mass = c * (span/40) ** span_exp * (mass_eff/300) ** mass_exp"
+    "spar_mass = c * (span / 40) ** span_exp * (mass_eff / 300) ** mass_exp"
 )
