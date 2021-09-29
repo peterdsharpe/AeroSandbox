@@ -347,7 +347,7 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
 def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     """
     Wave drag_force coefficient prediction using the (very) low-fidelity Korn Equation method; derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
-    :param Cl: (2D) lift_force coefficient
+    :param Cl: Sectional lift coefficient
     :param t_over_c: thickness-to-chord ratio
     :param sweep: sweep angle, in degrees
     :param kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
@@ -356,11 +356,11 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     mach = np.fmax(mach, 0)
     Mdd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - Cl / (10 * np.cosd(sweep) ** 3)
     Mcrit = Mdd - (0.1 / 80) ** (1 / 3)
-    Cd_wave = 20 * np.where(
+    Cd_wave = np.where(
         mach > Mcrit,
-        mach - Mcrit,
+        20 * (mach - Mcrit) ** 4,
         0
-    ) ** 4
+    )
 
     return Cd_wave
 
