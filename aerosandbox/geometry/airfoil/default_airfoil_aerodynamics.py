@@ -26,7 +26,12 @@ def default_CD_function(alpha, Re, mach=0, deflection=0):
     """
     print_default_warning()
     Cf = Cf_flat_plate(Re_L=Re, method="hybrid-sharpe-convex")
-    Cd_inc = 2 * Cf * (
+
+    ### Form factor model from Raymer, "Aircraft Design". Section 12.5, Eq. 12.30
+    t_over_c = 0.12
+    FF = 1 + 2 * t_over_c * 100 * t_over_c ** 4
+
+    Cd_inc = 2 * Cf * FF * (
             1 + (np.sind(alpha) * 180 / np.pi / 5) ** 2
     )
     beta = (1 - mach) ** 2
