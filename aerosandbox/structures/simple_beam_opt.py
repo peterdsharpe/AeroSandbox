@@ -214,7 +214,6 @@ if __name__ == '__main__':
     plt.suptitle("Beam Modeling (Total Spar Mass: %.2f kg)" % (2 * sol.value(mass)))
 
     plt.subplots_adjust(hspace=0.4)
-    plt.savefig("C:/Users/User/Downloads/beam.png")
 
     # plt.tight_layout()
     # plt.legend()
