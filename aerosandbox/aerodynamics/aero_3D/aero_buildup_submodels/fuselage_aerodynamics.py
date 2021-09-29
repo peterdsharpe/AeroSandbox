@@ -84,7 +84,9 @@ def fuselage_aerodynamics(
     x_w, y_w, z_w = op_point.convert_axes(
         1, 0, 0, from_axes="body", to_axes="wind"
     )
-    generalized_alpha = np.arccosd(x_w)
+    generalized_alpha = np.arccosd(x_w/(1+1e-14))
+    sin_generalized_alpha = np.sind(generalized_alpha)
+    cos_generalized_alpha = x_w
 
     alpha_fractional_component = -z_w / np.sqrt(
         y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
@@ -96,10 +98,9 @@ def fuselage_aerodynamics(
 
     ### Compute normal quantities
     ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
-    sina = np.sind(generalized_alpha)
-    M_n = sina * op_point.mach()
-    Re_n = sina * fuselage.Re
-    V_n = sina * op_point.velocity
+    # M_n = sin_generalized_alpha * op_point.mach()
+    Re_n = sin_generalized_alpha * fuselage.Re
+    # V_n = sin_generalized_alpha * op_point.velocity
     q = op_point.dynamic_pressure()
     x_nose = fuselage.xsecs[0].xyz_c[0]
     x_m = 0 - x_nose
@@ -126,10 +127,10 @@ def fuselage_aerodynamics(
     eta = jorgensen_eta(fuselage.fineness_ratio())
 
     C_N_v = (  # Normal force coefficient due to viscous crossflow. (Jorgensen Eq. 2.12, part 2)
-            eta * C_d_n * fuselage.area_projected() / S_ref * np.sind(generalized_alpha) ** 2
+            eta * C_d_n * fuselage.area_projected() / S_ref * sin_generalized_alpha ** 2
     )
     C_m_v = (
-            eta * C_d_n * fuselage.area_projected() / S_ref * (x_m - x_c) / c_ref * np.sind(generalized_alpha) ** 2
+            eta * C_d_n * fuselage.area_projected() / S_ref * (x_m - x_c) / c_ref * sin_generalized_alpha ** 2
     )
 
     ##### Total C_N model
@@ -137,11 +138,11 @@ def fuselage_aerodynamics(
     C_m_generalized = C_m_p + C_m_v
 
     ##### Total C_A model
-    C_A = C_D_zero_lift * np.cosd(generalized_alpha) * np.abs(np.cosd(generalized_alpha))
+    C_A = C_D_zero_lift * cos_generalized_alpha * np.abs(cos_generalized_alpha)
 
     ##### Convert to lift, drag
-    C_L_generalized = C_N * np.cosd(generalized_alpha) - C_A * np.sind(generalized_alpha)
-    C_D = C_N * np.sind(generalized_alpha) + C_A * np.cosd(generalized_alpha)
+    C_L_generalized = C_N * cos_generalized_alpha - C_A * sin_generalized_alpha
+    C_D = C_N * sin_generalized_alpha + C_A * cos_generalized_alpha
 
     ### Set proper directions
 
