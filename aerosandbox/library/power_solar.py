@@ -56,18 +56,35 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     # Solar azimuth angle (including seasonality, latitude, and time of day)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
     declination = declination_angle(day_of_year)
-    if time > 43200 :
-        solar_azimuth_angle = np.arccosd(
-            (np.sind(declination) * np.cosd(latitude) -
-            np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-            (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-        )  # in degrees
+    if len(time) == 1:
+        if time > 43200 :
+            solar_azimuth_angle = np.arccosd(
+                (np.sind(declination) * np.cosd(latitude) -
+                np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+                (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+            )  # in degrees
+        else:
+            solar_azimuth_angle = 360 - np.arccosd(
+                (np.sind(declination) * np.cosd(latitude) -
+                np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+                (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+            )  # in degrees
     else:
-        solar_azimuth_angle = 360 - np.arccosd(
-            (np.sind(declination) * np.cosd(latitude) -
-            np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-            (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-        )  # in degrees
+        solar_azimuth_angle = np.array([])
+        for t in time:
+            if t > 43200:
+                solar_azimuth = np.arccosd(
+                    (np.sind(declination) * np.cosd(latitude) -
+                     np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
+                    (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
+                )
+            else:
+                solar_azimuth = 360 - np.arccosd(
+                    (np.sind(declination) * np.cosd(latitude) -
+                     np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
+                    (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
+                )  # in degrees
+            solar_azimuth_angle = np.append([solar_azimuth_angle], [solar_azimuth])
     solar_azimuth_angle = np.fmax(solar_azimuth_angle, 0)
     return solar_azimuth_angle
 
@@ -98,8 +115,6 @@ def incidence_angle_function(latitude, day_of_year, time, scattering=True):
 
 def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
     """
-    This website will be useful for accounting for direction of the vertical surface
-    https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
     What is the fraction of insolation that a horizontal surface will receive as a function of sun position in the sky?
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
@@ -121,6 +136,31 @@ def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
         return cosine_factor
     else:
         return cosine_factor * scattering_factor_vert(elevation_angle)
+
+def incidence_angle_function_new(latitude, day_of_year, time, heading, angle, scattering=True):
+    """
+    This website will be useful for accounting for direction of the vertical surface
+    https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
+    :param latitude: Latitude [degrees]
+    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    :param time: Time since (local) solar noon [seconds]
+    :param heading: off-horizontal surfaces assumed to be mounted perpendicular to the direction of the
+    vehicle's motion therefore heading sets the direction the solar panel faces
+    North is 0 and south is 180
+    :param angle: the degrees of horizontal the array is mounted (0 if hoirzontal and 90 if vertical)
+    :param scattering: Boolean: include scattering effects at very low angles?
+    """
+    elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
+    theta = 90 - elevation_angle # Angle between panel normal and the sun, in degrees
+    azimuth_angle = solar_azimuth_angle(latitude, day_of_year, time)
+    cosine_factor = np.cosd(elevation_angle) * np.sind(angle) * np.cosd(heading + 90 - azimuth_angle) + np.sind(elevation_angle) * np.cosd(angle)
+
+    if not scattering:
+        incidence = cosine_factor
+    else:
+        incidence = cosine_factor * scattering_factor_vert(elevation_angle)
+    incidence = np.fmax(incidence, 0)
+    return incidence
 
 
 def scattering_factor(elevation_angle):
@@ -240,6 +280,28 @@ def solar_flux_on_horizontal(
             solar_flux_outside_atmosphere_normal(day_of_year) *
             incidence_angle_function(latitude, day_of_year, time, scattering)
     )
+
+def solar_flux_new(
+        latitude: float,
+        day_of_year: float,
+        time: float,
+        heading: float,
+        angle: float,
+        scattering: bool = True
+) -> float:
+    """
+    What is the solar flux on a horizontal surface for some given conditions?
+    :param latitude: Latitude [degrees]
+    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    :param time: Time since (local) solar noon [seconds]
+    :param scattering: Boolean: include scattering effects at very low angles?
+    :return:
+    """
+    return (
+            solar_flux_outside_atmosphere_normal(day_of_year) *
+            incidence_angle_function_new(latitude, day_of_year, time, heading, angle)
+    )
+
 def solar_flux_on_vertical(
         latitude: float,
         day_of_year: float,
@@ -337,10 +399,12 @@ if __name__ == "__main__":
     # Run some checks
     import plotly.graph_objects as go
 
-    latitudes = np.linspace(26, 49, 200)
+    latitudes = np.linspace(0, 80, 200)
     day_of_years = np.arange(0, 365) + 1
     times = np.linspace(0, 86400, 400)
-
+    #
+    headings = np.linspace(0, 180, 400)
+    #
     # Times, Latitudes = np.meshgrid(times, latitudes, indexing="ij")
     # fluxes = np.array(solar_flux_on_horizontal(Latitudes, 244, Times))
     # fig = go.Figure(
@@ -364,6 +428,54 @@ if __name__ == "__main__":
     #     title="Solar Flux on Horizontal",
     # )
     # fig.show()
+    ## test new function for off horizontal solar arrays
+    # latitude = 60
+    # angle = 90
+    # Times, Headings = np.meshgrid(times, headings, indexing="ij")
+    # fluxes = np.array(solar_flux_new(latitude, 174, times, headings, angle))
+    # fig = go.Figure(
+    #     data=[
+    #         go.Surface(
+    #             x=Times / 3600,
+    #             y=Headings,
+    #             z=fluxes,
+    #         )
+    #     ],
+    # )
+    # fig.update_layout(
+    #     scene=dict(
+    #         xaxis=dict(title="Time after Solar Noon [hours]"),
+    #         yaxis=dict(title="Aircraft Heading [deg]"),
+    #         zaxis=dict(title="Solar Flux [W/m^2]"),
+    #         camera=dict(
+    #             eye=dict(x=-1, y=-1, z=1)
+    #         )
+    #     ),
+    #     title="Solar Flux on Vertical",
+    # )
+    # fig.show()
+    # for heading in range(np.linspace(0, 180, 10)):
+    #     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    #     # lats_to_plot = [26, 49]
+    #     lats_to_plot = np.linspace(0, 90, 7)
+    #     colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
+    #     [
+    #         plt.plot(
+    #             times / 3600,
+    #             solar_flux_on_new(lats_to_plot[i], 173, times),
+    #             label="%iN Latitude" % lats_to_plot[i],
+    #             color=colors[i],
+    #             linewidth=3
+    #         ) for i in range(len(lats_to_plot))
+    #     ]
+    #     plt.grid(True)
+    #     plt.legend()
+    #     plt.title("Solar Flux on a Vertical Surface (Summer Solstice)")
+    #     plt.xlabel("Time after Solar Noon [hours]")
+    #     plt.ylabel(r"Solar Flux [W/m$^2$]")
+    #     plt.tight_layout()
+    #     # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_vertical")
+    #     plt.show()
     #
     # fig = go.Figure(
     #     data=[
@@ -393,6 +505,36 @@ if __name__ == "__main__":
     import seaborn as sns
 
     sns.set(font_scale=1)
+    latitudes = np.linspace(0, 80, 200)
+    day_of_years = np.arange(0, 365) + 1
+    times = np.linspace(0, 86400, 400)
+    latitude = 60
+    angle = 90
+    headings = np.linspace(0, 180, 400)
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    headings_to_plot = np.linspace(0, 180, 5)
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(headings_to_plot)))[::-1]
+    [
+        plt.plot(
+            times / 3600,
+            solar_flux_new(latitude,173, times, headings_to_plot[i], angle=10),
+            label="%iN Headings" % headings_to_plot[i],
+            color=colors[i],
+            linewidth=3
+        ) for i in range(len(headings_to_plot))
+    ]
+    plt.grid(True)
+    plt.legend()
+    plt.title("Solar Flux on a Vertical Surface (Summer Solstice)")
+    plt.xlabel("Time after Solar Noon [hours]")
+    plt.ylabel(r"Solar Flux [W/m$^2$]")
+    plt.tight_layout()
+    plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
+    plt.show()
+
+
+    sns.set(font_scale=1)
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     lats_to_plot = [26, 49]
@@ -415,54 +557,54 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
     plt.show()
+    # #
+    # sns.set(font_scale=1)
     #
-    sns.set(font_scale=1)
-
-    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    lats_to_plot = [26, 49]
-    lats_to_plot = np.linspace(0, 90, 7)
-    colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    [
-        plt.plot(
-            times / 3600,
-            solar_flux_on_vertical(lats_to_plot[i], 173, times),
-            label="%iN Latitude" % lats_to_plot[i],
-            color=colors[i],
-            linewidth=3
-        ) for i in range(len(lats_to_plot))
-    ]
-    plt.grid(True)
-    plt.legend()
-    plt.title("Solar Flux on a Vertical Surface (Summer Solstice)")
-    plt.xlabel("Time after Solar Noon [hours]")
-    plt.ylabel(r"Solar Flux [W/m$^2$]")
-    plt.tight_layout()
-    plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_vertical")
-    plt.show()
-
-    sns.set(font_scale=1)
-
-    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    lats_to_plot = [26, 49]
-    lats_to_plot = np.linspace(0, 90, 7)
-    colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    [
-        plt.plot(
-            times / 3600,
-            solar_flux_on_angle(10, lats_to_plot[i], 173, times),
-            label="%iN Latitude" % lats_to_plot[i],
-            color=colors[i],
-            linewidth=3
-        ) for i in range(len(lats_to_plot))
-    ]
-    plt.grid(True)
-    plt.legend()
-    plt.title("Solar Flux on a Angle 10 Degrees off Vertical Surface (Summer Solstice)")
-    plt.xlabel("Time after Solar Noon [hours]")
-    plt.ylabel(r"Solar Flux [W/m$^2$]")
-    plt.tight_layout()
-    plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_angle")
-    plt.show()
+    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    # lats_to_plot = [26, 49]
+    # lats_to_plot = np.linspace(0, 90, 7)
+    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
+    # [
+    #     plt.plot(
+    #         times / 3600,
+    #         solar_flux_on_vertical(lats_to_plot[i], 173, times),
+    #         label="%iN Latitude" % lats_to_plot[i],
+    #         color=colors[i],
+    #         linewidth=3
+    #     ) for i in range(len(lats_to_plot))
+    # ]
+    # plt.grid(True)
+    # plt.legend()
+    # plt.title("Solar Flux on a Vertical Surface (Summer Solstice)")
+    # plt.xlabel("Time after Solar Noon [hours]")
+    # plt.ylabel(r"Solar Flux [W/m$^2$]")
+    # plt.tight_layout()
+    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_vertical")
+    # plt.show()
+    #
+    # sns.set(font_scale=1)
+    #
+    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    # lats_to_plot = [26, 49]
+    # lats_to_plot = np.linspace(0, 90, 7)
+    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
+    # [
+    #     plt.plot(
+    #         times / 3600,
+    #         solar_flux_on_angle(10, lats_to_plot[i], 173, times),
+    #         label="%iN Latitude" % lats_to_plot[i],
+    #         color=colors[i],
+    #         linewidth=3
+    #     ) for i in range(len(lats_to_plot))
+    # ]
+    # plt.grid(True)
+    # plt.legend()
+    # plt.title("Solar Flux on a Angle 10 Degrees off Vertical Surface (Summer Solstice)")
+    # plt.xlabel("Time after Solar Noon [hours]")
+    # plt.ylabel(r"Solar Flux [W/m$^2$]")
+    # plt.tight_layout()
+    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_angle")
+    # plt.show()
     #
     # # Check scattering factor
     # elevations = np.linspace(-10,90,800)
