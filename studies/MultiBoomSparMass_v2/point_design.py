@@ -10,8 +10,8 @@ n_booms = 1
 # n_booms = 3
 # load_location_fraction = 0.60
 
-mass = 80 * 6
-span = 7.3
+mass = 300
+span = 30
 
 ### Set up problem
 opti = cas.Opti()
@@ -20,7 +20,7 @@ beam = TubeBeam1(
     length=span / 2,
     points_per_point_load=100,
     diameter_guess=10,
-    thickness=1e-3,
+    thickness=2e-3,
     bending=True,
     torsion=False,
     max_allowable_stress=570e6,
