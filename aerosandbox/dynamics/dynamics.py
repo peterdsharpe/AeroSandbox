@@ -248,6 +248,59 @@ class FreeBodyDynamics(AeroSandboxObject):
             r=self.r,
         )
 
+    def convert_axes(self,
+                     x_from, y_from, z_from,
+                     from_axes: str,
+                     to_axes: str,
+                     ):
+        """
+        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
+        y_to, z_to], as given in the `to_axes` frame.
+
+        Identical to OperatingPoint.convert_axes(), but adds in "earth" as a valid axis frame. For more documentation,
+        see the docstring of OperatingPoint.convert_axes().
+
+        Both `from_axes` and `to_axes` should be a string, one of:
+                * "geometry"
+                * "body"
+                * "wind"
+                * "stability"
+                * "earth"
+
+        Args:
+                x_from: x-component of the vector, in `from_axes` frame.
+                y_from: y-component of the vector, in `from_axes` frame.
+                z_from: z-component of the vector, in `from_axes` frame.
+                from_axes: The axes to convert from.
+                to_axes: The axes to convert to.
+
+        Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
+
+        """
+        try:
+            x_b, y_b, z_b = self.op_point.convert_axes(
+                x_from, y_from, z_from,
+                from_axes=from_axes, to_axes="body"
+            )
+        except ValueError:
+            if from_axes == "earth":
+                do_earth_thing() # TODO DO
+            else:
+                raise ValueError("Bad value of `from_axes`!")
+
+        try:
+            x_to, y_to, z_to = self.op_point.convert_axes(
+                x_b, y_b, z_b,
+                from_axes="body", to_axes=to_axes
+            )
+        except ValueError:
+            if to_axes == "earth":
+                do_earth_thing() # TODO DO
+            else:
+                raise ValueError("Bad value of `to_axes`!")
+
+        return x_to, y_to, z_to
+
 
 if __name__ == '__main__':
     import aerosandbox as asb
