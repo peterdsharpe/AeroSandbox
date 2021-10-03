@@ -197,7 +197,7 @@ if __name__ == '__main__':
         xsecs=[
             FuselageXSec(
                 xyz_c=[s, 0, 0],
-                radius=Airfoil("naca0012").local_thickness(0.8 * s)
+                radius=Airfoil("naca0010").local_thickness(0.8 * s)
             )
             for s in np.cosspace(0, 1, 20)
         ]
