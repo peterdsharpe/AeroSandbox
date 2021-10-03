@@ -13,7 +13,7 @@ def test_block_move_fixed_time():
     time = np.linspace(0, 1, n_timesteps)
 
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
         u=opti.variable(init_guess=1, n_vars=n_timesteps),
@@ -64,7 +64,7 @@ def test_block_move_minimum_time():
     )
 
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
         u=opti.variable(init_guess=1, n_vars=n_timesteps),
@@ -114,7 +114,7 @@ def test_rocket_primitive():
 
     ### Variables
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         ze=opti.variable(init_guess=np.linspace(0, ze_final, N)),  # Earth-axis z, or "negative altitude"
         u=opti.variable(init_guess=-ze_final / time_final, n_vars=N),  # Velocity
@@ -170,7 +170,7 @@ def test_rocket_with_data_structures():
     alpha = 1 / (300 * g)  # kg/(N*s), Inverse of specific impulse, basically - don't worry about this
 
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         ze=opti.variable(init_guess=np.linspace(0, ze_final, N)),  # Altitude (negative due to Earth-axes convention)
         u=opti.variable(init_guess=-ze_final / time_final, n_vars=N),  # Velocity

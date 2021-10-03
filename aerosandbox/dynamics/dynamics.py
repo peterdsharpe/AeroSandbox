@@ -1,12 +1,12 @@
 from aerosandbox.common import *
+from aerosandbox import Opti
 import aerosandbox.numpy as np
 from aerosandbox.dynamics.equations_of_motion import equations_of_motion
 from aerosandbox import OperatingPoint, Atmosphere
 import warnings
 
 
-class FreeBodyDynamics(ImplicitAnalysis):
-    @ImplicitAnalysis.initialize
+class FreeBodyDynamics(AeroSandboxObject):
     def __init__(self,
                  time: np.ndarray,
                  xe: np.ndarray = None,
@@ -38,7 +38,7 @@ class FreeBodyDynamics(ImplicitAnalysis):
                  hx=0,
                  hy=0,
                  hz=0,
-                 add_constraints: bool = True,
+                 opti_to_add_constraints_to: Opti= None,
                  ):
 
         self.time = time
@@ -72,24 +72,20 @@ class FreeBodyDynamics(ImplicitAnalysis):
         self.hy = hy
         self.hz = hz
 
-        if add_constraints:
-            if not self.opti_provided:
-                warnings.warn(
-                    "Can't add physics constraints to your dynamics environment, since no `opti` instance was provided. Skipping...")
-            else:
-                state = self.state
-                state_derivatives = self.state_derivatives()
-                for k in state.keys():  # TODO default to second-order integration for position, angles
-                    if eval(k) is None: # Don't constrain states that haven't been defined by the user.
-                        continue
-                    try:
-                        self.opti.constrain_derivative(
-                            derivative=state_derivatives[k],
-                            variable=state[k],
-                            with_respect_to=self.time,
-                        )
-                    except Exception as e:
-                        raise ValueError(f"Error while constraining state variable `{k}`: \n{e}")
+        if opti_to_add_constraints_to is not None:
+            state = self.state
+            state_derivatives = self.state_derivatives()
+            for k in state.keys():  # TODO default to second-order integration for position, angles
+                if locals()[k] is None:  # Don't constrain states that haven't been defined by the user.
+                    continue
+                try:
+                    opti_to_add_constraints_to.constrain_derivative(
+                        derivative=state_derivatives[k],
+                        variable=state[k],
+                        with_respect_to=self.time,
+                    )
+                except Exception as e:
+                    raise ValueError(f"Error while constraining state variable `{k}`: \n{e}")
 
     def __repr__(self):
         repr = []
@@ -188,26 +184,26 @@ class FreeBodyDynamics(ImplicitAnalysis):
     @property
     def control_variables(self):
         return {
-            "X"    : self.X,
-            "Y"    : self.Y,
-            "Z"    : self.Z,
-            "L"    : self.L,
-            "M"    : self.M,
-            "N"    : self.N,
-            "mass" : self.mass,
-            "Ixx"  : self.Ixx,
-            "Iyy"  : self.Iyy,
-            "Izz"  : self.Izz,
-            "Ixy"  : self.Ixy,
-            "Iyz"  : self.Iyz,
-            "Ixz"  : self.Ixz,
-            "g"    : self.g,
-            "hx"   : self.hx,
-            "hy"   : self.hy,
-            "hz"   : self.hz,
-            "alpha": self.alpha,
-            "beta" : self.beta,
-            "speed": self.speed,
+            "X"       : self.X,
+            "Y"       : self.Y,
+            "Z"       : self.Z,
+            "L"       : self.L,
+            "M"       : self.M,
+            "N"       : self.N,
+            "mass"    : self.mass,
+            "Ixx"     : self.Ixx,
+            "Iyy"     : self.Iyy,
+            "Izz"     : self.Izz,
+            "Ixy"     : self.Ixy,
+            "Iyz"     : self.Iyz,
+            "Ixz"     : self.Ixz,
+            "g"       : self.g,
+            "hx"      : self.hx,
+            "hy"      : self.hy,
+            "hz"      : self.hz,
+            "alpha"   : self.alpha,
+            "beta"    : self.beta,
+            "speed"   : self.speed,
             "altitude": self.altitude
         }
 

@@ -17,7 +17,7 @@ def test_quadcopter_navigation():
     mass = 0.1
 
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, N)),
         ze=opti.variable(init_guess=np.linspace(0, -1, N)),
@@ -77,7 +77,7 @@ def test_quadcopter_flip():
     mass = 0.1
 
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, N)),
         ze=opti.variable(init_guess=0, n_vars=N),
