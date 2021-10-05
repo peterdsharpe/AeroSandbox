@@ -79,8 +79,8 @@ def get_NACA_coordinates(
     # Trim 1 point from lower surface so there's no overlap
     x_L, y_L = x_L[1:], y_L[1:]
 
-    x = np.hstack((x_U, x_L))
-    y = np.hstack((y_U, y_L))
+    x = np.concatenate((x_U, x_L))
+    y = np.concatenate((y_U, y_L))
 
     return stack_coordinates(x, y)
 
