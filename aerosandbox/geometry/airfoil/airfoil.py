@@ -62,9 +62,9 @@ class Airfoil(Polygon):
             CL_function: A function that gives the sectional lift coefficient of the airfoil as a function of several
             parameters.
 
-                Must be a callable with the exact syntax:
+                Must be a callable with that takes exactly these parameters as follows:
 
-                >>> def my_function(alpha, Re, mach, deflection)
+                >>> def CL_function(alpha, Re, mach, deflection)
 
                 where:
 
@@ -74,8 +74,8 @@ class Airfoil(Polygon):
 
                     * `mach` is the local Mach number
 
-                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees. By
-                    default, a positive control surface deflections corresponds to a downwards deflection.
+                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees. Following
+                    convention, a positive control surface deflections corresponds to a downwards deflection of a trailing-edge surface.
 
             CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
             several parameters.
