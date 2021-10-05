@@ -98,7 +98,8 @@ def get_kulfan_coordinates(
     Calculates the coordinates of a Kulfan (CST) airfoil.
     To make a Kulfan (CST) airfoil, use the following syntax:
 
-    asb.Airfoil("My Airfoil Name", coordinates = asb.kulfan_coordinates(*args))
+    >>> import aerosandbox as asb
+    >>> asb.Airfoil("My Airfoil Name", coordinates=asb.get_kulfan_coordinates(*args))
 
     More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
     Notes on N1, N2 (shape factor) combinations:
@@ -116,7 +117,7 @@ def get_kulfan_coordinates(
     :param n_points_per_side: The number of points to discretize with.
     :param N1: LE shape factor; see above.
     :param N2: TE shape factor; see above.
-    :return:
+    :return: The coordinates of the airfoil as a Nx2 array.
     """
 
     if enforce_continuous_LE_radius:
