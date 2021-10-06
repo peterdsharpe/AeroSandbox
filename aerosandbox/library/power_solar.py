@@ -56,35 +56,50 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     # Solar azimuth angle (including seasonality, latitude, and time of day)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
     declination = declination_angle(day_of_year)
-    if len(time) == 1:
-        if time > 43200 :
-            solar_azimuth_angle = np.arccosd(
-                (np.sind(declination) * np.cosd(latitude) -
-                np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-                (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-            )  # in degrees
+    try:
+        if len(time) > 1:
+            solar_azimuth_angle = np.array([])
+            for t in time:
+                if t > 43200:
+                    solar_azimuth = np.arccosd(
+                        (np.sind(declination) * np.cosd(latitude) -
+                         np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
+                        (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
+                    )
+                else:
+                    solar_azimuth = 360 - np.arccosd(
+                        (np.sind(declination) * np.cosd(latitude) -
+                         np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
+                        (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
+                    )  # in degrees
+                solar_azimuth_angle = np.append([solar_azimuth_angle], [solar_azimuth])
         else:
-            solar_azimuth_angle = 360 - np.arccosd(
-                (np.sind(declination) * np.cosd(latitude) -
-                np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-                (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-            )  # in degrees
-    else:
-        solar_azimuth_angle = np.array([])
-        for t in time:
-            if t > 43200:
-                solar_azimuth = np.arccosd(
+                if time > 43200 :
+                    solar_azimuth_angle = np.arccosd(
+                        (np.sind(declination) * np.cosd(latitude) -
+                        np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+                        (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+                    )  # in degrees
+                else:
+                    solar_azimuth_angle = 360 - np.arccosd(
+                        (np.sind(declination) * np.cosd(latitude) -
+                        np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+                        (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+                    )  # in degrees
+    except TypeError:
+        if time > 43200:
+                solar_azimuth_angle = np.arccosd(
                     (np.sind(declination) * np.cosd(latitude) -
-                     np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
-                    (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
-                )
-            else:
-                solar_azimuth = 360 - np.arccosd(
-                    (np.sind(declination) * np.cosd(latitude) -
-                     np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
-                    (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
+                     np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+                    (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
                 )  # in degrees
-            solar_azimuth_angle = np.append([solar_azimuth_angle], [solar_azimuth])
+        else:
+                solar_azimuth_angle = 360 - np.arccosd(
+                    (np.sind(declination) * np.cosd(latitude) -
+                     np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+                    (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+                )  # in degrees
+
     solar_azimuth_angle = np.fmax(solar_azimuth_angle, 0)
     return solar_azimuth_angle
 
@@ -137,7 +152,7 @@ def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
     else:
         return cosine_factor * scattering_factor_vert(elevation_angle)
 
-def incidence_angle_function_new(latitude, day_of_year, time, heading, angle, scattering=True):
+def incidence_angle_function_new(latitude, day_of_year, time, heading, panel_angle, scattering=True):
     """
     This website will be useful for accounting for direction of the vertical surface
     https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
@@ -147,18 +162,17 @@ def incidence_angle_function_new(latitude, day_of_year, time, heading, angle, sc
     :param heading: off-horizontal surfaces assumed to be mounted perpendicular to the direction of the
     vehicle's motion therefore heading sets the direction the solar panel faces
     North is 0 and south is 180
-    :param angle: the degrees of horizontal the array is mounted (0 if hoirzontal and 90 if vertical)
+    :param panel_angle: the degrees of horizontal the array is mounted (0 if hoirzontal and 90 if vertical)
     :param scattering: Boolean: include scattering effects at very low angles?
     """
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
-    theta = 90 - elevation_angle # Angle between panel normal and the sun, in degrees
     azimuth_angle = solar_azimuth_angle(latitude, day_of_year, time)
-    cosine_factor = np.cosd(elevation_angle) * np.sind(angle) * np.cosd(heading + 90 - azimuth_angle) + np.sind(elevation_angle) * np.cosd(angle)
+    cosine_factor = np.cosd(elevation_angle) * np.sind(panel_angle) * np.cosd(heading + 90 - azimuth_angle) + np.sind(elevation_angle) * np.cosd(panel_angle)
 
     if not scattering:
         incidence = cosine_factor
     else:
-        incidence = cosine_factor * scattering_factor_vert(elevation_angle)
+        incidence = cosine_factor * scattering_factor(elevation_angle)
     incidence = np.fmax(incidence, 0)
     return incidence
 
