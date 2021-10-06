@@ -373,10 +373,10 @@ def solar_flux_circlular_flight_path(
     :param scattering: Boolean: include scattering effects at very low angles?
     :return:
     """
-    heading = speed * time / (np.pi / 180) / radius
+    heading = airspeed * time / (np.pi / 180) / radius
     solar_flux_on_panel = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(
-        latitude, day_of_year, time, heading, angle) # TODO account for both sides?
-    return solar_flux_on_vertical_panel
+        latitude, day_of_year, time, heading, panel_angle) # TODO account for both sides?
+    return solar_flux_on_panel
 
 
 def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True):
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     speed = 30 # m/s
     radius = 50000 # m
     latitude = 60
-    day_of_year = 244
+    day_of_year = 174
     angle = 90
     day = 60 * 60 * 24
     times = np.linspace(0, day)
@@ -454,7 +454,7 @@ if __name__ == "__main__":
         solar_flux.append(solar_flux_on_vertical_panel)
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    plt.plot(times, solar_flux)
+    plt.plot(times / 3600, solar_flux)
     plt.grid(True)
     plt.title("Solar Flux on Vertical as  Aircraft Completes a Circular Flight Path")
     plt.xlabel("Time after Solar Noon [hours]")
@@ -568,8 +568,8 @@ if __name__ == "__main__":
     # )
     # fig.show()
 
-    # import matplotlib.pyplot as plt
-    # import seaborn as sns
+    import matplotlib.pyplot as plt
+    import seaborn as sns
     #
     # sns.set(font_scale=1)
     # latitudes = np.linspace(0, 80, 200)
@@ -601,29 +601,29 @@ if __name__ == "__main__":
     # plt.show()
     #
     #
-    # sns.set(font_scale=1)
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # lats_to_plot = [26, 49]
-    # lats_to_plot = np.linspace(0, 90, 7)
-    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    # [
-    #     plt.plot(
-    #         times / 3600,
-    #         solar_flux_on_horizontal(lats_to_plot[i], 173, times),
-    #         label="%iN Latitude" % lats_to_plot[i],
-    #         color=colors[i],
-    #         linewidth=3
-    #     ) for i in range(len(lats_to_plot))
-    # ]
-    # plt.grid(True)
-    # plt.legend()
-    # plt.title("Solar Flux on a Horizontal Surface (Summer Solstice)")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # plt.show()
+    sns.set(font_scale=1)
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    lats_to_plot = [26, 49]
+    lats_to_plot = np.linspace(0, 90, 7)
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
+    [
+        plt.plot(
+            times / 3600,
+            solar_flux_on_horizontal(lats_to_plot[i], 173, times),
+            label="%iN Latitude" % lats_to_plot[i],
+            color=colors[i],
+            linewidth=3
+        ) for i in range(len(lats_to_plot))
+    ]
+    plt.grid(True)
+    plt.legend()
+    plt.title("Solar Flux on a Horizontal Surface (Summer Solstice)")
+    plt.xlabel("Time after Solar Noon [hours]")
+    plt.ylabel(r"Solar Flux [W/m$^2$]")
+    plt.tight_layout()
+    plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
+    plt.show()
     # # #
     # sns.set(font_scale=1)
     #
