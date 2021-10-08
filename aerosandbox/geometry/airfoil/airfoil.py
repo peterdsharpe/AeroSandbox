@@ -305,6 +305,12 @@ class Airfoil(Polygon):
             upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
         ))
 
+    # def LE_radius(self) -> float:
+    #     """
+    #     Gives the approximate leading edge radius of the airfoil, in chord-normalized units.
+    #     """ # TODO finish me
+
+
     def repanel(self,
                 n_points_per_side: int = 100,
                 ) -> 'Airfoil':
