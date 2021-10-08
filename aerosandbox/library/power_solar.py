@@ -123,7 +123,7 @@ def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
     else:
         return cosine_factor * scattering_factor_vert(elevation_angle)
 
-def incidence_angle_function_new(latitude, day_of_year, time, heading, panel_angle, scattering=True):
+def incidence_angle_function_new(latitude, day_of_year, time, panel_heading, panel_angle, scattering=True):
     """
     This website will be useful for accounting for direction of the vertical surface
     https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
@@ -138,7 +138,7 @@ def incidence_angle_function_new(latitude, day_of_year, time, heading, panel_ang
     """
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
     azimuth_angle = solar_azimuth_angle(latitude, day_of_year, time)
-    cosine_factor = np.cosd(elevation_angle) * np.sind(panel_angle) * np.cosd(heading + 90 - azimuth_angle) + np.sind(elevation_angle) * np.cosd(panel_angle)
+    cosine_factor = np.cosd(elevation_angle) * np.sind(panel_angle) * np.cosd(panel_heading + 90 - azimuth_angle) + np.sind(elevation_angle) * np.cosd(panel_angle)
 
     if not scattering:
         incidence = cosine_factor
@@ -270,7 +270,7 @@ def solar_flux_new(
         latitude: float,
         day_of_year: float,
         time: float,
-        heading: float,
+        panel_heading: float,
         panel_angle: float,
         scattering: bool = True
 ) -> float:
@@ -284,7 +284,7 @@ def solar_flux_new(
     """
     return (
             solar_flux_outside_atmosphere_normal(day_of_year) *
-            incidence_angle_function_new(latitude, day_of_year, time, heading, panel_angle)
+            incidence_angle_function_new(latitude, day_of_year, time, panel_heading, panel_angle)
     )
 
 def solar_flux_on_vertical(
@@ -327,10 +327,12 @@ def solar_flux_on_angle(
 def solar_flux_circlular_flight_path(
         latitude: float,
         day_of_year: float,
-        time: float, 
+        time: float,
         panel_angle: float,
         radius: float,
         downrange_distance: float,
+        # wind_speed: float,
+        # wind_direction: float,
         scattering: bool = True
 ) -> float:
     """
@@ -344,9 +346,9 @@ def solar_flux_circlular_flight_path(
     :param scattering: Boolean: include scattering effects at very low angles?
     :return:
     """
-    heading = downrange_distance / (np.pi / 180) / radius
+    panel_heading = downrange_distance / (np.pi / 180) / radius
     solar_flux_on_panel = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(
-        latitude, day_of_year, time, heading, panel_angle) # TODO account for wind? v_air = dx/dt + wind * sin(x/r)
+        latitude, day_of_year, time, panel_heading, panel_angle) # TODO account for wind? v_air = dx/dt + wind * sin(x/r)
     return solar_flux_on_panel
 
 
@@ -423,7 +425,7 @@ if __name__ == "__main__":
         # solar_flux_on_vertical_panel_b = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(latitude, day_of_year, time, heading+180, angle)
         # solar_flux_on_vertical_panel = solar_flux_on_vertical_panel_a + solar_flux_on_vertical_panel_b
         # solar_flux.append(solar_flux_on_vertical_panel)
-        solar_flux.append(solar_flux_circlular_flight_path(latitude, day_of_year, time, -angle, speed, radius) + solar_flux_circlular_flight_path(latitude, day_of_year, time, angle, speed, radius) )
+        solar_flux.append(solar_flux_circlular_flight_path(latitude, day_of_year, time, -angle, radius, speed * time) + solar_flux_circlular_flight_path(latitude, day_of_year, time, angle, radius, speed * time) )
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.plot(times / 3600, solar_flux)
