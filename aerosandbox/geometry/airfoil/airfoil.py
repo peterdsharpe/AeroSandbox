@@ -295,7 +295,7 @@ class Airfoil(Polygon):
 
     def TE_angle(self) -> float:
         """
-        Returns the trailing edge angle of the airfoil, in degrees
+        Returns the trailing edge angle of the airfoil, in degrees.
         """
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
