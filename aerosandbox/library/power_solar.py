@@ -56,49 +56,20 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     # Solar azimuth angle (including seasonality, latitude, and time of day)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
     declination = declination_angle(day_of_year)
-    try:
-        if len(time) > 1:
-            solar_azimuth_angle = np.array([])
-            for t in time:
-                if t > 43200:
-                    solar_azimuth = np.arccosd(
-                        (np.sind(declination) * np.cosd(latitude) -
-                         np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
-                        (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
-                    )
-                else:
-                    solar_azimuth = 360 - np.arccosd(
-                        (np.sind(declination) * np.cosd(latitude) -
-                         np.cosd(declination) * np.sind(latitude) * np.cosd(t / 86400 * 360)) /
-                        (np.cosd(solar_elevation_angle(latitude, day_of_year, t)))
-                    )  # in degrees
-                solar_azimuth_angle = np.append([solar_azimuth_angle], [solar_azimuth])
-        else:
-                if time > 43200 :
-                    solar_azimuth_angle = np.arccosd(
-                        (np.sind(declination) * np.cosd(latitude) -
-                        np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-                        (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-                    )  # in degrees
-                else:
-                    solar_azimuth_angle = 360 - np.arccosd(
-                        (np.sind(declination) * np.cosd(latitude) -
-                        np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-                        (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-                    )  # in degrees
-    except TypeError:
-        if time > 43200:
-                solar_azimuth_angle = np.arccosd(
-                    (np.sind(declination) * np.cosd(latitude) -
-                     np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-                    (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-                )  # in degrees
-        else:
-                solar_azimuth_angle = 360 - np.arccosd(
-                    (np.sind(declination) * np.cosd(latitude) -
-                     np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-                    (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
-                )  # in degrees
+
+    solar_azimuth_angle = np.where(
+        time > 43200,
+        np.arccosd(
+            (np.sind(declination) * np.cosd(latitude) -
+             np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+            (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+        ),
+        360 - np.arccosd(
+            (np.sind(declination) * np.cosd(latitude) -
+             np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
+            (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+        )
+    )
 
     solar_azimuth_angle = np.fmax(solar_azimuth_angle, 0)
     return solar_azimuth_angle
@@ -447,11 +418,12 @@ if __name__ == "__main__":
     times = np.linspace(0, day)
     solar_flux = []
     for time in times:
-        heading = speed * time / (np.pi / 180) / radius
-        solar_flux_on_vertical_panel_a = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(latitude, day_of_year, time, heading, angle)
-        solar_flux_on_vertical_panel_b = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(latitude, day_of_year, time, heading+180, angle)
-        solar_flux_on_vertical_panel = solar_flux_on_vertical_panel_a + solar_flux_on_vertical_panel_b
-        solar_flux.append(solar_flux_on_vertical_panel)
+        # heading = speed * time / (np.pi / 180) / radius
+        # solar_flux_on_vertical_panel_a = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(latitude, day_of_year, time, heading, angle)
+        # solar_flux_on_vertical_panel_b = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(latitude, day_of_year, time, heading+180, angle)
+        # solar_flux_on_vertical_panel = solar_flux_on_vertical_panel_a + solar_flux_on_vertical_panel_b
+        # solar_flux.append(solar_flux_on_vertical_panel)
+        solar_flux.append(solar_flux_circlular_flight_path(latitude, day_of_year, time, -angle, speed, radius) + solar_flux_circlular_flight_path(latitude, day_of_year, time, angle, speed, radius) )
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.plot(times / 3600, solar_flux)
