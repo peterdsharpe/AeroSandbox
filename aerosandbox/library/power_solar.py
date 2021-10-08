@@ -327,10 +327,10 @@ def solar_flux_on_angle(
 def solar_flux_circlular_flight_path(
         latitude: float,
         day_of_year: float,
-        time: float,
+        time: float, 
         panel_angle: float,
-        airspeed: float,
         radius: float,
+        downrange_distance: float,
         scattering: bool = True
 ) -> float:
     """
@@ -344,9 +344,9 @@ def solar_flux_circlular_flight_path(
     :param scattering: Boolean: include scattering effects at very low angles?
     :return:
     """
-    heading = airspeed * time / (np.pi / 180) / radius
+    heading = downrange_distance / (np.pi / 180) / radius
     solar_flux_on_panel = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(
-        latitude, day_of_year, time, heading, panel_angle) # TODO account for both sides?
+        latitude, day_of_year, time, heading, panel_angle) # TODO account for wind? v_air = dx/dt + wind * sin(x/r)
     return solar_flux_on_panel
 
 
