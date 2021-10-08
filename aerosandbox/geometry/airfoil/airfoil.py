@@ -5,7 +5,7 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, 
     get_kulfan_coordinates, get_file_coordinates
 from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
     default_CM_function
-from scipy.interpolate import interp1d
+from scipy import interpolate
 import matplotlib.pyplot as plt
 from typing import Callable, Union
 
@@ -356,15 +356,13 @@ class Airfoil(Polygon):
             raise ValueError(
                 "This airfoil has a duplicated point (i.e. two adjacent points with the same (x, y) coordinates), so you can't repanel it!")
 
-        x = interp1d(
+        x = interpolate.PchipInterpolator(
             distances_from_TE_normalized,
             self.x(),
-            kind="cubic",
         )(s)
-        y = interp1d(
+        y = interpolate.PchipInterpolator(
             distances_from_TE_normalized,
             self.y(),
-            kind="cubic",
         )(s)
 
         return Airfoil(
