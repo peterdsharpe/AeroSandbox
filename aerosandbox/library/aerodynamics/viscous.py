@@ -124,6 +124,22 @@ def Cl_flat_plate(alpha, Re_c):
     return 2 * np.pi * alpha_rad
 
 
+def Cd_flat_plate_normal():
+    """
+    Returns the drag coefficient of a flat plat oriented normal to the flow (i.e., alpha = 90 deg).
+
+    Uses results from Tian, Xinliang, Muk Chen Ong, Jianmin Yang, and Dag Myrhaug. “Large-Eddy Simulation of the Flow
+    Normal to a Flat Plate Including Corner Effects at a High Reynolds Number.” Journal of Fluids and Structures 49 (
+    August 2014): 149–69. https://doi.org/10.1016/j.jfluidstructs.2014.04.008.
+
+    Note: Cd for this case is effectively invariant of Re.
+
+    Returns: Drag coefficient
+
+    """
+    return 2.202
+
+
 def Cl_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil, 2D XFoil data
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9892
