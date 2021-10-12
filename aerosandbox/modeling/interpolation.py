@@ -36,7 +36,7 @@ class InterpolatedModel(SurrogateModel):
                  fill_value=np.NaN,  # Default behavior NaNs outside range
                  ):
         """
-        Create the interpolator. Note that data must be structured (i.e. gridded on a hypercube) for general
+        Create the interpolator. Note that data must be structured (i.e., gridded on a hypercube) for general
         N-dimensional interpolation.
 
         Args:
