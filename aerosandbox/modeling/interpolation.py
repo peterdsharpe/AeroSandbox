@@ -1,5 +1,4 @@
 from typing import Union, Dict
-
 import aerosandbox.numpy as np
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 
@@ -14,7 +13,7 @@ class InterpolatedModel(SurrogateModel):
 
     The input to the model (`x` in the example above) is of the type:
         * in the general N-dimensional case, a dictionary where: keys are variable names and values are float/array
-        * in the case of a 1-dimensional input (R^1 -> R^1), a float/array.
+        * in the case of a 1-dimensional input (R^1 -> R^1), it can optionally just be a float/array.
     If you're not sure what the input type of `my_interpolated_model` should be, just do:
 
     >>> print(my_interpolated_model) # Displays the valid input type to the model
