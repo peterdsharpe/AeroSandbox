@@ -6,7 +6,7 @@ from aerosandbox.modeling.surrogate_model import SurrogateModel
 
 class InterpolatedModel(SurrogateModel):
     """
-    A model that is interpolated to structured (i.e. gridded) N-dimensional data. Maps from R^N -> R^1.
+    A model that is interpolated to structured (i.e., gridded) N-dimensional data. Maps from R^N -> R^1.
 
     You can evaluate this model at a given point by calling it just like a function, e.g.:
 
