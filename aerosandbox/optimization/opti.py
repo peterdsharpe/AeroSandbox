@@ -24,12 +24,16 @@ class Opti(cas.Opti):
     """
 
     def __init__(self,
-                 variable_categories_to_freeze: List[str] = [],
+                 variable_categories_to_freeze: List[str] = None,
                  cache_filename: str = None,
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
                  ignore_violated_parametric_constraints: bool = False,
                  ):
+
+        # Default arguments
+        if variable_categories_to_freeze is None:
+            variable_categories_to_freeze = []
 
         # Parent class initialization
         super().__init__()
