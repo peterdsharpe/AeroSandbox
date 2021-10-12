@@ -3,6 +3,7 @@ import aerosandbox.numpy as np
 from aerosandbox.modeling.interpolation import InterpolatedModel
 from scipy import interpolate
 
+
 class UnstructuredInterpolatedModel(InterpolatedModel):
     """
     A model that is interpolated to unstructured (i.e., point cloud) N-dimensional data. Maps from R^N -> R^1.
@@ -27,13 +28,15 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
     def __init__(self,
                  x_data: Union[np.ndarray, Dict[str, np.ndarray]],
                  y_data: np.ndarray,
-                 x_data_resample: Union[int, np.ndarray, Dict[str, Union[int, np.ndarray]]] = 20,
-                 data_resample_method: str = "rbf",
-                 method: str = "bspline-resample",
+                 x_data_resample: Union[int, Dict[str, Union[int, np.ndarray]]] = 12,
+                 resampling_interpolator: object = interpolate.RBFInterpolator,
+                 resampling_interpolator_kwargs: Dict = None,
                  ):
         """
         Creates the interpolator. Note that data must be unstructured (i.e., point cloud) for general N-dimensional
         interpolation.
+
+        Note that if data is either 1D or structured,
 
         Args:
 
@@ -51,11 +54,6 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
                 and we resample onto a linearly-spaced grid between `min(xi)` and `max(xi)` with `x_data_resample`
                 points.
 
-                * If `x_data` is one-dimensional and provided as a np.ndarray, then x_data_resample can also be a
-                np.ndarray. However this use case doesn't really make much sense - if you have 1D data, then there is
-                no difference between structured and unstructured data, and you should probably just use
-                InterpolatedModel instead. If np.ndarray
-
                 * If this is a dict, it must be a dict where the keys are strings matching the keys of (the
                 dictionary) `x_data`. The values can either be ints or np.ndarrays.
 
@@ -64,7 +62,159 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
 
                     * If the values are np.ndarrays, then those np.ndarrays are used as the resampled spacing.
 
-            method:
+            resampling_interpolator: Indicates the interpolator to use in order to resample the TODO
 
         """
-        pass
+        if resampling_interpolator_kwargs is None:
+            resampling_interpolator_kwargs = {}
+
+        try:  # Try to use the InterpolatedModel initializer. If it doesn't work, then move on.
+            super().__init__(
+                x_data_coordinates=x_data,
+                y_data_structured=y_data,
+            )
+            return
+        except ValueError:
+            pass
+
+        # If it didn't work, this implies that x_data is multidimensional, and hence a dict-like object. Validate this.
+        try:  # Determine type of `x_data`
+            x_data.keys()
+            x_data.values()
+            x_data.items()
+        except AttributeError:
+            raise TypeError("`x_data` must be a dict-like object!")
+
+        # Make the interpolator, based on x_data and y_data.
+        if resampling_interpolator == interpolate.RBFInterpolator:
+            resampling_interpolator_kwargs = {
+                "kernel": "thin_plate_spline",
+                "degree": 1,
+                **resampling_interpolator_kwargs
+            }
+
+        interpolator = resampling_interpolator(
+            y=np.stack(tuple(x_data.values()), axis=1),
+            d=y_data,
+            **resampling_interpolator_kwargs
+        )
+
+        # If x_data_resample is an int, make it into a dict that matches x_data.
+        if isinstance(x_data_resample, int):
+            x_data_resample = {
+                k: x_data_resample
+                for k in x_data.keys()
+            }
+
+        # Now, x_data_resample should be dict-like. Validate this.
+        try:
+            x_data_resample.keys()
+            x_data_resample.values()
+            x_data_resample.items()
+        except AttributeError:
+            raise TypeError("`x_data_resample` must be a dict-like object!")
+
+        # Go through x_data_resample, and replace any values that are ints with linspaced arrays.
+        for k, v in x_data_resample.items():
+            if isinstance(v, int):
+                x_data_resample[k] = np.linspace(
+                    np.min(x_data[k]),
+                    np.max(x_data[k]),
+                    v
+                )
+
+        x_data_coordinates: Dict = x_data_resample
+
+        x_data_structured_values = [
+            xi.flatten()
+            for xi in np.meshgrid(*x_data_coordinates.values(), indexing="ij")
+        ]
+        x_data_structured = {
+            k: xi
+            for k, xi in zip(x_data.keys(), x_data_structured_values)
+        }
+
+        y_data_structured = interpolator(
+            np.stack(tuple(x_data_structured_values), axis=1)
+        )
+        y_data_structured = y_data_structured.reshape([
+            np.length(xi)
+            for xi in x_data_coordinates.values()
+        ])
+
+        super().__init__(
+            x_data_coordinates=x_data_coordinates,
+            y_data_structured=y_data_structured,
+        )
+
+        self.x_data_raw_unstructured = x_data
+        self.y_data_raw = y_data
+
+
+if __name__ == '__main__':
+    x = np.arange(10)
+    y = x ** 3
+    interp = UnstructuredInterpolatedModel(
+        x_data=x,
+        y_data=y
+    )
+
+
+    def randspace(start, stop, n=50):
+        vals = (stop - start) * np.random.rand(n) + start
+        vals = np.concatenate((vals[:-2], np.array([start, stop])))
+        # vals = np.sort(vals)
+        return vals
+
+
+    np.random.seed(4)
+    X = randspace(-5, 5, 200)
+    Y = randspace(-5, 5, 200)
+    f = np.where(X > 0, 1, 0)
+    # f = X ** 2 + Y ** 2
+    interp = UnstructuredInterpolatedModel(
+        x_data={
+            "x": X.flatten(),
+            "y": Y.flatten(),
+        },
+        y_data=f.flatten()
+    )
+
+    from aerosandbox.tools.pretty_plots import plt, show_plot
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    # ax.plot_surface(X, Y, f, color="blue", alpha=0.2)
+    ax.scatter(X.flatten(), Y.flatten(), f.flatten())
+    X_plot, Y_plot = np.meshgrid(
+        np.linspace(X.min(), X.max(), 500),
+        np.linspace(Y.min(), Y.max(), 500),
+    )
+    F_plot = interp({
+        "x": X_plot.flatten(),
+        "y": Y_plot.flatten()
+    }).reshape(X_plot.shape)
+    ax.plot_surface(
+        X_plot, Y_plot, F_plot,
+        color="red",
+        edgecolors=(1, 1, 1, 0.5),
+        linewidth=0.5,
+        alpha=0.2,
+        rcount=40,
+        ccount=40,
+        shade=True,
+    )
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.show()
+
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
+
+    opti = asb.Opti()
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
+    opti.minimize(interp({"x": x, "y": y}))
+    sol = opti.solve()
+    print(sol.value(x))
+    print(sol.value(y))
