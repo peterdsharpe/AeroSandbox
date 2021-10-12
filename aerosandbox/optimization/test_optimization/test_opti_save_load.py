@@ -54,7 +54,6 @@ def test_save_and_load_opti(tmp_path):
 
     opti = asb.Opti(
         cache_filename=temp_filename,
-        variable_categories_to_freeze=[],
         save_to_cache_on_solve=True,
     )
     x = opti.variable(init_guess=0, category="Cat 1")
@@ -94,6 +93,53 @@ def test_save_and_load_opti(tmp_path):
     assert sol.value(x) == pytest.approx(1)
     assert sol.value(y) == pytest.approx(2)
     assert sol.value(f) == pytest.approx(1)
+
+def test_save_and_load_opti_uncategorized(tmp_path):
+    temp_filename = tmp_path / "temp.json"
+
+    ### Round 1 optimization: free optimization
+
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        save_to_cache_on_solve=True,
+    )
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
+    f = (x - 1) ** 2 + (y - 1) ** 2
+    opti.minimize(f)
+
+    # Optimize, save to cache, print
+    sol = opti.solve()
+    opti.save_solution()
+    for i in ["x", "y", "f"]:
+        print(f"{i}: {sol.value(eval(i))}")
+
+    # Test
+    assert sol.value(x) == pytest.approx(1)
+    assert sol.value(y) == pytest.approx(1)
+    assert sol.value(f) == pytest.approx(0)
+
+    ### Round 2 optimization: Cat 1 is fixed from before; slightly different objective now
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        variable_categories_to_freeze=["Uncategorized"],
+        load_frozen_variables_from_cache=True,
+
+    )
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
+    f = (x - 2) ** 2 + (y - 2) ** 2
+    opti.minimize(f)
+
+    # Optimize, save to cache, print
+    sol = opti.solve()
+    for i in ["x", "y", "f"]:
+        print(f"{i}: {sol.value(eval(i))}")
+
+    # Test
+    assert sol.value(x) == pytest.approx(1)
+    assert sol.value(y) == pytest.approx(1)
+    assert sol.value(f) == pytest.approx(2)
 
 
 def test_save_and_load_opti_vectorized(tmp_path):
@@ -195,5 +241,6 @@ def test_save_and_load_opti_freeze_override(tmp_path):
 
 
 if __name__ == '__main__':
+    # from pathlib import Path
+    # test_save_and_load_opti_uncategorized(Path("C:/Users/peter/Downloads/test"))
     pytest.main()
-    # test_save_and_load_opti_vectorized()
