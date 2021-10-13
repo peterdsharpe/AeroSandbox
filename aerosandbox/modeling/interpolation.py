@@ -33,7 +33,7 @@ class InterpolatedModel(SurrogateModel):
                  x_data_coordinates: Union[np.ndarray, Dict[str, np.ndarray]],
                  y_data_structured: np.ndarray,
                  method: str = "bspline",
-                 fill_value=np.NaN,  # Default behavior NaNs outside range
+                 fill_value=np.NaN,  # Default behavior: return NaN for all inputs outside data range.
                  ):
         """
         Create the interpolator. Note that data must be structured (i.e., gridded on a hypercube) for general
@@ -70,19 +70,17 @@ class InterpolatedModel(SurrogateModel):
             method: The method of interpolation to perform. Options:
 
                 * "bspline" (Note: differentiable and suitable for optimization - made of piecewise-cubics. For other
-                applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot.)
+                applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot. Watch
+                out for Runge's phenomenon; on that note, if your data is noisy, consider smoothing it first.)
 
                 * "linear" (Note: differentiable, but not suitable for use in optimization w/o subgradient treatment due
                 to C1-discontinuity)
 
                 * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
 
-            bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
-            a ValueError is raised. If False, then fill_value is used.
-
-            fill_value: Only used if `bounds_error` is False. If `fill_value` is provided, it is the value to use for
-            points outside of the interpolation domain. If None, values outside the domain are extrapolated,
-            if possible given the `method` chosen.
+            fill_value: Gives the value that the interpolator should return for points outside of the interpolation
+            domain. The interpolation domain is defined as the hypercube bounded by the coordinates specified in
+            `x_data_coordinates`. If fill_value is None, then the interpolator will attempt to extrapolate if the interpolation method allows.
 
         """
         try:
