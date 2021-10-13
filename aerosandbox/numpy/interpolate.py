@@ -1,7 +1,7 @@
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
-from aerosandbox.numpy.array import array
+from aerosandbox.numpy.array import array, zeros_like
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
 from typing import Tuple
@@ -194,6 +194,10 @@ def interpn(
     elif (  ### CasADi implementation
             (method == "linear") or (method == "bspline")
     ):
+        ### Add handling to patch a specific bug in CasADi that occurs when `values` is all zeros.
+        ### For more information, see: https://github.com/casadi/casadi/issues/2837
+        if method == "bspline" and all(values == 0):
+            return zeros_like(xi)
 
         ### If xi is an int or float, promote it to an array
         if isinstance(xi, int) or isinstance(xi, float):
