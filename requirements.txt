@@ -10,3 +10,4 @@ pyvista~=0.32.1
 ipyvtklink~=0.2.1
 trimesh~=3.9.32
 sympy~=1.9
+tqdm~=4.62.3

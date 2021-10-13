@@ -60,6 +60,7 @@ setup(
         'pandas >= 1',
         'matplotlib >= 3',
         'seaborn >= 0.11',
+        'tqdm >= 4'
     ],
     extras_require={
         "full": [
