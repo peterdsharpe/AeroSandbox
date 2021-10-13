@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, Any
 import aerosandbox.numpy as np
 from aerosandbox.modeling.interpolation import InterpolatedModel
 from scipy import interpolate
@@ -28,9 +28,11 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
     def __init__(self,
                  x_data: Union[np.ndarray, Dict[str, np.ndarray]],
                  y_data: np.ndarray,
-                 x_data_resample: Union[int, Dict[str, Union[int, np.ndarray]]] = 12,
+                 x_data_resample: Union[int, Dict[str, Union[int, np.ndarray]]] = 10,
                  resampling_interpolator: object = interpolate.RBFInterpolator,
-                 resampling_interpolator_kwargs: Dict = None,
+                 resampling_interpolator_kwargs: Dict[str, Any] = None,
+                 fill_value=np.NaN,  # Default behavior: return NaN for all inputs outside data range.
+                 interpolated_model_kwargs: Dict[str, Any] = None,
                  ):
         """
         Creates the interpolator. Note that data must be unstructured (i.e., point cloud) for general N-dimensional
@@ -55,18 +57,36 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
                 points.
 
                 * If this is a dict, it must be a dict where the keys are strings matching the keys of (the
-                dictionary) `x_data`. The values can either be ints or np.ndarrays.
+                dictionary) `x_data`. The values can either be ints or 1D np.ndarrays.
 
                     * If the values are ints, then that axis is linearly spaced between `min(xi)` and `max(xi)` with
                     `x_data_resample` points.
 
-                    * If the values are np.ndarrays, then those np.ndarrays are used as the resampled spacing.
+                    * If the values are 1D np.ndarrays, then those 1D np.ndarrays are used as the resampled spacing
+                    for the given axis.
 
-            resampling_interpolator: Indicates the interpolator to use in order to resample the TODO
+            resampling_interpolator: Indicates the interpolator to use in order to resample the unstructured data
+            onto a structured grid. Should be analogous to scipy.interpolate.RBFInterpolator in __init__ and __call__
+            syntax. See reference here:
+
+                * https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RBFInterpolator.html
+
+            resampling_interpolator_kwargs: Indicates keyword arguments (keyword-value pairs, as a dictionary) to
+            pass into the resampling interpolator.
+
+            fill_value: Gives the value that the interpolator should return for points outside of the interpolation
+            domain. The interpolation domain is defined as the hypercube bounded by the coordinates specified in
+            `x_data_resample`. By default, these coordinates are the tightest axis-aligned hypercube that bounds the
+            point cloud data. If fill_value is None, then the interpolator will attempt to extrapolate if the interpolation method allows.
+
+            interpolated_model_kwargs: Indicates keyword arguments to pass into the (structured) InterpolatedModel.
+            Also a dictionary. See aerosandbox.InterpolatedModel for documentation on possible inputs here.
 
         """
         if resampling_interpolator_kwargs is None:
             resampling_interpolator_kwargs = {}
+        if interpolated_model_kwargs is None:
+            interpolated_model_kwargs = {}
 
         try:  # Try to use the InterpolatedModel initializer. If it doesn't work, then move on.
             super().__init__(
@@ -142,9 +162,15 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
             for xi in x_data_coordinates.values()
         ])
 
+        interpolated_model_kwargs = {
+            "fill_value": fill_value,
+            **interpolated_model_kwargs
+        }
+
         super().__init__(
             x_data_coordinates=x_data_coordinates,
             y_data_structured=y_data_structured,
+            **interpolated_model_kwargs,
         )
 
         self.x_data_raw_unstructured = x_data
@@ -170,7 +196,7 @@ if __name__ == '__main__':
     np.random.seed(4)
     X = randspace(-5, 5, 200)
     Y = randspace(-5, 5, 200)
-    f = np.where(X > 0, 1, 0)
+    f = np.where(X > 0, 1, 0) + np.where(Y > 0, 1, 0)
     # f = X ** 2 + Y ** 2
     interp = UnstructuredInterpolatedModel(
         x_data={
