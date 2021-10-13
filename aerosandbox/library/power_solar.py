@@ -130,15 +130,13 @@ def incidence_angle_function_new(latitude, day_of_year, time, panel_heading, pan
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time since (local) solar noon [seconds]
-    :param heading: off-horizontal surfaces assumed to be mounted perpendicular to the direction of the
-    vehicle's motion therefore heading sets the direction the solar panel faces
-    North is 0 and south is 180
+    :param panel_heading: the directionality of the solar panel (0 degrees if pointing North and 180 if South)
     :param panel_angle: the degrees of horizontal the array is mounted (0 if hoirzontal and 90 if vertical)
     :param scattering: Boolean: include scattering effects at very low angles?
     """
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
     azimuth_angle = solar_azimuth_angle(latitude, day_of_year, time)
-    cosine_factor = np.cosd(elevation_angle) * np.sind(panel_angle) * np.cosd(panel_heading + 90 - azimuth_angle) + np.sind(elevation_angle) * np.cosd(panel_angle)
+    cosine_factor = np.cosd(elevation_angle) * np.sind(panel_angle) * np.cosd(panel_heading - azimuth_angle) + np.sind(elevation_angle) * np.cosd(panel_angle)
 
     if not scattering:
         incidence = cosine_factor
@@ -324,15 +322,12 @@ def solar_flux_on_angle(
     S_angle =  S_horz * np.sind(solar_elevation_angle(latitude, day_of_year, time) + 90 - angle) / np.fmax(np.sind(solar_elevation_angle(latitude, day_of_year, time)), 0.0000001)
     return S_angle
 
-def solar_flux_circlular_flight_path(
+def solar_flux_circular_flight_path(
         latitude: float,
         day_of_year: float,
         time: float,
         panel_angle: float,
-        radius: float,
-        downrange_distance: float,
-        # wind_speed: float,
-        # wind_direction: float,
+        panel_heading: float,
         scattering: bool = True
 ) -> float:
     """
@@ -341,14 +336,13 @@ def solar_flux_circlular_flight_path(
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time since (local) solar noon [seconds]
     :param panel_angle: the degrees of horizontal the array is mounted (0 if hoirzontal and 90 if vertical)
-    :param airspeed:
-    :param radius: radius of the flight path
+    :param panel_heading: the directionality of the solar panel (0 degrees if pointing North and 180 if South)
     :param scattering: Boolean: include scattering effects at very low angles?
     :return:
     """
-    panel_heading = downrange_distance / (np.pi / 180) / radius
+
     solar_flux_on_panel = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(
-        latitude, day_of_year, time, panel_heading, panel_angle) # TODO account for wind? v_air = dx/dt + wind * sin(x/r)
+        latitude, day_of_year, time, panel_heading, panel_angle)
     return solar_flux_on_panel
 
 
@@ -411,21 +405,32 @@ def mass_MPPT(
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     ## fun integration problem
-    speed = 30 # m/s
+    airspeed = 30 # m/s
     radius = 50000 # m
     latitude = 60
     day_of_year = 174
     angle = 90
     day = 60 * 60 * 24
-    times = np.linspace(0, day)
+    times = np.linspace(0, day, 10000)
+    wind_speed = 25
+    wind_direction = 180
     solar_flux = []
-    for time in times:
-        # heading = speed * time / (np.pi / 180) / radius
-        # solar_flux_on_vertical_panel_a = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(latitude, day_of_year, time, heading, angle)
-        # solar_flux_on_vertical_panel_b = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(latitude, day_of_year, time, heading+180, angle)
-        # solar_flux_on_vertical_panel = solar_flux_on_vertical_panel_a + solar_flux_on_vertical_panel_b
-        # solar_flux.append(solar_flux_on_vertical_panel)
-        solar_flux.append(solar_flux_circlular_flight_path(latitude, day_of_year, time, -angle, radius, speed * time) + solar_flux_circlular_flight_path(latitude, day_of_year, time, angle, radius, speed * time) )
+    ground_dist_list = [0]
+    x_vector = []
+    time_step = times[2] - times[1]
+    groundspeed = 0
+    for i, time in enumerate(times):
+        x = airspeed * time
+        x_vector.append(x)
+        vehicle_direction = x / (np.pi / 180) / radius + 90
+        heading_x = airspeed * np.sind(vehicle_direction) - wind_speed * np.sind(wind_direction)
+        heading_y = airspeed * np.cosd(vehicle_direction) - wind_speed * np.cosd(wind_direction)
+        groundspeed = np.sqrt(heading_x ** 2 + heading_y ** 2)
+        ground_dist = ground_dist_list[i-1] + groundspeed * time_step
+        ground_dist_list.append(ground_dist)
+        vehicle_heading = np.arctan2d(heading_y, heading_x)
+        panel_heading = vehicle_heading - 90
+        solar_flux.append(solar_flux_circular_flight_path(latitude, day_of_year, time, -angle, panel_heading) + solar_flux_circular_flight_path(latitude, day_of_year, time, angle, panel_heading) )
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.plot(times / 3600, solar_flux)
@@ -433,6 +438,16 @@ if __name__ == "__main__":
     plt.title("Solar Flux on Vertical as  Aircraft Completes a Circular Flight Path")
     plt.xlabel("Time after Solar Noon [hours]")
     plt.ylabel(r"Solar Flux [W/m$^2$]")
+    plt.tight_layout()
+    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
+    plt.show()
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+    plt.plot(times / 3600, ground_dist_list[:-1])
+    plt.grid(True)
+    plt.title("Ground Distance Covered as Aircraft Completes a Circular Flight Path")
+    plt.xlabel("Time after Solar Noon [hours]")
+    plt.ylabel("Ground Distance [m]")
     plt.tight_layout()
     # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
     plt.show()
