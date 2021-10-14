@@ -159,7 +159,7 @@ class Airfoil(Polygon):
 
         xfoil_kwargs = {
             "verbose"      : False,
-            "max_iter"     : 15,
+            "max_iter"     : 20,
             "xfoil_repanel": True,
             **xfoil_kwargs
         }
@@ -294,10 +294,14 @@ class Airfoil(Polygon):
         )
 
         ### Determine if separated
+        alpha_stall_positive = np.max(data["alpha"]) # Across all Re
+        alpha_stall_negative = np.min(data["alpha"]) # Across all Re
+
         def separation_parameter(alpha, Re=0):
+            """Positive if separated, negative if attached."""
             return 0.5 * np.softmax(
-                alpha - 15,
-                -15 - alpha
+                alpha - alpha_stall_positive,
+                alpha_stall_negative - alpha
             )
 
         def CL_function(alpha, Re, mach=0, deflection=0):
