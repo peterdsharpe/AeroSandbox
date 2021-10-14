@@ -204,7 +204,7 @@ def interpn(
             xi = array([xi])
 
         ### If xi is a NumPy array and 1D, convert it to 2D for this.
-        if not is_casadi_type(xi, recursive=False) and len(xi.shape) == 1:
+        if not is_casadi_type(xi, recursive=False) and len(xi.shape) != 2:
             xi = _onp.reshape(xi, (-1, 1))
 
         ### Check that xi is now 2D
