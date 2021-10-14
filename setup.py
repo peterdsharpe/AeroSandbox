@@ -54,7 +54,7 @@ setup(
     packages=find_packages(exclude=['docs', 'media', 'examples', 'studies']),
     python_requires='>=3.6',
     install_requires=[
-        'numpy >= 1.15.0',
+        'numpy >= 1.20.0',
         'scipy >= 1.7.0',
         'casadi >= 3.5.5',
         'pandas >= 1',
