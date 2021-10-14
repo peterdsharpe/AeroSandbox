@@ -2,7 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 
 if __name__ == '__main__':
-    af = asb.Airfoil("naca0008", generate_polars=True)
+    af = asb.Airfoil("dae11", generate_polars=True)
 
     alpha = np.linspace(-40, 40, 300)
     re = np.geomspace(1e4, 1e12, 100)
@@ -18,6 +18,12 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
     contour(Alpha, Re, CL, levels=30)
+    plt.scatter(af.xfoil_data["alpha"], af.xfoil_data["Re"], color="k", alpha=0.2)
+    plt.yscale('log')
+    show_plot()
+
+    fig, ax = plt.subplots()
+    contour(Alpha, Re, np.log10(CD), levels=30)
     plt.scatter(af.xfoil_data["alpha"], af.xfoil_data["Re"], color="k", alpha=0.2)
     plt.yscale('log')
     show_plot()
@@ -57,7 +63,8 @@ if __name__ == '__main__':
     ##### Test optimization
     opti = asb.Opti()
     alpha = opti.variable(init_guess=0, lower_bound=-20, upper_bound=20)
+    LD = af.CL_function(alpha, 1e6) / af.CD_function(alpha, 1e6)
     opti.minimize(
-        -af.CL_function(alpha, 1e6) / af.CD_function(alpha, 1e6)
+        -LD
     )
     sol = opti.solve()
