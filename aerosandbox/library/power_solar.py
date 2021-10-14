@@ -69,7 +69,7 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     cele = np.cosd(elevation)
 
     solar_azimuth_angle = np.where(
-        time > 43200,
+        np.mod(time, 86400) > 43200,
         np.arccosd(
             (sdec * clat - cdec * slat * cos_time) / cele
         ),
