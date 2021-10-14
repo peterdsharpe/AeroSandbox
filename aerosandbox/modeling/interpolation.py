@@ -131,12 +131,21 @@ class InterpolatedModel(SurrogateModel):
             shape = np.broadcast_shapes(
                 *[get_shape(v) for v in x.values()]
             )
+
+            def reshape(value):
+                try:
+                    return np.reshape(value, shape)
+                except ValueError:
+                    if isinstance(value, int) or isinstance(value, float) or value.shape == tuple() or np.product(value.shape) == 1:
+                        return value * np.ones(shape)
+                raise ValueError("Could not reshape value of one of the inputs!")
+
             x = np.stack(tuple(
-                np.reshape(x[k], shape)
+                reshape(x[k])
                 for k, v in self.x_data_coordinates.items()
             ))
 
-        return np.interpn(
+        output = np.interpn(
             points=self.x_data_coordinates_values,
             values=self.y_data_structured,
             xi=x,
@@ -144,3 +153,7 @@ class InterpolatedModel(SurrogateModel):
             bounds_error=False,  # Can't be set true if general MX-type inputs are to be expected.
             fill_value=self.fill_value
         )
+        try:
+            return np.reshape(output, shape)
+        except UnboundLocalError:
+            return output
