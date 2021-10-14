@@ -41,6 +41,7 @@ class XFoil(ExplicitAnalysis):
                  xtr_lower: float = 1.,
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
+                 xfoil_repanel: bool = True,
                  verbose: bool = False,
                  working_directory: str = None,
                  ):
@@ -81,6 +82,15 @@ class XFoil(ExplicitAnalysis):
                 To add XFoil to your path, modify your system's environment variables. (Google how to do this for
                 your OS.)
 
+            xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE
+            -> PPAR, both with default settings, 160 nodes)
+
+            verbose: Controls whether or not XFoil output is printed to command line.
+
+            working_directory: Controls which working directory is used for the XFoil input and output files. By
+            default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
+            somewhere local for debugging purposes.
+
         """
         self.airfoil = airfoil
         self.Re = Re
@@ -90,8 +100,13 @@ class XFoil(ExplicitAnalysis):
         self.xtr_lower = xtr_lower
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
+        self.xfoil_repanel = xfoil_repanel
         self.verbose = verbose
         self.working_directory = working_directory
+
+        if np.length(self.airfoil.coordinates) > 401: # If the airfoil coordinates exceed Fortran array allocation
+            self.xfoil_repanel = True
+
 
     def _default_keystroke_file_contents(self) -> List[str]:
         run_file_contents = []
@@ -102,6 +117,13 @@ class XFoil(ExplicitAnalysis):
             "g",
             "",
         ]
+
+        if self.xfoil_repanel:
+            run_file_contents += [
+                "pane"
+                "ppar"
+                ""
+            ]
 
         # Enter oper mode
         run_file_contents += [
