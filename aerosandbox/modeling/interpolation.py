@@ -122,8 +122,17 @@ class InterpolatedModel(SurrogateModel):
 
     def __call__(self, x):
         if isinstance(self.x_data_coordinates, dict):
+            def get_shape(value):
+                try:
+                    return value.shape
+                except AttributeError:
+                    return tuple()
+
+            shape = np.broadcast_shapes(
+                *[get_shape(v) for v in x.values()]
+            )
             x = np.stack(tuple(
-                x[k]
+                np.reshape(x[k], shape)
                 for k, v in self.x_data_coordinates.items()
             ))
 
