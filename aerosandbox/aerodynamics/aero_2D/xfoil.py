@@ -43,7 +43,7 @@ class XFoil(ExplicitAnalysis):
                  xfoil_command: str = "xfoil",
                  xfoil_repanel: bool = True,
                  verbose: bool = False,
-                 timeout: Union[float, int, None] = 10,
+                 timeout: Union[float, int, None] = 30,
                  working_directory: str = None,
                  ):
         """
