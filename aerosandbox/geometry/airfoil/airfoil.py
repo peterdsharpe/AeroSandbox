@@ -208,7 +208,7 @@ class Airfoil(Polygon):
                 get_run_data(Re)
                 for Re in tqdm(
                     Res,
-                    desc=f"Running XFoil sweeps on Airfoil '{self.name}':",
+                    desc=f"Running XFoil to generate polars for Airfoil '{self.name}':",
                 )
             ]
             data = {
