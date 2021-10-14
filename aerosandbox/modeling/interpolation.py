@@ -131,13 +131,14 @@ class InterpolatedModel(SurrogateModel):
             shape = np.broadcast_shapes(
                 *[get_shape(v) for v in x.values()]
             )
+            shape_for_reshaping = (int(np.product(shape)),)
 
             def reshape(value):
                 try:
-                    return np.reshape(value, shape)
+                    return np.reshape(value, shape_for_reshaping)
                 except ValueError:
                     if isinstance(value, int) or isinstance(value, float) or value.shape == tuple() or np.product(value.shape) == 1:
-                        return value * np.ones(shape)
+                        return value * np.ones(shape_for_reshaping)
                 raise ValueError("Could not reshape value of one of the inputs!")
 
             x = np.stack(tuple(
