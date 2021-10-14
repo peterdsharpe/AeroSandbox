@@ -129,7 +129,7 @@ class Airfoil(Polygon):
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
     def generate_polars(self,
-                        alphas=np.linspace(-15, 15, 31),
+                        alphas=np.linspace(-15, 15, 21),
                         Res=np.geomspace(1e4, 1e7, 10),
                         mach=0,
                         cache_filename: str = None,
@@ -159,7 +159,7 @@ class Airfoil(Polygon):
 
         xfoil_kwargs = {
             "verbose" : False,
-            "max_iter": 20,
+            "max_iter": 15,
             "xfoil_repanel": True,
             **xfoil_kwargs
         }
@@ -278,7 +278,7 @@ class Airfoil(Polygon):
             )
 
         def CL_function(alpha, Re, mach=0, deflection=0):
-            alpha = (alpha + 180) % 360 - 180
+            alpha = np.mod(alpha + 180, 360) - 180
             CL_attached = CL_attached_interpolator({
                 "alpha"   : alpha,
                 "ln_Re": np.log(Re),
@@ -292,7 +292,7 @@ class Airfoil(Polygon):
 
 
         def CD_function(alpha, Re, mach=0, deflection=0):
-            alpha = (alpha + 180) % 360 - 180
+            alpha = np.mod(alpha + 180, 360) - 180
             log10_CD_attached = log10_CD_attached_interpolator({
                 "alpha"   : alpha,
                 "ln_Re": np.log(Re),
@@ -305,7 +305,7 @@ class Airfoil(Polygon):
             )
 
         def CM_function(alpha, Re, mach=0, deflection=0):
-            alpha = (alpha + 180) % 360 - 180
+            alpha = np.mod(alpha + 180, 360) - 180
             CM_attached = CM_attached_interpolator({
                 "alpha"   : alpha,
                 "ln_Re": np.log(Re),
