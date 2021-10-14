@@ -8,6 +8,7 @@ from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL
 from scipy import interpolate
 import matplotlib.pyplot as plt
 from typing import Callable, Union, Any, Dict
+import json
 
 
 class Airfoil(Polygon):
@@ -131,7 +132,6 @@ class Airfoil(Polygon):
     def generate_polars(self,
                         alphas=np.linspace(-15, 15, 21),
                         Res=np.geomspace(1e4, 1e7, 10),
-                        mach=0,
                         cache_filename: str = None,
                         xfoil_kwargs: Dict[str, Any] = None,
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
@@ -158,51 +158,74 @@ class Airfoil(Polygon):
             unstructured_interpolated_model_kwargs = {}
 
         xfoil_kwargs = {
-            "verbose" : False,
-            "max_iter": 15,
+            "verbose"      : False,
+            "max_iter"     : 15,
             "xfoil_repanel": True,
             **xfoil_kwargs
         }
 
         unstructured_interpolated_model_kwargs = {
             "resampling_interpolator_kwargs": {
-                "degree": 0,
+                "degree"   : 0,
                 # "kernel": "linear",
-                "kernel": "multiquadric",
-                "epsilon": 3,
+                "kernel"   : "multiquadric",
+                "epsilon"  : 3,
                 "smoothing": 0.01,
                 # "kernel": "cubic"
             },
             **unstructured_interpolated_model_kwargs
         }
 
+        ### Retrieve XFoil Polar Data from cache, if it exists.
+        data = None
+        if cache_filename is not None:
+            try:
+                with open(cache_filename, "r") as f:
+                    data = {
+                        k: np.array(v)
+                        for k, v in json.load(f).items()
+                    }
+            except FileNotFoundError:
+                pass
+
         ### Analyze airfoil with XFoil, if needed
-        from aerosandbox.aerodynamics.aero_2D import XFoil
+        if data is None:
 
-        def get_run_data(Re):
-            run_data = XFoil(
-                airfoil=self,
-                Re=Re,
-                **xfoil_kwargs
-            ).alpha(alphas)
-            run_data["Re"] = Re * np.ones_like(run_data["alpha"])
-            return run_data
+            from aerosandbox.aerodynamics.aero_2D import XFoil
 
-        from tqdm import tqdm
+            def get_run_data(Re):
+                run_data = XFoil(
+                    airfoil=self,
+                    Re=Re,
+                    **xfoil_kwargs
+                ).alpha(alphas)
+                run_data["Re"] = Re * np.ones_like(run_data["alpha"])
+                return run_data
 
-        run_datas = [
-            get_run_data(Re)
-            for Re in tqdm(
-                Res,
-                desc=f"Running XFoil sweeps on Airfoil '{self.name}':",
-            )
-        ]
-        data = {
-            k: np.concatenate(
-                tuple([run_data[k] for run_data in run_datas])
-            )
-            for k in run_datas[0].keys()
-        }
+            from tqdm import tqdm
+
+            run_datas = [
+                get_run_data(Re)
+                for Re in tqdm(
+                    Res,
+                    desc=f"Running XFoil sweeps on Airfoil '{self.name}':",
+                )
+            ]
+            data = {
+                k: np.concatenate(
+                    tuple([run_data[k] for run_data in run_datas])
+                )
+                for k in run_datas[0].keys()
+            }
+
+            if cache_filename is not None:
+                with open(cache_filename, "w+") as f:
+                    json.dump(
+                        {k: v.tolist() for k, v in data.items()},
+                        f
+                    )
+
+        ### Save the raw data as an instance attribute for later use
         self.xfoil_data = data
 
         ### Make the interpolators for attached aerodynamics
@@ -220,11 +243,11 @@ class Airfoil(Polygon):
         ])
 
         x_data = {
-            "alpha"   : data["alpha"],
+            "alpha": data["alpha"],
             "ln_Re": np.log(data["Re"]),
         }
         x_data_resample = {
-            "alpha"   : alpha_resample,
+            "alpha": alpha_resample,
             "ln_Re": np.log(Re_resample)
         }
 
@@ -280,7 +303,7 @@ class Airfoil(Polygon):
         def CL_function(alpha, Re, mach=0, deflection=0):
             alpha = np.mod(alpha + 180, 360) - 180
             CL_attached = CL_attached_interpolator({
-                "alpha"   : alpha,
+                "alpha": alpha,
                 "ln_Re": np.log(Re),
             })
             CL_separated = CL_separated_interpolator(alpha)
@@ -290,11 +313,10 @@ class Airfoil(Polygon):
                 CL_attached
             )
 
-
         def CD_function(alpha, Re, mach=0, deflection=0):
             alpha = np.mod(alpha + 180, 360) - 180
             log10_CD_attached = log10_CD_attached_interpolator({
-                "alpha"   : alpha,
+                "alpha": alpha,
                 "ln_Re": np.log(Re),
             })
             log10_CD_separated = log10_CD_separated_interpolator(alpha)
@@ -307,7 +329,7 @@ class Airfoil(Polygon):
         def CM_function(alpha, Re, mach=0, deflection=0):
             alpha = np.mod(alpha + 180, 360) - 180
             CM_attached = CM_attached_interpolator({
-                "alpha"   : alpha,
+                "alpha": alpha,
                 "ln_Re": np.log(Re),
             })
             CM_separated = CM_separated_interpolator(alpha)
