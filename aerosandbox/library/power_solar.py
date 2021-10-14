@@ -43,7 +43,6 @@ def solar_elevation_angle(latitude, day_of_year, time):
         np.sind(declination) * np.sind(latitude) +
         np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
     )  # in degrees
-    solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
 
 
