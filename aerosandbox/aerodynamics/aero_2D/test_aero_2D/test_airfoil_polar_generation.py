@@ -2,7 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 
 if __name__ == '__main__':
-    af = asb.Airfoil("dae11", generate_polars=True)
+    af = asb.Airfoil("naca0008", generate_polars=True)
 
     alpha = np.linspace(-40, 40, 300)
     re = np.geomspace(1e4, 1e12, 100)
@@ -13,6 +13,7 @@ if __name__ == '__main__':
     CD = af.CD_function(Alpha.flatten(), Re.flatten()).reshape(Alpha.shape)
     CM = af.CM_function(Alpha.flatten(), Re.flatten()).reshape(Alpha.shape)
 
+    ##### Plot alpha-Re contours
     from aerosandbox.tools.pretty_plots import plt, show_plot, contour
     fig, ax = plt.subplots()
     contour(Alpha, Re, CL, levels=30)
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     plt.yscale('log')
     show_plot()
 
+    ##### Plot Polars
     fig, ax = plt.subplots(2, 2, figsize=(8,8))
     Re=1e6
     alpha_lowres = np.linspace(-15, 15, 31)
@@ -50,3 +52,11 @@ if __name__ == '__main__':
     plt.plot(xa, xCL/xCD, ".")
 
     show_plot()
+
+    ##### Test optimization
+    opti = asb.Opti()
+    alpha = opti.variable(init_guess=0, lower_bound=-20, upper_bound=20)
+    opti.minimize(
+        -af.CL_function(alpha, 1e6) / af.CD_function(alpha, 1e6)
+    )
+    sol = opti.solve()
