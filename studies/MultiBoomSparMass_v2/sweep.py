@@ -3,17 +3,19 @@ This script generates data used to estimate spar mass as a function of lift forc
 """
 
 ### Imports
+import numpy as np
+
 from aerosandbox.structures.beams import *
 import copy
 
 ### Set up sweep variables
-# n_booms = 1
+n_booms = 1
 
 # n_booms = 2
 # load_location_fraction = 0.50
 
-n_booms = 3
-load_location_fraction = 0.60
+# n_booms = 3
+# load_location_fraction = 0.60
 
 res = 15
 masses = np.logspace(np.log10(5), np.log10(3000), res)
@@ -21,6 +23,7 @@ spans = np.logspace(np.log10(3), np.log10(120), res)
 
 Masses, Spans = np.meshgrid(masses, spans, indexing="ij")
 Spar_Masses = np.zeros_like(Masses)
+Spar_Diameters = np.zeros_like(Masses)
 
 ### Set up problem
 opti = cas.Opti()
@@ -84,10 +87,12 @@ for i in range(len(masses)):
         beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
         Spar_Masses[i, j] = beam_sol.mass * 2
+        Spar_Diameters[i,j] = beam_sol.nominal_diameter[0]
 
 np.save("masses", Masses)
 np.save("spans", Spans)
 np.save("spar_masses", Spar_Masses)
+np.save("spar_diameters", Spar_Diameters)
 
 # Run a sanity check
 beam_sol.draw_bending()

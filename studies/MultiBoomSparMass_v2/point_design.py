@@ -70,3 +70,4 @@ spar_mass = beam_sol.mass * 2
 beam_sol.draw_bending()
 
 print("Spar mass:", spar_mass)
+print("spar diameters:", opti.value(beam.nominal_diameter))
