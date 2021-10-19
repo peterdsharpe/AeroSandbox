@@ -432,6 +432,10 @@ class Opti(cas.Opti):
 
             verbose: Should we print the output of IPOPT?
 
+            jit: # TODO
+
+            options: # TODO
+
         Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
             OptiSol.value(variable).
 
