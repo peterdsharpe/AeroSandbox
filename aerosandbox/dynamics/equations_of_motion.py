@@ -129,7 +129,7 @@ def equations_of_motion(
             (cphi * sthe * cpsi + sphi * spsi) * w
     )
     d_ye = (
-            (cthe * sphi) * u +
+            (cthe * spsi) * u +
             (sphi * sthe * spsi + cphi * cpsi) * v +
             (cphi * sthe * spsi - sphi * cpsi) * w
     )
