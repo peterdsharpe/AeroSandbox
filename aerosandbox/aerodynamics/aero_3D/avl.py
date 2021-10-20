@@ -101,7 +101,7 @@ class AVL(ExplicitAnalysis):
 
         # Set parameters
         run_file_contents += [
-            "m"
+            "m",
             f"mn {self.op_point.mach()}",
             f"v {self.op_point.velocity}",
             f"d {self.op_point.atmosphere.density()}",
