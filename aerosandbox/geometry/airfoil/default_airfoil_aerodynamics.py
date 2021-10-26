@@ -9,7 +9,7 @@ def print_default_warning():
         "It's highly recommended that you either:",
         "\ta) Specify polar functions in the Airfoil constructor, or",
         "\tb) Call Airfoil.generate_polars() to auto-generate these polar functions with XFoil."
-    ]))
+    ]), stacklevel=3)
 
 
 def default_CL_function(alpha, Re, mach=0, deflection=0):

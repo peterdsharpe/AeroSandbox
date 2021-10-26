@@ -33,14 +33,18 @@ class Fuselage(AeroSandboxObject):
         if symmetric:
             import warnings
             warnings.warn(
-                "The `symmetric` argument for Fuselage objects will be deprecated soon. Make your fuselages separate instead!")
+                "The `symmetric` argument for Fuselage objects will be deprecated soon. Make your fuselages separate instead!",
+                stacklevel=2
+            )
 
         self.symmetric = symmetric
 
         if xyz_le is not None:
             import warnings
             warnings.warn(
-                "The `xyz_le` input for Fuselage is DEPRECATED and will be removed in a future version. Use Fuselage().translate(xyz) instead.")
+                "The `xyz_le` input for Fuselage is DEPRECATED and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
+                stacklevel=2
+            )
             self.xsecs = [
                 xsec.translate(xyz_le)
                 for xsec in xsecs

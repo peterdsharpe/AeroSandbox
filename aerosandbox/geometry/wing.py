@@ -50,7 +50,9 @@ class Wing(AeroSandboxObject):
         if xyz_le is not None:
             import warnings
             warnings.warn(
-                "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.")
+                "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.",
+                stacklevel=2
+            )
             self.xsecs = [
                 xsec.translate(xyz_le)
                 for xsec in xsecs
@@ -843,7 +845,10 @@ class WingXSec(AeroSandboxObject):
         """
         if twist_angle is not None:
             import warnings
-            warnings.warn("DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.")
+            warnings.warn(
+                "DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.",
+                stacklevel=2
+            )
             twist = twist_angle
 
         self.xyz_le = np.array(xyz_le)
