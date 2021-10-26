@@ -839,7 +839,7 @@ class WingXSec(AeroSandboxObject):
                     * That direction vector is projected onto the Y-Z plane.
                     * That direction vector is now the twist axis.
             airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
-            control_surface_is_symmetric: Is the control surface symmetric? (e.g. True for flaps, False for ailerons.)
+            control_surface_is_symmetric: Is the control surface symmetric? (e.g., True for flaps, False for ailerons.)
             control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
             control_surface_deflection: Control deflection, in degrees. Downwards-positive.
         """
