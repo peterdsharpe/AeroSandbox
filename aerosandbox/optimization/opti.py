@@ -1,4 +1,4 @@
-from typing import Union, List, Dict, Callable
+from typing import Union, List, Dict, Callable, Any
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -394,7 +394,7 @@ class Opti(cas.Opti):
               parameter_mapping: Dict[cas.MX, float] = None,
               max_iter: int = 1000,
               max_runtime: float = 1e20,
-              callback: Callable = None,
+              callback: Callable[[int], Any] = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
               options: Dict = None,  # TODO document
