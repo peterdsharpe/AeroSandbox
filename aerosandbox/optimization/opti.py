@@ -51,7 +51,7 @@ class Opti(cas.Opti):
     ### Primary Methods
 
     def variable(self,
-                 init_guess: Union[float, np.ndarray],
+                 init_guess: Union[float, np.ndarray] = None,
                  n_vars: int = None,
                  scale: float = None,
                  freeze: bool = False,
@@ -61,7 +61,7 @@ class Opti(cas.Opti):
                  upper_bound: float = None,
                  ) -> cas.MX:
         """
-        Initializes a new decision variable (or vector of decision variables). You must pass an initial guess (
+        Initializes a new decision variable (or vector of decision variables). You should pass an initial guess (
         `init_guess`) upon defining a new variable. Dimensionality is inferred from this initial guess, but it can be
         overridden; see below for syntax.
 
@@ -193,6 +193,13 @@ class Opti(cas.Opti):
 
         """
         ### Set defaults
+        if init_guess is None:
+            import warnings
+            warnings.warn("No initial guess set for Opti.variable().", stacklevel=2)
+            if log_transform:
+                init_guess = 1
+            else:
+                init_guess = 0
         if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
             n_vars = np.length(init_guess)
         if scale is None:  # Infer a scale from init_guess if it is not provided
