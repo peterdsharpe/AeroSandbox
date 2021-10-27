@@ -10,8 +10,6 @@ from matplotlib import ticker
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
 
-# plt.ion()
-
 ### Define color palettes
 palettes = {
     "categorical": [
