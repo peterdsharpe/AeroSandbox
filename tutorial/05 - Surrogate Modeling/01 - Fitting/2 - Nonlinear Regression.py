@@ -1,21 +1,25 @@
-#%%
+# %%
 
 import aerosandbox as asb
 import aerosandbox.numpy as np
+
 from scipy import io
+from pathlib import Path
 
-#%%
+root = Path(__file__).parent
 
-data = io.loadmat("data/wind_data_99.mat")
+# %%
+
+data = io.loadmat(str(root / "data" / "wind_data_99.mat"))
 lats_v = data["lats"].flatten()
 alts_v = data["alts"].flatten()
-speeds = data["speeds"].reshape(len(alts_v),len(lats_v)).T.flatten()
+speeds = data["speeds"].reshape(len(alts_v), len(lats_v)).T.flatten()
 
 lats, alts = np.meshgrid(lats_v, alts_v, indexing="ij")
 lats = lats.flatten()
 alts = alts.flatten()
 
-#%%
+# %%
 
 lats_scaled = (lats - 37.5) / 11.5
 alts_scaled = (alts - 24200) / 24200
@@ -40,7 +44,8 @@ weights_1d = weights_1d / np.mean(weights_1d)
 # )
 weights = np.tile(weights_1d, (93, 1)).flatten()
 
-#%%
+
+# %%
 
 def model(x, p):
     l = x["lats_scaled"]
@@ -132,13 +137,13 @@ fit = asb.FittedModel(
     # put_residuals_in_logspace=True
 )
 
-#%%
+# %%
 
 from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot
 
-fig = plt.figure(figsize=(6,5))
+fig = plt.figure(figsize=(6, 5))
 ax = fig.add_subplot(projection="3d")
-ax.scatter(lats, alts/1e3, speeds, marker=".", color="k", alpha=0.8, linewidth=0, label="Data")
+ax.scatter(lats, alts / 1e3, speeds, marker=".", color="k", alpha=0.8, linewidth=0, label="Data")
 
 lats_plot = np.linspace(lats.min(), lats.max(), 200)
 alts_plot = np.linspace(alts.min(), alts.max(), 200)
@@ -153,9 +158,9 @@ Speeds_plot = speeds_plot.reshape(
     len(lats_plot),
 )
 
-ax.plot_surface(Lats_plot, Alts_plot/1e3, Speeds_plot,
-                cmap = plt.cm.viridis,
-                edgecolors=(1,1,1,0.5),
+ax.plot_surface(Lats_plot, Alts_plot / 1e3, Speeds_plot,
+                cmap=plt.cm.viridis,
+                edgecolors=(1, 1, 1, 0.5),
                 linewidth=0.5,
                 alpha=0.7,
                 rcount=40,
