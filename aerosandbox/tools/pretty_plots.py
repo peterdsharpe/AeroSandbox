@@ -34,6 +34,7 @@ mpl.rcParams["figure.dpi"] = 200
 mpl.rcParams["axes.formatter.useoffset"] = False
 mpl.rcParams["contour.negative_linestyle"] = 'solid'
 
+
 def set_ticks(
         x_major: Union[float, int] = None,
         x_minor: Union[float, int] = None,
@@ -50,8 +51,10 @@ def set_ticks(
     if y_minor is not None:
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
+
 def equal():
     plt.gca().set_aspect("equal", adjustable='box')
+
 
 def adjust_lightness(color, amount=1.0):
     """
