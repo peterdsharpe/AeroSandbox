@@ -143,7 +143,7 @@ def contour(
         X: np.ndarray,
         Y: np.ndarray,
         Z: np.ndarray,
-        levels: Union[int, List, np.ndarray] = None,
+        levels: Union[int, List, np.ndarray] = 31,
         colorbar: bool = True,
         linelabels: bool = True,
         cmap=mpl.cm.get_cmap('viridis'),
@@ -155,6 +155,7 @@ def contour(
         linelabels_format: Union[str, Callable[[float], str]] = eng_string,
         linelabels_fontsize: float = 8,
         colorbar_label: str = None,
+        z_log_scale: bool = False,
         contour_kwargs: Dict = None,
         contourf_kwargs: Dict = None,
         colorbar_kwargs: Dict = None,
@@ -191,7 +192,7 @@ def contour(
         contourf_kwargs: Additional keyword arguments for contourf.
         colorbar_kwargs: Additional keyword arguments for colorbar.
         linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
-        **kwargs: Additional keywords, assumed to be for both contour and contourf.
+        **kwargs: Additional keywords, which are passed to both contour and contourf.
 
     Returns: A tuple of (contour, contourf, colorbar) objects.
 
@@ -215,8 +216,19 @@ def contour(
     shared_kwargs = kwargs
     if levels is not None:
         shared_kwargs["levels"] = levels
-    shared_kwargs["alpha"] = alpha
-    shared_kwargs["extend"] = extend
+    if alpha is not None:
+        shared_kwargs["alpha"] = alpha
+    if extend is not None:
+        shared_kwargs["extend"] = extend
+    if z_log_scale:
+
+        shared_kwargs = {
+            "norm": mpl.colors.LogNorm(),
+            "locator": mpl.ticker.LogLocator(
+                subs = np.geomspace(1, 10, 4+1)[:-1]
+            ),
+            **shared_kwargs
+        }
 
     if colorbar_label is not None:
         colorbar_kwargs["label"] = colorbar_label
@@ -257,6 +269,10 @@ def contour(
 
     if colorbar:
         cbar = plt.colorbar(**colorbar_kwargs)
+
+        if z_log_scale:
+            cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
+            cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatter())
     else:
         cbar = None
 
