@@ -56,6 +56,12 @@ def equal():
     plt.gca().set_aspect("equal", adjustable='box')
 
 
+def figure3d(*args, **kwargs):
+    fig = plt.figure(*args, **kwargs)
+    ax = plt.axes(projection='3d')
+    return fig, ax
+
+
 def adjust_lightness(color, amount=1.0):
     """
     Converts a color to HLS space, then mulitplies the lightness by `amount`, then converts back to RGB.
@@ -223,9 +229,9 @@ def contour(
     if z_log_scale:
 
         shared_kwargs = {
-            "norm": mpl.colors.LogNorm(),
+            "norm"   : mpl.colors.LogNorm(),
             "locator": mpl.ticker.LogLocator(
-                subs = np.geomspace(1, 10, 4+1)[:-1]
+                subs=np.geomspace(1, 10, 4 + 1)[:-1]
             ),
             **shared_kwargs
         }
