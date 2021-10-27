@@ -106,8 +106,9 @@ def show_plot(
 
     if pretty_grids:
         for ax in axes:
-            ax.grid(True, 'major', axis='both', linewidth=1.6)
-            ax.grid(True, 'minor', axis='both', linewidth=0.7)
+            if not ax.get_label() == '<colorbar>':
+                ax.grid(True, 'major', axis='both', linewidth=1.6)
+                ax.grid(True, 'minor', axis='both', linewidth=0.7)
 
     ### Determine if a legend should be shown
     if legend is None:
