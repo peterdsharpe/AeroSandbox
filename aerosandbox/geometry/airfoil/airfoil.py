@@ -95,18 +95,36 @@ class Airfoil(Polygon):
         self.name = name
 
         ### Handle the coordinates
+        self.coordinates = None
         if coordinates is None:  # If no coordinates are given
             try:  # See if it's a NACA airfoil
-                coordinates = get_NACA_coordinates(name=self.name)
+                self.coordinates = get_NACA_coordinates(name=self.name)
             except:
                 try:  # See if it's in the UIUC airfoil database
-                    coordinates = get_UIUC_coordinates(name=self.name)
+                    self.coordinates = get_UIUC_coordinates(name=self.name)
                 except:
                     pass
-        elif isinstance(coordinates, str):  # If coordinates is a string, assume it's a filepath to a .dat file
-            coordinates = get_file_coordinates(filepath=coordinates)
+        else:
+            try:  # If coordinates is a string, assume it's a filepath to a .dat file
+                self.coordinates = get_file_coordinates(filepath=coordinates)
+            except (OSError, FileNotFoundError):
+                try:
+                    shape = coordinates.shape
+                    assert len(shape) == 2
+                    assert shape[0] == 2 or shape[1] == 2
+                    if not shape[1] == 2:
+                        coordinates = np.transpose(shape)
 
-        self.coordinates = coordinates
+                    self.coordinates = coordinates
+                except AttributeError:
+                    pass
+
+        if self.coordinates is None:
+            import warnings
+            warnings.warn(
+                f"Airfoil {self.name} had no coordinates assigned, and could not parse the `coordinates` input!",
+                stacklevel=2,
+            )
 
         ### Handle getting default polars
         if generate_polars:
