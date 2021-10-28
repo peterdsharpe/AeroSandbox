@@ -176,14 +176,14 @@ class Airfoil(Polygon):
         if unstructured_interpolated_model_kwargs is None:
             unstructured_interpolated_model_kwargs = {}
 
-        xfoil_kwargs = { # See asb.XFoil for documentation on these.
+        xfoil_kwargs = {  # See asb.XFoil for documentation on these.
             "verbose"      : False,
             "max_iter"     : 20,
             "xfoil_repanel": True,
             **xfoil_kwargs
         }
 
-        unstructured_interpolated_model_kwargs = { # These were tuned heuristically as defaults!
+        unstructured_interpolated_model_kwargs = {  # These were tuned heuristically as defaults!
             "resampling_interpolator_kwargs": {
                 "degree"   : 0,
                 # "kernel": "linear",
@@ -212,32 +212,32 @@ class Airfoil(Polygon):
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
-            def get_run_data(Re): # Get the data for an XFoil alpha sweep at one specific Re.
+            def get_run_data(Re):  # Get the data for an XFoil alpha sweep at one specific Re.
                 run_data = XFoil(
                     airfoil=self,
                     Re=Re,
                     **xfoil_kwargs
                 ).alpha(alphas)
                 run_data["Re"] = Re * np.ones_like(run_data["alpha"])
-                return run_data # Data is a dict where keys are figures of merit [str] and values are 1D ndarrays.
+                return run_data  # Data is a dict where keys are figures of merit [str] and values are 1D ndarrays.
 
             from tqdm import tqdm
 
-            run_datas = [
+            run_datas = [  # Get a list of dicts, where each dict is the result of an XFoil run at a particular Re.
                 get_run_data(Re)
                 for Re in tqdm(
                     Res,
                     desc=f"Running XFoil to generate polars for Airfoil '{self.name}':",
                 )
             ]
-            data = {
+            data = {  # Merge the dicts into one big database of all runs.
                 k: np.concatenate(
                     tuple([run_data[k] for run_data in run_datas])
                 )
                 for k in run_datas[0].keys()
             }
 
-            if cache_filename is not None:
+            if cache_filename is not None:  # Cache the accumulated data for later use, if it doesn't already exist.
                 with open(cache_filename, "w+") as f:
                     json.dump(
                         {k: v.tolist() for k, v in data.items()},
@@ -254,12 +254,12 @@ class Airfoil(Polygon):
             np.array([-180, -150, -120, -90, -60, -30]),
             alphas[::2],
             np.array([30, 60, 90, 120, 150, 180])
-        ])
+        ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
         Re_resample = np.concatenate([
             np.array([1e0, 1e1, 1e2, 1e3]),
             Res,
             np.array([1e8, 1e9, 1e10, 1e11, 1e12])
-        ])
+        ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
 
         x_data = {
             "alpha": data["alpha"],
@@ -298,6 +298,7 @@ class Airfoil(Polygon):
         )
 
         CD_if_separated = CD_if_separated + np.median(data["CD"])
+        # The line above effectively ensures that separated CD will never be less than attached CD. Not exactly, but generally close. A good heuristic.
 
         CL_separated_interpolator = UnstructuredInterpolatedModel(
             x_data=alpha_resample,
@@ -317,7 +318,12 @@ class Airfoil(Polygon):
         alpha_stall_negative = np.min(data["alpha"])  # Across all Re
 
         def separation_parameter(alpha, Re=0):
-            """Positive if separated, negative if attached."""
+            """
+            Positive if separated, negative if attached.
+
+            This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
+            ~90% separated, and a value of -1 means the flow is ~90% attached.
+            """
             return 0.5 * np.softmax(
                 alpha - alpha_stall_positive,
                 alpha_stall_negative - alpha
