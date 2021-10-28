@@ -313,8 +313,8 @@ class Airfoil(Polygon):
         )
 
         ### Determine if separated
-        alpha_stall_positive = np.max(data["alpha"]) # Across all Re
-        alpha_stall_negative = np.min(data["alpha"]) # Across all Re
+        alpha_stall_positive = np.max(data["alpha"])  # Across all Re
+        alpha_stall_negative = np.min(data["alpha"])  # Across all Re
 
         def separation_parameter(alpha, Re=0):
             """Positive if separated, negative if attached."""
