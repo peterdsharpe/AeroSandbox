@@ -105,9 +105,10 @@ class Airfoil(Polygon):
                 except:
                     pass
         else:
+
             try:  # If coordinates is a string, assume it's a filepath to a .dat file
                 self.coordinates = get_file_coordinates(filepath=coordinates)
-            except (OSError, FileNotFoundError):
+            except (OSError, FileNotFoundError, TypeError, UnicodeDecodeError):
                 try:
                     shape = coordinates.shape
                     assert len(shape) == 2
