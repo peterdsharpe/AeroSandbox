@@ -171,7 +171,7 @@ ax.view_init(38, -130)
 ax.set_xlabel("Latitude [deg. N]")
 ax.set_ylabel("Altitude [km]")
 ax.set_zlabel("Wind Speed [m/s]")
-plt.title("99th-percentile Wind Speeds\nContinental U.S., August, 1979-2020")
+plt.title("99th-Percentile Wind Speeds\nContinental U.S., August, 1979-2020")
 plt.legend()
 plt.subplots_adjust(
     bottom=0.055,
