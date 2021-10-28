@@ -176,14 +176,14 @@ class Airfoil(Polygon):
         if unstructured_interpolated_model_kwargs is None:
             unstructured_interpolated_model_kwargs = {}
 
-        xfoil_kwargs = {
+        xfoil_kwargs = { # See asb.XFoil for documentation on these.
             "verbose"      : False,
             "max_iter"     : 20,
             "xfoil_repanel": True,
             **xfoil_kwargs
         }
 
-        unstructured_interpolated_model_kwargs = {
+        unstructured_interpolated_model_kwargs = { # These were tuned heuristically as defaults!
             "resampling_interpolator_kwargs": {
                 "degree"   : 0,
                 # "kernel": "linear",
@@ -212,14 +212,14 @@ class Airfoil(Polygon):
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
-            def get_run_data(Re):
+            def get_run_data(Re): # Get the data for an XFoil alpha sweep at one specific Re.
                 run_data = XFoil(
                     airfoil=self,
                     Re=Re,
                     **xfoil_kwargs
                 ).alpha(alphas)
                 run_data["Re"] = Re * np.ones_like(run_data["alpha"])
-                return run_data
+                return run_data # Data is a dict where keys are figures of merit [str] and values are 1D ndarrays.
 
             from tqdm import tqdm
 
