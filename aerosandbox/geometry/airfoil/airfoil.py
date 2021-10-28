@@ -330,7 +330,7 @@ class Airfoil(Polygon):
             )
 
         def CL_function(alpha, Re, mach=0, deflection=0):
-            alpha = np.mod(alpha + 180, 360) - 180
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CL_attached = CL_attached_interpolator({
                 "alpha": alpha,
                 "ln_Re": np.log(Re),
@@ -343,7 +343,7 @@ class Airfoil(Polygon):
             )
 
         def CD_function(alpha, Re, mach=0, deflection=0):
-            alpha = np.mod(alpha + 180, 360) - 180
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             log10_CD_attached = log10_CD_attached_interpolator({
                 "alpha": alpha,
                 "ln_Re": np.log(Re),
@@ -356,7 +356,7 @@ class Airfoil(Polygon):
             )
 
         def CM_function(alpha, Re, mach=0, deflection=0):
-            alpha = np.mod(alpha + 180, 360) - 180
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CM_attached = CM_attached_interpolator({
                 "alpha": alpha,
                 "ln_Re": np.log(Re),
