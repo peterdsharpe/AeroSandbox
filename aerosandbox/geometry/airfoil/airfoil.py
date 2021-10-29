@@ -95,18 +95,37 @@ class Airfoil(Polygon):
         self.name = name
 
         ### Handle the coordinates
+        self.coordinates = None
         if coordinates is None:  # If no coordinates are given
             try:  # See if it's a NACA airfoil
-                coordinates = get_NACA_coordinates(name=self.name)
+                self.coordinates = get_NACA_coordinates(name=self.name)
             except:
                 try:  # See if it's in the UIUC airfoil database
-                    coordinates = get_UIUC_coordinates(name=self.name)
+                    self.coordinates = get_UIUC_coordinates(name=self.name)
                 except:
                     pass
-        elif isinstance(coordinates, str):  # If coordinates is a string, assume it's a filepath to a .dat file
-            coordinates = get_file_coordinates(filepath=coordinates)
+        else:
 
-        self.coordinates = coordinates
+            try:  # If coordinates is a string, assume it's a filepath to a .dat file
+                self.coordinates = get_file_coordinates(filepath=coordinates)
+            except (OSError, FileNotFoundError, TypeError, UnicodeDecodeError):
+                try:
+                    shape = coordinates.shape
+                    assert len(shape) == 2
+                    assert shape[0] == 2 or shape[1] == 2
+                    if not shape[1] == 2:
+                        coordinates = np.transpose(shape)
+
+                    self.coordinates = coordinates
+                except AttributeError:
+                    pass
+
+        if self.coordinates is None:
+            import warnings
+            warnings.warn(
+                f"Airfoil {self.name} had no coordinates assigned, and could not parse the `coordinates` input!",
+                stacklevel=2,
+            )
 
         ### Handle getting default polars
         if generate_polars:
@@ -157,14 +176,14 @@ class Airfoil(Polygon):
         if unstructured_interpolated_model_kwargs is None:
             unstructured_interpolated_model_kwargs = {}
 
-        xfoil_kwargs = {
+        xfoil_kwargs = {  # See asb.XFoil for documentation on these.
             "verbose"      : False,
             "max_iter"     : 20,
             "xfoil_repanel": True,
             **xfoil_kwargs
         }
 
-        unstructured_interpolated_model_kwargs = {
+        unstructured_interpolated_model_kwargs = {  # These were tuned heuristically as defaults!
             "resampling_interpolator_kwargs": {
                 "degree"   : 0,
                 # "kernel": "linear",
@@ -193,32 +212,32 @@ class Airfoil(Polygon):
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
-            def get_run_data(Re):
+            def get_run_data(Re):  # Get the data for an XFoil alpha sweep at one specific Re.
                 run_data = XFoil(
                     airfoil=self,
                     Re=Re,
                     **xfoil_kwargs
                 ).alpha(alphas)
                 run_data["Re"] = Re * np.ones_like(run_data["alpha"])
-                return run_data
+                return run_data  # Data is a dict where keys are figures of merit [str] and values are 1D ndarrays.
 
             from tqdm import tqdm
 
-            run_datas = [
+            run_datas = [  # Get a list of dicts, where each dict is the result of an XFoil run at a particular Re.
                 get_run_data(Re)
                 for Re in tqdm(
                     Res,
                     desc=f"Running XFoil to generate polars for Airfoil '{self.name}':",
                 )
             ]
-            data = {
+            data = {  # Merge the dicts into one big database of all runs.
                 k: np.concatenate(
                     tuple([run_data[k] for run_data in run_datas])
                 )
                 for k in run_datas[0].keys()
             }
 
-            if cache_filename is not None:
+            if cache_filename is not None:  # Cache the accumulated data for later use, if it doesn't already exist.
                 with open(cache_filename, "w+") as f:
                     json.dump(
                         {k: v.tolist() for k, v in data.items()},
@@ -235,12 +254,12 @@ class Airfoil(Polygon):
             np.array([-180, -150, -120, -90, -60, -30]),
             alphas[::2],
             np.array([30, 60, 90, 120, 150, 180])
-        ])
+        ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
         Re_resample = np.concatenate([
             np.array([1e0, 1e1, 1e2, 1e3]),
             Res,
             np.array([1e8, 1e9, 1e10, 1e11, 1e12])
-        ])
+        ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
 
         x_data = {
             "alpha": data["alpha"],
@@ -279,6 +298,7 @@ class Airfoil(Polygon):
         )
 
         CD_if_separated = CD_if_separated + np.median(data["CD"])
+        # The line above effectively ensures that separated CD will never be less than attached CD. Not exactly, but generally close. A good heuristic.
 
         CL_separated_interpolator = UnstructuredInterpolatedModel(
             x_data=alpha_resample,
@@ -294,18 +314,23 @@ class Airfoil(Polygon):
         )
 
         ### Determine if separated
-        alpha_stall_positive = np.max(data["alpha"]) # Across all Re
-        alpha_stall_negative = np.min(data["alpha"]) # Across all Re
+        alpha_stall_positive = np.max(data["alpha"])  # Across all Re
+        alpha_stall_negative = np.min(data["alpha"])  # Across all Re
 
         def separation_parameter(alpha, Re=0):
-            """Positive if separated, negative if attached."""
+            """
+            Positive if separated, negative if attached.
+
+            This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
+            ~90% separated, and a value of -1 means the flow is ~90% attached.
+            """
             return 0.5 * np.softmax(
                 alpha - alpha_stall_positive,
                 alpha_stall_negative - alpha
             )
 
         def CL_function(alpha, Re, mach=0, deflection=0):
-            alpha = np.mod(alpha + 180, 360) - 180
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CL_attached = CL_attached_interpolator({
                 "alpha": alpha,
                 "ln_Re": np.log(Re),
@@ -318,7 +343,7 @@ class Airfoil(Polygon):
             )
 
         def CD_function(alpha, Re, mach=0, deflection=0):
-            alpha = np.mod(alpha + 180, 360) - 180
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             log10_CD_attached = log10_CD_attached_interpolator({
                 "alpha": alpha,
                 "ln_Re": np.log(Re),
@@ -331,7 +356,7 @@ class Airfoil(Polygon):
             )
 
         def CM_function(alpha, Re, mach=0, deflection=0):
-            alpha = np.mod(alpha + 180, 360) - 180
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CM_attached = CM_attached_interpolator({
                 "alpha": alpha,
                 "ln_Re": np.log(Re),

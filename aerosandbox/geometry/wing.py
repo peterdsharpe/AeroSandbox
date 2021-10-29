@@ -821,7 +821,7 @@ class WingXSec(AeroSandboxObject):
                  xyz_le: np.ndarray = np.array([0, 0, 0]),
                  chord: float = 1.,
                  twist: float = 0,
-                 airfoil: Airfoil = Airfoil("naca0012"),
+                 airfoil: Airfoil = None,
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
                  control_surface_deflection: float = 0.,
@@ -843,6 +843,9 @@ class WingXSec(AeroSandboxObject):
             control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
             control_surface_deflection: Control deflection, in degrees. Downwards-positive.
         """
+        if airfoil is None:
+            airfoil = Airfoil("naca0012")
+
         if twist_angle is not None:
             import warnings
             warnings.warn(

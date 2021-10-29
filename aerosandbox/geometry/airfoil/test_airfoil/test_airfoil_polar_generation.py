@@ -17,16 +17,24 @@ if __name__ == '__main__':
     from aerosandbox.tools.pretty_plots import plt, show_plot, contour
 
     fig, ax = plt.subplots()
-    contour(Alpha, Re, CL, levels=30)
+    contour(Alpha, Re, CL, levels=30, colorbar_label=r"$C_L$")
     plt.scatter(af.xfoil_data["alpha"], af.xfoil_data["Re"], color="k", alpha=0.2)
     plt.yscale('log')
-    show_plot()
+    show_plot(
+        f"Auto-generated Polar for {af.name} Airfoil",
+        "Angle of Attack [deg]",
+        "Reynolds Number [-]",
+    )
 
     fig, ax = plt.subplots()
-    contour(Alpha, Re, np.log10(CD), levels=30)
+    contour(Alpha, Re, CD, levels=30, colorbar_label=r"$C_D$", z_log_scale=True)
     plt.scatter(af.xfoil_data["alpha"], af.xfoil_data["Re"], color="k", alpha=0.2)
     plt.yscale('log')
-    show_plot()
+    show_plot(
+        f"Auto-generated Polar for {af.name} Airfoil",
+        "Angle of Attack [deg]",
+        "Reynolds Number [-]",
+    )
 
     ##### Plot Polars
     fig, ax = plt.subplots(2, 2, figsize=(8, 8))
@@ -43,20 +51,28 @@ if __name__ == '__main__':
     plt.sca(ax[0, 0])
     plt.plot(ma, mCL)
     plt.plot(xa, xCL, ".")
+    plt.xlabel("Angle of Attack [deg]")
+    plt.ylabel("Lift Coefficient $C_L$ [-]")
 
     plt.sca(ax[0, 1])
     plt.plot(ma, mCD)
     plt.plot(xa, xCD, ".")
     plt.ylim(0, 0.05)
+    plt.xlabel("Angle of Attack [deg]")
+    plt.ylabel("Drag Coefficient $C_D$ [-]")
 
     plt.sca(ax[1, 0])
     plt.plot(mCD, mCL)
     plt.plot(xCD, xCL, ".")
     plt.xlim(0, 0.05)
+    plt.xlabel("Drag Coefficient $C_D$ [-]")
+    plt.ylabel("Lift Coefficient $C_L$ [-]")
 
     plt.sca(ax[1, 1])
     plt.plot(ma, mCL / mCD)
     plt.plot(xa, xCL / xCD, ".")
+    plt.xlabel("Angle of Attack [deg]")
+    plt.ylabel("Lift-to-Drag Ratio $C_L/C_D$ [-]")
 
     show_plot()
 
