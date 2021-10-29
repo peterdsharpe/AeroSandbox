@@ -61,25 +61,25 @@ def test_gpkit_style_solve():
     C_D_fuse = CDA0 / S
     C_D_wpar = k * C_f * S_wetratio
     C_D_ind = C_L ** 2 / (pi * A * e)
-    opti.subject_to(cas.log(C_D) >= cas.log(C_D_fuse + C_D_wpar + C_D_ind))
+    opti.subject_to(np.log(C_D) >= np.log(C_D_fuse + C_D_wpar + C_D_ind))
 
     # Wing weight model
     W_w_strc = W_W_coeff1 * (N_ult * A ** 1.5 * (W_0 * W * S) ** 0.5) / tau
     W_w_surf = W_W_coeff2 * S
-    opti.subject_to(cas.log(W_w) >= cas.log(W_w_surf + W_w_strc))
+    opti.subject_to(np.log(W_w) >= np.log(W_w_surf + W_w_strc))
 
     # Other models
     opti.subject_to([
-        cas.log(D) >= cas.log(0.5 * rho * S * C_D * V ** 2),
-        cas.log(Re) <= cas.log((rho / mu) * V * (S / A) ** 0.5),
-        cas.log(C_f) >= cas.log(0.074 / Re ** 0.2),
-        cas.log(W) <= cas.log(0.5 * rho * S * C_L * V ** 2),
-        cas.log(W) <= cas.log(0.5 * rho * S * C_Lmax * V_min ** 2),
-        cas.log(W) >= cas.log(W_0 + W_w),
+        np.log(D) >= np.log(0.5 * rho * S * C_D * V ** 2),
+        np.log(Re) <= np.log((rho / mu) * V * (S / A) ** 0.5),
+        np.log(C_f) >= np.log(0.074 / Re ** 0.2),
+        np.log(W) <= np.log(0.5 * rho * S * C_L * V ** 2),
+        np.log(W) <= np.log(0.5 * rho * S * C_Lmax * V_min ** 2),
+        np.log(W) >= np.log(W_0 + W_w),
     ])
 
     # Objective
-    opti.minimize(cas.log(D))
+    opti.minimize(np.log(D))
 
     sol = opti.solve()
 

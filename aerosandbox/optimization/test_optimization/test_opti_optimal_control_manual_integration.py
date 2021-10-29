@@ -55,17 +55,17 @@ def test_rocket_control_problem(plot=False):
     a_max = opti.variable(init_guess=0)  # maximum acceleration
 
     opti.subject_to([
-        cas.diff(x) == v[:-1],  # physics
-        cas.diff(v) == a[:-1],  # physics
+        np.diff(x) == v[:-1],  # physics
+        np.diff(v) == a[:-1],  # physics
         x[0] == 0,  # boundary condition
         v[0] == 0,  # boundary condition
         x[-1] == d,  # boundary condition
         v[-1] == 0,  # boundary condition
         gamma >= c * a,  # lower bound on instantaneous fuel consumption
         gamma >= -c * a,  # lower bound on instantaneous fuel consumption
-        cas.sum1(gamma) <= f,  # fuel consumption limit
-        cas.diff(a) <= delta,  # jerk limits
-        cas.diff(a) >= -delta,  # jerk limits
+        np.sum(gamma) <= f,  # fuel consumption limit
+        np.diff(a) <= delta,  # jerk limits
+        np.diff(a) >= -delta,  # jerk limits
         a_max >= a,  # lower bound on maximum acceleration
         a_max >= -a,  # lower bound on maximum acceleration
     ])
