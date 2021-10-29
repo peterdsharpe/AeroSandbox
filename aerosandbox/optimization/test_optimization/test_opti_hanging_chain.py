@@ -1,5 +1,4 @@
 import aerosandbox as asb
-from aerosandbox import cas
 import aerosandbox.numpy as np
 import pytest
 import matplotlib.pyplot as plt
