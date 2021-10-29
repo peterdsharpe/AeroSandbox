@@ -235,6 +235,14 @@ def contour(
             **shared_kwargs
         }
 
+        if np.min(Z) <= 0:
+            import warnings
+            warnings.warn(
+                "Warning: All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!",
+                stacklevel=2
+            )
+            Z = np.maximum(Z, 1e-300) # Make all values nonnegative
+
     if colorbar_label is not None:
         colorbar_kwargs["label"] = colorbar_label
 

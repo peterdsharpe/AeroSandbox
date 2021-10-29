@@ -5,7 +5,6 @@ import pytest
 def w() -> Wing:
     wing = Wing(
         name="MyWing",
-        xyz_le=np.array([1, 2, 3]),
         xsecs=[
             WingXSec(
                 xyz_le=np.array([1, 1, 0]),
@@ -21,7 +20,7 @@ def w() -> Wing:
             )
         ],
         symmetric=True
-    )
+    ).translate(np.array([1, 2, 3]))
     return wing
 
 
