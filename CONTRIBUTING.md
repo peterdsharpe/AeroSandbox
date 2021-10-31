@@ -111,7 +111,7 @@ This is all pretty standard across all scientific computing in Python:
 
   The only exception is when units are explicitly noted as a suffix in a variable name: for example `battery_capacity_watt_hours` is in units of watt-hours, and `altitude_ft` is in units of feet.
 
-* Every function is required to be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are preferred but not required - as long as your docstring is intelligible to an average engineer who might come across it, you're fine. It is highly recommended (but not required) that you also do the following:
+* Every new user-facing function is required to be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are preferred but not required - as long as your docstring is intelligible to an average engineer who might come across it, you're fine. It is highly recommended (but not required) that you also do the following:
 
 	* Document the purpose, function, and expected input type(s) of every input parameter within this docstring.
 	* [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.

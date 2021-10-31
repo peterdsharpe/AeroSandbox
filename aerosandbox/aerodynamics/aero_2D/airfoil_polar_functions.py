@@ -6,7 +6,7 @@ import aerosandbox.library.aerodynamics as aerolib
 
 def airfoil_coefficients_post_stall(
         airfoil: Airfoil,
-        op_point: OperatingPoint,
+        alpha: float,
 ):
     """
     Estimates post-stall aerodynamics of an airfoil.
@@ -23,7 +23,6 @@ def airfoil_coefficients_post_stall(
     Returns:
 
     """
-    alpha = op_point.alpha
     sina = np.sind(alpha)
     cosa = np.cosd(alpha)
 
@@ -40,7 +39,6 @@ def airfoil_coefficients_post_stall(
     pt2_star = -1.78e-1
     pt3_star = -2.98e-1
 
-
     Cd90 = Cd90_0 + pn2_star * cosa + pn3_star * cosa ** 2
     CN = Cd90 * sina
 
@@ -50,7 +48,7 @@ def airfoil_coefficients_post_stall(
     ##### Conversion to wind axes
     CL = CN * cosa + CT * sina
     CD = CN * sina - CT * cosa
-    CM = 0
+    CM = np.zeros_like(CL)  # TODO
 
     return CL, CD, CM
 
@@ -59,18 +57,19 @@ if __name__ == '__main__':
     af = Airfoil("naca0012")
     alpha = np.linspace(0, 360, 721)
     CL, CD, CM = airfoil_coefficients_post_stall(
-        af, OperatingPoint(alpha=alpha)
+        af, alpha
     )
     from aerosandbox.tools.pretty_plots import plt, show_plot, set_ticks
-    fig, ax = plt.subplots(1,2, figsize=(8, 5))
+
+    fig, ax = plt.subplots(1, 2, figsize=(8, 5))
     plt.sca(ax[0])
     plt.plot(alpha, CL)
     plt.xlabel("AoA")
     plt.ylabel("CL")
-    set_ticks(45,15,0.5,0.1)
+    set_ticks(45, 15, 0.5, 0.1)
     plt.sca(ax[1])
     plt.plot(alpha, CD)
     plt.xlabel("AoA")
     plt.ylabel("CD")
-    set_ticks(45,15,0.5,0.1)
+    set_ticks(45, 15, 0.5, 0.1)
     show_plot()

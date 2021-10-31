@@ -1,6 +1,5 @@
-import math
 import hashlib
-
+import aerosandbox.numpy as np
 
 def eng_string(
         x: float,
@@ -47,7 +46,9 @@ def eng_string(
         sign = '-'
     elif x == 0:
         return format % 0
-    exp = int(math.floor(math.log10(x)))
+    elif np.isnan(x):
+        return "NaN"
+    exp = int(np.floor(np.log10(x)))
     exp3 = exp - (exp % 3)
     x3 = x / (10 ** exp3)
 

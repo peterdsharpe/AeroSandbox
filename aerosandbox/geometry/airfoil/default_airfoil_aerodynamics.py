@@ -4,8 +4,12 @@ from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
 
 
 def print_default_warning():
-    warnings.warn("Warning: Using a default NACA0012 aerodynamics model for this airfoil!\n"
-                  "To use a better, more accurate one, specify functions in the Airfoil constructor.")
+    warnings.warn("\n".join([
+        "Warning: Using a placeholder aerodynamics model for this Airfoil!",
+        "It's highly recommended that you either:",
+        "\ta) Specify polar functions in the Airfoil constructor, or",
+        "\tb) Call Airfoil.generate_polars() to auto-generate these polar functions with XFoil."
+    ]), stacklevel=3)
 
 
 def default_CL_function(alpha, Re, mach=0, deflection=0):

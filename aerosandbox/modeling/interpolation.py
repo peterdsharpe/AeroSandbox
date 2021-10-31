@@ -1,12 +1,11 @@
 from typing import Union, Dict
-
 import aerosandbox.numpy as np
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 
 
 class InterpolatedModel(SurrogateModel):
     """
-    A model that is interpolated to structured (i.e. gridded) N-dimensional data. Maps from R^N -> R^1.
+    A model that is interpolated to structured (i.e., gridded) N-dimensional data. Maps from R^N -> R^1.
 
     You can evaluate this model at a given point by calling it just like a function, e.g.:
 
@@ -14,7 +13,7 @@ class InterpolatedModel(SurrogateModel):
 
     The input to the model (`x` in the example above) is of the type:
         * in the general N-dimensional case, a dictionary where: keys are variable names and values are float/array
-        * in the case of a 1-dimensional input (R^1 -> R^1), a float/array.
+        * in the case of a 1-dimensional input (R^1 -> R^1), it can optionally just be a float/array.
     If you're not sure what the input type of `my_interpolated_model` should be, just do:
 
     >>> print(my_interpolated_model) # Displays the valid input type to the model
@@ -34,10 +33,10 @@ class InterpolatedModel(SurrogateModel):
                  x_data_coordinates: Union[np.ndarray, Dict[str, np.ndarray]],
                  y_data_structured: np.ndarray,
                  method: str = "bspline",
-                 fill_value=np.NaN,  # Default behavior NaNs outside range
+                 fill_value=np.NaN,  # Default behavior: return NaN for all inputs outside data range.
                  ):
         """
-        Create the interpolator. Note that data must be structured (i.e. gridded on a hypercube) for general
+        Create the interpolator. Note that data must be structured (i.e., gridded on a hypercube) for general
         N-dimensional interpolation.
 
         Args:
@@ -71,19 +70,17 @@ class InterpolatedModel(SurrogateModel):
             method: The method of interpolation to perform. Options:
 
                 * "bspline" (Note: differentiable and suitable for optimization - made of piecewise-cubics. For other
-                applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot.)
+                applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot. Watch
+                out for Runge's phenomenon; on that note, if your data is noisy, consider smoothing it first.)
 
                 * "linear" (Note: differentiable, but not suitable for use in optimization w/o subgradient treatment due
                 to C1-discontinuity)
 
                 * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
 
-            bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
-            a ValueError is raised. If False, then fill_value is used.
-
-            fill_value: Only used if `bounds_error` is False. If `fill_value` is provided, it is the value to use for
-            points outside of the interpolation domain. If None, values outside the domain are extrapolated,
-            if possible given the `method` chosen.
+            fill_value: Gives the value that the interpolator should return for points outside of the interpolation
+            domain. The interpolation domain is defined as the hypercube bounded by the coordinates specified in
+            `x_data_coordinates`. If fill_value is None, then the interpolator will attempt to extrapolate if the interpolation method allows.
 
         """
         try:
@@ -125,12 +122,31 @@ class InterpolatedModel(SurrogateModel):
 
     def __call__(self, x):
         if isinstance(self.x_data_coordinates, dict):
+            def get_shape(value):
+                try:
+                    return value.shape
+                except AttributeError:
+                    return tuple()
+
+            shape = np.broadcast_shapes(
+                *[get_shape(v) for v in x.values()]
+            )
+            shape_for_reshaping = (int(np.product(shape)),)
+
+            def reshape(value):
+                try:
+                    return np.reshape(value, shape_for_reshaping)
+                except ValueError:
+                    if isinstance(value, int) or isinstance(value, float) or value.shape == tuple() or np.product(value.shape) == 1:
+                        return value * np.ones(shape_for_reshaping)
+                raise ValueError("Could not reshape value of one of the inputs!")
+
             x = np.stack(tuple(
-                x[k]
+                reshape(x[k])
                 for k, v in self.x_data_coordinates.items()
             ))
 
-        return np.interpn(
+        output = np.interpn(
             points=self.x_data_coordinates_values,
             values=self.y_data_structured,
             xi=x,
@@ -138,3 +154,7 @@ class InterpolatedModel(SurrogateModel):
             bounds_error=False,  # Can't be set true if general MX-type inputs are to be expected.
             fill_value=self.fill_value
         )
+        try:
+            return np.reshape(output, shape)
+        except UnboundLocalError:
+            return output
