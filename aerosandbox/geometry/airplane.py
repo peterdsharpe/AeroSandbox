@@ -284,6 +284,7 @@ class Airplane(AeroSandboxObject):
         0
         """)
 
+        num_control_surface = 1
         for wing in self.wings:
             symmetry_line = "YDUPLICATE\n0" if wing.symmetric else ""
 
@@ -300,7 +301,7 @@ class Airplane(AeroSandboxObject):
             0
             """)
 
-            for xsec in wing.xsecs:
+            for idx_xsec, xsec in enumerate(wing.xsecs):
 
                 string += clean(f"""\
                 #{"-" * 50}
@@ -311,14 +312,32 @@ class Airplane(AeroSandboxObject):
                 AIRFOIL
                 {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
                 
-                #Cname   Cgain  Xhinge  HingeVec     SgnDup # TODO
-                #CONTROL
-                #csurf     1.0   0.75    0.0 0.0 0.0   1.0
-                
                 CLAF
                 {1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt
                 """)
 
+                # control surface n is defined using xsec i, spanning the section from xsec i to xsec i + 1
+                if idx_xsec == 0: # first xsec in wing
+                    idx_xsecs_active = [idx_xsec]
+                    idx_control_surfaces_active = [num_control_surface]
+                    num_control_surface += 1
+                elif idx_xsec == len(wing.xsecs) - 1: # last xsec in wing
+                    idx_xsecs_active = [idx_xsec - 1]
+                    idx_control_surfaces_active = [num_control_surface - 1]
+                else:
+                    idx_xsecs_active = [idx_xsec - 1, idx_xsec]
+                    idx_control_surfaces_active = [num_control_surface - 1, num_control_surface]
+                    num_control_surface += 1
+                
+                for idx_xsec_active, idx_control_surface_active in zip(idx_xsecs_active, idx_control_surfaces_active):
+                    xsec_active = wing.xsecs[idx_xsec_active]
+                    sign_duplication = 1.0 if xsec_active.control_surface_is_symmetric else -1.0
+                    string += clean(f"""
+                    CONTROL
+                    #Cname Cgain Xhinge HingeVec SgnDup
+                    control{idx_control_surface_active} 1.0 {xsec_active.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
+                    """)
+                
         for i, fuse in enumerate(self.fuselages):
             fuse_filepath = Path(str(filepath) + f".fuse{i}")
             fuse.write_avl_bfile(

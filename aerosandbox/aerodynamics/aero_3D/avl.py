@@ -122,6 +122,16 @@ class AVL(ExplicitAnalysis):
             f"y y {r_bar}"
         ]
 
+        # Set control surface deflections
+        control_counter = 0
+        for wing in self.airplane.wings:
+            for xsec in wing.xsecs[:-1]: # there are n - 1 control surfaces for a wing with n xsecs
+                control_counter += 1
+                control_name = f"d{control_counter}"
+                run_file_contents += [
+                    f"{control_name} {control_name} {xsec.control_surface_deflection}"
+                ]
+
         return run_file_contents
 
     def _run_avl(self,
@@ -190,17 +200,41 @@ class AVL(ExplicitAnalysis):
             # Trim off the first few lines that contain name, # of panels, etc.
             output_data = "\n".join(output_data.split("\n")[8:])
 
-            ### Iterate through the string to find all the numeric values, based on where "=" appears.
+            ### Iterate through the string to find all the keys and corresponding numeric values, based on where "=" appears.
+            keys = []
             values = []
             index = output_data.find("=")
+
             while index != -1:
+
+                # All keys contain no spaces except for "Clb Cnr / Clr Cnb" (spiral stability parameter)
+                potential_keys = output_data[:index].split()
+                if potential_keys[-1] == "Cnb" and len(potential_keys) >= 5:
+                    potential_key = " ".join(potential_keys[-5:])
+                    if potential_key == "Clb Cnr / Clr Cnb":
+                        key = potential_key
+                    else:
+                        key = potential_keys[-1]
+                else:
+                    key = potential_keys[-1]
+
+                keys.append(key)
                 output_data = output_data[index + 1:]
                 number = output_data[:12].split("\n")[0]
-                number = float(number)
+                try:
+                    number = float(number)
+                except:
+                    number = np.nan
                 values.append(number)
 
                 index = output_data.find("=")
 
+            # Make key names consistent with AeroSandbox notation
+            keys_lowerize = ["Alpha", "Beta", "Mach"]
+            keys = [key.lower() if key in keys_lowerize else key for key in keys]
+            keys = [key.replace("tot", "") for key in keys]
+
+            """
             ### Record the keys associated with those values:
             keys = [
                 "Sref",
@@ -261,8 +295,9 @@ class AVL(ExplicitAnalysis):
                 "Xnp",
                 "Clb Cnr / Clr Cnb"
             ]
+            """
 
-            if len(values) != 57 and len(values) != 56:  # Sometimes the spiral mode term is inexplicably not displayed by AVL
+            if len(values) < 56:  # Sometimes the spiral mode term is inexplicably not displayed by AVL
                 raise RuntimeError(
                     "AVL could not run for some reason!\n"
                     "Investigate by turning on the `verbose` flag and looking at the output.\n"
