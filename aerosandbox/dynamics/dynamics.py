@@ -322,22 +322,28 @@ class FreeBodyDynamics(AeroSandboxObject):
                 x_from, y_from, z_from,
                 from_axes=from_axes, to_axes="body"
             )
-        except ValueError as e:
-            if from_axes == "earth":
-                do_earth_thing()  # TODO DO
-            else:
-                raise e
 
-        try:
+        if to_axes == "earth":
+            x_to = (
+                    (cthe * cpsi) * x_b +
+                    (sphi * sthe * cpsi - cphi * spsi) * y_b +
+                    (cphi * sthe * cpsi + sphi * spsi) * z_b
+            )
+            y_to = (
+                    (cthe * spsi) * x_b +
+                    (sphi * sthe * spsi + cphi * cpsi) * y_b +
+                    (cphi * sthe * spsi - sphi * cpsi) * z_b
+            )
+            z_to = (
+                    (-sthe) * x_b +
+                    (sphi * cthe) * y_b +
+                    (cphi * cthe) * z_b
+            )
+        else:
             x_to, y_to, z_to = self.op_point.convert_axes(
                 x_b, y_b, z_b,
                 from_axes="body", to_axes=to_axes
             )
-        except ValueError as e:
-            if to_axes == "earth":
-                do_earth_thing()  # TODO DO
-            else:
-                raise e
 
         return x_to, y_to, z_to
 
