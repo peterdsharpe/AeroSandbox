@@ -8,7 +8,6 @@ import warnings
 
 class FreeBodyDynamics(AeroSandboxObject):
     def __init__(self,
-                 time: np.ndarray,
                  xe: np.ndarray = None,
                  ye: np.ndarray = None,
                  ze: np.ndarray = None,
@@ -39,9 +38,9 @@ class FreeBodyDynamics(AeroSandboxObject):
                  hy=0,
                  hz=0,
                  opti_to_add_constraints_to: Opti = None,
+                 time: np.ndarray = None,
                  ):
 
-        self.time = time
         self.xe = 0 if xe is None else xe
         self.ye = 0 if ye is None else ye
         self.ze = 0 if ze is None else ze
@@ -71,8 +70,12 @@ class FreeBodyDynamics(AeroSandboxObject):
         self.hx = hx
         self.hy = hy
         self.hz = hz
+        self.time = time
 
         if opti_to_add_constraints_to is not None:
+            if time is None:
+                raise ValueError("`time` parameter must be an array-like if `opti_to_add_constraints_to` is given!")
+
             state = self.state
             state_derivatives = self.state_derivatives()
             for k in state.keys():  # TODO default to second-order integration for position, angles
