@@ -265,15 +265,15 @@ class FreeBodyDynamics(AeroSandboxObject):
         """
         return self.mass * self.g * self.altitude
 
-    # def d_kinetic_energy(self):
-    #     Fg_xb, Fg_yb, Fg_zb = self.convert_axes(0, 0, self.g, from_axes="earth", to_axes="body")
-    #
-    #     d_KE = (
-    #             (self.X + Fg_xb) * self.u +
-    #             (self.Y + Fg_yb) * self.v +
-    #             (self.Z + Fg_zb) * self.w
-    #     )
-    #     return d_KE
+    def d_kinetic_energy(self):
+        Fg_xb, Fg_yb, Fg_zb = self.convert_axes(0, 0, self.g, from_axes="earth", to_axes="body")
+
+        d_KE = (
+                (self.X + Fg_xb) * self.u +
+                (self.Y + Fg_yb) * self.v +
+                (self.Z + Fg_zb) * self.w
+        )
+        return d_KE
 
     @property
     def altitude(self):
