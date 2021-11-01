@@ -1,5 +1,4 @@
 import aerosandbox as asb
-from aerosandbox import cas
 import aerosandbox.numpy as np
 import pytest
 import matplotlib.pyplot as plt
@@ -27,19 +26,19 @@ def test_opti_hanging_chain_with_callback(plot=False):
     opti = asb.Opti()
 
     x = opti.variable(
-        init_guess=cas.linspace(-2, 2, N)
+        init_guess=np.linspace(-2, 2, N)
     )
     y = opti.variable(
         init_guess=1,
         n_vars=N,
     )
 
-    distance = cas.sqrt(  # Distance from one node to the next
-        cas.diff(x) ** 2 + cas.diff(y) ** 2
+    distance = np.sqrt(  # Distance from one node to the next
+        np.diff(x) ** 2 + np.diff(y) ** 2
     )
 
-    potential_energy_spring = 0.5 * D * cas.sumsqr(distance - L / N)
-    potential_energy_gravity = g * m * cas.sum1(y)
+    potential_energy_spring = 0.5 * D * np.sum((distance - L / N) ** 2)
+    potential_energy_gravity = g * m * np.sum(y)
     potential_energy = potential_energy_spring + potential_energy_gravity
 
     opti.minimize(potential_energy)
@@ -54,7 +53,7 @@ def test_opti_hanging_chain_with_callback(plot=False):
 
     # Add a ground constraint
     opti.subject_to(
-        y >= cas.cos(0.1 * x) - 0.5
+        y >= np.cos(0.1 * x) - 0.5
     )
 
     # Add a callback

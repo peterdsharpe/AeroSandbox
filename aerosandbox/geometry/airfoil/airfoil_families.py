@@ -194,7 +194,7 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
             pass
 
     if len(raw_coordinates) == 0:
-        raise ValueError("File was found, but could not read any coordinates!")
+        raise ValueError("Could not read any coordinates from the `raw_text` input!")
 
     coordinates = np.array(raw_coordinates, dtype=float)
 
@@ -221,7 +221,10 @@ def get_file_coordinates(
                 f" Neither '{filepath}' nor '{filepath}.dat' were found and readable."
             ) from e
 
-    return get_coordinates_from_raw_dat(raw_text)
+    try:
+        return get_coordinates_from_raw_dat(raw_text)
+    except ValueError:
+        raise ValueError("File was found, but could not read any coordinates!")
 
 
 def get_UIUC_coordinates(

@@ -1,5 +1,4 @@
 import aerosandbox as asb
-from aerosandbox import cas
 import aerosandbox.numpy as np
 import pytest
 import os
@@ -8,6 +7,9 @@ import os
 Minimization over a simple unimodal function is used here:
     Minimize (x-1) ** 2 + (y-1) ** 2
 """
+
+def sumsqr(x):
+    return np.sum(x ** 2)
 
 
 def test_opti():
@@ -154,7 +156,7 @@ def test_save_and_load_opti_vectorized(tmp_path):
     )
     x = opti.variable(init_guess=0, n_vars=3, category="Cat 1")
     y = opti.variable(init_guess=0, n_vars=3, category="Cat 2")
-    f = cas.sumsqr(x - 1) + cas.sumsqr(y - 2)
+    f = sumsqr(x - 1) + sumsqr(y - 2)
     opti.minimize(f)
 
     # Optimize, save to cache, print
@@ -177,7 +179,7 @@ def test_save_and_load_opti_vectorized(tmp_path):
     )
     x = opti.variable(init_guess=0, n_vars=3, category="Cat 1")
     y = opti.variable(init_guess=0, n_vars=3, category="Cat 2")
-    f = cas.sumsqr(x - 3) + cas.sumsqr(y - 4)
+    f = sumsqr(x - 3) + sumsqr(y - 4)
     opti.minimize(f)
 
     # Optimize, save to cache, print
