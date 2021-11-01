@@ -233,6 +233,46 @@ class FreeBodyDynamics(AeroSandboxObject):
                ) ** 0.5
 
     @property
+    def translational_kinetic_energy(self):
+        speed_squared = (
+                self.u ** 2 +
+                self.v ** 2 +
+                self.w ** 2
+        )
+        return 0.5 * self.mass * speed_squared
+
+    @property
+    def rotational_kinetic_energy(self):
+        return 0.5 * (
+                self.Ixx * self.p ** 2 +
+                self.Iyy * self.q ** 2 +
+                self.Izz * self.r ** 2
+        )
+
+    @property
+    def kinetic_energy(self):
+        return self.translational_kinetic_energy + self.rotational_kinetic_energy
+
+    @property
+    def potential_energy(self):
+        """
+        Gives the potential energy [J] from gravity.
+
+        PE = mgh
+        """
+        return self.mass * self.g * self.altitude
+
+    # def d_kinetic_energy(self):
+    #     Fg_xb, Fg_yb, Fg_zb = self.convert_axes(0, 0, self.g, from_axes="earth", to_axes="body")
+    #
+    #     d_KE = (
+    #             (self.X + Fg_xb) * self.u +
+    #             (self.Y + Fg_yb) * self.v +
+    #             (self.Z + Fg_zb) * self.w
+    #     )
+    #     return d_KE
+
+    @property
     def altitude(self):
         return -self.ze
 
@@ -282,22 +322,22 @@ class FreeBodyDynamics(AeroSandboxObject):
                 x_from, y_from, z_from,
                 from_axes=from_axes, to_axes="body"
             )
-        except ValueError:
+        except ValueError as e:
             if from_axes == "earth":
-                do_earth_thing() # TODO DO
+                do_earth_thing()  # TODO DO
             else:
-                raise ValueError("Bad value of `from_axes`!")
+                raise e
 
         try:
             x_to, y_to, z_to = self.op_point.convert_axes(
                 x_b, y_b, z_b,
                 from_axes="body", to_axes=to_axes
             )
-        except ValueError:
+        except ValueError as e:
             if to_axes == "earth":
-                do_earth_thing() # TODO DO
+                do_earth_thing()  # TODO DO
             else:
-                raise ValueError("Bad value of `to_axes`!")
+                raise e
 
         return x_to, y_to, z_to
 
