@@ -250,10 +250,17 @@ class Opti(cas.Opti):
         var.is_manually_frozen = is_manually_frozen
 
         # Apply bounds
-        if lower_bound is not None:
-            self.subject_to(var >= lower_bound)
-        if upper_bound is not None:
-            self.subject_to(var <= upper_bound)
+        if not log_transform:
+            if lower_bound is not None:
+                self.subject_to(var / scale >= lower_bound / scale)
+            if upper_bound is not None:
+                self.subject_to(var / scale <= upper_bound / scale)
+        else:
+            if lower_bound is not None:
+                self.subject_to(log_var / log_scale >= np.log(lower_bound) / log_scale)
+            if upper_bound is not None:
+                self.subject_to(log_var / log_scale <= np.log(upper_bound) / log_scale)
+
 
         return var
 
