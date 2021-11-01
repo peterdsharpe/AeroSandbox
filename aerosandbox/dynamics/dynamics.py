@@ -317,7 +317,56 @@ class FreeBodyDynamics(AeroSandboxObject):
         Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
 
         """
-        try:
+        if from_axes == "earth" or to_axes == "earth":
+            ### Trig Shorthands
+            def sincos(x):
+                try:
+                    x = np.mod(x, 2 * np.pi)
+                    one = np.ones_like(x)
+                    zero = np.zeros_like(x)
+
+                    if np.allclose(x, 0) or np.allclose(x, 2 * np.pi):
+                        sin = zero
+                        cos = one
+                    elif np.allclose(x, np.pi / 2):
+                        sin = one
+                        cos = zero
+                    elif np.allclose(x, np.pi):
+                        sin = zero
+                        cos = -one
+                    elif np.allclose(x, 3 * np.pi / 2):
+                        sin = -one
+                        cos = zero
+                    else:
+                        raise ValueError()
+                except:
+                    sin = np.sin(x)
+                    cos = np.cos(x)
+                return sin, cos
+
+                # Do the trig
+
+            sphi, cphi = sincos(self.phi)
+            sthe, cthe = sincos(self.theta)
+            spsi, cpsi = sincos(self.psi)
+
+        if from_axes == "earth":
+            x_b = (
+                    (cthe * cpsi) * x_from +
+                    (cthe * spsi) * y_from +
+                    (-sthe) * z_from
+            )
+            y_b = (
+                    (sphi * sthe * cpsi - cphi * spsi) * x_from +
+                    (sphi * sthe * spsi + cphi * cpsi) * y_from +
+                    (sphi * cthe) * z_from
+            )
+            z_b = (
+                    (cphi * sthe * cpsi + sphi * spsi) * x_from +
+                    (cphi * sthe * spsi - sphi * cpsi) * y_from +
+                    (cphi * cthe) * z_from
+            )
+        else:
             x_b, y_b, z_b = self.op_point.convert_axes(
                 x_from, y_from, z_from,
                 from_axes=from_axes, to_axes="body"
