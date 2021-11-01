@@ -75,30 +75,33 @@ This is all pretty standard across all scientific computing in Python:
 
 * Use long, descriptive variable names. Use `temperature` instead of `T`. Use `wing_tip_coordinate_x` instead of `wtx`. In the age of modern IDEs with autocomplete and one-click refactoring, there is no reason not to obfuscate meaning with short variable names. Long variable names also force you to split complicated expressions onto multiple lines; this is a good thing (see the following point).
 
-* Spread expressions across multiple lines based on natural groupings of ideas. Generally, all functions with multiple input parameters should have each parameter on a new line unless it exceptionally short (something like `range(3,10)`, for example). Some examples of discouraged and encouraged coding standards:
+  * Spread expressions across multiple lines based on natural groupings of ideas. Generally, all functions with multiple input parameters should have each parameter on a new line unless it exceptionally short (something like `range(3,10)`, for example). Some examples of discouraged and encouraged coding standards:
 
-    ```python
-    ### This is discouraged:
-    distance = ((x_start - x_end) ** 2 + (y_start - y_end) ** 2) ** 0.5
+      ```python
+      ### This is discouraged:
+      distance = ((x_start - x_end) ** 2 + (y_start - y_end) ** 2) ** 0.5
     
-    ### Instead, do this:
-    distance = (
-        (x_start - x_end) ** 2 +
-        (y_start - y_end) ** 2
-    ) ** 0.5
-    ```
+      ### Instead, do this:
+      distance = (
+          (x_start - x_end) ** 2 +
+          (y_start - y_end) ** 2
+      ) ** 0.5
+      ```
 
-    ```python
-    ### This is discouraged:
-    np.linspace(temperature_start, temperature_end, n_temperature_points)
+      ```python
+      ### This is discouraged:
+      plt.plot(time, temperature, ".-", color='lightgrey', alpha=0.6, label="Temperature over time")
     
-    ### Instead, do this:
-    np.linspace(
-        temperature_start,
-        temperature_end,
-        n_temperature_points
-    )
-    ```
+      ### Instead, do this:
+      plt.plot(
+          	time, 
+    		temperature, 
+    		".-", 
+    		color='lightgrey', 
+    		alpha=0.6, 
+    		label="Temperature over time"
+      )
+      ```
 
 * All engineering quantities (i.e. quantities with units) used anywhere in AeroSandbox are expressed in base metric units, or derived units thereof (meters, newtons, meters per second, kilograms, etc.).
 
@@ -169,7 +172,7 @@ This is all pretty standard across all scientific computing in Python:
   
   ### Instead, do this:    
   atmosphere = asb.Atmosphere(altitude=7000)
-	```
+    ```
 
 # Code of Conduct
 
