@@ -38,7 +38,7 @@ class FreeBodyDynamics(AeroSandboxObject):
                  hx=0,
                  hy=0,
                  hz=0,
-                 opti_to_add_constraints_to: Opti= None,
+                 opti_to_add_constraints_to: Opti = None,
                  ):
 
         self.time = time
