@@ -3,23 +3,23 @@ from aerosandbox import Opti
 import aerosandbox.numpy as np
 from aerosandbox.dynamics.equations_of_motion import equations_of_motion
 from aerosandbox import OperatingPoint, Atmosphere
-import warnings
+from typing import Union
 
 
 class FreeBodyDynamics(AeroSandboxObject):
     def __init__(self,
-                 xe: np.ndarray = None,
-                 ye: np.ndarray = None,
-                 ze: np.ndarray = None,
-                 u: np.ndarray = None,
-                 v: np.ndarray = None,
-                 w: np.ndarray = None,
-                 phi: np.ndarray = None,
-                 theta: np.ndarray = None,
-                 psi: np.ndarray = None,
-                 p: np.ndarray = None,
-                 q: np.ndarray = None,
-                 r: np.ndarray = None,
+                 xe: Union[np.ndarray, float] = None,
+                 ye: Union[np.ndarray, float] = None,
+                 ze: Union[np.ndarray, float] = None,
+                 u: Union[np.ndarray, float] = None,
+                 v: Union[np.ndarray, float] = None,
+                 w: Union[np.ndarray, float] = None,
+                 phi: Union[np.ndarray, float] = None,
+                 theta: Union[np.ndarray, float] = None,
+                 psi: Union[np.ndarray, float] = None,
+                 p: Union[np.ndarray, float] = None,
+                 q: Union[np.ndarray, float] = None,
+                 r: Union[np.ndarray, float] = None,
                  X=0,
                  Y=0,
                  Z=0,
