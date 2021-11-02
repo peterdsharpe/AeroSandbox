@@ -153,7 +153,7 @@ def hline(
         text_ha="center",
         text_va="bottom",
         text_kwargs=None,
-):
+):  # TODO docs
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()
@@ -180,7 +180,7 @@ def vline(
         text_ha="right",
         text_va="center",
         text_kwargs=None,
-):
+):  # TODO docs
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()
