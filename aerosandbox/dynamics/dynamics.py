@@ -265,15 +265,40 @@ class FreeBodyDynamics(AeroSandboxObject):
         """
         return self.mass * self.g * self.altitude
 
-    def d_kinetic_energy(self):
+    def net_force(self, axes="body"):
         Fg_xb, Fg_yb, Fg_zb = self.convert_axes(0, 0, self.g, from_axes="earth", to_axes="body")
 
+        F_xb = self.X + Fg_xb
+        F_yb = self.Y + Fg_yb
+        F_zb = self.Z + Fg_yb
+
+        F_x_to, F_y_to, F_z_to = self.convert_axes(
+            x_from=F_xb,
+            y_from=F_yb,
+            z_from=F_zb,
+            from_axes="body",
+            to_axes=axes
+        )
+        return F_x_to, F_y_to, F_z_to
+
+    def d_translational_kinetic_energy(self):
+        """
+        Returns the derivative d(translational_kinetic_energy)/d(time) based on energy methods.
+        """
+        F_xb, F_yb, F_zb = self.net_force(axes="body")
+
         d_KE = (
-                (self.X + Fg_xb) * self.u +
-                (self.Y + Fg_yb) * self.v +
-                (self.Z + Fg_zb) * self.w
+                F_xb * self.u +
+                F_yb * self.v +
+                F_zb * self.w
         )
         return d_KE
+
+    def d_speed(self):
+        """
+        Returns the derivative d(speed)/d(time) based on energy methods.
+        """
+        return self.d_translational_kinetic_energy() / (self.mass * self.speed)
 
     @property
     def altitude(self):
@@ -410,7 +435,7 @@ if __name__ == '__main__':
     time = np.linspace(0, 1, n_timesteps)
 
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
         u=opti.variable(init_guess=1, n_vars=n_timesteps),
