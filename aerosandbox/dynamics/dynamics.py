@@ -39,7 +39,7 @@ class FreeBodyDynamics(AeroSandboxObject):
                  hz=0,
                  opti_to_add_constraints_to: Opti = None,
                  time: np.ndarray = None,
-                 ): # TODO add docs
+                 ):  # TODO add docs
 
         self.xe = 0 if xe is None else xe
         self.ye = 0 if ye is None else ye
@@ -132,7 +132,23 @@ class FreeBodyDynamics(AeroSandboxObject):
 
         return "\n".join(repr)
 
-    # TODO add __getitem__ for dynamic state at instant in time
+    def __getitem__(self, index):
+        def get_item_of_attribute(a):
+            try:
+                return a[index]
+            except TypeError:  # object is not subscriptable
+                return a
+            except IndexError as e:  # index out of range
+                raise IndexError("An element of ")
+
+        constructor_inputs = {
+            k: get_item_of_attribute(v)
+            for k, v in self.state.items()
+        }
+
+        return FreeBodyDynamics(
+            **constructor_inputs
+        )
 
     @property
     def state(self):
