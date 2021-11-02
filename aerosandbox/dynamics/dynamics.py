@@ -3,24 +3,23 @@ from aerosandbox import Opti
 import aerosandbox.numpy as np
 from aerosandbox.dynamics.equations_of_motion import equations_of_motion
 from aerosandbox import OperatingPoint, Atmosphere
-import warnings
+from typing import Union
 
 
 class FreeBodyDynamics(AeroSandboxObject):
     def __init__(self,
-                 time: np.ndarray,
-                 xe: np.ndarray = None,
-                 ye: np.ndarray = None,
-                 ze: np.ndarray = None,
-                 u: np.ndarray = None,
-                 v: np.ndarray = None,
-                 w: np.ndarray = None,
-                 phi: np.ndarray = None,
-                 theta: np.ndarray = None,
-                 psi: np.ndarray = None,
-                 p: np.ndarray = None,
-                 q: np.ndarray = None,
-                 r: np.ndarray = None,
+                 xe: Union[np.ndarray, float] = None,
+                 ye: Union[np.ndarray, float] = None,
+                 ze: Union[np.ndarray, float] = None,
+                 u: Union[np.ndarray, float] = None,
+                 v: Union[np.ndarray, float] = None,
+                 w: Union[np.ndarray, float] = None,
+                 phi: Union[np.ndarray, float] = None,
+                 theta: Union[np.ndarray, float] = None,
+                 psi: Union[np.ndarray, float] = None,
+                 p: Union[np.ndarray, float] = None,
+                 q: Union[np.ndarray, float] = None,
+                 r: Union[np.ndarray, float] = None,
                  X=0,
                  Y=0,
                  Z=0,
@@ -38,10 +37,10 @@ class FreeBodyDynamics(AeroSandboxObject):
                  hx=0,
                  hy=0,
                  hz=0,
-                 opti_to_add_constraints_to: Opti= None,
+                 opti_to_add_constraints_to: Opti = None,
+                 time: np.ndarray = None,
                  ):
 
-        self.time = time
         self.xe = 0 if xe is None else xe
         self.ye = 0 if ye is None else ye
         self.ze = 0 if ze is None else ze
@@ -71,8 +70,12 @@ class FreeBodyDynamics(AeroSandboxObject):
         self.hx = hx
         self.hy = hy
         self.hz = hz
+        self.time = time
 
         if opti_to_add_constraints_to is not None:
+            if time is None:
+                raise ValueError("`time` parameter must be an array-like if `opti_to_add_constraints_to` is given!")
+
             state = self.state
             state_derivatives = self.state_derivatives()
             for k in state.keys():  # TODO default to second-order integration for position, angles
@@ -233,6 +236,71 @@ class FreeBodyDynamics(AeroSandboxObject):
                ) ** 0.5
 
     @property
+    def translational_kinetic_energy(self):
+        speed_squared = (
+                self.u ** 2 +
+                self.v ** 2 +
+                self.w ** 2
+        )
+        return 0.5 * self.mass * speed_squared
+
+    @property
+    def rotational_kinetic_energy(self):
+        return 0.5 * (
+                self.Ixx * self.p ** 2 +
+                self.Iyy * self.q ** 2 +
+                self.Izz * self.r ** 2
+        )
+
+    @property
+    def kinetic_energy(self):
+        return self.translational_kinetic_energy + self.rotational_kinetic_energy
+
+    @property
+    def potential_energy(self):
+        """
+        Gives the potential energy [J] from gravity.
+
+        PE = mgh
+        """
+        return self.mass * self.g * self.altitude
+
+    def net_force(self, axes="body"):
+        Fg_xb, Fg_yb, Fg_zb = self.convert_axes(0, 0, self.g, from_axes="earth", to_axes="body")
+
+        F_xb = self.X + Fg_xb
+        F_yb = self.Y + Fg_yb
+        F_zb = self.Z + Fg_yb
+
+        F_x_to, F_y_to, F_z_to = self.convert_axes(
+            x_from=F_xb,
+            y_from=F_yb,
+            z_from=F_zb,
+            from_axes="body",
+            to_axes=axes
+        )
+        return F_x_to, F_y_to, F_z_to
+
+    def d_translational_kinetic_energy(self):
+        """
+        Returns the derivative d(translational_kinetic_energy)/d(time) based on energy methods.
+        """
+        F_xb, F_yb, F_zb = self.net_force(axes="body")
+
+        d_KE = (
+                F_xb * self.u +
+                F_yb * self.v +
+                F_zb * self.w
+        )
+        return d_KE
+
+    def d_speed(self):
+        """
+        Returns the derivative d(speed)/d(time) based on energy methods.
+        """
+        return self.d_translational_kinetic_energy() / (self.mass * self.speed)
+
+    @property
     def altitude(self):
         return -self.ze
 
@@ -277,27 +345,82 @@ class FreeBodyDynamics(AeroSandboxObject):
         Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
 
         """
-        try:
+        if from_axes == "earth" or to_axes == "earth":
+            ### Trig Shorthands
+            def sincos(x):
+                try:
+                    x = np.mod(x, 2 * np.pi)
+                    one = np.ones_like(x)
+                    zero = np.zeros_like(x)
+
+                    if np.allclose(x, 0) or np.allclose(x, 2 * np.pi):
+                        sin = zero
+                        cos = one
+                    elif np.allclose(x, np.pi / 2):
+                        sin = one
+                        cos = zero
+                    elif np.allclose(x, np.pi):
+                        sin = zero
+                        cos = -one
+                    elif np.allclose(x, 3 * np.pi / 2):
+                        sin = -one
+                        cos = zero
+                    else:
+                        raise ValueError()
+                except:
+                    sin = np.sin(x)
+                    cos = np.cos(x)
+                return sin, cos
+
+                # Do the trig
+
+            sphi, cphi = sincos(self.phi)
+            sthe, cthe = sincos(self.theta)
+            spsi, cpsi = sincos(self.psi)
+
+        if from_axes == "earth":
+            x_b = (
+                    (cthe * cpsi) * x_from +
+                    (cthe * spsi) * y_from +
+                    (-sthe) * z_from
+            )
+            y_b = (
+                    (sphi * sthe * cpsi - cphi * spsi) * x_from +
+                    (sphi * sthe * spsi + cphi * cpsi) * y_from +
+                    (sphi * cthe) * z_from
+            )
+            z_b = (
+                    (cphi * sthe * cpsi + sphi * spsi) * x_from +
+                    (cphi * sthe * spsi - sphi * cpsi) * y_from +
+                    (cphi * cthe) * z_from
+            )
+        else:
             x_b, y_b, z_b = self.op_point.convert_axes(
                 x_from, y_from, z_from,
                 from_axes=from_axes, to_axes="body"
             )
-        except ValueError:
-            if from_axes == "earth":
-                do_earth_thing() # TODO DO
-            else:
-                raise ValueError("Bad value of `from_axes`!")
 
-        try:
+        if to_axes == "earth":
+            x_to = (
+                    (cthe * cpsi) * x_b +
+                    (sphi * sthe * cpsi - cphi * spsi) * y_b +
+                    (cphi * sthe * cpsi + sphi * spsi) * z_b
+            )
+            y_to = (
+                    (cthe * spsi) * x_b +
+                    (sphi * sthe * spsi + cphi * cpsi) * y_b +
+                    (cphi * sthe * spsi - sphi * cpsi) * z_b
+            )
+            z_to = (
+                    (-sthe) * x_b +
+                    (sphi * cthe) * y_b +
+                    (cphi * cthe) * z_b
+            )
+        else:
             x_to, y_to, z_to = self.op_point.convert_axes(
                 x_b, y_b, z_b,
                 from_axes="body", to_axes=to_axes
             )
-        except ValueError:
-            if to_axes == "earth":
-                do_earth_thing() # TODO DO
-            else:
-                raise ValueError("Bad value of `to_axes`!")
 
         return x_to, y_to, z_to
 
@@ -312,7 +435,7 @@ if __name__ == '__main__':
     time = np.linspace(0, 1, n_timesteps)
 
     dyn = FreeBodyDynamics(
-        opti=opti,
+        opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
         u=opti.variable(init_guess=1, n_vars=n_timesteps),

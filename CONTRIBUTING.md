@@ -69,52 +69,55 @@ This is all pretty standard across all scientific computing in Python:
 
 * As far as code style goes, we use standard Python PEP8 naming conventions:
 
-	1. `variable_names_use_snake_case`
-	2. `def function_names_also_use_snake_case():`
-	3. `class ClassNamesUsePascalCase:`
+    1. `variable_names_use_snake_case`
+    2. `def function_names_also_use_snake_case():`
+    3. `class ClassNamesUsePascalCase:`
 
 * Use long, descriptive variable names. Use `temperature` instead of `T`. Use `wing_tip_coordinate_x` instead of `wtx`. In the age of modern IDEs with autocomplete and one-click refactoring, there is no reason not to obfuscate meaning with short variable names. Long variable names also force you to split complicated expressions onto multiple lines; this is a good thing (see the following point).
 
-* Spread expressions across multiple lines based on natural groupings of ideas. Generally, all functions with multiple input parameters should have each parameter on a new line unless it exceptionally short (something like `range(3,10)`, for example). Some examples of discouraged and encouraged coding standards:
+  * Spread expressions across multiple lines based on natural groupings of ideas. Generally, all functions with multiple input parameters should have each parameter on a new line unless it exceptionally short (something like `range(3,10)`, for example). Some examples of discouraged and encouraged coding standards:
 
-    ```python
-    ### This is discouraged
-    distance = ((x_start - x_end) ** 2 + (y_start - y_end) ** 2) ** 0.5
+      ```python
+      ### This is discouraged:
+      distance = ((x_start - x_end) ** 2 + (y_start - y_end) ** 2) ** 0.5
     
-    ### Instead, do this:
-    distance = (
-    	(x_start - x_end) ** 2 +
-    	(y_start - y_end) ** 2
-    ) ** 0.5
-    ```
+      ### Instead, do this:
+      distance = (
+          (x_start - x_end) ** 2 +
+          (y_start - y_end) ** 2
+      ) ** 0.5
+      ```
 
-    ```python
-    ### This is discouraged
-    np.linspace(temperature_start, temperature_end, n_temperature_points)
+      ```python
+      ### This is discouraged:
+      plt.plot(time, temperature, ".-", color='lightgrey', alpha=0.6, label="Temperature over time")
     
-    ### Instead, do this:
-    np.linspace(
-        temperature_start,
-        temperature_end,
-        n_temperature_points
-    )
-    ```
+      ### Instead, do this:
+      plt.plot(
+          	time, 
+    		temperature, 
+    		".-", 
+    		color='lightgrey', 
+    		alpha=0.6, 
+    		label="Temperature over time"
+      )
+      ```
 
 * All engineering quantities (i.e. quantities with units) used anywhere in AeroSandbox are expressed in base metric units, or derived units thereof (meters, newtons, meters per second, kilograms, etc.).
 
-	* This is true even for quantities that are traditionally expressed in non-base-metric units. Some common "gotchas":
-		* `battery_capacity` is in units of joules (not watt-hours)
-		* `temperature` is in Kelvin (not Celsius)
-		* `elastic_modulus` is in units of pascals (not GPa)
-		* `altitude` is in meters (not feet)
-		* `radio_frequency` is in Hz (not MHz)
+    * This is true even for quantities that are traditionally expressed in non-base-metric units. Some common "gotchas":
+        * `battery_capacity` is in units of joules (not watt-hours)
+        * `temperature` is in Kelvin (not Celsius)
+        * `elastic_modulus` is in units of pascals (not GPa)
+        * `altitude` is in meters (not feet)
+        * `radio_frequency` is in Hz (not MHz)
 
   The only exception is when units are explicitly noted as a suffix in a variable name: for example `battery_capacity_watt_hours` is in units of watt-hours, and `altitude_ft` is in units of feet.
 
 * Every new user-facing function is required to be documented by a docstring of some sort, with no exceptions. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) are preferred but not required - as long as your docstring is intelligible to an average engineer who might come across it, you're fine. It is highly recommended (but not required) that you also do the following:
 
-	* Document the purpose, function, and expected input type(s) of every input parameter within this docstring.
-	* [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.
+    * Document the purpose, function, and expected input type(s) of every input parameter within this docstring.
+    * [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.
 
   We illustrate both of these requirements with the following example:
     ```python
@@ -143,20 +146,32 @@ This is all pretty standard across all scientific computing in Python:
         """
         return True  # Of course my dog is always happy!
     ```
-	* Also notice that in this example above, we put each parameter on its own line. Generally, do this.
-	* Include usage examples in runnable Python in for each function in its docstring (demarcated by `>>>`)
+    * Also notice that in this example above, we put each parameter on its own line. Generally, do this.
+    * Include usage examples in runnable Python in for each function in its docstring (demarcated by `>>>`)
 
-* With *very* rare exceptions, do not type the same sequence of characters more than twice. For example:
+* With rare exceptions, do not type the same sequence of characters more than twice. For example:
 
     ``` python
-    ### This is discouraged
+    ### This is discouraged:
     print(sol.value(x))
     print(sol.value(y))
     print(sol.value(z))
     
     ### Instead, do this:
     for var in [x, y, z]:
-    	print(sol.value(var))
+        print(sol.value(var))
+    ```
+  
+* Use keyword arguments for functions, unless those functions are exceptionally simple, well-known, or self-explanatory. For example:
+
+    ```python
+  import aerosandbox as asb
+  
+  ### This is discouraged:
+  atmosphere = asb.Atmosphere(7000)
+  
+  ### Instead, do this:    
+  atmosphere = asb.Atmosphere(altitude=7000)
     ```
 
 # Code of Conduct

@@ -10,7 +10,7 @@ from .performance import *
 from .propulsion import *
 from .structures import *
 
-__version__ = "3.2.14"
+__version__ = "3.2.15"
 
 
 def docs():
@@ -23,7 +23,13 @@ def docs():
     )  # TODO: make this redirect to a hosted ReadTheDocs, or similar.
 
 def run_tests():
-    import pytest
+    """
+    Runs all of the AeroSandbox internal unit tests on this computer.
+    """
+    try:
+        import pytest
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError("Please install `pytest` (`pip install pytest`) to run AeroSandbox unit tests.")
     import matplotlib.pyplot as plt
     from pathlib import Path
 
