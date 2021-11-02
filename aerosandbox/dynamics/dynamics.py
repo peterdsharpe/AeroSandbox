@@ -39,7 +39,7 @@ class FreeBodyDynamics(AeroSandboxObject):
                  hz=0,
                  opti_to_add_constraints_to: Opti = None,
                  time: np.ndarray = None,
-                 ):
+                 ): # TODO add docs
 
         self.xe = 0 if xe is None else xe
         self.ye = 0 if ye is None else ye
