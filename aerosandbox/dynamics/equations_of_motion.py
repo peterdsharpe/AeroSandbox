@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.dynamics.utilities import inv_symmetric_3x3
 import warnings
 
 
@@ -205,7 +204,7 @@ def equations_of_motion(
             hy * p +
             hx * q
     )
-    i11, i22, i33, i12, i23, i13 = inv_symmetric_3x3(Ixx, Iyy, Izz, Ixy, Iyz, Ixz)
+    i11, i22, i33, i12, i23, i13 = np.linalg.inv_symmetric_3x3(Ixx, Iyy, Izz, Ixy, Iyz, Ixz)
 
     d_p = i11 * RHS_L + i12 * RHS_M + i13 * RHS_N
     d_q = i12 * RHS_L + i22 * RHS_M + i23 * RHS_N
