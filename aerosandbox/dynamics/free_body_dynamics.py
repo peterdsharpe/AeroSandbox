@@ -39,6 +39,40 @@ class FreeBodyDynamics(AeroSandboxObject):
                  opti_to_add_constraints_to: Opti = None,
                  time: np.ndarray = None,
                  ):  # TODO add docs
+        """
+        Args:
+            xe: x-position, in Earth axes. [meters]
+            ye: y-position, in Earth axes. [meters]
+            ze: z-position, in Earth axes. [meters]
+            u: x-velocity, in body axes. [m/s]
+            v: y-velocity, in body axes. [m/s]
+            w: z-velocity, in body axes. [m/s]
+            phi: roll angle. Uses yaw-pitch-roll Euler angle convention. [rad]
+            theta: pitch angle. Uses yaw-pitch-roll Euler angle convention. [rad]
+            psi: yaw angle. Uses yaw-pitch-roll Euler angle convention. [rad]
+            p: x-angular-velocity, in body axes. [rad/sec]
+            q: y-angular-velocity, in body axes. [rad/sec]
+            r: z-angular-velocity, in body axes. [rad/sec]
+            X: x-direction force, in body axes. [N]
+            Y: y-direction force, in body axes. [N]
+            Z: z-direction force, in body axes. [N]
+            L: Moment about the x axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
+            M: Moment about the y axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
+            N: Moment about the z axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
+            mass: Mass of the body. [kg]
+            Ixx: Respective component of the (symmetric) moment of inertia tensor.
+            Iyy: Respective component of the (symmetric) moment of inertia tensor.
+            Izz: Respective component of the (symmetric) moment of inertia tensor.
+            Ixy: Respective component of the (symmetric) moment of inertia tensor.
+            Ixz: Respective component of the (symmetric) moment of inertia tensor.
+            Iyz: Respective component of the (symmetric) moment of inertia tensor.
+            g: Magnitude of gravitational acceleration. Assumed to act in the positive-z-in-earth-axes ("downward") direction. [m/s^2]
+            hx: x-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
+            hy: y-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
+            hz: z-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
+            opti_to_add_constraints_to:
+            time:
+        """
 
         self.xe = 0 if xe is None else xe
         self.ye = 0 if ye is None else ye
@@ -131,23 +165,6 @@ class FreeBodyDynamics(AeroSandboxObject):
 
         return "\n".join(repr)
 
-    @classmethod
-    def from_speed_gamma_parameterization(cls,
-                                          xe: Union[np.ndarray, float] = None,
-                                          ye: Union[np.ndarray, float] = None,
-                                          ze: Union[np.ndarray, float] = None,
-                                          speed: Union[np.ndarray, float] = None,
-                                          gamma: Union[np.ndarray, float] = None,
-                                          bearing: Union[np.ndarray, float] = None,
-                                          alpha: Union[np.ndarray, float] = None,
-                                          beta: Union[np.ndarray, float] = None,
-                                          roll: Union[np.ndarray, float] = None,
-                                          p: Union[np.ndarray, float] = None,
-                                          q: Union[np.ndarray, float] = None,
-                                          r: Union[np.ndarray, float] = None,
-                                          ):
-        self.xe = 0 if xe is None else xe
-
     def __getitem__(self, index):
         def get_item_of_attribute(a):
             try:
@@ -188,37 +205,6 @@ class FreeBodyDynamics(AeroSandboxObject):
         Computes the state derivatives (i.e. equations of motion) for a body in 3D space.
 
         Based on Section 9.8.2 of Flight Vehicle Aerodynamics by Mark Drela.
-
-        Args:
-            xe: x-position, in Earth axes. [meters]
-            ye: y-position, in Earth axes. [meters]
-            ze: z-position, in Earth axes. [meters]
-            u: x-velocity, in body axes. [m/s]
-            v: y-velocity, in body axes. [m/s]
-            w: z-velocity, in body axes. [m/s]
-            phi: roll angle. Uses yaw-pitch-roll Euler angle convention. [rad]
-            theta: pitch angle. Uses yaw-pitch-roll Euler angle convention. [rad]
-            psi: yaw angle. Uses yaw-pitch-roll Euler angle convention. [rad]
-            p: x-angular-velocity, in body axes. [rad/sec]
-            q: y-angular-velocity, in body axes. [rad/sec]
-            r: z-angular-velocity, in body axes. [rad/sec]
-            X: x-direction force, in body axes. [N]
-            Y: y-direction force, in body axes. [N]
-            Z: z-direction force, in body axes. [N]
-            L: Moment about the x axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
-            M: Moment about the y axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
-            N: Moment about the z axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
-            mass: Mass of the body. [kg]
-            Ixx: Respective component of the (symmetric) moment of inertia tensor.
-            Iyy: Respective component of the (symmetric) moment of inertia tensor.
-            Izz: Respective component of the (symmetric) moment of inertia tensor.
-            Ixy: Respective component of the (symmetric) moment of inertia tensor.
-            Ixz: Respective component of the (symmetric) moment of inertia tensor.
-            Iyz: Respective component of the (symmetric) moment of inertia tensor.
-            g: Magnitude of gravitational acceleration. Assumed to act in the positive-z-in-earth-axes ("downward") direction. [m/s^2]
-            hx: x-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
-            hy: y-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
-            hz: z-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
 
         Returns:
             Time derivatives of each of the 12 state variables, given in a dictionary:
