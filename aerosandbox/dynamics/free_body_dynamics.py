@@ -32,7 +32,6 @@ class FreeBodyDynamics(AeroSandboxObject):
                  Ixy=0,
                  Iyz=0,
                  Ixz=0,
-                 g=0,
                  hx=0,
                  hy=0,
                  hz=0,
@@ -66,14 +65,12 @@ class FreeBodyDynamics(AeroSandboxObject):
             Ixy: Respective component of the (symmetric) moment of inertia tensor.
             Ixz: Respective component of the (symmetric) moment of inertia tensor.
             Iyz: Respective component of the (symmetric) moment of inertia tensor.
-            g: Magnitude of gravitational acceleration. Assumed to act in the positive-z-in-earth-axes ("downward") direction. [m/s^2]
-            hx: x-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
-            hy: y-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
-            hz: z-component of onboard angular momentum (e.g. propellers), in body axes. [kg*m^2/sec]
+            hx: x-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
+            hy: y-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
+            hz: z-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
             opti_to_add_constraints_to:
             time:
         """
-
         self.xe = 0 if xe is None else xe
         self.ye = 0 if ye is None else ye
         self.ze = 0 if ze is None else ze
@@ -99,7 +96,6 @@ class FreeBodyDynamics(AeroSandboxObject):
         self.Ixy = Ixy
         self.Iyz = Iyz
         self.Ixz = Ixz
-        self.g = g
         self.hx = hx
         self.hy = hy
         self.hz = hz
@@ -224,9 +220,6 @@ class FreeBodyDynamics(AeroSandboxObject):
                 }
         """
         ### Shorthand everything so we're not constantly "self."-ing:
-        xe = self.xe
-        ye = self.ye
-        ze = self.ze
         u = self.u
         v = self.v
         w = self.w
@@ -249,7 +242,6 @@ class FreeBodyDynamics(AeroSandboxObject):
         Ixy = self.Ixy
         Iyz = self.Iyz
         Ixz = self.Ixz
-        g = self.g
         hx = self.hx
         hy = self.hy
         hz = self.hz
@@ -305,17 +297,17 @@ class FreeBodyDynamics(AeroSandboxObject):
         )
         ### Velocity derivatives
         d_u = (
-                (X / mass - g * sthe) -
+                (X / mass) -
                 q * w +
                 r * v
         )
         d_v = (
-                (Y / mass + g * sphi * cthe) -
+                (Y / mass) -
                 r * u +
                 p * w
         )
         d_w = (
-                (Z / mass + g * cphi * cthe) -
+                (Z / mass) -
                 p * v +
                 q * u
         )
@@ -471,6 +463,78 @@ class FreeBodyDynamics(AeroSandboxObject):
         PE = mgh
         """
         return self.mass * self.g * self.altitude
+
+    def add_force(self,
+                  Fx: Union[np.ndarray, float] = 0,
+                  Fy: Union[np.ndarray, float] = 0,
+                  Fz: Union[np.ndarray, float] = 0,
+                  axes="body",
+                  ):
+        """
+        Adds a force (in whichever axis system you choose) to this dynamics instance.
+
+        Args:
+            Fx: Force in the x-direction in the axis system chosen. [N]
+            Fy: Force in the y-direction in the axis system chosen. [N]
+            Fz: Force in the z-direction in the axis system chosen. [N]
+            axes: The axis system that the specified force is in. One of:
+                * "geometry"
+                * "body"
+                * "wind"
+                * "stability"
+                * "earth"
+
+        Returns: None (in-place)
+
+        """
+        Fx_b, Fy_b, Fz_b = self.convert_axes(
+            x_from=Fx,
+            y_from=Fy,
+            z_from=Fz,
+            from_axes=axes,
+            to_axes="body"
+        )
+        self.X = self.X + Fx_b
+        self.Y = self.Y + Fy_b
+        self.Z = self.Z + Fz_b
+
+    def add_moment(self,
+                   Mx: Union[np.ndarray, float] = 0,
+                   My: Union[np.ndarray, float] = 0,
+                   Mz: Union[np.ndarray, float] = 0,
+                   axes="body",
+                   ):
+        """
+        Adds a force (in whichever axis system you choose) to this dynamics instance.
+
+        Args:
+            Fx: Moment about the x-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
+            Fy: Moment about the y-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
+            Fz: Moment about the z-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
+            axes: The axis system that the specified force is in. One of:
+                * "geometry"
+                * "body"
+                * "wind"
+                * "stability"
+                * "earth"
+
+        Returns: None (in-place)
+
+        """
+
+        Mx_b, My_b, Mz_b = self.convert_axes(
+            x_from=Mx,
+            y_from=My,
+            z_from=Mz,
+            from_axes=axes,
+            to_axes="body"
+        )
+        self.L = self.L + Mx_b
+        self.M = self.M + My_b
+        self.N = self.N + Mz_b
+
+    def add_gravity_force(self, g=9.81):
+        self.add_force(Fz=g * self.mass, axes="earth")
 
     def net_force(self, axes="body"):
         Fg_xb, Fg_yb, Fg_zb = self.convert_axes(0, 0, self.g, from_axes="earth", to_axes="body")
