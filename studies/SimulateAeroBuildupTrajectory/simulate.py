@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.dynamics.dynamics import FreeBodyDynamics
 from conventional import airplane
 from scipy import integrate
 
@@ -9,11 +8,9 @@ t_span = (0, 120)
 
 
 def dynamics(t, y):
-    dyn = FreeBodyDynamics(
-        0,
+    dyn = asb.FreeBodyDynamics(
         *y,
         g=1,
-        add_constraints=False
     )
     aero = asb.AeroBuildup(
         airplane=airplane,
@@ -71,10 +68,9 @@ sol = integrate.solve_ivp(
     atol=np.array(list(atols.values())),
 )
 time = np.linspace(sol.t.min(), sol.t.max(), 300)
-dyn = FreeBodyDynamics(
+dyn = asb.FreeBodyDynamics(
     time,
     *sol.sol(time),
-    add_constraints=False
 )
 aero = asb.AeroBuildup(
     airplane=airplane,
