@@ -674,6 +674,7 @@ if __name__ == '__main__':
         np.sum(np.trapz(dyn.X ** 2) * np.diff(time))
     )
 
-    sol = opti.solve()
+    sol = opti.solve(verbose=False)
 
     dyn.substitute_solution(sol)
+    print(dyn)
