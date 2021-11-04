@@ -38,7 +38,7 @@ class FreeBodyDynamics(AeroSandboxObject):
                  hz=0,
                  opti_to_add_constraints_to: Opti = None,
                  time: np.ndarray = None,
-                 ):  # TODO add docs
+                 ):
         """
         Args:
             xe: x-position, in Earth axes. [meters]
