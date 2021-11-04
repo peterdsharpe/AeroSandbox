@@ -1,12 +1,11 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.dynamics.dynamics import FreeBodyDynamics
 from typing import List
 import copy
 import pytest
 
 vector = [1, 2, 3]
-dyn = FreeBodyDynamics(
+dyn = asb.FreeBodyDynamics(
     xe=0,
     ye=0,
     ze=0,

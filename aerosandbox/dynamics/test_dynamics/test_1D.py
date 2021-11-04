@@ -1,7 +1,5 @@
-from aerosandbox.dynamics.dynamics import FreeBodyDynamics
 import aerosandbox as asb
 import aerosandbox.numpy as np
-
 import pytest
 
 
@@ -12,7 +10,7 @@ def test_block_move_fixed_time():
 
     time = np.linspace(0, 1, n_timesteps)
 
-    dyn = FreeBodyDynamics(
+    dyn = asb.FreeBodyDynamics(
         opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
@@ -63,7 +61,7 @@ def test_block_move_minimum_time():
         n_timesteps,
     )
 
-    dyn = FreeBodyDynamics(
+    dyn = asb.FreeBodyDynamics(
         opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
@@ -113,7 +111,7 @@ def test_rocket_primitive():
     opti = asb.Opti()
 
     ### Variables
-    dyn = FreeBodyDynamics(
+    dyn = asb.FreeBodyDynamics(
         opti_to_add_constraints_to=opti,
         time=time,
         ze=opti.variable(init_guess=np.linspace(0, ze_final, N)),  # Earth-axis z, or "negative altitude"
@@ -169,7 +167,7 @@ def test_rocket_with_data_structures():
     g = 9.81  # Gravity, m/s^2
     alpha = 1 / (300 * g)  # kg/(N*s), Inverse of specific impulse, basically - don't worry about this
 
-    dyn = FreeBodyDynamics(
+    dyn = asb.FreeBodyDynamics(
         opti_to_add_constraints_to=opti,
         time=time,
         ze=opti.variable(init_guess=np.linspace(0, ze_final, N)),  # Altitude (negative due to Earth-axes convention)

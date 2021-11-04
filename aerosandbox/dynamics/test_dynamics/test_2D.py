@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.dynamics.dynamics import FreeBodyDynamics
 import pytest
 
 def test_quadcopter_navigation():
@@ -16,7 +15,7 @@ def test_quadcopter_navigation():
 
     mass = 0.1
 
-    dyn = FreeBodyDynamics(
+    dyn = asb.FreeBodyDynamics(
         opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, N)),
@@ -76,7 +75,7 @@ def test_quadcopter_flip():
 
     mass = 0.1
 
-    dyn = FreeBodyDynamics(
+    dyn = asb.FreeBodyDynamics(
         opti_to_add_constraints_to=opti,
         time=time,
         xe=opti.variable(init_guess=np.linspace(0, 1, N)),
