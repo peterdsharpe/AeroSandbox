@@ -1,1 +1,1 @@
-from .equations_of_motion import equations_of_motion
+from .free_body_dynamics import FreeBodyDynamics
