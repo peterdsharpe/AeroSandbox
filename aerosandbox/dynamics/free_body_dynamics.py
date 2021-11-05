@@ -168,7 +168,7 @@ class FreeBodyDynamics(AeroSandboxObject):
             except TypeError:  # object is not subscriptable
                 return a
             except IndexError as e:  # index out of range
-                raise IndexError("An element of ")
+                raise IndexError("A state variable could not be indexed, since it is out of range!")
 
         constructor_inputs = {
             k: get_item_of_attribute(v)
@@ -534,6 +534,15 @@ class FreeBodyDynamics(AeroSandboxObject):
         self.N = self.N + Mz_b
 
     def add_gravity_force(self, g=9.81):
+        """
+        Adds the force of gravity based on current mass.
+
+        Args:
+            g: Local gravitational acceleration. [m/s^2]
+
+        Returns: None (in-place)
+
+        """
         self.add_force(Fz=g * self.mass, axes="earth")
 
     def net_force(self, axes="body"):
