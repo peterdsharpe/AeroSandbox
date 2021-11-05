@@ -168,7 +168,7 @@ class FreeBodyDynamics(AeroSandboxObject):
             except TypeError:  # object is not subscriptable
                 return a
             except IndexError as e:  # index out of range
-                raise IndexError("A state variable could not be indexed, since it is out of range!")
+                raise IndexError("A state variable could not be indexed, since the index is out of range!")
 
         constructor_inputs = {
             k: get_item_of_attribute(v)
