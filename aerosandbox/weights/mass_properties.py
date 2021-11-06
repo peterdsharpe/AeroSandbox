@@ -215,6 +215,7 @@ class MassProperties:
         else:
             return Jxx, Jyy, Jzz, Jxy, Jyz, Jxz
 
+
 if __name__ == '__main__':
     mp1 = MassProperties(
         mass=1
