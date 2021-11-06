@@ -60,14 +60,29 @@ class MassProperties:
         self.Iyz = Iyz
         self.Ixz = Ixz
 
+    def __repr__(self):
+        params_to_show = [
+            "mass",
+            "x_cg",
+            "y_cg",
+            "z_cg",
+        ]
+
+        param_data = ", ".join([
+            f"{param}: {self.__getattribute__(param)}"
+            for param in params_to_show
+        ])
+
+        return f"MassProperties ({param_data})"
+
     def __add__(self, other: "MassProperties"):
         """
         Combines one MassProperties object with another.
         """
         total_mass = self.mass + other.mass
-        total_x_cg = (self.mass * self.x_cg + other.mass * self.x_cg) / total_mass
-        total_y_cg = (self.mass * self.y_cg + other.mass * self.y_cg) / total_mass
-        total_z_cg = (self.mass * self.z_cg + other.mass * self.z_cg) / total_mass
+        total_x_cg = (self.mass * self.x_cg + other.mass * other.x_cg) / total_mass
+        total_y_cg = (self.mass * self.y_cg + other.mass * other.y_cg) / total_mass
+        total_z_cg = (self.mass * self.z_cg + other.mass * other.z_cg) / total_mass
         self_inertia_tensor_elements = self.get_inertia_tensor_about_point(
             x=total_x_cg,
             y=total_y_cg,
@@ -199,3 +214,14 @@ class MassProperties:
             ])
         else:
             return Jxx, Jyy, Jzz, Jxy, Jyz, Jxz
+
+if __name__ == '__main__':
+    mp1 = MassProperties(
+        mass=1
+    )
+    mp2 = MassProperties(
+        mass=1,
+        x_cg=1
+    )
+    mps = mp1 + mp2
+    assert mps.x_cg == 0.5
