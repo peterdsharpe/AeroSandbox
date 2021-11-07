@@ -2,29 +2,23 @@ from aerosandbox.common import *
 from aerosandbox import Opti
 import aerosandbox.numpy as np
 from aerosandbox import OperatingPoint, Atmosphere
-from typing import Union
+from typing import Union, List
 
 
 class FreeBodyDynamics(AeroSandboxObject):
     def __init__(self,
-                 xe: Union[np.ndarray, float] = None,
-                 ye: Union[np.ndarray, float] = None,
-                 ze: Union[np.ndarray, float] = None,
-                 u: Union[np.ndarray, float] = None,
-                 v: Union[np.ndarray, float] = None,
-                 w: Union[np.ndarray, float] = None,
-                 phi: Union[np.ndarray, float] = None,
-                 theta: Union[np.ndarray, float] = None,
-                 psi: Union[np.ndarray, float] = None,
-                 p: Union[np.ndarray, float] = None,
-                 q: Union[np.ndarray, float] = None,
-                 r: Union[np.ndarray, float] = None,
-                 X=0,
-                 Y=0,
-                 Z=0,
-                 L=0,
-                 M=0,
-                 N=0,
+                 xe: Union[np.ndarray, float] = 0,
+                 ye: Union[np.ndarray, float] = 0,
+                 ze: Union[np.ndarray, float] = 0,
+                 u: Union[np.ndarray, float] = 0,
+                 v: Union[np.ndarray, float] = 0,
+                 w: Union[np.ndarray, float] = 0,
+                 phi: Union[np.ndarray, float] = 0,
+                 theta: Union[np.ndarray, float] = 0,
+                 psi: Union[np.ndarray, float] = 0,
+                 p: Union[np.ndarray, float] = 0,
+                 q: Union[np.ndarray, float] = 0,
+                 r: Union[np.ndarray, float] = 0,
                  mass=1,
                  Ixx=1,
                  Iyy=1,
@@ -35,8 +29,6 @@ class FreeBodyDynamics(AeroSandboxObject):
                  hx=0,
                  hy=0,
                  hz=0,
-                 opti_to_add_constraints_to: Opti = None,
-                 time: np.ndarray = None,
                  ):
         """
         Args:
@@ -68,27 +60,28 @@ class FreeBodyDynamics(AeroSandboxObject):
             hx: x-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
             hy: y-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
             hz: z-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
-            opti_to_add_constraints_to:
-            time:
         """
-        self.xe = 0 if xe is None else xe
-        self.ye = 0 if ye is None else ye
-        self.ze = 0 if ze is None else ze
-        self.u = 0 if u is None else u
-        self.v = 0 if v is None else v
-        self.w = 0 if w is None else w
-        self.phi = 0 if phi is None else phi
-        self.theta = 0 if theta is None else theta
-        self.psi = 0 if psi is None else psi
-        self.p = 0 if p is None else p
-        self.q = 0 if q is None else q
-        self.r = 0 if r is None else r
-        self.X = X
-        self.Y = Y
-        self.Z = Z
-        self.L = L
-        self.M = M
-        self.N = N
+        # Assign parameters to attributes
+        self.xe = xe
+        self.ye = ye
+        self.ze = ze
+        self.u = u
+        self.v = v
+        self.w = w
+        self.phi = phi
+        self.theta = theta
+        self.psi = psi
+        self.p = p
+        self.q = q
+        self.r = r
+
+        # Initialize some other attributes
+        self.X = 0
+        self.Y = 0
+        self.Z = 0
+        self.L = 0
+        self.M = 0
+        self.N = 0
         self.mass = mass
         self.Ixx = Ixx
         self.Iyy = Iyy
@@ -99,25 +92,6 @@ class FreeBodyDynamics(AeroSandboxObject):
         self.hx = hx
         self.hy = hy
         self.hz = hz
-        self.time = time
-
-        if opti_to_add_constraints_to is not None:
-            if time is None:
-                raise ValueError("`time` parameter must be an array-like if `opti_to_add_constraints_to` is given!")
-
-            state = self.state
-            state_derivatives = self.state_derivatives()
-            for k in state.keys():  # TODO default to second-order integration for position, angles
-                if locals()[k] is None:  # Don't constrain states that haven't been defined by the user.
-                    continue
-                try:
-                    opti_to_add_constraints_to.constrain_derivative(
-                        derivative=state_derivatives[k],
-                        variable=state[k],
-                        with_respect_to=self.time,
-                    )
-                except Exception as e:
-                    raise ValueError(f"Error while constraining state variable `{k}`: \n{e}")
 
     def __repr__(self):
         repr = []
@@ -399,7 +373,6 @@ class FreeBodyDynamics(AeroSandboxObject):
             "Ixy"     : self.Ixy,
             "Iyz"     : self.Iyz,
             "Ixz"     : self.Ixz,
-            "g"       : self.g,
             "hx"      : self.hx,
             "hy"      : self.hy,
             "hz"      : self.hz,
@@ -408,6 +381,33 @@ class FreeBodyDynamics(AeroSandboxObject):
             "speed"   : self.speed,
             "altitude": self.altitude
         }
+
+    def constrain_derivatives(self,
+                              opti_to_add_constraints_to: Opti = None,
+                              time: np.ndarray = None,
+                              which: Union[str, List[str]] = "all"
+                              ):
+        if which == "all":
+            which = self.state.keys()
+
+        state_derivatives = self.state_derivatives()
+
+        for state_var_name in which:
+            try:
+                opti_to_add_constraints_to.constrain_derivative(
+                    derivative=state_derivatives[state_var_name],
+                    variable=self.state[state_var_name],
+                    with_respect_to=time,
+                )
+            except KeyError:
+                raise ValueError(f"This dynamics instance does not have a state named '{state_var_name}'!")
+            except Exception as e:
+                raise ValueError(f"Error while constraining state variable '{state_var_name}': \n{e}")
+
+    # def set_mass_properties(self,
+    #
+    #                         ):
+
 
     @property
     def alpha(self):
