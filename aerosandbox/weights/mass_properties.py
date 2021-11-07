@@ -2,6 +2,10 @@ import aerosandbox.numpy as np
 
 
 class MassProperties:
+    """
+    Mass properties of a rigid 3D object.
+    """
+
     def __init__(self,
                  mass: float = 0,
                  x_cg: float = 0,
@@ -15,7 +19,7 @@ class MassProperties:
                  Ixz: float = 0,
                  ):
         """
-        Mass properties of a rigid 3D object.
+        Initializes a new MassProperties object.
 
         Axes can be given in any convenient axes system, as long as mass properties are not combined across different
         axis systems. For aircraft design, the most common axis system is typically geometry axes.
@@ -214,7 +218,6 @@ class MassProperties:
             ])
         else:
             return Jxx, Jyy, Jzz, Jxy, Jyz, Jxz
-
 
 if __name__ == '__main__':
     mp1 = MassProperties(
