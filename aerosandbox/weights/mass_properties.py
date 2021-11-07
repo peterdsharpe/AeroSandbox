@@ -121,6 +121,48 @@ class MassProperties:
             Ixz=total_inertia_tensor_elements[5],
         )
 
+    def __sub__(self, other: "MassProperties"):
+        """
+        Subtracts one MassProperties object from another. (opposite of __add__() )
+        """
+        new_mass = self.mass - other.mass
+        new_x_cg = (self.x_cg * self.mass - other.x_cg * other.mass) / (self.mass - other.mass)
+        new_y_cg = (self.y_cg * self.mass - other.y_cg * other.mass) / (self.mass - other.mass)
+        new_z_cg = (self.z_cg * self.mass - other.z_cg * other.mass) / (self.mass - other.mass)
+        self_inertia_tensor_elements = self.get_inertia_tensor_about_point(
+            x=new_x_cg,
+            y=new_y_cg,
+            z=new_z_cg,
+            return_tensor=False
+        )
+        other_inertia_tensor_elements = other.get_inertia_tensor_about_point(
+            x=new_x_cg,
+            y=new_y_cg,
+            z=new_z_cg,
+            return_tensor=False
+        )
+
+        new_inertia_tensor_elements = [
+            I__ - J__
+            for I__, J__ in zip(
+                self_inertia_tensor_elements,
+                other_inertia_tensor_elements
+            )
+        ]
+
+        return MassProperties(
+            mass=new_mass,
+            x_cg=new_x_cg,
+            y_cg=new_y_cg,
+            z_cg=new_z_cg,
+            Ixx=new_inertia_tensor_elements[0],
+            Iyy=new_inertia_tensor_elements[1],
+            Izz=new_inertia_tensor_elements[2],
+            Ixy=new_inertia_tensor_elements[3],
+            Iyz=new_inertia_tensor_elements[4],
+            Ixz=new_inertia_tensor_elements[5],
+        )
+
     def __mul__(self, other: float):
         """
         Returns a new MassProperties object that is equivalent to if you had summed together N (with `other`
@@ -219,6 +261,7 @@ class MassProperties:
         else:
             return Jxx, Jyy, Jzz, Jxy, Jyz, Jxz
 
+
 if __name__ == '__main__':
     mp1 = MassProperties(
         mass=1
@@ -229,3 +272,5 @@ if __name__ == '__main__':
     )
     mps = mp1 + mp2
     assert mps.x_cg == 0.5
+
+    assert mp1 + mp2 - mp2 == mp1
