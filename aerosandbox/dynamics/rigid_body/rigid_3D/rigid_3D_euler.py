@@ -1,73 +1,65 @@
 from aerosandbox.common import *
 from aerosandbox import Opti
 import aerosandbox.numpy as np
-from aerosandbox import OperatingPoint, Atmosphere
+from aerosandbox import OperatingPoint, Atmosphere, MassProperties
 from typing import Union, List
 
 
-class FreeBodyDynamics(AeroSandboxObject):
-    def __init__(self,
-                 xe: Union[np.ndarray, float] = 0,
-                 ye: Union[np.ndarray, float] = 0,
-                 ze: Union[np.ndarray, float] = 0,
-                 u: Union[np.ndarray, float] = 0,
-                 v: Union[np.ndarray, float] = 0,
-                 w: Union[np.ndarray, float] = 0,
-                 phi: Union[np.ndarray, float] = 0,
-                 theta: Union[np.ndarray, float] = 0,
-                 psi: Union[np.ndarray, float] = 0,
-                 p: Union[np.ndarray, float] = 0,
-                 q: Union[np.ndarray, float] = 0,
-                 r: Union[np.ndarray, float] = 0,
-                 mass=1,
-                 Ixx=1,
-                 Iyy=1,
-                 Izz=1,
-                 Ixy=0,
-                 Iyz=0,
-                 Ixz=0,
-                 hx=0,
-                 hy=0,
-                 hz=0,
-                 ):
-        """
-        Args:
-            xe: x-position, in Earth axes. [meters]
-            ye: y-position, in Earth axes. [meters]
-            ze: z-position, in Earth axes. [meters]
-            u: x-velocity, in body axes. [m/s]
-            v: y-velocity, in body axes. [m/s]
-            w: z-velocity, in body axes. [m/s]
+class DynamicsRigid3DEuler(AeroSandboxObject):
+    """
+    Dynamics instance.
+    
+        State variables:
+            x_e: x-position, in Earth axes. [meters]
+            y_e: y-position, in Earth axes. [meters]
+            z_e: z-position, in Earth axes. [meters]
+            u_b: x-velocity, in body axes. [m/s]
+            v_b: y-velocity, in body axes. [m/s]
+            w_b: z-velocity, in body axes. [m/s]
             phi: roll angle. Uses yaw-pitch-roll Euler angle convention. [rad]
             theta: pitch angle. Uses yaw-pitch-roll Euler angle convention. [rad]
             psi: yaw angle. Uses yaw-pitch-roll Euler angle convention. [rad]
             p: x-angular-velocity, in body axes. [rad/sec]
             q: y-angular-velocity, in body axes. [rad/sec]
             r: z-angular-velocity, in body axes. [rad/sec]
-            X: x-direction force, in body axes. [N]
-            Y: y-direction force, in body axes. [N]
-            Z: z-direction force, in body axes. [N]
-            L: Moment about the x axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
-            M: Moment about the y axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
-            N: Moment about the z axis, in body axes. Assumed these moments are applied about the center of mass. [Nm]
-            mass: Mass of the body. [kg]
-            Ixx: Respective component of the (symmetric) moment of inertia tensor.
-            Iyy: Respective component of the (symmetric) moment of inertia tensor.
-            Izz: Respective component of the (symmetric) moment of inertia tensor.
-            Ixy: Respective component of the (symmetric) moment of inertia tensor.
-            Ixz: Respective component of the (symmetric) moment of inertia tensor.
-            Iyz: Respective component of the (symmetric) moment of inertia tensor.
-            hx: x-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
-            hy: y-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
-            hz: z-component of onboard angular momentum (e.g., propellers), in body axes. [kg*m^2/sec]
-        """
+        
+        Control variables:
+            Fx_b: Force along the body-x axis. [N]
+            Fy_b: Force along the body-y axis. [N]
+            Fz_b: Force along the body-z axis. [N]
+            Mx_b: Moment about the body-x axis. [Nm]
+            My_b: Moment about the body-y axis. [Nm]
+            Mz_b: Moment about the body-z axis. [Nm]
+            hx_b: Angular momentum (e.g., propellers) about the body-x axis. [kg*m^2/sec]
+            hy_b: Angular momentum (e.g., propellers) about the body-y axis. [kg*m^2/sec]
+            hz_b: Angular momentum (e.g., propellers) about the body-z axis. [kg*m^2/sec]
+
+    """
+
+    def __init__(self,
+                 mass_props: MassProperties = None,
+                 x_e: Union[np.ndarray, float] = 0,
+                 y_e: Union[np.ndarray, float] = 0,
+                 z_e: Union[np.ndarray, float] = 0,
+                 u_b: Union[np.ndarray, float] = 0,
+                 v_b: Union[np.ndarray, float] = 0,
+                 w_b: Union[np.ndarray, float] = 0,
+                 phi: Union[np.ndarray, float] = 0,
+                 theta: Union[np.ndarray, float] = 0,
+                 psi: Union[np.ndarray, float] = 0,
+                 p: Union[np.ndarray, float] = 0,
+                 q: Union[np.ndarray, float] = 0,
+                 r: Union[np.ndarray, float] = 0,
+                 ):
+
         # Assign parameters to attributes
-        self.xe = xe
-        self.ye = ye
-        self.ze = ze
-        self.u = u
-        self.v = v
-        self.w = w
+        self.mass_props = MassProperties() if mass_props is None else mass_props
+        self.x_e = x_e
+        self.y_e = y_e
+        self.z_e = z_e
+        self.u_b = u_b
+        self.v_b = v_b
+        self.w_b = w_b
         self.phi = phi
         self.theta = theta
         self.psi = psi
@@ -75,99 +67,46 @@ class FreeBodyDynamics(AeroSandboxObject):
         self.q = q
         self.r = r
 
-        # Initialize some other attributes
-        self.X = 0
-        self.Y = 0
-        self.Z = 0
-        self.L = 0
-        self.M = 0
-        self.N = 0
-        self.mass = mass
-        self.Ixx = Ixx
-        self.Iyy = Iyy
-        self.Izz = Izz
-        self.Ixy = Ixy
-        self.Iyz = Iyz
-        self.Ixz = Ixz
-        self.hx = hx
-        self.hy = hy
-        self.hz = hz
-
-    def __repr__(self):
-        repr = []
-        repr.append("Dynamics instance:")
-
-        def trim(string, width=40):
-            string = string.strip()
-            if len(string) > width:
-                return string[:width - 3] + "..."
-            else:
-                return string
-
-        def makeline(k, v):
-            name = trim(str(k), width=8).rjust(8)
-            item = trim(str(v), width=40).ljust(40)
-
-            try:
-                value = str(self.opti.value(v))
-            except:
-                value = None
-
-            if str(value).strip() == str(item).strip():
-                value = None
-
-            if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.ndarray):
-                value = None
-
-            if value is not None:
-                value = trim(value, width=40).ljust(40)
-                return f"\t\t{name}: {item} ({value})"
-            else:
-                return f"\t\t{name}: {item}"
-
-        repr.append("\tState variables:")
-        for k, v in self.state.items():
-            repr.append(makeline(k, v))
-
-        repr.append("\tControl/other variables:")
-        for k, v in self.control_variables.items():
-            repr.append(makeline(k, v))
-
-        return "\n".join(repr)
-
-    def __getitem__(self, index):
-        def get_item_of_attribute(a):
-            try:
-                return a[index]
-            except TypeError:  # object is not subscriptable
-                return a
-            except IndexError as e:  # index out of range
-                raise IndexError("A state variable could not be indexed, since the index is out of range!")
-
-        constructor_inputs = {
-            k: get_item_of_attribute(v)
-            for k, v in self.state.items()
-        }
-
-        return FreeBodyDynamics(
-            **constructor_inputs
-        )
+        # Initialize control variables
+        self.Fx_b = 0
+        self.Fy_b = 0
+        self.Fz_b = 0
+        self.Mx_b = 0
+        self.My_b = 0
+        self.Mz_b = 0
+        self.hx_b = 0
+        self.hy_b = 0
+        self.hz_b = 0
 
     @property
     def state(self):
         return {
-            "xe"   : self.xe,
-            "ye"   : self.ye,
-            "ze"   : self.ze,
-            "u"    : self.u,
-            "v"    : self.v,
-            "w"    : self.w,
+            "x_e"  : self.x_e,
+            "y_e"  : self.y_e,
+            "z_e"  : self.z_e,
+            "u_b"  : self.u_b,
+            "v_b"  : self.v_b,
+            "w_b"  : self.w_b,
             "phi"  : self.phi,
             "theta": self.theta,
             "psi"  : self.psi,
             "p"    : self.p,
             "q"    : self.q,
             "r"    : self.r,
+        }
+
+    @property
+    def control_variables(self):
+        return {
+            "Fx_b": self.Fx_b,
+            "Fy_b": self.Fy_b,
+            "Fz_b": self.Fz_b,
+            "Mx_b": self.Mx_b,
+            "My_b": self.My_b,
+            "Mz_b": self.Mz_b,
+            "hx_b": self.hx_b,
+            "hy_b": self.hy_b,
+            "hz_b": self.hz_b,
         }
 
     def state_derivatives(self):
@@ -358,97 +297,48 @@ class FreeBodyDynamics(AeroSandboxObject):
         }
 
     @property
-    def control_variables(self):
-        return {
-            "X"       : self.X,
-            "Y"       : self.Y,
-            "Z"       : self.Z,
-            "L"       : self.L,
-            "M"       : self.M,
-            "N"       : self.N,
-            "mass"    : self.mass,
-            "Ixx"     : self.Ixx,
-            "Iyy"     : self.Iyy,
-            "Izz"     : self.Izz,
-            "Ixy"     : self.Ixy,
-            "Iyz"     : self.Iyz,
-            "Ixz"     : self.Ixz,
-            "hx"      : self.hx,
-            "hy"      : self.hy,
-            "hz"      : self.hz,
-            "alpha"   : self.alpha,
-            "beta"    : self.beta,
-            "speed"   : self.speed,
-            "altitude": self.altitude
-        }
-
-    def constrain_derivatives(self,
-                              opti_to_add_constraints_to: Opti = None,
-                              time: np.ndarray = None,
-                              which: Union[str, List[str]] = "all"
-                              ):
-        if which == "all":
-            which = self.state.keys()
-
-        state_derivatives = self.state_derivatives()
-
-        for state_var_name in which:
-            try:
-                opti_to_add_constraints_to.constrain_derivative(
-                    derivative=state_derivatives[state_var_name],
-                    variable=self.state[state_var_name],
-                    with_respect_to=time,
-                )
-            except KeyError:
-                raise ValueError(f"This dynamics instance does not have a state named '{state_var_name}'!")
-            except Exception as e:
-                raise ValueError(f"Error while constraining state variable '{state_var_name}': \n{e}")
-
-    # def set_mass_properties(self,
-    #
-    #                         ):
-
-
-    @property
     def alpha(self):
         """The angle of attack, in degrees."""
         return np.arctan2d(
-            self.w,
-            self.u
+            self.w_b,
+            self.u_b
         )
 
     @property
     def beta(self):
         """The sideslip angle, in degrees."""
         return np.arctan2d(
-            self.v,
-            (self.u ** 2 + self.w ** 2) ** 0.5
+            self.v_b,
+            (
+                    self.u_b ** 2 +
+                    self.w_b ** 2
+            ) ** 0.5
         )
 
     @property
     def speed(self):
         """The speed of the object, expressed as a scalar."""
         return (
-                       self.u ** 2 +
-                       self.v ** 2 +
-                       self.w ** 2
+                       self.u_b ** 2 +
+                       self.v_b ** 2 +
+                       self.w_b ** 2
                ) ** 0.5
 
     @property
     def translational_kinetic_energy(self):
         speed_squared = (
-                self.u ** 2 +
-                self.v ** 2 +
-                self.w ** 2
+                self.u_b ** 2 +
+                self.v_b ** 2 +
+                self.w_b ** 2
         )
-        return 0.5 * self.mass * speed_squared
+        return 0.5 * self.mass_props.mass * speed_squared
 
     @property
     def rotational_kinetic_energy(self):
         return 0.5 * (
-                self.Ixx * self.p ** 2 +
-                self.Iyy * self.q ** 2 +
-                self.Izz * self.r ** 2
+                self.mass_props.Ixx * self.p ** 2 +
+                self.mass_props.Iyy * self.q ** 2 +
+                self.mass_props.Izz * self.r ** 2
         )
 
     @property
@@ -456,13 +346,13 @@ class FreeBodyDynamics(AeroSandboxObject):
         return self.translational_kinetic_energy + self.rotational_kinetic_energy
 
     @property
-    def potential_energy(self):
+    def potential_energy(self, g=9.81):
         """
         Gives the potential energy [J] from gravity.
 
         PE = mgh
         """
-        return self.mass * self.g * self.altitude
+        return self.mass_props.mass * g * self.altitude
 
     def add_force(self,
                   Fx: Union[np.ndarray, float] = 0,
@@ -533,44 +423,14 @@ class FreeBodyDynamics(AeroSandboxObject):
         self.M = self.M + My_b
         self.N = self.N + Mz_b
 
-    def add_gravity_force(self, g=9.81):
-        """
-        Adds the force of gravity based on current mass.
-
-        Args:
-            g: Local gravitational acceleration. [m/s^2]
-
-        Returns: None (in-place)
-
-        """
-        self.add_force(Fz=g * self.mass, axes="earth")
-
-    def net_force(self, axes="body"):
-        Fg_xb, Fg_yb, Fg_zb = self.convert_axes(0, 0, self.g, from_axes="earth", to_axes="body")
-
-        F_xb = self.X + Fg_xb
-        F_yb = self.Y + Fg_yb
-        F_zb = self.Z + Fg_yb
-
-        F_x_to, F_y_to, F_z_to = self.convert_axes(
-            x_from=F_xb,
-            y_from=F_yb,
-            z_from=F_zb,
-            from_axes="body",
-            to_axes=axes
-        )
-        return F_x_to, F_y_to, F_z_to
-
     def d_translational_kinetic_energy(self):
         """
         Returns the derivative d(translational_kinetic_energy)/d(time) based on energy methods.
         """
-        F_xb, F_yb, F_zb = self.net_force(axes="body")
-
         d_KE = (
-                F_xb * self.u +
-                F_yb * self.v +
-                F_zb * self.w
+                self.Fx_b * self.u_b +
+                self.Fy_b * self.v_b +
+                self.Fz_b * self.w_b
         )
         return d_KE
 
@@ -578,16 +438,16 @@ class FreeBodyDynamics(AeroSandboxObject):
         """
         Returns the derivative d(speed)/d(time) based on energy methods.
         """
-        return self.d_translational_kinetic_energy() / (self.mass * self.speed)
+        return self.d_translational_kinetic_energy() / (self.mass_props.mass * self.speed)
 
     @property
     def altitude(self):
-        return -self.ze
+        return -self.z_e
 
     @property
     def op_point(self):
         return OperatingPoint(
-            atmosphere=Atmosphere(altitude=-self.ze),
+            atmosphere=Atmosphere(altitude=self.altitude),
             velocity=self.speed,
             alpha=self.alpha,
             beta=self.beta,
@@ -708,32 +568,8 @@ class FreeBodyDynamics(AeroSandboxObject):
 if __name__ == '__main__':
     import aerosandbox as asb
 
-    opti = asb.Opti()
-
-    n_timesteps = 300
-
-    time = np.linspace(0, 1, n_timesteps)
-
-    dyn = FreeBodyDynamics(
-        opti_to_add_constraints_to=opti,
-        time=time,
-        xe=opti.variable(init_guess=np.linspace(0, 1, n_timesteps)),
-        u=opti.variable(init_guess=1, n_vars=n_timesteps),
-        X=opti.variable(init_guess=np.linspace(1, -1, n_timesteps)),
+    dyn = DynamicsRigid3DEuler(
+        mass_props=asb.MassProperties(
+            mass=1
+        )
     )
-
-    opti.subject_to([
-        dyn.xe[0] == 0,
-        dyn.xe[-1] == 1,
-        dyn.u[0] == 0,
-        dyn.u[-1] == 0,
-    ])
-
-    opti.minimize(
-        np.sum(np.trapz(dyn.X ** 2) * np.diff(time))
-    )
-
-    sol = opti.solve(verbose=False)
-
-    dyn.substitute_solution(sol)
-    print(dyn)
