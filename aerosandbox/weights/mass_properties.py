@@ -64,7 +64,7 @@ class MassProperties:
         self.Iyz = Iyz
         self.Ixz = Ixz
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         params_to_show = [
             "mass",
             "x_cg",
@@ -79,7 +79,7 @@ class MassProperties:
 
         return f"MassProperties ({param_data})"
 
-    def __add__(self, other: "MassProperties"):
+    def __add__(self, other: "MassProperties") -> "MassProperties":
         """
         Combines one MassProperties object with another.
         """
@@ -121,7 +121,7 @@ class MassProperties:
             Ixz=total_inertia_tensor_elements[5],
         )
 
-    def __sub__(self, other: "MassProperties"):
+    def __sub__(self, other: "MassProperties") -> "MassProperties":
         """
         Subtracts one MassProperties object from another. (opposite of __add__() )
         """
@@ -163,7 +163,7 @@ class MassProperties:
             Ixz=new_inertia_tensor_elements[5],
         )
 
-    def __mul__(self, other: float):
+    def __mul__(self, other: float) -> "MassProperties":
         """
         Returns a new MassProperties object that is equivalent to if you had summed together N (with `other`
         interpreted as N) identical MassProperties objects.
@@ -180,6 +180,26 @@ class MassProperties:
             Iyz=self.Iyz * other,
             Ixz=self.Ixz * other,
         )
+
+    def __eq__(self, other: "MassProperties") -> bool:
+        return all([
+            self.__getattribute__(attribute) == other.__getattribute__(attribute)
+            for attribute in [
+                "mass",
+                "x_cg",
+                "y_cg",
+                "z_cg",
+                "Ixx",
+                "Iyy",
+                "Izz",
+                "Ixy",
+                "Iyz",
+                "Ixz",
+            ]
+        ])
+
+    def __ne__(self, other: "MassProperties") -> bool:
+        return not self.__eq__(other)
 
     @property
     def xyz_cg(self):
