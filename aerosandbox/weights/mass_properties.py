@@ -79,6 +79,9 @@ class MassProperties:
 
         return f"MassProperties ({param_data})"
 
+    def __getitem__(self, index):
+        raise NotImplementedError() # TODO
+
     def __add__(self, other: "MassProperties") -> "MassProperties":
         """
         Combines one MassProperties object with another.
