@@ -1,6 +1,7 @@
 import hashlib
 import aerosandbox.numpy as np
 
+
 def eng_string(
         x: float,
         unit: str = None,
@@ -71,7 +72,7 @@ def eng_string(
 def latex_sci_notation_string(
         x: float,
         format='%.2e',
-):
+) -> str:
     """
     Converts a floating-point number to a LaTeX-style formatted string. Does not include the `$$` wrapping to put you in math mode.
 
@@ -101,3 +102,13 @@ def hash_string(string: str) -> int:
     hash_int = int(hash_hex, 16)
     hash_int64 = hash_int % (2 ** 32)
     return hash_int64
+
+
+def trim_string(string: str, length: int = 80) -> str:
+    """
+    Trims a string to be less than a given length. If the string would exceed the length, makes it end in "...".
+    """
+    if len(string) > length:
+        return string[:length - 3] + "..."
+    else:
+        return string
