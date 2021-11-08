@@ -104,11 +104,6 @@ class _DynamicsBaseClass(AeroSandboxObject, ABC):
             except Exception as e:
                 raise ValueError(f"Error while constraining state variable '{state_var_name}': \n{e}")
 
-
-    @abstractproperty
-    def op_point(self) -> OperatingPoint:
-        pass
-
     @abstractmethod
     def convert_axes(self,
                      x_from: float,
@@ -168,3 +163,7 @@ class _DynamicsBaseClass(AeroSandboxObject, ABC):
             Fz=self.mass_props.mass * g,
             axes="earth",
         )
+
+    @abstractproperty
+    def op_point(self) -> OperatingPoint:
+        pass

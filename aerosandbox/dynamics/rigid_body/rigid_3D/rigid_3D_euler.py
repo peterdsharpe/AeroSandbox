@@ -1,11 +1,10 @@
-from aerosandbox.common import *
-from aerosandbox import Opti
+from aerosandbox.dynamics.common import _DynamicsBaseClass
 import aerosandbox.numpy as np
 from aerosandbox import OperatingPoint, Atmosphere, MassProperties
-from typing import Union, List
+from typing import Union
 
 
-class DynamicsRigid3DEuler(AeroSandboxObject):
+class DynamicsRigid3DEuler(_DynamicsBaseClass):
     """
     Dynamics instance.
     
