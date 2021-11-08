@@ -80,7 +80,33 @@ class MassProperties:
         return f"MassProperties ({param_data})"
 
     def __getitem__(self, index):
-        raise NotImplementedError()  # TODO
+        def get_item_of_attribute(a):
+            try:
+                return a[index]
+            except TypeError:  # object is not subscriptable
+                return a
+            except IndexError as e:  # index out of range
+                raise IndexError("A state variable could not be indexed, since the index is out of range!")
+
+        inputs = {
+            "mass": self.mass,
+            "x_cg": self.x_cg,
+            "y_cg": self.y_cg,
+            "z_cg": self.z_cg,
+            "Ixx" : self.Ixx,
+            "Iyy" : self.Iyy,
+            "Izz" : self.Izz,
+            "Ixy" : self.Ixy,
+            "Iyz" : self.Iyz,
+            "Ixz" : self.Ixz,
+        }
+
+        return self.__class__(
+            **{
+                k: get_item_of_attribute(v)
+                for k, v in inputs.items()
+            }
+        )
 
     def __add__(self, other: "MassProperties") -> "MassProperties":
         """
