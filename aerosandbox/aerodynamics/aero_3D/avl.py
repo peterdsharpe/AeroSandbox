@@ -2,9 +2,9 @@ from aerosandbox.common import ExplicitAnalysis
 import aerosandbox.numpy as np
 import subprocess
 from pathlib import Path
-from aerosandbox.geometry import Airplane
+from aerosandbox.geometry import Airplane, Wing, WingXSec, Fuselage
 from aerosandbox.performance import OperatingPoint
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Any
 import tempfile
 import warnings
 
@@ -36,6 +36,58 @@ class AVL(ExplicitAnalysis):
         >>>outputs = avl.run()
 
     """
+
+    default_analysis_specific_options = {
+            "ground_plane": False,
+            "ground_plane_height": 0.0,
+            "parasitic_drag_coefficient": 0.0,
+            "component": None,
+            "no_wake": False,
+            "no_alpha_beta": False,
+            "no_load": False,
+            "wing_level_drag_polar": True,
+            "drag_polar": None,
+            "wing_level_spanwise_spacing": True,
+            "cl_alpha_factor": None,
+            "spanwise_resolution": 12,
+            "spanwise_spacing": "cosine",
+            "chordwise_resolution": 12,
+            "chordwise_spacing": "cosine",
+            "fuse_panel_resolution": 24,
+            "fuse_spacing": "cosine"
+        }
+
+    option_keys = {
+        Airplane: [
+            "ground_plane",
+            "ground_plane_height",
+            "parasitic_drag_coefficient"
+        ],
+        Wing: [
+            "component",
+            "no_wake",
+            "no_alpha_beta",
+            "no_load",
+            "wing_level_drag_polar",
+            "drag_polar",
+            "wing_level_spanwise_spacing",
+            "spanwise_resolution",
+            "spanwise_spacing",
+            "chordwise_resolution",
+            "chordwise_spacing"
+        ],
+        WingXSec: [
+            "cl_alpha_factor",
+            "spanwise_resolution",
+            "spanwise_spacing",
+            "chordwise_resolution",
+            "chordwise_spacing"
+        ],
+        Fuselage: [
+            "fuse_panel_resolution",
+            "fuse_spacing"
+        ]
+    }
 
     def __init__(self,
                  airplane: Airplane,
@@ -82,6 +134,24 @@ class AVL(ExplicitAnalysis):
 
     def run(self) -> Dict:
         return self._run_avl()
+
+    @staticmethod
+    def parse_options(invoking_class,
+                      user_options: Dict[type, Dict[str, Any]]
+                      ) -> Dict[type, Dict[str, Any]]:
+        
+        options = {
+            key: __class__.default_analysis_specific_options[key] for key in __class__.option_keys[invoking_class]
+        }
+
+        if user_options:
+            for key, value in user_options.items():
+                if key in options.keys():
+                    options[key] = value
+                else:
+                    raise ValueError(f"The option you supplied, '{key}', is invalid! Valid options are: {tuple(options.keys())}")
+
+        return options
 
     def _default_keystroke_file_contents(self) -> List[str]:
 

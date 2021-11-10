@@ -1,6 +1,7 @@
 from aerosandbox import AeroSandboxObject
+from aerosandbox.common import parse_analysis_specific_options
 from aerosandbox.geometry.common import *
-from typing import List, Union, Tuple
+from typing import List, Dict, Any, Union, Tuple
 from pathlib import Path
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 import copy
@@ -17,6 +18,8 @@ class Fuselage(AeroSandboxObject):
                  xsecs: List['FuselageXSec'] = [],  # This should be a list of FuselageXSec objects.
                  symmetric: bool = False,
                  xyz_le: np.ndarray = None,
+                 analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
+                 # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}
                  ):
         """
         Initialize a new fuselage.
@@ -45,6 +48,8 @@ class Fuselage(AeroSandboxObject):
                 xsec.translate(xyz_le)
                 for xsec in xsecs
             ]
+        
+        self.analysis_specific_options = parse_analysis_specific_options(__class__, analysis_specific_options)
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)

@@ -1,6 +1,6 @@
 from aerosandbox.optimization.opti import Opti
 from abc import abstractmethod
-
+from typing import Dict, Any
 
 class AeroSandboxObject:
 
@@ -155,3 +155,12 @@ class ImplicitAnalysis(AeroSandboxObject):
 
 class ExplicitAnalysis(AeroSandboxObject):
     pass
+
+def parse_analysis_specific_options(invoking_class,
+                   analysis_specific_options: Dict[type, Dict[str, Any]]
+                   ) -> Dict[type, Dict[str, Any]]:
+
+    for analysis, options in analysis_specific_options.items():
+            analysis_specific_options[analysis] = analysis.parse_options(invoking_class, options)
+
+    return analysis_specific_options

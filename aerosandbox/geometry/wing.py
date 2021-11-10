@@ -1,6 +1,7 @@
 from aerosandbox import AeroSandboxObject
+from aerosandbox.common import parse_analysis_specific_options
 from aerosandbox.geometry.common import *
-from typing import List, Tuple, Union
+from typing import List, Dict, Any, Tuple, Union
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
@@ -36,6 +37,8 @@ class Wing(AeroSandboxObject):
                  xsecs: List['WingXSec'] = [],
                  symmetric: bool = False,
                  xyz_le: np.ndarray = None,  # Note: deprecated.
+                 analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
+                 # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}
                  ):
         """
         Initialize a new wing.
@@ -55,6 +58,8 @@ class Wing(AeroSandboxObject):
                 xsec.translate(xyz_le)
                 for xsec in xsecs
             ]
+    
+        self.analysis_specific_options = parse_analysis_specific_options(__class__, analysis_specific_options)
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
@@ -824,6 +829,8 @@ class WingXSec(AeroSandboxObject):
                  control_surface_hinge_point: float = 0.75,
                  control_surface_deflection: float = 0.,
                  twist_angle=None,  # Note: deprecated.
+                 analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
+                 # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}
                  ):
         """
         Initialize a new wing cross section.
@@ -853,6 +860,8 @@ class WingXSec(AeroSandboxObject):
         self.control_surface_is_symmetric = control_surface_is_symmetric
         self.control_surface_hinge_point = control_surface_hinge_point
         self.control_surface_deflection = control_surface_deflection
+
+        self.analysis_specific_options = parse_analysis_specific_options(__class__, analysis_specific_options)
 
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"

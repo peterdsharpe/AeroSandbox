@@ -1,6 +1,7 @@
 from aerosandbox import AeroSandboxObject
+from aerosandbox.common import parse_analysis_specific_options
 from aerosandbox.geometry.common import *
-from typing import List, Union
+from typing import List, Dict, Any, Union
 from numpy import pi
 from textwrap import dedent
 from pathlib import Path
@@ -20,6 +21,8 @@ class Airplane(AeroSandboxObject):
                  s_ref: float = None,  # If not set, populates from first wing object.
                  c_ref: float = None,  # See above
                  b_ref: float = None,  # See above
+                 analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
+                 # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}
                  ):
         ### Initialize
         self.name = name
@@ -52,6 +55,8 @@ class Airplane(AeroSandboxObject):
         self.s_ref = s_ref
         self.c_ref = c_ref
         self.b_ref = b_ref
+
+        self.analysis_specific_options = parse_analysis_specific_options(__class__, analysis_specific_options)
 
     def __repr__(self):
         n_wings = len(self.wings)
