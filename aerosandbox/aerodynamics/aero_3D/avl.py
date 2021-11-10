@@ -234,69 +234,6 @@ class AVL(ExplicitAnalysis):
             keys = [key.lower() if key in keys_lowerize else key for key in keys]
             keys = [key.replace("tot", "") for key in keys]
 
-            """
-            ### Record the keys associated with those values:
-            keys = [
-                "Sref",
-                "Cref",
-                "Bref",
-                "Xref",
-                "Yref",
-                "Zref",
-                "alpha",
-                "pb/2V",
-                "p'b/2V",
-                "beta",
-                "qc/2V",
-                "mach",
-                "rb/2V",
-                "r'b/2V",
-                "CX",  # Note: these refer to "CXtot", etc. in AVL, but the "tot" is redundant.
-                "Cl",
-                "Cl'",
-                "CY",
-                "Cm",
-                "CZ",
-                "Cn",
-                "Cn'",
-                "CL",
-                "CD",
-                "CDvis",
-                "CDind",
-                "CLff",
-                "CDff",
-                "Cyff",
-                "e",
-                "CLa",
-                "CLb",
-                "CYa",
-                "CYb",
-                "Cla",
-                "Clb",
-                "Cma",
-                "Cmb",
-                "Cna",
-                "Cnb",
-                "CLp",
-                "CLq",
-                "CLr",
-                "CYp",
-                "CYq",
-                "CYr",
-                "Clp",
-                "Clq",
-                "Clr",
-                "Cmp",
-                "Cmq",
-                "Cmr",
-                "Cnp",
-                "Cnq",
-                "Cnr",
-                "Xnp",
-                "Clb Cnr / Clr Cnb"
-            ]
-            """
-
             if len(values) < 56:  # Sometimes the spiral mode term is inexplicably not displayed by AVL
                 raise RuntimeError(
                     "AVL could not run for some reason!\n"
