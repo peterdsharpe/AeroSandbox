@@ -161,7 +161,7 @@ class AVL(ExplicitAnalysis):
 
             # Handle the airplane file
             airplane_file = "airplane.avl"
-            self.airplane.write_avl(directory / airplane_file)
+            self.write_avl(self.airplane, directory / airplane_file)
 
             # Handle the run file
             keystroke_file_contents = self._default_keystroke_file_contents()
@@ -317,6 +317,127 @@ class AVL(ExplicitAnalysis):
             res["r"] = res["rb/2V"] * (2 * self.op_point.velocity / self.airplane.b_ref)
 
             return res
+    
+    @staticmethod
+    def write_avl(airplane: Airplane,
+                  filepath: Union[Path, str] = None,
+                  spanwise_panel_resolution: int = 12,
+                  chordwise_panel_resolution: int = 12,
+                  fuse_panel_resolution: int = 24,
+                  ) -> str:
+        """
+        Writes a .avl file corresponding to this airplane to a filepath.
+
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
+        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+
+        Args:
+            filepath: filepath (including the filename and .avl extension) [string]
+                If None, this function returns the .avl file as a string.
+
+        Returns: None
+
+        """
+        filepath = Path(filepath)
+
+        def clean(s):
+            """
+            Cleans up a multi-line string.
+            """
+            # return dedent(s)
+            return "\n".join([line.strip() for line in s.split("\n")])
+
+        string = ""
+
+        string += clean(f"""\
+        {airplane.name}
+        #Mach
+        0
+        #IYsym   IZsym   Zsym
+         0       0       0.0
+        #Sref    Cref    Bref
+        {airplane.s_ref} {airplane.c_ref} {airplane.b_ref}
+        #Xref    Yref    Zref
+        {airplane.xyz_ref[0]} {airplane.xyz_ref[1]} {airplane.xyz_ref[2]}
+        # CDp
+        0
+        """)
+
+        num_control_surface = 1
+        for wing in airplane.wings:
+            symmetry_line = "YDUPLICATE\n0" if wing.symmetric else ""
+
+            string += clean(f"""\
+            #{"=" * 50}
+            SURFACE
+            {wing.name}
+            #Nchordwise  Cspace   Nspanwise   Sspace
+            {chordwise_panel_resolution}   1.0   {spanwise_panel_resolution}   1.0
+            #
+            {symmetry_line}
+            #
+            ANGLE
+            0
+            """)
+
+            for idx_xsec, xsec in enumerate(wing.xsecs):
+
+                string += clean(f"""\
+                #{"-" * 50}
+                SECTION
+                #Xle    Yle    Zle     Chord   Ainc
+                {xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}
+                
+                AIRFOIL
+                {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
+                
+                CLAF
+                {1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt
+                """)
+
+                # control surface n is defined using xsec i, spanning the section from xsec i to xsec i + 1
+                if idx_xsec == 0: # first xsec in wing
+                    idx_xsecs_active = [idx_xsec]
+                    idx_control_surfaces_active = [num_control_surface]
+                    num_control_surface += 1
+                elif idx_xsec == len(wing.xsecs) - 1: # last xsec in wing
+                    idx_xsecs_active = [idx_xsec - 1]
+                    idx_control_surfaces_active = [num_control_surface - 1]
+                else:
+                    idx_xsecs_active = [idx_xsec - 1, idx_xsec]
+                    idx_control_surfaces_active = [num_control_surface - 1, num_control_surface]
+                    num_control_surface += 1
+                
+                for idx_xsec_active, idx_control_surface_active in zip(idx_xsecs_active, idx_control_surfaces_active):
+                    xsec_active = wing.xsecs[idx_xsec_active]
+                    sign_duplication = 1.0 if xsec_active.control_surface_is_symmetric else -1.0
+                    string += clean(f"""
+                    CONTROL
+                    #Cname Cgain Xhinge HingeVec SgnDup
+                    control{idx_control_surface_active} 1.0 {xsec_active.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
+                    """)
+                
+        for i, fuse in enumerate(airplane.fuselages):
+            fuse_filepath = Path(str(filepath) + f".fuse{i}")
+            fuse.write_avl_bfile(
+                filepath=fuse_filepath
+            )
+            string += clean(f"""\
+            #{"=" * 50}
+            BODY
+            {fuse.name}
+            {fuse_panel_resolution} 1
+            
+            BFIL
+            {fuse_filepath}
+            
+            """)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
 
 
 if __name__ == '__main__':
