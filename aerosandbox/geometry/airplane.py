@@ -1,5 +1,4 @@
 from aerosandbox import AeroSandboxObject
-# from aerosandbox.common import parse_analysis_specific_options
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union
 from numpy import pi
