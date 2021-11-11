@@ -1,4 +1,4 @@
-from typing import Union, List, Dict, Callable
+from typing import Union, List, Dict, Callable, Any
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -24,12 +24,16 @@ class Opti(cas.Opti):
     """
 
     def __init__(self,
-                 variable_categories_to_freeze: List[str] = [],
+                 variable_categories_to_freeze: List[str] = None,
                  cache_filename: str = None,
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
                  ignore_violated_parametric_constraints: bool = False,
                  ):
+
+        # Default arguments
+        if variable_categories_to_freeze is None:
+            variable_categories_to_freeze = []
 
         # Parent class initialization
         super().__init__()
@@ -47,7 +51,7 @@ class Opti(cas.Opti):
     ### Primary Methods
 
     def variable(self,
-                 init_guess: Union[float, np.ndarray],
+                 init_guess: Union[float, np.ndarray] = None,
                  n_vars: int = None,
                  scale: float = None,
                  freeze: bool = False,
@@ -57,7 +61,7 @@ class Opti(cas.Opti):
                  upper_bound: float = None,
                  ) -> cas.MX:
         """
-        Initializes a new decision variable (or vector of decision variables). You must pass an initial guess (
+        Initializes a new decision variable (or vector of decision variables). You should pass an initial guess (
         `init_guess`) upon defining a new variable. Dimensionality is inferred from this initial guess, but it can be
         overridden; see below for syntax.
 
@@ -189,6 +193,13 @@ class Opti(cas.Opti):
 
         """
         ### Set defaults
+        if init_guess is None:
+            import warnings
+            warnings.warn("No initial guess set for Opti.variable().", stacklevel=2)
+            if log_transform:
+                init_guess = 1
+            else:
+                init_guess = 0
         if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
             n_vars = np.length(init_guess)
         if scale is None:  # Infer a scale from init_guess if it is not provided
@@ -239,10 +250,17 @@ class Opti(cas.Opti):
         var.is_manually_frozen = is_manually_frozen
 
         # Apply bounds
-        if lower_bound is not None:
-            self.subject_to(var >= lower_bound)
-        if upper_bound is not None:
-            self.subject_to(var <= upper_bound)
+        if not log_transform:
+            if lower_bound is not None:
+                self.subject_to(var / scale >= lower_bound / scale)
+            if upper_bound is not None:
+                self.subject_to(var / scale <= upper_bound / scale)
+        else:
+            if lower_bound is not None:
+                self.subject_to(log_var / log_scale >= np.log(lower_bound) / log_scale)
+            if upper_bound is not None:
+                self.subject_to(log_var / log_scale <= np.log(upper_bound) / log_scale)
+
 
         return var
 
@@ -390,7 +408,7 @@ class Opti(cas.Opti):
               parameter_mapping: Dict[cas.MX, float] = None,
               max_iter: int = 1000,
               max_runtime: float = 1e20,
-              callback: Callable = None,
+              callback: Callable[[int], Any] = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
               options: Dict = None,  # TODO document
@@ -427,6 +445,10 @@ class Opti(cas.Opti):
                 each variable `x`.
 
             verbose: Should we print the output of IPOPT?
+
+            jit: # TODO
+
+            options: # TODO
 
         Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
             OptiSol.value(variable).

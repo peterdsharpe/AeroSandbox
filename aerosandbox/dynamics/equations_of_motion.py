@@ -129,7 +129,7 @@ def equations_of_motion(
             (cphi * sthe * cpsi + sphi * spsi) * w
     )
     d_ye = (
-            (cthe * sphi) * u +
+            (cthe * spsi) * u +
             (sphi * sthe * spsi + cphi * cpsi) * v +
             (cphi * sthe * spsi - sphi * cpsi) * w
     )
@@ -155,27 +155,27 @@ def equations_of_motion(
             q * u
     )
     ### Angle derivatives
-    if np.any(cthe != 0):
+    if np.all(cthe == 0):
+        d_phi = 0
+    else:
         d_phi = (
                 p +
                 q * sphi * sthe / cthe +
                 r * cphi * sthe / cthe
         )
-    else:
-        d_phi = 0
 
     d_theta = (
             q * cphi -
             r * sphi
     )
 
-    if np.any(cthe != 0):
-        d_psi = (
-            q * sphi / cthe +
-            r * cphi / cthe
-        )
-    else:
+    if np.all(cthe == 0):
         d_psi = 0
+    else:
+        d_psi = (
+                q * sphi / cthe +
+                r * cphi / cthe
+        )
 
     ### Angular velocity derivatives
     RHS_L = (

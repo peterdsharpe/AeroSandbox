@@ -1,11 +1,28 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+from aerosandbox.dynamics.dynamics import FreeBodyDynamics
 from typing import List
 import copy
 import pytest
 
 vector = [1, 2, 3]
-op_point = asb.OperatingPoint(alpha=10, beta=5)
+dyn = FreeBodyDynamics(
+    xe=0,
+    ye=0,
+    ze=0,
+    u=1,
+    v=0,
+    w=0,
+    phi=0,
+    theta=0,
+    psi=0,
+    p=0,
+    q=0,
+    r=0,
+    X=1,
+    Y=0,
+    Z=0,
+)
 
 
 def chain_conversion(
@@ -13,7 +30,7 @@ def chain_conversion(
 ):
     x, y, z = copy.deepcopy(vector)
     for from_axes, to_axes in zip(axes, axes[1:]):
-        x, y, z = op_point.convert_axes(
+        x, y, z = dyn.convert_axes(
             x_from=x,
             y_from=y,
             z_from=z,
@@ -37,6 +54,10 @@ def test_stability():
 
 def test_wind():
     assert chain_conversion(["body", "wind", "body"])
+
+
+def test_earth():
+    assert chain_conversion(["body", "earth", "body"])
 
 
 def test_cycle():

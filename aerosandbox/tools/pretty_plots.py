@@ -10,8 +10,6 @@ from matplotlib import ticker
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
 
-# plt.ion()
-
 ### Define color palettes
 palettes = {
     "categorical": [
@@ -34,6 +32,7 @@ mpl.rcParams["figure.dpi"] = 200
 mpl.rcParams["axes.formatter.useoffset"] = False
 mpl.rcParams["contour.negative_linestyle"] = 'solid'
 
+
 def set_ticks(
         x_major: Union[float, int] = None,
         x_minor: Union[float, int] = None,
@@ -50,8 +49,16 @@ def set_ticks(
     if y_minor is not None:
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
+
 def equal():
     plt.gca().set_aspect("equal", adjustable='box')
+
+
+def figure3d(*args, **kwargs):
+    fig = plt.figure(*args, **kwargs)
+    ax = plt.axes(projection='3d')
+    return fig, ax
+
 
 def adjust_lightness(color, amount=1.0):
     """
@@ -103,8 +110,10 @@ def show_plot(
 
     if pretty_grids:
         for ax in axes:
-            ax.grid(True, 'major', axis='both', linewidth=1.6)
-            ax.grid(True, 'minor', axis='both', linewidth=0.7)
+            if not ax.get_label() == '<colorbar>':
+                if not ax.name == '3d':
+                    ax.grid(True, 'major', axis='both', linewidth=1.6)
+                    ax.grid(True, 'minor', axis='both', linewidth=0.7)
 
     ### Determine if a legend should be shown
     if legend is None:
@@ -135,22 +144,78 @@ def show_plot(
         plt.show()
 
 
+def hline(
+        y,
+        linestyle="--",
+        color="k",
+        text: str = None,
+        text_xloc=0.5,
+        text_ha="center",
+        text_va="bottom",
+        text_kwargs=None,
+):  # TODO docs
+    if text_kwargs is None:
+        text_kwargs = {}
+    ax = plt.gca()
+    xlim = ax.get_xlim()
+    plt.axhline(y=y, ls=linestyle, color=color)
+    if text is not None:
+        plt.text(
+            x=text_xloc * xlim[1] + (1 - text_xloc) * xlim[0],
+            y=y,
+            s=text,
+            color=color,
+            horizontalalignment=text_ha,
+            verticalalignment=text_va,
+            **text_kwargs
+        )
+
+
+def vline(
+        x,
+        linestyle="--",
+        color="k",
+        text: str = None,
+        text_yloc=0.5,
+        text_ha="right",
+        text_va="center",
+        text_kwargs=None,
+):  # TODO docs
+    if text_kwargs is None:
+        text_kwargs = {}
+    ax = plt.gca()
+    ylim = ax.get_ylim()
+    plt.axvline(x=x, ls=linestyle, color=color)
+    if text is not None:
+        plt.text(
+            x=x,
+            y=text_yloc * ylim[1] + (1 - text_yloc) * ylim[0],
+            s=text,
+            color=color,
+            horizontalalignment=text_ha,
+            verticalalignment=text_va,
+            rotation=90,
+            **text_kwargs
+        )
+
+
 def contour(
-        X,
-        Y,
-        Z,
-        levels: Union[int, List, np.ndarray] = None,
-        colorbar=True,
-        linelabels=True,
+        X: np.ndarray,
+        Y: np.ndarray,
+        Z: np.ndarray,
+        levels: Union[int, List, np.ndarray] = 31,
+        colorbar: bool = True,
+        linelabels: bool = True,
         cmap=mpl.cm.get_cmap('viridis'),
         alpha: float = 0.7,
-        extend="both",
+        extend: str = "both",
         linecolor="k",
-        linewidths=0.5,
-        extendrect=True,
+        linewidths: float = 0.5,
+        extendrect: bool = True,
         linelabels_format: Union[str, Callable[[float], str]] = eng_string,
-        linelabels_fontsize=8,
-        colorbar_label=None,
+        linelabels_fontsize: float = 8,
+        colorbar_label: str = None,
+        z_log_scale: bool = False,
         contour_kwargs: Dict = None,
         contourf_kwargs: Dict = None,
         colorbar_kwargs: Dict = None,
@@ -187,7 +252,7 @@ def contour(
         contourf_kwargs: Additional keyword arguments for contourf.
         colorbar_kwargs: Additional keyword arguments for colorbar.
         linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
-        **kwargs: Additional keywords, assumed to be for both contour and contourf.
+        **kwargs: Additional keywords, which are passed to both contour and contourf.
 
     Returns: A tuple of (contour, contourf, colorbar) objects.
 
@@ -211,8 +276,27 @@ def contour(
     shared_kwargs = kwargs
     if levels is not None:
         shared_kwargs["levels"] = levels
-    shared_kwargs["alpha"] = alpha
-    shared_kwargs["extend"] = extend
+    if alpha is not None:
+        shared_kwargs["alpha"] = alpha
+    if extend is not None:
+        shared_kwargs["extend"] = extend
+    if z_log_scale:
+
+        shared_kwargs = {
+            "norm"   : mpl.colors.LogNorm(),
+            "locator": mpl.ticker.LogLocator(
+                subs=np.geomspace(1, 10, 4 + 1)[:-1]
+            ),
+            **shared_kwargs
+        }
+
+        if np.min(Z) <= 0:
+            import warnings
+            warnings.warn(
+                "Warning: All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!",
+                stacklevel=2
+            )
+            Z = np.maximum(Z, 1e-300)  # Make all values nonnegative
 
     if colorbar_label is not None:
         colorbar_kwargs["label"] = colorbar_label
@@ -253,6 +337,10 @@ def contour(
 
     if colorbar:
         cbar = plt.colorbar(**colorbar_kwargs)
+
+        if z_log_scale:
+            cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
+            cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatter())
     else:
         cbar = None
 

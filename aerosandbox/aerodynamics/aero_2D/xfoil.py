@@ -41,7 +41,9 @@ class XFoil(ExplicitAnalysis):
                  xtr_lower: float = 1.,
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
+                 xfoil_repanel: bool = True,
                  verbose: bool = False,
+                 timeout: Union[float, int, None] = 30,
                  working_directory: str = None,
                  ):
         """
@@ -81,6 +83,18 @@ class XFoil(ExplicitAnalysis):
                 To add XFoil to your path, modify your system's environment variables. (Google how to do this for
                 your OS.)
 
+            xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE
+            -> PPAR, both with default settings, 160 nodes)
+
+            verbose: Controls whether or not XFoil output is printed to command line.
+
+            timeout: Controls how long any individual XFoil run (i.e. alpha sweep) is allowed to run before the
+            process is killed. Given in units of seconds. To disable timeout, set this to None.
+
+            working_directory: Controls which working directory is used for the XFoil input and output files. By
+            default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
+            somewhere local for debugging purposes.
+
         """
         self.airfoil = airfoil
         self.Re = Re
@@ -90,10 +104,16 @@ class XFoil(ExplicitAnalysis):
         self.xtr_lower = xtr_lower
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
+        self.xfoil_repanel = xfoil_repanel
         self.verbose = verbose
+        self.timeout = timeout
         self.working_directory = working_directory
 
-    def _default_keystroke_file_contents(self) -> List[str]:
+        if np.length(self.airfoil.coordinates) > 401: # If the airfoil coordinates exceed Fortran array allocation
+            self.xfoil_repanel = True
+
+
+    def _default_keystrokes(self) -> List[str]:
         run_file_contents = []
 
         # Disable graphics
@@ -102,6 +122,13 @@ class XFoil(ExplicitAnalysis):
             "g",
             "",
         ]
+
+        if self.xfoil_repanel:
+            run_file_contents += [
+                "pane",
+                "ppar",
+                "",
+            ]
 
         # Enter oper mode
         run_file_contents += [
@@ -171,31 +198,28 @@ class XFoil(ExplicitAnalysis):
             self.airfoil.write_dat(directory / airfoil_file)
 
             # Handle the keystroke file
-            keystroke_file_contents = self._default_keystroke_file_contents()
-            keystroke_file_contents += [run_command]
-            keystroke_file_contents += [
+            keystrokes = self._default_keystrokes()
+            keystrokes += [run_command]
+            keystrokes += [
                 "pwrt",
                 f"{output_filename}",
                 "y",
                 "",
                 "quit"
             ]
-            keystroke_file = "keystroke_file.txt"
-            with open(directory / keystroke_file, "w+") as f:
-                f.write(
-                    "\n".join(keystroke_file_contents)
-                )
-
-            ### Set up the run command
-            command = f'{self.xfoil_command} {airfoil_file} < {keystroke_file}'
 
             ### Execute
-            subprocess.call(
-                command,
-                shell=True,
-                cwd=directory,
-                stdout=None if self.verbose else subprocess.DEVNULL
-            )
+            try:
+                subprocess.run(
+                    f'{self.xfoil_command} {airfoil_file}',
+                    input="\n".join(keystrokes),
+                    cwd=directory,
+                            stdout=None if self.verbose else subprocess.DEVNULL,
+                    text=True,
+                    timeout=self.timeout
+                )
+            except subprocess.TimeoutExpired:
+                pass
 
             ### Parse the polar
             columns = [
@@ -210,18 +234,23 @@ class XFoil(ExplicitAnalysis):
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                output_data = np.genfromtxt(
-                    directory / output_filename,
-                    skip_header=12,
-                    usecols=np.arange(len(columns))
-                ).reshape(-1, len(columns))
+                try:
+                    output_data = np.genfromtxt(
+                        directory / output_filename,
+                        skip_header=12,
+                        usecols=np.arange(len(columns))
+                    ).reshape(-1, len(columns))
+                except OSError: # File not found
+                    output_data = np.array([]).reshape(-1, len(columns))
 
             has_valid_inputs = len(output_data) != 0
 
-            return {
+            output_data_clean = {
                 k: output_data[:, index] if has_valid_inputs else np.array([])
                 for index, k in enumerate(columns)
             }
+
+            return output_data_clean
 
     def alpha(self,
               alpha: Union[float, np.ndarray],
@@ -254,8 +283,8 @@ class XFoil(ExplicitAnalysis):
             if start_at is not None:
                 if start_at > np.min(alphas) and start_at < np.max(alphas):
                     alphas = np.sort(alphas)
-                    alphas_upper = alphas[alphas >= start_at]
-                    alphas_lower = alphas[alpha < start_at][::-1]
+                    alphas_upper = alphas[alphas > start_at]
+                    alphas_lower = alphas[alpha <= start_at][::-1]
 
                     output = self._run_xfoil(
                         "\n".join(

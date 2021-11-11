@@ -29,10 +29,15 @@ def declination_angle(day_of_year):
 def solar_elevation_angle(latitude, day_of_year, time):
     """
     Elevation angle of the sun [degrees] for a local observer.
+
     :param latitude: Latitude [degrees]
+
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+
     :param time: Time after local solar noon [seconds]
-    :return: Solar elevation angle [degrees] (angle between horizon and sun). Returns 0 if the sun is below the horizon.
+
+    :return: Solar elevation angle [degrees] (angle between horizon and sun). Returns negative values if the sun is
+    below the horizon.
     """
 
     # Solar elevation angle (including seasonality, latitude, and time of day)
@@ -43,8 +48,41 @@ def solar_elevation_angle(latitude, day_of_year, time):
         np.sind(declination) * np.sind(latitude) +
         np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
     )  # in degrees
-    solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
+
+
+def solar_azimuth_angle(latitude, day_of_year, time):
+    """
+    Zenith angle of the sun [degrees] for a local observer.
+    :param latitude: Latitude [degrees]
+    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    :param time: Time after local solar noon [seconds]
+    :return: Solar azimuth angle [degrees] (the compass direction from which the sunlight is coming).
+    """
+
+    # Solar azimuth angle (including seasonality, latitude, and time of day)
+    # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
+    declination = declination_angle(day_of_year)
+    sdec = np.sind(declination)
+    cdec = np.cosd(declination)
+    slat = np.sind(latitude)
+    clat = np.cosd(latitude)
+    cos_time = np.cosd(time / 86400 * 360)
+
+    elevation = solar_elevation_angle(latitude, day_of_year, time)
+    cele = np.cosd(elevation)
+
+    solar_azimuth_angle = np.where(
+        np.mod(time, 86400) > 43200,
+        np.arccosd(
+            (sdec * clat - cdec * slat * cos_time) / cele
+        ),
+        360 - np.arccosd(
+            (sdec * clat - cdec * slat * cos_time) / cele
+        )
+    )
+
+    return solar_azimuth_angle
 
 
 def incidence_angle_function(
@@ -68,6 +106,7 @@ def incidence_angle_function(
     # Sharma: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611928/
 
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
+    sun_above_horizon_multiplier = np.where(elevation_angle > 0, 1, 0)
 
     if panel_orientation == "horizontal":
         theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
@@ -78,10 +117,13 @@ def incidence_angle_function(
 
     cosine_factor = np.cosd(theta)
 
-    if not scattering:
-        return cosine_factor
-    else:
-        return cosine_factor * scattering_factor(elevation_angle)
+    illumination_factor = cosine_factor
+
+    if scattering:
+        illumination_factor = illumination_factor * scattering_factor(elevation_angle)
+
+    illumination_factor = illumination_factor * sun_above_horizon_multiplier
+    return illumination_factor
 
 
 def scattering_factor(elevation_angle):

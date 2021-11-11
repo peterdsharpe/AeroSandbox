@@ -88,13 +88,16 @@ def fuselage_aerodynamics(
     sin_generalized_alpha = np.sind(generalized_alpha)
     cos_generalized_alpha = x_w
 
+    # ### Limit generalized alpha to -90 < alpha < 90, for now.
+    # generalized_alpha = np.clip(generalized_alpha, -90, 90)
+    # # TODO make the drag/moment functions not give negative results for alpha > 90.
+
     alpha_fractional_component = -z_w / np.sqrt(
         y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
     beta_fractional_component = y_w / np.sqrt(
         y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of beta
 
-    # generalized_alpha = np.clip(generalized_alpha, -90,
-    #                             90)  # TODO make the drag/moment functions not give negative results for alpha > 90.
+
 
     ### Compute normal quantities
     ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)

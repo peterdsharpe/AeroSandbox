@@ -52,7 +52,9 @@ class Wing(AeroSandboxObject):
         if xyz_le is not None:
             import warnings
             warnings.warn(
-                "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.")
+                "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.",
+                stacklevel=2
+            )
             self.xsecs = [
                 xsec.translate(xyz_le)
                 for xsec in xsecs
@@ -823,7 +825,7 @@ class WingXSec(AeroSandboxObject):
                  xyz_le: np.ndarray = np.array([0, 0, 0]),
                  chord: float = 1.,
                  twist: float = 0,
-                 airfoil: Airfoil = Airfoil("naca0012"),
+                 airfoil: Airfoil = None,
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
                  control_surface_deflection: float = 0.,
@@ -843,13 +845,19 @@ class WingXSec(AeroSandboxObject):
                     * That direction vector is projected onto the Y-Z plane.
                     * That direction vector is now the twist axis.
             airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
-            control_surface_is_symmetric: Is the control surface symmetric? (e.g. True for flaps, False for ailerons.)
+            control_surface_is_symmetric: Is the control surface symmetric? (e.g., True for flaps, False for ailerons.)
             control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
             control_surface_deflection: Control deflection, in degrees. Downwards-positive.
         """
+        if airfoil is None:
+            airfoil = Airfoil("naca0012")
+
         if twist_angle is not None:
             import warnings
-            warnings.warn("DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.")
+            warnings.warn(
+                "DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.",
+                stacklevel=2
+            )
             twist = twist_angle
 
         self.xyz_le = np.array(xyz_le)

@@ -216,6 +216,9 @@ def reshape(a, newshape):
         if isinstance(newshape, int):
             newshape = (newshape, 1)
 
+        if len(newshape) == 1:
+            newshape = (newshape[0], 1)
+
         if len(newshape) > 2:
             raise ValueError("CasADi data types are limited to no more than 2 dimensions.")
 

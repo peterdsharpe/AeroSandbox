@@ -113,13 +113,17 @@ def Cf_flat_plate(
         )
 
 
-def Cl_flat_plate(alpha, Re_c):
+def Cl_flat_plate(alpha, Re_c=None):
     """
     Returns the approximate lift coefficient of a flat plate, following thin airfoil theory.
     :param alpha: Angle of attack [deg]
     :param Re_c: Reynolds number, normalized to the length of the flat plate.
     :return: Approximate lift coefficient.
     """
+    if Re_c is not None:
+        from warnings import warn
+        warn("`Re_c` input will be deprecated in a future version.")
+
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
 

@@ -103,7 +103,6 @@ def test_all_tutorials():
 
 
 if __name__ == '__main__':
-    test_all_tutorials()
-
-    # import pytest
-    # pytest.main()
+    import matplotlib.pyplot as plt
+    with plt.ion():
+        test_all_tutorials()

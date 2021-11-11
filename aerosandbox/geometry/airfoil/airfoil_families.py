@@ -2,6 +2,8 @@ import aerosandbox.numpy as np
 from scipy.special import comb
 from aerosandbox.geometry.polygon import stack_coordinates
 import re
+from typing import Union
+import os
 
 _default_n_points_per_side = 200
 
@@ -192,7 +194,7 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
             pass
 
     if len(raw_coordinates) == 0:
-        raise ValueError("File was found, but could not read any coordinates!")
+        raise ValueError("Could not read any coordinates from the `raw_text` input!")
 
     coordinates = np.array(raw_coordinates, dtype=float)
 
@@ -200,21 +202,29 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
 
 
 def get_file_coordinates(
-        filepath
+        filepath: Union[str, os.PathLike]
 ):
+    possible_errors = (FileNotFoundError, UnicodeDecodeError)
+
+    if isinstance(filepath, np.ndarray):
+        raise TypeError("`filepath` should be a string or os.PathLike object.")
+
     try:
         with open(filepath, "r") as f:
             raw_text = f.readlines()
-    except FileNotFoundError as e:
+    except possible_errors as e:
         try:
             with open(f"{filepath}.dat", "r") as f:
                 raw_text = f.readlines()
-        except FileNotFoundError as e:
+        except possible_errors as e:
             raise FileNotFoundError(
-                f" Neither '{filepath}' nor '{filepath}.dat' were found."
+                f" Neither '{filepath}' nor '{filepath}.dat' were found and readable."
             ) from e
 
-    return get_coordinates_from_raw_dat(raw_text)
+    try:
+        return get_coordinates_from_raw_dat(raw_text)
+    except ValueError:
+        raise ValueError("File was found, but could not read any coordinates!")
 
 
 def get_UIUC_coordinates(
