@@ -5,6 +5,7 @@ from pathlib import Path
 from aerosandbox.geometry import Airplane, Wing, WingXSec, Fuselage
 from aerosandbox.performance import OperatingPoint
 from typing import Union, List, Dict, Any
+import copy
 import tempfile
 import warnings
 
@@ -45,7 +46,6 @@ class AVL(ExplicitAnalysis):
             "no_wake": False,
             "no_alpha_beta": False,
             "no_load": False,
-            "wing_level_drag_polar": True,
             "drag_polar": None,
             "wing_level_spanwise_spacing": True,
             "cl_alpha_factor": None,
@@ -54,7 +54,7 @@ class AVL(ExplicitAnalysis):
             "chordwise_resolution": 12,
             "chordwise_spacing": "cosine",
             "fuse_panel_resolution": 24,
-            "fuse_spacing": "cosine"
+            "fuse_panel_spacing": "cosine"
         }
 
     option_keys = {
@@ -64,28 +64,26 @@ class AVL(ExplicitAnalysis):
             "parasitic_drag_coefficient"
         ],
         Wing: [
-            "component",
-            "no_wake",
-            "no_alpha_beta",
-            "no_load",
-            "wing_level_drag_polar",
-            "drag_polar",
             "wing_level_spanwise_spacing",
             "spanwise_resolution",
             "spanwise_spacing",
             "chordwise_resolution",
-            "chordwise_spacing"
+            "chordwise_spacing",
+            "component",
+            "no_wake",
+            "no_alpha_beta",
+            "no_load",
+            "drag_polar"
         ],
         WingXSec: [
-            "cl_alpha_factor",
             "spanwise_resolution",
             "spanwise_spacing",
-            "chordwise_resolution",
-            "chordwise_spacing"
+            "cl_alpha_factor",
+            "drag_polar",
         ],
         Fuselage: [
             "fuse_panel_resolution",
-            "fuse_spacing"
+            "fuse_panel_spacing"
         ]
     }
 
@@ -310,9 +308,6 @@ class AVL(ExplicitAnalysis):
     @staticmethod
     def write_avl(airplane: Airplane,
                   filepath: Union[Path, str] = None,
-                  spanwise_panel_resolution: int = 12,
-                  chordwise_panel_resolution: int = 12,
-                  fuse_panel_resolution: int = 24,
                   ) -> str:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
@@ -327,8 +322,6 @@ class AVL(ExplicitAnalysis):
         Returns: None
 
         """
-        filepath = Path(filepath)
-
         def clean(s):
             """
             Cleans up a multi-line string.
@@ -338,51 +331,121 @@ class AVL(ExplicitAnalysis):
 
         string = ""
 
+        options = airplane.get_analysis_specific_options(__class__)
+        
+        z_symmetry = 1 if options["ground_plane"] == True else 0
+
         string += clean(f"""\
         {airplane.name}
         #Mach
         0
         #IYsym   IZsym   Zsym
-         0       0       0.0
+         0       {z_symmetry}       {options["ground_plane_height"]}
         #Sref    Cref    Bref
         {airplane.s_ref} {airplane.c_ref} {airplane.b_ref}
         #Xref    Yref    Zref
         {airplane.xyz_ref[0]} {airplane.xyz_ref[1]} {airplane.xyz_ref[2]}
         # CDp
-        0
+        {options["parasitic_drag_coefficient"]}
         """)
+
+        spacing = {
+            "uniform": 0.0,
+            "cosine": 1.0,
+            "sine": 2.0
+        }
 
         num_control_surface = 1
         for wing in airplane.wings:
-            symmetry_line = "YDUPLICATE\n0" if wing.symmetric else ""
+
+            options = wing.get_analysis_specific_options(__class__)
+            wing_options = copy.deepcopy(options) # store these for comparison to xsec options
+
+            spacing_line = f"{options['chordwise_resolution']}   {spacing[options['chordwise_spacing']]}"
+            if options["wing_level_spanwise_spacing"] == True:
+                spacing_line += f"   {options['spanwise_resolution']}   {spacing[options['spanwise_spacing']]}"
 
             string += clean(f"""\
             #{"=" * 50}
             SURFACE
             {wing.name}
-            #Nchordwise  Cspace   Nspanwise   Sspace
-            {chordwise_panel_resolution}   1.0   {spanwise_panel_resolution}   1.0
-            #
-            {symmetry_line}
-            #
-            ANGLE
-            0
+            #Nchordwise  Cspace  [Nspanwise   Sspace]
+            {spacing_line}
+
             """)
 
-            for idx_xsec, xsec in enumerate(wing.xsecs):
+            if wing.symmetric == True:
+                string += clean(f"""\
+                YDUPLICATE
+                0
 
+                """)
+            
+            if options["no_wake"] == True:
+                string += clean(f"""\
+                NOWAKE
+                
+                """)
+            
+            if options["no_alpha_beta"] == True:
+                string += clean(f"""\
+                NOALBE
+                
+                """)
+            
+            if options["no_load"] == True:
+                string += clean(f"""\
+                NOLOAD
+                
+                """)
+            
+            if options["drag_polar"] is not None:
+                drag_polar = options["drag_polar"]
+                CL = drag_polar["CL"]
+                CD = drag_polar["CD"]
+                string += clean(f"""\
+                CDCL
+                #CL1  CD1  CL2  CD2  CL3  CD3
+                {' '.join(str(x) for x in [CL[0], CD[0], CL[1], CD[1], CL[2], CD[2]])}
+                
+                """)
+
+            for idx_xsec, xsec in enumerate(wing.xsecs):
+                
+                options = xsec.get_analysis_specific_options(__class__)
+
+                xsec_def_line = f"{xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}"
+                if wing_options["wing_level_spanwise_spacing"] == False:
+                    xsec_def_line += f"   {options['spanwise_resolution']}   {spacing[options['spanwise_spacing']]}"
+
+                if options["cl_alpha_factor"] is None:
+                    claf_line = f"{1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt"
+                else:
+                    claf_line = f"{options['cl_alpha_factor']}"
+                
                 string += clean(f"""\
                 #{"-" * 50}
                 SECTION
-                #Xle    Yle    Zle     Chord   Ainc
-                {xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}
+                #Xle    Yle    Zle     Chord   Ainc  [Nspanwise   Sspace]
+                {xsec_def_line}
                 
                 AIRFOIL
                 {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
                 
                 CLAF
-                {1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt
+                {claf_line}
                 """)
+
+                if options["drag_polar"] is not None:
+                    drag_polar = options["drag_polar"]
+                    CL = drag_polar["CL"]
+                    CD = drag_polar["CD"]
+                    string += clean(f"""\
+                    CDCL
+                    #CL1  CD1  CL2  CD2  CL3  CD3
+                    {' '.join(str(x) for x in [CL[0], CD[0], CL[1], CD[1], CL[2], CD[2]])}
+                    
+                    """)
 
                 # control surface n is defined using xsec i, spanning the section from xsec i to xsec i + 1
                 if idx_xsec == 0: # first xsec in wing
@@ -405,18 +468,22 @@ class AVL(ExplicitAnalysis):
                     #Cname Cgain Xhinge HingeVec SgnDup
                     control{idx_control_surface_active} 1.0 {xsec_active.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
                     """)
-                
+        
+        filepath = Path(filepath)
         for i, fuse in enumerate(airplane.fuselages):
             fuse_filepath = Path(str(filepath) + f".fuse{i}")
             __class__.write_avl_bfile(
                 fuse,
                 filepath=fuse_filepath
             )
+
+            options = fuse.get_analysis_specific_options(__class__)
+
             string += clean(f"""\
             #{"=" * 50}
             BODY
             {fuse.name}
-            {fuse_panel_resolution} 1
+            {options['fuse_panel_resolution']} {spacing[options['fuse_panel_spacing']]}
             
             BFIL
             {fuse_filepath}
