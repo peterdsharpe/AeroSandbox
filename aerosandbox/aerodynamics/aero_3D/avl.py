@@ -135,24 +135,6 @@ class AVL(ExplicitAnalysis):
     def run(self) -> Dict:
         return self._run_avl()
 
-    @staticmethod
-    def parse_options(invoking_class,
-                      user_options: Dict[type, Dict[str, Any]]
-                      ) -> Dict[type, Dict[str, Any]]:
-        
-        options = {
-            key: __class__.default_analysis_specific_options[key] for key in __class__.option_keys[invoking_class]
-        }
-
-        if user_options:
-            for key, value in user_options.items():
-                if key in options.keys():
-                    options[key] = value
-                else:
-                    raise ValueError(f"The option you supplied, '{key}', is invalid! Valid options are: {tuple(options.keys())}")
-
-        return options
-
     def _default_keystroke_file_contents(self) -> List[str]:
 
         run_file_contents = []

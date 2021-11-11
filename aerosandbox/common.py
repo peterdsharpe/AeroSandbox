@@ -51,6 +51,48 @@ class AeroSandboxObject:
 
         return self
 
+    @classmethod
+    def parse_analysis_specific_options(self,
+                                        analysis_specific_options_dict: Dict[type, Dict[Any, Dict[type, Dict[str, Any]]]]
+                                        ) -> Dict[type, Dict[Any, Dict[type, Dict[str, Any]]]]:
+
+        for analysis, analysis_specific_options_user in analysis_specific_options_dict.items():
+            
+            analysis_specific_options_dict[analysis] = self.validate_analysis_specific_options(analysis, analysis_specific_options_user)
+
+        return analysis_specific_options_dict
+    
+
+    @classmethod
+    def validate_analysis_specific_options(self,
+                                           analysis,
+                                           analysis_specific_options_user: Dict[type, Dict[str, Any]]
+                                           ) -> Dict[type, Dict[str, Any]]:
+        
+        analysis_specific_options = {
+                key: analysis.default_analysis_specific_options[key] for key in analysis.option_keys[self] # initialize to default options for given object and analysis
+            }
+
+        if analysis_specific_options_user:
+            for key, value in analysis_specific_options_user.items():
+                if key in analysis_specific_options.keys():
+                    analysis_specific_options[key] = value
+                else:
+                    raise ValueError(f"'{key}' is not a valid option for object {self} within analysis {analysis}. Valid options are: {tuple(analysis_specific_options.keys())}")
+
+        return analysis_specific_options
+    
+    def get_analysis_specific_options(self,
+                                      analysis
+                                      ) -> Dict[type, Dict[str, Any]]:
+        
+        analysis_specific_options_dict = self.analysis_specific_options
+        if analysis not in analysis_specific_options_dict.keys(): # no analysis specific options for given analysis
+            analysis_specific_options = self.validate_analysis_specific_options(analysis, {}) # passing an empty dict will return the default options
+        else:
+            analysis_specific_options = analysis_specific_options_dict[analysis]
+
+        return analysis_specific_options
 
 class ImplicitAnalysis(AeroSandboxObject):
 
@@ -155,12 +197,3 @@ class ImplicitAnalysis(AeroSandboxObject):
 
 class ExplicitAnalysis(AeroSandboxObject):
     pass
-
-def parse_analysis_specific_options(invoking_class,
-                   analysis_specific_options: Dict[type, Dict[str, Any]]
-                   ) -> Dict[type, Dict[str, Any]]:
-
-    for analysis, options in analysis_specific_options.items():
-            analysis_specific_options[analysis] = analysis.parse_options(invoking_class, options)
-
-    return analysis_specific_options

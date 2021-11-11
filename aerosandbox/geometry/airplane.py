@@ -1,5 +1,5 @@
 from aerosandbox import AeroSandboxObject
-from aerosandbox.common import parse_analysis_specific_options
+# from aerosandbox.common import parse_analysis_specific_options
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union
 from numpy import pi
@@ -56,7 +56,7 @@ class Airplane(AeroSandboxObject):
         self.c_ref = c_ref
         self.b_ref = b_ref
 
-        self.analysis_specific_options = parse_analysis_specific_options(__class__, analysis_specific_options)
+        self.analysis_specific_options = __class__.parse_analysis_specific_options(analysis_specific_options)
 
     def __repr__(self):
         n_wings = len(self.wings)

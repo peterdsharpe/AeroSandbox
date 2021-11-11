@@ -1,5 +1,4 @@
 from aerosandbox import AeroSandboxObject
-from aerosandbox.common import parse_analysis_specific_options
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Tuple, Union
 from aerosandbox.geometry.airfoil import Airfoil
@@ -59,7 +58,7 @@ class Wing(AeroSandboxObject):
                 for xsec in xsecs
             ]
     
-        self.analysis_specific_options = parse_analysis_specific_options(__class__, analysis_specific_options)
+        self.analysis_specific_options = __class__.parse_analysis_specific_options(analysis_specific_options)
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
@@ -861,7 +860,7 @@ class WingXSec(AeroSandboxObject):
         self.control_surface_hinge_point = control_surface_hinge_point
         self.control_surface_deflection = control_surface_deflection
 
-        self.analysis_specific_options = parse_analysis_specific_options(__class__, analysis_specific_options)
+        self.analysis_specific_options = __class__.parse_analysis_specific_options(analysis_specific_options)
 
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"

@@ -30,3 +30,4 @@ def reflect_over_XZ_plane(input_vector):
             ), axis=1)
         else:
             raise ValueError("This function expected either a 3-element vector or an Nx3 array!")
+            
