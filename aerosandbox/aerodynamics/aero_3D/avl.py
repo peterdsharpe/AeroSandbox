@@ -408,7 +408,8 @@ class AVL(ExplicitAnalysis):
                 
         for i, fuse in enumerate(airplane.fuselages):
             fuse_filepath = Path(str(filepath) + f".fuse{i}")
-            fuse.write_avl_bfile(
+            __class__.write_avl_bfile(
+                fuse,
                 filepath=fuse_filepath
             )
             string += clean(f"""\
@@ -428,6 +429,54 @@ class AVL(ExplicitAnalysis):
 
         return string
 
+    @staticmethod
+    def write_avl_bfile(fuselage,
+                        filepath: Union[Path, str] = None,
+                        include_name: bool = True,
+                        ) -> str:
+        """
+        Writes an AVL-compatible BFILE corresponding to this fuselage to a filepath.
+
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
+        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+
+        Args:
+            filepath: filepath (including the filename and .avl extension) [string]
+                If None, this function returns the would-be file contents as a string.
+
+            include_name: Should the name be included in the .dat file? (This should be True for use with AVL.)
+
+        Returns:
+
+        """
+        filepath = Path(filepath)
+
+        contents = []
+
+        if include_name:
+            contents += [fuselage.name]
+
+        contents += [
+                        f"{xyz_c[0]} {xyz_c[2] + r}"
+                        for xyz_c, r in zip(
+                [xsec.xyz_c for xsec in fuselage.xsecs][::-1],
+                [xsec.radius for xsec in fuselage.xsecs][::-1]
+            )
+                    ] + [
+                        f"{xyz_c[0]} {xyz_c[2] - r}"
+                        for xyz_c, r in zip(
+                [xsec.xyz_c for xsec in fuselage.xsecs][1:],
+                [xsec.radius for xsec in fuselage.xsecs][1:]
+            )
+                    ]
+
+        string = "\n".join(contents)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
 
 if __name__ == '__main__':
 
