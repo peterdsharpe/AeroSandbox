@@ -1,4 +1,5 @@
 from aerosandbox.dynamics.point_mass.common_point_mass import _DynamicsPointMassBaseClass
+from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
 from typing import Union
 
@@ -23,15 +24,22 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
     """
 
     def __init__(self,
-                 x_e: Union[np.ndarray, float],
-                 z_e: Union[np.ndarray, float],
-                 u_e: Union[np.ndarray, float],
-                 w_e: Union[np.ndarray, float],
+                 mass_props: MassProperties = None,
+                 x_e: Union[np.ndarray, float] = 0,
+                 z_e: Union[np.ndarray, float] = 0,
+                 u_e: Union[np.ndarray, float] = 0,
+                 w_e: Union[np.ndarray, float] = 0,
                  ):
+        # Initialize state variables
+        self.mass_props = MassProperties() if mass_props is None else mass_props
         self.x_e = x_e
         self.z_e = z_e
         self.u_e = u_e
         self.w_e = w_e
+
+        # Initialize control variables
+        self.Fx_e = 0
+        self.Fz_e = 0
 
 
 if __name__ == '__main__':
