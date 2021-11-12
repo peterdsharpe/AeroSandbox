@@ -1,1 +1,1 @@
-from .mass_properties import *
+from aerosandbox.weights.mass_properties import *
