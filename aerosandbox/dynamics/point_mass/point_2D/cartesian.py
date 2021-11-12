@@ -41,14 +41,34 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
         self.Fx_e = 0
         self.Fz_e = 0
 
+    @property
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
-        pass
+        return {
+            "x_e": self.x_e,
+            "z_e": self.z_e,
+            "u_e": self.u_e,
+            "w_e": self.w_e,
+        }
 
+    @property
     def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
-        pass
+        return {
+            "Fx_e": self.Fx_e,
+            "Fz_e": self.Fz_e,
+        }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
-        pass
+        return {
+            "x_e": self.u_e,
+            "z_e": self.w_e,
+            "u_e": self.Fx_e / self.mass_props.mass,
+            "w_e": self.Fz_e / self.mass_props.mass,
+        }
+
+    @property
+    def gamma(self):
+        """Returns the flight path angle, in radians."""
+        return np.arctan2(-self.w_e, self.u_e)
 
     def convert_axes(self,
                      x_from: float,
@@ -70,9 +90,10 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
     @property
     def speed(self) -> float:
         return (
-            self.u_e ** 2 +
-            self.z_e ** 2
-        ) ** 0.5
+                       self.u_e ** 2 +
+                       self.z_e ** 2
+               ) ** 0.5
+
 
 if __name__ == '__main__':
     dyn = DynamicsPointMass2DCartesian()
