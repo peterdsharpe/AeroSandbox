@@ -1,15 +1,14 @@
 from aerosandbox.common import *
-from aerosandbox.atmosphere import *
-from aerosandbox.aerodynamics import *
-from aerosandbox.dynamics import *
-from aerosandbox.geometry import *
-import aerosandbox.numpy as numpy
-from aerosandbox.modeling import *
 from aerosandbox.optimization import *
+from aerosandbox.modeling import *
+from aerosandbox.geometry import *
+from aerosandbox.atmosphere import *
+from aerosandbox.weights import *
+from aerosandbox.dynamics import *
+from aerosandbox.aerodynamics import *
 from aerosandbox.performance import *
 from aerosandbox.propulsion import *
 from aerosandbox.structures import *
-from aerosandbox.weights import *
 
 __version__ = "3.2.15"
 
