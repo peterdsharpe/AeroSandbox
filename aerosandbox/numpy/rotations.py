@@ -30,7 +30,7 @@ def rotation_matrix_3D(
 ):
     """
     Gives the 3D rotation matrix from an angle and an axis.
-    An implmentation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+    An implementation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
     :param angle: can be one angle or a vector (1d ndarray) of angles. Given in radians. # TODO note deprecated functionality; must be scalar
         Direction corresponds to the right-hand rule.
     :param axis: a 1d numpy array of length 3 (x,y,z). Represents the angle.
