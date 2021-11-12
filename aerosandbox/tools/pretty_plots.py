@@ -200,13 +200,28 @@ def vline(
 
 
 def plot_color_by_value(
-        x,
-        y,
+        x: np.ndarray,
+        y: np.ndarray,
         *args,
-        c,
+        c: np.ndarray,
         cmap=mpl.cm.get_cmap('viridis'),
         **kwargs
 ):
+    """
+    Uses same syntax as matplotlib.pyplot.plot, except that `c` is now an array-like that maps to a specific color
+    pulled from `cmap`. Makes lines that are multicolored based on this `c` value.
+
+    Args:
+        x:
+        y:
+        *args:
+        c:
+        cmap:
+        **kwargs:
+
+    Returns:
+
+    """
     cmap = mpl.cm.get_cmap(cmap)
     norm = plt.Normalize(c.min(), c.max())
 
