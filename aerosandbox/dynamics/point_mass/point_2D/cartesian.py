@@ -66,6 +66,13 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
         }
 
     @property
+    def speed(self) -> float:
+        return (
+                       self.u_e ** 2 +
+                       self.z_e ** 2
+               ) ** 0.5
+
+    @property
     def gamma(self):
         """Returns the flight path angle, in radians."""
         return np.arctan2(-self.w_e, self.u_e)
@@ -103,7 +110,7 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
     def add_force(self,
                   Fx: Union[np.ndarray, float] = 0,
                   Fz: Union[np.ndarray, float] = 0,
-                  axes="wind",
+                  axes="earth",
                   ) -> None:
         Fx_e, Fz_e = self.convert_axes(
             x_from=Fx,
@@ -113,13 +120,6 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
         )
         self.Fx_e = self.Fx_e + Fx_e
         self.Fz_e = self.Fz_e + Fz_e
-
-    @property
-    def speed(self) -> float:
-        return (
-                       self.u_e ** 2 +
-                       self.z_e ** 2
-               ) ** 0.5
 
 
 if __name__ == '__main__':
