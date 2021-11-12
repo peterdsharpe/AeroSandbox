@@ -55,9 +55,14 @@ class AeroSandboxObject:
     def parse_analysis_specific_options(self,
                                         analysis_specific_options_dict: Dict[type, Dict[Any, Dict[type, Dict[str, Any]]]]
                                         ) -> Dict[type, Dict[Any, Dict[type, Dict[str, Any]]]]:
+        """
+        Loops through analysis_specific_options_dict (dict of analysis: options pairs) and calls the validate_analysis_specific_options method
+        of the invoking AeroSandbox object for the analysis class specified by each key of the dict.
 
+        Note: the @classmethod decorator is used because this method is called by by the __init__ method of each AeroSandbox object
+        before the object is instantiated.
+        """
         for analysis, analysis_specific_options_user in analysis_specific_options_dict.items():
-            
             analysis_specific_options_dict[analysis] = self.validate_analysis_specific_options(analysis, analysis_specific_options_user)
 
         return analysis_specific_options_dict
@@ -68,7 +73,14 @@ class AeroSandboxObject:
                                            analysis,
                                            analysis_specific_options_user: Dict[type, Dict[str, Any]]
                                            ) -> Dict[type, Dict[str, Any]]:
-        
+        """
+        Validates the user-specified analysis_specific_options (dict of parameter: value pairs) for the invoking AeroSandbox object and given analysis class
+        against a list of analysis-specific options defined within the analysis class. Returns default values for options not specified by user according to
+        defaults defined within the analysis class.
+
+        Note: the @classmethod decorator is used because this method is called by parse_analysis_specific_options, which itself is called in the __init__ method
+        of each AeroSandbox object before the object is instantiated.
+        """
         analysis_specific_options = {
                 key: analysis.default_analysis_specific_options[key] for key in analysis.option_keys[self] # initialize to default options for given object and analysis
             }
@@ -85,7 +97,10 @@ class AeroSandboxObject:
     def get_analysis_specific_options(self,
                                       analysis
                                       ) -> Dict[type, Dict[str, Any]]:
-        
+        """
+        Gets the analysis_specific_options for the invoking instantiated AeroSandbox object and given analysis class or returns the default options if
+        no analysis_specific_options are specified
+        """
         analysis_specific_options_dict = self.analysis_specific_options
         if analysis not in analysis_specific_options_dict.keys(): # no analysis specific options for given analysis
             analysis_specific_options = self.validate_analysis_specific_options(analysis, {}) # passing an empty dict will return the default options
