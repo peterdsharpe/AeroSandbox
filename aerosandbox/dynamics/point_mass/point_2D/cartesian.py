@@ -72,20 +72,47 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
 
     def convert_axes(self,
                      x_from: float,
-                     y_from: float,
                      z_from: float,
                      from_axes: str,
                      to_axes: str,
-                     ) -> Tuple[float, float, float]:
-        pass
+                     ) -> Tuple[float, float]:
+        if from_axes == "wind" or to_axes == "wind":
+            sgam = np.sin(self.gamma)
+            cgam = np.cos(self.gamma)
+
+        if from_axes == "earth":
+            x_e = x_from
+            z_e = z_from
+        elif from_axes == "wind":
+            x_e = cgam * x_from + sgam * z_from
+            z_e = -sgam * x_from + cgam * z_from
+        else:
+            raise ValueError("Bad value of `from_axes`!")
+
+        if to_axes == "earth":
+            x_to = x_e
+            z_to = z_e
+        elif to_axes == "wind":
+            x_to = cgam * x_e - sgam * z_e
+            z_to = sgam * x_e + cgam * z_e
+        else:
+            raise ValueError("Bad value of `to_axes`!")
+
+        return x_to, z_to
 
     def add_force(self,
                   Fx: Union[np.ndarray, float] = 0,
-                  Fy: Union[np.ndarray, float] = 0,
                   Fz: Union[np.ndarray, float] = 0,
                   axes="wind",
                   ) -> None:
-        pass
+        Fx_e, Fz_e = self.convert_axes(
+            x_from=Fx,
+            z_from=Fz,
+            from_axes=axes,
+            to_axes="earth"
+        )
+        self.Fx_e = self.Fx_e + Fx_e
+        self.Fz_e = self.Fz_e + Fz_e
 
     @property
     def speed(self) -> float:
