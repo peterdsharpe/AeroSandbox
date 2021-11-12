@@ -1,15 +1,15 @@
-from .common import *
-from .atmosphere import *
-from .aerodynamics import *
-from .dynamics import *
-from .geometry import *
+from aerosandbox.common import *
+from aerosandbox.atmosphere import *
+from aerosandbox.aerodynamics import *
+from aerosandbox.dynamics import *
+from aerosandbox.geometry import *
 import aerosandbox.numpy as numpy
-from .modeling import *
-from .optimization import *
-from .performance import *
-from .propulsion import *
-from .structures import *
-from .weights import *
+from aerosandbox.modeling import *
+from aerosandbox.optimization import *
+from aerosandbox.performance import *
+from aerosandbox.propulsion import *
+from aerosandbox.structures import *
+from aerosandbox.weights import *
 
 __version__ = "3.2.15"
 
@@ -22,6 +22,7 @@ def docs():
     webbrowser.open_new(
         "https://github.com/peterdsharpe/AeroSandbox/tree/master/aerosandbox"
     )  # TODO: make this redirect to a hosted ReadTheDocs, or similar.
+
 
 def run_tests():
     """
@@ -36,6 +37,6 @@ def run_tests():
 
     asb_root = Path(__file__).parent
 
-    with plt.ion(): # Disable blocking plotting
+    with plt.ion():  # Disable blocking plotting
 
         pytest.main([str(asb_root)])
