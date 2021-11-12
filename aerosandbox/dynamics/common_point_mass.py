@@ -2,11 +2,11 @@ import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Union, Dict, Tuple, List
-from aerosandbox import OperatingPoint, MassProperties, Opti
+from aerosandbox import MassProperties, Opti
 from aerosandbox.tools.string_formatting import trim_string
 
 
-class _DynamicsBaseClass(AeroSandboxObject, ABC):
+class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
     def __init__(self,
                  mass_props: MassProperties = None,
@@ -23,39 +23,38 @@ class _DynamicsBaseClass(AeroSandboxObject, ABC):
         pass
 
     def __repr__(self):
-        repr = []
-        repr.append(f"{self.__class__.__name__} instance:")
+
+        title = f"{self.__class__.__name__} instance:"
 
         def makeline(k, v):
             name = trim_string(str(k).strip(), length=8).rjust(8)
             item = trim_string(str(v).strip(), length=40).ljust(40)
 
-            try:
-                value = str(self.opti.value(v))
-            except:
-                value = None
+            line = f"{name}: {item}"
 
-            if str(value).strip() == str(item).strip():
-                value = None
+            return line
 
-            if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.ndarray):
-                value = None
+        state_variables_title = "\tState variables:"
 
-            if value is not None:
-                value = trim_string(str(value).strip(), length=40).ljust(40)
-                return f"\t\t{name}: {item} ({value})"
-            else:
-                return f"\t\t{name}: {item}"
+        state_variables = "\n".join([
+            "\t\t" + makeline(k, v)
+            for k, v in self.state.items()
+        ])
 
-        repr.append("\tState variables:")
-        for k, v in self.state.items():
-            repr.append(makeline(k, v))
+        control_variables_title = "\tControl variables:"
 
-        repr.append("\tControl variables:")
-        for k, v in self.control_variables.items():
-            repr.append(makeline(k, v))
+        control_variables = "\n".join([
+            "\t\t" + makeline(k, v)
+            for k, v in self.control_variables.items()
+        ])
 
-        return "\n".join(repr)
+        return "\n".join([
+            title,
+            state_variables_title,
+            state_variables,
+            control_variables_title,
+            control_variables
+        ])
 
     def __getitem__(self, index):
         def get_item_of_attribute(a):
@@ -120,10 +119,7 @@ class _DynamicsBaseClass(AeroSandboxObject, ABC):
         see the docstring of OperatingPoint.convert_axes().
 
         Both `from_axes` and `to_axes` should be a string, one of:
-                * "geometry"
-                * "body"
                 * "wind"
-                * "stability"
                 * "earth"
 
         Args:
@@ -143,17 +139,8 @@ class _DynamicsBaseClass(AeroSandboxObject, ABC):
                   Fx: Union[np.ndarray, float] = 0,
                   Fy: Union[np.ndarray, float] = 0,
                   Fz: Union[np.ndarray, float] = 0,
-                  axes="body",
+                  axes="wind",
                   ) -> None:
-        pass
-
-    @abstractmethod
-    def add_moment(self,
-                   Mx: Union[np.ndarray, float] = 0,
-                   My: Union[np.ndarray, float] = 0,
-                   Mz: Union[np.ndarray, float] = 0,
-                   axes="body",
-                   ) -> None:
         pass
 
     def add_gravity_force(self,
@@ -165,5 +152,26 @@ class _DynamicsBaseClass(AeroSandboxObject, ABC):
         )
 
     @abstractproperty
-    def op_point(self) -> OperatingPoint:
+    def altitude(self):
         pass
+
+    @abstractproperty
+    def speed(self) -> float:
+        pass
+
+    @property
+    def translational_kinetic_energy(self) -> float:
+        return 0.5 * self.mass_props.mass * self.speed ** 2
+
+    @property
+    def kinetic_energy(self):
+        return self.translational_kinetic_energy
+
+    @property
+    def potential_energy(self, g=9.81):
+        """
+        Gives the potential energy [J] from gravity.
+
+        PE = mgh
+        """
+        return self.mass_props.mass * g * self.altitude
