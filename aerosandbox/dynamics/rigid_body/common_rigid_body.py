@@ -40,7 +40,6 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
         """
         pass
 
-
     @abstractmethod
     def add_force(self,
                   Fx: Union[np.ndarray, float] = 0,
