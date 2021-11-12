@@ -199,6 +199,46 @@ def vline(
         )
 
 
+def plot_color_by_value(
+        x,
+        y,
+        *args,
+        c,
+        cmap=mpl.cm.get_cmap('viridis'),
+        **kwargs
+):
+    cmap = mpl.cm.get_cmap(cmap)
+    norm = plt.Normalize(c.min(), c.max())
+
+    label = kwargs.pop("label", None)
+
+    for i, (
+            x1, x2,
+            y1, y2,
+            c1, c2,
+    ) in enumerate(zip(
+        x[:-1], x[1:],
+        y[:-1], y[1:],
+        c[:-1], c[1:],
+    )):
+        plt.plot(
+            [x1, x2],
+            [y1, y2],
+            *args,
+            color=cmap(norm((c1 + c2) / 2)),
+            **kwargs
+        )
+    if label is not None:
+        plt.plot(
+            [x[0]],
+            [y[0]],
+            *args,
+            color=cmap(norm(0.5)),
+            label=label,
+            **kwargs
+        )
+
+
 def contour(
         X: np.ndarray,
         Y: np.ndarray,
