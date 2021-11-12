@@ -284,12 +284,12 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         d_r = i13 * RHS_L + i23 * RHS_M + i33 * RHS_N
 
         return {
-            "xe"   : d_xe,
-            "ye"   : d_ye,
-            "ze"   : d_ze,
-            "u"    : d_u,
-            "v"    : d_v,
-            "w"    : d_w,
+            "x_e"   : d_xe,
+            "y_e"   : d_ye,
+            "z_e"   : d_ze,
+            "u_b"    : d_u,
+            "v_b"    : d_v,
+            "w_b"    : d_w,
             "phi"  : d_phi,
             "theta": d_theta,
             "psi"  : d_psi,
@@ -530,7 +530,7 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 if __name__ == '__main__':
     import aerosandbox as asb
 
-    dyn = DynamicsRigid3DEuler(
+    dyn = DynamicsRigidBody3DBodyEuler(
         mass_props=asb.MassProperties(
             mass=1
         )
