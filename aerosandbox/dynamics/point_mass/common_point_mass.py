@@ -13,6 +13,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                  **state_variables,
                  ):
         self.mass_props = MassProperties() if mass_props is None else mass_props
+        """
+        For each state variable, self.state_var = state_var
+        """
+        """
+        For each control variable, self.control_var = 0
+        """
 
     @abstractproperty
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
@@ -151,9 +157,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             axes="earth",
         )
 
-    @abstractproperty
+    @property
     def altitude(self):
-        pass
+        return -self.z_e
 
     @abstractproperty
     def speed(self) -> float:
