@@ -4,6 +4,24 @@ from typing import Union
 
 
 class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
+    """
+    Dynamics instance:
+    * simulating a point mass
+    * in 2D
+    * with velocity parameterized in cartesian coordinates
+
+    State variables:
+        x_e: x-position, in Earth axes. [meters]
+        z_e: z-position, in Earth axes. [meters]
+        u_e: x-velocity, in Earth axes. [m/s]
+        w_e: z-velocity, in Earth axes. [m/s]
+
+    Control variables:
+        Fx_e: Force along the Earth-x axis. [N]
+        Fz_e: Force along the Earth-z axis. [N]
+
+    """
+
     def __init__(self,
                  x_e: Union[np.ndarray, float],
                  z_e: Union[np.ndarray, float],
@@ -17,4 +35,4 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
 
 
 if __name__ == '__main__':
-    dyn = DynamicsPointMass2DSpeedGamma()
+    dyn = DynamicsPointMass2DCartesian()

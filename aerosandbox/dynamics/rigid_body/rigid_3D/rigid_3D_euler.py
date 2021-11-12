@@ -1,37 +1,41 @@
-from aerosandbox.dynamics.common import _DynamicsBaseClass
+from aerosandbox.dynamics.rigid_body.common_rigid_body import _DynamicsRigidBodyBaseClass
 import aerosandbox.numpy as np
-from aerosandbox import OperatingPoint, Atmosphere, MassProperties
+from aerosandbox import MassProperties
 from typing import Union
 
 
-class DynamicsRigid3DEuler(_DynamicsBaseClass):
+class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
     """
-    Dynamics instance.
+    Dynamics instance:
+    * simulating a rigid body
+    * in 3D
+    * with velocity parameterized in body axes
+    * and angle parameterized in Euler angles
     
-        State variables:
-            x_e: x-position, in Earth axes. [meters]
-            y_e: y-position, in Earth axes. [meters]
-            z_e: z-position, in Earth axes. [meters]
-            u_b: x-velocity, in body axes. [m/s]
-            v_b: y-velocity, in body axes. [m/s]
-            w_b: z-velocity, in body axes. [m/s]
-            phi: roll angle. Uses yaw-pitch-roll Euler angle convention. [rad]
-            theta: pitch angle. Uses yaw-pitch-roll Euler angle convention. [rad]
-            psi: yaw angle. Uses yaw-pitch-roll Euler angle convention. [rad]
-            p: x-angular-velocity, in body axes. [rad/sec]
-            q: y-angular-velocity, in body axes. [rad/sec]
-            r: z-angular-velocity, in body axes. [rad/sec]
-        
-        Control variables:
-            Fx_b: Force along the body-x axis. [N]
-            Fy_b: Force along the body-y axis. [N]
-            Fz_b: Force along the body-z axis. [N]
-            Mx_b: Moment about the body-x axis. [Nm]
-            My_b: Moment about the body-y axis. [Nm]
-            Mz_b: Moment about the body-z axis. [Nm]
-            hx_b: Angular momentum (e.g., propellers) about the body-x axis. [kg*m^2/sec]
-            hy_b: Angular momentum (e.g., propellers) about the body-y axis. [kg*m^2/sec]
-            hz_b: Angular momentum (e.g., propellers) about the body-z axis. [kg*m^2/sec]
+    State variables:
+        x_e: x-position, in Earth axes. [meters]
+        y_e: y-position, in Earth axes. [meters]
+        z_e: z-position, in Earth axes. [meters]
+        u_b: x-velocity, in body axes. [m/s]
+        v_b: y-velocity, in body axes. [m/s]
+        w_b: z-velocity, in body axes. [m/s]
+        phi: roll angle. Uses yaw-pitch-roll Euler angle convention. [rad]
+        theta: pitch angle. Uses yaw-pitch-roll Euler angle convention. [rad]
+        psi: yaw angle. Uses yaw-pitch-roll Euler angle convention. [rad]
+        p: x-angular-velocity, in body axes. [rad/sec]
+        q: y-angular-velocity, in body axes. [rad/sec]
+        r: z-angular-velocity, in body axes. [rad/sec]
+
+    Control variables:
+        Fx_b: Force along the body-x axis. [N]
+        Fy_b: Force along the body-y axis. [N]
+        Fz_b: Force along the body-z axis. [N]
+        Mx_b: Moment about the body-x axis. [Nm]
+        My_b: Moment about the body-y axis. [Nm]
+        Mz_b: Moment about the body-z axis. [Nm]
+        hx_b: Angular momentum (e.g., propellers) about the body-x axis. [kg*m^2/sec]
+        hy_b: Angular momentum (e.g., propellers) about the body-y axis. [kg*m^2/sec]
+        hz_b: Angular momentum (e.g., propellers) about the body-z axis. [kg*m^2/sec]
 
     """
 
@@ -295,166 +299,6 @@ class DynamicsRigid3DEuler(_DynamicsBaseClass):
             "r"    : d_r,
         }
 
-    @property
-    def alpha(self):
-        """The angle of attack, in degrees."""
-        return np.arctan2d(
-            self.w_b,
-            self.u_b
-        )
-
-    @property
-    def beta(self):
-        """The sideslip angle, in degrees."""
-        return np.arctan2d(
-            self.v_b,
-            (
-                    self.u_b ** 2 +
-                    self.w_b ** 2
-            ) ** 0.5
-        )
-
-    @property
-    def speed(self):
-        """The speed of the object, expressed as a scalar."""
-        return (
-                       self.u_b ** 2 +
-                       self.v_b ** 2 +
-                       self.w_b ** 2
-               ) ** 0.5
-
-    @property
-    def translational_kinetic_energy(self):
-        speed_squared = (
-                self.u_b ** 2 +
-                self.v_b ** 2 +
-                self.w_b ** 2
-        )
-        return 0.5 * self.mass_props.mass * speed_squared
-
-    @property
-    def rotational_kinetic_energy(self):
-        return 0.5 * (
-                self.mass_props.Ixx * self.p ** 2 +
-                self.mass_props.Iyy * self.q ** 2 +
-                self.mass_props.Izz * self.r ** 2
-        )
-
-    @property
-    def kinetic_energy(self):
-        return self.translational_kinetic_energy + self.rotational_kinetic_energy
-
-    @property
-    def potential_energy(self, g=9.81):
-        """
-        Gives the potential energy [J] from gravity.
-
-        PE = mgh
-        """
-        return self.mass_props.mass * g * self.altitude
-
-    def add_force(self,
-                  Fx: Union[np.ndarray, float] = 0,
-                  Fy: Union[np.ndarray, float] = 0,
-                  Fz: Union[np.ndarray, float] = 0,
-                  axes="body",
-                  ):
-        """
-        Adds a force (in whichever axis system you choose) to this dynamics instance.
-
-        Args:
-            Fx: Force in the x-direction in the axis system chosen. [N]
-            Fy: Force in the y-direction in the axis system chosen. [N]
-            Fz: Force in the z-direction in the axis system chosen. [N]
-            axes: The axis system that the specified force is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
-
-        Returns: None (in-place)
-
-        """
-        Fx_b, Fy_b, Fz_b = self.convert_axes(
-            x_from=Fx,
-            y_from=Fy,
-            z_from=Fz,
-            from_axes=axes,
-            to_axes="body"
-        )
-        self.X = self.X + Fx_b
-        self.Y = self.Y + Fy_b
-        self.Z = self.Z + Fz_b
-
-    def add_moment(self,
-                   Mx: Union[np.ndarray, float] = 0,
-                   My: Union[np.ndarray, float] = 0,
-                   Mz: Union[np.ndarray, float] = 0,
-                   axes="body",
-                   ):
-        """
-        Adds a force (in whichever axis system you choose) to this dynamics instance.
-
-        Args:
-            Fx: Moment about the x-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            Fy: Moment about the y-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            Fz: Moment about the z-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            axes: The axis system that the specified force is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
-
-        Returns: None (in-place)
-
-        """
-
-        Mx_b, My_b, Mz_b = self.convert_axes(
-            x_from=Mx,
-            y_from=My,
-            z_from=Mz,
-            from_axes=axes,
-            to_axes="body"
-        )
-        self.L = self.L + Mx_b
-        self.M = self.M + My_b
-        self.N = self.N + Mz_b
-
-    def d_translational_kinetic_energy(self):
-        """
-        Returns the derivative d(translational_kinetic_energy)/d(time) based on energy methods.
-        """
-        d_KE = (
-                self.Fx_b * self.u_b +
-                self.Fy_b * self.v_b +
-                self.Fz_b * self.w_b
-        )
-        return d_KE
-
-    def d_speed(self):
-        """
-        Returns the derivative d(speed)/d(time) based on energy methods.
-        """
-        return self.d_translational_kinetic_energy() / (self.mass_props.mass * self.speed)
-
-    @property
-    def altitude(self):
-        return -self.z_e
-
-    @property
-    def op_point(self):
-        return OperatingPoint(
-            atmosphere=Atmosphere(altitude=self.altitude),
-            velocity=self.speed,
-            alpha=self.alpha,
-            beta=self.beta,
-            p=self.p,
-            q=self.q,
-            r=self.r,
-        )
-
     def convert_axes(self,
                      x_from, y_from, z_from,
                      from_axes: str,
@@ -562,6 +406,126 @@ class DynamicsRigid3DEuler(_DynamicsBaseClass):
             )
 
         return x_to, y_to, z_to
+
+    def add_force(self,
+                  Fx: Union[np.ndarray, float] = 0,
+                  Fy: Union[np.ndarray, float] = 0,
+                  Fz: Union[np.ndarray, float] = 0,
+                  axes="body",
+                  ):
+        """
+        Adds a force (in whichever axis system you choose) to this dynamics instance.
+
+        Args:
+            Fx: Force in the x-direction in the axis system chosen. [N]
+            Fy: Force in the y-direction in the axis system chosen. [N]
+            Fz: Force in the z-direction in the axis system chosen. [N]
+            axes: The axis system that the specified force is in. One of:
+                * "geometry"
+                * "body"
+                * "wind"
+                * "stability"
+                * "earth"
+
+        Returns: None (in-place)
+
+        """
+        Fx_b, Fy_b, Fz_b = self.convert_axes(
+            x_from=Fx,
+            y_from=Fy,
+            z_from=Fz,
+            from_axes=axes,
+            to_axes="body"
+        )
+        self.X = self.X + Fx_b
+        self.Y = self.Y + Fy_b
+        self.Z = self.Z + Fz_b
+
+    def add_moment(self,
+                   Mx: Union[np.ndarray, float] = 0,
+                   My: Union[np.ndarray, float] = 0,
+                   Mz: Union[np.ndarray, float] = 0,
+                   axes="body",
+                   ):
+        """
+        Adds a force (in whichever axis system you choose) to this dynamics instance.
+
+        Args:
+            Fx: Moment about the x-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
+            Fy: Moment about the y-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
+            Fz: Moment about the z-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
+            axes: The axis system that the specified force is in. One of:
+                * "geometry"
+                * "body"
+                * "wind"
+                * "stability"
+                * "earth"
+
+        Returns: None (in-place)
+
+        """
+
+        Mx_b, My_b, Mz_b = self.convert_axes(
+            x_from=Mx,
+            y_from=My,
+            z_from=Mz,
+            from_axes=axes,
+            to_axes="body"
+        )
+        self.L = self.L + Mx_b
+        self.M = self.M + My_b
+        self.N = self.N + Mz_b
+
+    @property
+    def speed(self):
+        """The speed of the object, expressed as a scalar."""
+        return (
+                       self.u_b ** 2 +
+                       self.v_b ** 2 +
+                       self.w_b ** 2
+               ) ** 0.5
+
+    @property
+    def alpha(self):
+        """The angle of attack, in degrees."""
+        return np.arctan2d(
+            self.w_b,
+            self.u_b
+        )
+
+    @property
+    def beta(self):
+        """The sideslip angle, in degrees."""
+        return np.arctan2d(
+            self.v_b,
+            (
+                    self.u_b ** 2 +
+                    self.w_b ** 2
+            ) ** 0.5
+        )
+
+    def d_translational_kinetic_energy(self):
+        """
+        Returns the derivative d(translational_kinetic_energy)/d(time) based on energy methods.
+        """
+        d_KE = (
+                self.Fx_b * self.u_b +
+                self.Fy_b * self.v_b +
+                self.Fz_b * self.w_b
+        )
+        return d_KE
+
+    def d_speed(self):
+        """
+        Returns the derivative d(speed)/d(time) based on energy methods.
+        """
+        return self.d_translational_kinetic_energy() / (self.mass_props.mass * self.speed)
+
+    @property
+    def altitude(self):
+        return -self.z_e
+
+
 
 
 if __name__ == '__main__':
