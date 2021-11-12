@@ -1,9 +1,8 @@
 import aerosandbox.numpy as np
-from aerosandbox.dynamics.common_point_mass import _DynamicsPointMassBaseClass
+from aerosandbox.dynamics.point_mass.common_point_mass import _DynamicsPointMassBaseClass
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Union, Dict, Tuple, List
-from aerosandbox import OperatingPoint, MassProperties, Opti
-from aerosandbox.tools.string_formatting import trim_string
+from typing import Union, Tuple
+from aerosandbox import OperatingPoint
 
 
 class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
