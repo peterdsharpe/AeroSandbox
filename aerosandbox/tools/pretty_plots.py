@@ -205,6 +205,7 @@ def plot_color_by_value(
         *args,
         c: np.ndarray,
         cmap=mpl.cm.get_cmap('viridis'),
+        colorbar=False,
         **kwargs
 ):
     """
@@ -227,6 +228,8 @@ def plot_color_by_value(
 
     label = kwargs.pop("label", None)
 
+    lines = []
+
     for i, (
             x1, x2,
             y1, y2,
@@ -236,15 +239,17 @@ def plot_color_by_value(
         y[:-1], y[1:],
         c[:-1], c[1:],
     )):
-        plt.plot(
+        line = plt.plot(
             [x1, x2],
             [y1, y2],
             *args,
             color=cmap(norm((c1 + c2) / 2)),
             **kwargs
         )
+        lines += line
+
     if label is not None:
-        plt.plot(
+        line = plt.plot(
             [x[0]],
             [y[0]],
             *args,
@@ -252,6 +257,13 @@ def plot_color_by_value(
             label=label,
             **kwargs
         )
+        lines += line
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    if colorbar:
+        cbar = plt.colorbar(sm)
+    else:
+        cbar = None
+    return lines, sm, cbar
 
 
 def contour(
