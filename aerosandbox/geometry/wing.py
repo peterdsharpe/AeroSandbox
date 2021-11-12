@@ -889,6 +889,22 @@ class WingXSec(AeroSandboxObject):
         new_xsec.xyz_le = new_xsec.xyz_le + np.array(xyz)
         return new_xsec
 
+class ControlSurface(AeroSandboxObject):
+
+    def __init__(self,
+                 trailing_edge: bool = True,
+                 hinge_point: float = 0.75,
+                 symmetric: bool = True,
+                 deflection: float = 0.0,
+                 analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
+                 # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}
+                 ):
+        
+        self.trailing_edge = trailing_edge
+        self.hinge_point = hinge_point
+        self.symmetric = symmetric
+        self.deflection = deflection
+        self.analysis_specific_options = __class__.parse_analysis_specific_options(analysis_specific_options)
 
 if __name__ == '__main__':
     wing = Wing(
