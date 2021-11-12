@@ -54,8 +54,7 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
                  q: Union[np.ndarray, float] = 0,
                  r: Union[np.ndarray, float] = 0,
                  ):
-
-        # Assign parameters to attributes
+        # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
         self.x_e = x_e
         self.y_e = y_e
