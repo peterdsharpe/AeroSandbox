@@ -1,7 +1,7 @@
 from aerosandbox.dynamics.point_mass.common_point_mass import _DynamicsPointMassBaseClass
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
-from typing import Union
+from typing import Union, Dict, Tuple
 
 
 class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
@@ -41,6 +41,38 @@ class DynamicsPointMass2DCartesian(_DynamicsPointMassBaseClass):
         self.Fx_e = 0
         self.Fz_e = 0
 
+    def state(self) -> Dict[str, Union[float, np.ndarray]]:
+        pass
+
+    def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
+        pass
+
+    def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+        pass
+
+    def convert_axes(self,
+                     x_from: float,
+                     y_from: float,
+                     z_from: float,
+                     from_axes: str,
+                     to_axes: str,
+                     ) -> Tuple[float, float, float]:
+        pass
+
+    def add_force(self,
+                  Fx: Union[np.ndarray, float] = 0,
+                  Fy: Union[np.ndarray, float] = 0,
+                  Fz: Union[np.ndarray, float] = 0,
+                  axes="wind",
+                  ) -> None:
+        pass
+
+    @property
+    def speed(self) -> float:
+        return (
+            self.u_e ** 2 +
+            self.z_e ** 2
+        ) ** 0.5
 
 if __name__ == '__main__':
     dyn = DynamicsPointMass2DCartesian()
