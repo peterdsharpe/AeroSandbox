@@ -33,8 +33,8 @@ class DynamicsPointMass2DSpeedGamma(_DynamicsPointMassBaseClass):
         self.mass_props = MassProperties() if mass_props is None else mass_props
         self.x_e = x_e
         self.z_e = z_e
-        self.speed = speed
-        self.gamma = gamma
+        self._speed = speed
+        self._gamma = gamma
 
         # Initialize control variables
         self.Fx_w = 0
@@ -66,11 +66,11 @@ class DynamicsPointMass2DSpeedGamma(_DynamicsPointMassBaseClass):
 
     @property
     def speed(self) -> float:
-        return self.speed
+        return self._speed
 
     @property
     def gamma(self) -> float:
-        return self.gamma
+        return self._gamma
 
     def convert_axes(self,
                      x_from: float,
