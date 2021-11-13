@@ -206,6 +206,7 @@ def plot_color_by_value(
         c: np.ndarray,
         cmap=mpl.cm.get_cmap('viridis'),
         colorbar=False,
+        colorbar_label: str = None,
         **kwargs
 ):
     """
@@ -260,7 +261,10 @@ def plot_color_by_value(
         lines += line
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     if colorbar:
-        cbar = plt.colorbar(sm)
+        if colorbar_label is None:
+            cbar = plt.colorbar(sm)
+        else:
+            cbar = plt.colorbar(sm, label=colorbar_label)
     else:
         cbar = None
     return lines, sm, cbar
