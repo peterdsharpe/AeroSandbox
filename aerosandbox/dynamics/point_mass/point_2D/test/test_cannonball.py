@@ -3,14 +3,23 @@ import aerosandbox.numpy as np
 from scipy import integrate
 
 t_eval = np.linspace(0, 10, 1001)
+u_e_0 = 100
+w_e_0 = -100
+speed_0 = (u_e_0 ** 2 + w_e_0 ** 2) ** 0.5
+gamma_0 = np.arctan2(-w_e_0, u_e_0)
+ivp_kwargs = {
+    "vectorized": True,
+    "rtol": 1e-12,
+    "atol": 1e-14,
+}
 
 def test_trajectory_Cartesian_with_drag(plot=False):
     dyn_init = asb.DynamicsPointMass2DCartesian(
         mass_props=asb.MassProperties(mass=1),
         x_e=0,
         z_e=0,
-        u_e=100,
-        w_e=-100,
+        u_e=u_e_0,
+        w_e=w_e_0,
     )
 
     def derivatives(t, y):
@@ -31,7 +40,7 @@ def test_trajectory_Cartesian_with_drag(plot=False):
         t_span=(t_eval[0], t_eval[-1]),
         t_eval=t_eval,
         y0=tuple(dyn_init.state.values()),
-        vectorized=True
+        **ivp_kwargs
     )
 
     dyn = dyn_init.__class__(
@@ -54,8 +63,8 @@ def test_trajectory_SpeedGamma_with_drag(plot=False):
         mass_props=asb.MassProperties(mass=1),
         x_e=0,
         z_e=0,
-        speed=100 * np.sqrt(2),
-        gamma=np.pi / 4,
+        speed=speed_0,
+        gamma=gamma_0,
     )
 
     def derivatives(t, y):
@@ -76,7 +85,7 @@ def test_trajectory_SpeedGamma_with_drag(plot=False):
         t_span=(t_eval[0], t_eval[-1]),
         t_eval=t_eval,
         y0=tuple(dyn_init.state.values()),
-        vectorized=True
+        **ivp_kwargs
     )
 
     dyn = dyn_init.__class__(
@@ -98,8 +107,8 @@ def final_position_Cartesian(drag=False):
         mass_props=asb.MassProperties(mass=1),
         x_e=0,
         z_e=0,
-        u_e=100,
-        w_e=-100,
+        u_e=u_e_0,
+        w_e=w_e_0,
     )
 
     def derivatives(t, y):
@@ -121,7 +130,7 @@ def final_position_Cartesian(drag=False):
         t_span=(t_eval[0], t_eval[-1]),
         t_eval=t_eval,
         y0=tuple(dyn_init.state.values()),
-        vectorized=True
+        **ivp_kwargs
     )
 
     dyn = dyn_init.__class__(
@@ -135,8 +144,8 @@ def final_position_SpeedGamma(drag=False):
         mass_props=asb.MassProperties(mass=1),
         x_e=0,
         z_e=0,
-        speed=100 * np.sqrt(2),
-        gamma=np.pi / 4,
+        speed=speed_0,
+        gamma=gamma_0,
     )
 
     def derivatives(t, y):
@@ -158,7 +167,7 @@ def final_position_SpeedGamma(drag=False):
         t_span=(t_eval[0], t_eval[-1]),
         t_eval=t_eval,
         y0=tuple(dyn_init.state.values()),
-        vectorized=True
+        **ivp_kwargs
     )
 
     dyn = dyn_init.__class__(
@@ -171,3 +180,7 @@ def final_position_SpeedGamma(drag=False):
 if __name__ == '__main__':
     test_trajectory_Cartesian_with_drag(False)
     test_trajectory_SpeedGamma_with_drag(False)
+    print(final_position_Cartesian(True))
+    print(final_position_SpeedGamma(True))
+    print(final_position_Cartesian(False))
+    print(final_position_SpeedGamma(False))
