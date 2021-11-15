@@ -76,7 +76,7 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
 
         d_speed = self.Fx_w / self.mass_props.mass
         d_gamma
-        d_heading # TODO
+        d_heading  # TODO
         raise NotImplementedError
 
         return {
@@ -163,4 +163,4 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
 
 
 if __name__ == '__main__':
-    dyn = DynamicsPointMass2DSpeedGamma()
+    dyn = DynamicsPointMass3DSpeedGammaHeading()
