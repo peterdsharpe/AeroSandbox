@@ -98,6 +98,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         state_derivatives = self.state_derivatives()
 
         for state_var_name in which:
+
+            # If a state derivative has a None value, skip it.
+            if state_derivatives[state_var_name] is None:
+                continue
+
+            # Try to constrain the derivative
             try:
                 opti.constrain_derivative(
                     derivative=state_derivatives[state_var_name],
