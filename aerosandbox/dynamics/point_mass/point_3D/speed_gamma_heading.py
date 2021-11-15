@@ -19,6 +19,7 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
         speed: Speed; equivalent to u_w, the x-velocity in wind axes. [m/s]
         gamma: Flight path angle. [rad]
         heading: Heading angle. [rad]
+        bank: Bank angle; used when applying wind-axes forces. [radians] No derivative (assumed to be instantaneously reached)
 
     Control variables:
         Fx_w: Force along the wind-x axis. [N]
@@ -34,6 +35,7 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
                  speed: Union[np.ndarray, float] = 0,
                  gamma: Union[np.ndarray, float] = 0,
                  heading: Union[np.ndarray, float] = 0,
+                 bank: Union[np.ndarray, float] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
@@ -42,7 +44,8 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
         self.z_e = z_e
         self.speed = speed
         self.gamma = gamma
-        self.heading= heading
+        self.heading = heading
+        self.bank = bank
 
         # Initialize control variables
         self.Fx_w = 0
@@ -52,25 +55,37 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
     @property
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
         return {
-            "x_e"  : self.x_e,
-            "z_e"  : self.z_e,
-            "speed": self.speed,
-            "gamma": self.gamma,
+            "x_e"    : self.x_e,
+            "y_e"    : self.y_e,
+            "z_e"    : self.z_e,
+            "speed"  : self.speed,
+            "gamma"  : self.gamma,
+            "heading": self.heading,
+            "bank"   : self.bank,
         }
 
     @property
     def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
         return {
             "Fx_w": self.Fx_w,
+            "Fy_w": self.Fy_w,
             "Fz_w": self.Fz_w,
         }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+
+        d_speed = self.Fx_w / self.mass_props.mass
+        d_gamma
+        d_heading
+
         return {
-            "x_e"  : self.speed * np.cos(self.gamma),
-            "z_e"  : -self.speed * np.sin(self.gamma),
-            "speed": self.Fx_w / self.mass_props.mass,
-            "gamma": -self.Fz_w / self.mass_props.mass / self.speed,
+            "x_e"    : self.speed * np.cos(self.gamma) * np.cos(self.heading),
+            "y_e"    : self.speed * np.cos(self.gamma) * np.sin(self.heading),
+            "z_e"    : -self.speed * np.sin(self.gamma),
+            "speed"  : d_speed,
+            "gamma"  : -self.Fz_w / self.mass_props.mass / self.speed,
+            "heading": None,
+            "bank"   : None,
         }
 
     @property
