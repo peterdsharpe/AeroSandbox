@@ -158,7 +158,22 @@ def rotation_matrix_from_euler_angles(
 def is_valid_rotation_matrix(
         a: _onp.ndarray,
         tol=1e-9
-):
+) -> bool:
+    """
+    Returns a boolean of whether the given matrix satisfies the properties of a rotation matrix.
+
+    Specifically, tests for:
+        * Volume-preserving
+        * Handedness of output reference frame
+        * Orthogonality of output reference frame
+
+    Args:
+        a: The array-like to be tested
+        tol: A tolerance to use for truthiness; accounts for floating-point error.
+
+    Returns: A boolean of whether the array-like is a valid rotation matrix.
+
+    """
     def approx_equal(x, y):
         return (x > y - tol) and (x < y + tol)
 
