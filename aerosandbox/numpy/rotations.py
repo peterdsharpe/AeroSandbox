@@ -91,6 +91,54 @@ def rotation_matrix_3D(
         return rot
 
 
+def rotation_matrix_from_euler_angles(
+        roll_angle: Union[float, _onp.ndarray] = 0,
+        pitch_angle: Union[float, _onp.ndarray] = 0,
+        yaw_angle: Union[float, _onp.ndarray] = 0,
+        as_array: bool = True
+):
+    """
+    Yields the rotation matrix that corresponds to a given Euler angle rotation.
+
+    Note: This uses the standard (yaw, pitch, roll) Euler angle rotation, where:
+    * First, a rotation about x is applied (roll)
+    * Second, a rotation about y is applied (pitch)
+    * Third, a rotation about z is applied (yaw)
+
+    In other words: R = R_z(yaw) @ R_y(pitch) @ R_x(roll).
+
+    Note: To use this, pre-multiply your vector to go from body axes to earth axes.
+        Example:
+            >>> vector_earth = rotation_matrix_from_euler_angles(np.pi / 4, np.pi / 4, np.pi / 4) @ vector_body
+
+    Args:
+        roll_angle: The roll angle, which is a rotation about the x-axis. [radians]
+        pitch_angle: The pitch angle, which is a rotation about the y-axis. [radians]
+        yaw_angle: The yaw angle, which is a rotation about the z-axis. [radians]
+        as_array:
+
+    Returns:
+
+    """
+    sa = sin(yaw_angle)
+    ca = cos(yaw_angle)
+    sb = sin(pitch_angle)
+    cb = cos(pitch_angle)
+    sc = sin(roll_angle)
+    cc = cos(roll_angle)
+
+    rot = [
+        [ca * cb, ca * sb * sc - sa * cc, ca * sb * cc + sa * sc],
+        [sa * cb, sa * sb * sc + ca * cc, sa * sb * cc - ca * sc],
+        [-sb, cb * sc, cb * cc]
+    ]
+
+    if as_array:
+        return array(rot)
+    else:
+        return rot
+
+
 def is_valid_rotation_matrix(
         a: _onp.ndarray,
         tol=1e-9
