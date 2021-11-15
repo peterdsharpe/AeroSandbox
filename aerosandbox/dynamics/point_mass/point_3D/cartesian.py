@@ -19,12 +19,12 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         u_e: x-velocity, in Earth axes. [m/s]
         v_e: v-velocity, in Earth axes. [m/s]
         w_e: z-velocity, in Earth axes. [m/s]
+        bank: Bank angle; used when applying wind-axes forces. [radians] No derivative (assumed to be instantaneously reached)
 
     Control variables:
         Fx_e: Force along the Earth-x axis. [N]
         Fy_e: Force along the Earth-y axis. [N]
         Fz_e: Force along the Earth-z axis. [N]
-        bank: Bank angle; used when applying wind-axes forces. [rad]
 
     """
 
@@ -46,12 +46,12 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         self.u_e = u_e
         self.v_e = v_e
         self.w_e = w_e
+        self.bank = bank
 
         # Initialize control variables
         self.Fx_e = 0
         self.Fy_e = 0
         self.Fz_e = 0
-        self.bank = bank
 
     @property
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
@@ -62,6 +62,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             "u_e": self.u_e,
             "v_e": self.v_e,
             "w_e": self.w_e,
+            "bank": self.bank,
         }
 
     @property
@@ -70,7 +71,6 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             "Fx_e": self.Fx_e,
             "Fy_e": self.Fy_e,
             "Fz_e": self.Fz_e,
-            "bank": self.bank,
         }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
@@ -81,6 +81,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             "u_e": self.Fx_e / self.mass_props.mass,
             "v_e": self.Fy_e / self.mass_props.mass,
             "w_e": self.Fz_e / self.mass_props.mass,
+            "bank": None
         }
 
     @property
