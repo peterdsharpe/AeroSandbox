@@ -111,6 +111,9 @@ def rotation_matrix_from_euler_angles(
         Example:
             >>> vector_earth = rotation_matrix_from_euler_angles(np.pi / 4, np.pi / 4, np.pi / 4) @ vector_body
 
+    See notes:
+    http://planning.cs.uiuc.edu/node102.html
+
     Args:
         roll_angle: The roll angle, which is a rotation about the x-axis. [radians]
         pitch_angle: The pitch angle, which is a rotation about the y-axis. [radians]
