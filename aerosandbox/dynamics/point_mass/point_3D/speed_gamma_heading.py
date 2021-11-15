@@ -146,16 +146,19 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
 
     def add_force(self,
                   Fx: Union[np.ndarray, float] = 0,
+                  Fy: Union[np.ndarray, float] = 0,
                   Fz: Union[np.ndarray, float] = 0,
                   axes="wind",
                   ) -> None:
-        Fx_w, Fz_w = self.convert_axes(
+        Fx_w, Fy_w, Fz_w = self.convert_axes(
             x_from=Fx,
+            y_from=Fy,
             z_from=Fz,
             from_axes=axes,
             to_axes="wind"
         )
         self.Fx_w = self.Fx_w + Fx_w
+        self.Fy_w = self.Fy_w + Fy_w
         self.Fz_w = self.Fz_w + Fz_w
 
 
