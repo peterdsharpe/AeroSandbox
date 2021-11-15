@@ -36,15 +36,28 @@ def rotation_matrix_3D(
         axis_already_normalized: bool = False
 ):
     """
-    Gives the 3D rotation matrix from an angle and an axis.
+    Yields the rotation matrix that corresponds to a rotation by a specified amount about a given axis.
+
     An implementation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
-    :param angle: can be one angle or a vector (1d ndarray) of angles. Given in radians. # TODO note deprecated functionality; must be scalar
-        Direction corresponds to the right-hand rule.
-    :param axis: a 1d numpy array of length 3 (x,y,z). Represents the angle.
-    :param axis_already_normalized: boolean, skips normalization for speed if you flag this true.
-    :return:
-        * If angle is a scalar, returns a 3x3 rotation matrix.
-        * If angle is a vector, returns a 3x3xN rotation matrix.
+
+    Args:
+
+        angle: The angle to rotate by. [radians]
+        Direction of rotation corresponds to the right-hand rule.
+        Can be vectorized.
+
+        axis: The axis to rotate about. [ndarray]
+        Can be vectorized; be sure axis[0] yields all the x-components, etc.
+
+        as_array: boolean, returns a 3x3 array-like if True, and a list-of-lists otherwise.
+
+            If you are intending to use this function vectorized, it is recommended you flag this False. (Or test before
+            proceeding.)
+
+        axis_already_normalized: boolean, skips axis normalization for speed if you flag this true.
+
+    Returns:
+        The rotation matrix, with type according to the parameter `as_array`.
     """
     s = sin(angle)
     c = cos(angle)
