@@ -24,6 +24,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         Fx_e: Force along the Earth-x axis. [N]
         Fy_e: Force along the Earth-y axis. [N]
         Fz_e: Force along the Earth-z axis. [N]
+        bank: Bank angle; used when applying wind-axes forces. [rad]
 
     """
 
@@ -35,6 +36,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
                  u_e: Union[np.ndarray, float] = 0,
                  v_e: Union[np.ndarray, float] = 0,
                  w_e: Union[np.ndarray, float] = 0,
+                 bank: Union[np.ndarray, float] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
@@ -49,6 +51,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         self.Fx_e = 0
         self.Fy_e = 0
         self.Fz_e = 0
+        self.bank = bank
 
     @property
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
@@ -67,6 +70,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             "Fx_e": self.Fx_e,
             "Fy_e": self.Fy_e,
             "Fz_e": self.Fz_e,
+            "bank": self.bank,
         }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
@@ -126,7 +130,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
                      ) -> Tuple[float, float, float]:
         if from_axes == "wind" or to_axes == "wind":
             rot_w_to_e = np.rotation_matrix_from_euler_angles(
-                roll_angle=0,
+                roll_angle=self.bank,
                 pitch_angle=self.gamma,
                 yaw_angle=self.heading,
                 as_array=False
