@@ -5,12 +5,15 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from numpy.linalg import *
 
 
-def inner(x, y):
+def inner(x, y, manual=False):
     """
     Inner product of two arrays.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.inner.html
     """
+    if manual:
+        return sum([xi * yi for xi, yi in zip(x, y)])
+
     if not is_casadi_type([x, y], recursive=True):
         return _onp.inner(x, y)
 
@@ -18,12 +21,21 @@ def inner(x, y):
         return _cas.dot(x, y)
 
 
-def outer(x, y):
+def outer(x, y, manual=False):
     """
     Compute the outer product of two vectors.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.outer.html
     """
+    if manual:
+        return [
+            [
+                xi * yi
+                for yi in y
+            ]
+            for xi in x
+        ]
+
     if not is_casadi_type([x, y], recursive=True):
         return _onp.outer(x, y)
 
@@ -145,6 +157,7 @@ def norm(x, ord=None, axis=None):
                 print(e)
                 raise ValueError("Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
                                  "as a last-ditch effort, but that didn't work.")
+
 
 def inv_symmetric_3x3(
         m11,
