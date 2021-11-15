@@ -10,7 +10,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
     * simulating a point mass
     * in 3D
     * with velocity parameterized in cartesian coordinates
-    * assuming coordinated flight (i.e., v_b = 0)
+    * assuming coordinated flight (i.e., v_b = 0, bank angle = 0)
 
     State variables:
         x_e: x-position, in Earth axes. [meters]
