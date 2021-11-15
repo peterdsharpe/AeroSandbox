@@ -1,4 +1,4 @@
-from aerosandbox.numpy import linalg, sin, cos
+from aerosandbox.numpy import sin, cos
 from aerosandbox.numpy.array import array
 import numpy as _onp
 from typing import Union, List
