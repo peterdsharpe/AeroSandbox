@@ -76,7 +76,8 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
 
         d_speed = self.Fx_w / self.mass_props.mass
         d_gamma
-        d_heading
+        d_heading # TODO
+        raise NotImplementedError
 
         return {
             "x_e"    : self.speed * np.cos(self.gamma) * np.cos(self.heading),
@@ -106,33 +107,42 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
 
     def convert_axes(self,
                      x_from: float,
+                     y_from: float,
                      z_from: float,
                      from_axes: str,
                      to_axes: str,
-                     ) -> Tuple[float, float]:
+                     ) -> Tuple[float, float, float]:
         if from_axes == "earth" or to_axes == "earth":
-            sgam = np.sin(self.gamma)
-            cgam = np.cos(self.gamma)
+            rot_w_to_e = np.rotation_matrix_from_euler_angles(
+                roll_angle=self.bank,
+                pitch_angle=self.gamma,
+                yaw_angle=self.heading,
+                as_array=False
+            )
 
         if from_axes == "wind":
             x_w = x_from
+            y_w = y_from
             z_w = z_from
         elif from_axes == "earth":
-            x_w = cgam * x_from - sgam * z_from
-            z_w = sgam * x_from + cgam * z_from
+            x_w = rot_w_to_e[0][0] * x_from + rot_w_to_e[1][0] * y_from + rot_w_to_e[2][0] * z_from
+            y_w = rot_w_to_e[0][1] * x_from + rot_w_to_e[1][1] * y_from + rot_w_to_e[2][1] * z_from
+            z_w = rot_w_to_e[0][2] * x_from + rot_w_to_e[1][2] * y_from + rot_w_to_e[2][2] * z_from
         else:
             raise ValueError("Bad value of `from_axes`!")
 
         if to_axes == "wind":
             x_to = x_w
+            y_to = y_w
             z_to = z_w
         elif to_axes == "earth":
-            x_to = cgam * x_w + sgam * z_w
-            z_to = -sgam * x_w + cgam * z_w
+            x_to = rot_w_to_e[0][0] * x_w + rot_w_to_e[0][1] * y_w + rot_w_to_e[0][2] * z_w
+            y_to = rot_w_to_e[1][0] * x_w + rot_w_to_e[1][1] * y_w + rot_w_to_e[1][2] * z_w
+            z_to = rot_w_to_e[2][0] * x_w + rot_w_to_e[2][1] * y_w + rot_w_to_e[2][2] * z_w
         else:
             raise ValueError("Bad value of `to_axes`!")
 
-        return x_to, z_to
+        return x_to, y_to, z_to
 
     def add_force(self,
                   Fx: Union[np.ndarray, float] = 0,
