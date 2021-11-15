@@ -1,4 +1,4 @@
-from aerosandbox.numpy import sin, cos
+from aerosandbox.numpy import sin, cos, linalg
 from aerosandbox.numpy.array import array
 import numpy as _onp
 from typing import Union, List
@@ -89,3 +89,27 @@ def rotation_matrix_3D(
         return array(rot)
     else:
         return rot
+
+
+def is_valid_rotation_matrix(
+        a: _onp.ndarray,
+        tol=1e-9
+):
+    def approx_equal(x, y):
+        return (x > y - tol) and (x < y + tol)
+
+    det = linalg.det(a)
+    is_volume_preserving_and_right_handed = approx_equal(det, 1)
+
+    eye_approx = a.T @ a
+    eye = _onp.eye(a.shape[0])
+    is_orthogonality_preserving = True
+    for i in range(eye.shape[0]):
+        for j in range(eye.shape[1]):
+            if not approx_equal(eye_approx[i, j], eye[i, j]):
+                is_orthogonality_preserving = False
+
+    return (
+            is_volume_preserving_and_right_handed and
+            is_orthogonality_preserving
+    )
