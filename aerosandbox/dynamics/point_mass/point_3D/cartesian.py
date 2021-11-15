@@ -162,7 +162,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
                   Fz: Union[np.ndarray, float] = 0,
                   axes="earth",
                   ) -> None:
-        Fx_e, Fz_e, Fz_e = self.convert_axes(
+        Fx_e, Fy_e, Fz_e = self.convert_axes(
             x_from=Fx,
             y_from=Fy,
             z_from=Fz,
@@ -170,6 +170,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             to_axes="earth"
         )
         self.Fx_e = self.Fx_e + Fx_e
+        self.Fy_e = self.Fy_e + Fy_e
         self.Fz_e = self.Fz_e + Fz_e
 
 
