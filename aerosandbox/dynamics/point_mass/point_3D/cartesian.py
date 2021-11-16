@@ -9,7 +9,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
     Dynamics instance:
     * simulating a point mass
     * in 3D
-    * with velocity parameterized in cartesian coordinates
+    * with velocity parameterized in Cartesian coordinates
 
     State variables:
         x_e: x-position, in Earth axes. [meters]

@@ -9,8 +9,7 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
     Dynamics instance:
     * simulating a point mass
     * in 3D
-    * with velocity parameterized in speed-gamma-track space.
-    * assuming coordinated flight (i.e., sideslip = 0, bank angle = 0)
+    * with velocity parameterized in speed-gamma-track space
 
     State variables:
         x_e: x-position, in Earth axes. [meters]
