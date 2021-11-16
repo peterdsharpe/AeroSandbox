@@ -19,7 +19,7 @@ real_tutorial_directory = Path(__file__).parent
 def convert_ipynb_to_py(
         input_file: Path,
         output_file: Path,
-):
+) -> None:
     """
     Reads an input Jupyter notebook (.ipynb) and converts it to a Python file (.py)
 
