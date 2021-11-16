@@ -25,6 +25,57 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
         pass
 
+    def set_state(self,
+                  value: Union[
+                      Dict[str, Union[float, np.ndarray]],
+                      List, Tuple, np.ndarray
+                  ]
+                  ):
+        try:  # Assume `value` is a dict-like, with keys
+            for key in self.state.keys():
+                setattr(self, key, value[key])
+        except TypeError:  # Assume it's an iterable that has been sorted.
+            self.set_state(self.pack_state(value))
+
+    def unpack_state(self,
+                     dict_like_state: Dict[str, Union[float, np.ndarray]] = None
+                     ) -> Tuple[Union[float, np.ndarray]]:
+        """
+        'Unpacks' a Dict-like state into an array-like that represents the state of the dynamical system.
+
+        Args:
+            dict_like_state: Takes in a dict-like representation of the state.
+
+        Returns: The array representation of the state that you gave.
+
+        """
+        return tuple(self.state.values())
+
+    def pack_state(self,
+                   array_like_state: Union[List, Tuple, np.ndarray] = None
+                   ) -> Dict[str, Union[float, np.ndarray]]:
+        """
+        'Packs' an array into a Dict that represents the state of the dynamical system.
+
+        Args:
+            array_like_state: Takes in an iterable that must have the same number of entries as the state vector of the system.
+
+        Returns: The Dict representation of the state that you gave.
+
+        """
+        if array_like_state is None:
+            return self.state
+        if not len(self.state.keys()) == len(array_like_state):
+            raise ValueError(
+                "There are a differing number of elements in the `state` variable and the `array_like` you're trying to pack!")
+        return {
+            k: v
+            for k, v in zip(
+                self.state.keys(),
+                array_like_state
+            )
+        }
+
     @abstractproperty
     def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
         pass
@@ -81,7 +132,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         return self.__class__(
             mass_props=mass_props,
-            **state_variables # TODO make this not break with indep. control vars.
+            **state_variables  # TODO make this not break with indep. control vars.
         )
 
     @abstractmethod
