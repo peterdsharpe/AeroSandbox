@@ -144,6 +144,6 @@ def test_cross_compare_no_drag():
 if __name__ == '__main__':
     dyn = get_trajectory(
         asb.DynamicsPointMass2DSpeedGamma,
-        plot=True
+        # plot=True
     )
-    pytest.main()
+    # pytest.main()

@@ -1,3 +1,7 @@
+from pathlib import Path
+
+_asb_root = Path(__file__).parent
+
 from aerosandbox.common import *
 from aerosandbox.optimization import *
 from aerosandbox.modeling import *
@@ -32,10 +36,7 @@ def run_tests():
     except ModuleNotFoundError:
         raise ModuleNotFoundError("Please install `pytest` (`pip install pytest`) to run AeroSandbox unit tests.")
     import matplotlib.pyplot as plt
-    from pathlib import Path
-
-    asb_root = Path(__file__).parent
 
     with plt.ion():  # Disable blocking plotting
 
-        pytest.main([str(asb_root)])
+        pytest.main([str(_asb_root)])

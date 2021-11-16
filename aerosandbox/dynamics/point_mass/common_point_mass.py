@@ -2,9 +2,11 @@ import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Union, Dict, Tuple, List
-from aerosandbox import MassProperties, Opti, OperatingPoint, Atmosphere
+from aerosandbox import MassProperties, Opti, OperatingPoint, Atmosphere, Airplane, _asb_root
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
+import copy
+from pathlib import Path
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
@@ -210,6 +212,19 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         return new_instance
 
+    def __len__(self):
+        length = 1
+        for v in self.state.values():
+            if np.length(v) == 1:
+                pass
+            elif length == 1:
+                length = np.length(v)
+            elif length == np.length(v):
+                pass
+            else:
+                raise ValueError("State variables are appear vectorized, but of different lengths!")
+        return length
+
     @abstractmethod
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
         """
@@ -352,6 +367,114 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             q=0,
             r=0,
         )
+
+    def draw(self,
+             vehicle_model: Union[Airplane] = None,
+             backend: str = "pyvista",
+             draw_axes: bool = True,
+             scale_vehicle_model: float = 1,
+             ):
+        if backend == "pyvista":
+            import pyvista as pv
+            import aerosandbox.tools.pretty_plots as p
+
+            if vehicle_model is None:
+                default_vehicle_stl = _asb_root / "dynamics" / "visualization" / "default_assets" / "yf23.stl"
+                vehicle_model = pv.read(str(default_vehicle_stl))
+            elif isinstance(vehicle_model, Airplane):
+                raise NotImplementedError  # TODO do this; make it a pv.PolyData
+
+            ### Initialize the plotter
+            plotter = pv.Plotter()
+            plotter.title = "Vehicle Dynamics"
+            plotter.add_axes()
+            plotter.show_grid(color='gray')
+
+            ### Draw the vehicle
+            def draw_airplane(
+                    x_e=0,
+                    y_e=0,
+                    z_e=0,
+                    phi=0,
+                    theta=0,
+                    psi=0,
+                    cg_xb=0,
+                    cg_yb=0,
+                    cg_zb=0,
+                    draw_axes=True,
+                    scale=1,
+            ):
+                this_vehicle = copy.deepcopy(vehicle_model)
+                this_vehicle.translate([-cg_xb, -cg_yb, -cg_zb])
+                this_vehicle.points *= scale
+                this_vehicle.rotate_x(np.degrees(phi))
+                this_vehicle.rotate_y(np.degrees(theta))
+                this_vehicle.rotate_z(np.degrees(psi))
+                this_vehicle.translate([x_e, y_e, z_e])
+                plotter.add_mesh(
+                    this_vehicle,
+                )
+                if draw_axes:
+                    rot = (
+                            np.rotation_matrix_3D(psi, np.array([0, 0, 1])) @
+                            np.rotation_matrix_3D(theta, np.array([0, 1, 0])) @
+                            np.rotation_matrix_3D(phi, np.array([1, 0, 0]))
+                    )
+                    axes_scale = 0.5 * np.max(
+                        np.diff(
+                            np.array(this_vehicle.bounds).reshape((3, -1)),
+                            axis=1
+                        )
+                    )
+                    origin = np.array([x_e, y_e, z_e])
+                    for i, c in enumerate(["r", "g", "b"]):
+                        plotter.add_mesh(
+                            pv.Spline(np.array([
+                                origin,
+                                origin + rot[:, i] * axes_scale
+                            ])),
+                            color=c,
+                            line_width=2.5,
+                        )
+
+        for i in range(len(self)):
+            dyn = self[i]
+            draw_airplane(
+                dyn.x_e,
+                dyn.y_e,
+                dyn.z_e,
+                0, 0, 0,  # TODO
+            )
+
+            ### Draw the trajectory line
+            length = len(self)
+            if np.length(self.x_e) == 1:
+                x_e = self.x_e * np.ones(length)
+            else:
+                x_e = self.x_e
+            if np.length(self.y_e) == 1:
+                y_e = self.y_e * np.ones(length)
+            else:
+                y_e = self.y_e
+            if np.length(self.z_e) == 1:
+                z_e = self.z_e * np.ones(length)
+            else:
+                z_e = self.z_e
+            
+            polyline = pv.Spline(np.array([x_e, y_e, z_e]).T)
+            plotter.add_mesh(
+                polyline,
+                color=p.adjust_lightness(p.palettes["categorical"][0], 1.2),
+                line_width=3,
+            )
+
+            ### Finalize the plotter
+            plotter.camera.up = (0, 0, -1)
+            plotter.camera.Azimuth(90)
+            plotter.camera.Elevation(60)
+            plotter.show()
+
+            return plotter
 
     @property
     def altitude(self):
