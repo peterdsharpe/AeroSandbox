@@ -284,12 +284,12 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         d_r = i13 * RHS_L + i23 * RHS_M + i33 * RHS_N
 
         return {
-            "x_e"   : d_xe,
-            "y_e"   : d_ye,
-            "z_e"   : d_ze,
-            "u_b"    : d_u,
-            "v_b"    : d_v,
-            "w_b"    : d_w,
+            "x_e"  : d_xe,
+            "y_e"  : d_ye,
+            "z_e"  : d_ze,
+            "u_b"  : d_u,
+            "v_b"  : d_v,
+            "w_b"  : d_w,
             "phi"  : d_phi,
             "theta": d_theta,
             "psi"  : d_psi,
@@ -412,23 +412,6 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
                   Fz: Union[np.ndarray, float] = 0,
                   axes="body",
                   ):
-        """
-        Adds a force (in whichever axis system you choose) to this dynamics instance.
-
-        Args:
-            Fx: Force in the x-direction in the axis system chosen. [N]
-            Fy: Force in the y-direction in the axis system chosen. [N]
-            Fz: Force in the z-direction in the axis system chosen. [N]
-            axes: The axis system that the specified force is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
-
-        Returns: None (in-place)
-
-        """
         Fx_b, Fy_b, Fz_b = self.convert_axes(
             x_from=Fx,
             y_from=Fy,
@@ -446,24 +429,6 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
                    Mz: Union[np.ndarray, float] = 0,
                    axes="body",
                    ):
-        """
-        Adds a force (in whichever axis system you choose) to this dynamics instance.
-
-        Args:
-            Fx: Moment about the x-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            Fy: Moment about the y-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            Fz: Moment about the z-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            axes: The axis system that the specified force is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
-
-        Returns: None (in-place)
-
-        """
-
         Mx_b, My_b, Mz_b = self.convert_axes(
             x_from=Mx,
             y_from=My,
@@ -502,29 +467,6 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
                     self.w_b ** 2
             ) ** 0.5
         )
-
-    def d_translational_kinetic_energy(self):
-        """
-        Returns the derivative d(translational_kinetic_energy)/d(time) based on energy methods.
-        """
-        d_KE = (
-                self.Fx_b * self.u_b +
-                self.Fy_b * self.v_b +
-                self.Fz_b * self.w_b
-        )
-        return d_KE
-
-    def d_speed(self):
-        """
-        Returns the derivative d(speed)/d(time) based on energy methods.
-        """
-        return self.d_translational_kinetic_energy() / (self.mass_props.mass * self.speed)
-
-    @property
-    def altitude(self):
-        return -self.z_e
-
-
 
 
 if __name__ == '__main__':
