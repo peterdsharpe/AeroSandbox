@@ -54,8 +54,7 @@ def get_trajectory(
         t_span=(time[0], time[-1]),
         t_eval=time,
         y0=dyn.unpack_state(),
-        method="BDF",
-        vectorized=True,
+        # vectorized=True,
         rtol=1e-9,
         atol=1e-9,
     )
