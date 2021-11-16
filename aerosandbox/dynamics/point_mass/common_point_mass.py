@@ -24,6 +24,20 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @abstractproperty
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
+        """
+        Returns the state variables of this Dynamics instance as a Dict.
+
+        Keys are strings that give the name of the variables.
+        Values are the variables themselves.
+
+        This method should look something like:
+            >>> {
+            >>>     "x_e": self.x_e,
+            >>>     "u_e": self.u_e,
+            >>>     ...
+            >>> }
+
+        """
         pass
 
     def get_new_instance_with_state(self,
