@@ -5,7 +5,20 @@ import copy
 import pytest
 
 vector = [1, 2, 3]
-op_point = asb.OperatingPoint(alpha=10, beta=5)
+dyn = asb.DynamicsRigidBody3DBodyEuler(
+    x_e=0,
+    y_e=0,
+    z_e=0,
+    u_b=1,
+    v_b=0,
+    w_b=0,
+    phi=0,
+    theta=0,
+    psi=0,
+    p=0,
+    q=0,
+    r=0,
+)
 
 
 def chain_conversion(
@@ -13,7 +26,7 @@ def chain_conversion(
 ):
     x, y, z = copy.deepcopy(vector)
     for from_axes, to_axes in zip(axes, axes[1:]):
-        x, y, z = op_point.convert_axes(
+        x, y, z = dyn.convert_axes(
             x_from=x,
             y_from=y,
             z_from=z,
@@ -37,6 +50,10 @@ def test_stability():
 
 def test_wind():
     assert chain_conversion(["body", "wind", "body"])
+
+
+def test_earth():
+    assert chain_conversion(["body", "earth", "body"])
 
 
 def test_cycle():

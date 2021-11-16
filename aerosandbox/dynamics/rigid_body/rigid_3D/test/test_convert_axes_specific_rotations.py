@@ -6,11 +6,11 @@ import pytest
 
 
 def test_alpha_wind():
-    op_point = asb.OperatingPoint(
-        alpha=90,
-        beta=0
+    dyn = asb.DynamicsRigidBody3DBodyEuler(
+        u_b=0,
+        w_b=1,
     )
-    x, y, z = op_point.convert_axes(
+    x, y, z = dyn.convert_axes(
         0, 0, 1,
         "geometry",
         "wind"
@@ -20,11 +20,13 @@ def test_alpha_wind():
     assert z == pytest.approx(0)
 
 def test_beta_wind():
-    op_point = asb.OperatingPoint(
-        alpha=0,
-        beta=90
+    dyn = asb.DynamicsRigidBody3DBodyEuler(
+        u_b=0,
+        v_b=1,
+        # alpha=0,
+        # beta=90
     )
-    x, y, z = op_point.convert_axes(
+    x, y, z = dyn.convert_axes(
         0, 1, 0,
         "geometry",
         "wind"
@@ -34,11 +36,13 @@ def test_beta_wind():
     assert z == pytest.approx(0)
 
 def test_beta_wind_body():
-    op_point = asb.OperatingPoint(
-        alpha=0,
-        beta=90
+    dyn = asb.DynamicsRigidBody3DBodyEuler(
+        u_b=0,
+        v_b=1,
+        # alpha=0,
+        # beta=90
     )
-    x, y, z = op_point.convert_axes(
+    x, y, z = dyn.convert_axes(
         0, 1, 0,
         "body",
         "wind"
@@ -48,11 +52,13 @@ def test_beta_wind_body():
     assert z == pytest.approx(0)
 
 def test_alpha_stability_body():
-    op_point = asb.OperatingPoint(
-        alpha=90,
-        beta=0
+    dyn = asb.DynamicsRigidBody3DBodyEuler(
+        u_b=0,
+        w_b=1,
+        # alpha=90,
+        # beta=0
     )
-    x, y, z = op_point.convert_axes(
+    x, y, z = dyn.convert_axes(
         0, 0, 1,
         "body",
         "stability"
@@ -62,11 +68,13 @@ def test_alpha_stability_body():
     assert z == pytest.approx(0)
 
 def test_beta_stability_body():
-    op_point = asb.OperatingPoint(
-        alpha=0,
-        beta=90
+    dyn = asb.DynamicsRigidBody3DBodyEuler(
+        u_b=0,
+        v_b=1
+        # alpha=0,
+        # beta=90
     )
-    x, y, z = op_point.convert_axes(
+    x, y, z = dyn.convert_axes(
         0, 1, 0,
         "body",
         "stability"
@@ -76,11 +84,14 @@ def test_beta_stability_body():
     assert z == pytest.approx(0)
 
 def test_order_wind_body():
-    op_point = asb.OperatingPoint(
-        alpha=90,
-        beta=90,
+    dyn = asb.DynamicsRigidBody3DBodyEuler(
+        u_b=0,
+        v_b=1,
+        phi=np.pi/2,
+        # alpha=90,
+        # beta=90,
     )
-    x, y, z = op_point.convert_axes(
+    x, y, z = dyn.convert_axes(
         0, 1, 0,
         "body",
         "wind"
