@@ -73,15 +73,21 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         If you want a new state yourself, you should instantiate a new one either:
             a) manually, or
             b) by using Dynamics.get_new_instance_with_state()
-        Hence, this function is meant for PRIVATE use only - be careful how you use this! Especially note that control variables do not reset.
+
+        Hence, this function is meant for PRIVATE use only - be careful how you use this! Especially note that
+        control variables (e.g., forces, moments) do not reset to zero.
         """
+        ### Set the defaults
         if new_state is None:
             new_state = {}
+
         try:  # Assume `value` is a dict-like, with keys
-            for key in new_state.keys():
+            for key in new_state.keys():  # Overwrite each of the specified state variables
                 setattr(self, key, new_state[key])
+
         except AttributeError:  # Assume it's an iterable that has been sorted.
-            self._set_state(self.pack_state(new_state))
+            self._set_state(
+                self.pack_state(new_state))  # Pack the iterable into a dict-like, then do the same thing as above.
 
     def unpack_state(self,
                      dict_like_state: Dict[str, Union[float, np.ndarray]] = None
