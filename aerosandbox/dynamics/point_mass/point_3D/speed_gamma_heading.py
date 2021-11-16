@@ -17,8 +17,10 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
         y_e: y-position, in Earth axes. [meters]
         z_e: z-position, in Earth axes. [meters]
         speed: Speed; equivalent to u_w, the x-velocity in wind axes. [m/s]
-        gamma: Flight path angle. [rad]
-        heading: Heading angle. [rad]
+        gamma: Flight path angle. [radians]
+        heading: Heading angle. [radians]
+            * Heading 0 == North == aligned with x_e axis
+            * Heading np.pi / 2 == East == aligned with y_e axis
         bank: Bank angle; used when applying wind-axes forces. [radians] No derivative (assumed to be instantaneously reached)
 
     Control variables:
