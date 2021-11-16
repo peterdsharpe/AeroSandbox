@@ -121,22 +121,6 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
     def w_e(self):
         return -self.speed * np.sin(self.gamma)
 
-    @property
-    def speed(self) -> float:
-        return self._speed
-
-    @speed.setter
-    def speed(self, value):
-        self._speed = value
-
-    @property
-    def gamma(self) -> float:
-        return self._gamma
-
-    @gamma.setter
-    def gamma(self, value):
-        self._gamma = value
-
     def convert_axes(self,
                      x_from: float,
                      y_from: float,
