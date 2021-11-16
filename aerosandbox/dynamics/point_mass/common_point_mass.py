@@ -203,6 +203,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Applies the relevant state derivative constraints to a given Opti instance.
 
         Args:
+
             opti: the AeroSandbox `Opti` instance that constraints should be applied to.
 
             time: A vector that represents the time at each discrete point. Should be the same length as any
