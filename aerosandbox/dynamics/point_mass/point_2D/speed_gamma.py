@@ -58,11 +58,19 @@ class DynamicsPointMass2DSpeedGamma(_DynamicsPointMassBaseClass):
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
         return {
-            "x_e"  : self.speed * np.cos(self.gamma),
-            "z_e"  : -self.speed * np.sin(self.gamma),
+            "x_e"  : self.u_e,
+            "z_e"  : self.w_e,
             "speed": self.Fx_w / self.mass_props.mass,
             "gamma": -self.Fz_w / self.mass_props.mass / self.speed,
         }
+
+    @property
+    def u_e(self):
+        return self.speed * np.cos(self.gamma)
+
+    @property
+    def w_e(self):
+        return -self.speed * np.sin(self.gamma)
 
     @property
     def speed(self) -> float:
