@@ -17,6 +17,9 @@ class DynamicsPointMass2DCartesian(DynamicsPointMass3DCartesian):
         u_e: x-velocity, in Earth axes. [m/s]
         w_e: z-velocity, in Earth axes. [m/s]
 
+    Indirect control variables:
+        alpha: Angle of attack. [degrees]
+
     Control variables:
         Fx_e: Force along the Earth-x axis. [N]
         Fz_e: Force along the Earth-z axis. [N]
