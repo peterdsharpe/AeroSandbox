@@ -128,7 +128,7 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
                      from_axes: str,
                      to_axes: str,
                      ) -> Tuple[float, float, float]:
-        if from_axes == "earth" or to_axes == "earth":
+        if (from_axes == "earth" or to_axes == "earth"):
             rot_w_to_e = np.rotation_matrix_from_euler_angles(
                 roll_angle=self.bank,
                 pitch_angle=self.gamma,
@@ -145,7 +145,10 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
             y_w = rot_w_to_e[0][1] * x_from + rot_w_to_e[1][1] * y_from + rot_w_to_e[2][1] * z_from
             z_w = rot_w_to_e[0][2] * x_from + rot_w_to_e[1][2] * y_from + rot_w_to_e[2][2] * z_from
         else:
-            raise ValueError("Bad value of `from_axes`!")
+            x_w, y_w, z_w = self.op_point.convert_axes(
+                x_from, y_from, z_from,
+                from_axes=from_axes, to_axes="wind"
+            )
 
         if to_axes == "wind":
             x_to = x_w
@@ -156,7 +159,10 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
             y_to = rot_w_to_e[1][0] * x_w + rot_w_to_e[1][1] * y_w + rot_w_to_e[1][2] * z_w
             z_to = rot_w_to_e[2][0] * x_w + rot_w_to_e[2][1] * y_w + rot_w_to_e[2][2] * z_w
         else:
-            raise ValueError("Bad value of `to_axes`!")
+            x_to, y_to, z_to = self.op_point.convert_axes(
+                x_w, y_w, z_w,
+                from_axes="wind", to_axes=to_axes
+            )
 
         return x_to, y_to, z_to
 
