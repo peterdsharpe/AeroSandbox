@@ -30,6 +30,7 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
         Fx_w: Force along the wind-x axis. [N]
         Fy_w: Force along the wind-y axis. [N]
         Fz_w: Force along the wind-z axis. [N]
+
     """
 
     def __init__(self,
