@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import Union, Dict, Tuple, List
 from aerosandbox import MassProperties, Opti, OperatingPoint, Atmosphere
 from aerosandbox.tools.string_formatting import trim_string
+import inspect
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
@@ -42,8 +43,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Returns:
 
         """
-        new_dyn: __class__ = self.__class__(mass_props=self.mass_props)
-        new_dyn._set_state(new_state=self.state)
+        init_signature = inspect.signature(self.__class__.__init__)
+        init_args = list(init_signature.parameters.keys())[1:] # Ignore 'self'
+
+        new_dyn: __class__ = self.__class__(**{
+            k: getattr(self, k)
+            for k in init_args
+        })
         new_dyn._set_state(new_state=new_state)
         return new_dyn
 
