@@ -30,7 +30,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                                     new_state: Union[
                                         Dict[str, Union[float, np.ndarray]],
                                         List, Tuple, np.ndarray
-                                    ]
+                                    ] = None
                                     ):
         """
         Creates a new instance of this same Dynamics class from the given state.
@@ -43,8 +43,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Returns:
 
         """
+
         init_signature = inspect.signature(self.__class__.__init__)
-        init_args = list(init_signature.parameters.keys())[1:] # Ignore 'self'
+        init_args = list(init_signature.parameters.keys())[1:]  # Ignore 'self'
 
         new_dyn: __class__ = self.__class__(**{
             k: getattr(self, k)
@@ -57,11 +58,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                    new_state: Union[
                        Dict[str, Union[float, np.ndarray]],
                        List, Tuple, np.ndarray
-                   ]
+                   ] = None
                    ):
         """
         Warning: this function is meant for PRIVATE use only - be careful how you use this! Especially note that control variables do not reset.
         """
+        if new_state is None:
+            new_state = {}
         try:  # Assume `value` is a dict-like, with keys
             for key in new_state.keys():
                 setattr(self, key, new_state[key])
@@ -155,6 +158,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 return a
             except IndexError as e:  # index out of range
                 raise IndexError("A state variable could not be indexed, since the index is out of range!")
+
+        new_instance = gni
 
         state_variables = {
             k: get_item_of_attribute(v)
