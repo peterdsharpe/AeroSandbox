@@ -186,6 +186,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @abstractmethod
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+        """
+        A function that returns the derivatives with respect to time of the state specified in the `state` property.
+
+        Should return a Dict with the same keys as the `state` property.
+        """
         pass
 
     def constrain_derivatives(self,
