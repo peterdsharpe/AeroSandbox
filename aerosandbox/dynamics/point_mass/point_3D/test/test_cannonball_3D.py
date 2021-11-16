@@ -17,7 +17,7 @@ def get_trajectory(
         parameterization: type = asb.DynamicsPointMass3DCartesian,
         gravity=True,
         drag=True,
-        sideforce=True,
+        sideforce=False,
         plot=False
 ):
     if parameterization is asb.DynamicsPointMass3DCartesian:
@@ -92,8 +92,8 @@ def test_final_position_Cartesian_with_drag():
         parameterization=asb.DynamicsPointMass3DCartesian,
         drag=True
     )
-    assert dyn[-1].x_e == pytest.approx(198.53465, abs=1e-2)
-    assert dyn[-1].z_e == pytest.approx(44.452918, abs=1e-2)
+    assert dyn[-1].x_e == pytest.approx(277.5774436945314, abs=1e-2)
+    assert dyn[-1].z_e == pytest.approx(3.1722727033631886, abs=1e-2)
 
 
 def test_final_position_Cartesian_no_drag():
@@ -110,8 +110,8 @@ def test_final_position_SpeedGammaTrack_with_drag():
         parameterization=asb.DynamicsPointMass3DSpeedGammaTrack,
         drag=True
     )
-    assert dyn[-1].x_e == pytest.approx(198.53465, abs=1e-2)
-    assert dyn[-1].z_e == pytest.approx(44.452918, abs=1e-2)
+    assert dyn[-1].x_e == pytest.approx(277.5774436945314, abs=1e-2)
+    assert dyn[-1].z_e == pytest.approx(3.1722727033631886, abs=1e-2)
 
 
 def test_final_position_SpeedGammaTrack_no_drag():
@@ -122,11 +122,43 @@ def test_final_position_SpeedGammaTrack_no_drag():
     assert dyn[-1].x_e == pytest.approx(1000, abs=1e-2)
     assert dyn[-1].z_e == pytest.approx(-509.5, abs=1e-2)
 
+def test_cross_compare_with_drag():
+    dyn1 = get_trajectory(
+        parameterization=asb.DynamicsPointMass3DCartesian,
+        drag=True
+    )
+    dyn2 = get_trajectory(
+        parameterization=asb.DynamicsPointMass3DSpeedGammaTrack,
+        drag=True
+    )
+    assert dyn1[-1].x_e == pytest.approx(dyn2[-1].x_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].y_e == pytest.approx(dyn2[-1].y_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].z_e == pytest.approx(dyn2[-1].z_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].u_e == pytest.approx(dyn2[-1].u_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].v_e == pytest.approx(dyn2[-1].v_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].w_e == pytest.approx(dyn2[-1].w_e, abs=1e-6, rel=1e-6)
+
+def test_cross_compare_no_drag():
+    dyn1 = get_trajectory(
+        parameterization=asb.DynamicsPointMass3DCartesian,
+        drag=False
+    )
+    dyn2 = get_trajectory(
+        parameterization=asb.DynamicsPointMass3DSpeedGammaTrack,
+        drag=False
+    )
+    assert dyn1[-1].x_e == pytest.approx(dyn2[-1].x_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].y_e == pytest.approx(dyn2[-1].y_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].z_e == pytest.approx(dyn2[-1].z_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].u_e == pytest.approx(dyn2[-1].u_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].v_e == pytest.approx(dyn2[-1].v_e, abs=1e-6, rel=1e-6)
+    assert dyn1[-1].w_e == pytest.approx(dyn2[-1].w_e, abs=1e-6, rel=1e-6)
+
 
 #
 if __name__ == '__main__':
+    pytest.main()
     dyn = get_trajectory(
         asb.DynamicsPointMass3DSpeedGammaTrack,
         plot=True
     )
-    pytest.main()
