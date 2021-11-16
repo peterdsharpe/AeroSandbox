@@ -10,7 +10,6 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
     * simulating a point mass
     * in 3D
     * with velocity parameterized in cartesian coordinates
-    * assuming coordinated flight (i.e., sideslip = 0, bank angle = 0)
 
     State variables:
         x_e: x-position, in Earth axes. [meters]
@@ -19,8 +18,11 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         u_e: x-velocity, in Earth axes. [m/s]
         v_e: v-velocity, in Earth axes. [m/s]
         w_e: z-velocity, in Earth axes. [m/s]
-        bank: Bank angle; used when applying wind-axes forces. [radians] No derivative (assumed to be instantaneously reached)
-            * If you don't want this to be true, you can supply your own derivative externally.
+
+    Indirect control variables:
+        alpha: Angle of attack. [degrees]
+        beta: Sideslip angle. [degrees]
+        bank: Bank angle. [radians]
 
     Control variables:
         Fx_e: Force along the Earth-x axis. [N]
@@ -37,6 +39,8 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
                  u_e: Union[np.ndarray, float] = 0,
                  v_e: Union[np.ndarray, float] = 0,
                  w_e: Union[np.ndarray, float] = 0,
+                 alpha: Union[np.ndarray, float] = 0,
+                 beta: Union[np.ndarray, float] = 0,
                  bank: Union[np.ndarray, float] = 0,
                  ):
         # Initialize state variables
@@ -47,6 +51,10 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         self.u_e = u_e
         self.v_e = v_e
         self.w_e = w_e
+
+        # Initialize indirect control variables
+        self.alpha = alpha
+        self.beta = beta
         self.bank = bank
 
         # Initialize control variables
@@ -63,26 +71,27 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             "u_e": self.u_e,
             "v_e": self.v_e,
             "w_e": self.w_e,
-            "bank": self.bank,
         }
 
     @property
     def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
         return {
-            "Fx_e": self.Fx_e,
-            "Fy_e": self.Fy_e,
-            "Fz_e": self.Fz_e,
+            "alpha": self.alpha,
+            "beta" : self.beta,
+            "bank" : self.bank,
+            "Fx_e" : self.Fx_e,
+            "Fy_e" : self.Fy_e,
+            "Fz_e" : self.Fz_e,
         }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
         return {
-            "x_e": self.u_e,
-            "y_e": self.v_e,
-            "z_e": self.w_e,
-            "u_e": self.Fx_e / self.mass_props.mass,
-            "v_e": self.Fy_e / self.mass_props.mass,
-            "w_e": self.Fz_e / self.mass_props.mass,
-            "bank": None
+            "x_e" : self.u_e,
+            "y_e" : self.v_e,
+            "z_e" : self.w_e,
+            "u_e" : self.Fx_e / self.mass_props.mass,
+            "v_e" : self.Fy_e / self.mass_props.mass,
+            "w_e" : self.Fz_e / self.mass_props.mass,
         }
 
     @property
@@ -110,12 +119,12 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         )
 
     @property
-    def heading(self):
+    def track(self):
         """
-        Returns the heading angle, in radians.
+        Returns the track angle, in radians.
 
-        * Heading 0 == North == aligned with x_e axis
-        * Heading np.pi / 2 == East == aligned with y_e axis
+        * Track of 0 == North == aligned with x_e axis
+        * Track of np.pi / 2 == East == aligned with y_e axis
 
         """
         return np.arctan2(
@@ -134,7 +143,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             rot_w_to_e = np.rotation_matrix_from_euler_angles(
                 roll_angle=self.bank,
                 pitch_angle=self.gamma,
-                yaw_angle=self.heading,
+                yaw_angle=self.track,
                 as_array=False
             )
 
