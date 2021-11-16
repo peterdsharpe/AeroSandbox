@@ -32,25 +32,6 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
         """
         pass
 
-    @abstractproperty
-    def alpha(self):
-        """The angle of attack, in degrees."""
-        return np.arctan2d(
-            self.w_b,
-            self.u_b
-        )
-
-    @abstractproperty
-    def beta(self):
-        """The sideslip angle, in degrees."""
-        return np.arctan2d(
-            self.v_b,
-            (
-                    self.u_b ** 2 +
-                    self.w_b ** 2
-            ) ** 0.5
-        )
-
     @property
     def op_point(self):
         return OperatingPoint(
@@ -61,6 +42,25 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
             p=self.p,
             q=self.q,
             r=self.r,
+        )
+
+    @property
+    def alpha(self):
+        """The angle of attack, in degrees."""
+        return np.arctan2d(
+            self.w_b,
+            self.u_b
+        )
+
+    @property
+    def beta(self):
+        """The sideslip angle, in degrees."""
+        return np.arctan2d(
+            self.v_b,
+            (
+                    self.u_b ** 2 +
+                    self.w_b ** 2
+            ) ** 0.5
         )
 
     @property
