@@ -180,14 +180,6 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def altitude(self):
         return -self.z_e
 
-    @abstractproperty
-    def speed(self) -> float:
-        pass
-
-    @abstractproperty
-    def gamma(self) -> float:
-        pass
-
     @property
     def translational_kinetic_energy(self) -> float:
         return 0.5 * self.mass_props.mass * self.speed ** 2
