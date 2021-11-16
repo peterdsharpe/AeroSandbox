@@ -25,17 +25,42 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
         pass
 
-    def set_state(self,
-                  value: Union[
+    def get_new_instance_with_state(self,
+                                    new_state: Union[
+                                        Dict[str, Union[float, np.ndarray]],
+                                        List, Tuple, np.ndarray
+                                    ]
+                                    ):
+        """
+        Creates a new instance of this same Dynamics class from the given state.
+
+        Note that any control variables (forces, moments) associated with the previous instance are zeroed.
+
+        Args:
+            new_state: The new state to be used for the new instance. Ideally, this is represented as a Dict in identical format to the `state` of a Dynamics instance.
+
+        Returns:
+
+        """
+        new_dyn: __class__ = self.__class__(mass_props = self.mass_props)
+        new_dyn._set_state(new_state=self.state)
+        new_dyn._set_state(new_state=new_state)
+        return new_dyn
+
+    def _set_state(self,
+                   new_state: Union[
                       Dict[str, Union[float, np.ndarray]],
                       List, Tuple, np.ndarray
                   ]
-                  ):
+                   ):
+        """
+        Warning: this function is meant for PRIVATE use only - be careful how you use this! Especially note that control variables do not reset.
+        """
         try:  # Assume `value` is a dict-like, with keys
-            for key in self.state.keys():
-                setattr(self, key, value[key])
-        except TypeError:  # Assume it's an iterable that has been sorted.
-            self.set_state(self.pack_state(value))
+            for key in new_state.keys():
+                setattr(self, key, new_state[key])
+        except AttributeError:  # Assume it's an iterable that has been sorted.
+            self._set_state(self.pack_state(new_state))
 
     def unpack_state(self,
                      dict_like_state: Dict[str, Union[float, np.ndarray]] = None
@@ -49,7 +74,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Returns: The array representation of the state that you gave.
 
         """
-        return tuple(self.state.values())
+        if dict_like_state is None:
+            dict_like_state = self.state
+        return tuple(dict_like_state.values())
 
     def pack_state(self,
                    array_like_state: Union[List, Tuple, np.ndarray] = None
