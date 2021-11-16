@@ -81,7 +81,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         return self.__class__(
             mass_props=mass_props,
-            **state_variables
+            **state_variables # TODO make this not break with indep. control vars.
         )
 
     @abstractmethod

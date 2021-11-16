@@ -71,11 +71,9 @@ class DynamicsPointMass2DCartesian(DynamicsPointMass3DCartesian):
         }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+        derivatives = super().state_derivatives()
         return {
-            "x_e": self.u_e,
-            "z_e": self.w_e,
-            "u_e": self.Fx_e / self.mass_props.mass,
-            "w_e": self.Fz_e / self.mass_props.mass,
+            k: derivatives[k] for k in self.state.keys()
         }
 
 

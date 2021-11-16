@@ -1,10 +1,10 @@
-from aerosandbox.dynamics.point_mass.common_point_mass import _DynamicsPointMassBaseClass
+from aerosandbox.dynamics.point_mass.point_3D.speed_gamma_track import DynamicsPointMass3DSpeedGammaTrack
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
 from typing import Union, Dict, Tuple
 
 
-class DynamicsPointMass2DSpeedGamma(_DynamicsPointMassBaseClass):
+class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
     """
     Dynamics instance:
     * simulating a point mass
@@ -17,9 +17,13 @@ class DynamicsPointMass2DSpeedGamma(_DynamicsPointMassBaseClass):
         speed: Speed; equivalent to u_w, the x-velocity in wind axes. [m/s]
         gamma: Flight path angle. [rad]
 
+    Indirect control variables:
+        alpha: Angle of attack. [degrees]
+
     Control variables:
         Fx_w: Force along the wind-x axis. [N]
         Fz_w: Force along the wind-z axis. [N]
+
     """
 
     def __init__(self,
@@ -28,16 +32,26 @@ class DynamicsPointMass2DSpeedGamma(_DynamicsPointMassBaseClass):
                  z_e: Union[np.ndarray, float] = 0,
                  speed: Union[np.ndarray, float] = 0,
                  gamma: Union[np.ndarray, float] = 0,
+                 alpha: Union[np.ndarray, float] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
         self.x_e = x_e
+        self.y_e = 0
         self.z_e = z_e
         self.speed = speed
         self.gamma = gamma
+        self.track = 0
+        self.bank = 0
+
+        # Initialize indirect control variables
+        self.alpha = alpha
+        self.beta = 0
+        self.bank = 0
 
         # Initialize control variables
         self.Fx_w = 0
+        self.Fy_w = 0
         self.Fz_w = 0
 
     @property
@@ -52,85 +66,16 @@ class DynamicsPointMass2DSpeedGamma(_DynamicsPointMassBaseClass):
     @property
     def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
         return {
-            "Fx_w": self.Fx_w,
-            "Fz_w": self.Fz_w,
+            "alpha": self.alpha,
+            "Fx_w" : self.Fx_w,
+            "Fz_w" : self.Fz_w,
         }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+        derivatives = super().state_derivatives()
         return {
-            "x_e"  : self.u_e,
-            "z_e"  : self.w_e,
-            "speed": self.Fx_w / self.mass_props.mass,
-            "gamma": -self.Fz_w / self.mass_props.mass / self.speed,
+            k: derivatives[k] for k in self.state.keys()
         }
-
-    @property
-    def u_e(self):
-        return self.speed * np.cos(self.gamma)
-
-    @property
-    def w_e(self):
-        return -self.speed * np.sin(self.gamma)
-
-    @property
-    def speed(self) -> float:
-        return self._speed
-
-    @speed.setter
-    def speed(self, value):
-        self._speed = value
-
-    @property
-    def gamma(self) -> float:
-        return self._gamma
-
-    @gamma.setter
-    def gamma(self, value):
-        self._gamma = value
-
-    def convert_axes(self,
-                     x_from: float,
-                     z_from: float,
-                     from_axes: str,
-                     to_axes: str,
-                     ) -> Tuple[float, float]:
-        if from_axes == "earth" or to_axes == "earth":
-            sgam = np.sin(self.gamma)
-            cgam = np.cos(self.gamma)
-
-        if from_axes == "wind":
-            x_w = x_from
-            z_w = z_from
-        elif from_axes == "earth":
-            x_w = cgam * x_from - sgam * z_from
-            z_w = sgam * x_from + cgam * z_from
-        else:
-            raise ValueError("Bad value of `from_axes`!")
-
-        if to_axes == "wind":
-            x_to = x_w
-            z_to = z_w
-        elif to_axes == "earth":
-            x_to = cgam * x_w + sgam * z_w
-            z_to = -sgam * x_w + cgam * z_w
-        else:
-            raise ValueError("Bad value of `to_axes`!")
-
-        return x_to, z_to
-
-    def add_force(self,
-                  Fx: Union[np.ndarray, float] = 0,
-                  Fz: Union[np.ndarray, float] = 0,
-                  axes="wind",
-                  ) -> None:
-        Fx_w, Fz_w = self.convert_axes(
-            x_from=Fx,
-            z_from=Fz,
-            from_axes=axes,
-            to_axes="wind"
-        )
-        self.Fx_w = self.Fx_w + Fx_w
-        self.Fz_w = self.Fz_w + Fz_w
 
 
 if __name__ == '__main__':

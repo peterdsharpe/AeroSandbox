@@ -53,7 +53,6 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
         self.speed = speed
         self.gamma = gamma
         self.track = track
-        self.bank = bank
 
         # Initialize indirect control variables
         self.alpha = alpha
