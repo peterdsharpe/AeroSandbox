@@ -139,7 +139,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
                      from_axes: str,
                      to_axes: str,
                      ) -> Tuple[float, float, float]:
-        if from_axes == "wind" or to_axes == "wind":
+        if not (from_axes == "earth" and to_axes == "earth"):
             rot_w_to_e = np.rotation_matrix_from_euler_angles(
                 roll_angle=self.bank,
                 pitch_angle=self.gamma,
@@ -156,7 +156,13 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             y_e = rot_w_to_e[1][0] * x_from + rot_w_to_e[1][1] * y_from + rot_w_to_e[1][2] * z_from
             z_e = rot_w_to_e[2][0] * x_from + rot_w_to_e[2][1] * y_from + rot_w_to_e[2][2] * z_from
         else:
-            raise ValueError("Bad value of `from_axes`!")
+            x_w, y_w, z_w = self.op_point.convert_axes(
+                x_from, y_from, z_from,
+                from_axes=from_axes, to_axes="wind"
+            )
+            x_e = rot_w_to_e[0][0] * x_w + rot_w_to_e[0][1] * y_w + rot_w_to_e[0][2] * z_w
+            y_e = rot_w_to_e[1][0] * x_w + rot_w_to_e[1][1] * y_w + rot_w_to_e[1][2] * z_w
+            z_e = rot_w_to_e[2][0] * x_w + rot_w_to_e[2][1] * y_w + rot_w_to_e[2][2] * z_w
 
         if to_axes == "earth":
             x_to = x_e
@@ -167,7 +173,13 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             y_to = rot_w_to_e[0][1] * x_e + rot_w_to_e[1][1] * y_e + rot_w_to_e[2][1] * z_e
             z_to = rot_w_to_e[0][2] * x_e + rot_w_to_e[1][2] * y_e + rot_w_to_e[2][2] * z_e
         else:
-            raise ValueError("Bad value of `to_axes`!")
+            x_w = rot_w_to_e[0][0] * x_e + rot_w_to_e[1][0] * y_e + rot_w_to_e[2][0] * z_e
+            y_w = rot_w_to_e[0][1] * x_e + rot_w_to_e[1][1] * y_e + rot_w_to_e[2][1] * z_e
+            z_w = rot_w_to_e[0][2] * x_e + rot_w_to_e[1][2] * y_e + rot_w_to_e[2][2] * z_e
+            x_to, y_to, z_to = self.op_point.convert_axes(
+                x_w, y_w, z_w,
+                from_axes="wind", to_axes=to_axes
+            )
 
         return x_to, y_to, z_to
 
