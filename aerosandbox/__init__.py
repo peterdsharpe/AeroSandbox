@@ -4,9 +4,9 @@ from aerosandbox.modeling import *
 from aerosandbox.geometry import *
 from aerosandbox.atmosphere import *
 from aerosandbox.weights import *
+from aerosandbox.performance import *
 from aerosandbox.dynamics import *
 from aerosandbox.aerodynamics import *
-from aerosandbox.performance import *
 from aerosandbox.propulsion import *
 from aerosandbox.structures import *
 
