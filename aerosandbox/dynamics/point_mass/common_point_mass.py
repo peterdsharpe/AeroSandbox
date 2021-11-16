@@ -10,13 +10,14 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
     def __init__(self,
                  mass_props: MassProperties = None,
-                 **state_variables,
+                 **state_variables_and_indirect_control_variables,
                  ):
         self.mass_props = MassProperties() if mass_props is None else mass_props
         """
-        For each state variable, self.state_var = state_var
-        """
-        """
+        For each state variable, self.state_var = state_var 
+        
+        For each indirect control variable, self.indirect_control_var = indirect_control_var
+        
         For each control variable, self.control_var = 0
         """
 
