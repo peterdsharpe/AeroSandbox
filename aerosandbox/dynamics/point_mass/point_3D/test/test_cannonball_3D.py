@@ -68,10 +68,10 @@ def get_trajectory(
         t_span=(time[0], time[-1]),
         t_eval=time,
         y0=dyn.unpack_state(),
-        method="RK23",
+        method="BDF",
         vectorized=True,
-        rtol=1e-8,
-        atol=1e-8,
+        rtol=1e-9,
+        atol=1e-9,
     )
 
     dyn = dyn.get_new_instance_with_state(res.y)
