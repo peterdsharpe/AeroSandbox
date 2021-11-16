@@ -8,7 +8,7 @@ w_e_0 = -100
 speed_0 = (u_e_0 ** 2 + w_e_0 ** 2) ** 0.5
 gamma_0 = np.arctan2(-w_e_0, u_e_0)
 
-time=np.linspace(0, 10, 1001)
+time=np.linspace(0, 10, 501)
 
 def get_trajectory(
         parameterization: type = asb.DynamicsPointMass2DCartesian,
