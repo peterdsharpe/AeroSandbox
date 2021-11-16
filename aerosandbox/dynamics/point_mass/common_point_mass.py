@@ -197,8 +197,31 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                               opti: Opti,
                               time: np.ndarray,
                               method: str = "midpoint",
-                              which: Union[str, List[str]] = "all"
+                              which: Union[str, List[str], Tuple[str]] = "all"
                               ):
+        """
+        Applies the relevant state derivative constraints to a given Opti instance.
+
+        Args:
+            opti: the AeroSandbox `Opti` instance that constraints should be applied to.
+
+            time: A vector that represents the time at each discrete point. Should be the same length as any
+            vectorized state variables in the `state` property of this Dynamics instance.
+
+            method: The discrete integration method to use. See Opti.constrain_derivative() for options.
+
+            which: Which state variables should be we constrain? By default, constrains all of them.
+
+                Options:
+
+                    * "all", which constrains all state variables (default)
+
+                    * A list of strings that are state variable names (i.e., a subset of `dyn.state.keys()`),
+                    that gives the names of state variables to be constrained.
+
+        Returns:
+
+        """
         if which == "all":
             which = self.state.keys()
 
