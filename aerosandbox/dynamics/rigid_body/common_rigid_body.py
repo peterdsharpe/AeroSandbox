@@ -7,66 +7,6 @@ from aerosandbox import OperatingPoint, Atmosphere
 
 class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
     @abstractmethod
-    def convert_axes(self,
-                     x_from: float,
-                     y_from: float,
-                     z_from: float,
-                     from_axes: str,
-                     to_axes: str,
-                     ) -> Tuple[float, float, float]:
-        """
-        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
-        y_to, z_to], as given in the `to_axes` frame.
-
-        Identical to OperatingPoint.convert_axes(), but adds in "earth" as a valid axis frame. For more documentation,
-        see the docstring of OperatingPoint.convert_axes().
-
-        Both `from_axes` and `to_axes` should be a string, one of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
-
-        Args:
-                x_from: x-component of the vector, in `from_axes` frame.
-                y_from: y-component of the vector, in `from_axes` frame.
-                z_from: z-component of the vector, in `from_axes` frame.
-                from_axes: The axes to convert from.
-                to_axes: The axes to convert to.
-
-        Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
-
-        """
-        pass
-
-    @abstractmethod
-    def add_force(self,
-                  Fx: Union[np.ndarray, float] = 0,
-                  Fy: Union[np.ndarray, float] = 0,
-                  Fz: Union[np.ndarray, float] = 0,
-                  axes="body",
-                  ) -> None:
-        """
-        Adds a force (in whichever axis system you choose) to this dynamics instance.
-
-        Args:
-            Fx: Force in the x-direction in the axis system chosen. [N]
-            Fy: Force in the y-direction in the axis system chosen. [N]
-            Fz: Force in the z-direction in the axis system chosen. [N]
-            axes: The axis system that the specified force is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
-
-        Returns: None (in-place)
-
-        """
-        pass
-
-    @abstractmethod
     def add_moment(self,
                    Mx: Union[np.ndarray, float] = 0,
                    My: Union[np.ndarray, float] = 0,
