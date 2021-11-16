@@ -42,16 +42,16 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Returns:
 
         """
-        new_dyn: __class__ = self.__class__(mass_props = self.mass_props)
+        new_dyn: __class__ = self.__class__(mass_props=self.mass_props)
         new_dyn._set_state(new_state=self.state)
         new_dyn._set_state(new_state=new_state)
         return new_dyn
 
     def _set_state(self,
                    new_state: Union[
-                      Dict[str, Union[float, np.ndarray]],
-                      List, Tuple, np.ndarray
-                  ]
+                       Dict[str, Union[float, np.ndarray]],
+                       List, Tuple, np.ndarray
+                   ]
                    ):
         """
         Warning: this function is meant for PRIVATE use only - be careful how you use this! Especially note that control variables do not reset.
@@ -169,6 +169,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def constrain_derivatives(self,
                               opti: Opti = None,
                               time: np.ndarray = None,
+                              method: str = "midpoint",
                               which: Union[str, List[str]] = "all"
                               ):
         if which == "all":
@@ -188,6 +189,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     derivative=state_derivatives[state_var_name],
                     variable=self.state[state_var_name],
                     with_respect_to=time,
+                    method=method,
                 )
             except KeyError:
                 raise ValueError(f"This dynamics instance does not have a state named '{state_var_name}'!")
