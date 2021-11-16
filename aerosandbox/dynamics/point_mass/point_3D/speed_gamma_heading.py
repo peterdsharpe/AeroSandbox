@@ -22,6 +22,7 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
             * Heading 0 == North == aligned with x_e axis
             * Heading np.pi / 2 == East == aligned with y_e axis
         bank: Bank angle; used when applying wind-axes forces. [radians] No derivative (assumed to be instantaneously reached)
+            * If you don't want this to be true, you can supply your own derivative externally.
 
     Control variables:
         Fx_w: Force along the wind-x axis. [N]

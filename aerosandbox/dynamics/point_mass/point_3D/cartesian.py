@@ -20,6 +20,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         v_e: v-velocity, in Earth axes. [m/s]
         w_e: z-velocity, in Earth axes. [m/s]
         bank: Bank angle; used when applying wind-axes forces. [radians] No derivative (assumed to be instantaneously reached)
+            * If you don't want this to be true, you can supply your own derivative externally.
 
     Control variables:
         Fx_e: Force along the Earth-x axis. [N]
