@@ -132,7 +132,10 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         see the docstring of OperatingPoint.convert_axes().
 
         Both `from_axes` and `to_axes` should be a string, one of:
+                * "geometry"
+                * "body"
                 * "wind"
+                * "stability"
                 * "earth"
 
         Args:
