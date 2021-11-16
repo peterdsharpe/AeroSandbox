@@ -55,9 +55,9 @@ def get_trajectory(
             )
         if sideforce:
             strouhal = 0.2
-            frequency = 5#strouhal * this_dyn.speed / 0.1
+            frequency = 5  # strouhal * this_dyn.speed / 0.1
             this_dyn.add_force(
-                Fy= q * 1 * (0.1) ** 2 * np.sin(2 * np.pi * frequency * t),
+                Fy=q * 1 * (0.1) ** 2 * np.sin(2 * np.pi * frequency * t),
                 axes="wind"
             )
 
@@ -97,6 +97,7 @@ def test_final_position_Cartesian_with_sideforce():
     assert dyn[-1].y_e == pytest.approx(10.791223276048788, abs=1e-2)
     assert dyn[-1].z_e == pytest.approx(3.1722726974414805, abs=1e-2)
 
+
 def test_final_position_Cartesian_with_drag():
     dyn = get_trajectory(
         parameterization=asb.DynamicsPointMass3DCartesian,
@@ -127,6 +128,7 @@ def test_final_position_SpeedGammaTrack_with_sideforce():
     assert dyn[-1].y_e == pytest.approx(10.791223276048788, abs=1e-2)
     assert dyn[-1].z_e == pytest.approx(3.1722726974414805, abs=1e-2)
 
+
 def test_final_position_SpeedGammaTrack_with_drag():
     dyn = get_trajectory(
         parameterization=asb.DynamicsPointMass3DSpeedGammaTrack,
@@ -146,6 +148,7 @@ def test_final_position_SpeedGammaTrack_no_drag():
     assert dyn[-1].x_e == pytest.approx(1000, abs=1e-2)
     assert dyn[-1].z_e == pytest.approx(-509.5, abs=1e-2)
 
+
 def test_cross_compare_with_drag():
     dyn1 = get_trajectory(
         parameterization=asb.DynamicsPointMass3DCartesian,
@@ -161,6 +164,7 @@ def test_cross_compare_with_drag():
     assert dyn1[-1].u_e == pytest.approx(dyn2[-1].u_e, abs=1e-6, rel=1e-6)
     assert dyn1[-1].v_e == pytest.approx(dyn2[-1].v_e, abs=1e-6, rel=1e-6)
     assert dyn1[-1].w_e == pytest.approx(dyn2[-1].w_e, abs=1e-6, rel=1e-6)
+
 
 def test_cross_compare_no_drag():
     dyn1 = get_trajectory(

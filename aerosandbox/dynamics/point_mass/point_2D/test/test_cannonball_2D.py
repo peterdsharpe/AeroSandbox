@@ -8,7 +8,8 @@ w_e_0 = -100
 speed_0 = (u_e_0 ** 2 + w_e_0 ** 2) ** 0.5
 gamma_0 = np.arctan2(-w_e_0, u_e_0)
 
-time=np.linspace(0, 10, 501)
+time = np.linspace(0, 10, 501)
+
 
 def get_trajectory(
         parameterization: type = asb.DynamicsPointMass2DCartesian,
@@ -107,6 +108,7 @@ def test_final_position_SpeedGamma_no_drag():
     assert dyn[-1].x_e == pytest.approx(1000, abs=1e-2)
     assert dyn[-1].z_e == pytest.approx(-509.5, abs=1e-2)
 
+
 def test_cross_compare_with_drag():
     dyn1 = get_trajectory(
         parameterization=asb.DynamicsPointMass2DCartesian,
@@ -121,6 +123,7 @@ def test_cross_compare_with_drag():
     assert dyn1[-1].u_e == pytest.approx(dyn2[-1].u_e, abs=1e-6, rel=1e-6)
     assert dyn1[-1].w_e == pytest.approx(dyn2[-1].w_e, abs=1e-6, rel=1e-6)
 
+
 def test_cross_compare_no_drag():
     dyn1 = get_trajectory(
         parameterization=asb.DynamicsPointMass2DCartesian,
@@ -134,6 +137,7 @@ def test_cross_compare_no_drag():
     assert dyn1[-1].z_e == pytest.approx(dyn2[-1].z_e, abs=1e-6, rel=1e-6)
     assert dyn1[-1].u_e == pytest.approx(dyn2[-1].u_e, abs=1e-6, rel=1e-6)
     assert dyn1[-1].w_e == pytest.approx(dyn2[-1].w_e, abs=1e-6, rel=1e-6)
+
 
 #
 if __name__ == '__main__':
