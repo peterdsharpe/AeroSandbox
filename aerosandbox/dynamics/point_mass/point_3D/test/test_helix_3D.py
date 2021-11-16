@@ -67,7 +67,7 @@ def get_trajectory(
 
         fig, ax = plt.subplots()
         p.plot_color_by_value(dyn.x_e, dyn.altitude, c=dyn.speed, colorbar=True)
-        p.equal()
+        # p.equal()
         p.show_plot("Trajectory", "$x_e$", "$z_e$")
 
     return dyn
