@@ -84,7 +84,9 @@ def rotation_matrix_3D(
         else:
             raise ValueError("If `axis` is a string, it must be `x`, `y`, or `z`.")
     else:
-        ux, uy, uz = axis
+        ux = axis[0]
+        uy = axis[1]
+        uz = axis[2]
 
         if not axis_already_normalized:
             norm = (ux ** 2 + uy ** 2 + uz ** 2) ** 0.5
