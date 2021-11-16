@@ -109,4 +109,8 @@ def test_final_position_SpeedGamma_no_drag():
 
 #
 if __name__ == '__main__':
+    dyn = get_trajectory(
+        asb.DynamicsPointMass2DSpeedGamma,
+        plot=True
+    )
     pytest.main()
