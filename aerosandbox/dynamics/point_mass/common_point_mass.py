@@ -159,19 +159,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             except IndexError as e:  # index out of range
                 raise IndexError("A state variable could not be indexed, since the index is out of range!")
 
-        new_instance = gni
+        new_instance = self.get_new_instance_with_state()
 
-        state_variables = {
-            k: get_item_of_attribute(v)
-            for k, v in self.state.items()
-        }
+        for k, v in new_instance.__dict__.items():
+            setattr(new_instance, k, get_item_of_attribute(v))
 
-        mass_props = self.mass_props[index]
-
-        return self.__class__(
-            mass_props=mass_props,
-            **state_variables  # TODO make this not break with indep. control vars.
-        )
+        return new_instance
 
     @abstractmethod
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
