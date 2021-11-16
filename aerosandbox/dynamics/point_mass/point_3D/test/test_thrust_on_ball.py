@@ -4,27 +4,30 @@ import pytest
 from scipy import integrate
 
 u_e_0 = 100
+v_e_0 = 0
 w_e_0 = -100
 speed_0 = (u_e_0 ** 2 + w_e_0 ** 2) ** 0.5
 gamma_0 = np.arctan2(-w_e_0, u_e_0)
+track_0 = 0
 
 time=np.linspace(0, 10, 1001)
 
 def get_trajectory(
-        parameterization: type = asb.DynamicsPointMass2DCartesian,
+        parameterization: type = asb.DynamicsPointMass3DCartesian,
         gravity=True,
         drag=True,
         plot=False
 ):
-    if parameterization is asb.DynamicsPointMass2DCartesian:
+    if parameterization is asb.DynamicsPointMass3DCartesian:
         dyn = parameterization(
             mass_props=asb.MassProperties(mass=1),
             x_e=0,
+            y_e=0,
             z_e=0,
             u_e=u_e_0,
             w_e=w_e_0,
         )
-    elif parameterization is asb.DynamicsPointMass2DSpeedGamma:
+    elif parameterization is asb.DynamicsPointMass3DSpeedGammaTrack:
         dyn = parameterization(
             mass_props=asb.MassProperties(mass=1),
             x_e=0,
