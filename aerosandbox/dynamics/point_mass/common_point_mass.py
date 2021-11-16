@@ -44,14 +44,20 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         """
 
+        ### Get a list of all the inputs that the class constructor wants to see
         init_signature = inspect.signature(self.__class__.__init__)
         init_args = list(init_signature.parameters.keys())[1:]  # Ignore 'self'
 
+        ### Create a new instance, and give the constructor all the inputs it wants to see (based on values in this instance)
         new_dyn: __class__ = self.__class__(**{
             k: getattr(self, k)
             for k in init_args
         })
+
+        ### Overwrite the state variables in the new instance with those from the input
         new_dyn._set_state(new_state=new_state)
+
+        ### Return the new instance
         return new_dyn
 
     def _set_state(self,
