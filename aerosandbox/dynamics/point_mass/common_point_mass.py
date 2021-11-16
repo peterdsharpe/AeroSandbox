@@ -40,7 +40,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Args:
             new_state: The new state to be used for the new instance. Ideally, this is represented as a Dict in identical format to the `state` of a Dynamics instance.
 
-        Returns:
+        Returns: A new instance of this same Dynamics class.
 
         """
 
@@ -157,6 +157,18 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         ])
 
     def __getitem__(self, index):
+        """
+        Indexes one item from each attribute of a Dynamics instance.
+        Returns a new Dynamics instance.
+
+        Args:
+            index: The index that is being called; e.g.,:
+                >>> first_dyn = dyn[0]
+
+        Returns: A new Dynamics instance, where each attribute is subscripted at the given value, if possible.
+
+        """
+
         def get_item_of_attribute(a):
             try:
                 return a[index]
