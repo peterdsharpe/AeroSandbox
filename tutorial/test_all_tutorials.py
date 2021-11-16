@@ -42,7 +42,7 @@ def convert_ipynb_to_py(
                 f.write("\n")
 
 
-def run_python_file(path: Path):
+def run_python_file(path: Path) -> None:
     """
     Executes a Python file from a path.
     Args:
