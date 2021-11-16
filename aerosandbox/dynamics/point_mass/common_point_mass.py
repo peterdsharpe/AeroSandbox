@@ -61,7 +61,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                    ] = None
                    ):
         """
-        Warning: this function is meant for PRIVATE use only - be careful how you use this! Especially note that control variables do not reset.
+        Force-overwrites all state variables with a new set (either partial or complete) of state variables.
+
+        Warning: this is *not* the intended public usage of Dynamics instances.
+        If you want a new state yourself, you should instantiate a new one either:
+            a) manually, or
+            b) by using Dynamics.get_new_instance_with_state()
+        Hence, this function is meant for PRIVATE use only - be careful how you use this! Especially note that control variables do not reset.
         """
         if new_state is None:
             new_state = {}
