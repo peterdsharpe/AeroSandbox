@@ -2,7 +2,7 @@ import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Union, Dict, Tuple, List
-from aerosandbox import MassProperties, Opti
+from aerosandbox import MassProperties, Opti, OperatingPoint, Atmosphere
 from aerosandbox.tools.string_formatting import trim_string
 
 
@@ -161,6 +161,18 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         self.add_force(
             Fz=self.mass_props.mass * g,
             axes="earth",
+        )
+
+    @property
+    def op_point(self):
+        return OperatingPoint(
+            atmosphere=Atmosphere(altitude=self.altitude),
+            velocity=self.speed,
+            alpha=self.alpha,
+            beta=self.beta,
+            p=0,
+            q=0,
+            r=0,
         )
 
     @property
