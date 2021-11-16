@@ -77,7 +77,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Hence, this function is meant for PRIVATE use only - be careful how you use this! Especially note that
         control variables (e.g., forces, moments) do not reset to zero.
         """
-        ### Set the defaults
+        ### Set the default parameters
         if new_state is None:
             new_state = {}
 
@@ -298,8 +298,25 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                   Fx: Union[np.ndarray, float] = 0,
                   Fy: Union[np.ndarray, float] = 0,
                   Fz: Union[np.ndarray, float] = 0,
-                  axes="wind",
+                  axes: str = "wind",
                   ) -> None:
+        """
+        Adds a force (in whichever axis system you choose) to this dynamics instance.
+
+        Args:
+            Fx: Force in the x-direction in the axis system chosen. [N]
+            Fy: Force in the y-direction in the axis system chosen. [N]
+            Fz: Force in the z-direction in the axis system chosen. [N]
+            axes: The axis system that the specified force is in. One of:
+                * "geometry"
+                * "body"
+                * "wind"
+                * "stability"
+                * "earth"
+
+        Returns: None (in-place)
+
+        """
         pass
 
     def add_gravity_force(self,
