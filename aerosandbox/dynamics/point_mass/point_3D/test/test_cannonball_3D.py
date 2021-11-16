@@ -69,8 +69,8 @@ def get_trajectory(
         t_eval=time,
         y0=dyn.unpack_state(),
         vectorized=True,
-        rtol=1e-9,
-        atol=1e-9,
+        rtol=1e-8,
+        atol=1e-8,
     )
 
     dyn = dyn.get_new_instance_with_state(res.y)
