@@ -54,6 +54,7 @@ def get_trajectory(
         t_span=(time[0], time[-1]),
         t_eval=time,
         y0=dyn.unpack_state(),
+        method="RK23",
         vectorized=True,
         rtol=1e-8,
         atol=1e-8,
