@@ -20,7 +20,7 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
             Fx: Moment about the x-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
             Fy: Moment about the y-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
             Fz: Moment about the z-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            axes: The axis system that the specified force is in. One of:
+            axes: The axis system that the specified moment is in. One of:
                 * "geometry"
                 * "body"
                 * "wind"
