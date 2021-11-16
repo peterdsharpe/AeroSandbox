@@ -82,9 +82,9 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
             "alpha": self.alpha,
             "beta" : self.beta,
             "bank" : self.bank,
-            "Fx_w": self.Fx_w,
-            "Fy_w": self.Fy_w,
-            "Fz_w": self.Fz_w,
+            "Fx_w" : self.Fx_w,
+            "Fy_w" : self.Fy_w,
+            "Fz_w" : self.Fz_w,
         }
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:

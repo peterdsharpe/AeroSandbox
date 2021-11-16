@@ -86,12 +86,12 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
         return {
-            "x_e" : self.u_e,
-            "y_e" : self.v_e,
-            "z_e" : self.w_e,
-            "u_e" : self.Fx_e / self.mass_props.mass,
-            "v_e" : self.Fy_e / self.mass_props.mass,
-            "w_e" : self.Fz_e / self.mass_props.mass,
+            "x_e": self.u_e,
+            "y_e": self.v_e,
+            "z_e": self.w_e,
+            "u_e": self.Fx_e / self.mass_props.mass,
+            "v_e": self.Fy_e / self.mass_props.mass,
+            "w_e": self.Fz_e / self.mass_props.mass,
         }
 
     @property
