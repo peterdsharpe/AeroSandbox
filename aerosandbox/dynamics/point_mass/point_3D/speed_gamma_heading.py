@@ -75,19 +75,37 @@ class DynamicsPointMass3DSpeedGammaHeading(_DynamicsPointMassBaseClass):
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
 
         d_speed = self.Fx_w / self.mass_props.mass
-        d_gamma
-        d_heading  # TODO
-        raise NotImplementedError
+
+        sb = np.sin(self.bank)
+        cb = np.cos(self.bank)
+
+        force_gamma_direction = -cb * self.Fz_w - sb * self.Fy_w  # Force in the direction that acts to increase gamma
+        force_heading_direction = -sb * self.Fz_w + cb * self.Fy_w  # Force in the direction that acts to increase heading
+
+        d_gamma = force_gamma_direction / self.mass_props.mass / self.speed
+        d_heading = force_heading_direction / self.mass_props.mass / self.speed / np.cos(self.gamma)
 
         return {
-            "x_e"    : self.speed * np.cos(self.gamma) * np.cos(self.heading),
-            "y_e"    : self.speed * np.cos(self.gamma) * np.sin(self.heading),
-            "z_e"    : -self.speed * np.sin(self.gamma),
+            "x_e"    : self.u_e,
+            "y_e"    : self.v_e,
+            "z_e"    : self.w_e,
             "speed"  : d_speed,
-            "gamma"  : -self.Fz_w / self.mass_props.mass / self.speed,
-            "heading": None,
+            "gamma"  : d_gamma,
+            "heading": d_heading,
             "bank"   : None,
         }
+
+    @property
+    def u_e(self):
+        return self.speed * np.cos(self.gamma) * np.cos(self.heading)
+
+    @property
+    def v_e(self):
+        return self.speed * np.cos(self.gamma) * np.sin(self.heading)
+
+    @property
+    def w_e(self):
+        return -self.speed * np.sin(self.gamma)
 
     @property
     def speed(self) -> float:
