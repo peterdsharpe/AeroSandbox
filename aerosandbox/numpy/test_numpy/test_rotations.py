@@ -46,5 +46,16 @@ def test_validity_checker():
     assert np.is_valid_rotation_matrix(rot)
 
 
+def test_general_3D_shorthands():
+    rotx = np.rotation_matrix_3D(1, np.array([1, 0, 0]))
+    assert pytest.approx(rotx) == np.rotation_matrix_3D(1, "x")
+
+    roty = np.rotation_matrix_3D(1, np.array([0, 1, 0]))
+    assert pytest.approx(roty) == np.rotation_matrix_3D(1, "y")
+
+    rotz = np.rotation_matrix_3D(1, np.array([0, 0, 1]))
+    assert pytest.approx(rotz) == np.rotation_matrix_3D(1, "z")
+
+
 if __name__ == '__main__':
     pytest.main()
