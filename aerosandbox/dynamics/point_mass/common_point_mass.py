@@ -6,7 +6,6 @@ from aerosandbox import MassProperties, Opti, OperatingPoint, Atmosphere, Airpla
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 import copy
-from pathlib import Path
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
