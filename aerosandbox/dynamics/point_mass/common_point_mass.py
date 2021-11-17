@@ -372,7 +372,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
              vehicle_model: Airplane = None,
              backend: str = "pyvista",
              draw_axes: bool = True,
-             scale_vehicle_model: float = 1,
+             scale_vehicle_model: Union[float, None] = None,
              n_vehicles_to_draw: int = 10,
              ):
         if backend == "pyvista":
@@ -390,62 +390,45 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             else:
                 raise TypeError("`vehicle_model` should be an Airplane object.")
 
+            x_e = np.array(self.x_e)
+            y_e = np.array(self.y_e)
+            z_e = np.array(self.z_e)
+            if len(x_e) == 1:
+                x_e = x_e * np.ones(len(self))
+            if len(y_e) == 1:
+                y_e = y_e * np.ones(len(self))
+            if len(z_e) == 1:
+                z_e = z_e * np.ones(len(self))
+
+            if scale_vehicle_model is None:
+                trajectory_bounds = np.array([
+                    [x_e.min(), x_e.max()],
+                    [y_e.min(), y_e.max()],
+                    [z_e.min(), z_e.max()],
+                ])
+                scale_vehicle_model = 0.1 * np.max(np.diff(trajectory_bounds, axis=1))
+
             ### Initialize the plotter
             plotter = pv.Plotter()
-            plotter.title = "Vehicle Dynamics"
+
+            # Set the window title
+            title = "ASB Dynamics"
+            addenda = []
+            if scale_vehicle_model != 1:
+                addenda.append(f"Vehicle drawn at {scale_vehicle_model:.2g}x scale")
+            addenda.append(f"{self.__class__.__name__} Engine")
+            if len(addenda) != 0:
+                title = title + f" ({'; '.join(addenda)})"
+            plotter.title = title
+
+            # Draw axes and grid
             plotter.add_axes()
             plotter.show_grid(color='gray')
 
             ### Draw the vehicle
-            def draw_airplane(
-                    x_e=0,
-                    y_e=0,
-                    z_e=0,
-                    phi=0,
-                    theta=0,
-                    psi=0,
-                    cg_xb=0,
-                    cg_yb=0,
-                    cg_zb=0,
-            ):
-                this_vehicle = copy.deepcopy(vehicle_model)
-                this_vehicle.translate([-cg_xb, -cg_yb, -cg_zb])
-                this_vehicle.points *= scale_vehicle_model
-                this_vehicle.rotate_x(np.degrees(phi))
-                this_vehicle.rotate_y(np.degrees(theta))
-                this_vehicle.rotate_z(np.degrees(psi))
-                this_vehicle.translate([x_e, y_e, z_e])
-                plotter.add_mesh(
-                    this_vehicle,
-                )
-                if draw_axes:
-                    rot = (
-                            np.rotation_matrix_3D(psi, np.array([0, 0, 1])) @
-                            np.rotation_matrix_3D(theta, np.array([0, 1, 0])) @
-                            np.rotation_matrix_3D(phi, np.array([1, 0, 0]))
-                    )
-                    axes_scale = 0.5 * np.max(
-                        np.diff(
-                            np.array(this_vehicle.bounds).reshape((3, -1)),
-                            axis=1
-                        )
-                    )
-                    origin = np.array([x_e, y_e, z_e])
-                    for i, c in enumerate(["r", "g", "b"]):
-                        plotter.add_mesh(
-                            pv.Spline(np.array([
-                                origin,
-                                origin + rot[:, i] * axes_scale
-                            ])),
-                            color=c,
-                            line_width=2.5,
-                        )
-
-            length = len(self)
-
             for i in np.unique(
                     np.round(
-                        np.linspace(0, length - 1, n_vehicles_to_draw)
+                        np.linspace(0, len(self) - 1, n_vehicles_to_draw)
                     )
             ).astype(int):
                 dyn = self[i]
@@ -462,27 +445,49 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 except AttributeError:
                     psi = dyn.track
 
-                draw_airplane(
+                this_vehicle = copy.deepcopy(vehicle_model)
+                this_vehicle.translate([
+                    -dyn.mass_props.x_cg,
+                    -dyn.mass_props.y_cg,
+                    -dyn.mass_props.z_cg,
+                ])
+                this_vehicle.points *= scale_vehicle_model
+                this_vehicle.rotate_x(np.degrees(phi))
+                this_vehicle.rotate_y(np.degrees(theta))
+                this_vehicle.rotate_z(np.degrees(psi))
+                this_vehicle.translate([
                     dyn.x_e,
                     dyn.y_e,
                     dyn.z_e,
-                    phi,
-                    theta,
-                    psi,
+                ])
+                plotter.add_mesh(
+                    this_vehicle,
                 )
+                if draw_axes:
+                    rot = np.rotation_matrix_from_euler_angles(phi, theta, psi)
+                    axes_scale = 0.5 * np.max(
+                        np.diff(
+                            np.array(this_vehicle.bounds).reshape((3, -1)),
+                            axis=1
+                        )
+                    )
+                    origin = np.array([
+                        dyn.x_e,
+                        dyn.y_e,
+                        dyn.z_e,
+                    ])
+                    for i, c in enumerate(["r", "g", "b"]):
+                        plotter.add_mesh(
+                            pv.Spline(np.array([
+                                origin,
+                                origin + rot[:, i] * axes_scale
+                            ])),
+                            color=c,
+                            line_width=2.5,
+                        )
 
-            for i in range(length):
+            for i in range(len(self)):
                 ### Draw the trajectory line
-                x_e = self.x_e
-                y_e = self.y_e
-                z_e = self.z_e
-
-                if np.length(x_e) == 1:
-                    x_e = x_e * np.ones(length)
-                if np.length(y_e) == 1:
-                    y_e = y_e * np.ones(length)
-                if np.length(z_e) == 1:
-                    z_e = z_e * np.ones(length)
 
                 polyline = pv.Spline(np.array([x_e, y_e, z_e]).T)
                 plotter.add_mesh(
