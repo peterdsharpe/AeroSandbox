@@ -387,6 +387,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     backend="backend",
                     show=False
                 )
+                vehicle_model.rotate_y(180)  # Rotate from geometry axes to body axes.
             else:
                 raise TypeError("`vehicle_model` should be an Airplane object.")
 
