@@ -5,7 +5,7 @@ A set of tools used for making prettier Matplotlib plots.
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
-from typing import Union, Dict, List, Callable
+from typing import Union, Dict, List, Callable, Tuple
 from matplotlib import ticker
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
@@ -207,6 +207,7 @@ def plot_color_by_value(
         cmap=mpl.cm.get_cmap('viridis'),
         colorbar=False,
         colorbar_label: str = None,
+        clim: Tuple[float, float] = None,
         **kwargs
 ):
     """
@@ -225,7 +226,14 @@ def plot_color_by_value(
 
     """
     cmap = mpl.cm.get_cmap(cmap)
-    norm = plt.Normalize(c.min(), c.max())
+
+    cmin = c.min()
+    cmax = c.max()
+
+    if clim is None:
+        clim = (cmin, cmax)
+
+    norm = plt.Normalize(vmin = clim[0], vmax = clim[1], clip=False)
 
     label = kwargs.pop("label", None)
 
@@ -244,7 +252,7 @@ def plot_color_by_value(
             [x1, x2],
             [y1, y2],
             *args,
-            color=cmap(norm((c1 + c2) / 2)),
+            color=cmap(norm((c1 + c2) / 2) if cmin != cmax else 0.5),
             **kwargs
         )
         lines += line
@@ -254,7 +262,7 @@ def plot_color_by_value(
             [x[0]],
             [y[0]],
             *args,
-            color=cmap(norm(0.5)),
+            color=cmap(0.5),
             label=label,
             **kwargs
         )
