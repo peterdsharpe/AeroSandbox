@@ -259,8 +259,8 @@ def plot_color_by_value(
 
     if label is not None:
         line = plt.plot(
-            [x[0]],
-            [y[0]],
+            [None],
+            [None],
             *args,
             color=cmap(0.5),
             label=label,
