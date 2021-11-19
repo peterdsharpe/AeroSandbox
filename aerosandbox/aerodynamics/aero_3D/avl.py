@@ -1,4 +1,5 @@
 from aerosandbox.common import ExplicitAnalysis
+from aerosandbox.geometry.wing import ControlSurface
 import aerosandbox.numpy as np
 import subprocess
 from pathlib import Path
@@ -54,7 +55,10 @@ class AVL(ExplicitAnalysis):
             "chordwise_resolution": 12,
             "chordwise_spacing": "cosine",
             "fuse_panel_resolution": 24,
-            "fuse_panel_spacing": "cosine"
+            "fuse_panel_spacing": "cosine",
+            "gain": 1.0,
+            "hinge_vector": [0.0, 0.0, 0.0],
+            "duplication_factor": None
         }
 
     options_for_analysis_by_object = {
@@ -80,6 +84,11 @@ class AVL(ExplicitAnalysis):
             "spanwise_spacing",
             "cl_alpha_factor",
             "drag_polar",
+        ],
+        ControlSurface: [
+            "gain",
+            "hinge_vector",
+            "duplication_factor"
         ],
         Fuselage: [
             "fuse_panel_resolution",
@@ -176,12 +185,22 @@ class AVL(ExplicitAnalysis):
         control_counter = 0
         for wing in self.airplane.wings:
             for xsec in wing.xsecs[:-1]: # there are n - 1 control surfaces for a wing with n xsecs
-                control_counter += 1
-                control_name = f"d{control_counter}"
-                run_file_contents += [
-                    f"{control_name} {control_name} {xsec.control_surface_deflection}"
-                ]
-
+                if xsec.control_surfaces is not None:
+                    control_surfaces = xsec.control_surfaces
+                    if control_surfaces:
+                        for control_surface in control_surfaces:
+                            control_counter += 1
+                            control_name = f"d{control_counter}"
+                            run_file_contents += [
+                                f"{control_name} {control_name} {control_surface.deflection}"
+                            ]
+                    else:
+                        control_counter += 1
+                        control_name = f"d{control_counter}"
+                        run_file_contents += [
+                            f"{control_name} {control_name} {xsec.control_surface_deflection}"
+                        ]
+                
         return run_file_contents
 
     def _run_avl(self,
@@ -328,10 +347,44 @@ class AVL(ExplicitAnalysis):
             """
             # return dedent(s)
             return "\n".join([line.strip() for line in s.split("\n")])
+        
+        def print_control_surface(control_surface: ControlSurface,
+                                  options_for_analysis: Dict[type, Dict[str, Any]]
+                                  ) -> str:
+            
+            if control_surface.trailing_edge:
+                hinge_point = control_surface.hinge_point
+            else:
+                hinge_point = -control_surface.hinge_point # leading edge surfaces are defined with negative hinge points in AVL
+
+            if options_for_analysis["duplication_factor"] is None:
+                duplication_factor = 1.0 if control_surface.symmetric else -1.0
+            else:
+                duplication_factor = options_for_analysis["duplication_factor"]
+
+            string = clean(f"""
+            CONTROL
+            #Cname Cgain Xhinge HingeVec SgnDup
+            control{control_surface.id} {options_for_analysis['gain']} {hinge_point} {' '.join(str(x) for x in options_for_analysis['hinge_vector'])} {duplication_factor}
+            """)
+            
+            return string
+        
+        def print_control_surface_deprecated(xsec: WingXSec,
+                                             id: int) -> str:
+            
+            sign_duplication = 1.0 if xsec.control_surface_is_symmetric else -1.0
+            string = clean(f"""
+            CONTROL
+            #Cname Cgain Xhinge HingeVec SgnDup
+            control{id} 1.0 {xsec.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
+            """)
+
+            return string
 
         string = ""
 
-        options = airplane.get_analysis_specific_options(__class__)
+        options = airplane.get_options_for_analysis(__class__)
         
         z_symmetry = 1 if options["ground_plane"] == True else 0
 
@@ -355,10 +408,10 @@ class AVL(ExplicitAnalysis):
             "sine": 2.0
         }
 
-        num_control_surface = 1
+        control_surface_counter = 1
         for wing in airplane.wings:
 
-            options = wing.get_analysis_specific_options(__class__)
+            options = wing.get_options_for_analysis(__class__)
             wing_options = copy.deepcopy(options) # store these for comparison to xsec options
 
             spacing_line = f"{options['chordwise_resolution']}   {spacing[options['chordwise_spacing']]}"
@@ -412,7 +465,7 @@ class AVL(ExplicitAnalysis):
 
             for idx_xsec, xsec in enumerate(wing.xsecs):
                 
-                options = xsec.get_analysis_specific_options(__class__)
+                options = xsec.get_options_for_analysis(__class__)
 
                 xsec_def_line = f"{xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}"
                 if wing_options["wing_level_spanwise_spacing"] == False:
@@ -447,27 +500,28 @@ class AVL(ExplicitAnalysis):
                     
                     """)
 
-                # control surface n is defined using xsec i, spanning the section from xsec i to xsec i + 1
-                if idx_xsec == 0: # first xsec in wing
-                    idx_xsecs_active = [idx_xsec]
-                    idx_control_surfaces_active = [num_control_surface]
-                    num_control_surface += 1
-                elif idx_xsec == len(wing.xsecs) - 1: # last xsec in wing
-                    idx_xsecs_active = [idx_xsec - 1]
-                    idx_control_surfaces_active = [num_control_surface - 1]
-                else:
-                    idx_xsecs_active = [idx_xsec - 1, idx_xsec]
-                    idx_control_surfaces_active = [num_control_surface - 1, num_control_surface]
-                    num_control_surface += 1
+                # see WingXSec in wing.py for explanation of control surface implementation protocol using control_surfaces list vs. deprecated WingXSec properties
+                if idx_xsec > 0: # if this xsec is not the first xsec, get previous xsec's control surface info
+                    xsec_prev = wing.xsecs[idx_xsec - 1]
+                    if xsec_prev.control_surfaces is not None: # if user specifies control_surfaces as None, then there will be no control surface
+                        if xsec_prev.control_surfaces: # if control_surfaces is not an empty list, print control surfaces to file using list of ControlSurface instances
+                            for control_surface in xsec_prev.control_surfaces:
+                                options = control_surface.get_options_for_analysis(__class__)
+                                string += print_control_surface(control_surface, options)
+                        else: # if control_surfaces is an empty list (default), print control surfaces to file using deprecated WingXSec properties
+                            string += print_control_surface_deprecated(xsec_prev, control_surface_counter - 1)
                 
-                for idx_xsec_active, idx_control_surface_active in zip(idx_xsecs_active, idx_control_surfaces_active):
-                    xsec_active = wing.xsecs[idx_xsec_active]
-                    sign_duplication = 1.0 if xsec_active.control_surface_is_symmetric else -1.0
-                    string += clean(f"""
-                    CONTROL
-                    #Cname Cgain Xhinge HingeVec SgnDup
-                    control{idx_control_surface_active} 1.0 {xsec_active.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
-                    """)
+                if idx_xsec < len(wing.xsecs) - 1: # if this xsec is not the last xsec, get this xsec's control surface info
+                    if xsec.control_surfaces is not None:
+                        if xsec.control_surfaces:
+                            for control_surface in xsec.control_surfaces:
+                                control_surface.id = control_surface_counter
+                                control_surface_counter += 1
+                                options = control_surface.get_options_for_analysis(__class__)
+                                string += print_control_surface(control_surface, options)
+                        else:
+                            string += print_control_surface_deprecated(xsec, control_surface_counter)
+                            control_surface_counter += 1
         
         filepath = Path(filepath)
         for i, fuse in enumerate(airplane.fuselages):
@@ -477,7 +531,7 @@ class AVL(ExplicitAnalysis):
                 filepath=fuse_filepath
             )
 
-            options = fuse.get_analysis_specific_options(__class__)
+            options = fuse.get_options_for_analysis(__class__)
 
             string += clean(f"""\
             #{"=" * 50}

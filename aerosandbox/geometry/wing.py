@@ -892,6 +892,8 @@ class WingXSec(AeroSandboxObject):
 
 class ControlSurface(AeroSandboxObject):
 
+    id = 1
+
     def __init__(self,
                  name: str = "Untitled Control Surface",
                  trailing_edge: bool = True,
@@ -903,6 +905,8 @@ class ControlSurface(AeroSandboxObject):
                  ):
         
         self.name = name
+        self.id = __class__.id
+        __class__.id += 1
         self.trailing_edge = trailing_edge
         self.hinge_point = hinge_point
         self.symmetric = symmetric

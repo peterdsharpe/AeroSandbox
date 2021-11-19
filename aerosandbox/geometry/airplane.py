@@ -1,4 +1,5 @@
 from aerosandbox import AeroSandboxObject
+from aerosandbox.geometry.wing import ControlSurface
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union
 from numpy import pi
@@ -56,6 +57,8 @@ class Airplane(AeroSandboxObject):
         self.b_ref = b_ref
 
         self.analysis_specific_options = __class__.parse_analysis_specific_options(analysis_specific_options)
+
+        ControlSurface.id = 1
 
     def __repr__(self):
         n_wings = len(self.wings)
