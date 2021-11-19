@@ -38,7 +38,7 @@ class AVL(ExplicitAnalysis):
 
     """
 
-    default_analysis_specific_options = {
+    options_for_analysis_defaults = {
             "ground_plane": False,
             "ground_plane_height": 0.0,
             "parasitic_drag_coefficient": 0.0,
@@ -57,7 +57,7 @@ class AVL(ExplicitAnalysis):
             "fuse_panel_spacing": "cosine"
         }
 
-    option_keys = {
+    options_for_analysis_by_object = {
         Airplane: [
             "ground_plane",
             "ground_plane_height",
