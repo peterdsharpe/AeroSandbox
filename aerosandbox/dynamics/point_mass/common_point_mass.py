@@ -379,11 +379,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             import aerosandbox.tools.pretty_plots as p
 
             if vehicle_model is None:
-                default_vehicle_stl = "../../../visualization/default_assets/yf23.stl"
+                default_vehicle_stl = _asb_root / "dynamics/visualization/default_assets/yf23.stl"
                 vehicle_model = pv.read(str(default_vehicle_stl))
             elif isinstance(vehicle_model, Airplane):
                 vehicle_model = vehicle_model.draw(
-                    backend="backend",
+                    backend="pyvista",
                     show=False
                 )
                 vehicle_model.rotate_y(180)  # Rotate from geometry axes to body axes.
@@ -393,11 +393,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             x_e = np.array(self.x_e)
             y_e = np.array(self.y_e)
             z_e = np.array(self.z_e)
-            if len(x_e) == 1:
+            if np.length(x_e) == 1:
                 x_e = x_e * np.ones(len(self))
-            if len(y_e) == 1:
+            if np.length(y_e) == 1:
                 y_e = y_e * np.ones(len(self))
-            if len(z_e) == 1:
+            if np.length(z_e) == 1:
                 z_e = z_e * np.ones(len(self))
 
             if scale_vehicle_model is None:
