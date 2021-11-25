@@ -1,0 +1,3 @@
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.wing_aerodynamics import wing_aerodynamics
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.fuselage_aerodynamics import fuselage_aerodynamics
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.interactions import *

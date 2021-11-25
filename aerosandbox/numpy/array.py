@@ -1,6 +1,6 @@
 import numpy as _onp
 import casadi as _cas
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Union
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
@@ -15,7 +15,8 @@ def array(array_like, dtype=None):
         return array_like
 
     elif not is_casadi_type(array_like,
-                            recursive=True):  # If you were given a list of iterables that don't have CasADi types:
+                            recursive=True) or dtype is not None:
+        # If you were given a list of iterables that don't have CasADi types:
         # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
 
@@ -187,7 +188,7 @@ def roll(a, shift, axis: int = None):
 
 def max(a):
     """
-    Returns the maximum value of an array
+    Returns the maximum value of an array.
     """
 
     try:
@@ -198,7 +199,7 @@ def max(a):
 
 def min(a):
     """
-    Returns the minimum value of an array
+    Returns the minimum value of an array.
     """
 
     try:
@@ -213,4 +214,85 @@ def reshape(a, newshape):
     if not is_casadi_type(a):
         return _onp.reshape(a, newshape)
     else:
-        return _cas.reshape(a, newshape)
+        if isinstance(newshape, int):
+            newshape = (newshape, 1)
+
+        if len(newshape) == 1:
+            newshape = (newshape[0], 1)
+
+        if len(newshape) > 2:
+            raise ValueError("CasADi data types are limited to no more than 2 dimensions.")
+
+        return _cas.reshape(a.T, newshape[::-1]).T
+
+
+def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
+    """Return an array of zeros with the same shape and type as a given array."""
+    if not is_casadi_type(a):
+        return _onp.zeros_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return _onp.zeros(shape=length(a))
+
+
+def ones_like(a, dtype=None, order='K', subok=True, shape=None):
+    """Return an array of ones with the same shape and type as a given array."""
+    if not is_casadi_type(a):
+        return _onp.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return _onp.ones(shape=length(a))
+
+
+def empty_like(prototype, dtype=None, order='K', subok=True, shape=None):
+    """Return a new array with the same shape and type as a given array."""
+    if not is_casadi_type(prototype):
+        return _onp.empty_like(prototype, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return zeros_like(prototype)
+
+
+def full_like(a, fill_value, dtype=None, order='K', subok=True, shape=None):
+    """Return a full array with the same shape and type as a given array."""
+    if not is_casadi_type(a):
+        return _onp.full_like(a, fill_value, dtype=dtype, order=order, subok=subok, shape=shape)
+    else:
+        return fill_value * ones_like(a)
+
+
+def assert_equal_shape(
+        arrays: Union[List[_onp.ndarray], Dict[str, _onp.ndarray]],
+) -> None:
+    """
+    Assert that all of the given arrays are the same shape. If this is not true, raise a ValueError.
+
+    Args: arrays: The arrays to be evaluated.
+
+            Can be provided as a:
+
+                * List, in which case a generic ValueError is thrown
+
+                * Dictionary consisting of name:array pairs for key:value, in which case the names are given in the ValueError.
+
+    Returns: None. Throws an error if leng
+
+    """
+    try:
+        names = arrays.keys()
+        arrays = list(arrays.values())
+    except AttributeError:
+        names = None
+
+    def get_shape(array):
+        try:
+            return array.shape
+        except AttributeError:  # If it's a float/int
+            return ()
+
+    shape = get_shape(arrays[0])
+
+    for array in arrays[1:]:
+        if not get_shape(array) == shape:
+            if names is None:
+                raise ValueError("The given arrays do not have the same shape!")
+            else:
+                namelist = ", ".join(names)
+                raise ValueError(f"The given arrays {namelist} do not have the same shape!")

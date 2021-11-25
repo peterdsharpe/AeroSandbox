@@ -20,26 +20,35 @@ class AeroSandboxObject:
         :param sol: OptiSol object.
         :return:
         """
-        for attrib_name in dir(self):
-            attrib_orig = getattr(self, attrib_name)
-            if isinstance(attrib_orig, bool) or isinstance(attrib_orig, int):
-                continue
+
+        def convert(item):
             try:
-                setattr(self, attrib_name, sol.value(attrib_orig))
+                return sol.value(item)
             except NotImplementedError:
                 pass
-            if isinstance(attrib_orig, list):
-                try:
-                    new_attrib_orig = []
-                    for item in attrib_orig:
-                        new_attrib_orig.append(item.substitute_solution(sol))
-                    setattr(self, attrib_name, new_attrib_orig)
-                except:
-                    pass
+
             try:
-                setattr(self, attrib_name, attrib_orig.substitute_solution(sol))
-            except:
+                return item.substitute_solution(sol)
+            except AttributeError:
                 pass
+
+            if isinstance(item, list) or isinstance(item, tuple):
+                return [convert(i) for i in item]
+
+            return item
+
+        for attrib_name in self.__dict__.keys():
+            attrib_value = getattr(self, attrib_name)
+
+            if isinstance(attrib_value, bool) or isinstance(attrib_value, int) or isinstance(attrib_value, float):
+                continue
+
+            try:
+                setattr(self, attrib_name, convert(attrib_value))
+                continue
+            except (TypeError, AttributeError):
+                pass
+
         return self
 
 
@@ -100,7 +109,7 @@ class ImplicitAnalysis(AeroSandboxObject):
 
             init_method(self, *args, **kwargs)
 
-            if not self.opti_provided:
+            if not self.opti_provided and not self.opti.x.shape == (0, 1):
                 sol = self.opti.solve()
                 self.substitute_solution(sol)
 

@@ -173,6 +173,7 @@ def test_Linf_without_x_in_dict():
     assert fitted_model.parameters["m"] == pytest.approx(0.247116, abs=1e-5)
     assert fitted_model.parameters["b"] == pytest.approx(0.227797, abs=1e-5)
 
+
 def test_type_errors():
     np.random.seed(0)  # Set a seed for repeatability
 
@@ -228,6 +229,7 @@ def test_type_errors():
 
     with pytest.raises(TypeError):
         fitted_model(5)
+
 
 if __name__ == '__main__':
     pytest.main()

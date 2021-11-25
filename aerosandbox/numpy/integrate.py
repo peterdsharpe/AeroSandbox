@@ -1,3 +1,3 @@
-# A mirror scipy.interpolate
+# A mirror scipy.integrate
 
 # TODO

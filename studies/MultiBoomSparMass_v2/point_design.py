@@ -10,8 +10,8 @@ n_booms = 1
 # n_booms = 3
 # load_location_fraction = 0.60
 
-mass = 80 * 6
-span = 7.3
+mass = 300
+span = 30
 
 ### Set up problem
 opti = cas.Opti()
@@ -20,7 +20,7 @@ beam = TubeBeam1(
     length=span / 2,
     points_per_point_load=100,
     diameter_guess=10,
-    thickness=1e-3,
+    thickness=2e-3,
     bending=True,
     torsion=False,
     max_allowable_stress=570e6,
@@ -32,10 +32,10 @@ lift_force = 9.81 * mass
 #     load_location > 1,
 #     load_location < beam.length - 1,
 # ])
-assert (n_booms == np.array([1,2,3])).any()
+assert (n_booms == np.array([1, 2, 3])).any()
 if n_booms == 2 or n_booms == 3:
     load_location = beam.length * load_location_fraction
-    beam.add_point_load(location = load_location, force = -lift_force / n_booms)
+    beam.add_point_load(location=load_location, force=-lift_force / n_booms)
 beam.add_elliptical_load(force=lift_force / 2)
 beam.setup()
 

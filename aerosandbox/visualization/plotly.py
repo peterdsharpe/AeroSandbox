@@ -1,6 +1,7 @@
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
+import aerosandbox.numpy as np
 
 # Set the rendering to happen in browser
 pio.renderers.default = "browser"

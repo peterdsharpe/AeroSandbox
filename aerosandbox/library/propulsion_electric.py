@@ -68,14 +68,20 @@ def motor_electric_performance(
                 torque = (current - no_load_current) / kv_rads_per_sec_per_volt
                 torque_known = True
 
-    efficiency = (rpm * np.pi / 30) * torque / (voltage * current)
+    shaft_power = (rpm * np.pi / 30) * torque
+    electrical_power = voltage * current
+    efficiency = shaft_power / electrical_power
+    waste_heat = np.fabs(electrical_power - shaft_power)
 
     return {
-        "voltage"   : voltage,
-        "current"   : current,
-        "rpm"       : rpm,
-        "torque"    : torque,
-        "efficiency": efficiency,
+        "voltage"         : voltage,
+        "current"         : current,
+        "rpm"             : rpm,
+        "torque"          : torque,
+        "shaft power"     : shaft_power,
+        "electrical power": electrical_power,
+        "efficiency"      : efficiency,
+        "waste heat"      : waste_heat,
     }
 
 
@@ -253,6 +259,7 @@ if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     sns.set(palette=sns.color_palette("husl"))
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)

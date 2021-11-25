@@ -1,1 +1,1 @@
-from .operating_point import *
+from aerosandbox.performance.operating_point import *

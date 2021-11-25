@@ -160,7 +160,6 @@ if __name__ == '__main__':
         sol = opti.debug
 
     import matplotlib.pyplot as plt
-    import matplotlib.style as style
     import seaborn as sns
 
     sns.set(font_scale=1)

@@ -32,6 +32,7 @@ def test_where_casadi():
         c == cas.DM([1, 2, 1, 2])
     )
 
+
 # def test_if_else_mixed(): # TODO write this
 
 

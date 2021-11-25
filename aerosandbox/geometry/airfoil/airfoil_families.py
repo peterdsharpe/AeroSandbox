@@ -2,6 +2,8 @@ import aerosandbox.numpy as np
 from scipy.special import comb
 from aerosandbox.geometry.polygon import stack_coordinates
 import re
+from typing import Union
+import os
 
 _default_n_points_per_side = 200
 
@@ -79,8 +81,8 @@ def get_NACA_coordinates(
     # Trim 1 point from lower surface so there's no overlap
     x_L, y_L = x_L[1:], y_L[1:]
 
-    x = np.hstack((x_U, x_L))
-    y = np.hstack((y_U, y_L))
+    x = np.concatenate((x_U, x_L))
+    y = np.concatenate((y_U, y_L))
 
     return stack_coordinates(x, y)
 
@@ -98,7 +100,8 @@ def get_kulfan_coordinates(
     Calculates the coordinates of a Kulfan (CST) airfoil.
     To make a Kulfan (CST) airfoil, use the following syntax:
 
-    asb.Airfoil("My Airfoil Name", coordinates = asb.kulfan_coordinates(*args))
+    >>> import aerosandbox as asb
+    >>> asb.Airfoil("My Airfoil Name", coordinates=asb.get_kulfan_coordinates(*args))
 
     More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
     Notes on N1, N2 (shape factor) combinations:
@@ -109,14 +112,14 @@ def get_kulfan_coordinates(
         * 0.75, 0.25: Low-drag projectile
         * 1, 0.001: Cone or wedge airfoil
         * 0.001, 0.001: Rectangle, circular duct, or circular rod.
-    :param lower_weights:
-    :param upper_weights:
-    :param enforce_continuous_LE_radius: Enforces a continous leading-edge radius by throwing out the first lower weight.
-    :param TE_thickness:
-    :param n_points_per_side:
-    :param N1: LE shape factor
-    :param N2: TE shape factor
-    :return:
+    :param lower_weights: An iterable of the Kulfan weights to use for the lower surface.
+    :param upper_weights: An iterable of the Kulfan weights to use for the upper surface.
+    :param enforce_continuous_LE_radius: Enforces a continuous leading-edge radius by throwing out the first lower weight.
+    :param TE_thickness: The trailing edge thickness to add, in terms of y/c.
+    :param n_points_per_side: The number of points to discretize with.
+    :param N1: LE shape factor; see above.
+    :param N2: TE shape factor; see above.
+    :return: The coordinates of the airfoil as a Nx2 array.
     """
 
     if enforce_continuous_LE_radius:
@@ -125,7 +128,7 @@ def get_kulfan_coordinates(
     x_lower = np.cosspace(0, 1, n_points_per_side)
     x_upper = x_lower[::-1]
 
-    x_lower = x_lower[1:] # Trim off the nose coordinate so there are no duplicates
+    x_lower = x_lower[1:]  # Trim off the nose coordinate so there are no duplicates
 
     def shape(w, x):
         # Class function
@@ -141,7 +144,7 @@ def get_kulfan_coordinates(
                 np.expand_dims(1 - x, 1) ** (n - np.arange(n + 1))
         )  # Polynomial coefficient * weight matrix
         # S = np.sum(S_matrix, axis=1)
-        S = np.array([np.sum(S_matrix[i,:]) for i in range(S_matrix.shape[0])])
+        S = np.array([np.sum(S_matrix[i, :]) for i in range(S_matrix.shape[0])])
 
         # Calculate y output
         y = C * S
@@ -191,7 +194,7 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
             pass
 
     if len(raw_coordinates) == 0:
-        raise ValueError("File was found, but could not read any coordinates!")
+        raise ValueError("Could not read any coordinates from the `raw_text` input!")
 
     coordinates = np.array(raw_coordinates, dtype=float)
 
@@ -199,21 +202,29 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
 
 
 def get_file_coordinates(
-        filepath
+        filepath: Union[str, os.PathLike]
 ):
+    possible_errors = (FileNotFoundError, UnicodeDecodeError)
+
+    if isinstance(filepath, np.ndarray):
+        raise TypeError("`filepath` should be a string or os.PathLike object.")
+
     try:
         with open(filepath, "r") as f:
             raw_text = f.readlines()
-    except FileNotFoundError as e:
+    except possible_errors as e:
         try:
             with open(f"{filepath}.dat", "r") as f:
                 raw_text = f.readlines()
-        except FileNotFoundError as e:
+        except possible_errors as e:
             raise FileNotFoundError(
-                f" Neither '{filepath}' nor '{filepath}.dat' were found."
+                f" Neither '{filepath}' nor '{filepath}.dat' were found and readable."
             ) from e
 
-    return get_coordinates_from_raw_dat(raw_text)
+    try:
+        return get_coordinates_from_raw_dat(raw_text)
+    except ValueError:
+        raise ValueError("File was found, but could not read any coordinates!")
 
 
 def get_UIUC_coordinates(
@@ -245,4 +256,3 @@ def get_UIUC_coordinates(
             ) from e
 
     return get_coordinates_from_raw_dat(raw_text)
-

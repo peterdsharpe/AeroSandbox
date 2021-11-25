@@ -11,6 +11,8 @@ def Cd_cylinder(
     :param subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows. Useful, since
     this model is now convex and can be more well-behaved.
     :return: Drag coefficient
+
+    # TODO rework this function to use tanh blending, which will mitigate overflows
     """
     csigc = 5.5766722118597247
     csigh = 23.7460859935990563
@@ -23,7 +25,7 @@ def Cd_cylinder(
     csuph = 9.9999999999999787
     csupscl = -0.4570690347113859
 
-    x = np.log10(Re_D)
+    x = np.log10(np.abs(Re_D) + 1e-16)
 
     if subcritical_only:
         Cd = 10 ** (csub0 * x + csub1) + csub2 + csub3 * x
@@ -79,6 +81,10 @@ def Cf_flat_plate(
             * "hybrid-sharpe-nonconvex": A hybrid model that blends the Blasius and Cengel models. Nonconvex in
             log-log-space; however, it may capture some truly nonconvex behavior near transitional Reynolds numbers.
 
+    Returns:
+
+        C_f: The skin friction coefficient, normalized to the length of the plate.
+
     You can view all of these functions graphically using
     `aerosandbox.library.aerodynamics.test_aerodynamics.test_Cf_flat_plate.py`
 
@@ -107,16 +113,35 @@ def Cf_flat_plate(
         )
 
 
-def Cl_flat_plate(alpha, Re_c):
+def Cl_flat_plate(alpha, Re_c=None):
     """
     Returns the approximate lift coefficient of a flat plate, following thin airfoil theory.
     :param alpha: Angle of attack [deg]
     :param Re_c: Reynolds number, normalized to the length of the flat plate.
     :return: Approximate lift coefficient.
     """
-    Re_c = np.abs(Re_c)
+    if Re_c is not None:
+        from warnings import warn
+        warn("`Re_c` input will be deprecated in a future version.")
+
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
+
+
+def Cd_flat_plate_normal():
+    """
+    Returns the drag coefficient of a flat plat oriented normal to the flow (i.e., alpha = 90 deg).
+
+    Uses results from Tian, Xinliang, Muk Chen Ong, Jianmin Yang, and Dag Myrhaug. “Large-Eddy Simulation of the Flow
+    Normal to a Flat Plate Including Corner Effects at a High Reynolds Number.” Journal of Fluids and Structures 49 (
+    August 2014): 149–69. https://doi.org/10.1016/j.jfluidstructs.2014.04.008.
+
+    Note: Cd for this case is effectively invariant of Re.
+
+    Returns: Drag coefficient
+
+    """
+    return 2.202
 
 
 def Cl_2412(alpha, Re_c):
@@ -342,7 +367,7 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
 def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     """
     Wave drag_force coefficient prediction using the (very) low-fidelity Korn Equation method; derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
-    :param Cl: (2D) lift_force coefficient
+    :param Cl: Sectional lift coefficient
     :param t_over_c: thickness-to-chord ratio
     :param sweep: sweep angle, in degrees
     :param kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
@@ -351,11 +376,11 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     mach = np.fmax(mach, 0)
     Mdd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - Cl / (10 * np.cosd(sweep) ** 3)
     Mcrit = Mdd - (0.1 / 80) ** (1 / 3)
-    Cd_wave = 20 * np.where(
+    Cd_wave = np.where(
         mach > Mcrit,
-        mach - Mcrit,
+        20 * (mach - Mcrit) ** 4,
         0
-    ) ** 4
+    )
 
     return Cd_wave
 
@@ -387,8 +412,8 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
     :return: A tuple of (CLA, CDA) [m^2]
     """
     alpha_rad = alpha * np.pi / 180
-    sin_alpha = np.sin(alpha_rad)
-    cos_alpha = np.cos(alpha_rad)
+    sin_alpha = np.sind(alpha)
+    cos_alpha = np.cosd(alpha)
 
     """
     Lift of a truncated fuselage, following slender body theory.

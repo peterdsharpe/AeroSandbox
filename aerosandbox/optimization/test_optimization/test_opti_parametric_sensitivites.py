@@ -1,12 +1,8 @@
 import aerosandbox as asb
-from aerosandbox import cas
 import aerosandbox.numpy as np
 import pytest
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-sns.set(palette=sns.color_palette("husl"))
+from aerosandbox.tools.pretty_plots import plt, show_plot
 
 """
 This test solves the 2-dimensional Rosenbrock problem constrained to a circle centered on the origin:

@@ -2,6 +2,7 @@ import casadi as cas
 import aerosandbox.numpy as np
 from aerosandbox.geometry import *
 
+
 class TubeBeam1(AeroSandboxObject):
 
     def __init__(self,
@@ -131,7 +132,6 @@ class TubeBeam1(AeroSandboxObject):
             }
         )
 
-
     def add_elliptical_load(self,
                             force=0,
                             bending_moment=0,
@@ -152,7 +152,6 @@ class TubeBeam1(AeroSandboxObject):
                 "torsional_moment": torsional_moment
             }
         )
-
 
     def setup(self,
               bending_BC_type="cantilevered"
@@ -193,7 +192,7 @@ class TubeBeam1(AeroSandboxObject):
                 self.force_per_unit_length += load["force"] / self.length
             elif load["type"] == "elliptical":
                 load_to_add = load["force"] / self.length * (
-                        4 / cas.pi * cas.sqrt(1 - (self.x/self.length) ** 2)
+                        4 / cas.pi * cas.sqrt(1 - (self.x / self.length) ** 2)
                 )
                 self.force_per_unit_length += load_to_add
             else:
@@ -302,7 +301,6 @@ class TubeBeam1(AeroSandboxObject):
         :return:
         """
         import matplotlib.pyplot as plt
-        import matplotlib.style as style
         import seaborn as sns
         sns.set(font_scale=1)
 

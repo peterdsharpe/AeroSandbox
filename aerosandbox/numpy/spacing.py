@@ -38,7 +38,14 @@ def cosspace(
     """
     mean = (stop + start) / 2
     amp = (stop - start) / 2
-    return mean + amp * _onp.cos(linspace(_onp.pi, 0, num))
+    ones = 0 * start + 1
+    return mean + amp * _onp.cos(
+        linspace(
+            _onp.pi * ones,
+            0 * ones,
+            num
+        )
+    )
 
 
 def logspace(

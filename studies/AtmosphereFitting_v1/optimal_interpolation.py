@@ -11,29 +11,23 @@ opti = cas.Opti()
 
 n = 101
 
-x = opti.variable(n)#cas.linspace(0,1,n)
+x = opti.variable(n)  # cas.linspace(0,1,n)
 
-
-
-opti.set_initial(x, cas.linspace(0,10,n))
-
-
-
+opti.set_initial(x, cas.linspace(0, 10, n))
 
 opti.subject_to([
-    x[0]==0,
-    x[-1]==10,
+    x[0] == 0,
+    x[-1] == 10,
 ])
-
 
 y = cas.exp(-x)
 
 x1 = x[:-1]
 x2 = x[1:]
-errors = -x1*cas.exp(-x2)/2 - x1*cas.exp(-x1)/2 + x2*cas.exp(-x2)/2 + x2*cas.exp(-x1)/2 + cas.exp(-x2) - cas.exp(-x1)
+errors = -x1 * cas.exp(-x2) / 2 - x1 * cas.exp(-x1) / 2 + x2 * cas.exp(-x2) / 2 + x2 * cas.exp(-x1) / 2 + cas.exp(-x2) - cas.exp(-x1)
 error = cas.sum1(errors)
 
-opti.minimize(error*1e3)
+opti.minimize(error * 1e3)
 opti.solver('ipopt')
 sol = opti.solve()
 

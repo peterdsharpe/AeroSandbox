@@ -1,1 +1,2 @@
-from .equations_of_motion import equations_of_motion
+from aerosandbox.dynamics.point_mass import *
+from aerosandbox.dynamics.rigid_body import *

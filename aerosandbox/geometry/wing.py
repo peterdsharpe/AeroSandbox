@@ -1,14 +1,29 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List
+from typing import List, Tuple, Union
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
+import aerosandbox.geometry.mesh_utilities as mesh_utils
+import copy
 
 
 class Wing(AeroSandboxObject):
     """
     Definition for a wing.
+
+    Anatomy of a wing:
+
+        A wing consists chiefly of a collection of cross sections, or "xsecs". These can be accessed with `Wing.xsecs`,
+        which gives a list of xsecs in the Wing. Each xsec is a WingXSec object, a class that is defined separately.
+
+        You may also see references to wing "sections", which are different than cross sections (xsecs)! Sections are
+        the portions of the wing that are in between xsecs. In other words, a wing with N cross sections (xsecs,
+        WingXSec objects) will always have N-1 sections. Sections are never explicitly defined, since you can get all
+        needed information by lofting from the adjacent cross sections. For example, section 0 is a loft between
+        cross sections 0 and 1.
+
+        Wings are lofted linearly between cross sections.
 
     If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the
     constructor.
@@ -18,27 +33,54 @@ class Wing(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled Wing",
-                 xyz_le: np.ndarray = np.array([0, 0, 0]),
                  xsecs: List['WingXSec'] = [],
                  symmetric: bool = False,
+                 xyz_le: np.ndarray = None,  # Note: deprecated.
                  ):
         """
         Initialize a new wing.
         Args:
             name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
-            xyz_le: xyz-coordinates of the datum point (typically the root leading edge) of the wing.
             xsecs: A list of wing cross ("X") sections in the form of WingXSec objects.
             symmetric: Is the wing symmetric across the XZ plane?
         """
         self.name = name
-        self.xyz_le = np.array(xyz_le)
         self.xsecs = xsecs
         self.symmetric = symmetric
+        if xyz_le is not None:
+            import warnings
+            warnings.warn(
+                "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.",
+                stacklevel=2
+            )
+            self.xsecs = [
+                xsec.translate(xyz_le)
+                for xsec in xsecs
+            ]
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
         symmetry_description = "symmetric" if self.symmetric else "asymmetric"
         return f"Wing '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'}, {symmetry_description})"
+
+    def translate(self,
+                  xyz: np.ndarray
+                  ):
+        """
+        Translates the entire Wing by a certain amount.
+
+        Args:
+            xyz:
+
+        Returns: self
+
+        """
+        new_wing = copy.copy(self)
+        new_wing.xsecs = [
+            xsec.translate(xyz)
+            for xsec in new_wing.xsecs
+        ]
+        return new_wing
 
     def span(self,
              type: str = "wetted",
@@ -60,12 +102,30 @@ class Wing(AeroSandboxObject):
         if type == "y-full":
             if _sectional:
                 raise ValueError("Cannot use `_sectional` with the parameter type as `y-full`!")
-            return self.xsecs[-1].quarter_chord()[1]
+            return self._compute_xyz_of_WingXSec(
+                -1,
+                x_nondim=0.25,
+                y_nondim=0.25
+            )[1]
 
         sectional_spans = []
 
-        for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
-            quarter_chord_vector = outer_xsec.quarter_chord() - inner_xsec.quarter_chord()
+        i_range = range(len(self.xsecs))
+
+        quarter_chord_vectors = [
+            self._compute_xyz_of_WingXSec(
+                i,
+                x_nondim=0.25,
+                y_nondim=0,
+            )
+            for i in i_range
+        ]
+
+        for inner_i, outer_i in zip(i_range, i_range[1:]):
+            quarter_chord_vector = (
+                    quarter_chord_vectors[outer_i] -
+                    quarter_chord_vectors[inner_i]
+            )
 
             if type == "wetted":
                 section_span = (
@@ -201,7 +261,6 @@ class Wing(AeroSandboxObject):
     def mean_twist_angle(self) -> float:
         r"""
         Returns the mean twist angle (in degrees) of the wing, weighted by area.
-        WARNING: This function's output is only exact in the case where all of the cross sections have the same twist axis!
         :return: mean twist angle (in degrees)
         """
 
@@ -225,14 +284,26 @@ class Wing(AeroSandboxObject):
 
         return mean_twist
 
-    def mean_sweep_angle(self) -> float:
+    def mean_sweep_angle(self, x_nondim=0.25) -> float:
         """
-        Returns the mean quarter-chord sweep angle (in degrees) of the wing, relative to the x-axis.
+        Returns the mean sweep angle (in degrees) of the wing, relative to the x-axis.
         Positive sweep is backwards, negative sweep is forward.
-        :return:
+
+        By changing `x_nondim`, you can change whether it's leading-edge sweep (0), quarter-chord sweep (0.25),
+        trailing-edge sweep (1), or anything else.
+
+        :return: The mean sweep angle, in degrees.
         """
-        root_quarter_chord = self.xsecs[0].quarter_chord()
-        tip_quarter_chord = self.xsecs[-1].quarter_chord()
+        root_quarter_chord = self._compute_xyz_of_WingXSec(
+            0,
+            x_nondim=x_nondim,
+            y_nondim=0
+        )
+        tip_quarter_chord = self._compute_xyz_of_WingXSec(
+            -1,
+            x_nondim=x_nondim,
+            y_nondim=0
+        )
 
         vec = tip_quarter_chord - root_quarter_chord
         vec_norm = vec / np.linalg.norm(vec)
@@ -243,11 +314,11 @@ class Wing(AeroSandboxObject):
 
         return sweep_deg
 
-    def aerodynamic_center(self, chord_fraction: float = 0.25) -> np.ndarray:
+    def aerodynamic_center(self, chord_fraction: float = 0.25, _sectional=False) -> np.ndarray:
         """
         Computes the location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:
-            https://core.ac.uk/download/pdf/79175663.pdf
+            https://core.ac.uk/downloattttd/pdf/79175663.pdf
 
         Args: chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
 
@@ -275,13 +346,16 @@ class Wing(AeroSandboxObject):
                     (1 + 2 * section_taper_ratio) /
                     (3 + 3 * section_taper_ratio)
             )
-            section_AC = section_MAC_le + np.array([ # TODO rotate this vector by the local twist angle
+            section_AC = section_MAC_le + np.array([  # TODO rotate this vector by the local twist angle
                 chord_fraction * section_MAC_length,
                 0,
                 0
             ])
 
             sectional_ACs.append(section_AC)
+
+        if _sectional:
+            return sectional_ACs
 
         sectional_AC_area_products = [
             AC * area
@@ -292,8 +366,6 @@ class Wing(AeroSandboxObject):
         ]
 
         aerodynamic_center = sum(sectional_AC_area_products) / sum(sectional_areas)
-
-        aerodynamic_center += self.xyz_le
 
         if self.symmetric:
             aerodynamic_center[1] = 0
@@ -310,6 +382,435 @@ class Wing(AeroSandboxObject):
         """
         return self.xsecs[-1].chord / self.xsecs[0].chord
 
+    def mesh_body(self,
+                  method="quad",
+                  chordwise_resolution: int = 32,
+                  spanwise_resolution: int = 16,
+                  spanwise_spacing: str = "uniform",
+                  mesh_surface: bool = True,
+                  mesh_tips: bool = True,
+                  mesh_trailing_edge: bool = True,
+                  ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Meshes the wing as a solid (thickened) body.
+
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
+        `aerosandbox.geometry.mesh_utilities`.
+
+        Args:
+            method: Allows choice between "tri" and "quad" meshing.
+            chordwise_resolution: Controls the chordwise resolution of the meshing.
+            spanwise_resolution: Controls the spanwise resolution of the meshing.
+            spanwise_spacing: Controls the spanwise spacing of the meshing. Can be "uniform" or "cosine".
+            mesh_surface: Controls whether the actual wing surface is meshed.
+            mesh_tips: Control whether the wing tips (both outside and inside) are meshed.
+            mesh_trailing_edge: Controls whether the wing trailing edge is meshed, in the case of open-TE airfoils.
+
+        Returns: (points, faces) in standard mesh format.
+
+        """
+
+        airfoil_nondim_coordinates = np.array([
+            xsec.airfoil
+                .repanel(n_points_per_side=chordwise_resolution + 1)
+                .coordinates
+            for xsec in self.xsecs
+        ])
+
+        x_nondim = airfoil_nondim_coordinates[:, :, 0].T
+        y_nondim = airfoil_nondim_coordinates[:, :, 1].T
+
+        spanwise_strips = []
+        for x_n, y_n in zip(x_nondim, y_nondim):
+            spanwise_strips.append(
+                self.mesh_line(
+                    x_nondim=x_n,
+                    y_nondim=y_n,
+                    add_camber=False,
+                    spanwise_resolution=spanwise_resolution,
+                    spanwise_spacing=spanwise_spacing,
+                )
+            )
+
+        points = np.concatenate(spanwise_strips)
+
+        faces = []
+
+        num_i = spanwise_resolution * (len(self.xsecs) - 1)
+        num_j = len(spanwise_strips) - 1
+
+        def index_of(iloc, jloc):
+            return iloc + jloc * (num_i + 1)
+
+        def add_face(*indices):
+            entry = list(indices)
+            if method == "quad":
+                faces.append(entry)
+            elif method == "tri":
+                faces.append([entry[0], entry[1], entry[3]])
+                faces.append([entry[1], entry[2], entry[3]])
+
+        if mesh_surface:
+            for i in range(num_i):
+                for j in range(num_j):
+                    add_face(
+                        index_of(i, j),
+                        index_of(i + 1, j),
+                        index_of(i + 1, j + 1),
+                        index_of(i, j + 1),
+                    )
+
+        if mesh_tips:
+            for j in range(num_j // 2):
+                add_face(  # Mesh the root face
+                    index_of(0, num_j - j),
+                    index_of(0, j),
+                    index_of(0, j + 1),
+                    index_of(0, num_j - j - 1),
+                )
+                add_face(  # Mesh the tip face
+                    index_of(num_i, j),
+                    index_of(num_i, j + 1),
+                    index_of(num_i, num_j - j - 1),
+                    index_of(num_i, num_j - j),
+                )
+        if mesh_trailing_edge:
+            for i in range(num_i):
+                add_face(
+                    index_of(i + 1, 0),
+                    index_of(i + 1, num_j),
+                    index_of(i, num_j),
+                    index_of(i, 0),
+                )
+
+        faces = np.array(faces)
+
+        if self.symmetric:
+            flipped_points = np.array(points)
+            flipped_points[:, 1] = flipped_points[:, 1] * -1
+
+            points, faces = mesh_utils.stack_meshes(
+                (points, faces),
+                (flipped_points, faces)
+            )
+
+        return points, faces
+
+    def mesh_thin_surface(self,
+                          method="tri",
+                          chordwise_resolution: int = 32,
+                          spanwise_resolution: int = 16,
+                          chordwise_spacing: str = "cosine",
+                          spanwise_spacing: str = "uniform",
+                          add_camber: bool = True,
+                          ) -> Tuple[np.ndarray, List[List[int]]]:
+        """
+        Meshes the mean camber line of the wing as a thin-sheet body.
+
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
+        `aerosandbox.geometry.mesh_utilities`.
+
+        Args:
+            method: Allows choice between "tri" and "quad" meshing.
+            chordwise_resolution: Controls the chordwise resolution of the meshing.
+            spanwise_resolution: Controls the spanwise resolution of the meshing.
+            chordwise_spacing: Controls the chordwise spacing of the meshing. Can be "uniform" or "cosine".
+            spanwise_spacing: Controls the spanwise spacing of the meshing. Can be "uniform" or "cosine".
+            add_camber: Controls whether to mesh the thin surface with camber (i.e., mean camber line), or just the flat planform.
+
+        Returns: (points, faces) in standard mesh format.
+
+        """
+        if chordwise_spacing == "cosine":
+            space = np.cosspace
+        elif chordwise_spacing == "uniform":
+            space = np.linspace
+        else:
+            raise ValueError("Bad value of 'chordwise_spacing'")
+
+        x_nondim = space(
+            0,
+            1,
+            chordwise_resolution + 1
+        )
+
+        spanwise_strips = []
+        for x_n in x_nondim:
+            spanwise_strips.append(
+                self.mesh_line(
+                    x_nondim=x_n,
+                    y_nondim=0,
+                    add_camber=add_camber,
+                    spanwise_resolution=spanwise_resolution,
+                    spanwise_spacing=spanwise_spacing
+                )
+            )
+
+        points = np.concatenate(spanwise_strips)
+
+        faces = []
+
+        num_i = spanwise_resolution * (len(self.xsecs) - 1)
+        num_j = len(spanwise_strips) - 1
+
+        def index_of(iloc, jloc):
+            return iloc + jloc * (num_i + 1)
+
+        def add_face(*indices):
+            entry = list(indices)
+            if method == "quad":
+                faces.append(entry)
+            elif method == "tri":
+                faces.append([entry[0], entry[1], entry[3]])
+                faces.append([entry[1], entry[2], entry[3]])
+
+        for i in range(num_i):
+            for j in range(num_j):
+                add_face(
+                    index_of(i, j),
+                    index_of(i + 1, j),
+                    index_of(i + 1, j + 1),
+                    index_of(i, j + 1),
+                )
+
+        faces = np.array(faces)
+
+        if self.symmetric:
+            flipped_points = np.array(points)
+            flipped_points[:, 1] = flipped_points[:, 1] * -1
+
+            points, faces = mesh_utils.stack_meshes(
+                (points, faces),
+                (flipped_points, faces)
+            )
+
+        return points, faces
+
+    def mesh_line(self,
+                  x_nondim: Union[float, List[float]] = 0.25,
+                  y_nondim: Union[float, List[float]] = 0,
+                  add_camber: bool = True,
+                  spanwise_resolution: int = 1,
+                  spanwise_spacing: str = "cosine"
+                  ) -> np.ndarray:
+        """
+        Meshes a line that goes through each of the WingXSec objects in this wing.
+
+        Args:
+
+            x_nondim: The nondimensional (chord-normalized) x-coordinate that the line should go through. Can either
+            be a single value used at all cross sections, or can be an iterable of values to be used at the
+            respective cross sections.
+
+            y_nondim: The nondimensional (chord-normalized) y-coordinate that the line should go through. Here,
+            y-coordinate means the "vertical" component (think standard 2D airfoil axes). Can either be a single
+            value used at all cross sections, or can be an iterable of values to be used at the respective cross
+            sections.
+
+            add_camber: Controls whether camber should be added to the line or not.
+
+            spanwise_resolution: Controls the number of times each WingXSec is subdivided.
+
+            spanwise_spacing: Controls the spanwise spacing. Either "cosine" or "uniform".
+
+        Returns:
+
+            points: a Nx3 np.ndarray that gives the coordinates of each point on the meshed line. Goes from the root to the tip.
+
+        """
+
+        if spanwise_spacing == "cosine":
+            space = np.cosspace
+        elif spanwise_spacing == "uniform":
+            space = np.linspace
+        else:
+            raise ValueError("Bad value of 'spanwise_spacing'")
+
+        xsec_points = []
+
+        try:
+            if len(x_nondim) != len(self.xsecs):
+                raise ValueError(
+                    "If x_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs."
+                )
+        except TypeError:
+            pass
+
+        try:
+            if len(y_nondim) != len(self.xsecs):
+                raise ValueError(
+                    "If y_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs."
+                )
+        except TypeError:
+            pass
+
+        for i, xsec in enumerate(self.xsecs):
+
+            try:
+                xsec_x_nondim = x_nondim[i]
+            except (TypeError, IndexError):
+                xsec_x_nondim = x_nondim
+
+            try:
+                xsec_y_nondim = y_nondim[i]
+            except (TypeError, IndexError):
+                xsec_y_nondim = y_nondim
+
+            if add_camber:
+                xsec_y_nondim = xsec_y_nondim + xsec.airfoil.local_camber(x_over_c=x_nondim)
+
+            xsec_point = self._compute_xyz_of_WingXSec(
+                i,
+                x_nondim=xsec_x_nondim,
+                y_nondim=xsec_y_nondim,
+            )
+            xsec_points.append(xsec_point)
+
+        points_sections = []
+        for i in range(len(xsec_points) - 1):
+            points_section = space(
+                xsec_points[i],
+                xsec_points[i + 1],
+                spanwise_resolution + 1
+            )
+            if not i == len(xsec_points) - 2:
+                points_section = points_section[:-1]
+
+            points_sections.append(points_section)
+
+        points = np.concatenate(points_sections)
+
+        return points
+
+    def draw(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw()
+            **kwargs: Keyword arguments to pass through to Airplane.draw()
+
+        Returns: Same return as Airplane.draw()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(wings=[self]).draw(*args, **kwargs)
+
+    def _compute_xyz_le_of_WingXSec(self, index: int):
+        return self.xsecs[index].xyz_le
+
+    def _compute_xyz_te_of_WingXSec(self, index: int):
+        return self._compute_xyz_of_WingXSec(
+            index,
+            x_nondim=1,
+            y_nondim=0,
+        )
+
+    def _compute_xyz_of_WingXSec(self,
+                                 index,
+                                 x_nondim,
+                                 y_nondim,
+                                 ):
+        xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(index)
+        origin = self.xsecs[index].xyz_le
+        xsec = self.xsecs[index]
+        return origin + (
+                x_nondim * xsec.chord * xg_local +
+                y_nondim * xsec.chord * zg_local
+        )
+
+    def _compute_frame_of_WingXSec(
+            self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Computes the local reference frame associated with a particular cross section (XSec) of this wing.
+
+        Args:
+
+            index: Which cross section (as indexed in Wing.xsecs) should we get the frame of?
+
+        Returns:
+
+            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis of
+            the local reference frame of the WingXSec. Given in geometry axes.
+
+        """
+        ### Compute the untwisted reference frame
+        xg_local = np.array([1, 0, 0])
+        if index == 0:
+            span_vector = self.xsecs[1].xyz_le - self.xsecs[0].xyz_le
+            span_vector[0] = 0
+            yg_local = span_vector / np.linalg.norm(span_vector)
+            z_scale = 1
+        elif index == len(self.xsecs) - 1 or index == -1:
+            span_vector = self.xsecs[-1].xyz_le - self.xsecs[-2].xyz_le
+            span_vector[0] = 0
+            yg_local = span_vector / np.linalg.norm(span_vector)
+            z_scale = 1
+        else:
+            vector_before = self.xsecs[index].xyz_le - self.xsecs[index - 1].xyz_le
+            vector_after = self.xsecs[index + 1].xyz_le - self.xsecs[index].xyz_le
+            vector_before[0] = 0  # Project onto YZ plane.
+            vector_after[0] = 0  # Project onto YZ plane.
+            vector_before = vector_before / np.linalg.norm(vector_before)
+            vector_after = vector_after / np.linalg.norm(vector_after)
+            span_vector = (vector_before + vector_after) / 2
+            yg_local = span_vector / np.linalg.norm(span_vector)
+            cos_vectors = np.linalg.inner(vector_before, vector_after)
+            z_scale = np.sqrt(2 / (cos_vectors + 1))
+
+        zg_local = np.cross(xg_local, yg_local) * z_scale
+
+        ### Twist the reference frame by the WingXSec twist angle
+        rot = np.rotation_matrix_3D(
+            self.xsecs[index].twist * pi / 180,
+            yg_local
+        )
+        xg_local = rot @ xg_local
+        zg_local = rot @ zg_local
+
+        return xg_local, yg_local, zg_local
+
+    def _compute_frame_of_section(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Computes the local reference frame associated with a particular section. (Note that sections and cross
+        sections are different! Cross sections, or xsecs, are the vertices, and sections are the parts in between. In
+        other words, a wing with N cross sections (xsecs) will always have N-1 sections.
+
+        Args:
+
+            index: Which section should we get the frame of? If given `i`, this retrieves the frame of the section
+            between xsecs `i` and `i+1`.
+
+        Returns:
+
+            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis
+            of the local reference frame of the section. Given in geometry axes.
+
+        """
+        in_front = self._compute_xyz_le_of_WingXSec(index)
+        in_back = self._compute_xyz_te_of_WingXSec(index)
+        out_front = self._compute_xyz_le_of_WingXSec(index + 1)
+        out_back = self._compute_xyz_te_of_WingXSec(index + 1)
+
+        diag1 = out_back - in_front
+        diag2 = out_front - in_back
+        cross = np.cross(diag1, diag2)
+
+        zg_local = cross / np.linalg.norm(cross)
+
+        quarter_chord_vector = (
+                                       0.75 * out_front + 0.25 * out_back
+                               ) - (
+                                       0.75 * in_front + 0.25 * in_back
+                               )
+        quarter_chord_vector[0] = 0
+
+        yg_local = quarter_chord_vector / np.linalg.norm(quarter_chord_vector)
+
+        xg_local = np.cross(yg_local, zg_local)
+
+        return xg_local, yg_local, zg_local
+
 
 class WingXSec(AeroSandboxObject):
     """
@@ -319,30 +820,43 @@ class WingXSec(AeroSandboxObject):
     def __init__(self,
                  xyz_le: np.ndarray = np.array([0, 0, 0]),
                  chord: float = 1.,
-                 twist_angle: float = 0,
-                 twist_axis: np.ndarray = np.array([0, 1, 0]),
-                 airfoil: Airfoil = Airfoil("naca0012"),
+                 twist: float = 0,
+                 airfoil: Airfoil = None,
                  control_surface_is_symmetric: bool = True,
                  control_surface_hinge_point: float = 0.75,
                  control_surface_deflection: float = 0.,
+                 twist_angle=None,  # Note: deprecated.
                  ):
         """
         Initialize a new wing cross section.
         Args:
-            xyz_le: xyz-coordinates of the leading edge of the cross section, relative to the wing's datum.
-            chord: Chord of the wing at this cross section
-            twist_angle: Twist angle, in degrees, as defined about the leading edge.
-            twist_axis: The twist axis vector, used if twist_angle != 0.
+            xyz_le: xyz-coordinates of the leading edge of the cross section. In geometry axes.
+            chord: Chord of the wing at this cross section.
+            twist: Twist angle, in degrees, as defined about the leading edge.
+                The twist axis is computed with the following procedure:
+                    * The quarter-chord point of this WingXSec and the following one are identified.
+                    * A line is drawn connecting them, and it is converted into a direction vector.
+                    * That direction vector is projected onto the Y-Z plane.
+                    * That direction vector is now the twist axis.
             airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
-            control_surface_is_symmetric: Is the control surface symmetric? (e.g. True for flaps, False for ailerons.)
+            control_surface_is_symmetric: Is the control surface symmetric? (e.g., True for flaps, False for ailerons.)
             control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
             control_surface_deflection: Control deflection, in degrees. Downwards-positive.
         """
+        if airfoil is None:
+            airfoil = Airfoil("naca0012")
+
+        if twist_angle is not None:
+            import warnings
+            warnings.warn(
+                "DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.",
+                stacklevel=2
+            )
+            twist = twist_angle
 
         self.xyz_le = np.array(xyz_le)
         self.chord = chord
-        self.twist = twist_angle
-        self.twist_axis = np.array(twist_axis)
+        self.twist = twist
         self.airfoil = airfoil
         self.control_surface_is_symmetric = control_surface_is_symmetric
         self.control_surface_hinge_point = control_surface_hinge_point
@@ -351,16 +865,45 @@ class WingXSec(AeroSandboxObject):
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
 
-    def quarter_chord(self) -> np.ndarray:
+    def translate(self,
+                  xyz: np.ndarray
+                  ) -> "WingXSec":
         """
-        Returns the (wing-relative) coordinates of the quarter chord of the cross section.
-        """
-        return 0.75 * self.xyz_le + 0.25 * self.xyz_te()
+        Returns a copy of this WingXSec that has been translated by `xyz`.
 
-    def xyz_te(self) -> np.ndarray:
+        Args:
+            xyz: The amount to translate the WingXSec. Given as a 3-element NumPy vector.
+
+        Returns: A new WingXSec object.
+
         """
-        Returns the (wing-relative) coordinates of the trailing edge of the cross section.
-        """
-        rot = np.rotation_matrix_3D(self.twist * pi / 180, self.twist_axis)
-        xyz_te = self.xyz_le + rot @ np.array([self.chord, 0, 0])
-        return xyz_te
+        new_xsec = copy.copy(self)
+        new_xsec.xyz_le = new_xsec.xyz_le + np.array(xyz)
+        return new_xsec
+
+
+if __name__ == '__main__':
+    wing = Wing(
+        xyz_le=[1, 0, 0],
+        xsecs=[
+            WingXSec(
+                xyz_le=[0, 0, 0],
+                chord=1,
+                airfoil=Airfoil("naca0012"),
+                twist=0,
+            ),
+            WingXSec(
+                xyz_le=[0.5, 1, 0],
+                chord=0.5,
+                airfoil=Airfoil("naca0012"),
+                twist=0,
+            ),
+            WingXSec(
+                xyz_le=[0.7, 1, 0.3],
+                chord=0.3,
+                airfoil=Airfoil("naca0012"),
+                twist=0,
+            )
+        ]
+    )
+    wing.draw()

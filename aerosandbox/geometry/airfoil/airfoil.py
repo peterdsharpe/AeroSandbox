@@ -5,10 +5,10 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, 
     get_kulfan_coordinates, get_file_coordinates
 from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
     default_CM_function
-from scipy.interpolate import interp1d
+from scipy import interpolate
 import matplotlib.pyplot as plt
-from aerosandbox.visualization.plotly import go, px
-from typing import Callable, Union
+from typing import Callable, Union, Any, Dict
+import json
 
 
 class Airfoil(Polygon):
@@ -19,9 +19,10 @@ class Airfoil(Polygon):
     def __init__(self,
                  name: str = "Untitled",
                  coordinates: Union[None, str, np.ndarray] = None,
-                 CL_function: Callable[[float, float, float, float], float] = default_CL_function,
-                 CD_function: Callable[[float, float, float, float], float] = default_CD_function,
-                 CM_function: Callable[[float, float, float, float], float] = default_CM_function,
+                 generate_polars: bool = False,
+                 CL_function: Callable[[float, float, float, float], float] = None,
+                 CD_function: Callable[[float, float, float, float], float] = None,
+                 CM_function: Callable[[float, float, float, float], float] = None,
                  ):
         """
         Creates an Airfoil object.
@@ -63,9 +64,9 @@ class Airfoil(Polygon):
             CL_function: A function that gives the sectional lift coefficient of the airfoil as a function of several
             parameters.
 
-                Must be a callable with the exact syntax:
+                Must be a callable with that takes exactly these parameters as follows:
 
-                >>> def my_function(alpha, Re, mach, deflection)
+                >>> def CL_function(alpha, Re, mach, deflection)
 
                 where:
 
@@ -73,16 +74,17 @@ class Airfoil(Polygon):
 
                     * `Re` is the local Reynolds number
 
-                    * `mach` is the local mach number
+                    * `mach` is the local Mach number
 
-                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees.
+                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees. Following
+                    convention, a positive control surface deflections corresponds to a downwards deflection of a trailing-edge surface.
 
             CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
             several parameters.
 
                 Has the exact same syntax as `CL_function`, see above.
 
-            Cm_function: A function that gives the sectional moment coefficient of the airfoil (about the
+            CM_function: A function that gives the sectional moment coefficient of the airfoil (about the
             quarter-chord) as a function of several parameters.
 
                 Has the exact same syntax as `CL_function`, see above.
@@ -93,34 +95,293 @@ class Airfoil(Polygon):
         self.name = name
 
         ### Handle the coordinates
+        self.coordinates = None
         if coordinates is None:  # If no coordinates are given
             try:  # See if it's a NACA airfoil
-                coordinates = get_NACA_coordinates(name=self.name)
+                self.coordinates = get_NACA_coordinates(name=self.name)
             except:
                 try:  # See if it's in the UIUC airfoil database
-                    coordinates = get_UIUC_coordinates(name=self.name)
+                    self.coordinates = get_UIUC_coordinates(name=self.name)
                 except:
                     pass
-        elif isinstance(coordinates, str):  # If coordinates is a string, assume it's a filepath to a .dat file
-            coordinates = get_file_coordinates(filepath=coordinates)
+        else:
 
-        self.coordinates = coordinates
+            try:  # If coordinates is a string, assume it's a filepath to a .dat file
+                self.coordinates = get_file_coordinates(filepath=coordinates)
+            except (OSError, FileNotFoundError, TypeError, UnicodeDecodeError):
+                try:
+                    shape = coordinates.shape
+                    assert len(shape) == 2
+                    assert shape[0] == 2 or shape[1] == 2
+                    if not shape[1] == 2:
+                        coordinates = np.transpose(shape)
 
-        ### Handle other arguments
-        self.CL_function = CL_function
-        self.CD_function = CD_function
-        self.CM_function = CM_function
+                    self.coordinates = coordinates
+                except AttributeError:
+                    pass
+
+        if self.coordinates is None:
+            import warnings
+            warnings.warn(
+                f"Airfoil {self.name} had no coordinates assigned, and could not parse the `coordinates` input!",
+                stacklevel=2,
+            )
+
+        ### Handle getting default polars
+        if generate_polars:
+            self.generate_polars()
+        else:
+            self.CL_function = default_CL_function
+            self.CD_function = default_CD_function
+            self.CM_function = default_CM_function
+
+        ### Overwrite any default polars with those provided
+        if CL_function is not None:
+            self.CL_function = CL_function
+
+        if CD_function is not None:
+            self.CD_function = CD_function
+
+        if CM_function is not None:
+            self.CM_function = CM_function
 
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
-    def local_camber(self, x_over_c=np.linspace(0, 1, 101)):
+    def generate_polars(self,
+                        alphas=np.linspace(-15, 15, 21),
+                        Res=np.geomspace(1e4, 1e7, 10),
+                        cache_filename: str = None,
+                        xfoil_kwargs: Dict[str, Any] = None,
+                        unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
+                        make_360_deg_model=True
+                        ) -> None:
+        """
+        Generates airfoil polars (CL, CD, CM functions) and self
+
+        Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
+        polars.
+
+        # TODO document parameters
+
+        Returns: None (in-place)
+
+        """
+        if self.coordinates is None:
+            raise ValueError("Cannot generate polars for an airfoil that you don't have the coordinates of!")
+
+        ### Set defaults
+        if xfoil_kwargs is None:
+            xfoil_kwargs = {}
+        if unstructured_interpolated_model_kwargs is None:
+            unstructured_interpolated_model_kwargs = {}
+
+        xfoil_kwargs = {  # See asb.XFoil for documentation on these.
+            "verbose"      : False,
+            "max_iter"     : 20,
+            "xfoil_repanel": True,
+            **xfoil_kwargs
+        }
+
+        unstructured_interpolated_model_kwargs = {  # These were tuned heuristically as defaults!
+            "resampling_interpolator_kwargs": {
+                "degree"   : 0,
+                # "kernel": "linear",
+                "kernel"   : "multiquadric",
+                "epsilon"  : 3,
+                "smoothing": 0.01,
+                # "kernel": "cubic"
+            },
+            **unstructured_interpolated_model_kwargs
+        }
+
+        ### Retrieve XFoil Polar Data from cache, if it exists.
+        data = None
+        if cache_filename is not None:
+            try:
+                with open(cache_filename, "r") as f:
+                    data = {
+                        k: np.array(v)
+                        for k, v in json.load(f).items()
+                    }
+            except FileNotFoundError:
+                pass
+
+        ### Analyze airfoil with XFoil, if needed
+        if data is None:
+
+            from aerosandbox.aerodynamics.aero_2D import XFoil
+
+            def get_run_data(Re):  # Get the data for an XFoil alpha sweep at one specific Re.
+                run_data = XFoil(
+                    airfoil=self,
+                    Re=Re,
+                    **xfoil_kwargs
+                ).alpha(alphas)
+                run_data["Re"] = Re * np.ones_like(run_data["alpha"])
+                return run_data  # Data is a dict where keys are figures of merit [str] and values are 1D ndarrays.
+
+            from tqdm import tqdm
+
+            run_datas = [  # Get a list of dicts, where each dict is the result of an XFoil run at a particular Re.
+                get_run_data(Re)
+                for Re in tqdm(
+                    Res,
+                    desc=f"Running XFoil to generate polars for Airfoil '{self.name}':",
+                )
+            ]
+            data = {  # Merge the dicts into one big database of all runs.
+                k: np.concatenate(
+                    tuple([run_data[k] for run_data in run_datas])
+                )
+                for k in run_datas[0].keys()
+            }
+
+            if cache_filename is not None:  # Cache the accumulated data for later use, if it doesn't already exist.
+                with open(cache_filename, "w+") as f:
+                    json.dump(
+                        {k: v.tolist() for k, v in data.items()},
+                        f
+                    )
+
+        ### Save the raw data as an instance attribute for later use
+        self.xfoil_data = data
+
+        ### Make the interpolators for attached aerodynamics
+        from aerosandbox.modeling import UnstructuredInterpolatedModel
+
+        alpha_resample = np.concatenate([
+            np.array([-180, -150, -120, -90, -60, -30]),
+            alphas[::2],
+            np.array([30, 60, 90, 120, 150, 180])
+        ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
+        Re_resample = np.concatenate([
+            np.array([1e0, 1e1, 1e2, 1e3]),
+            Res,
+            np.array([1e8, 1e9, 1e10, 1e11, 1e12])
+        ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
+
+        x_data = {
+            "alpha": data["alpha"],
+            "ln_Re": np.log(data["Re"]),
+        }
+        x_data_resample = {
+            "alpha": alpha_resample,
+            "ln_Re": np.log(Re_resample)
+        }
+
+        CL_attached_interpolator = UnstructuredInterpolatedModel(
+            x_data=x_data,
+            y_data=data["CL"],
+            x_data_resample=x_data_resample,
+            **unstructured_interpolated_model_kwargs
+        )
+        log10_CD_attached_interpolator = UnstructuredInterpolatedModel(
+            x_data=x_data,
+            y_data=np.log10(data["CD"]),
+            x_data_resample=x_data_resample,
+            **unstructured_interpolated_model_kwargs
+        )
+        CM_attached_interpolator = UnstructuredInterpolatedModel(
+            x_data=x_data,
+            y_data=data["CM"],
+            x_data_resample=x_data_resample,
+            **unstructured_interpolated_model_kwargs
+        )
+
+        ### Determine if separated
+        alpha_stall_positive = np.max(data["alpha"])  # Across all Re
+        alpha_stall_negative = np.min(data["alpha"])  # Across all Re
+
+        def separation_parameter(alpha, Re=0):
+            """
+            Positive if separated, negative if attached.
+
+            This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
+            ~90% separated, and a value of -1 means the flow is ~90% attached.
+            """
+            return 0.5 * np.softmax(
+                alpha - alpha_stall_positive,
+                alpha_stall_negative - alpha
+            )
+
+        ### Make the interpolators for separated aerodynamics
+        from aerosandbox.aerodynamics.aero_2D.airfoil_polar_functions import airfoil_coefficients_post_stall
+
+        CL_if_separated, CD_if_separated, CM_if_separated = airfoil_coefficients_post_stall(
+            airfoil=self,
+            alpha=alpha_resample
+        )
+        # if not make_360_deg_model:
+        #     CL_if_separated =
+
+        CD_if_separated = CD_if_separated + np.median(data["CD"])
+        # The line above effectively ensures that separated CD will never be less than attached CD. Not exactly, but generally close. A good heuristic.
+
+        CL_separated_interpolator = UnstructuredInterpolatedModel(
+            x_data=alpha_resample,
+            y_data=CL_if_separated
+        )
+        log10_CD_separated_interpolator = UnstructuredInterpolatedModel(
+            x_data=alpha_resample,
+            y_data=np.log10(CD_if_separated)
+        )
+        CM_separated_interpolator = UnstructuredInterpolatedModel(
+            x_data=alpha_resample,
+            y_data=CM_if_separated
+        )
+
+        def CL_function(alpha, Re, mach=0, deflection=0):
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
+            CL_attached = CL_attached_interpolator({
+                "alpha": alpha,
+                "ln_Re": np.log(Re),
+            })
+            CL_separated = CL_separated_interpolator(alpha)
+            return np.blend(
+                separation_parameter(alpha, Re),
+                CL_separated,
+                CL_attached
+            )
+
+        def CD_function(alpha, Re, mach=0, deflection=0):
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
+            log10_CD_attached = log10_CD_attached_interpolator({
+                "alpha": alpha,
+                "ln_Re": np.log(Re),
+            })
+            log10_CD_separated = log10_CD_separated_interpolator(alpha)
+            return 10 ** np.blend(
+                separation_parameter(alpha, Re),
+                log10_CD_separated,
+                log10_CD_attached,
+            )
+
+        def CM_function(alpha, Re, mach=0, deflection=0):
+            alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
+            CM_attached = CM_attached_interpolator({
+                "alpha": alpha,
+                "ln_Re": np.log(Re),
+            })
+            CM_separated = CM_separated_interpolator(alpha)
+            return np.blend(
+                separation_parameter(alpha, Re),
+                CM_separated,
+                CM_attached
+            )
+
+        self.CL_function = CL_function
+        self.CD_function = CD_function
+        self.CM_function = CM_function
+
+    def local_camber(self,
+                     x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
+                     ) -> Union[float, np.ndarray]:
         """
         Returns the local camber of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
         :return: Local camber of the airfoil (y/c) [1D array].
         """
-        # TODO casadify?
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
 
@@ -137,13 +398,14 @@ class Airfoil(Polygon):
 
         return (upper_interpolated + lower_interpolated) / 2
 
-    def local_thickness(self, x_over_c=np.linspace(0, 1, 101)):
+    def local_thickness(self,
+                        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
+                        ) -> Union[float, np.ndarray]:
         """
         Returns the local thickness of the airfoil at a given point or points.
         :param x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
         :return: Local thickness of the airfoil (y/c) [1D array].
         """
-        # TODO casadify?
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
 
@@ -160,10 +422,38 @@ class Airfoil(Polygon):
 
         return upper_interpolated - lower_interpolated
 
+    def max_camber(self,
+                   x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)
+                   ) -> float:
+        """
+        Returns the maximum camber of the airfoil.
+
+        Args:
+            x_over_c_sample: Where should the airfoil be sampled to determine the max camber?
+
+        Returns: The maximum thickness, as a fraction of chord.
+
+        """
+        return np.max(self.local_camber(x_over_c=x_over_c_sample))
+
+    def max_thickness(self,
+                      x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)
+                      ) -> float:
+        """
+        Returns the maximum thickness of the airfoil.
+
+        Args:
+            x_over_c_sample: Where should the airfoil be sampled to determine the max thickness?
+
+        Returns: The maximum thickness, as a fraction of chord.
+
+        """
+        return np.max(self.local_thickness(x_over_c=x_over_c_sample))
+
     def draw(self,
-             draw_mcl: bool = True,
-             backend: str = "plotly",
-             show: bool = True
+             draw_mcl=True,
+             backend="matplotlib",
+             show=True
              ):
         """
         Draw the airfoil object.
@@ -176,7 +466,23 @@ class Airfoil(Polygon):
         if draw_mcl:
             x_mcl = np.linspace(np.min(x), np.max(x), len(x))
             y_mcl = self.local_camber(x_mcl)
-        if backend == "plotly":
+
+        if backend == "matplotlib":
+            color = '#280887'
+            plt.plot(x, y, ".-", zorder=11, color=color)
+            plt.fill(x, y, zorder=10, color=color, alpha=0.2)
+            if draw_mcl:
+                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
+            plt.axis("equal")
+            plt.xlabel(r"$x/c$")
+            plt.ylabel(r"$y/c$")
+            plt.title("%s Airfoil" % self.name)
+            plt.tight_layout()
+            if show:
+                plt.show()
+
+        elif backend == "plotly":
+            from aerosandbox.visualization.plotly import go
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
@@ -212,19 +518,6 @@ class Airfoil(Polygon):
                 fig.show()
             else:
                 return fig
-        elif backend == "matplotlib":
-            color = '#280887'
-            plt.plot(x, y, ".-", zorder=11, color=color)
-            plt.fill(x, y, zorder=10, color=color, alpha=0.2)
-            if draw_mcl:
-                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
-            plt.axis("equal")
-            plt.xlabel(r"$x/c$")
-            plt.ylabel(r"$y/c$")
-            plt.title("%s Airfoil" % self.name)
-            plt.tight_layout()
-            if show:
-                plt.show()
 
     def LE_index(self) -> int:
         """
@@ -262,7 +555,7 @@ class Airfoil(Polygon):
 
     def TE_angle(self) -> float:
         """
-        Returns the trailing edge angle of the airfoil, in degrees
+        Returns the trailing edge angle of the airfoil, in degrees.
         """
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
@@ -271,6 +564,11 @@ class Airfoil(Polygon):
             upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
             upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
         ))
+
+    # def LE_radius(self) -> float:
+    #     """
+    #     Gives the approximate leading edge radius of the airfoil, in chord-normalized units.
+    #     """ # TODO finish me
 
     def repanel(self,
                 n_points_per_side: int = 100,
@@ -317,15 +615,13 @@ class Airfoil(Polygon):
             raise ValueError(
                 "This airfoil has a duplicated point (i.e. two adjacent points with the same (x, y) coordinates), so you can't repanel it!")
 
-        x = interp1d(
+        x = interpolate.PchipInterpolator(
             distances_from_TE_normalized,
             self.x(),
-            kind="cubic",
         )(s)
-        y = interp1d(
+        y = interpolate.PchipInterpolator(
             distances_from_TE_normalized,
             self.y(),
-            kind="cubic",
         )(s)
 
         return Airfoil(
@@ -459,43 +755,61 @@ class Airfoil(Polygon):
     #     pass  # TODO finish me
 
     def write_dat(self,
-                  filepath: str
-                  ):
+                  filepath: str = None,
+                  include_name: bool = True,
+                  ) -> str:
         """
         Writes a .dat file corresponding to this airfoil to a filepath.
 
         Args:
             filepath: filepath (including the filename and .dat extension) [string]
+                If None, this function returns the .dat file as a string.
+
+            include_name: Should the name be included in the .dat file? (In a standard *.dat file, it usually is.)
 
         Returns: None
 
         """
-        with open(filepath, "w+") as f:
-            f.writelines(
-                [self.name + "\n"] +
-                [f"%f %f\n" % tuple(coordinate) for coordinate in self.coordinates]
-            )
+        contents = []
+
+        if include_name:
+            contents += [self.name]
+
+        contents += ["%f %f" % tuple(coordinate) for coordinate in self.coordinates]
+
+        string = "\n".join(contents)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
 
     def write_sldcrv(self,
-                     filepath: str
+                     filepath: str = None
                      ):
         """
         Writes a .sldcrv (SolidWorks curve) file corresponding to this airfoil to a filepath.
+
         Args:
             filepath: A filepath (including the filename and .sldcrv extension) [string]
+                if None, this function returns the .sldcrv file as a string.
 
         Returns: None
 
         """
-        with open(filepath, "w+") as f:
-            for i, coordinate in enumerate(self.coordinates):
-                f.write(
-                    f"{coordinate[0]} {coordinate[1]} 0"
-                )
-                if i < self.n_points() - 1:
-                    f.write(
-                        f"\n"
-                    )
+        string = "\n".join(
+            [
+                "%f %f 0" % tuple(coordinate)
+                for coordinate in self.coordinates
+            ]
+        )
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
 
     # def get_xfoil_data(self,
     #                    a_start=-6,  # type: float
@@ -641,7 +955,7 @@ class Airfoil(Polygon):
     #         )
     #     return data_present
     #
-    # def plot_xfoil_data_contours(self):  # TODO add docstring
+    # def plot_xfoil_data_contours(self):
     #     self.has_xfoil_data()  # Ensure data is present.
     #     from matplotlib import colors
     #

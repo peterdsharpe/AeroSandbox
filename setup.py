@@ -54,14 +54,23 @@ setup(
     packages=find_packages(exclude=['docs', 'media', 'examples', 'studies']),
     python_requires='>=3.6',
     install_requires=[
-        'numpy >= 1',
-        'scipy >= 1',
+        'numpy >= 1.20.0',
+        'scipy >= 1.7.0',
         'casadi >= 3.5.5',
-        'plotly >= 4',
         'pandas >= 1',
         'matplotlib >= 3',
-        'seaborn >= 0.10',
+        'seaborn >= 0.11',
+        'tqdm >= 4'
     ],
+    extras_require={
+        "full": [
+            'plotly >= 5',
+            'pyvista >= 0.31',
+            'ipyvtklink >= 0.2',
+            'trimesh >= 3',
+            'sympy >= 1'
+        ]
+    },
     include_package_data=True,
     package_data={
         'Airfoil database': ['*.dat'],  # include all airfoil *.dat files

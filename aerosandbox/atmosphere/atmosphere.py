@@ -1,8 +1,5 @@
 from aerosandbox.common import AeroSandboxObject
 import aerosandbox.numpy as np
-import pandas as pd
-from pathlib import Path
-from aerosandbox.modeling.interpolation import InterpolatedModel
 from aerosandbox.atmosphere._isa_atmo_functions import pressure_isa, temperature_isa
 from aerosandbox.atmosphere._diff_atmo_functions import pressure_differentiable, temperature_differentiable
 
@@ -12,7 +9,6 @@ molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
 gas_constant_air = gas_constant_universal / molecular_mass_air  # J/(kg*K); gas constant of air
 g = 9.81  # m/s^2, gravitational acceleration on earth
 effective_collision_diameter = 0.365e-9  # m, effective collision diameter of an air molecule
-ratio_of_specific_heats = 1.4  # unitless, ratio of specific heats of air
 
 
 ### Define the Atmosphere class
@@ -21,7 +17,6 @@ class Atmosphere(AeroSandboxObject):
     All models here are smoothed fits to the 1976 COESA model;
     see AeroSandbox\studies\Atmosphere Fitting for details.
 
-    All models considered valid from 0 to 40 km.
     """
 
     def __init__(self,
@@ -83,11 +78,11 @@ class Atmosphere(AeroSandboxObject):
         Returns the speed of sound, in m/s.
         """
         temperature = self.temperature()
-        return (ratio_of_specific_heats * gas_constant_air * temperature) ** 0.5
+        return (self.ratio_of_specific_heats() * gas_constant_air * temperature) ** 0.5
 
     def dynamic_viscosity(self):
         """
-        Returns the dynamic viscosity, in kg/(m*s).
+        Returns the dynamic viscosity (mu), in kg/(m*s).
 
         Based on Sutherland's Law, citing `https://www.cfd-online.com/Wiki/Sutherland's_law`.
 
@@ -108,6 +103,17 @@ class Atmosphere(AeroSandboxObject):
 
         return mu
 
+    def kinematic_viscosity(self):
+        """
+        Returns the kinematic viscosity (nu), in m^2/s.
+
+        Definitional.
+        """
+        return self.dynamic_viscosity() / self.density()
+
+    def ratio_of_specific_heats(self):
+        return 1.4 # TODO model temperature variation
+
     # def thermal_velocity(self):
     #     """
     #     Returns the thermal velocity (mean particle speed)
@@ -115,11 +121,24 @@ class Atmosphere(AeroSandboxObject):
     #
     #     """
     #
-    # def mean_free_path(self): # TODO finish implementing methods for our hypersonics friends
-    #     """Returns the mean free path of an air molecule, in meters."""
-    #     return 1/(
-    #         2 ** 0.5 * np.pi *
-    #     )
+    def mean_free_path(self):
+        """
+        Returns the mean free path of an air molecule, in meters.
+
+        To find the collision radius, assumes "a hard-sphere gas that has the same viscosity as the actual gas being considered".
+
+        From Vincenti, W. G. and Kruger, C. H. (1965). Introduction to physical gas dynamics. Krieger Publishing Company. p. 414.
+
+        """
+        return self.dynamic_viscosity() / self.pressure() * np.sqrt(
+            np.pi * gas_constant_universal * self.temperature() / (2 * molecular_mass_air)
+        )
+
+    def knudsen(self, length):
+        """
+        Computes the Knudsen number for a given length.
+        """
+        return self.mean_free_path() / length
 
 
 if __name__ == "__main__":

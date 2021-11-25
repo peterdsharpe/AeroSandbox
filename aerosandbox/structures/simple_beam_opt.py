@@ -162,10 +162,6 @@ if __name__ == '__main__':
         sol = opti.debug
 
     import matplotlib.pyplot as plt
-    import matplotlib.style as style
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import dash
     import seaborn as sns
 
     sns.set(font_scale=1)
@@ -218,7 +214,6 @@ if __name__ == '__main__':
     plt.suptitle("Beam Modeling (Total Spar Mass: %.2f kg)" % (2 * sol.value(mass)))
 
     plt.subplots_adjust(hspace=0.4)
-    plt.savefig("C:/Users/User/Downloads/beam.png")
 
     # plt.tight_layout()
     # plt.legend()

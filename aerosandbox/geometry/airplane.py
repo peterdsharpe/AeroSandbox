@@ -1,8 +1,10 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List
-from aerosandbox.visualization.plotly_Figure3D import Figure3D
+from typing import List, Union
 from numpy import pi
+from textwrap import dedent
+from pathlib import Path
+import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 
 class Airplane(AeroSandboxObject):
@@ -22,19 +24,19 @@ class Airplane(AeroSandboxObject):
         ### Initialize
         self.name = name
 
-        self.xyz_ref = xyz_ref
+        self.xyz_ref = np.array(xyz_ref)
 
         ## Add the wing objects
         if wings is not None:
             self.wings = wings
         else:
-            self.wings = []
+            self.wings: List['Wing'] = []
 
         ## Add the fuselage objects
         if fuselages is not None:
             self.fuselages = fuselages
         else:
-            self.fuselages = []
+            self.fuselages: List['Fuselage'] = []
 
         ## Assign reference values
         try:
@@ -58,84 +60,131 @@ class Airplane(AeroSandboxObject):
                f"({n_wings} {'wing' if n_wings == 1 else 'wings'}, " \
                f"{n_fuselages} {'fuselage' if n_fuselages == 1 else 'fuselages'})"
 
+    def mesh_body(self,
+                  method="quad",
+                  thin_wings=False,
+                  stack_meshes=True,
+                  ):
+        """
+        Returns a surface mesh of the Airplane, in (points, faces) format. For reference on this format,
+        see the documentation in `aerosandbox.geometry.mesh_utilities`.
+
+        Args:
+
+            method:
+
+            thin_wings: Controls whether wings should be meshed as thin surfaces, rather than full 3D bodies.
+
+            stack_meshes: Controls whether the meshes should be merged into a single mesh or not.
+
+                * If True, returns a (points, faces) tuple in standard mesh format.
+
+                * If False, returns a list of (points, faces) tuples in standard mesh format.
+
+        Returns:
+
+        """
+        if thin_wings:
+            wing_meshes = [
+                wing.mesh_thin_surface(
+                    method=method,
+                )
+                for wing in self.wings
+            ]
+        else:
+            wing_meshes = [
+                wing.mesh_body(
+                    method=method,
+                )
+                for wing in self.wings
+            ]
+
+        fuse_meshes = [
+            fuse.mesh_body(
+                method=method
+            )
+            for fuse in self.fuselages
+        ]
+
+        meshes = wing_meshes + fuse_meshes
+
+        if stack_meshes:
+            points, faces = mesh_utils.stack_meshes(*meshes)
+            return points, faces
+        else:
+            return meshes
+
     def draw(self,
-             show=True,  # type: bool
-             colorscale="mint",  # type: str
-             colorbar_title="Component ID",
-             draw_quarter_chord=True,  # type: bool
+             backend: str = "pyvista",
+             thin_wings: bool = False,
+             show: bool = True,
+             show_kwargs=None,
              ):
         """
-        Draws the airplane using a Plotly interface.
-        :param show: Do you want to show the figure? [boolean]
-        :param colorscale: Which colorscale do you want to use? ("viridis", "plasma", mint", etc.)
-        :param draw_quarter_chord: Do you want to draw the quarter-chord? [boolean]
-        :return: A plotly figure object [go.Figure]
+
+        Args:
+
+            backend: One of:
+                * "plotly" for a Plot.ly backend
+                * "pyvista" for a PyVista backend
+                * "trimesh" for a trimesh backend
+
+            thin_wings: A boolean that determines whether to draw the full airplane (i.e. thickened, 3D bodies), or to use a
+            thin-surface representation for any Wing objects.
+
+            show: Should we show the visualization, or just return it?
+
+        Returns: The plotted object, in its associated backend format. Also displays the object if `show` is True.
+
         """
-        fig = Figure3D()
+        if show_kwargs is None:
+            show_kwargs = {}
 
-        # Wings
-        for wing_id, wing in enumerate(self.wings):
-            for inner_xsec, outer_xsec in zip(wing.xsecs[:-1], wing.xsecs[1:]):
+        if backend == "plotly":
 
-                le_inner = inner_xsec.xyz_le + wing.xyz_le
-                te_inner = inner_xsec.xyz_te() + wing.xyz_le
-                le_outer = outer_xsec.xyz_le + wing.xyz_le
-                te_outer = outer_xsec.xyz_te() + wing.xyz_le
+            points, faces = self.mesh_body(method="quad", thin_wings=thin_wings)
 
-                fig.add_quad(points=[
-                    le_inner,
-                    le_outer,
-                    te_outer,
-                    te_inner
-                ],
-                    intensity=wing_id,
-                    mirror=wing.symmetric,
-                )
-                if draw_quarter_chord:
-                    fig.add_line(  # draw the quarter-chord line
-                        points=[
-                            0.75 * le_inner + 0.25 * te_inner,
-                            0.75 * le_outer + 0.25 * te_outer,
-                        ],
-                        mirror=wing.symmetric
-                    )
+            from aerosandbox.visualization.plotly_Figure3D import Figure3D
+            fig = Figure3D()
+            for f in faces:
+                fig.add_quad((
+                    points[f[0]],
+                    points[f[1]],
+                    points[f[2]],
+                    points[f[3]],
+                ), outline=True)
+                show_kwargs = {
+                    "show": show,
+                    **show_kwargs
+                }
+            return fig.draw(**show_kwargs)
+        elif backend == "pyvista":
 
-        # Fuselages
-        for fuse_id, fuse in enumerate(self.fuselages):
+            points, faces = self.mesh_body(method="quad")
 
-            for front_xsec, back_xsec in zip(fuse.xsecs[:-1], fuse.xsecs[1:]):
-                r_front = front_xsec.radius
-                r_back = back_xsec.radius
-                points_front = np.zeros((fuse.circumferential_panels, 3))
-                points_rear = np.zeros((fuse.circumferential_panels, 3))
-                for point_index in range(fuse.circumferential_panels):
-                    rot = np.rotation_matrix_3D(
-                        2 * pi * point_index / fuse.circumferential_panels,
-                        [1, 0, 0],
-                        _axis_already_normalized=True
-                    )
-                    points_front[point_index, :] = rot @ np.array([0, 0, r_front])
-                    points_rear[point_index, :] = rot @ np.array([0, 0, r_back])
-                points_front = points_front + np.array(fuse.xyz_le).reshape(-1) + np.array(front_xsec.xyz_c).reshape(-1)
-                points_rear = points_rear + np.array(fuse.xyz_le).reshape(-1) + np.array(back_xsec.xyz_c).reshape(-1)
+            import pyvista as pv
+            fig = pv.PolyData(
+                *mesh_utils.convert_mesh_to_polydata_format(points, faces)
+            )
+            show_kwargs = {
+                "show_edges": True,
+                "show_grid" : True,
+                **show_kwargs,
+            }
+            if show:
+                fig.plot(**show_kwargs)
+            return fig
+        elif backend == "trimesh":
 
-                for point_index in range(fuse.circumferential_panels):
+            points, faces = self.mesh_body(method="tri")
 
-                    fig.add_quad(points=[
-                        points_front[(point_index) % fuse.circumferential_panels, :],
-                        points_front[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_rear[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_rear[(point_index) % fuse.circumferential_panels, :],
-                    ],
-                        intensity=fuse_id,
-                        mirror=fuse.symmetric,
-                    )
-
-        return fig.draw(
-            show=show,
-            colorscale=colorscale,
-            colorbar_title=colorbar_title,
-        )
+            import trimesh as tri
+            fig = tri.Trimesh(points, faces)
+            if show:
+                fig.show(**show_kwargs)
+            return fig
+        else:
+            raise ValueError("Bad value of `backend`!")
 
     def is_entirely_symmetric(self):
         """
@@ -190,3 +239,104 @@ class Airplane(AeroSandboxObject):
         aerodynamic_center = sum(wing_AC_area_products) / sum(wing_areas)
 
         return aerodynamic_center
+
+    def write_avl(self,
+                  filepath: Union[Path, str] = None,
+                  spanwise_panel_resolution: int = 12,
+                  chordwise_panel_resolution: int = 12,
+                  fuse_panel_resolution: int = 24,
+                  ) -> str:
+        """
+        Writes a .avl file corresponding to this airplane to a filepath.
+
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
+        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+
+        Args:
+            filepath: filepath (including the filename and .avl extension) [string]
+                If None, this function returns the .avl file as a string.
+
+        Returns: None
+
+        """
+        filepath = Path(filepath)
+
+        def clean(s):
+            """
+            Cleans up a multi-line string.
+            """
+            # return dedent(s)
+            return "\n".join([line.strip() for line in s.split("\n")])
+
+        string = ""
+
+        string += clean(f"""\
+        {self.name}
+        #Mach
+        0
+        #IYsym   IZsym   Zsym
+         0       0       0.0
+        #Sref    Cref    Bref
+        {self.s_ref} {self.c_ref} {self.b_ref}
+        #Xref    Yref    Zref
+        {self.xyz_ref[0]} {self.xyz_ref[1]} {self.xyz_ref[2]}
+        # CDp
+        0
+        """)
+
+        for wing in self.wings:
+            symmetry_line = "YDUPLICATE\n0" if wing.symmetric else ""
+
+            string += clean(f"""\
+            #{"=" * 50}
+            SURFACE
+            {wing.name}
+            #Nchordwise  Cspace   Nspanwise   Sspace
+            {chordwise_panel_resolution}   1.0   {spanwise_panel_resolution}   1.0
+            #
+            {symmetry_line}
+            #
+            ANGLE
+            0
+            """)
+
+            for xsec in wing.xsecs:
+
+                string += clean(f"""\
+                #{"-" * 50}
+                SECTION
+                #Xle    Yle    Zle     Chord   Ainc
+                {xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}
+                
+                AIRFOIL
+                {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
+                
+                #Cname   Cgain  Xhinge  HingeVec     SgnDup # TODO
+                #CONTROL
+                #csurf     1.0   0.75    0.0 0.0 0.0   1.0
+                
+                CLAF
+                {1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt
+                """)
+
+        for i, fuse in enumerate(self.fuselages):
+            fuse_filepath = Path(str(filepath) + f".fuse{i}")
+            fuse.write_avl_bfile(
+                filepath=fuse_filepath
+            )
+            string += clean(f"""\
+            #{"=" * 50}
+            BODY
+            {fuse.name}
+            {fuse_panel_resolution} 1
+            
+            BFIL
+            {fuse_filepath}
+            
+            """)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string

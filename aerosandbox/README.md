@@ -16,17 +16,17 @@ There's a big world in here filled with functions, classes, analyses, and more -
 
 These are the two key pieces of AeroSandbox to understand - once you get these, you're 90% of the way there.
 
-* `/optimization/`: This folder contains only one thing, and it's the single most important class in AeroSandbox: the `Opti` stack. The `Opti` class is an object-oriented way to formulate and solve an optimization problem, with syntax specifically aimed at engineering design. 
+* `/optimization/`: This folder contains only one thing, and it's the single most important class in AeroSandbox: the `Opti` stack. The `Opti` class is an object-oriented way to formulate and solve an optimization problem, with syntax specifically aimed at engineering design.
 
-	One of the core principles of AeroSandbox is that *everything* is an optimization problem. Even for problems that look like pure analysis ("I already have a design, how well does it perform?"), there's a beautiful duality between optimization and analysis through something called "Simultaneous Analysis and Design" - more on this later. Because of this, the `Opti` stack is truly ubiquitous throughout AeroSandbox.
+  One of the core principles of AeroSandbox is that *everything* is an optimization problem. Even for problems that look like pure analysis ("I already have a design, how well does it perform?"), there's a beautiful duality between optimization and analysis through something called "Simultaneous Analysis and Design" - more on this later. Because of this, the `Opti` stack is truly ubiquitous throughout AeroSandbox.
 
-	Extensive documentation with examples is provided in `aerosandbox.optimization.opti` - please read this!
+  Extensive documentation with examples is provided in `aerosandbox.optimization.opti` - please read this!
 
-* `/numpy/`: One of the coolest things about the `Opti` stack is that it's fast - really, **really** fast. You can solve nonlinear, nonconvex optimization problems with thousands of variables in mere seconds on a laptop, thanks to automatic differentiation (AD) provided by CasADi and modern optimization methods via IPOPT. 
+* `/numpy/`: One of the coolest things about the `Opti` stack is that it's fast - really, **really** fast. You can solve nonlinear, nonconvex optimization problems with thousands of variables in mere seconds on a laptop, thanks to automatic differentiation (AD) provided by CasADi and modern optimization methods via IPOPT.
 
-	In order for AD to work, we need to be able to make a list (more precisely, a directed graph) of each mathematical operation (think +, -, *, /, **, log(), fabs(), etc.) that's applied throughout our optimization formulation (some call this list a "trace" in the literature). This means we can't just use NumPy out of the box like we'd like to, because some of its functions break our trace.
+  In order for AD to work, we need to be able to make a list (more precisely, a directed graph) of each mathematical operation (think `+`, `-`, `*`, `/`, `**`, `log()`, `fabs()`, etc.) that's applied throughout our optimization formulation (some call this list a "trace" in the literature). This means we can't just use NumPy out of the box like we'd like to, because some of its functions break our trace.
 
-	Instead, we need to use a custom math library, which sounds scary at first. However, the AeroSandbox development team has tried to make this as seamless to you as possible - by writing our own NumPy with identical syntax! Here's how this works:
+  Instead, we need to use a custom math library, which sounds scary at first. However, the AeroSandbox development team has tried to make this as seamless to you as possible - by writing our own NumPy with identical syntax! Here's how this works:
 
 	* `aerosandbox.numpy` imports the entirety of NumPy.
 	* For NumPy functions that break our AD trace (e.g. `np.sum()`), we've rewritten our own versions of them. This means:
@@ -39,13 +39,13 @@ Before continuing, I'd recommend practicing a bit using the `Opti()` stack and `
 
 ### Modeling Tools
 
-* `/geometry/`: The main goal of AeroSandbox is to make engineering design optimization more harmonious. Engineering design can look like a lot of things depending on what you're trying to design - airplanes, cars, bridges, et cetera. 
+* `/geometry/`: The main goal of AeroSandbox is to make engineering design optimization more harmonious. Engineering design can look like a lot of things depending on what you're trying to design - airplanes, cars, bridges, et cetera.
 
-	However, all of these objects have one thing in common - geometry! They're all *physical* objects that we're trying to optimize the shape of - remember that **engineering design is the process of finding an optimal mapping from an object's function to that object's form** (in the words of my excellent advisor, Prof. John Hansman).
+  However, all of these objects have one thing in common - geometry! They're all *physical* objects that we're trying to optimize the shape of - remember that **engineering design is the process of finding an optimal mapping from an object's function to that object's form** (in the words of my excellent advisor, Prof. John Hansman).
 
-	The `geometry` folder therefore is a self-contained object-oriented framework for representing the geometry of engineered systems in Python. Right now, it's primarily used for aircraft - you can build a nested data structure all the way from an entire aircraft down to each point that defines the shape of an individual airfoil. Once you have that data structure, you can do all sorts of useful things with - output it to various filetypes, draw it in an interactive 3D window so that you can see it, and pass it to all kinds of analysis tools.
+  The `geometry` folder therefore is a self-contained object-oriented framework for representing the geometry of engineered systems in Python. Right now, it's primarily used for aircraft - you can build a nested data structure all the way from an entire aircraft down to each point that defines the shape of an individual airfoil. Once you have that data structure, you can do all sorts of useful things with - output it to various filetypes, draw it in an interactive 3D window so that you can see it, and pass it to all kinds of analysis tools.
 
-	In the future, we'll hopefully generalize this `geometry` stack with more general representations (`Polygon`, `Polyhedron`, etc.) to represent the geometry of arbitrary types of engineered systems (not just aircraft).
+  In the future, we'll hopefully generalize this `geometry` stack with more general representations (`Polygon`, `Polyhedron`, etc.) to represent the geometry of arbitrary types of engineered systems (not just aircraft).
 
 * `/modeling/` is all about one thing - making surrogate models (which is also called "curve fitting" if we're being honest or "machine learning" if we're trying to convince someone to give us money). Jokes aside, the point of `modeling` is to make simple, continuous, automatic-differentiable models based on either:
 
@@ -58,17 +58,17 @@ Before continuing, I'd recommend practicing a bit using the `Opti()` stack and `
 
 We also have a collections of aircraft analysis tools categorized by discipline:
 
-* `aerodynamics`: Contains analysis tools related to aerodynamics both in 2D and 3D.
-* `propulsion`: Contains analysis tools related to propulsion. Work in progress.
-* `structures`: Contains analysis tools related to structures, like beam models.
-* `atmosphere`: Contains a few models of standard atmospheres, so that you can get atmospheric properties at different altitudes.
-* `library`: Contains tons of simple surrogate models for a wide variety of relevant phenomena. Some models are physics-based, others are empirical fits - all are documented in their docstring.
+* `/aerodynamics/`: Contains analysis tools related to aerodynamics both in 2D and 3D.
+* `/propulsion/`: Contains analysis tools related to propulsion. Work in progress.
+* `/structures/`: Contains analysis tools related to structures, like beam models.
+* `/atmosphere/`: Contains a few models of standard atmospheres, so that you can get atmospheric properties at different altitudes.
+* `/library/`: Contains tons of simple surrogate models for a wide variety of relevant phenomena. Some models are physics-based, others are empirical fits - all are documented in their docstring.
 
 ### Miscellaneous Tools
 
 You can ignore all of these folders.
 
-* `tools`: Miscellaneous tools.
-* `visualization`: Tools for making prettier plots.
+* `/tools/`: Miscellaneous tools that do not interact with the rest of AeroSandbox - just along for the ride.
+* `/visualization/`: Tools for making prettier plots.
 
 * `in_progress`: Here be dragons, beware! But seriously, this is work in progress, ignore it.

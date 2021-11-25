@@ -29,7 +29,7 @@ lift_force = 9.81 * mass
 # ])
 beam.add_point_load(
     # location=location,
-    location=span / 2 * (2/3) + 1,
+    location=span / 2 * (2 / 3) + 1,
     force=-lift_force / 3
 )
 
@@ -74,8 +74,8 @@ opti.set_initial(sol.value_variables())
 beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
 import matplotlib.pyplot as plt
-import matplotlib.style as style
 import seaborn as sns
+
 sns.set(font_scale=1)
 beam_sol.draw_bending(for_print=True, show=False)
 plt.savefig("C:/Users/User/Downloads/beam_example.png")

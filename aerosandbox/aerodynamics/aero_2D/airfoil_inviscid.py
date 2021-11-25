@@ -1,12 +1,10 @@
 from aerosandbox.common import *
-from aerosandbox import Opti
 from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
 import aerosandbox.numpy as np
 from typing import Union, List
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 class AirfoilInviscid(ImplicitAnalysis):
@@ -201,8 +199,6 @@ class AirfoilInviscid(ImplicitAnalysis):
         for airfoil in self.airfoils:
             plt.fill(airfoil.x(), airfoil.y(), "k", linewidth=0, zorder=4)
 
-        from palettable.colorbrewer.diverging import RdBu_4 as colormap
-
         plt.streamplot(
             x,
             y,
@@ -211,7 +207,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             color=speed,
             density=2.5,
             arrowsize=0,
-            cmap=colormap.mpl_colormap,
+            cmap=plt.get_cmap('coolwarm_r'),
         )
         CB = plt.colorbar(
             orientation="horizontal",
@@ -219,12 +215,12 @@ class AirfoilInviscid(ImplicitAnalysis):
             aspect=40,
         )
         CB.set_label(r"Relative Airspeed ($U/U_\infty$)")
-        plt.clim(0.4, 1.6)
+        plt.clim(0.6, 1.4)
 
         plt.gca().set_aspect('equal', adjustable='box')
         plt.xlabel(r"$x/c$")
         plt.ylabel(r"$y/c$")
-        plt.title(rf"Invisicid Airfoil: Flow Field")
+        plt.title(rf"Inviscid Airfoil: Flow Field")
         plt.tight_layout()
         if show:
             plt.show()
@@ -267,6 +263,8 @@ if __name__ == '__main__':
     )
     a.draw_streamlines()
     a.draw_cp()
+
+    from aerosandbox import Opti
 
     opti2 = Opti()
     b = AirfoilInviscid(
