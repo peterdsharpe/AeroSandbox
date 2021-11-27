@@ -135,31 +135,31 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
                 }
         """
         ### Shorthand everything so we're not constantly "self."-ing:
-        u = self.u
-        v = self.v
-        w = self.w
+        u = self.u_b
+        v = self.v_b
+        w = self.w_b
         phi = self.phi
         theta = self.theta
         psi = self.psi
         p = self.p
         q = self.q
         r = self.r
-        X = self.X
-        Y = self.Y
-        Z = self.Z
-        L = self.L
-        M = self.M
-        N = self.N
-        mass = self.mass
-        Ixx = self.Ixx
-        Iyy = self.Iyy
-        Izz = self.Izz
-        Ixy = self.Ixy
-        Iyz = self.Iyz
-        Ixz = self.Ixz
-        hx = self.hx
-        hy = self.hy
-        hz = self.hz
+        X = self.Fx_b
+        Y = self.Fy_b
+        Z = self.Fz_b
+        L = self.Mx_b
+        M = self.My_b
+        N = self.Mz_b
+        mass = self.mass_props.mass
+        Ixx = self.mass_props.Ixx
+        Iyy = self.mass_props.Iyy
+        Izz = self.mass_props.Izz
+        Ixy = self.mass_props.Ixy
+        Iyz = self.mass_props.Iyz
+        Ixz = self.mass_props.Ixz
+        hx = self.hx_b
+        hy = self.hy_b
+        hz = self.hz_b
 
         ### Trig Shorthands
         def sincos(x):
