@@ -419,9 +419,9 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
             from_axes=axes,
             to_axes="body"
         )
-        self.X = self.X + Fx_b
-        self.Y = self.Y + Fy_b
-        self.Z = self.Z + Fz_b
+        self.Fx_b = self.Fx_b + Fx_b
+        self.Fy_b = self.Fy_b + Fy_b
+        self.Fz_b = self.Fz_b + Fz_b
 
     def add_moment(self,
                    Mx: Union[np.ndarray, float] = 0,
@@ -436,9 +436,9 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
             from_axes=axes,
             to_axes="body"
         )
-        self.L = self.L + Mx_b
-        self.M = self.M + My_b
-        self.N = self.N + Mz_b
+        self.Mx_b = self.Mx_b + Mx_b
+        self.My_b = self.My_b + My_b
+        self.Mz_b = self.Mz_b + Mz_b
 
     @property
     def speed(self):
