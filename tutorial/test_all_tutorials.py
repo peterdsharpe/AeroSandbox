@@ -53,7 +53,7 @@ def run_python_file(path: Path) -> None:
     """
     sys.path.append(str(path.parent))
     # __import__(os.path.splitext(path.name)[0])
-    __import__(path.with_suffix(""))
+    __import__(path.with_suffix("").name)
 
 
 def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
