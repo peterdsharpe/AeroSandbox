@@ -97,15 +97,15 @@ def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
             run_all_python_files(subpath, recursive=recursive, verbose=verbose)
 
 
-def test_all_tutorials():
-    with tempfile.TemporaryDirectory() as temp:
-        temp_tutorial_directory = Path(temp) / "tutorial"
-        print("##### Making temporary directory of /tutorial/ for testing...")
-        shutil.copytree(
-            src=real_tutorial_directory,
-            dst=temp_tutorial_directory,
-        )
-        run_all_python_files(temp_tutorial_directory, recursive=True)
+# def test_all_tutorials():
+#     with tempfile.TemporaryDirectory() as temp:
+#         temp_tutorial_directory = Path(temp) / "tutorial"
+#         print("##### Making temporary directory of /tutorial/ for testing...")
+#         shutil.copytree(
+#             src=real_tutorial_directory,
+#             dst=temp_tutorial_directory,
+#         )
+#         run_all_python_files(temp_tutorial_directory, recursive=True)
 
 
 if __name__ == '__main__':
