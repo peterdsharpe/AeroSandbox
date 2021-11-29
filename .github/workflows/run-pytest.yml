@@ -35,6 +35,5 @@ jobs:
           pytest aerosandbox
       - name: Test with pytest (with extras; only tutorials)
         run: |
-          python -m pip uninstall -y aerosandbox
           python -m pip install .[full,test]
           py.test tutorial --nbval-lax
