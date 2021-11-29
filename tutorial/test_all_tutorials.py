@@ -52,7 +52,6 @@ def run_python_file(path: Path) -> None:
 
     """
     sys.path.append(str(path.parent))
-    # __import__(os.path.splitext(path.name)[0])
     __import__(path.with_suffix("").name)
 
 
