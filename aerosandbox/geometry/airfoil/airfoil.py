@@ -15,7 +15,6 @@ class Airfoil(Polygon):
     """
     An airfoil. See constructor docstring for usage details.
     """
-
     def __init__(self,
                  name: str = "Untitled",
                  coordinates: Union[None, str, np.ndarray] = None,
@@ -160,11 +159,7 @@ class Airfoil(Polygon):
 
         return upper_interpolated - lower_interpolated
 
-    def draw(self,
-             draw_mcl: bool = True,
-             backend: str = "plotly",
-             show: bool = True
-             ):
+    def draw(self, draw_mcl=True, backend="plotly", show=True):
         """
         Draw the airfoil object.
         :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
@@ -217,7 +212,7 @@ class Airfoil(Polygon):
             plt.plot(x, y, ".-", zorder=11, color=color)
             plt.fill(x, y, zorder=10, color=color, alpha=0.2)
             if draw_mcl:
-                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
+                plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha = 0.4)
             plt.axis("equal")
             plt.xlabel(r"$x/c$")
             plt.ylabel(r"$y/c$")
