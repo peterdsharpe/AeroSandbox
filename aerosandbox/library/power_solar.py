@@ -44,34 +44,38 @@ def solar_elevation_angle(latitude, day_of_year, time):
     solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
 
+
 def solar_azimuth_angle(latitude, day_of_year, time):
     """
     Zenith angle of the sun [degrees] for a local observer.
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time after local solar noon [seconds]
-    :return: Solar azimuth angle [degrees] (the compass direction from which the sunlight is coming). Returns 0 if the sun is below the horizon.
+    :return: Solar azimuth angle [degrees] (the compass direction from which the sunlight is coming).
     """
 
     # Solar azimuth angle (including seasonality, latitude, and time of day)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
     declination = declination_angle(day_of_year)
+    sdec = np.sind(declination)
+    cdec = np.cosd(declination)
+    slat = np.sind(latitude)
+    clat = np.cosd(latitude)
+    cos_time = np.cosd(time / 86400 * 360)
+
+    elevation = solar_elevation_angle(latitude, day_of_year, time)
+    cele = np.cosd(elevation)
 
     solar_azimuth_angle = np.where(
-        time > 43200,
+        np.mod(time, 86400) > 43200,
         np.arccosd(
-            (np.sind(declination) * np.cosd(latitude) -
-             np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-            (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+            (sdec * clat - cdec * slat * cos_time) / cele
         ),
         360 - np.arccosd(
-            (np.sind(declination) * np.cosd(latitude) -
-             np.cosd(declination) * np.sind(latitude) * np.cosd(time / 86400 * 360)) /
-            (np.cosd(solar_elevation_angle(latitude, day_of_year, time)))
+            (sdec * clat - cdec * slat * cos_time) / cele
         )
     )
 
-    solar_azimuth_angle = np.fmax(solar_azimuth_angle, 0)
     return solar_azimuth_angle
 
 
