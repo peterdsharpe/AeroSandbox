@@ -84,7 +84,13 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     return solar_azimuth_angle
 
 
-def incidence_angle_function(latitude, day_of_year, time, scattering=True):
+def incidence_angle_function(
+        latitude,
+        day_of_year,
+        time,
+        scattering=True,
+        panel_orientation="horizontal"
+):
     """
     What is the fraction of insolation that a horizontal surface will receive as a function of sun position in the sky?
     :param latitude: Latitude [degrees]
@@ -99,14 +105,25 @@ def incidence_angle_function(latitude, day_of_year, time, scattering=True):
     # Sharma: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611928/
 
     elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
-    theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
+    sun_above_horizon_multiplier = np.where(elevation_angle > 0, 1, 0)
+
+    if panel_orientation == "horizontal":
+        theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
+    elif panel_orientation == "vertical":
+        theta = elevation_angle
+    else:
+        raise ValueError("Bad value of `panel_orientation`!")
 
     cosine_factor = np.cosd(theta)
 
-    if not scattering:
-        return cosine_factor
-    else:
-        return cosine_factor * scattering_factor(elevation_angle)
+    illumination_factor = cosine_factor
+
+    if scattering:
+        illumination_factor = illumination_factor * scattering_factor(elevation_angle)
+
+    illumination_factor = illumination_factor * sun_above_horizon_multiplier
+    return illumination_factor
+
 
 def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
     """
