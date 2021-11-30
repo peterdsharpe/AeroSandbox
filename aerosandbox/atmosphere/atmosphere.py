@@ -130,21 +130,19 @@ if __name__ == "__main__":
 
     from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot, set_ticks
 
-    # fig, ax = plt.subplots()
-    #
-    # plt.plot(
-    #     (
-    #             (atmo_diff.pressure() - atmo_isa.pressure()) / atmo_isa.pressure()
-    #     ) * 100,
-    #     altitude / 1e3,
-    # )
-    # set_ticks(0.2, 0.1, 20, 10)
-    # plt.xlim(-1, 1)
-    # show_plot(
-    #     "AeroSandbox Atmosphere vs. ISA Atmosphere",
-    #     "Pressure, Relative Error [%]",
-    #     "Altitude [km]"
-    # )
+    fig, ax = plt.subplots()
+    plt.plot(
+        (
+                (atmo_diff.pressure() - atmo_isa.pressure()) / atmo_isa.pressure()
+        ) * 100,
+        altitude / 1e3,
+    )
+    plt.xlim(-1, 1)
+    show_plot(
+        "AeroSandbox Atmosphere vs. ISA Atmosphere",
+        "Pressure, Relative Error [%]",
+        "Altitude [km]"
+    )
 
     fig, ax = plt.subplots()
     plt.plot(
@@ -154,16 +152,12 @@ if __name__ == "__main__":
     )
     temp = np.linspace(175, 350, 1000)
     plt.plot(temp, [14] * 1000, label="Tropopause Altitude")
-    # set_ticks(1, 0.5, 20, 10)
     plt.xlim(175, 350)
     show_plot(
         "Temperature Variation with Altitude",
         "Temperature [K]",
         "Altitude [km]",
-        show=False,
     )
-    plt.savefig('/Users/annickdewald/Desktop/Thesis/Photos/tropopause', dpi=300)
-    plt.show()
 
     fig, ax = plt.subplots()
     plt.plot(
@@ -173,13 +167,9 @@ if __name__ == "__main__":
     )
     temp = np.linspace(0, 2, 1000)
     plt.plot(temp, [14] * 1000, label="Tropopause Altitude")
-    # set_ticks(1, 0.5, 20, 10)
     plt.xlim(-0.1, 2)
     show_plot(
         "Density Variation with Altitude",
         "Density [kg/m^3]",
         "Altitude [km]",
-        show=False,
     )
-    plt.savefig('/Users/annickdewald/Desktop/Thesis/Photos/density', dpi=300)
-    plt.show()
