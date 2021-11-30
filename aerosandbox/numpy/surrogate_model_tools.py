@@ -37,8 +37,8 @@ def softmax(*args, hardness=1):
         max = _np.fmax(max, arg)
 
     out = max + _np.log(sum(
-        [_np.exp(array - max) for array in args]
-    )
+            [_np.exp(array - max) for array in args]
+        )
     )
     out = out / hardness
     return out

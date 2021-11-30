@@ -2,6 +2,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
+
 N = 1000
 ue = np.linspace(1, 1, N)
 x = np.linspace(0, 1, N)
@@ -10,6 +11,7 @@ theta_0 = 1e-3
 H_0 = 2.6
 
 opti = asb.Opti()
+
 
 theta = opti.variable(
     init_guess=theta_0,
@@ -54,7 +56,6 @@ d_H_star_dx = np.diff(H_star) / np.diff(x)
 def int(x):
     return (x[1:] + x[:-1]) / 2
 
-
 def logint(x):
     # return int(x)
     logx = np.log(x)
@@ -67,7 +68,7 @@ def logint(x):
 opti.subject_to(
     d_theta_dx == int(c_f) / 2 - int(
         (H + 2) * theta / ue
-    ) * d_ue_dx,  # From AVF Eq. 4.51
+    ) * d_ue_dx, # From AVF Eq. 4.51
 )
 opti.subject_to(
     logint(theta / H_star) * d_H_star_dx ==
@@ -89,10 +90,21 @@ theta = sol.value(theta)
 H = sol.value(H)
 
 ### Plot
-from aerosandbox.tools.pretty_plots import plt, show_plot
-fig, ax = plt.subplots()
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set(palette=sns.color_palette("husl"))
+fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 plt.plot(x, theta)
-show_plot(r"$\theta$", "$x$", r"$\theta$")
-fig, ax = plt.subplots()
+plt.xlabel(r"$x$")
+plt.ylabel(r"$\theta$")
+plt.title(r"$\theta$")
+plt.tight_layout()
+plt.show()
+fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 plt.plot(x, H)
-show_plot("$H$", "$x$", "$H$")
+plt.xlabel(r"$x$")
+plt.ylabel(r"$H$")
+plt.title(r"$H$")
+plt.tight_layout()
+plt.show()

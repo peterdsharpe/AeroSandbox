@@ -7,7 +7,6 @@ velocity = 1
 viscosity = 1.81e-5
 CL = 0.4
 
-
 def test_normal_problem():
     """
     An engineering optimization problem to minimize drag on a rectangular wing using analytical relations.
@@ -34,7 +33,6 @@ def test_normal_problem():
     assert sol.value(chord) == pytest.approx(0.2288630528244024)
     assert sol.value(span) == pytest.approx(4.369425242121806)
 
-
 def test_log_transformed_problem():
     opti = asb.Opti()
 
@@ -57,13 +55,11 @@ def test_log_transformed_problem():
     assert sol.value(chord) == pytest.approx(0.2288630528244024)
     assert sol.value(span) == pytest.approx(4.369425242121806)
 
-
 def test_log_transformed_negativity_error():
     opti = asb.Opti()
 
     with pytest.raises(ValueError):
         myvar = opti.variable(log_transform=True, init_guess=-1)
-
 
 def test_fixed_variable():
     opti = asb.Opti()
@@ -87,7 +83,6 @@ def test_fixed_variable():
     assert sol.value(chord) == pytest.approx(1)
     assert sol.value(span) == pytest.approx(1)
 
-
 def test_fully_fixed_problem():
     opti = asb.Opti()
 
@@ -109,7 +104,6 @@ def test_fully_fixed_problem():
 
     assert sol.value(chord) == pytest.approx(1)
     assert sol.value(span) == pytest.approx(1)
-
 
 def test_overconstrained_fully_fixed_problem():
     opti = asb.Opti()
@@ -133,7 +127,6 @@ def test_overconstrained_fully_fixed_problem():
 
     # assert sol.value(chord) == pytest.approx(1)
     # assert sol.value(span) == pytest.approx(1)
-
 
 if __name__ == '__main__':
     pytest.main()

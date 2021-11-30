@@ -7,7 +7,6 @@ These studies are provided purely for reference; no guarantee is made that these
 Some docstrings in AeroSandbox's documentation refer to studies in this folder.
 
 File formats you may see here:
-
 * `.py` Python files
 * `.ipynb` Jupyter notebooks
 * `.m` Matlab files

@@ -1,29 +1,21 @@
 from aerosandbox import Opti, ImplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
-from typing import Dict
+from aerosandbox.visualization import Figure3D
 
 
 class LiftingLine(ImplicitAnalysis):
     """
-    An implicit aerodynamics analysis based on lifting line theory, with modifications for nonzero sweep
-    and dihedral + multiple wings.
+    An implicit analysis based on lifting line theory, with modifications for nonzero sweep and dihedral + multiple wings.
 
-    Nonlinear, and includes viscous effects based on 2D data.
+    Key outputs:
 
-    Usage example:
-        >>>analysis = asb.LiftingLine(
-        >>>    airplane=my_airplane,
-        >>>    op_point=asb.OperatingPoint(
-        >>>        velocity=100, # m/s
-        >>>        alpha=5, # deg
-        >>>        beta=4, # deg
-        >>>        p=0.01, # rad/sec
-        >>>        q=0.02, # rad/sec
-        >>>        r=0.03, # rad/sec
-        >>>    )
-        >>>)
-        >>>outputs = analysis.run()
+        * LiftingLine.CL
+        * LiftingLine.CD
+        * LiftingLine.Cm
+        * LiftingLine.lift_force
+        * LiftingLine.drag_force
+
     """
 
     @ImplicitAnalysis.initialize
@@ -32,8 +24,8 @@ class LiftingLine(ImplicitAnalysis):
                  op_point: OperatingPoint,
                  run_symmetric_if_possible=True,
                  verbose=True,
-                 spanwise_resolution=8,  # TODO document
-                 spanwise_spacing="cosine"  # TODO document
+                 default_n_spanwise_panels = 8, # TODO document
+                 default_spanwise_spacing = "cosine" # TODO document
                  ):
         """
         Initializes and conducts a LiftingLine analysis.
@@ -55,15 +47,14 @@ class LiftingLine(ImplicitAnalysis):
                 If not provided, creates and solves the governing equations in a new instance.
 
         """
-        super().__init__()
 
         ### Initialize
         self.airplane = airplane
         self.op_point = op_point
         self.run_symmetric_if_possible = run_symmetric_if_possible
         self.verbose = verbose
-        self.spanwise_resolution = spanwise_resolution
-        self.spanwise_spacing = spanwise_spacing
+        self.default_n_spanwise_panels = default_n_spanwise_panels
+        self.default_spanwise_spacing = default_spanwise_spacing
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
@@ -75,12 +66,17 @@ class LiftingLine(ImplicitAnalysis):
                         self.op_point.r == 0 and
                         self.airplane.is_entirely_symmetric()
                 )
-            except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
+            except RuntimeError: # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
                 pass
 
-    def run(self) -> Dict:
+        self._make_panels()
+        self._setup_geometry()
+        self._setup_operating_point()
+        self._calculate_vortex_strengths()
+        self._calculate_forces()
 
-        ### Make Panels
+    def _make_panels(self):
+        # Creates self.panel_coordinates_structured_list and self.wing_mcl_normals.
 
         if self.verbose:
             print("Meshing...")
@@ -94,39 +90,23 @@ class LiftingLine(ImplicitAnalysis):
         Cm_functions = []
         wing_id = []
 
-        for wing in self.airplane.wings:  # Iterate through wings
+        for wing_index, wing in enumerate(self.airplane.wings):  # Iterate through wings
             for inner_xsec, outer_xsec in zip(
                     wing.xsecs[:-1],
                     wing.xsecs[1:]
             ):  # Iterate through pairs of wing cross sections
 
-                wing_section = Wing(
-                    xsecs=[
-                        inner_xsec,
-                        outer_xsec
-                    ],
-                    symmetric=wing.symmetric
-                )
-
-                points, faces = wing_section.mesh_thin_surface(
-                    method="quad",
-                    chordwise_resolution=1,
-                    spanwise_resolution=self.spanwise_resolution,
-                    spanwise_spacing=spanwise_spacing,
-                    add_camber=False
-                )
-
                 # Find the corners
-                inner_xsec_xyz_le = inner_xsec.xyz_le
-                inner_xsec_xyz_te = inner_xsec.xyz_te()
-                outer_xsec_xyz_le = outer_xsec.xyz_le
-                outer_xsec_xyz_te = outer_xsec.xyz_te()
+                inner_xsec_xyz_le = inner_xsec.xyz_le + wing.xyz_le
+                inner_xsec_xyz_te = inner_xsec.xyz_te() + wing.xyz_le
+                outer_xsec_xyz_le = outer_xsec.xyz_le + wing.xyz_le
+                outer_xsec_xyz_te = outer_xsec.xyz_te() + wing.xyz_le
 
                 # Define number of spanwise points
                 try:
                     n_spanwise_panels = inner_xsec.spanwise_panels
                 except AttributeError:
-                    n_spanwise_panels = self.spanwise_resolution
+                    n_spanwise_panels = self.default_n_spanwise_panels
 
                 n_spanwise_coordinates = n_spanwise_panels + 1
 
@@ -134,7 +114,7 @@ class LiftingLine(ImplicitAnalysis):
                 try:
                     spanwise_spacing = inner_xsec.spanwise_spacing
                 except AttributeError:
-                    spanwise_spacing = self.spanwise_spacing
+                    spanwise_spacing = self.default_spanwise_spacing
 
                 if spanwise_spacing == 'uniform':
                     nondim_spanwise_coordinates = np.linspace(0, 1, n_spanwise_coordinates)
@@ -174,8 +154,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=(
-                                                                  nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                               nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.CL_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -191,8 +170,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=(
-                                                                  nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                               nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.CDp_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -208,8 +186,7 @@ class LiftingLine(ImplicitAnalysis):
                         lambda alpha, Re, mach,
                                inner_xsec=inner_xsec,
                                outer_xsec=outer_xsec,
-                               nondim_spanwise_coordinate=(
-                                                                  nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                               nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                         : (
                                 inner_xsec.airfoil.Cm_function(
                                     alpha=alpha, Re=Re, mach=mach,
@@ -234,8 +211,7 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=(
-                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                   nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.CL_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -255,8 +231,7 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=(
-                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                   nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.CDp_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -276,8 +251,7 @@ class LiftingLine(ImplicitAnalysis):
                             lambda alpha, Re, mach,
                                    inner_xsec=inner_xsec,
                                    outer_xsec=outer_xsec,
-                                   nondim_spanwise_coordinate=(
-                                                                      nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
+                                   nondim_spanwise_coordinate=(nondim_spanwise_coordinate_inner + nondim_spanwise_coordinate_outer) / 2,
                             : (
                                     inner_xsec.airfoil.Cm_function(
                                         alpha=alpha, Re=Re, mach=mach,
@@ -357,7 +331,7 @@ class LiftingLine(ImplicitAnalysis):
             fuse = self.airplane.fuselages[fuse_num]  # type: Fuselage
 
             # Find the centerline points
-            this_fuse_centerline_points = [xsec.xyz_c for xsec in fuse.xsecs]
+            this_fuse_centerline_points = [xsec.xyz_c + fuse.xyz_le for xsec in fuse.xsecs]
             this_fuse_centerline_points = np.stack(this_fuse_centerline_points).T
 
             # Find the radii
@@ -365,7 +339,7 @@ class LiftingLine(ImplicitAnalysis):
 
             fuse_centerline_points.append(
                 this_fuse_centerline_points)  # TODO handle fuselage symmetry (non-symmetric problem)
-            fuse_radii.append(this_fuse_radii)  # TODO resume here
+            fuse_radii.append(this_fuse_radii) # TODO resume here
             if (not self.run_symmetric) and fuse.symmetric:
                 fuse_centerline_points.append(reflect_over_XZ_plane(this_fuse_centerline_points))
                 fuse_radii.append(this_fuse_radii)
@@ -944,9 +918,6 @@ class LiftingLine(ImplicitAnalysis):
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
         :return:
         """
-
-        # TODO rewrite me
-
         if self.verbose:
             print("Drawing...")
 
@@ -1017,8 +988,8 @@ class LiftingLine(ImplicitAnalysis):
                     ).toarray()
                     points_1[point_index, :] = rot @ np.array([0, 0, r1])
                     points_2[point_index, :] = rot @ np.array([0, 0, r2])
-                points_1 = points_1 + np.array(xsec_1.xyz_c).reshape(-1)
-                points_2 = points_2 + np.array(xsec_2.xyz_c).reshape(-1)
+                points_1 = points_1 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_1.xyz_c).reshape(-1)
+                points_2 = points_2 + np.array(fuse.xyz_le).reshape(-1) + np.array(xsec_2.xyz_c).reshape(-1)
 
                 for point_index in range(fuse.circumferential_panels):
 

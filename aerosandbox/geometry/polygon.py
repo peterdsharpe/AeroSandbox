@@ -3,7 +3,6 @@ from matplotlib import path
 from aerosandbox.common import AeroSandboxObject
 from typing import Union
 
-
 class Polygon(AeroSandboxObject):
     def __init__(self, coordinates):
         self.coordinates = coordinates  # Nx2 NumPy ndarray

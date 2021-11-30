@@ -58,7 +58,7 @@ opti.solver('ipopt', p_opts, s_opts)
 ### Do the sweep
 for i in range(len(masses)):
     iterable = range(len(spans))
-    iterable = iterable[::-1] if i % 2 != 0 else iterable
+    iterable = iterable[::-1]  if i % 2 != 0 else iterable
     for j in iterable:
         opti.set_value(mass, Masses[i, j])
         opti.set_value(span, Spans[i, j])
@@ -71,7 +71,7 @@ for i in range(len(masses)):
 
 sio.savemat("data_single_boom.mat",
             {
-                "Masses"     : Masses,
-                "Spans"      : Spans,
+                "Masses": Masses,
+                "Spans": Spans,
                 "Spar_Masses": Spar_Masses
             })

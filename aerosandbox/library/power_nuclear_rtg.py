@@ -31,7 +31,7 @@
 alpha_particle_mass_amu = 4.001506179127  # mass of an alpha particle
 po_210_mass_amu = 209.9828736  # mass of Polonium-210
 pb_206_mass_amu = 205.9744818  # mass of Lead-206
-amu = 1.6605390666050e-27  # kg, 1 atomic mass unit
+amu = 1.6605390666050e-27 # kg, 1 atomic mass unit
 c = 299792458  # m/s, speed of light
 
 
@@ -41,7 +41,7 @@ def po210_specific_power(
     half_life = 138.376  # days
     # Source: https://en.wikipedia.org/wiki/Polonium-210
     pure_specific_energy = (
-            (po_210_mass_amu - alpha_particle_mass_amu - pb_206_mass_amu) * c ** 2
-            / po_210_mass_amu
-    )  # J/kg
+        (po_210_mass_amu - alpha_particle_mass_amu - pb_206_mass_amu) * c ** 2
+        / po_210_mass_amu
+    ) # J/kg
     # TODO finish

@@ -1,4 +1,4 @@
-from typing import Union, List, Dict, Callable, Any
+from typing import Union, List, Dict, Callable
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -24,16 +24,12 @@ class Opti(cas.Opti):
     """
 
     def __init__(self,
-                 variable_categories_to_freeze: List[str] = None,
+                 variable_categories_to_freeze: List[str] = [],
                  cache_filename: str = None,
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
                  ignore_violated_parametric_constraints: bool = False,
                  ):
-
-        # Default arguments
-        if variable_categories_to_freeze is None:
-            variable_categories_to_freeze = []
 
         # Parent class initialization
         super().__init__()
@@ -51,7 +47,7 @@ class Opti(cas.Opti):
     ### Primary Methods
 
     def variable(self,
-                 init_guess: Union[float, np.ndarray] = None,
+                 init_guess: Union[float, np.ndarray],
                  n_vars: int = None,
                  scale: float = None,
                  freeze: bool = False,
@@ -61,7 +57,7 @@ class Opti(cas.Opti):
                  upper_bound: float = None,
                  ) -> cas.MX:
         """
-        Initializes a new decision variable (or vector of decision variables). You should pass an initial guess (
+        Initializes a new decision variable (or vector of decision variables). You must pass an initial guess (
         `init_guess`) upon defining a new variable. Dimensionality is inferred from this initial guess, but it can be
         overridden; see below for syntax.
 
@@ -193,13 +189,6 @@ class Opti(cas.Opti):
 
         """
         ### Set defaults
-        if init_guess is None:
-            import warnings
-            warnings.warn("No initial guess set for Opti.variable().", stacklevel=2)
-            if log_transform:
-                init_guess = 1
-            else:
-                init_guess = 0
         if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
             n_vars = np.length(init_guess)
         if scale is None:  # Infer a scale from init_guess if it is not provided
@@ -250,23 +239,16 @@ class Opti(cas.Opti):
         var.is_manually_frozen = is_manually_frozen
 
         # Apply bounds
-        if not log_transform:
-            if lower_bound is not None:
-                self.subject_to(var / scale >= lower_bound / scale)
-            if upper_bound is not None:
-                self.subject_to(var / scale <= upper_bound / scale)
-        else:
-            if lower_bound is not None:
-                self.subject_to(log_var / log_scale >= np.log(lower_bound) / log_scale)
-            if upper_bound is not None:
-                self.subject_to(log_var / log_scale <= np.log(upper_bound) / log_scale)
-
+        if lower_bound is not None:
+            self.subject_to(var >= lower_bound)
+        if upper_bound is not None:
+            self.subject_to(var <= upper_bound)
 
         return var
 
     def subject_to(self,
                    constraint: Union[cas.MX, bool, List],  # TODO add scale
-                   ) -> Union[cas.MX, None, List[cas.MX]]:
+                   ) -> cas.MX:
         """
         Initialize a new equality or inequality constraint(s).
 
@@ -310,25 +292,11 @@ class Opti(cas.Opti):
             return dual
         else:  # Constraint is not valid because it is not MX type or is parametric.
             try:
-                constraint_satisfied = np.all(self.value(constraint))  # Determine if the constraint is true
+                constraint_satisfied = np.all(self.value(constraint))
             except:
                 raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
                     doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
                     {constraint}""")
-
-            if isinstance(constraint,
-                          cas.MX) and not constraint_satisfied:  # Determine if the constraint is *almost* true
-                try:
-                    LHS = constraint.dep(0)
-                    RHS = constraint.dep(1)
-                    LHS_value = self.value(LHS)
-                    RHS_value = self.value(RHS)
-                except:
-                    raise ValueError(
-                        """Could not evaluate the LHS and RHS of the constraint - are you sure you passed in a comparative expression?""")
-
-                constraint_satisfied = np.allclose(LHS_value,
-                                                   RHS_value)  # Call the constraint satisfied if it is *almost* true.
 
             if constraint_satisfied or self.ignore_violated_parametric_constraints:
                 # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
@@ -408,7 +376,7 @@ class Opti(cas.Opti):
               parameter_mapping: Dict[cas.MX, float] = None,
               max_iter: int = 1000,
               max_runtime: float = 1e20,
-              callback: Callable[[int], Any] = None,
+              callback: Callable = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
               options: Dict = None,  # TODO document
@@ -445,10 +413,6 @@ class Opti(cas.Opti):
                 each variable `x`.
 
             verbose: Should we print the output of IPOPT?
-
-            jit: # TODO
-
-            options: # TODO
 
         Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
             OptiSol.value(variable).
@@ -500,32 +464,31 @@ class Opti(cas.Opti):
         if options is None:
             options = {}
 
-        default_options = {
-            "ipopt.sb"                   : 'yes',  # Hide the IPOPT banner.
-            "ipopt.max_iter"             : max_iter,
-            "ipopt.max_cpu_time"         : max_runtime,
-            "ipopt.mu_strategy"          : "adaptive",
-            "ipopt.fast_step_computation": "yes",
-        }
-
         if jit:
-            default_options["jit"] = True
+            options["jit"] = True
             # options["compiler"] = "shell"  # Recommended by CasADi devs, but doesn't work on my machine
-            default_options["jit_options"] = {
+            options["jit_options"] = {
                 "flags": ["-O3"],
                 # "verbose": True
             }
 
-        if verbose:
-            default_options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
-        else:
-            default_options["print_time"] = False  # No time printing
-            default_options["ipopt.print_level"] = 0  # No printing from IPOPT
+        options["ipopt.sb"] = 'yes'  # Hide the IPOPT banner.
 
-        self.solver('ipopt', {
-            **default_options,
-            **options,
-        })
+        if verbose:
+            options["ipopt.print_level"] = 5  # Verbose, per-iteration printing.
+        else:
+            options["print_time"] = False  # No time printing
+            options["ipopt.print_level"] = 0  # No printing from IPOPT
+
+        # Set defaults, if not set
+        if "ipopt.max_iter" not in options:
+            options["ipopt.max_iter"] = max_iter
+        if "ipopt.max_cpu_time" not in options:
+            options["ipopt.max_cpu_time"] = max_runtime
+        if "ipopt.mu_strategy" not in options:
+            options["ipopt.mu_strategy"] = "adaptive"
+
+        self.solver('ipopt', options)
 
         # Set the callback
         if callback is not None:
@@ -744,16 +707,7 @@ class Opti(cas.Opti):
         Returns: None (adds constraint in-place).
 
         """
-        try:
-            d_var = np.diff(variable)
-        except ValueError:
-            d_var = np.diff(np.zeros_like(with_respect_to))
-
-        try:
-            derivative[0]
-        except (TypeError, IndexError):
-            derivative = np.full_like(with_respect_to, fill_value=derivative)
-
+        d_var = np.diff(variable)
         d_time = np.diff(with_respect_to)  # Calculate the timestep
 
         # TODO scale constraints by variable scale?
@@ -765,6 +719,7 @@ class Opti(cas.Opti):
                 d_var == derivative[:-1] * d_time
             )
 
+
         elif method == "backward euler" or method == "backward" or method == "backwards":
             # raise NotImplementedError
             self.subject_to(
@@ -775,6 +730,7 @@ class Opti(cas.Opti):
             self.subject_to(
                 d_var == np.trapz(derivative) * d_time,
             )
+
 
         elif method == "simpson":
             raise NotImplementedError

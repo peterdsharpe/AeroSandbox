@@ -14,7 +14,6 @@ assignees: ''
 ## Expected Behavior
 
 ## System Information
-
 * Operating System:
 * Python Version:
 * AeroSandbox Verion:

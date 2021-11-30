@@ -3,7 +3,6 @@ import numpy as np
 from gpkit import Variable, Model, SolutionArray
 import time
 
-
 def solve():
     pi = np.pi
 
@@ -60,13 +59,11 @@ def solve():
     m = Model(D, constraints)
     return m.solve(verbosity=0)
 
-
 def timeit():
     start = time.time()
     solve()
     end = time.time()
     return end - start
-
 
 if __name__ == '__main__':
     times = np.array([

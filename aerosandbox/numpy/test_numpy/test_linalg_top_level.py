@@ -2,7 +2,6 @@ import pytest
 import aerosandbox.numpy as np
 import casadi as cas
 
-
 def test_cross_1D_input():
     a = np.array([1, 1, 1])
     b = np.array([1, 2, 3])

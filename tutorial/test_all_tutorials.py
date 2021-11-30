@@ -1,7 +1,4 @@
 """
-################################################################################
-README:
-
 Ignore this file; this is just here so that all tutorials are automatically run by PyTest on each build (in order
 to ensure that they don't throw any errors).
 """
@@ -9,17 +6,14 @@ to ensure that they don't throw any errors).
 import os
 import sys
 from pathlib import Path
-import shutil
 import tempfile
 import json
-
-real_tutorial_directory = Path(__file__).parent
 
 
 def convert_ipynb_to_py(
         input_file: Path,
         output_file: Path,
-) -> None:
+):
     """
     Reads an input Jupyter notebook (.ipynb) and converts it to a Python file (.py)
 
@@ -42,7 +36,7 @@ def convert_ipynb_to_py(
                 f.write("\n")
 
 
-def run_python_file(path: Path) -> None:
+def run_python_file(path: Path):
     """
     Executes a Python file from a path.
     Args:
@@ -55,7 +49,7 @@ def run_python_file(path: Path) -> None:
     __import__(os.path.splitext(path.name)[0])
 
 
-def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
+def run_all_python_files(path: Path, recursive=True) -> None:
     """
     Executes all Python files and Jupyter Notebooks in a directory.
     Args:
@@ -75,41 +69,37 @@ def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
 
         ### Run the file if it's a Python file
         if path.suffix == ".py":
-            if verbose:
-                print(f"##### Running file: {path}")
             run_python_file(path)
 
         ### Run the file if it's a Jupyter notebook
         if path.suffix == ".ipynb":
-            if verbose:
-                print(f"##### Converting file: {path}")
-            notebook = path
-            python_file = path.with_suffix(".py")
+            with tempfile.TemporaryDirectory() as tempdir:
+                tempdir = Path(tempdir)
+                notebook = path
+                output_dir = tempdir
+                output_filename = path.name.strip(path.suffix) + ".py"
+                python_file = output_dir / output_filename
 
-            convert_ipynb_to_py(notebook, python_file)
+                # convert_command = f'jupyter nbconvert --to python "{notebook}" --output-dir "{output_dir}" --output "{output_filename}"'
+                # os.system(convert_command)
 
-            run_all_python_files(python_file, recursive=False, verbose=verbose)
+                convert_ipynb_to_py(notebook, python_file)
 
-    elif path.is_dir() and recursive:
-        if verbose:
-            print(f"##### Opening directory: {path}")
+                run_python_file(python_file)
+
+    ### Recurse through a directory if directed to
+    if recursive and path.is_dir():
         for subpath in path.iterdir():
-            run_all_python_files(subpath, recursive=recursive, verbose=verbose)
+            run_all_python_files(subpath)
 
 
 def test_all_tutorials():
-    with tempfile.TemporaryDirectory() as temp:
-        temp_tutorial_directory = Path(temp) / "tutorial"
-        print("##### Making temporary directory of /tutorial/ for testing...")
-        shutil.copytree(
-            src=real_tutorial_directory,
-            dst=temp_tutorial_directory,
-        )
-        run_all_python_files(temp_tutorial_directory, recursive=True)
+    tutorial_dir_path = Path(os.path.abspath(__file__)).parent
+    run_all_python_files(tutorial_dir_path)
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
+    test_all_tutorials()
 
-    with plt.ion():
-        test_all_tutorials()
+    # import pytest
+    # pytest.main()

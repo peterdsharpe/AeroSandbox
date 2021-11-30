@@ -2,7 +2,6 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import time
 
-
 def solve():
     opti = asb.Opti()
 
@@ -87,13 +86,11 @@ def solve():
 
     sol = opti.solve(verbose=False)
 
-
 def timeit():
     start = time.time()
     solve()
     end = time.time()
     return end - start
-
 
 if __name__ == '__main__':
     times = np.array([

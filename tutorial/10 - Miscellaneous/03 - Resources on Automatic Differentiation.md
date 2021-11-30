@@ -1,7 +1,6 @@
 # Resources on Automatic Differentiation (AD)
 
-Compiled by Peter Sharpe
-
+by Peter Sharpe
 -----
 
 Lectures, Videos, GitHub repos, blog posts:

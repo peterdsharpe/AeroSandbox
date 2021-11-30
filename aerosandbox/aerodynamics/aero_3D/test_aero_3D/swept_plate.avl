@@ -1,0 +1,19 @@
+Swept_Plate
+0					!	Mach
+0 0 0					!	iYsym	iZsym	Zsym
+1 0.5 2 	!	Sref	Cref	Bref
+0 0 0 					!	Xref	Yref	Zref	(moment reference loc)
+
+SURFACE
+Main Wing
+10 1.0 22 1.0 			!	Nchord	Cspan	Nspan	Sspace
+!YDUPLICATE
+!0.0 					!	Y = pos of symmetry
+SCALE
+1.0 1.0	1.0				!	Xscale	Yscale	Zscale
+TRANSLATE
+0 0 0			!	dX	dY	dZ
+SECTION
+0 0 0 0.5 0			!	Xle	Yle	Zle	Chord	Ainc
+SECTION
+0 2 0 0.5 0	!	Xle	Yle	Zle	Chord	Ainc

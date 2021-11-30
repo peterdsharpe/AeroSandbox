@@ -1,14 +1,12 @@
-"""
-A set of tools used for making prettier Matplotlib plots.
-"""
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
-from typing import Union, Dict, List, Callable, Tuple
+from typing import Union, Dict, List, Callable
 from matplotlib import ticker
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
+
+# plt.ion()
 
 ### Define color palettes
 palettes = {
@@ -30,7 +28,6 @@ sns.set_theme(
 
 mpl.rcParams["figure.dpi"] = 200
 mpl.rcParams["axes.formatter.useoffset"] = False
-mpl.rcParams["contour.negative_linestyle"] = 'solid'
 
 
 def set_ticks(
@@ -50,27 +47,7 @@ def set_ticks(
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(base=y_minor))
 
 
-def equal():
-    plt.gca().set_aspect("equal", adjustable='box')
-
-
-def figure3d(*args, **kwargs):
-    fig = plt.figure(*args, **kwargs)
-    ax = plt.axes(projection='3d')
-    return fig, ax
-
-
-def adjust_lightness(color, amount=1.0):
-    """
-    Converts a color to HLS space, then mulitplies the lightness by `amount`, then converts back to RGB.
-
-    Args:
-        color: A color, in any format that matplotlib understands.
-        amount: The amount to multiply the lightness by. Valid range is 0 to infinity.
-
-    Returns: A color, as an RGB tuple.
-
-    """
+def adjust_lightness(color, amount=1):
     import matplotlib.colors as mc
     import colorsys
     try:
@@ -110,10 +87,8 @@ def show_plot(
 
     if pretty_grids:
         for ax in axes:
-            if not ax.get_label() == '<colorbar>':
-                if not ax.name == '3d':
-                    ax.grid(True, 'major', axis='both', linewidth=1.6)
-                    ax.grid(True, 'minor', axis='both', linewidth=0.7)
+            ax.grid(True, 'major', axis='both', linewidth=1.6)
+            ax.grid(True, 'minor', axis='both', linewidth=0.7)
 
     ### Determine if a legend should be shown
     if legend is None:
@@ -144,162 +119,25 @@ def show_plot(
         plt.show()
 
 
-def hline(
-        y,
-        linestyle="--",
-        color="k",
-        text: str = None,
-        text_xloc=0.5,
-        text_ha="center",
-        text_va="bottom",
-        text_kwargs=None,
-):  # TODO docs
-    if text_kwargs is None:
-        text_kwargs = {}
-    ax = plt.gca()
-    xlim = ax.get_xlim()
-    plt.axhline(y=y, ls=linestyle, color=color)
-    if text is not None:
-        plt.text(
-            x=text_xloc * xlim[1] + (1 - text_xloc) * xlim[0],
-            y=y,
-            s=text,
-            color=color,
-            horizontalalignment=text_ha,
-            verticalalignment=text_va,
-            **text_kwargs
-        )
-
-
-def vline(
-        x,
-        linestyle="--",
-        color="k",
-        text: str = None,
-        text_yloc=0.5,
-        text_ha="right",
-        text_va="center",
-        text_kwargs=None,
-):  # TODO docs
-    if text_kwargs is None:
-        text_kwargs = {}
-    ax = plt.gca()
-    ylim = ax.get_ylim()
-    plt.axvline(x=x, ls=linestyle, color=color)
-    if text is not None:
-        plt.text(
-            x=x,
-            y=text_yloc * ylim[1] + (1 - text_yloc) * ylim[0],
-            s=text,
-            color=color,
-            horizontalalignment=text_ha,
-            verticalalignment=text_va,
-            rotation=90,
-            **text_kwargs
-        )
-
-
-def plot_color_by_value(
-        x: np.ndarray,
-        y: np.ndarray,
-        *args,
-        c: np.ndarray,
-        cmap=mpl.cm.get_cmap('viridis'),
-        colorbar=False,
-        colorbar_label: str = None,
-        clim: Tuple[float, float] = None,
-        **kwargs
-):
-    """
-    Uses same syntax as matplotlib.pyplot.plot, except that `c` is now an array-like that maps to a specific color
-    pulled from `cmap`. Makes lines that are multicolored based on this `c` value.
-
-    Args:
-        x:
-        y:
-        *args:
-        c:
-        cmap:
-        **kwargs:
-
-    Returns:
-
-    """
-    cmap = mpl.cm.get_cmap(cmap)
-
-    cmin = c.min()
-    cmax = c.max()
-
-    if clim is None:
-        clim = (cmin, cmax)
-
-    norm = plt.Normalize(vmin = clim[0], vmax = clim[1], clip=False)
-
-    label = kwargs.pop("label", None)
-
-    lines = []
-
-    for i, (
-            x1, x2,
-            y1, y2,
-            c1, c2,
-    ) in enumerate(zip(
-        x[:-1], x[1:],
-        y[:-1], y[1:],
-        c[:-1], c[1:],
-    )):
-        line = plt.plot(
-            [x1, x2],
-            [y1, y2],
-            *args,
-            color=cmap(norm((c1 + c2) / 2) if cmin != cmax else 0.5),
-            **kwargs
-        )
-        lines += line
-
-    if label is not None:
-        line = plt.plot(
-            [None],
-            [None],
-            *args,
-            color=cmap(0.5),
-            label=label,
-            **kwargs
-        )
-        lines += line
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-    if colorbar:
-        if colorbar_label is None:
-            cbar = plt.colorbar(sm)
-        else:
-            cbar = plt.colorbar(sm, label=colorbar_label)
-    else:
-        cbar = None
-    return lines, sm, cbar
-
-
 def contour(
-        X: np.ndarray,
-        Y: np.ndarray,
-        Z: np.ndarray,
-        levels: Union[int, List, np.ndarray] = 31,
-        colorbar: bool = True,
-        linelabels: bool = True,
+        X,
+        Y,
+        Z,
+        levels: Union[int, List, np.ndarray] = None,
+        colorbar=True,
+        linelabels=True,
         cmap=mpl.cm.get_cmap('viridis'),
         alpha: float = 0.7,
-        extend: str = "both",
+        extend="both",
         linecolor="k",
-        linewidths: float = 0.5,
-        extendrect: bool = True,
+        linewidths=0.5,
+        extendrect=True,
         linelabels_format: Union[str, Callable[[float], str]] = eng_string,
-        linelabels_fontsize: float = 8,
-        colorbar_label: str = None,
-        z_log_scale: bool = False,
+        linelabels_fontsize=10,
         contour_kwargs: Dict = None,
         contourf_kwargs: Dict = None,
         colorbar_kwargs: Dict = None,
         linelabels_kwargs: Dict = None,
-        **kwargs,
 ):
     """
     An analogue for plt.contour and plt.tricontour and friends that produces a much prettier default graph.
@@ -331,7 +169,6 @@ def contour(
         contourf_kwargs: Additional keyword arguments for contourf.
         colorbar_kwargs: Additional keyword arguments for colorbar.
         linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
-        **kwargs: Additional keywords, which are passed to both contour and contourf.
 
     Returns: A tuple of (contour, contourf, colorbar) objects.
 
@@ -352,33 +189,11 @@ def contour(
         Z,
     ]
 
-    shared_kwargs = kwargs
+    shared_kwargs = {}
     if levels is not None:
         shared_kwargs["levels"] = levels
-    if alpha is not None:
-        shared_kwargs["alpha"] = alpha
-    if extend is not None:
-        shared_kwargs["extend"] = extend
-    if z_log_scale:
-
-        shared_kwargs = {
-            "norm"   : mpl.colors.LogNorm(),
-            "locator": mpl.ticker.LogLocator(
-                subs=np.geomspace(1, 10, 4 + 1)[:-1]
-            ),
-            **shared_kwargs
-        }
-
-        if np.min(Z) <= 0:
-            import warnings
-            warnings.warn(
-                "Warning: All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!",
-                stacklevel=2
-            )
-            Z = np.maximum(Z, 1e-300)  # Make all values nonnegative
-
-    if colorbar_label is not None:
-        colorbar_kwargs["label"] = colorbar_label
+    shared_kwargs["alpha"] = alpha
+    shared_kwargs["extend"] = extend
 
     contour_kwargs = {
         "colors"    : linecolor,
@@ -405,25 +220,42 @@ def contour(
     }
 
     try:
-        cont = plt.contour(*args, **contour_kwargs)
-        contf = plt.contourf(*args, **contourf_kwargs)
+        CS = plt.contour(*args, **contour_kwargs)
+        CF = plt.contourf(*args, **contourf_kwargs)
     except TypeError as e:
         try:
-            cont = plt.tricontour(*args, **contour_kwargs)
-            contf = plt.tricontourf(*args, **contourf_kwargs)
+            CS = plt.tricontour(*args, **contour_kwargs)
+            CF = plt.tricontourf(*args, **contourf_kwargs)
         except TypeError:
             raise e
 
     if colorbar:
         cbar = plt.colorbar(**colorbar_kwargs)
-
-        if z_log_scale:
-            cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
-            cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatter())
     else:
         cbar = None
 
     if linelabels:
-        plt.gca().clabel(cont, **linelabels_kwargs)
+        plt.gca().clabel(CS, **linelabels_kwargs)
 
-    return cont, contf, cbar
+    return CS, CF, cbar
+
+# def contour(
+#         func: Callable,
+#         x_range: Tuple[Union[float,int],Union[float,int]],
+#         y_range: Tuple[Union[float,int],Union[float,int]],
+#         resolution:int =50,
+#         show:bool=True,  # type: bool
+# ):
+#     """
+#     Makes a contour plot of a function of 2 variables. Can also plot a list of functions.
+#     :param func: function of form f(x,y) to plot.
+#     :param x_range: Range of x values to plot, expressed as a tuple (x_min, x_max)
+#     :param y_range: Range of y values to plot, expressed as a tuple (y_min, y_max)
+#     :param resolution: Resolution in x and y to plot. [int]
+#     :param show: Should we show the plot?
+#     :return:
+#     """
+#     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
+#     x = np.linspace(x_range[0], x_range[1], resolution)
+#     y = np.linspace(y_range[0], y_range[1], resolution)
+#     # TODO finish function

@@ -325,9 +325,7 @@ class FittedModel(SurrogateModel):
         raise DeprecationWarning(
             "Use FittedModel.plot() instead, which generalizes plotting to non-fitted surrogate models")
 
-    def goodness_of_fit(self,
-                        type="R^2"
-                        ):
+    def goodness_of_fit(self, type="R^2"):
         """
         Returns a metric of the goodness of the fit.
 
@@ -335,12 +333,10 @@ class FittedModel(SurrogateModel):
 
             type: Type of metric to use for goodness of fit. One of:
 
-                * "R^2": The coefficient of determination. Strictly speaking only mathematically rigorous to use this
+                * R^2: The coefficient of determination. Strictly speaking only mathematically rigorous to use this
                 for linear fits.
 
                     https://en.wikipedia.org/wiki/Coefficient_of_determination
-
-                * "deviation" or "Linf": The maximum deviation of the fit from any of the data points.
 
         Returns: The metric of the goodness of the fit.
 
@@ -362,9 +358,6 @@ class FittedModel(SurrogateModel):
             R_squared = 1 - SS_res / SS_tot
 
             return R_squared
-
-        elif type == "deviation" or type == "Linf":
-            return np.max(np.abs(self.y_data - self(self.x_data)))
 
         else:
             raise ValueError("Bad value of `type`!")

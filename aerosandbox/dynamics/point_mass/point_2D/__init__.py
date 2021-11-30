@@ -1,2 +1,0 @@
-from .cartesian import DynamicsPointMass2DCartesian
-from .speed_gamma import DynamicsPointMass2DSpeedGamma

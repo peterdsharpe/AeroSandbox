@@ -42,10 +42,10 @@ lift_force = 9.81 * mass
 #     load_location > 1,
 #     load_location < beam.length - 1,
 # ])
-assert (n_booms == np.array([1, 2, 3])).any()
+assert (n_booms == np.array([1,2,3])).any()
 if n_booms == 2 or n_booms == 3:
     load_location = beam.length * load_location_fraction
-    beam.add_point_load(location=load_location, force=-lift_force / n_booms)
+    beam.add_point_load(location = load_location, force = -lift_force / n_booms)
 beam.add_elliptical_load(force=lift_force / 2)
 beam.setup()
 

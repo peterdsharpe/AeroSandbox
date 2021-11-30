@@ -14,7 +14,7 @@ $$ f''' + f f'' + \beta (1- (f' )^2) = 0 $$
 
 Then, define three new variables $F, U, S$:
 
-$$ F = f $$
+$$ F = f  $$
 
 $$ U = f' $$
 

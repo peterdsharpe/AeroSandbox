@@ -2,7 +2,6 @@ import aerosandbox.numpy as np
 from typing import Union
 import casadi as cas
 
-
 def _calculate_induced_velocity_line_singularity_panel_coordinates(
         xp_field: Union[float, np.ndarray],
         yp_field: Union[float, np.ndarray],
@@ -130,6 +129,7 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
 
         # Calculate v_vortex
         v_vortex_term_1 = u_vortex_term_2_quantity * ln_r_2_r_1
+
 
         v_vortex_term_2 = np.where(
             is_on_panel,
@@ -283,16 +283,16 @@ def calculate_induced_velocity_line_singularities(
     Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
 
     In this flowfield, the following singularity elements are assumed: # TODO update paragraph
-        * A line vortex that passes through the coordinates specified in (x_panel, y_panel). Each of these vertices is
+        A line vortex that passes through the coordinates specified in (x_panel, y_panel). Each of these vertices is
         called a "node".
-        * The vorticity of this line vortex per unit length varies linearly between subsequent nodes.
-        * The vorticity at each node is specified by the parameter gamma.
+        The vorticity of this line vortex per unit length varies linearly between subsequent nodes.
+        The vorticity at each node is specified by the parameter gamma.
 
     By convention here, positive gamma induces clockwise swirl in the flow field.
 
     Function returns the 2D velocity u, v in the global coordinate system (x, y).
 
-    Inputs x_field and y_field can be 1D ndarrays representing various field points,
+    Inputs x and y can be 1D ndarrays representing various field points,
     in which case the resulting velocities u and v have the corresponding dimensionality.
 
     """
@@ -327,22 +327,20 @@ def calculate_induced_velocity_line_singularities(
 if __name__ == '__main__':
 
     X, Y = np.meshgrid(
-        np.linspace(-2, 2, 50),
-        np.linspace(-2, 2, 50),
+        np.linspace(-1, 1, 50),
+        np.linspace(-1, 1, 50),
+        indexing='ij',
     )
     X = X.flatten()
     Y = Y.flatten()
 
-    x_panels = np.array([1, -1, -1, 1, 1])
-    y_panels = np.array([1, 1, -1, -1, 1])
-
     U, V = calculate_induced_velocity_line_singularities(
         x_field=X,
         y_field=Y,
-        x_panels=x_panels,
-        y_panels=y_panels,
-        gamma=1 * np.ones_like(x_panels),
-        sigma=1 * np.ones_like(x_panels)
+        x_panels=np.array([-0.5, 0.5, 0.5, -0.5, -0.5]),
+        y_panels=np.array([-0.5, -0.5, 0.5, 0.5, -0.5]),
+        gamma=np.array([0, 0, 0, 0, 0]),
+        sigma=np.array([1, 1, 1, 1, 1])
     )
 
     import matplotlib.pyplot as plt

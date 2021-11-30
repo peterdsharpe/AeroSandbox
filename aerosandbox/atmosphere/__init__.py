@@ -1,1 +1,1 @@
-from aerosandbox.atmosphere.atmosphere import Atmosphere
+from .atmosphere import Atmosphere

@@ -1,5 +1,4 @@
 # CylinderDragFits
-
 By Peter Sharpe
 
 ## Overview
@@ -19,21 +18,17 @@ The following model is found, where `x = log10(Re)`:
 The model:
 
 Matlab-ish syntax:
-
 ```matlab
 log10(CD) = 
 (log10(10^(csub0*x+csub1)+csub2+csub3*x))*(1-1/(1+exp(-csigh*(x-csigc)))) + (csup0+csupscl/csuph*log(exp(csuph*(csupc-x))+1))*(1/(1+exp(-csigh*(x-csigc))))
 ```
 
 Python-ish syntax:
-
 ```python
 log10(CD) = 
 (log10(10 ** (csub0*x+csub1)+csub2+csub3*x))*(1-1/(1+exp(-csigh*(x-csigc)))) + (csup0+csupscl/csuph*log(exp(csuph*(csupc-x))+1))*(1/(1+exp(-csigh*(x-csigc))))
 ```
-
 Constants:
-
 ```
 csigc = 5.5766722118597247
 csigh = 23.7460859935990563

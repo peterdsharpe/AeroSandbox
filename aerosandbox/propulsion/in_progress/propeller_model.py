@@ -1,3 +1,4 @@
+
 from typing import List
 import aerosandbox as asb
 import aerosandbox.numpy as np
@@ -7,9 +8,9 @@ from aerosandbox import cas
 from numpy import pi
 
 # set input parameters
-airspeed = 5  # meters per second
+airspeed = 5 # meters per second
 rpm = 10000
-altitude = 0  # meters
+altitude = 0 # meters
 # air_density = atmo.get_density_at_altitude(altitude)
 # mu = atmo.get_viscosity_from_temperature(atmo.get_temperature_at_altitude(altitude))
 # speed_of_sound = 343
@@ -18,7 +19,7 @@ mu = 0.178E-04
 speed_of_sound = 340
 
 ## Prop Specs from CAM 6X3 for QPROP Validation
-n_blades = 2  # number of blades
+n_blades = 2 # number of blades
 # give value in inches for some number of radial locations from root to tip
 # tip radial location is propeller radius
 radial_locations_in = np.array([0.75, 1, 1.5, 2, 2.5, 2.875, 3])
@@ -63,7 +64,6 @@ Ideally:
 :return:
 """
 
-
 # ## original CL function
 # def airfoil_CL(alpha, Re, Ma):
 #     alpha_rad = alpha * pi / 180
@@ -95,8 +95,7 @@ def interpolate(radial_locations, blade_chords, blade_betas, div):
 
     return radial_locations_new, blade_chords_new, blade_betas_new
 
-
-# QPROP CL function
+#QPROP CL function
 def airfoil_CL(alpha, Re, Ma):
     alpha_rad = alpha * pi / 180
     beta = (1 - Ma ** 2) ** 0.5
@@ -107,7 +106,6 @@ def airfoil_CL(alpha, Re, Ma):
     cl = (alpha_rad * cl_alpha + cl_0) / beta
     Cl = np.fmin(np.fmax(cl, cl_min), cl_max)
     return Cl
-
 
 # ## Peter Sharpe's CDp model
 # def airfoil_CDp(alpha, Re, Ma, Cl):
@@ -129,7 +127,7 @@ def airfoil_CDp(alpha, Re, Ma, Cl):
     Re_ref = 70000
     cd_0 = 0.028
     cd_2 = 0.05
-    # cd_2 = 0.05
+    #cd_2 = 0.05
     cl_cd_0 = 0.5
     cl_0 = 0.5
     cl_alpha = 5.8
@@ -140,15 +138,14 @@ def airfoil_CDp(alpha, Re, Ma, Cl):
     aCD0 = (cl_cd_0 - cl_0) / cl_alpha
     dcd_stall = 2 * (np.sin(alpha - aCD0)) ** 2
     if cas.is_equal(Cl, cl_max):
-        cd = dcd_stall + cd
+         cd = dcd_stall + cd
     if cas.is_equal(Cl, cl_min):
-        cd = dcd_stall + cd
+         cd = dcd_stall + cd
     return cd
-
 
 radial_locations_m, blade_chord_m, blade_beta_deg = interpolate(radial_locations_m, blade_chord_m, blade_beta_deg, divisions)
 n_stations = len(radial_locations_m) - 1
-tip_radius = radial_locations_m[n_stations]  # use tip radial location as prop radius
+tip_radius = radial_locations_m[n_stations] #use tip radial location as prop radius
 omega = rpm * 2 * pi / 60  # radians per second
 blade_twist_deg = blade_beta_deg + dBeta_deg
 blade_twist_rad = blade_twist_deg * pi / 180
@@ -171,8 +168,8 @@ Wt = []
 torque = []
 thrust = []
 
-for station in range(n_stations):  # TODO undo this
-    # for station in [22]:
+for station in range(n_stations): # TODO undo this
+# for station in [22]:
     radial_loc = (radial_locations_m[station] + radial_locations_m[station + 1]) / 2
     blade_section = (radial_locations_m[station + 1] - radial_locations_m[station])
     chord_local = (blade_chord_m[station] + blade_chord_m[station + 1]) / 2
@@ -182,14 +179,14 @@ for station in range(n_stations):  # TODO undo this
     # v_a = opti.variable(init_guess=15)
     # v_t = opti.variable(init_guess=15)
     # u_a = opti.variable(init_guess=5)
-    Psi = opti.variable(init_guess=pi / 2)
+    Psi = opti.variable(init_guess=pi/2)
     # h_ati = opti.variable(init_guess=0.01)
     # f = opti.variable(init_guess=300)
     # F = opti.variable(init_guess=1)
     # gamma = opti.variable(init_guess=1)
 
     ### Define velocity triangle components
-    U_a = airspeed  # + u_a # Axial velocity w/o induced eff. assuming u_a = 0
+    U_a = airspeed #+ u_a # Axial velocity w/o induced eff. assuming u_a = 0
     U_t = omega * radial_loc  # Tangential velocity w/o induced eff.
     U = (U_a ** 2 + U_t ** 2) ** 0.5  # Velocity magnitude
     W_a = 0.5 * U_a + 0.5 * U * np.sin(Psi)  # Axial velocity w/ induced eff.
@@ -204,8 +201,9 @@ for station in range(n_stations):  # TODO undo this
     f = (n_blades / 2) * (1 - radial_loc / tip_radius) * 1 / loc_wake_adv_ratio
     F = 2 / pi * np.arccos(np.exp(-f))
 
+
     ## Compute local blade quantities
-    phi_rad = np.arctan2(W_a, W_t)  # local flow angle
+    phi_rad = np.arctan2(W_a, W_t) #local flow angle
     phi_deg = phi_rad * 180 / pi
     alpha_rad = twist_local_rad - phi_rad
     alpha_deg = alpha_rad * 180 / pi
@@ -221,15 +219,15 @@ for station in range(n_stations):  # TODO undo this
         # v_a == v_t * W_t / W_a,
         # U ** 2 == v ** 2 + W ** 2,
         # gamma == -0.0145,
-        # gamma ==  (4 * pi * radial_loc / n_blades) * F * (
-        # 1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
+        #gamma ==  (4 * pi * radial_loc / n_blades) * F * (
+                   # 1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
 
         gamma == v_t * (4 * pi * radial_loc / n_blades) * F * (1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
         # vt**2*F**2*(1.+(4.*lam_w*R/(pi*B*r))**2) >= (B*G/(4.*pi*r))**2,
         # f + (radial_loc / tip_radius) * n_blades / (2 * loc_wake_adv_ratio) <= (n_blades / 2) * (1 / loc_wake_adv_ratio),
-        # blade_twist_deg * pi / 180 == alpha_rad + 1 / h_ati,
-        # h_ati ** 1.83442 == 0.966692 * (W_a / W_t) ** -1.84391 + 0.596688 * (W_a / W_t) ** -0.0973781,
-        # v_t ** 2 * F ** 2 * (1 + (4 * loc_wake_adv_ratio * tip_radius/(pi * n_blades * radial_loc)) ** 2) >= (n_blades * gamma /(4 * pi * radial_loc)) ** 2,
+        #blade_twist_deg * pi / 180 == alpha_rad + 1 / h_ati,
+        #h_ati ** 1.83442 == 0.966692 * (W_a / W_t) ** -1.84391 + 0.596688 * (W_a / W_t) ** -0.0973781,
+        #v_t ** 2 * F ** 2 * (1 + (4 * loc_wake_adv_ratio * tip_radius/(pi * n_blades * radial_loc)) ** 2) >= (n_blades * gamma /(4 * pi * radial_loc)) ** 2,
         # alpha_deg >= -45
         # v_a >= 0,
         # v_t >= 0
@@ -264,7 +262,7 @@ for station in range(n_stations):  # TODO undo this
     torque.append(dTorque)
     radius.append(opti.value(radial_loc))
     chord.append(opti.value(chord_local))
-    beta.append(opti.value(phi_deg + alpha_deg))
+    beta.append(opti.value(phi_deg+alpha_deg))
     Cl.append(opti.value(cl))
     Cd.append(opti.value(cd))
     RE.append(opti.value(Re))
@@ -281,14 +279,14 @@ Thrust = sum(thrust)
 Torque = sum(torque)
 
 # debugging section: outputs printed in qprop
-print("radius    chord      beta      Cl        Cd        Re     Mach    effi      effp     Wa      Aswirl    adv_wake     alpha    Wt")
+print(    "radius    chord      beta      Cl        Cd        Re     Mach    effi      effp     Wa      Aswirl    adv_wake     alpha    Wt")
 for i in range(0, len(radius)):
-    # print(f'{radius[i]} {chord[i]}  {beta[i]}   {Cl[i]}  {Cd[i]}  {Re[i]}  {Mach[i]}    {effi[i]}    {effp[i]}    {Wa[i]}  {a_swirl[i]}  {adv_wake[i]}')
+    #print(f'{radius[i]} {chord[i]}  {beta[i]}   {Cl[i]}  {Cd[i]}  {Re[i]}  {Mach[i]}    {effi[i]}    {effp[i]}    {Wa[i]}  {a_swirl[i]}  {adv_wake[i]}')
     print('%.4f    %.4f     %.3f    %.4f    %.5f   %d  %.3f   %.4f    %.4f   %.2f   %.3f   %.4f     %.4f    %.2f'
-          % (radius[i], chord[i], beta[i], Cl[i], Cd[i], RE[i], Mach[i], effi[i], effp[i], Wa[i], a_swirl[i], adv_wake[i], alpha[i], Wt[i]))
+          %(radius[i], chord[i],  beta[i],   Cl[i],  Cd[i],  RE[i],  Mach[i],    effi[i],    effp[i],    Wa[i],  a_swirl[i],  adv_wake[i],  alpha[i], Wt[i]))
 print(f"Thrust Total: {Thrust}")
 print(f"Torque Total: {Torque}")
-# return Torque, Thrust
+#return Torque, Thrust
 
 
 # Thrust, Torque = annick_propulsion_model(

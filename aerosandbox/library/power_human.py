@@ -48,8 +48,7 @@ def power_human(
             b0 +
             b1 * log_duration_mins +
             b2 * log_duration_mins ** 2
-    )  # essentially, a cubic in log-log space
-
+    ) # essentially, a cubic in log-log space
 
 if __name__ == '__main__':
     print(
