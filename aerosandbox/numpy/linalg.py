@@ -184,12 +184,11 @@ def inv_symmetric_3x3(
 
     From https://math.stackexchange.com/questions/233378/inverse-of-a-3-x-3-covariance-matrix-or-any-positive-definite-pd-matrix
     """
-    det = (
+    inv_det = 1 / (
             m11 * (m33 * m22 - m23 ** 2) -
             m12 * (m33 * m12 - m23 * m13) +
             m13 * (m23 * m12 - m22 * m13)
     )
-    inv_det = 1 / det
     a11 = m33 * m22 - m23 ** 2
     a12 = m13 * m23 - m33 * m12
     a13 = m12 * m23 - m13 * m22

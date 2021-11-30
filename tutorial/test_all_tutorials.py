@@ -1,5 +1,20 @@
+"""
+################################################################################
+README:
+
+Ignore this file; this is just here so that all tutorials are automatically run by PyTest on each build (in order
+to ensure that they don't throw any errors).
+"""
+
+import os
+import sys
 from pathlib import Path
-import json, sys, os
+import shutil
+import tempfile
+import json
+
+real_tutorial_directory = Path(__file__).parent
+
 
 def convert_ipynb_to_py(
         input_file: Path,
@@ -37,7 +52,7 @@ def run_python_file(path: Path) -> None:
 
     """
     sys.path.append(str(path.parent))
-    __import__(path.with_suffix("").name)
+    __import__(os.path.splitext(path.name)[0])
 
 
 def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
@@ -80,3 +95,21 @@ def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
             print(f"##### Opening directory: {path}")
         for subpath in path.iterdir():
             run_all_python_files(subpath, recursive=recursive, verbose=verbose)
+
+
+def test_all_tutorials():
+    with tempfile.TemporaryDirectory() as temp:
+        temp_tutorial_directory = Path(temp) / "tutorial"
+        print("##### Making temporary directory of /tutorial/ for testing...")
+        shutil.copytree(
+            src=real_tutorial_directory,
+            dst=temp_tutorial_directory,
+        )
+        run_all_python_files(temp_tutorial_directory, recursive=True)
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+
+    with plt.ion():
+        test_all_tutorials()
