@@ -13,6 +13,7 @@ def solar_flux_outside_atmosphere_normal(day_of_year):
     return 1366 * (
             1 + 0.033 * np.cosd(360 * (day_of_year - 2) / 365))  # W/m^2; variation due to orbital eccentricity
 
+
 def declination_angle(day_of_year):
     """
     Declination angle, in degrees, as a func. of day of year. (Seasonality)
