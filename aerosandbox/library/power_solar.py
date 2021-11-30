@@ -27,10 +27,15 @@ def declination_angle(day_of_year):
 def solar_elevation_angle(latitude, day_of_year, time):
     """
     Elevation angle of the sun [degrees] for a local observer.
+
     :param latitude: Latitude [degrees]
+
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+
     :param time: Time after local solar noon [seconds]
-    :return: Solar elevation angle [degrees] (angle between horizon and sun). Returns 0 if the sun is below the horizon.
+
+    :return: Solar elevation angle [degrees] (angle between horizon and sun). Returns negative values if the sun is
+    below the horizon.
     """
 
     # Solar elevation angle (including seasonality, latitude, and time of day)
@@ -41,7 +46,6 @@ def solar_elevation_angle(latitude, day_of_year, time):
         np.sind(declination) * np.sind(latitude) +
         np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
     )  # in degrees
-    solar_elevation_angle = np.fmax(solar_elevation_angle, 0)
     return solar_elevation_angle
 
 
