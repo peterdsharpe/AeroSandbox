@@ -85,6 +85,8 @@ def show_plot(
         title: str = None,
         xlabel: str = None,
         ylabel: str = None,
+        dpi: float = None,
+        savefig: str = None,
         tight_layout: bool = True,
         legend: bool = None,
         legend_frame: bool = True,
@@ -140,6 +142,10 @@ def show_plot(
         plt.tight_layout()
     if legend:
         plt.legend(frameon=legend_frame)
+    if dpi is not None:
+        fig.set_dpi(dpi)
+    if savefig is not None:
+        plt.savefig(savefig)
     if show:
         plt.show()
 
@@ -233,7 +239,7 @@ def plot_color_by_value(
     if clim is None:
         clim = (cmin, cmax)
 
-    norm = plt.Normalize(vmin = clim[0], vmax = clim[1], clip=False)
+    norm = plt.Normalize(vmin=clim[0], vmax=clim[1], clip=False)
 
     label = kwargs.pop("label", None)
 
