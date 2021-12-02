@@ -10,9 +10,6 @@ slug = 14.59390
 lbm = 0.45359237
 short_ton = 2000 * lbm
 
-# Force (equivalents in Newtons)
-lbf = slug * foot
-
 # Time (equivalents in seconds)
 minute = 60
 hour = 60 * minute
@@ -20,3 +17,6 @@ day = 86400
 week = 7 * day
 year = 365.25 * day
 month = year / 12
+
+# Force (equivalents in Newtons)
+lbf = slug * foot
