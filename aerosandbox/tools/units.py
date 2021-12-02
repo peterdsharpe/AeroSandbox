@@ -11,7 +11,7 @@ lbm = 0.45359237
 short_ton = 2000 * lbm
 
 # Force (equivalents in Newtons)
-lbf = 4.4482216152605
+lbf = slug * foot
 
 # Time (equivalents in seconds)
 minute = 60
