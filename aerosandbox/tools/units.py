@@ -9,6 +9,8 @@ naut_mile = 1852
 slug = 14.59390
 lbm = 0.45359237
 short_ton = 2000 * lbm
+long_ton = 2240 * lbm
+oz = lbm / 16
 
 # Time (equivalents in seconds)
 minute = 60
