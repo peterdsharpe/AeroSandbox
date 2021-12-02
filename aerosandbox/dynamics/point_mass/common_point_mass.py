@@ -373,6 +373,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
              draw_axes: bool = True,
              scale_vehicle_model: Union[float, None] = None,
              n_vehicles_to_draw: int = 10,
+             cg_axes: str="geometry",
              ):
         if backend == "pyvista":
             import pyvista as pv
@@ -445,11 +446,19 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 except AttributeError:
                     psi = dyn.track
 
+                x_cg_b, y_cg_b, z_cg_b = dyn.convert_axes(
+                    dyn.mass_props.x_cg,
+                    dyn.mass_props.y_cg,
+                    dyn.mass_props.z_cg,
+                    from_axes=cg_axes,
+                    to_axes="body"
+                )
+
                 this_vehicle = copy.deepcopy(vehicle_model)
                 this_vehicle.translate([
-                    -dyn.mass_props.x_cg,
-                    -dyn.mass_props.y_cg,
-                    -dyn.mass_props.z_cg,
+                    -x_cg_b,
+                    -y_cg_b,
+                    -z_cg_b,
                 ])
                 this_vehicle.points *= scale_vehicle_model
                 this_vehicle.rotate_x(np.degrees(phi))
