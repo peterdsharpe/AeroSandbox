@@ -15,7 +15,7 @@ fuselage = asb.Fuselage(
 )
 
 fig, ax = plt.subplots(figsize=(7, 6))
-Beta, Alpha = np.meshgrid(np.linspace(-30, 30, 500), np.linspace(-30, 30, 500))
+Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 500), np.linspace(-90, 90, 500))
 aero = fuselage_aerodynamics(
     fuselage=fuselage,
     op_point=asb.OperatingPoint(
@@ -28,7 +28,7 @@ from aerosandbox.tools.string_formatting import eng_string
 
 contour(
     Beta, Alpha, aero["L"], colorbar_label="Lift $L$ [N]",
-    levels=100,
+    # levels=100,
     linelabels_format=lambda s: eng_string(s, unit="N"),
     cmap=plt.get_cmap("coolwarm")
 )
