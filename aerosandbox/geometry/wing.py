@@ -818,7 +818,7 @@ class WingXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_le: np.ndarray = np.array([0, 0, 0]),
+                 xyz_le: Union[np.ndarray, List] = np.array([0, 0, 0]),
                  chord: float = 1.,
                  twist: float = 0,
                  airfoil: Airfoil = None,
