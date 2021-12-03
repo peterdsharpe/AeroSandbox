@@ -29,7 +29,8 @@ class Opti(cas.Opti):
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
                  ignore_violated_parametric_constraints: bool = False,
-                 ):
+                 freeze_style: str = "parameter",
+                 ):  # TODO document
 
         # Default arguments
         if variable_categories_to_freeze is None:
@@ -232,7 +233,15 @@ class Opti(cas.Opti):
 
         # If the variable is to be frozen, return the initial guess. Otherwise, define the variable using CasADi symbolics.
         if freeze:
-            var = self.parameter(n_params=n_vars, value=init_guess)
+            if self.freeze_style == "parameter":
+                var = self.parameter(n_params=n_vars, value=init_guess)
+            elif self.freeze_style == "float":
+                if n_vars == 1:
+                    var = init_guess
+                else:
+                    var = init_guess * np.ones(n_vars)
+            else:
+                raise ValueError("Bad value of `Opti.freeze_style`!")
         else:
             if not log_transform:
                 var = scale * super().variable(n_vars)
