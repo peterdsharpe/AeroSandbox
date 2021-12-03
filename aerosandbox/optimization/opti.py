@@ -24,7 +24,7 @@ class Opti(cas.Opti):
     """
 
     def __init__(self,
-                 variable_categories_to_freeze: List[str] = None,
+                 variable_categories_to_freeze: Union[List[str], str] = None,
                  cache_filename: str = None,
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
