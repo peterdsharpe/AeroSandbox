@@ -228,7 +228,11 @@ class Opti(cas.Opti):
 
         # If the variable is in a category to be frozen, fix the variable at the initial guess.
         is_manually_frozen = freeze
-        if category in self.variable_categories_to_freeze:
+        if (
+                category in self.variable_categories_to_freeze or
+                category == self.variable_categories_to_freeze or
+                self.variable_categories_to_freeze == "all"
+        ):
             freeze = True
 
         # If the variable is to be frozen, return the initial guess. Otherwise, define the variable using CasADi symbolics.
