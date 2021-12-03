@@ -279,7 +279,6 @@ class Opti(cas.Opti):
                 if upper_bound is not None:
                     self.subject_to(log_var / log_scale <= np.log(upper_bound) / log_scale)
 
-
         return var
 
     def subject_to(self,
