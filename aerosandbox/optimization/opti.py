@@ -45,6 +45,7 @@ class Opti(cas.Opti):
         self.load_frozen_variables_from_cache = load_frozen_variables_from_cache  # TODO load and start tracking
         self.save_to_cache_on_solve = save_to_cache_on_solve
         self.ignore_violated_parametric_constraints = ignore_violated_parametric_constraints
+        self.freeze_style = freeze_style
 
         # Start tracking variables and categorize them.
         self.variables_categorized = {}  # key: value :: category name [str] : list of variables [list]
@@ -260,7 +261,10 @@ class Opti(cas.Opti):
         if category not in self.variables_categorized:  # Add a category if it does not exist
             self.variables_categorized[category] = []
         self.variables_categorized[category].append(var)
-        var.is_manually_frozen = is_manually_frozen
+        try:
+            var.is_manually_frozen = is_manually_frozen
+        except AttributeError:
+            pass
 
         # Apply bounds
         if not freeze and self.ignore_violated_parametric_constraints:
