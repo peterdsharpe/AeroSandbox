@@ -25,3 +25,19 @@ def is_casadi_type(array_like, recursive=True) -> bool:
             isinstance(array_like, cas.DM) or
             isinstance(array_like, cas.SX)
     )
+
+
+def is_iterable(x):
+    """
+    Returns a boolean of whether an object is iterable or not.
+    Args:
+        x:
+
+    Returns:
+
+    """
+    try:
+        iter(x)
+        return True
+    except TypeError:
+        return False

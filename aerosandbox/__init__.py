@@ -1,16 +1,20 @@
-from .common import *
-from .atmosphere import *
-from .aerodynamics import *
-from .dynamics import *
-from .geometry import *
-import aerosandbox.numpy as numpy
-from .modeling import *
-from .optimization import *
-from .performance import *
-from .propulsion import *
-from .structures import *
+from pathlib import Path
 
-__version__ = "3.2.15"
+_asb_root = Path(__file__).parent
+
+from aerosandbox.common import *
+from aerosandbox.optimization import *
+from aerosandbox.modeling import *
+from aerosandbox.geometry import *
+from aerosandbox.atmosphere import *
+from aerosandbox.weights import *
+from aerosandbox.performance import *
+from aerosandbox.dynamics import *
+from aerosandbox.aerodynamics import *
+from aerosandbox.propulsion import *
+from aerosandbox.structures import *
+
+__version__ = "3.3.0"
 
 
 def docs():
@@ -22,6 +26,7 @@ def docs():
         "https://github.com/peterdsharpe/AeroSandbox/tree/master/aerosandbox"
     )  # TODO: make this redirect to a hosted ReadTheDocs, or similar.
 
+
 def run_tests():
     """
     Runs all of the AeroSandbox internal unit tests on this computer.
@@ -31,10 +36,7 @@ def run_tests():
     except ModuleNotFoundError:
         raise ModuleNotFoundError("Please install `pytest` (`pip install pytest`) to run AeroSandbox unit tests.")
     import matplotlib.pyplot as plt
-    from pathlib import Path
 
-    asb_root = Path(__file__).parent
+    with plt.ion():  # Disable blocking plotting
 
-    with plt.ion(): # Disable blocking plotting
-
-        pytest.main([str(asb_root)])
+        pytest.main([str(_asb_root)])

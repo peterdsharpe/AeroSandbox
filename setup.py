@@ -68,7 +68,11 @@ setup(
             'pyvista >= 0.31',
             'ipyvtklink >= 0.2',
             'trimesh >= 3',
-            'sympy >= 1'
+            'sympy >= 1',
+        ],
+        "test": [
+            'pytest',
+            'nbval'
         ]
     },
     include_package_data=True,

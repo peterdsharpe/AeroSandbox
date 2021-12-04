@@ -289,6 +289,22 @@ class Airfoil(Polygon):
             **unstructured_interpolated_model_kwargs
         )
 
+        ### Determine if separated
+        alpha_stall_positive = np.max(data["alpha"])  # Across all Re
+        alpha_stall_negative = np.min(data["alpha"])  # Across all Re
+
+        def separation_parameter(alpha, Re=0):
+            """
+            Positive if separated, negative if attached.
+
+            This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
+            ~90% separated, and a value of -1 means the flow is ~90% attached.
+            """
+            return 0.5 * np.softmax(
+                alpha - alpha_stall_positive,
+                alpha_stall_negative - alpha
+            )
+
         ### Make the interpolators for separated aerodynamics
         from aerosandbox.aerodynamics.aero_2D.airfoil_polar_functions import airfoil_coefficients_post_stall
 
@@ -296,6 +312,8 @@ class Airfoil(Polygon):
             airfoil=self,
             alpha=alpha_resample
         )
+        # if not make_360_deg_model:
+        #     CL_if_separated =
 
         CD_if_separated = CD_if_separated + np.median(data["CD"])
         # The line above effectively ensures that separated CD will never be less than attached CD. Not exactly, but generally close. A good heuristic.
@@ -312,22 +330,6 @@ class Airfoil(Polygon):
             x_data=alpha_resample,
             y_data=CM_if_separated
         )
-
-        ### Determine if separated
-        alpha_stall_positive = np.max(data["alpha"])  # Across all Re
-        alpha_stall_negative = np.min(data["alpha"])  # Across all Re
-
-        def separation_parameter(alpha, Re=0):
-            """
-            Positive if separated, negative if attached.
-
-            This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
-            ~90% separated, and a value of -1 means the flow is ~90% attached.
-            """
-            return 0.5 * np.softmax(
-                alpha - alpha_stall_positive,
-                alpha_stall_negative - alpha
-            )
 
         def CL_function(alpha, Re, mach=0, deflection=0):
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.

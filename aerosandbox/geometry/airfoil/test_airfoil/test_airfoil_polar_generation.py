@@ -2,7 +2,8 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 
 if __name__ == '__main__':
-    af = asb.Airfoil("dae11", generate_polars=True)
+    af = asb.Airfoil("dae11")
+    af.generate_polars(make_360_deg_model=False)
 
     alpha = np.linspace(-40, 40, 300)
     re = np.geomspace(1e4, 1e12, 100)

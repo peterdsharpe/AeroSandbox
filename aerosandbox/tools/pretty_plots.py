@@ -5,7 +5,7 @@ A set of tools used for making prettier Matplotlib plots.
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
-from typing import Union, Dict, List, Callable
+from typing import Union, Dict, List, Callable, Tuple
 from matplotlib import ticker
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
@@ -85,6 +85,8 @@ def show_plot(
         title: str = None,
         xlabel: str = None,
         ylabel: str = None,
+        dpi: float = None,
+        savefig: str = None,
         tight_layout: bool = True,
         legend: bool = None,
         legend_frame: bool = True,
@@ -140,6 +142,10 @@ def show_plot(
         plt.tight_layout()
     if legend:
         plt.legend(frameon=legend_frame)
+    if dpi is not None:
+        fig.set_dpi(dpi)
+    if savefig is not None:
+        plt.savefig(savefig)
     if show:
         plt.show()
 
@@ -197,6 +203,85 @@ def vline(
             rotation=90,
             **text_kwargs
         )
+
+
+def plot_color_by_value(
+        x: np.ndarray,
+        y: np.ndarray,
+        *args,
+        c: np.ndarray,
+        cmap=mpl.cm.get_cmap('viridis'),
+        colorbar=False,
+        colorbar_label: str = None,
+        clim: Tuple[float, float] = None,
+        **kwargs
+):
+    """
+    Uses same syntax as matplotlib.pyplot.plot, except that `c` is now an array-like that maps to a specific color
+    pulled from `cmap`. Makes lines that are multicolored based on this `c` value.
+
+    Args:
+        x:
+        y:
+        *args:
+        c:
+        cmap:
+        **kwargs:
+
+    Returns:
+
+    """
+    cmap = mpl.cm.get_cmap(cmap)
+
+    cmin = c.min()
+    cmax = c.max()
+
+    if clim is None:
+        clim = (cmin, cmax)
+
+    norm = plt.Normalize(vmin=clim[0], vmax=clim[1], clip=False)
+
+    label = kwargs.pop("label", None)
+
+    lines = []
+
+    for i, (
+            x1, x2,
+            y1, y2,
+            c1, c2,
+    ) in enumerate(zip(
+        x[:-1], x[1:],
+        y[:-1], y[1:],
+        c[:-1], c[1:],
+    )):
+        line = plt.plot(
+            [x1, x2],
+            [y1, y2],
+            *args,
+            color=cmap(norm((c1 + c2) / 2) if cmin != cmax else 0.5),
+            **kwargs
+        )
+        lines += line
+
+    if label is not None:
+        line = plt.plot(
+            [None],
+            [None],
+            *args,
+            color=cmap(0.5),
+            label=label,
+            **kwargs
+        )
+        lines += line
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    if colorbar:
+        if colorbar_label is None:
+            cbar = plt.colorbar(sm)
+        else:
+            cbar = plt.colorbar(sm, label=colorbar_label)
+    else:
+        cbar = None
+    return lines, sm, cbar
 
 
 def contour(

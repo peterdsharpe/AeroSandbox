@@ -84,7 +84,7 @@ def fuselage_aerodynamics(
     x_w, y_w, z_w = op_point.convert_axes(
         1, 0, 0, from_axes="body", to_axes="wind"
     )
-    generalized_alpha = np.arccosd(x_w/(1+1e-14))
+    generalized_alpha = np.arccosd(x_w / (1 + 1e-14))
     sin_generalized_alpha = np.sind(generalized_alpha)
     cos_generalized_alpha = x_w
 
@@ -96,8 +96,6 @@ def fuselage_aerodynamics(
         y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
     beta_fractional_component = y_w / np.sqrt(
         y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of beta
-
-
 
     ### Compute normal quantities
     ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
@@ -252,6 +250,11 @@ if __name__ == '__main__':
         )
     )
     from aerosandbox.tools.string_formatting import eng_string
-    contour(Beta, Alpha, aero["L"], levels=30, colorbar_label="Lift $L$ [N]", linelabels_format=lambda s: eng_string(s, unit="N"))
+
+    contour(
+        Beta, Alpha, aero["L"],
+        levels=30, colorbar_label="Lift $L$ [N]",
+        linelabels_format=lambda s: eng_string(s, unit="N")
+    )
     equal()
     show_plot("3D Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")

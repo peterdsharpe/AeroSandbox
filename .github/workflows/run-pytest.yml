@@ -29,13 +29,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
-          python -m pip install pytest
       - name: Test with pytest (without extras; only package)
         run: |
-          python -m pip install .
+          python -m pip install .[test]
           pytest aerosandbox
       - name: Test with pytest (with extras; only tutorials)
         run: |
-          python -m pip uninstall -y aerosandbox
-          python -m pip install .[full]
-          pytest tutorial
+          python -m pip install .[full,test]
+          py.test tutorial --nbval-lax --nbval-cell-timeout 60

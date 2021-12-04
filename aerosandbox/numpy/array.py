@@ -15,7 +15,8 @@ def array(array_like, dtype=None):
         return array_like
 
     elif not is_casadi_type(array_like,
-                            recursive=True):  # If you were given a list of iterables that don't have CasADi types:
+                            recursive=True) or dtype is not None:
+        # If you were given a list of iterables that don't have CasADi types:
         # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
 

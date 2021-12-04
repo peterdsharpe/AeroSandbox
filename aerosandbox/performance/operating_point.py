@@ -1,6 +1,7 @@
 from aerosandbox.geometry import *
 from aerosandbox import Atmosphere
 import aerosandbox.numpy as np
+from typing import Tuple, Union
 
 
 class OperatingPoint(AeroSandboxObject):
@@ -112,10 +113,12 @@ class OperatingPoint(AeroSandboxObject):
         )
 
     def convert_axes(self,
-                     x_from, y_from, z_from,
+                     x_from: Union[float, np.ndarray],
+                     y_from: Union[float, np.ndarray],
+                     z_from: Union[float, np.ndarray],
                      from_axes: str,
                      to_axes: str,
-                     ):
+                     ) -> Tuple[float, float, float]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.
@@ -204,18 +207,15 @@ class OperatingPoint(AeroSandboxObject):
 
         alpha_rotation = np.rotation_matrix_3D(
             angle=np.radians(-self.alpha),
-            axis=np.array([0, 1, 0]),
-            _axis_already_normalized=True
+            axis="y",
         )
         beta_rotation = np.rotation_matrix_3D(
             angle=np.radians(-self.beta),
-            axis=np.array([0, 0, 1]),
-            _axis_already_normalized=True
+            axis="z",
         )
         axes_flip = np.rotation_matrix_3D(
             angle=np.pi,
-            axis=np.array([0, 1, 0]),
-            _axis_already_normalized=True
+            axis="y",
         )  # Since in geometry axes, X is downstream by convention, while in wind axes, X is upstream by convetion. Same with Z being up/down respectively.
 
         r = axes_flip @ alpha_rotation @ beta_rotation  # where "@" is the matrix multiplication operator
