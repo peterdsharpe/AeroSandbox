@@ -45,6 +45,7 @@ class Wing(AeroSandboxObject):
             name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
             xsecs: A list of wing cross ("X") sections in the form of WingXSec objects.
             symmetric: Is the wing symmetric across the XZ plane?
+            analysis_specific_options: A dict of analysis-specific options in the form of analysis class: options dict pairs.
         """
         self.name = name
         self.xsecs = xsecs
@@ -826,11 +827,11 @@ class WingXSec(AeroSandboxObject):
                  chord: float = 1.,
                  twist: float = 0,
                  airfoil: Airfoil = None,
-                 control_surface_is_symmetric: bool = True,
-                 control_surface_hinge_point: float = 0.75,
-                 control_surface_deflection: float = 0.,
-                 control_surfaces: List['ControlSurface'] = [],
+                 control_surface_is_symmetric: bool = True,  # Note: deprecated.
+                 control_surface_hinge_point: float = 0.75,  # Note: deprecated.
+                 control_surface_deflection: float = 0.,  # Note: deprecated.
                  twist_angle=None,  # Note: deprecated.
+                 control_surfaces: List['ControlSurface'] = [],
                  analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
                  # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}
                  ):
@@ -846,9 +847,46 @@ class WingXSec(AeroSandboxObject):
                     * That direction vector is projected onto the Y-Z plane.
                     * That direction vector is now the twist axis.
             airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
-            control_surface_is_symmetric: Is the control surface symmetric? (e.g., True for flaps, False for ailerons.)
-            control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
-            control_surface_deflection: Control deflection, in degrees. Downwards-positive.
+            control_surfaces: A list of control surfaces in the form of ControlSurface objects.
+            analysis_specific_options: A dict of analysis-specific options in the form of analysis class: options dict pairs.
+
+            Note: Control surface definition through WingXSec properties (control_surface_is_symmetric, control_surface_hinge_point, control_surface_deflection)
+            is deprecated. Control surfaces should be handled according to the following protocol:
+            
+                1. If control_surfaces is an empty list (default, user does not specify any control surfaces), use deprecated WingXSec control surface definition properties.
+                This will result in 1 control surface at this xsec.
+                
+                Usage example:
+
+                >>>xsecs = asb.WingXSec(
+                >>>    chord = 2
+                >>>)
+
+                2. If control_surfaces is a list of ControlSurface instances, use ControlSurface properties to define control surfaces. This will result in as many
+                control surfaces at this xsec as there are entries in the control_surfaces list (an arbitrary number >= 1).
+
+                Usage example:
+
+                >>>xsecs = asb.WingXSec(
+                >>>    chord = 2,
+                >>>    control_surfaces = [
+                >>>        ControlSurface(
+                >>>            trailing_edge = False
+                >>>        )
+                >>>    ]
+                >>>)
+
+                3. If control_surfaces is None, override deprecated control surface definition properties and do not define a control surface at this xsec. This will
+                result in 0 control surfaces at this xsec.
+
+                Usage example:
+
+                >>>xsecs = asb.WingXSec(
+                >>>    chord = 2,
+                >>>    control_surfaces = None
+                >>>)
+            
+            See avl.py for example of control_surface handling using this protocol.
         """
         if airfoil is None:
             airfoil = Airfoil("naca0012")
@@ -903,6 +941,17 @@ class ControlSurface(AeroSandboxObject):
                  analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
                  # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}
                  ):
+        
+        """
+        Initialize a new control surface.
+        Args:
+            name: Name of the control surface [optional]. It can help when debugging to give each control surface a sensible name.
+            trailing_edge: Is the control surface on the trailing edge? If False, control surface is on the leading edge. (e.g. True for flaps, False for slats.)
+            hinge_point: The location of the control surface hinge, as a fraction of chord.
+            symmetric: Is the control surface symmetric? If False, control surface is anti-symmetric. (e.g. True for flaps, False for ailerons.)
+            deflection: Control deflection, in degrees. Downwards-positive.
+            analysis_specific_options: A dict of analysis-specific options in the form of analysis class: options dict pairs.
+        """
         
         self.name = name
         self.id = __class__.id
