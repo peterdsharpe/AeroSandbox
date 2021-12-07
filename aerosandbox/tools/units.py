@@ -22,3 +22,8 @@ month = year / 12
 
 # Force (equivalents in Newtons)
 lbf = slug * foot
+
+# Speed (equivalents in m/s)
+knot = 1.852 * 1000 / hour
+mph = mile / hour
+fps = foot / 1
