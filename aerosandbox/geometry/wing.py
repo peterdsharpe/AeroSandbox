@@ -69,7 +69,7 @@ class Wing(AeroSandboxObject):
         return f"Wing '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'}, {symmetry_description})"
 
     def translate(self,
-                  xyz: np.ndarray
+                  xyz: Union[np.ndarray, List]
                   ):
         """
         Translates the entire Wing by a certain amount.
@@ -823,7 +823,7 @@ class WingXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_le: np.ndarray = np.array([0, 0, 0]),
+                 xyz_le: Union[np.ndarray, List] = np.array([0, 0, 0]),
                  chord: float = 1.,
                  twist: float = 0,
                  airfoil: Airfoil = None,
@@ -913,7 +913,7 @@ class WingXSec(AeroSandboxObject):
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
 
     def translate(self,
-                  xyz: np.ndarray
+                  xyz: Union[np.ndarray, List]
                   ) -> "WingXSec":
         """
         Returns a copy of this WingXSec that has been translated by `xyz`.

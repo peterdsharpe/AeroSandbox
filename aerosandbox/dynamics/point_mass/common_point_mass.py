@@ -199,10 +199,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         def get_item_of_attribute(a):
             try:
                 return a[index]
-            except TypeError:  # object is not subscriptable
+            except TypeError as e:  # object is not subscriptable
                 return a
             except IndexError as e:  # index out of range
                 raise IndexError("A state variable could not be indexed, since the index is out of range!")
+            except NotImplementedError as e:
+                raise TypeError(f"Indices must be integers or slices, not {index.__class__.__name__}")
 
         new_instance = self.get_new_instance_with_state()
 
@@ -373,6 +375,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
              draw_axes: bool = True,
              scale_vehicle_model: Union[float, None] = None,
              n_vehicles_to_draw: int = 10,
+             cg_axes: str = "geometry",
+             show: bool = True,
              ):
         if backend == "pyvista":
             import pyvista as pv
@@ -381,14 +385,21 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             if vehicle_model is None:
                 default_vehicle_stl = _asb_root / "dynamics/visualization/default_assets/yf23.stl"
                 vehicle_model = pv.read(str(default_vehicle_stl))
+            elif isinstance(vehicle_model, pv.PolyData):
+                pass
             elif isinstance(vehicle_model, Airplane):
                 vehicle_model = vehicle_model.draw(
                     backend="pyvista",
                     show=False
                 )
                 vehicle_model.rotate_y(180)  # Rotate from geometry axes to body axes.
+            elif isinstance(vehicle_model, str):  # Interpret the string as a filepath to a .stl or similar
+                try:
+                    pv.read(filename=vehicle_model)
+                except:
+                    raise ValueError("Could not parse `vehicle_model`!")
             else:
-                raise TypeError("`vehicle_model` should be an Airplane object.")
+                raise TypeError("`vehicle_model` should be an Airplane or PolyData object.")
 
             x_e = np.array(self.x_e)
             y_e = np.array(self.y_e)
@@ -406,7 +417,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     [y_e.min(), y_e.max()],
                     [z_e.min(), z_e.max()],
                 ])
-                scale_vehicle_model = 0.1 * np.max(np.diff(trajectory_bounds, axis=1))
+                trajectory_size = np.max(np.diff(trajectory_bounds, axis=1))
+
+                vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
+                vehicle_size = np.max(np.diff(vehicle_bounds, axis=1))
+
+                scale_vehicle_model = 0.1 * trajectory_size / vehicle_size
 
             ### Initialize the plotter
             plotter = pv.Plotter()
@@ -445,11 +461,19 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 except AttributeError:
                     psi = dyn.track
 
+                x_cg_b, y_cg_b, z_cg_b = dyn.convert_axes(
+                    dyn.mass_props.x_cg,
+                    dyn.mass_props.y_cg,
+                    dyn.mass_props.z_cg,
+                    from_axes=cg_axes,
+                    to_axes="body"
+                )
+
                 this_vehicle = copy.deepcopy(vehicle_model)
                 this_vehicle.translate([
-                    -dyn.mass_props.x_cg,
-                    -dyn.mass_props.y_cg,
-                    -dyn.mass_props.z_cg,
+                    -x_cg_b,
+                    -y_cg_b,
+                    -z_cg_b,
                 ])
                 this_vehicle.points *= scale_vehicle_model
                 this_vehicle.rotate_x(np.degrees(phi))
@@ -496,13 +520,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     line_width=3,
                 )
 
-                ### Finalize the plotter
-                plotter.camera.up = (0, 0, -1)
-                plotter.camera.Azimuth(90)
-                plotter.camera.Elevation(60)
+            ### Finalize the plotter
+            plotter.camera.up = (0, 0, -1)
+            plotter.camera.Azimuth(90)
+            plotter.camera.Elevation(60)
+            if show:
                 plotter.show()
-
-                return plotter
+            return plotter
 
     @property
     def altitude(self):

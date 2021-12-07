@@ -367,7 +367,7 @@ class FuselageXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_c: np.ndarray = np.array([0, 0, 0]),
+                 xyz_c: Union[np.ndarray, List] = np.array([0, 0, 0]),
                  radius: float = 0,
                  analysis_specific_options: Dict[type, Dict[type, Dict[str, Any]]] = {}
                  # dict of analysis-specific options dicts in form {analysis: {"option": value}}, e.g. {AeroSandbox.AVL: {"component": 1}}

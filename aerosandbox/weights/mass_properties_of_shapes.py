@@ -6,6 +6,38 @@ Most of these relations are taken from:
 https://en.wikipedia.org/wiki/List_of_moments_of_inertia
 """
 
+def mass_properties_from_radius_of_gyration(
+        mass: float,
+        radius_of_gyration_x: float,
+        radius_of_gyration_y: float,
+        radius_of_gyration_z: float,
+) -> MassProperties:
+    """
+    Returns the mass properties of an object, given its radius of gyration.
+
+    It's assumed that the principle axes of the inertia tensor are aligned with the coordinate axes.
+
+    Args:
+        mass: Mass [kg]
+        radius_of_gyration_x: Radius of gyration along the x-axis [m]
+        radius_of_gyration_y: Radius of gyration along the y-axis [m]
+        radius_of_gyration_z: Radius of gyration along the z-axis [m]
+
+    Returns: MassProperties object.
+
+    """
+    return MassProperties(
+        mass=mass,
+        x_cg=0,
+        y_cg=0,
+        z_cg=0,
+        Ixx=mass * radius_of_gyration_x ** 2,
+        Iyy=mass * radius_of_gyration_y ** 2,
+        Izz=mass * radius_of_gyration_z ** 2,
+        Ixy=0,
+        Iyz=0,
+        Ixz=0,
+    )
 
 def mass_properties_of_ellipsoid(
         mass: float,

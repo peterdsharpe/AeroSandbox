@@ -24,12 +24,13 @@ class Opti(cas.Opti):
     """
 
     def __init__(self,
-                 variable_categories_to_freeze: List[str] = None,
+                 variable_categories_to_freeze: Union[List[str], str] = None,
                  cache_filename: str = None,
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
                  ignore_violated_parametric_constraints: bool = False,
-                 ):
+                 freeze_style: str = "parameter",
+                 ):  # TODO document
 
         # Default arguments
         if variable_categories_to_freeze is None:
@@ -44,6 +45,7 @@ class Opti(cas.Opti):
         self.load_frozen_variables_from_cache = load_frozen_variables_from_cache  # TODO load and start tracking
         self.save_to_cache_on_solve = save_to_cache_on_solve
         self.ignore_violated_parametric_constraints = ignore_violated_parametric_constraints
+        self.freeze_style = freeze_style
 
         # Start tracking variables and categorize them.
         self.variables_categorized = {}  # key: value :: category name [str] : list of variables [list]
@@ -207,7 +209,7 @@ class Opti(cas.Opti):
                 scale = 1
             else:
                 scale = np.mean(np.fabs(init_guess))  # Initialize the scale to a heuristic based on the init_guess
-                if scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
+                if isinstance(scale, cas.MX) or scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
                     scale = 1
 
                 # scale = np.fabs(
@@ -227,12 +229,24 @@ class Opti(cas.Opti):
 
         # If the variable is in a category to be frozen, fix the variable at the initial guess.
         is_manually_frozen = freeze
-        if category in self.variable_categories_to_freeze:
+        if (
+                category in self.variable_categories_to_freeze or
+                category == self.variable_categories_to_freeze or
+                self.variable_categories_to_freeze == "all"
+        ):
             freeze = True
 
         # If the variable is to be frozen, return the initial guess. Otherwise, define the variable using CasADi symbolics.
         if freeze:
-            var = self.parameter(n_params=n_vars, value=init_guess)
+            if self.freeze_style == "parameter":
+                var = self.parameter(n_params=n_vars, value=init_guess)
+            elif self.freeze_style == "float":
+                if n_vars == 1:
+                    var = init_guess
+                else:
+                    var = init_guess * np.ones(n_vars)
+            else:
+                raise ValueError("Bad value of `Opti.freeze_style`!")
         else:
             if not log_transform:
                 var = scale * super().variable(n_vars)
@@ -247,20 +261,23 @@ class Opti(cas.Opti):
         if category not in self.variables_categorized:  # Add a category if it does not exist
             self.variables_categorized[category] = []
         self.variables_categorized[category].append(var)
-        var.is_manually_frozen = is_manually_frozen
+        try:
+            var.is_manually_frozen = is_manually_frozen
+        except AttributeError:
+            pass
 
         # Apply bounds
-        if not log_transform:
-            if lower_bound is not None:
-                self.subject_to(var / scale >= lower_bound / scale)
-            if upper_bound is not None:
-                self.subject_to(var / scale <= upper_bound / scale)
-        else:
-            if lower_bound is not None:
-                self.subject_to(log_var / log_scale >= np.log(lower_bound) / log_scale)
-            if upper_bound is not None:
-                self.subject_to(log_var / log_scale <= np.log(upper_bound) / log_scale)
-
+        if not (freeze and self.ignore_violated_parametric_constraints):
+            if not log_transform:
+                if lower_bound is not None:
+                    self.subject_to(var / scale >= lower_bound / scale)
+                if upper_bound is not None:
+                    self.subject_to(var / scale <= upper_bound / scale)
+            else:
+                if lower_bound is not None:
+                    self.subject_to(log_var / log_scale >= np.log(lower_bound) / log_scale)
+                if upper_bound is not None:
+                    self.subject_to(log_var / log_scale <= np.log(upper_bound) / log_scale)
 
         return var
 
