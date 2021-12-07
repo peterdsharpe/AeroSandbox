@@ -377,6 +377,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
              scale_vehicle_model: Union[float, None] = None,
              n_vehicles_to_draw: int = 10,
              cg_axes: str="geometry",
+             show: bool = True,
              ):
         if backend == "pyvista":
             import pyvista as pv
@@ -508,13 +509,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     line_width=3,
                 )
 
-                ### Finalize the plotter
-                plotter.camera.up = (0, 0, -1)
-                plotter.camera.Azimuth(90)
-                plotter.camera.Elevation(60)
-                plotter.show()
+            ### Finalize the plotter
+            plotter.camera.up = (0, 0, -1)
+            plotter.camera.Azimuth(90)
+            plotter.camera.Elevation(60)
+            plotter.show()
 
-                return plotter
+            return plotter
 
     @property
     def altitude(self):
