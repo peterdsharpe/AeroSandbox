@@ -513,8 +513,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             plotter.camera.up = (0, 0, -1)
             plotter.camera.Azimuth(90)
             plotter.camera.Elevation(60)
-            plotter.show()
-
+            if show:
+                plotter.show()
             return plotter
 
     @property
