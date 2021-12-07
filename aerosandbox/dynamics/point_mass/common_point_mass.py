@@ -199,10 +199,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         def get_item_of_attribute(a):
             try:
                 return a[index]
-            except TypeError:  # object is not subscriptable
+            except TypeError as e:  # object is not subscriptable
                 return a
             except IndexError as e:  # index out of range
                 raise IndexError("A state variable could not be indexed, since the index is out of range!")
+            except NotImplementedError as e:
+                raise TypeError(f"Indices must be integers or slices, not {index.__class__.__name__}")
+
 
         new_instance = self.get_new_instance_with_state()
 
