@@ -206,7 +206,6 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             except NotImplementedError as e:
                 raise TypeError(f"Indices must be integers or slices, not {index.__class__.__name__}")
 
-
         new_instance = self.get_new_instance_with_state()
 
         for k, v in new_instance.__dict__.items():
@@ -376,7 +375,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
              draw_axes: bool = True,
              scale_vehicle_model: Union[float, None] = None,
              n_vehicles_to_draw: int = 10,
-             cg_axes: str="geometry",
+             cg_axes: str = "geometry",
              show: bool = True,
              ):
         if backend == "pyvista":
@@ -394,7 +393,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     show=False
                 )
                 vehicle_model.rotate_y(180)  # Rotate from geometry axes to body axes.
-            elif isinstance(vehicle_model, str): # Interpret the string as a filepath to a .stl or similar
+            elif isinstance(vehicle_model, str):  # Interpret the string as a filepath to a .stl or similar
                 try:
                     pv.read(filename=vehicle_model)
                 except:
@@ -418,7 +417,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     [y_e.min(), y_e.max()],
                     [z_e.min(), z_e.max()],
                 ])
-                scale_vehicle_model = 0.1 * np.max(np.diff(trajectory_bounds, axis=1))
+                trajectory_size = np.max(np.diff(trajectory_bounds, axis=1))
+
+                vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
+                vehicle_size = np.max(np.diff(vehicle_bounds, axis=1))
+
+                scale_vehicle_model = 0.1 * trajectory_size / vehicle_size
 
             ### Initialize the plotter
             plotter = pv.Plotter()
