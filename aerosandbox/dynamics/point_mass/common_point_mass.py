@@ -386,14 +386,21 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             if vehicle_model is None:
                 default_vehicle_stl = _asb_root / "dynamics/visualization/default_assets/yf23.stl"
                 vehicle_model = pv.read(str(default_vehicle_stl))
+            elif isinstance(vehicle_model, pv.PolyData):
+                pass
             elif isinstance(vehicle_model, Airplane):
                 vehicle_model = vehicle_model.draw(
                     backend="pyvista",
                     show=False
                 )
                 vehicle_model.rotate_y(180)  # Rotate from geometry axes to body axes.
+            elif isinstance(vehicle_model, str): # Interpret the string as a filepath to a .stl or similar
+                try:
+                    pv.read(filename=vehicle_model)
+                except:
+                    raise ValueError("Could not parse `vehicle_model`!")
             else:
-                raise TypeError("`vehicle_model` should be an Airplane object.")
+                raise TypeError("`vehicle_model` should be an Airplane or PolyData object.")
 
             x_e = np.array(self.x_e)
             y_e = np.array(self.y_e)
