@@ -211,30 +211,6 @@ def solar_flux(
     )
 
 
-def solar_flux_circular_flight_path(
-        latitude: float,
-        day_of_year: float,
-        time: float,
-        panel_angle: float,
-        panel_heading: float,
-        scattering: bool = True
-) -> float:
-    """
-    What is the solar flux on a surface at a given angle for a circular flight path given the radius?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param panel_angle: the degrees of horizontal the array is mounted (0 if hoirzontal and 90 if vertical)
-    :param panel_heading: the directionality of the solar panel (0 degrees if pointing North and 180 if South)
-    :param scattering: Boolean: include scattering effects at very low angles?
-    :return:
-    """
-
-    solar_flux_on_panel = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function(
-        latitude, day_of_year, time, panel_heading, panel_angle)
-    return solar_flux_on_panel
-
-
 def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True):
     """
     How many hours of equivalent peak sun do you get per day?
