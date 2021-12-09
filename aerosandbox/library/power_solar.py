@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
 
+
 def solar_flux_outside_atmosphere_normal(day_of_year):
     """
     Normal solar flux at the top of the atmosphere (variation due to orbital eccentricity)
@@ -83,13 +84,14 @@ def solar_azimuth_angle(latitude, day_of_year, time):
 
     return solar_azimuth_angle
 
+
 def incidence_angle_function(
         latitude: float,
         day_of_year: float,
         time: float,
-        panel_azimuth_angle: float=0,
-        panel_tilt_angle: float=0,
-        scattering: bool=True,
+        panel_azimuth_angle: float = 0,
+        panel_tilt_angle: float = 0,
+        scattering: bool = True,
 ):
     """
     This website will be useful for accounting for direction of the vertical surface
@@ -112,10 +114,10 @@ def incidence_angle_function(
             np.cosd(panel_azimuth_angle - solar_azimuth)
             + np.sind(solar_elevation) * np.cosd(panel_tilt_angle)
 
-    if scattering:
+        if scattering:
         incidence = cosine_factor * scattering_factor(solar_elevation)
     else:
-        illumination_factor = cosine_factor
+    illumination_factor = cosine_factor
 
     illumination_factor = np.fmax(illumination_factor, 0)
     illumination_factor = np.where(
@@ -175,12 +177,13 @@ def scattering_factor(elevation_angle):
     # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
     return scattering_factor
 
+
 def solar_flux(
         latitude: float,
         day_of_year: float,
         time: float,
-        panel_azimuth_angle: float =0,
-        panel_tilt_angle: float=0,
+        panel_azimuth_angle: float = 0,
+        panel_tilt_angle: float = 0,
         scattering: bool = True
 ) -> float:
     """
@@ -202,6 +205,7 @@ def solar_flux(
                 scattering=scattering
             )
     )
+
 
 def solar_flux_circular_flight_path(
         latitude: float,
@@ -247,6 +251,8 @@ def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True)
     ) / 3600
 
     return sun_hours
+
+
 def length_day(latitude, day_of_year):
     """
     How many hours of with incoming solar energy  per day?
@@ -264,6 +270,7 @@ def length_day(latitude, day_of_year):
         if solar_flux > 1:
             sun_time = sun_time + (872.72727273 / 60 / 60)
     return sun_time
+
 
 def mass_MPPT(
         power: float
@@ -284,13 +291,13 @@ def mass_MPPT(
 
 
 if __name__ == "__main__":
-
     # circular flight path function test
 
     import matplotlib.pyplot as plt
+
     ## fun integration problem
-    airspeed = 30 # m/s
-    radius = 50000 # m
+    airspeed = 30  # m/s
+    radius = 50000  # m
     latitude = 60
     day_of_year = 174
     angle = 90
@@ -335,10 +342,11 @@ if __name__ == "__main__":
     # # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
     # plt.show()
 
-    #circular flight path test w optimization
+    # circular flight path test w optimization
     import aerosandbox as asb
+
     opti = asb.Opti()
-    radius = 50000 # m
+    radius = 50000  # m
     latitude = 60
     day_of_year = 174
     angle = 90
@@ -405,11 +413,16 @@ if __name__ == "__main__":
         airspeed >= 0,
         dx / 1e4 == trapz(groundspeed) * dt / 1e4,
         x[-1] >= 10000,
-        vehicle_direction == x / (np.pi / 180) / radius + 90 , # direction the vehicle must fly on to remain in the circular trajectory
-        heading_x == airspeed * np.sind(vehicle_direction) - wind_speed * np.sind(wind_direction),  # x component of heading vector
-        heading_y == airspeed * np.cosd(vehicle_direction) - wind_speed * np.cosd(wind_direction) , # y component of heading vector
-        vehicle_heading == np.arctan2d(heading_y, heading_x), # actual directionality of the vehicle as modified by the wind speed and direction
-        groundspeed ** 2 == heading_x ** 2 + heading_y ** 2, # speed of aircraft as measured from observer on the ground
+        vehicle_direction == x / (np.pi / 180) / radius + 90,
+        # direction the vehicle must fly on to remain in the circular trajectory
+        heading_x == airspeed * np.sind(vehicle_direction) - wind_speed * np.sind(wind_direction),
+        # x component of heading vector
+        heading_y == airspeed * np.cosd(vehicle_direction) - wind_speed * np.cosd(wind_direction),
+        # y component of heading vector
+        vehicle_heading == np.arctan2d(heading_y, heading_x),
+        # actual directionality of the vehicle as modified by the wind speed and direction
+        groundspeed ** 2 == heading_x ** 2 + heading_y ** 2,
+        # speed of aircraft as measured from observer on the ground
         groundspeed >= 2,
         airspeed <= 40,
         airspeed >= 10,
@@ -461,7 +474,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
     plt.show()
-
 
     # Run some checks
     import plotly.graph_objects as go
@@ -570,6 +582,7 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     #
     # sns.set(font_scale=1)
     # latitudes = np.linspace(0, 80, 200)
@@ -690,4 +703,3 @@ if __name__ == "__main__":
     # # plt.legend()
     # # plt.savefig("C:/Users/User/Downloads/temp.svg")
     # plt.show()
-
