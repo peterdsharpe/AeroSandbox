@@ -121,7 +121,6 @@ def diameter_wing_spar(
         span,
         mass_supported,
         ultimate_load_factor=1.75,  # default taken from Daedalus design
-        n_booms=1,
 ):
 
 
