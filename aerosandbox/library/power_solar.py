@@ -259,7 +259,7 @@ def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True)
 
 def length_day(latitude, day_of_year):
     """
-    How many hours of with incoming solar energy per day?
+    For what length of time is the sun above the horizon on a given day?
 
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
