@@ -226,7 +226,7 @@ def solar_flux_circular_flight_path(
     :return:
     """
 
-    solar_flux_on_panel = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function_new(
+    solar_flux_on_panel = solar_flux_outside_atmosphere_normal(day_of_year) * incidence_angle_function(
         latitude, day_of_year, time, panel_heading, panel_angle)
     return solar_flux_on_panel
 
@@ -255,7 +255,9 @@ def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True)
 
 def length_day(latitude, day_of_year):
     """
-    How many hours of with incoming solar energy  per day?
+    How many hours of with incoming solar energy per day?
+
+    Warning: NOT differentiable as-written # TODO make differentiable
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :return: hours of no sun
@@ -264,10 +266,10 @@ def length_day(latitude, day_of_year):
     dt = np.diff(times)
     sun_time = 0
     for time in times:
-        solar_flux = solar_flux_on_horizontal(
+        current_solar_flux = solar_flux(
             latitude, day_of_year, time, scattering=True
         )
-        if solar_flux > 1:
+        if current_solar_flux > 1:
             sun_time = sun_time + (872.72727273 / 60 / 60)
     return sun_time
 
