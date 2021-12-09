@@ -83,93 +83,47 @@ def solar_azimuth_angle(latitude, day_of_year, time):
 
     return solar_azimuth_angle
 
-
 def incidence_angle_function(
         latitude,
         day_of_year,
         time,
+        panel_azimuth_angle=0,
+        panel_tilt_angle=0,
         scattering=True,
-        panel_orientation="horizontal"
 ):
-    """
-    What is the fraction of insolation that a horizontal surface will receive as a function of sun position in the sky?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param scattering: Boolean: include scattering effects at very low angles?
-    """
-    # Old description:
-    # To first-order, this is true. In class, Kevin Uleck claimed that you have higher-than-cosine losses at extreme angles,
-    # since you get reflection losses. However, an experiment by Sharma appears to not reproduce this finding, showing only a
-    # 0.4-percentage-point drop in cell efficiency from 0 to 60 degrees. So, for now, we'll just say it's a cosine loss.
-    # Sharma: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611928/
-
-    elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
-    sun_above_horizon_multiplier = np.where(elevation_angle > 0, 1, 0)
-
-    if panel_orientation == "horizontal":
-        theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
-    elif panel_orientation == "vertical":
-        theta = elevation_angle
-    else:
-        raise ValueError("Bad value of `panel_orientation`!")
-
-    cosine_factor = np.cosd(theta)
-
-    illumination_factor = cosine_factor
-
-    if scattering:
-        illumination_factor = illumination_factor * scattering_factor(elevation_angle)
-
-    illumination_factor = illumination_factor * sun_above_horizon_multiplier
-    return illumination_factor
-
-
-def incidence_angle_function_vert(latitude, day_of_year, time, scattering=True):
-    """
-    What is the fraction of insolation that a horizontal surface will receive as a function of sun position in the sky?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param scattering: Boolean: include scattering effects at very low angles?
-    """
-    # Old description:
-    # To first-order, this is true. In class, Kevin Uleck claimed that you have higher-than-cosine losses at extreme angles,
-    # since you get reflection losses. However, an experiment by Sharma appears to not reproduce this finding, showing only a
-    # 0.4-percentage-point drop in cell efficiency from 0 to 60 degrees. So, for now, we'll just say it's a cosine loss.
-    # Sharma: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611928/
-
-    elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
-    theta = 90 - elevation_angle - 90  # Angle between panel normal and the sun, in degrees
-
-    cosine_factor = np.cosd(theta)
-
-    if not scattering:
-        return cosine_factor
-    else:
-        return cosine_factor * scattering_factor_vert(elevation_angle)
-
-def incidence_angle_function_new(latitude, day_of_year, time, panel_heading, panel_angle, scattering=True):
     """
     This website will be useful for accounting for direction of the vertical surface
     https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time since (local) solar noon [seconds]
-    :param panel_heading: the directionality of the solar panel (0 degrees if pointing North and 180 if South)
-    :param panel_angle: the degrees of horizontal the array is mounted (0 if hoirzontal and 90 if vertical)
+    :param panel_azimuth_angle: the directionality of the solar panel (0 degrees if pointing North and 90 if East)
+    :param panel_tilt_angle: the degrees of horizontal the array is mounted (0 if horizontal and 90 if vertical)
     :param scattering: Boolean: include scattering effects at very low angles?
-    """
-    elevation_angle = solar_elevation_angle(latitude, day_of_year, time)
-    azimuth_angle = solar_azimuth_angle(latitude, day_of_year, time)
-    cosine_factor = np.cosd(elevation_angle) * np.sind(panel_angle) * np.cosd(panel_heading - azimuth_angle) + np.sind(elevation_angle) * np.cosd(panel_angle)
 
-    if not scattering:
-        incidence = cosine_factor
+    :returns
+    illumination_factor: Fraction of solar insolation received, relative to what it would get if it were perfectly oriented to the sun.
+    """
+    solar_elevation = solar_elevation_angle(latitude, day_of_year, time)
+    solar_azimuth = solar_azimuth_angle(latitude, day_of_year, time)
+    cosine_factor = (
+            np.cosd(solar_elevation) *
+            np.sind(panel_tilt_angle) *
+            np.cosd(panel_azimuth_angle - solar_azimuth)
+            + np.sind(solar_elevation) * np.cosd(panel_tilt_angle)
+
+    if scattering:
+        incidence = cosine_factor * scattering_factor(solar_elevation)
     else:
-        incidence = cosine_factor * scattering_factor(elevation_angle)
-    incidence = np.fmax(incidence, 0)
-    return incidence
+        illumination_factor = cosine_factor
+
+    illumination_factor = np.fmax(illumination_factor, 0)
+    illumination_factor = np.where(
+        solar_elevation < 0,
+        0,
+        illumination_factor
+    )
+    return illumination_factor
 
 
 def scattering_factor(elevation_angle):
