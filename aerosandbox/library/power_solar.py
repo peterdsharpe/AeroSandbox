@@ -113,11 +113,11 @@ def incidence_angle_function(
             np.sind(panel_tilt_angle) *
             np.cosd(panel_azimuth_angle - solar_azimuth)
             + np.sind(solar_elevation) * np.cosd(panel_tilt_angle)
-
-        if scattering:
-        incidence = cosine_factor * scattering_factor(solar_elevation)
+    )
+    if scattering:
+        illumination_factor = cosine_factor * scattering_factor(solar_elevation)
     else:
-    illumination_factor = cosine_factor
+        illumination_factor = cosine_factor
 
     illumination_factor = np.fmax(illumination_factor, 0)
     illumination_factor = np.where(
@@ -134,6 +134,7 @@ def scattering_factor(elevation_angle):
     Source: AeroSandbox/studies/SolarPanelScattering
     :param elevation_angle: Angle between the horizon and the sun [degrees]
     :return: Fraction of the light that is not lost to scattering.
+    # TODO figure out if scattering is w.r.t. sun elevation or w.r.t. angle between panel and sun
     """
     elevation_angle = np.clip(elevation_angle, 0, 90)
     theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
@@ -145,7 +146,7 @@ def scattering_factor(elevation_angle):
     #     -19.707332432605799255043166340329,
     #     -0.66260979582573353852126274432521
     # )
-    # scattering_factor = c[0] + c[3] * theta_rad + cas.exp(
+    # factor = c[0] + c[3] * theta_rad + cas.exp(
     #     c[1] * (
     #             cas.tan(theta_rad) + c[2] * theta_rad
     #     )
@@ -156,7 +157,7 @@ def scattering_factor(elevation_angle):
         -0.04636,
         -0.3171
     )
-    scattering_factor = np.exp(
+    factor = np.exp(
         c[0] * (
                 np.tand(theta * 0.999) + c[1] * np.radians(theta)
         )
@@ -170,12 +171,12 @@ def scattering_factor(elevation_angle):
     # q1 = -923.2
     # q2 = 1456
     # x = theta_rad
-    # scattering_factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
+    # factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
     #            (x**2 + q1*x + q2))
 
     # Keep this:
-    # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
-    return scattering_factor
+    # factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
+    return factor
 
 
 def solar_flux(
