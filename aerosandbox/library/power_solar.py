@@ -72,14 +72,16 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     elevation = solar_elevation_angle(latitude, day_of_year, time)
     cele = np.cosd(elevation)
 
+    azimuth_raw = np.arccosd(
+        (sdec * clat - cdec * slat * ctime) / cele
+    )
+
+    is_solar_morning = np.mod(time, 86400) > 43200
+
     solar_azimuth_angle = np.where(
-        np.mod(time, 86400) > 43200,
-        np.arccosd(
-            (sdec * clat - cdec * slat * ctime) / cele
-        ),
-        360 - np.arccosd(
-            (sdec * clat - cdec * slat * ctime) / cele
-        )
+        is_solar_morning,
+        azimuth_raw,
+        360 - azimuth_raw
     )
 
     return solar_azimuth_angle
