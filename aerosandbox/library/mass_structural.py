@@ -117,43 +117,6 @@ def mass_wing_spar(
 
     return spar_mass
 
-def diameter_wing_spar(
-        span,
-        mass_supported,
-        ultimate_load_factor=1.75,  # default taken from Daedalus design
-):
-
-
-    masses = np.load('/Users/annickdewald/Desktop/Thesis/AeroSandbox/studies/MultiBoomSparMass_v2/masses.npy')
-    spans = np.load('/Users/annickdewald/Desktop/Thesis/AeroSandbox/studies/MultiBoomSparMass_v2/spans.npy')
-    spar_diameters = np.load('/Users/annickdewald/Desktop/Thesis/AeroSandbox/studies/MultiBoomSparMass_v2/spar_diameters.npy')
-    """
-    Finds the root diameter of the spar for a wing on a single- lightweight aircraft. Model originally designed for solar aircraft.
-    Data was fit to the range 3 < wing_span < 120 [m] and 5 < supported_mass < 3000 [kg], but validity should extend somewhat beyond that.
-    Extremely accurate fits within this range; R^2 > 0.995 for all fits.
-    Source: AeroSandbox\studies\MultiBoomSparMass_v2
-    Assumptions:
-        * Elliptical lift distribution
-        * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere in the ultimate load case.
-        * If multi-boom, assumes roughly static-aerostructurally-optimal placement of the outer booms and equal boom weights.
-    :param span: Wing span [m]
-    :param mass_supported: Total mass of all fuselages + tails
-    :param ultimate_load_factor: Design load factor. Default taken from Daedalus design.
-    :param n_booms: Number of booms on the design. Can be 1, 2, or 3. Assumes optimal placement of the outer booms.
-    :return:
-    """
-    spar_diameter_model = InterpolatedModel({
-        "mass": np.array([i[0] for i in masses]),
-        "span": spans[0] },
-        spar_diameters, "bspline")
-
-    mass_eff = mass_supported * ultimate_load_factor
-
-    spar_diameter = spar_diameter_model({'mass': mass_eff, "span":span})
-
-    return spar_diameter
-
-
 def mass_hpa_stabilizer(
         span,
         chord,
