@@ -84,12 +84,12 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     return solar_azimuth_angle
 
 def incidence_angle_function(
-        latitude,
-        day_of_year,
-        time,
-        panel_azimuth_angle=0,
-        panel_tilt_angle=0,
-        scattering=True,
+        latitude: float,
+        day_of_year: float,
+        time: float,
+        panel_azimuth_angle: float=0,
+        panel_tilt_angle: float=0,
+        scattering: bool=True,
 ):
     """
     This website will be useful for accounting for direction of the vertical surface
@@ -175,10 +175,12 @@ def scattering_factor(elevation_angle):
     # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
     return scattering_factor
 
-def solar_flux_on_horizontal(
+def solar_flux(
         latitude: float,
         day_of_year: float,
         time: float,
+        panel_azimuth_angle: float =0,
+        panel_tilt_angle: float=0,
         scattering: bool = True
 ) -> float:
     """
@@ -191,66 +193,15 @@ def solar_flux_on_horizontal(
     """
     return (
             solar_flux_outside_atmosphere_normal(day_of_year) *
-            incidence_angle_function(latitude, day_of_year, time, scattering)
+            incidence_angle_function(
+                latitude=latitude,
+                day_of_year=day_of_year,
+                time=time,
+                panel_azimuth_angle=panel_azimuth_angle,
+                panel_tilt_angle=panel_tilt_angle,
+                scattering=scattering
+            )
     )
-
-def solar_flux_new(
-        latitude: float,
-        day_of_year: float,
-        time: float,
-        panel_heading: float,
-        panel_angle: float,
-        scattering: bool = True
-) -> float:
-    """
-    What is the solar flux on a horizontal surface for some given conditions?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param scattering: Boolean: include scattering effects at very low angles?
-    :return:
-    """
-    return (
-            solar_flux_outside_atmosphere_normal(day_of_year) *
-            incidence_angle_function_new(latitude, day_of_year, time, panel_heading, panel_angle)
-    )
-
-def solar_flux_on_vertical(
-        latitude: float,
-        day_of_year: float,
-        time: float,
-        scattering: bool = True
-) -> float:
-    """
-    What is the solar flux on a vertical surface for some given conditions?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param scattering: Boolean: include scattering effects at very low angles?
-    :return:
-    """
-    S_horz = solar_flux_outside_atmosphere_normal(day_of_year) * (incidence_angle_function(latitude, day_of_year, time, scattering))
-    S_vert =  S_horz * np.sind(solar_elevation_angle(latitude, day_of_year, time) + 90) / np.fmax(np.sind(solar_elevation_angle(latitude, day_of_year, time)), 0.0000001)
-    return S_vert
-
-def solar_flux_on_angle(
-        angle: float,
-        latitude: float,
-        day_of_year: float,
-        time: float,
-        scattering: bool = True
-) -> float:
-    """
-    What is the solar flux on a surface at a given angle for some given conditions?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param scattering: Boolean: include scattering effects at very low angles?
-    :return:
-    """
-    S_horz = solar_flux_outside_atmosphere_normal(day_of_year) * (incidence_angle_function(latitude, day_of_year, time, scattering))
-    S_angle =  S_horz * np.sind(solar_elevation_angle(latitude, day_of_year, time) + 90 - angle) / np.fmax(np.sind(solar_elevation_angle(latitude, day_of_year, time)), 0.0000001)
-    return S_angle
 
 def solar_flux_circular_flight_path(
         latitude: float,
