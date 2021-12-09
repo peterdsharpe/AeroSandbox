@@ -53,7 +53,7 @@ def solar_elevation_angle(latitude, day_of_year, time):
 
 def solar_azimuth_angle(latitude, day_of_year, time):
     """
-    Zenith angle of the sun [degrees] for a local observer.
+    Azimuth angle of the sun [degrees] for a local observer.
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time after local solar noon [seconds]
