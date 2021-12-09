@@ -182,6 +182,7 @@ def interpn(
     ) and (
             (method == "linear") or (method == "nearest")
     ):
+        xi = _onp.array(xi).reshape((-1, len(implied_values_shape)))
         return _interpolate.interpn(
             points=points,
             values=values,
