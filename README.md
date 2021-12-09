@@ -49,7 +49,9 @@ The only exception to this rule is when units are explicitly noted via variable 
 * `battery_capacity` -> Joules
 * `battery_capacity_watt_hours` -> Watt-hours.
 
-All angles are in radians, except for α and β which are in degrees due to long-standing aerospace convention. (In any case, units are marked on all inputs.)
+All angles are in radians, except for α and β which are in degrees due to long-standing aerospace convention. (In any case, units are marked on all function docstrings.)
+
+If you wish to use other units, consider using `aerosandbox.tools.units` to convert easily.
 
 ## Project Details
 
