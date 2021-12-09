@@ -175,56 +175,6 @@ def scattering_factor(elevation_angle):
     # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
     return scattering_factor
 
-def scattering_factor_vert(elevation_angle):
-    """
-    Calculates a scattering factor (a factor that gives losses due to atmospheric scattering at low elevation angles).
-    Source: AeroSandbox/studies/SolarPanelScattering
-    :param elevation_angle: Angle between the horizon and the sun [degrees]
-    :return: Fraction of the light that is not lost to scattering.
-    """
-    elevation_angle = np.clip(elevation_angle, 0, 90)
-    theta = 90 - elevation_angle - 90 # Angle between panel normal and the sun, in degrees
-
-    # # Model 1
-    # c = (
-    #     0.27891510500505767300438719757949,
-    #     -0.015994330894744987481281839336589,
-    #     -19.707332432605799255043166340329,
-    #     -0.66260979582573353852126274432521
-    # )
-    # scattering_factor = c[0] + c[3] * theta_rad + cas.exp(
-    #     c[1] * (
-    #             cas.tan(theta_rad) + c[2] * theta_rad
-    #     )
-    # )
-
-    # Model 2
-    c = (
-        -0.04636,
-        -0.3171
-    )
-    scattering_factor = np.exp(
-        c[0] * (
-                np.tand(theta * 0.999) + c[1] * np.radians(theta)
-        )
-    )
-
-    # # Model 3
-    # p1 = -21.74
-    # p2 = 282.6
-    # p3 = -1538
-    # p4 = 1786
-    # q1 = -923.2
-    # q2 = 1456
-    # x = theta_rad
-    # scattering_factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
-    #            (x**2 + q1*x + q2))
-
-    # Keep this:
-    # scattering_factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
-    return scattering_factor
-
-
 def solar_flux_on_horizontal(
         latitude: float,
         day_of_year: float,
