@@ -261,20 +261,18 @@ def length_day(latitude, day_of_year):
     """
     How many hours of with incoming solar energy per day?
 
-    Warning: NOT differentiable as-written # TODO make differentiable
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :return: hours of no sun
+    :return: Seconds of sunlight in a given day
     """
-    times = np.linspace(0, 86400, 100)
-    dt = np.diff(times)
-    sun_time = 0
-    for time in times:
-        current_solar_flux = solar_flux(
-            latitude, day_of_year, time, scattering=True
-        )
-        if current_solar_flux > 1:
-            sun_time = sun_time + (872.72727273 / 60 / 60)
+    dec = declination_angle(day_of_year)
+
+    constant = -np.sind(dec) * np.sind(latitude) / (np.cosd(dec) * np.cosd(latitude))
+    constant = np.clip(constant, -1, 1)
+
+    sun_time_nondim = 2 * np.arccos(constant)
+    sun_time = sun_time_nondim / (2 * np.pi) * 86400
+
     return sun_time
 
 
