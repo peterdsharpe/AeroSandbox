@@ -77,7 +77,6 @@ def solar_azimuth_angle(latitude, day_of_year, time):
 
     azimuth_raw = np.arccosd(cos_azimuth)
 
-
     is_solar_morning = np.mod(time, 86400) > 43200
 
     solar_azimuth_angle = np.where(
