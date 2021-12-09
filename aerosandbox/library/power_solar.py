@@ -102,8 +102,8 @@ def incidence_angle_function(
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time since (local) solar noon [seconds]
-    :param panel_azimuth_angle: the directionality of the solar panel (0 degrees if pointing North and 90 if East)
-    :param panel_tilt_angle: the degrees of horizontal the array is mounted (0 if horizontal and 90 if vertical)
+    :param panel_azimuth_angle: The azimuth angle of the panel normal, in degrees. (0 degrees if pointing North and 90 if East)
+    :param panel_tilt_angle: The angle between the panel normal and vertical, in degrees. (0 if horizontal and 90 if vertical)
     :param scattering: Boolean: include scattering effects at very low angles?
 
     :returns
@@ -195,8 +195,11 @@ def solar_flux(
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time since (local) solar noon [seconds]
+    :param panel_azimuth_angle: The azimuth angle of the panel normal, in degrees. (0 degrees if pointing North and 90 if East)
+    :param panel_tilt_angle: The angle between the panel normal and vertical, in degrees. (0 if horizontal and 90 if vertical)
     :param scattering: Boolean: include scattering effects at very low angles?
-    :return:
+
+    :return: The solar flux on the panel, expressed in W/m^2.
     """
     return (
             solar_flux_outside_atmosphere_normal(day_of_year) *
