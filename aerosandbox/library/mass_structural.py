@@ -1,4 +1,3 @@
-from aerosandbox.modeling.interpolation import *
 def mass_hpa_wing(
         span,
         chord,
@@ -116,6 +115,7 @@ def mass_wing_spar(
     spar_mass = c * (span / 40) ** span_exp * (mass_eff / 300) ** mass_exp
 
     return spar_mass
+
 
 def mass_hpa_stabilizer(
         span,
@@ -251,6 +251,7 @@ if __name__ == "__main__":
     import aerosandbox.numpy as np
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     sns.set(palette=sns.color_palette("husl"))
 
     # Daedalus wing mass validation
@@ -265,7 +266,9 @@ if __name__ == "__main__":
             type="one-wire"
         )
     )
-
+    print(
+        "Daedalus wing, actual mass: %f" % 18.9854
+    )
 
     nr = np.linspace(1, 400, 401)
     m = mass_hpa_wing(
@@ -328,16 +331,6 @@ if __name__ == "__main__":
         type="cantilevered",
         include_spar=False
     )
-    print(
-        "Daedalus wing, estimated root diameter: %f" %
-        diameter_wing_spar(
-            span=34,
-            mass_supported=104.1,
-        )
-    )
-    print(
-        "Daedalus wing, actual root diameter: %f" % 0.0889
-    ) # from what I can tell from Juan Cruz document ID of center spar is 3.5"
 
     mass_wing_primary_physics = mass_wing_spar(
         span=span,
