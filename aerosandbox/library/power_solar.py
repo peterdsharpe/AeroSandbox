@@ -177,8 +177,6 @@ def scattering_factor(elevation_angle):
     # factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
     #            (x**2 + q1*x + q2))
 
-    # Keep this:
-    # factor = cas.fmin(cas.fmax(scattering_factor, 0), 1)
     return factor
 
 
