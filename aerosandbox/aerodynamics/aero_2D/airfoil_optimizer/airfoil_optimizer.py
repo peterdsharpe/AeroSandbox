@@ -139,12 +139,12 @@ if __name__ == '__main__':
         global iteration
         iteration += 1
         print(
-            "Iteration %i: Cd = %.6f" % (iteration, fs[-1])
+            f"Iteration {iteration}: Cd = {fs[-1]:.6f}"
         )
         if iteration % 1 == 0:
             airfoil = make_airfoil(x)
             draw(airfoil)
-            ax.set_title("Airfoil Optimization: Iteration %i" % iteration)
+            ax.set_title(f"Airfoil Optimization: Iteration {iteration}")
             airfoil.write_dat("optimized_airfoil.dat")
 
 
