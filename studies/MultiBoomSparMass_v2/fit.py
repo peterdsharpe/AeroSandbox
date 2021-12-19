@@ -30,7 +30,7 @@ fit = asb.FittedModel(
 print("\nMODEL\n-----")
 for k, v in fit.parameters.items():
     print(
-        "%s = %.16f" % (k, v)
+        f"{k} = {v}"
     )
 print(
     "spar_mass = c * (span / 40) ** span_exp * (mass_eff / 300) ** mass_exp"

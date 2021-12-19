@@ -299,7 +299,7 @@ if __name__ == "__main__":
         type="one-wire"
     ))
     sol = opti.solve()
-    print("Optimal number of ribs: %f" % sol.value(nr_opt))
+    print(f"Optimal number of ribs: {sol.value(nr_opt)}")
 
     print(
         "Daedalus elevator, estimated mass: %f" %

@@ -58,7 +58,7 @@ def eng_string(
     elif exp3 == 0:
         exp3_text = ''
     else:
-        exp3_text = 'e%s' % exp3
+        exp3_text = f'e{exp3}'
 
     if unit is not None:
         if si:
