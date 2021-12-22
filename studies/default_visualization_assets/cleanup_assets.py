@@ -1,5 +1,6 @@
 import pyvista as pv
 
+
 def plot(mesh):
     plotter = pv.Plotter()
     plotter.add_mesh(mesh)
@@ -9,6 +10,7 @@ def plot(mesh):
     plotter.show_axes()
     plotter.show_grid()
     plotter.show()
+
 
 talon = pv.read("talon-original.stl")
 talon.rotate_z(180)

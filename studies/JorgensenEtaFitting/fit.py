@@ -3,11 +3,13 @@ import aerosandbox.numpy as np
 import pandas as pd
 
 data = pd.read_csv("fineness-vs-eta.csv", names=["fineness", "eta"])
-fineness=data['fineness'].values
-eta=data['eta'].values
+fineness = data['fineness'].values
+eta = data['eta'].values
+
 
 def model(x, p):
     return 1 - p["1scl"] / (x - p["1cen"]) - (p["2scl"] / (x - p["2cen"])) ** 2
+
 
 fit = asb.FittedModel(
     model=model,
@@ -31,6 +33,7 @@ fit = asb.FittedModel(
 print(fit.parameters)
 
 from aerosandbox.tools.pretty_plots import plt, show_plot
+
 fig, ax = plt.subplots()
 plt.plot(fineness, eta, ".k")
 fineness_plot = np.linspace(0, 40, 500)

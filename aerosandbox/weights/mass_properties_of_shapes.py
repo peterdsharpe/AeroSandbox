@@ -6,6 +6,7 @@ Most of these relations are taken from:
 https://en.wikipedia.org/wiki/List_of_moments_of_inertia
 """
 
+
 def mass_properties_from_radius_of_gyration(
         mass: float,
         radius_of_gyration_x: float,
@@ -38,6 +39,7 @@ def mass_properties_from_radius_of_gyration(
         Iyz=0,
         Ixz=0,
     )
+
 
 def mass_properties_of_ellipsoid(
         mass: float,
@@ -145,4 +147,3 @@ def mass_properties_of_cube(
         length_y=side_length,
         length_z=side_length,
     )
-

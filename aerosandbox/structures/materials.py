@@ -2,109 +2,109 @@ import warnings
 import copy
 import aerosandbox.numpy as np
 
+
 class Material:
-    
     # A short list of properties, more can be added
-    
+
     # Physical Properties
-    density                    = None  # kg/m^3
-    
+    density = None  # kg/m^3
+
     # Mechanical Properties
-    tensile_strength_ultimate  = None  # Pa
-    tensile_strength_yield     = None  # Pa
-    elongation_at_break        = None  # Percentage
-    modulus_of_elasticity      = None
-    bulk_modulus               = None
-    poissons_ratio              = None
-    shear_modulus              = None
-    
+    tensile_strength_ultimate = None  # Pa
+    tensile_strength_yield = None  # Pa
+    elongation_at_break = None  # Percentage
+    modulus_of_elasticity = None
+    bulk_modulus = None
+    poissons_ratio = None
+    shear_modulus = None
+
     # Electrical Properties
-    electrical_conductivity     = None
-    
+    electrical_conductivity = None
+
     # Thermal Properties
-    cte_linear                 = None
-    specific_heat_capacity     = None
-    thermal_conductivity       = None
-    
+    cte_linear = None
+    specific_heat_capacity = None
+    thermal_conductivity = None
+
     # Extras
-    isotropic                  = None
+    isotropic = None
 
     # add redirects for easy access? Maybe a bad idea
     _aliases = {
-        'density': [
+        'density'                  : [
             'rho',
         ],
-        'tensile_strength_yield': [
+        'tensile_strength_yield'   : [
             'yield_strength',
             'yield_stress',
         ],
-        'tensile_strength_Ultimate':[
+        'tensile_strength_Ultimate': [
             'ultimate_strength',
             'tensile_strength',  # Not sure I like this, but typical?
         ],
-        'elongation_at_break': [
+        'elongation_at_break'      : [
             'elongation',
         ],
-        'poissons_ratio': [
+        'poissons_ratio'           : [
             'poisson_ratio'
         ],
-        'modulus_of_elasticity':[
+        'modulus_of_elasticity'    : [
             'elastic_modulus',
             'E',
         ],
-        'electrical_conductivity': [
+        'electrical_conductivity'  : [
             'elastic_modulus'
             'conductivity',
         ],
-        'shear_modulus': [
+        'shear_modulus'            : [
             'modulus_of_rigidity',
             'G',
         ],
-        'cte_linear': [
+        'cte_linear'               : [
             'coefficient_of_thermal_expansion',
         ],
-        'specific_heat_capacity': [
+        'specific_heat_capacity'   : [
             'specific_heat',
         ]
-        }
-    
+    }
+
     def _set_aliases(self):
         for key in self._aliases.keys():
-            #redirect aliases to original
-            
+            # redirect aliases to original
+
             def make_getter(key):
                 def getter(self):
                     # print('getting ' + key)
                     return getattr(self, key)
+
                 return getter
-            
+
             def make_setter(key):
                 def setter(self, value):
                     # print('setting ' + key)
                     setattr(self, key, value)
+
                 return setter
-            
+
             for alias in self._aliases[key]:
                 prop = property(fget=make_getter(key),
                                 fset=make_setter(key))
-                
+
                 # Add it to the list of properties
-                setattr(self.__class__, alias, prop)      
-            
-    
+                setattr(self.__class__, alias, prop)
+
     def __init__(self, **kwargs):
-        
+
         self._set_aliases()
-        
+
         # Just stuff  everything into vars for now
         for key in kwargs.keys():
             setattr(self, key, kwargs[key])
-      
 
 # %% Web Scraping
-      
+
 # A class to import directly from MatMatch? Not 100% reliable, but the lazy way
-#class MatMatch_Material(Material):
+# class MatMatch_Material(Material):
 #    
 #    def __init__(self, 
 #                 url: str,
@@ -269,10 +269,9 @@ class Material:
 #        return properties
 #            
 #            
-#class AISI_1006_Steel_Cold_Drawn(MatMatch_Material):
+# class AISI_1006_Steel_Cold_Drawn(MatMatch_Material):
 #    
 #    def __init__(self):
 #        url = 'https://matmatch.com/materials/mitf545-aisi-1006-cold-drawn'
 #        
 #        super().__init__(url, force_value='min')
-        

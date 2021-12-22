@@ -24,7 +24,8 @@ y = cas.exp(-x)
 
 x1 = x[:-1]
 x2 = x[1:]
-errors = -x1 * cas.exp(-x2) / 2 - x1 * cas.exp(-x1) / 2 + x2 * cas.exp(-x2) / 2 + x2 * cas.exp(-x1) / 2 + cas.exp(-x2) - cas.exp(-x1)
+errors = -x1 * cas.exp(-x2) / 2 - x1 * cas.exp(-x1) / 2 + x2 * cas.exp(-x2) / 2 + x2 * cas.exp(-x1) / 2 + cas.exp(
+    -x2) - cas.exp(-x1)
 error = cas.sum1(errors)
 
 opti.minimize(error * 1e3)

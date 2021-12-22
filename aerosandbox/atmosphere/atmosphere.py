@@ -112,7 +112,7 @@ class Atmosphere(AeroSandboxObject):
         return self.dynamic_viscosity() / self.density()
 
     def ratio_of_specific_heats(self):
-        return 1.4 # TODO model temperature variation
+        return 1.4  # TODO model temperature variation
 
     # def thermal_velocity(self):
     #     """

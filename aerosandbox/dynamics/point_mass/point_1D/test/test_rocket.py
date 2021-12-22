@@ -2,6 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
 
+
 def test_rocket():
     ### Environment
     opti = asb.Opti()
@@ -46,7 +47,7 @@ def test_rocket():
         dyn.w_e[0] == 0,
         dyn.mass_props.mass[0] == mass_initial,
         dyn.z_e[-1] == z_e_final,
-        ])
+    ])
 
     ### Path constraints
     opti.subject_to([

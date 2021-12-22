@@ -134,7 +134,6 @@ def m_dot_corrected_over_m_dot(
 if __name__ == '__main__':
     import aerosandbox as asb
 
-
     atmo = asb.Atmosphere(altitude=10668)
     op_point = asb.OperatingPoint(atmo, velocity=0.80 * atmo.speed_of_sound())
     m_dot_corrected_over_m_dot_ratio = m_dot_corrected_over_m_dot(
@@ -143,7 +142,7 @@ if __name__ == '__main__':
     )
 
     ### CFM56-2 engine test
-    mass_cfm56_2 = mass_turbofan( # Data here from Wikipedia, cross-referenced to other sources for sanity check.
+    mass_cfm56_2 = mass_turbofan(  # Data here from Wikipedia, cross-referenced to other sources for sanity check.
         m_dot_core_corrected=364 / (5.95 + 1),
         overall_pressure_ratio=31.2,
         bypass_ratio=5.95,

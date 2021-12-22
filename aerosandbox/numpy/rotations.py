@@ -176,6 +176,7 @@ def is_valid_rotation_matrix(
     Returns: A boolean of whether the array-like is a valid rotation matrix.
 
     """
+
     def approx_equal(x, y):
         return (x > y - tol) and (x < y + tol)
 

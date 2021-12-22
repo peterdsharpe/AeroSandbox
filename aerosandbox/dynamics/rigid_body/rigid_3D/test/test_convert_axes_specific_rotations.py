@@ -19,6 +19,7 @@ def test_alpha_wind():
     assert y == pytest.approx(0)
     assert z == pytest.approx(0)
 
+
 def test_beta_wind():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
         u_b=0,
@@ -34,6 +35,7 @@ def test_beta_wind():
     assert x == pytest.approx(1)
     assert y == pytest.approx(0)
     assert z == pytest.approx(0)
+
 
 def test_beta_wind_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
@@ -51,6 +53,7 @@ def test_beta_wind_body():
     assert y == pytest.approx(0)
     assert z == pytest.approx(0)
 
+
 def test_alpha_stability_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
         u_b=0,
@@ -66,6 +69,7 @@ def test_alpha_stability_body():
     assert x == pytest.approx(1)
     assert y == pytest.approx(0)
     assert z == pytest.approx(0)
+
 
 def test_beta_stability_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
@@ -83,11 +87,12 @@ def test_beta_stability_body():
     assert y == pytest.approx(1)
     assert z == pytest.approx(0)
 
+
 def test_order_wind_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
         u_b=0,
         v_b=1,
-        phi=np.pi/2,
+        phi=np.pi / 2,
         # alpha=90,
         # beta=90,
     )

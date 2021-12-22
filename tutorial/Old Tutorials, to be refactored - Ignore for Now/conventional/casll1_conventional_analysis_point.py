@@ -66,7 +66,8 @@ if __name__ == '__main__':  # If you're a Windows user, you must run within a ma
                         chord=0.18,
                         twist_angle=2,  # degrees
                         airfoil=e216,  # Airfoils are blended between a given XSec and the next one.
-                        control_surface_type='symmetric',  # Flap (ctrl. surfs. applied between this XSec and the next one.)
+                        control_surface_type='symmetric',
+                        # Flap (ctrl. surfs. applied between this XSec and the next one.)
                         control_surface_deflection=0,  # degrees
                     ),
                     WingXSec(  # Mid

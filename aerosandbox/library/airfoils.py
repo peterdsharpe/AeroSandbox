@@ -1,8 +1,8 @@
 ### This file contains an assortment of random airfoils to use
 from aerosandbox.geometry.airfoil import Airfoil
 from aerosandbox.library.aerodynamics.viscous import *
-from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates,\
-                                                          get_UIUC_coordinates
+from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, \
+    get_UIUC_coordinates
 
 
 def diamond_airfoil(
@@ -57,7 +57,7 @@ generic_airfoil = Airfoil(
     ),
     CM_function=lambda alpha, Re, mach, deflection: (  # Moment coefficient function about quarter-chord
         0
-    ), # TODO make this an actual curve!
+    ),  # TODO make this an actual curve!
     coordinates=get_NACA_coordinates(name="naca0012")
 )
 
@@ -121,5 +121,5 @@ flat_plate = Airfoil(
         [0, -1e-6],
         [1, -1e-6],
         [1, 0],
-        ])
+    ])
 )

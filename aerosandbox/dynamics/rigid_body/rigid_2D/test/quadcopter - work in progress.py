@@ -2,8 +2,8 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
 
-def test_quadcopter_navigation():
 
+def test_quadcopter_navigation():
     opti = asb.Opti()
 
     N = 300
@@ -38,7 +38,7 @@ def test_quadcopter_navigation():
         dyn.w[0] == 0,
         dyn.theta[0] == np.radians(90),
         dyn.q[0] == 0,
-        ])
+    ])
 
     opti.subject_to([  # Final state
         dyn.xe[-1] == 1,
@@ -47,9 +47,9 @@ def test_quadcopter_navigation():
         dyn.w[-1] == 0,
         dyn.theta[-1] == np.radians(90),
         dyn.q[-1] == 0,
-        ])
+    ])
 
-    effort = np.sum( # The average "effort per second", where effort is integrated as follows:
+    effort = np.sum(  # The average "effort per second", where effort is integrated as follows:
         np.trapz(left_thrust ** 2 + right_thrust ** 2) * np.diff(time)
     ) / time_final
 
@@ -62,8 +62,8 @@ def test_quadcopter_navigation():
 
     print(sol.value(effort))
 
-def test_quadcopter_flip():
 
+def test_quadcopter_flip():
     opti = asb.Opti()
 
     N = 300
@@ -98,7 +98,7 @@ def test_quadcopter_flip():
         dyn.w[0] == 0,
         dyn.theta[0] == np.radians(90),
         dyn.q[0] == 0,
-        ])
+    ])
 
     opti.subject_to([  # Final state
         dyn.xe[-1] == 1,
@@ -107,7 +107,7 @@ def test_quadcopter_flip():
         dyn.w[-1] == 0,
         dyn.theta[-1] == np.radians(90 - 360),
         dyn.q[-1] == 0,
-        ])
+    ])
 
     opti.minimize(time_final)
 
@@ -115,6 +115,7 @@ def test_quadcopter_flip():
     dyn.substitute_solution(sol)
 
     assert sol.value(time_final) == pytest.approx(0.824, abs=0.01)
+
 
 if __name__ == '__main__':
     pytest.main()
