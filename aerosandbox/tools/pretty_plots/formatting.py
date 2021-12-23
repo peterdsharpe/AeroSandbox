@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 from typing import Union
-from labellines import labelLines
+from .labellines import labelLines
 
 
 def show_plot(
