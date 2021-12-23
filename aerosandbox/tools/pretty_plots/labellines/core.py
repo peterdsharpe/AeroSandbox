@@ -5,23 +5,22 @@ import matplotlib.patheffects as path_effects
 import numpy as np
 from matplotlib.container import ErrorbarContainer
 from matplotlib.dates import DateConverter, num2date
-from more_itertools import always_iterable
 
-from .utils import ensure_float, maximum_bipartite_matching
+from .utils import ensure_float, maximum_bipartite_matching, always_iterable
 
 
 # Label line with line2D label data
 def labelLine(
-    line,
-    x,
-    label=None,
-    align=True,
-    drop_label=False,
-    yoffset=0,
-    yoffset_logspace=False,
-    outline_color="auto",
-    outline_width=8,
-    **kwargs,
+        line,
+        x,
+        label=None,
+        align=True,
+        drop_label=False,
+        yoffset=0,
+        yoffset_logspace=False,
+        outline_color="auto",
+        outline_width=8,
+        **kwargs,
 ):
     """Label a single matplotlib line at position x
 
@@ -148,15 +147,15 @@ def labelLine(
 
 
 def labelLines(
-    lines,
-    align=True,
-    xvals=None,
-    drop_label=False,
-    shrink_factor=0.05,
-    yoffsets=0,
-    outline_color="auto",
-    outline_width=5,
-    **kwargs,
+        lines,
+        align=True,
+        xvals=None,
+        drop_label=False,
+        shrink_factor=0.05,
+        yoffsets=0,
+        outline_color="auto",
+        outline_width=5,
+        **kwargs,
 ):
     """Label all lines with their respective legends.
 
@@ -210,8 +209,8 @@ def labelLines(
         xscale = ax.get_xscale()
         if xscale == "log":
             xvals = np.logspace(np.log10(xmin), np.log10(xmax), len(all_lines) + 2)[
-                1:-1
-            ]
+                    1:-1
+                    ]
         else:
             xvals = np.linspace(xmin, xmax, len(all_lines) + 2)[1:-1]
 
