@@ -4,6 +4,7 @@ import aerosandbox.numpy as np
 from typing import Tuple, Dict, Union, Callable, List
 from aerosandbox.tools.string_formatting import eng_string
 
+
 def plot_color_by_value(
         x: np.ndarray,
         y: np.ndarray,
@@ -31,6 +32,10 @@ def plot_color_by_value(
 
     """
     cmap = mpl.cm.get_cmap(cmap)
+
+    x = np.array(x)
+    y = np.array(y)
+    c = np.array(c)
 
     cmin = c.min()
     cmax = c.max()
