@@ -17,6 +17,8 @@ def show(
         rhs = simp(rhs)
 
     if lhs is not None:
+        if simplify:
+            lhs = simp(lhs)
         display(
             s.Eq(
                 s.symbols(lhs),
