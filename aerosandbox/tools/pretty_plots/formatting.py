@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 from typing import Union
+from labellines import labelLines
 
 
 def show_plot(
@@ -11,6 +12,7 @@ def show_plot(
         savefig: str = None,
         tight_layout: bool = True,
         legend: bool = None,
+        legend_inline: bool = False,
         legend_frame: bool = True,
         show: bool = True,
         pretty_grids: bool = True,
@@ -63,7 +65,12 @@ def show_plot(
     if tight_layout:
         plt.tight_layout()
     if legend:
-        plt.legend(frameon=legend_frame)
+        if legend_inline:  # Display an inline (matplotlib-label-lines) legend instead
+            labelLines(
+                lines=plt.gca().get_lines(),
+            )
+        else:  # Display a traditional legend
+            plt.legend(frameon=legend_frame)
     if dpi is not None:
         fig.set_dpi(dpi)
     if savefig is not None:
