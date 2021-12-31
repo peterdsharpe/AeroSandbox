@@ -17,7 +17,7 @@ palettes = {
 
 def adjust_lightness(color, amount=1.0):
     """
-    Converts a color to HLS space, then mulitplies the lightness by `amount`, then converts back to RGB.
+    Converts a color to HLS space, then multiplies the lightness by `amount`, then converts back to RGB.
 
     Args:
         color: A color, in any format that matplotlib understands.
