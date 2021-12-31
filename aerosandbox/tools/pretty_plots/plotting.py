@@ -11,7 +11,7 @@ def plot_color_by_value(
         *args,
         c: np.ndarray,
         cmap=mpl.cm.get_cmap('viridis'),
-        colorbar=False,
+        colorbar: bool = False,
         colorbar_label: str = None,
         clim: Tuple[float, float] = None,
         **kwargs
@@ -21,12 +21,26 @@ def plot_color_by_value(
     pulled from `cmap`. Makes lines that are multicolored based on this `c` value.
 
     Args:
-        x:
-        y:
-        *args:
-        c:
-        cmap:
-        **kwargs:
+
+        x: Array of x-points.
+
+        y: Array of y-points.
+
+        *args: Args that will be passed into matplotlib.pyplot.plot().
+            Example: ".-" for a dotted line.
+
+        c: Array of values that will map to colors. Must be the same length as x and y.
+
+        cmap: The colormap to use.
+
+        colorbar: Whether or not to display the colormap. [bool]
+
+        colorbar_label: The label to add to the colorbar. Only applies if the colorbar is created. [str]
+
+        clim: A tuple of (min, max) that assigns bounds to the colormap. Computed from the range of `c` if not given.
+
+        **kwargs: Kwargs that will be passed into matplotlib.pyplot.plot()
+
 
     Returns:
 
