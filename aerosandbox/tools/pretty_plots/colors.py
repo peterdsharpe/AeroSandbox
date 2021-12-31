@@ -7,10 +7,10 @@ palettes = {
         "#EA4335",  # From Google logo, red
         "#34A853",  # From Google logo, green
         "#ECB22E",  # From Slack logo, gold
-        "#9467BD",  # Rest are from Matplotlib "tab10"
-        "#8C564B",
-        "#E377C2",
-        "#7F7F7F",
+        "#9467BD",  # From Matplotlib "tab10", purple
+        "#8C564B",  # From Matplotlib "tab10", brown
+        "#E377C2",  # From Matplotlib "tab10", pink
+        "#7F7F7F",  # From Matplotlib "tab10", gray
     ],
 }
 
