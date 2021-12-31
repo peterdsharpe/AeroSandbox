@@ -11,7 +11,7 @@ def plot_color_by_value(
         *args,
         c: np.ndarray,
         cmap=mpl.cm.get_cmap('viridis'),
-        colorbar: bool = False,
+        colorbar: bool=False,
         colorbar_label: str = None,
         clim: Tuple[float, float] = None,
         **kwargs
@@ -138,24 +138,43 @@ def contour(
 
     Args:
         X: See contour docs.
+
         Y: See contour docs.
+
         Z: See contour docs.
+
         levels: See contour docs.
+
         colorbar: Should we draw a colorbar?
+
         linelabels: Should we add line labels?
+
         cmap: What colormap should we use?
+
         alpha: What transparency should all plot elements be?
+
         extend: See contour docs.
+
         linecolor: What color should the line labels be?
+
         linewidths: See contour docs.
+
         extendrect: See colorbar docs.
+
         linelabels_format: See ax.clabel docs.
+
         linelabels_fontsize: See ax.clabel docs.
+
         contour_kwargs: Additional keyword arguments for contour.
+
         contourf_kwargs: Additional keyword arguments for contourf.
+
         colorbar_kwargs: Additional keyword arguments for colorbar.
+
         linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
+
         **kwargs: Additional keywords, which are passed to both contour and contourf.
+
 
     Returns: A tuple of (contour, contourf, colorbar) objects.
 
