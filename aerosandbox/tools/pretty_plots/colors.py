@@ -1,4 +1,6 @@
 import matplotlib.colors as mc
+import matplotlib as mpl
+import aerosandbox.numpy as np
 import colorsys
 
 palettes = {
@@ -13,6 +15,26 @@ palettes = {
         "#7F7F7F",  # From Matplotlib "tab10", gray
     ],
 }
+
+
+def get_discrete_colors_from_colormap(
+        cmap: str = "rainbow",
+        N: int = 8,
+        lower_bound: float = 0,
+        upper_bound: float = 1,
+):
+    """
+    Returns uniformly-spaced discrete color samples from a (continuous) colormap.
+    Args:
+        cmap: Name of a colormap.
+        N: Number of colors to retrieve from colormap.
+
+    Returns: A Nx4 array of (R, G, B, A) colors.
+
+    """
+    cmap = mpl.cm.get_cmap(cmap)
+    colors = cmap(np.linspace(lower_bound, upper_bound, N))
+    return colors
 
 
 def adjust_lightness(color, amount=1.0):
