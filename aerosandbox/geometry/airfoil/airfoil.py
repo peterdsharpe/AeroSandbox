@@ -241,7 +241,8 @@ class Airfoil(Polygon):
                 with open(cache_filename, "w+") as f:
                     json.dump(
                         {k: v.tolist() for k, v in data.items()},
-                        f
+                        f,
+                        indent=4
                     )
 
         ### Save the raw data as an instance attribute for later use
