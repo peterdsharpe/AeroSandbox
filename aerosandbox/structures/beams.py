@@ -425,7 +425,7 @@ if __name__ == '__main__':
 
     beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
-    print("Beam mass: %f kg" % beam_sol.mass)
+    print(f"Beam mass: {beam_sol.mass} kg")
     beam_sol.draw_bending()
 
     bs = beam_sol

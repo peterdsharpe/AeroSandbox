@@ -28,5 +28,6 @@ def plot_Cf_flat_plates():
         r"$C_f$",
     )
 
+
 if __name__ == '__main__':
     plot_Cf_flat_plates()

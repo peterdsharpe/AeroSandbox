@@ -209,7 +209,7 @@ if __name__ == '__main__':
     plt.ylabel("t [m]")
     plt.title("Optimal Spar Diameter")
 
-    plt.suptitle("Beam Modeling (Total Spar Mass: %.2f kg)" % (2 * sol.value(mass)))
+    plt.suptitle(f"Beam Modeling (Total Spar Mass: {2 * sol.value(mass):.2f} kg)")
 
     plt.subplots_adjust(hspace=0.4)
     plt.savefig("C:/Users/User/Downloads/beam.png")

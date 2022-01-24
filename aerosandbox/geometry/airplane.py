@@ -14,7 +14,8 @@ class Airplane(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled",  # A sensible name for your airplane.
-                 xyz_ref: Union[np.ndarray, List] = np.array([0, 0, 0]),  # Ref. point for moments; should be the center of gravity.
+                 xyz_ref: Union[np.ndarray, List] = np.array([0, 0, 0]),
+                 # Ref. point for moments; should be the center of gravity.
                  wings: List['Wing'] = None,  # A list of Wing objects.
                  fuselages: List['Fuselage'] = None,  # A list of Fuselage objects.
                  s_ref: float = None,  # If not set, populates from first wing object.

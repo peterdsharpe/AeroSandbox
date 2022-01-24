@@ -476,7 +476,7 @@ class Airfoil(Polygon):
             plt.axis("equal")
             plt.xlabel(r"$x/c$")
             plt.ylabel(r"$y/c$")
-            plt.title("%s Airfoil" % self.name)
+            plt.title(f"{self.name} Airfoil")
             plt.tight_layout()
             if show:
                 plt.show()
@@ -512,7 +512,7 @@ class Airfoil(Polygon):
                 xaxis_title="x/c",
                 yaxis_title="y/c",
                 yaxis=dict(scaleanchor="x", scaleratio=1),
-                title="%s Airfoil" % self.name
+                title=f"{self.name} Airfoil"
             )
             if show:
                 fig.show()

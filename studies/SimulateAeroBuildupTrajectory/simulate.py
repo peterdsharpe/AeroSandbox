@@ -3,7 +3,6 @@ import aerosandbox.numpy as np
 from conventional import airplane
 from scipy import integrate
 
-
 t_span = (0, 120)
 
 
@@ -104,7 +103,7 @@ show_plot()
 
 fig, ax = plt.subplots()
 plt.plot(dyn.xe, dyn.altitude, "k")
-sc =plt.scatter(dyn.xe, dyn.altitude, c=dyn.speed, cmap=plt.get_cmap("rainbow"), zorder=4)
+sc = plt.scatter(dyn.xe, dyn.altitude, c=dyn.speed, cmap=plt.get_cmap("rainbow"), zorder=4)
 plt.axis('equal')
 plt.colorbar(label="Airspeed [m/s]")
 show_plot("Trajectory using `asb.AeroBuildup` Flight Dynamics", "$x_e$", "$-z_e$")

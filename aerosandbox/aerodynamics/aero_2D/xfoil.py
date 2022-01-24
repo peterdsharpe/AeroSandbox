@@ -109,9 +109,8 @@ class XFoil(ExplicitAnalysis):
         self.timeout = timeout
         self.working_directory = working_directory
 
-        if np.length(self.airfoil.coordinates) > 401: # If the airfoil coordinates exceed Fortran array allocation
+        if np.length(self.airfoil.coordinates) > 401:  # If the airfoil coordinates exceed Fortran array allocation
             self.xfoil_repanel = True
-
 
     def _default_keystrokes(self) -> List[str]:
         run_file_contents = []
@@ -214,7 +213,7 @@ class XFoil(ExplicitAnalysis):
                     f'{self.xfoil_command} {airfoil_file}',
                     input="\n".join(keystrokes),
                     cwd=directory,
-                            stdout=None if self.verbose else subprocess.DEVNULL,
+                    stdout=None if self.verbose else subprocess.DEVNULL,
                     text=True,
                     timeout=self.timeout
                 )
@@ -240,7 +239,7 @@ class XFoil(ExplicitAnalysis):
                         skip_header=12,
                         usecols=np.arange(len(columns))
                     ).reshape(-1, len(columns))
-                except OSError: # File not found
+                except OSError:  # File not found
                     output_data = np.array([]).reshape(-1, len(columns))
 
             has_valid_inputs = len(output_data) != 0
@@ -313,7 +312,6 @@ class XFoil(ExplicitAnalysis):
                 for a in alphas
             ])
         )
-
 
     def cl(self,
            cl: Union[float, np.ndarray]

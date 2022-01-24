@@ -146,7 +146,8 @@ def airfoil_CDp(alpha, Re, Ma, Cl):
     return cd
 
 
-radial_locations_m, blade_chord_m, blade_beta_deg = interpolate(radial_locations_m, blade_chord_m, blade_beta_deg, divisions)
+radial_locations_m, blade_chord_m, blade_beta_deg = interpolate(radial_locations_m, blade_chord_m, blade_beta_deg,
+                                                                divisions)
 n_stations = len(radial_locations_m) - 1
 tip_radius = radial_locations_m[n_stations]  # use tip radial location as prop radius
 omega = rpm * 2 * pi / 60  # radians per second
@@ -224,7 +225,8 @@ for station in range(n_stations):  # TODO undo this
         # gamma ==  (4 * pi * radial_loc / n_blades) * F * (
         # 1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
 
-        gamma == v_t * (4 * pi * radial_loc / n_blades) * F * (1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
+        gamma == v_t * (4 * pi * radial_loc / n_blades) * F * (
+                    1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
         # vt**2*F**2*(1.+(4.*lam_w*R/(pi*B*r))**2) >= (B*G/(4.*pi*r))**2,
         # f + (radial_loc / tip_radius) * n_blades / (2 * loc_wake_adv_ratio) <= (n_blades / 2) * (1 / loc_wake_adv_ratio),
         # blade_twist_deg * pi / 180 == alpha_rad + 1 / h_ati,
@@ -281,11 +283,14 @@ Thrust = sum(thrust)
 Torque = sum(torque)
 
 # debugging section: outputs printed in qprop
-print("radius    chord      beta      Cl        Cd        Re     Mach    effi      effp     Wa      Aswirl    adv_wake     alpha    Wt")
+print(
+    "radius    chord      beta      Cl        Cd        Re     Mach    effi      effp     Wa      Aswirl    adv_wake     alpha    Wt")
 for i in range(0, len(radius)):
     # print(f'{radius[i]} {chord[i]}  {beta[i]}   {Cl[i]}  {Cd[i]}  {Re[i]}  {Mach[i]}    {effi[i]}    {effp[i]}    {Wa[i]}  {a_swirl[i]}  {adv_wake[i]}')
     print('%.4f    %.4f     %.3f    %.4f    %.5f   %d  %.3f   %.4f    %.4f   %.2f   %.3f   %.4f     %.4f    %.2f'
-          % (radius[i], chord[i], beta[i], Cl[i], Cd[i], RE[i], Mach[i], effi[i], effp[i], Wa[i], a_swirl[i], adv_wake[i], alpha[i], Wt[i]))
+          % (
+          radius[i], chord[i], beta[i], Cl[i], Cd[i], RE[i], Mach[i], effi[i], effp[i], Wa[i], a_swirl[i], adv_wake[i],
+          alpha[i], Wt[i]))
 print(f"Thrust Total: {Thrust}")
 print(f"Torque Total: {Torque}")
 # return Torque, Thrust

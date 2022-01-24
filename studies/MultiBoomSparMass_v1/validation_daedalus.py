@@ -46,8 +46,8 @@ import copy
 
 beam_sol = copy.deepcopy(beam).substitute_solution(sol)
 
-print("Beam mass: %f kg" % beam_sol.mass)
-print("Wing spar mass: %f kg (Wing spar consists of two of these beams)" % (2 * beam_sol.mass))
+print(f"Beam mass: {beam_sol.mass} kg")
+print(f"Wing spar mass: {2 * beam_sol.mass} kg (Wing spar consists of two of these beams)")
 beam_sol.draw_bending(show=False, for_print=True)
 
 plt.savefig("validation_daedalus_plot.pgf")

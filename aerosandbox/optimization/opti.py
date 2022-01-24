@@ -209,7 +209,8 @@ class Opti(cas.Opti):
                 scale = 1
             else:
                 scale = np.mean(np.fabs(init_guess))  # Initialize the scale to a heuristic based on the init_guess
-                if isinstance(scale, cas.MX) or scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
+                if isinstance(scale,
+                              cas.MX) or scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
                     scale = 1
 
                 # scale = np.fabs(

@@ -137,7 +137,8 @@ class InterpolatedModel(SurrogateModel):
                 try:
                     return np.reshape(value, shape_for_reshaping)
                 except ValueError:
-                    if isinstance(value, int) or isinstance(value, float) or value.shape == tuple() or np.product(value.shape) == 1:
+                    if isinstance(value, int) or isinstance(value, float) or value.shape == tuple() or np.product(
+                            value.shape) == 1:
                         return value * np.ones(shape_for_reshaping)
                 raise ValueError("Could not reshape value of one of the inputs!")
 

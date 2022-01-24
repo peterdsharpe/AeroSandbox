@@ -52,6 +52,6 @@ for dataset in datasets:
     plt.loglog(durations, human_power_model({"d": durations}, params))
     plt.xlabel(r"Duration [mins]")
     plt.ylabel(r"Maximum Sustainable Power [W]")
-    plt.title("Human Power Output (%s)\n(Fig. 2.4, Bicycling Science by D. Wilson)" % dataset)
+    plt.title(f"Human Power Output ({dataset})\n(Fig. 2.4, Bicycling Science by D. Wilson)")
     plt.tight_layout()
     plt.show()

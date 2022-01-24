@@ -51,6 +51,7 @@ def abs(x):
     else:
         return _cas.fabs(x)
 
+
 def mod(x1, x2):
     """
     Return element-wise remainder of division.

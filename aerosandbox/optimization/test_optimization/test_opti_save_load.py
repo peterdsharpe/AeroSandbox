@@ -8,6 +8,7 @@ Minimization over a simple unimodal function is used here:
     Minimize (x-1) ** 2 + (y-1) ** 2
 """
 
+
 def sumsqr(x):
     return np.sum(x ** 2)
 
@@ -95,6 +96,7 @@ def test_save_and_load_opti(tmp_path):
     assert sol.value(x) == pytest.approx(1)
     assert sol.value(y) == pytest.approx(2)
     assert sol.value(f) == pytest.approx(1)
+
 
 def test_save_and_load_opti_uncategorized(tmp_path):
     temp_filename = tmp_path / "temp.json"
