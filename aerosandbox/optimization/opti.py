@@ -219,6 +219,12 @@ class Opti(cas.Opti):
                 #         1
                 #     ))
 
+        # Try to convert init_guess to a float or np.ndarray if it is an Opti parameter.
+        try:
+            init_guess = self.value(init_guess)
+        except RuntimeError as e:
+            raise TypeError("The `init_guess` for a new Opti variable must not be a function of an existing Opti variable.")
+
         # Validate the inputs
         if log_transform:
             if np.any(init_guess <= 0):
