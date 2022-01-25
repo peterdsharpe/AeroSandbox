@@ -8,7 +8,7 @@ class MassProperties(AeroSandboxObject):
     """
 
     def __init__(self,
-                 mass: float = 0,
+                 mass: float = None,
                  x_cg: float = 0,
                  y_cg: float = 0,
                  z_cg: float = 0,
@@ -54,6 +54,14 @@ class MassProperties(AeroSandboxObject):
             this is symmetric about z.
 
         """
+        if mass is None:
+            import warnings
+            warnings.warn(
+                "Defining a MassProperties object with zero mass. This can cause problems (divide-by-zero) in dynamics calculations, if this is not intended.\nTo silence this warning, please explicitly set `mass=0` in the MassProperties constructor.",
+                stacklevel=2
+            )
+            mass = 0
+
         self.mass = mass
         self.x_cg = x_cg
         self.y_cg = y_cg
