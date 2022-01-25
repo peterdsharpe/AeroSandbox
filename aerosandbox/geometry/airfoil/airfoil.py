@@ -154,7 +154,7 @@ class Airfoil(Polygon):
                         cache_filename: str = None,
                         xfoil_kwargs: Dict[str, Any] = None,
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
-                        make_360_deg_model=True
+                        simplify = False
                         ) -> None:
         """
         Generates airfoil polars (CL, CD, CM functions) and self
@@ -313,8 +313,6 @@ class Airfoil(Polygon):
             airfoil=self,
             alpha=alpha_resample
         )
-        # if not make_360_deg_model:
-        #     CL_if_separated =
 
         CD_if_separated = CD_if_separated + np.median(data["CD"])
         # The line above effectively ensures that separated CD will never be less than attached CD. Not exactly, but generally close. A good heuristic.
