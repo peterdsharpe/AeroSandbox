@@ -224,7 +224,7 @@ class Fuselage(AeroSandboxObject):
 
     def mesh_body(self,
                   method="quad",
-                  chordwise_resolution: int = 6,
+                  chordwise_resolution: int = 1,
                   spanwise_resolution: int = 36,
                   ) -> Tuple[np.ndarray, np.ndarray]:
         """

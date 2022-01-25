@@ -197,11 +197,12 @@ class Opti(cas.Opti):
         ### Set defaults
         if init_guess is None:
             import warnings
-            warnings.warn("No initial guess set for Opti.variable().", stacklevel=2)
             if log_transform:
                 init_guess = 1
+                warnings.warn("No initial guess set for Opti.variable(). Defaulting to 1 (log-transformed variable).", stacklevel=2)
             else:
                 init_guess = 0
+                warnings.warn("No initial guess set for Opti.variable(). Defaulting to 0.", stacklevel=2)
         if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
             n_vars = np.length(init_guess)
         if scale is None:  # Infer a scale from init_guess if it is not provided
@@ -219,6 +220,12 @@ class Opti(cas.Opti):
                 #         init_guess,
                 #         1
                 #     ))
+
+        # Try to convert init_guess to a float or np.ndarray if it is an Opti parameter.
+        try:
+            init_guess = self.value(init_guess)
+        except RuntimeError as e:
+            raise TypeError("The `init_guess` for a new Opti variable must not be a function of an existing Opti variable.")
 
         # Validate the inputs
         if log_transform:

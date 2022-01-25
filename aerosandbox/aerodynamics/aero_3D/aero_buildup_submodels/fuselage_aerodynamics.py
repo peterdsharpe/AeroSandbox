@@ -4,6 +4,25 @@ import aerosandbox.numpy as np
 import aerosandbox.library.aerodynamics as aerolib
 
 
+def sears_haack_drag(radius_max: float, length: float) -> float:
+    """
+    Yields the idealized drag area (denoted CDA, or equivalently, D/q) of a Sears-Haack body.
+
+    Assumes linearized supersonic (Prandtl-Glauert) flow.
+
+    https://en.wikipedia.org/wiki/Sears%E2%80%93Haack_body
+
+    Args:
+        radius_max: The maximum radius of the Sears-Haack body.
+        length: The length of the Sears-Haack body.
+
+    Returns: The drag area (CDA, or D/q) of the body. To get the drag force, multiply by the dynamic pressure.
+
+    """
+    CDA = 9 * np.pi ** 2 * radius_max ** 2 / (2 * length ** 2)
+    return CDA
+
+
 def jorgensen_eta(fineness_ratio: float) -> float:
     """
     A fit for the eta parameter (crossflow lift multiplier) of a fuselage, as described in:
