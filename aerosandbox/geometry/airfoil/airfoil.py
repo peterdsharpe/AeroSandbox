@@ -156,12 +156,33 @@ class Airfoil(Polygon):
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
                         ) -> None:
         """
-        Generates airfoil polars (CL, CD, CM functions) and self
+        Generates airfoil polars (CL, CD, CM functions) and assigns them in-place to this Airfoil's polar functions.
+
+        In other words, when this function is run, the following functions will be added (or overwritten) to the instance:
+            * Airfoil.CL_function(alpha, Re, mach, deflection)
+            * Airfoil.CD_function(alpha, Re, mach, deflection)
+            * Airfoil.CM_function(alpha, Re, mach, deflection)
+
+        Where alpha is in degrees. Right now, deflection is not used.
+
+        Args:
+
+            alphas: The range of alphas to sample from XFoil at.
+
+            Res: The range of Reynolds numbers to sample from XFoil at.
+
+            cache_filename: A path-like filename (ideally a "*.json" file) that can be used to cache the XFoil
+            results, making it much faster to regenerate the results.
+
+            xfoil_kwargs: Keyword arguments to pass into the AeroSandbox XFoil module. See the aerosandbox.XFoil
+            constructor for options.
+
+            unstructured_interpolated_model_kwargs: Keyword arguments to pass into the UnstructuredInterpolatedModels
+            that contain the polars themselves. See the aerosandbox.UnstructuredInterpolatedModel constructor for
+            options.
 
         Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
         polars.
-
-        # TODO document parameters
 
         Returns: None (in-place)
 
