@@ -154,7 +154,6 @@ class Airfoil(Polygon):
                         cache_filename: str = None,
                         xfoil_kwargs: Dict[str, Any] = None,
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
-                        simplify = False
                         ) -> None:
         """
         Generates airfoil polars (CL, CD, CM functions) and self
