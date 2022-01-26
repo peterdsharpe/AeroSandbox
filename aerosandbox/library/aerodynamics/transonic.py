@@ -2,7 +2,10 @@ import aerosandbox.numpy as np
 from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 
 
-def sears_haack_drag(radius_max: float, length: float) -> float:
+def sears_haack_drag(
+        radius_max: float,
+        length: float
+) -> float:
     """
     Yields the idealized drag area (denoted CDA, or equivalently, D/q) of a Sears-Haack body.
 
@@ -18,6 +21,14 @@ def sears_haack_drag(radius_max: float, length: float) -> float:
 
     """
     CDA = 9 * np.pi ** 2 * radius_max ** 2 / (2 * length ** 2)
+    return CDA
+
+
+def sears_haack_drag_from_volume(
+        volume: float,
+        length: float
+) -> float:
+    CDA = 128 * volume ** 2 / (np.pi * length ** 4)
     return CDA
 
 
