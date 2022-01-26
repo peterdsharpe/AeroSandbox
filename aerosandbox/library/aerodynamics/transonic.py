@@ -28,6 +28,11 @@ def sears_haack_drag_from_volume(
         volume: float,
         length: float
 ) -> float:
+    """
+    See documentation for sears_haack_drag() in this same file.
+
+    Identical, except takes volume as an input rather than max radius.
+    """
     CDA = 128 * volume ** 2 / (np.pi * length ** 4)
     return CDA
 
