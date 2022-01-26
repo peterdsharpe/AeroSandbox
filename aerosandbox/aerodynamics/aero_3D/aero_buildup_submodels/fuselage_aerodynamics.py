@@ -4,23 +4,42 @@ import aerosandbox.numpy as np
 import aerosandbox.library.aerodynamics as aerolib
 
 
-def sears_haack_drag(radius_max: float, length: float) -> float:
+
+def critical_mach(fineness_ratio_nose: float) -> float:
     """
-    Yields the idealized drag area (denoted CDA, or equivalently, D/q) of a Sears-Haack body.
+    Returns the transonic critical Mach number for a streamlined fuselage.
 
-    Assumes linearized supersonic (Prandtl-Glauert) flow.
-
-    https://en.wikipedia.org/wiki/Sears%E2%80%93Haack_body
+    Fitted to data from Raymer "Aircraft Design: A Conceptual Approach" 2nd Ed., Fig. 12.28.
+    See figure + study + fit in: /studies/FuselageCriticalMach/
 
     Args:
-        radius_max: The maximum radius of the Sears-Haack body.
-        length: The length of the Sears-Haack body.
 
-    Returns: The drag area (CDA, or D/q) of the body. To get the drag force, multiply by the dynamic pressure.
+        fineness_ratio_nose: The fineness ratio of the nose section of the fuselage.
+
+            Specifically, fineness_ratio_nose = 2 * L_n / d, where:
+
+                * L_n is the length from the nose to the longitudinal location at which the fuselage cross section
+                becomes essentially constant, and:
+
+                * d is the body diameter at that location.
+
+    Returns: The critical Mach number
 
     """
-    CDA = 9 * np.pi ** 2 * radius_max ** 2 / (2 * length ** 2)
-    return CDA
+    p = {
+        'a': 11.087202397070559,
+        'b': 13.469755774708842,
+        'c': 4.034476257077558
+    }
+
+    mach_dd = 1 - (p["a"] / (2 * fineness_ratio_nose + p["b"])) ** p["c"]
+
+    ### The following approximate relation is derived in W.H. Mason, "Configuration Aerodynamics", Chapter 7. Transonic Aerodynamics of Airfoils and Wings.
+    ### Equation 7-8 on Page 7-19.
+    ### This is in turn based on Lock's proposed empirically-derived shape of the drag rise, from Hilton, W.F., High Speed Aerodynamics, Longmans, Green & Co., London, 1952, pp. 47-49
+    mach_crit = mach_dd - (0.1 / 80) ** (1 / 3)
+
+    return mach_crit
 
 
 def jorgensen_eta(fineness_ratio: float) -> float:
@@ -33,7 +52,7 @@ def jorgensen_eta(fineness_ratio: float) -> float:
     Fits performed in /studies/JorgensenEtaFitting/
 
     Args:
-        fineness_ratio: The fineness ratio of the fuselage.
+        fineness_ratio: The fineness ratio of the fuselage. (length / diameter)
 
     Returns: An estimate of eta.
 
