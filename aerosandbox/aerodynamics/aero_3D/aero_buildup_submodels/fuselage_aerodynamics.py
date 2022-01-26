@@ -244,6 +244,8 @@ def fuselage_aerodynamics(
 
 
 if __name__ == '__main__':
+    import aerosandbox as asb
+
     fuselage = Fuselage(
         xsecs=[
             FuselageXSec(
@@ -257,21 +259,24 @@ if __name__ == '__main__':
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
         op_point=OperatingPoint(
-            velocity=10,
+            atmosphere=asb.Atmosphere(altitude=0000),
+            velocity=50,
             alpha=10,
             beta=5
         )
     )
     print(aero)
 
-    from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
 
     fig, ax = plt.subplots(1, 2)
-    alpha = np.linspace(-60, 60, 1000)
+    alpha = np.linspace(-20, 20, 1000)
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
         op_point=OperatingPoint(
-            velocity=10,
+            atmosphere=asb.Atmosphere(altitude=0000),
+            velocity=50,
             alpha=alpha,
         )
     )
@@ -279,13 +284,15 @@ if __name__ == '__main__':
     plt.plot(alpha, aero["L"])
     plt.xlabel("Angle of Attack [deg]")
     plt.ylabel("Lift Force [N]")
+    p.set_ticks(10,2)
 
     plt.sca(ax[1])
     plt.plot(alpha, aero["D"])
     plt.xlabel("Angle of Attack [deg]")
     plt.ylabel("Drag Force [N]")
+    p.set_ticks(10,2)
 
-    show_plot(
+    p.show_plot(
         "Fuselage Aerodynamics"
     )
 
@@ -294,17 +301,18 @@ if __name__ == '__main__':
     aero = fuselage_aerodynamics(
         fuselage=fuselage,
         op_point=OperatingPoint(
-            velocity=10,
+            atmosphere=asb.Atmosphere(altitude=10000),
+            velocity=50,
             alpha=Alpha,
             beta=Beta,
         )
     )
     from aerosandbox.tools.string_formatting import eng_string
 
-    contour(
+    p.contour(
         Beta, Alpha, aero["L"],
         levels=30, colorbar_label="Lift $L$ [N]",
         linelabels_format=lambda s: eng_string(s, unit="N")
     )
-    equal()
-    show_plot("3D Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")
+    p.equal()
+    p.show_plot("3D Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")
