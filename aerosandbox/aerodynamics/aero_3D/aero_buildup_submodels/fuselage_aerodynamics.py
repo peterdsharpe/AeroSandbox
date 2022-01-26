@@ -4,7 +4,6 @@ import aerosandbox.numpy as np
 import aerosandbox.library.aerodynamics as aerolib
 
 
-
 def critical_mach(fineness_ratio_nose: float) -> float:
     """
     Returns the transonic critical Mach number for a streamlined fuselage.
