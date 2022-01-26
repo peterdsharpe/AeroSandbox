@@ -2,6 +2,7 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 import aerosandbox.numpy as np
 import aerosandbox.library.aerodynamics as aerolib
+from aerosandbox.library.aerodynamics import transonic
 
 
 def critical_mach(fineness_ratio_nose: float) -> float:
@@ -91,7 +92,6 @@ def fuselage_aerodynamics(
     Returns:
 
     """
-
     fuselage.Re = op_point.reynolds(reference_length=fuselage.length())
 
     ####### Reference quantities (Set these 1 here, just so we can follow Jorgensen syntax.)
@@ -112,8 +112,21 @@ def fuselage_aerodynamics(
     ### Skin friction drag
     C_D_skin = C_f_forebody * fuselage.area_wetted() / S_ref
 
+    ### Wave drag
+    sears_haack_drag = transonic.sears_haack_drag_from_volume(
+        volume=fuselage.volume(),
+        length=fuselage.length()
+    )
+    C_D_wave = transonic.approximate_CD_wave(
+        mach=op_point.mach(),
+        mach_crit=critical_mach(
+            fineness_ratio_nose=fuselage.fineness_ratio() / 2
+        ),
+        CD_wave_at_fully_supersonic=2.0 * sears_haack_drag
+    )
+
     ### Total zero-lift drag
-    C_D_zero_lift = C_D_skin + C_D_base
+    C_D_zero_lift = C_D_skin + C_D_base + C_D_wave
 
     ####### Jorgensen model
 
