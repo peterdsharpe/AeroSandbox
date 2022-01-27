@@ -72,24 +72,22 @@ class Airplane(AeroSandboxObject):
                 >>> }
 
         """
+        ### Set defaults
+        if wings is None:
+            wings: List['Wing'] = []
+        if fuselages is None:
+            fuselages: List['Fuselage'] = []
+        if analysis_specific_options is None:
+            analysis_specific_options = {}
+
         ### Initialize
         self.name = name
-
         self.xyz_ref = np.array(xyz_ref)
+        self.wings = wings
+        self.fuselages = fuselages
+        self.analysis_specific_options = analysis_specific_options
 
-        ## Add the wing objects
-        if wings is not None:
-            self.wings = wings
-        else:
-            self.wings: List['Wing'] = []
-
-        ## Add the fuselage objects
-        if fuselages is not None:
-            self.fuselages = fuselages
-        else:
-            self.fuselages: List['Fuselage'] = []
-
-        ## Assign reference values
+        ### Assign reference values
         try:
             main_wing = self.wings[0]
             if s_ref is None:
@@ -103,8 +101,6 @@ class Airplane(AeroSandboxObject):
         self.s_ref = s_ref
         self.c_ref = c_ref
         self.b_ref = b_ref
-
-        self.analysis_specific_options = analysis_specific_options
 
     def __repr__(self):
         n_wings = len(self.wings)

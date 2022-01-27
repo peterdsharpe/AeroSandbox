@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Union, Tuple
+from typing import List, Dict, Any, Union, Tuple
 from pathlib import Path
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 import copy
@@ -9,27 +9,64 @@ import copy
 class Fuselage(AeroSandboxObject):
     """
     Definition for a fuselage or other slender body (pod, etc.).
-    For now, all fuselages are assumed to be circular and fairly closely aligned with the body x axis. (<10 deg or so) # TODO update if this changes
+
+    For now, all fuselages are assumed to be circular and fairly closely aligned with the body x axis. (<10 deg or
+    so) # TODO update if this changes
+
     """
 
     def __init__(self,
-                 name: str = "Untitled Fuselage",  # It can help when debugging to give each fuselage a sensible name.
-                 xsecs: List['FuselageXSec'] = [],  # This should be a list of FuselageXSec objects.
-                 symmetric: bool = False,
-                 xyz_le: np.ndarray = None,
+                 name: str = "Untitled",
+                 xsecs: List['FuselageXSec'] = None,
+                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
+                 symmetric: bool = False,  # Deprecated
+                 xyz_le: np.ndarray = None,  # Deprecated
                  ):
         """
-        Initialize a new fuselage.
+        Defines a new fuselage.
+
         Args:
+
             name: Name of the fuselage [optional]. It can help when debugging to give each fuselage a sensible name.
-            xyz_le: xyz-coordinates of the datum point (typically the nose) of the fuselage.
+
             xsecs: A list of fuselage cross ("X") sections in the form of FuselageXSec objects.
-            symmetric: DEPRECATED. Is the fuselage to be mirrored across the XZ plane (e.g. for wing-mounted pods).
-            circumferential_panels:
+
+            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
+            that should be passed on to specific analyses and associated with this specific geometry object.
+
+                This should be a dictionary where:
+
+                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
+                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
+                    something else (like a string), that's totally fine - it's just a unique identifier for the
+                    specific analysis you're running.
+
+                    * Values are a dictionary of key:value pairs, where:
+
+                        * Keys are strings.
+
+                        * Values are some value you want to assign.
+
+                This is more easily demonstrated / understood with an example:
+
+                >>> analysis_specific_options = {
+                >>>     asb.AeroBuildup: dict(
+                >>>         include_wave_drag=True,
+                >>>     )
+                >>> }
         """
+        ### Set defaults
+        if xsecs is None:
+            xsecs = []
+        if analysis_specific_options is None:
+            analysis_specific_options = {}
+
+        ### Initialize
         self.name = name
         self.xsecs = xsecs
+        self.analysis_specific_options = analysis_specific_options
 
+        ### Handle deprecated parameters
         if symmetric:
             import warnings
             warnings.warn(
@@ -47,7 +84,7 @@ class Fuselage(AeroSandboxObject):
             )
             self.xsecs = [
                 xsec.translate(xyz_le)
-                for xsec in xsecs
+                for xsec in self.xsecs
             ]
 
     def __repr__(self) -> str:
@@ -413,9 +450,49 @@ class FuselageXSec(AeroSandboxObject):
     def __init__(self,
                  xyz_c: Union[np.ndarray, List] = np.array([0, 0, 0]),
                  radius: float = 0,
+                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
                  ):
+        """
+        Defines a new fuselage cross section.
+
+        Args:
+
+            xyz_c: An array-like that represents the center of this fuselage cross section.
+
+            radius: Radius of the fuselage cross section.
+
+            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
+            that should be passed on to specific analyses and associated with this specific geometry object.
+
+                This should be a dictionary where:
+
+                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
+                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
+                    something else (like a string), that's totally fine - it's just a unique identifier for the
+                    specific analysis you're running.
+
+                    * Values are a dictionary of key:value pairs, where:
+
+                        * Keys are strings.
+
+                        * Values are some value you want to assign.
+
+                This is more easily demonstrated / understood with an example:
+
+                >>> analysis_specific_options = {
+                >>>     asb.AeroBuildup: dict(
+                >>>         include_wave_drag=True,
+                >>>     )
+                >>> }
+        """
+        ### Set defaults
+        if analysis_specific_options is None:
+            analysis_specific_options = {}
+
+        ### Initialize
         self.xyz_c = np.array(xyz_c)
         self.radius = radius
+        self.analysis_specific_options = analysis_specific_options
 
     def __repr__(self) -> str:
         return f"FuselageXSec (xyz_c: {self.xyz_c}, radius: {self.radius})"
