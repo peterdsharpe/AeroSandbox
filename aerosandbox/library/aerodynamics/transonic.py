@@ -45,6 +45,8 @@ def approximate_CD_wave(
     """
     An approximate relation for computing transonic wave drag, based on an object's Mach number.
 
+    Considered reasonably valid from Mach 0 up to around Mach 2 or 3-ish.
+
     Methodology is a combination of:
 
         * The methodology described in Raymer, "Aircraft Design: A Conceptual Approach", Section 12.5.10 Transonic Parasite Drag (pg. 449 in Ed. 2)
@@ -148,12 +150,15 @@ if __name__ == '__main__':
 
     m = np.linspace(0., 2, 1000)
     plt.sca(ax[0])
+    plt.title("$C_D$")
     plt.ylabel("$C_{D, wave} / C_{D, wave, M=1.2}$")
     plt.plot(m, d(m))
     for mi in [mc, 1, 1.05, 1.2, mc + (0.1 / 80) ** (1 / 3)]:
         plt.plot([mi], [d(mi)], ".k")
     # plt.ylim(0, 0.005)
+
     plt.sca(ax[1])
+    plt.title("Derivative of $C_D$ w.r.t. Speed")
     plt.ylabel(r"$\frac{d(C_{D, wave})}{dM}$")
     plt.plot(np.trapz(m), np.diff(d(m)) / np.diff(m))
     plt.ylim(-5, 15)
