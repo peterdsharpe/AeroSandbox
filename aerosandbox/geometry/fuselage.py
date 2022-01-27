@@ -57,7 +57,7 @@ class Fuselage(AeroSandboxObject):
         """
         ### Set defaults
         if xsecs is None:
-            xsecs = []
+            xsecs: List['FuselageXSec'] = []
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -457,7 +457,8 @@ class FuselageXSec(AeroSandboxObject):
 
         Args:
 
-            xyz_c: An array-like that represents the center of this fuselage cross section.
+            xyz_c: An array-like that represents the xyz-coordinates of the center of this fuselage cross section,
+            in geometry axes.
 
             radius: Radius of the fuselage cross section.
 
