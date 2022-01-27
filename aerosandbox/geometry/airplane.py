@@ -1,27 +1,77 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Union
-from numpy import pi
-from textwrap import dedent
-from pathlib import Path
+from typing import List, Dict, Any, Union
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 
 class Airplane(AeroSandboxObject):
     """
     Definition for an airplane.
+
+    Anatomy of an Airplane:
+
+        An Airplane consists chiefly of a collection of wings and fuselages. These can be accessed with
+        `Airplane.wings` and `Airplane.fuselages`, which gives a list of those respective components. Each wing is a
+        Wing object, and each fuselage is a Fuselage object.
     """
 
     def __init__(self,
-                 name: str = "Untitled",  # A sensible name for your airplane.
+                 name: str = "Untitled",
                  xyz_ref: Union[np.ndarray, List] = np.array([0, 0, 0]),
-                 # Ref. point for moments; should be the center of gravity.
-                 wings: List['Wing'] = None,  # A list of Wing objects.
-                 fuselages: List['Fuselage'] = None,  # A list of Fuselage objects.
-                 s_ref: float = None,  # If not set, populates from first wing object.
-                 c_ref: float = None,  # See above
-                 b_ref: float = None,  # See above
+                 wings: List['Wing'] = None,
+                 fuselages: List['Fuselage'] = None,
+                 s_ref: float = None,
+                 c_ref: float = None,
+                 b_ref: float = None,
+                 analysis_specific_options: Dict[type, Dict[str, Any]] = None
                  ):
+        """
+        Defines a new airplane.
+
+        Args:
+
+            name: Name of the airplane [optional]. It can help when debugging to give the airplane a sensible name.
+
+            xyz_ref: An array-like that gives the x-, y-, and z- reference point of the airplane, used when computing
+            moments and stability derivatives. Generally, this should be the center of gravity.
+
+                # In a future version, this will be deprecated and replaced with asb.MassProperties.
+
+            wings: A list of Wing objects that are a part of the airplane.
+
+            fuselages: A list of Fuselage objects that are a part of the airplane.
+
+            s_ref: Reference area. If undefined, it's set from the area of the first Wing object. # Note: will be deprecated
+
+            c_ref: Reference chord. If undefined, it's set from the mean aerodynamic chord of the first Wing object. # Note: will be deprecated
+
+            b_ref: Reference span. If undefined, it's set from the span of the first Wing object. # Note: will be deprecated
+
+            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
+            that should be passed on to specific analyses and associated with this specific geometry object.
+
+                This should be a dictionary where:
+
+                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
+                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
+                    something else (like a string), that's totally fine - it's just a unique identifier for the
+                    specific analysis you're running.
+
+                    * Values are a dictionary of key:value pairs, where:
+
+                        * Keys are strings.
+
+                        * Values are some value you want to assign.
+
+                This is more easily demonstrated / understood with an example:
+
+                >>> analysis_specific_options = {
+                >>>     asb.AeroBuildup: dict(
+                >>>         include_wave_drag=True,
+                >>>     )
+                >>> }
+
+        """
         ### Initialize
         self.name = name
 
@@ -54,12 +104,16 @@ class Airplane(AeroSandboxObject):
         self.c_ref = c_ref
         self.b_ref = b_ref
 
+        self.analysis_specific_options = analysis_specific_options
+
     def __repr__(self):
         n_wings = len(self.wings)
         n_fuselages = len(self.fuselages)
         return f"Airplane '{self.name}' " \
                f"({n_wings} {'wing' if n_wings == 1 else 'wings'}, " \
                f"{n_fuselages} {'fuselage' if n_fuselages == 1 else 'fuselages'})"
+
+    # TODO def add_wing(wing: 'Wing') -> None
 
     def mesh_body(self,
                   method="quad",
