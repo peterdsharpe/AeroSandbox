@@ -94,12 +94,12 @@ This is all pretty standard across all scientific computing in Python:
     
       ### Instead, do this:
       plt.plot(
-          	time, 
-    		temperature, 
-    		".-", 
-    		color='lightgrey', 
-    		alpha=0.6, 
-    		label="Temperature over time"
+              time, 
+            temperature, 
+            ".-", 
+            color='lightgrey', 
+            alpha=0.6, 
+            label="Temperature over time"
       )
       ```
 
@@ -173,6 +173,31 @@ This is all pretty standard across all scientific computing in Python:
   ### Instead, do this:    
   atmosphere = asb.Atmosphere(altitude=7000)
     ```
+
+* When defining a new function: never, never make the default value of a parameter a mutable data type. Common culprits are empty lists `[]` and empty dicts `{}`. Debugging this common mistake is often very difficult and wastes other devs' time. For an explanation of why this is such bad practice, read this article: ["Python Mutable Defaults are the Source of All Evil"](https://florimond.dev/en/posts/2018/08/python-mutable-defaults-are-the-source-of-all-evil/).
+
+	Any IDE worth its salt will likely yell at you if you do this - listen to it!
+
+    * As an example of what **NOT** to do:
+	``` python
+	def bad_function(
+			my_parameter=[],  # Don't do this
+			another_param={},  # Or this!!!
+	):
+		pass
+	
+	
+	### Instead, do this:
+	def good_function(
+			my_parameter=None,
+			another_param=None,
+	):
+		### Set defaults
+		if my_parameter is None:
+			my_parameter = []
+		if another_param is None:
+			another_param = {}
+	```
 
 # Code of Conduct
 
