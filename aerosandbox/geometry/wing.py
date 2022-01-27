@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Tuple, Union
+from typing import List, Dict, Any, Tuple, Union
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
@@ -10,9 +10,9 @@ import copy
 
 class Wing(AeroSandboxObject):
     """
-    Definition for a wing.
+    Definition for a Wing.
 
-    Anatomy of a wing:
+    Anatomy of a Wing:
 
         A wing consists chiefly of a collection of cross sections, or "xsecs". These can be accessed with `Wing.xsecs`,
         which gives a list of xsecs in the Wing. Each xsec is a WingXSec object, a class that is defined separately.
@@ -28,25 +28,64 @@ class Wing(AeroSandboxObject):
     If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the
     constructor.
 
-    If the wing is not symmetric across the XZ plane, just define the wing.
+    If the wing is not symmetric across the XZ plane (e.g., a vertical stabilizer), just define the wing.
     """
 
     def __init__(self,
-                 name: str = "Untitled Wing",
-                 xsecs: List['WingXSec'] = [],
+                 name: str = "Untitled",
+                 xsecs: List['WingXSec'] = None,
                  symmetric: bool = False,
                  xyz_le: np.ndarray = None,  # Note: deprecated.
+                 analysis_specific_options: Dict[type, Dict[str, Any]] = None
                  ):
         """
-        Initialize a new wing.
+        Defines a new wing.
+
         Args:
+
             name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
+
             xsecs: A list of wing cross ("X") sections in the form of WingXSec objects.
+
             symmetric: Is the wing symmetric across the XZ plane?
+
+            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
+            that should be passed on to specific analyses and associated with this specific geometry object.
+
+                This should be a dictionary where:
+
+                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
+                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
+                    something else (like a string), that's totally fine - it's just a unique identifier for the
+                    specific analysis you're running.
+
+                    * Values are a dictionary of key:value pairs, where:
+
+                        * Keys are strings.
+
+                        * Values are some value you want to assign.
+
+                This is more easily demonstrated / understood with an example:
+
+                >>> analysis_specific_options = {
+                >>>     asb.AeroBuildup: dict(
+                >>>         include_wave_drag=True,
+                >>>     )
+                >>> }
         """
+        ### Set defaults
+        if xsecs is None:
+            xsecs: List['WingXSec'] = []
+        if analysis_specific_options is None:
+            analysis_specific_options = {}
+
+        ### Initialize
         self.name = name
         self.xsecs = xsecs
         self.symmetric = symmetric
+        self.analysis_specific_options = analysis_specific_options
+
+        ### Handle deprecated parameters
         if xyz_le is not None:
             import warnings
             warnings.warn(
@@ -55,7 +94,7 @@ class Wing(AeroSandboxObject):
             )
             self.xsecs = [
                 xsec.translate(xyz_le)
-                for xsec in xsecs
+                for xsec in self.xsecs
             ]
 
     def __repr__(self) -> str:
@@ -822,45 +861,148 @@ class WingXSec(AeroSandboxObject):
                  chord: float = 1.,
                  twist: float = 0,
                  airfoil: Airfoil = None,
-                 control_surface_is_symmetric: bool = True,
-                 control_surface_hinge_point: float = 0.75,
-                 control_surface_deflection: float = 0.,
+                 control_surfaces: List['ControlSurface'] = None,
+                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
+                 control_surface_is_symmetric=None,  # Note: deprecated.
+                 control_surface_hinge_point=None,  # Note: deprecated.
+                 control_surface_deflection=None,  # Note: deprecated.
                  twist_angle=None,  # Note: deprecated.
                  ):
         """
-        Initialize a new wing cross section.
+        Defines a new wing cross section.
+
         Args:
-            xyz_le: xyz-coordinates of the leading edge of the cross section. In geometry axes.
+
+            xyz_le: An array-like that represents the xyz-coordinates of the leading edge of the cross section, in
+            geometry axes.
+
             chord: Chord of the wing at this cross section.
+
             twist: Twist angle, in degrees, as defined about the leading edge.
+
                 The twist axis is computed with the following procedure:
+
                     * The quarter-chord point of this WingXSec and the following one are identified.
-                    * A line is drawn connecting them, and it is converted into a direction vector.
-                    * That direction vector is projected onto the Y-Z plane.
+
+                    * A line is drawn connecting them, and it is normalized to a unit direction vector.
+
+                    * That direction vector is projected onto the geometry Y-Z plane.
+
                     * That direction vector is now the twist axis.
+
             airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
-            control_surface_is_symmetric: Is the control surface symmetric? (e.g., True for flaps, False for ailerons.)
-            control_surface_hinge_point: The location of the control surface hinge, as a fraction of chord.
-            control_surface_deflection: Control deflection, in degrees. Downwards-positive.
+
+            control_surfaces: A list of control surfaces in the form of ControlSurface objects.
+
+            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
+            that should be passed on to specific analyses and associated with this specific geometry object.
+
+                This should be a dictionary where:
+
+                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
+                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
+                    something else (like a string), that's totally fine - it's just a unique identifier for the
+                    specific analysis you're running.
+
+                    * Values are a dictionary of key:value pairs, where:
+
+                        * Keys are strings.
+
+                        * Values are some value you want to assign.
+
+                This is more easily demonstrated / understood with an example:
+
+                >>> analysis_specific_options = {
+                >>>     asb.AeroBuildup: dict(
+                >>>         include_wave_drag=True,
+                >>>     )
+                >>> }
+
+            Note: Control surface definition through WingXSec properties (control_surface_is_symmetric, control_surface_hinge_point, control_surface_deflection)
+            is deprecated. Control surfaces should be handled according to the following protocol:
+            
+                1. If control_surfaces is an empty list (default, user does not specify any control surfaces), use deprecated WingXSec control surface definition properties.
+                This will result in 1 control surface at this xsec.
+                
+                Usage example:
+
+                >>> xsecs = asb.WingXSec(
+                >>>     chord = 2
+                >>> )
+
+                2. If control_surfaces is a list of ControlSurface instances, use ControlSurface properties to define control surfaces. This will result in as many
+                control surfaces at this xsec as there are entries in the control_surfaces list (an arbitrary number >= 1).
+
+                Usage example:
+
+                >>>xsecs = asb.WingXSec(
+                >>>    chord = 2,
+                >>>    control_surfaces = [
+                >>>        ControlSurface(
+                >>>            trailing_edge = False
+                >>>        )
+                >>>    ]
+                >>>)
+
+                3. If control_surfaces is None, override deprecated control surface definition properties and do not define a control surface at this xsec. This will
+                result in 0 control surfaces at this xsec.
+
+                Usage example:
+
+                >>>xsecs = asb.WingXSec(
+                >>>    chord = 2,
+                >>>    control_surfaces = None
+                >>>)
+            
+            See avl.py for example of control_surface handling using this protocol.
         """
+        ### Set defaults
         if airfoil is None:
             airfoil = Airfoil("naca0012")
+        if control_surfaces is None:
+            control_surfaces = []
+        if analysis_specific_options is None:
+            analysis_specific_options = {}
 
+        self.xyz_le = np.array(xyz_le)
+        self.chord = chord
+        self.twist = twist
+        self.airfoil = airfoil
+        self.control_surfaces = control_surfaces
+        self.analysis_specific_options = analysis_specific_options
+
+        ### Handle deprecated arguments
         if twist_angle is not None:
             import warnings
             warnings.warn(
                 "DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.",
                 stacklevel=2
             )
-            twist = twist_angle
+            self.twist = twist_angle
+        if not (
+                control_surface_is_symmetric is None and
+                control_surface_hinge_point is None and
+                control_surface_deflection is None
+        ):
+            import warnings
+            warnings.warn(
+                "DEPRECATED: Define control surfaces using the `control_surfaces` parameter, which takes in a list of asb.ControlSurface objects.",
+                stacklevel=2
+            )
+            if control_surface_is_symmetric is None:
+                control_surface_is_symmetric = True
+            if control_surface_hinge_point is None:
+                control_surface_hinge_point = 0.75
+            if control_surface_deflection is None:
+                control_surface_deflection = 0
 
-        self.xyz_le = np.array(xyz_le)
-        self.chord = chord
-        self.twist = twist
-        self.airfoil = airfoil
-        self.control_surface_is_symmetric = control_surface_is_symmetric
-        self.control_surface_hinge_point = control_surface_hinge_point
-        self.control_surface_deflection = control_surface_deflection
+            self.control_surfaces.append(
+                ControlSurface(
+                    hinge_point=control_surface_hinge_point,
+                    symmetric=control_surface_is_symmetric,
+                    deflection=control_surface_deflection,
+                )
+            )
 
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
@@ -882,9 +1024,76 @@ class WingXSec(AeroSandboxObject):
         return new_xsec
 
 
+class ControlSurface(AeroSandboxObject):
+    """
+    Definition for a control surface, which is attached to a particular WingXSec via WingXSec's `control_surfaces=[]` parameter.
+    """
+
+    def __init__(self,
+                 name: str = "Untitled",
+                 trailing_edge: bool = True,
+                 hinge_point: float = 0.75,
+                 symmetric: bool = True,
+                 deflection: float = 0.0,
+                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
+                 ):
+        """
+        Define a new control surface.
+
+        Args:
+
+            name: Name of the control surface [optional]. It can help when debugging to give each control surface a
+            sensible name.
+
+            trailing_edge: Is the control surface on the trailing edge? If False, control surface is on the leading
+            edge. (e.g., True for flaps, False for slats.)
+
+            hinge_point: The location of the control surface hinge, as a fraction of chord.
+
+            symmetric: Is the control surface symmetric? If False, control surface is anti-symmetric. (e.g.,
+            True for flaps, False for ailerons.)
+
+            deflection: Control deflection, in degrees. Downwards-positive.
+
+            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
+            that should be passed on to specific analyses and associated with this specific geometry object.
+
+                This should be a dictionary where:
+
+                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
+                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
+                    something else (like a string), that's totally fine - it's just a unique identifier for the
+                    specific analysis you're running.
+
+                    * Values are a dictionary of key:value pairs, where:
+
+                        * Keys are strings.
+
+                        * Values are some value you want to assign.
+
+                This is more easily demonstrated / understood with an example:
+
+                >>> analysis_specific_options = {
+                >>>     asb.AeroBuildup: dict(
+                >>>         include_wave_drag=True,
+                >>>     )
+                >>> }
+
+        """
+        ### Set defaults
+        if analysis_specific_options is None:
+            analysis_specific_options = {}
+
+        self.name = name
+        self.trailing_edge = trailing_edge
+        self.hinge_point = hinge_point
+        self.symmetric = symmetric
+        self.deflection = deflection
+        self.analysis_specific_options = analysis_specific_options
+
+
 if __name__ == '__main__':
     wing = Wing(
-        xyz_le=[1, 0, 0],
         xsecs=[
             WingXSec(
                 xyz_le=[0, 0, 0],
@@ -905,5 +1114,5 @@ if __name__ == '__main__':
                 twist=0,
             )
         ]
-    )
+    ).translate([1, 0, 0])
     wing.draw()
