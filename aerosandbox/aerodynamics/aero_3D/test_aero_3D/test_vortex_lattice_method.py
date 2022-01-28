@@ -44,5 +44,5 @@ if __name__ == '__main__':
     # test_conventional()
     # test_vanilla()
     # test_flat_plate()['CL']
-    test_flat_plate_mirrored()
-    # pytest.main()
+    # test_flat_plate_mirrored()
+    pytest.main()
