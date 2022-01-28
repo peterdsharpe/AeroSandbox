@@ -2,9 +2,10 @@ from aerosandbox.common import ExplicitAnalysis
 import aerosandbox.numpy as np
 import subprocess
 from pathlib import Path
-from aerosandbox.geometry import Airplane
+from aerosandbox.geometry import Airplane, Wing, WingXSec, Fuselage, ControlSurface
 from aerosandbox.performance import OperatingPoint
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Any
+import copy
 import tempfile
 import warnings
 
