@@ -246,6 +246,8 @@ class Airplane(AeroSandboxObject):
             if not wing.is_entirely_symmetric():
                 return False
 
+        # TODO add in logic for fuselages
+
         return True
 
     def aerodynamic_center(self, chord_fraction: float = 0.25):
