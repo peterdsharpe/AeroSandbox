@@ -250,12 +250,22 @@ class Wing(AeroSandboxObject):
 
     def is_entirely_symmetric(self) -> bool:
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has symmetric control surfaces.
-        if not self.symmetric:
-            return False
-        for xsec in self.xsecs:
+        for xsec in self.xsecs: # To be symmetric, all
             for surf in xsec.control_surfaces:
                 if not (surf.symmetric or surf.deflection == 0):
                     return False
+
+        if not self.symmetric: # If the wing itself isn't mirrored (e.g., vertical stabilizer), check that it's symmetric
+            for xsec in self.xsecs:
+                if not xsec.xyz_le[1] == 0: # Surface has to be right on the centerline
+                    return False
+                if not xsec.twist == 0: # Surface has to be untwisted
+                    return False
+                if not xsec.airfoil.CL_function(0, 1e6, 0, 0) == 0: # Surface has to have a symmetric airfoil.
+                    return False
+                if not xsec.airfoil.CM_function(0, 1e6, 0, 0) == 0: # Surface has to have a symmetric airfoil.
+                    return False
+
         return True
 
     def mean_geometric_chord(self) -> float:

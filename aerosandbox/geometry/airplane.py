@@ -245,19 +245,6 @@ class Airplane(AeroSandboxObject):
         for wing in self.wings:
             if not wing.is_entirely_symmetric():
                 return False
-            for xsec in wing.xsecs:
-                if not (xsec.control_surface_is_symmetric or xsec.control_surface_deflection == 0):
-                    return False
-                if not wing.symmetric:
-                    if not xsec.xyz_le[1] == 0:
-                        return False
-                    if not xsec.twist == 0:
-                        if not (xsec.twist_axis[0] == 0 and xsec.twist_axis[2] == 0):
-                            return False
-                    if not xsec.airfoil.CL_function(0, 1e6, 0, 0) == 0:
-                        return False
-                    if not xsec.airfoil.Cm_function(0, 1e6, 0, 0) == 0:
-                        return False
 
         return True
 
