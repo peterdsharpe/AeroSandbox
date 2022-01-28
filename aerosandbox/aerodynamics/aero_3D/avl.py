@@ -102,7 +102,7 @@ class AVL(ExplicitAnalysis):
 
         # Set parameters
         run_file_contents += [
-            "m"
+            "m",
             f"mn {self.op_point.mach()}",
             f"v {self.op_point.velocity}",
             f"d {self.op_point.atmosphere.density()}",
@@ -291,15 +291,7 @@ if __name__ == '__main__':
     ### Import Vanilla Airplane
     import aerosandbox as asb
 
-    from pathlib import Path
-
-    geometry_folder = Path(asb.__file__).parent.parent / "tutorial" / "04 - Geometry" / "example_geometry"
-
-    import sys
-
-    sys.path.insert(0, str(geometry_folder))
-
-    from vanilla import airplane as vanilla
+    from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.vanilla import airplane as vanilla
 
     ### Do the AVL run
     avl = AVL(
