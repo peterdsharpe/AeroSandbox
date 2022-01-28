@@ -70,12 +70,22 @@ class AVL(ExplicitAnalysis):
         )
     }
 
+    AVL_spacing_parameters = {
+        "uniform": 0,
+        "cosine" : 1,
+        "sine"   : 2,
+        "-sine"  : -2,
+        "equal"  : 0,  # "uniform" is preferred
+    }
+
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint = None,
                  avl_command: str = "avl",
                  verbose: bool = False,
                  working_directory: str = None,
+                 ground_effect: bool = False,
+                 ground_effect_height: float = 0
                  ):
         """
         Interface to AVL.
@@ -117,6 +127,8 @@ class AVL(ExplicitAnalysis):
         self.avl_command = avl_command
         self.verbose = verbose
         self.working_directory = working_directory
+        self.ground_effect = ground_effect
+        self.ground_effect_height = ground_effect_height
 
     def run(self) -> Dict:
         return self._run_avl()
