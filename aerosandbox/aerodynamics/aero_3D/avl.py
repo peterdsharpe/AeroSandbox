@@ -23,20 +23,52 @@ class AVL(ExplicitAnalysis):
 
     Usage example:
 
-        >>>avl = asb.AVL(
-        >>>    airplane=my_airplane,
-        >>>    op_point=asb.OperatingPoint(
-        >>>        velocity=100, # m/s
-        >>>        alpha=5, # deg
-        >>>        beta=4, # deg
-        >>>        p=0.01, # rad/sec
-        >>>        q=0.02, # rad/sec
-        >>>        r=0.03, # rad/sec
-        >>>    )
-        >>>)
-        >>>outputs = avl.run()
+        >>> avl = asb.AVL(
+        >>>     airplane=my_airplane,
+        >>>     op_point=asb.OperatingPoint(
+        >>>         velocity=100, # m/s
+        >>>         alpha=5, # deg
+        >>>         beta=4, # deg
+        >>>         p=0.01, # rad/sec
+        >>>         q=0.02, # rad/sec
+        >>>         r=0.03, # rad/sec
+        >>>     )
+        >>> )
+        >>> outputs = avl.run()
 
     """
+    default_analysis_specific_options = {
+        Airplane      : dict(
+            parasite_drag_coefficient=0
+        ),
+        Wing          : dict(
+            wing_level_spanwise_spacing=True,
+            spanwise_resolution=12,
+            spanwise_spacing="cosine",
+            chordwise_resolution=12,
+            chordwise_spacing="cosine",
+            component=None,
+            no_wake=False,
+            no_alpha_beta=False,
+            no_load=False,
+            drag_polar=None,
+        ),
+        WingXSec      : dict(
+            spanwise_resolution=12,
+            spanwise_spacing="cosine",
+            cl_alpha_factor=1,
+            drag_polar=None,
+        ),
+        ControlSurface: dict(
+            gain=1,
+            hinge_vector=None,
+            duplication_factor=None,
+        ),
+        Fuselage      : dict(
+            panel_resolution=24,
+            panel_spacing="cosine"
+        )
+    }
 
     def __init__(self,
                  airplane: Airplane,
