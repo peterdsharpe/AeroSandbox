@@ -285,6 +285,280 @@ class AVL(ExplicitAnalysis):
 
             return res
 
+    @staticmethod
+    def write_avl(airplane: Airplane,
+                  filepath: Union[Path, str] = None,
+                  ) -> str:
+        """
+        Writes a .avl file corresponding to this airplane to a filepath.
+
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
+        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+
+        Args:
+            filepath: filepath (including the filename and .avl extension) [string]
+                If None, this function returns the .avl file as a string.
+
+        Returns: None
+
+        """
+        def clean(s):
+            """
+            Cleans up a multi-line string.
+            """
+            # return dedent(s)
+            return "\n".join([line.strip() for line in s.split("\n")])
+
+        def print_control_surface(control_surface: ControlSurface,
+                                  options_for_analysis: Dict[type, Dict[str, Any]]
+                                  ) -> str:
+
+            if control_surface.trailing_edge:
+                hinge_point = control_surface.hinge_point
+            else:
+                hinge_point = -control_surface.hinge_point # leading edge surfaces are defined with negative hinge points in AVL
+
+            if options_for_analysis["duplication_factor"] is None:
+                duplication_factor = 1.0 if control_surface.symmetric else -1.0
+            else:
+                duplication_factor = options_for_analysis["duplication_factor"]
+
+            string = clean(f"""
+            CONTROL
+            #Cname Cgain Xhinge HingeVec SgnDup
+            control{control_surface.id} {options_for_analysis['gain']} {hinge_point} {' '.join(str(x) for x in options_for_analysis['hinge_vector'])} {duplication_factor}
+            """)
+
+            return string
+
+        def print_control_surface_deprecated(xsec: WingXSec,
+                                             id: int) -> str:
+
+            sign_duplication = 1.0 if xsec.control_surface_is_symmetric else -1.0
+            string = clean(f"""
+            CONTROL
+            #Cname Cgain Xhinge HingeVec SgnDup
+            control{id} 1.0 {xsec.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
+            """)
+
+            return string
+
+        string = ""
+
+        options = airplane.get_options_for_analysis(__class__)
+
+        z_symmetry = 1 if options["ground_plane"] == True else 0
+
+        string += clean(f"""\
+        {airplane.name}
+        #Mach
+        0
+        #IYsym   IZsym   Zsym
+         0       {z_symmetry}       {options["ground_plane_height"]}
+        #Sref    Cref    Bref
+        {airplane.s_ref} {airplane.c_ref} {airplane.b_ref}
+        #Xref    Yref    Zref
+        {airplane.xyz_ref[0]} {airplane.xyz_ref[1]} {airplane.xyz_ref[2]}
+        # CDp
+        {options["parasitic_drag_coefficient"]}
+        """)
+
+        spacing = {
+            "uniform": 0.0,
+            "cosine": 1.0,
+            "sine": 2.0
+        }
+
+        control_surface_counter = 1
+        for wing in airplane.wings:
+
+            options = wing.get_options_for_analysis(__class__)
+            wing_options = copy.deepcopy(options) # store these for comparison to xsec options
+
+            spacing_line = f"{options['chordwise_resolution']}   {spacing[options['chordwise_spacing']]}"
+            if options["wing_level_spanwise_spacing"] == True:
+                spacing_line += f"   {options['spanwise_resolution']}   {spacing[options['spanwise_spacing']]}"
+
+            string += clean(f"""\
+            #{"=" * 50}
+            SURFACE
+            {wing.name}
+            #Nchordwise  Cspace  [Nspanwise   Sspace]
+            {spacing_line}
+
+            """)
+
+            if wing.symmetric == True:
+                string += clean(f"""\
+                YDUPLICATE
+                0
+
+                """)
+
+            if options["no_wake"] == True:
+                string += clean(f"""\
+                NOWAKE
+                
+                """)
+
+            if options["no_alpha_beta"] == True:
+                string += clean(f"""\
+                NOALBE
+                
+                """)
+
+            if options["no_load"] == True:
+                string += clean(f"""\
+                NOLOAD
+                
+                """)
+
+            if options["drag_polar"] is not None:
+                drag_polar = options["drag_polar"]
+                CL = drag_polar["CL"]
+                CD = drag_polar["CD"]
+                string += clean(f"""\
+                CDCL
+                #CL1  CD1  CL2  CD2  CL3  CD3
+                {' '.join(str(x) for x in [CL[0], CD[0], CL[1], CD[1], CL[2], CD[2]])}
+                
+                """)
+
+            for idx_xsec, xsec in enumerate(wing.xsecs):
+
+                options = xsec.get_options_for_analysis(__class__)
+
+                xsec_def_line = f"{xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}"
+                if wing_options["wing_level_spanwise_spacing"] == False:
+                    xsec_def_line += f"   {options['spanwise_resolution']}   {spacing[options['spanwise_spacing']]}"
+
+                if options["cl_alpha_factor"] is None:
+                    claf_line = f"{1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt"
+                else:
+                    claf_line = f"{options['cl_alpha_factor']}"
+
+                string += clean(f"""\
+                #{"-" * 50}
+                SECTION
+                #Xle    Yle    Zle     Chord   Ainc  [Nspanwise   Sspace]
+                {xsec_def_line}
+                
+                AIRFOIL
+                {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
+                
+                CLAF
+                {claf_line}
+                """)
+
+                if options["drag_polar"] is not None:
+                    drag_polar = options["drag_polar"]
+                    CL = drag_polar["CL"]
+                    CD = drag_polar["CD"]
+                    string += clean(f"""\
+                    CDCL
+                    #CL1  CD1  CL2  CD2  CL3  CD3
+                    {' '.join(str(x) for x in [CL[0], CD[0], CL[1], CD[1], CL[2], CD[2]])}
+                    
+                    """)
+
+                # see WingXSec in wing.py for explanation of control surface implementation protocol using control_surfaces list vs. deprecated WingXSec properties
+                if idx_xsec > 0: # if this xsec is not the first xsec, get previous xsec's control surface info
+                    xsec_prev = wing.xsecs[idx_xsec - 1]
+                    if xsec_prev.control_surfaces is not None: # if user specifies control_surfaces as None, then there will be no control surface
+                        if xsec_prev.control_surfaces: # if control_surfaces is not an empty list, print control surfaces to file using list of ControlSurface instances
+                            for control_surface in xsec_prev.control_surfaces:
+                                options = control_surface.get_options_for_analysis(__class__)
+                                string += print_control_surface(control_surface, options)
+                        else: # if control_surfaces is an empty list (default), print control surfaces to file using deprecated WingXSec properties
+                            string += print_control_surface_deprecated(xsec_prev, control_surface_counter - 1)
+
+                if idx_xsec < len(wing.xsecs) - 1: # if this xsec is not the last xsec, get this xsec's control surface info
+                    if xsec.control_surfaces is not None:
+                        if xsec.control_surfaces:
+                            for control_surface in xsec.control_surfaces:
+                                control_surface.id = control_surface_counter
+                                control_surface_counter += 1
+                                options = control_surface.get_options_for_analysis(__class__)
+                                string += print_control_surface(control_surface, options)
+                        else:
+                            string += print_control_surface_deprecated(xsec, control_surface_counter)
+                            control_surface_counter += 1
+
+        filepath = Path(filepath)
+        for i, fuse in enumerate(airplane.fuselages):
+            fuse_filepath = Path(str(filepath) + f".fuse{i}")
+            __class__.write_avl_bfile(
+                fuse,
+                filepath=fuse_filepath
+            )
+
+            options = fuse.get_options_for_analysis(__class__)
+
+            string += clean(f"""\
+            #{"=" * 50}
+            BODY
+            {fuse.name}
+            {options['fuse_panel_resolution']} {spacing[options['fuse_panel_spacing']]}
+            
+            BFIL
+            {fuse_filepath}
+            
+            """)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
+
+    @staticmethod
+    def write_avl_bfile(fuselage,
+                        filepath: Union[Path, str] = None,
+                        include_name: bool = True,
+                        ) -> str:
+        """
+        Writes an AVL-compatible BFILE corresponding to this fuselage to a filepath.
+
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
+        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+
+        Args:
+            filepath: filepath (including the filename and .avl extension) [string]
+                If None, this function returns the would-be file contents as a string.
+
+            include_name: Should the name be included in the .dat file? (This should be True for use with AVL.)
+
+        Returns:
+
+        """
+        filepath = Path(filepath)
+
+        contents = []
+
+        if include_name:
+            contents += [fuselage.name]
+
+        contents += [
+                        f"{xyz_c[0]} {xyz_c[2] + r}"
+                        for xyz_c, r in zip(
+                [xsec.xyz_c for xsec in fuselage.xsecs][::-1],
+                [xsec.radius for xsec in fuselage.xsecs][::-1]
+            )
+                    ] + [
+                        f"{xyz_c[0]} {xyz_c[2] - r}"
+                        for xyz_c, r in zip(
+                [xsec.xyz_c for xsec in fuselage.xsecs][1:],
+                [xsec.radius for xsec in fuselage.xsecs][1:]
+            )
+                    ]
+
+        string = "\n".join(contents)
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
 
 if __name__ == '__main__':
 
