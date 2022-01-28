@@ -72,7 +72,7 @@ class AVL(ExplicitAnalysis):
 
     def __init__(self,
                  airplane: Airplane,
-                 op_point: OperatingPoint = OperatingPoint(),
+                 op_point: OperatingPoint = None,
                  avl_command: str = "avl",
                  verbose: bool = False,
                  working_directory: str = None,
@@ -107,6 +107,11 @@ class AVL(ExplicitAnalysis):
 
             working_directory:
         """
+        ### Set defaults
+        if op_point is None:
+            op_point = OperatingPoint()
+
+        ### Initialize
         self.airplane = airplane
         self.op_point = op_point
         self.avl_command = avl_command
