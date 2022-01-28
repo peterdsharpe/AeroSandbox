@@ -253,8 +253,9 @@ class Wing(AeroSandboxObject):
         if not self.symmetric:
             return False
         for xsec in self.xsecs:
-            if not (xsec.control_surface_is_symmetric or xsec.control_surface_deflection == 0):
-                return False
+            for surf in xsec.control_surfaces:
+                if not (surf.symmetric or surf.deflection == 0):
+                    return False
         return True
 
     def mean_geometric_chord(self) -> float:
