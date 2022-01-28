@@ -337,7 +337,7 @@ class AVL(ExplicitAnalysis):
     @staticmethod
     def write_avl(airplane: Airplane,
                   filepath: Union[Path, str] = None,
-                  ) -> str:
+                  ) -> None:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
 
@@ -351,11 +351,11 @@ class AVL(ExplicitAnalysis):
         Returns: None
 
         """
+
         def clean(s):
             """
-            Cleans up a multi-line string.
+            Removes leading and trailing whitespace from each line of a multi-line string.
             """
-            # return dedent(s)
             return "\n".join([line.strip() for line in s.split("\n")])
 
         def print_control_surface(control_surface: ControlSurface,
@@ -558,8 +558,6 @@ class AVL(ExplicitAnalysis):
             with open(filepath, "w+") as f:
                 f.write(string)
 
-        return string
-
     @staticmethod
     def write_avl_bfile(fuselage,
                         filepath: Union[Path, str] = None,
@@ -575,7 +573,7 @@ class AVL(ExplicitAnalysis):
             filepath: filepath (including the filename and .avl extension) [string]
                 If None, this function returns the would-be file contents as a string.
 
-            include_name: Should the name be included in the .dat file? (This should be True for use with AVL.)
+            include_name: Should the name of the fuselage be included in the .dat file? (This should be True for use with AVL.)
 
         Returns:
 
@@ -609,6 +607,7 @@ class AVL(ExplicitAnalysis):
 
         return string
 
+
 if __name__ == '__main__':
 
     ### Import Vanilla Airplane
@@ -628,6 +627,8 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
+        working_directory=str(Path.home() / "Downloads" / "avl_test"),
+        verbose=True
     )
 
     res = avl.run()
