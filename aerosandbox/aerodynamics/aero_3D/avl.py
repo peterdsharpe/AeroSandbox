@@ -38,33 +38,42 @@ class AVL(ExplicitAnalysis):
 
     """
     default_analysis_specific_options = {
-        Airplane      : dict(
-            parasite_drag_coefficient=0
+        Airplane: dict(
+            profile_drag_coefficient=0
         ),
-        Wing          : dict(
+        Wing    : dict(
             wing_level_spanwise_spacing=True,
             spanwise_resolution=12,
             spanwise_spacing="cosine",
             chordwise_resolution=12,
             chordwise_spacing="cosine",
-            component=None,
+            component=None,  # type: int
             no_wake=False,
             no_alpha_beta=False,
             no_load=False,
-            drag_polar=None,
+            drag_polar=dict(
+                CL1=0,
+                CD1=0,
+                CL2=0,
+                CD2=0,
+                CL3=0,
+                CD3=0,
+            ),
         ),
-        WingXSec      : dict(
+        WingXSec: dict(
             spanwise_resolution=12,
             spanwise_spacing="cosine",
-            cl_alpha_factor=1,
-            drag_polar=None,
+            cl_alpha_factor=None, # type: float
+            drag_polar=dict(
+                CL1=0,
+                CD1=0,
+                CL2=0,
+                CD2=0,
+                CL3=0,
+                CD3=0,
+            )
         ),
-        ControlSurface: dict(
-            gain=1,
-            hinge_vector=None,
-            duplication_factor=None,
-        ),
-        Fuselage      : dict(
+        Fuselage: dict(
             panel_resolution=24,
             panel_spacing="cosine"
         )
@@ -172,6 +181,11 @@ class AVL(ExplicitAnalysis):
             f"y y {r_bar}"
         ]
 
+        # Set control surface deflections
+        run_file_contents += [
+            f"d1 d1 1"
+        ]
+
         return run_file_contents
 
     def _run_avl(self,
@@ -201,7 +215,7 @@ class AVL(ExplicitAnalysis):
 
             # Handle the airplane file
             airplane_file = "airplane.avl"
-            self.airplane.write_avl(directory / airplane_file)
+            self.write_avl(directory / airplane_file)
 
             # Handle the run file
             keystroke_file_contents = self._default_keystroke_file_contents()
@@ -240,80 +254,41 @@ class AVL(ExplicitAnalysis):
             # Trim off the first few lines that contain name, # of panels, etc.
             output_data = "\n".join(output_data.split("\n")[8:])
 
-            ### Iterate through the string to find all the numeric values, based on where "=" appears.
+            ### Iterate through the string to find all the keys and corresponding numeric values, based on where "=" appears.
+            keys = []
             values = []
             index = output_data.find("=")
+
             while index != -1:
+
+                # All keys contain no spaces except for "Clb Cnr / Clr Cnb" (spiral stability parameter)
+                potential_keys = output_data[:index].split()
+                if potential_keys[-1] == "Cnb" and len(potential_keys) >= 5:
+                    potential_key = " ".join(potential_keys[-5:])
+                    if potential_key == "Clb Cnr / Clr Cnb":
+                        key = potential_key
+                    else:
+                        key = potential_keys[-1]
+                else:
+                    key = potential_keys[-1]
+
+                keys.append(key)
                 output_data = output_data[index + 1:]
                 number = output_data[:12].split("\n")[0]
-                number = float(number)
+                try:
+                    number = float(number)
+                except:
+                    number = np.nan
                 values.append(number)
 
                 index = output_data.find("=")
 
-            ### Record the keys associated with those values:
-            keys = [
-                "Sref",
-                "Cref",
-                "Bref",
-                "Xref",
-                "Yref",
-                "Zref",
-                "alpha",
-                "pb/2V",
-                "p'b/2V",
-                "beta",
-                "qc/2V",
-                "mach",
-                "rb/2V",
-                "r'b/2V",
-                "CX",  # Note: these refer to "CXtot", etc. in AVL, but the "tot" is redundant.
-                "Cl",
-                "Cl'",
-                "CY",
-                "Cm",
-                "CZ",
-                "Cn",
-                "Cn'",
-                "CL",
-                "CD",
-                "CDvis",
-                "CDind",
-                "CLff",
-                "CDff",
-                "Cyff",
-                "e",
-                "CLa",
-                "CLb",
-                "CYa",
-                "CYb",
-                "Cla",
-                "Clb",
-                "Cma",
-                "Cmb",
-                "Cna",
-                "Cnb",
-                "CLp",
-                "CLq",
-                "CLr",
-                "CYp",
-                "CYq",
-                "CYr",
-                "Clp",
-                "Clq",
-                "Clr",
-                "Cmp",
-                "Cmq",
-                "Cmr",
-                "Cnp",
-                "Cnq",
-                "Cnr",
-                "Xnp",
-                "Clb Cnr / Clr Cnb"
-            ]
+            # Make key names consistent with AeroSandbox notation
+            keys_lowerize = ["Alpha", "Beta", "Mach"]
+            keys = [key.lower() if key in keys_lowerize else key for key in keys]
+            keys = [key.replace("tot", "") for key in keys]
 
-            if len(values) != 57 and len(
-                    values) != 56:  # Sometimes the spiral mode term is inexplicably not displayed by AVL
+            if len(values) < 56:  # Sometimes the spiral mode term is inexplicably not displayed by AVL
                 raise RuntimeError(
                     "AVL could not run for some reason!\n"
                     "Investigate by turning on the `verbose` flag and looking at the output.\n"
@@ -334,8 +309,7 @@ class AVL(ExplicitAnalysis):
 
             return res
 
-    @staticmethod
-    def write_avl(airplane: Airplane,
+    def write_avl(self,
                   filepath: Union[Path, str] = None,
                   ) -> None:
         """
@@ -358,135 +332,159 @@ class AVL(ExplicitAnalysis):
             """
             return "\n".join([line.strip() for line in s.split("\n")])
 
-        def print_control_surface(control_surface: ControlSurface,
-                                  options_for_analysis: Dict[type, Dict[str, Any]]
-                                  ) -> str:
+        # def print_control_surface(control_surface: ControlSurface,
+        #                           options_for_analysis: Dict[type, Dict[str, Any]]
+        #                           ) -> str:
+        #
+        #     if control_surface.trailing_edge:
+        #         hinge_point = control_surface.hinge_point
+        #     else:
+        #         hinge_point = -control_surface.hinge_point  # leading edge surfaces are defined with negative hinge points in AVL
+        #
+        #     if options_for_analysis["duplication_factor"] is None:
+        #         duplication_factor = 1.0 if control_surface.symmetric else -1.0
+        #     else:
+        #         duplication_factor = options_for_analysis["duplication_factor"]
+        #
+        #     string = clean(f"""
+        #     CONTROL
+        #     #Cname Cgain Xhinge HingeVec SgnDup
+        #     control{control_surface.id} {options_for_analysis['gain']} {hinge_point} {' '.join(str(x) for x in options_for_analysis['hinge_vector'])} {duplication_factor}
+        #     """)
+        #
+        #     return string
+        #
+        # def print_control_surface_deprecated(xsec: WingXSec,
+        #                                      id: int) -> str:
+        #
+        #     sign_duplication = 1.0 if xsec.control_surface_is_symmetric else -1.0
+        #     string = clean(f"""
+        #     CONTROL
+        #     #Cname Cgain Xhinge HingeVec SgnDup
+        #     control{id} 1.0 {xsec.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
+        #     """)
+        #
+        #     return string
 
-            if control_surface.trailing_edge:
-                hinge_point = control_surface.hinge_point
-            else:
-                hinge_point = -control_surface.hinge_point # leading edge surfaces are defined with negative hinge points in AVL
+        airplane = self.airplane
 
-            if options_for_analysis["duplication_factor"] is None:
-                duplication_factor = 1.0 if control_surface.symmetric else -1.0
-            else:
-                duplication_factor = options_for_analysis["duplication_factor"]
+        avl_file = ""
 
-            string = clean(f"""
-            CONTROL
-            #Cname Cgain Xhinge HingeVec SgnDup
-            control{control_surface.id} {options_for_analysis['gain']} {hinge_point} {' '.join(str(x) for x in options_for_analysis['hinge_vector'])} {duplication_factor}
-            """)
+        airplane_options = copy.deepcopy(self.default_analysis_specific_options[Airplane])
+        if AVL in airplane.analysis_specific_options.keys():
+            airplane_options.update(airplane.analysis_specific_options[AVL])
 
-            return string
-
-        def print_control_surface_deprecated(xsec: WingXSec,
-                                             id: int) -> str:
-
-            sign_duplication = 1.0 if xsec.control_surface_is_symmetric else -1.0
-            string = clean(f"""
-            CONTROL
-            #Cname Cgain Xhinge HingeVec SgnDup
-            control{id} 1.0 {xsec.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
-            """)
-
-            return string
-
-        string = ""
-
-        options = airplane.get_options_for_analysis(__class__)
-
-        z_symmetry = 1 if options["ground_plane"] == True else 0
-
-        string += clean(f"""\
+        avl_file += clean(f"""\
         {airplane.name}
         #Mach
         0
         #IYsym   IZsym   Zsym
-         0       {z_symmetry}       {options["ground_plane_height"]}
+         0       {1 if self.ground_effect else 0}   {self.ground_effect_height}
         #Sref    Cref    Bref
         {airplane.s_ref} {airplane.c_ref} {airplane.b_ref}
         #Xref    Yref    Zref
         {airplane.xyz_ref[0]} {airplane.xyz_ref[1]} {airplane.xyz_ref[2]}
         # CDp
-        {options["parasitic_drag_coefficient"]}
+        {airplane_options["profile_drag_coefficient"]}
         """)
-
-        spacing = {
-            "uniform": 0.0,
-            "cosine": 1.0,
-            "sine": 2.0
-        }
 
         control_surface_counter = 1
         for wing in airplane.wings:
 
-            options = wing.get_options_for_analysis(__class__)
-            wing_options = copy.deepcopy(options) # store these for comparison to xsec options
+            wing_options = copy.deepcopy(self.default_analysis_specific_options[Wing])
+            if AVL in wing.analysis_specific_options.keys():
+                wing_options.update(wing.analysis_specific_options[AVL])
 
-            spacing_line = f"{options['chordwise_resolution']}   {spacing[options['chordwise_spacing']]}"
-            if options["wing_level_spanwise_spacing"] == True:
-                spacing_line += f"   {options['spanwise_resolution']}   {spacing[options['spanwise_spacing']]}"
+            spacing_line = f"{wing_options['chordwise_resolution']}   {self.AVL_spacing_parameters[wing_options['chordwise_spacing']]}"
+            if wing_options["wing_level_spanwise_spacing"]:
+                spacing_line += f"   {wing_options['spanwise_resolution']}   {self.AVL_spacing_parameters[wing_options['spanwise_spacing']]}"
 
-            string += clean(f"""\
+            avl_file += clean(f"""\
             #{"=" * 50}
             SURFACE
             {wing.name}
             #Nchordwise  Cspace  [Nspanwise   Sspace]
             {spacing_line}
-
+            
             """)
 
-            if wing.symmetric == True:
-                string += clean(f"""\
-                YDUPLICATE
-                0
-
+            if wing_options["component"] is not None:
+                avl_file += clean(f"""\
+                COMPONENT
+                {wing_options['component']}
+                    
                 """)
 
-            if options["no_wake"] == True:
-                string += clean(f"""\
+            if wing.symmetric:
+                avl_file += clean(f"""\
+                YDUPLICATE
+                0
+                    
+                """)
+
+            if wing_options["no_wake"]:
+                avl_file += clean(f"""\
                 NOWAKE
                 
                 """)
 
-            if options["no_alpha_beta"] == True:
-                string += clean(f"""\
+            if wing_options["no_alpha_beta"]:
+                avl_file += clean(f"""\
                 NOALBE
                 
                 """)
 
-            if options["no_load"] == True:
-                string += clean(f"""\
+            if wing_options["no_load"]:
+                avl_file += clean(f"""\
                 NOLOAD
                 
                 """)
 
-            if options["drag_polar"] is not None:
-                drag_polar = options["drag_polar"]
-                CL = drag_polar["CL"]
-                CD = drag_polar["CD"]
-                string += clean(f"""\
-                CDCL
-                #CL1  CD1  CL2  CD2  CL3  CD3
-                {' '.join(str(x) for x in [CL[0], CD[0], CL[1], CD[1], CL[2], CD[2]])}
-                
-                """)
+            polar = wing_options["drag_polar"]
+            avl_file += clean(f"""\
+            CDCL
+            #CL1  CD1  CL2  CD2  CL3  CD3
+            {polar["CL1"]} {polar["CD1"]} {polar["CL2"]} {polar["CD2"]} {polar["CL3"]} {polar["CD3"]}
+            
+            """)
 
-            for idx_xsec, xsec in enumerate(wing.xsecs):
+            ### Build up a buffer of the control surface strings to write to each section
+            control_surface_commands: List[List[str]] = [
+                []
+                for _ in wing.xsecs
+            ]
+            for i, xsec in enumerate(wing.xsecs[:-1]):
+                for surf in xsec.control_surfaces:
+                    xhinge = surf.hinge_point if surf.trailing_edge else -surf.hinge_point
+                    xyz_hinge_vector = wing._compute_frame_of_section(i)[1]
+                    sign_dup = 1 if surf.symmetric else -1
 
-                options = xsec.get_options_for_analysis(__class__)
+                    command = clean(f"""\
+                        CONTROL
+                        #name, gain, Xhinge, XYZhvec, SgnDup
+                        all_deflections {surf.deflection} {xhinge} {xyz_hinge_vector[0]} {xyz_hinge_vector[1]} {xyz_hinge_vector[2]} {sign_dup}
+                        """)
+
+                    control_surface_commands[i].append(command)
+                    control_surface_commands[i + 1].append(command)
+
+            ### Write the commands for each wing section
+            for i, xsec in enumerate(wing.xsecs):
+
+                xsec_options = copy.deepcopy(self.default_analysis_specific_options[WingXSec])
+                if AVL in xsec.analysis_specific_options.keys():
+                    xsec_options.update(xsec.analysis_specific_options[AVL])
 
                 xsec_def_line = f"{xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}"
-                if wing_options["wing_level_spanwise_spacing"] == False:
-                    xsec_def_line += f"   {options['spanwise_resolution']}   {spacing[options['spanwise_spacing']]}"
+                if not wing_options["wing_level_spanwise_spacing"]:
+                    xsec_def_line += f"   {xsec_options['spanwise_resolution']}   {self.AVL_spacing_parameters[xsec_options['spanwise_spacing']]}"
 
-                if options["cl_alpha_factor"] is None:
-                    claf_line = f"{1 + 0.77 * xsec.airfoil.max_thickness()} # Computed using rule from avl_doc.txt"
+                if xsec_options["cl_alpha_factor"] is None:
+                    claf_line = f"{1 + 0.77 * xsec.airfoil.max_thickness()}  # Computed using rule from avl_doc.txt"
                 else:
-                    claf_line = f"{options['cl_alpha_factor']}"
+                    claf_line = f"{xsec_options['cl_alpha_factor']}"
 
-                string += clean(f"""\
+                avl_file += clean(f"""\
                 #{"-" * 50}
                 SECTION
                 #Xle    Yle    Zle     Chord   Ainc  [Nspanwise   Sspace]
@@ -497,57 +495,36 @@ class AVL(ExplicitAnalysis):
                 
                 CLAF
                 {claf_line}
+                
                 """)
 
-                if options["drag_polar"] is not None:
-                    drag_polar = options["drag_polar"]
-                    CL = drag_polar["CL"]
-                    CD = drag_polar["CD"]
-                    string += clean(f"""\
-                    CDCL
-                    #CL1  CD1  CL2  CD2  CL3  CD3
-                    {' '.join(str(x) for x in [CL[0], CD[0], CL[1], CD[1], CL[2], CD[2]])}
-                    
-                    """)
+                polar = xsec_options["drag_polar"]
+                avl_file += clean(f"""\
+                CDCL
+                #CL1  CD1  CL2  CD2  CL3  CD3
+                {polar["CL1"]} {polar["CD1"]} {polar["CL2"]} {polar["CD2"]} {polar["CL3"]} {polar["CD3"]}
+                
+                """)
 
-                # see WingXSec in wing.py for explanation of control surface implementation protocol using control_surfaces list vs. deprecated WingXSec properties
-                if idx_xsec > 0: # if this xsec is not the first xsec, get previous xsec's control surface info
-                    xsec_prev = wing.xsecs[idx_xsec - 1]
-                    if xsec_prev.control_surfaces is not None: # if user specifies control_surfaces as None, then there will be no control surface
-                        if xsec_prev.control_surfaces: # if control_surfaces is not an empty list, print control surfaces to file using list of ControlSurface instances
-                            for control_surface in xsec_prev.control_surfaces:
-                                options = control_surface.get_options_for_analysis(__class__)
-                                string += print_control_surface(control_surface, options)
-                        else: # if control_surfaces is an empty list (default), print control surfaces to file using deprecated WingXSec properties
-                            string += print_control_surface_deprecated(xsec_prev, control_surface_counter - 1)
-
-                if idx_xsec < len(wing.xsecs) - 1: # if this xsec is not the last xsec, get this xsec's control surface info
-                    if xsec.control_surfaces is not None:
-                        if xsec.control_surfaces:
-                            for control_surface in xsec.control_surfaces:
-                                control_surface.id = control_surface_counter
-                                control_surface_counter += 1
-                                options = control_surface.get_options_for_analysis(__class__)
-                                string += print_control_surface(control_surface, options)
-                        else:
-                            string += print_control_surface_deprecated(xsec, control_surface_counter)
-                            control_surface_counter += 1
+                for control_surface_command in control_surface_commands[i]:
+                    avl_file += control_surface_command
 
         filepath = Path(filepath)
         for i, fuse in enumerate(airplane.fuselages):
             fuse_filepath = Path(str(filepath) + f".fuse{i}")
-            __class__.write_avl_bfile(
-                fuse,
+            self.write_avl_bfile(
+                fuselage=fuse,
                 filepath=fuse_filepath
             )
+            fuse_options = copy.deepcopy(self.default_analysis_specific_options[Fuselage])
+            if AVL in fuse.analysis_specific_options.keys():
+                fuse_options.update(fuse.analysis_specific_options[AVL])
 
-            options = fuse.get_options_for_analysis(__class__)
-
-            string += clean(f"""\
+            avl_file += clean(f"""\
             #{"=" * 50}
             BODY
             {fuse.name}
-            {options['fuse_panel_resolution']} {spacing[options['fuse_panel_spacing']]}
+            {fuse_options['panel_resolution']} {self.AVL_spacing_parameters[fuse_options['panel_spacing']]}
             
             BFIL
             {fuse_filepath}
@@ -556,7 +533,7 @@ class AVL(ExplicitAnalysis):
 
         if filepath is not None:
             with open(filepath, "w+") as f:
-                f.write(string)
+                f.write(avl_file)
 
     @staticmethod
     def write_avl_bfile(fuselage,
@@ -615,6 +592,18 @@ if __name__ == '__main__':
 
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.vanilla import airplane as vanilla
 
+    vanilla.analysis_specific_options[AVL] = dict(
+        profile_drag_coefficient=0.1
+    )
+    vanilla.wings[0].xsecs[0].control_surfaces.append(
+        ControlSurface(
+            name="Flap",
+            trailing_edge=True,
+            hinge_point=0.75,
+            symmetric=True,
+            deflection=10
+        )
+    )
     ### Do the AVL run
     avl = AVL(
         airplane=vanilla,
