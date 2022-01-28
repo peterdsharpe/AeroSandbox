@@ -100,18 +100,28 @@ def wing_aerodynamics(
 
         sect_alpha_generalized = 90 - np.arccosd(vel_dot_normal)
 
+        def get_deflection(xsec):
+            n_surfs = len(xsec.control_surfaces)
+            if n_surfs == 0:
+                return 0
+            elif n_surfs == 1:
+                surf = xsec.control_surfaces[0]
+                return surf.deflection
+            else:
+                raise NotImplementedError("AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
+
         ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
         xsec_a_Cl_incompressible = xsec_a.airfoil.CL_function(
             alpha=sect_alpha_generalized,
             Re=op_point.reynolds(xsec_a.chord),
             mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
-            deflection=xsec_a.control_surface_deflection  # TODO treat symmetry
+            deflection=get_deflection(xsec_a)
         )
         xsec_b_Cl_incompressible = xsec_b.airfoil.CL_function(
             alpha=sect_alpha_generalized,
             Re=op_point.reynolds(xsec_b.chord),
             mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
-            deflection=xsec_a.control_surface_deflection
+            deflection=get_deflection(xsec_b)
         )
         sect_CL = (
                           xsec_a_Cl_incompressible * a_weight +
@@ -123,13 +133,13 @@ def wing_aerodynamics(
             alpha=sect_alpha_generalized,
             Re=op_point.reynolds(xsec_a.chord),
             mach=mach,
-            deflection=xsec_a.control_surface_deflection
+            deflection=get_deflection(xsec_a)
         )
         xsec_b_Cd_profile = xsec_b.airfoil.CD_function(
             alpha=sect_alpha_generalized,
             Re=op_point.reynolds(xsec_b.chord),
             mach=mach,
-            deflection=xsec_a.control_surface_deflection
+            deflection=get_deflection(xsec_b)
         )
         sect_CDp = (
                 xsec_a_Cd_profile * a_weight +
@@ -234,18 +244,29 @@ def wing_aerodynamics(
 
             sym_sect_alpha_generalized = 90 - np.arccosd(sym_vel_dot_normal)
 
+            def get_deflection(xsec):
+                n_surfs = len(xsec.control_surfaces)
+                if n_surfs == 0:
+                    return 0
+                elif n_surfs == 1:
+                    surf = xsec.control_surfaces[0]
+                    return surf.deflection if surf.symmetric else -surf.deflection
+                else:
+                    raise NotImplementedError("AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
+
+
             ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
             sym_xsec_a_Cl_incompressible = xsec_a.airfoil.CL_function(
                 alpha=sym_sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_a.chord),
                 mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
-                deflection=xsec_a.control_surface_deflection * (1 if xsec_a.control_surface_is_symmetric else -1)
+                deflection=get_deflection(xsec_a)
             )
             sym_xsec_b_Cl_incompressible = xsec_b.airfoil.CL_function(
                 alpha=sym_sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_b.chord),
                 mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
-                deflection=xsec_a.control_surface_deflection * (1 if xsec_a.control_surface_is_symmetric else -1)
+                deflection=get_deflection(xsec_b)
             )
             sym_sect_CL = (
                                   sym_xsec_a_Cl_incompressible * a_weight +
@@ -257,13 +278,13 @@ def wing_aerodynamics(
                 alpha=sym_sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_a.chord),
                 mach=mach,
-                deflection=xsec_a.control_surface_deflection * (1 if xsec_a.control_surface_is_symmetric else -1)
+                deflection=get_deflection(xsec_a)
             )
             sym_xsec_b_Cd_profile = xsec_b.airfoil.CD_function(
                 alpha=sym_sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_b.chord),
                 mach=mach,
-                deflection=xsec_a.control_surface_deflection * (1 if xsec_a.control_surface_is_symmetric else -1)
+                deflection=get_deflection(xsec_b)
             )
             sym_sect_CDp = (
                     sym_xsec_a_Cd_profile * a_weight +
