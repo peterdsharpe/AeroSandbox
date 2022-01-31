@@ -370,9 +370,7 @@ class AVL(ExplicitAnalysis):
 
         avl_file = ""
 
-        airplane_options = copy.deepcopy(self.default_analysis_specific_options[Airplane])
-        if AVL in airplane.analysis_specific_options.keys():
-            airplane_options.update(airplane.analysis_specific_options[AVL])
+        airplane_options = self.get_options(airplane)
 
         avl_file += clean(f"""\
         {airplane.name}
@@ -391,9 +389,7 @@ class AVL(ExplicitAnalysis):
         control_surface_counter = 1
         for wing in airplane.wings:
 
-            wing_options = copy.deepcopy(self.default_analysis_specific_options[Wing])
-            if AVL in wing.analysis_specific_options.keys():
-                wing_options.update(wing.analysis_specific_options[AVL])
+            wing_options = self.get_options(wing)
 
             spacing_line = f"{wing_options['chordwise_resolution']}   {self.AVL_spacing_parameters[wing_options['chordwise_spacing']]}"
             if wing_options["wing_level_spanwise_spacing"]:
@@ -471,9 +467,7 @@ class AVL(ExplicitAnalysis):
             ### Write the commands for each wing section
             for i, xsec in enumerate(wing.xsecs):
 
-                xsec_options = copy.deepcopy(self.default_analysis_specific_options[WingXSec])
-                if AVL in xsec.analysis_specific_options.keys():
-                    xsec_options.update(xsec.analysis_specific_options[AVL])
+                xsec_options = self.get_options(xsec)
 
                 xsec_def_line = f"{xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}"
                 if not wing_options["wing_level_spanwise_spacing"]:
@@ -516,9 +510,7 @@ class AVL(ExplicitAnalysis):
                 fuselage=fuse,
                 filepath=fuse_filepath
             )
-            fuse_options = copy.deepcopy(self.default_analysis_specific_options[Fuselage])
-            if AVL in fuse.analysis_specific_options.keys():
-                fuse_options.update(fuse.analysis_specific_options[AVL])
+            fuse_options = self.get_options(fuse)
 
             avl_file += clean(f"""\
             #{"=" * 50}
@@ -616,8 +608,8 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        working_directory=str(Path.home() / "Downloads" / "avl_test"),
-        verbose=True
+        # working_directory=str(Path.home() / "Downloads" / "avl_test"),
+        # verbose=True
     )
 
     res = avl.run()
