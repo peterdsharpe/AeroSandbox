@@ -121,7 +121,8 @@ This is all pretty standard across all scientific computing in Python:
 
   We illustrate both of these requirements with the following example:
     ```python
-    from typing import List, Tuple, Union  # Note: List, Tuple, Dict, Union, etc. need to be imported from the built-in "typing"
+    from typing import List, Tuple, Union  
+  # Note: List, Tuple, Dict, Union, etc. (note capitalization) need to be imported from the built-in "typing"
     
    
     def is_my_dog_happy(
