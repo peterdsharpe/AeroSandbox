@@ -99,13 +99,40 @@ class ExplicitAnalysis(AeroSandboxObject):
                     geometry_object: AeroSandboxObject,
                     ) -> Dict[str, Any]:
         """
-        Retrie
-        Args:
-            geometry_object:
+        Retrieves the analysis-specific options that correspond to both:
 
-        Returns:
+            * An analysis type (which is this object, "self"), and
+
+            * A specific geometry object, such as an Airplane or Wing.
+
+        Args:
+            geometry_object: An instance of an AeroSandbox geometry object, such as an Airplane, Wing, etc.
+
+                * In order for this function to do something useful, you probably want this option to have
+                `analysis_specific_options` defined. See the asb.Airplane constructor for an example of this.
+
+        Returns: A dictionary that combines:
+
+            * This analysis's default options for this geometry, if any exist.
+
+            * The geometry's declared analysis-specific-options for this analysis, if it exists. These geometry
+            options will override the defaults from the analysis.
+
+            This dictionary has the format:
+
+                * keys are strings, listing specific options
+
+                * values can by any type, and simply state the value of the analysis-specific option following the
+                logic above.
+
+        Note: if this analysis defines a set of default options for the geometry type in question (by using
+        `self.default_analysis_specific_options`), all keys from the geometry object's `analysis_specific_options`
+        will be validated against those in the default options set. A warning will be raised if keys do not
+        correspond to those in the defaults, as this (potentially) indicates a typo, which would otherwise be
+        difficult to debug.
 
         """
+
         ### Determine the types of both this analysis and the geometry object.
         analysis_type: type = self.__class__
         geometry_type: type = geometry_object.__class__
