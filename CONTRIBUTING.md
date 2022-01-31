@@ -189,8 +189,8 @@ This is all pretty standard across all scientific computing in Python:
 	
 	### Instead, do this:
 	def good_function(
-			my_parameter=None,
-			another_param=None,
+			my_parameter: List=None,
+			another_param: Dict=None,
 	):
 		### Set defaults
 		if my_parameter is None:
