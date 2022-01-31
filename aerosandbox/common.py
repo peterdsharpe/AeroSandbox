@@ -1,6 +1,7 @@
 from aerosandbox.optimization.opti import Opti
 from abc import abstractmethod
 import copy
+from typing import Dict, Any
 
 
 class AeroSandboxObject:
@@ -52,73 +53,59 @@ class AeroSandboxObject:
 
         return self
 
-    # TODO delete
-    # @classmethod
-    # def parse_analysis_specific_options(self,
-    #                                     analysis_specific_options: Dict[type, Dict[Any, Dict[type, Dict[str, Any]]]]
-    #                                     ) -> Dict[type, Dict[Any, Dict[type, Dict[str, Any]]]]:
-    #     """
-    #     Loops through analysis_specific_options (dict of analysis class: options dict pairs) and calls the
-    #     validate_analysis_specific_options method of the invoking AeroSandbox object for the analysis class specified by each key of the dict.
-    #
-    #     Note: the @classmethod decorator is used because this method is called by the __init__ method of each AeroSandbox object
-    #     before the object is instantiated.
-    #     """
-    #     for analysis, analysis_specific_options_user in analysis_specific_options.items():
-    #         analysis_specific_options[analysis] = self.validate_options_for_analysis(analysis, analysis_specific_options_user)
-    #
-    #     return analysis_specific_options
-    #
-    #
-    # @classmethod
-    # def validate_options_for_analysis(self,
-    #                                   analysis,
-    #                                   options_for_analysis_user: Dict[type, Dict[str, Any]]
-    #                                   ) -> Dict[type, Dict[str, Any]]:
-    #     """
-    #     Validates the user-specified options_for_analysis (dict of parameter: value pairs) for the invoking AeroSandbox object and given analysis class
-    #     against a list of options defined within the given analysis class. Returns default values for options not specified by the user according to
-    #     defaults defined within the given analysis class.
-    #
-    #     Note: the @classmethod decorator is used because this method is called by parse_analysis_specific_options, which itself is called in the __init__ method
-    #     of each AeroSandbox object before the object is instantiated.
-    #     """
-    #     options_for_analysis = {
-    #             key: analysis.options_for_analysis_defaults[key] for key in analysis.options_for_analysis_by_object[self] # initialize to default options for given object and analysis
-    #         }
-    #
-    #     if options_for_analysis_user:
-    #         for key, value in options_for_analysis_user.items():
-    #             if key in options_for_analysis.keys():
-    #                 options_for_analysis[key] = value
-    #             else:
-    #                 raise ValueError(f"'{key}' is not a valid option for object {self} within analysis {analysis}. Valid options are: {tuple(options_for_analysis.keys())}")
-    #
-    #     return options_for_analysis
-    #
-    # def get_options_for_analysis(self,
-    #                              analysis
-    #                              ) -> Dict[type, Dict[str, Any]]:
-    #     """
-    #     Gets the analysis_specific_options for the invoking instantiated AeroSandbox object and given analysis class or returns the default options if
-    #     no analysis_specific_options are specified
-    #     """
-    #     analysis_specific_options = self.analysis_specific_options
-    #     if analysis not in analysis_specific_options.keys(): # no options for given analysis
-    #         analysis_specific_options = self.validate_options_for_analysis(analysis, {}) # passing an empty dict will return the default options
-    #     else:
-    #         analysis_specific_options = analysis_specific_options[analysis]
-    #
-    #     return analysis_specific_options
-
 
 class ExplicitAnalysis(AeroSandboxObject):
-    default_analysis_specific_options = {}
-    # TODO document format
+    default_analysis_specific_options: Dict[type, Dict[str, Any]] = {}
+    """This is part of AeroSandbox's "analysis-specific options" feature, which lets you "tag" geometry objects with 
+    flags that change how different analyses act on them. 
+    
+    This variable, `default_analysis_specific_options`, allows you to specify default values for options that can be used for 
+    specific problems. 
+    
+    This should be a dictionary, where: * keys are the geometry-like types that you might be interested in defining 
+    parameters for. * values are dictionaries, where: * keys are strings that label a given option * values are 
+    anything. These are used as the default values, in the event that the associated geometry doesn't override those. 
+    
+    An example of what this variable might look like, for a vortex-lattice method aerodynamic analysis:
+    
+    >>> default_analysis_specific_options = {
+    >>>     Airplane: dict(
+    >>>         profile_drag_coefficient=0
+    >>>     ),
+    >>>     Wing    : dict(
+    >>>         wing_level_spanwise_spacing=True,
+    >>>         spanwise_resolution=12,
+    >>>         spanwise_spacing="cosine",
+    >>>         chordwise_resolution=12,
+    >>>         chordwise_spacing="cosine",
+    >>>         component=None,  # type: int
+    >>>         no_wake=False,
+    >>>         no_alpha_beta=False,
+    >>>         no_load=False,
+    >>>         drag_polar=dict(
+    >>>             CL1=0,
+    >>>             CD1=0,
+    >>>             CL2=0,
+    >>>             CD2=0,
+    >>>             CL3=0,
+    >>>             CD3=0,
+    >>>         ),
+    >>>     )
+    >>> }
+    
+    """
 
     def get_options(self,
                     geometry_object: AeroSandboxObject,
-                    ):
+                    ) -> Dict[str, Any]:
+        """
+        Retrie
+        Args:
+            geometry_object:
+
+        Returns:
+
+        """
         ### Determine the types of both this analysis and the geometry object.
         analysis_type: type = self.__class__
         geometry_type: type = geometry_object.__class__
