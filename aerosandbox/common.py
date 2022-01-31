@@ -1,5 +1,6 @@
 from aerosandbox.optimization.opti import Opti
 from abc import abstractmethod
+import copy
 
 
 class AeroSandboxObject:
@@ -110,6 +111,58 @@ class AeroSandboxObject:
     #
     #     return analysis_specific_options
 
+
+class ExplicitAnalysis(AeroSandboxObject):
+    default_analysis_specific_options = {}
+    # TODO document format
+
+    def get_options(self,
+                    geometry_object: AeroSandboxObject,
+                    ):
+        ### Determine the types of both this analysis and the geometry object.
+        analysis_type: type = self.__class__
+        geometry_type: type = geometry_object.__class__
+
+        ### Determine whether this analysis and the geometry object have options that specifically reference each other or not.
+        try:
+            analysis_options_for_this_geometry = self.default_analysis_specific_options[geometry_type]
+            assert hasattr(analysis_options_for_this_geometry, "items")
+        except (AttributeError, KeyError, AssertionError):
+            analysis_options_for_this_geometry = None
+
+        try:
+            geometry_options_for_this_analysis = geometry_object.analysis_specific_options[analysis_type]
+            assert hasattr(geometry_options_for_this_analysis, "items")
+        except (AttributeError, KeyError, AssertionError):
+            geometry_options_for_this_analysis = None
+
+        ### Now, merge those options (with logic depending on whether they exist or not)
+        if analysis_options_for_this_geometry is not None:
+            options = copy.deepcopy(analysis_options_for_this_geometry)
+            if geometry_options_for_this_analysis is not None:
+                for k, v in geometry_options_for_this_analysis.items():
+                    if k in analysis_options_for_this_geometry.keys():
+                        options[k] = v
+                    else:
+
+                        import warnings
+                        allowable_keys = [f'"{k}"' for k in analysis_options_for_this_geometry.keys()]
+                        warnings.warn(
+                            f"\nAn object of type '{geometry_type.__name__}' declared the analysis-specific option '{k}' for use with analysis '{analysis_type.__name__}'.\n"
+                            f"This was unexpected! Allowable analysis-specific options for '{geometry_type.__name__}' with '{analysis_type.__name__}' are:\n"
+                            "\t" + "\n\t".join(allowable_keys) + "\n" "Did you make a typo?",
+                            stacklevel=2,
+                        )
+
+        else:
+            if geometry_options_for_this_analysis is not None:
+                options = geometry_options_for_this_analysis
+            else:
+                options = {}
+
+        return options
+
+
 class ImplicitAnalysis(AeroSandboxObject):
 
     @staticmethod
@@ -209,7 +262,3 @@ class ImplicitAnalysis(AeroSandboxObject):
     @abstractmethod
     def opti_provided(self, value: bool):
         self._opti_provided = value
-
-
-class ExplicitAnalysis(AeroSandboxObject):
-    pass
