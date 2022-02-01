@@ -122,7 +122,7 @@ class ExplicitAnalysis(AeroSandboxObject):
 
                 * keys are strings, listing specific options
 
-                * values can by any type, and simply state the value of the analysis-specific option following the
+                * values can be any type, and simply state the value of the analysis-specific option following the
                 logic above.
 
         Note: if this analysis defines a set of default options for the geometry type in question (by using
