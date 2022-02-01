@@ -23,7 +23,7 @@ If you're developing, install AeroSandbox in editable mode. In other words:
 	4. Switch to the develop branch for normal use (`git checkout develop`)
 	5. *While on the develop branch*, create a new branch if you want to make changes (`git checkout -b feature/insert-your-feature-name-here`)
 3. From here, you can make your changes. After you are finished:
-	1. Make sure that your branch passes tests by running PyTest from terminal (`pytest`).
+	1. Make sure that your branch passes tests by running [pytest](https://docs.pytest.org/) from terminal (`pytest`).
 	2. Verify that your code (at least loosely) follows the coding standards in this document.
 	3. Make sure your work is committed and pushed.
 	4. Create a pull request on GitHub targeting the `develop` branch of the main ASB repository.
