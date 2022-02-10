@@ -8,7 +8,7 @@ In short:
 
 More detail:
 
-1. First, install Python via the Anaconda distribution, [available here](https://www.anaconda.com/products/individual). It is recommended that you add Python to your PATH ("[What does this mean?](https://janelbrandon.medium.com/understanding-the-path-variable-6eae0936e976)"), which can be conveniently done during the Anaconda installation by checking a checkbox.
+1. First, install Python via the Anaconda distribution, [available here](https://www.anaconda.com/products/individual). During the installation, it is recommended that you add Python to your PATH ("[What does this mean?](https://janelbrandon.medium.com/understanding-the-path-variable-6eae0936e976)"), which can be conveniently done by checking a checkbox.
 
 2. Verify that your installation has completed correctly by opening up a Terminal (Command Prompt on Windows) and executing the following commands. You should see something similar to the below:
 	
@@ -49,6 +49,10 @@ More detail:
     ```
  
     If all goes well, you should see a bunch of output as it first downloads & installs dependencies, then downloads & installs the latest version of AeroSandbox.
+
+5. Congrats! You've installed Anaconda Python and AeroSandbox. If desired, you can test your install by following steps in the "Testing" section of this document, but it's not necessary. 
+
+   To start learning how to use AeroSandbox on your problems, we recommend you [check out the tutorials folder here](./tutorial/).
 
 ## Testing
 
