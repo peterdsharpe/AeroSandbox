@@ -50,6 +50,36 @@ More detail:
  
     If all goes well, you should see a bunch of output as it first downloads & installs dependencies, then downloads & installs the latest version of AeroSandbox.
 
+## Testing
+
+If desired, you can test that AeroSandbox functions properly on your system by:
+
+1. Installing with the `[test]` flag, so:
+   ```shell
+   pip install aerosandbox[full,test] 
+   ```
+   for a new install, or, if you already have an existing installation:
+   ```shell
+   pip install --upgrade aerosandbox[full,test]
+   ```
+2. Then, as shown below: open up a terminal, launch into Python, and execute these commands:
+
+```
+C:\Users\peter>python
+Python 3.9.7 (default, Sep 16 2021, 16:59:28) [MSC v.1916 64 bit (AMD64)] :: Anaconda, Inc. on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import aerosandbox as asb
+>>> asb.run_tests()
+```
+
+A bunch of tests should run, hopefully terminating with a message like:
+
+```shell
+====================== 214 passed, 47 warnings in 17.89s =======================
+```
+
+If you get any failing tests, that is considered a bug, and we hope you'll report it to us [by creating an issue ticket](https://github.com/peterdsharpe/AeroSandbox/issues).
+
 ## Troubleshooting
 
 ### Permissions Errors
