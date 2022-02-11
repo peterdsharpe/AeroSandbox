@@ -97,7 +97,9 @@ class Airplane(AeroSandboxObject):
             if b_ref is None:
                 b_ref = main_wing.span()
         except IndexError:
-            pass
+            s_ref = 1
+            c_ref = 1
+            b_ref = 1
         self.s_ref = s_ref
         self.c_ref = c_ref
         self.b_ref = b_ref
