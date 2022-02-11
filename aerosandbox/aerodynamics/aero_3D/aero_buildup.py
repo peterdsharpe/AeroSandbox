@@ -31,6 +31,22 @@ class AeroBuildup(ExplicitAnalysis):
             additional_M=0,
         ),
         Fuselage: dict(
+            E_wave_drag=2.5,  # Wave drag efficiency factor
+
+            # Defined by Raymer, "Aircraft Design: A Conceptual Approach", 2nd Ed. Chap. 12.5.9 "Supersonic Parasite Drag".
+            # Notated there as "E_WD".
+            #
+            # Various recommendations:
+            #   * For a perfect Sears-Haack body, 1.0
+            #   * For a clean aircraft with smooth volume distribution (e.g., BWB), 1.2
+            #   * For a "more typical supersonic...", 1.8 - 2.2
+            #   * For a "poor supersonic design", 2.5 - 3.0
+            #   * The F-15 has E_WD = 2.9.
+
+            nose_fineness_ratio=3,  # Fineness ratio (length / diameter) of the nose section of the fuselage.
+
+            # Impacts wave drag calculations, among other things.
+
             additional_CL=0,
             additional_CD=0,
             additional_CM=0,
@@ -44,11 +60,13 @@ class AeroBuildup(ExplicitAnalysis):
                  airplane: Airplane,
                  op_point: OperatingPoint,
                  include_wave_drag: bool = True,
+                 only_model_transonic_drag_rise=False,
                  ):
         ### Initialize
         self.airplane = airplane
         self.op_point = op_point
         self.include_wave_drag = include_wave_drag
+        self.only_model_transonic_drag_rise = only_model_transonic_drag_rise
 
     def run(self):
         ### Compute the forces on each component
@@ -113,7 +131,9 @@ class AeroBuildup(ExplicitAnalysis):
         Returns:
 
         """
+        ##### Alias a few things for convenience
         op_point = self.op_point
+        wing_options = self.get_options(wing)
 
         ##### Compute general wing properties and things to be used in sectional analysis.
         sweep = wing.mean_sweep_angle()
@@ -478,8 +498,10 @@ class AeroBuildup(ExplicitAnalysis):
         Returns:
 
         """
+        ##### Alias a few things for convenience
         op_point = self.op_point
         Re = op_point.reynolds(reference_length=fuselage.length())
+        fuse_options = self.get_options(fuselage)
 
         ####### Reference quantities (Set these 1 here, just so we can follow Jorgensen syntax.)
         # Outputs of this function should be invariant of these quantities, if normalization has been done correctly.
@@ -508,9 +530,10 @@ class AeroBuildup(ExplicitAnalysis):
             C_D_wave = transonic.approximate_CD_wave(
                 mach=op_point.mach(),
                 mach_crit=critical_mach(
-                    fineness_ratio_nose=fuselage.fineness_ratio() / 2
+                    fineness_ratio_nose=fuse_options["nose_fineness_ratio"]
                 ),
-                CD_wave_at_fully_supersonic=2.0 * sears_haack_drag
+                CD_wave_at_fully_supersonic=fuse_options["E_wave_drag"] * sears_haack_drag,
+                only_model_drag_rise=self.only_model_transonic_drag_rise
             )
         else:
             C_D_wave = 0

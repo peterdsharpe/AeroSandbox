@@ -41,6 +41,7 @@ def approximate_CD_wave(
         mach,
         mach_crit,
         CD_wave_at_fully_supersonic,
+        only_model_drag_rise=False,
 ):
     """
     An approximate relation for computing transonic wave drag, based on an object's Mach number.
@@ -76,6 +77,10 @@ def approximate_CD_wave(
             In the high-Mach limit, this function asymptotes at 0.80 * this value, as empirically stated by Raymer.
             However, this model is only approximate and is likely not valid for high-supersonic flows.
 
+        only_model_drag_rise: If this flag is set to true, then only the transonic drag rise is modeled.
+
+        In other words, the drag will rise, rise, and rise, diverging from the true numbers roughly around the sonic condition.
+
     Returns: The approximate wave drag coefficient at the specified Mach number.
 
         The reference area is whatever the reference area used in the `CD_wave_at_fully_supersonic` parameter is.
@@ -94,74 +99,103 @@ def approximate_CD_wave(
     ### This is in turn based on Lock's proposed empirically-derived shape of the drag rise, from Hilton, W.F., High Speed Aerodynamics, Longmans, Green & Co., London, 1952, pp. 47-49
     mach_dd = mach_crit + (0.1 / 80) ** (1 / 3)
 
-    return CD_wave_at_fully_supersonic * np.where(
-        mach < mach_crit,
-        0,
-        np.where(
-            mach < mach_dd,
-            20 * (mach - mach_crit) ** 4,
+    ### Model drag sections and cutoffs:
+    if not only_model_drag_rise:
+        return CD_wave_at_fully_supersonic * np.where(
+            mach < mach_crit,
+            0,
             np.where(
-                mach < 1,
-                np.exp(cubic_hermite_patch(
-                    np.clip(mach, mach_dd - 0.001, 1.051),
-                    x_a=mach_dd,
-                    x_b=1,
-                    f_a=np.log(20 * (0.1 / 80) ** (4 / 3)),
-                    f_b=np.log(0.5),
-                    dfdx_a=0.1 / (20 * (0.1 / 80) ** (4 / 3)),
-                    dfdx_b=10 / (0.5)
-                )),
+                mach < mach_dd,
+                20 * (mach - mach_crit) ** 4,
                 np.where(
-                    mach < 1.05,
-                    linear_hermite_patch(
-                        x=mach,
-                        x_a=1,
-                        x_b=1.05,
-                        f_a=0.5,
-                        f_b=1
-                    ),
+                    mach < 1,
+                    np.exp(cubic_hermite_patch(
+                        np.clip(mach, mach_dd - 0.001, 1.051),
+                        x_a=mach_dd,
+                        x_b=1,
+                        f_a=np.log(20 * (0.1 / 80) ** (4 / 3)),
+                        f_b=np.log(0.5),
+                        dfdx_a=0.1 / (20 * (0.1 / 80) ** (4 / 3)),
+                        dfdx_b=10 / (0.5)
+                    )),
                     np.where(
-                        mach < 1.2,
-                        cubic_hermite_patch(
-                            mach,
-                            x_a=1.05,
-                            x_b=1.2,
-                            f_a=1,
-                            f_b=1,
-                            dfdx_a=10,
-                            dfdx_b=-0.2 * 2
+                        mach < 1.05,
+                        linear_hermite_patch(
+                            x=mach,
+                            x_a=1,
+                            x_b=1.05,
+                            f_a=0.5,
+                            f_b=1
                         ),
-                        0.8 + 0.2 * np.exp(2 * (1.2 - mach))
+                        np.where(
+                            mach < 1.2,
+                            cubic_hermite_patch(
+                                mach,
+                                x_a=1.05,
+                                x_b=1.2,
+                                f_a=1,
+                                f_b=1,
+                                dfdx_a=10,
+                                dfdx_b=-4
+                            ),
+                            np.blend(
+                                switch=4 * 2 * (mach - 1.2) / (1.2 - 0.8),
+                                value_switch_high=0.8,
+                                value_switch_low=1.2,
+                            )
+                            # 0.8 + 0.2 * np.exp(20 * (1.2 - mach))
+                        )
                     )
                 )
             )
         )
-    )
+    else:
+        return CD_wave_at_fully_supersonic * np.where(
+            mach < mach_crit,
+            0,
+            20 * (mach - mach_crit) ** 3, # TODO review
+        )
 
 
 if __name__ == '__main__':
     mc = 0.7
-    d = lambda mach: approximate_CD_wave(mach, mach_crit=mc, CD_wave_at_fully_supersonic=1)
+    drag = lambda mach: approximate_CD_wave(
+        mach,
+        mach_crit=mc,
+        CD_wave_at_fully_supersonic=1,
+    )
 
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    fig, ax = plt.subplots(2, 1)
+    fig, ax = plt.subplots(3, 1)
 
-    m = np.linspace(0., 2, 1000)
+    mach = np.linspace(0., 2, 10000)
+    drag = drag(mach)
+    ddragdm = np.gradient(drag, np.diff(mach)[0])
+    dddragdm = np.gradient(ddragdm, np.diff(mach)[0])
+
     plt.sca(ax[0])
     plt.title("$C_D$")
     plt.ylabel("$C_{D, wave} / C_{D, wave, M=1.2}$")
-    plt.plot(m, d(m))
-    for mi in [mc, 1, 1.05, 1.2, mc + (0.1 / 80) ** (1 / 3)]:
-        plt.plot([mi], [d(mi)], ".k")
-    # plt.ylim(0, 0.005)
+    plt.plot(mach, drag)
+    plt.ylim(-0.05, 1.5)
 
     plt.sca(ax[1])
-    plt.title("Derivative of $C_D$ w.r.t. Speed")
+    plt.title("$d(C_D)/d(M)$")
     plt.ylabel(r"$\frac{d(C_{D, wave})}{dM}$")
-    plt.plot(np.trapz(m), np.diff(d(m)) / np.diff(m))
+    plt.plot(mach, ddragdm)
     plt.ylim(-5, 15)
+    p.show_plot(
+        None,
+        "Mach [-]"
+    )
+
+    plt.sca(ax[2])
+    plt.title("$d^2(C_D)/d(M)^2$")
+    plt.ylabel(r"$\frac{d^2(C_{D, wave})}{dM^2}$")
+    plt.plot(mach, dddragdm)
+    # plt.ylim(-5, 15)
     p.show_plot(
         None,
         "Mach [-]"
