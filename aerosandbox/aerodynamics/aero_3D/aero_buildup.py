@@ -500,17 +500,20 @@ class AeroBuildup(ExplicitAnalysis):
         C_D_skin = C_f_forebody * fuselage.area_wetted() / S_ref
 
         ### Wave drag
-        sears_haack_drag = transonic.sears_haack_drag_from_volume(
-            volume=fuselage.volume(),
-            length=fuselage.length()
-        )
-        C_D_wave = transonic.approximate_CD_wave(
-            mach=op_point.mach(),
-            mach_crit=critical_mach(
-                fineness_ratio_nose=fuselage.fineness_ratio() / 2
-            ),
-            CD_wave_at_fully_supersonic=2.0 * sears_haack_drag
-        )
+        if self.include_wave_drag:
+            sears_haack_drag = transonic.sears_haack_drag_from_volume(
+                volume=fuselage.volume(),
+                length=fuselage.length()
+            )
+            C_D_wave = transonic.approximate_CD_wave(
+                mach=op_point.mach(),
+                mach_crit=critical_mach(
+                    fineness_ratio_nose=fuselage.fineness_ratio() / 2
+                ),
+                CD_wave_at_fully_supersonic=2.0 * sears_haack_drag
+            )
+        else:
+            C_D_wave = 0
 
         ### Total zero-lift drag
         C_D_zero_lift = C_D_skin + C_D_base + C_D_wave
