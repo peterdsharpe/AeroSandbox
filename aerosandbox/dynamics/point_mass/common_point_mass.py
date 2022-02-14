@@ -474,16 +474,16 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     -x_cg_b,
                     -y_cg_b,
                     -z_cg_b,
-                ])
+                ], inplace=True)
                 this_vehicle.points *= scale_vehicle_model
-                this_vehicle.rotate_x(np.degrees(phi))
-                this_vehicle.rotate_y(np.degrees(theta))
-                this_vehicle.rotate_z(np.degrees(psi))
+                this_vehicle.rotate_x(np.degrees(phi), inplace=True)
+                this_vehicle.rotate_y(np.degrees(theta), inplace=True)
+                this_vehicle.rotate_z(np.degrees(psi), inplace=True)
                 this_vehicle.translate([
                     dyn.x_e,
                     dyn.y_e,
                     dyn.z_e,
-                ])
+                ], inplace=True)
                 plotter.add_mesh(
                     this_vehicle,
                 )
