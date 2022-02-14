@@ -60,13 +60,11 @@ class AeroBuildup(ExplicitAnalysis):
                  airplane: Airplane,
                  op_point: OperatingPoint,
                  include_wave_drag: bool = True,
-                 only_model_transonic_drag_rise=False,
                  ):
         ### Initialize
         self.airplane = airplane
         self.op_point = op_point
         self.include_wave_drag = include_wave_drag
-        self.only_model_transonic_drag_rise = only_model_transonic_drag_rise
 
     def run(self):
         ### Compute the forces on each component
@@ -533,7 +531,6 @@ class AeroBuildup(ExplicitAnalysis):
                     fineness_ratio_nose=fuse_options["nose_fineness_ratio"]
                 ),
                 CD_wave_at_fully_supersonic=fuse_options["E_wave_drag"] * sears_haack_drag,
-                only_model_drag_rise=self.only_model_transonic_drag_rise
             )
         else:
             C_D_wave = 0

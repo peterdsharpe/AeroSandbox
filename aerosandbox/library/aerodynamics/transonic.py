@@ -41,7 +41,6 @@ def approximate_CD_wave(
         mach,
         mach_crit,
         CD_wave_at_fully_supersonic,
-        only_model_drag_rise=False,
 ):
     """
     An approximate relation for computing transonic wave drag, based on an object's Mach number.
@@ -77,10 +76,6 @@ def approximate_CD_wave(
             In the high-Mach limit, this function asymptotes at 0.80 * this value, as empirically stated by Raymer.
             However, this model is only approximate and is likely not valid for high-supersonic flows.
 
-        only_model_drag_rise: If this flag is set to true, then only the transonic drag rise is modeled.
-
-        In other words, the drag will rise, rise, and rise, diverging from the true numbers roughly around the sonic condition.
-
     Returns: The approximate wave drag coefficient at the specified Mach number.
 
         The reference area is whatever the reference area used in the `CD_wave_at_fully_supersonic` parameter is.
@@ -100,61 +95,44 @@ def approximate_CD_wave(
     mach_dd = mach_crit + (0.1 / 80) ** (1 / 3)
 
     ### Model drag sections and cutoffs:
-    if not only_model_drag_rise:
-        return CD_wave_at_fully_supersonic * np.where(
-            mach < mach_crit,
-            0,
+    return CD_wave_at_fully_supersonic * np.where(
+        mach < mach_crit,
+        0,
+        np.where(
+            mach < mach_dd,
+            20 * (mach - mach_crit) ** 4,
             np.where(
-                mach < mach_dd,
-                20 * (mach - mach_crit) ** 4,
+                mach < 1.05,
+                cubic_hermite_patch(
+                    mach,
+                    x_a=mach_dd,
+                    x_b=1.05,
+                    f_a=20 * (0.1 / 80) ** (4 / 3),
+                    f_b=1,
+                    dfdx_a=0.1,
+                    dfdx_b=10
+                ),
                 np.where(
-                    mach < 1,
-                    np.exp(cubic_hermite_patch(
-                        np.clip(mach, mach_dd - 0.001, 1.051),
-                        x_a=mach_dd,
-                        x_b=1,
-                        f_a=np.log(20 * (0.1 / 80) ** (4 / 3)),
-                        f_b=np.log(0.5),
-                        dfdx_a=0.1 / (20 * (0.1 / 80) ** (4 / 3)),
-                        dfdx_b=10 / (0.5)
-                    )),
-                    np.where(
-                        mach < 1.05,
-                        linear_hermite_patch(
-                            x=mach,
-                            x_a=1,
-                            x_b=1.05,
-                            f_a=0.5,
-                            f_b=1
-                        ),
-                        np.where(
-                            mach < 1.2,
-                            cubic_hermite_patch(
-                                mach,
-                                x_a=1.05,
-                                x_b=1.2,
-                                f_a=1,
-                                f_b=1,
-                                dfdx_a=10,
-                                dfdx_b=-4
-                            ),
-                            np.blend(
-                                switch=4 * 2 * (mach - 1.2) / (1.2 - 0.8),
-                                value_switch_high=0.8,
-                                value_switch_low=1.2,
-                            )
-                            # 0.8 + 0.2 * np.exp(20 * (1.2 - mach))
-                        )
+                    mach < 1.2,
+                    cubic_hermite_patch(
+                        mach,
+                        x_a=1.05,
+                        x_b=1.2,
+                        f_a=1,
+                        f_b=1,
+                        dfdx_a=10,
+                        dfdx_b=-4
+                    ),
+                    np.blend(
+                        switch=4 * 2 * (mach - 1.2) / (1.2 - 0.8),
+                        value_switch_high=0.8,
+                        value_switch_low=1.2,
                     )
+                    # 0.8 + 0.2 * np.exp(20 * (1.2 - mach))
                 )
             )
         )
-    else:
-        return CD_wave_at_fully_supersonic * np.where(
-            mach < mach_crit,
-            0,
-            20 * (mach - mach_crit) ** 3, # TODO review
-        )
+    )
 
 
 if __name__ == '__main__':
@@ -168,7 +146,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    fig, ax = plt.subplots(3, 1)
+    fig, ax = plt.subplots(1, 3, figsize=(10, 5))
 
     mach = np.linspace(0., 2, 10000)
     drag = drag(mach)
@@ -180,23 +158,23 @@ if __name__ == '__main__':
     plt.ylabel("$C_{D, wave} / C_{D, wave, M=1.2}$")
     plt.plot(mach, drag)
     plt.ylim(-0.05, 1.5)
+    # plt.ylim(-0.01, 0.05)
 
     plt.sca(ax[1])
     plt.title("$d(C_D)/d(M)$")
     plt.ylabel(r"$\frac{d(C_{D, wave})}{dM}$")
     plt.plot(mach, ddragdm)
     plt.ylim(-5, 15)
-    p.show_plot(
-        None,
-        "Mach [-]"
-    )
 
     plt.sca(ax[2])
     plt.title("$d^2(C_D)/d(M)^2$")
     plt.ylabel(r"$\frac{d^2(C_{D, wave})}{dM^2}$")
     plt.plot(mach, dddragdm)
     # plt.ylim(-5, 15)
-    p.show_plot(
-        None,
-        "Mach [-]"
-    )
+
+    for a in ax:
+        plt.sca(a)
+        plt.xlim(0.5, 1.5)
+        plt.xlabel("Mach [-]")
+
+    p.show_plot()
