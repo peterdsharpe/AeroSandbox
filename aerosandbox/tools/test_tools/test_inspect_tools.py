@@ -26,10 +26,15 @@ def test_function_argument_names_from_source_code():
         "3 + 5"                : ValueError,
         ""                     : ValueError,
     }
+
     for input, expected_output in tests.items():
+
+        ### If you're expecting an error, make sure it gets raised
         if inspect.isclass(expected_output) and issubclass(expected_output, Exception):
             with pytest.raises(expected_output):
                 get_function_argument_names_from_source_code(input)
+
+        ### If you're expecting a specific output, make sure you get that
         else:
             assert get_function_argument_names_from_source_code(input) == expected_output
 
