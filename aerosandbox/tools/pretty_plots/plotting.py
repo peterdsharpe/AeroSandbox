@@ -10,8 +10,8 @@ def plot_color_by_value(
         y: np.ndarray,
         *args,
         c: np.ndarray,
-        cmap=mpl.cm.get_cmap('viridis'),
-        colorbar: bool=False,
+        cmap=mpl.cm.get_cmap('turbo'),
+        colorbar: bool = False,
         colorbar_label: str = None,
         clim: Tuple[float, float] = None,
         **kwargs
