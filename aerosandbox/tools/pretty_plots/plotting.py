@@ -76,7 +76,11 @@ def plot_color_by_value(
             [x1, x2],
             [y1, y2],
             *args,
-            color=cmap(norm((c1 + c2) / 2) if cmin != cmax else 0.5),
+            color=cmap(
+                norm(
+                    (c1 + c2) / 2
+                ) if cmin != cmax else 0.5
+            ),
             **kwargs
         )
         lines += line
