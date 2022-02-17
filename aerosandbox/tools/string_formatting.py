@@ -112,3 +112,15 @@ def trim_string(string: str, length: int = 80) -> str:
         return string[:length - 3] + "..."
     else:
         return string
+
+
+def has_balanced_parentheses(string: str, left="(", right=")"):
+    parenthesis_level = 0
+
+    for char in string:
+        if char == "(":
+            parenthesis_level += 1
+        elif char == ")":
+            parenthesis_level -= 1
+
+    return parenthesis_level == 0
