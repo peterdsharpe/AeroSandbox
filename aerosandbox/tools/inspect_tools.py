@@ -1,6 +1,7 @@
 import inspect
 from typing import List
 from pathlib import Path
+from aerosandbox.tools.string_formatting import has_balanced_parentheses
 
 
 def get_caller_source_location(
@@ -42,16 +43,26 @@ def get_caller_source_code(
     if the call is multi-line.
 
     """
+    ### Go up `stacklevel` frames from the current one to get to the caller frame.
+    frame = inspect.currentframe()
+    for _ in range(stacklevel):
+        frame = frame.f_back
 
-    filename, lineno = get_caller_source_location(stacklevel=stacklevel + 1)
+    ### Extract the frame info (an `inspect.Traceback` type) from the caller frame
+    frame_info: inspect.Traceback = inspect.getframeinfo(frame)
+
+    ### If Python's auto-extracted "code context" is a compete statement, then you're done here.
+    code_context = "".join(frame_info.code_context)
+    if has_balanced_parentheses(code_context):
+        return code_context
 
     ### Initialize the caller source lines, which is a list of strings that contain the source for the call.
     caller_source_lines: List[str] = []
 
     ### Read the source lines of code surrounding the call
     try:
-        with open(filename, "r") as f:  # Read the file containing the call
-            for _ in range(lineno - 1):  # Skip the first N lines of code, until you get to the call
+        with open(frame_info.filename, "r") as f:  # Read the file containing the call
+            for _ in range(frame_info.lineno - 1):  # Skip the first N lines of code, until you get to the call
                 f.readline()  # Unfortunately there's no way around this, since you need to find the "\n" encodings in the file
 
             parenthesis_level = 0  # Track the number of "(" and ")" characters, so you know when the function call is complete
