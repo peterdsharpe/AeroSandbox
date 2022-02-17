@@ -1,5 +1,6 @@
 from aerosandbox.tools.inspect_tools import *
 import pytest
+import inspect
 
 
 def test_function_argument_names_from_source_code():
@@ -22,19 +23,17 @@ def test_function_argument_names_from_source_code():
         "f({a:b,\nc:d}, e)"    : ['{a:b,c:d}', 'e'],
         "f(dict(a=b,c=d), e)"  : ['dict(a=b,c=d)', 'e'],
         "f(a=1, b=2)"          : ['a=1', 'b=2'],
+        "3 + 5"                : ValueError,
+        ""                     : ValueError,
     }
     for input, expected_output in tests.items():
-        assert get_function_argument_names_from_source_code(input) == expected_output
-
-    with pytest.raises(ValueError):
-        get_function_argument_names_from_source_code(
-            "3 + 5"
-        )
-    with pytest.raises(ValueError):
-        get_function_argument_names_from_source_code(
-            ""
-        )
+        if inspect.isclass(expected_output) and issubclass(expected_output, Exception):
+            with pytest.raises(expected_output):
+                get_function_argument_names_from_source_code(input)
+        else:
+            assert get_function_argument_names_from_source_code(input) == expected_output
 
 
 if __name__ == '__main__':
+    test_function_argument_names_from_source_code()
     pytest.main()
