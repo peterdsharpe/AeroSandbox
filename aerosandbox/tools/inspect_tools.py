@@ -88,6 +88,108 @@ def get_caller_source_code(
     return caller_source
 
 
+def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
+    """
+    Gets the names of the function arguments found in a particular line of source code.
+
+    Specifically, it retrieves the names of the arguments in the first function call found in the source code string.
+
+    If the source code line is an assignment statement, only the right-hand-side of the line is analyzed.
+
+    Examples function inputs and outputs:
+
+        "f(a, b)"               -> ['a', 'b']
+        "f(a,b)"                -> ['a', 'b']
+        "f(\na,\nb)"            -> ['a', 'b']
+        "g = f(a, b)"           -> ['a', 'b']
+        "g.h = f(a, b)"         -> ['a', 'b']
+        "g.h() = f(a, b)"       -> ['a', 'b']
+        "g.h(i=j) = f(a, b)"    -> ['a', 'b']
+        "f(a, b) + g(h)"        -> ['a', 'b']
+        "f(a: int, b: float())" -> ['a', 'b']
+        "f(a, b).g(c, d)"       -> ['a', 'b']
+        "f(a(b), c)"            -> ['a(b)', 'c']
+        "f(a(b,c), d)"          -> ['a(b,c)', 'd']
+        "f({a:b}, c)"           -> ['{a:b}', 'c']
+        "f(a[b], c)"            -> ['a[b]', 'c']
+        "f({a:b, c:d}, e)"      -> ['{a:b,c:d}', 'e']
+        "f({a:b,\nc:d}, e)"     -> ['{a:b,c:d}', 'e']
+        "f(dict(a=b,c=d), e)"   -> ['dict(a=b,c=d)', 'e']
+        "f(a=1, b=2)"           -> ['a=1', 'b=2']
+        "f()"                   -> ['']
+        "3 + 5"                 -> raises ValueError
+        ""                      -> raises ValueError
+
+    Args:
+        source_code: A line of Python source code that includes a function call. Can be a multi-line piece of source code (e.g., includes '\n').
+
+    Returns: A list of strings containing all of the function arguments. If keyword arguments are found, includes both the key and the value, as-written.
+
+    """
+    assignment_equals_index = 0
+
+    parenthesis_level = 0
+    for i, char in enumerate(source_code):
+        if char == "(":
+            parenthesis_level += 1
+        elif char == ")":
+            parenthesis_level -= 1
+        elif char == "=" and parenthesis_level == 0:
+            assignment_equals_index = i + 1
+            break
+
+    source_code_rhs = source_code[assignment_equals_index:]
+
+    parenthesis_level = 0
+    braces_level = 0
+    for i, char in enumerate(source_code_rhs):
+        if char == "(":
+            parenthesis_level += 1
+            break
+
+    if parenthesis_level == 0:
+        raise ValueError("No function call was found in the source code provided!")
+
+    arg_names: List[str] = []
+    current_arg = ""
+    in_type_hinting_block = False
+
+    while parenthesis_level != 0:
+        i += 1
+        char = source_code_rhs[i]
+
+        if char == "(":
+            parenthesis_level += 1
+        elif char == ")":
+            parenthesis_level -= 1
+        elif char == "{":
+            braces_level += 1
+        elif char == "}":
+            braces_level -= 1
+
+        if char == "," and parenthesis_level == 1 and braces_level == 0:
+            arg_names.append(current_arg)
+            current_arg = ""
+            in_type_hinting_block = False
+        elif char == ":" and parenthesis_level == 1 and braces_level == 0:
+            in_type_hinting_block = True
+        elif char == " ":
+            pass
+        elif parenthesis_level >= 1 and not in_type_hinting_block:
+            current_arg += char
+
+    arg_names.append(current_arg)
+
+    def clean(s: str) -> str:
+        return s.strip()
+
+    arg_names = [
+        clean(arg) for arg in arg_names
+    ]
+
+    return arg_names
+
+
 if __name__ == '__main__':
     def dashes():
         """A quick macro for drawing some dashes, to make the terminal output clearer to distinguish."""
@@ -118,3 +220,9 @@ if __name__ == '__main__':
     if_you_can_see_this_it_works = my_func()
 
     dashes()
+
+    print("Arguments of f(a, b):")
+
+    print(
+        get_function_argument_names_from_source_code("f(a, b)")
+    )
