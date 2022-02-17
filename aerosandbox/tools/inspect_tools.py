@@ -92,7 +92,11 @@ def get_caller_source_code(
                 add_line()
     except OSError as e:
         raise FileNotFoundError(
-            "Couldn't retrieve source code at this stack level, because the source code file couldn't be opened for some reason.")
+            "\n".join([
+                "Couldn't retrieve source code at this stack level, because the source code file couldn't be opened for some reason.",
+                "One common possible reason is that you're referring to an IPython console with a multi-line statement."
+            ])
+        )
 
     caller_source = "\n".join(caller_source_lines)
 

@@ -40,13 +40,17 @@ def qp(
 
     ##### This section serves to try to retrieve appropriate axis labels for the plot.
     ### This is some interesting and tricky code here: retrieves the source code of where qp() was called, as a string.
-    caller_source_code = inspect_tools.get_caller_source_code(stacklevel=2)
-    arg_names = inspect_tools.get_function_argument_names_from_source_code(caller_source_code)
-    arg_names = arg_names[:len(args)]
+    try:
+        caller_source_code = inspect_tools.get_caller_source_code(stacklevel=2)
+        arg_names = inspect_tools.get_function_argument_names_from_source_code(caller_source_code)
+        arg_names = arg_names[:len(args)]
+    except FileNotFoundError:
+        arg_names = "xyzabcdefghijklmnopqrstuvw"
+
     arg_values = args
 
     ##### Do the plotting:
-    n_dimensions = len(arg_names)  # dimensionality
+    n_dimensions = len(arg_values)  # dimensionality
 
     if backend == "plotly":
         import plotly.express as px
