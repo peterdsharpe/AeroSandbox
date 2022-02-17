@@ -96,6 +96,8 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
 
     If the source code line is an assignment statement, only the right-hand-side of the line is analyzed.
 
+    Also, removes all line breaks ('\n').
+
     Examples function inputs and outputs:
 
         "f(a, b)"               -> ['a', 'b']
@@ -126,6 +128,7 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
     Returns: A list of strings containing all of the function arguments. If keyword arguments are found, includes both the key and the value, as-written.
 
     """
+
     assignment_equals_index = 0
 
     parenthesis_level = 0
@@ -139,6 +142,8 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
             break
 
     source_code_rhs = source_code[assignment_equals_index:]
+
+    source_code_rhs = source_code_rhs.replace("\n", "")
 
     parenthesis_level = 0
     braces_level = 0
