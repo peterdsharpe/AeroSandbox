@@ -59,12 +59,6 @@ def plot_with_bootstrapped_uncertainty(
         axis=0
     )
 
-    print(
-        np.std(
-            interpolate.InterpolatedUnivariateSpline(x_fit, y_median_and_ci[1, :])(x) - y
-        )
-    )
-
     if draw_line:
         line, = plt.plot(
             x_fit,
