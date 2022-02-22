@@ -9,6 +9,7 @@ import matplotlib as mpl
 
 ### Local imports
 from .plotting import *
+from .plotting_with_uncertainty import *
 from .formatting import *
 from .colors import *
 from .annotation import *

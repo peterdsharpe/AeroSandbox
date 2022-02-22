@@ -6,10 +6,10 @@ from typing import Callable
 
 
 def plot_with_bootstrapped_uncertainty(
-        x,
-        y,
-        y_stdev=1.0,
-        ci=0.95,
+        x: np.ndarray,
+        y: np.ndarray,
+        y_stdev: float,
+        ci: float = 0.95,
         color=None,
         label_line=None,
         label_ci=None,
@@ -20,19 +20,6 @@ def plot_with_bootstrapped_uncertainty(
 ):
     if not (ci > 0 and ci < 1):
         raise ValueError("Confidence interval `ci` should be in the range of (0, 1).")
-
-    ### Task 2:
-    def get_fit(
-            weights=np.ones_like(x)
-    ) -> Callable:
-        return interpolate.UnivariateSpline(
-            x=x,
-            y=y,
-            w=weights,
-            s=len(x) * y_stdev,
-            k=spline_degree,
-            ext='extrapolate'
-        )
 
     x_fit = np.linspace(x.min(), x.max(), n_fit_points)
 
@@ -49,7 +36,14 @@ def plot_with_bootstrapped_uncertainty(
 
         weights = np.diff(np.sort(splits))
 
-        y_bootstrap_fits[i, :] = get_fit(weights)(x_fit)
+        y_bootstrap_fits[i, :] = interpolate.UnivariateSpline(
+            x=x,
+            y=y,
+            w=weights,
+            s=len(x) * y_stdev,
+            k=spline_degree,
+            ext='extrapolate'
+        )(x_fit)
 
     ### Compute a confidence interval using equal-tails method
     y_median_and_ci = np.nanquantile(
@@ -62,13 +56,19 @@ def plot_with_bootstrapped_uncertainty(
         axis=0
     )
 
-    line, = ax.plot(
+    print(
+        np.std(
+            interpolate.InterpolatedUnivariateSpline(x_fit, y_median_and_ci[1, :])(x) - y
+        )
+    )
+
+    line, = plt.plot(
         x_fit,
         y_median_and_ci[1, :],
         color=color,
         label=label_line
     )
-    ax.fill_between(
+    plt.fill_between(
         x_fit,
         y_median_and_ci[0, :],
         y_median_and_ci[2, :],
@@ -77,7 +77,7 @@ def plot_with_bootstrapped_uncertainty(
         alpha=0.25,
         linewidth=0
     )
-    ax.plot(
+    plt.plot(
         x,
         y,
         ".",
@@ -85,7 +85,7 @@ def plot_with_bootstrapped_uncertainty(
         label=label_scatter,
         alpha=0.5
     )
-    return fig, ax
+    return x_fit, y_bootstrap_fits
 
 
 if __name__ == '__main__':
@@ -97,12 +97,12 @@ if __name__ == '__main__':
 
     ### Generate data
     x = np.linspace(0, 10, 101)
-    y_true = np.sin(x)
+    y_true = np.abs(x - 5)  # np.sin(x)
     y_noisy = y_true + 0.1 * np.random.randn(len(x))
 
     ### Plot spline regression
     fig, ax = plt.subplots(dpi=300)
-    plot_with_bootstrapped_uncertainty(
+    x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
         x,
         y_noisy,
         y_stdev=0.1,
