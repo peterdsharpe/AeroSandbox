@@ -11,9 +11,11 @@ def plot_with_bootstrapped_uncertainty(
         y_stdev: float,
         ci: float = 0.95,
         color=None,
+        draw_ci=True,
+        draw_data = True,
         label_line=None,
         label_ci=None,
-        label_scatter=None,
+        label_data=None,
         n_bootstraps=2000,
         n_fit_points=300,
         spline_degree=3,
@@ -68,23 +70,25 @@ def plot_with_bootstrapped_uncertainty(
         color=color,
         label=label_line
     )
-    plt.fill_between(
-        x_fit,
-        y_median_and_ci[0, :],
-        y_median_and_ci[2, :],
-        color=line.get_color(),
-        label=label_ci,
-        alpha=0.25,
-        linewidth=0
-    )
-    plt.plot(
-        x,
-        y,
-        ".",
-        color=line.get_color(),
-        label=label_scatter,
-        alpha=0.5
-    )
+    if draw_ci:
+        plt.fill_between(
+            x_fit,
+            y_median_and_ci[0, :],
+            y_median_and_ci[2, :],
+            color=line.get_color(),
+            label=label_ci,
+            alpha=0.25,
+            linewidth=0
+        )
+    if draw_data:
+        plt.plot(
+            x,
+            y,
+            ".",
+            color=line.get_color(),
+            label=label_data,
+            alpha=0.5
+        )
     return x_fit, y_bootstrap_fits
 
 
@@ -107,7 +111,7 @@ if __name__ == '__main__':
         y_noisy,
         y_stdev=0.1,
         label_line="Best Estimate",
-        label_scatter="Data",
+        label_data="Data",
         label_ci="95% CI",
     )
     ax.plot(x, y_true, "k", label="True Function", alpha=0.2)
