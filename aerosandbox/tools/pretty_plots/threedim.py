@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 
-def figure3d(*args, **kwargs, orthographic=True):
+def figure3d(*args, orthographic=True, **kwargs):
     """
     Creates a new 3D figure. Args and kwargs are passed into matplotlib.pyplot.figure().
 
