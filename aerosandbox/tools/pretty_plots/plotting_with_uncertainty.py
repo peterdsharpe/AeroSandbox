@@ -120,7 +120,6 @@ if __name__ == '__main__':
         label_line="Best Estimate",
         label_data="Data",
         label_ci="95% CI",
-        draw_line=False
     )
     ax.plot(x, y_true, "k", label="True Function", alpha=0.2)
 
