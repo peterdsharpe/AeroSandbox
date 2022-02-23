@@ -115,27 +115,28 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
 
     Examples function inputs and outputs:
 
-        "f(a, b)"               -> ['a', 'b']
-        "f(a,b)"                -> ['a', 'b']
-        "f(\na,\nb)"            -> ['a', 'b']
-        "g = f(a, b)"           -> ['a', 'b']
-        "g.h = f(a, b)"         -> ['a', 'b']
-        "g.h() = f(a, b)"       -> ['a', 'b']
-        "g.h(i=j) = f(a, b)"    -> ['a', 'b']
-        "f(a, b) + g(h)"        -> ['a', 'b']
-        "f(a: int, b: float())" -> ['a', 'b']
-        "f(a, b).g(c, d)"       -> ['a', 'b']
-        "f(a(b), c)"            -> ['a(b)', 'c']
-        "f(a(b,c), d)"          -> ['a(b,c)', 'd']
-        "f({a:b}, c)"           -> ['{a:b}', 'c']
-        "f(a[b], c)"            -> ['a[b]', 'c']
-        "f({a:b, c:d}, e)"      -> ['{a:b,c:d}', 'e']
-        "f({a:b,\nc:d}, e)"     -> ['{a:b,c:d}', 'e']
-        "f(dict(a=b,c=d), e)"   -> ['dict(a=b,c=d)', 'e']
-        "f(a=1, b=2)"           -> ['a=1', 'b=2']
-        "f()"                   -> ['']
-        "3 + 5"                 -> raises ValueError
-        ""                      -> raises ValueError
+        "f(a, b)"                -> ['a', 'b']
+        "f(a,b)"                 -> ['a', 'b']
+        "f(\na,\nb)"             -> ['a', 'b']
+        "g = f(a, b)"            -> ['a', 'b']
+        "g.h = f(a, b)"          -> ['a', 'b']
+        "g.h() = f(a, b)"        -> ['a', 'b']
+        "g.h(i=j) = f(a, b)"     -> ['a', 'b']
+        "f(a, b) + g(h)"         -> ['a', 'b']
+        "f(a: int, b: MyType())" -> ['a', 'b']
+        "f(a, b).g(c, d)"        -> ['a', 'b']
+        "f(a(b), c)"             -> ['a(b)', 'c']
+        "f(a(b,c), d)"           -> ['a(b,c)', 'd']
+        "f({a:b}, c)"            -> ['{a:b}', 'c']
+        "f(a[b], c)"             -> ['a[b]', 'c']
+        "f({a:b, c:d}, e)"       -> ['{a:b,c:d}', 'e']
+        "f({a:b,\nc:d}, e)"      -> ['{a:b,c:d}', 'e']
+        "f(dict(a=b,c=d), e)"    -> ['dict(a=b,c=d)', 'e']
+        "f(a=1, b=2)"            -> ['a=1', 'b=2']
+        "f()"                    -> ['']
+        "f(incomplete, "         -> raises ValueError
+        "3 + 5"                  -> raises ValueError
+        ""                       -> raises ValueError
 
     Args:
         source_code: A line of Python source code that includes a function call. Can be a multi-line piece of source code (e.g., includes '\n').
@@ -176,6 +177,8 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
 
     while parenthesis_level != 0:
         i += 1
+        if i >= len(source_code_rhs):
+            raise ValueError("Couldn't match all parentheses, so this doesn't look like valid code!")
         char = source_code_rhs[i]
 
         if char == "(":
