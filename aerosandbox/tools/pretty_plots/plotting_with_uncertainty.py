@@ -1,9 +1,7 @@
-from scipy import interpolate
+from aerosandbox.tools.pretty_plots.utilities.natural_univariate_spline import NaturalUnivariateSpline as Spline
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from typing import Callable
-
 
 def plot_with_bootstrapped_uncertainty(
         x: np.ndarray,
@@ -48,7 +46,7 @@ def plot_with_bootstrapped_uncertainty(
 
         weights = np.diff(np.sort(splits))
 
-        y_bootstrap_fits[i, :] = interpolate.UnivariateSpline(
+        y_bootstrap_fits[i, :] = Spline(
             x=x,
             y=y,
             w=weights,
