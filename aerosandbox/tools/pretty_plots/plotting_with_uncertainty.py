@@ -24,6 +24,15 @@ def plot_with_bootstrapped_uncertainty(
     if not (ci > 0 and ci < 1):
         raise ValueError("Confidence interval `ci` should be in the range of (0, 1).")
 
+    ### Discard any NaN points
+    isnan = np.logical_or(
+        np.isnan(x),
+        np.isnan(y),
+    )
+    x = x[~isnan]
+    y = y[~isnan]
+
+    ### Prepare for the bootstrap
     x_fit = np.linspace(x.min(), x.max(), n_fit_points)
 
     y_bootstrap_fits = np.empty((n_bootstraps, len(x_fit)))
