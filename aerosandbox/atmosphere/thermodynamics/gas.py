@@ -10,7 +10,16 @@ universal_gas_constant = 8.31432  # J/(mol*K); universal gas constant
 #         molecular_mass = 28.9644e-3,
 # )
 
-class IdealPerfectGas:
+class PerfectGas:
+    """
+    Provides a class for an ideal, calorically perfect gas.
+
+    Specifically, this gas:
+        * Has PV = nRT (ideal)
+        * Has constant heat capacities C_V, C_P (independent of temperature and pressure).
+
+    """
+
     def __init__(self,
                  pressure=101325,
                  temperature=273.15 + 15,
@@ -208,7 +217,7 @@ class IdealPerfectGas:
             self.temperature = new_temperature
 
         else:
-            return IdealPerfectGas(
+            return PerfectGas(
                 pressure=new_pressure,
                 temperature=new_temperature,
                 specific_heat_constant_pressure=self.specific_heat_constant_pressure,
@@ -219,7 +228,7 @@ class IdealPerfectGas:
 
 
 if __name__ == '__main__':
-    air = IdealPerfectGas()
+    air = PerfectGas()
     # print(air)
 
     # air = air.process("isentropic", new_pressure=1e6)
@@ -233,5 +242,5 @@ if __name__ == '__main__':
     print(air)
     air = air.process("isothermal", new_density=5)
     print(air)
-    air = air.process("isentropic", new_pressure=IdealPerfectGas().pressure)
+    air = air.process("isentropic", new_pressure=PerfectGas().pressure)
     print(air)
