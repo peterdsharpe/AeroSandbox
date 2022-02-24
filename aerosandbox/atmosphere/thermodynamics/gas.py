@@ -208,6 +208,11 @@ class PerfectGas:
                 "\t* `enthalpy_addition_at_constant_volume`",
             ]))
 
+        if enthalpy_at_pressure_specified:
+            new_temperature = self.temperature + enthalpy_addition_at_constant_pressure / self.specific_heat_constant_pressure
+        elif enthalpy_at_volume_specified:
+            new_temperature = self.temperature + enthalpy_addition_at_constant_volume / self.specific_heat_constant_volume
+
         if pressure_specified:
             P_ratio = new_pressure / self.pressure
         elif temperature_specified:
