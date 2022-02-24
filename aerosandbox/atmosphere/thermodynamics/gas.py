@@ -1,14 +1,10 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
 import copy
+from typing import Union
 
 universal_gas_constant = 8.31432  # J/(mol*K); universal gas constant
 
-
-# def ideal_gas_law(
-#
-#         molecular_mass = 28.9644e-3,
-# )
 
 class PerfectGas:
     """
@@ -23,12 +19,12 @@ class PerfectGas:
     """
 
     def __init__(self,
-                 pressure=101325,
-                 temperature=273.15 + 15,
-                 specific_heat_constant_pressure=1006,
-                 specific_heat_constant_volume=717,
-                 molecular_mass=28.9644e-3,
-                 effective_collision_diameter=0.365e-9,
+                 pressure: Union[float, np.ndarray] = 101325,
+                 temperature: Union[float, np.ndarray] = 273.15 + 15,
+                 specific_heat_constant_pressure: float = 1006,
+                 specific_heat_constant_volume: float = 717,
+                 molecular_mass: float = 28.9644e-3,
+                 effective_collision_diameter: float = 0.365e-9,
                  ):
         """
 
@@ -310,13 +306,10 @@ class PerfectGas:
 
 
 if __name__ == '__main__':
-    air = PerfectGas()
-    # print(air)
-
-    # air = air.process("isentropic", new_pressure=1e6)
-    # print(air)
 
     ### Carnot
+    air = PerfectGas(pressure=100e3, temperature=300)
+
     print(air)
     air = air.process("isothermal", new_density=5)
     print(air)
