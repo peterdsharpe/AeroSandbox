@@ -17,7 +17,9 @@ class PerfectGas:
     Specifically, this gas:
         * Has PV = nRT (ideal)
         * Has constant heat capacities C_V, C_P (independent of temperature and pressure).
-
+        * Is in thermodynamic equilibrium
+        * Is not chemically reacting
+        * Has internal energy and enthalpy purely as functions of temperature
     """
 
     def __init__(self,
@@ -78,18 +80,72 @@ class PerfectGas:
     def ratio_of_specific_heats(self):
         return self.specific_heat_constant_pressure / self.specific_heat_constant_volume
 
+    def specific_enthalpy_change(self, start_temperature, end_temperature):
+        """
+        Returns the change in specific enthalpy that would occur from a given temperature change via a thermodynamic
+        process.
+
+        Args:
+            start_temperature: Starting temperature [K]
+            end_temperature: Ending temperature [K]
+
+        Returns: The change in specific enthalpy, in J/kg.
+
+        """
+        return self.specific_heat_constant_pressure * (end_temperature - start_temperature)
+
+    def specific_internal_energy_change(self, start_temperature, end_temperature):
+        """
+        Returns the change in specific internal energy that would occur from a given temperature change via a
+        thermodynamic process.
+
+        Args:
+            start_temperature: Starting temperature [K]
+            end_temperature: Ending temperature [K]
+
+        Returns: The change in specific internal energy, in J/kg.
+
+        """
+        return self.specific_heat_constant_volume * (end_temperature - start_temperature)
+
     @property
     def specific_volume(self):
+        """
+        Gives the specific volume, often denoted `v`.
+
+        (Note the lowercase; "V" is often the volume of a specific amount of gas, and this presents a potential point
+        of confusion.)
+        """
         return 1 / self.density
+
+    @property
+    def specific_enthalpy(self):
+        """
+        Gives the specific enthalpy, often denoted `h`.
+
+        Enthalpy here is in units of J/kg.
+        """
+        return self.specific_enthalpy_change(start_temperature=0, end_temperature=self.temperature)
+
+    @property
+    def specific_internal_energy(self):
+        """
+        Gives the specific internal energy, often denoted `u`.
+
+        Internal energy here is in units of J/kg.
+        """
+        return self.specific_internal_energy_change(start_temperature=0, end_temperature=self.temperature)
 
     def process(self,
                 process: str = "isentropic",
                 new_pressure: float = None,
                 new_temperature: float = None,
                 new_density: float = None,
+                enthalpy_addition_at_constant_pressure: float = None,
+                enthalpy_addition_at_constant_volume: float = None,
                 polytropic_n: float = None,
                 inplace=False
-                ):
+                ) -> "PerfectGas":
         """
         Puts this gas under a thermodynamic process.
 
@@ -105,31 +161,52 @@ class PerfectGas:
                 * "isentropic"
                 * "polytropic"
 
-            new_pressure: The pressure that the
+                The `process` must be specified.
 
-            new_temperature:
+            You must specifiy exactly one of the following arguments:
+                * `new_pressure`: the new pressure after the process [Pa].
+                * `new_temperature`: the new temperature after the process [K]
+                * `new_density`: the new density after the process [kg/m^3]
+                * `enthalpy_addition_at_constant_pressure`: [J/kg]
+                * `enthalpy_addition_at_constant_volume`: [J/kg]
 
-            new_density:
+            polytropic_n: If you specified the process type to be "polytropic", you must provide the polytropic index
+            `n` to be used here. (Reminder: PV^n = constant)
 
-            polytropic_n:
-
-            inplace:
+            inplace: Specifies whether to return the result in-place or to allocate a new PerfectGas object in memory
+            for the result.
 
 
         Returns:
 
+            If `inplace` is False (default), returns a new PerfectGas object that represents the gas after the change.
+
+            If `inplace` is True, nothing is returned.
+
         """
+
         pressure_specified = new_pressure is not None
         temperature_specified = new_temperature is not None
         density_specified = new_density is not None
+        enthalpy_at_pressure_specified = enthalpy_addition_at_constant_pressure is not None
+        enthalpy_at_volume_specified = enthalpy_addition_at_constant_volume is not None
 
-        number_of_conditions_specified = (pressure_specified + temperature_specified + density_specified)
+        number_of_conditions_specified = (
+                pressure_specified +
+                temperature_specified +
+                density_specified +
+                enthalpy_at_pressure_specified +
+                enthalpy_at_volume_specified
+        )
 
-        if number_of_conditions_specified == 0:
-            raise ValueError("You must specify a new pressure, temperature, or density for this process to go to.")
-        elif number_of_conditions_specified > 1:
-            raise ValueError(
-                "You can only specify only one of pressure, temperature or density; the state is overdetermined otherwise.")
+        if number_of_conditions_specified != 1:
+            raise ValueError("You must specify exactly one of the following arguments:\n" + "\n".join([
+                "\t* `new_pressure`",
+                "\t* `new_temperature`",
+                "\t* `new_density`",
+                "\t* `enthalpy_addition_at_constant_pressure`",
+                "\t* `enthalpy_addition_at_constant_volume`",
+            ]))
 
         if pressure_specified:
             P_ratio = new_pressure / self.pressure
