@@ -7,7 +7,6 @@ from aerosandbox.atmosphere._diff_atmo_functions import pressure_differentiable,
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
 molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
 gas_constant_air = gas_constant_universal / molecular_mass_air  # J/(kg*K); gas constant of air
-g = 9.81  # m/s^2, gravitational acceleration on earth
 effective_collision_diameter = 0.365e-9  # m, effective collision diameter of an air molecule
 
 
