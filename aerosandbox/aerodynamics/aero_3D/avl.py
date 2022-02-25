@@ -140,7 +140,23 @@ class AVL(ExplicitAnalysis):
         self.ground_effect_height = ground_effect_height
 
     def run(self) -> Dict:
-        return self._run_avl()
+        avl_results: Dict = self._run_avl()
+
+        if self.airplane.s_ref is not None:
+            q = self.op_point.dynamic_pressure()
+            S = self.airplane.s_ref
+            b = self.airplane.b_ref
+            c = self.airplane.c_ref
+
+            avl_results["L"] = q * S * avl_results["CLff"]
+            avl_results["Y"] = q * S * avl_results["CYff"]
+            avl_results["D"] = q * S * avl_results["CDff"]
+            avl_results["l_b"] = q * S * b * avl_results["Cl"]
+            avl_results["m_b"] = q * S * c * avl_results["Cm"]
+            avl_results["n_b"] = q * S * b * avl_results["Cn"]
+
+        return avl_results
+
 
     def _default_keystroke_file_contents(self) -> List[str]:
 
