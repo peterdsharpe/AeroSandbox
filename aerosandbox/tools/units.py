@@ -19,7 +19,7 @@ oz = lbm / 16
 second = 1
 minute = 60
 hour = 60 * minute
-day = 86400
+day = 24 * hour
 week = 7 * day
 year = 365.25 * day
 month = year / 12
@@ -39,6 +39,7 @@ liter = 0.001
 # Pressure (equivalents in Pa)
 torr = 133.3223684211
 atm = 101325
+psi = lbf / inch ** 2
 
 # SI prefixes
 yocto = 1e-24
