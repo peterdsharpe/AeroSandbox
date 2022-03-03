@@ -36,6 +36,10 @@ fps = foot / 1
 # Volume (equivalents in m^3)
 liter = 0.001
 
+# Pressure (equivalents in Pa)
+torr = 133.3223684211
+atm = 101325
+
 # SI prefixes
 yocto = 1e-24
 zepto = 1e-21
