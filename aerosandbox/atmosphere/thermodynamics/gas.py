@@ -172,7 +172,6 @@ class PerfectGas:
             inplace: Specifies whether to return the result in-place or to allocate a new PerfectGas object in memory
             for the result.
 
-
         Returns:
 
             If `inplace` is False (default), returns a new PerfectGas object that represents the gas after the change.
@@ -308,14 +307,13 @@ class PerfectGas:
 if __name__ == '__main__':
 
     ### Carnot
-    air = PerfectGas(pressure=100e3, temperature=300)
+    g = []
 
-    print(air)
-    air = air.process("isothermal", new_density=5)
-    print(air)
-    air = air.process("isentropic", new_density=0.1)
-    print(air)
-    air = air.process("isothermal", new_density=5)
-    print(air)
-    air = air.process("isentropic", new_pressure=PerfectGas().pressure)
-    print(air)
+    g.append(PerfectGas(pressure=100e3, temperature=300))
+    g.append(g[-1].process("isothermal", new_density=0.5))
+    g.append(g[-1].process("isentropic", new_density=0.25))
+    g.append(g[-1].process("isothermal", new_density=0.58))
+    g.append(g[-1].process("isentropic", new_temperature=300))
+
+    for i in range(len(g)):
+        print(f"After Process {i}: {g[i]}")
