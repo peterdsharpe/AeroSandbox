@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Tuple
+from typing import List, Dict, Any, Union, Tuple, Optional
 from pathlib import Path
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 import copy
@@ -18,7 +18,7 @@ class Fuselage(AeroSandboxObject):
     def __init__(self,
                  name: str = "Untitled",
                  xsecs: List['FuselageXSec'] = None,
-                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
+                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  symmetric: bool = False,  # Deprecated
                  xyz_le: np.ndarray = None,  # Deprecated
                  ):
@@ -402,7 +402,7 @@ class FuselageXSec(AeroSandboxObject):
     def __init__(self,
                  xyz_c: Union[np.ndarray, List] = np.array([0, 0, 0]),
                  radius: float = 0,
-                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
+                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  ):
         """
         Defines a new fuselage cross section.

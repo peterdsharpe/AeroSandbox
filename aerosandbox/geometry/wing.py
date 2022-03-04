@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Tuple, Union
+from typing import List, Dict, Any, Tuple, Union, Optional
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
@@ -36,7 +36,7 @@ class Wing(AeroSandboxObject):
                  xsecs: List['WingXSec'] = None,
                  symmetric: bool = False,
                  xyz_le: np.ndarray = None,  # Note: deprecated.
-                 analysis_specific_options: Dict[type, Dict[str, Any]] = None
+                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None
                  ):
         """
         Defines a new wing.
@@ -872,8 +872,8 @@ class WingXSec(AeroSandboxObject):
                  chord: float = 1.,
                  twist: float = 0,
                  airfoil: Airfoil = None,
-                 control_surfaces: List['ControlSurface'] = None,
-                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
+                 control_surfaces: Optional[List['ControlSurface']] = None,
+                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  control_surface_is_symmetric=None,  # Note: deprecated.
                  control_surface_hinge_point=None,  # Note: deprecated.
                  control_surface_deflection=None,  # Note: deprecated.
@@ -1046,7 +1046,7 @@ class ControlSurface(AeroSandboxObject):
                  hinge_point: float = 0.75,
                  symmetric: bool = True,
                  deflection: float = 0.0,
-                 analysis_specific_options: Dict[type, Dict[str, Any]] = None,
+                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  ):
         """
         Define a new control surface.

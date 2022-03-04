@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 
@@ -18,12 +18,12 @@ class Airplane(AeroSandboxObject):
     def __init__(self,
                  name: str = "Untitled",
                  xyz_ref: Union[np.ndarray, List] = np.array([0, 0, 0]),
-                 wings: List['Wing'] = None,
-                 fuselages: List['Fuselage'] = None,
-                 s_ref: float = None,
-                 c_ref: float = None,
-                 b_ref: float = None,
-                 analysis_specific_options: Dict[type, Dict[str, Any]] = None
+                 wings: Optional[List['Wing']] = None,
+                 fuselages: Optional[List['Fuselage']] = None,
+                 s_ref: Optional[float] = None,
+                 c_ref: Optional[float] = None,
+                 b_ref: Optional[float] = None,
+                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None
                  ):
         """
         Defines a new airplane.
