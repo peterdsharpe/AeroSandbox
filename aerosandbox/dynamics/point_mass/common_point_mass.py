@@ -446,7 +446,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     np.round(
                         np.linspace(0, len(self) - 1, n_vehicles_to_draw)
                     )
-            ).astype(int):
+            ).astype(np.int64):
                 dyn = self[i]
                 try:
                     phi = dyn.phi
