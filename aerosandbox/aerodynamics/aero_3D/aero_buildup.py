@@ -112,7 +112,7 @@ class AeroBuildup(ExplicitAnalysis):
 
     def wing_aerodynamics(self,
                           wing: Wing,
-                          ):
+                          ) -> Dict[str, Any]:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a wing in isolation.
 
@@ -476,7 +476,7 @@ class AeroBuildup(ExplicitAnalysis):
 
     def fuselage_aerodynamics(self,
                               fuselage: Fuselage,
-                              ):
+                              ) -> Dict[str, Any]:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a fuselage in isolation.
 
