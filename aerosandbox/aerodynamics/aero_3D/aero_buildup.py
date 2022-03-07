@@ -522,13 +522,7 @@ class AeroBuildup(ExplicitAnalysis):
 
         ### Compute normal quantities
         ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
-        # M_n = sin_generalized_alpha * op_point.mach()
-        # Re_n = sin_generalized_alpha * Re
-        # V_n = sin_generalized_alpha * op_point.velocity
         q = op_point.dynamic_pressure()
-        # x_nose = fuselage.xsecs[0].xyz_c[0]
-        # x_m = 0 - x_nose
-        # x_c = fuselage.x_centroid_projected() - x_nose
 
         eta = jorgensen_eta(fuselage.fineness_ratio())
 
