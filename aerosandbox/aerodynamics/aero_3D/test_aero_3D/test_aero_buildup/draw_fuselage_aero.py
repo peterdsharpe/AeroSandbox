@@ -15,7 +15,10 @@ fuselage = asb.Fuselage(
 )
 
 fig, ax = plt.subplots(figsize=(7, 6))
-Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 500), np.linspace(-90, 90, 500))
+Beta, Alpha = np.meshgrid(
+    np.linspace(-90, 90, 500),
+    np.linspace(-90, 90, 500)
+)
 aero = asb.AeroBuildup(
     airplane=asb.Airplane(
         fuselages=[fuselage]
