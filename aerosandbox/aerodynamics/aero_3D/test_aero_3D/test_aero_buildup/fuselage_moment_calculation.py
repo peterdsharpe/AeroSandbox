@@ -8,14 +8,14 @@ fuselage = asb.Fuselage(
     xsecs=[
         asb.FuselageXSec(
             xyz_c=[xi, 0, 0],
-            radius=asb.Airfoil("naca0010").local_thickness(xi)
+            radius=asb.Airfoil("naca0020").local_thickness(xi) / 2
         )
         for xi in np.cosspace(0, 1, 20)
     ],
 )
 
-
 # fuselage.draw()
+
 
 def get_aero(xyz_ref):
     return asb.AeroBuildup(
@@ -26,6 +26,7 @@ def get_aero(xyz_ref):
         op_point=asb.OperatingPoint(
             velocity=10,
             alpha=5,
+            beta=5
         )
     ).run()
 
@@ -39,7 +40,7 @@ aeros = np.array([
 import matplotlib.pyplot as plt
 import aerosandbox.tools.pretty_plots as p
 
-fig, ax = plt.subplots(figsize=(4,4))
+fig, ax = plt.subplots(figsize=(4, 4))
 
 plt.plot(
     x_cgs,
