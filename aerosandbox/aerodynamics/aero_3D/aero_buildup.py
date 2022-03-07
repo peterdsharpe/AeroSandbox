@@ -501,23 +501,136 @@ class AeroBuildup(ExplicitAnalysis):
         Re = op_point.reynolds(reference_length=fuselage.length())
         fuse_options = self.get_options(fuselage)
 
-        ####### Reference quantities (Set these 1 here, just so we can follow Jorgensen syntax.)
-        # Outputs of this function should be invariant of these quantities, if normalization has been done correctly.
-        S_ref = 1  # m^2
-        c_ref = 1  # m
+        ####### Jorgensen model
 
-        ####### Fuselage zero-lift drag estimation
+        ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
+        x_w, y_w, z_w = op_point.convert_axes(
+            1, 0, 0, from_axes="body", to_axes="wind"
+        )
+        generalized_alpha = np.arccosd(x_w / (1 + 1e-14))
+        sin_generalized_alpha = np.sind(generalized_alpha)
+        cos_generalized_alpha = x_w
 
-        ### Forebody drag
-        C_f_forebody = aerolib.Cf_flat_plate(
-            Re_L=Re
+        # ### Limit generalized alpha to -90 < alpha < 90, for now.
+        # generalized_alpha = np.clip(generalized_alpha, -90, 90)
+        # # TODO make the drag/moment functions not give negative results for alpha > 90.
+
+        alpha_fractional_component = -z_w / np.sqrt(  # This is positive when alpha is positive
+            y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
+        beta_fractional_component = -y_w / np.sqrt(  # This is positive when beta is positive
+            y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of beta
+
+        ### Compute normal quantities
+        ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
+        # M_n = sin_generalized_alpha * op_point.mach()
+        # Re_n = sin_generalized_alpha * Re
+        # V_n = sin_generalized_alpha * op_point.velocity
+        q = op_point.dynamic_pressure()
+        # x_nose = fuselage.xsecs[0].xyz_c[0]
+        # x_m = 0 - x_nose
+        # x_c = fuselage.x_centroid_projected() - x_nose
+
+        eta = jorgensen_eta(fuselage.fineness_ratio())
+
+        def forces_on_fuselage_section(
+                xsec_a: FuselageXSec,
+                xsec_b: FuselageXSec,
+        ):
+            ### Some metrics, like effective force location, are area-weighted. Here, we compute those weights.
+            r_a = xsec_a.radius
+            r_b = xsec_b.radius
+
+            x_a = xsec_a.xyz_c[0]
+            x_b = xsec_b.xyz_c[0]
+
+            area_a = xsec_a.xsec_area()
+            area_b = xsec_b.xsec_area()
+            total_area = area_a + area_b
+
+            a_weight = area_a / total_area
+            b_weight = area_b / total_area
+
+            delta_x = x_b - x_a
+
+            mean_geometric_radius = (r_a + r_b) / 2
+            mean_aerodynamic_radius = r_a * a_weight + r_b * b_weight
+
+            force_x_location = x_a * a_weight + x_b * b_weight
+
+            ##### Inviscid Forces
+            force_potential_flow = q * (  # From Munk, via Jorgensen
+                    np.sind(2 * generalized_alpha) *
+                    (area_b - area_a)
+            )
+
+            # Direction of force is midway between the normal to the axis of revolution of the body and the
+            # normal to the free-stream velocity, according to:
+            # Ward, via Jorgensen
+            force_normal_potential_flow = force_potential_flow * np.cosd(generalized_alpha / 2)
+            force_axial_potential_flow = -force_potential_flow * np.sind(
+                generalized_alpha / 2)  # Reminder: axial force is defined positive-aft
+
+            ##### Viscous Forces
+
+            Re_n = sin_generalized_alpha * op_point.reynolds(reference_length=2 * mean_aerodynamic_radius)
+
+            C_d_n = np.where(
+                Re_n != 0,
+                aerolib.Cd_cylinder(Re_D=Re_n),  # Replace with 1.20 from Jorgensen Table 1 if not working well
+                0,
+            )
+
+            force_viscous_flow = delta_x * q * (
+                    2 * eta * C_d_n *
+                    sin_generalized_alpha ** 2 *
+                    mean_geometric_radius
+            )
+
+            # Viscous crossflow acts exactly normal to vehicle axis, definitionally. (Axial forces accounted for on a total-body basis)
+            force_normal_viscous_flow = force_viscous_flow
+            force_axial_viscous_flow = 0
+
+            normal_force = force_normal_potential_flow + force_normal_viscous_flow
+            axial_force = force_axial_potential_flow + force_axial_viscous_flow
+
+            return normal_force, axial_force, force_x_location
+
+        normal_force_contributions = []
+        axial_force_contributions = []
+        force_x_locations = []
+
+        for xsec_a, xsec_b in zip(
+                fuselage.xsecs[:-1],
+                fuselage.xsecs[1:]
+        ):
+            normal_force_contribution, axial_force_contribution, force_x_location = \
+                forces_on_fuselage_section(
+                    xsec_a,
+                    xsec_b
+                )
+
+            normal_force_contributions.append(normal_force_contribution)
+            axial_force_contributions.append(axial_force_contribution)
+            force_x_locations.append(force_x_location)
+
+        ##### Add up all forces
+        normal_force = sum(normal_force_contributions)
+        axial_force = sum(axial_force_contributions)
+        generalized_pitching_moment = sum(
+            [
+                force * x
+                for force, x in
+                zip(normal_force_contributions, force_x_locations)
+            ]
         )
 
+        ##### Add in profile drag: viscous drag forces and wave drag forces
         ### Base Drag
-        C_D_base = 0.029 / np.sqrt(C_f_forebody) * fuselage.area_base() / S_ref
+        C_f_forebody = aerolib.Cf_flat_plate(Re_L=Re)
+        drag_base = 0.029 / np.sqrt(C_f_forebody) * fuselage.area_base() * q
 
         ### Skin friction drag
-        C_D_skin = C_f_forebody * fuselage.area_wetted() / S_ref
+        drag_skin = C_f_forebody * fuselage.area_wetted() * q
 
         ### Wave drag
         if self.include_wave_drag:
@@ -535,93 +648,25 @@ class AeroBuildup(ExplicitAnalysis):
         else:
             C_D_wave = 0
 
-        ### Total zero-lift drag
-        C_D_zero_lift = C_D_skin + C_D_base + C_D_wave
+        mean_cross_sectional_area = fuselage.volume() / fuselage.length()
 
-        ####### Jorgensen model
+        drag_wave = C_D_wave * mean_cross_sectional_area * q
 
-        ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
-        x_w, y_w, z_w = op_point.convert_axes(
-            1, 0, 0, from_axes="body", to_axes="wind"
-        )
-        generalized_alpha = np.arccosd(x_w / (1 + 1e-14))
-        sin_generalized_alpha = np.sind(generalized_alpha)
-        cos_generalized_alpha = x_w
+        ### Sum up the profile drag
+        drag_profile = drag_skin + drag_wave
 
-        # ### Limit generalized alpha to -90 < alpha < 90, for now.
-        # generalized_alpha = np.clip(generalized_alpha, -90, 90)
-        # # TODO make the drag/moment functions not give negative results for alpha > 90.
+        ##### Convert Normal/Axial to Lift/Drag, but still in generalized (2D-esque) coordinates
+        L_generalized = normal_force * cos_generalized_alpha - axial_force * sin_generalized_alpha
+        D = normal_force * sin_generalized_alpha + axial_force * cos_generalized_alpha + drag_profile
 
-        alpha_fractional_component = -z_w / np.sqrt(
-            y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
-        beta_fractional_component = y_w / np.sqrt(
-            y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of beta
+        ##### Convert from generalized (2D-esque) coordinates to full 3D
+        L = L_generalized * alpha_fractional_component
+        Y = -L_generalized * beta_fractional_component
+        l_w = 0  # No roll moment
+        m_w = generalized_pitching_moment * alpha_fractional_component
+        n_w = -generalized_pitching_moment * beta_fractional_component
 
-        ### Compute normal quantities
-        ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
-        # M_n = sin_generalized_alpha * op_point.mach()
-        Re_n = sin_generalized_alpha * Re
-        # V_n = sin_generalized_alpha * op_point.velocity
-        q = op_point.dynamic_pressure()
-        x_nose = fuselage.xsecs[0].xyz_c[0]
-        x_m = 0 - x_nose
-        x_c = fuselage.x_centroid_projected() - x_nose
-
-        ##### Potential flow crossflow model
-        C_N_p = (  # Normal force coefficient due to potential flow. (Jorgensen Eq. 2.12, part 1)
-                fuselage.area_base() / S_ref * np.sind(2 * generalized_alpha) * np.cosd(generalized_alpha / 2)
-        )
-        C_m_p = (
-                (
-                        fuselage.volume() - fuselage.area_base() * (fuselage.length() - x_m)
-                ) / (
-                        S_ref * c_ref
-                ) * np.sind(2 * generalized_alpha) * np.cosd(generalized_alpha / 2)
-        )
-
-        ##### Viscous crossflow model
-        C_d_n = np.where(
-            Re_n != 0,
-            aerolib.Cd_cylinder(Re_D=Re_n),  # Replace with 1.20 from Jorgensen Table 1 if not working well
-            0
-        )
-        eta = jorgensen_eta(fuselage.fineness_ratio())
-
-        C_N_v = (  # Normal force coefficient due to viscous crossflow. (Jorgensen Eq. 2.12, part 2)
-                eta * C_d_n * fuselage.area_projected() / S_ref * sin_generalized_alpha ** 2
-        )
-        C_m_v = (
-                eta * C_d_n * fuselage.area_projected() / S_ref * (x_m - x_c) / c_ref * sin_generalized_alpha ** 2
-        )
-
-        ##### Total C_N model
-        C_N = C_N_p + C_N_v
-        C_m_generalized = C_m_p + C_m_v
-
-        ##### Total C_A model
-        C_A = C_D_zero_lift * cos_generalized_alpha * np.abs(cos_generalized_alpha)
-
-        ##### Convert to lift, drag
-        C_L_generalized = C_N * cos_generalized_alpha - C_A * sin_generalized_alpha
-        C_D = C_N * sin_generalized_alpha + C_A * cos_generalized_alpha
-
-        ### Set proper directions
-
-        C_L = C_L_generalized * alpha_fractional_component
-        C_Y = -C_L_generalized * beta_fractional_component
-        C_l = 0
-        C_m = C_m_generalized * alpha_fractional_component
-        C_n = -C_m_generalized * beta_fractional_component
-
-        ### Un-normalize
-        L = C_L * q * S_ref
-        Y = C_Y * q * S_ref
-        D = C_D * q * S_ref
-        l_w = C_l * q * S_ref * c_ref
-        m_w = C_m * q * S_ref * c_ref
-        n_w = C_n * q * S_ref * c_ref
-
-        ### Convert to axes coordinates for reporting
+        ##### Convert to various axes coordinates for reporting
         F_w = (
             -D,
             Y,
@@ -637,6 +682,7 @@ class AeroBuildup(ExplicitAnalysis):
         M_b = op_point.convert_axes(*M_w, from_axes="wind", to_axes="body")
         M_g = op_point.convert_axes(*M_b, from_axes="body", to_axes="geometry")
 
+        ##### Return
         return {
             "F_g": F_g,
             "F_b": F_b,
@@ -644,12 +690,12 @@ class AeroBuildup(ExplicitAnalysis):
             "M_g": M_g,
             "M_b": M_b,
             "M_w": M_w,
-            "L"  : -F_w[2],
-            "Y"  : F_w[1],
-            "D"  : -F_w[0],
+            "L"  : L,
+            "Y"  : Y,
+            "D"  : D,
             "l_b": M_b[0],
             "m_b": M_b[1],
-            "n_b": M_b[2]
+            "n_b": M_b[2],
         }
 
 
