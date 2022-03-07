@@ -13,6 +13,8 @@ def sears_haack_drag(
 
     https://en.wikipedia.org/wiki/Sears%E2%80%93Haack_body
 
+    Note that drag coefficient and drag area are independent of Mach number for this case (assuming linearized supersonic aero).
+
     Args:
         radius_max: The maximum radius of the Sears-Haack body.
         length: The length of the Sears-Haack body.
@@ -32,6 +34,8 @@ def sears_haack_drag_from_volume(
     See documentation for sears_haack_drag() in this same file.
 
     Identical, except takes volume as an input rather than max radius.
+
+    Also returns a drag area (denoted CDA, or equivalently, D/q).
     """
     CDA = 128 * volume ** 2 / (np.pi * length ** 4)
     return CDA
