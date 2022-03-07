@@ -6,8 +6,8 @@ import pytest
 def test_fuselage_aerodynamics_optimization():
     opti = asb.Opti()
 
-    alpha = opti.variable(init_guess=1, lower_bound=0, upper_bound=30)
-    beta = opti.variable(init_guess=1)
+    alpha = opti.variable(init_guess=0, lower_bound=0, upper_bound=30)
+    beta = opti.variable(init_guess=0)
 
     fuselage = asb.Fuselage(
         xsecs=[
