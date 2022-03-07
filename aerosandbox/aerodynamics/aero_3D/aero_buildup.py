@@ -629,24 +629,26 @@ class AeroBuildup(ExplicitAnalysis):
         drag_skin = C_f_forebody * fuselage.area_wetted() * q
 
         ### Wave drag
+        S_ref = 1 # Does not matter here, just for accounting.
+
         if self.include_wave_drag:
-            sears_haack_drag = transonic.sears_haack_drag_from_volume(
+            sears_haack_drag_area = transonic.sears_haack_drag_from_volume(
                 volume=fuselage.volume(),
                 length=fuselage.length()
-            )
+            ) # Units of area
+            sears_haack_C_D_wave = sears_haack_drag_area / S_ref
+
             C_D_wave = transonic.approximate_CD_wave(
                 mach=op_point.mach(),
                 mach_crit=critical_mach(
                     fineness_ratio_nose=fuse_options["nose_fineness_ratio"]
                 ),
-                CD_wave_at_fully_supersonic=fuse_options["E_wave_drag"] * sears_haack_drag,
+                CD_wave_at_fully_supersonic=fuse_options["E_wave_drag"] * sears_haack_C_D_wave,
             )
         else:
             C_D_wave = 0
 
-        mean_cross_sectional_area = fuselage.volume() / fuselage.length()
-
-        drag_wave = C_D_wave * mean_cross_sectional_area * q
+        drag_wave = C_D_wave * q * S_ref
 
         ### Sum up the profile drag
         drag_profile = drag_skin + drag_wave
