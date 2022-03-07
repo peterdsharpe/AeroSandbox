@@ -508,8 +508,10 @@ class AeroBuildup(ExplicitAnalysis):
             1, 0, 0, from_axes="body", to_axes="wind"
         )
         generalized_alpha = np.arccosd(x_w / (1 + 1e-14))
-        sin_generalized_alpha = np.sind(generalized_alpha)
+        sin_generalized_alpha = (y_w ** 2 + z_w ** 2 + 1e-14) ** 0.5
+        # sin_generalized_alpha = np.sind(generalized_alpha)
         cos_generalized_alpha = x_w
+        sin_squared_generalized_alpha = y_w ** 2 + z_w ** 2
 
         # ### Limit generalized alpha to -90 < alpha < 90, for now.
         # generalized_alpha = np.clip(generalized_alpha, -90, 90)
@@ -576,7 +578,7 @@ class AeroBuildup(ExplicitAnalysis):
 
             force_viscous_flow = delta_x * q * (
                     2 * eta * C_d_n *
-                    sin_generalized_alpha ** 2 *
+                    sin_squared_generalized_alpha *
                     mean_geometric_radius
             )
 
