@@ -64,6 +64,7 @@ def mod(x1, x2):
     else:
         return _cas.mod(x1, x2)
 
+
 # TODO trace()
 
 # def cumsum(x, axis: int = None):
@@ -80,3 +81,15 @@ def mod(x1, x2):
 #         raise NotImplementedError
 #         if axis is None:
 #             return _cas.cumsum(_onp.flatten(x))
+
+def prod(x, axis: int = None):
+    """
+    Return the product of array elements over a given axis.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.prod.html
+    """
+    if not is_casadi_type(x):
+        return _onp.prod(x, axis=axis)
+
+    else:
+        return _cas.exp(sum(_cas.log(x), axis=axis))
