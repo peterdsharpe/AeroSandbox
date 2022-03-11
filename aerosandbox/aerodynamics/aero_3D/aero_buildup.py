@@ -79,7 +79,7 @@ class AeroBuildup(ExplicitAnalysis):
         ### Sum up the forces
         aero_total = {}
 
-        for k in aero_components[0].keys():
+        for k in aero_components[0].keys(): # TODO add fix for when no aero components exist
             values = [
                 component[k] for component in aero_components
             ]
