@@ -614,7 +614,7 @@ class AeroBuildup(ExplicitAnalysis):
         axial_force = sum(axial_force_contributions)
         generalized_pitching_moment = sum(
             [
-                force * x
+                -force * x
                 for force, x in
                 zip(normal_force_contributions, force_x_locations)
             ]
