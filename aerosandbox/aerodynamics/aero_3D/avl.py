@@ -148,9 +148,9 @@ class AVL(ExplicitAnalysis):
             b = self.airplane.b_ref
             c = self.airplane.c_ref
 
-            avl_results["L"] = q * S * avl_results["CLff"]
-            avl_results["Y"] = q * S * avl_results["CYff"]
-            avl_results["D"] = q * S * avl_results["CDff"]
+            avl_results["L"] = q * S * avl_results["CL"]
+            avl_results["Y"] = q * S * avl_results["CY"]
+            avl_results["D"] = q * S * avl_results["CD"]
             avl_results["l_b"] = q * S * b * avl_results["Cl"]
             avl_results["m_b"] = q * S * c * avl_results["Cm"]
             avl_results["n_b"] = q * S * b * avl_results["Cn"]
