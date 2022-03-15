@@ -557,14 +557,15 @@ class AeroBuildup(ExplicitAnalysis):
             force_potential_flow = q * (  # From Munk, via Jorgensen
                     np.sind(2 * generalized_alpha) *
                     (area_b - area_a)
-            )
+            ) # Matches Drela, Flight Vehicle Aerodynamics Eqn. 6.75 in the small-alpha limit.
+            # Note that no delta_x should be here; dA/dx * dx = dA.
 
             # Direction of force is midway between the normal to the axis of revolution of the body and the
             # normal to the free-stream velocity, according to:
             # Ward, via Jorgensen
             force_normal_potential_flow = force_potential_flow * np.cosd(generalized_alpha / 2)
-            force_axial_potential_flow = -force_potential_flow * np.sind(
-                generalized_alpha / 2)  # Reminder: axial force is defined positive-aft
+            force_axial_potential_flow = -force_potential_flow * np.sind(generalized_alpha / 2)
+            # Reminder: axial force is defined positive-aft
 
             ##### Viscous Forces
 
