@@ -1,5 +1,6 @@
 import matplotlib.colors as mc
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
 import colorsys
 
@@ -54,3 +55,11 @@ def adjust_lightness(color, amount=1.0):
         c = color
     c = colorsys.rgb_to_hls(*mc.to_rgb(c))
     return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
+
+def get_last_line_color():
+    lines = plt.gca().lines
+    try:
+        line = lines[-1]
+        return line._color
+    except IndexError:
+        return palettes["categorical"][0]
