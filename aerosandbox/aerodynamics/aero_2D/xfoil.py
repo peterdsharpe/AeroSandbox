@@ -215,10 +215,21 @@ class XFoil(ExplicitAnalysis):
                     cwd=directory,
                     stdout=None if self.verbose else subprocess.DEVNULL,
                     text=True,
-                    timeout=self.timeout
+                    timeout=self.timeout,
+                    check=True
                 )
             except subprocess.TimeoutExpired:
+                warnings.warn(
+                    "XFoil run timed out!\n"
+                    "If this was not expected, try increasing the `timeout` parameter when you create this XFoil instance.",
+                    stacklevel=2
+                )
+            except subprocess.CalledProcessError as e:
+                if e.returncode == 11:
+                    print("XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
+                          "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.")
                 pass
+
 
             ### Parse the polar
             columns = [
