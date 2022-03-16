@@ -44,7 +44,7 @@ def jorgensen_eta(fineness_ratio: float) -> float:
     Jorgensen, Leland Howard. "Prediction of Static Aerodynamic Characteristics for Slender Bodies
     Alone and with Lifting Surfaces to Very High Angles of Attack". NASA TR R-474. 1977.
 
-    Fits performed in /studies/JorgensenEtaFitting/
+    Fits performed in /studies/FuselageJorgensenEtaFitting/
 
     Args:
         fineness_ratio: The fineness ratio of the fuselage. (length / diameter)
