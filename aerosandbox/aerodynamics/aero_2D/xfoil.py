@@ -232,37 +232,35 @@ class XFoil(ExplicitAnalysis):
                           "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance.")
                 pass
 
-
             ### Parse the polar
-            columns = [
-                "alpha",
-                "CL",
-                "CD",
-                "CDp",
-                "CM",
-                "xtr_upper",
-                "xtr_lower"
-            ]
+            with open(directory / output_filename) as f:
+                lines = f.readlines()
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                try:
-                    output_data = np.genfromtxt(
-                        directory / output_filename,
-                        skip_header=12,
-                        usecols=np.arange(len(columns))
-                    ).reshape(-1, len(columns))
-                except OSError:  # File not found
-                    output_data = np.array([]).reshape(-1, len(columns))
+            title_line = lines[10]
+            columns = title_line.split()
 
-            has_valid_inputs = len(output_data) != 0
-
-            output_data_clean = {
-                k: output_data[:, index] if has_valid_inputs else np.array([])
-                for index, k in enumerate(columns)
+            output = {
+                column: []
+                for column in columns
             }
 
-            return output_data_clean
+            def str_to_float(s: str) -> float:
+                try:
+                    return float(s)
+                except ValueError:
+                    return np.NaN
+
+            for line in lines[12:]:
+                data = [str_to_float(entry) for entry in line.split()]
+                for i in range(len(columns)):
+                    output[columns[i]].append(data[i])
+
+            output = {
+                k: np.array(v, dtype=float)
+                for k, v in output.items()
+            }
+
+            return output
 
     def alpha(self,
               alpha: Union[float, np.ndarray],
