@@ -6,6 +6,7 @@ from aerosandbox.geometry import Airfoil
 from typing import Union, List, Dict
 import tempfile
 import warnings
+import os
 
 
 class XFoil(ExplicitAnalysis):
@@ -207,6 +208,12 @@ class XFoil(ExplicitAnalysis):
                 "quit"
             ]
 
+            # Remove an old output file, if one exists:
+            try:
+                os.remove(directory / output_filename)
+            except FileNotFoundError:
+                pass
+
             ### Execute
             try:
                 subprocess.run(
@@ -227,14 +234,25 @@ class XFoil(ExplicitAnalysis):
                 )
             except subprocess.CalledProcessError as e:
                 if e.returncode == 11:
-                    print("XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
+                    raise RuntimeError("XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
                           "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
                           "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance.")
-                pass
+                elif e.returncode == 8:
+                    raise RuntimeError(
+                        "XFoil returned a floating point exception. This is probably because you are trying to start\n"
+                        "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
+                        "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
+                        "your XFoil run at a less-aggressive operating point.")
+                else:
+                    raise e
 
             ### Parse the polar
-            with open(directory / output_filename) as f:
-                lines = f.readlines()
+            try:
+                with open(directory / output_filename) as f:
+                    lines = f.readlines()
+            except FileNotFoundError as e:
+                raise FileNotFoundError("It appears XFoil didn't produce an output file, probably because it crashed.")
+
 
             title_line = lines[10]
             columns = title_line.split()
