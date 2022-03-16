@@ -624,7 +624,8 @@ class AeroBuildup(ExplicitAnalysis):
         ##### Add in profile drag: viscous drag forces and wave drag forces
         ### Base Drag
         base_drag_coefficient = fuselage_base_drag_coefficient(mach=op_point.mach())
-        drag_base = base_drag_coefficient * fuselage.area_base() * q * np.abs(cos_generalized_alpha)
+        drag_base = base_drag_coefficient * fuselage.area_base() * q * cos_generalized_alpha ** 2
+        # One cosine from q dependency, one cosine from direction of drag force
 
         ### Skin friction drag
         C_f_forebody = aerolib.Cf_flat_plate(Re_L=Re)
