@@ -1,3 +1,4 @@
+import aerosandbox.numpy as np
 
 def critical_mach(fineness_ratio_nose: float) -> float:
     """
@@ -59,3 +60,35 @@ def jorgensen_eta(fineness_ratio: float) -> float:
         '2cen': -24.367562906887436
     }
     return 1 - p["1scl"] / (x - p["1cen"]) - (p["2scl"] / (x - p["2cen"])) ** 2
+
+def fuselage_base_drag_coefficient(mach: float) -> float:
+    """
+    A fit for the fuselage base drag coefficient of a cylindrical fuselage, as described in:
+
+    MIL-HDBK-762: DESIGN OF AERODYNAMICALLY STABILIZED FREE ROCKETS:
+        * Section 5-5.3.1 Body-of-Revolution Base Drag, Rocket Jet Plume-Off
+        * Figure 5-140: Effects of Mach Number and Reynolds Number on Base Pressure
+
+    Fits in /studies/FuselageBaseDragCoefficient
+
+    Args:
+        mach: Mach number [-]
+
+    Returns: Fuselage base drag coefficient
+
+    """
+
+    m = mach
+    p = {'a': 0.18024110740341143,
+     'center_sup': -0.21737019935624047,
+     'm_trans': 0.9985447737532848,
+     'pc_sub': 0.15922582283573747,
+     'pc_sup': 0.04698820458826384,
+     'scale_sup': 0.34978926411193456,
+     'trans_str': 9.999987483414937}
+
+    return np.blend(
+        p["trans_str"] * (m - p["m_trans"]),
+        p["pc_sup"] + p["a"] * np.exp(-(p["scale_sup"] * (m - p["center_sup"])) ** 2),
+        p["pc_sub"]
+    )
