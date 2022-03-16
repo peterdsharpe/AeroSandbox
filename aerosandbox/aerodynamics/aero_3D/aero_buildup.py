@@ -570,10 +570,14 @@ class AeroBuildup(ExplicitAnalysis):
             ##### Viscous Forces
 
             Re_n = sin_generalized_alpha * op_point.reynolds(reference_length=2 * mean_aerodynamic_radius)
+            M_n = sin_generalized_alpha * op_point.mach()
 
             C_d_n = np.where(
                 Re_n != 0,
-                aerolib.Cd_cylinder(Re_D=Re_n),  # Replace with 1.20 from Jorgensen Table 1 if not working well
+                aerolib.Cd_cylinder(
+                    Re_D=Re_n,
+                    mach=M_n
+                ),  # Replace with 1.20 from Jorgensen Table 1 if this isn't working well
                 0,
             )
 

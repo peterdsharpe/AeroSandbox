@@ -3,17 +3,27 @@ import aerosandbox.numpy as np
 
 def Cd_cylinder(
         Re_D: float,
+        mach: float = 0.,
+        include_mach_effects=True,
         subcritical_only=False
 ) -> float:
     """
-    Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number.
-    :param Re_D: Reynolds number, referenced to diameter
-    :param subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows. Useful, since
+    Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number and Mach.
+
+    Args:
+        Re_D: Reynolds number, referenced to diameter
+        mach: Mach number
+        include_mach_effects: If this is set False, it assumes Mach = 0, which simplifies the computation.
+        subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows. Useful, since
     this model is now convex and can be more well-behaved.
-    :return: Drag coefficient
+
+    Returns:
 
     # TODO rework this function to use tanh blending, which will mitigate overflows
+
     """
+
+    ##### Do the viscous part of the computation
     csigc = 5.5766722118597247
     csigh = 23.7460859935990563
     csub0 = -0.6989492360435040
@@ -28,7 +38,7 @@ def Cd_cylinder(
     x = np.log10(np.abs(Re_D) + 1e-16)
 
     if subcritical_only:
-        Cd = 10 ** (csub0 * x + csub1) + csub2 + csub3 * x
+        Cd_mach_0 = 10 ** (csub0 * x + csub1) + csub2 + csub3 * x
     else:
         log10_Cd = (
                 (np.log10(10 ** (csub0 * x + csub1) + csub2 + csub3 * x))
@@ -36,7 +46,30 @@ def Cd_cylinder(
                 + (csup0 + csupscl / csuph * np.log(np.exp(csuph * (csupc - x)) + 1))
                 * (1 / (1 + np.exp(-csigh * (x - csigc))))
         )
-        Cd = 10 ** log10_Cd
+        Cd_mach_0 = 10 ** log10_Cd
+
+    ##### Do the compressible part of the computation
+    if include_mach_effects:
+        m = mach
+        p = {'a_sub'    : 0.03458900259594298,
+             'a_sup'    : -0.7129528087049688,
+             'cd_sub'   : 1.163206940186374,
+             'cd_sup'   : 1.2899213533122527,
+             's_sub'    : 3.436601777569716,
+             's_sup'    : -1.37123096976983,
+             'trans'    : 1.022819211244295,
+             'trans_str': 19.017600596069848}
+
+        Cd_over_Cd_mach_0 = np.blend(
+            p["trans_str"] * (m - p["trans"]),
+            p["cd_sup"] + np.exp(p["a_sup"] + p["s_sup"] * (m - p["trans"])),
+            p["cd_sub"] + np.exp(p["a_sub"] + p["s_sub"] * (m - p["trans"]))
+        ) / 1.1940010047391572
+
+        Cd = Cd_mach_0 * Cd_over_Cd_mach_0
+
+    else:
+        Cd = Cd_mach_0
 
     return Cd
 
