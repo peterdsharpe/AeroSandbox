@@ -49,7 +49,8 @@ class XFoil(ExplicitAnalysis):
                  working_directory: str = None,
                  ):
         """
-        Interface to XFoil.
+        Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
+        MIT for a copy.)
 
         Args:
 
@@ -64,6 +65,11 @@ class XFoil(ExplicitAnalysis):
             xtr_upper: The upper-surface trip location [x/c]
 
             xtr_lower: The lower-surface trip location [x/c]
+
+            full_potential: If this is set True, it will turn full-potential mode on. Note that full-potential mode
+            is only available in XFoil v7.xx or higher. (Unless you have specifically gone through the trouble of
+            acquiring a copy of XFoil v7.xx you likely have v6.xx. Version 7.xx is not publicly distributed as of
+            2022; contact Mark Drela at MIT for a copy.)
 
             max_iter: How many iterations should we let XFoil do?
 
