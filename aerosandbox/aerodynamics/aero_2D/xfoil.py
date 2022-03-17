@@ -69,7 +69,8 @@ class XFoil(ExplicitAnalysis):
             full_potential: If this is set True, it will turn full-potential mode on. Note that full-potential mode
             is only available in XFoil v7.xx or higher. (Unless you have specifically gone through the trouble of
             acquiring a copy of XFoil v7.xx you likely have v6.xx. Version 7.xx is not publicly distributed as of
-            2022; contact Mark Drela at MIT for a copy.)
+            2022; contact Mark Drela at MIT for a copy.) Note that if you enable this flag with XFoil v6.xx,
+            you'll likely get an error (no output file generated).
 
             max_iter: How many iterations should we let XFoil do?
 
