@@ -259,7 +259,10 @@ class XFoil(ExplicitAnalysis):
                 with open(directory / output_filename) as f:
                     lines = f.readlines()
             except FileNotFoundError as e:
-                raise FileNotFoundError("It appears XFoil didn't produce an output file, probably because it crashed.")
+                raise FileNotFoundError(
+                    "It appears XFoil didn't produce an output file, probably because it crashed.\n"
+                    "Try running with `verbose=True` in the XFoil constructor to see what's going on."
+                )
 
             title_line = lines[10]
             columns = title_line.split()
