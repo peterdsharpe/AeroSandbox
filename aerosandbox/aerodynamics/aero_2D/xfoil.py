@@ -265,7 +265,7 @@ class XFoil(ExplicitAnalysis):
             try:
                 with open(directory / output_filename) as f:
                     lines = f.readlines()
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 raise FileNotFoundError(
                     "It appears XFoil didn't produce an output file, probably because it crashed.\n"
                     "Try running with `verbose=True` in the XFoil constructor to see what's going on."
@@ -326,7 +326,7 @@ class XFoil(ExplicitAnalysis):
 
         if np.length(alphas) > 1:
             if start_at is not None:
-                if start_at > np.min(alphas) and start_at < np.max(alphas):
+                if np.min(alphas) < start_at < np.max(alphas):
                     alphas = np.sort(alphas)
                     alphas_upper = alphas[alphas > start_at]
                     alphas_lower = alphas[alpha <= start_at][::-1]
