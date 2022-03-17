@@ -9,6 +9,7 @@ from scipy import interpolate
 import matplotlib.pyplot as plt
 from typing import Callable, Union, Any, Dict
 import json
+from pathlib import Path
 
 
 class Airfoil(Polygon):
@@ -774,7 +775,7 @@ class Airfoil(Polygon):
     #     pass  # TODO finish me
 
     def write_dat(self,
-                  filepath: str = None,
+                  filepath: Union[str, Path] = None,
                   include_name: bool = True,
                   ) -> str:
         """
