@@ -110,9 +110,6 @@ class XFoil(ExplicitAnalysis):
         self.timeout = timeout
         self.working_directory = working_directory
 
-        if np.length(self.airfoil.coordinates) > 401:  # If the airfoil coordinates exceed Fortran array allocation
-            self.xfoil_repanel = True
-
     def _default_keystrokes(self) -> List[str]:
         run_file_contents = []
 
@@ -234,9 +231,10 @@ class XFoil(ExplicitAnalysis):
                 )
             except subprocess.CalledProcessError as e:
                 if e.returncode == 11:
-                    raise RuntimeError("XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
-                          "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
-                          "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance.")
+                    raise RuntimeError(
+                        "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
+                        "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
+                        "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance.")
                 elif e.returncode == 8:
                     raise RuntimeError(
                         "XFoil returned a floating point exception. This is probably because you are trying to start\n"
