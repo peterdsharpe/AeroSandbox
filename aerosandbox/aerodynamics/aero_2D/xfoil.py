@@ -40,6 +40,7 @@ class XFoil(ExplicitAnalysis):
                  n_crit: float = 9.,
                  xtr_upper: float = 1.,
                  xtr_lower: float = 1.,
+                 full_potential: bool = False,
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
                  xfoil_repanel: bool = True,
@@ -103,6 +104,7 @@ class XFoil(ExplicitAnalysis):
         self.n_crit = n_crit
         self.xtr_upper = xtr_upper
         self.xtr_lower = xtr_lower
+        self.full_potential = full_potential
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
         self.xfoil_repanel = xfoil_repanel
@@ -143,6 +145,14 @@ class XFoil(ExplicitAnalysis):
         run_file_contents += [
             f"m {self.mach}",
         ]
+
+        if self.full_potential:
+            run_file_contents += [
+                "full",
+                "fpar",
+                f"i {self.max_iter}",
+                "",
+            ]
 
         # Handle iterations
         run_file_contents += [
@@ -250,7 +260,6 @@ class XFoil(ExplicitAnalysis):
                     lines = f.readlines()
             except FileNotFoundError as e:
                 raise FileNotFoundError("It appears XFoil didn't produce an output file, probably because it crashed.")
-
 
             title_line = lines[10]
             columns = title_line.split()
