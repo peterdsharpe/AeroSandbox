@@ -253,7 +253,7 @@ class XFoil(ExplicitAnalysis):
                         "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
                         "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
                         "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance.")
-                elif e.returncode == 8:
+                elif e.returncode == 8 or e.returncode == 136:
                     raise RuntimeError(
                         "XFoil returned a floating point exception. This is probably because you are trying to start\n"
                         "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
