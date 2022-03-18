@@ -161,8 +161,6 @@ class AVL(ExplicitAnalysis):
 
             # Designate an intermediate file for file I/O
             output_filename = "output.txt"
-            # with open(directory / output_filename, "w+") as f:
-            #     pass
 
             # Handle the airplane file
             airplane_file = "airplane.avl"
