@@ -3,6 +3,7 @@ import aerosandbox.numpy as np
 import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
+from aerosandbox.aerodynamics.aero_3D.avl import AVL
 from typing import Union, List, Dict
 import tempfile
 import warnings
@@ -323,7 +324,7 @@ class MSES(ExplicitAnalysis):
                     print(mplot_run.stdout)
                     print(mplot_run.stderr)
 
-                run_output = self.parse_mplot_output(mplot_run.stdout)
+                run_output = AVL.parse_unformatted_data_output(mplot_run.stdout)
 
                 # Merge runs_output and run_output
                 for k in keys:
@@ -340,114 +341,6 @@ class MSES(ExplicitAnalysis):
 
 
             return runs_output
-
-    @staticmethod
-    def parse_mplot_output(
-            s: str,
-            data_identifier=" = ",
-            cast_outputs_to_float=True,
-    ) -> Dict[str, float]:
-        """
-        Parses a (multiline) string of unformatted data into a nice and tidy dictionary.
-
-        The expected input string looks like what you might get as an output from AVL (or many other Drela codes),
-        which may list data in ragged order.
-
-        An example input `s` that you might want to parse could look like the following:
-
-        ```
-         Standard axis orientation,  X fwd, Z down
-
-         Run case:  -unnamed-
-
-          Alpha =   0.43348     pb/2V =  -0.00000     p'b/2V =  -0.00000
-          Beta  =   0.00000     qc/2V =   0.00000
-          Mach  =     0.003     rb/2V =  -0.00000     r'b/2V =  -0.00000
-
-          CXtot =  -0.02147     Cltot =   0.00000     Cl'tot =   0.00000
-          CYtot =   0.00000     Cmtot =   0.28149
-          CZtot =  -1.01474     Cntot =  -0.00000     Cn'tot =  -0.00000
-
-          CLtot =   1.01454
-          CDtot =   0.02915
-          CDvis =   0.00000     CDind = 0.0291513
-          CLff  =   1.00050     CDff  = 0.0297201    | Trefftz
-          CYff  =   0.00000         e =    0.9649    | Plane
-        ```
-
-        Here, this function will go through this string and extract each key-value pair, as denoted by the data
-        identifier (by default, " = "). It will pull the next whole word without spaces to the left as the key,
-        and it will pull the next whole word without spaces to the right as the value. Together, these will be
-        returned as a Dict.
-
-        So, the output for the input above would be:
-        {
-            'Alpha' : 0.43348,
-            'pb/2V' : -0.00000,
-            'p'b/2V' : -0.00000,
-            'Beta' : 0.00000,
-            # and so on...
-        }
-
-        Args:
-
-            s: The input string to identify. Can be multiline.
-
-            data_identifier: The triggering substring for a new key-value pair. By default, it's " = ",
-            which is convention in many output files from Mark Drela's codes. Be careful if you decide to change this
-            to "=", as you could pick up on heading separators ('=======') in Markdown-like files.
-
-            cast_outputs_to_float: If this boolean flag is set true, the values of the key-value pairs are cast to
-            floating-point numbers before returning (as opposed to the default type, string). If a value can't be
-            cast, a NaN is returned (guaranteeing that you can do floating-point math with the outputs in downstream
-            applications.)
-
-        Returns: A dictionary of key-value pairs, corresponding to the unformatted data in the input string.
-
-            Keys are strings, values are floats if `cast_outputs_to_float` is True, otherwise also strings.
-
-        """
-
-        items = {}
-
-        index = s.find(data_identifier)
-
-        while index != -1:  # While there are still data identifiers:
-
-            key = ""  # start with a blank key, which we will build up as we read
-
-            i = index - 1  # Starting from the left of the identifier
-            while s[i] == " " and i >= 0:
-                # First, skip any blanks
-                i -= 1
-            while s[i] != " " and i >= 0:
-                # Then, read the key in backwards order until you get to a blank
-                key = s[i] + key
-                i -= 1
-
-            value = ""  # start with a blank value, which we will build up as we read
-
-            i = index + len(data_identifier)  # Starting from the right of the identifier
-            while s[i] == " " and i <= len(s):
-                # First, skip any blanks
-                i += 1
-            while s[i] != " " and i <= len(s):
-                # Then, read the key in forward order until you get to a blank
-                value += s[i]
-                i += 1
-
-            if cast_outputs_to_float:
-                try:  # Try to convert the value into a float. If you can't, return a NaN
-                    value = float(value)
-                except:
-                    value = np.NaN
-
-            items[key] = value  # Assign the key-value pair to the output we're writing
-
-            s = s[index + len(data_identifier):]  # Trim the string by starting to read from the next point.
-            index = s.find(data_identifier)
-
-        return items
 
 
 if __name__ == '__main__':

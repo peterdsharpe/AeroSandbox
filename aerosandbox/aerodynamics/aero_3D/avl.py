@@ -63,7 +63,7 @@ class AVL(ExplicitAnalysis):
         WingXSec: dict(
             spanwise_resolution=12,
             spanwise_spacing="cosine",
-            cl_alpha_factor=None, # type: float
+            cl_alpha_factor=None,  # type: float
             drag_polar=dict(
                 CL1=0,
                 CD1=0,
@@ -140,23 +140,9 @@ class AVL(ExplicitAnalysis):
         self.ground_effect_height = ground_effect_height
 
     def run(self) -> Dict:
-        avl_results: Dict = self._run_avl()
-
-        if self.airplane.s_ref is not None:
-            q = self.op_point.dynamic_pressure()
-            S = self.airplane.s_ref
-            b = self.airplane.b_ref
-            c = self.airplane.c_ref
-
-            avl_results["L"] = q * S * avl_results["CL"]
-            avl_results["Y"] = q * S * avl_results["CY"]
-            avl_results["D"] = q * S * avl_results["CD"]
-            avl_results["l_b"] = q * S * b * avl_results["Cl"]
-            avl_results["m_b"] = q * S * c * avl_results["Cm"]
-            avl_results["n_b"] = q * S * b * avl_results["Cn"]
+        avl_results: Dict = self._run_avl()  # TODO remove
 
         return avl_results
-
 
     def _default_keystroke_file_contents(self) -> List[str]:
 
@@ -253,8 +239,8 @@ class AVL(ExplicitAnalysis):
 
             ### Execute
             subprocess.run(
-                command, # TODO use keystroke as input here
-                input = keystrokes,
+                command,  # TODO use keystroke as input here
+                input=keystrokes,
                 shell=True,
                 text=True,
                 cwd=directory,
@@ -266,61 +252,32 @@ class AVL(ExplicitAnalysis):
             with open(directory / output_filename, "r") as f:
                 output_data = f.read()
 
-            # Trim off the first few lines that contain name, # of panels, etc.
-            output_data = "\n".join(output_data.split("\n")[8:])
+            res = self.parse_unformatted_data_output(output_data, overwrite=False)
 
-            ### Iterate through the string to find all the keys and corresponding numeric values, based on where "=" appears.
-            keys = []
-            values = []
-            index = output_data.find("=")
+            ##### Clean up results
+            for key_to_lowerize in ["Alpha", "Beta", "Mach"]:
+                res[key_to_lowerize.lower()] = res.pop(key_to_lowerize)
 
-            while index != -1:
+                ##### Add in missing useful results
+                q = self.op_point.dynamic_pressure()
+                S = self.airplane.s_ref
+                b = self.airplane.b_ref
+                c = self.airplane.c_ref
 
-                # All keys contain no spaces except for "Clb Cnr / Clr Cnb" (spiral stability parameter)
-                potential_keys = output_data[:index].split()
-                if potential_keys[-1] == "Cnb" and len(potential_keys) >= 5:
-                    potential_key = " ".join(potential_keys[-5:])
-                    if potential_key == "Clb Cnr / Clr Cnb":
-                        key = potential_key
-                    else:
-                        key = potential_keys[-1]
-                else:
-                    key = potential_keys[-1]
+            for key in list(res.keys()):
+                if "tot" in key:
+                    res[key.replace("tot", "")] = res.pop(key)
 
-                keys.append(key)
-                output_data = output_data[index + 1:]
-                number = output_data[:12].split("\n")[0]
-                try:
-                    number = float(number)
-                except:
-                    number = np.nan
-                values.append(number)
-
-                index = output_data.find("=")
-
-            # Make key names consistent with AeroSandbox notation
-            keys_lowerize = ["Alpha", "Beta", "Mach"]
-            keys = [key.lower() if key in keys_lowerize else key for key in keys]
-            keys = [key.replace("tot", "") for key in keys]
-
-            if len(values) < 56:  # Sometimes the spiral mode term is inexplicably not displayed by AVL
-                raise RuntimeError(
-                    "AVL could not run for some reason!\n"
-                    "Investigate by turning on the `verbose` flag and looking at the output.\n"
-                    "(Common culprit: angular rates too high.)"
-                )
-
-            res = {
-                k: v
-                for k, v in zip(
-                    keys, values
-                )
-            }
-
-            ##### Add a few more outputs for ease of use
-            res["p"] = res["pb/2V"] * (2 * self.op_point.velocity / self.airplane.b_ref)
-            res["q"] = res["qc/2V"] * (2 * self.op_point.velocity / self.airplane.c_ref)
-            res["r"] = res["rb/2V"] * (2 * self.op_point.velocity / self.airplane.b_ref)
+            res["p"] = res["pb/2V"] * (2 * self.op_point.velocity / b)
+            res["q"] = res["qc/2V"] * (2 * self.op_point.velocity / c)
+            res["r"] = res["rb/2V"] * (2 * self.op_point.velocity / b)
+            res["L"] = q * S * res["CL"]
+            res["Y"] = q * S * res["CY"]
+            res["D"] = q * S * res["CD"]
+            res["l_b"] = q * S * b * res["Cl"]
+            res["m_b"] = q * S * c * res["Cm"]
+            res["n_b"] = q * S * b * res["Cn"]
+            res["Clb Cnr / Clr Cnb"] = res["Clb"] * res["Cnr"] / (res["Clr"] * res["Cnb"])
 
             return res
 
@@ -556,6 +513,138 @@ class AVL(ExplicitAnalysis):
                 f.write(string)
 
         return string
+
+    @staticmethod
+    def parse_unformatted_data_output(
+            s: str,
+            data_identifier: str = " = ",
+            cast_outputs_to_float: bool = True,
+            overwrite: bool = None
+    ) -> Dict[str, float]:
+        """
+        Parses a (multiline) string of unformatted data into a nice and tidy dictionary.
+
+        The expected input string looks like what you might get as an output from AVL (or many other Drela codes),
+        which may list data in ragged order.
+
+        An example input `s` that you might want to parse could look like the following:
+
+        ```
+         Standard axis orientation,  X fwd, Z down
+
+         Run case:  -unnamed-
+
+          Alpha =   0.43348     pb/2V =  -0.00000     p'b/2V =  -0.00000
+          Beta  =   0.00000     qc/2V =   0.00000
+          Mach  =     0.003     rb/2V =  -0.00000     r'b/2V =  -0.00000
+
+          CXtot =  -0.02147     Cltot =   0.00000     Cl'tot =   0.00000
+          CYtot =   0.00000     Cmtot =   0.28149
+          CZtot =  -1.01474     Cntot =  -0.00000     Cn'tot =  -0.00000
+
+          CLtot =   1.01454
+          CDtot =   0.02915
+          CDvis =   0.00000     CDind = 0.0291513
+          CLff  =   1.00050     CDff  = 0.0297201    | Trefftz
+          CYff  =   0.00000         e =    0.9649    | Plane
+        ```
+
+        Here, this function will go through this string and extract each key-value pair, as denoted by the data
+        identifier (by default, " = "). It will pull the next whole word without spaces to the left as the key,
+        and it will pull the next whole word without spaces to the right as the value. Together, these will be
+        returned as a Dict.
+
+        So, the output for the input above would be:
+        {
+            'Alpha' : 0.43348,
+            'pb/2V' : -0.00000,
+            'p'b/2V' : -0.00000,
+            'Beta' : 0.00000,
+            # and so on...
+        }
+
+        Args:
+
+            s: The input string to identify. Can be multiline.
+
+            data_identifier: The triggering substring for a new key-value pair. By default, it's " = ",
+            which is convention in many output files from Mark Drela's codes. Be careful if you decide to change this
+            to "=", as you could pick up on heading separators ('=======') in Markdown-like files.
+
+            cast_outputs_to_float: If this boolean flag is set true, the values of the key-value pairs are cast to
+            floating-point numbers before returning (as opposed to the default type, string). If a value can't be
+            cast, a NaN is returned (guaranteeing that you can do floating-point math with the outputs in downstream
+            applications.)
+
+            overwrite: Determines the behavior if you find a key that's already in the dictionary.
+
+                * By default, value is None. In this case, an error is raised.
+
+                * If you set it to True, the new value will overwrite the old one. Thus, your dictionary will have
+                the last matching value from the string.
+
+                * If you set it to False, the new value will be discarded. Thus, your dictionary will have the first
+                matching value from the string.
+
+        Returns: A dictionary of key-value pairs, corresponding to the unformatted data in the input string.
+
+            Keys are strings, values are floats if `cast_outputs_to_float` is True, otherwise also strings.
+
+        """
+
+        items = {}
+
+        index = s.find(data_identifier)
+
+        while index != -1:  # While there are still data identifiers:
+
+            key = ""  # start with a blank key, which we will build up as we read
+
+            i = index - 1  # Starting from the left of the identifier
+            while s[i] == " " and i >= 0:
+                # First, skip any blanks
+                i -= 1
+            while s[i] != " " and i >= 0:
+                # Then, read the key in backwards order until you get to a blank
+                key = s[i] + key
+                i -= 1
+
+            value = ""  # start with a blank value, which we will build up as we read
+
+            i = index + len(data_identifier)  # Starting from the right of the identifier
+            while s[i] == " " and i <= len(s):
+                # First, skip any blanks
+                i += 1
+            while s[i] != " " and i <= len(s):
+                # Then, read the key in forward order until you get to a blank
+                value += s[i]
+                i += 1
+
+            if cast_outputs_to_float:
+                try:  # Try to convert the value into a float. If you can't, return a NaN
+                    value = float(value)
+                except:
+                    value = np.NaN
+
+            if key in items.keys():  # If you already have this key
+                if overwrite is None:
+                    raise ValueError(
+                        f"Key \"{key}\" is being overwritten, and no behavior has been specified here (Default behavior is to error).\n"
+                        f"Check that the output file doesn't have a duplicate here.\n"
+                        f"Alternatively, set the `overwrite` parameter of this function to True or False (rather than the default None).",
+                    )
+                else:
+                    if overwrite:
+                        items[key] = value  # Assign (and overwrite) the key-value pair to the output we're writing
+                    else:
+                        pass
+            else:
+                items[key] = value  # Assign the key-value pair to the output we're writing
+
+            s = s[index + len(data_identifier):]  # Trim the string by starting to read from the next point.
+            index = s.find(data_identifier)
+
+        return items
 
 
 if __name__ == '__main__':
