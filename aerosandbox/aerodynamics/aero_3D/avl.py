@@ -226,8 +226,8 @@ class AVL(ExplicitAnalysis):
 
             # Designate an intermediate file for file I/O
             output_filename = "output.txt"
-            with open(directory / output_filename, "w+") as f:
-                pass
+            # with open(directory / output_filename, "w+") as f:
+            #     pass
 
             # Handle the airplane file
             airplane_file = "airplane.avl"
@@ -246,20 +246,19 @@ class AVL(ExplicitAnalysis):
                 "",
                 "quit"
             ]
-            keystroke_file = "keystroke_file.txt"
-            with open(directory / keystroke_file, "w+") as f:
-                f.write(
-                    "\n".join(keystroke_file_contents)
-                )
 
-            command = f'{self.avl_command} {airplane_file} < {keystroke_file}'
+            keystrokes = "\n".join(keystroke_file_contents)
+
+            command = f'{self.avl_command} {airplane_file}'
 
             ### Execute
-            subprocess.call(
-                command,
+            subprocess.run(
+                command, # TODO use keystroke as input here
+                input = keystrokes,
                 shell=True,
+                text=True,
                 cwd=directory,
-                stdout=None if self.verbose else subprocess.DEVNULL
+                stdout=None if self.verbose else subprocess.DEVNULL,
             )
 
             ##### Parse the output file
@@ -347,40 +346,6 @@ class AVL(ExplicitAnalysis):
             Removes leading and trailing whitespace from each line of a multi-line string.
             """
             return "\n".join([line.strip() for line in s.split("\n")])
-
-        # def print_control_surface(control_surface: ControlSurface,
-        #                           options_for_analysis: Dict[type, Dict[str, Any]]
-        #                           ) -> str:
-        #
-        #     if control_surface.trailing_edge:
-        #         hinge_point = control_surface.hinge_point
-        #     else:
-        #         hinge_point = -control_surface.hinge_point  # leading edge surfaces are defined with negative hinge points in AVL
-        #
-        #     if options_for_analysis["duplication_factor"] is None:
-        #         duplication_factor = 1.0 if control_surface.symmetric else -1.0
-        #     else:
-        #         duplication_factor = options_for_analysis["duplication_factor"]
-        #
-        #     string = clean(f"""
-        #     CONTROL
-        #     #Cname Cgain Xhinge HingeVec SgnDup
-        #     control{control_surface.id} {options_for_analysis['gain']} {hinge_point} {' '.join(str(x) for x in options_for_analysis['hinge_vector'])} {duplication_factor}
-        #     """)
-        #
-        #     return string
-        #
-        # def print_control_surface_deprecated(xsec: WingXSec,
-        #                                      id: int) -> str:
-        #
-        #     sign_duplication = 1.0 if xsec.control_surface_is_symmetric else -1.0
-        #     string = clean(f"""
-        #     CONTROL
-        #     #Cname Cgain Xhinge HingeVec SgnDup
-        #     control{id} 1.0 {xsec.control_surface_hinge_point} 0.0 0.0 0.0 {sign_duplication}
-        #     """)
-        #
-        #     return string
 
         airplane = self.airplane
 
