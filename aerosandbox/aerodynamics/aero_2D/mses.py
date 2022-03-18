@@ -79,8 +79,7 @@ class MSES(ExplicitAnalysis):
                  timeout_mses: Union[float, int, None] = 60,
                  timeout_mplot: Union[float, int, None] = 10,
                  working_directory: str = None,
-                 include_unconverged_runs: bool = False,
-                 reinitialize_mesh_after_unconverged_run: bool = True,
+                 behavior_after_unconverged_run: str = "reinitialize",
                  mset_alpha: float = 0,
                  mset_n: int = 141,
                  mset_e: float = 0.4,
@@ -172,8 +171,7 @@ class MSES(ExplicitAnalysis):
         self.timeout_mset = timeout_mset
         self.timeout_mplot = timeout_mplot
         self.working_directory = working_directory
-        self.include_unconverged_runs = include_unconverged_runs
-        self.reinitialize_mesh_after_unconverged_run = reinitialize_mesh_after_unconverged_run
+        self.behavior_after_unconverged_run = behavior_after_unconverged_run
         self.mset_alpha = mset_alpha
         self.mset_n = mset_n
         self.mset_e = mset_e
@@ -248,14 +246,12 @@ class MSES(ExplicitAnalysis):
                                        "Try either installing a typical X11 client, or install Xvfb, which is\n"
                                        "a virtual X11 server. More details in the AeroSandbox MSES docstring.")
 
-            keys = ['Ma', 'alpha', 'Re', 'Ncrit', 'CL', 'CD', 'CM', 'L/D', 'CDv', 'CDw', 'CDf', 'CDp', 'Gamma', 'Sigma',
-                    'x,y', 'Doubx', 'Douby', 'dCL/da', 'dCD/da', 'dCM/da', 'dCL/dM', 'dCD/dM', 'dCM/dM', 'Xtr']
-            runs_output = {k: [] for k in keys}
+            runs_output = {}
 
             for i, (alpha, mach, Re) in enumerate(zip(alphas, machs, Res)):
 
                 if self.verbosity >= 1:
-                    print(f"Solving alpha = {alpha:.2f}, mach = {mach:.2f}, Re = {Re:.2e} with MSES...")
+                    print(f"Solving alpha = {alpha:.3f}, mach = {mach:.4f}, Re = {Re:.3e} with MSES...")
 
                 with open(directory / "mses.case", "w+") as f:
                     f.write(dedent(f"""\
@@ -292,16 +288,20 @@ class MSES(ExplicitAnalysis):
 
                 converged = "Converged on tolerance" in mses_run.stdout
                 if not converged:
-                    if not self.include_unconverged_runs:
+                    if self.behavior_after_unconverged_run == "reinitialize":
                         if self.verbosity >= 1:
-                            print("Run did not converge; skipping.")
-                        if self.reinitialize_mesh_after_unconverged_run:
-                            try:
-                                next_alpha = alphas[i+1]
-                            except IndexError:
-                                break
-                            mset_run = mset(mset_alpha=next_alpha)
-                        continue
+                            print("Run did not converge. Reinitializing mesh and continuing...")
+                        try:
+                            next_alpha = alphas[i+1]
+                        except IndexError:
+                            break
+                        mset_run = mset(mset_alpha=next_alpha)
+                    elif self.behavior_after_unconverged_run == "terminate":
+                        if self.verbosity >= 1:
+                            print("Run did not converge. Skipping all subsequent runs...")
+                            break
+
+                    continue
 
                 mplot_keystrokes = dedent(f"""\
                         1
@@ -324,21 +324,28 @@ class MSES(ExplicitAnalysis):
                     print(mplot_run.stdout)
                     print(mplot_run.stderr)
 
-                run_output = AVL.parse_unformatted_data_output(mplot_run.stdout)
+                raw_output = mplot_run.stdout.\
+                    replace("top Xtr", "xtr_top").\
+                    replace("bot Xtr", "xtr_bot").\
+                    replace("at x,y", "x_ac")
+
+                run_output = AVL.parse_unformatted_data_output(raw_output)
 
                 # Merge runs_output and run_output
-                for k in keys:
+                for k in run_output.keys():
                     try:
                         runs_output[k].append(
                             run_output[k]
                         )
-                    except KeyError:
-                        runs_output[k].append(np.NaN)
+                    except KeyError: # List not created yet
+                        runs_output[k] = [run_output[k]]
 
             # Clean up the dictionary
             runs_output = {k: np.array(v) for k, v in runs_output.items()}
-            runs_output["mach"] = runs_output.pop("Ma")
-
+            try:
+                runs_output["mach"] = runs_output.pop("Ma")
+            except KeyError:
+                pass
 
             return runs_output
 
@@ -348,14 +355,28 @@ if __name__ == '__main__':
     from pprint import pprint
 
     ms = MSES(
-        airfoil=Airfoil("naca0012"),  # .repanel(n_points_per_side=30),
+        airfoil=Airfoil("rae2822"),  # .repanel(n_points_per_side=30),
         working_directory="/mnt/c/Users/peter/Downloads/msestest/",
-        max_iter=120,
-        verbosity=1
+        # max_iter=120,
+        verbosity=1,
+        behavior_after_unconverged_run="terminate",
+        mset_n=300,
+        max_iter=100,
         # verbose=False
     )
     res = ms.run(
-        mach=[0.5, 0.6, 0.7, 0.75, 0.8],
-        Re=1e6,
+        alpha=3,
+        mach=np.arange(0.55, 0.8, 0.005),
+        # Re=1e6,
     )
     pprint(res)
+
+    import matplotlib
+    matplotlib.use("WebAgg")
+
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+    fig, ax = plt.subplots()
+    plt.plot(res['mach'], res['CD'], ".-")
+    p.show_plot()
