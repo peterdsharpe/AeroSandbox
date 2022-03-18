@@ -139,60 +139,9 @@ class AVL(ExplicitAnalysis):
         self.ground_effect = ground_effect
         self.ground_effect_height = ground_effect_height
 
-    def run(self) -> Dict:
-        avl_results: Dict = self._run_avl()  # TODO remove
-
-        return avl_results
-
-    def _default_keystroke_file_contents(self) -> List[str]:
-
-        run_file_contents = []
-
-        # Disable graphics
-        run_file_contents += [
-            "plop",
-            "g",
-            "",
-        ]
-
-        # Enter oper mode
-        run_file_contents += [
-            "oper",
-        ]
-
-        # Set parameters
-        run_file_contents += [
-            "m",
-            f"mn {self.op_point.mach()}",
-            f"v {self.op_point.velocity}",
-            f"d {self.op_point.atmosphere.density()}",
-            "g 9.81",
-            ""
-        ]
-
-        # Set analysis state
-        p_bar = self.op_point.p * self.airplane.b_ref / (2 * self.op_point.velocity)
-        q_bar = self.op_point.q * self.airplane.c_ref / (2 * self.op_point.velocity)
-        r_bar = self.op_point.r * self.airplane.b_ref / (2 * self.op_point.velocity)
-
-        run_file_contents += [
-            f"a a {self.op_point.alpha}",
-            f"b b {self.op_point.beta}",
-            f"r r {p_bar}",
-            f"p p {q_bar}",
-            f"y y {r_bar}"
-        ]
-
-        # Set control surface deflections
-        run_file_contents += [
-            f"d1 d1 1"
-        ]
-
-        return run_file_contents
-
-    def _run_avl(self,
-                 run_command: str = None,
-                 ) -> Dict[str, np.ndarray]:
+    def run(self,
+            run_command: str = None,
+            ) -> Dict[str, float]:
         """
         Private function to run AVL.
 
@@ -280,6 +229,52 @@ class AVL(ExplicitAnalysis):
             res["Clb Cnr / Clr Cnb"] = res["Clb"] * res["Cnr"] / (res["Clr"] * res["Cnb"])
 
             return res
+
+    def _default_keystroke_file_contents(self) -> List[str]:
+
+        run_file_contents = []
+
+        # Disable graphics
+        run_file_contents += [
+            "plop",
+            "g",
+            "",
+        ]
+
+        # Enter oper mode
+        run_file_contents += [
+            "oper",
+        ]
+
+        # Set parameters
+        run_file_contents += [
+            "m",
+            f"mn {self.op_point.mach()}",
+            f"v {self.op_point.velocity}",
+            f"d {self.op_point.atmosphere.density()}",
+            "g 9.81",
+            ""
+        ]
+
+        # Set analysis state
+        p_bar = self.op_point.p * self.airplane.b_ref / (2 * self.op_point.velocity)
+        q_bar = self.op_point.q * self.airplane.c_ref / (2 * self.op_point.velocity)
+        r_bar = self.op_point.r * self.airplane.b_ref / (2 * self.op_point.velocity)
+
+        run_file_contents += [
+            f"a a {self.op_point.alpha}",
+            f"b b {self.op_point.beta}",
+            f"r r {p_bar}",
+            f"p p {q_bar}",
+            f"y y {r_bar}"
+        ]
+
+        # Set control surface deflections
+        run_file_contents += [
+            f"d1 d1 1"
+        ]
+
+        return run_file_contents
 
     def write_avl(self,
                   filepath: Union[Path, str] = None,
