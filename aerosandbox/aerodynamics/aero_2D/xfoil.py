@@ -236,6 +236,7 @@ class XFoil(ExplicitAnalysis):
                     cwd=directory,
                     stdout=None if self.verbose else subprocess.DEVNULL,
                     text=True,
+                    shell=True,
                     timeout=self.timeout,
                     check=True
                 )
