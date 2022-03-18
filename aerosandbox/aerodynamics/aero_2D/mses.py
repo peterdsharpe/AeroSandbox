@@ -344,8 +344,65 @@ class MSES(ExplicitAnalysis):
     @staticmethod
     def parse_mplot_output(
             s: str,
-            data_identifier=" = "
+            data_identifier=" = ",
+            cast_outputs_to_float=True,
     ) -> Dict[str, float]:
+        """
+        Parses a (multiline) string from AVL (or many other Drela codes), which may list data in ragged order:
+
+        An example input `s` that you might want to parse could look like:
+
+        ```
+         Standard axis orientation,  X fwd, Z down
+
+         Run case:  -unnamed-
+
+          Alpha =   0.43348     pb/2V =  -0.00000     p'b/2V =  -0.00000
+          Beta  =   0.00000     qc/2V =   0.00000
+          Mach  =     0.003     rb/2V =  -0.00000     r'b/2V =  -0.00000
+
+          CXtot =  -0.02147     Cltot =   0.00000     Cl'tot =   0.00000
+          CYtot =   0.00000     Cmtot =   0.28149
+          CZtot =  -1.01474     Cntot =  -0.00000     Cn'tot =  -0.00000
+
+          CLtot =   1.01454
+          CDtot =   0.02915
+          CDvis =   0.00000     CDind = 0.0291513
+          CLff  =   1.00050     CDff  = 0.0297201    | Trefftz
+          CYff  =   0.00000         e =    0.9649    | Plane
+        ```
+
+        Here, this function will go through this string and extract each key-value pair, as denoted by the data
+        identifier (by default, " = "). It will pull the next whole word without spaces to the left as the key,
+        and it will pull the next whole word without spaces to the right as the value. This will be returned as a Dict.
+
+        So, the output for the input above would be:
+        {
+            'Alpha' : 0.43348,
+            'pb/2V' : -0.00000,
+            'p'b/2V' : -0.00000,
+            'Beta' : 0.00000,
+            # and so on...
+        }
+
+        Args:
+
+            s: The input string to identify. Can be multiline.
+
+            data_identifier: The triggering substring for a new key-value pair. By default, it's " = ",
+            which is convention in many output files from Mark Drela's codes. Be careful if you decide to change this
+            to "=", as you could pick up on heading separators ('=======') in Markdown-like files.
+
+            cast_outputs_to_float: If this boolean flag is set true, the values of the key-value pairs are cast to
+            floating-point numbers before returning (as opposed to the default type, string). If a value can't be
+            cast, a NaN is returned (guaranteeing that you can do floating-point math with the outputs in downstream
+            applications.)
+
+        Returns: A dictionary of key-value pairs, corresponding to the unformatted data in the input string.
+
+            Keys are strings, values are floats if `cast_outputs_to_float` is True, otherwise also strings.
+
+        """
 
         items = {}
 
@@ -375,10 +432,11 @@ class MSES(ExplicitAnalysis):
                 value += s[i]
                 i += 1
 
-            try:  # Try to convert the value into a float. If you can't, return a NaN
-                value = float(value)
-            except:
-                value = np.NaN
+            if cast_outputs_to_float:
+                try:  # Try to convert the value into a float. If you can't, return a NaN
+                    value = float(value)
+                except:
+                    value = np.NaN
 
             items[key] = value  # Assign the key-value pair to the output we're writing
 
