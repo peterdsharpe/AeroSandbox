@@ -73,12 +73,13 @@ class MSES(ExplicitAnalysis):
                  mplot_command: str = "mplot",
                  use_xvfb: bool = None,
                  xvfb_command: str = "xvfb-run -a",
-                 verbosity: int = 0,  # TODO change
+                 verbosity: int = 1,
                  timeout_mset: Union[float, int, None] = 10,
                  timeout_mses: Union[float, int, None] = 60,
                  timeout_mplot: Union[float, int, None] = 10,
                  working_directory: str = None,
                  include_unconverged_runs: bool = False,
+                 reinitialize_mesh_after_unconverged_run: bool = True,
                  mset_alpha: float = 0,
                  mset_n: int = 141,
                  mset_e: float = 0.4,
@@ -171,6 +172,7 @@ class MSES(ExplicitAnalysis):
         self.timeout_mplot = timeout_mplot
         self.working_directory = working_directory
         self.include_unconverged_runs = include_unconverged_runs
+        self.reinitialize_mesh_after_unconverged_run = reinitialize_mesh_after_unconverged_run
         self.mset_alpha = mset_alpha
         self.mset_n = mset_n
         self.mset_e = mset_e
@@ -201,7 +203,8 @@ class MSES(ExplicitAnalysis):
             airfoil_file = "airfoil.dat"
             self.airfoil.write_dat(directory / airfoil_file)
 
-            mset_keystrokes = dedent(f"""\
+            def mset(mset_alpha):
+                mset_keystrokes = dedent(f"""\
                 15
                 case
                 
@@ -213,7 +216,7 @@ class MSES(ExplicitAnalysis):
                 x {self.mset_x}
                 
                 1
-                {alphas[0]}
+                {mset_alpha}
                 2
                 
                 3
@@ -221,11 +224,10 @@ class MSES(ExplicitAnalysis):
                 0
                 """)
 
-            if self.verbosity >= 1:
-                print("Generating mesh with MSES...")
+                if self.verbosity >= 1:
+                    print(f"Generating mesh at alpha = {mset_alpha} with MSES...")
 
-            try:
-                mset_run = subprocess.run(
+                return subprocess.run(
                     f'{self.xvfb_command} "{self.mset_command}" "{airfoil_file}"',
                     input=mset_keystrokes,
                     cwd=directory,
@@ -235,6 +237,8 @@ class MSES(ExplicitAnalysis):
                     check=True,
                     timeout=self.timeout_mset
                 )
+            try:
+                mset_run = mset(mset_alpha = alphas[0])
             except subprocess.CalledProcessError as e:
                 print(e.stdout)
                 print(e.stderr)
@@ -247,7 +251,7 @@ class MSES(ExplicitAnalysis):
                     'x,y', 'Doubx', 'Douby', 'dCL/da', 'dCD/da', 'dCM/da', 'dCL/dM', 'dCD/dM', 'dCM/dM', 'Xtr']
             runs_output = {k: [] for k in keys}
 
-            for alpha, mach, Re in zip(alphas, machs, Res):
+            for i, (alpha, mach, Re) in enumerate(zip(alphas, machs, Res)):
 
                 if self.verbosity >= 1:
                     print(f"Solving alpha = {alpha:.2f}, mach = {mach:.2f}, Re = {Re:.2e} with MSES...")
@@ -286,7 +290,18 @@ class MSES(ExplicitAnalysis):
                     print(mses_run.stderr)
 
                 converged = "Converged on tolerance" in mses_run.stdout
-                print(converged)
+                if not converged:
+                    if not self.include_unconverged_runs:
+                        if self.verbosity >= 1:
+                            print("Run did not converge; skipping.")
+                        if self.reinitialize_mesh_after_unconverged_run:
+                            try:
+                                next_alpha = alphas[i+1]
+                            except IndexError:
+                                break
+                            mset_run = mset(mset_alpha=next_alpha)
+                        continue
+
                 mplot_keystrokes = dedent(f"""\
                         1
                         12
@@ -385,7 +400,7 @@ if __name__ == '__main__':
         # verbose=False
     )
     res = ms.run(
-        mach=[0.5, 0.6, 0.7, 0.75, 0.8, 0.75],
+        mach=[0.5, 0.6, 0.7, 0.75, 0.8],
         Re=1e6,
     )
     pprint(res)
