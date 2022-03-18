@@ -348,9 +348,12 @@ class MSES(ExplicitAnalysis):
             cast_outputs_to_float=True,
     ) -> Dict[str, float]:
         """
-        Parses a (multiline) string from AVL (or many other Drela codes), which may list data in ragged order:
+        Parses a (multiline) string of unformatted data into a nice and tidy dictionary.
 
-        An example input `s` that you might want to parse could look like:
+        The expected input string looks like what you might get as an output from AVL (or many other Drela codes),
+        which may list data in ragged order.
+
+        An example input `s` that you might want to parse could look like the following:
 
         ```
          Standard axis orientation,  X fwd, Z down
@@ -374,7 +377,8 @@ class MSES(ExplicitAnalysis):
 
         Here, this function will go through this string and extract each key-value pair, as denoted by the data
         identifier (by default, " = "). It will pull the next whole word without spaces to the left as the key,
-        and it will pull the next whole word without spaces to the right as the value. This will be returned as a Dict.
+        and it will pull the next whole word without spaces to the right as the value. Together, these will be
+        returned as a Dict.
 
         So, the output for the input above would be:
         {
