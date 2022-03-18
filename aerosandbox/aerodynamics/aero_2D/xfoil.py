@@ -235,6 +235,7 @@ class XFoil(ExplicitAnalysis):
                     input="\n".join(keystrokes),
                     cwd=directory,
                     stdout=None if self.verbose else subprocess.DEVNULL,
+                    stderr=None if self.verbose else subprocess.DEVNULL,
                     text=True,
                     shell=True,
                     timeout=self.timeout,
