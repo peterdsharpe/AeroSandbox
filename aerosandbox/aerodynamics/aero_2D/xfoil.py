@@ -105,6 +105,9 @@ class XFoil(ExplicitAnalysis):
             somewhere local for debugging purposes.
 
         """
+        if mach >= 1:
+            raise ValueError("XFoil will terminate if a supersonic freestream Mach number is given.")
+
         self.airfoil = airfoil
         self.Re = Re
         self.mach = mach
