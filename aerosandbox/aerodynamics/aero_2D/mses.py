@@ -261,7 +261,7 @@ class MSES(ExplicitAnalysis):
                     4  2                             | ISMOM  IFFBC  [ DOUXin DOUYin SRCEin ]
                     {Re}  {self.n_crit}          | REYNin ACRIT [ KTRTYP ]
                     {self.xtr_lower}    {self.xtr_upper}                   | XTR1 XTR2
-                    0.990  1.2                       | MCRIT  MUCON
+                    0.990  1.0                       | MCRIT  MUCON
                     0    0                           | ISMOVE  ISPRES
                     0    0                           | NMODN   NPOSN
                     
