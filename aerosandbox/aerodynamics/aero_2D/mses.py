@@ -85,6 +85,8 @@ class MSES(ExplicitAnalysis):
                  mset_e: float = 0.4,
                  mset_io: int = 37,
                  mset_x: float = 0.850,
+                 mses_mcrit: float = 0.99,
+                 mses_mucon: float = -1.0,
                  ):
         """
         Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
@@ -177,6 +179,8 @@ class MSES(ExplicitAnalysis):
         self.mset_e = mset_e
         self.mset_io = mset_io
         self.mset_x = mset_x
+        self.mses_mcrit = mses_mcrit
+        self.mses_mucon = mses_mucon
 
     def run(self,
             alpha: Union[float, np.ndarray, List] = 0.,
@@ -206,7 +210,6 @@ class MSES(ExplicitAnalysis):
                 mset_keystrokes = dedent(f"""\
                 15
                 case
-                
                 7
                 n {self.mset_n}
                 e {self.mset_e}
@@ -258,10 +261,10 @@ class MSES(ExplicitAnalysis):
                     3  4  5  7
                     3  4  5  7
                     {mach}   0.0   {alpha} | MACHin  CLIFin  ALFAin
-                    4  2                             | ISMOM  IFFBC  [ DOUXin DOUYin SRCEin ]
+                    3  2                             | ISMOM  IFFBC  [ DOUXin DOUYin SRCEin ]
                     {Re}  {self.n_crit}          | REYNin ACRIT [ KTRTYP ]
                     {self.xtr_lower}    {self.xtr_upper}                   | XTR1 XTR2
-                    0.990  1.0                       | MCRIT  MUCON
+                    {self.mses_mcrit}  {self.mses_mucon}                      | MCRIT  MUCON
                     0    0                           | ISMOVE  ISPRES
                     0    0                           | NMODN   NPOSN
                     
@@ -342,10 +345,11 @@ class MSES(ExplicitAnalysis):
 
             # Clean up the dictionary
             runs_output = {k: np.array(v) for k, v in runs_output.items()}
-            try:
-                runs_output["mach"] = runs_output.pop("Ma")
-            except KeyError:
-                pass
+                # runs_output["mach"] = runs_output.pop("Ma")
+            runs_output = {
+                "mach": runs_output.pop("Ma"),
+                **runs_output
+            }
 
             return runs_output
 
