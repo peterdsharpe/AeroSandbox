@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
 from typing import Union, Callable
 from scipy.integrate import quad
@@ -25,45 +24,6 @@ from scipy.integrate import quad
 
 # If you run this file as is, the lift history of a flat plate pitching through a 
 # top hat gust will be computed.
-
-
-def main():
-    time = np.linspace(0, 10, 100)  # Time in seconds
-    wing_velocity = 2  # Wing horizontal velocity in m/s
-    chord = 2
-    reduced_time = calculate_reduced_time(time, wing_velocity, chord)  # Number of semi chords travelled
-
-    # Visualize the gust profiles as well as the pitch maneuvers
-    fig, ax1 = plt.subplots(dpi=300)
-    ln1 = ax1.plot(reduced_time, np.array([top_hat_gust(s) for s in reduced_time]), label="Top-Hat Gust", lw=3)
-    ln2 = ax1.plot(reduced_time, np.array([sine_squared_gust(s) for s in reduced_time]), label="Sine-Squared Gust",
-                   lw=3)
-    ax1.set_xlabel("Reduced time")
-    ax1.set_ylabel("Velocity (m/s)")
-    ax2 = ax1.twinx()
-    ln3 = ax2.plot(reduced_time, np.array([gaussian_pitch(s) for s in reduced_time]), label="Guassian Pitch", c="red",
-                   ls="--", lw=3)
-    ax2.set_ylabel("Angle of Attack, degrees")
-    lns = ln1 + ln2 + ln3
-    labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, loc="lower right")
-    plt.title("Gust and pitch example profiles")
-
-    total_lift = pitching_through_transverse_gust(reduced_time, top_hat_gust, wing_velocity, gaussian_pitch)
-    gust_lift = calculate_lift_due_to_transverse_gust(reduced_time, top_hat_gust, wing_velocity, gaussian_pitch)
-    pitch_lift = calculate_lift_due_to_pitching_profile(reduced_time, gaussian_pitch)
-    added_mass_lift = added_mass_due_to_pitching(reduced_time, gaussian_pitch)
-
-    # Visualize the different sources of lift
-    plt.figure(dpi=300)
-    plt.plot(reduced_time, total_lift, label="Total Lift", lw=2)
-    plt.plot(reduced_time, gust_lift, label="Gust Lift", lw=2)
-    plt.plot(reduced_time, pitch_lift, label="Pitching Lift", lw=2)
-    plt.plot(reduced_time, added_mass_lift, label="Added Mass Lift", lw=2)
-    plt.legend()
-    plt.xlabel("Reduced time")
-    plt.ylabel("$C_\ell$")
-    plt.title("Guassian Pitch Maneuver Through Top-Hat Gust")
 
 
 def calculate_reduced_time(
@@ -399,4 +359,43 @@ def linear_ramp_pitch(reduced_time: float) -> float:
 
 
 if __name__ == "__main__":
-    main()
+
+    import matplotlib.pyplot as plt
+
+
+    time = np.linspace(0, 10, 100)  # Time in seconds
+    wing_velocity = 2  # Wing horizontal velocity in m/s
+    chord = 2
+    reduced_time = calculate_reduced_time(time, wing_velocity, chord)  # Number of semi chords travelled
+
+    # Visualize the gust profiles as well as the pitch maneuvers
+    fig, ax1 = plt.subplots(dpi=300)
+    ln1 = ax1.plot(reduced_time, np.array([top_hat_gust(s) for s in reduced_time]), label="Top-Hat Gust", lw=3)
+    ln2 = ax1.plot(reduced_time, np.array([sine_squared_gust(s) for s in reduced_time]), label="Sine-Squared Gust",
+                   lw=3)
+    ax1.set_xlabel("Reduced time")
+    ax1.set_ylabel("Velocity (m/s)")
+    ax2 = ax1.twinx()
+    ln3 = ax2.plot(reduced_time, np.array([gaussian_pitch(s) for s in reduced_time]), label="Guassian Pitch", c="red",
+                   ls="--", lw=3)
+    ax2.set_ylabel("Angle of Attack, degrees")
+    lns = ln1 + ln2 + ln3
+    labs = [l.get_label() for l in lns]
+    ax2.legend(lns, labs, loc="lower right")
+    plt.title("Gust and pitch example profiles")
+
+    total_lift = pitching_through_transverse_gust(reduced_time, top_hat_gust, wing_velocity, gaussian_pitch)
+    gust_lift = calculate_lift_due_to_transverse_gust(reduced_time, top_hat_gust, wing_velocity, gaussian_pitch)
+    pitch_lift = calculate_lift_due_to_pitching_profile(reduced_time, gaussian_pitch)
+    added_mass_lift = added_mass_due_to_pitching(reduced_time, gaussian_pitch)
+
+    # Visualize the different sources of lift
+    plt.figure(dpi=300)
+    plt.plot(reduced_time, total_lift, label="Total Lift", lw=2)
+    plt.plot(reduced_time, gust_lift, label="Gust Lift", lw=2)
+    plt.plot(reduced_time, pitch_lift, label="Pitching Lift", lw=2)
+    plt.plot(reduced_time, added_mass_lift, label="Added Mass Lift", lw=2)
+    plt.legend()
+    plt.xlabel("Reduced time")
+    plt.ylabel("$C_\ell$")
+    plt.title("Guassian Pitch Maneuver Through Top-Hat Gust")
