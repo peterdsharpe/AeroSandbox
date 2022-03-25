@@ -140,7 +140,7 @@ def approximate_CD_wave(
                     f_a=20 * (0.1 / 80) ** (4 / 3),
                     f_b=1,
                     dfdx_a=0.1,
-                    dfdx_b=10
+                    dfdx_b=8
                 ),
                 np.where(
                     mach < 1.2,
@@ -150,7 +150,7 @@ def approximate_CD_wave(
                         x_b=1.2,
                         f_a=1,
                         f_b=1,
-                        dfdx_a=10,
+                        dfdx_a=8,
                         dfdx_b=-4
                     ),
                     np.blend(
@@ -166,7 +166,7 @@ def approximate_CD_wave(
 
 
 if __name__ == '__main__':
-    mc = 0.7
+    mc = 0.6
     drag = lambda mach: approximate_CD_wave(
         mach,
         mach_crit=mc,
@@ -188,6 +188,7 @@ if __name__ == '__main__':
     plt.ylabel("$C_{D, wave} / C_{D, wave, M=1.2}$")
     plt.plot(mach, drag)
     plt.ylim(-0.05, 1.5)
+
     # plt.ylim(-0.01, 0.05)
 
     plt.sca(ax[1])
@@ -204,7 +205,7 @@ if __name__ == '__main__':
 
     for a in ax:
         plt.sca(a)
-        plt.xlim(0.5, 1.5)
+        plt.xlim(0.6, 1.2)
         plt.xlabel("Mach [-]")
 
     p.show_plot()
