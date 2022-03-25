@@ -6,6 +6,7 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, 
 from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
     default_CM_function
 from aerosandbox.library.aerodynamics import transonic
+from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 from scipy import interpolate
 import matplotlib.pyplot as plt
 from typing import Callable, Union, Any, Dict
@@ -446,18 +447,60 @@ class Airfoil(Polygon):
 
                 CL = CL_mach_0 / prandtl_glauert_beta
 
+                t_over_c = self.max_thickness()
+
                 mach_crit = transonic.mach_crit_Korn(
                     # CL=CL_function(alpha, Re, mach, deflection),
                     CL=CL,
-                    t_over_c=self.max_thickness(),
+                    t_over_c=t_over_c,
                     sweep=0,
-                    kappa_A=0.87
+                    kappa_A=0.92
                 )
-                CD_wave = transonic.approximate_CD_wave(
-                    mach=mach,
-                    mach_crit=mach_crit,
-                    CD_wave_at_fully_supersonic=0.90 * self.max_thickness()
+                mach_dd = mach_crit + (0.1 / 80) ** (1 / 3)
+                CD_wave = np.where(
+                    mach < mach_crit,
+                    0,
+                    np.where(
+                        mach < mach_dd,
+                        20 * (mach - mach_crit) ** 4,
+                        np.where(
+                            mach < 0.97,
+                            cubic_hermite_patch(
+                                mach,
+                                x_a=mach_dd,
+                                x_b=0.97,
+                                f_a=20 * (0.1 / 80) ** (4 / 3),
+                                f_b=0.8 * t_over_c,
+                                dfdx_a=0.1,
+                                dfdx_b=0.8 * t_over_c * 8
+                            ),
+                            np.where(
+                                mach < 1.1,
+                                cubic_hermite_patch(
+                                    mach,
+                                    x_a=0.97,
+                                    x_b=1.1,
+                                    f_a=0.8 * t_over_c,
+                                    f_b=0.8 * t_over_c,
+                                    dfdx_a=0.8 * t_over_c * 8,
+                                    dfdx_b=-0.8 * t_over_c * 8,
+                                ),
+                                np.blend(
+                                    8 * 2 * (mach - 1.1) / (1.2 - 0.8),
+                                    0.8 * 0.8 * t_over_c,
+                                    1.2 * 0.8 * t_over_c,
+                                )
+                            )
+                        )
+                    )
                 )
+
+                # CD_wave = transonic.approximate_CD_wave(
+                #     mach=mach,
+                #     mach_crit=mach_crit,
+                #     CD_wave_at_fully_supersonic=0.90 * self.max_thickness()
+                # )
+
                 return 10 ** log10_CD_mach_0 + CD_wave
 
 
