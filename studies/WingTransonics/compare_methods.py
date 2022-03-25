@@ -71,8 +71,9 @@ for analysis, data in datas.items():
 # plt.ylim(bottom=0)
 # plt.xlim(0.7, 0.95)
 # plt.xlim(0.6, 0.8)
-# plt.ylim(0, 0.02)
-p.set_ticks(0.1, 0.02)
+# plt.ylim(0, 1)
+plt.ylim(0, 0.02)
+# p.set_ticks(0.1, 0.02)
 p.show_plot(
     "Comparison of Aerodynamic Analysis Methods\nRAE2822 Airfoil, AoA=1 deg, Re=6.5M",
     x,
