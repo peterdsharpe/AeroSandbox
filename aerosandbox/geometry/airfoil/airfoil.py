@@ -395,7 +395,13 @@ class Airfoil(Polygon):
                     0.3
                 )
 
-                return CL * asymmetric_shock_factor
+                cla_supersonic_ratio_factor = np.blend(
+                    10 * (mach - 1),
+                    4 / (2 * np.pi),
+                    1,
+                )
+
+                return CL * asymmetric_shock_factor * cla_supersonic_ratio_factor
 
             else:
                 return CL_mach_0
