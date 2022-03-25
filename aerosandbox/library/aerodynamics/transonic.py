@@ -60,7 +60,9 @@ def mach_crit_Korn(
     Returns:
 
     """
-    M_dd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - CL / (10 * np.cosd(sweep) ** 3)
+    smooth_abs_CL = np.softmax(CL, -CL, hardness=10)
+
+    M_dd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - smooth_abs_CL / (10 * np.cosd(sweep) ** 3)
     M_crit = M_dd - (0.1 / 80) ** (1 / 3)
     return M_crit
 
