@@ -142,7 +142,8 @@ class AeroBuildup(ExplicitAnalysis):
         CL_over_Cl = aerolib.CL_over_Cl(
             aspect_ratio=AR,
             mach=mach,
-            sweep=sweep
+            sweep=sweep,
+            Cl_is_compressible=True
         )
         oswalds_efficiency = aerolib.oswalds_efficiency(
             taper_ratio=wing.taper_ratio(),
