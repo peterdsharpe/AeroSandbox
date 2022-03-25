@@ -199,7 +199,7 @@ class AVL(ExplicitAnalysis):
             with open(directory / output_filename, "r") as f:
                 output_data = f.read()
 
-            res = self.parse_unformatted_data_output(output_data, overwrite=False)
+            res = self.parse_unformatted_data_output(output_data, data_identifier=" =", overwrite=False)
 
             ##### Clean up results
             for key_to_lowerize in ["Alpha", "Beta", "Mach"]:
@@ -224,7 +224,10 @@ class AVL(ExplicitAnalysis):
             res["l_b"] = q * S * b * res["Cl"]
             res["m_b"] = q * S * c * res["Cm"]
             res["n_b"] = q * S * b * res["Cn"]
-            res["Clb Cnr / Clr Cnb"] = res["Clb"] * res["Cnr"] / (res["Clr"] * res["Cnb"])
+            try:
+                res["Clb Cnr / Clr Cnb"] = res["Clb"] * res["Cnr"] / (res["Clr"] * res["Cnb"])
+            except ZeroDivisionError:
+                res["Clb Cnr / Clr Cnb"] = np.NaN
 
             return res
 
@@ -597,8 +600,8 @@ class AVL(ExplicitAnalysis):
             while s[i] == " " and i >= 0:
                 # First, skip any blanks
                 i -= 1
-            while s[i] != " " and i >= 0:
-                # Then, read the key in backwards order until you get to a blank
+            while s[i] != " " and s[i] != "\n" and i >= 0:
+                # Then, read the key in backwards order until you get to a blank or newline
                 key = s[i] + key
                 i -= 1
 
@@ -608,8 +611,8 @@ class AVL(ExplicitAnalysis):
             while s[i] == " " and i <= len(s):
                 # First, skip any blanks
                 i += 1
-            while s[i] != " " and i <= len(s):
-                # Then, read the key in forward order until you get to a blank
+            while s[i] != " " and s[i] != "\n" and i <= len(s):
+                # Then, read the key in forward order until you get to a blank or newline
                 value += s[i]
                 i += 1
 
