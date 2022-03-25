@@ -29,7 +29,7 @@ def get_data(filename):
 
     return data
 
-machs = np.linspace(0, 1.2, 500)
+machs = np.linspace(0, 1.3, 500)
 airfoil = asb.Airfoil("rae2822")
 airfoil.generate_polars(cache_filename="./cache/rae2822.json")
 aerobuildup_data={
