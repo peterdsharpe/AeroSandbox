@@ -427,10 +427,19 @@ class Airfoil(Polygon):
                     CL_separated,
                     CL_attached
                 )
+                prandtl_glauert_beta_squared_ideal = 1 - mach ** 2
+
+                prandtl_glauert_beta = np.softmax(
+                    prandtl_glauert_beta_squared_ideal,
+                    -prandtl_glauert_beta_squared_ideal,
+                    hardness=2.0  # Empirically tuned to data
+                ) ** 0.5
+
+                CL = CL_mach_0 / prandtl_glauert_beta
 
                 mach_crit = transonic.mach_crit_Korn(
                     # CL=CL_function(alpha, Re, mach, deflection),
-                    CL=CL_mach_0,
+                    CL=CL,
                     t_over_c=self.max_thickness(),
                     sweep=0,
                     kappa_A=0.87
@@ -440,7 +449,6 @@ class Airfoil(Polygon):
                     mach_crit=mach_crit,
                     CD_wave_at_fully_supersonic=0.90 * self.max_thickness()
                 )
-                print(CD_wave)
                 return 10 ** log10_CD_mach_0 + CD_wave
 
 
