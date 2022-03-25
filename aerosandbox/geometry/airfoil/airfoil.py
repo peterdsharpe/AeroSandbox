@@ -157,7 +157,8 @@ class Airfoil(Polygon):
                         cache_filename: str = None,
                         xfoil_kwargs: Dict[str, Any] = None,
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
-                        include_compressibility_effects: bool = True
+                        include_compressibility_effects: bool = True,
+                        transonic_buffet_lift_knockdown: float = 0.3
                         ) -> None:
         """
         Generates airfoil polars (CL, CD, CM functions) and assigns them in-place to this Airfoil's polar functions.
@@ -394,7 +395,7 @@ class Airfoil(Polygon):
                 buffet_factor = np.blend(
                     40 * (mach - mach_crit - (0.1 / 80) ** (1 / 3) - 0.06) * (mach - 1.1),
                     1,
-                    0.3
+                    transonic_buffet_lift_knockdown
                 )
 
                 ### Accounts for the fact that theoretical CL_alpha goes from 2 * pi (subsonic) to 4 (supersonic),
