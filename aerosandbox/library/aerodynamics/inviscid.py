@@ -108,8 +108,12 @@ def CL_over_Cl(
     :param sweep: Sweep angle [deg]
     :return:
     """
-    beta_squared = np.sqrt(
-        (1 - mach) ** 2 + 0.02
+    prandtl_glauert_beta_squared_ideal = 1 - mach ** 2
+
+    beta_squared = np.softmax(
+        prandtl_glauert_beta_squared_ideal,
+        -prandtl_glauert_beta_squared_ideal,
+        hardness=2.0 # Empirically tuned to data
     )
     # return aspect_ratio / (aspect_ratio + 2) # Equivalent to equation in Drela's FVA in incompressible, 2*pi*alpha limit.
     # return aspect_ratio / (2 + np.sqrt(4 + aspect_ratio ** 2))  # more theoretically sound at low aspect_ratio
