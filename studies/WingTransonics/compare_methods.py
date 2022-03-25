@@ -40,9 +40,9 @@ aerobuildup_data={
 }
 
 datas = {
-    "XFoil v6": get_data(data_folder / "xfoil6.csv"),
-    "MSES": get_data(data_folder / "mses.csv"),
-    "SU2": get_data(data_folder / "su2.csv"),
+    "XFoil v6 (P-G)": get_data(data_folder / "xfoil6.csv"),
+    "MSES (Euler + IBL)": get_data(data_folder / "mses.csv"),
+    "SU2 (RANS)": get_data(data_folder / "su2.csv"),
     "ASB AeroBuildup": aerobuildup_data,
 }
 
@@ -52,7 +52,7 @@ import aerosandbox.tools.pretty_plots as p
 fig, ax = plt.subplots()
 
 x = 'mach'
-y = 'CD'
+y = 'CM'
 
 for analysis, data in datas.items():
 
@@ -71,11 +71,15 @@ for analysis, data in datas.items():
 # plt.xlim(0.7, 0.95)
 # plt.xlim(0.6, 0.8)
 # plt.ylim(0, 1)
+
+# plt.xlim(0, 1)
 # plt.ylim(0, 0.02)
 
-p.set_ticks(0.1, 0.02)
+# p.set_ticks(0.1, 0.02)
+
 p.show_plot(
     "Comparison of Aerodynamic Analysis Methods\nRAE2822 Airfoil, AoA=1 deg, Re=6.5M",
     x,
-    y
+    y,
+    savefig="C:/Users/peter/Downloads/figs/moment.png"
 )

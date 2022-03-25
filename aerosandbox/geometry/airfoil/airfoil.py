@@ -514,11 +514,26 @@ class Airfoil(Polygon):
                 "ln_Re": np.log(Re),
             })
             CM_separated = CM_separated_interpolator(alpha)
-            return np.blend(
+
+            CM_mach_0 = np.blend(
                 separation_parameter(alpha, Re),
                 CM_separated,
                 CM_attached
             )
+            if include_compressibility_effects:
+                prandtl_glauert_beta_squared_ideal = 1 - mach ** 2
+
+                prandtl_glauert_beta = np.softmax(
+                    prandtl_glauert_beta_squared_ideal,
+                    -prandtl_glauert_beta_squared_ideal,
+                    hardness=2.0  # Empirically tuned to data
+                ) ** 0.5
+
+                CM = CM_mach_0 / prandtl_glauert_beta
+
+                return CM
+            else:
+                return CM_mach_0
 
         self.CL_function = CL_function
         self.CD_function = CD_function
