@@ -1,8 +1,7 @@
 import aerosandbox.numpy as _np
 from typing import Tuple, Union
 
-
-def softmax(*args, hardness=1):
+def softmax(*args, hardness: float=1.0):
     """
     An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
 
@@ -19,7 +18,7 @@ def softmax(*args, hardness=1):
     Returns:
         Soft maximum of the supplied values.
     """
-    if hardness <= 0:
+    if _np.any(hardness <= 0):
         raise ValueError("The value of `hardness` must be positive.")
 
     if len(args) <= 1:
