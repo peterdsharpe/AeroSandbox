@@ -41,6 +41,30 @@ def sears_haack_drag_from_volume(
     return CDA
 
 
+def mach_crit_Korn(
+        CL,
+        t_over_c,
+        sweep=0,
+        kappa_A=0.95
+):
+    """
+        Wave drag_force coefficient prediction using the low-fidelity Korn Equation method;
+    derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
+
+    Args:
+        CL: Sectional lift coefficient
+        t_over_c: thickness-to-chord ratio
+        sweep: sweep angle, in degrees
+        kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
+
+    Returns:
+
+    """
+    M_dd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - CL / (10 * np.cosd(sweep) ** 3)
+    M_crit = M_dd - (0.1 / 80) ** (1 / 3)
+    return M_crit
+
+
 def approximate_CD_wave(
         mach,
         mach_crit,
