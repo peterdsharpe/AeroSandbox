@@ -389,19 +389,22 @@ class Airfoil(Polygon):
                     kappa_A=0.95
                 )
 
-                asymmetric_shock_factor = np.blend(
-                    30 * (mach - mach_crit - (0.1 / 80) ** (1 / 3) - 0.04) * (mach - 1.2),
+                ### Accounts approximately for the lift drop due to buffet.
+                buffet_factor = np.blend(
+                    40 * (mach - mach_crit - (0.1 / 80) ** (1 / 3) - 0.06) * (mach - 1.1),
                     1,
                     0.3
                 )
 
+                ### Accounts for the fact that theoretical CL_alpha goes from 2 * pi (subsonic) to 4 (supersonic),
+                # following linearized supersonic flow on a thin airfoil.
                 cla_supersonic_ratio_factor = np.blend(
                     10 * (mach - 1),
                     4 / (2 * np.pi),
                     1,
                 )
 
-                return CL * asymmetric_shock_factor * cla_supersonic_ratio_factor
+                return CL * buffet_factor * cla_supersonic_ratio_factor
 
             else:
                 return CL_mach_0
