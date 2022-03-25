@@ -137,6 +137,7 @@ class AeroBuildup(ExplicitAnalysis):
         sweep = wing.mean_sweep_angle()
         AR = wing.aspect_ratio()
         mach = op_point.mach()
+        mach_normal = mach * np.cosd(sweep)
         q = op_point.dynamic_pressure()
         CL_over_Cl = aerolib.CL_over_Cl(
             aspect_ratio=AR,
@@ -221,34 +222,34 @@ class AeroBuildup(ExplicitAnalysis):
                         "AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
 
             ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
-            xsec_a_Cl_incompressible = xsec_a.airfoil.CL_function(
+            xsec_a_Cl = xsec_a.airfoil.CL_function(
                 alpha=sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_a.chord),
-                mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
+                mach=mach_normal,
                 deflection=get_deflection(xsec_a)
             )
-            xsec_b_Cl_incompressible = xsec_b.airfoil.CL_function(
+            xsec_b_Cl = xsec_b.airfoil.CL_function(
                 alpha=sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_b.chord),
-                mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
+                mach=mach_normal,
                 deflection=get_deflection(xsec_b)
             )
             sect_CL = (
-                              xsec_a_Cl_incompressible * a_weight +
-                              xsec_b_Cl_incompressible * b_weight
+                              xsec_a_Cl * a_weight +
+                              xsec_b_Cl * b_weight
                       ) * CL_over_Cl
 
             ##### Compute sectional drag at cross sections using lookup functions. Merge them linearly to get section CD.
             xsec_a_Cd_profile = xsec_a.airfoil.CD_function(
                 alpha=sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_a.chord),
-                mach=mach,
+                mach=mach_normal,
                 deflection=get_deflection(xsec_a)
             )
             xsec_b_Cd_profile = xsec_b.airfoil.CD_function(
                 alpha=sect_alpha_generalized,
                 Re=op_point.reynolds(xsec_b.chord),
-                mach=mach,
+                mach=mach_normal,
                 deflection=get_deflection(xsec_b)
             )
             sect_CDp = (
@@ -366,34 +367,34 @@ class AeroBuildup(ExplicitAnalysis):
                             "AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
 
                 ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
-                sym_xsec_a_Cl_incompressible = xsec_a.airfoil.CL_function(
+                sym_xsec_a_Cl = xsec_a.airfoil.CL_function(
                     alpha=sym_sect_alpha_generalized,
                     Re=op_point.reynolds(xsec_a.chord),
-                    mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
+                    mach=mach_normal,  # Note: this is correct, mach correction happens in 2D -> 3D step
                     deflection=get_deflection(xsec_a)
                 )
-                sym_xsec_b_Cl_incompressible = xsec_b.airfoil.CL_function(
+                sym_xsec_b_Cl = xsec_b.airfoil.CL_function(
                     alpha=sym_sect_alpha_generalized,
                     Re=op_point.reynolds(xsec_b.chord),
-                    mach=0,  # Note: this is correct, mach correction happens in 2D -> 3D step
+                    mach=mach_normal,
                     deflection=get_deflection(xsec_b)
                 )
                 sym_sect_CL = (
-                                      sym_xsec_a_Cl_incompressible * a_weight +
-                                      sym_xsec_b_Cl_incompressible * b_weight
+                                      sym_xsec_a_Cl * a_weight +
+                                      sym_xsec_b_Cl * b_weight
                               ) * CL_over_Cl
 
                 ##### Compute sectional drag at cross sections using lookup functions. Merge them linearly to get section CD.
                 sym_xsec_a_Cd_profile = xsec_a.airfoil.CD_function(
                     alpha=sym_sect_alpha_generalized,
                     Re=op_point.reynolds(xsec_a.chord),
-                    mach=mach,
+                    mach=mach_normal,
                     deflection=get_deflection(xsec_a)
                 )
                 sym_xsec_b_Cd_profile = xsec_b.airfoil.CD_function(
                     alpha=sym_sect_alpha_generalized,
                     Re=op_point.reynolds(xsec_b.chord),
-                    mach=mach,
+                    mach=mach_normal,
                     deflection=get_deflection(xsec_b)
                 )
                 sym_sect_CDp = (
