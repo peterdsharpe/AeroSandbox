@@ -5,6 +5,7 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, 
     get_kulfan_coordinates, get_file_coordinates
 from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
     default_CM_function
+from aerosandbox.library.aerodynamics import transonic
 from scipy import interpolate
 import matplotlib.pyplot as plt
 from typing import Callable, Union, Any, Dict
@@ -155,6 +156,7 @@ class Airfoil(Polygon):
                         cache_filename: str = None,
                         xfoil_kwargs: Dict[str, Any] = None,
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
+                        include_compressibility_effects: bool = True
                         ) -> None:
         """
         Generates airfoil polars (CL, CD, CM functions) and assigns them in-place to this Airfoil's polar functions.
@@ -181,6 +183,10 @@ class Airfoil(Polygon):
             unstructured_interpolated_model_kwargs: Keyword arguments to pass into the UnstructuredInterpolatedModels
             that contain the polars themselves. See the aerosandbox.UnstructuredInterpolatedModel constructor for
             options.
+
+            include_compressibility_effects: Includes compressibility effects in the polars, such as wave drag,
+            mach tuck, CL effects across normal shocks. Note that accuracy here is dubious in the transonic regime
+            and above - you should really specify your own CL/CD/CM models
 
         Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
         polars.
@@ -358,11 +364,41 @@ class Airfoil(Polygon):
                 "ln_Re": np.log(Re),
             })
             CL_separated = CL_separated_interpolator(alpha)
-            return np.blend(
+
+            CL_mach_0 = np.blend(
                 separation_parameter(alpha, Re),
                 CL_separated,
                 CL_attached
             )
+
+            if include_compressibility_effects:
+                prandtl_glauert_beta_squared_ideal = 1 - mach ** 2
+
+                prandtl_glauert_beta = np.softmax(
+                    prandtl_glauert_beta_squared_ideal,
+                    -prandtl_glauert_beta_squared_ideal,
+                    hardness=2.0  # Empirically tuned to data
+                ) ** 0.5
+
+                CL = CL_mach_0 / prandtl_glauert_beta
+
+                mach_crit = transonic.mach_crit_Korn(
+                    CL=CL,
+                    t_over_c=self.max_thickness(),
+                    sweep=0,
+                    kappa_A=0.95
+                )
+
+                asymmetric_shock_factor = np.blend(
+                    30 * (mach - mach_crit - (0.1 / 80) ** (1 / 3) - 0.04) * (mach - 1.2),
+                    1,
+                    0.3
+                )
+
+                return CL * asymmetric_shock_factor
+
+            else:
+                return CL_mach_0
 
         def CD_function(alpha, Re, mach=0, deflection=0):
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
@@ -371,11 +407,45 @@ class Airfoil(Polygon):
                 "ln_Re": np.log(Re),
             })
             log10_CD_separated = log10_CD_separated_interpolator(alpha)
-            return 10 ** np.blend(
+
+            log10_CD_mach_0 = np.blend(
                 separation_parameter(alpha, Re),
                 log10_CD_separated,
                 log10_CD_attached,
             )
+
+            if include_compressibility_effects:
+
+                CL_attached = CL_attached_interpolator({
+                    "alpha": alpha,
+                    "ln_Re": np.log(Re),
+                })
+                CL_separated = CL_separated_interpolator(alpha)
+
+                CL_mach_0 = np.blend(
+                    separation_parameter(alpha, Re),
+                    CL_separated,
+                    CL_attached
+                )
+
+                mach_crit = transonic.mach_crit_Korn(
+                    # CL=CL_function(alpha, Re, mach, deflection),
+                    CL=CL_mach_0,
+                    t_over_c=self.max_thickness(),
+                    sweep=0,
+                    kappa_A=0.87
+                )
+                CD_wave = transonic.approximate_CD_wave(
+                    mach=mach,
+                    mach_crit=mach_crit,
+                    CD_wave_at_fully_supersonic=0.90 * self.max_thickness()
+                )
+                print(CD_wave)
+                return 10 ** log10_CD_mach_0 + CD_wave
+
+
+            else:
+                return 10 ** log10_CD_mach_0
 
         def CM_function(alpha, Re, mach=0, deflection=0):
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
