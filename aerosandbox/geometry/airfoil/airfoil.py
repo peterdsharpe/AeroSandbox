@@ -158,7 +158,8 @@ class Airfoil(Polygon):
                         xfoil_kwargs: Dict[str, Any] = None,
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
                         include_compressibility_effects: bool = True,
-                        transonic_buffet_lift_knockdown: float = 0.3
+                        transonic_buffet_lift_knockdown: float = 0.3,
+                        make_symmetric_polars: bool = False,
                         ) -> None:
         """
         Generates airfoil polars (CL, CD, CM functions) and assigns them in-place to this Airfoil's polar functions.
@@ -265,6 +266,14 @@ class Airfoil(Polygon):
                 )
                 for k in run_datas[0].keys()
             }
+
+            if make_symmetric_polars: # If the airfoil is known to be symmetric, duplicate all data across alpha.
+                keys_symmetric_across_alpha = ['CD', 'CDp', 'Re']
+
+                data = {
+                    k: np.concatenate([v, v if k in keys_symmetric_across_alpha else -v])
+                    for k, v in data.items()
+                }
 
             if cache_filename is not None:  # Cache the accumulated data for later use, if it doesn't already exist.
                 with open(cache_filename, "w+") as f:
