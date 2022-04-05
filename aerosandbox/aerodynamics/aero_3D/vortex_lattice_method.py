@@ -331,10 +331,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if self.verbose:
             print("Drawing...")
 
-        if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
-            print("WARNING: This method should only be used after a solution has been found!\n"
-                  "Running anyway for debugging purposes - this is likely to not work...")
-
         # Do substitutions
         get = lambda x: self.opti.debug.value(x)
         front_left_vertices = get(self.front_left_vertices)
