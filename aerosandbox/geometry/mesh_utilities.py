@@ -51,11 +51,11 @@ def stack_meshes(
 
 
 def convert_mesh_to_polydata_format(
-        points,
-        faces
+        points: np.ndarray,
+        faces: np.ndarray
 ):
     """
-    Pyvista uses a slightly different convention for the standard (points, faces) format as described above. They
+    PyVista uses a slightly different convention for the standard (points, faces) format as described above. They
     give `faces` as a single 1D vector of roughly length (M*3), or (M*4) in the case of quadrilateral meshing.
     Basically, the mesh displayer goes down the `faces` array, and when it sees a number N, it interprets that as the
     number of vertices in the following face. Then, the next N entries are interpreted as integer references to the
@@ -79,3 +79,4 @@ def convert_mesh_to_polydata_format(
     faces = np.array(faces)
     faces = np.reshape(faces, -1)
     return points, faces
+
