@@ -618,9 +618,9 @@ class Wing(AeroSandboxObject):
             for j in range(num_j):
                 add_face(
                     index_of(i, j),
-                    index_of(i + 1, j),
-                    index_of(i + 1, j + 1),
                     index_of(i, j + 1),
+                    index_of(i + 1, j + 1),
+                    index_of(i + 1, j),
                 )
 
         faces = np.array(faces)
