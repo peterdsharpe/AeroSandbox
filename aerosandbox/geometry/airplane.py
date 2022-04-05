@@ -213,7 +213,7 @@ class Airplane(AeroSandboxObject):
             return fig.draw(**show_kwargs)
         elif backend == "pyvista":
 
-            points, faces = self.mesh_body(method="quad")
+            points, faces = self.mesh_body(method="quad", thin_wings=thin_wings)
 
             import pyvista as pv
             fig = pv.PolyData(
@@ -229,7 +229,7 @@ class Airplane(AeroSandboxObject):
             return fig
         elif backend == "trimesh":
 
-            points, faces = self.mesh_body(method="tri")
+            points, faces = self.mesh_body(method="tri", thin_wings=thin_wings)
 
             import trimesh as tri
             fig = tri.Trimesh(points, faces)
