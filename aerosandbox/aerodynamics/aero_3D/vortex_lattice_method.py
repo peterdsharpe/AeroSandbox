@@ -145,6 +145,11 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 freestream_velocities[:, 2] * normal_directions[:, 2]
         )
 
+        ### Save things to the instance for later access
+        self.steady_freestream_velocity = steady_freestream_velocity
+        self.steady_freestream_direction = steady_freestream_direction
+        self.freestream_velocities = freestream_velocities
+
         ##### Setup Geometry
         ### Calculate AIC matrix
         if self.verbose:
@@ -185,34 +190,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if self.verbose:
             print("Calculating forces on each panel...")
         # Calculate the induced velocity at the center of each bound leg
-        u_centers_induced, v_centers_induced, w_centers_induced = calculate_induced_velocity_horseshoe(
-            x_field=tall(vortex_centers[:, 0]),
-            y_field=tall(vortex_centers[:, 1]),
-            z_field=tall(vortex_centers[:, 2]),
-            x_left=wide(left_vortex_vertices[:, 0]),
-            y_left=wide(left_vortex_vertices[:, 1]),
-            z_left=wide(left_vortex_vertices[:, 2]),
-            x_right=wide(right_vortex_vertices[:, 0]),
-            y_right=wide(right_vortex_vertices[:, 1]),
-            z_right=wide(right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=steady_freestream_direction,
-            gamma=wide(self.vortex_strengths),
-        )
-        u_centers_induced = np.sum(u_centers_induced, axis=1)
-        v_centers_induced = np.sum(v_centers_induced, axis=1)
-        w_centers_induced = np.sum(w_centers_induced, axis=1)
-
-        u_centers = u_centers_induced + freestream_velocities[:, 0]
-        v_centers = v_centers_induced + freestream_velocities[:, 1]
-        w_centers = w_centers_induced + freestream_velocities[:, 2]
+        V_centers = self.get_velocity_at_points(vortex_centers)
 
         # Calculate forces_inviscid_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES,
         # not WIND AXES or BODY AXES.
-        Vi_cross_li = np.stack((
-            v_centers * vortex_bound_leg[:, 2] - w_centers * vortex_bound_leg[:, 1],
-            w_centers * vortex_bound_leg[:, 0] - u_centers * vortex_bound_leg[:, 2],
-            u_centers * vortex_bound_leg[:, 1] - v_centers * vortex_bound_leg[:, 0],
-        ), axis=1)
+        Vi_cross_li = np.cross(V_centers, vortex_bound_leg, axis=1)
+
         forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
         moments_geometry = np.cross(
             vortex_centers - wide(self.airplane.xyz_ref),
@@ -289,7 +272,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(self.right_vortex_vertices[:, 0]),
             y_right=wide(self.right_vortex_vertices[:, 1]),
             z_right=wide(self.right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=self.op_point.compute_freestream_velocity_geometry_axes(),
+            trailing_vortex_direction=self.steady_freestream_direction,
             gamma=wide(self.vortex_strengths),
         )
         u_induced = np.sum(u_induced, axis=1)
@@ -314,9 +297,13 @@ class VortexLatticeMethod(ExplicitAnalysis):
         """
         V_induced = self.get_induced_velocity_at_points(points)
 
-        freestream = self.op_point.compute_freestream_velocity_geometry_axes()
+        rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
+            points
+        )
 
-        V = V_induced + wide(freestream)
+        freestream_velocities = self.steady_freestream_velocity + rotation_freestream_velocities
+
+        V = V_induced + freestream_velocities
         return V
 
     def calculate_streamlines(self,
