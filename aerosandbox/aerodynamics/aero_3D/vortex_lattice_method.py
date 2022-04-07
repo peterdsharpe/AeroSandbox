@@ -79,6 +79,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         back_left_vertices = []
         back_right_vertices = []
         front_right_vertices = []
+        is_trailing_edge = []
 
         for wing in self.airplane.wings:
             points, faces = wing.mesh_thin_surface(
@@ -93,11 +94,15 @@ class VortexLatticeMethod(ExplicitAnalysis):
             back_left_vertices.append(points[faces[:, 1], :])
             back_right_vertices.append(points[faces[:, 2], :])
             front_right_vertices.append(points[faces[:, 3], :])
+            is_trailing_edge.append(
+                (np.arange(len(faces)) + 1) % self.chordwise_resolution == 0
+            )
 
         front_left_vertices = np.concatenate(front_left_vertices)
         back_left_vertices = np.concatenate(back_left_vertices)
         back_right_vertices = np.concatenate(back_right_vertices)
         front_right_vertices = np.concatenate(front_right_vertices)
+        is_trailing_edge = np.concatenate(is_trailing_edge)
 
         ### Compute panel statistics
         diag1 = front_right_vertices - back_left_vertices
@@ -122,6 +127,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
+        self.is_trailing_edge=is_trailing_edge
         self.left_vortex_vertices = left_vortex_vertices
         self.right_vortex_vertices = right_vortex_vertices
         self.vortex_centers = vortex_centers
@@ -312,11 +318,23 @@ class VortexLatticeMethod(ExplicitAnalysis):
                               seed_points: np.ndarray = None,  # will be auto-calculated if not specified
                               n_steps=100,  # minimum of 2
                               length=None  # will be auto-calculated if not specified
-                              ):
+                              ) -> None:
         if length is None:
             length = self.airplane.c_ref * 5
         if seed_points is None:
-            seed_points = (self.back_left_vertices + self.back_right_vertices) / 2
+            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge]
+            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge]
+            N_streamlines_target = 100
+            seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
+
+            nondim_node_locations = np.linspace(0, 1, seed_points_per_panel + 1)
+            nondim_seed_locations = (nondim_node_locations[1:] + nondim_node_locations[:-1]) / 2
+
+
+            seed_points = np.concatenate([
+                x * left_TE_vertices + (1-x) * right_TE_vertices
+                for x in nondim_seed_locations
+            ])
 
         # # Resolution
         # length_per_step = length / n_steps
@@ -356,6 +374,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def draw(self,
              c: np.ndarray = None,
+             cmap: str = None,
              colorbar_label: str = None,
              show: bool = True,
              show_kwargs: Dict = None,
@@ -385,9 +404,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 fig.add_quad(
                     points=[
                         self.front_left_vertices[i, :],
-                        self.front_right_vertices[i, :],
-                        self.back_right_vertices[i, :],
                         self.back_left_vertices[i, :],
+                        self.back_right_vertices[i, :],
+                        self.front_right_vertices[i, :],
                     ],
                     intensity=c[i],
                     outline=True,
@@ -401,6 +420,60 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 show=show,
                 colorbar_title=colorbar_label
             )
+
+        elif backend == "pyvista":
+            import pyvista as pv
+            plotter = pv.Plotter()
+            plotter.title = "ASB VortexLatticeMethod"
+            plotter.add_axes()
+            plotter.show_grid(color='gray')
+
+            ### Draw the airplane mesh
+            points = np.concatenate([
+                self.front_left_vertices,
+                self.back_left_vertices,
+                self.back_right_vertices,
+                self.front_right_vertices
+            ])
+            N = len(self.front_left_vertices)
+            range_N = np.arange(N)
+            faces = tall(range_N) + wide(np.array([0, 1, 2, 3]) * N)
+
+            mesh = pv.PolyData(
+                *mesh_utils.convert_mesh_to_polydata_format(points, faces)
+            )
+            scalar_bar_args = {}
+            if colorbar_label is not None:
+                scalar_bar_args["title"] = colorbar_label
+            plotter.add_mesh(
+                mesh=mesh,
+                scalars=c,
+                show_edges=True,
+                show_scalar_bar=c is not None,
+                scalar_bar_args=scalar_bar_args,
+                cmap=cmap,
+            )
+
+            ### Draw the streamlines
+            if draw_streamlines:
+                import aerosandbox.tools.pretty_plots as p
+                for i in range(self.streamlines.shape[0]):
+                    plotter.add_mesh(
+                        pv.Spline(self.streamlines[i, :, :].T),
+                        color=p.adjust_lightness("#7700FF", 1.5),
+                        opacity=0.7,
+                        line_width=1
+                    )
+
+            if show:
+                plotter.show()
+            return plotter
+
+
+
+
+        else:
+            raise ValueError("Bad value of `backend`!")
 
 
 if __name__ == '__main__':
