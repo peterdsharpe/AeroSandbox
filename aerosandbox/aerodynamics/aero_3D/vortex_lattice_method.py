@@ -72,9 +72,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         ##### Make Panels
         front_left_vertices = []
-        front_right_vertices = []
         back_left_vertices = []
         back_right_vertices = []
+        front_right_vertices = []
 
         for wing in self.airplane.wings:
             points, faces = wing.mesh_thin_surface(
@@ -91,9 +91,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
             front_right_vertices.append(points[faces[:, 3], :])
 
         front_left_vertices = np.concatenate(front_left_vertices)
-        front_right_vertices = np.concatenate(front_right_vertices)
         back_left_vertices = np.concatenate(back_left_vertices)
         back_right_vertices = np.concatenate(back_right_vertices)
+        front_right_vertices = np.concatenate(front_right_vertices)
 
         ### Compute panel statistics
         diag1 = front_right_vertices - back_left_vertices
@@ -112,6 +112,17 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 0.5 * (0.25 * front_left_vertices + 0.75 * back_left_vertices) +
                 0.5 * (0.25 * front_right_vertices + 0.75 * back_right_vertices)
         )
+
+        ### Save things to the instance for later access
+        self.front_left_vertices = front_left_vertices
+        self.back_left_vertices = back_left_vertices
+        self.back_right_vertices = back_right_vertices
+        self.front_right_vertices = front_right_vertices
+        self.left_vortex_vertices = left_vortex_vertices
+        self.right_vortex_vertices = right_vortex_vertices
+        self.vortex_centers = vortex_centers
+        self.vortex_bound_leg = vortex_bound_leg
+        self.collocation_points = collocation_points
 
         if self.verbose:
             print("Meshing complete!")
@@ -201,26 +212,25 @@ class VortexLatticeMethod(ExplicitAnalysis):
             u_centers * vortex_bound_leg[:, 1] - v_centers * vortex_bound_leg[:, 0],
         ), axis=1)
         forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(gamma)
-
-        # Calculate total forces and moments
-        if self.verbose:
-            print("Calculating total forces and moments...")
-        force_geometry = np.sum(forces_geometry, axis=0)
-        # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-
-        force_wind = np.transpose( # Total aerodynamic forces in wind axes
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_geometry
-        # if self.verbose: print("Total aerodynamic forces (wind axes):", self.force_total_inviscid_wind)
-
         moments_geometry = np.cross(
             vortex_centers - wide(self.airplane.xyz_ref),
             forces_geometry
         )
 
+        # Calculate total forces and moments
+        force_geometry = np.sum(forces_geometry, axis=0)
         moment_geometry = np.sum(moments_geometry, axis=0)
 
-        moment_wind = np.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_geometry
+        force_wind = self.op_point.convert_axes(
+            force_geometry[0], force_geometry[1], force_geometry[2],
+            from_axes="geometry",
+            to_axes="wind"
+        )
+        moment_wind = self.op_point.convert_axes(
+            moment_geometry[0], moment_geometry[1], moment_geometry[2],
+            from_axes="geometry",
+            to_axes="wind"
+        )
 
         # Calculate dimensional forces
         L = -force_wind[2]
