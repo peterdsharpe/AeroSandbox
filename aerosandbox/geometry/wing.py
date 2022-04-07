@@ -250,20 +250,20 @@ class Wing(AeroSandboxObject):
 
     def is_entirely_symmetric(self) -> bool:
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has symmetric control surfaces.
-        for xsec in self.xsecs: # To be symmetric, all
+        for xsec in self.xsecs:  # To be symmetric, all
             for surf in xsec.control_surfaces:
                 if not (surf.symmetric or surf.deflection == 0):
                     return False
 
-        if not self.symmetric: # If the wing itself isn't mirrored (e.g., vertical stabilizer), check that it's symmetric
+        if not self.symmetric:  # If the wing itself isn't mirrored (e.g., vertical stabilizer), check that it's symmetric
             for xsec in self.xsecs:
-                if not xsec.xyz_le[1] == 0: # Surface has to be right on the centerline
+                if not xsec.xyz_le[1] == 0:  # Surface has to be right on the centerline
                     return False
-                if not xsec.twist == 0: # Surface has to be untwisted
+                if not xsec.twist == 0:  # Surface has to be untwisted
                     return False
-                if not xsec.airfoil.CL_function(0, 1e6, 0, 0) == 0: # Surface has to have a symmetric airfoil.
+                if not xsec.airfoil.CL_function(0, 1e6, 0, 0) == 0:  # Surface has to have a symmetric airfoil.
                     return False
-                if not xsec.airfoil.CM_function(0, 1e6, 0, 0) == 0: # Surface has to have a symmetric airfoil.
+                if not xsec.airfoil.CM_function(0, 1e6, 0, 0) == 0:  # Surface has to have a symmetric airfoil.
                     return False
 
         return True
@@ -560,6 +560,27 @@ class Wing(AeroSandboxObject):
         Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
         `aerosandbox.geometry.mesh_utilities`.
 
+        Order of faces:
+            * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
+                * First face is the face nearest the leading edge of the wing root.
+                * Proceeds along a chordwise strip to the trailing edge.
+                * Then, goes to the subsequent spanwise location and does another chordwise strip, et cetera until
+                  we get to the wing tip.
+            * On the left wing (applicable only if `Wing.symmetric` is `True`):
+                * Same order: Starts at the root leading edge, goes in chordwise strips.
+
+        Order of vertices within each face:
+            * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
+                * Front-left
+                * Back-left
+                * Back-right
+                * Front-right
+            * On the left wing (applicable only if `Wing.symmetric` is `True`):
+                * Front-left
+                * Back-left
+                * Back-right
+                * Front-right
+
         Args:
             method: Allows choice between "tri" and "quad" meshing.
             chordwise_resolution: Controls the chordwise resolution of the meshing.
@@ -600,11 +621,11 @@ class Wing(AeroSandboxObject):
 
         faces = []
 
-        num_i = spanwise_resolution * (len(self.xsecs) - 1)
-        num_j = len(spanwise_strips) - 1
+        num_i = np.length(spanwise_strips[0]) # spanwise
+        num_j = np.length(spanwise_strips) # chordwise
 
         def index_of(iloc, jloc):
-            return iloc + jloc * (num_i + 1)
+            return iloc + jloc * num_i
 
         def add_face(*indices):
             entry = list(indices)
@@ -614,25 +635,36 @@ class Wing(AeroSandboxObject):
                 faces.append([entry[0], entry[1], entry[3]])
                 faces.append([entry[1], entry[2], entry[3]])
 
-        for i in range(num_i):
-            for j in range(num_j):
-                add_face(
-                    index_of(i, j),
-                    index_of(i, j + 1),
-                    index_of(i + 1, j + 1),
-                    index_of(i + 1, j),
+        for i in range(num_i - 1):
+            for j in range(num_j - 1):
+                add_face( # On right wing:
+                    index_of(i, j), # Front-left
+                    index_of(i, j + 1), # Back-left
+                    index_of(i + 1, j + 1), # Back-right
+                    index_of(i + 1, j), # Front-right
                 )
 
-        faces = np.array(faces)
-
         if self.symmetric:
-            flipped_points = np.array(points)
-            flipped_points[:, 1] = flipped_points[:, 1] * -1
+            index_offset = np.length(points)
 
-            points, faces = mesh_utils.stack_meshes(
-                (points, faces),
-                (flipped_points, faces)
-            )
+            points = np.concatenate([
+                points,
+                points * np.array([[1, -1, 1]])
+            ])
+
+            def index_of(iloc, jloc):
+                return index_offset + iloc + jloc * num_i
+
+            for i in range(num_i - 1):
+                for j in range(num_j - 1):
+                    add_face( # On left wing:
+                        index_of(i + 1, j), # Front-left
+                        index_of(i + 1, j + 1), # Back-left
+                        index_of(i, j + 1), # Back-right
+                        index_of(i, j), # Front-right
+                    )
+
+        faces = np.array(faces)
 
         return points, faces
 
@@ -665,7 +697,8 @@ class Wing(AeroSandboxObject):
 
         Returns:
 
-            points: a Nx3 np.ndarray that gives the coordinates of each point on the meshed line. Goes from the root to the tip.
+            points: a Nx3 np.ndarray that gives the coordinates of each point on the meshed line. Goes from the root
+            to the tip. Ignores any wing symmetry (e.g., only gives one side).
 
         """
 

@@ -77,9 +77,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 add_camber=True
             )
             front_left_vertices.append(points[faces[:, 0], :])
-            front_right_vertices.append(points[faces[:, 1], :])
-            back_left_vertices.append(points[faces[:, 3], :])
+            back_left_vertices.append(points[faces[:, 1], :])
             back_right_vertices.append(points[faces[:, 2], :])
+            front_right_vertices.append(points[faces[:, 3], :])
 
         front_left_vertices = np.concatenate(front_left_vertices)
         front_right_vertices = np.concatenate(front_right_vertices)
