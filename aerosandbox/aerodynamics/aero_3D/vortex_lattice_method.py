@@ -5,6 +5,16 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
     calculate_induced_velocity_horseshoe
 
 
+### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
+# Useful for broadcasting with matrices later.
+def tall(array):
+    return np.reshape(array, (-1, 1))
+
+
+def wide(array):
+    return np.reshape(array, (1, -1))
+
+
 class VortexLatticeMethod(ExplicitAnalysis):
     """
     An explicit (linear) vortex-lattice-method aerodynamics analysis.
@@ -58,14 +68,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 pass
 
     def run(self):
-
-        ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
-        # Useful for broadcasting with matrices later.
-        def tall(array):
-            return np.reshape(array, (-1, 1))
-
-        def wide(array):
-            return np.reshape(array, (1, -1))
 
         if self.verbose:
             print("Meshing...")
@@ -172,7 +174,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if self.verbose:
             print("Calculating vortex strengths...")
 
-        gamma = np.linalg.solve(AIC, -freestream_influences)
+        self.vortex_strengths = np.linalg.solve(AIC, -freestream_influences)
 
         ##### Calculate forces
         ### Calculate Near-Field Forces and Moments
@@ -194,7 +196,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             y_right=wide(right_vortex_vertices[:, 1]),
             z_right=wide(right_vortex_vertices[:, 2]),
             trailing_vortex_direction=steady_freestream_direction,
-            gamma=wide(gamma),
+            gamma=wide(self.vortex_strengths),
         )
         u_centers_induced = np.sum(u_centers_induced, axis=1)
         v_centers_induced = np.sum(v_centers_induced, axis=1)
@@ -211,7 +213,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             w_centers * vortex_bound_leg[:, 0] - u_centers * vortex_bound_leg[:, 2],
             u_centers * vortex_bound_leg[:, 1] - v_centers * vortex_bound_leg[:, 0],
         ), axis=1)
-        forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(gamma)
+        forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
         moments_geometry = np.cross(
             vortex_centers - wide(self.airplane.xyz_ref),
             forces_geometry
@@ -267,34 +269,54 @@ class VortexLatticeMethod(ExplicitAnalysis):
             "Cn": Cn
         }
 
-    def get_induced_velocity_at_point(self, point):
+    def get_induced_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
+        """
+        Computes the induced velocity at a set of points in the flowfield.
 
-        Vij_x, Vij_y, Vij_z = self.calculate_Vij(point)
+        Args:
+            points: A Nx3 array of points that you would like to know the induced velocities at. Given in geometry axes.
 
-        # vortex_strengths = self.opti.debug.value(self.vortex_strengths)
+        Returns: A Nx3 of the induced velocity at those points. Given in geometry axes.
 
-        Vi_x = Vij_x @ self.vortex_strengths
-        Vi_y = Vij_y @ self.vortex_strengths
-        Vi_z = Vij_z @ self.vortex_strengths
+        """
+        u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
+            x_field=tall(points[:, 0]),
+            y_field=tall(points[:, 1]),
+            z_field=tall(points[:, 2]),
+            x_left=wide(self.left_vortex_vertices[:, 0]),
+            y_left=wide(self.left_vortex_vertices[:, 1]),
+            z_left=wide(self.left_vortex_vertices[:, 2]),
+            x_right=wide(self.right_vortex_vertices[:, 0]),
+            y_right=wide(self.right_vortex_vertices[:, 1]),
+            z_right=wide(self.right_vortex_vertices[:, 2]),
+            trailing_vortex_direction=self.op_point.compute_freestream_velocity_geometry_axes(),
+            gamma=wide(self.vortex_strengths),
+        )
+        u_induced = np.sum(u_induced, axis=1)
+        v_induced = np.sum(v_induced, axis=1)
+        w_induced = np.sum(w_induced, axis=1)
 
-        get = lambda x: self.opti.debug.value(x)
-        Vi_x = get(Vi_x)
-        Vi_y = get(Vi_y)
-        Vi_z = get(Vi_z)
+        V_induced = np.stack([
+            u_induced, v_induced, w_induced
+        ], axis=1)
 
-        Vi = np.vstack((Vi_x, Vi_y, Vi_z)).T
+        return V_induced
 
-        return Vi
+    def get_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
+        """
+        Computes the velocity at a set of points in the flowfield.
 
-    def get_velocity_at_point(self, point):
-        # Input: a Nx3 numpy array of points that you would like to know the velocities at.
-        # Output: a Nx3 numpy array of the velocities at those points.
+        Args:
+            points: A Nx3 array of points that you would like to know the velocities at. Given in geometry axes.
 
-        Vi = self.get_induced_velocity_at_point(point)
+        Returns: A Nx3 of the velocity at those points. Given in geometry axes.
+
+        """
+        V_induced = self.get_induced_velocity_at_points(points)
 
         freestream = self.op_point.compute_freestream_velocity_geometry_axes()
 
-        V = cas.transpose(cas.transpose(Vi) + freestream)
+        V = V_induced + wide(freestream)
         return V
 
     def calculate_streamlines(self,
