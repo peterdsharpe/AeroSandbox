@@ -58,6 +58,15 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 pass
 
     def run(self):
+
+        ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
+        # Useful for broadcasting with matrices later.
+        def tall(array):
+            return np.reshape(array, (-1, 1))
+
+        def wide(array):
+            return np.reshape(array, (1, -1))
+
         if self.verbose:
             print("Meshing...")
 
@@ -90,8 +99,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
         diag1 = front_right_vertices - back_left_vertices
         diag2 = front_left_vertices - back_right_vertices
         cross = np.cross(diag1, diag2)
-        cross_norm = (cross[:, 0] ** 2 + cross[:, 1] ** 2 + cross[:, 2] ** 2) ** 0.5
-        normal_directions = cross / np.reshape(cross_norm, (-1, 1))
+        cross_norm = np.linalg.norm(cross, axis=1)
+        normal_directions = cross / tall(cross_norm)
         areas = cross_norm / 2
 
         # Compute the location of points of interest on each panel
@@ -99,12 +108,10 @@ class VortexLatticeMethod(ExplicitAnalysis):
         right_vortex_vertices = 0.75 * front_right_vertices + 0.25 * back_right_vertices
         vortex_centers = (left_vortex_vertices + right_vortex_vertices) / 2
         vortex_bound_leg = right_vortex_vertices - left_vortex_vertices
-        collocation_points = 0.5 * (
-                0.25 * front_left_vertices + 0.75 * back_left_vertices
-        ) + 0.5 * (
-                                     0.25 * front_right_vertices + 0.75 * back_right_vertices
-                             )
-        n_panels = collocation_points.shape[0]
+        collocation_points = (
+                0.5 * (0.25 * front_left_vertices + 0.75 * back_left_vertices) +
+                0.5 * (0.25 * front_right_vertices + 0.75 * back_right_vertices)
+        )
 
         if self.verbose:
             print("Meshing complete!")
@@ -129,12 +136,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
         ### Calculate AIC matrix
         if self.verbose:
             print("Calculating the collocation influence matrix...")
-
-        def wide(array):
-            return np.reshape(array, (1, -1))
-
-        def tall(array):
-            return np.reshape(array, (-1, 1))
 
         u_collocations_unit, v_collocations_unit, w_collocations_unit = calculate_induced_velocity_horseshoe(
             x_field=tall(collocation_points[:, 0]),
@@ -194,13 +195,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         # Calculate forces_inviscid_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES,
         # not WIND AXES or BODY AXES.
-        # Vi_cross_li = np.cross(Vi, self.vortex_bound_leg, axis=1)
         Vi_cross_li = np.stack((
             v_centers * vortex_bound_leg[:, 2] - w_centers * vortex_bound_leg[:, 1],
             w_centers * vortex_bound_leg[:, 0] - u_centers * vortex_bound_leg[:, 2],
             u_centers * vortex_bound_leg[:, 1] - v_centers * vortex_bound_leg[:, 0],
         ), axis=1)
-        forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * np.reshape(gamma, (-1, 1))
+        forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(gamma)
 
         # Calculate total forces and moments
         if self.verbose:
@@ -208,12 +208,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
         force_geometry = np.sum(forces_geometry, axis=0)
         # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
 
-        force_wind = np.transpose(
+        force_wind = np.transpose( # Total aerodynamic forces in wind axes
             self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_geometry
         # if self.verbose: print("Total aerodynamic forces (wind axes):", self.force_total_inviscid_wind)
 
         moments_geometry = np.cross(
-            vortex_centers - np.reshape(self.airplane.xyz_ref, (1, -1)),
+            vortex_centers - wide(self.airplane.xyz_ref),
             forces_geometry
         )
 
@@ -258,9 +258,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
         }
 
     def get_induced_velocity_at_point(self, point):
-        if not self.opti.return_status() == 'Solve_Succeeded':
-            print("WARNING: This method should only be used after a solution has been found!!!\n"
-                  "Running anyway for debugging purposes - this is likely to not work.")
 
         Vij_x, Vij_y, Vij_z = self.calculate_Vij(point)
 
