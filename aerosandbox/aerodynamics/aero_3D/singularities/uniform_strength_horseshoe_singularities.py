@@ -14,6 +14,7 @@ def calculate_induced_velocity_horseshoe(
         z_right: Union[float, np.ndarray],
         gamma: np.ndarray,
         trailing_vortex_direction: np.ndarray = None,
+        vortex_core_radius = 1e-8,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -26,16 +27,16 @@ def calculate_induced_velocity_horseshoe(
 
 
     Args:
-        x_field:
-        y_field:
-        z_field:
-        x_left:
-        y_left:
-        z_left:
-        x_right:
-        y_right:
-        z_right:
-        gamma:
+        x_field: x-coordinate of the field point
+        y_field: y-coordinate of the field point
+        z_field: z-coordinate of the field point
+        x_left: x-coordinate of the left vertex of the bound vortex
+        y_left: y-coordinate of the left vertex of the bound vortex
+        z_left: z-coordinate of the left vertex of the bound vortex
+        x_right: x-coordinate of the right vertex of the bound vortex
+        y_right: y-coordinate of the right vertex of the bound vortex
+        z_right: z-coordinate of the right vertex of the bound vortex
+        gamma: The strength of the
 
     Returns:
 
@@ -72,7 +73,7 @@ def calculate_induced_velocity_horseshoe(
     # Handle the special case where the field point is on one of the legs
     def smoothed_inv(x):
         "Approximates 1/x with a function that sharply goes to 0 in the x -> 0 limit."
-        return x / (x ** 2 + 1e-8)
+        return x / (x ** 2 + vortex_core_radius ** 2)
 
     ### Do some useful arithmetic
 
