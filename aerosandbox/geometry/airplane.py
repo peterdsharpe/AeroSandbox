@@ -171,7 +171,7 @@ class Airplane(AeroSandboxObject):
              backend: str = "pyvista",
              thin_wings: bool = False,
              show: bool = True,
-             show_kwargs=None,
+             show_kwargs: Dict = None,
              ):
         """
 

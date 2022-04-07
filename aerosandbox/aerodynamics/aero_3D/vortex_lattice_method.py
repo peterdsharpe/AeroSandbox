@@ -1,8 +1,10 @@
 import numpy as np
 from aerosandbox import ExplicitAnalysis
 from aerosandbox.geometry import *
+from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
+from scipy import integrate
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
@@ -35,14 +37,14 @@ class VortexLatticeMethod(ExplicitAnalysis):
     """
 
     def __init__(self,
-                 airplane,  # type: Airplane
-                 op_point,  # type: op_point
-                 run_symmetric_if_possible=True,
-                 verbose=False,
-                 spanwise_resolution=10,
-                 spanwise_spacing="cosine",
-                 chordwise_resolution=10,
-                 chordwise_spacing="cosine",
+                 airplane: Airplane,
+                 op_point: OperatingPoint,
+                 run_symmetric_if_possible: bool = True,
+                 verbose: bool = False,
+                 spanwise_resolution: int = 10,
+                 spanwise_spacing: str = "cosine",
+                 chordwise_resolution: int = 10,
+                 chordwise_spacing: str = "cosine",
                  ):
         super().__init__()
 
@@ -307,7 +309,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         return V
 
     def calculate_streamlines(self,
-                              seed_points=None,  # will be auto-calculated if not specified
+                              seed_points: np.ndarray = None,  # will be auto-calculated if not specified
                               n_steps=100,  # minimum of 2
                               length=None  # will be auto-calculated if not specified
                               ):
@@ -316,133 +318,89 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if seed_points is None:
             seed_points = (self.back_left_vertices + self.back_right_vertices) / 2
 
-        # Resolution
-        length_per_step = length / n_steps
-
-        # Initialize
-        streamlines = [seed_points]
-
+        # # Resolution
+        # length_per_step = length / n_steps
+        #
+        # # Initialize
+        # streamlines = [seed_points]
+        #
         # Iterate
-        for step_num in range(1, n_steps):
-            update_amount = self.get_velocity_at_point(streamlines[-1])
-            norm_update_amount = cas.sqrt(
-                update_amount[:, 0] ** 2 + update_amount[:, 1] ** 2 + update_amount[:, 2] ** 2)
-            update_amount = length_per_step * update_amount / norm_update_amount
-            streamlines.append(streamlines[-1] + update_amount)
+        # for step_num in range(1, n_steps):
+        #     update_amount = self.get_velocity_at_point(streamlines[-1])
+        #     norm_update_amount = cas.sqrt(
+        #         update_amount[:, 0] ** 2 + update_amount[:, 1] ** 2 + update_amount[:, 2] ** 2)
+        #     update_amount = length_per_step * update_amount / norm_update_amount
+        #     streamlines.append(streamlines[-1] + update_amount)
+
+        t_max = length / self.op_point.velocity
+
+        def pack(points):
+            return np.reshape(points, (-1))
+
+        def unpack(y):
+            return np.reshape(y, (len(seed_points), 3))
+
+        def fun(t, y):
+            return pack(self.get_velocity_at_points(unpack(y)))
+
+        res = integrate.solve_ivp(
+            fun=fun,
+            t_span=(0, t_max),
+            y0=pack(seed_points),
+            t_eval=np.linspace(0, t_max, n_steps),
+        )
+
+        streamlines = np.reshape(res.y, (len(seed_points), 3, -1))
 
         self.streamlines = streamlines
 
     def draw(self,
-             data_to_plot=None,
-             data_name=None,
-             show=True,
+             c: np.ndarray = None,
+             colorbar_label: str = None,
+             show: bool = True,
+             show_kwargs: Dict = None,
              draw_streamlines=True,
-             recalculate_streamlines=False
+             recalculate_streamlines=False,
+             backend: str = "pyvista"
              ):
         """
         Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
         :return:
         """
-        if self.verbose:
-            print("Drawing...")
 
-        # Do substitutions
-        get = lambda x: self.opti.debug.value(x)
-        front_left_vertices = get(self.front_left_vertices)
-        front_right_vertices = get(self.front_right_vertices)
-        back_left_vertices = get(self.back_left_vertices)
-        back_right_vertices = get(self.back_right_vertices)
-        left_vortex_vertices = get(self.left_vortex_vertices)
-        right_vortex_vertices = get(self.right_vortex_vertices)
-        self.vortex_strengths = get(self.vortex_strengths)
-        try:
-            data_to_plot = get(data_to_plot)
-        except NotImplementedError:
-            pass
-
-        if data_to_plot is None:
-            data_name = "Vortex Strengths"
-            data_to_plot = get(self.vortex_strengths)
-
-        fig = Figure3D()
-
-        for index in range(len(front_left_vertices)):
-            fig.add_quad(
-                points=[
-                    front_left_vertices[index, :],
-                    front_right_vertices[index, :],
-                    back_right_vertices[index, :],
-                    back_left_vertices[index, :],
-                ],
-                intensity=data_to_plot[index],
-                outline=True,
-            )
-            # fig.add_line( # Don't draw the quarter-chords
-            #     points=[
-            #         left_vortex_vertices[index],
-            #         right_vortex_vertices[index]
-            #     ],
-            # )
-
-        # Fuselages
-        for fuse_id in range(len(self.airplane.fuselages)):
-            fuse = self.airplane.fuselages[fuse_id]  # type: Fuselage
-
-            for xsec_id in range(len(fuse.xsecs) - 1):
-                xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
-                xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
-
-                r1 = xsec_1.radius
-                r2 = xsec_2.radius
-                points_1 = np.zeros((fuse.circumferential_panels, 3))
-                points_2 = np.zeros((fuse.circumferential_panels, 3))
-                for point_index in range(fuse.circumferential_panels):
-                    rot = rotation_matrix_angle_axis(
-                        2 * cas.pi * point_index / fuse.circumferential_panels,
-                        [1, 0, 0],
-                        True
-                    ).toarray()
-                    points_1[point_index, :] = rot @ np.array([0, 0, r1])
-                    points_2[point_index, :] = rot @ np.array([0, 0, r2])
-                points_1 = points_1 + np.array(xsec_1.xyz_c).reshape(-1)
-                points_2 = points_2 + np.array(xsec_2.xyz_c).reshape(-1)
-
-                for point_index in range(fuse.circumferential_panels):
-
-                    fig.add_quad(points=[
-                        points_1[(point_index) % fuse.circumferential_panels, :],
-                        points_1[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index) % fuse.circumferential_panels, :],
-                    ],
-                        intensity=0,
-                        mirror=fuse.symmetric,
-                    )
+        if c is None:
+            c = self.vortex_strengths
+            colorbar_label = "Vortex Strengths"
 
         if draw_streamlines:
             if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
-                if self.verbose:
-                    print("Calculating streamlines...")
-                is_trailing_edge = np.array(self.is_trailing_edge, dtype=bool)
-                seed_points = (back_left_vertices[is_trailing_edge] + back_right_vertices[is_trailing_edge]) / 2
-                self.calculate_streamlines(seed_points=seed_points)
+                self.calculate_streamlines()
 
-            if self.verbose:
-                print("Parsing streamline data...")
-            n_streamlines = self.streamlines[0].shape[0]
-            n_timesteps = len(self.streamlines)
+        if backend == "plotly":
+            from aerosandbox.visualization.plotly_Figure3D import Figure3D
+            fig = Figure3D()
 
-            for streamlines_num in range(n_streamlines):
-                streamline = [self.streamlines[ts][streamlines_num, :] for ts in range(n_timesteps)]
-                fig.add_streamline(
-                    points=streamline,
+            for i in range(len(self.front_left_vertices)):
+                fig.add_quad(
+                    points=[
+                        self.front_left_vertices[i, :],
+                        self.front_right_vertices[i, :],
+                        self.back_right_vertices[i, :],
+                        self.back_left_vertices[i, :],
+                    ],
+                    intensity=c[i],
+                    outline=True,
                 )
 
-        return fig.draw(
-            show=show,
-            colorbar_title=data_name
-        )
+            if draw_streamlines:
+                for i in range(self.streamlines.shape[0]):
+                    fig.add_streamline(self.streamlines[i, :, :].T)
+
+            return fig.draw(
+                show=show,
+                colorbar_title=colorbar_label
+            )
 
 
 if __name__ == '__main__':
