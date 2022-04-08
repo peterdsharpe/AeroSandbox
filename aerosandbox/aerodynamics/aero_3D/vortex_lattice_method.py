@@ -45,6 +45,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
                  spanwise_spacing: str = "cosine",
                  chordwise_resolution: int = 10,
                  chordwise_spacing: str = "cosine",
+                 vortex_core_radius: float = 1e-8,
                  ):
         super().__init__()
 
@@ -55,6 +56,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.spanwise_spacing = spanwise_spacing
         self.chordwise_resolution = chordwise_resolution
         self.chordwise_spacing = chordwise_spacing
+        self.vortex_core_radius = vortex_core_radius
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
@@ -175,12 +177,13 @@ class VortexLatticeMethod(ExplicitAnalysis):
             z_right=wide(right_vortex_vertices[:, 2]),
             trailing_vortex_direction=steady_freestream_direction,
             gamma=1,
+            vortex_core_radius=self.vortex_core_radius
         )
 
         AIC = (
-                u_collocations_unit * normal_directions[:, 0] +
-                v_collocations_unit * normal_directions[:, 1] +
-                w_collocations_unit * normal_directions[:, 2]
+                u_collocations_unit * tall(normal_directions[:, 0]) +
+                v_collocations_unit * tall(normal_directions[:, 1]) +
+                w_collocations_unit * tall(normal_directions[:, 2])
         )
 
         ##### Calculate Vortex Strengths
@@ -282,6 +285,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             z_right=wide(self.right_vortex_vertices[:, 2]),
             trailing_vortex_direction=self.steady_freestream_direction,
             gamma=wide(self.vortex_strengths),
+            vortex_core_radius=self.vortex_core_radius
         )
         u_induced = np.sum(u_induced, axis=1)
         v_induced = np.sum(v_induced, axis=1)
@@ -316,7 +320,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def calculate_streamlines(self,
                               seed_points: np.ndarray = None,  # will be auto-calculated if not specified
-                              n_steps=100,  # minimum of 2
+                              n_steps=500,  # minimum of 2
                               length=None  # will be auto-calculated if not specified
                               ) -> None:
         if length is None:
@@ -324,7 +328,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if seed_points is None:
             left_TE_vertices = self.back_left_vertices[self.is_trailing_edge]
             right_TE_vertices = self.back_right_vertices[self.is_trailing_edge]
-            N_streamlines_target = 100
+            N_streamlines_target = 500
             seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
 
             nondim_node_locations = np.linspace(0, 1, seed_points_per_panel + 1)
@@ -335,20 +339,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 x * left_TE_vertices + (1-x) * right_TE_vertices
                 for x in nondim_seed_locations
             ])
-
-        # # Resolution
-        # length_per_step = length / n_steps
-        #
-        # # Initialize
-        # streamlines = [seed_points]
-        #
-        # Iterate
-        # for step_num in range(1, n_steps):
-        #     update_amount = self.get_velocity_at_point(streamlines[-1])
-        #     norm_update_amount = cas.sqrt(
-        #         update_amount[:, 0] ** 2 + update_amount[:, 1] ** 2 + update_amount[:, 2] ** 2)
-        #     update_amount = length_per_step * update_amount / norm_update_amount
-        #     streamlines.append(streamlines[-1] + update_amount)
 
         t_max = length / self.op_point.velocity
 
@@ -366,6 +356,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
             t_span=(0, t_max),
             y0=pack(seed_points),
             t_eval=np.linspace(0, t_max, n_steps),
+            method="RK45",
+            # min_step=t_max / 500
         )
 
         streamlines = np.reshape(res.y, (len(seed_points), 3, -1))
