@@ -4,7 +4,6 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
-from scipy import integrate
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
