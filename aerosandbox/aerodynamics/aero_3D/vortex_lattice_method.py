@@ -332,15 +332,17 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def calculate_streamlines(self,
                               seed_points: np.ndarray = None,  # will be auto-calculated if not specified
-                              n_steps=500,  # minimum of 2
+                              n_steps=300,  # minimum of 2
                               length=None  # will be auto-calculated if not specified
                               ) -> None:
+        if self.verbose:
+            print("Calculating streamlines...")
         if length is None:
             length = self.airplane.c_ref * 5
         if seed_points is None:
             left_TE_vertices = self.back_left_vertices[self.is_trailing_edge]
             right_TE_vertices = self.back_right_vertices[self.is_trailing_edge]
-            N_streamlines_target = 500
+            N_streamlines_target = 200
             seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
 
             nondim_node_locations = np.linspace(0, 1, seed_points_per_panel + 1)
@@ -351,29 +353,46 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 for x in nondim_seed_locations
             ])
 
-        t_max = length / self.op_point.velocity
+        streamlines = np.empty((len(seed_points), 3, n_steps))
+        streamlines[:, :, 0] = seed_points
+        for i in range(1, n_steps):
+            V = self.get_velocity_at_points(streamlines[:, :, i-1])
+            streamlines[:, :, i] = (
+                    streamlines[:, :, i-1] +
+                    length / n_steps * V / tall(np.linalg.norm(V, axis=1))
+            )
 
-        def pack(points):
-            return np.reshape(points, (-1))
-
-        def unpack(y):
-            return np.reshape(y, (len(seed_points), 3))
-
-        def fun(t, y):
-            return pack(self.get_velocity_at_points(unpack(y)))
-
-        res = integrate.solve_ivp(
-            fun=fun,
-            t_span=(0, t_max),
-            y0=pack(seed_points),
-            t_eval=np.linspace(0, t_max, n_steps),
-            method="RK45",
-            # min_step=t_max / 500
-        )
-
-        streamlines = np.reshape(res.y, (len(seed_points), 3, -1))
+        # t_max = length / self.op_point.velocity
+        #
+        # def pack(points):
+        #     return np.reshape(points, (-1))
+        #
+        # def unpack(y):
+        #     return np.reshape(y, (len(seed_points), 3))
+        #
+        # def fun(t, y):
+        #     V = self.get_velocity_at_points(unpack(y))
+        #     V_normalized = V / tall(np.linalg.norm(V, axis=1))
+        #     return pack(V)
+        #
+        # res = integrate.solve_ivp(
+        #     fun=fun,
+        #     t_span=(0, t_max),
+        #     y0=pack(seed_points),
+        #     # t_eval=np.linspace(0, t_max, n_steps),
+        #     method="RK45",
+        #     first_step = t_max / n_steps,
+        #     max_step = t_max / n_steps,
+        #     atol=1e30,
+        #     rtol=1e30,
+        #     # min_step=t_max / 500
+        # )
+        # streamlines = np.reshape(res.y, (len(seed_points), 3, -1))
 
         self.streamlines = streamlines
+
+        if self.verbose:
+            print("Streamlines calculated.")
 
     def draw(self,
              c: np.ndarray = None,
