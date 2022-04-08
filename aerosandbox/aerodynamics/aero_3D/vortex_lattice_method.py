@@ -129,7 +129,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
-        self.is_trailing_edge=is_trailing_edge
+        self.is_trailing_edge = is_trailing_edge
         self.left_vortex_vertices = left_vortex_vertices
         self.right_vortex_vertices = right_vortex_vertices
         self.vortex_centers = vortex_centers
@@ -228,6 +228,14 @@ class VortexLatticeMethod(ExplicitAnalysis):
             to_axes="wind"
         )
 
+        ### Save things to the instance for later access
+        self.forces_geometry = forces_geometry
+        self.moments_geometry = moments_geometry
+        self.force_geometry = force_geometry
+        self.force_wind = force_wind
+        self.moment_geometry = moment_geometry
+        self.moment_wind = moment_wind
+
         # Calculate dimensional forces
         L = -force_wind[2]
         D = -force_wind[0]
@@ -249,18 +257,22 @@ class VortexLatticeMethod(ExplicitAnalysis):
         Cn = n / q / s_ref / b_ref
 
         return {
-            "L" : L,
-            "D" : D,
-            "Y" : Y,
-            "l" : l,
-            "m" : m,
-            "n" : n,
-            "CL": CL,
-            "CD": CD,
-            "CY": CY,
-            "Cl": Cl,
-            "Cm": Cm,
-            "Cn": Cn
+            "L"  : L,
+            "D"  : D,
+            "Y"  : Y,
+            "l"  : l,
+            "m"  : m,
+            "n"  : n,
+            "CL" : CL,
+            "CD" : CD,
+            "CY" : CY,
+            "Cl" : Cl,
+            "Cm" : Cm,
+            "Cn" : Cn,
+            "F_g": force_geometry,
+            "F_w": force_wind,
+            "M_g": moment_geometry,
+            "M_w": moment_wind
         }
 
     def get_induced_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
@@ -334,9 +346,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
             nondim_node_locations = np.linspace(0, 1, seed_points_per_panel + 1)
             nondim_seed_locations = (nondim_node_locations[1:] + nondim_node_locations[:-1]) / 2
 
-
             seed_points = np.concatenate([
-                x * left_TE_vertices + (1-x) * right_TE_vertices
+                x * left_TE_vertices + (1 - x) * right_TE_vertices
                 for x in nondim_seed_locations
             ])
 
