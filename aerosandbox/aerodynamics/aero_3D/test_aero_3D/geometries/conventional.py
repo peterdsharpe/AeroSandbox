@@ -20,17 +20,12 @@ airplane = asb.Airplane(
                     chord=0.18,
                     twist=2,  # degrees
                     airfoil=wing_airfoil,  # Airfoils are blended between a given XSec and the next one.
-                    control_surface_is_symmetric=True,
-                    # Flap (ctrl. surfs. applied between this XSec and the next one.)
-                    control_surface_deflection=0,  # degrees
                 ),
                 asb.WingXSec(  # Mid
                     xyz_le=[0.01, 0.5, 0],
                     chord=0.16,
                     twist=0,
                     airfoil=wing_airfoil,
-                    control_surface_is_symmetric=False,  # Aileron
-                    control_surface_deflection=0,
                 ),
                 asb.WingXSec(  # Tip
                     xyz_le=[0.08, 1, 0.1],
@@ -49,8 +44,6 @@ airplane = asb.Airplane(
                     chord=0.1,
                     twist=-10,
                     airfoil=tail_airfoil,
-                    control_surface_is_symmetric=True,  # Elevator
-                    control_surface_deflection=0,
                 ),
                 asb.WingXSec(  # tip
                     xyz_le=[0.02, 0.17, 0],
@@ -69,8 +62,6 @@ airplane = asb.Airplane(
                     chord=0.1,
                     twist=0,
                     airfoil=tail_airfoil,
-                    control_surface_is_symmetric=True,  # Rudder
-                    control_surface_deflection=0,
                 ),
                 asb.WingXSec(
                     xyz_le=[0.04, 0, 0.15],
