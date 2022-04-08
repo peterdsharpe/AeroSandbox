@@ -24,21 +24,38 @@ def calculate_induced_velocity_horseshoe(
     In this flowfield, the following singularity elements are assumed:
         * A single horseshoe vortex consisting of a bound leg and two trailing legs
 
-
+    This function consists entirely of scalar, NumPy ufunc operations - so it can be vectorized as desired.
 
     Args:
         x_field: x-coordinate of the field point
-        y_field: y-coordinate of the field point
-        z_field: z-coordinate of the field point
-        x_left: x-coordinate of the left vertex of the bound vortex
-        y_left: y-coordinate of the left vertex of the bound vortex
-        z_left: z-coordinate of the left vertex of the bound vortex
-        x_right: x-coordinate of the right vertex of the bound vortex
-        y_right: y-coordinate of the right vertex of the bound vortex
-        z_right: z-coordinate of the right vertex of the bound vortex
-        gamma: The strength of the
 
-    Returns:
+        y_field: y-coordinate of the field point
+
+        z_field: z-coordinate of the field point
+
+        x_left: x-coordinate of the left vertex of the bound vortex
+
+        y_left: y-coordinate of the left vertex of the bound vortex
+
+        z_left: z-coordinate of the left vertex of the bound vortex
+
+        x_right: x-coordinate of the right vertex of the bound vortex
+
+        y_right: y-coordinate of the right vertex of the bound vortex
+
+        z_right: z-coordinate of the right vertex of the bound vortex
+
+        gamma: The strength of the horseshoe vortex filament.
+
+        trailing_vortex_direction: The direction that the trailing legs of the horseshoe vortex extend. Usually,
+        this is modeled as the direction of the freestream.
+
+        vortex_core_radius: To prevent a vortex singularity, here we use a Kaufmann vortex model. This parameter
+        governs the radius of this vortex model. It should be significantly smaller (e.g., at least an order of
+        magnitude smaller) than the smallest bound leg in the analysis in question.
+
+    Returns: u, v, and w:
+        The x-, y-, and z-direction induced velocities.
 
     """
     if trailing_vortex_direction is None:
