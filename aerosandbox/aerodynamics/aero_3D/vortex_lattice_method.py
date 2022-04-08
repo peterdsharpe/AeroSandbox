@@ -362,33 +362,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
                     length / n_steps * V / tall(np.linalg.norm(V, axis=1))
             )
 
-        # t_max = length / self.op_point.velocity
-        #
-        # def pack(points):
-        #     return np.reshape(points, (-1))
-        #
-        # def unpack(y):
-        #     return np.reshape(y, (len(seed_points), 3))
-        #
-        # def fun(t, y):
-        #     V = self.get_velocity_at_points(unpack(y))
-        #     V_normalized = V / tall(np.linalg.norm(V, axis=1))
-        #     return pack(V)
-        #
-        # res = integrate.solve_ivp(
-        #     fun=fun,
-        #     t_span=(0, t_max),
-        #     y0=pack(seed_points),
-        #     # t_eval=np.linspace(0, t_max, n_steps),
-        #     method="RK45",
-        #     first_step = t_max / n_steps,
-        #     max_step = t_max / n_steps,
-        #     atol=1e30,
-        #     rtol=1e30,
-        #     # min_step=t_max / 500
-        # )
-        # streamlines = np.reshape(res.y, (len(seed_points), 3, -1))
-
         self.streamlines = streamlines
 
         if self.verbose:
