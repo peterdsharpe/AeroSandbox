@@ -35,8 +35,8 @@ class Wing(AeroSandboxObject):
                  name: str = "Untitled",
                  xsecs: List['WingXSec'] = None,
                  symmetric: bool = False,
-                 xyz_le: np.ndarray = None,  # Note: deprecated.
-                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None
+                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+                 **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
                  ):
         """
         Defines a new wing.
@@ -86,7 +86,7 @@ class Wing(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated parameters
-        if xyz_le is not None:
+        if 'xyz_le' in locals():
             import warnings
             warnings.warn(
                 "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.",
@@ -104,14 +104,14 @@ class Wing(AeroSandboxObject):
 
     def translate(self,
                   xyz: Union[np.ndarray, List]
-                  ):
+                  ) -> 'Wing':
         """
         Translates the entire Wing by a certain amount.
 
         Args:
             xyz:
 
-        Returns: self
+        Returns: The new wing object.
 
         """
         new_wing = copy.copy(self)
