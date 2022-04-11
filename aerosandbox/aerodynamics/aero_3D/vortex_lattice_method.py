@@ -148,7 +148,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
         rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             collocation_points)
 
-        freestream_velocities = wide(steady_freestream_velocity) + rotation_freestream_velocities  # Nx3, represents the freestream velocity at each panel collocation point (c)
+        freestream_velocities = wide(steady_freestream_velocity) + rotation_freestream_velocities
+        # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         freestream_influences = (
                 freestream_velocities[:, 0] * normal_directions[:, 0] +
@@ -332,10 +333,36 @@ class VortexLatticeMethod(ExplicitAnalysis):
         return V
 
     def calculate_streamlines(self,
-                              seed_points: np.ndarray = None,  # will be auto-calculated if not specified
-                              n_steps=300,  # minimum of 2
-                              length=None  # will be auto-calculated if not specified
-                              ) -> None:
+                              seed_points: np.ndarray = None,
+                              n_steps: int = 300,
+                              length: float = None
+                              ) -> np.ndarray:
+        """
+        Computes streamlines, starting at specific seed points.
+
+        After running this function, a new instance variable `VortexLatticeFilaments.streamlines` is computed
+
+        Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity vectors are normalized
+        before ODE integration). After investigation, it's not worth doing fancier ODE integration methods (adaptive
+        schemes, RK substepping, etc.), due to the near-singular conditions near vortex filaments.
+
+        Args:
+
+            seed_points: A Nx3 ndarray that contains a list of points where streamlines are started. Will be
+            auto-calculated if not specified.
+
+            n_steps: The number of individual streamline steps to trace. Minimum of 2.
+
+            length: The approximate total length of the streamlines desired, in meters. Will be auto-calculated if
+            not specified.
+
+        Returns:
+            streamlines: a 3D array with dimensions: (n_seed_points) x (3) x (n_steps).
+            Consists of streamlines data.
+
+            Result is also saved as an instance variable, VortexLatticeMethod.streamlines.
+
+        """
         if self.verbose:
             print("Calculating streamlines...")
         if length is None:
@@ -357,9 +384,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         streamlines = np.empty((len(seed_points), 3, n_steps))
         streamlines[:, :, 0] = seed_points
         for i in range(1, n_steps):
-            V = self.get_velocity_at_points(streamlines[:, :, i-1])
+            V = self.get_velocity_at_points(streamlines[:, :, i - 1])
             streamlines[:, :, i] = (
-                    streamlines[:, :, i-1] +
+                    streamlines[:, :, i - 1] +
                     length / n_steps * V / tall(np.linalg.norm(V, axis=1))
             )
 
@@ -367,6 +394,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         if self.verbose:
             print("Streamlines calculated.")
+
+        return streamlines
 
     def draw(self,
              c: np.ndarray = None,
