@@ -21,18 +21,19 @@ class VortexLatticeMethod(ExplicitAnalysis):
     An explicit (linear) vortex-lattice-method aerodynamics analysis.
 
     Usage example:
-        >>>analysis = asb.VortexLatticeMethod(
-        >>>    airplane=my_airplane,
-        >>>    op_point=asb.OperatingPoint(
-        >>>        velocity=100, # m/s
-        >>>        alpha=5, # deg
-        >>>        beta=4, # deg
-        >>>        p=0.01, # rad/sec
-        >>>        q=0.02, # rad/sec
-        >>>        r=0.03, # rad/sec
-        >>>    )
-        >>>)
-        >>>outputs = analysis.run()
+        >>> analysis = asb.VortexLatticeMethod(
+        >>>     airplane=my_airplane,
+        >>>     op_point=asb.OperatingPoint(
+        >>>         velocity=100, # m/s
+        >>>         alpha=5, # deg
+        >>>         beta=4, # deg
+        >>>         p=0.01, # rad/sec
+        >>>         q=0.02, # rad/sec
+        >>>         r=0.03, # rad/sec
+        >>>     )
+        >>> )
+        >>> aero_data = analysis.run()
+        >>> analysis.draw()
     """
 
     def __init__(self,
