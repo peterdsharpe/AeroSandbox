@@ -197,8 +197,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         ##### Calculate forces
         ### Calculate Near-Field Forces and Moments
-        # Governing Equation: The force on a straight, small vortex filament is F = rho * V p l * gamma,
-        # where rho is density, V is the velocity vector, p is the cross product operator,
+        # Governing Equation: The force on a straight, small vortex filament is F = rho * cross(V, l) * gamma,
+        # where rho is density, V is the velocity vector, cross() is the cross product operator,
         # l is the vector of the filament itself, and gamma is the circulation.
 
         if self.verbose:
