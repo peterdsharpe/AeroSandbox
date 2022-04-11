@@ -129,6 +129,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
         self.is_trailing_edge = is_trailing_edge
+        self.normal_directions = normal_directions
+        self.areas = areas
         self.left_vortex_vertices = left_vortex_vertices
         self.right_vortex_vertices = right_vortex_vertices
         self.vortex_centers = vortex_centers
