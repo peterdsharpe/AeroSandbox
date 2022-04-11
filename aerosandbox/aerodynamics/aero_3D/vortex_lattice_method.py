@@ -71,7 +71,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
                 pass
 
-    def run(self) -> Dict:
+    def run(self) -> Dict[str, Any]:
 
         if self.verbose:
             print("Meshing...")
