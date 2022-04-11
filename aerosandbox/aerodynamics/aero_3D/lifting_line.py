@@ -12,18 +12,18 @@ class LiftingLine(ImplicitAnalysis):
     Nonlinear, and includes viscous effects based on 2D data.
 
     Usage example:
-        >>>analysis = asb.LiftingLine(
-        >>>    airplane=my_airplane,
-        >>>    op_point=asb.OperatingPoint(
-        >>>        velocity=100, # m/s
-        >>>        alpha=5, # deg
-        >>>        beta=4, # deg
-        >>>        p=0.01, # rad/sec
-        >>>        q=0.02, # rad/sec
-        >>>        r=0.03, # rad/sec
-        >>>    )
-        >>>)
-        >>>outputs = analysis.run()
+        >>> analysis = asb.LiftingLine(
+        >>>     airplane=my_airplane,
+        >>>     op_point=asb.OperatingPoint(
+        >>>         velocity=100, # m/s
+        >>>         alpha=5, # deg
+        >>>         beta=4, # deg
+        >>>         p=0.01, # rad/sec
+        >>>         q=0.02, # rad/sec
+        >>>         r=0.03, # rad/sec
+        >>>     )
+        >>> )
+        >>> outputs = analysis.run()
     """
 
     @ImplicitAnalysis.initialize
