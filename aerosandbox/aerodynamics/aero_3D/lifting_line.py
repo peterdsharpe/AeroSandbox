@@ -4,6 +4,16 @@ from aerosandbox.performance import OperatingPoint
 from typing import Dict
 
 
+### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
+# Useful for broadcasting with matrices later.
+def tall(array):
+    return np.reshape(array, (-1, 1))
+
+
+def wide(array):
+    return np.reshape(array, (1, -1))
+
+
 class LiftingLine(ImplicitAnalysis):
     """
     An implicit aerodynamics analysis based on lifting line theory, with modifications for nonzero sweep
