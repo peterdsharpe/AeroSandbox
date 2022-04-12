@@ -59,13 +59,13 @@ def burn_rate_coefficient(oxamide_fraction):
 
 def c_star(oxamide_fraction):
     """Characteristic velocity vs. oxamide content model.
-    Valid from 0% to 15% oxamide. # TODO IMPLEMENT THIS
+    Valid from 0% to 20% oxamide. # TODO IMPLEMENT THIS
 
     Returns:
         c_star: ideal characteristic velocity [units: meter second**-1].
     """
     # oxamide_fraction = cas.fmax(oxamide_fraction, 0)
-    coefs = [1380.28, -989.19, -657.70]
+    coefs = [1380.2, -983.3, -697.1]
     return coefs[0] + coefs[1] * oxamide_fraction + coefs[2] * oxamide_fraction ** 2
 
 
@@ -88,7 +88,7 @@ def gamma(oxamide_fraction):
     """
     # oxamide_fraction = cas.fmax(oxamide_fraction, 0)
 
-    coefs = [1.23767512, 0.21940021, -0.37727591]
+    coefs = [1.238, 0.216, -0.351]
     return coefs[0] + coefs[1] * oxamide_fraction + coefs[2] * oxamide_fraction ** 2
 
 
