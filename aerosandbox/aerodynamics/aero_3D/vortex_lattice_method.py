@@ -138,9 +138,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.vortex_bound_leg = vortex_bound_leg
         self.collocation_points = collocation_points
 
-        if self.verbose:
-            print("Meshing complete!")
-
         ##### Setup Operating Point
         if self.verbose:
             print("Calculating the freestream influence...")
