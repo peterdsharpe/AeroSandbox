@@ -1,32 +1,6 @@
 from pathlib import Path
-import json, sys, os
-import importlib
-
-
-def convert_ipynb_to_py(
-        input_file: Path,
-        output_file: Path,
-) -> None:
-    """
-    Reads an input Jupyter notebook (.ipynb) and converts it to a Python file (.py)
-
-    Tried using `jupyter nbconvert`, but that is SO SLOW, like 3 seconds per notebook! It's just json parsing,
-    this should *not* take more than a few milliseconds - come on, Jupyter!
-
-    Args:
-        input_file: File path
-        output_file: File path
-
-    Returns: None
-
-    """
-    with open(input_file, "r") as f:
-        ipynb_contents = json.load(f)
-    with open(output_file, "w+") as f:
-        for cell in ipynb_contents['cells']:
-            if cell['cell_type'] == "code":
-                f.writelines(cell['source'])
-                f.write("\n")
+import sys, os
+from aerosandbox.tools.python.io import convert_ipynb_to_py
 
 
 def run_python_file(path: Path) -> None:
@@ -82,26 +56,3 @@ def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
             print(f"##### Opening directory: {path}")
         for subpath in path.iterdir():
             run_all_python_files(subpath, recursive=recursive, verbose=verbose)
-
-
-def lazy_import(name):
-    """
-    Allows you to lazily import a module.
-
-    Usage:
-    >>> asb = lazy_import("aerosandbox")  # Runs instantly
-    >>> asb.Airplane()  # When this is called, ASB will be loaded.
-
-    Args:
-        name: The package name
-
-    Returns: The module itself, to be loaded on first use.
-
-    """
-    spec = importlib.util.find_spec(name)
-    loader = importlib.util.LazyLoader(spec.loader)
-    spec.loader = loader
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    loader.exec_module(module)
-    return module
