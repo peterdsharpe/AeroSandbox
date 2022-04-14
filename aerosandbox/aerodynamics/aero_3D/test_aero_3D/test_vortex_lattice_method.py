@@ -45,4 +45,11 @@ if __name__ == '__main__':
     # test_vanilla()
     # test_flat_plate()['CL']
     # test_flat_plate_mirrored()
-    pytest.main()
+    # pytest.main()
+    from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
+    analysis = asb.VortexLatticeMethod(
+        airplane=airplane,
+        op_point=asb.OperatingPoint(alpha=10),
+    )
+    aero = analysis.run()
+    analysis.draw()
