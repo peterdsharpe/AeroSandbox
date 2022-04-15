@@ -1,5 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+import pytest
 
 airplane = asb.Airplane(
     wings=[
@@ -18,6 +19,7 @@ airplane = asb.Airplane(
     ]
 )
 
+
 def LD_from_alpha(alpha):
     op_point = asb.OperatingPoint(
         velocity=1,
@@ -30,20 +32,23 @@ def LD_from_alpha(alpha):
     )
     aero = vlm.run()
 
-    CDp = 0.01
+    CD0 = 0.01
 
-    LD = aero["CL"] / (aero["CD"] + CDp)
+    LD = aero["CL"] / (aero["CD"] + CD0)
     return LD
 
-import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
-alphas = np.linspace(-15, 15, 50)
-LDs = np.vectorize(LD_from_alpha)(alphas)
-plt.plot(alphas, LDs, ".-")
-p.show_plot()
 
-# opti = asb.Opti()
-# alpha = opti.variable(init_guess=0)
-# LD = LD_from_alpha(alpha)
-# opti.minimize(-LD)
-# sol = opti.solve()
+def test_vlm_optimization_operating_point():
+    opti = asb.Opti()
+    alpha = opti.variable(init_guess=0, lower_bound=-90, upper_bound=90)
+    LD = LD_from_alpha(alpha)
+    opti.minimize(-LD)
+    sol = opti.solve(
+        verbose=False,
+        # callback=lambda _: print(f"alpha = {opti.debug.value(alpha)}")
+    )
+    assert sol.value(alpha) == pytest.approx(5.85, abs=0.1)
+
+
+if __name__ == '__main__':
+    pytest.main()
