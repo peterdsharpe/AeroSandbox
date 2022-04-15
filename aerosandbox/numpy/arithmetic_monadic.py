@@ -52,17 +52,6 @@ def abs(x):
         return _cas.fabs(x)
 
 
-def mod(x1, x2):
-    """
-    Return element-wise remainder of division.
-
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.mod.html
-    """
-    if not is_casadi_type(x1) and not is_casadi_type(x2):
-        return _onp.mod(x1, x2)
-
-    else:
-        return _cas.mod(x1, x2)
 
 
 # TODO trace()

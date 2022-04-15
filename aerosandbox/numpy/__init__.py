@@ -4,7 +4,8 @@ from numpy import *
 
 ### Overwrite some functions
 from aerosandbox.numpy.array import *
-from aerosandbox.numpy.arithmetic import *
+from aerosandbox.numpy.arithmetic_monadic import *
+from aerosandbox.numpy.arithmetic_dyadic import *
 from aerosandbox.numpy.calculus import *
 from aerosandbox.numpy.conditionals import *
 from aerosandbox.numpy.finite_difference_operators import *
