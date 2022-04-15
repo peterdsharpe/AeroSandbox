@@ -147,7 +147,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             collocation_points)
 
-        freestream_velocities = wide(steady_freestream_velocity) + rotation_freestream_velocities
+        freestream_velocities = np.add(wide(steady_freestream_velocity), rotation_freestream_velocities)
         # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         freestream_influences = np.sum(freestream_velocities * normal_directions, axis=1)
@@ -322,7 +322,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             points
         )
 
-        freestream_velocities = self.steady_freestream_velocity + rotation_freestream_velocities
+        freestream_velocities = np.add(wide(self.steady_freestream_velocity), rotation_freestream_velocities)
 
         V = V_induced + freestream_velocities
         return V
