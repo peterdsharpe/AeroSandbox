@@ -14,7 +14,7 @@ def calculate_induced_velocity_horseshoe(
         z_right: Union[float, np.ndarray],
         gamma: np.ndarray,
         trailing_vortex_direction: np.ndarray = None,
-        vortex_core_radius = 1e-8,
+        vortex_core_radius=1e-8,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -122,20 +122,29 @@ def calculate_induced_velocity_horseshoe(
 
     constant = gamma / (4 * np.pi)
 
-    u = constant * (
-            a_cross_b_x * term1 +
-            a_cross_u_x * term2 -
-            b_cross_u_x * term3
+    u = np.multiply(
+        constant,
+        (
+                a_cross_b_x * term1 +
+                a_cross_u_x * term2 -
+                b_cross_u_x * term3
+        )
     )
-    v = constant * (
-            a_cross_b_y * term1 +
-            a_cross_u_y * term2 -
-            b_cross_u_y * term3
+    v = np.multiply(
+        constant,
+        (
+                a_cross_b_y * term1 +
+                a_cross_u_y * term2 -
+                b_cross_u_y * term3
+        )
     )
-    w = constant * (
-            a_cross_b_z * term1 +
-            a_cross_u_z * term2 -
-            b_cross_u_z * term3
+    w = np.multiply(
+        constant,
+        (
+                a_cross_b_z * term1 +
+                a_cross_u_z * term2 -
+                b_cross_u_z * term3
+        )
     )
 
     return u, v, w
