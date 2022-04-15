@@ -4,6 +4,7 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
+from typing import Dict, Any
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
@@ -149,11 +150,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         freestream_velocities = wide(steady_freestream_velocity) + rotation_freestream_velocities
         # Nx3, represents the freestream velocity at each panel collocation point (c)
 
-        freestream_influences = (
-                freestream_velocities[:, 0] * normal_directions[:, 0] +
-                freestream_velocities[:, 1] * normal_directions[:, 1] +
-                freestream_velocities[:, 2] * normal_directions[:, 2]
-        )
+        freestream_influences = np.sum(freestream_velocities * normal_directions, axis=1)
 
         ### Save things to the instance for later access
         self.steady_freestream_velocity = steady_freestream_velocity
