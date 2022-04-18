@@ -907,10 +907,7 @@ class WingXSec(AeroSandboxObject):
                  airfoil: Airfoil = None,
                  control_surfaces: Optional[List['ControlSurface']] = None,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
-                 control_surface_is_symmetric=None,  # Note: deprecated.
-                 control_surface_hinge_point=None,  # Note: deprecated.
-                 control_surface_deflection=None,  # Note: deprecated.
-                 twist_angle=None,  # Note: deprecated.
+                 **deprecated_kwargs,
                  ):
         """
         Defines a new wing cross section.
@@ -1016,28 +1013,28 @@ class WingXSec(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated arguments
-        if twist_angle is not None:
+        if 'twist_angle' in locals():
             import warnings
             warnings.warn(
                 "DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.",
                 stacklevel=2
             )
             self.twist = twist_angle
-        if not (
-                control_surface_is_symmetric is None and
-                control_surface_hinge_point is None and
-                control_surface_deflection is None
+        if (
+                'control_surface_is_symmetric' in locals() or
+                'control_surface_hinge_point' in locals() or
+                'control_surface_deflection' in locals()
         ):
             import warnings
             warnings.warn(
                 "DEPRECATED: Define control surfaces using the `control_surfaces` parameter, which takes in a list of asb.ControlSurface objects.",
                 stacklevel=2
             )
-            if control_surface_is_symmetric is None:
+            if 'control_surface_is_symmetric' not in locals():
                 control_surface_is_symmetric = True
-            if control_surface_hinge_point is None:
+            if 'control_surface_hinge_point' not in locals():
                 control_surface_hinge_point = 0.75
-            if control_surface_deflection is None:
+            if 'control_surface_deflection' not in locals():
                 control_surface_deflection = 0
 
             self.control_surfaces.append(
