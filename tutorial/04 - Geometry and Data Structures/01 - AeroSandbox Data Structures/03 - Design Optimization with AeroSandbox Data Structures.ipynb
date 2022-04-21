@@ -4,12 +4,13 @@
    "cell_type": "code",
    "execution_count": null,
    "metadata": {
-    "collapsed": true
+    "collapsed": true,
+    "pycharm": {
+     "name": "#%%\n"
+    }
    },
    "outputs": [],
-   "source": [
-    ""
-   ]
+   "source": []
   }
  ],
  "metadata": {
