@@ -649,7 +649,7 @@ class Wing(AeroSandboxObject):
 
             points = np.concatenate([
                 points,
-                points * np.array([[1, -1, 1]])
+                np.multiply(points, np.array([[1, -1, 1]]))
             ])
 
             def index_of(iloc, jloc):
