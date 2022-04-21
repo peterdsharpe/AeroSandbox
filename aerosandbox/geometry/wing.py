@@ -621,8 +621,8 @@ class Wing(AeroSandboxObject):
 
         faces = []
 
-        num_i = np.length(spanwise_strips[0]) # spanwise
-        num_j = np.length(spanwise_strips) # chordwise
+        num_i = np.length(spanwise_strips[0])  # spanwise
+        num_j = np.length(spanwise_strips)  # chordwise
 
         def index_of(iloc, jloc):
             return iloc + jloc * num_i
@@ -637,11 +637,11 @@ class Wing(AeroSandboxObject):
 
         for i in range(num_i - 1):
             for j in range(num_j - 1):
-                add_face( # On right wing:
-                    index_of(i, j), # Front-left
-                    index_of(i, j + 1), # Back-left
-                    index_of(i + 1, j + 1), # Back-right
-                    index_of(i + 1, j), # Front-right
+                add_face(  # On right wing:
+                    index_of(i, j),  # Front-left
+                    index_of(i, j + 1),  # Back-left
+                    index_of(i + 1, j + 1),  # Back-right
+                    index_of(i + 1, j),  # Front-right
                 )
 
         if self.symmetric:
@@ -657,11 +657,11 @@ class Wing(AeroSandboxObject):
 
             for i in range(num_i - 1):
                 for j in range(num_j - 1):
-                    add_face( # On left wing:
-                        index_of(i + 1, j), # Front-left
-                        index_of(i + 1, j + 1), # Back-left
-                        index_of(i, j + 1), # Back-right
-                        index_of(i, j), # Front-right
+                    add_face(  # On left wing:
+                        index_of(i + 1, j),  # Front-left
+                        index_of(i + 1, j + 1),  # Back-left
+                        index_of(i, j + 1),  # Back-right
+                        index_of(i, j),  # Front-right
                     )
 
         faces = np.array(faces)
