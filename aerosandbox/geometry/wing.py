@@ -751,11 +751,14 @@ class Wing(AeroSandboxObject):
 
         points_sections = []
         for i in range(len(xsec_points) - 1):
-            points_section = space(
-                xsec_points[i],
-                xsec_points[i + 1],
-                spanwise_resolution + 1
-            )
+            points_section = np.stack([
+                space(
+                    xsec_points[i][dim],
+                    xsec_points[i + 1][dim],
+                    spanwise_resolution + 1
+                )
+                for dim in range(3)
+            ], axis=1)
             if not i == len(xsec_points) - 2:
                 points_section = points_section[:-1]
 
