@@ -206,7 +206,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
         moments_geometry = np.cross(
-            vortex_centers - wide(self.airplane.xyz_ref),
+            np.add(vortex_centers, -wide(self.airplane.xyz_ref)),
             forces_geometry
         )
 
