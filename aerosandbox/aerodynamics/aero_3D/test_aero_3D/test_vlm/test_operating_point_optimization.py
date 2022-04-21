@@ -44,7 +44,7 @@ def test_vlm_optimization_operating_point():
     LD = LD_from_alpha(alpha)
     opti.minimize(-LD)
     sol = opti.solve(
-        verbose=False,
+        verbose=True,
         # callback=lambda _: print(f"alpha = {opti.debug.value(alpha)}")
     )
     assert sol.value(alpha) == pytest.approx(5.85, abs=0.1)
@@ -52,4 +52,5 @@ def test_vlm_optimization_operating_point():
 
 if __name__ == '__main__':
     LD_from_alpha(6)
-    pytest.main()
+    test_vlm_optimization_operating_point()
+    # pytest.main()
