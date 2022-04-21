@@ -51,4 +51,5 @@ def test_vlm_optimization_operating_point():
 
 
 if __name__ == '__main__':
+    LD_from_alpha(6)
     pytest.main()
