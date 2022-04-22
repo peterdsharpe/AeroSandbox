@@ -438,7 +438,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
             return fig.draw(
                 show=show,
-                colorbar_title=colorbar_label
+                colorbar_title=colorbar_label,
+                **show_kwargs,
             )
 
         elif backend == "pyvista":
@@ -486,11 +487,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
                     )
 
             if show:
-                plotter.show()
+                plotter.show(**show_kwargs)
             return plotter
-
-
-
 
         else:
             raise ValueError("Bad value of `backend`!")
