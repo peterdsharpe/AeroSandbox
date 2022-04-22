@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.library import airfoils
 
 wing_airfoil = asb.Airfoil("sd7037")
 tail_airfoil = asb.Airfoil("naca0010")
