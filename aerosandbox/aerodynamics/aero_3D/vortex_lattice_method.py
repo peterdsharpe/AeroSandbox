@@ -40,7 +40,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
-                 run_symmetric_if_possible: bool = True,
+                 run_symmetric_if_possible: bool = False,
                  verbose: bool = False,
                  spanwise_resolution: int = 10,
                  spanwise_spacing: str = "cosine",
@@ -64,15 +64,16 @@ class VortexLatticeMethod(ExplicitAnalysis):
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
         if run_symmetric_if_possible:
-            try:
-                self.run_symmetric = (  # Satisfies assumptions
-                        self.op_point.beta == 0 and
-                        self.op_point.p == 0 and
-                        self.op_point.r == 0 and
-                        self.airplane.is_entirely_symmetric()
-                )
-            except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
-                pass
+            raise NotImplementedError("VLM with symmetry detection not yet implemented!")
+            # try:
+            #     self.run_symmetric = (  # Satisfies assumptions
+            #             self.op_point.beta == 0 and
+            #             self.op_point.p == 0 and
+            #             self.op_point.r == 0 and
+            #             self.airplane.is_entirely_symmetric()
+            #     )
+            # except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
+            #     pass
 
     def run(self) -> Dict[str, Any]:
 
