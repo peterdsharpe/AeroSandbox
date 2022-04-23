@@ -407,6 +407,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
         :return:
         """
+        if show_kwargs is None:
+            show_kwargs = {}
 
         if c is None:
             c = self.vortex_strengths
