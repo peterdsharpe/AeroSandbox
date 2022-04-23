@@ -47,6 +47,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
                  chordwise_resolution: int = 10,
                  chordwise_spacing: str = "cosine",
                  vortex_core_radius: float = 1e-8,
+                 align_trailing_vortices_with_wind: bool = False,
                  ):
         super().__init__()
 
@@ -58,6 +59,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.chordwise_resolution = chordwise_resolution
         self.chordwise_spacing = chordwise_spacing
         self.vortex_core_radius = vortex_core_radius
+        self.align_trailing_vortices_with_wind = align_trailing_vortices_with_wind
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
@@ -172,7 +174,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(right_vortex_vertices[:, 0]),
             y_right=wide(right_vortex_vertices[:, 1]),
             z_right=wide(right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=steady_freestream_direction,
+            trailing_vortex_direction=steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array([1, 0, 0]),
             gamma=1,
             vortex_core_radius=self.vortex_core_radius
         )
@@ -292,7 +294,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(self.right_vortex_vertices[:, 0]),
             y_right=wide(self.right_vortex_vertices[:, 1]),
             z_right=wide(self.right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=self.steady_freestream_direction,
+            trailing_vortex_direction=self.steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array([1, 0, 0]),
             gamma=wide(self.vortex_strengths),
             vortex_core_radius=self.vortex_core_radius
         )
