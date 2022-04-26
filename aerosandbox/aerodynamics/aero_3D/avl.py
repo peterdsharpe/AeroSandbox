@@ -205,15 +205,15 @@ class AVL(ExplicitAnalysis):
             for key_to_lowerize in ["Alpha", "Beta", "Mach"]:
                 res[key_to_lowerize.lower()] = res.pop(key_to_lowerize)
 
-                ##### Add in missing useful results
-                q = self.op_point.dynamic_pressure()
-                S = self.airplane.s_ref
-                b = self.airplane.b_ref
-                c = self.airplane.c_ref
-
             for key in list(res.keys()):
                 if "tot" in key:
                     res[key.replace("tot", "")] = res.pop(key)
+
+            ##### Add in missing useful results
+            q = self.op_point.dynamic_pressure()
+            S = self.airplane.s_ref
+            b = self.airplane.b_ref
+            c = self.airplane.c_ref
 
             res["p"] = res["pb/2V"] * (2 * self.op_point.velocity / b)
             res["q"] = res["qc/2V"] * (2 * self.op_point.velocity / c)
