@@ -366,8 +366,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if length is None:
             length = self.airplane.c_ref * 5
         if seed_points is None:
-            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge]
-            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge]
+            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge.astype(bool)]
+            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge.astype(bool)]
             N_streamlines_target = 200
             seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
 
