@@ -9,10 +9,12 @@ airplane = asb.Airplane(
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=1,
+                    airfoil=asb.Airfoil("naca0001")
                 ),
                 asb.WingXSec(
                     xyz_le=[0, 1, 0],
                     chord=1,
+                    airfoil=asb.Airfoil("naca0001")
                 )
             ]
         )
@@ -29,6 +31,7 @@ def LD_from_alpha(alpha):
     vlm = asb.VortexLatticeMethod(
         airplane,
         op_point,
+        align_trailing_vortices_with_wind=True
     )
     aero = vlm.run()
 
@@ -40,13 +43,14 @@ def LD_from_alpha(alpha):
 
 def test_vlm_optimization_operating_point():
     opti = asb.Opti()
-    alpha = opti.variable(init_guess=0, lower_bound=-90, upper_bound=90)
+    alpha = opti.variable(init_guess=0, lower_bound=-30, upper_bound=30)
     LD = LD_from_alpha(alpha)
     opti.minimize(-LD)
     sol = opti.solve(
         verbose=True,
         # callback=lambda _: print(f"alpha = {opti.debug.value(alpha)}")
     )
+    print(sol.value(alpha), sol.value(LD))
     assert sol.value(alpha) == pytest.approx(5.85, abs=0.1)
 
 
