@@ -760,7 +760,7 @@ class Wing(AeroSandboxObject):
                 for dim in range(3)
             ], axis=1)
             if not i == len(xsec_points) - 2:
-                points_section = points_section[:-1]
+                points_section = points_section[:-1, :]
 
             points_sections.append(points_section)
 
