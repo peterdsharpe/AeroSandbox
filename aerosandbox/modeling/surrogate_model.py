@@ -2,7 +2,6 @@ from aerosandbox.common import AeroSandboxObject
 from abc import abstractmethod
 from typing import Union, Dict, List, Tuple
 import aerosandbox.numpy as np
-import matplotlib.pyplot as plt
 
 
 class SurrogateModel(AeroSandboxObject):
@@ -92,6 +91,7 @@ class SurrogateModel(AeroSandboxObject):
             return None
 
     def plot(self, resolution=250):
+        import matplotlib.pyplot as plt
 
         def axis_range(x_data_axis: np.ndarray) -> Tuple[float, float]:
             """
