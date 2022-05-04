@@ -820,25 +820,30 @@ class Wing(AeroSandboxObject):
             the local reference frame of the WingXSec. Given in geometry axes.
 
         """
+
+        def project_to_YZ_plane_and_normalize(vector):
+            YZ_magnitude = (vector[1] ** 2 + vector[2] ** 2) ** 0.5
+            return np.array([0, vector[1], vector[2]]) / YZ_magnitude
+
         ### Compute the untwisted reference frame
         xg_local = np.array([1, 0, 0])
         if index == 0:
-            span_vector = self.xsecs[1].xyz_le - self.xsecs[0].xyz_le
-            span_vector[0] = 0
-            yg_local = span_vector / np.linalg.norm(span_vector)
+            yg_local = project_to_YZ_plane_and_normalize(
+                self.xsecs[1].xyz_le - self.xsecs[0].xyz_le
+            )
             z_scale = 1
         elif index == len(self.xsecs) - 1 or index == -1:
-            span_vector = self.xsecs[-1].xyz_le - self.xsecs[-2].xyz_le
-            span_vector[0] = 0
-            yg_local = span_vector / np.linalg.norm(span_vector)
+            yg_local = project_to_YZ_plane_and_normalize(
+                self.xsecs[-1].xyz_le - self.xsecs[-2].xyz_le
+            )
             z_scale = 1
         else:
-            vector_before = self.xsecs[index].xyz_le - self.xsecs[index - 1].xyz_le
-            vector_after = self.xsecs[index + 1].xyz_le - self.xsecs[index].xyz_le
-            vector_before[0] = 0  # Project onto YZ plane.
-            vector_after[0] = 0  # Project onto YZ plane.
-            vector_before = vector_before / np.linalg.norm(vector_before)
-            vector_after = vector_after / np.linalg.norm(vector_after)
+            vector_before = project_to_YZ_plane_and_normalize(
+                self.xsecs[index].xyz_le - self.xsecs[index - 1].xyz_le
+            )
+            vector_after = project_to_YZ_plane_and_normalize(
+                self.xsecs[index + 1].xyz_le - self.xsecs[index].xyz_le
+            )
             span_vector = (vector_before + vector_after) / 2
             yg_local = span_vector / np.linalg.norm(span_vector)
             cos_vectors = np.linalg.inner(vector_before, vector_after)
