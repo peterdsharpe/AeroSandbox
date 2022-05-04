@@ -189,8 +189,8 @@ class AirfoilInviscid(ImplicitAnalysis):
         # NaN out any points inside the airfoil
         for airfoil in self.airfoils:
             contains = airfoil.contains_points(X, Y)
-            U[contains] = np.NaN
-            V[contains] = np.NaN
+            U[contains] = np.nan
+            V[contains] = np.nan
 
         speed = (U ** 2 + V ** 2) ** 0.5
         Cp = 1 - speed ** 2

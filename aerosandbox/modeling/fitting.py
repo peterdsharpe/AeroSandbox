@@ -303,7 +303,7 @@ class FittedModel(SurrogateModel):
             try:
                 params_solved[param_name] = sol.value(params[param_name])
             except:
-                params_solved[param_name] = np.NaN
+                params_solved[param_name] = np.nan
 
         ### Store all the data and inputs
         self.model = model

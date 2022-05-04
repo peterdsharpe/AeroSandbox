@@ -288,7 +288,7 @@ class XFoil(ExplicitAnalysis):
                 try:
                     return float(s)
                 except ValueError:
-                    return np.NaN
+                    return np.nan
 
             for line in lines[12:]:
                 data = [str_to_float(entry) for entry in line.split()]

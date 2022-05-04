@@ -23,7 +23,7 @@ def time_limit(seconds):
         >>>     with time_limit(5):
         >>>         x = complicated_function()
         >>> except TimeoutException:
-        >>>     x = np.NaN
+        >>>     x = np.nan
 
     Args:
         seconds: Duration of timeout [seconds]

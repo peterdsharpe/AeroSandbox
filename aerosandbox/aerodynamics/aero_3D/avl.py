@@ -227,7 +227,7 @@ class AVL(ExplicitAnalysis):
             try:
                 res["Clb Cnr / Clr Cnb"] = res["Clb"] * res["Cnr"] / (res["Clr"] * res["Cnb"])
             except ZeroDivisionError:
-                res["Clb Cnr / Clr Cnb"] = np.NaN
+                res["Clb Cnr / Clr Cnb"] = np.nan
 
             return res
 
@@ -620,7 +620,7 @@ class AVL(ExplicitAnalysis):
                 try:  # Try to convert the value into a float. If you can't, return a NaN
                     value = float(value)
                 except:
-                    value = np.NaN
+                    value = np.nan
 
             if key in items.keys():  # If you already have this key
                 if overwrite is None:
