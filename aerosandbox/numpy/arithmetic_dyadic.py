@@ -1,4 +1,4 @@
-import numpy as _onp
+import jax.numpy as _onp
 import casadi as _cas
 from typing import Tuple, Iterable, Union
 

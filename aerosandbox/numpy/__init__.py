@@ -1,6 +1,6 @@
 ### Import everything from NumPy
 
-from numpy import *
+from jax.numpy import *
 
 ### Overwrite some functions
 from aerosandbox.numpy.array import *
@@ -21,4 +21,4 @@ from aerosandbox.numpy.trig import *
 
 ### Force-overwrite built-in Python functions.
 
-from numpy import round  # TODO check that min, max are properly imported
+from jax.numpy import round  # TODO check that min, max are properly imported

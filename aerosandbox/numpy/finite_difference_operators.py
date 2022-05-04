@@ -1,5 +1,5 @@
 from aerosandbox.numpy.array import array, length
-import numpy as _onp
+import jax.numpy as _onp
 
 
 def finite_difference_coefficients(

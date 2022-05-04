@@ -1,4 +1,4 @@
-import numpy as _onp
+import jax.numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.arithmetic_monadic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type

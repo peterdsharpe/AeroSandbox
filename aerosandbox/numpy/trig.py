@@ -1,4 +1,4 @@
-import numpy as _onp
+import jax.numpy as _onp
 from numpy import pi as _pi
 
 

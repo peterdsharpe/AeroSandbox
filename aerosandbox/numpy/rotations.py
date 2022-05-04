@@ -1,6 +1,6 @@
 from aerosandbox.numpy import sin, cos, linalg
 from aerosandbox.numpy.array import array
-import numpy as _onp
+import jax.numpy as _onp
 from typing import Union, List
 
 
