@@ -14,7 +14,6 @@ isa_base_altitude = isa_table["Base Altitude [m]"].values
 isa_lapse_rate = isa_table["Lapse Rate [K/km]"].values / 1000
 isa_base_temperature = isa_table["Base Temperature [C]"].values + 273.15
 
-
 ### Calculate pressure at each ISA level programmatically using the barometric pressure equation with linear temperature.
 def barometric_formula(
         P_b,
@@ -35,13 +34,12 @@ def barometric_formula(
     Returns:
 
     """
-    with np.errstate(divide="ignore", over="ignore"):
-        T = T_b + L_b * (h - h_b)
-        T = np.fmax(T, 0)  # Keep temperature nonnegative, no matter the inputs.
-        if L_b != 0:
-            return P_b * (T / T_b) ** (-g / (gas_constant_air * L_b))
-        else:
-            return P_b * np.exp(-g * (h - h_b) / (gas_constant_air * T_b))
+    T = T_b + L_b * (h - h_b)
+    T = np.fmax(T, 0)  # Keep temperature nonnegative, no matter the inputs.
+    if L_b != 0:
+        return P_b * (T / T_b) ** (-g / (gas_constant_air * L_b))
+    else:
+        return P_b * np.exp(-g * (h - h_b) / (gas_constant_air * T_b))
 
 
 isa_pressure = [101325.]  # Pascals
