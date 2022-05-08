@@ -536,8 +536,12 @@ class Wing(AeroSandboxObject):
         faces = np.array(faces)
 
         if self.symmetric:
-            flipped_points = np.array(points)
-            flipped_points[:, 1] = flipped_points[:, 1] * -1
+            flipped_points = np.multiply(
+                points,
+                np.array([
+                    [1, -1, 1]
+                ])
+            )
 
             points, faces = mesh_utils.stack_meshes(
                 (points, faces),
