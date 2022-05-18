@@ -67,6 +67,50 @@ class AeroBuildup(ExplicitAnalysis):
         self.include_wave_drag = include_wave_drag
 
     def run(self):
+        """
+        Computes the aerodynamic forces.
+
+        Returns a dictionary with keys:
+
+            'F_g' : an [x, y, z] list of forces in geometry axes [N]
+
+            'F_b' : an [x, y, z] list of forces in body axes [N]
+
+            'F_w' : an [x, y, z] list of forces in wind axes [N]
+
+            'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+
+            'M_b' : an [x, y, z] list of moments about body axes [Nm]
+
+            'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+
+            'L' : the lift force [N]
+
+            'Y' : the side force [N]
+
+            'D' : the drag force [N]
+
+            'l_b', the rolling moment [Nm]. Positive is roll-right.
+
+            'm_b', the pitching moment [Nm]. Positive is pitch-up.
+
+            'n_b', the yawing moment [Nm]. Positive is nose-right.
+
+            'CL', the lift coefficient [-]
+
+            'CY', the sideforce coefficient [-]
+
+            'CD', the drag coefficient [-]
+
+            'Cl', the rolling coefficient [-]
+
+            'Cm', the pitching coefficient [-]
+
+            'Cn', the yawing coefficient [-]
+
+        Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+        """
+
         ### Compute the forces on each component
         aero_components = [
                               self.wing_aerodynamics(wing=wing.translate(-self.airplane.xyz_ref)) for wing in
