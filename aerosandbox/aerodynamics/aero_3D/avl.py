@@ -229,6 +229,17 @@ class AVL(ExplicitAnalysis):
             except ZeroDivisionError:
                 res["Clb Cnr / Clr Cnb"] = np.NaN
 
+            res["F_w"] = [
+                -res["D"], res["Y"], -res["L"]
+            ]
+            res["F_b"] = self.op_point.convert_axes(*res["F_w"], from_axes="wind", to_axes="body")
+            res["F_g"] = self.op_point.convert_axes(*res["F_b"], from_axes="body", to_axes="geometry")
+            res["M_b"] = [
+                res["l_b"], res["m_b"], res["n_b"]
+            ]
+            res["M_g"] = self.op_point.convert_axes(*res["M_b"], from_axes="body", to_axes="geometry")
+            res["M_w"] = self.op_point.convert_axes(*res["M_b"], from_axes="body", to_axes="wind")
+
             return res
 
     def _default_keystroke_file_contents(self) -> List[str]:
