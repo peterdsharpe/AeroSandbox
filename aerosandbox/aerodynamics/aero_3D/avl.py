@@ -250,9 +250,9 @@ class AVL(ExplicitAnalysis):
         # Set parameters
         run_file_contents += [
             "m",
-            f"mn {self.op_point.mach()}",
-            f"v {self.op_point.velocity}",
-            f"d {self.op_point.atmosphere.density()}",
+            f"mn {float(self.op_point.mach())}",
+            f"v {float(self.op_point.velocity)}",
+            f"d {float(self.op_point.atmosphere.density())}",
             "g 9.81",
             ""
         ]
@@ -263,11 +263,11 @@ class AVL(ExplicitAnalysis):
         r_bar = self.op_point.r * self.airplane.b_ref / (2 * self.op_point.velocity)
 
         run_file_contents += [
-            f"a a {self.op_point.alpha}",
-            f"b b {self.op_point.beta}",
-            f"r r {p_bar}",
-            f"p p {q_bar}",
-            f"y y {r_bar}"
+            f"a a {float(self.op_point.alpha)}",
+            f"b b {float(self.op_point.beta)}",
+            f"r r {float(p_bar)}",
+            f"p p {float(q_bar)}",
+            f"y y {float(r_bar)}"
         ]
 
         # Set control surface deflections
