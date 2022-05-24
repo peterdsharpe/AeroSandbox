@@ -14,7 +14,7 @@ def string_to_float(s: str) -> float:
     try:
         return float(s)
     except ValueError:
-        return np.NaN
+        return np.nan
 
 
 def remove_nan_rows(a: np.ndarray) -> np.ndarray:

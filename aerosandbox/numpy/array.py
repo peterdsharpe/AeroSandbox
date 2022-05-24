@@ -115,7 +115,7 @@ def length(array) -> int:
     Returns:
 
     """
-    if not is_casadi_type(array):
+    if not is_casadi_type(array, recursive=False):
         try:
             return len(array)
         except TypeError:

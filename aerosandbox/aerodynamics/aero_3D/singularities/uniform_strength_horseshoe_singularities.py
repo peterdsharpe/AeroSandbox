@@ -75,13 +75,13 @@ def calculate_induced_velocity_horseshoe(
         "z_right": z_right,
     })
 
-    a_x = x_field - x_left
-    a_y = y_field - y_left
-    a_z = z_field - z_left
+    a_x = np.add(x_field, -x_left)
+    a_y = np.add(y_field, -y_left)
+    a_z = np.add(z_field, -z_left)
 
-    b_x = x_field - x_right
-    b_y = y_field - y_right
-    b_z = z_field - z_right
+    b_x = np.add(x_field, -x_right)
+    b_y = np.add(y_field, -y_right)
+    b_z = np.add(z_field, -z_right)
 
     u_x = trailing_vortex_direction[0]
     u_y = trailing_vortex_direction[1]

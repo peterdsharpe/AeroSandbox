@@ -31,7 +31,7 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
                  x_data_resample: Union[int, Dict[str, Union[int, np.ndarray]]] = 10,
                  resampling_interpolator: object = interpolate.RBFInterpolator,
                  resampling_interpolator_kwargs: Dict[str, Any] = None,
-                 fill_value=np.NaN,  # Default behavior: return NaN for all inputs outside data range.
+                 fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
                  interpolated_model_kwargs: Dict[str, Any] = None,
                  ):
         """

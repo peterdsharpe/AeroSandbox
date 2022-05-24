@@ -1093,7 +1093,7 @@ class Airfoil(Polygon):
     #     np.place(
     #         arr=xfoil_data_2D["Re"],
     #         mask=np.isnan(xfoil_data_2D["alpha"]),
-    #         vals=np.NaN
+    #         vals=np.nan
     #     )
     #     xfoil_data_2D["alpha_indices"] = np.arange(a_start, a_end + a_step / 2, a_step)
     #     xfoil_data_2D["Re_indices"] = Res

@@ -126,7 +126,7 @@ def interpn(
         xi: _onp.ndarray,
         method: str = "linear",
         bounds_error=True,
-        fill_value=_onp.NaN
+        fill_value=_onp.nan
 ) -> _onp.ndarray:
     """
     Performs multidimensional interpolation on regular grids. Analogue to scipy.interpolate.interpn().

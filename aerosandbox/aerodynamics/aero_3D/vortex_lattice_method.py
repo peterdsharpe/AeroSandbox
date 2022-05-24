@@ -40,13 +40,14 @@ class VortexLatticeMethod(ExplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
-                 run_symmetric_if_possible: bool = True,
+                 run_symmetric_if_possible: bool = False,
                  verbose: bool = False,
                  spanwise_resolution: int = 10,
                  spanwise_spacing: str = "cosine",
                  chordwise_resolution: int = 10,
                  chordwise_spacing: str = "cosine",
                  vortex_core_radius: float = 1e-8,
+                 align_trailing_vortices_with_wind: bool = False,
                  ):
         super().__init__()
 
@@ -58,19 +59,21 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.chordwise_resolution = chordwise_resolution
         self.chordwise_spacing = chordwise_spacing
         self.vortex_core_radius = vortex_core_radius
+        self.align_trailing_vortices_with_wind = align_trailing_vortices_with_wind
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
         if run_symmetric_if_possible:
-            try:
-                self.run_symmetric = (  # Satisfies assumptions
-                        self.op_point.beta == 0 and
-                        self.op_point.p == 0 and
-                        self.op_point.r == 0 and
-                        self.airplane.is_entirely_symmetric()
-                )
-            except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
-                pass
+            raise NotImplementedError("VLM with symmetry detection not yet implemented!")
+            # try:
+            #     self.run_symmetric = (  # Satisfies assumptions
+            #             self.op_point.beta == 0 and
+            #             self.op_point.p == 0 and
+            #             self.op_point.r == 0 and
+            #             self.airplane.is_entirely_symmetric()
+            #     )
+            # except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
+            #     pass
 
     def run(self) -> Dict[str, Any]:
 
@@ -172,7 +175,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(right_vortex_vertices[:, 0]),
             y_right=wide(right_vortex_vertices[:, 1]),
             z_right=wide(right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=steady_freestream_direction,
+            trailing_vortex_direction=steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array([1, 0, 0]),
             gamma=1,
             vortex_core_radius=self.vortex_core_radius
         )
@@ -206,7 +209,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
         moments_geometry = np.cross(
-            vortex_centers - wide(self.airplane.xyz_ref),
+            np.add(vortex_centers, -wide(self.airplane.xyz_ref)),
             forces_geometry
         )
 
@@ -292,7 +295,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(self.right_vortex_vertices[:, 0]),
             y_right=wide(self.right_vortex_vertices[:, 1]),
             z_right=wide(self.right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=self.steady_freestream_direction,
+            trailing_vortex_direction=self.steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array([1, 0, 0]),
             gamma=wide(self.vortex_strengths),
             vortex_core_radius=self.vortex_core_radius
         )
@@ -363,8 +366,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if length is None:
             length = self.airplane.c_ref * 5
         if seed_points is None:
-            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge]
-            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge]
+            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge.astype(bool)]
+            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge.astype(bool)]
             N_streamlines_target = 200
             seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
 
@@ -407,6 +410,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
         :return:
         """
+        if show_kwargs is None:
+            show_kwargs = {}
 
         if c is None:
             c = self.vortex_strengths
@@ -438,7 +443,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
             return fig.draw(
                 show=show,
-                colorbar_title=colorbar_label
+                colorbar_title=colorbar_label,
+                **show_kwargs,
             )
 
         elif backend == "pyvista":
@@ -486,11 +492,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
                     )
 
             if show:
-                plotter.show()
+                plotter.show(**show_kwargs)
             return plotter
-
-
-
 
         else:
             raise ValueError("Bad value of `backend`!")

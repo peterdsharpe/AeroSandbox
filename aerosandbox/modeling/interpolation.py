@@ -33,7 +33,7 @@ class InterpolatedModel(SurrogateModel):
                  x_data_coordinates: Union[np.ndarray, Dict[str, np.ndarray]],
                  y_data_structured: np.ndarray,
                  method: str = "bspline",
-                 fill_value=np.NaN,  # Default behavior: return NaN for all inputs outside data range.
+                 fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
                  ):
         """
         Create the interpolator. Note that data must be structured (i.e., gridded on a hypercube) for general

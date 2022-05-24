@@ -75,3 +75,17 @@ def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None, manual=False):
             raise ValueError("`axisc` must be -1, 0, or 1.")
 
         return c
+
+
+def transpose(a, axes=None):
+    """
+    Reverse or permute the axes of an array; returns the modified array.
+
+    For an array a with two axes, transpose(a) gives the matrix transpose.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.transpose.html
+    """
+    if not is_casadi_type(a, recursive=False):
+        return _onp.transpose(a, axes=axes)
+    else:
+        return _cas.transpose(a)

@@ -35,13 +35,18 @@ def barometric_formula(
     Returns:
 
     """
-    with np.errstate(divide="ignore", over="ignore"):
-        T = T_b + L_b * (h - h_b)
-        T = np.fmax(T, 0)  # Keep temperature nonnegative, no matter the inputs.
-        if L_b != 0:
-            return P_b * (T / T_b) ** (-g / (gas_constant_air * L_b))
-        else:
-            return P_b * np.exp(-g * (h - h_b) / (gas_constant_air * T_b))
+    T = T_b + L_b * (h - h_b)
+    T = np.fmax(T, 1)  # Keep temperature nonnegative, no matter the inputs.
+    if L_b != 0:
+        return P_b * (T / T_b) ** (-g / (gas_constant_air * L_b))
+    else:
+        return P_b * np.exp(
+            np.clip(
+                -g * (h - h_b) / (gas_constant_air * T_b),
+                -500,
+                500
+            )
+        )
 
 
 isa_pressure = [101325.]  # Pascals

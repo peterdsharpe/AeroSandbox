@@ -536,8 +536,12 @@ class Wing(AeroSandboxObject):
         faces = np.array(faces)
 
         if self.symmetric:
-            flipped_points = np.array(points)
-            flipped_points[:, 1] = flipped_points[:, 1] * -1
+            flipped_points = np.multiply(
+                points,
+                np.array([
+                    [1, -1, 1]
+                ])
+            )
 
             points, faces = mesh_utils.stack_meshes(
                 (points, faces),
@@ -621,8 +625,8 @@ class Wing(AeroSandboxObject):
 
         faces = []
 
-        num_i = np.length(spanwise_strips[0]) # spanwise
-        num_j = np.length(spanwise_strips) # chordwise
+        num_i = np.length(spanwise_strips[0])  # spanwise
+        num_j = np.length(spanwise_strips)  # chordwise
 
         def index_of(iloc, jloc):
             return iloc + jloc * num_i
@@ -637,11 +641,11 @@ class Wing(AeroSandboxObject):
 
         for i in range(num_i - 1):
             for j in range(num_j - 1):
-                add_face( # On right wing:
-                    index_of(i, j), # Front-left
-                    index_of(i, j + 1), # Back-left
-                    index_of(i + 1, j + 1), # Back-right
-                    index_of(i + 1, j), # Front-right
+                add_face(  # On right wing:
+                    index_of(i, j),  # Front-left
+                    index_of(i, j + 1),  # Back-left
+                    index_of(i + 1, j + 1),  # Back-right
+                    index_of(i + 1, j),  # Front-right
                 )
 
         if self.symmetric:
@@ -649,7 +653,7 @@ class Wing(AeroSandboxObject):
 
             points = np.concatenate([
                 points,
-                points * np.array([[1, -1, 1]])
+                np.multiply(points, np.array([[1, -1, 1]]))
             ])
 
             def index_of(iloc, jloc):
@@ -657,11 +661,11 @@ class Wing(AeroSandboxObject):
 
             for i in range(num_i - 1):
                 for j in range(num_j - 1):
-                    add_face( # On left wing:
-                        index_of(i + 1, j), # Front-left
-                        index_of(i + 1, j + 1), # Back-left
-                        index_of(i, j + 1), # Back-right
-                        index_of(i, j), # Front-right
+                    add_face(  # On left wing:
+                        index_of(i + 1, j),  # Front-left
+                        index_of(i + 1, j + 1),  # Back-left
+                        index_of(i, j + 1),  # Back-right
+                        index_of(i, j),  # Front-right
                     )
 
         faces = np.array(faces)
@@ -751,13 +755,16 @@ class Wing(AeroSandboxObject):
 
         points_sections = []
         for i in range(len(xsec_points) - 1):
-            points_section = space(
-                xsec_points[i],
-                xsec_points[i + 1],
-                spanwise_resolution + 1
-            )
+            points_section = np.stack([
+                space(
+                    xsec_points[i][dim],
+                    xsec_points[i + 1][dim],
+                    spanwise_resolution + 1
+                )
+                for dim in range(3)
+            ], axis=1)
             if not i == len(xsec_points) - 2:
-                points_section = points_section[:-1]
+                points_section = points_section[:-1, :]
 
             points_sections.append(points_section)
 
@@ -817,25 +824,30 @@ class Wing(AeroSandboxObject):
             the local reference frame of the WingXSec. Given in geometry axes.
 
         """
+
+        def project_to_YZ_plane_and_normalize(vector):
+            YZ_magnitude = (vector[1] ** 2 + vector[2] ** 2) ** 0.5
+            return np.array([0, vector[1], vector[2]]) / YZ_magnitude
+
         ### Compute the untwisted reference frame
         xg_local = np.array([1, 0, 0])
         if index == 0:
-            span_vector = self.xsecs[1].xyz_le - self.xsecs[0].xyz_le
-            span_vector[0] = 0
-            yg_local = span_vector / np.linalg.norm(span_vector)
+            yg_local = project_to_YZ_plane_and_normalize(
+                self.xsecs[1].xyz_le - self.xsecs[0].xyz_le
+            )
             z_scale = 1
         elif index == len(self.xsecs) - 1 or index == -1:
-            span_vector = self.xsecs[-1].xyz_le - self.xsecs[-2].xyz_le
-            span_vector[0] = 0
-            yg_local = span_vector / np.linalg.norm(span_vector)
+            yg_local = project_to_YZ_plane_and_normalize(
+                self.xsecs[-1].xyz_le - self.xsecs[-2].xyz_le
+            )
             z_scale = 1
         else:
-            vector_before = self.xsecs[index].xyz_le - self.xsecs[index - 1].xyz_le
-            vector_after = self.xsecs[index + 1].xyz_le - self.xsecs[index].xyz_le
-            vector_before[0] = 0  # Project onto YZ plane.
-            vector_after[0] = 0  # Project onto YZ plane.
-            vector_before = vector_before / np.linalg.norm(vector_before)
-            vector_after = vector_after / np.linalg.norm(vector_after)
+            vector_before = project_to_YZ_plane_and_normalize(
+                self.xsecs[index].xyz_le - self.xsecs[index - 1].xyz_le
+            )
+            vector_after = project_to_YZ_plane_and_normalize(
+                self.xsecs[index + 1].xyz_le - self.xsecs[index].xyz_le
+            )
             span_vector = (vector_before + vector_after) / 2
             yg_local = span_vector / np.linalg.norm(span_vector)
             cos_vectors = np.linalg.inner(vector_before, vector_after)
