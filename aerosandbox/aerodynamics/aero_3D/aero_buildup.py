@@ -253,7 +253,7 @@ class AeroBuildup(ExplicitAnalysis):
             )
             vel_dot_normal = np.dot(velocity_dir_b, sect_z_b, manual=True)
 
-            sect_alpha_generalized = 90 - np.arccosd(vel_dot_normal)
+            sect_alpha_generalized = 90 - np.arccosd(np.clip(vel_dot_normal, -1, 1))
 
             def get_deflection(xsec):
                 n_surfs = len(xsec.control_surfaces)
