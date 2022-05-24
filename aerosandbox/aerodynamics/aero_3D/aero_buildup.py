@@ -123,7 +123,7 @@ class AeroBuildup(ExplicitAnalysis):
         ### Sum up the forces
         aero_total = {}
 
-        for k in aero_components[0].keys(): # TODO add fix for when no aero components exist
+        for k in aero_components[0].keys():  # TODO add fix for when no aero components exist
             values = [
                 component[k] for component in aero_components
             ]
@@ -603,7 +603,7 @@ class AeroBuildup(ExplicitAnalysis):
             force_potential_flow = q * (  # From Munk, via Jorgensen
                     np.sind(2 * generalized_alpha) *
                     (area_b - area_a)
-            ) # Matches Drela, Flight Vehicle Aerodynamics Eqn. 6.75 in the small-alpha limit.
+            )  # Matches Drela, Flight Vehicle Aerodynamics Eqn. 6.75 in the small-alpha limit.
             # Note that no delta_x should be here; dA/dx * dx = dA.
 
             # Direction of force is midway between the normal to the axis of revolution of the body and the
@@ -682,13 +682,13 @@ class AeroBuildup(ExplicitAnalysis):
         drag_skin = C_f_forebody * fuselage.area_wetted() * q
 
         ### Wave drag
-        S_ref = 1 # Does not matter here, just for accounting.
+        S_ref = 1  # Does not matter here, just for accounting.
 
         if self.include_wave_drag:
             sears_haack_drag_area = transonic.sears_haack_drag_from_volume(
                 volume=fuselage.volume(),
                 length=fuselage.length()
-            ) # Units of area
+            )  # Units of area
             sears_haack_C_D_wave = sears_haack_drag_area / S_ref
 
             C_D_wave = transonic.approximate_CD_wave(
