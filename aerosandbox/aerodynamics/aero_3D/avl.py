@@ -258,6 +258,13 @@ class AVL(ExplicitAnalysis):
             "oper",
         ]
 
+        # Direct p, q, r to be in body axes, to match ASB convention
+        run_file_contents += [
+            "o",
+            "r",
+            "",
+        ]
+
         # Set parameters
         run_file_contents += [
             "m",
