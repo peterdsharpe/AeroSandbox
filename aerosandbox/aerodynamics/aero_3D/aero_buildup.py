@@ -315,20 +315,28 @@ class AeroBuildup(ExplicitAnalysis):
             sect_L = q * area * sect_CL
             sect_D = q * area * sect_CD
 
-            ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the freestream.
-            sect_L_direction_w = (
-                np.zeros_like(sect_z_w[0]),
-                sect_z_w[1] / np.sqrt(sect_z_w[1] ** 2 + sect_z_w[2] ** 2),
-                sect_z_w[2] / np.sqrt(sect_z_w[1] ** 2 + sect_z_w[2] ** 2)
+            ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
+            sect_z_dot_local_velocity_b = np.dot(
+                sect_z_b, velocity_dir_b, manual=True
             )
+            sect_L_direction_b_unnormalized = [
+                sect_z_b[i] - sect_z_dot_local_velocity_b * velocity_dir_b[i]
+                for i in range(3)
+            ]
+            sect_L_direction_b_mag = np.sqrt(sum([comp ** 2 for comp in sect_L_direction_b_unnormalized]))
+            sect_L_direction_b = [
+                sect_L_direction_b_unnormalized[i] / sect_L_direction_b_mag
+                for i in range(3)
+            ]
+
             sect_L_direction_g = op_point.convert_axes(
-                *sect_L_direction_w, from_axes="wind", to_axes="geometry"
+                *sect_L_direction_b, from_axes="body", to_axes="geometry"
             )
 
             ##### Compute the direction of the drag by aligning the drag vector with the freestream vector.
-            sect_D_direction_w = (-1, 0, 0)
+            sect_D_direction_b = velocity_dir_b
             sect_D_direction_g = op_point.convert_axes(
-                *sect_D_direction_w, from_axes="wind", to_axes="geometry"
+                *sect_D_direction_b, from_axes="body", to_axes="geometry"
             )
 
             ##### Compute the force vector in geometry axes.
@@ -460,20 +468,28 @@ class AeroBuildup(ExplicitAnalysis):
                 sym_sect_L = q * area * sym_sect_CL
                 sym_sect_D = q * area * sym_sect_CD
 
-                ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the freestream.
-                sym_sect_L_direction_w = (
-                    np.zeros_like(sym_sect_z_w[0]),
-                    sym_sect_z_w[1] / np.sqrt(sym_sect_z_w[1] ** 2 + sym_sect_z_w[2] ** 2),
-                    sym_sect_z_w[2] / np.sqrt(sym_sect_z_w[1] ** 2 + sym_sect_z_w[2] ** 2)
+                ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
+                sym_sect_z_dot_local_velocity_b = np.dot(
+                    sym_sect_z_b, sym_velocity_dir_b, manual=True
                 )
+                sym_sect_L_direction_b_unnormalized = [
+                    sym_sect_z_b[i] - sym_sect_z_dot_local_velocity_b * sym_velocity_dir_b[i]
+                    for i in range(3)
+                ]
+                sym_sect_L_direction_b_mag = np.sqrt(sum([comp ** 2 for comp in sym_sect_L_direction_b_unnormalized]))
+                sym_sect_L_direction_b = [
+                    sym_sect_L_direction_b_unnormalized[i] / sym_sect_L_direction_b_mag
+                    for i in range(3)
+                ]
+
                 sym_sect_L_direction_g = op_point.convert_axes(
-                    *sym_sect_L_direction_w, from_axes="wind", to_axes="geometry"
+                    *sym_sect_L_direction_b, from_axes="body", to_axes="geometry"
                 )
 
                 ##### Compute the direction of the drag by aligning the drag vector with the freestream vector.
-                sym_sect_D_direction_w = (-1, 0, 0)
+                sym_sect_D_direction_b = sym_velocity_dir_b
                 sym_sect_D_direction_g = op_point.convert_axes(
-                    *sym_sect_D_direction_w, from_axes="wind", to_axes="geometry"
+                    *sym_sect_D_direction_b, from_axes="body", to_axes="geometry"
                 )
 
                 ##### Compute the force vector in geometry axes.
