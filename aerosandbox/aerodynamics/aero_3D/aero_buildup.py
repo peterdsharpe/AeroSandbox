@@ -305,6 +305,7 @@ class AeroBuildup(ExplicitAnalysis):
             ##### When linearly interpolating, weight things by the relative chord.
             a_weight = xsec_a.chord / (xsec_a.chord + xsec_b.chord)
             b_weight = xsec_b.chord / (xsec_a.chord + xsec_b.chord)
+            mean_chord = (xsec_a.chord + xsec_b.chord) / 2
 
             ##### Compute the local frame of this section, and put the z (normal) component into wind axes.
             xg_local, yg_local, zg_local = wing._compute_frame_of_section(sect_id)
@@ -396,6 +397,24 @@ class AeroBuildup(ExplicitAnalysis):
                     xsec_b_Cd_profile * b_weight
             )
 
+            ##### Compute sectional moment at cross sections using lookup functions. Merge them linearly to get section CM.
+            xsec_a_Cm = xsec_a.airfoil.CM_function(
+                alpha=sect_alpha_generalized,
+                Re=op_point.reynolds(xsec_a.chord),
+                mach=mach_normal,
+                deflection=get_deflection(xsec_a)
+            )
+            xsec_b_Cm = xsec_b.airfoil.CM_function(
+                alpha=sect_alpha_generalized,
+                Re=op_point.reynolds(xsec_b.chord),
+                mach=mach_normal,
+                deflection=get_deflection(xsec_b)
+            )
+            sect_CM = (
+                    xsec_a_Cm * a_weight +
+                    xsec_b_Cm * b_weight
+            )
+
             ##### Compute induced drag from local CL and full-wing properties (AR, e)
             sect_CDi = (
                     sect_CL ** 2 / (np.pi * AR * oswalds_efficiency)
@@ -408,6 +427,7 @@ class AeroBuildup(ExplicitAnalysis):
             area = areas[sect_id]
             sect_L = q * area * sect_CL
             sect_D = q * area * sect_CD
+            sect_M = q * area * sect_CM * mean_chord
 
             ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
             sect_z_dot_local_velocity_b = np.dot(
@@ -440,11 +460,16 @@ class AeroBuildup(ExplicitAnalysis):
             ]
 
             ##### Compute the moment vector in geometry axes.
-            sect_M_g = np.cross(
+            sect_M_g_lift = np.cross(
                 sect_aerodynamic_center,
                 sect_F_g,
                 manual=True
             )
+            sect_M_direction_g = np.cross(sect_L_direction_g, sect_D_direction_g, manual=True)
+            sect_M_g_moment = [
+                sect_M_direction_g[i] * sect_M
+                for i in range(3)
+            ]
 
             ##### Add section forces and moments to overall forces and moments
             F_g = [
@@ -452,7 +477,7 @@ class AeroBuildup(ExplicitAnalysis):
                 for i in range(3)
             ]
             M_g = [
-                M_g[i] + sect_M_g[i]
+                M_g[i] + sect_M_g_lift[i] + sect_M_g_moment[i]
                 for i in range(3)
             ]
 
@@ -549,6 +574,24 @@ class AeroBuildup(ExplicitAnalysis):
                         sym_xsec_b_Cd_profile * b_weight
                 )
 
+                ##### Compute sectional moment at cross sections using lookup functions. Merge them linearly to get section CM.
+                sym_xsec_a_Cm = xsec_a.airfoil.CM_function(
+                    alpha=sym_sect_alpha_generalized,
+                    Re=op_point.reynolds(xsec_a.chord),
+                    mach=mach_normal,
+                    deflection=get_deflection(xsec_a)
+                )
+                sym_xsec_b_Cm = xsec_b.airfoil.CM_function(
+                    alpha=sym_sect_alpha_generalized,
+                    Re=op_point.reynolds(xsec_b.chord),
+                    mach=mach_normal,
+                    deflection=get_deflection(xsec_b)
+                )
+                sym_sect_CM = (
+                        sym_xsec_a_Cm * a_weight +
+                        sym_xsec_b_Cm * b_weight
+                )
+
                 ##### Compute induced drag from local CL and full-wing properties (AR, e)
                 sym_sect_CDi = (
                         sym_sect_CL ** 2 / (np.pi * AR * oswalds_efficiency)
@@ -558,9 +601,9 @@ class AeroBuildup(ExplicitAnalysis):
                 sym_sect_CD = sym_sect_CDp + sym_sect_CDi
 
                 ##### Go to dimensional quantities using the area.
-                area = areas[sect_id]
                 sym_sect_L = q * area * sym_sect_CL
                 sym_sect_D = q * area * sym_sect_CD
+                sym_sect_M = q * area * sym_sect_CM * mean_chord
 
                 ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
                 sym_sect_z_dot_local_velocity_b = np.dot(
@@ -593,11 +636,16 @@ class AeroBuildup(ExplicitAnalysis):
                 ]
 
                 ##### Compute the moment vector in geometry axes.
-                sym_sect_M_g = np.cross(
+                sym_sect_M_g_lift = np.cross(
                     sym_sect_aerodynamic_center,
                     sym_sect_F_g,
                     manual=True
                 )
+                sym_sect_M_direction_g = np.cross(sym_sect_L_direction_g, sym_sect_D_direction_g, manual=True)
+                sym_sect_M_g_moment = [
+                    sym_sect_M_direction_g[i] * sym_sect_M
+                    for i in range(3)
+                ]
 
                 ##### Add section forces and moments to overall forces and moments
                 F_g = [
@@ -605,7 +653,7 @@ class AeroBuildup(ExplicitAnalysis):
                     for i in range(3)
                 ]
                 M_g = [
-                    M_g[i] + sym_sect_M_g[i]
+                    M_g[i] + sym_sect_M_g_lift[i] + sym_sect_M_g_moment[i]
                     for i in range(3)
                 ]
 
