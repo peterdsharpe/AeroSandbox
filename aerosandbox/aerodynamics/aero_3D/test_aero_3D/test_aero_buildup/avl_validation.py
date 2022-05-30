@@ -14,10 +14,10 @@ for i, wing in enumerate(airplane.wings):
         )
         airplane.wings[i].xsecs[j].airfoil = af
 
-wing = airplane.wings[0]
-wing.xsecs=[wing.xsecs[0], wing.xsecs[1]]
-airplane.wings = [wing]
-airplane.fuselages = []
+# wing = airplane.wings[0]
+# wing.xsecs = [wing.xsecs[0], wing.xsecs[1]]
+# airplane.wings = [wing]
+# airplane.fuselages = []
 
 op_point = asb.OperatingPoint(
     velocity=100,
@@ -38,18 +38,42 @@ av = asb.AVL(
     op_point
 ).run()
 
+vl = asb.VortexLatticeMethod(
+    airplane,
+    op_point
+).run()
+
 keys = set()
 keys.update(ab.keys())
 keys.update(av.keys())
 keys = list(keys)
 keys.sort()
 
-title = f"{'Output':10} | {'AeroBuild':10} | {'AVL':10} | Significantly Different?"
-print(title)
-print("-" * len(title))
+
+def println(*data):
+    print(" | ".join([
+        d.ljust(10) if isinstance(d, str) else f"{d:10.4g}"
+        for d in data
+    ]))
+
+
+println(
+    'Output',
+    'AeroBuild',
+    'AVL',
+    'VLM',
+    'Significantly Different?'
+)
+print("-" * 80)
 for k in keys:
     try:
-        is_correct = ab[k] == pytest.approx(av[k], rel=0.75, abs=0.01)
-        print(f"{k:10} | {ab[k]:10.4g} | {av[k]:10.4g} | {'*' if not is_correct else ''}")
+        println(
+            k,
+            ab[k],
+            av[k],
+            vl[k] if k in vl.keys() else '-',
+            '' if ab[k] == pytest.approx(av[k], rel=0.5, abs=0.01) else '*'
+        )
+
     except (KeyError, TypeError):
         pass
