@@ -223,10 +223,13 @@ class AeroBuildup(ExplicitAnalysis):
                 "Cn",
             ]:
                 derivative_name = derivative_numerator + abbreviations[derivative_denominator]  # Gives "CLa"
-                run_base[derivative_name] = (  # Finite-difference out the derivatives
-                                                    run_incremented[derivative_numerator] - run_base[
-                                                derivative_numerator]
-                                            ) / finite_difference_amounts[derivative_denominator] * scaling_factors[derivative_denominator]
+                run_base[derivative_name] = (
+                        (  # Finite-difference out the derivatives
+                                run_incremented[derivative_numerator] - run_base[
+                            derivative_numerator]
+                        ) / finite_difference_amounts[derivative_denominator]
+                        * scaling_factors[derivative_denominator]
+                )
 
         return run_base
 
