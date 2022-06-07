@@ -931,6 +931,24 @@ class Airfoil(Polygon):
                                    blend_fraction: float = 0.5,
                                    n_points_per_side: int = 100,
                                    ) -> "Airfoil":
+        """
+        Blends this airfoil with another airfoil. Merges both the coordinates and the aerodynamic functions.
+
+        Args:
+
+            airfoil: The other airfoil to blend with.
+
+            blend_fraction: The fraction of the other airfoil to use when blending. Defaults to 0.5 (50%).
+
+                * A blend fraction of 0 will return an identical airfoil to this one (self).
+
+                * A blend fraction of 1 will return an identical airfoil to the other one (`airfoil` parameter).
+
+            n_points_per_side: The number of points per side to use when blending the coordinates of the two airfoils.
+
+        Returns: A new airfoil that is a blend of this airfoil and another one.
+
+        """
         this_foil = self.repanel(n_points_per_side=n_points_per_side)
         that_foil = airfoil.repanel(n_points_per_side=n_points_per_side)
         this_fraction = 1 - blend_fraction
