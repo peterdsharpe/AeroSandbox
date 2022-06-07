@@ -32,7 +32,7 @@ class Wing(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name: str = "Untitled",
+                 name: str = None,
                  xsecs: List['WingXSec'] = None,
                  symmetric: bool = False,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
@@ -74,6 +74,8 @@ class Wing(AeroSandboxObject):
                 >>> }
         """
         ### Set defaults
+        if name is None:
+            name = "Untitled"
         if xsecs is None:
             xsecs: List['WingXSec'] = []
         if analysis_specific_options is None:
@@ -967,7 +969,7 @@ class WingXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_le: Union[np.ndarray, List] = np.array([0, 0, 0]),
+                 xyz_le: Union[np.ndarray, List] = None,
                  chord: float = 1.,
                  twist: float = 0,
                  airfoil: Airfoil = None,
@@ -1064,6 +1066,8 @@ class WingXSec(AeroSandboxObject):
             See avl.py for example of control_surface handling using this protocol.
         """
         ### Set defaults
+        if xyz_le is None:
+            xyz_le = np.array([0., 0., 0.])
         if airfoil is None:
             airfoil = Airfoil("naca0012")
         if control_surfaces is None:

@@ -16,8 +16,8 @@ class Airplane(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name: str = "Untitled",
-                 xyz_ref: Union[np.ndarray, List] = np.array([0, 0, 0]),
+                 name: str = None,
+                 xyz_ref: Union[np.ndarray, List] = None,
                  wings: Optional[List['Wing']] = None,
                  fuselages: Optional[List['Fuselage']] = None,
                  s_ref: Optional[float] = None,
@@ -73,6 +73,10 @@ class Airplane(AeroSandboxObject):
 
         """
         ### Set defaults
+        if name is None:
+            name = "Untitled"
+        if xyz_ref is None:
+            xyz_ref = np.array([0., 0., 0.])
         if wings is None:
             wings: List['Wing'] = []
         if fuselages is None:
