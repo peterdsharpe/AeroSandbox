@@ -1205,13 +1205,13 @@ if __name__ == '__main__':
             WingXSec(
                 xyz_le=[0, 0, 0],
                 chord=1,
-                airfoil=Airfoil("naca0012"),
+                airfoil=Airfoil("naca4412"),
                 twist=0,
             ),
             WingXSec(
                 xyz_le=[0.5, 1, 0],
                 chord=0.5,
-                airfoil=Airfoil("naca0012"),
+                airfoil=Airfoil("naca4412"),
                 twist=0,
             ),
             WingXSec(
@@ -1222,4 +1222,4 @@ if __name__ == '__main__':
             )
         ]
     ).translate([1, 0, 0])
-    wing.draw()
+    wing.subdivide_sections(30).draw()
