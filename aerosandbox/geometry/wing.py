@@ -1079,13 +1079,13 @@ class WingXSec(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated arguments
-        if 'twist_angle' in locals():
+        if 'twist_angle' in deprecated_kwargs.keys():
             import warnings
             warnings.warn(
                 "DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.",
                 stacklevel=2
             )
-            self.twist = twist_angle
+            self.twist = deprecated_kwargs['twist_angle']
         if (
                 'control_surface_is_symmetric' in locals() or
                 'control_surface_hinge_point' in locals() or
