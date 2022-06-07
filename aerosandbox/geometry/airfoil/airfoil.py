@@ -267,7 +267,7 @@ class Airfoil(Polygon):
                 for k in run_datas[0].keys()
             }
 
-            if make_symmetric_polars: # If the airfoil is known to be symmetric, duplicate all data across alpha.
+            if make_symmetric_polars:  # If the airfoil is known to be symmetric, duplicate all data across alpha.
                 keys_symmetric_across_alpha = ['CD', 'CDp', 'Re']
 
                 data = {
