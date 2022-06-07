@@ -1222,4 +1222,4 @@ if __name__ == '__main__':
             )
         ]
     ).translate([1, 0, 0])
-    wing.subdivide_sections(30).draw()
+    wing.subdivide_sections(5).draw()
