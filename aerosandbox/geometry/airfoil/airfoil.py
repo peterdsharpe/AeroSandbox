@@ -926,6 +926,49 @@ class Airfoil(Polygon):
             coordinates=coordinates
         )
 
+    def blend_with_another_airfoil(self,
+                                   airfoil: "Airfoil",
+                                   blend_fraction: float = 0.5,
+                                   n_points_per_side: int = 100,
+                                   ) -> "Airfoil":
+        this_foil = self.repanel(n_points_per_side=n_points_per_side)
+        that_foil = airfoil.repanel(n_points_per_side=n_points_per_side)
+        this_fraction = 1 - blend_fraction
+        that_fraction = blend_fraction
+
+        name = f"{this_fraction * 100:.0f}% {self.name}, {that_fraction * 100:.0f}% {airfoil.name}"
+
+        coordinates = (
+                this_fraction * this_foil.coordinates +
+                that_fraction * that_foil.coordinates
+        )
+
+        def CL_function(alpha, Re, mach, deflection):
+            return (
+                    this_fraction * this_foil.CL_function(alpha, Re, mach, deflection) +
+                    that_fraction * that_foil.CL_function(alpha, Re, mach, deflection)
+            )
+
+        def CD_function(alpha, Re, mach, deflection):
+            return (
+                    this_fraction * this_foil.CD_function(alpha, Re, mach, deflection) +
+                    that_fraction * that_foil.CD_function(alpha, Re, mach, deflection)
+            )
+
+        def CM_function(alpha, Re, mach, deflection):
+            return (
+                    this_fraction * this_foil.CM_function(alpha, Re, mach, deflection) +
+                    that_fraction * that_foil.CM_function(alpha, Re, mach, deflection)
+            )
+
+        return Airfoil(
+            name=name,
+            coordinates=coordinates,
+            CL_function=CL_function,
+            CD_function=CD_function,
+            CM_function=CM_function,
+        )
+
     # def normalize(self):
     #     pass  # TODO finish me
 
