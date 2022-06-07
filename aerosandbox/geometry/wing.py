@@ -786,6 +786,60 @@ class Wing(AeroSandboxObject):
         from aerosandbox.geometry.airplane import Airplane
         return Airplane(wings=[self]).draw(*args, **kwargs)
 
+    def subdivide_sections(self, ratio: int) -> "Wing":
+        """
+        Generates a new wing that subdivides the existing sections of this Wing into several smaller ones. Splits
+        each section into `ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
+
+        This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
+
+        Args:
+            ratio: The number of new sections to split each old section into.
+
+        Returns: A new Wing object with subdivided sections.
+
+        """
+
+        new_xsecs = []
+        span_fractions_along_section = np.linspace(0, 1, ratio + 1)[:-1]
+
+        for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
+            for s in span_fractions_along_section:
+                a_weight = 1 - s
+                b_weight = s
+
+                if xsec_a.airfoil is xsec_b.airfoil:
+                    blended_airfoil = xsec_a.airfoil
+                elif a_weight == 1:
+                    blended_airfoil = xsec_a.airfoil
+                elif b_weight == 1:
+                    blended_airfoil = xsec_b.airfoil
+                else:
+                    blended_airfoil = xsec_a.airfoil.blend_with_another_airfoil(
+                        airfoil=xsec_b.airfoil,
+                        blend_fraction=b_weight
+                    )
+
+                new_xsecs.append(
+                    WingXSec(
+                        xyz_le=xsec_a.xyz_le * a_weight + xsec_b.xyz_le * b_weight,
+                        chord=xsec_a.chord * a_weight + xsec_b.chord * b_weight,
+                        twist=xsec_a.twist * a_weight + xsec_b.twist * b_weight,
+                        airfoil=blended_airfoil,
+                        control_surfaces=xsec_a.control_surfaces,
+                        analysis_specific_options=xsec_a.analysis_specific_options,
+                    )
+                )
+
+        new_xsecs.append(self.xsecs[-1])
+
+        return Wing(
+            name=self.name,
+            xsecs=new_xsecs,
+            symmetric=self.symmetric,
+            analysis_specific_options=self.analysis_specific_options
+        )
+
     def _compute_xyz_le_of_WingXSec(self, index: int):
         return self.xsecs[index].xyz_le
 
