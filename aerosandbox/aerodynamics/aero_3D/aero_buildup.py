@@ -59,11 +59,17 @@ class AeroBuildup(ExplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
+                 xyz_ref: List[float] = None,
                  include_wave_drag: bool = True,
                  ):
+        ### Set defaults
+        if xyz_ref is None:
+            xyz_ref = airplane.xyz_ref
+
         ### Initialize
         self.airplane = airplane
         self.op_point = op_point
+        self.xyz_ref = xyz_ref
         self.include_wave_drag = include_wave_drag
 
     def run(self):
@@ -113,10 +119,10 @@ class AeroBuildup(ExplicitAnalysis):
 
         ### Compute the forces on each component
         aero_components = [
-                              self.wing_aerodynamics(wing=wing.translate(-self.airplane.xyz_ref)) for wing in
+                              self.wing_aerodynamics(wing=wing) for wing in
                               self.airplane.wings
                           ] + [
-                              self.fuselage_aerodynamics(fuselage=fuse.translate(-self.airplane.xyz_ref)) for fuse in
+                              self.fuselage_aerodynamics(fuselage=fuse) for fuse in
                               self.airplane.fuselages
                           ]
 
@@ -295,11 +301,25 @@ class AeroBuildup(ExplicitAnalysis):
         areas = wing.area(_sectional=True)
         aerodynamic_centers = wing.aerodynamic_center(_sectional=True)
 
-        F_g = [0, 0, 0]
-        M_g = [0, 0, 0]
+        def compute_section_aerodynamics(
+                sect_id: int,
+                mirror_across_XZ=False
+        ):
+            """
+            Computes the forces and moments about self.xyz_ref on a given wing section.
+            Args:
 
-        ##### Iterate through the wing sections.
-        for sect_id in range(len(wing.xsecs) - 1):
+                sect_id: Wing section id. An int that can be from 0 to len(wing.xsecs) - 2.
+
+                mirror_across_XZ: Boolean. If true, computes the forces and moments for the section that is mirrored across the XZ plane.
+
+            Returns: Forces and moments, in a `(F_g, M_g)` tuple, where `F_g` and `M_g` have the following formats:
+
+                F_g: a [Fx, Fy, Fz] list, given in geometry (`_g`) axes.
+
+                M_g: a [Mx, My, Mz] list, given in geometry (`_g`) axes. Moment reference is `AeroBuildup.xyz_ref`.
+
+            """
 
             ##### Identify the wing cross sections adjacent to this wing section.
             xsec_a = wing.xsecs[sect_id]
@@ -310,15 +330,26 @@ class AeroBuildup(ExplicitAnalysis):
             b_weight = xsec_b.chord / (xsec_a.chord + xsec_b.chord)
             mean_chord = (xsec_a.chord + xsec_b.chord) / 2
 
-            ##### Compute the local frame of this section, and put the z (normal) component into wind axes.
-            xg_local, yg_local, zg_local = wing._compute_frame_of_section(sect_id)
-            sect_aerodynamic_center = aerodynamic_centers[sect_id]
+            ##### Compute the local frame of this section.
+            _, _, zg_local = wing._compute_frame_of_section(sect_id)
+            if mirror_across_XZ:
+                zg_local = [zg_local[0], -zg_local[1], zg_local[2]]
 
-            sect_z_w = op_point.convert_axes(
+            zb_local = op_point.convert_axes(
                 x_from=zg_local[0], y_from=zg_local[1], z_from=zg_local[2],
                 from_axes="geometry",
-                to_axes="wind",
+                to_axes="body",
             )
+
+            ##### Compute the moment arm from the section AC
+            sect_AC_raw = aerodynamic_centers[sect_id]
+            if mirror_across_XZ:
+                sect_AC_raw[1] *= -1
+
+            sect_AC = [
+                sect_AC_raw[i] - self.xyz_ref[i]
+                for i in range(3)
+            ]
 
             ##### Compute the generalized angle of attack, so the geometric alpha that the wing section "sees".
             velocity_vector_b_from_freestream = op_point.convert_axes(
@@ -328,7 +359,7 @@ class AeroBuildup(ExplicitAnalysis):
             )
             velocity_vector_b_from_rotation = np.cross(
                 op_point.convert_axes(
-                    sect_aerodynamic_center[0], sect_aerodynamic_center[1], sect_aerodynamic_center[2],
+                    sect_AC[0], sect_AC[1], sect_AC[2],
                     from_axes="geometry",
                     to_axes="body"
                 ),
@@ -344,38 +375,40 @@ class AeroBuildup(ExplicitAnalysis):
                 velocity_vector_b[i] / velocity_mag_b
                 for i in range(3)
             ]
-            sect_z_b = op_point.convert_axes(
-                x_from=zg_local[0], y_from=zg_local[1], z_from=zg_local[2],
-                from_axes="geometry",
-                to_axes="body",
-            )
-            vel_dot_normal = np.dot(velocity_dir_b, sect_z_b, manual=True)
+            vel_dot_normal = np.dot(velocity_dir_b, zb_local, manual=True)
 
             sect_alpha_generalized = 90 - np.arccosd(np.clip(vel_dot_normal, -1, 1))
 
-            def get_deflection(xsec):
-                n_surfs = len(xsec.control_surfaces)
-                if n_surfs == 0:
-                    return 0
-                elif n_surfs == 1:
-                    surf = xsec.control_surfaces[0]
-                    return surf.deflection
-                else:
-                    raise NotImplementedError(
-                        "AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
+            # Compute the control surface deflection
+            n_surfs = len(xsec_a.control_surfaces)
+            if n_surfs == 0:
+                deflection = 0.
+            elif n_surfs == 1:
+                surf = xsec_a.control_surfaces[0]
+                deflection = surf.deflection
+                if mirror_across_XZ:
+                    if not surf.symmetric:
+                        deflection *= -1
+            else:
+                raise NotImplementedError(
+                    "AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
+
+            # Compute Reynolds numbers
+            Re_a = op_point.reynolds(xsec_a.chord)
+            Re_b = op_point.reynolds(xsec_b.chord)
 
             ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
             xsec_a_Cl = xsec_a.airfoil.CL_function(
                 alpha=sect_alpha_generalized,
-                Re=op_point.reynolds(xsec_a.chord),
+                Re=Re_a,
                 mach=mach_normal,
-                deflection=get_deflection(xsec_a)
+                deflection=deflection
             )
             xsec_b_Cl = xsec_b.airfoil.CL_function(
                 alpha=sect_alpha_generalized,
-                Re=op_point.reynolds(xsec_b.chord),
+                Re=Re_b,
                 mach=mach_normal,
-                deflection=get_deflection(xsec_b)
+                deflection=deflection
             )
             sect_CL = (
                               xsec_a_Cl * a_weight +
@@ -383,35 +416,35 @@ class AeroBuildup(ExplicitAnalysis):
                       ) * CL_over_Cl
 
             ##### Compute sectional drag at cross sections using lookup functions. Merge them linearly to get section CD.
-            xsec_a_Cd_profile = xsec_a.airfoil.CD_function(
+            xsec_a_Cd = xsec_a.airfoil.CD_function(
                 alpha=sect_alpha_generalized,
-                Re=op_point.reynolds(xsec_a.chord),
+                Re=Re_a,
                 mach=mach_normal,
-                deflection=get_deflection(xsec_a)
+                deflection=deflection
             )
-            xsec_b_Cd_profile = xsec_b.airfoil.CD_function(
+            xsec_b_Cd = xsec_b.airfoil.CD_function(
                 alpha=sect_alpha_generalized,
-                Re=op_point.reynolds(xsec_b.chord),
+                Re=Re_b,
                 mach=mach_normal,
-                deflection=get_deflection(xsec_b)
+                deflection=deflection
             )
-            sect_CDp = (
-                    xsec_a_Cd_profile * a_weight +
-                    xsec_b_Cd_profile * b_weight
+            sect_CD = (
+                    xsec_a_Cd * a_weight +
+                    xsec_b_Cd * b_weight
             )
 
             ##### Compute sectional moment at cross sections using lookup functions. Merge them linearly to get section CM.
             xsec_a_Cm = xsec_a.airfoil.CM_function(
                 alpha=sect_alpha_generalized,
-                Re=op_point.reynolds(xsec_a.chord),
+                Re=Re_a,
                 mach=mach_normal,
-                deflection=get_deflection(xsec_a)
+                deflection=deflection
             )
             xsec_b_Cm = xsec_b.airfoil.CM_function(
                 alpha=sect_alpha_generalized,
-                Re=op_point.reynolds(xsec_b.chord),
+                Re=Re_b,
                 mach=mach_normal,
-                deflection=get_deflection(xsec_b)
+                deflection=deflection
             )
             sect_CM = (
                     xsec_a_Cm * a_weight +
@@ -424,7 +457,7 @@ class AeroBuildup(ExplicitAnalysis):
             )
 
             ##### Total the drag.
-            sect_CD = sect_CDp + sect_CDi
+            sect_CD = sect_CD + sect_CDi
 
             ##### Go to dimensional quantities using the area.
             area = areas[sect_id]
@@ -433,11 +466,8 @@ class AeroBuildup(ExplicitAnalysis):
             sect_M = q * area * sect_CM * mean_chord
 
             ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
-            sect_z_dot_local_velocity_b = np.dot(
-                sect_z_b, velocity_dir_b, manual=True
-            )
             sect_L_direction_b_unnormalized = [
-                sect_z_b[i] - sect_z_dot_local_velocity_b * velocity_dir_b[i]
+                zb_local[i] - vel_dot_normal * velocity_dir_b[i]
                 for i in range(3)
             ]
             sect_L_direction_b_mag = np.sqrt(sum([comp ** 2 for comp in sect_L_direction_b_unnormalized]))
@@ -464,7 +494,7 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Compute the moment vector in geometry axes.
             sect_M_g_lift = np.cross(
-                sect_aerodynamic_center,
+                sect_AC,
                 sect_F_g,
                 manual=True
             )
@@ -475,190 +505,29 @@ class AeroBuildup(ExplicitAnalysis):
             ]
 
             ##### Add section forces and moments to overall forces and moments
-            F_g = [
-                F_g[i] + sect_F_g[i]
-                for i in range(3)
-            ]
-            M_g = [
-                M_g[i] + sect_M_g_lift[i] + sect_M_g_moment[i]
+            sect_M_g = [
+                sect_M_g_lift[i] + sect_M_g_moment[i]
                 for i in range(3)
             ]
 
-            ##### Treat symmetry
+            return sect_F_g, sect_M_g
+
+        F_g = [0, 0, 0]
+        M_g = [0, 0, 0]
+
+        for sect_id in range(len(wing.xsecs) - 1):
+            sect_F_g, sect_M_g = compute_section_aerodynamics(sect_id=sect_id)
+
+            for i in range(3):
+                F_g[i] += sect_F_g[i]
+                M_g[i] += sect_M_g[i]
+
             if wing.symmetric:
-                ##### Compute the local frame of this section, and put the z (normal) component into wind axes.
+                sect_F_g, sect_M_g = compute_section_aerodynamics(sect_id=sect_id, mirror_across_XZ=True)
 
-                sym_sect_aerodynamic_center = aerodynamic_centers[sect_id]
-                sym_sect_aerodynamic_center[1] *= -1
-
-                sym_sect_z_w = op_point.convert_axes(
-                    x_from=zg_local[0], y_from=-zg_local[1], z_from=zg_local[2],
-                    from_axes="geometry",
-                    to_axes="wind",
-                )
-
-                ##### Compute the generalized angle of attack, so the geometric alpha that the wing section "sees".
-                sym_velocity_vector_b_from_freestream = op_point.convert_axes(
-                    x_from=-op_point.velocity, y_from=0, z_from=0,
-                    from_axes="wind",
-                    to_axes="body"
-                )
-                sym_velocity_vector_b_from_rotation = np.cross(
-                    op_point.convert_axes(
-                        sym_sect_aerodynamic_center[0], sym_sect_aerodynamic_center[1], sym_sect_aerodynamic_center[2],
-                        from_axes="geometry",
-                        to_axes="body"
-                    ),
-                    [op_point.p, op_point.q, op_point.r],
-                    manual=True
-                )
-                sym_velocity_vector_b = [
-                    sym_velocity_vector_b_from_freestream[i] + sym_velocity_vector_b_from_rotation[i]
-                    for i in range(3)
-                ]
-                sym_velocity_mag_b = np.sqrt(sum([comp ** 2 for comp in sym_velocity_vector_b]))
-                sym_velocity_dir_b = [
-                    sym_velocity_vector_b[i] / sym_velocity_mag_b
-                    for i in range(3)
-                ]
-                sym_sect_z_b = op_point.convert_axes(
-                    x_from=zg_local[0], y_from=-zg_local[1], z_from=zg_local[2],
-                    from_axes="geometry",
-                    to_axes="body",
-                )
-                sym_vel_dot_normal = np.dot(sym_velocity_dir_b, sym_sect_z_b, manual=True)
-
-                sym_sect_alpha_generalized = 90 - np.arccosd(sym_vel_dot_normal)
-
-                def get_deflection(xsec):
-                    n_surfs = len(xsec.control_surfaces)
-                    if n_surfs == 0:
-                        return 0
-                    elif n_surfs == 1:
-                        surf = xsec.control_surfaces[0]
-                        return surf.deflection if surf.symmetric else -surf.deflection
-                    else:
-                        raise NotImplementedError(
-                            "AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
-
-                ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
-                sym_xsec_a_Cl = xsec_a.airfoil.CL_function(
-                    alpha=sym_sect_alpha_generalized,
-                    Re=op_point.reynolds(xsec_a.chord),
-                    mach=mach_normal,  # Note: this is correct, mach correction happens in 2D -> 3D step
-                    deflection=get_deflection(xsec_a)
-                )
-                sym_xsec_b_Cl = xsec_b.airfoil.CL_function(
-                    alpha=sym_sect_alpha_generalized,
-                    Re=op_point.reynolds(xsec_b.chord),
-                    mach=mach_normal,
-                    deflection=get_deflection(xsec_b)
-                )
-                sym_sect_CL = (
-                                      sym_xsec_a_Cl * a_weight +
-                                      sym_xsec_b_Cl * b_weight
-                              ) * CL_over_Cl
-
-                ##### Compute sectional drag at cross sections using lookup functions. Merge them linearly to get section CD.
-                sym_xsec_a_Cd_profile = xsec_a.airfoil.CD_function(
-                    alpha=sym_sect_alpha_generalized,
-                    Re=op_point.reynolds(xsec_a.chord),
-                    mach=mach_normal,
-                    deflection=get_deflection(xsec_a)
-                )
-                sym_xsec_b_Cd_profile = xsec_b.airfoil.CD_function(
-                    alpha=sym_sect_alpha_generalized,
-                    Re=op_point.reynolds(xsec_b.chord),
-                    mach=mach_normal,
-                    deflection=get_deflection(xsec_b)
-                )
-                sym_sect_CDp = (
-                        sym_xsec_a_Cd_profile * a_weight +
-                        sym_xsec_b_Cd_profile * b_weight
-                )
-
-                ##### Compute sectional moment at cross sections using lookup functions. Merge them linearly to get section CM.
-                sym_xsec_a_Cm = xsec_a.airfoil.CM_function(
-                    alpha=sym_sect_alpha_generalized,
-                    Re=op_point.reynolds(xsec_a.chord),
-                    mach=mach_normal,
-                    deflection=get_deflection(xsec_a)
-                )
-                sym_xsec_b_Cm = xsec_b.airfoil.CM_function(
-                    alpha=sym_sect_alpha_generalized,
-                    Re=op_point.reynolds(xsec_b.chord),
-                    mach=mach_normal,
-                    deflection=get_deflection(xsec_b)
-                )
-                sym_sect_CM = (
-                        sym_xsec_a_Cm * a_weight +
-                        sym_xsec_b_Cm * b_weight
-                )
-
-                ##### Compute induced drag from local CL and full-wing properties (AR, e)
-                sym_sect_CDi = (
-                        sym_sect_CL ** 2 / (np.pi * AR * oswalds_efficiency)
-                )
-
-                ##### Total the drag.
-                sym_sect_CD = sym_sect_CDp + sym_sect_CDi
-
-                ##### Go to dimensional quantities using the area.
-                sym_sect_L = q * area * sym_sect_CL
-                sym_sect_D = q * area * sym_sect_CD
-                sym_sect_M = q * area * sym_sect_CM * mean_chord
-
-                ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
-                sym_sect_z_dot_local_velocity_b = np.dot(
-                    sym_sect_z_b, sym_velocity_dir_b, manual=True
-                )
-                sym_sect_L_direction_b_unnormalized = [
-                    sym_sect_z_b[i] - sym_sect_z_dot_local_velocity_b * sym_velocity_dir_b[i]
-                    for i in range(3)
-                ]
-                sym_sect_L_direction_b_mag = np.sqrt(sum([comp ** 2 for comp in sym_sect_L_direction_b_unnormalized]))
-                sym_sect_L_direction_b = [
-                    sym_sect_L_direction_b_unnormalized[i] / sym_sect_L_direction_b_mag
-                    for i in range(3)
-                ]
-
-                sym_sect_L_direction_g = op_point.convert_axes(
-                    *sym_sect_L_direction_b, from_axes="body", to_axes="geometry"
-                )
-
-                ##### Compute the direction of the drag by aligning the drag vector with the freestream vector.
-                sym_sect_D_direction_b = sym_velocity_dir_b
-                sym_sect_D_direction_g = op_point.convert_axes(
-                    *sym_sect_D_direction_b, from_axes="body", to_axes="geometry"
-                )
-
-                ##### Compute the force vector in geometry axes.
-                sym_sect_F_g = [
-                    sym_sect_L * sym_sect_L_direction_g[i] + sym_sect_D * sym_sect_D_direction_g[i]
-                    for i in range(3)
-                ]
-
-                ##### Compute the moment vector in geometry axes.
-                sym_sect_M_g_lift = np.cross(
-                    sym_sect_aerodynamic_center,
-                    sym_sect_F_g,
-                    manual=True
-                )
-                sym_sect_M_direction_g = np.cross(sym_sect_L_direction_g, sym_sect_D_direction_g, manual=True)
-                sym_sect_M_g_moment = [
-                    sym_sect_M_direction_g[i] * sym_sect_M
-                    for i in range(3)
-                ]
-
-                ##### Add section forces and moments to overall forces and moments
-                F_g = [
-                    F_g[i] + sym_sect_F_g[i]
-                    for i in range(3)
-                ]
-                M_g = [
-                    M_g[i] + sym_sect_M_g_lift[i] + sym_sect_M_g_moment[i]
-                    for i in range(3)
-                ]
+                for i in range(3):
+                    F_g[i] += sect_F_g[i]
+                    M_g[i] += sect_M_g[i]
 
         ##### Convert F_g and M_g to body and wind axes for reporting.
         F_b = op_point.convert_axes(*F_g, from_axes="geometry", to_axes="body")
