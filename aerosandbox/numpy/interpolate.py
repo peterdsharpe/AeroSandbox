@@ -135,11 +135,12 @@ def interpn(
 
     Args:
 
-        points: The points defining the regular grid in n dimensions. Tuple of coordinates of each axis.
+        points: The points defining the regular grid in n dimensions. Tuple of coordinates of each axis. Shapes (m1,
+        ), ..., (mn,)
 
-        values: The data on the regular grid in n dimensions.
+        values: The data on the regular grid in n dimensions. Shape (m1, ..., mn)
 
-        xi: The coordinates to sample the gridded data at.
+        xi: The coordinates to sample the gridded data at. (..., ndim)
 
         method: The method of interpolation to perform. one of:
 
