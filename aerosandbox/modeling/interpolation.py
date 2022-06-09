@@ -145,7 +145,7 @@ class InterpolatedModel(SurrogateModel):
             x = np.stack(tuple(
                 reshape(x[k])
                 for k, v in self.x_data_coordinates.items()
-            ))
+            ), axis=1)
 
         output = np.interpn(
             points=self.x_data_coordinates_values,
