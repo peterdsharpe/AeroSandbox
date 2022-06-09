@@ -127,23 +127,30 @@ class AeroBuildup(ExplicitAnalysis):
                           ]
 
         ### Sum up the forces
-        aero_total = {}
+        aero_total = {
+            "F_g": [0., 0., 0.],
+            "F_b": [0., 0., 0.],
+            "F_w": [0., 0., 0.],
+            "M_g": [0., 0., 0.],
+            "M_b": [0., 0., 0.],
+            "M_w": [0., 0., 0.],
+            "L"  : 0.,
+            "Y"  : 0.,
+            "D"  : 0.,
+            "l_b": 0.,
+            "m_b": 0.,
+            "n_b": 0.,
+        }
 
-        for k in aero_components[0].keys():  # TODO add fix for when no aero components exist
-            values = [
-                component[k] for component in aero_components
-            ]
-
-            try:
-                aero_total[k] = sum(values)
-            except TypeError:
-                aero_total[k] = [
-                    sum([
-                        value[i]
-                        for value in values
-                    ])
-                    for i in range(3)
-                ]
+        for k in aero_total.keys():
+            for aero_component in aero_components:
+                if isinstance(aero_total[k], list):
+                    aero_total[k] = [
+                        aero_total[k][i] + aero_component[k][i]
+                        for i in range(3)
+                    ]
+                else:
+                    aero_total[k] = aero_total[k] + aero_component[k]
 
         ##### Add nondimensional forces, and nondimensional quantities.
         if self.airplane.s_ref is not None:
