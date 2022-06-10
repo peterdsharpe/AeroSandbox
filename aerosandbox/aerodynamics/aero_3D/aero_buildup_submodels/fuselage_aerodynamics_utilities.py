@@ -92,3 +92,54 @@ def fuselage_base_drag_coefficient(mach: float) -> float:
         p["pc_sup"] + p["a"] * np.exp(-(p["scale_sup"] * (m - p["center_sup"])) ** 2),
         p["pc_sub"]
     )
+
+def fuselage_form_factor(
+        fineness_ratio: float,
+        ratio_of_corner_radius_to_body_width: float = 0.5
+):
+    """
+    Computes the form factor of a fuselage as a function of various geometrical parameters.
+
+    Assumes the body cross section is a rounded square with constant-radius-of-curvature fillets.
+    Body cross section can therefore vary from a true square to a true circle.
+
+    Uses the methodology described in:
+
+    Götten, Falk; Havermann, Marc; Braun, Carsten; Marino, Matthew; Bil, Cees.
+    "Improved Form Factor for Drag Estimation of Fuselages with Various Cross Sections.
+    AIAA Journal of Aircraft, 2021. DOI: 10.2514/1.C036032
+
+    https://arc.aiaa.org/doi/10.2514/1.C036032
+
+    Assumes fully turbulent flow. Coefficient of determination found in the paper above was 0.95.
+
+    Note: the value returned does not account for any base separation (other than minor aft-closure separation). The
+    equations were also fit to relatively-shape-optimized fuselages, and will be overly-optimistic for unoptimized
+    shapes.
+
+    Args:
+
+        fineness_ratio: The fineness ratio of the body (length / diameter).
+
+        ratio_of_corner_radius_to_body_width: A parameter that describes the cross-sectional shape of the fuselage.
+        Precisely, this is ratio of corner radius to body width.
+
+            * A value of 0 corresponds to a true square.
+
+            * A value of 0.5 (default) corresponds to a true circle.
+
+    Returns: The form factor of the body, defined as:
+
+        C_D = C_f * form_factor * (S_wet / S_ref)
+
+    """
+    fr = fineness_ratio
+    r = 2 * ratio_of_corner_radius_to_body_width
+
+    cs1 = -0.825885 * r ** 0.411795 + 4.0001
+    cs2 = -0.340977 * r ** 7.54327 - 2.27920
+    cs3 = -0.013846 * r ** 1.34253 + 1.11029
+
+    form_factor = cs1 * fr ** cs2 + cs3
+
+    return form_factor
