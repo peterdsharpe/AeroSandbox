@@ -285,7 +285,7 @@ class AeroBuildup(ExplicitAnalysis):
         op_point = self.op_point
         wing_options = self.get_options(wing)
 
-        ##### Compute general wing properties and things to be used in sectional analysis.
+        ##### Compute general wing properties
         sweep = wing.mean_sweep_angle()
         AR = wing.aspect_ratio()
         mach = op_point.mach()
@@ -351,12 +351,12 @@ class AeroBuildup(ExplicitAnalysis):
             ]
 
             ##### Compute the generalized angle of attack, so the geometric alpha that the wing section "sees".
-            velocity_vector_g_from_freestream = op_point.convert_axes(
+            vel_vector_g_from_freestream = op_point.convert_axes(
                 x_from=-op_point.velocity, y_from=0, z_from=0,
                 from_axes="wind",
                 to_axes="geometry"
             )
-            velocity_vector_g_from_rotation = np.cross(
+            vel_vector_g_from_rotation = np.cross(
                 sect_AC,
                 op_point.convert_axes(
                     op_point.p, op_point.q, op_point.r,
@@ -365,18 +365,18 @@ class AeroBuildup(ExplicitAnalysis):
                 ),
                 manual=True
             )
-            velocity_vector_g = [
-                velocity_vector_g_from_freestream[i] + velocity_vector_g_from_rotation[i]
+            vel_vector_g = [
+                vel_vector_g_from_freestream[i] + vel_vector_g_from_rotation[i]
                 for i in range(3)
             ]
-            velocity_mag_g = np.sqrt(sum([comp ** 2 for comp in velocity_vector_g]))
-            velocity_dir_g = [
-                velocity_vector_g[i] / velocity_mag_g
+            vel_mag_g = np.sqrt(sum([comp ** 2 for comp in vel_vector_g]))
+            vel_dir_g = [
+                vel_vector_g[i] / vel_mag_g
                 for i in range(3)
             ]
-            vel_dot_z = np.dot(velocity_dir_g, zg_local, manual=True)
+            vel_dot_z = np.dot(vel_dir_g, zg_local, manual=True)
 
-            sect_alpha_generalized = 90 - np.arccosd(np.clip(vel_dot_z, -1, 1))
+            alpha_generalized = 90 - np.arccosd(np.clip(vel_dot_z, -1, 1))
 
             # Compute the control surface deflection
             n_surfs = len(xsec_a.control_surfaces)
@@ -398,13 +398,13 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
             xsec_a_args = dict(
-                alpha=sect_alpha_generalized,
+                alpha=alpha_generalized,
                 Re=Re_a,
                 mach=mach_normal,
                 deflection=deflection
             )
             xsec_b_args = dict(
-                alpha=sect_alpha_generalized,
+                alpha=alpha_generalized,
                 Re=Re_b,
                 mach=mach_normal,
                 deflection=deflection
@@ -448,45 +448,46 @@ class AeroBuildup(ExplicitAnalysis):
             sect_M = q * area * sect_CM * mean_chord
 
             ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
-            sect_L_direction_g_unnormalized = [
-                zg_local[i] - vel_dot_z * velocity_dir_g[i]
+            L_direction_g_unnormalized = [
+                zg_local[i] - vel_dot_z * vel_dir_g[i]
                 for i in range(3)
             ]
-            sect_L_direction_g_mag = np.sqrt(sum([comp ** 2 for comp in sect_L_direction_g_unnormalized]))
-            sect_L_direction_g = [
-                sect_L_direction_g_unnormalized[i] / sect_L_direction_g_mag
+            L_direction_g_mag = np.sqrt(sum([comp ** 2 for comp in L_direction_g_unnormalized]))
+            L_direction_g = [
+                L_direction_g_unnormalized[i] / L_direction_g_mag
                 for i in range(3)
             ]
 
             ##### Compute the direction of the drag by aligning the drag vector with the freestream vector.
-            sect_D_direction_g = velocity_dir_g
+            D_direction_g = vel_dir_g
 
             ##### Compute the force vector in geometry axes.
             sect_F_g = [
-                sect_L * sect_L_direction_g[i] + sect_D * sect_D_direction_g[i]
+                sect_L * L_direction_g[i] + sect_D * D_direction_g[i]
                 for i in range(3)
             ]
 
             ##### Compute the moment vector in geometry axes.
-            sect_M_g_lift = np.cross(
+            M_g_lift = np.cross(
                 sect_AC,
                 sect_F_g,
                 manual=True
             )
-            sect_M_direction_g = np.cross(sect_L_direction_g, sect_D_direction_g, manual=True)
-            sect_M_g_pitching_moment = [
-                sect_M_direction_g[i] * sect_M
+            M_direction_g = np.cross(L_direction_g, D_direction_g, manual=True)
+            M_g_pitching_moment = [
+                M_direction_g[i] * sect_M
                 for i in range(3)
             ]
             sect_M_g = [
-                sect_M_g_lift[i] + sect_M_g_pitching_moment[i]
+                M_g_lift[i] + M_g_pitching_moment[i]
                 for i in range(3)
             ]
 
             return sect_F_g, sect_M_g
 
-        F_g = [0, 0, 0]
-        M_g = [0, 0, 0]
+        ##### Iterate through all sections and add up all forces/moments.
+        F_g = [0., 0., 0.]
+        M_g = [0., 0., 0.]
 
         for sect_id in range(len(wing.xsecs) - 1):
             sect_F_g, sect_M_g = compute_section_aerodynamics(sect_id=sect_id)
@@ -550,43 +551,46 @@ class AeroBuildup(ExplicitAnalysis):
         Re = op_point.reynolds(reference_length=fuselage.length())
         fuse_options = self.get_options(fuselage)
 
-        ####### Jorgensen model
+        ##### Compute general fuselage properties
+        q = op_point.dynamic_pressure()
+        eta = jorgensen_eta(fuselage.fineness_ratio())
 
-        ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
-        x_w, y_w, z_w = op_point.convert_axes(
-            1, 0, 0, from_axes="body", to_axes="wind"
-        )
-        generalized_alpha = np.arccosd(x_w / (1 + 1e-14))
-        sin_generalized_alpha = (y_w ** 2 + z_w ** 2 + 1e-14) ** 0.5
-        # sin_generalized_alpha = np.sind(generalized_alpha)
-        cos_generalized_alpha = x_w
-        sin_squared_generalized_alpha = y_w ** 2 + z_w ** 2
+        ####### Jorgensen model
+        ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
+        # ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
+        # x_w, y_w, z_w = op_point.convert_axes(
+        #     1, 0, 0, from_axes="body", to_axes="wind"
+        # )
+        # generalized_alpha = np.arccosd(x_w / (1 + 1e-14))
+        # sin_generalized_alpha = (y_w ** 2 + z_w ** 2 + 1e-14) ** 0.5
+        # # sin_generalized_alpha = np.sind(generalized_alpha)
+        # cos_generalized_alpha = x_w
+        # sin_squared_generalized_alpha = y_w ** 2 + z_w ** 2
 
         # ### Limit generalized alpha to -90 < alpha < 90, for now.
         # generalized_alpha = np.clip(generalized_alpha, -90, 90)
         # # TODO make the drag/moment functions not give negative results for alpha > 90.
 
-        alpha_fractional_component = -z_w / np.sqrt(  # This is positive when alpha is positive
-            y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
-        beta_fractional_component = -y_w / np.sqrt(  # This is positive when beta is positive
-            y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of beta
+        # alpha_fractional_component = -z_w / np.sqrt(  # This is positive when alpha is positive
+        #     y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
+        # beta_fractional_component = -y_w / np.sqrt(  # This is positive when beta is positive
+        #     y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of beta
 
         ### Compute normal quantities
-        ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
-        q = op_point.dynamic_pressure()
 
-        eta = jorgensen_eta(fuselage.fineness_ratio())
-
-        def forces_on_fuselage_section(
-                xsec_a: FuselageXSec,
-                xsec_b: FuselageXSec,
+        def compute_section_aerodynamics(
+                sect_id: int,
         ):
+            ##### Identify the fuselage cross sections adjacent to this fuselage section.
+            xsec_a = fuselage.xsecs[sect_id]
+            xsec_b = fuselage.xsecs[sect_id + 1]
+
             ### Some metrics, like effective force location, are area-weighted. Here, we compute those weights.
             r_a = xsec_a.radius
             r_b = xsec_b.radius
 
-            x_a = xsec_a.xyz_c[0]
-            x_b = xsec_b.xyz_c[0]
+            xyz_a = xsec_a.xyz_c
+            xyz_b = xsec_b.xyz_c
 
             area_a = xsec_a.xsec_area()
             area_b = xsec_b.xsec_area()
@@ -595,12 +599,43 @@ class AeroBuildup(ExplicitAnalysis):
             a_weight = area_a / total_area
             b_weight = area_b / total_area
 
-            delta_x = x_b - x_a
-
             mean_geometric_radius = (r_a + r_b) / 2
             mean_aerodynamic_radius = r_a * a_weight + r_b * b_weight
 
-            force_x_location = x_a * a_weight + x_b * b_weight
+            sect_length = np.sqrt(sum([(xyz_b[i] - xyz_a[i]) ** 2 for i in range(3)]))
+            xg_local = [
+                (xyz_b[i] - xyz_a[i]) / sect_length
+                for i in range(3)
+            ]
+
+            ##### Compute the moment arm from the section AC
+            sect_AC = [
+                (xyz_a[i] + xyz_b[i]) / 2 - self.xyz_ref[i]
+                for i in range(3)
+            ]
+
+            ##### Compute the generalized angle of attack that the section sees
+            vel_direction_g = op_point.convert_axes(-1, 0, 0, from_axes="wind", to_axes="geometry")
+            vel_dot_x = np.dot(
+                vel_direction_g,
+                xg_local,
+                manual=True
+            )
+            generalized_alpha = np.arccosd(np.clip(vel_dot_x, -1, 1))
+            sin_generalized_alpha = np.sin(generalized_alpha)
+
+            ##### Compute the normal-force and axial-force directions
+            normal_direction_g_unnormalized = [
+                vel_direction_g[i] - vel_dot_x * xg_local[i]
+                for i in range(3)
+            ]
+            normal_direction_g_mag = np.sqrt(sum([comp ** 2 for comp in normal_direction_g_unnormalized]))
+            normal_direction_g = [
+                normal_direction_g_unnormalized[i] / normal_direction_g_mag
+                for i in range(3)
+            ]
+
+            axial_direction_g = xg_local
 
             ##### Inviscid Forces
             force_potential_flow = q * (  # From Munk, via Jorgensen
@@ -630,59 +665,59 @@ class AeroBuildup(ExplicitAnalysis):
                 0,
             )
 
-            force_viscous_flow = delta_x * q * (
+            force_viscous_crossflow = sect_length * q * (
                     2 * eta * C_d_n *
-                    sin_squared_generalized_alpha *
+                    sin_generalized_alpha ** 2 *
                     mean_geometric_radius
             )
 
-            # Viscous crossflow acts exactly normal to vehicle axis, definitionally. (Axial forces accounted for on a total-body basis)
-            force_normal_viscous_flow = force_viscous_flow
-            force_axial_viscous_flow = 0
+            ##### Viscous crossflow acts exactly normal to vehicle axis, definitionally.
+            # (Axial viscous forces accounted for on a total-body basis)
 
-            normal_force = force_normal_potential_flow + force_normal_viscous_flow
-            axial_force = force_axial_potential_flow + force_axial_viscous_flow
+            normal_force = force_normal_potential_flow + force_viscous_crossflow
+            axial_force = force_axial_potential_flow
 
-            return normal_force, axial_force, force_x_location
-
-        normal_force_contributions = []
-        axial_force_contributions = []
-        force_x_locations = []
-
-        for xsec_a, xsec_b in zip(
-                fuselage.xsecs[:-1],
-                fuselage.xsecs[1:]
-        ):
-            normal_force_contribution, axial_force_contribution, force_x_location = \
-                forces_on_fuselage_section(
-                    xsec_a,
-                    xsec_b
-                )
-
-            normal_force_contributions.append(normal_force_contribution)
-            axial_force_contributions.append(axial_force_contribution)
-            force_x_locations.append(force_x_location)
-
-        ##### Add up all forces
-        normal_force = sum(normal_force_contributions)
-        axial_force = sum(axial_force_contributions)
-        generalized_pitching_moment = sum(
-            [
-                -force * x
-                for force, x in
-                zip(normal_force_contributions, force_x_locations)
+            ##### Compute the force vector in geometry axes
+            sect_F_g = [
+                normal_force * normal_direction_g[i] + axial_force * axial_direction_g[i]
+                for i in range(3)
             ]
-        )
+
+            ##### Compute the moment vector in geometry axes.
+            sect_M_g = np.cross(
+                sect_AC,
+                sect_F_g,
+                manual=True
+            )
+
+            return sect_F_g, sect_M_g
+
+        ##### Iterate through all sections and add up all forces/moments.
+        F_g = [0., 0., 0.]
+        M_g = [0., 0., 0.]
+
+        for sect_id in range(len(fuselage.xsecs) - 1):
+            sect_F_g, sect_M_g = compute_section_aerodynamics(sect_id=sect_id)
+
+            for i in range(3):
+                F_g[i] += sect_F_g[i]
+                M_g[i] += sect_M_g[i]
+
+            if fuselage.symmetric:
+                raise NotImplementedError()
 
         ##### Add in profile drag: viscous drag forces and wave drag forces
         ### Base Drag
         base_drag_coefficient = fuselage_base_drag_coefficient(mach=op_point.mach())
-        drag_base = base_drag_coefficient * fuselage.area_base() * q * cos_generalized_alpha ** 2
-        # One cosine from q dependency, one cosine from direction of drag force
+        D_base = base_drag_coefficient * fuselage.area_base() * q
 
         ### Skin friction drag
-        C_f_forebody = aerolib.Cf_flat_plate(Re_L=Re)
-        drag_skin = C_f_forebody * fuselage.area_wetted() * q
+        form_factor = fuselage_form_factor(
+            fineness_ratio=fuselage.fineness_ratio(),
+            ratio_of_corner_radius_to_body_width=0.5
+        )
+        C_f = aerolib.Cf_flat_plate(Re_L=Re) * form_factor
+        D_skin = C_f * fuselage.area_wetted() * q
 
         ### Wave drag
         S_ref = 1  # Does not matter here, just for accounting.
@@ -704,39 +739,38 @@ class AeroBuildup(ExplicitAnalysis):
         else:
             C_D_wave = 0
 
-        drag_wave = C_D_wave * q * S_ref
+        D_wave = C_D_wave * q * S_ref
 
         ### Sum up the profile drag
-        drag_profile = drag_base + drag_skin + drag_wave
+        D_profile = D_base + D_skin + D_wave
 
-        ##### Convert Normal/Axial to Lift/Drag, but still in generalized (2D-esque) coordinates
-        L_generalized = normal_force * cos_generalized_alpha - axial_force * sin_generalized_alpha
-        D = normal_force * sin_generalized_alpha + axial_force * cos_generalized_alpha + drag_profile
-
-        ##### Convert from generalized (2D-esque) coordinates to full 3D
-        L = L_generalized * alpha_fractional_component
-        Y = -L_generalized * beta_fractional_component
-        l_w = 0  # No roll moment
-        m_w = generalized_pitching_moment * alpha_fractional_component
-        n_w = -generalized_pitching_moment * beta_fractional_component
-
-        ##### Convert to various axes coordinates for reporting
-        F_w = (
-            -D,
-            Y,
-            -L
+        D_profile_g = op_point.convert_axes(
+            -D_profile, 0, 0,
+            from_axes="wind",
+            to_axes="geometry",
         )
-        F_b = op_point.convert_axes(*F_w, from_axes="wind", to_axes="body")
-        F_g = op_point.convert_axes(*F_b, from_axes="body", to_axes="geometry")
-        M_w = (
-            l_w,
-            m_w,
-            n_w,
-        )
-        M_b = op_point.convert_axes(*M_w, from_axes="wind", to_axes="body")
-        M_g = op_point.convert_axes(*M_b, from_axes="body", to_axes="geometry")
 
-        ##### Return
+        drag_moment_arm = [
+            fuselage.xsecs[-1].xyz_c - self.xyz_ref[i]  # TODO make this act at centroid
+            for i in range(3)
+        ]
+
+        M_g_from_D_profile = np.cross(
+            drag_moment_arm,
+            D_profile_g,
+            manual=True
+        )
+
+        for i in range(3):
+            F_g[i] += D_profile_g[i]
+            M_g[i] += M_g_from_D_profile[i]
+
+        ##### Convert F_g and M_g to body and wind axes for reporting.
+        F_b = op_point.convert_axes(*F_g, from_axes="geometry", to_axes="body")
+        F_w = op_point.convert_axes(*F_b, from_axes="body", to_axes="wind")
+        M_b = op_point.convert_axes(*M_g, from_axes="geometry", to_axes="body")
+        M_w = op_point.convert_axes(*M_b, from_axes="body", to_axes="wind")
+
         return {
             "F_g": F_g,
             "F_b": F_b,
@@ -744,12 +778,12 @@ class AeroBuildup(ExplicitAnalysis):
             "M_g": M_g,
             "M_b": M_b,
             "M_w": M_w,
-            "L"  : L,
-            "Y"  : Y,
-            "D"  : D,
+            "L"  : -F_w[2],
+            "Y"  : F_w[1],
+            "D"  : -F_w[0],
             "l_b": M_b[0],
             "m_b": M_b[1],
-            "n_b": M_b[2],
+            "n_b": M_b[2]
         }
 
 
