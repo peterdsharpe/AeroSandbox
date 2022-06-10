@@ -621,7 +621,14 @@ class AeroBuildup(ExplicitAnalysis):
                 xg_local,
                 manual=True
             )
-            generalized_alpha = np.arccosd(np.clip(vel_dot_x, -1, 1))
+
+            def norm(xyz):
+                return sum([comp ** 2 for comp in xyz]) ** 0.5
+
+            generalized_alpha = 2 * np.arctan2d(
+                norm([vel_direction_g[i] - xg_local[i] for i in range(3)]),
+                norm([vel_direction_g[i] + xg_local[i] for i in range(3)])
+            )
             sin_generalized_alpha = np.sind(generalized_alpha)
 
             ##### Compute the normal-force and axial-force directions
