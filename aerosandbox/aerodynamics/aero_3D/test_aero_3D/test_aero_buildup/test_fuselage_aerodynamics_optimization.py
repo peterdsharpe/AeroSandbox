@@ -31,7 +31,7 @@ def test_fuselage_aerodynamics_optimization():
     ).run()
 
     opti.minimize(-aero["L"] / aero["D"])
-    sol = opti.solve(verbose=False)
+    sol = opti.solve(verbose=True)
     print(sol.value(alpha))
     assert sol.value(alpha) > 10 and sol.value(alpha) < 20
     assert sol.value(beta) == pytest.approx(0, abs=1e-3)
