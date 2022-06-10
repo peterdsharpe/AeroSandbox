@@ -392,7 +392,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     backend="pyvista",
                     show=False
                 )
-                vehicle_model.rotate_y(180)  # Rotate from geometry axes to body axes.
+                vehicle_model.rotate_y(180, inplace=True)  # Rotate from geometry axes to body axes.
             elif isinstance(vehicle_model, str):  # Interpret the string as a filepath to a .stl or similar
                 try:
                     pv.read(filename=vehicle_model)
