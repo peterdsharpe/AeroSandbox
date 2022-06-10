@@ -556,29 +556,6 @@ class AeroBuildup(ExplicitAnalysis):
         q = op_point.dynamic_pressure()
         eta = jorgensen_eta(fuselage.fineness_ratio())
 
-        ####### Jorgensen model
-        ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
-        # ### First, merge the alpha and beta into a single "generalized alpha", which represents the degrees between the fuselage axis and the freestream.
-        # x_w, y_w, z_w = op_point.convert_axes(
-        #     1, 0, 0, from_axes="body", to_axes="wind"
-        # )
-        # generalized_alpha = np.arccosd(x_w / (1 + 1e-14))
-        # sin_generalized_alpha = (y_w ** 2 + z_w ** 2 + 1e-14) ** 0.5
-        # # sin_generalized_alpha = np.sind(generalized_alpha)
-        # cos_generalized_alpha = x_w
-        # sin_squared_generalized_alpha = y_w ** 2 + z_w ** 2
-
-        # ### Limit generalized alpha to -90 < alpha < 90, for now.
-        # generalized_alpha = np.clip(generalized_alpha, -90, 90)
-        # # TODO make the drag/moment functions not give negative results for alpha > 90.
-
-        # alpha_fractional_component = -z_w / np.sqrt(  # This is positive when alpha is positive
-        #     y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of alpha
-        # beta_fractional_component = -y_w / np.sqrt(  # This is positive when beta is positive
-        #     y_w ** 2 + z_w ** 2 + 1e-16)  # The fraction of any "generalized lift" to be in the direction of beta
-
-        ### Compute normal quantities
-
         def compute_section_aerodynamics(
                 sect_id: int,
         ):
@@ -610,7 +587,7 @@ class AeroBuildup(ExplicitAnalysis):
                 np.where(
                     sect_length != 0,
                     (xyz_b[i] - xyz_a[i]) / (sect_length + 1e-100),
-                    1 if i == 0 else 0 # Default to [1, 0, 0]
+                    1 if i == 0 else 0  # Default to [1, 0, 0]
                 )
                 for i in range(3)
             ]
@@ -631,9 +608,9 @@ class AeroBuildup(ExplicitAnalysis):
 
             def soft_norm(xyz):
                 return (
-                    sum([comp ** 2 for comp in xyz])
-                    + 1e-100 # Keeps the derivative from exploding
-                ) ** 0.5
+                               sum([comp ** 2 for comp in xyz])
+                               + 1e-100  # Keeps the derivative from exploding
+                       ) ** 0.5
 
             generalized_alpha = 2 * np.arctan2d(
                 soft_norm([vel_direction_g[i] - xg_local[i] for i in range(3)]),
@@ -646,7 +623,7 @@ class AeroBuildup(ExplicitAnalysis):
                 vel_direction_g[i] - vel_dot_x * xg_local[i]
                 for i in range(3)
             ]
-            normal_direction_g_unnormalized[2] += 1e-16 # A hack that prevents NaN for 0-AoA case.
+            normal_direction_g_unnormalized[2] += 1e-16  # A hack that prevents NaN for 0-AoA case.
             normal_direction_g_mag = np.sqrt(sum([comp ** 2 for comp in normal_direction_g_unnormalized]))
             normal_direction_g = [
                 normal_direction_g_unnormalized[i] / normal_direction_g_mag
@@ -656,6 +633,8 @@ class AeroBuildup(ExplicitAnalysis):
             axial_direction_g = xg_local
 
             ##### Inviscid Forces
+            ### Jorgensen model
+            ### Note the (N)ormal, (A)ligned coordinate system. (See Jorgensen for definitions.)
             force_potential_flow = q * (  # From Munk, via Jorgensen
                     np.sind(2 * generalized_alpha) *
                     (area_b - area_a)
@@ -670,6 +649,7 @@ class AeroBuildup(ExplicitAnalysis):
             # Reminder: axial force is defined positive-aft
 
             ##### Viscous Forces
+            ### Jorgensen model
 
             Re_n = sin_generalized_alpha * op_point.reynolds(reference_length=2 * mean_aerodynamic_radius)
             M_n = sin_generalized_alpha * op_point.mach()
