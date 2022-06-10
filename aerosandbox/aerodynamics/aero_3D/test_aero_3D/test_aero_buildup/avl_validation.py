@@ -128,30 +128,46 @@ keys.update(av.keys())
 keys = list(keys)
 keys.sort()
 
+titles = [
+    'Output',
+    'AeroBuildup',
+    'AVL      ',
+    'VLM        ',
+    'AB & AVL Significantly Different?'
+]
 
 def println(*data):
-    print(" | ".join([
-        d.ljust(10) if isinstance(d, str) else f"{d:10.4g}"
-        for d in data
-    ]))
+    print(
+        " | ".join([
+        d.ljust(len(t)) if isinstance(d, str) else f"{{0:{len(t)}.3g}}".format(d)
+        for d, t in zip(data, titles)
+    ])
+    )
 
-
-println(
-    'Output',
-    'AeroBuild',
-    'AVL',
-    'VLM',
-    'AB & AVL Significantly Different?'
-)
+println(*titles)
 print("-" * 80)
 for k in keys:
     try:
+        rel = 0.20
+        abs = 0.01
+
+        if 'l' in k or 'm' in k or 'n' in k:
+            rel = 0.5
+            abs = 0.05
+
+
+        differences = ab[k] != pytest.approx(av[k], rel=rel, abs=abs)
+        differences_text = '*' if differences else ''
+        if differences and ('D' in k):
+            differences_text = 'Expected'
+
+
         println(
             k,
             ab[k],
             av[k],
             vl[k] if k in vl.keys() else ' ' * 5 + '-',
-            '' if ab[k] == pytest.approx(av[k], rel=0.5, abs=0.01) else '*'
+            differences_text
         )
 
     except (KeyError, TypeError):
