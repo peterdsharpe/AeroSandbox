@@ -622,12 +622,15 @@ class AeroBuildup(ExplicitAnalysis):
                 manual=True
             )
 
-            def norm(xyz):
-                return sum([comp ** 2 for comp in xyz]) ** 0.5
+            def soft_norm(xyz):
+                return (
+                    sum([comp ** 2 for comp in xyz])
+                    + 1e-100 # Keeps the derivative from exploding
+                ) ** 0.5
 
             generalized_alpha = 2 * np.arctan2d(
-                norm([vel_direction_g[i] - xg_local[i] for i in range(3)]),
-                norm([vel_direction_g[i] + xg_local[i] for i in range(3)])
+                soft_norm([vel_direction_g[i] - xg_local[i] for i in range(3)]),
+                soft_norm([vel_direction_g[i] + xg_local[i] for i in range(3)])
             )
             sin_generalized_alpha = np.sind(generalized_alpha)
 
