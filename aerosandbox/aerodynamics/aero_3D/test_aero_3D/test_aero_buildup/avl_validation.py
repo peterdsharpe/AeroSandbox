@@ -77,8 +77,8 @@ airplane = asb.Airplane(
             name="Fuselage",
             xsecs=[
                 asb.FuselageXSec(
-                    xyz_c=[xi, 0, 0],
-                    radius=1 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
+                    xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi - 0.03],
+                    radius=0.6 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
                 )
                 for xi in np.cosspace(0, 1, 30)
             ]
