@@ -622,7 +622,7 @@ class AeroBuildup(ExplicitAnalysis):
                 manual=True
             )
             generalized_alpha = np.arccosd(np.clip(vel_dot_x, -1, 1))
-            sin_generalized_alpha = np.sin(generalized_alpha)
+            sin_generalized_alpha = np.sind(generalized_alpha)
 
             ##### Compute the normal-force and axial-force directions
             normal_direction_g_unnormalized = [
