@@ -602,9 +602,15 @@ class AeroBuildup(ExplicitAnalysis):
             mean_geometric_radius = (r_a + r_b) / 2
             mean_aerodynamic_radius = r_a * a_weight + r_b * b_weight
 
+            ### Compute the key geometric properties of the centerline between the two sections.
             sect_length = np.sqrt(sum([(xyz_b[i] - xyz_a[i]) ** 2 for i in range(3)]))
+
             xg_local = [
-                (xyz_b[i] - xyz_a[i]) / sect_length
+                np.where(
+                    sect_length != 0,
+                    (xyz_b[i] - xyz_a[i]) / (sect_length + 1e-100),
+                    1 if i == 0 else 0 # Default to [1, 0, 0]
+                )
                 for i in range(3)
             ]
 
