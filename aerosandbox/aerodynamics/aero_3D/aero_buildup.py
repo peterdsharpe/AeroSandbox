@@ -337,8 +337,9 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Compute the local frame of this section.
             _, _, zg_local = wing._compute_frame_of_section(sect_id)
+            zg_local = [zg_local[0], zg_local[1], zg_local[2]]
             if mirror_across_XZ:
-                zg_local = [zg_local[0], -zg_local[1], zg_local[2]]
+                zg_local[1] *= -1
 
             ##### Compute the moment arm from the section AC
             sect_AC_raw = aerodynamic_centers[sect_id]
