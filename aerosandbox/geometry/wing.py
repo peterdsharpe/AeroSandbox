@@ -971,7 +971,7 @@ class WingXSec(AeroSandboxObject):
     def __init__(self,
                  xyz_le: Union[np.ndarray, List] = None,
                  chord: float = 1.,
-                 twist: float = 0,
+                 twist: float = 0.,
                  airfoil: Airfoil = None,
                  control_surfaces: Optional[List['ControlSurface']] = None,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
