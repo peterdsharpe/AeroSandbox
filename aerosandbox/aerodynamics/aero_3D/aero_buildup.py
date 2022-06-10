@@ -290,7 +290,6 @@ class AeroBuildup(ExplicitAnalysis):
         AR = wing.aspect_ratio()
         mach = op_point.mach()
         mach_normal = mach * np.cosd(sweep)
-        q = op_point.dynamic_pressure()
         CL_over_Cl = aerolib.CL_over_Cl(
             aspect_ratio=AR,
             mach=mach,
@@ -444,9 +443,10 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Go to dimensional quantities using the area.
             area = areas[sect_id]
-            sect_L = q * area * sect_CL
-            sect_D = q * area * sect_CD
-            sect_M = q * area * sect_CM * mean_chord
+            q_local = 0.5 * op_point.atmosphere.density() * vel_mag_g ** 2
+            sect_L = q_local * area * sect_CL
+            sect_D = q_local * area * sect_CD
+            sect_M = q_local * area * sect_CM * mean_chord
 
             ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
             L_direction_g_unnormalized = [
