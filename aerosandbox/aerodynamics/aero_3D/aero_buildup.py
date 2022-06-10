@@ -629,6 +629,7 @@ class AeroBuildup(ExplicitAnalysis):
                 vel_direction_g[i] - vel_dot_x * xg_local[i]
                 for i in range(3)
             ]
+            normal_direction_g_unnormalized[2] += 1e-16 # A hack that prevents NaN for 0-AoA case.
             normal_direction_g_mag = np.sqrt(sum([comp ** 2 for comp in normal_direction_g_unnormalized]))
             normal_direction_g = [
                 normal_direction_g_unnormalized[i] / normal_direction_g_mag
