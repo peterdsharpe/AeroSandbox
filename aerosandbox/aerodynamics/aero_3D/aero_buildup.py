@@ -751,7 +751,7 @@ class AeroBuildup(ExplicitAnalysis):
         )
 
         drag_moment_arm = [
-            fuselage.xsecs[-1].xyz_c - self.xyz_ref[i]  # TODO make this act at centroid
+            fuselage.xsecs[-1].xyz_c[i] - self.xyz_ref[i]  # TODO make this act at centroid
             for i in range(3)
         ]
 
