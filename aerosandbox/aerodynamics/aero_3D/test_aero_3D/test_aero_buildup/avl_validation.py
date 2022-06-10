@@ -150,7 +150,7 @@ for k in keys:
             k,
             ab[k],
             av[k],
-            vl[k] if k in vl.keys() else '-',
+            vl[k] if k in vl.keys() else ' ' * 5 + '-',
             '' if ab[k] == pytest.approx(av[k], rel=0.5, abs=0.01) else '*'
         )
 
