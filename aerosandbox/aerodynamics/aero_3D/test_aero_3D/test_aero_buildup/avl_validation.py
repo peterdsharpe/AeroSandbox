@@ -73,16 +73,16 @@ airplane = asb.Airplane(
         ).translate([0.6, 0, 0.07])
     ],
     fuselages=[
-        asb.Fuselage(
-            name="Fuselage",
-            xsecs=[
-                asb.FuselageXSec(
-                    xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi - 0.03],
-                    radius=0.6 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
-                )
-                for xi in np.cosspace(0, 1, 30)
-            ]
-        )
+        # asb.Fuselage(
+        #     name="Fuselage",
+        #     xsecs=[
+        #         asb.FuselageXSec(
+        #             xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi - 0.03],
+        #             radius=0.6 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
+        #         )
+        #         for xi in np.cosspace(0, 1, 30)
+        #     ]
+        # )
     ]
 )
 
@@ -108,10 +108,6 @@ ab = asb.AeroBuildup(
     op_point,
 ).run_with_stability_derivatives()
 
-# from pprint import pprint
-#
-# pprint(ab)
-
 av = asb.AVL(
     airplane,
     op_point
@@ -120,7 +116,7 @@ av = asb.AVL(
 vl = asb.VortexLatticeMethod(
     airplane,
     op_point
-).run()
+).run_with_stability_derivatives()
 
 keys = set()
 keys.update(ab.keys())
@@ -132,7 +128,7 @@ titles = [
     'Output',
     'AeroBuildup',
     'AVL      ',
-    'VLM        ',
+    'VLM      ',
     'AB & AVL Significantly Different?'
 ]
 
