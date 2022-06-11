@@ -76,6 +76,49 @@ class VortexLatticeMethod(ExplicitAnalysis):
             #     pass
 
     def run(self) -> Dict[str, Any]:
+        """
+        Computes the aerodynamic forces.
+
+        Returns a dictionary with keys:
+
+            'F_g' : an [x, y, z] list of forces in geometry axes [N]
+
+            'F_b' : an [x, y, z] list of forces in body axes [N]
+
+            'F_w' : an [x, y, z] list of forces in wind axes [N]
+
+            'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+
+            'M_b' : an [x, y, z] list of moments about body axes [Nm]
+
+            'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+
+            'L' : the lift force [N]. Definitionally, this is in wind axes.
+
+            'Y' : the side force [N]. This is in wind axes.
+
+            'D' : the drag force [N]. Definitionally, this is in wind axes.
+
+            'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+
+            'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+
+            'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+
+            'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+
+            'CY', the sideforce coefficient [-]. This is in wind axes.
+
+            'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+
+            'Cl', the rolling coefficient [-], in body axes
+
+            'Cm', the pitching coefficient [-], in body axes
+
+            'Cn', the yawing coefficient [-], in body axes
+
+        Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+        """
 
         if self.verbose:
             print("Meshing...")
@@ -221,14 +264,14 @@ class VortexLatticeMethod(ExplicitAnalysis):
         force_geometry = np.sum(forces_geometry, axis=0)
         moment_geometry = np.sum(moments_geometry, axis=0)
 
-        force_wind = self.op_point.convert_axes(
+        force_body = self.op_point.convert_axes(
             force_geometry[0], force_geometry[1], force_geometry[2],
             from_axes="geometry",
-            to_axes="wind"
+            to_axes="body"
         )
-        moment_wind = self.op_point.convert_axes(
-            moment_geometry[0], moment_geometry[1], moment_geometry[2],
-            from_axes="geometry",
+        force_wind = self.op_point.convert_axes(
+            force_body[0], force_body[1], force_body[2],
+            from_axes="body",
             to_axes="wind"
         )
         moment_body = self.op_point.convert_axes(
@@ -236,20 +279,27 @@ class VortexLatticeMethod(ExplicitAnalysis):
             from_axes="geometry",
             to_axes="body"
         )
+        moment_wind = self.op_point.convert_axes(
+            moment_body[0], moment_body[1], moment_body[2],
+            from_axes="body",
+            to_axes="wind"
+        )
 
         ### Save things to the instance for later access
         self.forces_geometry = forces_geometry
         self.moments_geometry = moments_geometry
         self.force_geometry = force_geometry
+        self.force_body = force_body
         self.force_wind = force_wind
         self.moment_geometry = moment_geometry
+        self.moment_body = moment_body
         self.moment_wind = moment_wind
 
         # Calculate dimensional forces
         L = -force_wind[2]
         D = -force_wind[0]
         Y = force_wind[1]
-        l_b = moment_body[0]  # TODO review axes
+        l_b = moment_body[0]
         m_b = moment_body[1]
         n_b = moment_body[2]
 
@@ -266,6 +316,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
         Cn = n_b / q / s_ref / b_ref
 
         return {
+            "F_g": force_geometry,
+            "F_b": force_body,
+            "F_w": force_wind,
+            "M_g": moment_geometry,
+            "M_b": moment_body,
+            "M_w": moment_wind,
             "L"  : L,
             "D"  : D,
             "Y"  : Y,
@@ -278,10 +334,6 @@ class VortexLatticeMethod(ExplicitAnalysis):
             "Cl" : Cl,
             "Cm" : Cm,
             "Cn" : Cn,
-            "F_g": force_geometry,
-            "F_w": force_wind,
-            "M_g": moment_geometry,
-            "M_w": moment_wind
         }
 
     def get_induced_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
