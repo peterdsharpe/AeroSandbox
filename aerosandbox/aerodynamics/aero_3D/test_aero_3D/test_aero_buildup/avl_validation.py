@@ -9,7 +9,7 @@ tail_airfoil = asb.Airfoil("naca0010")
 # Here, all distances are in meters and all angles are in degrees.
 airplane = asb.Airplane(
     name="Peter's Glider",
-    xyz_ref=[0, 0, 0],  # CG location
+    xyz_ref=[0.18 * 0.32, 0, 0],  # CG location
     wings=[
         asb.Wing(
             name="Main Wing",
