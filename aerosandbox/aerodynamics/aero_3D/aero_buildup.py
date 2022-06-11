@@ -74,6 +74,8 @@ class AeroBuildup(ExplicitAnalysis):
                  xyz_ref: List[float] = None,
                  include_wave_drag: bool = True,
                  ):
+        super().__init__()
+
         ### Set defaults
         if xyz_ref is None:
             xyz_ref = airplane.xyz_ref
