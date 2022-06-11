@@ -258,24 +258,6 @@ class AeroBuildup(ExplicitAnalysis):
 
         return run_base
 
-        # def run_with_increment(
-        #         alpha=0.,
-        #         beta=0.,
-        #         p=0.,
-        #         q=0.,
-        #         r=0.,
-        #         mach=0.,
-        # ):
-        #     op_point = OperatingPoint(
-        #         atmosphere=self.op_point.atmosphere,
-        #         velocity=self.op_point.velocity,
-        #         alpha=self.op_point.alpha + alpha,
-        #         beta=self.op_point.beta + beta,
-        #         p=self.op_point.p + p,
-        #         q=self.op_point.q + q,
-        #         r=self.op_point.r + r,
-        #     )
-
     def wing_aerodynamics(self,
                           wing: Wing,
                           ) -> Dict[str, Any]:
