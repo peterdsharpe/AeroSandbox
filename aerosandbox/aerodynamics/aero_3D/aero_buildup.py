@@ -96,11 +96,11 @@ class AeroBuildup(ExplicitAnalysis):
 
             'D' : the drag force [N]
 
-            'l_b', the rolling moment [Nm]. Positive is roll-right.
+            'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
 
-            'm_b', the pitching moment [Nm]. Positive is pitch-up.
+            'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
 
-            'n_b', the yawing moment [Nm]. Positive is nose-right.
+            'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
 
             'CL', the lift coefficient [-]
 
