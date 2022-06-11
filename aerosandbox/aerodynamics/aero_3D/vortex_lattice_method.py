@@ -40,6 +40,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
+                 xyz_ref: List[float] = None,
                  run_symmetric_if_possible: bool = False,
                  verbose: bool = False,
                  spanwise_resolution: int = 10,
@@ -51,8 +52,13 @@ class VortexLatticeMethod(ExplicitAnalysis):
                  ):
         super().__init__()
 
+        ### Set defaults
+        if xyz_ref is None:
+            xyz_ref = airplane.xyz_ref
+
         self.airplane = airplane
         self.op_point = op_point
+        self.xyz_ref = xyz_ref
         self.verbose = verbose
         self.spanwise_resolution = spanwise_resolution
         self.spanwise_spacing = spanwise_spacing
@@ -256,7 +262,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
         moments_geometry = np.cross(
-            np.add(vortex_centers, -wide(np.array(self.airplane.xyz_ref))),
+            np.add(vortex_centers, -wide(np.array(self.xyz_ref))),
             forces_geometry
         )
 
