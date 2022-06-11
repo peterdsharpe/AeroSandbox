@@ -11,6 +11,18 @@ import aerosandbox.library.aerodynamics as aerolib
 class AeroBuildup(ExplicitAnalysis):
     """
     A workbook-style aerodynamics buildup.
+
+    Example usage:
+
+    >>> import aerosandbox as asb
+    >>> ab = asb.AeroBuildup(  # This sets up the analysis, but doesn't execute calculation
+    >>>     airplane=my_airplane,  # type: asb.Airplane
+    >>>     op_point=my_operating_point,  # type: asb.OperatingPoint
+    >>>     xyz_ref=[0.1, 0.2, 0.3],  # Moment reference and center of rotation.
+    >>> )
+    >>> aero = ab.run()  # This executes the actual aero analysis.
+    >>> aero_with_stability_derivs = ab.run_with_stability_derivatives()  # Same, but also gets stability derivatives.
+
     """
     default_analysis_specific_options = {
         Airplane: dict(),
@@ -102,17 +114,17 @@ class AeroBuildup(ExplicitAnalysis):
 
             'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
 
-            'CL', the lift coefficient [-]
+            'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
 
-            'CY', the sideforce coefficient [-]
+            'CY', the sideforce coefficient [-]. This is in wind axes.
 
-            'CD', the drag coefficient [-]
+            'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
 
-            'Cl', the rolling coefficient [-]
+            'Cl', the rolling coefficient [-], in body axes
 
-            'Cm', the pitching coefficient [-]
+            'Cm', the pitching coefficient [-], in body axes
 
-            'Cn', the yawing coefficient [-]
+            'Cn', the yawing coefficient [-], in body axes
 
         Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
         """
