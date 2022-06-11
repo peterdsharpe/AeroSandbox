@@ -23,7 +23,7 @@ def declination_angle(day_of_year):
     """
     # Declination (seasonality)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/declination-angle
-    return -23.45 * np.cosd(360 / 365 * (day_of_year + 10))  # in degrees
+    return -23.4398 * np.cosd(360 / 365 * (day_of_year + 10))  # in degrees
 
 
 def solar_elevation_angle(latitude, day_of_year, time):
