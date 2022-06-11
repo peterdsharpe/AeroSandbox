@@ -175,8 +175,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(right_vortex_vertices[:, 0]),
             y_right=wide(right_vortex_vertices[:, 1]),
             z_right=wide(right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array([1, 0, 0]),
-            gamma=1,
+            trailing_vortex_direction=(
+                steady_freestream_direction
+                if self.align_trailing_vortices_with_wind else
+                np.array([1, 0, 0])
+            ),
+            gamma=1.,
             vortex_core_radius=self.vortex_core_radius
         )
 
@@ -227,6 +231,11 @@ class VortexLatticeMethod(ExplicitAnalysis):
             from_axes="geometry",
             to_axes="wind"
         )
+        moment_body = self.op_point.convert_axes(
+            moment_geometry[0], moment_geometry[1], moment_geometry[2],
+            from_axes="geometry",
+            to_axes="body"
+        )
 
         ### Save things to the instance for later access
         self.forces_geometry = forces_geometry
@@ -240,9 +249,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         L = -force_wind[2]
         D = -force_wind[0]
         Y = force_wind[1]
-        l = moment_wind[0]  # TODO review axes
-        m = moment_wind[1]
-        n = moment_wind[2]
+        l_b = moment_body[0]  # TODO review axes
+        m_b = moment_body[1]
+        n_b = moment_body[2]
 
         # Calculate nondimensional forces
         q = self.op_point.dynamic_pressure()
@@ -252,17 +261,17 @@ class VortexLatticeMethod(ExplicitAnalysis):
         CL = L / q / s_ref
         CD = D / q / s_ref
         CY = Y / q / s_ref
-        Cl = l / q / s_ref / b_ref
-        Cm = m / q / s_ref / c_ref
-        Cn = n / q / s_ref / b_ref
+        Cl = l_b / q / s_ref / b_ref
+        Cm = m_b / q / s_ref / c_ref
+        Cn = n_b / q / s_ref / b_ref
 
         return {
             "L"  : L,
             "D"  : D,
             "Y"  : Y,
-            "l"  : l,
-            "m"  : m,
-            "n"  : n,
+            "l_b": l_b,
+            "m_b": m_b,
+            "n_b": n_b,
             "CL" : CL,
             "CD" : CD,
             "CY" : CY,
@@ -295,7 +304,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(self.right_vortex_vertices[:, 0]),
             y_right=wide(self.right_vortex_vertices[:, 1]),
             z_right=wide(self.right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=self.steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array([1, 0, 0]),
+            trailing_vortex_direction=self.steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array(
+                [1, 0, 0]),
             gamma=wide(self.vortex_strengths),
             vortex_core_radius=self.vortex_core_radius
         )
