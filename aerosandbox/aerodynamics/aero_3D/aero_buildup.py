@@ -90,11 +90,11 @@ class AeroBuildup(ExplicitAnalysis):
 
             'M_w' : an [x, y, z] list of moments about wind axes [Nm]
 
-            'L' : the lift force [N]
+            'L' : the lift force [N]. Definitionally, this is in wind axes.
 
-            'Y' : the side force [N]
+            'Y' : the side force [N]. This is in wind axes.
 
-            'D' : the drag force [N]
+            'D' : the drag force [N]. Definitionally, this is in wind axes.
 
             'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
 
