@@ -12,7 +12,7 @@ def calculate_induced_velocity_horseshoe(
         x_right: Union[float, np.ndarray],
         y_right: Union[float, np.ndarray],
         z_right: Union[float, np.ndarray],
-        gamma: np.ndarray,
+        gamma: Union[float, np.ndarray],
         trailing_vortex_direction: np.ndarray = None,
         vortex_core_radius=1e-8,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
