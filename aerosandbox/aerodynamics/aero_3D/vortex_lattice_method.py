@@ -342,6 +342,85 @@ class VortexLatticeMethod(ExplicitAnalysis):
             "Cn" : Cn,
         }
 
+    def run_with_stability_derivatives(self,
+                                       alpha=True,
+                                       beta=True,
+                                       p=True,
+                                       q=True,
+                                       r=True,
+                                       ):
+        abbreviations = {
+            "alpha": "a",
+            "beta" : "b",
+            "p"    : "p",
+            "q"    : "q",
+            "r"    : "r",
+        }
+        finite_difference_amounts = {
+            "alpha": 0.001,
+            "beta" : 0.001,
+            "p"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "q"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
+            "r"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
+        }
+        scaling_factors = {
+            "alpha": np.degrees(1),
+            "beta" : np.degrees(1),
+            "p"    : (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "q"    : (2 * self.op_point.velocity) / self.airplane.c_ref,
+            "r"    : (2 * self.op_point.velocity) / self.airplane.b_ref,
+        }
+
+        original_op_point = self.op_point
+
+        # Compute the point analysis, which returns a dictionary that we will later add key:value pairs to.
+        run_base = self.run()
+
+        # Note for the loops below: here, "derivative numerator" and "... denominator" refer to the quantity being
+        # differentiated and the variable of differentiation, respectively. In other words, in the expression df/dx,
+        # the "numerator" is f, and the "denominator" is x. I realize that this would make a mathematician cry (as a
+        # partial derivative is not a fraction), but the reality is that there seems to be no commonly-accepted name
+        # for these terms. (Curiously, this contrasts with integration, where there is an "integrand" and a "variable
+        # of integration".)
+
+        for derivative_denominator in abbreviations.keys():
+            if not locals()[derivative_denominator]:  # Basically, if the parameter from the function input is not True,
+                continue  # Skip this run.
+                # This way, you can (optionally) speed up this routine if you only need static derivatives,
+                # or longitudinal derivatives, etc.
+
+            # These lines make a copy of the original operating point, incremented by the finite difference amount
+            # along the variable defined by derivative_denominator.
+            incremented_op_point = copy.copy(original_op_point)
+            incremented_op_point.__setattr__(
+                derivative_denominator,
+                original_op_point.__getattribute__(derivative_denominator) + finite_difference_amounts[
+                    derivative_denominator]
+            )
+
+            vlm_incremented = copy.copy(self)
+            vlm_incremented.op_point = incremented_op_point
+            run_incremented = vlm_incremented.run()
+
+            for derivative_numerator in [
+                "CL",
+                "CD",
+                "CY",
+                "Cl",
+                "Cm",
+                "Cn",
+            ]:
+                derivative_name = derivative_numerator + abbreviations[derivative_denominator]  # Gives "CLa"
+                run_base[derivative_name] = (
+                        (  # Finite-difference out the derivatives
+                                run_incremented[derivative_numerator] - run_base[
+                            derivative_numerator]
+                        ) / finite_difference_amounts[derivative_denominator]
+                        * scaling_factors[derivative_denominator]
+                )
+
+        return run_base
+
     def get_induced_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
         """
         Computes the induced velocity at a set of points in the flowfield.
