@@ -2,6 +2,13 @@ import aerosandbox.numpy as np
 from aerosandbox.atmosphere.atmosphere import Atmosphere
 from typing import Union
 
+"""
+Welcome to the AeroSandbox solar energy library!
+
+The function you're probably looking for is `solar_flux()`, which summarizes this entire module and computes the 
+realized solar flux on a given surface as a function of many different parameters.
+"""
+
 
 def solar_flux_outside_atmosphere_normal(
         day_of_year: Union[int, float, np.ndarray]
