@@ -1,47 +1,69 @@
 import aerosandbox.numpy as np
+from aerosandbox.atmosphere.atmosphere import Atmosphere
+from typing import Union
 
 
-def solar_flux_outside_atmosphere_normal(day_of_year):
+def solar_flux_outside_atmosphere_normal(
+        day_of_year: Union[int, float, np.ndarray]
+):
     """
-    Normal solar flux at the top of the atmosphere (variation due to orbital eccentricity)
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :return: Solar flux [W/m^2]
+    Computes the normal solar flux at the top of the atmosphere ("Airmass 0").
+    This varies due to Earth's orbital eccentricity (elliptical orbit).
+
+    Source: https://www.itacanet.org/the-sun-as-a-source-of-energy/part-2-solar-energy-reaching-the-earths-surface/#2.1.-The-Solar-Constant
+
+    Args:
+        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+
+    Returns: The normal solar flux [W/m^2] at the top of the atmosphere.
+
     """
-    # Space effects
-    # # Source: https://www.itacanet.org/the-sun-as-a-source-of-energy/part-2-solar-energy-reaching-the-earths-surface/#2.1.-The-Solar-Constant
-    # solar_flux_outside_atmosphere_normal = 1367 * (1 + 0.034 * cas.cos(2 * cas.pi * (day_of_year / 365.25)))  # W/m^2; variation due to orbital eccentricity
-    # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/solar-radiation-outside-the-earths-atmosphere
-    return 1366 * (
-            1 + 0.033 * np.cosd(360 * (day_of_year - 2) / 365))  # W/m^2; variation due to orbital eccentricity
+    return 1367 * (
+            1 + 0.034 * np.cosd(360 * (day_of_year) / 365.25)
+    )
 
 
-def declination_angle(day_of_year):
+def declination_angle(
+        day_of_year: Union[int, float, np.ndarray]
+):
     """
-    Declination angle, in degrees, as a func. of day of year. (Seasonality)
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :return: Declination angle [deg]
+    Computes the solar declination angle, in degrees, as a function of day of year.
+
+    Accounts for the Earth's obliquity.
+
+    Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/declination-angle
+
+    Args:
+        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+
+    Returns: Solar declination angle [deg]
+
     """
-    # Declination (seasonality)
-    # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/declination-angle
-    return -23.4398 * np.cosd(360 / 365 * (day_of_year + 10))  # in degrees
+    return -23.4398 * np.cosd(360 / 365.25 * (day_of_year + 10))
 
 
-def solar_elevation_angle(latitude, day_of_year, time):
+def solar_elevation_angle(
+        latitude,
+        day_of_year,
+        time
+):
     """
     Elevation angle of the sun [degrees] for a local observer.
 
-    :param latitude: Latitude [degrees]
+    Solar elevation angle is the angle between the Sun's position and the local horizon plane.
+    (Solar elevation angle) = 90 deg - (solar zenith angle)
 
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/elevation-angle
 
-    :param time: Time after local solar noon [seconds]
+    Args:
+        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
+        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+        time: Time after local solar noon [seconds]
 
-    :return: Solar elevation angle [degrees] (angle between horizon and sun). Returns negative values if the sun is
+    Returns: Solar elevation angle [degrees] (angle between horizon and sun). Returns negative values if the sun is
     below the horizon.
-    """
 
-    # Solar elevation angle (including seasonality, latitude, and time of day)
-    # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/elevation-angle
+    """
     declination = declination_angle(day_of_year)
 
     solar_elevation_angle = np.arcsind(
@@ -54,14 +76,19 @@ def solar_elevation_angle(latitude, day_of_year, time):
 def solar_azimuth_angle(latitude, day_of_year, time):
     """
     Azimuth angle of the sun [degrees] for a local observer.
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time after local solar noon [seconds]
-    :return: Solar azimuth angle [degrees] (the compass direction from which the sunlight is coming).
-    """
 
-    # Solar azimuth angle (including seasonality, latitude, and time of day)
-    # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
+    Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
+
+    Args:
+        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
+        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+        time: Time after local solar noon [seconds]
+
+    Returns: Solar azimuth angle [degrees] (the compass direction from which the sunlight is coming).
+        * 0 corresponds to North, 90 corresponds to East.
+        * Output ranges from 0 to 360 degrees.
+
+    """
     declination = declination_angle(day_of_year)
     sdec = np.sind(declination)
     cdec = np.cosd(declination)
