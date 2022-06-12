@@ -129,6 +129,7 @@ def airmass(
 ):
     """
     Computes the (relative) airmass as a function of the (true) solar elevation angle and observer altitude.
+    Includes refractive (e.g. curving) effects due to atmospheric density gradient.
 
     Airmass is the line integral of air density along an upwards-pointed ray, extended to infinity. As a raw
     calculation of "absolute airmass", this would have units of kg/m^2. It varies primarily as a function of solar
@@ -153,6 +154,12 @@ def airmass(
     Solar elevation angle is the angle between the Sun's position and the horizon.
     (Solar elevation angle) = 90 deg - (solar zenith angle)
 
+    Note that for small negative values of the solar elevation angle (e.g., -0.5 degree), airmass remains finite,
+    due to ray refraction (curving) through the atmosphere.
+
+    For significantly negative values of the solar elevation angle (e.g., -10 degrees), the airmass is theoretically
+    infinite. This function returns 1e100 in lieu of this here.
+
     Sources:
 
         Young model: Young, A. T. 1994. Air mass and refraction. Applied Optics. 33:1108–1110. doi:
@@ -171,6 +178,8 @@ def airmass(
 
     Returns: The relative airmass [unitless] as a function of the (true) solar elevation angle and observer altitude.
 
+        * Always ranges from 0 to Infinity
+
     """
     true_zenith_angle = 90 - solar_elevation_angle
 
@@ -179,9 +188,13 @@ def airmass(
         cos2_zt = cos_zt ** 2
         cos3_zt = cos_zt ** 3
 
-        sea_level_airmass = (
-                (1.002432 * cos2_zt + 0.148386 * cos_zt + 0.0096467) /
-                (cos3_zt + 0.149864 * cos2_zt + 0.0102963 * cos_zt + 0.000303978)
+        numerator = 1.002432 * cos2_zt + 0.148386 * cos_zt + 0.0096467
+        denominator = cos3_zt + 0.149864 * cos2_zt + 0.0102963 * cos_zt + 0.000303978
+
+        sea_level_airmass = np.where(
+            denominator > 0,
+            numerator / denominator,
+            1e100  # Essentially, infinity.
         )
     else:
         raise ValueError("Bad value of `method`!")
