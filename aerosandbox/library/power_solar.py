@@ -115,6 +115,78 @@ def solar_azimuth_angle(latitude, day_of_year, time):
     return solar_azimuth_angle
 
 
+def airmass(
+        solar_elevation_angle: float,
+        altitude: float = 0.,
+        method='Young'
+):
+    """
+    Computes the (relative) airmass as a function of the (true) solar elevation angle and observer altitude.
+
+    Airmass is the line integral of air density along an upwards-pointed ray, extended to infinity. As a raw
+    calculation of "absolute airmass", this would have units of kg/m^2. It varies primarily as a function of solar
+    elevation angle and observer altitude. (Higher altitude means less optical absorption.) However,
+    "airmass" usually refers to the "relative airmass", which is the absolute airmass of a given scenario divided by
+    the absolute airmass of a reference scenario. This reference scenario is when the sun is directly overhead (solar
+    elevation angle of 90 degrees) and the observer is at sea level.
+
+    Therefore:
+
+        * Outer space has a (relative) airmass of 0 (regardless of solar elevation angle).
+
+        * Sea level with the sun directly overhead has a (relative) airmass of 1.
+
+        * Sea level with the sun at the horizon has a (relative) airmass of ~31.7. (Not infinity, since the Earth is
+        spherical, so the ray eventually reaches outer space.) Some models will say that this relative airmass at the
+        horizon should be ~38; that is only true if one uses the *apparent* solar elevation angle, rather than the
+        *true* (geometric) one. The discrepancy comes from the fact that light refracts (curves) as it passes through
+        the atmosphere's density gradient, with the difference between true and apparent elevation angles reaching a
+        maximum of 0.56 degrees at the horizon.
+
+    Solar elevation angle is the angle between the Sun's position and the horizon.
+    (Solar elevation angle) = 90 deg - (solar zenith angle)
+
+    Sources:
+
+        Young model: Young, A. T. 1994. Air mass and refraction. Applied Optics. 33:1108–1110. doi:
+        10.1364/AO.33.001108. Reproduced at https://en.wikipedia.org/wiki/Air_mass_(astronomy)
+
+    Args:
+
+        solar_elevation_angle: Solar elevation angle [degrees] (angle between horizon and sun). Note that we use the
+        true solar elevation angle, rather than the apparent one. The discrepancy comes from the fact that light
+        refracts (curves) as it passes through the atmosphere's density gradient, with the difference between true
+        and apparent elevation angles reaching a maximum of 0.56 degrees at the horizon.
+
+        altitude: Altitude of the observer [meters] above sea level.
+
+        method: A string that determines which model to use.
+
+    Returns: The relative airmass [unitless] as a function of the (true) solar elevation angle and observer altitude.
+
+    """
+    true_zenith_angle = 90 - solar_elevation_angle
+
+    if method == 'Young':
+        cos_zt = np.cosd(true_zenith_angle)
+        cos2_zt = cos_zt ** 2
+        cos3_zt = cos_zt ** 3
+
+        sea_level_airmass = (
+                (1.002432 * cos2_zt + 0.148386 * cos_zt + 0.0096467) /
+                (cos3_zt + 0.149864 * cos2_zt + 0.0102963 * cos_zt + 0.000303978)
+        )
+    else:
+        raise ValueError("Bad value of `method`!")
+
+    airmass_at_altitude = sea_level_airmass * (
+            Atmosphere(altitude=altitude).pressure() /
+            101325.
+    )
+
+    return airmass_at_altitude
+
+
 def incidence_angle_function(
         latitude: float,
         day_of_year: float,
