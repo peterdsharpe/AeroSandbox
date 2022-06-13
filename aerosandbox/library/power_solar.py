@@ -398,45 +398,151 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
+    base_color = p.palettes['categorical'][0]
+    quality_colors = {
+        'clean'   : p.adjust_lightness(base_color, amount=1.2),
+        'typical' : p.adjust_lightness(base_color, amount=0.7),
+        'polluted': p.adjust_lightness(base_color, amount=0.2),
+    }
+
+    ##### Plot solar_flux() over the course of a day
     time = np.linspace(0, 86400, 86401)
     hour = time / 3600
 
-    fig, ax = plt.subplots(figsize=(5, 3))
-    fluxes = lambda **kwargs: solar_flux(
+    base_kwargs = dict(
         latitude=23.5,
         day_of_year=172,
         time=time,
-        altitude=0,
-        **kwargs
     )
-    for q in ['clean', 'typical', 'polluted']:
-        plt.plot(hour, fluxes(air_quality=q), label=f'{q.capitalize()} air')
 
-    p.set_ticks(3, 0.5)
-    plt.xlim(0, 24)
+    fig, ax = plt.subplots(2, 1, figsize=(7, 6.5))
+    plt.sca(ax[0])
+    plt.title(f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice)")
+    for q in quality_colors.keys():
+        plt.plot(
+            hour,
+            solar_flux(
+                **base_kwargs,
+                air_quality=q
+            ),
+            color=quality_colors[q],
+            label=f'ASB Model: {q.capitalize()} air'
+        )
+
+    plt.sca(ax[1])
+    plt.title(f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice)")
+    for q in quality_colors.keys():
+        plt.plot(
+            hour,
+            solar_flux(
+                **base_kwargs,
+                panel_tilt_angle=90 - solar_elevation_angle(**base_kwargs),
+                panel_azimuth_angle=solar_azimuth_angle(**base_kwargs),
+                air_quality=q
+            ),
+            color=quality_colors[q],
+            label=f'ASB Model: {q.capitalize()} air'
+        )
+
+    for a in ax:
+        plt.sca(a)
+        plt.xlabel("Time after Local Solar Noon [hours]")
+        plt.ylabel("Solar Flux [$W/m^2$]")
+        plt.xlim(0, 24)
+        plt.ylim(-10, 1200)
+        p.set_ticks(3, 0.5, 200, 50)
+
+    plt.sca(ax[0])
+    p.show_plot()
+
+    ##### Plot solar_flux() as a function of elevation angle, and compare to data to validate.
+    # Source: Ed. (2008), Table 1.1, Earthscan with the International Institute for Environment and Development, Deutsche Gesellschaft für Sonnenenergie. ISBN 1-84407-442-0.
+    # Via: https://en.wikipedia.org/wiki/Air_mass_(solar_energy)#Solar_intensity
+
+    # Values here give lower and upper bounds for measured solar flux on a typical clear day, varying primarily due
+    # to pollution.
+    raw_data = """\
+z [deg],AM [-],Solar Flux Lower Bound [W/m^2],Solar Flux Upper Bound [W/m^2]
+0,1,840,1130
+23,1.09,800,1110
+30,1.15,780,1100
+45,1.41,710,1060
+48.2,1.5,680,1050
+60,2,560,970
+70,2.9,430,880
+75,3.8,330,800
+80,5.6,200,660
+85,10,85,480
+90,38,6,34
+"""
+    import pandas as pd
+    from io import StringIO
+
+    delimiter = "\t"
+    df = pd.read_csv(
+        StringIO(raw_data),
+        delimiter=','
+    )
+    df["Solar Flux [W/m^2]"] = (df['Solar Flux Lower Bound [W/m^2]'] + df['Solar Flux Upper Bound [W/m^2]']) / 2
+
+    fluxes = solar_flux(
+        **base_kwargs,
+        panel_tilt_angle=90 - solar_elevation_angle(**base_kwargs),
+        panel_azimuth_angle=solar_azimuth_angle(**base_kwargs),
+    )
+    elevations = solar_elevation_angle(
+        **base_kwargs
+    )
+
+    fig, ax = plt.subplots()
+    for q in quality_colors.keys():
+        plt.plot(
+            solar_elevation_angle(**base_kwargs),
+            solar_flux(
+                **base_kwargs,
+                panel_tilt_angle=90 - solar_elevation_angle(**base_kwargs),
+                panel_azimuth_angle=solar_azimuth_angle(**base_kwargs),
+                air_quality=q
+            ),
+            color=quality_colors[q],
+            label=f'ASB Model: {q.capitalize()} air',
+            zorder=3
+        )
+
+    data_color = p.palettes['categorical'][1]
+
+    plt.fill_between(
+        x=90 - df['z [deg]'].values,
+        y1=df['Solar Flux Lower Bound [W/m^2]'],
+        y2=df['Solar Flux Upper Bound [W/m^2]'],
+        color=data_color,
+        alpha=0.4,
+        label='Experimental Data Range\n(due to Pollution)',
+        zorder=2.9,
+    )
+    for d in ['Lower', 'Upper']:
+        plt.plot(
+            90 - df['z [deg]'].values,
+            df[f'Solar Flux {d} Bound [W/m^2]'],
+            ".",
+            color=data_color,
+            alpha=0.7,
+            zorder=2.95
+        )
+
+    plt.annotate(
+        text='Data: "Planning and Installing Photovoltaic Systems".\nEarthscan (2008), ISBN 1-84407-442-0.',
+        xy=(0.02, 0.98),
+        xycoords="axes fraction",
+        ha="left",
+        va='top',
+        fontsize=9
+    )
+    plt.xlim(-5, 90)
+    p.set_ticks(15, 5, 200, 50)
+
     p.show_plot(
-        f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice)",
-        "Time after Local Solar Noon [hours]",
-        "Solar Flux [$W/m^2$]"
-    )
-
-    fig, ax = plt.subplots(figsize=(5, 3))
-    fluxes = lambda **kwargs: solar_flux(
-        latitude=23.5,
-        day_of_year=172,
-        time=time,
-        altitude=0,
-        panel_tilt_angle=90 - solar_elevation_angle(23.5, 177, time),
-        panel_azimuth_angle = solar_azimuth_angle(23.5, 177, time),
-        **kwargs
-    )
-    for q in ['clean', 'typical', 'polluted']:
-        plt.plot(hour, fluxes(air_quality=q), label=f'{q.capitalize()} air')
-
-    p.set_ticks(3, 0.5)
-    plt.xlim(0, 24)
-    p.show_plot(
-        f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice)",
-        "Time after Local Solar Noon [hours]",
+        f"Sun Position vs. Solar Flux on a Sun-Tracking Surface",
+        f"Solar Elevation Angle [deg]",
         "Solar Flux [$W/m^2$]"
     )
