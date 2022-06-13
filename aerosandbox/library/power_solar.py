@@ -266,7 +266,7 @@ def solar_flux(
 
     Returns: The solar power flux [W/m^2] on the panel.
 
-        * Note: does not account for any potential reflectivity of the solar panel coating.
+        * Note: does not account for any potential reflectivity of the solar panel's coating itself.
 
     """
     flux_outside_atmosphere = solar_flux_outside_atmosphere_normal(day_of_year=day_of_year)
