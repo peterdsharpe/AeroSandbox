@@ -319,7 +319,7 @@ def solar_flux(
     cosine_of_angle_between_panel_normal_and_sun = np.fmax(
         cosine_of_angle_between_panel_normal_and_sun,
         0
-    ) # Accounts for if you have a downwards-pointing panel while the sun is above you.
+    )  # Accounts for if you have a downwards-pointing panel while the sun is above you.
 
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
     # Author of this code (Peter Sharpe) has manually verified correctness of this vector math.
