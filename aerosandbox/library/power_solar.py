@@ -12,7 +12,7 @@ realized solar flux on a given surface as a function of many different parameter
 
 def solar_flux_outside_atmosphere_normal(
         day_of_year: Union[int, float, np.ndarray]
-):
+) -> Union[float, np.ndarray]:
     """
     Computes the normal solar flux at the top of the atmosphere ("Airmass 0").
     This varies due to Earth's orbital eccentricity (elliptical orbit).
@@ -32,7 +32,7 @@ def solar_flux_outside_atmosphere_normal(
 
 def declination_angle(
         day_of_year: Union[int, float, np.ndarray]
-):
+) -> Union[float, np.ndarray]:
     """
     Computes the solar declination angle, in degrees, as a function of day of year.
 
@@ -50,10 +50,10 @@ def declination_angle(
 
 
 def solar_elevation_angle(
-        latitude,
-        day_of_year,
-        time
-):
+        latitude: Union[float, np.ndarray],
+        day_of_year: Union[int, float, np.ndarray],
+        time: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Elevation angle of the sun [degrees] for a local observer.
 
@@ -80,7 +80,11 @@ def solar_elevation_angle(
     return solar_elevation_angle
 
 
-def solar_azimuth_angle(latitude, day_of_year, time):
+def solar_azimuth_angle(
+        latitude: Union[float, np.ndarray],
+        day_of_year: Union[int, float, np.ndarray],
+        time: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Azimuth angle of the sun [degrees] for a local observer.
 
@@ -123,10 +127,10 @@ def solar_azimuth_angle(latitude, day_of_year, time):
 
 
 def airmass(
-        solar_elevation_angle: float,
-        altitude: float = 0.,
+        solar_elevation_angle: Union[float, np.ndarray],
+        altitude: Union[float, np.ndarray] = 0.,
         method='Young'
-):
+) -> Union[float, np.ndarray]:
     """
     Computes the (relative) airmass as a function of the (true) solar elevation angle and observer altitude.
     Includes refractive (e.g. curving) effects due to atmospheric density gradient.
@@ -207,137 +211,125 @@ def airmass(
     return airmass_at_altitude
 
 
-def incidence_angle_function(
-        latitude: float,
-        day_of_year: float,
-        time: float,
-        panel_azimuth_angle: float = 0,
-        panel_tilt_angle: float = 0,
-        scattering: bool = True,
-):
+def solar_flux(
+        latitude: Union[float, np.ndarray],
+        day_of_year: Union[int, float, np.ndarray],
+        time: Union[float, np.ndarray],
+        altitude: Union[float, np.ndarray],
+        panel_azimuth_angle: Union[float, np.ndarray] = 0.,
+        panel_tilt_angle: Union[float, np.ndarray] = 0.,
+        air_quality: str='typical',
+        **deprecated_kwargs
+) -> Union[float, np.ndarray]:
     """
-    This website will be useful for accounting for direction of the vertical surface
-    https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param panel_azimuth_angle: The azimuth angle of the panel normal, in degrees. (0 degrees if pointing North and 90 if East)
-    :param panel_tilt_angle: The angle between the panel normal and vertical, in degrees. (0 if horizontal and 90 if vertical)
-    :param scattering: Boolean: include scattering effects at very low angles?
+    Computes the solar power flux (power per unit area) on a flat panel.
 
-    :returns
-    illumination_factor: Fraction of solar insolation received, relative to what it would get if it were perfectly oriented to the sun.
+    Source for atmospheric absorption:
+
+        * Planning and installing photovoltaic systems: a guide for installers, architects and engineers,
+        2nd Ed. (2008), Table 1.1, Earthscan with the International Institute for Environment and Development,
+        Deutsche Gesellschaft für Sonnenenergie. ISBN 1-84407-442-0., accessed via
+        https://en.wikipedia.org/wiki/Air_mass_(solar_energy)
+
+    Args:
+
+        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
+
+        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+
+        time: Time after local solar noon [seconds]
+
+        altitude: Altitude of the panel above sea level [meters]. This affects atmospheric absorption and scattering
+        characteristics.
+
+        panel_azimuth_angle: The azimuth angle of the panel normal [degrees] (the compass direction from which the
+        sunlight is coming).
+
+            * 0 corresponds to North, 90 corresponds to East.
+
+            * Input ranges from 0 to 360 degrees.
+
+        panel_tilt_angle: The angle between the panel normal and vertical (zenith) [degrees].
+
+            * Note: this angle convention is different than the solar elevation angle convention!
+
+            * A horizontal panel has a tilt angle of 0, and a vertical panel has a tilt angle of 90 degrees.
+
+        air_quality: Indicates the amount of pollution in the air. A string, one of:
+
+            * 'typical': Corresponds to "rural aerosol loading" following ASTM G-173.
+
+            * 'clean': Pristine atmosphere conditions.
+
+            * 'polluted': Urban atmosphere conditions.
+
+    Returns: The solar power flux [W/m^2].
+
     """
+    flux_outside_atmosphere = solar_flux_outside_atmosphere_normal(day_of_year=day_of_year)
+
     solar_elevation = solar_elevation_angle(latitude, day_of_year, time)
     solar_azimuth = solar_azimuth_angle(latitude, day_of_year, time)
-    cosine_factor = (
+
+    relative_airmass = airmass(
+        solar_elevation_angle=solar_elevation,
+        altitude=altitude,
+    )
+
+    # Source: "Planning and installing..." Earthscan. Full citation in docstring above.
+    if air_quality == 'typical':
+        atmospheric_transmission_fraction = 0.70 ** (relative_airmass ** 0.678)
+    elif air_quality == 'clean':
+        atmospheric_transmission_fraction = 0.76 ** (relative_airmass ** 0.618)
+    elif air_quality == 'polluted':
+        atmospheric_transmission_fraction = 0.56 ** (relative_airmass ** 0.715)
+    else:
+        raise ValueError("Bad value of `air_quality`!")
+
+    direct_normal_irradiance = np.where(
+        solar_elevation > 0.,
+        flux_outside_atmosphere * atmospheric_transmission_fraction,
+        0.
+    )
+
+    absorption_and_scattering_losses = flux_outside_atmosphere - flux_outside_atmosphere * atmospheric_transmission_fraction
+
+    scattering_losses = absorption_and_scattering_losses * (10. / 28.)
+    # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/air-mass
+    # Indicates that absorption and scattering happen in a 18:10 ratio, at least in AM1.5 conditions. We extrapolate
+    # this to all conditions.
+
+    diffuse_irradiance = scattering_losses * atmospheric_transmission_fraction
+    # We assume that the in-scattering (i.e., diffuse irradiance) and the out-scattering (i.e., scattering losses in
+    # the direct irradiance calculation) are equal, by argument of approximately parallel incident rays.
+    # We further assume that any in-scattering must then once-again go through the absorption / re-scattering process,
+    # which is identical to the original atmospheric transmission fraction.
+
+    cosine_of_angle_between_panel_normal_and_sun = (
             np.cosd(solar_elevation) *
             np.sind(panel_tilt_angle) *
             np.cosd(panel_azimuth_angle - solar_azimuth)
             + np.sind(solar_elevation) * np.cosd(panel_tilt_angle)
     )
-    if scattering:
-        illumination_factor = cosine_factor * scattering_factor(solar_elevation)
-    else:
-        illumination_factor = cosine_factor
+    # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
+    # Author of this code (Peter Sharpe) has manually verified correctness of this vector math.
 
-    illumination_factor = np.fmax(illumination_factor, 0)
-    illumination_factor = np.where(
-        solar_elevation < 0,
-        0,
-        illumination_factor
-    )
-    return illumination_factor
-
-
-def scattering_factor(elevation_angle):
-    """
-    Calculates a scattering factor (a factor that gives losses due to atmospheric scattering at low elevation angles).
-    Source: AeroSandbox/studies/SolarPanelScattering
-    :param elevation_angle: Angle between the horizon and the sun [degrees]
-    :return: Fraction of the light that is not lost to scattering.
-    # TODO figure out if scattering is w.r.t. sun elevation or w.r.t. angle between panel and sun
-    """
-    elevation_angle = np.clip(elevation_angle, 0, 90)
-    theta = 90 - elevation_angle  # Angle between panel normal and the sun, in degrees
-
-    # # Model 1
-    # c = (
-    #     0.27891510500505767300438719757949,
-    #     -0.015994330894744987481281839336589,
-    #     -19.707332432605799255043166340329,
-    #     -0.66260979582573353852126274432521
-    # )
-    # factor = c[0] + c[3] * theta_rad + cas.exp(
-    #     c[1] * (
-    #             cas.tan(theta_rad) + c[2] * theta_rad
-    #     )
-    # )
-
-    # Model 2
-    c = (
-        -0.04636,
-        -0.3171
-    )
-    factor = np.exp(
-        c[0] * (
-                np.tand(theta * 0.999) + c[1] * np.radians(theta)
-        )
+    flux_on_panel = (
+            direct_normal_irradiance * cosine_of_angle_between_panel_normal_and_sun
+            + diffuse_irradiance
     )
 
-    # # Model 3
-    # p1 = -21.74
-    # p2 = 282.6
-    # p3 = -1538
-    # p4 = 1786
-    # q1 = -923.2
-    # q2 = 1456
-    # x = theta_rad
-    # factor = ((p1*x**3 + p2*x**2 + p3*x + p4) /
-    #            (x**2 + q1*x + q2))
+    return flux_on_panel
 
-    return factor
-
-
-def solar_flux(
-        latitude: float,
-        day_of_year: float,
-        time: float,
-        panel_azimuth_angle: float = 0,
-        panel_tilt_angle: float = 0,
-        scattering: bool = True
-) -> float:
-    """
-    What is the solar flux on a horizontal surface for some given conditions?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :param panel_azimuth_angle: The azimuth angle of the panel normal, in degrees. (0 degrees if pointing North and 90 if East)
-    :param panel_tilt_angle: The angle between the panel normal and vertical, in degrees. (0 if horizontal and 90 if vertical)
-    :param scattering: Boolean: include scattering effects at very low angles?
-
-    :return: The solar flux on the panel, expressed in W/m^2.
-    """
-    return (
-            solar_flux_outside_atmosphere_normal(day_of_year) *
-            incidence_angle_function(
-                latitude=latitude,
-                day_of_year=day_of_year,
-                time=time,
-                panel_azimuth_angle=panel_azimuth_angle,
-                panel_tilt_angle=panel_tilt_angle,
-                scattering=scattering
-            )
-    )
-
-
-def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True):
+def peak_sun_hours_per_day_on_horizontal(
+        latitude: Union[float, np.ndarray],
+        day_of_year: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     How many hours of equivalent peak sun do you get per day?
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
     :param time: Time since (local) solar noon [seconds]
-    :param scattering: Boolean: include scattering effects at very low angles?
     :return:
     """
     times = np.linspace(0, 86400, 1000)
@@ -353,9 +345,22 @@ def peak_sun_hours_per_day_on_horizontal(latitude, day_of_year, scattering=True)
     return sun_hours
 
 
-def length_day(latitude, day_of_year):
+def length_day(
+        latitude: Union[float, np.ndarray],
+        day_of_year: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
-    For what length of time is the sun above the horizon on a given day?
+    Gives the duration where the sun is above the horizon on a given day.
+
+    Args:
+        latitude:
+        day_of_year:
+
+    Returns:
+
+    """
+    """
+    Gives the duration where the sun is above the horizon on a given day.
 
     :param latitude: Latitude [degrees]
     :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
@@ -373,8 +378,8 @@ def length_day(latitude, day_of_year):
 
 
 def mass_MPPT(
-        power: float
-) -> float:
+        power: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Gives the estimated mass of a Maximum Power Point Tracking (MPPT) unit for solar energy
     collection. Based on regressions at AeroSandbox/studies/SolarMPPTMasses.
@@ -391,416 +396,48 @@ def mass_MPPT(
 
 
 if __name__ == "__main__":
-    pass
-    # # circular flight path function test
-    #
-    # import matplotlib.pyplot as plt
-    #
-    # ## fun integration problem
-    # airspeed = 30  # m/s
-    # radius = 50000  # m
-    # latitude = 60
-    # day_of_year = 174
-    # angle = 90
-    # day = 60 * 60 * 24
-    # # wind_speed = 25
-    # # wind_direction = 180
-    # # solar_flux = []
-    # # ground_dist_list = [0]
-    # # x_vector = []
-    # # time_step = times[2] - times[1]
-    # # groundspeed = 0
-    # # for i, time in enumerate(times):
-    # #     x = airspeed * time
-    # #     x_vector.append(x)
-    # #     vehicle_direction = x / (np.pi / 180) / radius + 90
-    # #     heading_x = airspeed * np.sind(vehicle_direction) - wind_speed * np.sind(wind_direction)
-    # #     heading_y = airspeed * np.cosd(vehicle_direction) - wind_speed * np.cosd(wind_direction)
-    # #     groundspeed = np.sqrt(heading_x ** 2 + heading_y ** 2)
-    # #     ground_dist = ground_dist_list[i-1] + groundspeed * time_step
-    # #     ground_dist_list.append(ground_dist)
-    # #     vehicle_heading = np.arctan2d(heading_y, heading_x)
-    # #     panel_heading = vehicle_heading - 90
-    # #     solar_flux.append(solar_flux_circular_flight_path(latitude, day_of_year, time, -angle, panel_heading) + solar_flux_circular_flight_path(latitude, day_of_year, time, angle, panel_heading) )
-    #
-    # # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # # plt.plot(times / 3600, solar_flux)
-    # # plt.grid(True)
-    # # plt.title("Solar Flux on Vertical as  Aircraft Completes a Circular Flight Path")
-    # # plt.xlabel("Time after Solar Noon [hours]")
-    # # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # # plt.tight_layout()
-    # # # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # # plt.show()
-    # #
-    # # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # # plt.plot(times / 3600, ground_dist_list[:-1])
-    # # plt.grid(True)
-    # # plt.title("Ground Distance Covered as Aircraft Completes a Circular Flight Path")
-    # # plt.xlabel("Time after Solar Noon [hours]")
-    # # plt.ylabel("Ground Distance [m]")
-    # # plt.tight_layout()
-    # # # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # # plt.show()
-    #
-    # # circular flight path test w optimization
-    # import aerosandbox as asb
-    #
-    # opti = asb.Opti()
-    # radius = 50000  # m
-    # latitude = 60
-    # day_of_year = 174
-    # angle = 90
-    # wind_speed = 20
-    # wind_direction = 90
-    #
-    # n_timesteps_per_segment = 300
-    # time_start = 0 * 3600
-    # time_end = 24 * 3600
-    #
-    # time = np.linspace(
-    #     time_start,
-    #     time_end,
-    #     n_timesteps_per_segment
-    # )
-    # time_periodic_start_index = 0
-    # time_periodic_end_index = time.shape[0] - 1
-    #
-    # n_timesteps = time.shape[0]
-    # hour = time / 3600
-    #
-    # # initialize variables
-    # airspeed = opti.variable(
-    #     n_vars=n_timesteps,
-    #     init_guess=25,
-    #     scale=10,
-    # )
-    # x = opti.variable(
-    #     n_vars=n_timesteps,
-    #     init_guess=0,
-    #     scale=1e5,
-    # )
-    # heading_x = opti.variable(
-    #     n_vars=n_timesteps,
-    #     init_guess=90,
-    #     scale=20,
-    # )
-    # heading_y = opti.variable(
-    #     n_vars=n_timesteps,
-    #     init_guess=180,
-    #     scale=20,
-    # )
-    # vehicle_heading = opti.variable(
-    #     n_vars=n_timesteps,
-    #     init_guess=90,
-    #     scale=20,
-    # )
-    # vehicle_direction = opti.variable(
-    #     n_vars=n_timesteps,
-    #     init_guess=80,
-    #     scale=20,
-    # )
-    # groundspeed = opti.variable(
-    #     n_vars=n_timesteps,
-    #     init_guess=3,
-    #     scale=1,
-    # )
-    #
-    # # constraints
-    # trapz = lambda x: (x[1:] + x[:-1]) / 2
-    # dt = np.diff(time)
-    # dx = np.diff(x)
-    # opti.subject_to([
-    #     airspeed >= 0,
-    #     dx / 1e4 == trapz(groundspeed) * dt / 1e4,
-    #     x[-1] >= 10000,
-    #     vehicle_direction == x / (np.pi / 180) / radius + 90,
-    #     # direction the vehicle must fly on to remain in the circular trajectory
-    #     heading_x == airspeed * np.sind(vehicle_direction) - wind_speed * np.sind(wind_direction),
-    #     # x component of heading vector
-    #     heading_y == airspeed * np.cosd(vehicle_direction) - wind_speed * np.cosd(wind_direction),
-    #     # y component of heading vector
-    #     vehicle_heading == np.arctan2d(heading_y, heading_x),
-    #     # actual directionality of the vehicle as modified by the wind speed and direction
-    #     groundspeed ** 2 == heading_x ** 2 + heading_y ** 2,
-    #     # speed of aircraft as measured from observer on the ground
-    #     groundspeed >= 2,
-    #     airspeed <= 40,
-    #     airspeed >= 10,
-    #     x > 0,
-    #     x[0] == 0,
-    # ])
-    #
-    # panel_heading = vehicle_heading - 90  # actual directionality of the solar panel
-    #
-    # solar_flux_on_vertical_left = solar_flux_circular_flight_path(
-    #     latitude, day_of_year, time, 90, panel_heading, scattering=True,
-    # )
-    # solar_flux_on_vertical_right = solar_flux_circular_flight_path(
-    #     latitude, day_of_year, time, -90, panel_heading, scattering=True,
-    # )
-    # solar_flux = solar_flux_on_vertical_left + solar_flux_on_vertical_right
-    # solar_flux_total = np.sum(solar_flux_on_vertical_left + solar_flux_on_vertical_right)
-    # opti.minimize(-solar_flux_total)
-    # sol = opti.solve(
-    #     max_iter=10000,
-    # )
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # plt.plot(opti.value(time / 3600), opti.value(solar_flux))
-    # plt.grid(True)
-    # plt.title("Solar Flux on Vertical as  Aircraft Completes a Circular Flight Path")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # plt.show()
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # plt.plot(opti.value(time / 3600), opti.value(x))
-    # plt.grid(True)
-    # plt.title("Ground Distance Covered as Aircraft Completes a Circular Flight Path")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel("Ground Distance [m]")
-    # plt.tight_layout()
-    # # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # plt.show()
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # plt.plot(opti.value(time / 3600), opti.value(groundspeed))
-    # plt.grid(True)
-    # plt.title("Groundspeed as Aircraft Completes a Circular Flight Path")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel("Groundspeed [m/s]")
-    # plt.tight_layout()
-    # # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # plt.show()
-    #
-    # # Run some checks
-    # import plotly.graph_objects as go
-    #
-    # latitudes = np.linspace(0, 80, 200)
-    # day_of_years = np.arange(0, 365) + 1
-    # times = np.linspace(0, 86400, 400)
-    # #
-    # headings = np.linspace(0, 180, 400)
-    #
-    # Times, Latitudes = np.meshgrid(times, latitudes, indexing="ij")
-    # fluxes = np.array(solar_flux_on_horizontal(Latitudes, 244, Times))
-    # fig = go.Figure(
-    #     data=[
-    #         go.Surface(
-    #             x=Times / 3600,
-    #             y=Latitudes,
-    #             z=fluxes,
-    #         )
-    #     ],
-    # )
-    # fig.update_layout(
-    #     scene=dict(
-    #         xaxis=dict(title="Time after Solar Noon [hours]"),
-    #         yaxis=dict(title="Latitude [deg]"),
-    #         zaxis=dict(title="Solar Flux [W/m^2]"),
-    #         camera=dict(
-    #             eye=dict(x=-1, y=-1, z=1)
-    #         )
-    #     ),
-    #     title="Solar Flux on Horizontal",
-    # )
-    # fig.show()
-    ## test new function for off horizontal solar arrays
-    # latitude = 60
-    # angle = 90
-    # Times, Headings = np.meshgrid(times, headings, indexing="ij")
-    # fluxes = np.array(solar_flux_new(latitude, 174, times, headings, angle))
-    # fig = go.Figure(
-    #     data=[
-    #         go.Surface(
-    #             x=Times / 3600,
-    #             y=Headings,
-    #             z=fluxes,
-    #         )
-    #     ],
-    # )
-    # fig.update_layout(
-    #     scene=dict(
-    #         xaxis=dict(title="Time after Solar Noon [hours]"),
-    #         yaxis=dict(title="Aircraft Heading [deg]"),
-    #         zaxis=dict(title="Solar Flux [W/m^2]"),
-    #         camera=dict(
-    #             eye=dict(x=-1, y=-1, z=1)
-    #         )
-    #     ),
-    #     title="Solar Flux on Vertical",
-    # )
-    # fig.show()
-    # for heading in range(np.linspace(0, 180, 10)):
-    #     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    #     # lats_to_plot = [26, 49]
-    #     lats_to_plot = np.linspace(0, 90, 7)
-    #     colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    #     [
-    #         plt.plot(
-    #             times / 3600,
-    #             solar_flux_on_new(lats_to_plot[i], 173, times),
-    #             label="%iN Latitude" % lats_to_plot[i],
-    #             color=colors[i],
-    #             linewidth=3
-    #         ) for i in range(len(lats_to_plot))
-    #     ]
-    #     plt.grid(True)
-    #     plt.legend()
-    #     plt.title("Solar Flux on a Vertical Surface (Summer Solstice)")
-    #     plt.xlabel("Time after Solar Noon [hours]")
-    #     plt.ylabel(r"Solar Flux [W/m$^2$]")
-    #     plt.tight_layout()
-    #     # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_vertical")
-    #     plt.show()
-    #
-    # fig = go.Figure(
-    #     data=[
-    #         go.Contour(
-    #             z=fluxes.T,
-    #             x=times/3600,
-    #             y=latitudes,
-    #             colorbar=dict(
-    #                 title="Solar Flux [W/m^2]"
-    #             ),
-    #             colorscale="Viridis",
-    #         )
-    #     ]
-    # )
-    # fig.update_layout(
-    #     scene=dict(
-    #         xaxis=dict(title="Hours after Solar Noon [hours]"),
-    #         yaxis=dict(title="Latitude [deg]"),
-    #     ),
-    #     title="Solar Flux on Horizontal",
-    #     xaxis_title="Time after Solar Noon [hours]",
-    #     yaxis_title="Latitude [deg]",
-    # )
-    # fig.show()
-
     import matplotlib.pyplot as plt
-    import seaborn as sns
+    import aerosandbox.tools.pretty_plots as p
 
-    #
-    # sns.set(font_scale=1)
-    # latitudes = np.linspace(0, 80, 200)
-    # day_of_years = np.arange(0, 365) + 1
-    # times = np.linspace(0, 86400, 400)
-    # latitude = 60
-    # angle = 90
-    # headings = np.linspace(0, 180, 400)
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # headings_to_plot = np.linspace(0, 180, 5)
-    # colors = plt.cm.rainbow(np.linspace(0, 1, len(headings_to_plot)))[::-1]
-    # [
-    #     plt.plot(
-    #         times / 3600,
-    #         solar_flux_new(latitude,173, times, headings_to_plot[i], angle=0),
-    #         label="%iN Headings" % headings_to_plot[i],
-    #         color=colors[i],
-    #         linewidth=3
-    #     ) for i in range(len(headings_to_plot))
-    # ]
-    # plt.grid(True)
-    # plt.legend()
-    # plt.title("Solar Flux on a Horizontal Surface (Summer Solstice)")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # plt.show()
-    #
-    #
-    sns.set(font_scale=1)
+    time = np.linspace(0, 86400, 86401)
+    hour = time / 3600
 
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # lats_to_plot = [26, 49]
-    # lats_to_plot = np.linspace(0, 90, 7)
-    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    # [
-    #     plt.plot(
-    #         times / 3600,
-    #         solar_flux_on_horizontal(lats_to_plot[i], 173, times),
-    #         label="%iN Latitude" % lats_to_plot[i],
-    #         color=colors[i],
-    #         linewidth=3
-    #     ) for i in range(len(lats_to_plot))
-    # ]
-    # plt.grid(True)
-    # plt.legend()
-    # plt.title("Solar Flux on a Horizontal Surface (Summer Solstice)")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_horizontal")
-    # plt.show()
-    # # #
-    # sns.set(font_scale=1)
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # lats_to_plot = [26, 49]
-    # lats_to_plot = np.linspace(0, 90, 7)
-    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    # [
-    #     plt.plot(
-    #         times / 3600,
-    #         solar_flux_on_vertical(lats_to_plot[i], 173, times),
-    #         label="%iN Latitude" % lats_to_plot[i],
-    #         color=colors[i],
-    #         linewidth=3
-    #     ) for i in range(len(lats_to_plot))
-    # ]
-    # plt.grid(True)
-    # plt.legend()
-    # plt.title("Solar Flux on a Vertical Surface (Summer Solstice)")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_vertical")
-    # plt.show()
-    #
-    # sns.set(font_scale=1)
-    #
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # lats_to_plot = [26, 49]
-    # lats_to_plot = np.linspace(0, 90, 7)
-    # colors = plt.cm.rainbow(np.linspace(0, 1, len(lats_to_plot)))[::-1]
-    # [
-    #     plt.plot(
-    #         times / 3600,
-    #         solar_flux_on_angle(10, lats_to_plot[i], 173, times),
-    #         label="%iN Latitude" % lats_to_plot[i],
-    #         color=colors[i],
-    #         linewidth=3
-    #     ) for i in range(len(lats_to_plot))
-    # ]
-    # plt.grid(True)
-    # plt.legend()
-    # plt.title("Solar Flux on a Angle 10 Degrees off Vertical Surface (Summer Solstice)")
-    # plt.xlabel("Time after Solar Noon [hours]")
-    # plt.ylabel(r"Solar Flux [W/m$^2$]")
-    # plt.tight_layout()
-    # plt.savefig("/Users/annickdewald/Desktop/Thesis/Photos/solar_angle")
-    # plt.show()
-    #
-    # # Check scattering factor
-    # elevations = np.linspace(-10,90,800)
-    # scatter_factors = scattering_factor(elevations)
-    #
-    # import matplotlib.pyplot as plt
-    # import matplotlib.style as style
-    # import seaborn as sns
-    # sns.set(font_scale=1)
-    # fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    # plt.plot(elevations, scatter_factors,'.-')
-    # plt.xlabel(r"Elevation Angle [deg]")
-    # plt.ylabel(r"Scattering Factor")
-    # plt.title(r"Scattering Factor")
-    # plt.tight_layout()
-    # # plt.legend()
-    # # plt.savefig("C:/Users/User/Downloads/temp.svg")
-    # plt.show()
+    fig, ax = plt.subplots(figsize=(5, 3))
+    fluxes = lambda **kwargs: solar_flux(
+        latitude=23.5,
+        day_of_year=172,
+        time=time,
+        altitude=0,
+        **kwargs
+    )
+    for q in ['clean', 'typical', 'polluted']:
+        plt.plot(hour, fluxes(air_quality=q), label=f'{q.capitalize()} air')
+
+    p.set_ticks(3, 0.5)
+    plt.xlim(0, 24)
+    p.show_plot(
+        f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice)",
+        "Time after Local Solar Noon [hours]",
+        "Solar Flux [$W/m^2$]"
+    )
+
+    fig, ax = plt.subplots(figsize=(5, 3))
+    fluxes = lambda **kwargs: solar_flux(
+        latitude=23.5,
+        day_of_year=172,
+        time=time,
+        altitude=0,
+        panel_tilt_angle=90 - solar_elevation_angle(23.5, 177, time),
+        panel_azimuth_angle = solar_azimuth_angle(23.5, 177, time),
+        **kwargs
+    )
+    for q in ['clean', 'typical', 'polluted']:
+        plt.plot(hour, fluxes(air_quality=q), label=f'{q.capitalize()} air')
+
+    p.set_ticks(3, 0.5)
+    plt.xlim(0, 24)
+    p.show_plot(
+        f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice)",
+        "Time after Local Solar Noon [hours]",
+        "Solar Flux [$W/m^2$]"
+    )
