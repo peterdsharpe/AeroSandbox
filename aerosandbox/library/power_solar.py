@@ -219,6 +219,7 @@ def solar_flux(
         panel_azimuth_angle: Union[float, np.ndarray] = 0.,
         panel_tilt_angle: Union[float, np.ndarray] = 0.,
         air_quality: str = 'typical',
+        albedo: Union[float, np.ndarray] = 0.2,
         **deprecated_kwargs
 ) -> Union[float, np.ndarray]:
     """
@@ -270,6 +271,27 @@ def solar_flux(
 
             * 'polluted': Urban atmosphere conditions.
 
+        albedo: The fraction of light that hits the ground that is reflected. Affects illumination from re-scattering
+        when panels are tilted. Typical values for general terrestrial surfaces are 0.2, which is the default here.
+
+            * Other values, taken from the Earthscan source (citation above):
+
+                * Grass (July, August): 0.25
+                * Lawn: 0.18 - 0.23
+                * Dry grass: 0.28 - 0.32
+                * Milled fields: 0.26
+                * Barren soil: 0.17
+                * Gravel: 0.18
+                * Clean concrete: 0.30
+                * Eroded concrete: 0.20
+                * Clean cement: 0.55
+                * Asphalt: 0.15
+                * Forests: 0.05 - 0.18
+                * Sandy areas: 0.10 - 0.25
+                * Water: Strongly dependent on incidence angle; 0.05 - 0.22
+                * Fresh snow: 0.80 - 0.90
+                * Old snow: 0.45 - 0.70
+
     Returns: The solar power flux [W/m^2] on the panel.
 
         * Note: does not account for any potential reflectivity of the solar panel's coating itself.
@@ -308,7 +330,16 @@ def solar_flux(
     # Indicates that absorption and scattering happen in a 18:10 ratio, at least in AM1.5 conditions. We extrapolate
     # this to all conditions.
 
-    diffuse_irradiance = scattering_losses * atmospheric_transmission_fraction
+    panel_tilt_angle = np.mod(panel_tilt_angle, 360)
+    fraction_of_panel_facing_sky = np.where(
+        panel_tilt_angle < 180,
+        1 - panel_tilt_angle / 180,
+        -1 + panel_tilt_angle / 180,
+    )
+
+    diffuse_irradiance = scattering_losses * atmospheric_transmission_fraction * (
+            fraction_of_panel_facing_sky + albedo * (1 - fraction_of_panel_facing_sky)
+    )
     # We assume that the in-scattering (i.e., diffuse irradiance) and the out-scattering (i.e., scattering losses in
     # the direct irradiance calculation) are equal, by argument of approximately parallel incident rays.
     # We further assume that any in-scattering must then once-again go through the absorption / re-scattering process,
