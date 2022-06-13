@@ -215,7 +215,7 @@ def solar_flux(
         latitude: Union[float, np.ndarray],
         day_of_year: Union[int, float, np.ndarray],
         time: Union[float, np.ndarray],
-        altitude: Union[float, np.ndarray],
+        altitude: Union[float, np.ndarray] = 0.,
         panel_azimuth_angle: Union[float, np.ndarray] = 0.,
         panel_tilt_angle: Union[float, np.ndarray] = 0.,
         air_quality: str='typical',
