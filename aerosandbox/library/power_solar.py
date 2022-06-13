@@ -242,8 +242,8 @@ def solar_flux(
         altitude: Altitude of the panel above sea level [meters]. This affects atmospheric absorption and scattering
         characteristics.
 
-        panel_azimuth_angle: The azimuth angle of the panel normal [degrees] (the compass direction from which the
-        sunlight is coming).
+        panel_azimuth_angle: The azimuth angle of the panel normal [degrees] (the compass direction in which the
+        panel normal is tilted). Irrelevant if the panel tilt angle is 0 (e.g., the panel is horizontal).
 
             * 0 corresponds to North, 90 corresponds to East.
 
@@ -397,6 +397,8 @@ def mass_MPPT(
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
+
+    plt.switch_backend('WebAgg')
 
     base_color = p.palettes['categorical'][0]
     quality_colors = {
