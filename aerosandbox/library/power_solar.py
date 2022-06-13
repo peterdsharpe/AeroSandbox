@@ -218,7 +218,7 @@ def solar_flux(
         altitude: Union[float, np.ndarray] = 0.,
         panel_azimuth_angle: Union[float, np.ndarray] = 0.,
         panel_tilt_angle: Union[float, np.ndarray] = 0.,
-        air_quality: str='typical',
+        air_quality: str = 'typical',
         **deprecated_kwargs
 ) -> Union[float, np.ndarray]:
     """
@@ -320,6 +320,7 @@ def solar_flux(
     )
 
     return flux_on_panel
+
 
 def peak_sun_hours_per_day_on_horizontal(
         latitude: Union[float, np.ndarray],
