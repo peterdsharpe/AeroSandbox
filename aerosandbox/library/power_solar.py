@@ -222,7 +222,8 @@ def solar_flux(
         **deprecated_kwargs
 ) -> Union[float, np.ndarray]:
     """
-    Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel.
+    Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel. Accounts for atmospheric
+    absorption, scattering, and re-scattering (e.g. diffuse illumination), all as a function of panel altitude.
 
     Source for atmospheric absorption:
 
@@ -263,7 +264,9 @@ def solar_flux(
 
             * 'polluted': Urban atmosphere conditions.
 
-    Returns: The solar power flux [W/m^2].
+    Returns: The solar power flux [W/m^2] on the panel.
+
+        * Note: does not account for any potential reflectivity of the solar panel coating.
 
     """
     flux_outside_atmosphere = solar_flux_outside_atmosphere_normal(day_of_year=day_of_year)
