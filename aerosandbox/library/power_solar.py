@@ -225,7 +225,7 @@ def solar_flux(
     Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel. Accounts for atmospheric
     absorption, scattering, and re-scattering (e.g. diffuse illumination), all as a function of panel altitude.
 
-    Fully vectorized.
+    Fully vectorizable.
 
     Source for atmospheric absorption:
 
