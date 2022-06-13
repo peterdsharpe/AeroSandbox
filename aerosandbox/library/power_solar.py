@@ -258,6 +258,10 @@ def solar_flux(
 
             * A horizontal panel has a tilt angle of 0, and a vertical panel has a tilt angle of 90 degrees.
 
+            If the angle between the panel normal and the sun direction is ever more than 90 degrees (e.g. the panel
+            is pointed the wrong way), we assume that the panel receives no direct irradiation. (However,
+            it may still receive minor amounts of power due to diffuse irradiation from re-scattering.)
+
         air_quality: Indicates the amount of pollution in the air. A string, one of:
 
             * 'typical': Corresponds to "rural aerosol loading" following ASTM G-173.
