@@ -464,7 +464,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(2, 1, figsize=(7, 6.5))
     plt.sca(ax[0])
-    plt.title(f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice)")
+    plt.title(f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)")
     for q in quality_colors.keys():
         plt.plot(
             hour,
@@ -477,7 +477,7 @@ if __name__ == "__main__":
         )
 
     plt.sca(ax[1])
-    plt.title(f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice)")
+    plt.title(f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)")
     for q in quality_colors.keys():
         plt.plot(
             hour,
