@@ -408,7 +408,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    plt.switch_backend('WebAgg')
+    # plt.switch_backend('WebAgg')
 
     base_color = p.palettes['categorical'][0]
     quality_colors = {
