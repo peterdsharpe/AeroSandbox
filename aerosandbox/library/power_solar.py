@@ -332,15 +332,18 @@ def peak_sun_hours_per_day_on_horizontal(
     :param time: Time since (local) solar noon [seconds]
     :return:
     """
-    times = np.linspace(0, 86400, 1000)
-    dt = np.diff(times)
-    normalized_fluxes = (
-        # solar_flux_outside_atmosphere_normal(day_of_year) *
-        incidence_angle_function(latitude, day_of_year, times, scattering)
+    import warnings
+    warnings.warn(
+        "Use `solar_flux()` function from this module instead and integrate, which allows far greater granularity.",
+        DeprecationWarning
     )
-    sun_hours = np.sum(
-        (normalized_fluxes[1:] + normalized_fluxes[:-1]) / 2 * dt
-    ) / 3600
+    time = np.linspace(0, 86400, 1000)
+    fluxes = solar_flux(latitude, day_of_year, time)
+    energy_per_area = np.sum(np.trapz(fluxes) * np.diff(time))
+
+    duration_of_equivalent_peak_sun = energy_per_area / solar_flux(latitude, day_of_year, time=0.)
+
+    sun_hours = duration_of_equivalent_peak_sun / 3600
 
     return sun_hours
 
