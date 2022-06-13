@@ -353,18 +353,13 @@ def length_day(
     Gives the duration where the sun is above the horizon on a given day.
 
     Args:
-        latitude:
-        day_of_year:
 
-    Returns:
+        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
 
-    """
-    """
-    Gives the duration where the sun is above the horizon on a given day.
+        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
 
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :return: Seconds of sunlight in a given day
+    Returns: The duration where the sun is above the horizon on a given day. [seconds]
+
     """
     dec = declination_angle(day_of_year)
 
