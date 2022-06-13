@@ -222,7 +222,7 @@ def solar_flux(
         **deprecated_kwargs
 ) -> Union[float, np.ndarray]:
     """
-    Computes the solar power flux (power per unit area) on a flat panel.
+    Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel.
 
     Source for atmospheric absorption:
 
