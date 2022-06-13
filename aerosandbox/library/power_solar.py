@@ -316,6 +316,11 @@ def solar_flux(
             np.cosd(panel_azimuth_angle - solar_azimuth)
             + np.sind(solar_elevation) * np.cosd(panel_tilt_angle)
     )
+    cosine_of_angle_between_panel_normal_and_sun = np.fmax(
+        cosine_of_angle_between_panel_normal_and_sun,
+        0
+    ) # Accounts for if you have a downwards-pointing panel while the sun is above you.
+
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
     # Author of this code (Peter Sharpe) has manually verified correctness of this vector math.
 
