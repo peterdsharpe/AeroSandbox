@@ -180,6 +180,10 @@ class Airfoil(Polygon):
             cache_filename: A path-like filename (ideally a "*.json" file) that can be used to cache the XFoil
             results, making it much faster to regenerate the results.
 
+                * If the file does not exist, XFoil will be run, and a cache file will be created.
+
+                * If the file does exist, XFoil will not be run, and the cache file will be read instead.
+
             xfoil_kwargs: Keyword arguments to pass into the AeroSandbox XFoil module. See the aerosandbox.XFoil
             constructor for options.
 
