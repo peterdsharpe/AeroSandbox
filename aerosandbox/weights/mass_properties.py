@@ -219,6 +219,13 @@ class MassProperties(AeroSandboxObject):
             Ixz=self.Ixz * other,
         )
 
+    def __truediv__(self, other: float) -> "MassProperties":
+        """
+        Returns a new MassProperties object that is equivalent to if you had divided the mass of the current
+        MassProperties object by a factor.
+        """
+        return self.__mul__(1 / other)
+
     def __eq__(self, other: "MassProperties") -> bool:
         return all([
             self.__getattribute__(attribute) == other.__getattribute__(attribute)

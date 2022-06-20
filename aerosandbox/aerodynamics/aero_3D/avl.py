@@ -89,7 +89,8 @@ class AVL(ExplicitAnalysis):
 
     def __init__(self,
                  airplane: Airplane,
-                 op_point: OperatingPoint = None,
+                 op_point: OperatingPoint,
+                 xyz_ref: List[float] = None,
                  avl_command: str = "avl",
                  verbose: bool = False,
                  working_directory: str = None,
@@ -126,13 +127,16 @@ class AVL(ExplicitAnalysis):
 
             working_directory:
         """
+        super().__init__()
+
         ### Set defaults
-        if op_point is None:
-            op_point = OperatingPoint()
+        if xyz_ref is None:
+            xyz_ref = airplane.xyz_ref
 
         ### Initialize
         self.airplane = airplane
         self.op_point = op_point
+        self.xyz_ref = xyz_ref
         self.avl_command = avl_command
         self.verbose = verbose
         self.working_directory = working_directory
@@ -333,7 +337,7 @@ class AVL(ExplicitAnalysis):
         #Sref    Cref    Bref
         {airplane.s_ref} {airplane.c_ref} {airplane.b_ref}
         #Xref    Yref    Zref
-        {airplane.xyz_ref[0]} {airplane.xyz_ref[1]} {airplane.xyz_ref[2]}
+        {self.xyz_ref[0]} {self.xyz_ref[1]} {self.xyz_ref[2]}
         # CDp
         {airplane_options["profile_drag_coefficient"]}
         """)
