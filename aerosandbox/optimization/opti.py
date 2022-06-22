@@ -2,6 +2,8 @@ from typing import Union, List, Dict, Callable, Any
 import json
 import casadi as cas
 import aerosandbox.numpy as np
+from aerosandbox.tools import inspect_tools
+from sortedcontainers import SortedDict
 
 
 class Opti(cas.Opti):
@@ -48,7 +50,13 @@ class Opti(cas.Opti):
         self.freeze_style = freeze_style
 
         # Start tracking variables and categorize them.
-        self.variables_categorized = {}  # key: value :: category name [str] : list of variables [list]
+        self.variables_categorized = {}  # category name [str] : list of variables [list]
+
+        # Track variable declaration locations, useful for debugging
+        self._variable_declarations = SortedDict()  # first index in super().x : (filename, lineno, code_context, n_vars)
+        self._constraint_declarations = SortedDict()  # first index in super().g : (filename, lineno, code_context, n_cons)
+        self._variable_index_counter = 0
+        self._constraint_index_counter = 0
 
     ### Primary Methods
 
@@ -61,6 +69,7 @@ class Opti(cas.Opti):
                  category: str = "Uncategorized",
                  lower_bound: float = None,
                  upper_bound: float = None,
+                 _stacklevel: int = 1,
                  ) -> cas.MX:
         """
         Initializes a new decision variable (or vector of decision variables). You should pass an initial guess (
@@ -179,7 +188,18 @@ class Opti(cas.Opti):
             before passing it to the optimizer. Good for known positive engineering quantities that become nonsensical
             if negative (e.g. mass). Log-transforming these variables can also help maintain convexity.
 
-            category: [Optional] What category of variables does this belong to?
+            category: [Optional] What category of variables does this belong to? # TODO expand docs
+
+            lower_bound: [Optional] If provided, defines a bounds constraint on the new variable that keeps the
+            variable above a given value.
+
+            upper_bound: [Optional] If provided, defines a bounds constraint on the new variable that keeps the
+            variable below a given value.
+
+            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
+            variables are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
+            stacklevel of the declaration tracked, which is then presented using
+            `aerosandbox.Opti.variable_declaration()`.
 
         Usage notes:
 
@@ -199,7 +219,8 @@ class Opti(cas.Opti):
             import warnings
             if log_transform:
                 init_guess = 1
-                warnings.warn("No initial guess set for Opti.variable(). Defaulting to 1 (log-transformed variable).", stacklevel=2)
+                warnings.warn("No initial guess set for Opti.variable(). Defaulting to 1 (log-transformed variable).",
+                              stacklevel=2)
             else:
                 init_guess = 0
                 warnings.warn("No initial guess set for Opti.variable(). Defaulting to 0.", stacklevel=2)
@@ -221,11 +242,17 @@ class Opti(cas.Opti):
                 #         1
                 #     ))
 
+        length_init_guess = np.length(init_guess)
+
+        if length_init_guess != 1 and length_init_guess != n_vars:
+            raise ValueError(f"`init_guess` has length {length_init_guess}, but `n_vars` is {n_vars}!")
+
         # Try to convert init_guess to a float or np.ndarray if it is an Opti parameter.
         try:
             init_guess = self.value(init_guess)
         except RuntimeError as e:
-            raise TypeError("The `init_guess` for a new Opti variable must not be a function of an existing Opti variable.")
+            raise TypeError(
+                "The `init_guess` for a new Opti variable must not be a function of an existing Opti variable.")
 
         # Validate the inputs
         if log_transform:
@@ -265,7 +292,17 @@ class Opti(cas.Opti):
                 var = np.exp(log_var)
                 self.set_initial(log_var, np.log(init_guess))
 
-        # Track the variable
+            # Track where this variable was declared in code.
+            filename, lineno, code_context = inspect_tools.get_caller_source_location(stacklevel=_stacklevel + 1)
+            self._variable_declarations[self._variable_index_counter] = (
+                filename,
+                lineno,
+                code_context,
+                n_vars
+            )
+            self._variable_index_counter += n_vars
+
+        # Track the category of the variable
         if category not in self.variables_categorized:  # Add a category if it does not exist
             self.variables_categorized[category] = []
         self.variables_categorized[category].append(var)
@@ -278,19 +315,32 @@ class Opti(cas.Opti):
         if not (freeze and self.ignore_violated_parametric_constraints):
             if not log_transform:
                 if lower_bound is not None:
-                    self.subject_to(var / scale >= lower_bound / scale)
+                    self.subject_to(
+                        var / scale >= lower_bound / scale,
+                        _stacklevel=_stacklevel + 1
+                    )
                 if upper_bound is not None:
-                    self.subject_to(var / scale <= upper_bound / scale)
+                    self.subject_to(
+                        var / scale <= upper_bound / scale,
+                        _stacklevel=_stacklevel + 1
+                    )
             else:
                 if lower_bound is not None:
-                    self.subject_to(log_var / log_scale >= np.log(lower_bound) / log_scale)
+                    self.subject_to(
+                        log_var / log_scale >= np.log(lower_bound) / log_scale,
+                        _stacklevel=_stacklevel + 1
+                    )
                 if upper_bound is not None:
-                    self.subject_to(log_var / log_scale <= np.log(upper_bound) / log_scale)
+                    self.subject_to(
+                        log_var / log_scale <= np.log(upper_bound) / log_scale,
+                        _stacklevel=_stacklevel + 1
+                    )
 
         return var
 
     def subject_to(self,
                    constraint: Union[cas.MX, bool, List],  # TODO add scale
+                   _stacklevel: int = 1,
                    ) -> Union[cas.MX, None, List[cas.MX]]:
         """
         Initialize a new equality or inequality constraint(s).
@@ -314,6 +364,11 @@ class Opti(cas.Opti):
                 >>>     x <= 10
                 >>> ])
 
+            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
+            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
+            stacklevel of the declaration tracked, which is then presented using
+            `aerosandbox.Opti.constraint_declaration()`.
+
         Returns: The dual variable associated with the new constraint. If the `constraint` input is a list, returns
             a list of dual variables.
 
@@ -322,7 +377,7 @@ class Opti(cas.Opti):
         # If the latter, recursively apply them.
         if type(constraint) in (list, tuple):
             return [
-                self.subject_to(each_constraint)  # return the dual of each constraint
+                self.subject_to(each_constraint, _stacklevel=_stacklevel + 2)  # return the dual of each constraint
                 for each_constraint in constraint
             ]
 
@@ -331,6 +386,17 @@ class Opti(cas.Opti):
         if isinstance(constraint, cas.MX) and not self.advanced.is_parametric(constraint):
             super().subject_to(constraint)
             dual = self.dual(constraint)
+
+            # Track where this constraint was declared in code.
+            n_cons = np.length(constraint)
+            filename, lineno, code_context = inspect_tools.get_caller_source_location(stacklevel=_stacklevel + 1)
+            self._constraint_declarations[self._constraint_index_counter] = (
+                filename,
+                lineno,
+                code_context,
+                n_cons
+            )
+            self._constraint_index_counter += np.length(constraint)
 
             return dual
         else:  # Constraint is not valid because it is not MX type or is parametric.
@@ -564,6 +630,71 @@ class Opti(cas.Opti):
 
         return sol
 
+    ### Debugging Methods
+    def find_variable_declaration(self,
+                                  index: int,
+                                  use_full_filename: bool = False
+                                  ):
+        ### Check inputs
+        if index < 0:
+            raise ValueError("Indices must be nonnegative.")
+        if index >= self._variable_index_counter:
+            raise ValueError(f"The variable index exceeds the number of declared variables ({self._variable_index_counter})!")
+
+        index_of_first_element = self._variable_declarations.iloc[self._variable_declarations.bisect_right(index) - 1]
+
+        filename, lineno, code_context, n_vars = self._variable_declarations[index_of_first_element]
+        source = inspect_tools.get_source_code_from_location(
+            filename=filename,
+            lineno=lineno,
+            code_context=code_context,
+        ).strip("\n")
+        is_scalar = n_vars == 1
+        title = f"{'Scalar' if is_scalar else 'Vector'} variable"
+        if not is_scalar:
+            title += f" (index {index - index_of_first_element} of {n_vars})"
+        print("\n".join([
+            "",
+            f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
+            "",
+            "```",
+            source,
+            "```"
+        ])
+        )
+
+    def find_constraint_declaration(self,
+                                    index: int,
+                                    use_full_filename: bool = False
+                                    ):
+        ### Check inputs
+        if index < 0:
+            raise ValueError("Indices must be nonnegative.")
+        if index >= self._constraint_index_counter:
+            raise ValueError(f"The constraint index exceeds the number of declared constraints ({self._constraint_index_counter})!")
+
+        index_of_first_element = self._constraint_declarations.iloc[self._constraint_declarations.bisect_right(index) - 1]
+
+        filename, lineno, code_context, n_cons = self._constraint_declarations[index_of_first_element]
+        source = inspect_tools.get_source_code_from_location(
+            filename=filename,
+            lineno=lineno,
+            code_context=code_context,
+        ).strip("\n")
+        is_scalar = n_cons == 1
+        title = f"{'Scalar' if is_scalar else 'Vector'} constraint"
+        if not is_scalar:
+            title += f" (index {index - index_of_first_element} of {n_cons})"
+        print("\n".join([
+            "",
+            f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
+            "",
+            "```",
+            source,
+            "```"
+        ])
+        )
+
     ### Advanced Methods
 
     def set_initial_from_sol(self,
@@ -586,13 +717,63 @@ class Opti(cas.Opti):
         if initialize_duals:
             self.set_initial(self.lam_g, sol.value(self.lam_g))
 
+    def save_solution(self):
+        if self.cache_filename is None:
+            raise ValueError("""In order to use the save feature, you need to supply a filepath for the cache upon
+                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
+
+        # Write a function that tries to turn an iterable into a JSON-serializable list
+        def try_to_put_in_list(iterable):
+            try:
+                return list(iterable)
+            except TypeError:
+                return iterable
+
+        # Build up a dictionary of all the variables
+        solution_dict = {}
+        for category, category_variables in self.variables_categorized.items():
+            category_values = [
+                try_to_put_in_list(self.value(variable))
+                for variable in category_variables
+            ]
+
+            solution_dict[category] = category_values
+
+        # Write the dictionary to file
+        with open(self.cache_filename, "w+") as f:
+            json.dump(
+                solution_dict,
+                fp=f,
+                indent=4
+            )
+
+        return solution_dict
+
+    def get_solution_dict_from_cache(self):
+        if self.cache_filename is None:
+            raise ValueError("""In order to use the load feature, you need to supply a filepath for the cache upon
+                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
+
+        with open(self.cache_filename, "r") as f:
+            solution_dict = json.load(fp=f)
+
+        # Turn all vectorized variables back into NumPy arrays
+        for category in solution_dict:
+            for i, var in enumerate(solution_dict[category]):
+                solution_dict[category][i] = np.array(var)
+
+        return solution_dict
+
+    ### Methods for Dynamics and Control Problems
+
     def derivative_of(self,
                       variable: cas.MX,
                       with_respect_to: Union[np.ndarray, cas.MX],
                       derivative_init_guess: Union[float, np.ndarray],  # TODO add default
                       derivative_scale: float = None,
                       method: str = "midpoint",
-                      explicit: bool = False  # TODO implement explicit
+                      explicit: bool = False,  # TODO implement explicit
+                      _stacklevel: int = 1,
                       ) -> cas.MX:
         """
         Returns a quantity that is either defined or constrained to be a derivative of an existing variable.
@@ -666,6 +847,10 @@ class Opti(cas.Opti):
 
                 # TODO implement explicit
 
+            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
+            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
+            stacklevel of the declaration tracked, which is then presented using
+            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
 
 
         Returns: A vector consisting of the derivative of the parameter `variable` with respect to `with_respect_to`.
@@ -698,6 +883,7 @@ class Opti(cas.Opti):
                 variable=variable,
                 with_respect_to=with_respect_to,
                 method=method,
+                _stacklevel=_stacklevel + 1
             )
 
         else:
@@ -710,6 +896,7 @@ class Opti(cas.Opti):
                              variable: cas.MX,
                              with_respect_to: Union[np.ndarray, cas.MX],
                              method: str = "midpoint",
+                             _stacklevel: int = 1,
                              ) -> None:
         """
         Adds a constraint to the optimization problem such that:
@@ -766,6 +953,11 @@ class Opti(cas.Opti):
             world, this is analogous to using finite volume methods rather than finite difference methods to allow
             shock capturing.)
 
+            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
+            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
+            stacklevel of the declaration tracked, which is then presented using
+            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
+
         Returns: None (adds constraint in-place).
 
         """
@@ -787,18 +979,21 @@ class Opti(cas.Opti):
         if method == "forward euler" or method == "forward" or method == "forwards":
             # raise NotImplementedError
             self.subject_to(
-                d_var == derivative[:-1] * d_time
+                d_var == derivative[:-1] * d_time,
+                _stacklevel=_stacklevel + 1
             )
 
         elif method == "backward euler" or method == "backward" or method == "backwards":
             # raise NotImplementedError
             self.subject_to(
-                d_var == derivative[1:] * d_time
+                d_var == derivative[1:] * d_time,
+                _stacklevel=_stacklevel + 1
             )
 
         elif method == "midpoint" or method == "trapezoid" or method == "trapezoidal":
             self.subject_to(
                 d_var == np.trapz(derivative) * d_time,
+                _stacklevel=_stacklevel + 1
             )
 
         elif method == "simpson":
@@ -812,53 +1007,6 @@ class Opti(cas.Opti):
 
         else:
             raise ValueError("Bad value of `method`!")
-
-    def save_solution(self):
-        if self.cache_filename is None:
-            raise ValueError("""In order to use the save feature, you need to supply a filepath for the cache upon
-                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
-
-        # Write a function that tries to turn an iterable into a JSON-serializable list
-        def try_to_put_in_list(iterable):
-            try:
-                return list(iterable)
-            except TypeError:
-                return iterable
-
-        # Build up a dictionary of all the variables
-        solution_dict = {}
-        for category, category_variables in self.variables_categorized.items():
-            category_values = [
-                try_to_put_in_list(self.value(variable))
-                for variable in category_variables
-            ]
-
-            solution_dict[category] = category_values
-
-        # Write the dictionary to file
-        with open(self.cache_filename, "w+") as f:
-            json.dump(
-                solution_dict,
-                fp=f,
-                indent=4
-            )
-
-        return solution_dict
-
-    def get_solution_dict_from_cache(self):
-        if self.cache_filename is None:
-            raise ValueError("""In order to use the load feature, you need to supply a filepath for the cache upon
-                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
-
-        with open(self.cache_filename, "r") as f:
-            solution_dict = json.load(fp=f)
-
-        # Turn all vectorized variables back into NumPy arrays
-        for category in solution_dict:
-            for i, var in enumerate(solution_dict[category]):
-                solution_dict[category][i] = np.array(var)
-
-        return solution_dict
 
 
 if __name__ == '__main__':
