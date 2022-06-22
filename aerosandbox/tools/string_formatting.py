@@ -118,9 +118,9 @@ def has_balanced_parentheses(string: str, left="(", right=")"):
     parenthesis_level = 0
 
     for char in string:
-        if char == "(":
+        if char == left:
             parenthesis_level += 1
-        elif char == ")":
+        elif char == right:
             parenthesis_level -= 1
 
     return parenthesis_level == 0
