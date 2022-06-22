@@ -106,10 +106,19 @@ def hash_string(string: str) -> int:
 
 def trim_string(string: str, length: int = 80) -> str:
     """
-    Trims a string to be less than a given length. If the string would exceed the length, makes it end in "...".
+    Trims a string to be less than a given length. If the string would exceed the length, makes it end in ellipses ("…").
+
+    Args:
+
+        string: The string to be trimmed.
+
+        length: The length to trim the string to, including any ellipses that may be added.
+
+    Returns: The trimmed string, including ellipses if needed.
+
     """
     if len(string) > length:
-        return string[:length - 3] + "..."
+        return string[:length - 1] + "…"
     else:
         return string
 
