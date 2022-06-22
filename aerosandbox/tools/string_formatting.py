@@ -114,7 +114,27 @@ def trim_string(string: str, length: int = 80) -> str:
         return string
 
 
-def has_balanced_parentheses(string: str, left="(", right=")"):
+def has_balanced_parentheses(string: str, left="(", right=")") -> bool:
+    """
+    Determines whether a string has matching parentheses or not.
+
+    Examples:
+
+        >>> has_balanced_parentheses("3 * (x + (2 ** 5))") -> True
+
+        >>> has_balanced_parentheses("3 * (x + (2 ** 5)") -> False
+
+    Args:
+
+        string: The string to be evaluated.
+
+        left: The left parentheses. Can be modified if, for example, you need to check square brackets.
+
+        right: The right parentheses. Can be modified if, for example, you need to check square brackets.
+
+    Returns: A boolean of whether or not the string has balanced parentheses.
+
+    """
     parenthesis_level = 0
 
     for char in string:
