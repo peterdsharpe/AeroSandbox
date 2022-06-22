@@ -55,7 +55,7 @@ def sinspace(
         reverse_spacing: bool = False,
 ):
     """
-    Makes a sine-spaced vector.
+    Makes a sine-spaced vector. By default, bunches points near the start.
 
     Sine spacing is exactly identical to half of a cosine-spaced distrubution, in terms of relative separations.
 
