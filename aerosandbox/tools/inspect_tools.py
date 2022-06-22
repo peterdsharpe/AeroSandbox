@@ -82,7 +82,7 @@ def get_source_code_from_location(
     Optionally, you can also provide `code_context`, which has the format:
 
         * `code_context`: the immediate line of code where this function was called. A string. Note that, in the case of
-        multiline statements, this may not be a complete Python expression. Includes the trailing newline character ("\n") at the end.
+        multiline statements, this may not be a complete Python expression.
 
     You can get source code from further up the call stack by using the `stacklevel` argument.
 
@@ -336,3 +336,5 @@ if __name__ == '__main__':
     print(
         get_function_argument_names_from_source_code("f(a, b)")
     )
+
+    location = get_caller_source_location()
