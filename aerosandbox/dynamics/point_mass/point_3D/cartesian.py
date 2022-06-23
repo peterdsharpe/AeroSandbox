@@ -139,6 +139,9 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
                      from_axes: str,
                      to_axes: str,
                      ) -> Tuple[float, float, float]:
+        if from_axes == to_axes:
+            return x_from, y_from, z_from
+
         if not (from_axes == "earth" and to_axes == "earth"):
             rot_w_to_e = np.rotation_matrix_from_euler_angles(
                 roll_angle=self.bank,

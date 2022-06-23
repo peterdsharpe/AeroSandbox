@@ -106,21 +106,50 @@ def hash_string(string: str) -> int:
 
 def trim_string(string: str, length: int = 80) -> str:
     """
-    Trims a string to be less than a given length. If the string would exceed the length, makes it end in "...".
+    Trims a string to be less than a given length. If the string would exceed the length, makes it end in ellipses ("…").
+
+    Args:
+
+        string: The string to be trimmed.
+
+        length: The length to trim the string to, including any ellipses that may be added.
+
+    Returns: The trimmed string, including ellipses if needed.
+
     """
     if len(string) > length:
-        return string[:length - 3] + "..."
+        return string[:length - 1] + "…"
     else:
         return string
 
 
-def has_balanced_parentheses(string: str, left="(", right=")"):
+def has_balanced_parentheses(string: str, left="(", right=")") -> bool:
+    """
+    Determines whether a string has matching parentheses or not.
+
+    Examples:
+
+        >>> has_balanced_parentheses("3 * (x + (2 ** 5))") -> True
+
+        >>> has_balanced_parentheses("3 * (x + (2 ** 5)") -> False
+
+    Args:
+
+        string: The string to be evaluated.
+
+        left: The left parentheses. Can be modified if, for example, you need to check square brackets.
+
+        right: The right parentheses. Can be modified if, for example, you need to check square brackets.
+
+    Returns: A boolean of whether or not the string has balanced parentheses.
+
+    """
     parenthesis_level = 0
 
     for char in string:
-        if char == "(":
+        if char == left:
             parenthesis_level += 1
-        elif char == ")":
+        elif char == right:
             parenthesis_level -= 1
 
     return parenthesis_level == 0

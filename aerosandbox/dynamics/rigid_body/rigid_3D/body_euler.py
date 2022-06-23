@@ -327,6 +327,9 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
 
         """
+        if from_axes == to_axes:
+            return x_from, y_from, z_from
+
         if from_axes == "earth" or to_axes == "earth":
             ### Trig Shorthands
             def sincos(x):

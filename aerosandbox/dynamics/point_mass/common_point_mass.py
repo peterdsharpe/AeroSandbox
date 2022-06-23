@@ -239,7 +239,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                               opti: Opti,
                               time: np.ndarray,
                               method: str = "midpoint",
-                              which: Union[str, List[str], Tuple[str]] = "all"
+                              which: Union[str, List[str], Tuple[str]] = "all",
+                              _stacklevel=1,
                               ):
         """
         Applies the relevant state derivative constraints to a given Opti instance.
@@ -262,6 +263,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     * A list of strings that are state variable names (i.e., a subset of `dyn.state.keys()`),
                     that gives the names of state variables to be constrained.
 
+            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
+            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
+            stacklevel of the declaration tracked, which is then presented using
+            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
+
         Returns:
 
         """
@@ -283,6 +289,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     variable=self.state[state_var_name],
                     with_respect_to=time,
                     method=method,
+                    _stacklevel=_stacklevel + 1
                 )
             except KeyError:
                 raise ValueError(f"This dynamics instance does not have a state named '{state_var_name}'!")
