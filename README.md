@@ -71,7 +71,7 @@ Contact information can be found next to my name near the top of this README.
 ### Donating
 
 If you like this software, please consider donating to support development [via PayPal](https://paypal.me/peterdsharpe)
-or [GitHub Sponsors](https://github.com/sponsors/peterdsharpe/)! I'm a grad student, so every dollar that you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
+or [GitHub Sponsors](https://github.com/sponsors/peterdsharpe/)! Proceeds will go towards more coffee for the grad students.
 
 ### Bugs
 
