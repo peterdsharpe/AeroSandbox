@@ -96,7 +96,7 @@ If you find AeroSandbox useful in a research publication, please cite it using t
 
 ### License
 
-[MIT License, full terms here](LICENSE.txt).
+[MIT License, terms here](LICENSE.txt). Basically: use AeroSandbox for anything you want; no warranty express or implied. Attribution appreciated but not required.
 
 ## Stargazers over time
 
