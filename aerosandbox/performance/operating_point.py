@@ -101,7 +101,8 @@ class OperatingPoint(AeroSandboxObject):
         Returns the indicated airspeed associated with the current flight condition, in meters per second.
         """
         return np.sqrt(
-            2 * (self.total_pressure() - self.atmosphere.pressure()) / self.atmosphere.density()
+            2 * (self.total_pressure() - self.atmosphere.pressure())
+            / Atmosphere(altitude=0, method="isa").density()
         )
 
     def equivalent_airspeed(self):
