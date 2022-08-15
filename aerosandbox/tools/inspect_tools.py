@@ -216,11 +216,12 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
         "f(a(b,c), d)"           -> ['a(b,c)', 'd']
         "f({a:b}, c)"            -> ['{a:b}', 'c']
         "f(a[b], c)"             -> ['a[b]', 'c']
-        "f({a:b, c:d}, e)"       -> ['{a:b,c:d}', 'e']
+        "f({a:b, c:d}, e)"       -> ['{a:b, c:d}', 'e']
         "f({a:b,\nc:d}, e)"      -> ['{a:b,c:d}', 'e']
         "f(dict(a=b,c=d), e)"    -> ['dict(a=b,c=d)', 'e']
         "f(a=1, b=2)"            -> ['a=1', 'b=2']
         "f()"                    -> ['']
+        "f(a, [i for i in l])"   -> ['a', '[i for i in l]'],
         "f(incomplete, "         -> raises ValueError
         "3 + 5"                  -> raises ValueError
         ""                       -> raises ValueError
