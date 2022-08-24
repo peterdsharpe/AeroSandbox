@@ -3,6 +3,7 @@ import matplotlib as mpl
 import aerosandbox.numpy as np
 from typing import Tuple, Dict, Union, Callable, List
 from aerosandbox.tools.string_formatting import eng_string
+from scipy import interpolate
 
 
 def plot_color_by_value(
@@ -104,6 +105,93 @@ def plot_color_by_value(
     else:
         cbar = None
     return lines, sm, cbar
+
+
+def plot_smooth(
+        *args,
+        color=None,
+        label=None,
+        resample_resolution: int = 500,
+        **kwargs,
+):
+    """
+    TODO document
+    
+    Args:
+        *args:
+        color:
+        label:
+        resample_resolution:
+        **kwargs:
+
+    Returns:
+
+    """
+    argslist = list(args)
+
+    if len(args) == 3:
+        x = argslist.pop(0)
+        y = argslist.pop(0)
+        fmt = argslist.pop(0)
+    elif len(args) == 2:
+        if isinstance(args[1], str):
+            x = np.arange(np.length(args[0]))
+            y = argslist.pop(0)
+            fmt = argslist.pop(0)
+        else:
+            x = argslist.pop(0)
+            y = argslist.pop(0)
+            fmt = '.-'
+    elif len(args) == 1:
+        x = np.arange(np.length(args[0]))
+        y = argslist.pop(0)
+        fmt = '.-'
+    elif len(args) == 0:
+        raise ValueError("Missing plot data. Use syntax `plot_smooth(x, y, fmt, *args, **kwargs)'.")
+
+    bspline = interpolate.make_interp_spline(
+        x=np.linspace(0, 1, np.length(y)),
+        y=np.stack(
+            (x, y), axis=1
+        )
+    )
+    result = bspline(np.linspace(0, 1, resample_resolution))
+    x_resample = result[:, 0]
+    y_resample = result[:, 1]
+
+    scatter_kwargs = {
+        'color'    : color,
+        **kwargs,
+        'linewidth': 0,
+    }
+
+    line, = plt.plot(
+        x,
+        y,
+        fmt,
+        *argslist,
+        **scatter_kwargs
+    )
+
+    if color is None:
+        color = line.get_color()
+
+    line_kwargs = {
+        'color'     : color,
+        'label'     : label,
+        **kwargs,
+        'markersize': 0,
+    }
+
+    plt.plot(
+        x_resample,
+        y_resample,
+        fmt,
+        *argslist,
+        **line_kwargs
+    )
+
+    return x_resample, y_resample
 
 
 def contour(
