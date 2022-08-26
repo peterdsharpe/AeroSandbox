@@ -220,7 +220,7 @@ class XFoil(ExplicitAnalysis):
             keystrokes += [
                 "pwrt",
                 f"{output_filename}",
-                "y",
+                "",
                 "",
                 "quit"
             ]
@@ -233,8 +233,9 @@ class XFoil(ExplicitAnalysis):
 
             ### Execute
             try:
+                command = f'{self.xfoil_command} {airfoil_file}'
                 subprocess.run(
-                    f'{self.xfoil_command} {airfoil_file}',
+                    command,
                     input="\n".join(keystrokes),
                     cwd=directory,
                     stdout=None if self.verbose else subprocess.DEVNULL,
@@ -263,6 +264,13 @@ class XFoil(ExplicitAnalysis):
                         "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
                         "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
                         "your XFoil run at a less-aggressive operating point.")
+                elif e.returncode == 1:
+                    raise RuntimeError(
+                        f"Command '{command}' returned non-zero exit status 1.\n"
+                        f"This is likely because AeroSandbox does not see XFoil on PATH with the given command.\n"
+                        f"Check the logs (`asb.XFoil(..., verbose=True)`) to verify that this is the case, and if so,\n"
+                        f"provide the correct path to the XFoil executable in the asb.XFoil constructor via `xfoil_command=`."
+                    )
                 else:
                     raise e
 
@@ -270,19 +278,30 @@ class XFoil(ExplicitAnalysis):
             try:
                 with open(directory / output_filename) as f:
                     lines = f.readlines()
+
+                title_line = lines[10]
+                columns = title_line.split()
+
+                output = {
+                    column: []
+                    for column in columns
+                }
+
             except FileNotFoundError:
                 raise FileNotFoundError(
                     "It appears XFoil didn't produce an output file, probably because it crashed.\n"
                     "Try running with `verbose=True` in the XFoil constructor to see what's going on."
                 )
 
-            title_line = lines[10]
-            columns = title_line.split()
-
-            output = {
-                column: []
-                for column in columns
-            }
+                output = dict(
+                    alpha=[],
+                    CL=[],
+                    CD=[],
+                    CDp=[],
+                    CM=[],
+                    Top_Xtr=[],
+                    Bot_Xtr=[],
+                )
 
             def str_to_float(s: str) -> float:
                 try:
@@ -388,11 +407,14 @@ class XFoil(ExplicitAnalysis):
 
 
 if __name__ == '__main__':
+    af = Airfoil("naca2412").repanel(n_points_per_side=100)
+    # af.coordinates[:, 1] *= 30
+
     xf = XFoil(
-        airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
+        airfoil=af,
         Re=1e6,
+        verbose=True
     )
     # result_at_single_alpha = xf.alpha(5)
     # result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
-    # result_at_multiple_alphas = xf.alpha([3, 5, 60])  # Note: if a result does
-    xf.alpha(np.arange(-5, 5))
+    result_at_multiple_alphas = xf.alpha([3, 5, 60])  # Note: if a result does
