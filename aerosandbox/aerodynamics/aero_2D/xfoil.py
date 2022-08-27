@@ -147,14 +147,14 @@ class XFoil(ExplicitAnalysis):
         # Handle Re
         if self.Re != 0:
             run_file_contents += [
-                f"re {self.Re}",
-                "v",
+                f"v {self.Re}",
             ]
 
         # Handle mach
-        run_file_contents += [
-            f"m {self.mach}",
-        ]
+        if self.mach != 0:
+            run_file_contents += [
+                f"m {self.mach}",
+            ]
 
         if self.full_potential:
             run_file_contents += [
@@ -170,18 +170,24 @@ class XFoil(ExplicitAnalysis):
         ]
 
         # Handle trips and ncrit
-        run_file_contents += [
-            "vpar",
-            f"xtr {self.xtr_upper} {self.xtr_lower}",
-            f"n {self.n_crit}",
-            "",
-        ]
+        if not (self.xtr_upper == 1 and self.xtr_lower == 1 and self.n_crit == 9):
+            run_file_contents += [
+                "vpar",
+                f"xtr {self.xtr_upper} {self.xtr_lower}",
+                f"n {self.n_crit}",
+                "",
+            ]
 
         # Set polar accumulation
         run_file_contents += [
             "pacc",
             "",
             "",
+        ]
+
+        # Include more data in polar
+        run_file_contents += [
+            "cinc" # include minimum Cp
         ]
 
         return run_file_contents
@@ -234,18 +240,27 @@ class XFoil(ExplicitAnalysis):
             ### Execute
             try:
                 command = f'{self.xfoil_command} {airfoil_file}'
-                subprocess.run(
+                proc = subprocess.Popen(
                     command,
-                    input="\n".join(keystrokes),
                     cwd=directory,
+                    stdin=subprocess.PIPE,
                     stdout=None if self.verbose else subprocess.DEVNULL,
                     stderr=None if self.verbose else subprocess.DEVNULL,
                     text=True,
-                    shell=True,
-                    timeout=self.timeout,
-                    check=True
+                    # shell=True,
+                    # timeout=self.timeout,
+                    # check=True
                 )
+                outs, errs = proc.communicate(
+                    input="\n".join(keystrokes),
+                    timeout=self.timeout
+                )
+                return_code = proc.poll()
+
             except subprocess.TimeoutExpired:
+                proc.kill()
+                outs, errs = proc.communicate()
+
                 warnings.warn(
                     "XFoil run timed out!\n"
                     "If this was not expected, try increasing the `timeout` parameter\n"
@@ -291,16 +306,6 @@ class XFoil(ExplicitAnalysis):
                 raise FileNotFoundError(
                     "It appears XFoil didn't produce an output file, probably because it crashed.\n"
                     "Try running with `verbose=True` in the XFoil constructor to see what's going on."
-                )
-
-                output = dict(
-                    alpha=[],
-                    CL=[],
-                    CD=[],
-                    CDp=[],
-                    CM=[],
-                    Top_Xtr=[],
-                    Bot_Xtr=[],
                 )
 
             def str_to_float(s: str) -> float:
@@ -413,8 +418,8 @@ if __name__ == '__main__':
     xf = XFoil(
         airfoil=af,
         Re=1e6,
-        verbose=True
+        # verbose=True
     )
-    # result_at_single_alpha = xf.alpha(5)
-    # result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
+    result_at_single_alpha = xf.alpha(5)
+    result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
     result_at_multiple_alphas = xf.alpha([3, 5, 60])  # Note: if a result does
