@@ -1116,7 +1116,7 @@ class WingXSec(AeroSandboxObject):
             )
 
     def __repr__(self) -> str:
-        return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord:.3f}, twist: {self.twist:.3f})"
+        return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord}, twist: {self.twist})"
 
     def translate(self,
                   xyz: Union[np.ndarray, List]

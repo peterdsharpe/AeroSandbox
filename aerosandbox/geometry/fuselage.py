@@ -238,16 +238,8 @@ class Fuselage(AeroSandboxObject):
             spanwise_resolution + 1,
         )[:-1]
 
-        shape_nondim_coordinates = np.array([
-            np.stack((
-                np.sin(theta),
-                np.cos(theta),
-            )).T
-            for xsec in self.xsecs
-        ])
-
-        x_nondim = shape_nondim_coordinates[:, :, 0].T
-        y_nondim = shape_nondim_coordinates[:, :, 1].T
+        x_nondim = np.sin(theta)
+        y_nondim = np.cos(theta)
 
         chordwise_strips = []
         for x_n, y_n in zip(x_nondim, y_nondim):

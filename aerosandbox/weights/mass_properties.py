@@ -90,6 +90,9 @@ class MassProperties(AeroSandboxObject):
 
     def __getitem__(self, index):
         def get_item_of_attribute(a):
+            if np.isscalar(a): # If NumPy says its a scalar, return it.
+                return a
+
             try:
                 return a[index]
             except TypeError:  # object is not subscriptable

@@ -9,12 +9,13 @@ def hline(
         text_ha="center",
         text_va="bottom",
         text_kwargs=None,
+        **kwargs
 ):  # TODO docs
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()
     xlim = ax.get_xlim()
-    plt.axhline(y=y, ls=linestyle, color=color)
+    plt.axhline(y=y, ls=linestyle, color=color, **kwargs)
     if text is not None:
         plt.text(
             x=text_xloc * xlim[1] + (1 - text_xloc) * xlim[0],
@@ -36,12 +37,13 @@ def vline(
         text_ha="right",
         text_va="center",
         text_kwargs=None,
+        **kwargs
 ):  # TODO docs
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()
     ylim = ax.get_ylim()
-    plt.axvline(x=x, ls=linestyle, color=color)
+    plt.axvline(x=x, ls=linestyle, color=color, **kwargs)
     if text is not None:
         plt.text(
             x=x,

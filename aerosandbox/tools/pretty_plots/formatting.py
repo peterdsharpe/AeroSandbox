@@ -38,8 +38,12 @@ def show_plot(
         for ax in axes:
             if not ax.get_label() == '<colorbar>':
                 if not ax.name == '3d':
-                    ax.grid(True, 'major', axis='both', linewidth=1.6)
-                    ax.grid(True, 'minor', axis='both', linewidth=0.7)
+                    if any(line.get_visible() for line in ax.get_xgridlines()):
+                        ax.grid(True, 'major', axis='x', linewidth=1.6)
+                        ax.grid(True, 'minor', axis='x', linewidth=0.7)
+                    if any(line.get_visible() for line in ax.get_ygridlines()):
+                        ax.grid(True, 'major', axis='y', linewidth=1.6)
+                        ax.grid(True, 'minor', axis='y', linewidth=0.7)
 
     ### Determine if a legend should be shown
     if legend is None:

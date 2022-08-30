@@ -1,6 +1,7 @@
 from aerosandbox.tools import inspect_tools
 from typing import Union, Tuple, List
 import aerosandbox.numpy as np
+import warnings
 
 
 def qp(
@@ -9,6 +10,7 @@ def qp(
         show=True,
         plotly_renderer: Union[str, None] = "browser",
         orthographic=True,
+        stacklevel=1
 ) -> None:
     """
     Quickly plots ("QP") a 1D, 2D, or 3D dataset as a line plot with markers. Useful for exploratory data analysis.
@@ -34,23 +36,56 @@ def qp(
 
         orthographic: A boolean of whether or not to use an orthographic (rather than persepctive) projection when viewing 3D plots.
 
+        stacklevel: (Advanced) Choose the level of the stack that you want to retrieve plot labels at. Higher
+        integers will get you higher (i.e., more end-user-facing) in the stack. Same behaviour as the `stacklevel`
+        argument in warnings.warn().
+
     Returns: None (in-place)
 
     """
+    arg_values = args
+    n_dimensions = len(arg_values)  # dimensionality
 
     ##### This section serves to try to retrieve appropriate axis labels for the plot.
-    ### This is some interesting and tricky code here: retrieves the source code of where qp() was called, as a string.
+    ### First, set some defaults.
+    arg_names = []
+    if n_dimensions >= 1:
+        arg_names += ["x"]
+        if n_dimensions >= 2:
+            arg_names += ["y"]
+            if n_dimensions >= 3:
+                arg_names += ["z"]
+                if n_dimensions >= 4:
+                    arg_names += [
+                        f"Dim. {i}"
+                        for i in range(4, n_dimensions + 1)
+                    ]
+    title = "QuickPlot"
     try:
-        caller_source_code = inspect_tools.get_caller_source_code(stacklevel=2)
-        arg_names = inspect_tools.get_function_argument_names_from_source_code(caller_source_code)
-        arg_names = arg_names[:len(args)]
+        ### This is some interesting and tricky code here: retrieves the source code of where qp() was called, as a string.
+        caller_source_code = inspect_tools.get_caller_source_code(stacklevel=stacklevel + 1)
+        try:
+            parsed_arg_names = inspect_tools.get_function_argument_names_from_source_code(caller_source_code)
+            title = "QuickPlot: " + " vs. ".join(parsed_arg_names)
+            if len(parsed_arg_names) == n_dimensions:
+                arg_names = parsed_arg_names
+            else:
+                warnings.warn(
+                    f"Couldn't parse QuickPlot call signature (dimension mismatch):\n\n{caller_source_code}",
+                    stacklevel=2,
+                )
+        except ValueError as e:
+            warnings.warn(
+                f"Couldn't parse QuickPlot call signature (invalid source code):\n\n{caller_source_code}",
+                stacklevel=2,
+            )
     except FileNotFoundError:
-        arg_names = "xyzabcdefghijklmnopqrstuvw"
-
-    arg_values = args
+        warnings.warn(
+            f"Couldn't parse QuickPlot call signature (missing filepath).",
+            stacklevel=2,
+        )
 
     ##### Do the plotting:
-    n_dimensions = len(arg_values)  # dimensionality
 
     if backend == "plotly":
         import plotly.express as px
@@ -73,7 +108,7 @@ def qp(
                 )
             )
             fig.update_layout(
-                title=arg_names[0],
+                title=title,
                 xaxis_title="Array index #",
                 yaxis_title=arg_names[0]
             )
@@ -87,7 +122,7 @@ def qp(
                 )
             )
             fig.update_layout(
-                title=f"{arg_names[0]} vs. {arg_names[1]}",
+                title=title,
                 xaxis_title=arg_names[0],
                 yaxis_title=arg_names[1]
             )
@@ -102,7 +137,7 @@ def qp(
                 ),
             )
             fig.update_layout(
-                title=f"{arg_names[0]} vs. {arg_names[1]} vs. {arg_names[2]}",
+                title=title,
                 scene=dict(
                     xaxis_title=arg_names[0],
                     yaxis_title=arg_names[1],
