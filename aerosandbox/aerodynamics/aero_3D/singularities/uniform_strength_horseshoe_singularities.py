@@ -12,9 +12,9 @@ def calculate_induced_velocity_horseshoe(
         x_right: Union[float, np.ndarray],
         y_right: Union[float, np.ndarray],
         z_right: Union[float, np.ndarray],
-        gamma: Union[float, np.ndarray],
+        gamma: Union[float, np.ndarray] = 1,
         trailing_vortex_direction: np.ndarray = None,
-        vortex_core_radius=1e-8,
+        vortex_core_radius: float = 0,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -24,7 +24,8 @@ def calculate_induced_velocity_horseshoe(
     In this flowfield, the following singularity elements are assumed:
         * A single horseshoe vortex consisting of a bound leg and two trailing legs
 
-    This function consists entirely of scalar, NumPy ufunc operations - so it can be vectorized as desired.
+    This function consists entirely of scalar, elementwise NumPy ufunc operations - so it can be vectorized as
+    desired assuming input dimensions/broadcasting are compatible.
 
     Args:
         x_field: x-coordinate of the field point
@@ -56,7 +57,6 @@ def calculate_induced_velocity_horseshoe(
 
     Returns: u, v, and w:
         The x-, y-, and z-direction induced velocities.
-
     """
     if trailing_vortex_direction is None:
         trailing_vortex_direction = np.array([1, 0, 0])
@@ -87,10 +87,13 @@ def calculate_induced_velocity_horseshoe(
     u_y = trailing_vortex_direction[1]
     u_z = trailing_vortex_direction[2]
 
-    # Handle the special case where the field point is on one of the legs
+    # Handle the special case where the field point is on one of the legs (either bound or trailing)
     def smoothed_inv(x):
         "Approximates 1/x with a function that sharply goes to 0 in the x -> 0 limit."
-        return x / (x ** 2 + vortex_core_radius ** 2)
+        if not np.all(vortex_core_radius == 0):
+            return x / (x ** 2 + vortex_core_radius ** 2)
+        else:
+            return 1 / x
 
     ### Do some useful arithmetic
 
