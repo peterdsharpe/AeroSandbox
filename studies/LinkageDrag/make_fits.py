@@ -96,38 +96,65 @@ for k, v in x_data_test_ranges.items():
     else:
         x_data_test[k] = np.random.uniform(*v, n_test_data)
 
-# x_data_test = {
-#     k: v
-#     for k, v in zip(
-#         x_data_test_ranges.keys(),
-#
-#     )
-# }
 y_data_test = fit(x_data_test)
 plt.plot(
     x_data_test["Re_l"],
     y_data_test,
     ".",
-    alpha=0.3,
+    alpha=0.1,
     markersize=1,
 )
-
-# plt.loglog(
-#     Re_plot,
-#     fit(dict(
-#         Re=Re_plot,
-#         is_top=True,
-#     )),
-#     "-",
-#     alpha=0.6,
-#     color=line.get_color()
-# )
-
-# print(f"{name.rjust(30)} : lambda Re: {fit.parameters['a']:.8f} * (Re / 1e5) ** {fit.parameters['b']:.8f}")
-
-# plt.xlim(left=1e4, right=2e6)
 p.show_plot(
     "Linkage Drag",
     "Reynolds Number [-]",
     "Drag Area [m$^2$]"
+)
+
+#############################
+
+plt.loglog(
+    df["Re_l"],
+    (4 / np.pi * df["CDA"]) **0.5,
+    ".k",
+    zorder=4,
+)
+
+n_test_data = 50000
+
+x_data_test_ranges = dict(
+    Re_l=(1e3, 1e7),
+    linkage_length=(0.055, 0.085),
+    is_covered=[True, False],
+    is_top=[True, False]
+)
+x_data_test = {}
+for k, v in x_data_test_ranges.items():
+    if isinstance(v[0], bool):
+        x_data_test[k] = np.random.rand(n_test_data) > 0.5
+    elif v[0] > 0 and v[1] > 0:
+        x_data_test[k] = np.exp(
+            np.random.uniform(
+                np.log(v[0]),
+                np.log(v[1]),
+                n_test_data
+            )
+        )
+    else:
+        x_data_test[k] = np.random.uniform(*v, n_test_data)
+
+y_data_test = fit(x_data_test)
+plt.plot(
+    x_data_test["Re_l"],
+    (4 / np.pi * y_data_test) ** 0.5,
+    ".",
+    alpha=0.1,
+    markersize=1,
+)
+plt.yscale('linear')
+plt.ylim(bottom=0)
+p.set_ticks(None, None, 0.05, 0.01)
+p.show_plot(
+    "Linkage Drag",
+    "Reynolds Number [-]",
+    "Drag Diameter [m]"
 )

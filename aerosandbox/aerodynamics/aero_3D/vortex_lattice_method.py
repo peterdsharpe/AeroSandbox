@@ -652,7 +652,7 @@ if __name__ == '__main__':
 
     from pathlib import Path
 
-    geometry_folder = Path(asb.__file__).parent.parent / "tutorial" / "04 - Geometry" / "example_geometry"
+    geometry_folder = Path(__file__).parent / "test_aero_3D" / "geometries"
 
     import sys
 
@@ -661,7 +661,7 @@ if __name__ == '__main__':
     from vanilla import airplane as vanilla
 
     ### Do the AVL run
-    analysis = VortexLatticeMethod(
+    vlm = VortexLatticeMethod(
         airplane=vanilla,
         op_point=asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=0),
@@ -676,7 +676,7 @@ if __name__ == '__main__':
         chordwise_resolution=12,
     )
 
-    res = analysis.run()
+    res = vlm.run()
 
     for k, v in res.items():
-        print(f"{str(k).rjust(10)} : {v:.4f}")
+        print(f"{str(k).rjust(10)} : {v}")
