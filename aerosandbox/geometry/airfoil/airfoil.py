@@ -8,7 +8,6 @@ from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL
 from aerosandbox.library.aerodynamics import transonic
 from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 from scipy import interpolate
-import matplotlib.pyplot as plt
 from typing import Callable, Union, Any, Dict
 import json
 from pathlib import Path
@@ -647,6 +646,7 @@ class Airfoil(Polygon):
             y_mcl = self.local_camber(x_mcl)
 
         if backend == "matplotlib":
+            import matplotlib.pyplot as plt
             color = '#280887'
             plt.plot(x, y, ".-", zorder=11, color=color)
             plt.fill(x, y, zorder=10, color=color, alpha=0.2)
