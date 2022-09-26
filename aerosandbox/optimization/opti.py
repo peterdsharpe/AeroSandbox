@@ -35,11 +35,11 @@ class Singleton(type):
     instance = WeakValueDictionary()
 
     def __new__(cls, name, bases, dictn):
-        if cls not in cls._instances:
+        if cls not in cls.instance:
             # !! force strong reference on the instance. !! 
             new_instance = type.__new__(cls, name, bases, dictn)
             cls.instance[cls] = new_instance
-        return cls._instance[cls]
+        return cls.instance[cls]
 
     @classmethod
     def clear_instance(cls):

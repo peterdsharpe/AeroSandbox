@@ -38,7 +38,6 @@ class LiftingLine(ImplicitAnalysis):
         >>> outputs = analysis.run()
     """
 
-    @ImplicitAnalysis.initialize
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,

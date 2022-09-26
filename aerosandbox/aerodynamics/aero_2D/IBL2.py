@@ -17,7 +17,7 @@ class IBL2(ImplicitAnalysis):
 
     """
 
-    @ImplicitAnalysis.initialize
+    
     def __init__(self,
                  streamwise_coordinate: np.ndarray,
                  edge_velocity: np.ndarray,

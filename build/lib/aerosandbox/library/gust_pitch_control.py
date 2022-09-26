@@ -19,7 +19,7 @@ class TransverseGustPitchControl(ImplicitAnalysis):
 
     """
 
-    @ImplicitAnalysis.initialize
+    
     def __init__(self,
                  reduced_time: np.ndarray,
                  gust_profile: np.ndarray,

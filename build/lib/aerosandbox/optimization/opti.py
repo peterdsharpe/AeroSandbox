@@ -9,15 +9,45 @@ from weakref import WeakValueDictionary
 
 
 class Singleton(type):
-    """ Destoyable singleton metaclass """
-    _instances = WeakValueDictionary()
+    """ 
+    Destoyable singleton metaclass with context manager.
+
+    ## Usage: 
+
+    class Opti(metaclass=Singleton):
+        ...
+
+    # Context Manager 
+    with Opti() as opti: 
+        var = opti.variable(
+            ... 
+        )
+
+    # Normal Instantiation   
+    opti = Opti() 
+    var = opti.variable(
+        ...
+    ) 
+
+    opti.clear_instance()      # explicit instance removal  
+    del opti.instance          # same 
+    """
+    instance = WeakValueDictionary()
 
     def __new__(cls, name, bases, dictn):
-        if cls not in cls._instances:
+        if cls not in cls.instance:
             # !! force strong reference on the instance. !! 
-            instance = type.__new__(cls, name, bases, dictn)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
+            new_instance = type.__new__(cls, name, bases, dictn)
+            cls.instance[cls] = new_instance
+        return cls.instance[cls]
+
+    @classmethod
+    def clear_instance(cls):
+        del cls.instance
+
+    def __exit__(self, type, value, traceback):
+        self.clear_instance()
+
 
 
 # Opti as a singleton 

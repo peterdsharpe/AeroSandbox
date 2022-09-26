@@ -6,9 +6,8 @@ from typing import Dict, Any
 
 class AeroSandboxObject:
 
-    # Singleton shared with every AeroSandboxObjects
     opti = Opti() 
-
+    
     @abstractmethod
     def __init__(self):
         """
@@ -179,16 +178,6 @@ class ExplicitAnalysis(AeroSandboxObject):
 
         return options
 
-class ImplicitAnalysisInitError(Exception):
-        def __init__(self,
-                     message="""
-    Your ImplicitAnalysis object doesn't have an `opti` property!
-    This is almost certainly because you didn't decorate your object's __init__ method with 
-    `@ImplicitAnalysis.initialize`, which you should go do.
-                     """
-                     ):
-            self.message = message
-            super().__init__(self.message)
 
 class ImplicitAnalysis(AeroSandboxObject):
-    pass 
+    pass

@@ -16,8 +16,6 @@ class AirfoilInviscid(ImplicitAnalysis):
         * AirfoilInviscid.Cl
 
     """
-
-    @ImplicitAnalysis.initialize
     def __init__(self,
                  airfoil: Union[Airfoil, List[Airfoil]],
                  op_point: OperatingPoint,
