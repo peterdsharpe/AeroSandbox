@@ -5,8 +5,55 @@ import aerosandbox.numpy as np
 from aerosandbox.tools import inspect_tools
 from sortedcontainers import SortedDict
 
+from weakref import WeakValueDictionary
 
-class Opti(cas.Opti):
+
+class Singleton(type):
+    """ 
+    Destoyable singleton metaclass with context manager.
+
+    ## Usage: 
+
+    class Opti(metaclass=Singleton):
+        ...
+
+    # Context Manager 
+    with Opti() as opti: 
+        var = opti.variable(
+            ... 
+        )
+
+    # Normal Instantiation   
+    opti = Opti() 
+    var = opti.variable(
+        ...
+    ) 
+
+    opti.clear_instance()      # explicit instance removal  
+    del opti.instance          # same 
+    """
+    instance = WeakValueDictionary()
+
+    def __new__(cls, name, bases, dictn):
+        if cls not in cls._instances:
+            # !! force strong reference on the instance. !! 
+            new_instance = type.__new__(cls, name, bases, dictn)
+            cls.instance[cls] = new_instance
+        return cls._instance[cls]
+
+    @classmethod
+    def clear_instance(cls):
+        del cls.instance
+
+    def __exit__(self, type, value, traceback):
+        self.clear_instance()
+
+
+
+# Opti as a singleton 
+# This enables creating an Opti in each AerosandboxObject
+# while still referencing the original Opti object
+class Opti(cas.Opti, metaclass=Singleton):
     """
     The base class for mathematical optimization. For detailed usage, see the docstrings in its key methods:
         * Opti.variable()
