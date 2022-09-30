@@ -129,7 +129,7 @@ def mass_motor_electric(
         max_power,
         kv_rpm_volt=1000,  # This is in rpm/volt, not rads/sec/volt!
         voltage=20,
-        method="astroflight"
+        method="hobbyking"
 ):
     """
     Estimates the mass of a brushless DC electric motor.
