@@ -258,20 +258,17 @@ if __name__ == '__main__':
     mass_mot_astroflight = mass_motor_electric(pows, method="astroflight")
 
     import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    sns.set(palette=sns.color_palette("husl"))
+    import aerosandbox.tools.pretty_plots as p
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.loglog(pows, np.array(mass_mot_burton), "-", label="Burton Model")
     plt.plot(pows, np.array(mass_mot_hobbyking), "--", label="Hobbyking Model")
     plt.plot(pows, np.array(mass_mot_astroflight), "-.", label="Astroflight Model")
-    plt.xlabel("Motor Power [W]")
-    plt.ylabel("Motor Mass [kg]")
-    plt.title("Small Electric Motor Mass Models\n(500 kv, 100 V)")
-    plt.tight_layout()
-    plt.legend()
-    plt.show()
+    p.show_plot(
+        "Small Electric Motor Mass Models\n(500 kv, 100 V)",
+        "Motor Power [W]",
+        "Motor Mass [kg]"
+    )
 
     print(mass_wires(
         wire_length=1,
