@@ -233,9 +233,7 @@ def plot_smooth(
 
 
 def contour(
-        X: np.ndarray,
-        Y: np.ndarray,
-        Z: np.ndarray,
+        *args,
         levels: Union[int, List, np.ndarray] = 31,
         colorbar: bool = True,
         linelabels: bool = True,
@@ -318,12 +316,6 @@ def contour(
         colorbar_kwargs = {}
     if linelabels_kwargs is None:
         linelabels_kwargs = {}
-
-    args = [
-        X,
-        Y,
-        Z,
-    ]
 
     shared_kwargs = kwargs
     if levels is not None:
