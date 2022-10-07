@@ -37,6 +37,7 @@ fps = foot / 1
 liter = 0.001
 
 # Pressure (equivalents in Pa)
+pascal = 1
 torr = 133.3223684211
 atm = 101325
 psi = lbf / inch ** 2
@@ -62,3 +63,20 @@ peta = 1e15
 exa = 1e18
 zetta = 1e21
 yotta = 1e24
+
+# Some abbreviations / alternate names
+m = meter
+ft = foot
+yd = yard
+mi = mile
+nmi = naut_mile
+kilogram = kg
+sec = second
+min = minute
+hr = hour
+wk = week
+yr = year
+N = newton
+kt = knot
+L = liter
+Pa = pascal
