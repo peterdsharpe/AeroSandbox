@@ -239,7 +239,7 @@ def contour(
         linelabels: bool = True,
         cmap=mpl.cm.get_cmap('viridis'),
         alpha: float = 0.7,
-        extend: str = "both",
+        extend: str = "neither",
         linecolor="k",
         linewidths: float = 0.5,
         extendrect: bool = True,
@@ -307,7 +307,31 @@ def contour(
     Returns: A tuple of (contour, contourf, colorbar) objects.
 
     """
+    bad_signature_error = ValueError("Call signature should be one of:\n"
+                                     "  * `contour(Z, **kwargs)`\n"
+                                     "  * `contour(X, Y, Z, **kwargs)`\n"
+                                     "  * `contour(X, Y, Z, levels, **kwargs)`"
+                                     )
 
+    ### Parse *args
+    if len(args) == 1:
+        X = None
+        Y = None
+        Z = args[0]
+    elif len(args) == 3:
+        X = args[0]
+        Y = args[1]
+        Z = args[2]
+    else:
+        raise bad_signature_error
+    if not len(Z.shape) == 2:
+        raise ValueError(f"Z must be a 2D array; instead, got shape {Z.shape}.")
+    if X is None:
+        X = np.arange(Z.shape[1])
+    if Y is None:
+        Y = np.arange(Z.shape[0])
+
+    ### Set defaults
     if contour_kwargs is None:
         contour_kwargs = {}
     if contourf_kwargs is None:
@@ -325,23 +349,28 @@ def contour(
     if extend is not None:
         shared_kwargs["extend"] = extend
     if z_log_scale:
+        if np.any(Z) <= 0:
+            raise ValueError(
+                "All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!"
+            )
+
+        Z_ratio = np.max(Z) / np.min(Z)
+        log10_ceil_z_max = np.ceil(np.log10(np.max(Z)))
+        log10_floor_z_min = np.floor(np.log10(np.min(Z)))
+
+        try:
+            default_levels = int(levels)
+        except TypeError:
+            default_levels = 31
+        divisions_per_decade = np.ceil(default_levels / np.log10(Z_ratio)).astype(int)
 
         shared_kwargs = {
             "norm"   : mpl.colors.LogNorm(),
             "locator": mpl.ticker.LogLocator(
-                subs=np.geomspace(1, 10, 4 + 1)[:-1]
+                subs=np.geomspace(1, 10, divisions_per_decade + 1)[:-1],
             ),
             **shared_kwargs
         }
-
-        if np.min(Z) <= 0:
-            import warnings
-            warnings.warn(
-                "Warning: All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!",
-                stacklevel=2
-            )
-            Z = np.maximum(Z, 1e-300)  # Make all values nonnegative
-
     if colorbar_label is not None:
         colorbar_kwargs["label"] = colorbar_label
 
@@ -369,13 +398,15 @@ def contour(
         **linelabels_kwargs
     }
 
+    ### Now, with all the kwargs merged, do the actual plotting:
+
     try:
-        cont = plt.contour(*args, **contour_kwargs)
-        contf = plt.contourf(*args, **contourf_kwargs)
+        cont = plt.contour(X, Y, Z, **contour_kwargs)
+        contf = plt.contourf(X, Y, Z, **contourf_kwargs)
     except TypeError as e:
         try:
-            cont = plt.tricontour(*args, **contour_kwargs)
-            contf = plt.tricontourf(*args, **contourf_kwargs)
+            cont = plt.tricontour(X, Y, Z, **contour_kwargs)
+            contf = plt.tricontourf(X, Y, Z, **contourf_kwargs)
         except TypeError:
             raise e
 
@@ -383,12 +414,65 @@ def contour(
         cbar = plt.colorbar(**colorbar_kwargs)
 
         if z_log_scale:
-            cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
-            cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatter())
+
+            if Z_ratio >= 10 ** 2:
+                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
+                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
+                cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
+            elif Z_ratio >= 10 ** 1.5:
+                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
+                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
+                # cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
+            else:
+                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
+                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(100)))
+            print(Z_ratio)
+
     else:
         cbar = None
 
     if linelabels:
-        plt.gca().clabel(cont, **linelabels_kwargs)
+        cont.axes.clabel(cont, **linelabels_kwargs)
 
     return cont, contf, cbar
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+
+
+    x = np.linspace(0, 1, 300)
+    y = np.linspace(0, 1, 200)
+    X, Y = np.meshgrid(x, y)
+
+    Z_ratio = 1
+
+    Z = 10 ** (
+            Z_ratio / 2 * np.cos(
+        2 * np.pi * (X ** 4 + Y ** 4)
+    )
+    )
+
+    fig, ax = plt.subplots(figsize=(6,6))
+
+    try:
+        from palettable.scientific.sequential import Hawaii_20
+
+        cmap = Hawaii_20.get_mpl_colormap()
+    except ImportError:
+        cmap = plt.get_cmap("rainbow")
+
+    cont, contf, cbar = contour(
+        X, Y, Z,
+        z_log_scale=True,
+        cmap=cmap,
+        # levels=10,
+        colorbar_label="Colorbar label"
+    )
+    p.show_plot(
+        "Title",
+        "X label",
+        "Y label"
+    )
