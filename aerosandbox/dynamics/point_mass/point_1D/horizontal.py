@@ -21,8 +21,8 @@ class DynamicsPointMass1DHorizontal(DynamicsPointMass3DCartesian):
 
     def __init__(self,
                  mass_props: MassProperties = None,
-                 x_e: Union[np.ndarray, float] = 0,
-                 u_e: Union[np.ndarray, float] = 0,
+                 x_e: Union[float, np.ndarray] = 0,
+                 u_e: Union[float, np.ndarray] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props

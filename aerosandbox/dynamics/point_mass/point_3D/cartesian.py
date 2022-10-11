@@ -33,15 +33,15 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
 
     def __init__(self,
                  mass_props: MassProperties = None,
-                 x_e: Union[np.ndarray, float] = 0,
-                 y_e: Union[np.ndarray, float] = 0,
-                 z_e: Union[np.ndarray, float] = 0,
-                 u_e: Union[np.ndarray, float] = 0,
-                 v_e: Union[np.ndarray, float] = 0,
-                 w_e: Union[np.ndarray, float] = 0,
-                 alpha: Union[np.ndarray, float] = 0,
-                 beta: Union[np.ndarray, float] = 0,
-                 bank: Union[np.ndarray, float] = 0,
+                 x_e: Union[float, np.ndarray] = 0,
+                 y_e: Union[float, np.ndarray] = 0,
+                 z_e: Union[float, np.ndarray] = 0,
+                 u_e: Union[float, np.ndarray] = 0,
+                 v_e: Union[float, np.ndarray] = 0,
+                 w_e: Union[float, np.ndarray] = 0,
+                 alpha: Union[float, np.ndarray] = 0,
+                 beta: Union[float, np.ndarray] = 0,
+                 bank: Union[float, np.ndarray] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
@@ -187,9 +187,9 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         return x_to, y_to, z_to
 
     def add_force(self,
-                  Fx: Union[np.ndarray, float] = 0,
-                  Fy: Union[np.ndarray, float] = 0,
-                  Fz: Union[np.ndarray, float] = 0,
+                  Fx: Union[float, np.ndarray] = 0,
+                  Fy: Union[float, np.ndarray] = 0,
+                  Fz: Union[float, np.ndarray] = 0,
                   axes="earth",
                   ) -> None:
         Fx_e, Fy_e, Fz_e = self.convert_axes(

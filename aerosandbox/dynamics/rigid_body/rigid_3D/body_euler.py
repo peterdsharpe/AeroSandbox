@@ -41,18 +41,18 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def __init__(self,
                  mass_props: MassProperties = None,
-                 x_e: Union[np.ndarray, float] = 0,
-                 y_e: Union[np.ndarray, float] = 0,
-                 z_e: Union[np.ndarray, float] = 0,
-                 u_b: Union[np.ndarray, float] = 0,
-                 v_b: Union[np.ndarray, float] = 0,
-                 w_b: Union[np.ndarray, float] = 0,
-                 phi: Union[np.ndarray, float] = 0,
-                 theta: Union[np.ndarray, float] = 0,
-                 psi: Union[np.ndarray, float] = 0,
-                 p: Union[np.ndarray, float] = 0,
-                 q: Union[np.ndarray, float] = 0,
-                 r: Union[np.ndarray, float] = 0,
+                 x_e: Union[float, np.ndarray] = 0,
+                 y_e: Union[float, np.ndarray] = 0,
+                 z_e: Union[float, np.ndarray] = 0,
+                 u_b: Union[float, np.ndarray] = 0,
+                 v_b: Union[float, np.ndarray] = 0,
+                 w_b: Union[float, np.ndarray] = 0,
+                 phi: Union[float, np.ndarray] = 0,
+                 theta: Union[float, np.ndarray] = 0,
+                 psi: Union[float, np.ndarray] = 0,
+                 p: Union[float, np.ndarray] = 0,
+                 q: Union[float, np.ndarray] = 0,
+                 r: Union[float, np.ndarray] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
@@ -410,9 +410,9 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         return x_to, y_to, z_to
 
     def add_force(self,
-                  Fx: Union[np.ndarray, float] = 0,
-                  Fy: Union[np.ndarray, float] = 0,
-                  Fz: Union[np.ndarray, float] = 0,
+                  Fx: Union[float, np.ndarray] = 0,
+                  Fy: Union[float, np.ndarray] = 0,
+                  Fz: Union[float, np.ndarray] = 0,
                   axes="body",
                   ):
         Fx_b, Fy_b, Fz_b = self.convert_axes(
@@ -427,9 +427,9 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         self.Fz_b = self.Fz_b + Fz_b
 
     def add_moment(self,
-                   Mx: Union[np.ndarray, float] = 0,
-                   My: Union[np.ndarray, float] = 0,
-                   Mz: Union[np.ndarray, float] = 0,
+                   Mx: Union[float, np.ndarray] = 0,
+                   My: Union[float, np.ndarray] = 0,
+                   Mz: Union[float, np.ndarray] = 0,
                    axes="body",
                    ):
         Mx_b, My_b, Mz_b = self.convert_axes(

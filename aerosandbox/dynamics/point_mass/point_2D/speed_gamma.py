@@ -28,11 +28,11 @@ class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
 
     def __init__(self,
                  mass_props: MassProperties = None,
-                 x_e: Union[np.ndarray, float] = 0,
-                 z_e: Union[np.ndarray, float] = 0,
-                 speed: Union[np.ndarray, float] = 0,
-                 gamma: Union[np.ndarray, float] = 0,
-                 alpha: Union[np.ndarray, float] = 0,
+                 x_e: Union[float, np.ndarray] = 0,
+                 z_e: Union[float, np.ndarray] = 0,
+                 speed: Union[float, np.ndarray] = 0,
+                 gamma: Union[float, np.ndarray] = 0,
+                 alpha: Union[float, np.ndarray] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props

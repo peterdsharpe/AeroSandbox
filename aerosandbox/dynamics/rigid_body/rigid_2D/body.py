@@ -28,12 +28,12 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
 
     def __init__(self,
                  mass_props: MassProperties = None,
-                 x_e: Union[np.ndarray, float] = 0,
-                 z_e: Union[np.ndarray, float] = 0,
-                 u_b: Union[np.ndarray, float] = 0,
-                 w_b: Union[np.ndarray, float] = 0,
-                 theta: Union[np.ndarray, float] = 0,
-                 q: Union[np.ndarray, float] = 0,
+                 x_e: Union[float, np.ndarray] = 0,
+                 z_e: Union[float, np.ndarray] = 0,
+                 u_b: Union[float, np.ndarray] = 0,
+                 w_b: Union[float, np.ndarray] = 0,
+                 theta: Union[float, np.ndarray] = 0,
+                 q: Union[float, np.ndarray] = 0,
                  ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props

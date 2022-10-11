@@ -56,7 +56,7 @@ def calculate_reduced_time(
         return 2 / chord * reduced_time
 
 
-def wagners_function(reduced_time: Union[np.ndarray, float]):
+def wagners_function(reduced_time: Union[float, np.ndarray]):
     """ 
     A commonly used approximation to Wagner's function 
     (Jones, R.T. The Unsteady Lift of a Finite Wing; Technical Report NACA TN-682; NACA: Washington, DC, USA, 1939)
@@ -69,7 +69,7 @@ def wagners_function(reduced_time: Union[np.ndarray, float]):
     return wagner
 
 
-def kussners_function(reduced_time: Union[np.ndarray, float]):
+def kussners_function(reduced_time: Union[float, np.ndarray]):
     """ 
     A commonly used approximation to Kussner's function (Sears and Sparks 1941)
     

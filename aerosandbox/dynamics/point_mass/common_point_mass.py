@@ -332,9 +332,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @abstractmethod
     def add_force(self,
-                  Fx: Union[np.ndarray, float] = 0,
-                  Fy: Union[np.ndarray, float] = 0,
-                  Fz: Union[np.ndarray, float] = 0,
+                  Fx: Union[float, np.ndarray] = 0,
+                  Fy: Union[float, np.ndarray] = 0,
+                  Fz: Union[float, np.ndarray] = 0,
                   axes: str = "wind",
                   ) -> None:
         """

@@ -11,9 +11,9 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
 
     @abstractmethod
     def add_moment(self,
-                   Mx: Union[np.ndarray, float] = 0,
-                   My: Union[np.ndarray, float] = 0,
-                   Mz: Union[np.ndarray, float] = 0,
+                   Mx: Union[float, np.ndarray] = 0,
+                   My: Union[float, np.ndarray] = 0,
+                   Mz: Union[float, np.ndarray] = 0,
                    axes="body",
                    ) -> None:
         """
