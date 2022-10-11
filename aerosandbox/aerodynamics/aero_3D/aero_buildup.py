@@ -375,18 +375,12 @@ class AeroBuildup(ExplicitAnalysis):
             alpha_generalized = 90 - np.arccosd(np.clip(vel_dot_z, -1, 1))
 
             # Compute the control surface deflection
-            n_surfs = len(xsec_a.control_surfaces)
-            if n_surfs == 0:
-                deflection = 0.
-            elif n_surfs == 1:
-                surf = xsec_a.control_surfaces[0]
-                deflection = surf.deflection
-                if mirror_across_XZ:
-                    if not surf.symmetric:
-                        deflection *= -1
-            else:
-                raise NotImplementedError(
-                    "AeroBuildup currently cannot handle multiple control surfaces attached to a given WingXSec.")
+            deflection = 0.
+            for surf in xsec_a.control_surfaces:
+                if mirror_across_XZ and not surf.symmetric:
+                    deflection -= surf.deflection
+                else:
+                    deflection += surf.deflection
 
             # Compute Reynolds numbers
             Re_a = op_point.reynolds(xsec_a.chord)
