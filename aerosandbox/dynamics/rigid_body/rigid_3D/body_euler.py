@@ -1,6 +1,6 @@
 from aerosandbox.dynamics.rigid_body.common_rigid_body import _DynamicsRigidBodyBaseClass
 import aerosandbox.numpy as np
-from aerosandbox import MassProperties
+from aerosandbox.weights.mass_properties import MassProperties
 from typing import Union
 
 
