@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
-
+from typing import Union
 
 class MassProperties(AeroSandboxObject):
     """
@@ -8,16 +8,16 @@ class MassProperties(AeroSandboxObject):
     """
 
     def __init__(self,
-                 mass: float = None,
-                 x_cg: float = 0,
-                 y_cg: float = 0,
-                 z_cg: float = 0,
-                 Ixx: float = 0,
-                 Iyy: float = 0,
-                 Izz: float = 0,
-                 Ixy: float = 0,
-                 Iyz: float = 0,
-                 Ixz: float = 0,
+                 mass: Union[float, np.ndarray] = None,
+                 x_cg: Union[float, np.ndarray] = 0.,
+                 y_cg: Union[float, np.ndarray] = 0.,
+                 z_cg: Union[float, np.ndarray] = 0.,
+                 Ixx: Union[float, np.ndarray] = 0.,
+                 Iyy: Union[float, np.ndarray] = 0.,
+                 Izz: Union[float, np.ndarray] = 0.,
+                 Ixy: Union[float, np.ndarray] = 0.,
+                 Iyz: Union[float, np.ndarray] = 0.,
+                 Ixz: Union[float, np.ndarray] = 0.,
                  ):
         """
         Initializes a new MassProperties object.
@@ -92,7 +92,7 @@ class MassProperties(AeroSandboxObject):
 
     def __getitem__(self, index):
         def get_item_of_attribute(a):
-            if np.isscalar(a): # If NumPy says its a scalar, return it.
+            if np.isscalar(a):  # If NumPy says its a scalar, return it.
                 return a
 
             try:
@@ -286,10 +286,10 @@ class MassProperties(AeroSandboxObject):
         )
 
     def get_inertia_tensor_about_point(self,
-                                       x: float = 0,
-                                       y: float = 0,
-                                       z: float = 0,
-                                       return_tensor=True,
+                                       x: float = 0.,
+                                       y: float = 0.,
+                                       z: float = 0.,
+                                       return_tensor: bool = True,
                                        ):
         """
         Returns the inertia tensor about an arbitrary point.
@@ -297,9 +297,12 @@ class MassProperties(AeroSandboxObject):
 
         Args:
             x: x-position of the new point, in the same axes as this MassProperties instance is specified in.
+
             y: y-position of the new point, in the same axes as this MassProperties instance is specified in.
+
             z: z-position of the new point, in the same axes as this MassProperties instance is specified in.
-            return_tensor: A switch for the desired return type.
+
+            return_tensor: A switch for the desired return type; see below for details. [boolean]
 
         Returns:
 
