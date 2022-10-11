@@ -23,7 +23,8 @@ class MassProperties(AeroSandboxObject):
         Initializes a new MassProperties object.
 
         Axes can be given in any convenient axes system, as long as mass properties are not combined across different
-        axis systems. For aircraft design, the most common axis system is typically geometry axes.
+        axis systems. For aircraft design, the most common axis system is typically geometry axes (x-positive aft,
+        y-positive out the right wingtip, z-positive upwards).
 
         Args:
 
@@ -44,14 +45,15 @@ class MassProperties(AeroSandboxObject):
             Izz: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
             this is a point mass.
 
+            Ixy: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
+            this is symmetric about z.
+
             Iyz: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
             this is symmetric about x.
 
             Ixz: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
             this is symmetric about y.
 
-            Ixy: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
-            this is symmetric about z.
 
         """
         if mass is None:
