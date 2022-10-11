@@ -770,7 +770,7 @@ class Opti(cas.Opti):
                       variable: cas.MX,
                       with_respect_to: Union[np.ndarray, cas.MX],
                       derivative_init_guess: Union[float, np.ndarray],  # TODO add default
-                      derivative_scale: float = None,
+                      derivative_scale: Union[float, np.ndarray] = None,
                       method: str = "midpoint",
                       explicit: bool = False,  # TODO implement explicit
                       _stacklevel: int = 1,
