@@ -2,6 +2,7 @@ import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from typing import Union
 
+
 class MassProperties(AeroSandboxObject):
     """
     Mass properties of a rigid 3D object.
