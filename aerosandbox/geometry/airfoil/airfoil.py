@@ -159,9 +159,11 @@ class Airfoil(Polygon):
                         include_compressibility_effects: bool = True,
                         transonic_buffet_lift_knockdown: float = 0.3,
                         make_symmetric_polars: bool = False,
+                        add_deflections_as_all_moving_surfaces: bool = True,
                         ) -> None:
         """
-        Generates airfoil polars (CL, CD, CM functions) and assigns them in-place to this Airfoil's polar functions.
+        Generates airfoil polar surrogate models (CL, CD, CM functions) from XFoil data and assigns them in-place to
+        this Airfoil's polar functions.
 
         In other words, when this function is run, the following functions will be added (or overwritten) to the instance:
             * Airfoil.CL_function(alpha, Re, mach, deflection)
@@ -193,6 +195,11 @@ class Airfoil(Polygon):
             include_compressibility_effects: Includes compressibility effects in the polars, such as wave drag,
             mach tuck, CL effects across normal shocks. Note that accuracy here is dubious in the transonic regime
             and above - you should really specify your own CL/CD/CM models
+
+            add_deflections_as_all_moving_surfaces: If this boolean is flagged `True`, the `deflection=` keyword
+            argument of the generated polar functions directly modifies the angle of attack. This effectively means
+            that you are assuming an all-moving airfoil hinged about the quarter-chord. If this boolean is flagged
+            `False`, the `deflection=` keyword argument will do nothing.
 
         Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
         polars.
@@ -271,7 +278,7 @@ class Airfoil(Polygon):
             }
 
             if make_symmetric_polars:  # If the airfoil is known to be symmetric, duplicate all data across alpha.
-                keys_symmetric_across_alpha = ['CD', 'CDp', 'Re']
+                keys_symmetric_across_alpha = ['CD', 'CDp', 'Re']  # Assumes the rest are antisymmetric
 
                 data = {
                     k: np.concatenate([v, v if k in keys_symmetric_across_alpha else -v])
@@ -372,6 +379,9 @@ class Airfoil(Polygon):
         )
 
         def CL_function(alpha, Re, mach=0, deflection=0):
+            if add_deflections_as_all_moving_surfaces:
+                alpha = alpha + deflection
+
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CL_attached = CL_attached_interpolator({
                 "alpha": alpha,
@@ -424,6 +434,9 @@ class Airfoil(Polygon):
                 return CL_mach_0
 
         def CD_function(alpha, Re, mach=0, deflection=0):
+            if add_deflections_as_all_moving_surfaces:
+                alpha = alpha + deflection
+
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             log10_CD_attached = log10_CD_attached_interpolator({
                 "alpha": alpha,
@@ -521,6 +534,9 @@ class Airfoil(Polygon):
                 return 10 ** log10_CD_mach_0
 
         def CM_function(alpha, Re, mach=0, deflection=0):
+            if add_deflections_as_all_moving_surfaces:
+                alpha = alpha + deflection
+
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CM_attached = CM_attached_interpolator({
                 "alpha": alpha,
