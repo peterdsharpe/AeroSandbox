@@ -364,13 +364,24 @@ def contour(
             default_levels = 31
         divisions_per_decade = np.ceil(default_levels / np.log10(Z_ratio)).astype(int)
 
+        if Z_ratio > 1e8:
+            locator = mpl.ticker.LogLocator()
+        else:
+            locator = mpl.ticker.LogLocator(
+                subs=np.geomspace(1, 10, divisions_per_decade + 1)[:-1]
+            )
+
         shared_kwargs = {
             "norm"   : mpl.colors.LogNorm(),
-            "locator": mpl.ticker.LogLocator(
-                subs=np.geomspace(1, 10, divisions_per_decade + 1)[:-1],
-            ),
+            "locator": locator,
             **shared_kwargs
         }
+
+        colorbar_kwargs = {
+            "norm" : mpl.colors.LogNorm(),
+            **colorbar_kwargs
+        }
+
     if colorbar_label is not None:
         colorbar_kwargs["label"] = colorbar_label
 
@@ -411,22 +422,33 @@ def contour(
             raise e
 
     if colorbar:
-        cbar = plt.colorbar(**colorbar_kwargs)
+        from matplotlib import cm
+
+        cbar = plt.colorbar(
+            mappable=cm.ScalarMappable(
+                norm=contf.norm,
+                cmap=contf.cmap,
+            ),
+            **colorbar_kwargs
+        )
 
         if z_log_scale:
 
-            if Z_ratio >= 10 ** 2:
+            if Z_ratio >= 1e2:
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
                 cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
                 cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
+                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
             elif Z_ratio >= 10 ** 1.5:
-                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
+                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
                 cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
-                # cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
+                cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
+                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.LogFormatterSciNotation())
             else:
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
                 cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(100)))
-            print(Z_ratio)
+                cbar.ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
+                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
     else:
         cbar = None
@@ -441,13 +463,11 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-
-
     x = np.linspace(0, 1, 300)
     y = np.linspace(0, 1, 200)
     X, Y = np.meshgrid(x, y)
 
-    Z_ratio = 1
+    Z_ratio = 1.5
 
     Z = 10 ** (
             Z_ratio / 2 * np.cos(
@@ -455,7 +475,7 @@ if __name__ == '__main__':
     )
     )
 
-    fig, ax = plt.subplots(figsize=(6,6))
+    fig, ax = plt.subplots(figsize=(6, 6))
 
     try:
         from palettable.scientific.sequential import Hawaii_20
@@ -468,7 +488,7 @@ if __name__ == '__main__':
         X, Y, Z,
         z_log_scale=True,
         cmap=cmap,
-        # levels=10,
+        levels=10,
         colorbar_label="Colorbar label"
     )
     p.show_plot(
