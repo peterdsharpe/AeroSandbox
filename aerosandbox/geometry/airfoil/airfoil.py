@@ -821,7 +821,10 @@ class Airfoil(Polygon):
 
         return Airfoil(
             name=self.name,
-            coordinates=stack_coordinates(x, y)
+            coordinates=stack_coordinates(x, y),
+            CL_function=self.CL_function,
+            CD_function=self.CD_function,
+            CM_function=self.CM_function,
         )
 
     def add_control_surface(
