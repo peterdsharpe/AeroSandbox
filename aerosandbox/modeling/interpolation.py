@@ -123,6 +123,9 @@ class InterpolatedModel(SurrogateModel):
     def __call__(self, x):
         if isinstance(self.x_data_coordinates, dict):
             def get_shape(value):
+                if np.is_casadi_type(value, recursive=False):
+                    return (np.length(value),)
+
                 try:
                     return value.shape
                 except AttributeError:
