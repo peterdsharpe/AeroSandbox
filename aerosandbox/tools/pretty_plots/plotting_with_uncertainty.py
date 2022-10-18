@@ -75,7 +75,7 @@ def plot_with_bootstrapped_uncertainty(
             x=x_normalize(x),
             y=y_normalize(y),
             w=weights / y_normalize(y_stdev),
-            s=len(x) * y_normalize(y.max() - y.min()) ** 0.5,
+            s=len(x) * (y_normalize(y).max() - y_normalize(y).min()) ** 0.5,
             k=spline_degree,
             ext='extrapolate'
         )(x_normalize(x_fit)))
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
         x,
         y_noisy,
-        y_stdev=0.01 * np.std(y_noisy),
+        y_stdev=0.1 * np.std(y_noisy),
         label_line="Best Estimate",
         label_data="Data",
         label_ci="95% CI",
