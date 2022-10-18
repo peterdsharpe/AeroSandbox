@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+
 def plot_with_bootstrapped_uncertainty(
         x: np.ndarray,
         y: np.ndarray,
@@ -18,7 +19,9 @@ def plot_with_bootstrapped_uncertainty(
         n_bootstraps=2000,
         n_fit_points=300,
         spline_degree=3,
+        normalize=True,
 ):
+
     if not (ci > 0 and ci < 1):
         raise ValueError("Confidence interval `ci` should be in the range of (0, 1).")
 
@@ -30,8 +33,30 @@ def plot_with_bootstrapped_uncertainty(
     x = x[~isnan]
     y = y[~isnan]
 
+    ### Prepare for normalization
+    if normalize:
+        x_min = np.min(x)
+        x_rng = np.max(x) - x_min
+        y_min = np.min(y)
+        y_rng = np.max(y) - y_min
+
+        x_normalize = lambda xi: (xi - x_min) / x_rng
+        y_normalize = lambda yi: (yi - y_min) / y_rng
+        x_unnormalize = lambda xi: xi * x_rng + x_min
+        y_unnormalize = lambda yi: yi * y_rng + y_min
+
+    else:
+        x_normalize = lambda xi: xi
+        y_normalize = lambda yi: yi
+        x_unnormalize = lambda xi: xi
+        y_unnormalize = lambda yi: yi
+
     ### Prepare for the bootstrap
-    x_fit = np.linspace(x.min(), x.max(), n_fit_points)
+    x_fit = np.linspace(
+        np.min(x),
+        np.max(x),
+        n_fit_points
+    )
 
     y_bootstrap_fits = np.empty((n_bootstraps, len(x_fit)))
 
@@ -46,14 +71,14 @@ def plot_with_bootstrapped_uncertainty(
 
         weights = np.diff(np.sort(splits))
 
-        y_bootstrap_fits[i, :] = Spline(
-            x=x,
-            y=y,
-            w=weights,
-            s=len(x) * y_stdev,
+        y_bootstrap_fits[i, :] = y_unnormalize(Spline(
+            x=x_normalize(x),
+            y=y_normalize(y),
+            w=weights / y_normalize(y_stdev),
+            s=len(x) * y_normalize(y.max() - y.min()) ** 0.5,
             k=spline_degree,
             ext='extrapolate'
-        )(x_fit)
+        )(x_normalize(x_fit)))
 
     ### Compute a confidence interval using equal-tails method
     y_median_and_ci = np.nanquantile(
@@ -112,12 +137,14 @@ if __name__ == '__main__':
     y_true = np.abs(x - 5)  # np.sin(x)
     y_noisy = y_true + 0.1 * np.random.randn(len(x))
 
+    y_noisy *= 1e3
+
     ### Plot spline regression
     fig, ax = plt.subplots(dpi=300)
     x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
         x,
         y_noisy,
-        y_stdev=0.1,
+        y_stdev=0.01 * np.std(y_noisy),
         label_line="Best Estimate",
         label_data="Data",
         label_ci="95% CI",
