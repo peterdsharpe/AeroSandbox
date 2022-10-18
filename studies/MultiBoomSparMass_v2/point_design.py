@@ -1,5 +1,5 @@
 ### Imports
-from aerosandbox.structures.beams import *
+from aerosandbox.structures.legacy.beams import *
 import copy
 
 n_booms = 1

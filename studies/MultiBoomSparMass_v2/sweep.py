@@ -3,7 +3,7 @@ This script generates data used to estimate spar mass as a function of lift forc
 """
 
 ### Imports
-from aerosandbox.structures.beams import *
+from aerosandbox.structures.legacy.beams import *
 import copy
 
 ### Set up sweep variables
@@ -92,4 +92,3 @@ np.save("spar_masses", Spar_Masses)
 # Run a sanity check
 beam_sol.draw_bending()
 
-from fit import *

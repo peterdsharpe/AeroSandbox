@@ -1,4 +1,4 @@
-from aerosandbox.structures.beams import *
+from aerosandbox.structures.legacy.beams import *
 import matplotlib.pyplot as plt
 import seaborn as sns
 

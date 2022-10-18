@@ -3,8 +3,7 @@ This script generates data used to estimate spar mass as a function of lift forc
 """
 
 ### Imports
-from aerosandbox.structures.beams import *
-import scipy.io as sio
+from aerosandbox.structures.legacy.beams import *
 import copy
 
 ### Set up problem
