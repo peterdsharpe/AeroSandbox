@@ -378,7 +378,7 @@ def contour(
         }
 
         colorbar_kwargs = {
-            "norm" : mpl.colors.LogNorm(),
+            "norm": mpl.colors.LogNorm(),
             **colorbar_kwargs
         }
 
