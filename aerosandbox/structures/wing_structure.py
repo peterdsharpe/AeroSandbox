@@ -84,7 +84,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         if isinstance(thickness_function, Callable):
             thickness = thickness_function(y)
         elif thickness_function is None:
-            thickness = self.opti.variable(init_guess=1e-2, n_vars=N, lower_bound=diameter)
+            thickness = self.opti.variable(init_guess=1e-2, n_vars=N, lower_bound=0, upper_bound=diameter)
         else:
             thickness = thickness_function * np.ones_like(y)
 
@@ -209,11 +209,11 @@ if __name__ == '__main__':
         opti=opti,
         length=34,
         diameter_function=0.12,
-        thickness_function=opti.variable(
-            init_guess=1e-3,
-            n_vars=20,
-            lower_bound=0.
-        ),
+        # thickness_function=opti.variable(
+        #     init_guess=1e-3,
+        #     n_vars=20,
+        #     lower_bound=0.
+        # ),
         bending_distributed_force_function=lambda y: 200 * 9.81 / 34 * np.ones_like(y),
     )
     opti.subject_to([
