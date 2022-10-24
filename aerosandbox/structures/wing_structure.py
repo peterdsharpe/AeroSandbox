@@ -9,19 +9,147 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
     def __init__(self,
                  length: float,
                  diameter_function: Union[float, Callable[[np.ndarray], np.ndarray]] = None,
-                 thickness_function: Union[float, Callable[[np.ndarray], np.ndarray]] = None,
+                 wall_thickness_function: Union[float, Callable[[np.ndarray], np.ndarray]] = None,
                  bending_point_forces: Dict[float, float] = None,
                  bending_distributed_force_function: Union[float, Callable[[np.ndarray], np.ndarray]] = 0.,
                  points_per_point_load: int = 20,
                  elastic_modulus_function: Union[float, Callable[[np.ndarray], np.ndarray]] = 175e9,  # Pa
-                 ignore_buckling: bool = True,
                  EI_guess: float = None,
                  assume_thin_tube=True,
                  ):
+        """
+        A structural spar model that simulates bending of a cantilever tube spar based on beam theory (static,
+        linear elasticity). This tube spar is assumed to have uniform wall thickness in the azimuthal direction,
+        but not necessarily along its length. The diameter of the tube spar and elastic modulus may vary along its
+        length.
+
+        Governing equation is Euler-Bernoulli beam theory:
+
+        (E * I * u(y)'')'' = q(y)
+
+        where:
+            * y is the distance along the spar, with a cantilever support at y=0 and a free tip at y=length.
+            * E is the elastic modulus
+            * I is the bending moment of inertia
+            * u(y) is the local displacement at y.
+            * q(y) is the force-per-unit-length at y. (In other words, a dirac delta is a point load.)
+            * ()' is a derivative w.r.t. y.
+
+        Any applicable constraints relating to stress, buckling, ovalization, gauge limits, displacement, etc. should
+        be applied after initialization of this class.
+
+        Example:
+
+            >>> import aerosandbox as asb
+            >>> import aerosandbox.numpy as np
+            >>>
+            >>> opti = asb.Opti()
+            >>>
+            >>> beam = TubeSparBendingStructure(
+            >>>     opti=opti,
+            >>>     length=34,
+            >>>     diameter_function=0.12,
+            >>>     points_per_point_load=100,
+            >>>     bending_distributed_force_function=lambda y: 200 * 9.81 / 34 * np.ones_like(y),
+            >>> )
+            >>> opti.subject_to([
+            >>>     beam.stress_axial <= 500e6,
+            >>>     beam.u <= 3,
+            >>>     beam.wall_thickness > 1e-3
+            >>> ])
+            >>> mass = beam.volume() * 1600
+            >>>
+            >>> opti.minimize(mass / 100)
+            >>> sol = opti.solve()
+
+        Args:
+
+            length: Length of the spar [m]. Spar is assumed to go from y=0 (cantilever support) to y=length (free tip).
+
+            diameter_function: The diameter of the tube as a function of the distance along the spar y. Refers to the
+            nominal diameter (e.g. the arithmetic mean of the inner diameter and outer diameter of the tube; the
+            "centerline" diameter). In terms of data types, can be one of:
+
+                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
+                can freely vary along the length of the spar.
+
+                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
+                instance to this analysis), in which case it's interpreted as a design variable to optimize over
+                that's uniform along the length of the spar.
+
+                * a float, in which case it's interpreted as a uniform value along the spar
+
+                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
+                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
+
+            wall_thickness_function: The wall thickness of the tube as a function of the distance along the spar y. In
+            terms of data types, can be one of:
+
+                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
+                can freely vary along the length of the spar.
+
+                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
+                instance to this analysis), in which case it's interpreted as a design variable to optimize over
+                that's uniform along the length of the spar.
+
+                * a float, in which case it's interpreted as a uniform value along the spar
+
+                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
+                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
+
+            bending_point_forces: Not yet implemented; will allow for inclusion of point loads in the future.
+
+            bending_distributed_force_function: The (distributed) load per unit span applied to the spar,
+            as a function of the distance along the spar y. Should be in units of force per unit length. In terms of
+            data types, can be one of:
+
+                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
+                can freely vary along the length of the spar.
+
+                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
+                instance to this analysis), in which case it's interpreted as a design variable to optimize over
+                that's uniform along the length of the spar.
+
+                * a float, in which case it's interpreted as a uniform value along the spar
+
+                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
+                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
+
+            points_per_point_load: Controls the discretization resolution of the beam. [int] When point load support
+            is added, this will be the number of nodes between each individual point load.
+
+            elastic_modulus_function: The elastic modulus [Pa] of the spar as a function of the distance along the
+            spar y. In terms of data types, can be one of:
+
+                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
+                can freely vary along the length of the spar.
+
+                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
+                instance to this analysis), in which case it's interpreted as a design variable to optimize over
+                that's uniform along the length of the spar.
+
+                * a float, in which case it's interpreted as a uniform value along the spar
+
+                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
+                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
+
+            EI_guess: Provides an initial guess for the bending stiffness EI, which is used in problems where spar
+            diameter and thickness is not known at the outset. If not provided, a heuristic will be used to calculate this.
+
+            assume_thin_tube: Makes assumptions that are applicable in the limit of a thin-walled (thickness <<
+            diameter) tube. This greatly increases numerical stability.
+
+                Relative error of this assumption in the thin-walled limit is:
+
+                    (wall_thickness / diameter) ^ 2
+
+                So, for t/d = 0.1, the relative error is roughly 1%.
+
+        """
         ### Parse the inputs
         self.length = length
         self.diameter_function = diameter_function
-        self.thickness_function = thickness_function
+        self.wall_thickness_function = wall_thickness_function
 
         if bending_point_forces is not None:
             self.bending_point_forces = bending_point_forces
@@ -32,7 +160,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.bending_distributed_force_function = bending_distributed_force_function
         self.points_per_point_load = points_per_point_load
         self.elastic_modulus_function = elastic_modulus_function
-        self.ignore_buckling = ignore_buckling
 
         if EI_guess is None:
             try:
@@ -41,9 +168,9 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 diameter_guess = 1
 
             try:
-                thickness_guess = float(thickness_function)
+                wall_thickness_guess = float(wall_thickness_function)
             except (TypeError, RuntimeError):
-                thickness_guess = 0.01
+                wall_thickness_guess = 0.01
 
             try:
                 E_guess = float(elastic_modulus_function)
@@ -51,17 +178,19 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 E_guess = 175e9
 
             if assume_thin_tube:
-                I_guess = np.pi / 8 * diameter_guess ** 3 * thickness_guess
+                I_guess = np.pi / 8 * diameter_guess ** 3 * wall_thickness_guess
             else:
                 I_guess = np.pi / 64 * (
-                        (diameter_guess + thickness_guess) ** 4 -
-                        (diameter_guess - thickness_guess) ** 4
+                        (diameter_guess + wall_thickness_guess) ** 4 -
+                        (diameter_guess - wall_thickness_guess) ** 4
                 )
             EI_guess = E_guess * I_guess
 
             # EI_guess *= 1e0  # A very high EI guess is numerically stabilizing
 
         self.EI_guess = EI_guess
+
+        self.assume_thin_tube = assume_thin_tube
 
         ### Discretize
         y = np.linspace(
@@ -81,12 +210,12 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         else:
             diameter = diameter_function * np.ones_like(y)
 
-        if isinstance(thickness_function, Callable):
-            thickness = thickness_function(y)
-        elif thickness_function is None:
-            thickness = self.opti.variable(init_guess=1e-2, n_vars=N, lower_bound=0, upper_bound=diameter)
+        if isinstance(wall_thickness_function, Callable):
+            wall_thickness = wall_thickness_function(y)
+        elif wall_thickness_function is None:
+            wall_thickness = self.opti.variable(init_guess=1e-2, n_vars=N, lower_bound=0, upper_bound=diameter)
         else:
-            thickness = thickness_function * np.ones_like(y)
+            wall_thickness = wall_thickness_function * np.ones_like(y)
 
         if isinstance(bending_distributed_force_function, Callable):
             distributed_force = bending_distributed_force_function(y)
@@ -100,11 +229,11 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
 
         ### Evaluate the beam properties
         if assume_thin_tube:
-            I = np.pi / 8 * diameter ** 3 * thickness
+            I = np.pi / 8 * diameter ** 3 * wall_thickness
         else:
             I = np.pi / 64 * (
-                    (diameter + thickness) ** 4 -
-                    (diameter - thickness) ** 4
+                    (diameter + wall_thickness) ** 4 -
+                    (diameter - wall_thickness) ** 4
             )
         EI = elastic_modulus * I
 
@@ -143,11 +272,11 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         bending_moment = -EI * ddu
         shear_force = -dEIddu
 
-        stress_axial = elastic_modulus * ddu * (diameter + thickness) / 2
+        stress_axial = elastic_modulus * ddu * (diameter + wall_thickness) / 2
 
         self.y = y
         self.diameter = diameter
-        self.thickness = thickness
+        self.wall_thickness = wall_thickness
         self.distributed_force = distributed_force
         self.elastic_modulus = elastic_modulus
         self.I = I
@@ -160,12 +289,19 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.stress_axial = stress_axial
 
     def volume(self):
-        return np.sum(
-            np.pi / 4 * np.trapz(
-                (self.diameter + self.thickness) ** 2 -
-                (self.diameter - self.thickness) ** 2
-            ) * np.diff(self.y)
-        )
+        if self.assume_thin_tube:
+            return np.sum(
+                np.pi * np.trapz(
+                    self.diameter * self.wall_thickness
+                ) * np.diff(self.y)
+            )
+        else:
+            return np.sum(
+                np.pi / 4 * np.trapz(
+                    (self.diameter + self.wall_thickness) ** 2 -
+                    (self.diameter - self.wall_thickness) ** 2
+                ) * np.diff(self.y)
+            )
 
     def draw(self):
         import matplotlib.pyplot as plt
@@ -178,7 +314,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             "Axial Stress [MPa]"            : self.stress_axial / 1e6,
             "Bending $EI$ [N $\cdot$ m$^2$]": self.elastic_modulus * self.I,
             "Tube Diameter [m]"             : self.diameter,
-            "Wall Thickness [m]"            : self.thickness,
+            "Wall Thickness [m]"            : self.wall_thickness,
         }
 
         fig, ax = plt.subplots(2, 3, figsize=(8, 6), sharex='all')
@@ -188,7 +324,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             plt.plot(
                 self.y,
                 v,
-                ".-"
+                # ".-"
             )
             plt.ylabel(k)
             plt.xlim(
@@ -205,25 +341,27 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
 if __name__ == '__main__':
     opti = asb.Opti()
 
+    span = 34
+    half_span = span / 2
+    lift = 200 * 9.81
+
     beam = TubeSparBendingStructure(
         opti=opti,
-        length=34,
+        length=half_span,
         diameter_function=0.12,
-        # thickness_function=opti.variable(
-        #     init_guess=1e-3,
-        #     n_vars=20,
-        #     lower_bound=0.
-        # ),
-        bending_distributed_force_function=lambda y: 200 * 9.81 / 34 * np.ones_like(y),
+        points_per_point_load=100,
+        bending_distributed_force_function=lambda y: (lift / span) * (4 / np.pi * (1 - (y/half_span) ** 2) ** 0.5), # Elliptical
+        # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform
     )
     opti.subject_to([
-        beam.stress_axial <= 500e6,
-        beam.u <= 3,
-        beam.thickness > 1e-3
+        beam.stress_axial <= 500e6, # Stress constraint
+        beam.u[-1] <= 3, # Tip displacement constraint
+        beam.wall_thickness > 1e-3 # Gauge constraint
     ])
     mass = beam.volume() * 1600
 
     opti.minimize(mass / 100)
+    sol = opti.solve()
 
     try:
         sol = opti.solve()
