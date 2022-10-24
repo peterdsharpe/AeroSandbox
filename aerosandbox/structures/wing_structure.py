@@ -40,27 +40,37 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
 
         Example:
 
-            >>> import aerosandbox as asb
-            >>> import aerosandbox.numpy as np
-            >>>
             >>> opti = asb.Opti()
+            >>>
+            >>> span = 34
+            >>> half_span = span / 2
+            >>> lift = 200 * 9.81
             >>>
             >>> beam = TubeSparBendingStructure(
             >>>     opti=opti,
-            >>>     length=34,
+            >>>     length=half_span,
             >>>     diameter_function=0.12,
             >>>     points_per_point_load=100,
-            >>>     bending_distributed_force_function=lambda y: 200 * 9.81 / 34 * np.ones_like(y),
+            >>>     bending_distributed_force_function=lambda y: (lift / span) * (
+            >>>             4 / np.pi * (1 - (y / half_span) ** 2) ** 0.5
+            >>>     ),  # Elliptical
+            >>>     # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform
             >>> )
             >>> opti.subject_to([
-            >>>     beam.stress_axial <= 500e6,
-            >>>     beam.u <= 3,
-            >>>     beam.wall_thickness > 1e-3
+            >>>     beam.stress_axial <= 500e6,  # Stress constraint
+            >>>     beam.u[-1] <= 3,  # Tip displacement constraint
+            >>>     beam.wall_thickness > 1e-3  # Gauge constraint
             >>> ])
-            >>> mass = beam.volume() * 1600
+            >>> mass = beam.volume() * 1600  # Density of carbon fiber [kg/m^3]
             >>>
             >>> opti.minimize(mass / 100)
             >>> sol = opti.solve()
+            >>>
+            >>> beam.substitute_solution(sol)
+            >>>
+            >>> print(f"{sol.value(mass)} kg")
+            >>>
+            >>> beam.draw()
 
         Args:
 
@@ -303,6 +313,16 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 ) * np.diff(self.y)
             )
 
+    def total_force(self):
+        if len(self.bending_point_forces) != 0:
+            raise NotImplementedError
+
+        return np.sum(
+            np.trapz(
+                self.distributed_force
+            ) * np.diff(self.y)
+        )
+
     def draw(self):
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
@@ -350,23 +370,21 @@ if __name__ == '__main__':
         length=half_span,
         diameter_function=0.12,
         points_per_point_load=100,
-        bending_distributed_force_function=lambda y: (lift / span) * (4 / np.pi * (1 - (y/half_span) ** 2) ** 0.5), # Elliptical
+        bending_distributed_force_function=lambda y: (lift / span) * (
+                4 / np.pi * (1 - (y / half_span) ** 2) ** 0.5
+        ),  # Elliptical
         # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform
     )
     opti.subject_to([
-        beam.stress_axial <= 500e6, # Stress constraint
-        beam.u[-1] <= 3, # Tip displacement constraint
-        beam.wall_thickness > 1e-3 # Gauge constraint
+        beam.stress_axial <= 500e6,  # Stress constraint
+        beam.u[-1] <= 3,  # Tip displacement constraint
+        beam.wall_thickness > 1e-3  # Gauge constraint
     ])
-    mass = beam.volume() * 1600
+    mass = beam.volume() * 1600  # Density of carbon fiber [kg/m^3]
 
     opti.minimize(mass / 100)
     sol = opti.solve()
 
-    try:
-        sol = opti.solve()
-    except RuntimeError:
-        sol = opti.debug
     beam.substitute_solution(sol)
 
     print(f"{sol.value(mass)} kg")
