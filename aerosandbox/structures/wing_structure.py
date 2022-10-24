@@ -14,7 +14,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                  bending_distributed_force_function: Union[float, Callable[[np.ndarray], np.ndarray]] = 0.,
                  points_per_point_load: int = 20,
                  elastic_modulus_function: Union[float, Callable[[np.ndarray], np.ndarray]] = 175e9,  # Pa
-                 allowable_stress_function: Union[float, Callable[[np.ndarray], np.ndarray]] = 925e6 / 3,  # Pa
                  ignore_buckling: bool = True,
                  EI_guess: float = None,
                  assume_thin_tube=True,
@@ -33,7 +32,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.bending_distributed_force_function = bending_distributed_force_function
         self.points_per_point_load = points_per_point_load
         self.elastic_modulus_function = elastic_modulus_function
-        self.allowable_stress_function = allowable_stress_function
         self.ignore_buckling = ignore_buckling
 
         if EI_guess is None:
@@ -86,7 +84,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         if isinstance(thickness_function, Callable):
             thickness = thickness_function(y)
         elif thickness_function is None:
-            thickness = self.opti.variable(init_guess=1e-3, n_vars=N, lower_bound=1.001 * diameter)
+            thickness = self.opti.variable(init_guess=1e-2, n_vars=N, lower_bound=diameter)
         else:
             thickness = thickness_function * np.ones_like(y)
 
@@ -99,11 +97,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             elastic_modulus = elastic_modulus_function(y)
         else:
             elastic_modulus = elastic_modulus_function * np.ones_like(y)
-
-        if isinstance(allowable_stress_function, Callable):
-            allowable_stress = allowable_stress_function(y)
-        else:
-            allowable_stress = allowable_stress_function * np.ones_like(y)
 
         ### Evaluate the beam properties
         if assume_thin_tube:
@@ -155,6 +148,9 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.y = y
         self.diameter = diameter
         self.thickness = thickness
+        self.distributed_force = distributed_force
+        self.elastic_modulus = elastic_modulus
+        self.I = I
         self.u = u
         self.du = du
         self.ddu = ddu
@@ -171,6 +167,40 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             ) * np.diff(self.y)
         )
 
+    def draw(self):
+        import matplotlib.pyplot as plt
+        import aerosandbox.tools.pretty_plots as p
+
+        plot_quantities = {
+            "Displacement [m]"              : self.u,
+            # "Local Slope [deg]": np.arctan2d(self.du, 1),
+            "Local Load [N/m]"              : self.distributed_force,
+            "Axial Stress [MPa]"            : self.stress_axial / 1e6,
+            "Bending $EI$ [N $\cdot$ m$^2$]": self.elastic_modulus * self.I,
+            "Tube Diameter [m]"             : self.diameter,
+            "Wall Thickness [m]"            : self.thickness,
+        }
+
+        fig, ax = plt.subplots(2, 3, figsize=(8, 6), sharex='all')
+
+        for i, (k, v) in enumerate(plot_quantities.items()):
+            plt.sca(ax.flatten()[i])
+            plt.plot(
+                self.y,
+                v,
+                ".-"
+            )
+            plt.ylabel(k)
+            plt.xlim(
+                np.min(self.y),
+                np.max(self.y),
+            )
+
+        for a in ax[-1, :]:
+            a.set_xlabel(r"$y$ [m]")
+
+        p.show_plot()
+
 
 if __name__ == '__main__':
     opti = asb.Opti()
@@ -178,8 +208,7 @@ if __name__ == '__main__':
     beam = TubeSparBendingStructure(
         opti=opti,
         length=34,
-        diameter_function=0.1,
-        # thickness_function=1e-3,
+        diameter_function=0.12,
         thickness_function=opti.variable(
             init_guess=1e-3,
             n_vars=20,
@@ -187,11 +216,21 @@ if __name__ == '__main__':
         ),
         bending_distributed_force_function=lambda y: 200 * 9.81 / 34 * np.ones_like(y),
     )
-    opti.subject_to(beam.stress_axial <= 500e6)
-    opti.minimize(beam.volume())
+    opti.subject_to([
+        beam.stress_axial <= 500e6,
+        beam.u <= 3,
+        beam.thickness > 1e-3
+    ])
+    mass = beam.volume() * 1600
+
+    opti.minimize(mass / 100)
 
     try:
         sol = opti.solve()
     except RuntimeError:
         sol = opti.debug
     beam.substitute_solution(sol)
+
+    print(f"{sol.value(mass)} kg")
+
+    beam.draw()
