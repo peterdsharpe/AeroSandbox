@@ -136,7 +136,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             EI_guess: Provides an initial guess for the bending stiffness EI, which is used in problems where spar
             diameter and thickness is not known at the outset. If not provided, a heuristic will be used to calculate this.
 
-            assume_thin_tube: Makes assumptions that are applicable in the limit of a thin-walled (thickness <<
+            assume_thin_tube: Makes assumptions that are applicable in the limit of a thin-walled (wall_thickness <<
             diameter) tube. This greatly increases numerical stability.
 
                 Relative error of this assumption in the thin-walled limit is:
