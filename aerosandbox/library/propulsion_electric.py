@@ -208,7 +208,7 @@ def mass_wires(
     elif material == "silver":  # worse specific conductivity than aluminum, expensive
         density = 10490  # kg/m^3
         resistivity = 15.87e-9  # ohm-meters
-    elif material == "gold":  # worse specific conductivity than aluminum, expensive
+    elif material == "gold":  # worse specific conductivity than aluminum, very expensive
         density = 19300  # kg/m^3
         resistivity = 22.14e-9  # ohm-meters
     elif material == "iron":  # worse specific conductivity than aluminum
