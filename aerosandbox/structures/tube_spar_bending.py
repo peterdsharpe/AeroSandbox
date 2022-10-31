@@ -323,7 +323,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             ) * np.diff(self.y)
         )
 
-    def draw(self):
+    def draw(self, show=True):
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
@@ -355,38 +355,52 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         for a in ax[-1, :]:
             a.set_xlabel(r"$y$ [m]")
 
-        p.show_plot()
+        if show:
+            p.show_plot("Tube Spar Bending Structure")
 
 
 if __name__ == '__main__':
+    import aerosandbox.tools.units as u
+
     opti = asb.Opti()
 
-    span = 34
+    span = 112 * u.foot
+    lift = 229 * u.lbm * 9.81
     half_span = span / 2
-    lift = 200 * 9.81
 
     beam = TubeSparBendingStructure(
         opti=opti,
         length=half_span,
-        diameter_function=0.12,
+        diameter_function=3.5 * u.inch,  # lambda y: (3.5 * u.inch) - (3.5 - 1.25) * u.inch * (y / half_span),
         points_per_point_load=100,
         bending_distributed_force_function=lambda y: (lift / span) * (
                 4 / np.pi * (1 - (y / half_span) ** 2) ** 0.5
         ),  # Elliptical
-        # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform
+        # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform,
+        elastic_modulus_function=228e9,
     )
     opti.subject_to([
         beam.stress_axial <= 500e6,  # Stress constraint
-        beam.u[-1] <= 3,  # Tip displacement constraint
-        beam.wall_thickness > 1e-3  # Gauge constraint
+        beam.u[-1] <= 2,  # Tip displacement constraint
+        beam.wall_thickness > 0.1e-3  # Gauge constraint
     ])
     mass = beam.volume() * 1600  # Density of carbon fiber [kg/m^3]
 
-    opti.minimize(mass / 100)
+    opti.minimize(mass / (lift / 9.81))
     sol = opti.solve()
 
     beam.substitute_solution(sol)
 
-    print(f"{sol.value(mass)} kg")
+    print(f"{sol.value(mass)} kg per half-wing")
 
     beam.draw()
+
+    computed_spar_mass = 2 * sol.value(mass)
+
+    vehicle_mass = lift / 9.81
+    ultimate_load_factor = 2
+
+    cruz_estimated_spar_mass = (
+            (span * 1.17e-1 + span ** 2 * 1.10e-2) *
+            (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+    )
