@@ -120,13 +120,17 @@ if __name__ == '__main__':
     }
     data["Other"] = 597678511 - np.sum(np.array(list(data.values())))
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(9, 5))
     pie(
         values=list(data.values()),
         names=list(data.keys()),
-        label_format=lambda name, value, percentage: f"{name}, {value / 1e6:.0f}M ({percentage:.0f}%)",
+        colors=[
+            p.palettes["categorical"][0] if s in ["USA"] else "gray"
+            for s in data.keys()
+        ],
+        label_format=lambda name, value, percentage: f"{name}, {eng_string(value)} ({percentage:.0f}%)",
         startangle=40,
-        center_text="Population of\nNorth America\n(2021)"
+        center_text="USA is a Majority\nof North America's\nPopulation"
     )
     p.show_plot(
 
