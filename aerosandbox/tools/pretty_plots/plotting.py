@@ -324,8 +324,6 @@ def contour(
         Z = args[2]
     else:
         raise bad_signature_error
-    if not len(Z.shape) == 2:
-        raise ValueError(f"Z must be a 2D array; instead, got shape {Z.shape}.")
     if X is None:
         X = np.arange(Z.shape[1])
     if Y is None:
