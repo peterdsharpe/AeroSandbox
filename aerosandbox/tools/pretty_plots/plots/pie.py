@@ -130,7 +130,7 @@ if __name__ == '__main__':
         ],
         label_format=lambda name, value, percentage: f"{name}, {eng_string(value)} ({percentage:.0f}%)",
         startangle=40,
-        center_text="USA is a Majority\nof North America's\nPopulation"
+        center_text="Majority of North\nAmerica's Population\nlives in USA"
     )
     p.show_plot(
 
