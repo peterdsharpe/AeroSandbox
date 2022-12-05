@@ -25,23 +25,6 @@ class AeroBuildup(ExplicitAnalysis):
 
     """
     default_analysis_specific_options = {
-        Airplane: dict(),
-        Wing    : dict(
-            additional_CL=0,
-            additional_CD=0,
-            additional_CM=0,
-            additional_L=0,
-            additional_D=0,
-            additional_M=0,
-        ),
-        WingXSec: dict(
-            additional_CL=0,
-            additional_CD=0,
-            additional_CM=0,
-            additional_L=0,
-            additional_D=0,
-            additional_M=0,
-        ),
         Fuselage: dict(
             E_wave_drag=2.5,  # Wave drag efficiency factor
 
@@ -58,13 +41,6 @@ class AeroBuildup(ExplicitAnalysis):
             nose_fineness_ratio=3,  # Fineness ratio (length / diameter) of the nose section of the fuselage.
 
             # Impacts wave drag calculations, among other things.
-
-            additional_CL=0,
-            additional_CD=0,
-            additional_CM=0,
-            additional_L=0,
-            additional_D=0,
-            additional_M=0,
         ),
     }
 
@@ -166,18 +142,26 @@ class AeroBuildup(ExplicitAnalysis):
                 else:
                     aero_total[k] = aero_total[k] + aero_component[k]
 
-        ##### Add nondimensional forces, and nondimensional quantities.
+        ##### Compute dimensionalization factor
         if self.airplane.s_ref is not None:
             qS = self.op_point.dynamic_pressure() * self.airplane.s_ref
+            c = self.airplane.c_ref
+            b = self.airplane.b_ref
+        else:
+            raise ValueError(
+                "Airplane must have a reference area and length attributes.\n"
+                "(`Airplane.s_ref`, `Airplane.c_ref`, `airplane.b_ref`)"
+            )
 
-            aero_total["CL"] = aero_total["L"] / qS
-            aero_total["CY"] = aero_total["Y"] / qS
-            aero_total["CD"] = aero_total["D"] / qS
-            aero_total["Cl"] = aero_total["l_b"] / qS / self.airplane.b_ref
-            aero_total["Cm"] = aero_total["m_b"] / qS / self.airplane.c_ref
-            aero_total["Cn"] = aero_total["n_b"] / qS / self.airplane.b_ref
+        ##### Add nondimensional forces, and nondimensional quantities.
+        aero_total["CL"] = aero_total["L"] / qS
+        aero_total["CY"] = aero_total["Y"] / qS
+        aero_total["CD"] = aero_total["D"] / qS
+        aero_total["Cl"] = aero_total["l_b"] / qS / b
+        aero_total["Cm"] = aero_total["m_b"] / qS / c
+        aero_total["Cn"] = aero_total["n_b"] / qS / b
 
-            self.output = aero_total
+        self.output = aero_total
 
         return aero_total
 
