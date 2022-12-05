@@ -129,11 +129,19 @@ class Wing(AeroSandboxObject):
              ) -> float:
         """
         Returns the span, with options for various ways of measuring this.
+
          * wetted: Adds up YZ-distances of each section piece by piece
+
          * y: Adds up the Y-distances of each section piece by piece
+
          * z: Adds up the Z-distances of each section piece by piece
+
          * y-full: Y-distance between the XZ plane and the tip of the wing. (Can't be used with _sectional).
-        If symmetric, this is doubled left/right to obtain the full span.
+
+        If symmetric, this is doubled left/right to obtain the full span. With symmetric wings, note that if the root
+        cross-section is not coincident with the centerline, the fictitious span connecting the left and right root
+        cross-sections is not included. The only exception to this is the "y-full" option, which computes the span to
+        the XZ plane (hence, including the center part).
 
         Args:
             type: One of the above options, as a string.
@@ -199,12 +207,17 @@ class Wing(AeroSandboxObject):
     def area(self,
              type: str = "wetted",
              _sectional: bool = False,
-             ) -> float:
+             ) -> Union[float, List[float]]:
         """
-        Returns the area, with options for various ways of measuring this.
+        Computes the wing area, with options for various ways of measuring this.
+
          * wetted: wetted area
+
          * projected: area projected onto the XY plane (top-down view)
-        If symmetric, this is doubled left/right to obtain the full wing area.
+
+        If symmetric, this area is doubled left/right to obtain the full wing area. With symmetric wings, note that if the
+        root cross-section is not coincident with the centerline, the fictitious area connecting the left and right
+        root cross-sections is not included.
 
         Args:
             type: One of the above options, as a string.
@@ -464,8 +477,8 @@ class Wing(AeroSandboxObject):
 
         airfoil_nondim_coordinates = np.array([
             xsec.airfoil
-                .repanel(n_points_per_side=chordwise_resolution + 1)
-                .coordinates
+            .repanel(n_points_per_side=chordwise_resolution + 1)
+            .coordinates
             for xsec in self.xsecs
         ])
 
