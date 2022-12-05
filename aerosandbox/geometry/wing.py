@@ -277,9 +277,9 @@ class Wing(AeroSandboxObject):
             return self.span() ** 2 / self.area()
 
         elif type == "effective":
-            effective_span = wing.span() + 0.5 * self.xsecs[0].xyz_le[1]
+            effective_span = self.span() + 0.5 * self.xsecs[0].xyz_le[1]
 
-            effective_area = wing.area() + 0.5 * self.xsecs[0].xyz_le[1] * self.xsecs[0].chord
+            effective_area = self.area() + 0.5 * self.xsecs[0].xyz_le[1] * self.xsecs[0].chord
 
             return effective_span ** 2 / effective_area
 
