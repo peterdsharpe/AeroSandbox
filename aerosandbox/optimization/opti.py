@@ -31,7 +31,7 @@ class Opti(cas.Opti):
                  load_frozen_variables_from_cache: bool = False,
                  save_to_cache_on_solve: bool = False,
                  ignore_violated_parametric_constraints: bool = False,
-                 freeze_style: str = "float",
+                 freeze_style: str = "parameter",
                  ):  # TODO document
 
         # Default arguments
