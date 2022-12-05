@@ -643,7 +643,9 @@ class Opti(cas.Opti):
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
         if index >= self._variable_index_counter:
-            raise ValueError(f"The variable index exceeds the number of declared variables ({self._variable_index_counter})!")
+            raise ValueError(
+                f"The variable index exceeds the number of declared variables ({self._variable_index_counter})!"
+            )
 
         index_of_first_element = self._variable_declarations.iloc[self._variable_declarations.bisect_right(index) - 1]
 
@@ -675,9 +677,13 @@ class Opti(cas.Opti):
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
         if index >= self._constraint_index_counter:
-            raise ValueError(f"The constraint index exceeds the number of declared constraints ({self._constraint_index_counter})!")
+            raise ValueError(
+                f"The constraint index exceeds the number of declared constraints ({self._constraint_index_counter})!"
+            )
 
-        index_of_first_element = self._constraint_declarations.iloc[self._constraint_declarations.bisect_right(index) - 1]
+        index_of_first_element = self._constraint_declarations.iloc[
+            self._constraint_declarations.bisect_right(index) - 1
+            ]
 
         filename, lineno, code_context, n_cons = self._constraint_declarations[index_of_first_element]
         source = inspect_tools.get_source_code_from_location(
