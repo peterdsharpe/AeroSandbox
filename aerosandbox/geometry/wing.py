@@ -258,10 +258,33 @@ class Wing(AeroSandboxObject):
 
         return area
 
-    def aspect_ratio(self) -> float:
-        # Returns the aspect ratio (b^2/S).
-        # Uses the full span and the full area if symmetric.
-        return self.span() ** 2 / self.area()
+    def aspect_ratio(self,
+                     type: str = "geometric",
+                     ) -> float:
+        """
+        Computes the aspect ratio of the wing, with options for various ways of measuring this.
+
+         * geometric: geometric aspect ratio, computed in the typical fashion (b^2 / S).
+
+         * effective: Differs from the geometric aspect ratio only in the case of symmetric wings whose root
+         cross-section is not on the centerline. In these cases, it counts 50% of the fictitious span as wing span
+
+        Args:
+            type: One of the above options, as a string.
+
+        """
+        if type == "geometric":
+            return self.span() ** 2 / self.area()
+
+        elif type == "effective":
+            effective_span = wing.span() + 0.5 * self.xsecs[0].xyz_le[1]
+
+            effective_area = wing.area() + 0.5 * self.xsecs[0].xyz_le[1] * self.xsecs[0].chord
+
+            return effective_span ** 2 / effective_area
+
+        else:
+            raise ValueError("Bad value of `type`!")
 
     def is_entirely_symmetric(self) -> bool:
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has symmetric control surfaces.
