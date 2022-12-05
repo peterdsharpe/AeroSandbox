@@ -287,7 +287,7 @@ class AeroBuildup(ExplicitAnalysis):
 
         def compute_section_aerodynamics(
                 sect_id: int,
-                mirror_across_XZ=False
+                mirror_across_XZ:bool=False
         ):
             """
             Computes the forces and moments about self.xyz_ref on a given wing section.
