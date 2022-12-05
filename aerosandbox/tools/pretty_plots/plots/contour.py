@@ -5,12 +5,13 @@ from typing import Tuple, Dict, Union, Callable, List
 from scipy import interpolate
 from aerosandbox.tools.string_formatting import eng_string
 
+
 def contour(
         *args,
         levels: Union[int, List, np.ndarray] = 31,
         colorbar: bool = True,
         linelabels: bool = True,
-        cmap=mpl.cm.get_cmap('viridis'),
+        cmap=None,
         alpha: float = 0.7,
         extend: str = "neither",
         linecolor="k",
@@ -103,6 +104,8 @@ def contour(
         Y = np.arange(Z.shape[0])
 
     ### Set defaults
+    if cmap is None:
+        cmap = mpl.colormaps.get_cmap('viridis')
     if contour_kwargs is None:
         contour_kwargs = {}
     if contourf_kwargs is None:
