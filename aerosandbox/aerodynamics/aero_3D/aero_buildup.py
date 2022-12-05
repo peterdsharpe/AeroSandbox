@@ -441,9 +441,13 @@ class AeroBuildup(ExplicitAnalysis):
             xsec_a_Cdp = xsec_a.airfoil.CD_function(**xsec_a_args)
             xsec_b_Cdp = xsec_b.airfoil.CD_function(**xsec_b_args)
             sect_CDp = (
-                    xsec_a_Cdp * a_weight +
-                    xsec_b_Cdp * b_weight
-            ) * (1 + 0.2 / AR_geometric) # accounts for extra form factor of tip area, and 3D effects (crossflow trips)
+                    (
+                            xsec_a_Cdp * a_weight +
+                            xsec_b_Cdp * b_weight
+                    ) *
+                    (1 + 0.2 / AR_geometric * np.cosd(alpha_generalized_effective) ** 2)
+                # accounts for extra form factor of tip area, and 3D effects (crossflow trips)
+            )
 
             ##### Compute sectional moment at cross sections using lookup functions. Merge them linearly to get section CM.
             xsec_a_Cm = xsec_a.airfoil.CM_function(**xsec_a_args)
