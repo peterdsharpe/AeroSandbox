@@ -71,7 +71,7 @@ class AeroBuildup(ExplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
-                 xyz_ref: List[float] = None,
+                 xyz_ref: Union[np.ndarray, List[float]] = None,
                  include_wave_drag: bool = True,
                  ):
         super().__init__()
@@ -386,7 +386,7 @@ class AeroBuildup(ExplicitAnalysis):
             Re_a = op_point.reynolds(xsec_a.chord)
             Re_b = op_point.reynolds(xsec_b.chord)
 
-            ##### Compute sectional lift at cross sections using lookup functions. Merge them linearly to get section CL.
+            ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
             xsec_a_args = dict(
                 alpha=alpha_generalized,
                 Re=Re_a,
@@ -598,9 +598,9 @@ class AeroBuildup(ExplicitAnalysis):
 
             def soft_norm(xyz):
                 return (
-                               sum([comp ** 2 for comp in xyz])
-                               + 1e-100  # Keeps the derivative from exploding
-                       ) ** 0.5
+                        sum([comp ** 2 for comp in xyz])
+                        + 1e-100  # Keeps the derivative from exploding
+                ) ** 0.5
 
             generalized_alpha = 2 * np.arctan2d(
                 soft_norm([vel_direction_g[i] - xg_local[i] for i in range(3)]),
