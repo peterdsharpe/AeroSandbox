@@ -251,8 +251,12 @@ class Opti(cas.Opti):
         try:
             init_guess = self.value(init_guess)
         except RuntimeError as e:
-            raise TypeError(
-                "The `init_guess` for a new Opti variable must not be a function of an existing Opti variable.")
+            if not (
+                    freeze and self.freeze_style == "float"
+            ):
+                raise TypeError(
+                    "The `init_guess` for a new Opti variable must not be a function of an existing Opti variable."
+                )
 
         # Validate the inputs
         if log_transform:
