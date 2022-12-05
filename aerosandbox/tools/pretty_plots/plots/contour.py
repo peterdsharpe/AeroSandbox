@@ -196,6 +196,7 @@ def contour(
         from matplotlib import cm
 
         cbar = plt.colorbar(
+            ax=contf.axes,
             mappable=cm.ScalarMappable(
                 norm=contf.norm,
                 cmap=contf.cmap,
