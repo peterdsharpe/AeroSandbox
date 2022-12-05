@@ -216,7 +216,7 @@ class Airfoil(Polygon):
         if unstructured_interpolated_model_kwargs is None:
             unstructured_interpolated_model_kwargs = {}
 
-        xfoil_kwargs = {  # See asb.XFoil for documentation on these.
+        xfoil_kwargs = {  # See asb.XFoil for the documentation on these.
             "verbose"      : False,
             "max_iter"     : 20,
             "xfoil_repanel": True,
@@ -235,7 +235,7 @@ class Airfoil(Polygon):
             **unstructured_interpolated_model_kwargs
         }
 
-        ### Retrieve XFoil Polar Data from cache, if it exists.
+        ### Retrieve XFoil Polar Data from the cache, if it exists.
         data = None
         if cache_filename is not None:
             try:
@@ -387,9 +387,9 @@ class Airfoil(Polygon):
                 "alpha": alpha,
                 "ln_Re": np.log(Re),
             })
-            CL_separated = CL_separated_interpolator(alpha)
+            CL_separated = CL_separated_interpolator(alpha)  # Lift coefficient if separated
 
-            CL_mach_0 = np.blend(
+            CL_mach_0 = np.blend(  # Lift coefficient at mach = 0
                 separation_parameter(alpha, Re),
                 CL_separated,
                 CL_attached
