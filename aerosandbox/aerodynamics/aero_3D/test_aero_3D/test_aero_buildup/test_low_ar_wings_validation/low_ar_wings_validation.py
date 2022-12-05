@@ -1,7 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
-AR = 2
+AR = 1
 taper = 0.1
 
 af = asb.Airfoil("naca0010")
@@ -37,7 +37,7 @@ airplane = asb.Airplane(
     wings=[wing]
 )
 
-alphas = np.linspace(0, 90, 300)
+alphas = np.linspace(0, 90, 500)
 
 op_point = asb.OperatingPoint(
     atmosphere=asb.Atmosphere(altitude=0),
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         filename="data/wpd_datasets.csv"
     )
 
-    polhamus_data_AR = polhamus_data['2.0']
+    polhamus_data_AR = polhamus_data[f'{AR:.1f}']
 
     plt.plot(
         polhamus_data_AR[:, 0],
@@ -76,11 +76,13 @@ if __name__ == '__main__':
         ".",
         label="Experiment (Polhamus)"
     )
+    plt.xlim(alphas.min(), alphas.max())
+    plt.ylim(0, 1.5)
 
     p.set_ticks(10, 2, 0.1, 0.05)
 
     p.show_plot(
-        r"AeroBuildup for Low-Aspect-Ratio, Swept Wings",
+        f"AeroBuildup for Low-Aspect-Ratio, Swept Wings\n$AR={AR:.1f}$",
         r"Angle of Attack $\alpha$ [deg]",
         r"Lift Coefficient $C_L$ [-]"
     )

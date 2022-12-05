@@ -263,31 +263,41 @@ class AeroBuildup(ExplicitAnalysis):
         """
         ##### Alias a few things for convenience
         op_point = self.op_point
-        wing_options = self.get_options(wing)
+        # wing_options = self.get_options(wing) # currently no wing options
 
         ##### Compute general wing properties
-        sweep = wing.mean_sweep_angle()
-        AR = wing.aspect_ratio()
+        wing_sweep = wing.mean_sweep_angle()
+        AR_effective = wing.aspect_ratio(type="effective")
+        AR_geometric = wing.aspect_ratio(type="geometric")
         mach = op_point.mach()
-        mach_normal = mach * np.cosd(sweep)
-        CL_over_Cl = aerolib.CL_over_Cl(
-            aspect_ratio=AR,
+        # mach_normal = mach * np.cosd(sweep)
+        AR_3D_factor = aerolib.CL_over_Cl(
+            aspect_ratio=AR_effective,
             mach=mach,
-            sweep=sweep,
+            sweep=wing_sweep,
             Cl_is_compressible=True
         )
         oswalds_efficiency = aerolib.oswalds_efficiency(
             taper_ratio=wing.taper_ratio(),
-            aspect_ratio=AR,
-            sweep=sweep,
+            aspect_ratio=AR_effective,
+            sweep=wing_sweep,
             fuselage_diameter_to_span_ratio=0  # an assumption
         )
         areas = wing.area(_sectional=True)
         aerodynamic_centers = wing.aerodynamic_center(_sectional=True)
 
+        xsec_quarter_chords = [
+            wing._compute_xyz_of_WingXSec(
+                index=i,
+                x_nondim=0.25,
+                y_nondim=0,
+            )
+            for i in range(len(wing.xsecs))
+        ]
+
         def compute_section_aerodynamics(
                 sect_id: int,
-                mirror_across_XZ:bool=False
+                mirror_across_XZ: bool = False
         ):
             """
             Computes the forces and moments about self.xyz_ref on a given wing section.
@@ -315,10 +325,14 @@ class AeroBuildup(ExplicitAnalysis):
             mean_chord = (xsec_a.chord + xsec_b.chord) / 2
 
             ##### Compute the local frame of this section.
-            _, _, zg_local = wing._compute_frame_of_section(sect_id)
-            zg_local = [zg_local[0], zg_local[1], zg_local[2]]
+            xg_local, yg_local, zg_local = wing._compute_frame_of_section(sect_id)
+            xg_local = [xg_local[0], xg_local[1], xg_local[2]]  # convert it to a list
+            yg_local = [yg_local[0], yg_local[1], yg_local[2]]  # convert it to a list
+            zg_local = [zg_local[0], zg_local[1], zg_local[2]]  # convert it to a list
             if mirror_across_XZ:
-                zg_local[1] *= -1
+                xg_local[1] *= -1
+                yg_local[1] *= -1
+                zg_local[1] *= -1  # Note: if mirrored, this results in a left-handed coordinate system.
 
             ##### Compute the moment arm from the section AC
             sect_AC_raw = aerodynamic_centers[sect_id]
@@ -330,8 +344,8 @@ class AeroBuildup(ExplicitAnalysis):
                 for i in range(3)
             ]
 
-            ##### Compute the generalized angle of attack, so the geometric alpha that the wing section "sees".
-            vel_vector_g_from_freestream = op_point.convert_axes(
+            ##### Compute the generalized angle of attack, which is the geometric alpha that the wing section "sees".
+            vel_vector_g_from_freestream = op_point.convert_axes(  # Points backwards (with relative wind)
                 x_from=-op_point.velocity, y_from=0, z_from=0,
                 from_axes="wind",
                 to_axes="geometry"
@@ -354,11 +368,26 @@ class AeroBuildup(ExplicitAnalysis):
                 vel_vector_g[i] / vel_mag_g
                 for i in range(3)
             ]
+            vel_dot_x = np.dot(vel_dir_g, xg_local, manual=True)
             vel_dot_z = np.dot(vel_dir_g, zg_local, manual=True)
 
-            alpha_generalized = 90 - np.arccosd(np.clip(vel_dot_z, -1, 1))
+            # alpha_generalized = 90 - np.arccosd(np.clip(vel_dot_z, -1, 1)) # In range (-90 to 90)
+            alpha_generalized = np.where(
+                vel_dot_x > 0,
+                90 - np.arccosd(np.clip(vel_dot_z, -1, 1)),  # In range (-90 to 90)
+                90 + np.arccosd(np.clip(vel_dot_z, -1, 1))  # In range (90 to 270)
+            )
 
-            # Compute the control surface deflection
+            ##### Compute the effective generalized angle of attack, which roughly accounts for self-downwash
+            # effects (e.g., finite-wing effects on lift curve slope). Despite this being a tuned heuristic,
+            # it is surprisingly accurate! (<20% lift coefficient error against wind tunnel experiment, even at as
+            # low as AR = 0.5.)
+            alpha_generalized_effective = (
+                    alpha_generalized -
+                    (1 - AR_3D_factor ** 0.8) * np.sind(2 * alpha_generalized) / 2 * (180 / np.pi)
+            )  # Models finite-wing increase in alpha_{CL_max}.
+
+            ##### Compute the control surface deflection
             deflection = 0.
             for surf in xsec_a.control_surfaces:
                 if mirror_across_XZ and not surf.symmetric:
@@ -366,19 +395,36 @@ class AeroBuildup(ExplicitAnalysis):
                 else:
                     deflection += surf.deflection
 
-            # Compute Reynolds numbers
+            ##### Compute sweep angle
+            xsec_a_quarter_chord = xsec_quarter_chords[sect_id]
+            xsec_b_quarter_chord = xsec_quarter_chords[sect_id + 1]
+            quarter_chord_vector_g = xsec_b_quarter_chord - xsec_a_quarter_chord
+            quarter_chord_dir_g = quarter_chord_vector_g / np.linalg.norm(quarter_chord_vector_g)
+
+            vel_dot_quarter_chord = np.dot(
+                vel_dir_g,
+                quarter_chord_dir_g,
+                manual=True
+            )
+
+            sweep_rad = np.arcsin(vel_dot_quarter_chord)
+
+            ##### Compute Reynolds numbers
             Re_a = op_point.reynolds(xsec_a.chord)
             Re_b = op_point.reynolds(xsec_b.chord)
 
+            ##### Compute Mach numbers
+            mach_normal = mach * np.cos(sweep_rad)
+
             ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
             xsec_a_args = dict(
-                alpha=alpha_generalized,
+                alpha=alpha_generalized_effective,
                 Re=Re_a,
                 mach=mach_normal,
                 deflection=deflection
             )
             xsec_b_args = dict(
-                alpha=alpha_generalized,
+                alpha=alpha_generalized_effective,
                 Re=Re_b,
                 mach=mach_normal,
                 deflection=deflection
@@ -389,7 +435,7 @@ class AeroBuildup(ExplicitAnalysis):
             sect_CL = (
                               xsec_a_Cl * a_weight +
                               xsec_b_Cl * b_weight
-                      ) * CL_over_Cl
+                      ) * AR_3D_factor ** 0.2  # Models slight decrease in finite-wing CL_max.
 
             ##### Compute sectional drag at cross sections using lookup functions. Merge them linearly to get section CD.
             xsec_a_Cdp = xsec_a.airfoil.CD_function(**xsec_a_args)
@@ -397,7 +443,7 @@ class AeroBuildup(ExplicitAnalysis):
             sect_CDp = (
                     xsec_a_Cdp * a_weight +
                     xsec_b_Cdp * b_weight
-            )
+            ) * (1 + 0.2 / AR_geometric) # accounts for extra form factor of tip area, and 3D effects (crossflow trips)
 
             ##### Compute sectional moment at cross sections using lookup functions. Merge them linearly to get section CM.
             xsec_a_Cm = xsec_a.airfoil.CM_function(**xsec_a_args)
@@ -409,7 +455,7 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Compute induced drag from local CL and full-wing properties (AR, e)
             sect_CDi = (
-                    sect_CL ** 2 / (np.pi * AR * oswalds_efficiency)
+                    sect_CL ** 2 / (np.pi * AR_effective * oswalds_efficiency)
             )
 
             ##### Total the drag.
@@ -425,6 +471,14 @@ class AeroBuildup(ExplicitAnalysis):
             ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
             L_direction_g_unnormalized = [
                 zg_local[i] - vel_dot_z * vel_dir_g[i]
+                for i in range(3)
+            ]
+            L_direction_g_unnormalized = [  # Handles the 90 degree to 270 degree cases
+                np.where(
+                    vel_dot_x > 0,
+                    L_direction_g_unnormalized[i],
+                    -1 * L_direction_g_unnormalized[i],
+                )
                 for i in range(3)
             ]
             L_direction_g_mag = np.sqrt(sum([comp ** 2 for comp in L_direction_g_unnormalized]))
