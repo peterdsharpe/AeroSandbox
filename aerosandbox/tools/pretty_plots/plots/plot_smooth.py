@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import numpy as np
+import aerosandbox.numpy as np
 from typing import Tuple, Dict, Union, Callable, List
 from scipy import interpolate
 
