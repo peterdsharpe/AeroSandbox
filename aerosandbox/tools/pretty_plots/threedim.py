@@ -1,4 +1,5 @@
 import matplotlib
+import mpl_toolkits
 import matplotlib.pyplot as plt
 from typing import Dict, Tuple, Union
 
@@ -22,7 +23,7 @@ def figure3d(
         adjust_colors: bool = True,
         ax_kwargs: Dict = None,
         **kwargs
-):
+) -> [matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
     """
     Creates a new 3D figure. Args and kwargs are passed into matplotlib.pyplot.figure().
 
