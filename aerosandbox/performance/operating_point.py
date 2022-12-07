@@ -1,4 +1,4 @@
-from aerosandbox.geometry import *
+from aerosandbox.common import AeroSandboxObject
 from aerosandbox import Atmosphere
 import aerosandbox.numpy as np
 from typing import Tuple, Union

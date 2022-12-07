@@ -6,6 +6,8 @@ import aerosandbox.numpy as np
 from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.fuselage_aerodynamics_utilities import *
 from aerosandbox.library.aerodynamics import transonic
 import aerosandbox.library.aerodynamics as aerolib
+import copy
+from typing import Union, List, Dict, Any
 
 
 class AeroBuildup(ExplicitAnalysis):
