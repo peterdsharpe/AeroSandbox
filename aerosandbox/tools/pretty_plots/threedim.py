@@ -8,13 +8,14 @@ preset_view_angles = {
     # Given in the form:
     #   * key is the view name
     #   * value is a tuple of three floats: (elev, azim, roll)
-    'XY'            : (90, -90, 0),
-    'XZ'            : (0, -90, 0),
-    'YZ'            : (0, 0, 0),
-    '-XY'           : (-90, 90, 0),
-    '-XZ'           : (0, 90, 0),
-    '-YZ'           : (0, 180, 0),
-    'left_isometric': (np.arctan2d(1, 2 ** 0.5), -135, 0)
+    'XY'             : (90, -90, 0),
+    'XZ'             : (0, -90, 0),
+    'YZ'             : (0, 0, 0),
+    '-XY'            : (-90, 90, 0),
+    '-XZ'            : (0, 90, 0),
+    '-YZ'            : (0, 180, 0),
+    'left_isometric' : (np.arctan2d(1, 2 ** 0.5), -135, 0),
+    'right_isometric': (np.arctan2d(1, 2 ** 0.5), 135, 0)
 }
 
 
