@@ -130,6 +130,7 @@ def equal() -> None:
 
     if not ax_is_3d(ax):
         ax.set_aspect("equal", adjustable='box')
+
     else:
         ax.set_box_aspect((1, 1, 1))
 
