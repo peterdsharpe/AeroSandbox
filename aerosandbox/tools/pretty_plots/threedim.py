@@ -1,6 +1,7 @@
 import matplotlib
 import mpl_toolkits
 import matplotlib.pyplot as plt
+import aerosandbox.numpy as np
 from typing import Dict, Tuple, Union
 
 preset_view_angles = {
@@ -12,7 +13,8 @@ preset_view_angles = {
     'YZ' : (0, 0, 0),
     '-XY': (-90, 90, 0),
     '-XZ': (0, 90, 0),
-    '-YZ': (0, 180, 0)
+    '-YZ': (0, 180, 0),
+    'left_isometric': (np.arctan2d(1, 2 ** 0.5), -135, 0)
 }
 
 
@@ -105,4 +107,29 @@ def set_preset_3d_view_angle(
 
 
 if __name__ == '__main__':
+    import aerosandbox.numpy as np
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
     figure3d()
+
+
+    t = np.linspace(0, 1, 100)
+
+    x = np.sin(4 * 2 * np.pi * t)
+    y = t ** 2
+    z = 5 * t
+
+    fig, ax = p.figure3d()
+    p.set_preset_3d_view_angle('-YZ')
+
+    ax.plot(
+        x, y, z, "-"
+    )
+    p.set_ticks(*([1, 1] * 3))
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
+    p.equal()
+    p.show_plot()

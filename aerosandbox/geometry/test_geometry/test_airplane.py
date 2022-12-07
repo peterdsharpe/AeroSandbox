@@ -422,4 +422,30 @@ def a() -> asb.Airplane:
 
 
 if __name__ == '__main__':
+    # import matplotlib
+    # matplotlib.use("TkAgg")
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
     airplane = a()
+
+    airplane.draw_three_view()
+
+    # airplane.draw(backend="matplotlib", show=False)
+    #
+    # import matplotlib.pyplot as plt
+    # import aerosandbox.tools.pretty_plots as p
+    #
+    # ax = plt.gca()
+    #
+    # t = np.linspace(0, 1, 100)
+    #
+    # x = airplane.fuselages[0].length() * t
+    # y = 15 * np.sin(4 * 2 * np.pi * t)
+    # z = 15 *np.cos(4 * 2 * np.pi * t)
+    #
+    # ax.plot(
+    #     x, y, z
+    # )
+    #
+    # p.show_plot()
