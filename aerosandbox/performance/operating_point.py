@@ -57,8 +57,8 @@ class OperatingPoint(AeroSandboxObject):
         return self.atmosphere.pressure() * (
                 1 + (gamma - 1) / 2 * self.mach() ** 2
         ) ** (
-                       gamma / (gamma - 1)
-               )
+                gamma / (gamma - 1)
+        )
 
     def total_temperature(self):
         """

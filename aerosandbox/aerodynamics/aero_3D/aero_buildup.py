@@ -402,7 +402,7 @@ class AeroBuildup(ExplicitAnalysis):
             xsec_b_quarter_chord = xsec_quarter_chords[sect_id + 1]
             quarter_chord_vector_g = xsec_b_quarter_chord - xsec_a_quarter_chord
             quarter_chord_dir_g = quarter_chord_vector_g / np.linalg.norm(quarter_chord_vector_g)
-            quarter_chord_dir_g = [ # Convert to list
+            quarter_chord_dir_g = [  # Convert to list
                 quarter_chord_dir_g[0],
                 quarter_chord_dir_g[1],
                 quarter_chord_dir_g[2],

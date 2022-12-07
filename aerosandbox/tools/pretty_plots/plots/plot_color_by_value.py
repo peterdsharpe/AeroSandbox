@@ -4,6 +4,7 @@ import numpy as np
 from typing import Tuple, Dict, Union, Callable, List
 from scipy import interpolate
 
+
 def plot_color_by_value(
         x: np.ndarray,
         y: np.ndarray,
@@ -103,4 +104,3 @@ def plot_color_by_value(
     else:
         cbar = None
     return lines, sm, cbar
-

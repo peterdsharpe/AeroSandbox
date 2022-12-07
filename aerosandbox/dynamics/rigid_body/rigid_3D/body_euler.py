@@ -447,10 +447,10 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
     def speed(self):
         """The speed of the object, expressed as a scalar."""
         return (
-                       self.u_b ** 2 +
-                       self.v_b ** 2 +
-                       self.w_b ** 2
-               ) ** 0.5
+                self.u_b ** 2 +
+                self.v_b ** 2 +
+                self.w_b ** 2
+        ) ** 0.5
 
     @property
     def alpha(self):

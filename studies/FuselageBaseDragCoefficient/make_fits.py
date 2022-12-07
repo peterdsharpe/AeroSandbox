@@ -79,6 +79,7 @@ fit = asb.FittedModel(
 # )
 
 from pprint import pprint
+
 pprint(fit.parameters)
 
 mach = np.linspace(0, 5, 1000)

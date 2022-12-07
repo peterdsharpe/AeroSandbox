@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import interpolate
 
+
 class NaturalUnivariateSpline(interpolate.UnivariateSpline):
     """
     A Natural UnivariateSpline.
@@ -37,7 +38,6 @@ class NaturalUnivariateSpline(interpolate.UnivariateSpline):
         self.y = y
         self.w = w
 
-
     def __call__(self, x, nu=0, ext=None):
         xmin = np.min(self.x)
         xmax = np.max(self.x)
@@ -53,6 +53,7 @@ class NaturalUnivariateSpline(interpolate.UnivariateSpline):
                 cubic(x)
             )
         )
+
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt

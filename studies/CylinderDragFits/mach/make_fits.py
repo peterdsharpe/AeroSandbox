@@ -34,13 +34,13 @@ fit = asb.FittedModel(
         "s_sup"    : -1.5,
     },
     parameter_bounds={
-        "s_sub": (0, None),
-        "s_sup": (None, 0),
+        "s_sub"    : (0, None),
+        "s_sup"    : (None, 0),
         # "cd_sub": (1.2, 1.2),
-        "trans": (0.9, 1.1),
+        "trans"    : (0.9, 1.1),
         "trans_str": (0, None),
     },
-    weights = 1 + 5 * ((data[:, 0] >0.9) & (data[:,0] < 1.1)),
+    weights=1 + 5 * ((data[:, 0] > 0.9) & (data[:, 0] < 1.1)),
     verbose=False,
     # residual_norm_type="LInf",
     put_residuals_in_logspace=True

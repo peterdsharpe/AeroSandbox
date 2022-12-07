@@ -52,8 +52,6 @@ def abs(x):
         return _cas.fabs(x)
 
 
-
-
 # TODO trace()
 
 # def cumsum(x, axis: int = None):

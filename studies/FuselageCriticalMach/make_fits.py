@@ -2,7 +2,6 @@ from aerosandbox.tools.webplotdigitizer_reader import read_webplotdigitizer_csv
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
-
 data = read_webplotdigitizer_csv(filename="data.csv")
 sub = data["Subsonic"]
 sup = data["Supersonic"]
@@ -16,6 +15,7 @@ plt.plot(sup[:, 0], sup[:, 1], ".", label="Supersonic Designs")
 
 fr = np.linspace(0., 15, 500)
 
+
 def model(fr, p):
     """
     Using this model because it satisfies some things that should be true in asymptotic limits:
@@ -27,6 +27,7 @@ def model(fr, p):
 
     """
     return 1 - (p["a"] / (fr + p["b"])) ** p["c"]
+
 
 fit = asb.FittedModel(
     model=model,

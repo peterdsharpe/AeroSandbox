@@ -1,6 +1,7 @@
 import importlib
 import sys
 
+
 def lazy_import(name):
     """
     Allows you to lazily import a module.

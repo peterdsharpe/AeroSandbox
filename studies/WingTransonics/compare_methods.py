@@ -6,9 +6,10 @@ from pathlib import Path
 
 data_folder = Path(__file__).parent / "data" / "RAE2822_alpha_1deg_Re_6500000"
 
+
 def get_data(filename):
     with open(filename) as f:
-        data= f.readlines()
+        data = f.readlines()
 
     data = [
         json.loads(line)
@@ -29,21 +30,22 @@ def get_data(filename):
 
     return data
 
+
 machs = np.linspace(0, 1.3, 500)
 airfoil = asb.Airfoil("rae2822")
 airfoil.generate_polars(cache_filename="./cache/rae2822.json")
-aerobuildup_data={
+aerobuildup_data = {
     "mach": machs,
-    "CL": airfoil.CL_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
-    "CD": airfoil.CD_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
-    "CM": airfoil.CM_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
+    "CL"  : airfoil.CL_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
+    "CD"  : airfoil.CD_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
+    "CM"  : airfoil.CM_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
 }
 
 datas = {
-    "XFoil v6 (P-G)": get_data(data_folder / "xfoil6.csv"),
+    "XFoil v6 (P-G)"    : get_data(data_folder / "xfoil6.csv"),
     "MSES (Euler + IBL)": get_data(data_folder / "mses.csv"),
-    "SU2 (RANS)": get_data(data_folder / "su2.csv"),
-    "ASB AeroBuildup": aerobuildup_data,
+    "SU2 (RANS)"        : get_data(data_folder / "su2.csv"),
+    "ASB AeroBuildup"   : aerobuildup_data,
 }
 
 import matplotlib.pyplot as plt

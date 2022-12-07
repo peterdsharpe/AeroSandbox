@@ -97,10 +97,10 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
     @property
     def speed(self) -> float:
         return (
-                       self.u_e ** 2 +
-                       self.v_e ** 2 +
-                       self.w_e ** 2
-               ) ** 0.5
+                self.u_e ** 2 +
+                self.v_e ** 2 +
+                self.w_e ** 2
+        ) ** 0.5
 
     @property
     def gamma(self):

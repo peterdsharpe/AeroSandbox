@@ -114,7 +114,7 @@ p.show_plot(
 
 plt.loglog(
     df["Re_l"],
-    (4 / np.pi * df["CDA"]) **0.5,
+    (4 / np.pi * df["CDA"]) ** 0.5,
     ".k",
     zorder=4,
 )

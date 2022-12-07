@@ -46,10 +46,10 @@ for col in raw_df.columns:
         for k, v in dict(
                 CDA=CDA,
                 Re_l=Re_l,
-                linkage_length = linkage_length,
-                is_covered = "covered" in name,
-                is_top = "top" in name
-            ).items():
+                linkage_length=linkage_length,
+                is_covered="covered" in name,
+                is_top="top" in name
+        ).items():
             data[k].append(v)
 
 df = pd.DataFrame(data)

@@ -56,6 +56,7 @@ def adjust_lightness(color, amount=1.0):
     c = colorsys.rgb_to_hls(*mc.to_rgb(c))
     return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
 
+
 def get_last_line_color():
     lines = plt.gca().lines
     try:

@@ -91,4 +91,3 @@ np.save("spar_masses", Spar_Masses)
 
 # Run a sanity check
 beam_sol.draw_bending()
-
