@@ -1,7 +1,11 @@
 import aerosandbox.numpy as _np
 from typing import Tuple, Union
 
-def softmax(*args, hardness: float=1.0):
+
+def softmax(
+        *args: Tuple[Union[float, _np.ndarray]],
+        hardness: float = 1.0
+) -> Union[float, _np.ndarray]:
     """
     An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
 

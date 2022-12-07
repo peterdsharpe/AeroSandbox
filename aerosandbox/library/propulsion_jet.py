@@ -127,8 +127,8 @@ def m_dot_corrected_over_m_dot(
     temperature_standard = 273.15 + 15
     pressure_standard = 101325
     return (
-                   temperature_total_2 / temperature_standard
-           ) ** 0.5 / (pressure_total_2 / pressure_standard)
+            temperature_total_2 / temperature_standard
+    ) ** 0.5 / (pressure_total_2 / pressure_standard)
 
 
 if __name__ == '__main__':

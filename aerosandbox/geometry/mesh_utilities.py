@@ -79,4 +79,3 @@ def convert_mesh_to_polydata_format(
     faces = np.array(faces)
     faces = np.reshape(faces, -1)
     return points, faces
-

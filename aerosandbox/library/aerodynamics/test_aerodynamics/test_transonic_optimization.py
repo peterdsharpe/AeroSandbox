@@ -18,5 +18,6 @@ def test_simple_scalar_optimization():
     opti.minimize(CD)
     sol = opti.solve()
 
+
 if __name__ == '__main__':
     pytest.main()

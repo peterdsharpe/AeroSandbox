@@ -187,7 +187,7 @@ class XFoil(ExplicitAnalysis):
 
         # Include more data in polar
         run_file_contents += [
-            "cinc" # include minimum Cp
+            "cinc"  # include minimum Cp
         ]
 
         return run_file_contents

@@ -9,7 +9,7 @@ def calculate_induced_velocity_point_source(
         x_source: Union[float, np.ndarray],
         y_source: Union[float, np.ndarray],
         z_source: Union[float, np.ndarray],
-        sigma: Union[float, np.ndarray]=1,
+        sigma: Union[float, np.ndarray] = 1,
         viscous_radius=0,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
@@ -93,12 +93,14 @@ if __name__ == '__main__':
     Yf = Y.flatten()
     Zf = Z.flatten()
 
+
     def wide(array):
         return np.reshape(array, (1, -1))
 
 
     def tall(array):
         return np.reshape(array, (-1, 1))
+
 
     Uf, Vf, Wf = calculate_induced_velocity_point_source(
         x_field=Xf,

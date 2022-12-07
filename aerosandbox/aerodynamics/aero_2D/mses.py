@@ -239,8 +239,9 @@ class MSES(ExplicitAnalysis):
                     check=True,
                     timeout=self.timeout_mset
                 )
+
             try:
-                mset_run = mset(mset_alpha = alphas[0])
+                mset_run = mset(mset_alpha=alphas[0])
             except subprocess.CalledProcessError as e:
                 print(e.stdout)
                 print(e.stderr)
@@ -295,7 +296,7 @@ class MSES(ExplicitAnalysis):
                         if self.verbosity >= 1:
                             print("Run did not converge. Reinitializing mesh and continuing...")
                         try:
-                            next_alpha = alphas[i+1]
+                            next_alpha = alphas[i + 1]
                         except IndexError:
                             break
                         mset_run = mset(mset_alpha=next_alpha)
@@ -327,9 +328,9 @@ class MSES(ExplicitAnalysis):
                     print(mplot_run.stdout)
                     print(mplot_run.stderr)
 
-                raw_output = mplot_run.stdout.\
-                    replace("top Xtr", "xtr_top").\
-                    replace("bot Xtr", "xtr_bot").\
+                raw_output = mplot_run.stdout. \
+                    replace("top Xtr", "xtr_top"). \
+                    replace("bot Xtr", "xtr_bot"). \
                     replace("at x,y", "x_ac")
 
                 run_output = AVL.parse_unformatted_data_output(raw_output)
@@ -340,12 +341,12 @@ class MSES(ExplicitAnalysis):
                         runs_output[k].append(
                             run_output[k]
                         )
-                    except KeyError: # List not created yet
+                    except KeyError:  # List not created yet
                         runs_output[k] = [run_output[k]]
 
             # Clean up the dictionary
             runs_output = {k: np.array(v) for k, v in runs_output.items()}
-                # runs_output["mach"] = runs_output.pop("Ma")
+            # runs_output["mach"] = runs_output.pop("Ma")
             runs_output = {
                 "mach": runs_output.pop("Ma"),
                 **runs_output
@@ -376,6 +377,7 @@ if __name__ == '__main__':
     pprint(res)
 
     import matplotlib
+
     matplotlib.use("WebAgg")
 
     import matplotlib.pyplot as plt

@@ -362,7 +362,6 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
 
-
     time = np.linspace(0, 10, 100)  # Time in seconds
     wing_velocity = 2  # Wing horizontal velocity in m/s
     chord = 2

@@ -4,6 +4,7 @@ import aerosandbox.numpy as np
 from typing import Tuple, Dict, Union, Callable, List
 from scipy import interpolate
 
+
 def plot_smooth(
         *args,
         color=None,

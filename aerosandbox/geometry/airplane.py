@@ -276,7 +276,7 @@ class Airplane(AeroSandboxObject):
                        color="k",
                        thin_linewidth=0.2,
                        thick_linewidth=0.5,
-                       fuselage_longeron_theta = None,
+                       fuselage_longeron_theta=None,
                        set_equal: bool = True,
                        show: bool = True,
                        ):
@@ -470,7 +470,8 @@ class Airplane(AeroSandboxObject):
 
                 self.draw_wireframe(
                     ax=ax,
-                    fuselage_longeron_theta=np.linspace(0, 2 * np.pi, 8 + 1)[:-1] if 'isometric' in preset_view else None,
+                    fuselage_longeron_theta=np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
+                    if 'isometric' in preset_view else None,
                     show=False
                 )
 
