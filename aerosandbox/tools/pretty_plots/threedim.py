@@ -23,7 +23,7 @@ def figure3d(
         adjust_colors: bool = True,
         ax_kwargs: Dict = None,
         **kwargs
-) -> [matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
+) -> Tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
     """
     Creates a new 3D figure. Args and kwargs are passed into matplotlib.pyplot.figure().
 
