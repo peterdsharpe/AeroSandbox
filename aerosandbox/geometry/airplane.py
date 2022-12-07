@@ -275,7 +275,8 @@ class Airplane(AeroSandboxObject):
                        ax=None,
                        color="k",
                        thin_linewidth=0.2,
-                       thick_linewidth=0.6,
+                       thick_linewidth=0.5,
+                       fuselage_longeron_theta = None,
                        set_equal: bool = True,
                        show: bool = True,
                        ):
@@ -289,6 +290,9 @@ class Airplane(AeroSandboxObject):
                 raise ValueError("`ax` must be a 3D axis.")
 
             plt.sca(ax)
+
+        if fuselage_longeron_theta is None:
+            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 4 + 1)[:-1]
 
         def plot_line(
                 xyz,
@@ -373,14 +377,9 @@ class Airplane(AeroSandboxObject):
         for fuse in self.fuselages:
 
             ### Longerons
-            for xy in [
-                (1, 0),  # Right
-                (0, 1),  # Top
-                (-1, 0),  # Left
-                (0, -1),  # Bottom
-            ]:
+            for theta in fuselage_longeron_theta:
                 plot_line(
-                    fuse.mesh_line(x_nondim=xy[0], y_nondim=xy[1]),
+                    fuse.mesh_line(x_nondim=np.cos(theta), y_nondim=np.sin(theta)),
                     linewidth=thick_linewidth
                 )
 
@@ -428,7 +427,7 @@ class Airplane(AeroSandboxObject):
         import aerosandbox.tools.pretty_plots as p
 
         if fig is None:
-            fig = plt.figure(figsize=(8, 8))
+            fig = plt.figure(figsize=(8, 8), dpi=400)
 
         preset_view_angles = np.array([
             ["XZ", "-YZ"],
@@ -471,6 +470,7 @@ class Airplane(AeroSandboxObject):
 
                 self.draw_wireframe(
                     ax=ax,
+                    fuselage_longeron_theta=np.linspace(0, 2 * np.pi, 8 + 1)[:-1] if 'isometric' in preset_view else None,
                     show=False
                 )
 
