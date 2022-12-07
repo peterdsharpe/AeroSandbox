@@ -8,12 +8,12 @@ preset_view_angles = {
     # Given in the form:
     #   * key is the view name
     #   * value is a tuple of three floats: (elev, azim, roll)
-    'XY' : (90, -90, 0),
-    'XZ' : (0, -90, 0),
-    'YZ' : (0, 0, 0),
-    '-XY': (-90, 90, 0),
-    '-XZ': (0, 90, 0),
-    '-YZ': (0, 180, 0),
+    'XY'            : (90, -90, 0),
+    'XZ'            : (0, -90, 0),
+    'YZ'            : (0, 0, 0),
+    '-XY'           : (-90, 90, 0),
+    '-XZ'           : (0, 90, 0),
+    '-YZ'           : (0, 180, 0),
     'left_isometric': (np.arctan2d(1, 2 ** 0.5), -135, 0)
 }
 
@@ -99,11 +99,21 @@ def set_preset_3d_view_angle(
             f"Input '{preset_view}' is not a valid preset. Valid presets are:\n" +
             "\n".join([f"  * '{k}'" for k in preset_view_angles.keys()])
         )
-    ax.view_init(
-        elev=elev,
-        azim=azim,
-        roll=roll
-    )
+
+    if roll == 0:
+        # This is to maintain back-compatibility to older Matplotlib versions.
+        # Older versions of Matplotlib (roughly, <=3.4.0) didn't support the `roll` kwarg.
+        # Hence, if we don't need to edit the roll, we don't - this extends back-compatibility.
+        ax.view_init(
+            elev=elev,
+            azim=azim,
+        )
+    else:
+        ax.view_init(
+            elev=elev,
+            azim=azim,
+            roll=roll
+        )
 
 
 if __name__ == '__main__':
@@ -112,7 +122,6 @@ if __name__ == '__main__':
     import aerosandbox.tools.pretty_plots as p
 
     figure3d()
-
 
     t = np.linspace(0, 1, 100)
 
