@@ -44,15 +44,15 @@ setup(
     url='https://peterdsharpe.github.io/AeroSandbox/',
     author_email='pds@mit.edu',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Physics',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
     ],
     keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation',
     packages=find_packages(exclude=['docs', 'media', 'examples', 'studies']),
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=[
         'numpy >= 1.20.0',
         'scipy >= 1.7.0',
