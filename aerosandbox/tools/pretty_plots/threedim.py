@@ -97,7 +97,7 @@ def set_preset_3d_view_angle(
         elev, azim, roll = preset_view_angles[preset_view]
     except KeyError:
         raise ValueError(
-            f"Input '{preset_view}' is not a valid preset. Valid presets are:\n" +
+            f"Input '{preset_view}' is not a valid preset view. Valid presets are:\n" +
             "\n".join([f"  * '{k}'" for k in preset_view_angles.keys()])
         )
 
