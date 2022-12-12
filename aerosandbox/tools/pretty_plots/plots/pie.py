@@ -20,7 +20,7 @@ def pie(
         arm_radius=5,
 ):
     # TODO docs
-
+    ax = plt.gca()
     n_wedges = len(values)
 
     ### Set defaults
