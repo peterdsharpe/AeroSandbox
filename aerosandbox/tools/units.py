@@ -35,6 +35,10 @@ fps = foot / 1
 
 # Volume (equivalents in m^3)
 liter = 0.001
+gallon_us = 231 * inch ** 3
+gallon_imperial = 4.54609 * liter
+gallon = gallon_us
+quart = gallon_us / 4
 
 # Pressure (equivalents in Pa)
 pascal = 1
