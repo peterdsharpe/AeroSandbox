@@ -244,6 +244,16 @@ class AeroBuildup(ExplicitAnalysis):
                         * scaling_factors[derivative_denominator]
                 )
 
+            ### Try to compute and append neutral point, if possible
+            if derivative_denominator == "alpha":
+                run_base["x_np"] = self.xyz_ref[0] - (
+                        run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
+                )
+            if derivative_denominator == "beta":
+                run_base["x_np_lateral"] = self.xyz_ref[0] - (
+                        run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
+                )
+
         return run_base
 
     def wing_aerodynamics(self,
