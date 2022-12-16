@@ -32,19 +32,10 @@ if __name__ == '__main__':
 
     dev = eval(pysr_model.replace("^", "**").replace("\n", ""))
 
-    # dev = a ** 2.2836578 * (
-    #         -0.4994786 * s * (s + (t ** (-0.46121752) + 0.6455717) * (t - 0.7528881)) - 0.13291761) + 0.10509591
-
-    # dev = ((((sweep_rad - taper) * -0.30672163) * sweep_rad) * np.tan(ARf))
-    # dev = (((((sweep_rad * ARf) - (taper - 0.29707846)) * sweep_rad) * (np.tan(ARf) * -0.35278562)) + (
-    #         0.017927283 / ARf))
-
     interpolator = interpolate.LinearNDInterpolator(
         np.vstack([df["AR"], df["sweep"], df["taper"]]).T,
         ((df["ab_xnp"] - df["vlm_xnp"]) / (df["MAC"])).values,
         rescale=True
-        # neighbors=100,
-        # kernel='linear',
     )
 
     plt.plot(

@@ -10,11 +10,11 @@ Peter Sharpe
 
 ![unsweep](illustrations/swept_wing_lifting_line_unsweep.svg)
 
-For a given cross-section (i.e., a slice normal to the local span) of the wing, we can define a sectional aerodynamic center. This aerodynamic center is the point at which the following relation holds:
+For a given cross-section (i.e., a slice normal to the local span) of the wing, we can define a sectional aerodynamic center. This aerodynamic center is the reference point at which the following relation holds:
 
 $\frac{d(C_M)}{d \alpha} \bigg\rvert_{\alpha = \alpha_{\rm local}} = 0$
 
-with a few additional assumptions about freezing the 3D spanwise flow.
+noting that $C_M$ changes depending on reference point, and with a few additional assumptions about freezing the 3D spanwise flow.
 
 A naïve approach would place this sectional aerodynamic center at the location found in 2D aerodynamics analysis. (For a thin, uncambered airfoil at small angle of attack, this would be the quarter-chord $x/c=0.25$. A typical thicker cambered airfoil might have this at $x/c=0.30$ or so.) In the figure above, this would give a locus of aerodynamic centers corresponding to the blue line.
 
