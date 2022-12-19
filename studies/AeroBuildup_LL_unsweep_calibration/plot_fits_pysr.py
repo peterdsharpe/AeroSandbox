@@ -3,6 +3,20 @@ import aerosandbox.numpy as np
 import pandas as pd
 from scipy import interpolate
 
+### Clean up PySR model
+
+pysr_model = """
+((((((((s * a) + ((t * 2.0672152) + -1.5531529)) * a) * s) + (0.39056087 ^ a)) * a) + -0.39042628) * -0.52582735)
+"""
+
+import sympy as sym
+a, s, t = sym.symbols('a s t')
+pysr_model_sympy = eval(pysr_model.replace("^", "**").replace("\n", "")).simplify()
+pysr_model_lambda = sym.lambdify([a, s, t], pysr_model_sympy)
+
+print(f"Simplifed Model\n{pysr_model_sympy}")
+
+### Get data
 df = pd.read_csv("data.csv")
 
 if __name__ == '__main__':
@@ -26,11 +40,7 @@ if __name__ == '__main__':
     s = sweep_rad
     t = np.exp(-taper)
 
-    pysr_model = """
-((((3.557726 ^ (a ^ 2.8443985)) * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)) + (a + -0.89228547)) * -0.16073418)
-    """
-
-    dev = eval(pysr_model.replace("^", "**").replace("\n", ""))
+    dev = pysr_model_lambda(a, s, t)
 
     interpolator = interpolate.LinearNDInterpolator(
         np.vstack([df["AR"], df["sweep"], df["taper"]]).T,
