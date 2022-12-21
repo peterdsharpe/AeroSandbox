@@ -14,14 +14,15 @@ class Wing(AeroSandboxObject):
 
     Anatomy of a Wing:
 
-        A wing consists chiefly of a collection of cross sections, or "xsecs". These can be accessed with `Wing.xsecs`,
-        which gives a list of xsecs in the Wing. Each xsec is a WingXSec object, a class that is defined separately.
+        A wing consists chiefly of a collection of cross sections, or "xsecs". A cross section is a 2D "slice" of a
+        wing. These can be accessed with `Wing.xsecs`, which gives a list of xsecs in the Wing. Each xsec is a
+        WingXSec object, a class that is defined separately.
 
         You may also see references to wing "sections", which are different than cross sections (xsecs)! Sections are
         the portions of the wing that are in between xsecs. In other words, a wing with N cross sections (xsecs,
         WingXSec objects) will always have N-1 sections. Sections are never explicitly defined, since you can get all
-        needed information by lofting from the adjacent cross sections. For example, section 0 is a loft between
-        cross sections 0 and 1.
+        needed information by lofting from the adjacent cross sections. For example, section 0 (the first one) is a
+        loft between cross sections 0 and 1.
 
         Wings are lofted linearly between cross sections.
 

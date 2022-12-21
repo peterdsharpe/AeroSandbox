@@ -8,10 +8,21 @@ import copy
 
 class Fuselage(AeroSandboxObject):
     """
-    Definition for a fuselage or other slender body (pod, etc.).
+    Definition for a Fuselage or other slender body (pod, fuel tank, etc.).
 
-    For now, all fuselages are assumed to be circular and fairly closely aligned with the body x axis. (<10 deg or
-    so) # TODO update if this changes
+    Anatomy of a Fuselage:
+
+        A fuselage consists chiefly of a collection of cross sections, or "xsecs". A cross section is a 2D "slice" of
+        a fuselage. These can be accessed with `Fuselage.xsecs`, which gives a list of xsecs in the Fuselage. Each
+        xsec is a FuselageXSec object, a class that is defined separately.
+
+        You may also see references to fuselage "sections", which are different than cross sections (xsecs)! Sections
+        are the portions of the fuselage that are in between xsecs. In other words, a fuselage with N cross sections
+        (xsecs, FuselageXSec objects) will always have N-1 sections. Sections are never explicitly defined,
+        since you can get all needed information by lofting from the adjacent cross sections. For example,
+        section 0 (the first one) is a loft between cross sections 0 and 1.
+
+        Fuselages are lofted linearly between cross sections.
 
     """
 
