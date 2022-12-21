@@ -45,7 +45,7 @@ class Wing(AeroSandboxObject):
 
             name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
 
-            xsecs: A list of wing cross ("X") sections in the form of WingXSec objects.
+            xsecs: A list of wing cross sections ("xsecs") in the form of WingXSec objects.
 
             symmetric: Is the wing symmetric across the XZ plane?
 

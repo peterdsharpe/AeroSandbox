@@ -29,7 +29,7 @@ class Fuselage(AeroSandboxObject):
 
             name: Name of the fuselage [optional]. It can help when debugging to give each fuselage a sensible name.
 
-            xsecs: A list of fuselage cross ("X") sections in the form of FuselageXSec objects.
+            xsecs: A list of fuselage cross sections ("xsecs") in the form of FuselageXSec objects.
 
             analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
             that should be passed on to specific analyses and associated with this specific geometry object.
