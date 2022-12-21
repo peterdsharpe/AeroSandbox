@@ -564,10 +564,12 @@ class Airplane(AeroSandboxObject):
 
         return aerodynamic_center
 
+
 if __name__ == '__main__':
     import aerosandbox as asb
     import aerosandbox.numpy as np
     import aerosandbox.tools.units as u
+
 
     def ft(feet, inches=0):  # Converts feet (and inches) to meters
         return feet * u.foot + inches * u.inch
@@ -649,12 +651,11 @@ if __name__ == '__main__':
                     asb.FuselageXSec(
                         xyz_c=[0, 0, ft(-1)],
                         radius=0,
-                        shape=3,
                     ),
                     asb.FuselageXSec(
                         xyz_c=[0, 0, ft(-1)],
                         radius=ft(1.5),
-                        shape=7,
+                        shape=3,
                     ),
                     asb.FuselageXSec(
                         xyz_c=[ft(3), 0, ft(-0.85)],
