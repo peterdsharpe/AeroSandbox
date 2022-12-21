@@ -519,6 +519,29 @@ class FuselageXSec(AeroSandboxObject):
         return area
 
     def xsec_perimeter(self):
+        """
+        Computes the FuselageXSec's perimeter. ("Circumference" in the case of a circular cross section.)
+
+        The computation method is a closed-form approximation for the perimeter of a superellipse. The exact equation
+        for the perimeter of a superellipse is quite long and is not repeated here for brevity; a Google search will
+        bring it up.
+
+        We replace this exact equation with the following closed-form approximation obtained from symbolic regression:
+
+            perimeter_per_quadrant = 2.0022144 - 2.2341106 / ( s^-2.2698476 / 1.218528 + (s + 0.50136507) * 1.9967787 )
+            perimeter = perimeter_per_quadrant * 4 * radius
+
+        This approximation has the following properties:
+
+            * For the s=1 case (diamond), the error is +0.2%.
+
+            * For the s=2 case (circle), the error is -0.1%.
+
+            * In the s -> infinity limit (square), the error is +0.1%.
+
+        Returns:
+
+        """
         s = self.shape
         perimeter_per_quadrant = (
                 (-2.2341106 / (((s ** -2.2698476) / 1.218528) + ((s + 0.50136507) * 1.9967787))) + 2.0022144
