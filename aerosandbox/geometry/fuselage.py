@@ -520,8 +520,9 @@ class FuselageXSec(AeroSandboxObject):
 
     def xsec_perimeter(self):
         s = self.shape
-        perimeter_per_quadrant = (-2.2341106 / (
-                ((s ** -2.268331) / 1.2180636) + ((s + 0.4997542) * 1.9967787))) + 2.002495
+        perimeter_per_quadrant = (
+                (-2.2341106 / (((s ** -2.2698476) / 1.218528) + ((s + 0.50136507) * 1.9967787))) + 2.0022144
+        )
         perimeter = perimeter_per_quadrant * 4 * self.radius
 
         return perimeter
