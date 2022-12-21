@@ -2,8 +2,8 @@ from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union, Optional
 import aerosandbox.geometry.mesh_utilities as mesh_utils
-from .wing import Wing
-from .fuselage import Fuselage
+from aerosandbox.geometry.wing import Wing
+from aerosandbox.geometry.fuselage import Fuselage
 
 
 class Airplane(AeroSandboxObject):
@@ -363,24 +363,40 @@ class Airplane(AeroSandboxObject):
                 origin = reshape(xsec.xyz_le)
                 scale = xsec.chord
 
-                line = origin + (
-                        xsec.airfoil.x().reshape((-1, 1)) * scale * xg_local +
-                        xsec.airfoil.y().reshape((-1, 1)) * scale * zg_local
+                line_upper = origin + (
+                        xsec.airfoil.upper_coordinates()[:, 0].reshape((-1, 1)) * scale * xg_local +
+                        xsec.airfoil.upper_coordinates()[:, 1].reshape((-1, 1)) * scale * zg_local
+                )
+                line_lower = origin + (
+                        xsec.airfoil.lower_coordinates()[:, 0].reshape((-1, 1)) * scale * xg_local +
+                        xsec.airfoil.lower_coordinates()[:, 1].reshape((-1, 1)) * scale * zg_local
                 )
 
-                plot_line(
-                    line,
-                    symmetric=wing.symmetric,
-                    linewidth=thick_linewidth if i == 0 or i == len(wing.xsecs) - 1 else thin_linewidth
-                )
+                for line in [line_upper, line_lower]:
+                    plot_line(
+                        line,
+                        symmetric=wing.symmetric,
+                        linewidth=thick_linewidth if i == 0 or i == len(wing.xsecs) - 1 else thin_linewidth
+                    )
 
         ##### Fuselages
         for fuse in self.fuselages:
 
+            xsec_shape_parameters = np.array([
+                xsec.shape
+                for xsec in fuse.xsecs
+            ])
+
             ### Longerons
             for theta in fuselage_longeron_theta:
+                st = np.sin(theta)
+                ct = np.cos(theta)
+
                 plot_line(
-                    fuse.mesh_line(x_nondim=np.cos(theta), y_nondim=np.sin(theta)),
+                    fuse.mesh_line(
+                        x_nondim=np.abs(ct) ** (2 / xsec_shape_parameters) * np.where(ct > 0, 1, -1),
+                        y_nondim=np.abs(st) ** (2 / xsec_shape_parameters) * np.where(st > 0, 1, -1)
+                    ),
                     linewidth=thick_linewidth
                 )
 
@@ -402,11 +418,15 @@ class Airplane(AeroSandboxObject):
                 origin = reshape(xsec.xyz_c)
                 scale = xsec.radius
 
-                theta = np.linspace(0, 2 * np.pi, 61).reshape((-1, 1))
+                theta = np.linspace(0, 2 * np.pi, 121).reshape((-1, 1))
+                st = np.sin(theta)
+                ct = np.cos(theta)
+                x_nondim = np.abs(ct) ** (2 / xsec.shape) * np.where(ct > 0, 1, -1)
+                y_nondim = np.abs(st) ** (2 / xsec.shape) * np.where(st > 0, 1, -1)
 
                 line = origin + (
-                        np.sin(theta) * scale * yg_local +
-                        np.cos(theta) * scale * zg_local
+                        x_nondim * scale * yg_local +
+                        y_nondim * scale * zg_local
                 )
 
                 plot_line(
@@ -543,3 +563,122 @@ class Airplane(AeroSandboxObject):
         aerodynamic_center = sum(wing_AC_area_products) / sum(wing_areas)
 
         return aerodynamic_center
+
+if __name__ == '__main__':
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
+    import aerosandbox.tools.units as u
+
+    def ft(feet, inches=0):  # Converts feet (and inches) to meters
+        return feet * u.foot + inches * u.inch
+
+
+    naca2412 = asb.Airfoil("naca2412")
+    naca0012 = asb.Airfoil("naca0012")
+
+    airplane = asb.Airplane(
+        name="Cessna 152",
+        wings=[
+            asb.Wing(
+                name="Wing",
+                xsecs=[
+                    asb.WingXSec(
+                        xyz_le=[0, 0, 0],
+                        chord=ft(5, 4),
+                        airfoil=naca2412
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[0, ft(7), ft(7) * np.sind(1)],
+                        chord=ft(5, 4),
+                        airfoil=naca2412
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[
+                            ft(4, 3 / 4) - ft(3, 8 + 1 / 2),
+                            ft(33, 4) / 2,
+                            ft(33, 4) / 2 * np.sind(1)
+                        ],
+                        chord=ft(3, 8 + 1 / 2),
+                        airfoil=naca0012
+                    )
+                ],
+                symmetric=True
+            ),
+            asb.Wing(
+                name="Horizontal Stabilizer",
+                xsecs=[
+                    asb.WingXSec(
+                        xyz_le=[0, 0, 0],
+                        chord=ft(3, 8),
+                        airfoil=naca0012,
+                        twist=-2
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[ft(1), ft(10) / 2, 0],
+                        chord=ft(2, 4 + 3 / 8),
+                        airfoil=naca0012,
+                        twist=-2
+                    )
+                ],
+                symmetric=True
+            ).translate([ft(13, 3), 0, ft(-2)]),
+            asb.Wing(
+                name="Vertical Stabilizer",
+                xsecs=[
+                    asb.WingXSec(
+                        xyz_le=[ft(-5), 0, 0],
+                        chord=ft(8, 8),
+                        airfoil=naca0012,
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[ft(0), 0, ft(1)],
+                        chord=ft(3, 8),
+                        airfoil=naca0012,
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[ft(0, 8), 0, ft(5)],
+                        chord=ft(2, 8),
+                        airfoil=naca0012,
+                    ),
+                ]
+            ).translate([ft(16, 11) - ft(3, 8), 0, ft(-2)])
+        ],
+        fuselages=[
+            asb.Fuselage(
+                xsecs=[
+                    asb.FuselageXSec(
+                        xyz_c=[0, 0, ft(-1)],
+                        radius=0,
+                        shape=3,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[0, 0, ft(-1)],
+                        radius=ft(1.5),
+                        shape=7,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(3), 0, ft(-0.85)],
+                        radius=ft(1.7),
+                        shape=7,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(5), 0, ft(0)],
+                        radius=ft(2.7),
+                        shape=7,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(10, 4), 0, ft(0.3)],
+                        radius=ft(2.3),
+                        shape=7,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(21, 11), 0, ft(0.8)],
+                        radius=ft(0.3),
+                        shape=3,
+                    ),
+                ]
+            ).translate([ft(-5), 0, ft(-3)])
+        ]
+    )
+
+    airplane.draw_three_view()
