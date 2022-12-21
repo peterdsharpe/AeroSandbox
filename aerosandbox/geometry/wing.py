@@ -33,7 +33,7 @@ class Wing(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name: str = None,
+                 name: Optional[str] = None,
                  xsecs: List['WingXSec'] = None,
                  symmetric: bool = False,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,

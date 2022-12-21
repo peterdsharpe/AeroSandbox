@@ -15,10 +15,11 @@ class Airplane(AeroSandboxObject):
         An Airplane consists chiefly of a collection of wings and fuselages. These can be accessed with
         `Airplane.wings` and `Airplane.fuselages`, which gives a list of those respective components. Each wing is a
         Wing object, and each fuselage is a Fuselage object.
+
     """
 
     def __init__(self,
-                 name: str = None,
+                 name: Optional[str] = None,
                  xyz_ref: Union[np.ndarray, List] = None,
                  wings: Optional[List[Wing]] = None,
                  fuselages: Optional[List[Fuselage]] = None,

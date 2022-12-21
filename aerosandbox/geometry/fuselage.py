@@ -27,7 +27,7 @@ class Fuselage(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name: str = "Untitled",
+                 name: Optional[str] = "Untitled",
                  xsecs: List['FuselageXSec'] = None,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  symmetric: bool = False,  # Deprecated
