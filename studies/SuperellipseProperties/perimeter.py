@@ -39,10 +39,8 @@ def get_arc_length(s):
 
     return arc_length
 
-s = np.linspace(1e-3, 50, 50)
+s = np.concatenate([
+    np.linspace(1e-6, 3, 200),
+    np.linspace(3, 50, 100)[1:]
+])
 arc_lengths = get_arc_length(s)
-
-fig, ax = plt.subplots()
-plt.plot(s, arc_lengths)
-# p.equal()
-p.show_plot()
