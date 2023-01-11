@@ -278,6 +278,8 @@ class AeroBuildup(ExplicitAnalysis):
         # wing_options = self.get_options(wing) # currently no wing options
 
         ##### Compute general wing properties
+        wing_MAC = wing.mean_aerodynamic_chord()
+        wing_taper = wing.taper_ratio()
         wing_sweep = wing.mean_sweep_angle()
         AR_effective = wing.aspect_ratio(type="effective")
         AR_geometric = wing.aspect_ratio(type="geometric")
@@ -290,13 +292,27 @@ class AeroBuildup(ExplicitAnalysis):
             Cl_is_compressible=True
         )
         oswalds_efficiency = aerolib.oswalds_efficiency(
-            taper_ratio=wing.taper_ratio(),
+            taper_ratio=wing_taper,
             aspect_ratio=AR_effective,
             sweep=wing_sweep,
             fuselage_diameter_to_span_ratio=0  # an assumption
         )
         areas = wing.area(_sectional=True)
+
         aerodynamic_centers = wing.aerodynamic_center(_sectional=True)
+
+        ### Model for the neutral point movement due to lifting-line unsweep near centerline
+        # See /studies/AeroBuildup_LL_unsweep_calibration
+        a = AR_effective / (AR_effective + 2)
+        s = np.radians(wing_sweep)
+        t = np.exp(-wing_taper)
+        neutral_point_deviation_due_to_unsweep = -(
+            ((((3.557726 ** (a ** 2.8443985)) * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)) + (a + -0.89228547)) * -0.16073418)
+        ) * wing_MAC
+        aerodynamic_centers = [
+            ac + np.array([neutral_point_deviation_due_to_unsweep, 0, 0])
+            for ac in aerodynamic_centers
+        ]
 
         xsec_quarter_chords = [
             wing._compute_xyz_of_WingXSec(
