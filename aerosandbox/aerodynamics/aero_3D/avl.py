@@ -672,7 +672,7 @@ class AVL(ExplicitAnalysis):
                     value = np.nan
 
             if key in items.keys():  # If you already have this key
-                if overwrite is None:
+                if overwrite is None:  # If the `overwrite` parameter wasn't explicitly defined True/False, raise an error
                     raise ValueError(
                         f"Key \"{key}\" is being overwritten, and no behavior has been specified here (Default behavior is to error).\n"
                         f"Check that the output file doesn't have a duplicate here.\n"
@@ -723,7 +723,7 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        working_directory=str(Path.home() / "Downloads" / "avl_test"),
+        working_directory=str(Path.home() / "Downloads" / "test"),
         verbose=True
     )
 
