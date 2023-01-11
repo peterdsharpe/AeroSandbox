@@ -1,7 +1,9 @@
+import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
 from abc import abstractmethod
 import copy
 from typing import Dict, Any
+import casadi as cas
 
 
 class AeroSandboxObject:
@@ -14,7 +16,10 @@ class AeroSandboxObject:
         """
         pass
 
-    def substitute_solution(self, sol):
+    def substitute_solution(self,
+                            sol: cas.OptiSol,
+                            inplace: bool = None,
+                            ):
         """
         Substitutes a solution from CasADi's solver recursively as an in-place operation.
 
@@ -23,35 +28,100 @@ class AeroSandboxObject:
         :return:
         """
 
-        def convert(item):
-            try:
-                return sol.value(item)
-            except NotImplementedError:
-                pass
+        # Set defaults
+        if inplace is None:
+            inplace = True
 
+        def convert(item):
+            """
+            This is essentially a supercharged version of sol.value(), which works for more iterable types.
+
+            Args:
+                item:
+
+            Returns:
+
+            """
+
+            # If it can be converted, do the conversion.
+            if np.is_casadi_type(item, recursive=False):
+                return sol.value(item)
+
+            t = type(item)
+
+            # If it's a Python iterable, recursively convert it.
+            if issubclass(t, list):
+                return [convert(i) for i in item]
+            if issubclass(t, tuple):
+                return tuple([convert(i) for i in item])
+            if issubclass(t, set) or issubclass(t, frozenset):
+                return {convert(i) for i in item}
+            if issubclass(t, dict):
+                return {
+                    convert(k): convert(v)
+                    for k, v in item.items()
+                }
+
+            # Skip certain Python types
+            for type_to_skip in (
+                    bool, str,
+                    int, float, complex,
+                    range,
+                    type(None),
+                    bytes, bytearray, memoryview
+            ):
+                if issubclass(t, type_to_skip):
+                    return item
+
+            # Skip certain CasADi types
+            for type_to_skip in (
+                    cas.Opti,
+                    cas.OptiSol
+            ):
+                if issubclass(t, type_to_skip):
+                    return item
+
+            # If it's any other type, try converting its attribute dictionary:
             try:
-                return item.substitute_solution(sol)
+                newdict = {
+                    k: convert(v)
+                    for k, v in item.__dict__.items()
+                }
+
+                if inplace:
+                    for k, v in newdict.items():
+                        setattr(item, k, v)
+
+                    return item
+
+                else:
+                    newitem = copy.copy(item)
+                    for k, v in newitem.items():
+                        setattr(newitem, k, v)
+
+                    return newitem
+
             except AttributeError:
                 pass
 
-            if isinstance(item, list) or isinstance(item, tuple):
-                return [convert(i) for i in item]
+            # Try converting it blindly. This will catch most NumPy-array-like types.
+            try:
+                return sol.value(item)
+            except (NotImplementedError, TypeError, ValueError):
+                pass
+
+            # At this point, we're not really sure what type the object is. Raise a warning and return the item, then hope for the best.
+            import warnings
+            warnings.warn(f"In solution substitution, could not convert an object of type {t}.\n"
+                          f"Returning it and hoping for the best.", UserWarning)
 
             return item
 
-        for attrib_name in self.__dict__.keys():
-            attrib_value = getattr(self, attrib_name)
+        if inplace:
+            convert(self)
 
-            if isinstance(attrib_value, bool) or isinstance(attrib_value, int) or isinstance(attrib_value, float):
-                continue
-
-            try:
-                setattr(self, attrib_name, convert(attrib_value))
-                continue
-            except (TypeError, AttributeError):
-                pass
-
-        return self
+        else:
+            return convert(self)
 
 
 class ExplicitAnalysis(AeroSandboxObject):
