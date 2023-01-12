@@ -413,6 +413,8 @@ class AeroBuildup(ExplicitAnalysis):
             alpha_generalized_effective = (
                     alpha_generalized -
                     (1 - AR_3D_factor ** 0.8) * np.sind(2 * alpha_generalized) / 2 * (180 / np.pi)
+                    # TODO: "center" this scaling around alpha = alpha_{airfoil, Cl=0}, not around alpha = 0.
+                    # TODO Can estimate airfoil's alpha_{Cl=0} by camber + thin airfoil theory + viscous decambering knockdown.
             )  # Models finite-wing increase in alpha_{CL_max}.
 
             ##### Compute the control surface deflection
