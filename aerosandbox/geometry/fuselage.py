@@ -103,8 +103,8 @@ class Fuselage(AeroSandboxObject):
         return f"Fuselage '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'})"
 
     def translate(self,
-                  xyz: np.ndarray
-                  ):
+                  xyz: Union[np.ndarray, List[float]]
+                  ) -> "Fuselage":
         """
         Translates the entire Fuselage by a certain amount.
 
@@ -489,7 +489,7 @@ class FuselageXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_c: Union[np.ndarray, List] = np.array([0, 0, 0]),
+                 xyz_c: Union[np.ndarray, List[float]] = np.array([0, 0, 0]),
                  radius: float = 0,
                  shape: float = 2.,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
@@ -631,7 +631,7 @@ class FuselageXSec(AeroSandboxObject):
         return perimeter
 
     def translate(self,
-                  xyz: np.ndarray
+                  xyz: Union[np.ndarray, List[float]]
                   ) -> "FuselageXSec":
         """
         Returns a copy of this FuselageXSec that has been translated by `xyz`.
