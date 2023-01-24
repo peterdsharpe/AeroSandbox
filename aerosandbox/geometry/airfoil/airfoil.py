@@ -874,6 +874,87 @@ class Airfoil(Polygon):
             coordinates=coordinates
         )
 
+    def set_TE_thickness(self,
+                         thickness: float = 0.,
+                         ) -> 'Airfoil':
+        """
+        Creates a modified copy of the Airfoil that has a specified trailing-edge thickness.
+
+        Note that the trailing-edge thickness is given nondimensionally (e.g., as a fraction of chord).
+
+        Args:
+            thickness: The target trailing-edge thickness, given nondimensionally (e.g., as a fraction of chord).
+
+        Returns: The modified airfoil.
+
+        """
+        ### Compute existing trailing-edge properties
+        x_gap = self.coordinates[0, 0] - self.coordinates[-1, 0]
+        y_gap = self.coordinates[0, 1] - self.coordinates[-1, 1]
+
+        s_gap = (
+                        x_gap ** 2 +
+                        y_gap ** 2
+                ) ** 0.5
+
+        s_adjustment = (thickness - self.TE_thickness()) / 2
+
+        ### Determine how much the trailing edge should move by in X and Y.
+        if s_gap != 0:
+            x_adjustment = s_adjustment * x_gap / s_gap
+            y_adjustment = s_adjustment * y_gap / s_gap
+        else:
+            x_adjustment = 0
+            y_adjustment = s_adjustment
+
+        ### Decompose the existing airfoil coordinates to upper and lower sides, and x and y.
+        u = self.upper_coordinates()
+        ux = u[:, 0]
+        uy = u[:, 1]
+
+        le_x = ux[-1]
+
+        l = self.lower_coordinates()[1:]
+        lx = l[:, 0]
+        ly = l[:, 1]
+
+        te_x = (ux[0] + lx[-1]) / 2
+
+        ### Create modified versions of the upper and lower coordinates
+        new_u = np.stack(
+            arrays=[
+                ux + x_adjustment * (ux - le_x) / (te_x - le_x),
+                uy + y_adjustment * (ux - le_x) / (te_x - le_x)
+            ],
+            axis=1
+        )
+        new_l = np.stack(
+            arrays=[
+                lx - x_adjustment * (lx - le_x) / (te_x - le_x),
+                ly - y_adjustment * (lx - le_x) / (te_x - le_x)
+            ],
+            axis=1
+        )
+
+        ### If the desired thickness is zero, ensure that is precisely reached.
+        if thickness == 0:
+            new_l[-1] = new_u[0]
+
+        ### Combine the upper and lower surface coordinates into a single array.
+        new_coordinates = np.concatenate(
+            [
+                new_u,
+                new_l
+            ],
+            axis=0
+        )
+
+        ### Return a new Airfoil with the desired coordinates.
+        return Airfoil(
+            name=self.name,
+            coordinates=new_coordinates
+        )
+
     def scale(self,
               scale_x: float = 1.,
               scale_y: float = 1.,
