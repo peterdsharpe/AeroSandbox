@@ -825,10 +825,38 @@ class Wing(AeroSandboxObject):
         from aerosandbox.geometry.airplane import Airplane
         return Airplane(wings=[self]).draw(*args, **kwargs)
 
+    def draw_wireframe(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw_wireframe() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw_wireframe()
+            **kwargs: Keyword arguments to pass through to Airplane.draw_wireframe()
+
+        Returns: Same return as Airplane.draw_wireframe()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(wings=[self]).draw_wireframe(*args, **kwargs)
+
+    def draw_three_view(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw_three_view() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw_three_view()
+            **kwargs: Keyword arguments to pass through to Airplane.draw_three_view()
+
+        Returns: Same return as Airplane.draw_three_view()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(wings=[self]).draw_three_view(*args, **kwargs)
+
     def subdivide_sections(self, ratio: int) -> "Wing":
         """
-        Generates a new wing that subdivides the existing sections of this Wing into several smaller ones. Splits
-        each section into `ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
+        Generates a new Wing that subdivides the existing sections of this Wing into several smaller ones. Splits
+        each section into N=`ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
 
         This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
 
@@ -838,6 +866,8 @@ class Wing(AeroSandboxObject):
         Returns: A new Wing object with subdivided sections.
 
         """
+        if not ratio >= 2:
+            raise ValueError("`ratio` must be an integer greater than or equal to 2.")
 
         new_xsecs = []
         span_fractions_along_section = np.linspace(0, 1, ratio + 1)[:-1]

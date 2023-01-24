@@ -393,6 +393,75 @@ class Fuselage(AeroSandboxObject):
         from aerosandbox.geometry.airplane import Airplane
         return Airplane(fuselages=[self]).draw(*args, **kwargs)
 
+    def draw_wireframe(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw_wireframe() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw_wireframe()
+            **kwargs: Keyword arguments to pass through to Airplane.draw_wireframe()
+
+        Returns: Same return as Airplane.draw_wireframe()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(fuselages=[self]).draw_wireframe(*args, **kwargs)
+
+    def draw_three_view(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw_three_view() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw_three_view()
+            **kwargs: Keyword arguments to pass through to Airplane.draw_three_view()
+
+        Returns: Same return as Airplane.draw_three_view()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(fuselages=[self]).draw_three_view(*args, **kwargs)
+
+    def subdivide_sections(self, ratio: int) -> "Fuselage":
+        """
+        Generates a new Fuselage that subdivides the existing sections of this Fuselage into several smaller ones. Splits
+        each section into N=`ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
+
+        This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
+
+        Args:
+            ratio: The number of new sections to split each old section into.
+
+        Returns: A new Fuselage object with subdivided sections.
+
+        """
+        if not ratio >= 2:
+            raise ValueError("`ratio` must be an integer greater than or equal to 2.")
+
+        new_xsecs = []
+        length_fractions_along_section = np.linspace(0, 1, ratio + 1)[:-1]
+
+        for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
+            for s in length_fractions_along_section:
+                a_weight = 1 - s
+                b_weight = s
+
+                new_xsecs.append(
+                    FuselageXSec(
+                        xyz_c=xsec_a.xyz_c * a_weight + xsec_b.xyz_c * b_weight,
+                        radius=xsec_a.radius * a_weight + xsec_b.radius * b_weight,
+                        shape=xsec_a.shape * a_weight + xsec_b.shape * b_weight,
+                        analysis_specific_options=xsec_a.analysis_specific_options,
+                    )
+                )
+
+        new_xsecs.append(self.xsecs[-1])
+
+        return Fuselage(
+            name=self.name,
+            xsecs=new_xsecs,
+            analysis_specific_options=self.analysis_specific_options
+        )
+
     def _compute_frame_of_FuselageXSec(self, index: int):
 
         if index == len(self.xsecs) - 1:
