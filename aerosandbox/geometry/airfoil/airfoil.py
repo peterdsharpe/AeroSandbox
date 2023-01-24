@@ -833,10 +833,15 @@ class Airfoil(Polygon):
             hinge_point_x: float = 0.75,
     ) -> 'Airfoil':
         """
-        Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
-        :param deflection: deflection angle [degrees]. Downwards-positive.
-        :param hinge_point_x: location of the hinge, as a fraction of chord [float].
-        :return: The new airfoil.
+        Returns a version of the airfoil with a trailing-edge control surface added at a given point. Implicitly
+        repanels the airfoil as part of this operation.
+
+        Args:
+            deflection: Deflection angle [degrees]. Downwards-positive.
+            hinge_point_x: Chordwise location of the hinge, as a fraction of chord (x/c) [float]
+
+        Returns: an Airfoil object with the new control deflection.
+
         """
 
         # Make the rotation matrix for the given angle.
