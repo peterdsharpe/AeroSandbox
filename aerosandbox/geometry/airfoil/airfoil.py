@@ -746,7 +746,13 @@ class Airfoil(Polygon):
         """
         Returns the thickness of the trailing edge of the airfoil.
         """
-        return self.local_thickness(x_over_c=1)
+        x_gap = self.coordinates[0, 0] - self.coordinates[-1, 0]
+        y_gap = self.coordinates[0, 1] - self.coordinates[-1, 1]
+
+        return (
+                x_gap ** 2 +
+                y_gap ** 2
+        ) ** 0.5
 
     def TE_angle(self) -> float:
         """
