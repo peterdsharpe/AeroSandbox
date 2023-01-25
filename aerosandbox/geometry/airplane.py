@@ -521,6 +521,110 @@ class Airplane(AeroSandboxObject):
         if show:
             plt.show()
 
+    def export_cadquery_solid(self,
+                              filename: str = None,
+                              ) -> "Workplane":
+        import cadquery as cq
+
+        solids = []
+
+        for wing in self.wings:
+
+            xsec_wires = []
+
+            for i, xsec in enumerate(wing.xsecs):
+                csys = wing._compute_frame_of_WingXSec(i)
+
+                xsec_wires.append(
+                    cq.Workplane(
+                        inPlane=cq.Plane(
+                            origin=tuple(xsec.xyz_le),
+                            xDir=tuple(csys[0]),
+                            normal=tuple(-csys[1])
+                        )
+                    ).spline(
+                        listOfXYTuple=[
+                            tuple(xy * xsec.chord)
+                            for xy in xsec.airfoil.set_TE_thickness(0).coordinates
+                        ]
+                    ).close()
+                )
+
+            wire_collection = xsec_wires[0]
+            for s in xsec_wires[1:]:
+                wire_collection.ctx.pendingWires.extend(s.ctx.pendingWires)
+
+            loft = wire_collection.loft(ruled=True, clean=True)
+
+            if wing.symmetric:
+                loft = loft.mirror(
+                    mirrorPlane='XZ',
+                    union=True
+                )
+
+            solids.append(loft)
+
+        for fuse in self.fuselages:
+
+            xsec_wires = []
+
+            for i, xsec in enumerate(fuse.xsecs):
+                csys = fuse._compute_frame_of_FuselageXSec(i)
+
+                scale = xsec.radius
+
+                tol = 1e-4
+                if scale == 0:
+                    if i == 0:
+                        if np.abs(xsec.xyz_c[0] - fuse.xsecs[1].xyz_c[0]) < tol:
+                            continue
+                    if i == len(fuse.xsecs) - 1:
+                        if np.abs(xsec.xyz_c[0] - fuse.xsecs[-2].xyz_c[0]) < tol:
+                            continue
+                    scale = tol
+
+                theta = np.linspace(0, 2 * np.pi, 121)
+                st = np.sin(theta)
+                ct = np.cos(theta)
+                x_nondim = np.abs(ct) ** (2 / xsec.shape) * np.where(ct > 0, 1, -1)
+                y_nondim = np.abs(st) ** (2 / xsec.shape) * np.where(st > 0, 1, -1)
+
+                xsec_wires.append(
+                    cq.Workplane(
+                        inPlane=cq.Plane(
+                            origin=tuple(xsec.xyz_c),
+                            xDir=(0, 1, 0),
+                            normal=(-1, 0, 0)
+                        )
+                    ).spline(
+                        listOfXYTuple=[
+                            (x * scale, y * scale)
+                            for x, y in zip(x_nondim, y_nondim)
+                        ]
+                    ).close()
+                )
+
+            wire_collection = xsec_wires[0]
+            for s in xsec_wires[1:]:
+                wire_collection.ctx.pendingWires.extend(s.ctx.pendingWires)
+
+            loft = wire_collection.loft(ruled=True, clean=True)
+
+            solids.append(loft)
+
+        solid = solids[0]
+        for s in solids[1:]:
+            solid.add(s)
+
+        if filename is not None:
+            from cadquery import exporters
+            exporters.export(
+                solid,
+                fname=filename
+            )
+
+        return solid
+
     def is_entirely_symmetric(self):
         """
         Returns a boolean describing whether the airplane is geometrically entirely symmetric across the XZ-plane.
