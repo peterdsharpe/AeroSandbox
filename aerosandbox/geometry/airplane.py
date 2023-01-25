@@ -521,9 +521,7 @@ class Airplane(AeroSandboxObject):
         if show:
             plt.show()
 
-    def export_cadquery_solid(self,
-                              filename: str = None,
-                              ) -> "Workplane":
+    def generate_cadquery_geometry(self) -> "Workplane":
         import cadquery as cq
 
         solids = []
@@ -554,7 +552,7 @@ class Airplane(AeroSandboxObject):
             for s in xsec_wires[1:]:
                 wire_collection.ctx.pendingWires.extend(s.ctx.pendingWires)
 
-            loft = wire_collection.loft(ruled=True, clean=True)
+            loft = wire_collection.loft(ruled=True, clean=False)
 
             if wing.symmetric:
                 loft = loft.mirror(
@@ -608,7 +606,7 @@ class Airplane(AeroSandboxObject):
             for s in xsec_wires[1:]:
                 wire_collection.ctx.pendingWires.extend(s.ctx.pendingWires)
 
-            loft = wire_collection.loft(ruled=True, clean=True)
+            loft = wire_collection.loft(ruled=True, clean=False)
 
             solids.append(loft)
 
@@ -616,14 +614,23 @@ class Airplane(AeroSandboxObject):
         for s in solids[1:]:
             solid.add(s)
 
-        if filename is not None:
-            from cadquery import exporters
-            exporters.export(
-                solid,
-                fname=filename
-            )
+        return solid.clean()
 
-        return solid
+    def export_cadquery_geometry(self,
+                        filename: str
+                        ) -> None:
+        solid = self.generate_cadquery_solid()
+
+        solid.objects = [
+            o.scale(1000)
+            for o in solid.objects
+        ]
+
+        from cadquery import exporters
+        exporters.export(
+            solid,
+            fname=filename
+        )
 
     def is_entirely_symmetric(self):
         """
