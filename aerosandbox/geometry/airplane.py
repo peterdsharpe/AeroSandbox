@@ -617,8 +617,8 @@ class Airplane(AeroSandboxObject):
         return solid.clean()
 
     def export_cadquery_geometry(self,
-                        filename: str
-                        ) -> None:
+                                 filename: str
+                                 ) -> None:
         solid = self.generate_cadquery_geometry()
 
         solid.objects = [
