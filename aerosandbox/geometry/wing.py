@@ -125,19 +125,19 @@ class Wing(AeroSandboxObject):
         return new_wing
 
     def span(self,
-             type: str = "wetted",
+             type: str = "planform",
              _sectional: bool = False,
              ) -> float:
         """
-        Returns the span, with options for various ways of measuring this.
+        Returns the span, with options for various ways of measuring this:
 
-         * wetted: Adds up YZ-distances of each section piece by piece
+         * "planform" or "wetted": Adds up YZ-distances of each section piece by piece
 
-         * y: Adds up the Y-distances of each section piece by piece
+         * "y": Adds up the Y-distances of each section piece by piece
 
-         * z: Adds up the Z-distances of each section piece by piece
+         * "z": Adds up the Z-distances of each section piece by piece
 
-         * y-full: Y-distance between the XZ plane and the tip of the wing. (Can't be used with _sectional).
+         * "y-full": Y-distance between the XZ plane and the tip of the wing. (Can't be used with _sectional).
 
         If symmetric, this is doubled left/right to obtain the full span. With symmetric wings, note that if the root
         cross-section is not coincident with the centerline, the fictitious span connecting the left and right root
@@ -177,7 +177,7 @@ class Wing(AeroSandboxObject):
                     quarter_chord_vectors[inner_i]
             )
 
-            if type == "wetted":
+            if type == "planform" or type == "wetted":
                 section_span = (
                                        quarter_chord_vector[1] ** 2 +
                                        quarter_chord_vector[2] ** 2
