@@ -226,6 +226,7 @@ class Wing(AeroSandboxObject):
                 `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
 
         """
+
         area = 0
         chords = [xsec.chord for xsec in self.xsecs]
 
@@ -254,7 +255,7 @@ class Wing(AeroSandboxObject):
         if _sectional:
             return sectional_areas
 
-        if self.symmetric:
+        if self.symmetric: # Returns the total area of both the left and right wing halves on mirrored wings.
             area *= 2
 
         return area
