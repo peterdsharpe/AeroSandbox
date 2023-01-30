@@ -206,13 +206,17 @@ class Wing(AeroSandboxObject):
             return span
 
     def area(self,
-             type: str = "wetted",
+             type: str = "planform",
              _sectional: bool = False,
              ) -> Union[float, List[float]]:
         """
-        Computes the wing area, with options for various ways of measuring this.
+        Computes the wing area, with options for various ways of measuring this:
 
-         * wetted: wetted area
+         * "planform": The typical definition of wing area. Treats the wing as a group of sections represented as
+         thin sheets, each of which is a quadrilateral. Computes the one-sided area of each quadrilateral section,
+         then sums them up.
+
+         * "wetted": The wetted area of the wing (counts both sides of the wing, and accounts for airfoil curvature).
 
          * projected: area projected onto the XY plane (top-down view)
 
@@ -227,15 +231,27 @@ class Wing(AeroSandboxObject):
 
         """
 
-        area = 0
-        chords = [xsec.chord for xsec in self.xsecs]
-
-        if type == "wetted":
+        if type == "planform":
+            sectional_spans = self.span(_sectional=True)
+        elif type == "wetted":
             sectional_spans = self.span(_sectional=True)
         elif type == "projected":
             sectional_spans = self.span(type="y", _sectional=True)
         else:
             raise ValueError("Bad value of `type`!")
+
+        if type == "planform":
+            chords = [xsec.chord for xsec in self.xsecs]
+        elif type == "wetted":
+            chords = [
+                xsec.chord * xsec.airfoil.perimeter()
+                for xsec in self.xsecs
+            ]
+        elif type == "projected":
+            chords = [xsec.chord for xsec in self.xsecs]
+        else:
+            raise ValueError("Bad value of `type`!")
+
         sectional_chords = [
             (inner_chord + outer_chord) / 2
             for inner_chord, outer_chord in zip(
@@ -255,7 +271,7 @@ class Wing(AeroSandboxObject):
         if _sectional:
             return sectional_areas
 
-        if self.symmetric: # Returns the total area of both the left and right wing halves on mirrored wings.
+        if self.symmetric:  # Returns the total area of both the left and right wing halves on mirrored wings.
             area *= 2
 
         return area
