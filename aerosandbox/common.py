@@ -96,7 +96,7 @@ class AeroSandboxObject:
 
                 else:
                     newitem = copy.copy(item)
-                    for k, v in newitem.items():
+                    for k, v in newdict.items():
                         setattr(newitem, k, v)
 
                     return newitem
