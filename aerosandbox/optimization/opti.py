@@ -1,4 +1,5 @@
 from typing import Union, List, Dict, Callable, Any
+import numpy.typing as npt
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -635,7 +636,7 @@ class Opti(cas.Opti):
         return sol
 
     def solve_sweep(self,
-                    parameter_mapping: Dict[cas.MX, np.ndarray[float]] = None,
+                    parameter_mapping: Dict[cas.MX, npt.NDArray[float]] = None,
                     update_initial_guesses_between_solves=False,
                     verbose=True,
                     solve_kwargs: Dict = None
