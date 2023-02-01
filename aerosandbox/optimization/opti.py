@@ -634,6 +634,87 @@ class Opti(cas.Opti):
 
         return sol
 
+    def solve_sweep(self,
+                    parameter_mapping: Dict[cas.MX, np.ndarray[float]] = None,
+                    update_initial_guesses_between_solves=False,
+                    verbose=True,
+                    solve_kwargs: Dict = None
+                    ) -> np.ndarray[Union[cas.OptiSol, None]]:
+
+        # Handle defaults
+        if solve_kwargs is None:
+            solve_kwargs = {}
+        solve_kwargs = {
+            **dict(
+                verbose=False,
+            ),
+            **solve_kwargs
+        }
+
+        # Split parameter_mappings up so that it can be passed into run() via np.vectorize
+        keys: tuple[cas.MX] = tuple(parameter_mapping.keys())
+        values: tuple[np.ndarray[float]] = tuple(parameter_mapping.values())
+
+        # Display an output
+        if verbose:
+            print("Running optimization sweep in serial...")
+
+        n_runs = np.broadcast(*values).size
+        run_number = 1
+
+        def run(*args):
+            # Reconstruct parameter mapping on a run-by-run basis by zipping together keys and this run's values.
+            parameter_mappings_for_this_run: [cas.MX, float] = {
+                k: v
+                for k, v in zip(keys, args)
+            }
+
+            # Pull in run_number so that we can increment this counter
+            nonlocal run_number
+
+            # Display as needed
+            if verbose:
+                print(
+                    "|".join(
+                        [
+                            f"Run {run_number}/{n_runs}".ljust(12)
+                        ] + [
+                            f"{v:10.5g}"
+                            for v in args
+                        ] + [""]
+                    ),
+                    end=''  # Leave the newline off, since we'll complete the line later with a success or fail print.
+                )
+
+            run_number += 1
+
+            try:
+                sol = self.solve(
+                    parameter_mapping=parameter_mappings_for_this_run,
+                    **solve_kwargs
+                )
+
+                if update_initial_guesses_between_solves:
+                    self.set_initial_from_sol(sol)
+
+                if verbose:
+                    print("")
+
+            except RuntimeError:
+                if verbose:
+                    print(" Failed to converge!")
+
+                return None
+
+            return sol
+
+        run = np.vectorize(
+            run,
+            otypes=[cas.OptiSol]
+        )
+
+        return run(*values)
+
     ### Debugging Methods
     def find_variable_declaration(self,
                                   index: int,
