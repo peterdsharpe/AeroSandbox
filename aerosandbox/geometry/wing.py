@@ -155,8 +155,8 @@ class Wing(AeroSandboxObject):
             return self._compute_xyz_of_WingXSec(
                 -1,
                 x_nondim=0.25,
-                y_nondim=0.25
-            )[1]
+                y_nondim=0,
+            )[1] * (2 if self.symmetric else 1)
 
         sectional_spans = []
 
