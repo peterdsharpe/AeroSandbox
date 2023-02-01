@@ -49,7 +49,7 @@ class AeroSandboxObject:
 
             t = type(item)
 
-            # If it's a Python iterable, recursively convert it.
+            # If it's a Python iterable, recursively convert it, and preserve the type as best as possible.
             if issubclass(t, list):
                 return [convert(i) for i in item]
             if issubclass(t, tuple):
