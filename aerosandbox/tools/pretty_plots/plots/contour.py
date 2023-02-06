@@ -128,9 +128,9 @@ def contour(
                 "All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!"
             )
 
-        Z_ratio = np.max(Z) / np.min(Z)
-        log10_ceil_z_max = np.ceil(np.log10(np.max(Z)))
-        log10_floor_z_min = np.floor(np.log10(np.min(Z)))
+        Z_ratio = np.nanmax(Z) / np.nanmin(Z)
+        log10_ceil_z_max = np.ceil(np.log10(np.nanmax(Z)))
+        log10_floor_z_min = np.floor(np.log10(np.nanmin(Z)))
 
         try:
             default_levels = int(levels)
