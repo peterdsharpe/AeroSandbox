@@ -265,11 +265,16 @@ def solar_flux(
 
         air_quality: Indicates the amount of pollution in the air. A string, one of:
 
+            * 'clean': Pristine atmosphere conditions.
+            
             * 'typical': Corresponds to "rural aerosol loading" following ASTM G-173.
 
-            * 'clean': Pristine atmosphere conditions.
-
             * 'polluted': Urban atmosphere conditions.
+            
+            Note: in very weird edge cases, a polluted atmosphere can actually result in slightly higher solar flux
+            than clean air, due to increased back-scattering. For example, imagine it's near sunset, with the sun in
+            the west, and your panel normal vector points east. Increased pollution can, in some edge cases,
+            result in enough increased back-scattering (multipathing) that you have a smidge more illumination.
 
         albedo: The fraction of light that hits the ground that is reflected. Affects illumination from re-scattering
         when panels are tilted. Typical values for general terrestrial surfaces are 0.2, which is the default here.
