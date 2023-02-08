@@ -16,6 +16,4 @@ Here's how this works:
 
 * Each tutorial file is designed to take ~5 minutes to read through and will introduce you to several new features.
 
-* Many of the Markdown files (such as the `README.md` files) use inline LaTeX to represent mathematical equations. Your viewing experience will be **greatly** improved if you get a modern Markdown editor like [Typora](https://typora.io/) (once you get Typora, be sure to turn on "Inline LaTeX" in Preferences). [PyCharm](https://www.jetbrains.com/pycharm/) and VSCode will also render Markdown well. Side note: If you're a scientist unfamiliar with Markdown with a modern editor, you're in for a real treat - download Typora and have your mind blown!
-
 Happy reading!

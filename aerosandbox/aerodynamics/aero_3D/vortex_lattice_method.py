@@ -4,7 +4,8 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
-from typing import Dict, Any
+from typing import Dict, Any, List
+import copy
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
@@ -419,6 +420,16 @@ class VortexLatticeMethod(ExplicitAnalysis):
                         * scaling_factors[derivative_denominator]
                 )
 
+            ### Try to compute and append neutral point, if possible
+            if derivative_denominator == "alpha":
+                run_base["x_np"] = self.xyz_ref[0] - (
+                        run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
+                )
+            if derivative_denominator == "beta":
+                run_base["x_np_lateral"] = self.xyz_ref[0] - (
+                        run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
+                )
+
         return run_base
 
     def get_induced_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
@@ -652,7 +663,7 @@ if __name__ == '__main__':
 
     from pathlib import Path
 
-    geometry_folder = Path(asb.__file__).parent.parent / "tutorial" / "04 - Geometry" / "example_geometry"
+    geometry_folder = Path(__file__).parent / "test_aero_3D" / "geometries"
 
     import sys
 
@@ -661,7 +672,7 @@ if __name__ == '__main__':
     from vanilla import airplane as vanilla
 
     ### Do the AVL run
-    analysis = VortexLatticeMethod(
+    vlm = VortexLatticeMethod(
         airplane=vanilla,
         op_point=asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=0),
@@ -676,7 +687,7 @@ if __name__ == '__main__':
         chordwise_resolution=12,
     )
 
-    res = analysis.run()
+    res = vlm.run()
 
     for k, v in res.items():
-        print(f"{str(k).rjust(10)} : {v:.4f}")
+        print(f"{str(k).rjust(10)} : {v}")

@@ -2,6 +2,8 @@ from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union, Optional
 import aerosandbox.geometry.mesh_utilities as mesh_utils
+from aerosandbox.geometry.wing import Wing
+from aerosandbox.geometry.fuselage import Fuselage
 
 
 class Airplane(AeroSandboxObject):
@@ -13,13 +15,14 @@ class Airplane(AeroSandboxObject):
         An Airplane consists chiefly of a collection of wings and fuselages. These can be accessed with
         `Airplane.wings` and `Airplane.fuselages`, which gives a list of those respective components. Each wing is a
         Wing object, and each fuselage is a Fuselage object.
+
     """
 
     def __init__(self,
-                 name: str = None,
+                 name: Optional[str] = None,
                  xyz_ref: Union[np.ndarray, List] = None,
-                 wings: Optional[List['Wing']] = None,
-                 fuselages: Optional[List['Fuselage']] = None,
+                 wings: Optional[List[Wing]] = None,
+                 fuselages: Optional[List[Fuselage]] = None,
                  s_ref: Optional[float] = None,
                  c_ref: Optional[float] = None,
                  b_ref: Optional[float] = None,
@@ -78,9 +81,9 @@ class Airplane(AeroSandboxObject):
         if xyz_ref is None:
             xyz_ref = np.array([0., 0., 0.])
         if wings is None:
-            wings: List['Wing'] = []
+            wings: List[Wing] = []
         if fuselages is None:
-            fuselages: List['Fuselage'] = []
+            fuselages: List[Fuselage] = []
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -197,9 +200,37 @@ class Airplane(AeroSandboxObject):
         if show_kwargs is None:
             show_kwargs = {}
 
-        if backend == "plotly":
+        points, faces = self.mesh_body(method="quad", thin_wings=thin_wings)
 
-            points, faces = self.mesh_body(method="quad", thin_wings=thin_wings)
+        if backend == "matplotlib":
+            import matplotlib.pyplot as plt
+            import aerosandbox.tools.pretty_plots as p
+            from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+            fig, ax = p.figure3d()
+
+            ax.add_collection(
+                Poly3DCollection(
+                    points[faces],
+                    edgecolors="k",
+                    linewidths=0.2,
+                ),
+            )
+
+            ax.set_xlim(points[:, 0].min(), points[:, 0].max())
+            ax.set_ylim(points[:, 1].min(), points[:, 1].max())
+            ax.set_zlim(points[:, 2].min(), points[:, 2].max())
+
+            p.equal()
+
+            ax.set_xlabel("$x_g$")
+            ax.set_ylabel("$y_g$")
+            ax.set_zlabel("$z_g$")
+
+            if show:
+                p.show_plot()
+
+        elif backend == "plotly":
 
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
             fig = Figure3D()
@@ -215,9 +246,8 @@ class Airplane(AeroSandboxObject):
                     **show_kwargs
                 }
             return fig.draw(**show_kwargs)
-        elif backend == "pyvista":
 
-            points, faces = self.mesh_body(method="quad", thin_wings=thin_wings)
+        elif backend == "pyvista":
 
             import pyvista as pv
             fig = pv.PolyData(
@@ -231,9 +261,8 @@ class Airplane(AeroSandboxObject):
             if show:
                 fig.plot(**show_kwargs)
             return fig
-        elif backend == "trimesh":
 
-            points, faces = self.mesh_body(method="tri", thin_wings=thin_wings)
+        elif backend == "trimesh":
 
             import trimesh as tri
             fig = tri.Trimesh(points, faces)
@@ -242,6 +271,366 @@ class Airplane(AeroSandboxObject):
             return fig
         else:
             raise ValueError("Bad value of `backend`!")
+
+    def draw_wireframe(self,
+                       ax=None,
+                       color="k",
+                       thin_linewidth=0.2,
+                       thick_linewidth=0.5,
+                       fuselage_longeron_theta=None,
+                       set_equal: bool = True,
+                       show: bool = True,
+                       ):
+        import matplotlib.pyplot as plt
+        import aerosandbox.tools.pretty_plots as p
+
+        if ax is None:
+            fig, ax = p.figure3d(figsize=(8, 8))
+        else:
+            if not p.ax_is_3d(ax):
+                raise ValueError("`ax` must be a 3D axis.")
+
+            plt.sca(ax)
+
+        if fuselage_longeron_theta is None:
+            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 4 + 1)[:-1]
+
+        def plot_line(
+                xyz,
+                symmetric=False,
+                fmt="-",
+                color=color,
+                linewidth=0.4,
+                **kwargs
+        ):
+            if symmetric:
+                xyz = np.vstack([
+                    xyz,
+                    [np.nan] * 3,
+                    xyz * np.array([1, -1, 1])
+                ])
+
+            ax.plot(
+                xyz[:, 0],
+                xyz[:, 1],
+                xyz[:, 2],
+                fmt,
+                color=color,
+                linewidth=linewidth,
+                **kwargs
+            )
+
+        def reshape(x):
+            return np.array(x).reshape((1, 3))
+
+        ##### Wings
+        for wing in self.wings:
+
+            ### LE and TE lines
+            for xy in [
+                (0, 0),  # Leading Edge
+                (1, 0),  # Trailing Edge
+            ]:
+
+                plot_line(
+                    wing.mesh_line(x_nondim=xy[0], y_nondim=xy[1]),
+                    symmetric=wing.symmetric,
+                    linewidth=thick_linewidth,
+                )
+
+            ### Top and Bottom lines
+            x = 0.4
+            afs = [xsec.airfoil for xsec in wing.xsecs]
+            thicknesses = np.array([af.local_thickness(x_over_c=x) for af in afs])
+
+            plot_line(
+                wing.mesh_line(x_nondim=x, y_nondim=thicknesses / 2, add_camber=True),
+                symmetric=wing.symmetric,
+                linewidth=thin_linewidth,
+            )
+            plot_line(
+                wing.mesh_line(x_nondim=x, y_nondim=-thicknesses / 2, add_camber=True),
+                symmetric=wing.symmetric,
+                linewidth=thin_linewidth,
+            )
+
+            ### Airfoils
+            for i, xsec in enumerate(wing.xsecs):
+                xg_local, yg_local, zg_local = wing._compute_frame_of_WingXSec(i)
+                xg_local = reshape(xg_local)
+                yg_local = reshape(yg_local)
+                zg_local = reshape(zg_local)
+                origin = reshape(xsec.xyz_le)
+                scale = xsec.chord
+
+                line_upper = origin + (
+                        xsec.airfoil.upper_coordinates()[:, 0].reshape((-1, 1)) * scale * xg_local +
+                        xsec.airfoil.upper_coordinates()[:, 1].reshape((-1, 1)) * scale * zg_local
+                )
+                line_lower = origin + (
+                        xsec.airfoil.lower_coordinates()[:, 0].reshape((-1, 1)) * scale * xg_local +
+                        xsec.airfoil.lower_coordinates()[:, 1].reshape((-1, 1)) * scale * zg_local
+                )
+
+                for line in [line_upper, line_lower]:
+                    plot_line(
+                        line,
+                        symmetric=wing.symmetric,
+                        linewidth=thick_linewidth if i == 0 or i == len(wing.xsecs) - 1 else thin_linewidth
+                    )
+
+        ##### Fuselages
+        for fuse in self.fuselages:
+
+            xsec_shape_parameters = np.array([
+                xsec.shape
+                for xsec in fuse.xsecs
+            ])
+
+            ### Longerons
+            for theta in fuselage_longeron_theta:
+                st = np.sin(theta)
+                ct = np.cos(theta)
+
+                plot_line(
+                    fuse.mesh_line(
+                        x_nondim=np.abs(ct) ** (2 / xsec_shape_parameters) * np.where(ct > 0, 1, -1),
+                        y_nondim=np.abs(st) ** (2 / xsec_shape_parameters) * np.where(st > 0, 1, -1)
+                    ),
+                    linewidth=thick_linewidth
+                )
+
+            ### Centerline
+            plot_line(
+                fuse.mesh_line(x_nondim=0, y_nondim=0),
+                linewidth=thin_linewidth
+            )
+
+            ### Bulkheads
+            for i, xsec in enumerate(fuse.xsecs):
+                if xsec.radius < 1e-6:
+                    continue
+
+                xg_local, yg_local, zg_local = fuse._compute_frame_of_FuselageXSec(i)
+                xg_local = reshape(xg_local)
+                yg_local = reshape(yg_local)
+                zg_local = reshape(zg_local)
+                origin = reshape(xsec.xyz_c)
+                scale = xsec.radius
+
+                theta = np.linspace(0, 2 * np.pi, 121).reshape((-1, 1))
+                st = np.sin(theta)
+                ct = np.cos(theta)
+                x_nondim = np.abs(ct) ** (2 / xsec.shape) * np.where(ct > 0, 1, -1)
+                y_nondim = np.abs(st) ** (2 / xsec.shape) * np.where(st > 0, 1, -1)
+
+                line = origin + (
+                        x_nondim * scale * yg_local +
+                        y_nondim * scale * zg_local
+                )
+
+                plot_line(
+                    line,
+                    linewidth=thick_linewidth if i == 0 or i == len(fuse.xsecs) - 1 else thin_linewidth
+                )
+
+        if set_equal:
+            p.equal()
+
+        if show:
+            p.show_plot()
+
+    def draw_three_view(self,
+                        fig=None,
+                        show=True,
+                        ):
+        import matplotlib.pyplot as plt
+        import aerosandbox.tools.pretty_plots as p
+
+        if fig is None:
+            fig = plt.figure(figsize=(8, 8), dpi=400)
+
+        preset_view_angles = np.array([
+            ["XZ", "-YZ"],
+            ["XY", "left_isometric"]
+        ], dtype="O")
+
+        axes = np.empty_like(preset_view_angles, dtype="O")
+
+        for i in range(axes.shape[0]):
+            for j in range(axes.shape[1]):
+                ax = fig.add_subplot(
+                    axes.shape[0],
+                    axes.shape[1],
+                    i * axes.shape[0] + j + 1,
+                    projection='3d',
+                    proj_type='ortho',
+                    box_aspect=(1, 1, 1)
+                )
+
+                preset_view = preset_view_angles[i, j]
+
+                if 'isometric' in preset_view:
+                    ax.set_axis_off()
+                if preset_view == 'XY' or preset_view == '-XY':
+                    ax.set_zticks([])
+                if preset_view == 'XZ' or preset_view == '-XZ':
+                    ax.set_yticks([])
+                if preset_view == 'YZ' or preset_view == '-YZ':
+                    ax.set_xticks([])
+
+                pane_color = ax.get_facecolor()
+                ax.set_facecolor((0, 0, 0, 0))  # Set transparent
+                #
+                ax.xaxis.pane.set_facecolor(pane_color)
+                ax.xaxis.pane.set_alpha(1)
+                ax.yaxis.pane.set_facecolor(pane_color)
+                ax.yaxis.pane.set_alpha(1)
+                ax.zaxis.pane.set_facecolor(pane_color)
+                ax.zaxis.pane.set_alpha(1)
+
+                self.draw_wireframe(
+                    ax=ax,
+                    fuselage_longeron_theta=np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
+                    if 'isometric' in preset_view else None,
+                    show=False
+                )
+
+                p.set_preset_3d_view_angle(
+                    preset_view_angles[i, j]
+                )
+
+                axes[i, j] = ax
+
+        axes[1, 0].set_xlabel("$x_g$ [m]")
+        axes[1, 0].set_ylabel("$y_g$ [m]")
+        axes[0, 0].set_zlabel("$z_g$ [m]")
+        axes[0, 0].set_xticklabels([])
+        axes[0, 1].set_yticklabels([])
+        axes[0, 1].set_zticklabels([])
+
+        plt.subplots_adjust(
+            left=-0.08,
+            right=1.08,
+            bottom=-0.08,
+            top=1.08,
+            wspace=-0.38,
+            hspace=-0.38,
+        )
+
+        if show:
+            plt.show()
+
+    def generate_cadquery_geometry(self) -> "Workplane":
+        import cadquery as cq
+
+        solids = []
+
+        for wing in self.wings:
+
+            xsec_wires = []
+
+            for i, xsec in enumerate(wing.xsecs):
+                csys = wing._compute_frame_of_WingXSec(i)
+
+                xsec_wires.append(
+                    cq.Workplane(
+                        inPlane=cq.Plane(
+                            origin=tuple(xsec.xyz_le),
+                            xDir=tuple(csys[0]),
+                            normal=tuple(-csys[1])
+                        )
+                    ).spline(
+                        listOfXYTuple=[
+                            tuple(xy * xsec.chord)
+                            for xy in xsec.airfoil.set_TE_thickness(0).coordinates
+                        ]
+                    ).close()
+                )
+
+            wire_collection = xsec_wires[0]
+            for s in xsec_wires[1:]:
+                wire_collection.ctx.pendingWires.extend(s.ctx.pendingWires)
+
+            loft = wire_collection.loft(ruled=True, clean=False)
+
+            if wing.symmetric:
+                loft = loft.mirror(
+                    mirrorPlane='XZ',
+                    union=True
+                )
+
+            solids.append(loft)
+
+        for fuse in self.fuselages:
+
+            xsec_wires = []
+
+            for i, xsec in enumerate(fuse.xsecs):
+                csys = fuse._compute_frame_of_FuselageXSec(i)
+
+                scale = xsec.radius
+
+                tol = 1e-4
+                if scale == 0:
+                    if i == 0:
+                        if np.abs(xsec.xyz_c[0] - fuse.xsecs[1].xyz_c[0]) < tol:
+                            continue
+                    if i == len(fuse.xsecs) - 1:
+                        if np.abs(xsec.xyz_c[0] - fuse.xsecs[-2].xyz_c[0]) < tol:
+                            continue
+                    scale = tol
+
+                theta = np.linspace(0, 2 * np.pi, 121)
+                st = np.sin(theta)
+                ct = np.cos(theta)
+                x_nondim = np.abs(ct) ** (2 / xsec.shape) * np.where(ct > 0, 1, -1)
+                y_nondim = np.abs(st) ** (2 / xsec.shape) * np.where(st > 0, 1, -1)
+
+                xsec_wires.append(
+                    cq.Workplane(
+                        inPlane=cq.Plane(
+                            origin=tuple(xsec.xyz_c),
+                            xDir=(0, 1, 0),
+                            normal=(-1, 0, 0)
+                        )
+                    ).spline(
+                        listOfXYTuple=[
+                            (x * scale, y * scale)
+                            for x, y in zip(x_nondim, y_nondim)
+                        ]
+                    ).close()
+                )
+
+            wire_collection = xsec_wires[0]
+            for s in xsec_wires[1:]:
+                wire_collection.ctx.pendingWires.extend(s.ctx.pendingWires)
+
+            loft = wire_collection.loft(ruled=True, clean=False)
+
+            solids.append(loft)
+
+        solid = solids[0]
+        for s in solids[1:]:
+            solid.add(s)
+
+        return solid.clean()
+
+    def export_cadquery_geometry(self,
+                                 filename: str
+                                 ) -> None:
+        solid = self.generate_cadquery_geometry()
+
+        solid.objects = [
+            o.scale(1000)
+            for o in solid.objects
+        ]
+
+        from cadquery import exporters
+        exporters.export(
+            solid,
+            fname=filename
+        )
 
     def is_entirely_symmetric(self):
         """
@@ -285,3 +674,123 @@ class Airplane(AeroSandboxObject):
         aerodynamic_center = sum(wing_AC_area_products) / sum(wing_areas)
 
         return aerodynamic_center
+
+
+if __name__ == '__main__':
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
+    import aerosandbox.tools.units as u
+
+
+    def ft(feet, inches=0):  # Converts feet (and inches) to meters
+        return feet * u.foot + inches * u.inch
+
+
+    naca2412 = asb.Airfoil("naca2412")
+    naca0012 = asb.Airfoil("naca0012")
+
+    airplane = asb.Airplane(
+        name="Cessna 152",
+        wings=[
+            asb.Wing(
+                name="Wing",
+                xsecs=[
+                    asb.WingXSec(
+                        xyz_le=[0, 0, 0],
+                        chord=ft(5, 4),
+                        airfoil=naca2412
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[0, ft(7), ft(7) * np.sind(1)],
+                        chord=ft(5, 4),
+                        airfoil=naca2412
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[
+                            ft(4, 3 / 4) - ft(3, 8 + 1 / 2),
+                            ft(33, 4) / 2,
+                            ft(33, 4) / 2 * np.sind(1)
+                        ],
+                        chord=ft(3, 8 + 1 / 2),
+                        airfoil=naca0012
+                    )
+                ],
+                symmetric=True
+            ),
+            asb.Wing(
+                name="Horizontal Stabilizer",
+                xsecs=[
+                    asb.WingXSec(
+                        xyz_le=[0, 0, 0],
+                        chord=ft(3, 8),
+                        airfoil=naca0012,
+                        twist=-2
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[ft(1), ft(10) / 2, 0],
+                        chord=ft(2, 4 + 3 / 8),
+                        airfoil=naca0012,
+                        twist=-2
+                    )
+                ],
+                symmetric=True
+            ).translate([ft(13, 3), 0, ft(-2)]),
+            asb.Wing(
+                name="Vertical Stabilizer",
+                xsecs=[
+                    asb.WingXSec(
+                        xyz_le=[ft(-5), 0, 0],
+                        chord=ft(8, 8),
+                        airfoil=naca0012,
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[ft(0), 0, ft(1)],
+                        chord=ft(3, 8),
+                        airfoil=naca0012,
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[ft(0, 8), 0, ft(5)],
+                        chord=ft(2, 8),
+                        airfoil=naca0012,
+                    ),
+                ]
+            ).translate([ft(16, 11) - ft(3, 8), 0, ft(-2)])
+        ],
+        fuselages=[
+            asb.Fuselage(
+                xsecs=[
+                    asb.FuselageXSec(
+                        xyz_c=[0, 0, ft(-1)],
+                        radius=0,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[0, 0, ft(-1)],
+                        radius=ft(1.5),
+                        shape=3,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(3), 0, ft(-0.85)],
+                        radius=ft(1.7),
+                        shape=7,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(5), 0, ft(0)],
+                        radius=ft(2.7),
+                        shape=7,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(10, 4), 0, ft(0.3)],
+                        radius=ft(2.3),
+                        shape=7,
+                    ),
+                    asb.FuselageXSec(
+                        xyz_c=[ft(21, 11), 0, ft(0.8)],
+                        radius=ft(0.3),
+                        shape=3,
+                    ),
+                ]
+            ).translate([ft(-5), 0, ft(-3)])
+        ]
+    )
+
+    airplane.draw_three_view()

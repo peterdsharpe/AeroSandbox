@@ -1,1 +1,1 @@
-from aerosandbox.optimization.opti import *
+from aerosandbox.optimization.opti import Opti

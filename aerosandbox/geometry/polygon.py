@@ -85,6 +85,19 @@ class Polygon(AeroSandboxObject):
 
         return A
 
+    def perimeter(self) -> float:
+        """
+        Returns the perimeter of the polygon.
+        """
+        dx = np.diff(self.x())
+        dy = np.diff(self.y())
+        ds = (
+            dx ** 2 +
+            dy ** 2
+        ) ** 0.5
+
+        return np.sum(ds)
+
     def centroid(self) -> np.ndarray:
         """
         Returns the centroid of the polygon as a 1D np.ndarray of length 2.

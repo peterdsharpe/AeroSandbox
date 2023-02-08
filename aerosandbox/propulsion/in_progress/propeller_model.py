@@ -226,7 +226,7 @@ for station in range(n_stations):  # TODO undo this
         # 1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
 
         gamma == v_t * (4 * pi * radial_loc / n_blades) * F * (
-                    1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
+                1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
         # vt**2*F**2*(1.+(4.*lam_w*R/(pi*B*r))**2) >= (B*G/(4.*pi*r))**2,
         # f + (radial_loc / tip_radius) * n_blades / (2 * loc_wake_adv_ratio) <= (n_blades / 2) * (1 / loc_wake_adv_ratio),
         # blade_twist_deg * pi / 180 == alpha_rad + 1 / h_ati,
@@ -289,8 +289,9 @@ for i in range(0, len(radius)):
     # print(f'{radius[i]} {chord[i]}  {beta[i]}   {Cl[i]}  {Cd[i]}  {Re[i]}  {Mach[i]}    {effi[i]}    {effp[i]}    {Wa[i]}  {a_swirl[i]}  {adv_wake[i]}')
     print('%.4f    %.4f     %.3f    %.4f    %.5f   %d  %.3f   %.4f    %.4f   %.2f   %.3f   %.4f     %.4f    %.2f'
           % (
-          radius[i], chord[i], beta[i], Cl[i], Cd[i], RE[i], Mach[i], effi[i], effp[i], Wa[i], a_swirl[i], adv_wake[i],
-          alpha[i], Wt[i]))
+              radius[i], chord[i], beta[i], Cl[i], Cd[i], RE[i], Mach[i], effi[i], effp[i], Wa[i], a_swirl[i],
+              adv_wake[i],
+              alpha[i], Wt[i]))
 print(f"Thrust Total: {Thrust}")
 print(f"Torque Total: {Torque}")
 # return Torque, Thrust

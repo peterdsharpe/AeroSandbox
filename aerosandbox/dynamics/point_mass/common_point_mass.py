@@ -149,7 +149,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
 
         title = f"{self.__class__.__name__} instance:"
 
@@ -183,10 +183,10 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             control_variables
         ])
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         """
         Indexes one item from each attribute of a Dynamics instance.
-        Returns a new Dynamics instance.
+        Returns a new Dynamics instance of the same type.
 
         Args:
             index: The index that is being called; e.g.,:
@@ -332,9 +332,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @abstractmethod
     def add_force(self,
-                  Fx: Union[np.ndarray, float] = 0,
-                  Fy: Union[np.ndarray, float] = 0,
-                  Fz: Union[np.ndarray, float] = 0,
+                  Fx: Union[float, np.ndarray] = 0,
+                  Fy: Union[float, np.ndarray] = 0,
+                  Fz: Union[float, np.ndarray] = 0,
                   axes: str = "wind",
                   ) -> None:
         """

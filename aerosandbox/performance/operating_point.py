@@ -1,7 +1,9 @@
-from aerosandbox.geometry import *
+from aerosandbox.common import AeroSandboxObject
 from aerosandbox import Atmosphere
 import aerosandbox.numpy as np
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict, List
+from aerosandbox.tools.string_formatting import trim_string
+import inspect
 
 
 class OperatingPoint(AeroSandboxObject):
@@ -34,6 +36,194 @@ class OperatingPoint(AeroSandboxObject):
         self.q = q
         self.r = r
 
+    @property
+    def state(self) -> Dict[str, Union[float, np.ndarray]]:
+        """
+        Returns the state variables of this OperatingPoint instance as a Dict.
+
+        Keys are strings that give the name of the variables.
+        Values are the variables themselves.
+
+        """
+        return {
+            "atmosphere": self.atmosphere,
+            "velocity"  : self.velocity,
+            "alpha"     : self.alpha,
+            "beta"      : self.beta,
+            "p"         : self.p,
+            "q"         : self.q,
+            "r"         : self.r,
+        }
+
+    def get_new_instance_with_state(self,
+                                    new_state: Union[
+                                        Dict[str, Union[float, np.ndarray]],
+                                        List, Tuple, np.ndarray
+                                    ] = None
+                                    ):
+        """
+        Creates a new instance of the OperatingPoint class from the given state.
+
+        Args:
+            new_state: The new state to be used for the new instance. Ideally, this is represented as a Dict in identical format to the `state` of a OperatingPoint instance.
+
+        Returns: A new instance of this same OperatingPoint class.
+
+        """
+
+        ### Get a list of all the inputs that the class constructor wants to see
+        init_signature = inspect.signature(self.__class__.__init__)
+        init_args = list(init_signature.parameters.keys())[1:]  # Ignore 'self'
+
+        ### Create a new instance, and give the constructor all the inputs it wants to see (based on values in this instance)
+        new_op_point: __class__ = self.__class__(**{
+            k: getattr(self, k)
+            for k in init_args
+        })
+
+        ### Overwrite the state variables in the new instance with those from the input
+        new_op_point._set_state(new_state=new_state)
+
+        ### Return the new instance
+        return new_op_point
+
+    def _set_state(self,
+                   new_state: Union[
+                       Dict[str, Union[float, np.ndarray]],
+                       List, Tuple, np.ndarray
+                   ] = None
+                   ):
+        """
+        Force-overwrites all state variables with a new set (either partial or complete) of state variables.
+
+        Warning: this is *not* the intended public usage of OperatingPoint instances.
+        If you want a new state yourself, you should instantiate a new one either:
+            a) manually, or
+            b) by using OperatingPoint.get_new_instance_with_state()
+
+        Hence, this function is meant for PRIVATE use only - be careful how you use this!
+        """
+        ### Set the default parameters
+        if new_state is None:
+            new_state = {}
+
+        try:  # Assume `value` is a dict-like, with keys
+            for key in new_state.keys():  # Overwrite each of the specified state variables
+                setattr(self, key, new_state[key])
+
+        except AttributeError:  # Assume it's an iterable that has been sorted.
+            self._set_state(
+                self.pack_state(new_state))  # Pack the iterable into a dict-like, then do the same thing as above.
+
+    def unpack_state(self,
+                     dict_like_state: Dict[str, Union[float, np.ndarray]] = None
+                     ) -> Tuple[Union[float, np.ndarray]]:
+        """
+        'Unpacks' a Dict-like state into an array-like that represents the state of the OperatingPoint.
+
+        Args:
+            dict_like_state: Takes in a dict-like representation of the state.
+
+        Returns: The array representation of the state that you gave.
+
+        """
+        if dict_like_state is None:
+            dict_like_state = self.state
+        return tuple(dict_like_state.values())
+
+    def pack_state(self,
+                   array_like_state: Union[List, Tuple, np.ndarray] = None
+                   ) -> Dict[str, Union[float, np.ndarray]]:
+        """
+        'Packs' an array into a Dict that represents the state of the OperatingPoint.
+
+        Args:
+            array_like_state: Takes in an iterable that must have the same number of entries as the state vector of the OperatingPoint.
+
+        Returns: The Dict representation of the state that you gave.
+
+        """
+        if array_like_state is None:
+            return self.state
+        if not len(self.state.keys()) == len(array_like_state):
+            raise ValueError(
+                "There are a differing number of elements in the `state` variable and the `array_like` you're trying to pack!")
+        return {
+            k: v
+            for k, v in zip(
+                self.state.keys(),
+                array_like_state
+            )
+        }
+
+    def __repr__(self) -> str:
+
+        title = f"{self.__class__.__name__} instance:"
+
+        def makeline(k, v):
+            name = trim_string(str(k).strip(), length=10).rjust(10)
+            item = trim_string(str(v).strip(), length=40).ljust(40)
+
+            line = f"{name}: {item}"
+
+            return line
+
+        state_variables_title = "\tState variables:"
+
+        state_variables = "\n".join([
+            "\t\t" + makeline(k, v)
+            for k, v in self.state.items()
+        ])
+
+        return "\n".join([
+            title,
+            state_variables_title,
+            state_variables,
+        ])
+
+    def __getitem__(self, index: int) -> "OperatingPoint":
+        """
+        Indexes one item from each attribute of an OperatingPoint instance.
+        Returns a new OperatingPoint instance.
+
+        Args:
+            index: The index that is being called; e.g.,:
+                >>> first_dyn = op_point[0]
+
+        Returns: A new OperatingPoint instance, where each attribute is subscripted at the given value, if possible.
+
+        """
+
+        def get_item_of_attribute(a):
+            try:
+                return a[index]
+            except TypeError as e:  # object is not subscriptable
+                return a
+            except IndexError as e:  # index out of range
+                raise IndexError("A state variable could not be indexed, since the index is out of range!")
+            except NotImplementedError as e:
+                raise TypeError(f"Indices must be integers or slices, not {index.__class__.__name__}")
+
+        new_instance = self.get_new_instance_with_state()
+
+        for k, v in new_instance.__dict__.items():
+            setattr(new_instance, k, get_item_of_attribute(v))
+
+        return new_instance
+
+    def __len__(self):
+        length = 1
+        for v in self.state.values():
+            if np.length(v) == 1:
+                pass
+            elif length == 1:
+                length = np.length(v)
+            elif length == np.length(v):
+                pass
+            else:
+                raise ValueError("State variables are appear vectorized, but of different lengths!")
+        return length
+
     def dynamic_pressure(self):
         """
         Dynamic pressure of the working fluid
@@ -57,8 +247,8 @@ class OperatingPoint(AeroSandboxObject):
         return self.atmosphere.pressure() * (
                 1 + (gamma - 1) / 2 * self.mach() ** 2
         ) ** (
-                       gamma / (gamma - 1)
-               )
+                gamma / (gamma - 1)
+        )
 
     def total_temperature(self):
         """

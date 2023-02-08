@@ -8,7 +8,7 @@ At its most basic level, AeroSandbox can be used to optimize parameters of dynam
 
 This capability to optimize systems that must operate at many different operating points is so important, especially for aircraft design! With rare exceptions, nearly all aircraft operate at very different operating points throughout their missions. A few examples that have come up from users' AeroSandbox studies:
 
-* Commercial transport aircraft lose a significant fraction (~30%) of their take-off mass over the course of their flight due to fuel burn. This fuel burn leads to a large variation in the cruise $C_L$ over the course of the flight.
+* Commercial transport aircraft lose a significant fraction (~30%) of their take-off mass over the course of their flight due to fuel burn. This fuel burn leads to a [large variation in the cruise altitude over the course of the flight](https://en.wikipedia.org/wiki/Step_climb).
 
 * Solar aircraft performance is intensely driven by the day-night energy cycle. Due to the cyclic injection of power into the system, trajectories may involve differing cruise altitudes or airspeeds during day and night. Naturally, any optimized aircraft design must then be robust to this wider variety of flight conditions.
 

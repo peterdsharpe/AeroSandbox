@@ -129,7 +129,7 @@ def mass_motor_electric(
         max_power,
         kv_rpm_volt=1000,  # This is in rpm/volt, not rads/sec/volt!
         voltage=20,
-        method="astroflight"
+        method="hobbyking"
 ):
     """
     Estimates the mass of a brushless DC electric motor.
@@ -208,7 +208,7 @@ def mass_wires(
     elif material == "silver":  # worse specific conductivity than aluminum, expensive
         density = 10490  # kg/m^3
         resistivity = 15.87e-9  # ohm-meters
-    elif material == "gold":  # worse specific conductivity than aluminum, expensive
+    elif material == "gold":  # worse specific conductivity than aluminum, very expensive
         density = 19300  # kg/m^3
         resistivity = 22.14e-9  # ohm-meters
     elif material == "iron":  # worse specific conductivity than aluminum
@@ -258,20 +258,17 @@ if __name__ == '__main__':
     mass_mot_astroflight = mass_motor_electric(pows, method="astroflight")
 
     import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    sns.set(palette=sns.color_palette("husl"))
+    import aerosandbox.tools.pretty_plots as p
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.loglog(pows, np.array(mass_mot_burton), "-", label="Burton Model")
     plt.plot(pows, np.array(mass_mot_hobbyking), "--", label="Hobbyking Model")
     plt.plot(pows, np.array(mass_mot_astroflight), "-.", label="Astroflight Model")
-    plt.xlabel("Motor Power [W]")
-    plt.ylabel("Motor Mass [kg]")
-    plt.title("Small Electric Motor Mass Models\n(500 kv, 100 V)")
-    plt.tight_layout()
-    plt.legend()
-    plt.show()
+    p.show_plot(
+        "Small Electric Motor Mass Models\n(500 kv, 100 V)",
+        "Motor Power [W]",
+        "Motor Mass [kg]"
+    )
 
     print(mass_wires(
         wire_length=1,

@@ -19,8 +19,8 @@ def test_where_numpy():
 
 
 def test_where_casadi():
-    a = cas.GenDM_ones(4)
-    b = 2 * cas.GenDM_ones(4)
+    a = cas.DM(np.ones(4))
+    b = 2 * cas.DM(np.ones(4))
 
     c = np.where(
         cas.DM([1, 0, 1, 0]),

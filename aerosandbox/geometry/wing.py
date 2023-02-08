@@ -14,14 +14,15 @@ class Wing(AeroSandboxObject):
 
     Anatomy of a Wing:
 
-        A wing consists chiefly of a collection of cross sections, or "xsecs". These can be accessed with `Wing.xsecs`,
-        which gives a list of xsecs in the Wing. Each xsec is a WingXSec object, a class that is defined separately.
+        A wing consists chiefly of a collection of cross sections, or "xsecs". A cross section is a 2D "slice" of a
+        wing. These can be accessed with `Wing.xsecs`, which gives a list of xsecs in the Wing. Each xsec is a
+        WingXSec object, a class that is defined separately.
 
         You may also see references to wing "sections", which are different than cross sections (xsecs)! Sections are
         the portions of the wing that are in between xsecs. In other words, a wing with N cross sections (xsecs,
         WingXSec objects) will always have N-1 sections. Sections are never explicitly defined, since you can get all
-        needed information by lofting from the adjacent cross sections. For example, section 0 is a loft between
-        cross sections 0 and 1.
+        needed information by lofting from the adjacent cross sections. For example, section 0 (the first one) is a
+        loft between cross sections 0 and 1.
 
         Wings are lofted linearly between cross sections.
 
@@ -32,7 +33,7 @@ class Wing(AeroSandboxObject):
     """
 
     def __init__(self,
-                 name: str = None,
+                 name: Optional[str] = None,
                  xsecs: List['WingXSec'] = None,
                  symmetric: bool = False,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
@@ -45,7 +46,7 @@ class Wing(AeroSandboxObject):
 
             name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
 
-            xsecs: A list of wing cross ("X") sections in the form of WingXSec objects.
+            xsecs: A list of wing cross sections ("xsecs") in the form of WingXSec objects.
 
             symmetric: Is the wing symmetric across the XZ plane?
 
@@ -124,16 +125,24 @@ class Wing(AeroSandboxObject):
         return new_wing
 
     def span(self,
-             type: str = "wetted",
+             type: str = "planform",
              _sectional: bool = False,
              ) -> float:
         """
-        Returns the span, with options for various ways of measuring this.
-         * wetted: Adds up YZ-distances of each section piece by piece
-         * y: Adds up the Y-distances of each section piece by piece
-         * z: Adds up the Z-distances of each section piece by piece
-         * y-full: Y-distance between the XZ plane and the tip of the wing. (Can't be used with _sectional).
-        If symmetric, this is doubled left/right to obtain the full span.
+        Returns the span, with options for various ways of measuring this:
+
+         * "planform" or "wetted": Adds up YZ-distances of each section piece by piece
+
+         * "y": Adds up the Y-distances of each section piece by piece
+
+         * "z": Adds up the Z-distances of each section piece by piece
+
+         * "y-full": Y-distance between the XZ plane and the tip of the wing. (Can't be used with _sectional).
+
+        If symmetric, this is doubled left/right to obtain the full span. With symmetric wings, note that if the root
+        cross-section is not coincident with the centerline, the fictitious span connecting the left and right root
+        cross-sections is not included. The only exception to this is the "y-full" option, which computes the span to
+        the XZ plane (hence, including the center part).
 
         Args:
             type: One of the above options, as a string.
@@ -146,8 +155,8 @@ class Wing(AeroSandboxObject):
             return self._compute_xyz_of_WingXSec(
                 -1,
                 x_nondim=0.25,
-                y_nondim=0.25
-            )[1]
+                y_nondim=0,
+            )[1] * (2 if self.symmetric else 1)
 
         sectional_spans = []
 
@@ -168,7 +177,7 @@ class Wing(AeroSandboxObject):
                     quarter_chord_vectors[inner_i]
             )
 
-            if type == "wetted":
+            if type == "planform" or type == "wetted":
                 section_span = (
                                        quarter_chord_vector[1] ** 2 +
                                        quarter_chord_vector[2] ** 2
@@ -197,14 +206,23 @@ class Wing(AeroSandboxObject):
             return span
 
     def area(self,
-             type: str = "wetted",
+             type: str = "planform",
              _sectional: bool = False,
-             ) -> float:
+             ) -> Union[float, List[float]]:
         """
-        Returns the area, with options for various ways of measuring this.
-         * wetted: wetted area
+        Computes the wing area, with options for various ways of measuring this:
+
+         * "planform": The typical definition of wing area. Treats the wing as a group of sections represented as
+         thin sheets, each of which is a quadrilateral. Computes the one-sided area of each quadrilateral section,
+         then sums them up.
+
+         * "wetted": The wetted area of the wing (counts both sides of the wing, and accounts for airfoil curvature).
+
          * projected: area projected onto the XY plane (top-down view)
-        If symmetric, this is doubled left/right to obtain the full wing area.
+
+        If symmetric, this area is doubled left/right to obtain the full wing area. With symmetric wings, note that if the
+        root cross-section is not coincident with the centerline, the fictitious area connecting the left and right
+        root cross-sections is not included.
 
         Args:
             type: One of the above options, as a string.
@@ -212,15 +230,28 @@ class Wing(AeroSandboxObject):
                 `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
 
         """
-        area = 0
-        chords = [xsec.chord for xsec in self.xsecs]
 
-        if type == "wetted":
+        if type == "planform":
+            sectional_spans = self.span(_sectional=True)
+        elif type == "wetted":
             sectional_spans = self.span(_sectional=True)
         elif type == "projected":
             sectional_spans = self.span(type="y", _sectional=True)
         else:
             raise ValueError("Bad value of `type`!")
+
+        if type == "planform":
+            chords = [xsec.chord for xsec in self.xsecs]
+        elif type == "wetted":
+            chords = [
+                xsec.chord * xsec.airfoil.perimeter()
+                for xsec in self.xsecs
+            ]
+        elif type == "projected":
+            chords = [xsec.chord for xsec in self.xsecs]
+        else:
+            raise ValueError("Bad value of `type`!")
+
         sectional_chords = [
             (inner_chord + outer_chord) / 2
             for inner_chord, outer_chord in zip(
@@ -240,15 +271,38 @@ class Wing(AeroSandboxObject):
         if _sectional:
             return sectional_areas
 
-        if self.symmetric:
+        if self.symmetric:  # Returns the total area of both the left and right wing halves on mirrored wings.
             area *= 2
 
         return area
 
-    def aspect_ratio(self) -> float:
-        # Returns the aspect ratio (b^2/S).
-        # Uses the full span and the full area if symmetric.
-        return self.span() ** 2 / self.area()
+    def aspect_ratio(self,
+                     type: str = "geometric",
+                     ) -> float:
+        """
+        Computes the aspect ratio of the wing, with options for various ways of measuring this.
+
+         * geometric: geometric aspect ratio, computed in the typical fashion (b^2 / S).
+
+         * effective: Differs from the geometric aspect ratio only in the case of symmetric wings whose root
+         cross-section is not on the centerline. In these cases, it counts 50% of the fictitious span as wing span
+
+        Args:
+            type: One of the above options, as a string.
+
+        """
+        if type == "geometric":
+            return self.span() ** 2 / self.area()
+
+        elif type == "effective":
+            effective_span = self.span() + 0.5 * self.xsecs[0].xyz_le[1]
+
+            effective_area = self.area() + 0.5 * self.xsecs[0].xyz_le[1] * self.xsecs[0].chord
+
+            return effective_span ** 2 / effective_area
+
+        else:
+            raise ValueError("Bad value of `type`!")
 
     def is_entirely_symmetric(self) -> bool:
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has symmetric control surfaces.
@@ -464,8 +518,8 @@ class Wing(AeroSandboxObject):
 
         airfoil_nondim_coordinates = np.array([
             xsec.airfoil
-                .repanel(n_points_per_side=chordwise_resolution + 1)
-                .coordinates
+            .repanel(n_points_per_side=chordwise_resolution + 1)
+            .coordinates
             for xsec in self.xsecs
         ])
 
@@ -788,10 +842,38 @@ class Wing(AeroSandboxObject):
         from aerosandbox.geometry.airplane import Airplane
         return Airplane(wings=[self]).draw(*args, **kwargs)
 
+    def draw_wireframe(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw_wireframe() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw_wireframe()
+            **kwargs: Keyword arguments to pass through to Airplane.draw_wireframe()
+
+        Returns: Same return as Airplane.draw_wireframe()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(wings=[self]).draw_wireframe(*args, **kwargs)
+
+    def draw_three_view(self, *args, **kwargs):
+        """
+        An alias to the more general Airplane.draw_three_view() method. See there for documentation.
+
+        Args:
+            *args: Arguments to pass through to Airplane.draw_three_view()
+            **kwargs: Keyword arguments to pass through to Airplane.draw_three_view()
+
+        Returns: Same return as Airplane.draw_three_view()
+
+        """
+        from aerosandbox.geometry.airplane import Airplane
+        return Airplane(wings=[self]).draw_three_view(*args, **kwargs)
+
     def subdivide_sections(self, ratio: int) -> "Wing":
         """
-        Generates a new wing that subdivides the existing sections of this Wing into several smaller ones. Splits
-        each section into `ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
+        Generates a new Wing that subdivides the existing sections of this Wing into several smaller ones. Splits
+        each section into N=`ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
 
         This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
 
@@ -801,6 +883,8 @@ class Wing(AeroSandboxObject):
         Returns: A new Wing object with subdivided sections.
 
         """
+        if not ratio >= 2:
+            raise ValueError("`ratio` must be an integer greater than or equal to 2.")
 
         new_xsecs = []
         span_fractions_along_section = np.linspace(0, 1, ratio + 1)[:-1]

@@ -246,5 +246,6 @@ def test_save_and_load_opti_freeze_override(tmp_path):
 
 if __name__ == '__main__':
     # from pathlib import Path
-    # test_save_and_load_opti_uncategorized(Path("C:/Users/peter/Downloads/test"))
+    # tmp_path = Path.home() / "Downloads" / "test"
+    # test_save_and_load_opti(tmp_path)
     pytest.main()

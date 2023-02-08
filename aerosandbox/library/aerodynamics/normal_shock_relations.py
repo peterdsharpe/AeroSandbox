@@ -18,8 +18,8 @@ def mach_number_after_normal_shock(
     m2 = mach_upstream ** 2
 
     return (
-                   (gm1 * m2 + 2) / (2 * gamma * m2 - gm1)
-           ) ** 0.5
+            (gm1 * m2 + 2) / (2 * gamma * m2 - gm1)
+    ) ** 0.5
 
 
 def density_ratio_across_normal_shock(
@@ -39,10 +39,10 @@ def density_ratio_across_normal_shock(
 
     """
     return (
-                   (gamma + 1) * mach_upstream ** 2
-           ) / (
-                   (gamma - 1) * mach_upstream ** 2 + 2
-           )
+            (gamma + 1) * mach_upstream ** 2
+    ) / (
+            (gamma - 1) * mach_upstream ** 2 + 2
+    )
 
 
 def temperature_ratio_across_normal_shock(
@@ -64,10 +64,10 @@ def temperature_ratio_across_normal_shock(
     gm1 = gamma - 1
     m2 = mach_upstream ** 2
     return (
-                   (2 * gamma * m2 - gm1) * (gm1 * m2 + 2)
-           ) / (
-                   (gamma + 1) ** 2 * m2
-           )
+            (2 * gamma * m2 - gm1) * (gm1 * m2 + 2)
+    ) / (
+            (gamma + 1) ** 2 * m2
+    )
 
 
 def pressure_ratio_across_normal_shock(
@@ -88,10 +88,10 @@ def pressure_ratio_across_normal_shock(
     """
     m2 = mach_upstream ** 2
     return (
-                   2 * gamma * m2 - (gamma - 1)
-           ) / (
-               (gamma + 1)
-           )
+            2 * gamma * m2 - (gamma - 1)
+    ) / (
+        (gamma + 1)
+    )
 
 
 def total_pressure_ratio_across_normal_shock(
@@ -114,8 +114,8 @@ def total_pressure_ratio_across_normal_shock(
         mach_upstream=mach_upstream,
         gamma=gamma
     ) ** (gamma / (gamma - 1)) * (
-                   (gamma + 1) / (2 * gamma * mach_upstream ** 2 - (gamma - 1))
-           ) ** (1 / (gamma - 1))
+            (gamma + 1) / (2 * gamma * mach_upstream ** 2 - (gamma - 1))
+    ) ** (1 / (gamma - 1))
 
 
 if __name__ == '__main__':

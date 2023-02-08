@@ -1,4 +1,5 @@
 from typing import Union, List, Dict, Callable, Any
+import numpy.typing as npt
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -251,8 +252,12 @@ class Opti(cas.Opti):
         try:
             init_guess = self.value(init_guess)
         except RuntimeError as e:
-            raise TypeError(
-                "The `init_guess` for a new Opti variable must not be a function of an existing Opti variable.")
+            if not (
+                    freeze and self.freeze_style == "float"
+            ):
+                raise TypeError(
+                    "The `init_guess` for a new Opti variable must not be a function of an existing Opti variable."
+                )
 
         # Validate the inputs
         if log_transform:
@@ -630,6 +635,87 @@ class Opti(cas.Opti):
 
         return sol
 
+    def solve_sweep(self,
+                    parameter_mapping: Dict[cas.MX, np.ndarray] = None,
+                    update_initial_guesses_between_solves=False,
+                    verbose=True,
+                    solve_kwargs: Dict = None
+                    ) -> np.ndarray:
+
+        # Handle defaults
+        if solve_kwargs is None:
+            solve_kwargs = {}
+        solve_kwargs = {
+            **dict(
+                verbose=False,
+            ),
+            **solve_kwargs
+        }
+
+        # Split parameter_mappings up so that it can be passed into run() via np.vectorize
+        keys: tuple[cas.MX] = tuple(parameter_mapping.keys())
+        values: tuple[np.ndarray[float]] = tuple(parameter_mapping.values())
+
+        # Display an output
+        if verbose:
+            print("Running optimization sweep in serial...")
+
+        n_runs = np.broadcast(*values).size
+        run_number = 1
+
+        def run(*args):
+            # Reconstruct parameter mapping on a run-by-run basis by zipping together keys and this run's values.
+            parameter_mappings_for_this_run: [cas.MX, float] = {
+                k: v
+                for k, v in zip(keys, args)
+            }
+
+            # Pull in run_number so that we can increment this counter
+            nonlocal run_number
+
+            # Display as needed
+            if verbose:
+                print(
+                    "|".join(
+                        [
+                            f"Run {run_number}/{n_runs}".ljust(12)
+                        ] + [
+                            f"{v:10.5g}"
+                            for v in args
+                        ] + [""]
+                    ),
+                    end=''  # Leave the newline off, since we'll complete the line later with a success or fail print.
+                )
+
+            run_number += 1
+
+            try:
+                sol = self.solve(
+                    parameter_mapping=parameter_mappings_for_this_run,
+                    **solve_kwargs
+                )
+
+                if update_initial_guesses_between_solves:
+                    self.set_initial_from_sol(sol)
+
+                if verbose:
+                    print("")
+
+            except RuntimeError:
+                if verbose:
+                    print(" Failed to converge!")
+
+                return None
+
+            return sol
+
+        run = np.vectorize(
+            run,
+            otypes=[cas.OptiSol]
+        )
+
+        return run(*values)
+
     ### Debugging Methods
     def find_variable_declaration(self,
                                   index: int,
@@ -639,7 +725,9 @@ class Opti(cas.Opti):
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
         if index >= self._variable_index_counter:
-            raise ValueError(f"The variable index exceeds the number of declared variables ({self._variable_index_counter})!")
+            raise ValueError(
+                f"The variable index exceeds the number of declared variables ({self._variable_index_counter})!"
+            )
 
         index_of_first_element = self._variable_declarations.iloc[self._variable_declarations.bisect_right(index) - 1]
 
@@ -671,9 +759,13 @@ class Opti(cas.Opti):
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
         if index >= self._constraint_index_counter:
-            raise ValueError(f"The constraint index exceeds the number of declared constraints ({self._constraint_index_counter})!")
+            raise ValueError(
+                f"The constraint index exceeds the number of declared constraints ({self._constraint_index_counter})!"
+            )
 
-        index_of_first_element = self._constraint_declarations.iloc[self._constraint_declarations.bisect_right(index) - 1]
+        index_of_first_element = self._constraint_declarations.iloc[
+            self._constraint_declarations.bisect_right(index) - 1
+            ]
 
         filename, lineno, code_context, n_cons = self._constraint_declarations[index_of_first_element]
         source = inspect_tools.get_source_code_from_location(
@@ -770,7 +862,7 @@ class Opti(cas.Opti):
                       variable: cas.MX,
                       with_respect_to: Union[np.ndarray, cas.MX],
                       derivative_init_guess: Union[float, np.ndarray],  # TODO add default
-                      derivative_scale: float = None,
+                      derivative_scale: Union[float, np.ndarray] = None,
                       method: str = "midpoint",
                       explicit: bool = False,  # TODO implement explicit
                       _stacklevel: int = 1,

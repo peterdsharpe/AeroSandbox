@@ -13,11 +13,11 @@ def ensure_float(value):
         # https://stackoverflow.com/q/23063362/4549682
         # somewhere, the datetime64 with timezone is getting converted to 'O' dtype
         if (
-            isinstance(value, datetime)
-            or isinstance(value, np.datetime64)
-            or np.issubdtype(value.dtype, np.datetime64)
-            or str(value.dtype).startswith("datetime64")
-            or value.dtype == "O"
+                isinstance(value, datetime)
+                or isinstance(value, np.datetime64)
+                or np.issubdtype(value.dtype, np.datetime64)
+                or str(value.dtype).startswith("datetime64")
+                or value.dtype == "O"
         ):
             return date2num(value)
         else:  # another numpy dtype like float64

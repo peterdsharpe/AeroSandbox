@@ -50,7 +50,7 @@ def test_length():
     assert length(np.array([1, 2, 3])) == 3
     assert length(np.ones((3, 2))) == 3
 
-    assert length(cas.GenMX_ones(5)) == 5
+    assert length(cas.MX(np.ones(5))) == 5
 
 
 def test_concatenate():

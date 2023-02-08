@@ -2,7 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
 
-wing_airfoil = asb.Airfoil("naca0010")# asb.Airfoil("sd7037")
+wing_airfoil = asb.Airfoil("naca0010")  # asb.Airfoil("sd7037")
 tail_airfoil = asb.Airfoil("naca0010")
 
 ### Define the 3D geometry you want to analyze/optimize.
@@ -132,13 +132,15 @@ titles = [
     'AB & AVL Significantly Different?'
 ]
 
+
 def println(*data):
     print(
         " | ".join([
-        d.ljust(len(t)) if isinstance(d, str) else f"{{0:{len(t)}.3g}}".format(d)
-        for d, t in zip(data, titles)
-    ])
+            d.ljust(len(t)) if isinstance(d, str) else f"{{0:{len(t)}.3g}}".format(d)
+            for d, t in zip(data, titles)
+        ])
     )
+
 
 println(*titles)
 print("-" * 80)
@@ -151,12 +153,10 @@ for k in keys:
             rel = 0.5
             abs = 0.05
 
-
         differences = ab[k] != pytest.approx(av[k], rel=rel, abs=abs)
         differences_text = '*' if differences else ''
         if differences and ('D' in k):
             differences_text = 'Expected'
-
 
         println(
             k,

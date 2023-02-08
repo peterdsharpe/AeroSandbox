@@ -4,7 +4,6 @@ from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
 import aerosandbox.numpy as np
 from typing import Union, List
-import matplotlib.pyplot as plt
 
 
 class AirfoilInviscid(ImplicitAnalysis):
@@ -165,6 +164,7 @@ class AirfoilInviscid(ImplicitAnalysis):
         self.Cl = 2 * self.total_vorticity
 
     def draw_streamlines(self, res=200, show=True):
+        import matplotlib.pyplot as plt
         fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 
         plt.xlim(-0.5, 1.5)
@@ -226,6 +226,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             plt.show()
 
     def draw_cp(self, show=True):
+        import matplotlib.pyplot as plt
         fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
         for airfoil in self.airfoils:
             surface_speeds = airfoil.gamma
@@ -249,12 +250,12 @@ if __name__ == '__main__':
             # Airfoil("naca4408")
             #     .repanel(50)
             Airfoil("e423")
-                .repanel(n_points_per_side=50),
+            .repanel(n_points_per_side=50),
             Airfoil("naca6408")
-                .repanel(n_points_per_side=25)
-                .scale(0.4, 0.4)
-                .rotate(np.radians(-20))
-                .translate(0.9, -0.05),
+            .repanel(n_points_per_side=25)
+            .scale(0.4, 0.4)
+            .rotate(np.radians(-20))
+            .translate(0.9, -0.05),
         ],
         op_point=OperatingPoint(
             velocity=1,

@@ -93,6 +93,7 @@ class AVL(ExplicitAnalysis):
                  xyz_ref: List[float] = None,
                  avl_command: str = "avl",
                  verbose: bool = False,
+                 timeout: Union[float, int, None] = 5,
                  working_directory: str = None,
                  ground_effect: bool = False,
                  ground_effect_height: float = 0
@@ -123,9 +124,14 @@ class AVL(ExplicitAnalysis):
 
                 To add AVL to your path, modify your system's environment variables. (Google how to do this for your OS.)
 
-            verbose:
+            verbose: Controls whether or not AVL output is printed to command line.
 
-            working_directory:
+            timeout: Controls how long any individual AVL run is allowed to run before the
+            process is killed. Given in units of seconds. To disable timeout, set this to None.
+
+            working_directory: Controls which working directory is used for the AVL input and output files. By
+            default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
+            somewhere local for debugging purposes.
         """
         super().__init__()
 
@@ -139,6 +145,7 @@ class AVL(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.avl_command = avl_command
         self.verbose = verbose
+        self.timeout=timeout
         self.working_directory = working_directory
         self.ground_effect = ground_effect
         self.ground_effect_height = ground_effect_height
@@ -189,14 +196,34 @@ class AVL(ExplicitAnalysis):
             command = f'{self.avl_command} {airplane_file}'
 
             ### Execute
-            subprocess.run(
-                command,  # TODO use keystroke as input here
-                input=keystrokes,
-                shell=True,
-                text=True,
-                cwd=directory,
-                stdout=None if self.verbose else subprocess.DEVNULL,
-            )
+            try:
+                proc = subprocess.Popen(
+                    command,
+                    cwd=directory,
+                    stdin=subprocess.PIPE,
+                    stdout=None if self.verbose else subprocess.DEVNULL,
+                    stderr=None if self.verbose else subprocess.DEVNULL,
+                    text=True,
+                    # shell=True,
+                    # timeout=self.timeout,
+                    # check=True
+                )
+                outs, errs = proc.communicate(
+                    input=keystrokes,
+                    timeout=self.timeout
+                )
+                return_code = proc.poll()
+
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                outs, errs = proc.communicate()
+
+                warnings.warn(
+                    "AVL run timed out!\n"
+                    "If this was not expected, try increasing the `timeout` parameter\n"
+                    "when you create this AeroSandbox XFoil instance.",
+                    stacklevel=2
+                )
 
             ##### Parse the output file
             # Read the file
@@ -645,7 +672,7 @@ class AVL(ExplicitAnalysis):
                     value = np.nan
 
             if key in items.keys():  # If you already have this key
-                if overwrite is None:
+                if overwrite is None:  # If the `overwrite` parameter wasn't explicitly defined True/False, raise an error
                     raise ValueError(
                         f"Key \"{key}\" is being overwritten, and no behavior has been specified here (Default behavior is to error).\n"
                         f"Check that the output file doesn't have a duplicate here.\n"
@@ -696,8 +723,8 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        # working_directory=str(Path.home() / "Downloads" / "avl_test"),
-        # verbose=True
+        working_directory=str(Path.home() / "Downloads" / "test"),
+        verbose=True
     )
 
     res = avl.run()

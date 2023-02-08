@@ -17,6 +17,7 @@ talon.rotate_z(180)
 talon.rotate_x(180)
 talon.translate([0, 0, 27])
 talon.points /= -talon.bounds[0]
+talon.translate([0.6, 0, 0])
 talon.save("talon.stl")
 plot(talon)
 
@@ -25,5 +26,6 @@ yf.rotate_z(-90)
 yf.rotate_x(180)
 yf.translate([yf.bounds[0], 0, 0])
 yf.points /= -yf.bounds[0]
+yf.translate([0.6, 0, 0])
 yf.save("yf23.stl")
 plot(yf)

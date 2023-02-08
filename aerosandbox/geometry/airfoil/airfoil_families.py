@@ -114,7 +114,7 @@ def get_kulfan_coordinates(
         * 0.001, 0.001: Rectangle, circular duct, or circular rod.
     :param lower_weights: An iterable of the Kulfan weights to use for the lower surface.
     :param upper_weights: An iterable of the Kulfan weights to use for the upper surface.
-    :param enforce_continuous_LE_radius: Enforces a continuous leading-edge radius by throwing out the first lower weight.
+    :param enforce_continuous_LE_radius: Enforces a continuous leading-edge radius by discarding the first lower weight.
     :param TE_thickness: The trailing edge thickness to add, in terms of y/c.
     :param n_points_per_side: The number of points to discretize with.
     :param N1: LE shape factor; see above.

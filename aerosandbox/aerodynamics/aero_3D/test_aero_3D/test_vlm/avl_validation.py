@@ -14,7 +14,7 @@ for i, wing in enumerate(airplane.wings):
         airplane.wings[i].xsecs[j].airfoil = af
 
 op_point = asb.OperatingPoint(
-    velocity = 25,
+    velocity=25,
     alpha=3
 )
 
@@ -42,7 +42,7 @@ avl_aero = avl.run()
 for k, v in {
     "VLM": vlm_aero,
     "AVL": avl_aero,
-    "AB": ab_aero
+    "AB" : ab_aero
 }.items():
     print(f"{k}:")
     for f in ["CL", "CD", "Cm"]:

@@ -18,7 +18,7 @@ def test_airfoil_symmetric_NACA():
     a = asb.AirfoilInviscid(
         airfoil=[
             asb.Airfoil("naca0012")
-                .repanel(50)
+            .repanel(50)
         ],
         op_point=asb.OperatingPoint(
             velocity=1,
@@ -43,12 +43,12 @@ def test_airfoil_multielement():
     a = asb.AirfoilInviscid(
         airfoil=[
             asb.Airfoil("e423")
-                .repanel(n_points_per_side=50),
+            .repanel(n_points_per_side=50),
             asb.Airfoil("naca6408")
-                .repanel(n_points_per_side=25)
-                .scale(0.4, 0.4)
-                .rotate(np.radians(-20))
-                .translate(0.9, -0.05),
+            .repanel(n_points_per_side=25)
+            .scale(0.4, 0.4)
+            .rotate(np.radians(-20))
+            .translate(0.9, -0.05),
         ],
         op_point=asb.OperatingPoint(
             velocity=1,

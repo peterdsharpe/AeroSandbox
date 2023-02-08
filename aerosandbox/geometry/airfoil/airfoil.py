@@ -8,7 +8,6 @@ from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL
 from aerosandbox.library.aerodynamics import transonic
 from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 from scipy import interpolate
-import matplotlib.pyplot as plt
 from typing import Callable, Union, Any, Dict
 import json
 from pathlib import Path
@@ -160,9 +159,11 @@ class Airfoil(Polygon):
                         include_compressibility_effects: bool = True,
                         transonic_buffet_lift_knockdown: float = 0.3,
                         make_symmetric_polars: bool = False,
+                        add_deflections_as_all_moving_surfaces: bool = True,
                         ) -> None:
         """
-        Generates airfoil polars (CL, CD, CM functions) and assigns them in-place to this Airfoil's polar functions.
+        Generates airfoil polar surrogate models (CL, CD, CM functions) from XFoil data and assigns them in-place to
+        this Airfoil's polar functions.
 
         In other words, when this function is run, the following functions will be added (or overwritten) to the instance:
             * Airfoil.CL_function(alpha, Re, mach, deflection)
@@ -195,6 +196,11 @@ class Airfoil(Polygon):
             mach tuck, CL effects across normal shocks. Note that accuracy here is dubious in the transonic regime
             and above - you should really specify your own CL/CD/CM models
 
+            add_deflections_as_all_moving_surfaces: If this boolean is flagged `True`, the `deflection=` keyword
+            argument of the generated polar functions directly modifies the angle of attack. This effectively means
+            that you are assuming an all-moving airfoil hinged about the quarter-chord. If this boolean is flagged
+            `False`, the `deflection=` keyword argument will do nothing.
+
         Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
         polars.
 
@@ -210,7 +216,7 @@ class Airfoil(Polygon):
         if unstructured_interpolated_model_kwargs is None:
             unstructured_interpolated_model_kwargs = {}
 
-        xfoil_kwargs = {  # See asb.XFoil for documentation on these.
+        xfoil_kwargs = {  # See asb.XFoil for the documentation on these.
             "verbose"      : False,
             "max_iter"     : 20,
             "xfoil_repanel": True,
@@ -229,7 +235,7 @@ class Airfoil(Polygon):
             **unstructured_interpolated_model_kwargs
         }
 
-        ### Retrieve XFoil Polar Data from cache, if it exists.
+        ### Retrieve XFoil Polar Data from the cache, if it exists.
         data = None
         if cache_filename is not None:
             try:
@@ -272,7 +278,7 @@ class Airfoil(Polygon):
             }
 
             if make_symmetric_polars:  # If the airfoil is known to be symmetric, duplicate all data across alpha.
-                keys_symmetric_across_alpha = ['CD', 'CDp', 'Re']
+                keys_symmetric_across_alpha = ['CD', 'CDp', 'Re']  # Assumes the rest are antisymmetric
 
                 data = {
                     k: np.concatenate([v, v if k in keys_symmetric_across_alpha else -v])
@@ -373,14 +379,17 @@ class Airfoil(Polygon):
         )
 
         def CL_function(alpha, Re, mach=0, deflection=0):
+            if add_deflections_as_all_moving_surfaces:
+                alpha = alpha + deflection
+
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CL_attached = CL_attached_interpolator({
                 "alpha": alpha,
                 "ln_Re": np.log(Re),
             })
-            CL_separated = CL_separated_interpolator(alpha)
+            CL_separated = CL_separated_interpolator(alpha)  # Lift coefficient if separated
 
-            CL_mach_0 = np.blend(
+            CL_mach_0 = np.blend(  # Lift coefficient at mach = 0
                 separation_parameter(alpha, Re),
                 CL_separated,
                 CL_attached
@@ -425,6 +434,9 @@ class Airfoil(Polygon):
                 return CL_mach_0
 
         def CD_function(alpha, Re, mach=0, deflection=0):
+            if add_deflections_as_all_moving_surfaces:
+                alpha = alpha + deflection
+
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             log10_CD_attached = log10_CD_attached_interpolator({
                 "alpha": alpha,
@@ -522,6 +534,9 @@ class Airfoil(Polygon):
                 return 10 ** log10_CD_mach_0
 
         def CM_function(alpha, Re, mach=0, deflection=0):
+            if add_deflections_as_all_moving_surfaces:
+                alpha = alpha + deflection
+
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CM_attached = CM_attached_interpolator({
                 "alpha": alpha,
@@ -647,6 +662,7 @@ class Airfoil(Polygon):
             y_mcl = self.local_camber(x_mcl)
 
         if backend == "matplotlib":
+            import matplotlib.pyplot as plt
             color = '#280887'
             plt.plot(x, y, ".-", zorder=11, color=color)
             plt.fill(x, y, zorder=10, color=color, alpha=0.2)
@@ -730,7 +746,13 @@ class Airfoil(Polygon):
         """
         Returns the thickness of the trailing edge of the airfoil.
         """
-        return self.local_thickness(x_over_c=1)
+        x_gap = self.coordinates[0, 0] - self.coordinates[-1, 0]
+        y_gap = self.coordinates[0, 1] - self.coordinates[-1, 1]
+
+        return (
+                x_gap ** 2 +
+                y_gap ** 2
+        ) ** 0.5
 
     def TE_angle(self) -> float:
         """
@@ -739,10 +761,10 @@ class Airfoil(Polygon):
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
 
-        return 180 / np.pi * (np.arctan2(
+        return np.arctan2d(
             upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
             upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1]
-        ))
+        )
 
     # def LE_radius(self) -> float:
     #     """
@@ -805,7 +827,10 @@ class Airfoil(Polygon):
 
         return Airfoil(
             name=self.name,
-            coordinates=stack_coordinates(x, y)
+            coordinates=stack_coordinates(x, y),
+            CL_function=self.CL_function,
+            CD_function=self.CD_function,
+            CM_function=self.CM_function,
         )
 
     def add_control_surface(
@@ -814,10 +839,15 @@ class Airfoil(Polygon):
             hinge_point_x: float = 0.75,
     ) -> 'Airfoil':
         """
-        Returns a version of the airfoil with a control surface added at a given point. Implicitly repanels the airfoil as part of this operation.
-        :param deflection: deflection angle [degrees]. Downwards-positive.
-        :param hinge_point_x: location of the hinge, as a fraction of chord [float].
-        :return: The new airfoil.
+        Returns a version of the airfoil with a trailing-edge control surface added at a given point. Implicitly
+        repanels the airfoil as part of this operation.
+
+        Args:
+            deflection: Deflection angle [degrees]. Downwards-positive.
+            hinge_point_x: Chordwise location of the hinge, as a fraction of chord (x/c) [float]
+
+        Returns: an Airfoil object with the new control deflection.
+
         """
 
         # Make the rotation matrix for the given angle.
@@ -842,6 +872,87 @@ class Airfoil(Polygon):
         return Airfoil(
             name=self.name,
             coordinates=coordinates
+        )
+
+    def set_TE_thickness(self,
+                         thickness: float = 0.,
+                         ) -> 'Airfoil':
+        """
+        Creates a modified copy of the Airfoil that has a specified trailing-edge thickness.
+
+        Note that the trailing-edge thickness is given nondimensionally (e.g., as a fraction of chord).
+
+        Args:
+            thickness: The target trailing-edge thickness, given nondimensionally (e.g., as a fraction of chord).
+
+        Returns: The modified airfoil.
+
+        """
+        ### Compute existing trailing-edge properties
+        x_gap = self.coordinates[0, 0] - self.coordinates[-1, 0]
+        y_gap = self.coordinates[0, 1] - self.coordinates[-1, 1]
+
+        s_gap = (
+                        x_gap ** 2 +
+                        y_gap ** 2
+                ) ** 0.5
+
+        s_adjustment = (thickness - self.TE_thickness()) / 2
+
+        ### Determine how much the trailing edge should move by in X and Y.
+        if s_gap != 0:
+            x_adjustment = s_adjustment * x_gap / s_gap
+            y_adjustment = s_adjustment * y_gap / s_gap
+        else:
+            x_adjustment = 0
+            y_adjustment = s_adjustment
+
+        ### Decompose the existing airfoil coordinates to upper and lower sides, and x and y.
+        u = self.upper_coordinates()
+        ux = u[:, 0]
+        uy = u[:, 1]
+
+        le_x = ux[-1]
+
+        l = self.lower_coordinates()[1:]
+        lx = l[:, 0]
+        ly = l[:, 1]
+
+        te_x = (ux[0] + lx[-1]) / 2
+
+        ### Create modified versions of the upper and lower coordinates
+        new_u = np.stack(
+            arrays=[
+                ux + x_adjustment * (ux - le_x) / (te_x - le_x),
+                uy + y_adjustment * (ux - le_x) / (te_x - le_x)
+            ],
+            axis=1
+        )
+        new_l = np.stack(
+            arrays=[
+                lx - x_adjustment * (lx - le_x) / (te_x - le_x),
+                ly - y_adjustment * (lx - le_x) / (te_x - le_x)
+            ],
+            axis=1
+        )
+
+        ### If the desired thickness is zero, ensure that is precisely reached.
+        if thickness == 0:
+            new_l[-1] = new_u[0]
+
+        ### Combine the upper and lower surface coordinates into a single array.
+        new_coordinates = np.concatenate(
+            [
+                new_u,
+                new_l
+            ],
+            axis=0
+        )
+
+        ### Return a new Airfoil with the desired coordinates.
+        return Airfoil(
+            name=self.name,
+            coordinates=new_coordinates
         )
 
     def scale(self,

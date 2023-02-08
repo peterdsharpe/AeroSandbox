@@ -27,11 +27,11 @@ def test_numpy():
 
 def test_casadi():
     assert is_casadi_type(
-        cas.GenMX_ones(5),
+        cas.MX(np.ones(5)),
         recursive=False
     ) == True
     assert is_casadi_type(
-        cas.GenMX_ones(5),
+        cas.MX(np.ones(5)),
         recursive=True
     ) == True
 
@@ -49,22 +49,22 @@ def test_numpy_list():
 
 def test_casadi_list():
     assert is_casadi_type(
-        [cas.GenMX_ones(5), cas.GenMX_ones(5)],
+        [cas.MX(np.ones(5)), cas.MX(np.ones(5))],
         recursive=False
     ) == False
     assert is_casadi_type(
-        [cas.GenMX_ones(5), cas.GenMX_ones(5)],
+        [cas.MX(np.ones(5)), cas.MX(np.ones(5))],
         recursive=True
     ) == True
 
 
 def test_mixed_list():
     assert is_casadi_type(
-        [np.array(5), cas.GenMX_ones(5)],
+        [np.array(5), cas.MX(np.ones(5))],
         recursive=False
     ) == False
     assert is_casadi_type(
-        [np.array(5), cas.GenMX_ones(5)],
+        [np.array(5), cas.MX(np.ones(5))],
         recursive=True
     ) == True
 

@@ -31,7 +31,6 @@ airplane = asb.Airplane(
         asb.Wing(
             name="H-stab",
             symmetric=True,
-            xyz_le=[4, 0, 0],
             xsecs=[
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
@@ -42,10 +41,9 @@ airplane = asb.Airplane(
                     chord=0.42
                 ),
             ]
-        ),
+        ).translate([4, 0, 0]),
         asb.Wing(
             name="V-stab",
-            xyz_le=[4, 0, 0],
             xsecs=[
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
@@ -56,12 +54,11 @@ airplane = asb.Airplane(
                     chord=0.42
                 )
             ]
-        )
+        ).translate([4, 0, 0])
     ],
     fuselages=[
         asb.Fuselage(
             name="Fuselage",
-            xyz_le=[0, 0, 0],
             xsecs=[
                 asb.FuselageXSec(
                     xyz_c=[xi * 5 - 0.5, 0, 0],
@@ -74,4 +71,4 @@ airplane = asb.Airplane(
 )
 
 if __name__ == '__main__':
-    airplane.draw()
+    airplane.draw_three_view()

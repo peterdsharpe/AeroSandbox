@@ -5,6 +5,7 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 [![Downloads](https://pepy.tech/badge/aerosandbox)](https://pepy.tech/project/aerosandbox)
 [![Monthly Downloads](https://pepy.tech/badge/aerosandbox/month)](https://pepy.tech/project/aerosandbox)
 [![Build Status](https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg)](https://github.com/peterdsharpe/AeroSandbox/actions/workflows/run-pytest.yml)
+[![PyPI](https://img.shields.io/pypi/v/aerosandbox.svg)](https://pypi.python.org/pypi/aerosandbox)
 
 ## Overview
 
@@ -71,7 +72,7 @@ Contact information can be found next to my name near the top of this README.
 ### Donating
 
 If you like this software, please consider donating to support development [via PayPal](https://paypal.me/peterdsharpe)
-or [GitHub Sponsors](https://github.com/sponsors/peterdsharpe/)! I'm a grad student, so every dollar that you donate helps wean me off my diet of instant coffee and microwaved ramen noodles.
+or [GitHub Sponsors](https://github.com/sponsors/peterdsharpe/)! Proceeds will go towards more coffee for the grad students.
 
 ### Bugs
 
@@ -96,7 +97,7 @@ If you find AeroSandbox useful in a research publication, please cite it using t
 
 ### License
 
-[MIT License, full terms here](LICENSE.txt).
+[MIT License, terms here](LICENSE.txt). Basically: use AeroSandbox for anything you want; no warranty express or implied.
 
 ## Stargazers over time
 
