@@ -325,7 +325,7 @@ def solar_flux(
 
     absorption_and_scattering_losses = flux_outside_atmosphere - flux_outside_atmosphere * atmospheric_transmission_fraction
 
-    scattering_losses = absorption_and_scattering_losses * (10. / 28.)
+    scattering_losses = absorption_and_scattering_losses * (10. / 18.)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/air-mass
     # Indicates that absorption and scattering happen in a 18:10 ratio, at least in AM1.5 conditions. We extrapolate
     # this to all conditions.
