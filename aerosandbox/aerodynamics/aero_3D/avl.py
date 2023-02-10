@@ -358,7 +358,7 @@ class AVL(ExplicitAnalysis):
         avl_file += clean(f"""\
         {airplane.name}
         #Mach
-        0
+        0        ! AeroSandbox note: This is overwritten later to match the current OperatingPoint Mach during the AVL run.
         #IYsym   IZsym   Zsym
          0       {1 if self.ground_effect else 0}   {self.ground_effect_height}
         #Sref    Cref    Bref
