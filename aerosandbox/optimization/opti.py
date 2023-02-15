@@ -318,7 +318,7 @@ class Opti(cas.Opti):
 
         # Apply bounds
         if not (freeze and self.ignore_violated_parametric_constraints):
-            if not log_transform:
+            if (not log_transform) or (freeze):
                 if lower_bound is not None:
                     self.subject_to(
                         var / scale >= lower_bound / scale,
