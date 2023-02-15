@@ -127,7 +127,7 @@ class Wing(AeroSandboxObject):
     def span(self,
              type: str = "planform",
              _sectional: bool = False,
-             ) -> float:
+             ) -> Union[float, List[float]]:
         """
         Returns the span, with options for various ways of measuring this:
 
