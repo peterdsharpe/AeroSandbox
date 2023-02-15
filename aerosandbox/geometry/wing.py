@@ -1218,6 +1218,14 @@ class WingXSec(AeroSandboxObject):
         new_xsec.xyz_le = new_xsec.xyz_le + np.array(xyz)
         return new_xsec
 
+    def xsec_area(self):
+        """
+        Computes the WingXSec's cross-sectional (xsec) area.
+
+        Returns: The (dimensional) cross-sectional area of the WingXSec.
+        """
+        return self.airfoil.area() * self.chord ** 2
+
 
 class ControlSurface(AeroSandboxObject):
     """
