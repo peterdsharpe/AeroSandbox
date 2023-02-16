@@ -591,8 +591,9 @@ class FuselageXSec(AeroSandboxObject):
 
             area = 4 * r^2 * (gamma(1 + 1/n))^2 / gamma(1 + 2/n)
 
-        where gamma() is the gamma function. The gamma function is (relatively computationally expensive to evaluate,
-        so we replace this area calculation with a closed-form approximation:
+        where gamma() is the gamma function. The gamma function is (relatively) computationally expensive to evaluate
+        and differentiate, so we replace this area calculation with a closed-form approximation (with essentially no
+        loss in accuracy):
 
             area = 4 * r^2 / (s^-1.8717618013591173 + 1)
 
