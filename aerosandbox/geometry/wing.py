@@ -488,6 +488,49 @@ class Wing(AeroSandboxObject):
         """
         return self.xsecs[-1].chord / self.xsecs[0].chord
 
+    def volume(self,
+               _sectional: bool = False
+               ) -> Union[float, List[float]]:
+        """
+        Computes the volume of the Wing.
+
+        Args:
+
+            _sectional: A boolean. If False, returns the total volume. If True, returns a list of volumes for each of
+            the `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
+
+        Returns:
+
+            The computed volume.
+        """
+        xsec_areas = [
+            xsec.xsec_area()
+            for xsec in self.xsecs
+        ]
+        separations = self.span(
+            type="wetted",
+            _sectional=True
+        )
+
+        sectional_volumes = [
+            separation / 3 * (area_a + area_b + (area_a * area_b + 1e-100) ** 0.5)
+            for area_a, area_b, separation in zip(
+                xsec_areas[1:],
+                xsec_areas[:-1],
+                separations
+            )
+        ]
+
+        volume = sum(sectional_volumes)
+
+        if self.symmetric:
+            volume *= 2
+
+        if _sectional:
+            return sectional_volumes
+        else:
+            return volume
+
     def mesh_body(self,
                   method="quad",
                   chordwise_resolution: int = 36,
