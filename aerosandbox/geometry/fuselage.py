@@ -194,7 +194,7 @@ class Fuselage(AeroSandboxObject):
 
     def volume(self,
                _sectional: bool = False
-               ) -> float:
+               ) -> Union[float, List[float]]:
         """
         Computes the volume of the Fuselage.
 
