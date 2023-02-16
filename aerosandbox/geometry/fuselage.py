@@ -192,26 +192,49 @@ class Fuselage(AeroSandboxObject):
         """
         return np.fabs(self.xsecs[-1].xyz_c[0] - self.xsecs[0].xyz_c[0])
 
-    def volume(self) -> float:
+    def volume(self,
+               _sectional: bool = False
+               ) -> float:
         """
-        Gives the volume of the Fuselage.
+        Computes the volume of the Fuselage.
+
+        Args:
+
+            _sectional: A boolean. If False, returns the total volume. If True, returns a list of volumes for each of
+            the `n-1` lofted sections (between the `n` fuselage cross sections in fuselage.xsec).
 
         Returns:
-            Fuselage volume.
+
+            The computed volume.
         """
-        volume = 0
+        xsec_areas = [
+            xsec.xsec_area()
+            for xsec in self.xsecs
+        ]
 
-        xsec_areas = [xsec.xsec_area() for xsec in self.xsecs]
-
-        for i in range(len(self.xsecs) - 1):
-            x_separation = self.xsecs[i + 1].xyz_c[0] - self.xsecs[i].xyz_c[0]
-            area_a = xsec_areas[i]
-            area_b = xsec_areas[i + 1]
-
-            volume += x_separation / 3 * (
-                    area_a + area_b + (area_a * area_b + 1e-100) ** 0.5
+        separations = [
+            xsec_b.xyz_c[0] - xsec_a.xyz_c[0]
+            for xsec_a, xsec_b in zip(
+                self.xsecs[:-1],
+                self.xsecs[1:]
             )
-        return volume
+        ]
+
+        sectional_volumes = [
+            separation / 3 * (area_a + area_b + (area_a * area_b + 1e-100) ** 0.5)
+            for area_a, area_b, separation in zip(
+                xsec_areas[1:],
+                xsec_areas[:-1],
+                separations
+            )
+        ]
+
+        volume = sum(sectional_volumes)
+
+        if _sectional:
+            return sectional_volumes
+        else:
+            return volume
 
     def x_centroid_projected(self) -> float:
         """
