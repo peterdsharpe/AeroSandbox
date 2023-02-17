@@ -58,7 +58,7 @@ def get_dalpha(
 
 Alpha, Deflection, Hinge_x, Re, Camber, Thickness = np.meshgrid(
     np.linspace(0, 15, 6),
-    np.linspace(0, 25, 11),
+    np.linspace(1, 25, 11),
     np.linspace(0, 1, 11),
     np.array([1e5, 2e5, 3e5, 4e5, 5e5, 1e6, 5e6]),
     0,

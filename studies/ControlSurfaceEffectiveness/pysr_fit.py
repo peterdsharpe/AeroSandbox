@@ -1,5 +1,5 @@
 from pysr import PySRRegressor
-from get_data import S, H, Arc_lengths
+from read_data import a, d, hf, lr, eff
 import numpy as np
 
 model = PySRRegressor(
@@ -39,26 +39,37 @@ model = PySRRegressor(
         # 'cos': 5,
         # 'tan': 5,
     },
-    maxsize=40,
+    maxsize=30,
     # batching=True,
     # batch_size=500,
     # warm_start=True,
     # extra_sympy_mappings={"inv": lambda x: 1 / x},
     # ^ Define operator for SymPy as well
-    loss="loss(prediction, target, weight) = weight * log(max(prediction, 1e-6) / target) ^ 2",
+    loss="loss(prediction, target, weight) = weight * (prediction - target) ^ 2",
     # ^ Custom loss function (julia syntax)
 )
 
-weights = np.ones_like(S)
-weights[(1.5 < S) & (S < 2.5)] *= 4
-weights[H<1.5] *= 4
+weights = np.ones_like(eff)
+weights[hf <= 0.5] *= 4
+weights[d < 10] *= 2
+weights[a < 10] *= 2
+
+weights[hf == 0] = 100
+weights[hf == 1] = 100
 
 model.fit(
     np.stack([
-        S.flatten(),
-        H.flatten()
+        a,
+        # d,
+        hf,
+        # lr
     ], axis=1),
-    Arc_lengths.flatten(),
-    weights=weights.flatten(),
-    variable_names=["s", "h"],
+    eff,
+    weights=weights,
+    variable_names=[
+        "a",
+        # "d",
+        "hf",
+        # "lr"
+    ],
 )
