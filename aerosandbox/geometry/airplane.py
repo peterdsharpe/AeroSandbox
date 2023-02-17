@@ -382,22 +382,15 @@ class Airplane(AeroSandboxObject):
         ##### Fuselages
         for fuse in self.fuselages:
 
-            xsec_shape_parameters = np.array([
-                xsec.shape
+            ### Bulkheads
+            perimeters_xyz = [
+                xsec.get_3D_coordinates(theta=np.linspace(0, 2 * np.pi, 121))
                 for xsec in fuse.xsecs
-            ])
-
-            ### Longerons
-            for theta in fuselage_longeron_theta:
-                st = np.sin(theta)
-                ct = np.cos(theta)
-
+            ]
+            for i, perim in enumerate(perimeters_xyz):
                 plot_line(
-                    fuse.mesh_line(
-                        x_nondim=np.abs(ct) ** (2 / xsec_shape_parameters) * np.where(ct > 0, 1, -1),
-                        y_nondim=np.abs(st) ** (2 / xsec_shape_parameters) * np.where(st > 0, 1, -1)
-                    ),
-                    linewidth=thick_linewidth
+                    np.stack(perim, axis=1),
+                    linewidth=thick_linewidth if i == 0 or i == len(fuse.xsecs) - 1 else thin_linewidth
                 )
 
             ### Centerline
@@ -406,32 +399,14 @@ class Airplane(AeroSandboxObject):
                 linewidth=thin_linewidth
             )
 
-            ### Bulkheads
-            for i, xsec in enumerate(fuse.xsecs):
-                if xsec.radius < 1e-6:
-                    continue
-
-                xg_local, yg_local, zg_local = fuse._compute_frame_of_FuselageXSec(i)
-                xg_local = reshape(xg_local)
-                yg_local = reshape(yg_local)
-                zg_local = reshape(zg_local)
-                origin = reshape(xsec.xyz_c)
-                scale = xsec.radius
-
-                theta = np.linspace(0, 2 * np.pi, 121).reshape((-1, 1))
-                st = np.sin(theta)
-                ct = np.cos(theta)
-                x_nondim = np.abs(ct) ** (2 / xsec.shape) * np.where(ct > 0, 1, -1)
-                y_nondim = np.abs(st) ** (2 / xsec.shape) * np.where(st > 0, 1, -1)
-
-                line = origin + (
-                        x_nondim * scale * yg_local +
-                        y_nondim * scale * zg_local
-                )
-
+            ### Longerons
+            for theta in fuselage_longeron_theta:
                 plot_line(
-                    line,
-                    linewidth=thick_linewidth if i == 0 or i == len(fuse.xsecs) - 1 else thin_linewidth
+                    np.stack([
+                        np.array(xsec.get_3D_coordinates(theta=theta))
+                        for xsec in fuse.xsecs
+                    ], axis=0),
+                    linewidth=thick_linewidth
                 )
 
         if set_equal:
@@ -567,25 +542,14 @@ class Airplane(AeroSandboxObject):
             xsec_wires = []
 
             for i, xsec in enumerate(fuse.xsecs):
-                csys = fuse._compute_frame_of_FuselageXSec(i)
-
-                scale = xsec.radius
-
                 tol = 1e-4
-                if scale == 0:
+                if xsec.xsec_area() ** 0.5 < tol:
                     if i == 0:
                         if np.abs(xsec.xyz_c[0] - fuse.xsecs[1].xyz_c[0]) < tol:
                             continue
                     if i == len(fuse.xsecs) - 1:
                         if np.abs(xsec.xyz_c[0] - fuse.xsecs[-2].xyz_c[0]) < tol:
                             continue
-                    scale = tol
-
-                theta = np.linspace(0, 2 * np.pi, 121)
-                st = np.sin(theta)
-                ct = np.cos(theta)
-                x_nondim = np.abs(ct) ** (2 / xsec.shape) * np.where(ct > 0, 1, -1)
-                y_nondim = np.abs(st) ** (2 / xsec.shape) * np.where(st > 0, 1, -1)
 
                 xsec_wires.append(
                     cq.Workplane(
@@ -596,8 +560,8 @@ class Airplane(AeroSandboxObject):
                         )
                     ).spline(
                         listOfXYTuple=[
-                            (x * scale, y * scale)
-                            for x, y in zip(x_nondim, y_nondim)
+                            (y - xsec.xyz_c[1], z - xsec.xyz_c[2])
+                            for x, y, z in zip(*xsec.get_3D_coordinates())
                         ]
                     ).close()
                 )

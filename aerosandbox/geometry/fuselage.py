@@ -297,7 +297,6 @@ class Fuselage(AeroSandboxObject):
             method: Allows choice between "tri" and "quad" meshing.
             chordwise_resolution: Controls the chordwise resolution of the meshing.
             spanwise_resolution: Controls the spanwise resolution of the meshing.
-            TODO add mesh_trailing_edge argument.
 
         Returns: (points, faces) in standard mesh format.
 
@@ -305,33 +304,23 @@ class Fuselage(AeroSandboxObject):
 
         t = np.linspace(0, 2 * np.pi, spanwise_resolution + 1)[:-1]
 
-        xsec_shape_parameters = np.array([
-            xsec.shape
-            for xsec in self.xsecs
-        ])
-
-        chordwise_strips = []
-        for ti in t:
-            st = np.sin(ti)
-            ct = np.cos(ti)
-
-            chordwise_strips.append(
-                self.mesh_line(
-                    x_nondim=np.abs(ct) ** (2 / xsec_shape_parameters) * np.where(ct > 0, 1, -1),
-                    y_nondim=np.abs(st) ** (2 / xsec_shape_parameters) * np.where(st > 0, 1, -1),
-                    chordwise_resolution=chordwise_resolution
-                )
+        points = np.concatenate([
+            np.stack(
+                xsec.get_3D_coordinates(theta=t)
+                , axis=1
             )
-
-        points = np.concatenate(chordwise_strips)
+            for xsec in self.xsecs
+        ],
+            axis=0
+        )
 
         faces = []
 
-        num_i = len(chordwise_strips)
-        num_j = chordwise_resolution * (len(self.xsecs) - 1)
+        num_i = len(self.xsecs)
+        num_j = len(t)
 
         def index_of(iloc, jloc):
-            return jloc + (iloc % spanwise_resolution) * (num_j + 1)
+            return iloc * num_j + (jloc % num_j)
 
         def add_face(*indices):
             entry = list(indices)
@@ -341,7 +330,7 @@ class Fuselage(AeroSandboxObject):
                 faces.append([entry[0], entry[1], entry[3]])
                 faces.append([entry[1], entry[2], entry[3]])
 
-        for i in range(num_i):
+        for i in range(num_i - 1):
             for j in range(num_j):
                 add_face(
                     index_of(i, j),
@@ -393,8 +382,8 @@ class Fuselage(AeroSandboxObject):
                 xsec_y_nondim = y_nondim
 
             xsec_point = origin + (
-                    xsec_x_nondim * xsec.width / 2 * yg_local +
-                    xsec_y_nondim * xsec.height / 2 * zg_local
+                    xsec_x_nondim * (xsec.width / 2) * yg_local +
+                    xsec_y_nondim * (xsec.height / 2) * zg_local
             )
             xsec_points.append(xsec_point)
 
@@ -709,11 +698,7 @@ class FuselageXSec(AeroSandboxObject):
 
     def get_3D_coordinates(self,
                            theta: Union[float, np.ndarray] = None
-                           ) -> Tuple[
-        Union[float, np.ndarray],
-        Union[float, np.ndarray],
-        Union[float, np.ndarray]
-    ]:
+                           ) -> Tuple[Union[float, np.ndarray]]:
         """
         Samples points from the perimeter of this FuselageXSec.
 
@@ -744,7 +729,7 @@ class FuselageXSec(AeroSandboxObject):
             theta = np.linspace(
                 0,
                 2 * np.pi,
-                61 + 1
+                60 + 1
             )[:-1]
 
         st = np.sin(theta)
@@ -788,8 +773,9 @@ if __name__ == '__main__':
             ),
             FuselageXSec(
                 xyz_c=[1, 0, 1],
-                radius=0.3,
-                shape=10
+                width=0.5,
+                height=0.2,
+                shape=5
             ),
             FuselageXSec(
                 xyz_c=[2, 0, 1],
