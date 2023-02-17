@@ -307,7 +307,8 @@ class AeroBuildup(ExplicitAnalysis):
         s = np.radians(wing_sweep)
         t = np.exp(-wing_taper)
         neutral_point_deviation_due_to_unsweep = -(
-            ((((3.557726 ** (a ** 2.8443985)) * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)) + (a + -0.89228547)) * -0.16073418)
+            ((((3.557726 ** (a ** 2.8443985)) * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)) + (
+                        a + -0.89228547)) * -0.16073418)
         ) * wing_MAC
         aerodynamic_centers = [
             ac + np.array([neutral_point_deviation_due_to_unsweep, 0, 0])
@@ -413,8 +414,8 @@ class AeroBuildup(ExplicitAnalysis):
             alpha_generalized_effective = (
                     alpha_generalized -
                     (1 - AR_3D_factor ** 0.8) * np.sind(2 * alpha_generalized) / 2 * (180 / np.pi)
-                    # TODO: "center" this scaling around alpha = alpha_{airfoil, Cl=0}, not around alpha = 0.
-                    # TODO Can estimate airfoil's alpha_{Cl=0} by camber + thin airfoil theory + viscous decambering knockdown.
+                # TODO: "center" this scaling around alpha = alpha_{airfoil, Cl=0}, not around alpha = 0.
+                # TODO Can estimate airfoil's alpha_{Cl=0} by camber + thin airfoil theory + viscous decambering knockdown.
             )  # Models finite-wing increase in alpha_{CL_max}.
 
             ##### Compute the control surface deflection
@@ -631,7 +632,8 @@ class AeroBuildup(ExplicitAnalysis):
             xsec_b = fuselage.xsecs[sect_id + 1]
 
             ### Some metrics, like effective force location, are area-weighted. Here, we compute those weights.
-            r_a = xsec_a.equivalent_radius(preserve="area") # TODO modify AeroBuildup for improved accuracy on non-circular fuses
+            r_a = xsec_a.equivalent_radius(
+                preserve="area")  # TODO modify AeroBuildup for improved accuracy on non-circular fuses
             r_b = xsec_b.equivalent_radius(preserve="area")
 
             xyz_a = xsec_a.xyz_c
