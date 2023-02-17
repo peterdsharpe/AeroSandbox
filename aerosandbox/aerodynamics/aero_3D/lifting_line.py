@@ -1170,7 +1170,6 @@ class LiftingLine(ImplicitAnalysis):
                         points_2[(point_index) % fuse.circumferential_panels, :],
                     ],
                         intensity=0,
-                        mirror=fuse.symmetric,
                     )
 
         if draw_streamlines:

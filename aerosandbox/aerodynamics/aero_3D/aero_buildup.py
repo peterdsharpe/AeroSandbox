@@ -768,9 +768,6 @@ class AeroBuildup(ExplicitAnalysis):
                 F_g[i] += sect_F_g[i]
                 M_g[i] += sect_M_g[i]
 
-            if fuselage.symmetric:
-                raise NotImplementedError()
-
         ##### Add in profile drag: viscous drag forces and wave drag forces
         ### Base Drag
         base_drag_coefficient = fuselage_base_drag_coefficient(mach=op_point.mach())
