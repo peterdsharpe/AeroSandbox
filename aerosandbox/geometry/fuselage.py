@@ -707,7 +707,60 @@ class FuselageXSec(AeroSandboxObject):
 
             return perimeter
 
-    def get_coordinates(self) -> np.ndarray:
+    def get_3D_coordinates(self,
+                           theta: Union[float, np.ndarray] = None
+                           ) -> Tuple[
+        Union[float, np.ndarray],
+        Union[float, np.ndarray],
+        Union[float, np.ndarray]
+    ]:
+        """
+        Samples points from the perimeter of this FuselageXSec.
+
+        Args:
+
+            theta: Coordinate in the tangential-ish direction to sample points at. Given in the 2D FuselageXSec
+            coordinate system, where:
+
+                * x_2D points along the (global) y_g
+                * y_2D points along the (global) z_g
+
+                In other words, a value of:
+
+                    * theta=0     -> samples points from the right side of the FuselageXSec
+                    * theta=pi/2  -> samples points from the top of the FuselageXSec
+                    * theta=pi    -> samples points from the left side of the FuselageXSec
+                    * theta=3pi/2 -> samples points from the bottom of the FuselageXSec
+
+        Returns: Points sampled from the perimeter of the FuselageXSec, as a [x, y, z] tuple.
+
+            If theta is a float, then each of x, y, and z will be floats.
+
+            If theta is an array, then x, y, and z will also be arrays of the same size.
+
+        """
+        ### Set defaults
+        if theta is None:
+            theta = np.linspace(
+                0,
+                2 * np.pi,
+                61 + 1
+            )[:-1]
+
+        st = np.sin(theta)
+        ct = np.cos(theta)
+
+        x_nondim = np.abs(ct) ** (2 / self.shape) * np.where(ct > 0, 1, -1)
+        y_nondim = np.abs(st) ** (2 / self.shape) * np.where(st > 0, 1, -1)
+
+        x_2D = x_nondim * self.width / 2
+        y_2D = y_nondim * self.height / 2
+
+        return (
+            self.xyz_c[0] * np.ones_like(theta),
+            self.xyz_c[1] + x_2D,
+            self.xyz_c[2] + y_2D,
+        )
 
     def translate(self,
                   xyz: Union[np.ndarray, List[float]]
