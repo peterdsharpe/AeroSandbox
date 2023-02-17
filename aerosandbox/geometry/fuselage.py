@@ -674,7 +674,7 @@ class FuselageXSec(AeroSandboxObject):
 
             Then, the perimeter of that single quadrant is:
 
-            (h + ((((((s -0.5655713244523656) ^ 0.91736424) ^ exp(s * -0.90069205)) + h) + 0.09919785) ^ (-1.4812293 / s)))
+            h + (((((s-0.88487077) * h + 0.2588574 / h) ^ exp(s / -0.90069205)) + h) + 0.09919785) ^ (-1.4812293 / s)
 
             See `AeroSandbox/studies/SuperellipseProperties` for details about how this was obtained.
 
@@ -700,8 +700,8 @@ class FuselageXSec(AeroSandboxObject):
             s = self.shape
             h = np.maximum(self.width / self.height, self.height / self.width)
             nondim_quadrant_perimeter = (
-                (h + ((((((s - 0.5655713244523656) ** 0.91736424) ** np.exp(s * -0.90069205)) + h) + 0.09919785) ** (
-                        -1.4812293 / s)))
+                    h + (((((s - 0.88487077) * h + 0.2588574 / h) ** np.exp(s / -0.90069205)) + h) + 0.09919785) ** (
+                    -1.4812293 / s)
             )
             perimeter = 2 * nondim_quadrant_perimeter * np.minimum(self.width, self.height)
 
