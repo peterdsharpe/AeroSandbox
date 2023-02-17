@@ -35,14 +35,17 @@ def get_dalpha(
             ),
             Re=Re,
             max_iter=20,
-            timeout=5,
+            timeout=0.5,
         ).alpha(alpha=alpha)
+
+        if any(np.isnan(res_deflected["CL"])):
+            return np.nan
 
         res_undeflected = asb.XFoil(
             airfoil=af,
             Re=Re,
             max_iter=20,
-            timeout=5,
+            timeout=0.5,
         ).cl(cl=res_deflected['CL'])
 
         delta_alpha = float(res_undeflected['alpha'] - res_deflected['alpha'])
@@ -56,7 +59,7 @@ def get_dalpha(
 Alpha, Deflection, Hinge_x, Re, Camber, Thickness = np.meshgrid(
     np.linspace(0, 15, 6),
     np.linspace(0, 25, 11),
-    np.linspace(0, 1, 21),
+    np.linspace(0, 1, 11),
     np.array([1e5, 2e5, 3e5, 4e5, 5e5, 1e6, 5e6]),
     0,
     0.10
