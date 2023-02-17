@@ -855,19 +855,31 @@ class Airfoil(Polygon):
 
         # Find the hinge point
         hinge_point_y = self.local_camber(hinge_point_x)
+        hinge_point = np.array([hinge_point_x, hinge_point_y])
 
-        # Find the coordinates of a rotated airfoil
-        rotated_airfoil = self.rotate(
-            angle=-np.pi / 180 * deflection,
-            x_center=hinge_point_x,
-            y_center=hinge_point_y,
+        def is_behind_hinge(xy: np.ndarray) -> np.ndarray:
+            return (
+                (xy[:, 0] - hinge_point_x) * np.cosd(deflection / 2) -
+                (xy[:, 1] - hinge_point_y) * np.sind(deflection / 2)
+                > 0
+            )
+
+        orig_u = self.upper_coordinates()
+        orig_l = self.lower_coordinates()
+
+        rotation_matrix = np.rotation_matrix_2D(
+            angle=-np.radians(deflection),
         )
 
-        # Merge the two sets of coordinates
+        rot_u = (rotation_matrix @ (orig_u - hinge_point).T).T + hinge_point
+        rot_l = (rotation_matrix @ (orig_l - hinge_point).T).T + hinge_point
 
-        coordinates = np.copy(self.coordinates)
-        is_past_hinge = self.x() > hinge_point_x  # TODO fix hinge self-intersecting paneling issue for large deflection
-        coordinates[is_past_hinge] = rotated_airfoil.coordinates[is_past_hinge]
+        coordinates = np.concatenate([
+            rot_u[is_behind_hinge(rot_u)],
+            orig_u[~is_behind_hinge(orig_u)],
+            orig_l[~is_behind_hinge(orig_l)],
+            rot_l[is_behind_hinge(rot_l)]
+        ], axis=0)
 
         return Airfoil(
             name=self.name,
@@ -1523,3 +1535,7 @@ class Airfoil(Polygon):
     #     plt.show()
     #
     #     return self
+
+if __name__ == '__main__':
+    af = Airfoil("naca2412")
+    af.add_control_surface(45).draw()
