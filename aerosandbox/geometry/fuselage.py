@@ -30,8 +30,7 @@ class Fuselage(AeroSandboxObject):
                  name: Optional[str] = "Untitled",
                  xsecs: List['FuselageXSec'] = None,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
-                 symmetric: bool = False,  # Deprecated
-                 xyz_le: np.ndarray = None,  # Deprecated
+                 **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
                  ):
         """
         Defines a new fuselage.
@@ -78,16 +77,10 @@ class Fuselage(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated parameters
-        if symmetric:
-            import warnings
-            warnings.warn(
-                "The `symmetric` argument for Fuselage objects will be deprecated soon. Make your fuselages separate instead!",
-                stacklevel=2
-            )
+        if 'symmetric' in locals():
+            raise Exception("The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!")
 
-        self.symmetric = symmetric
-
-        if xyz_le is not None:
+        if 'xyz_le' in locals():
             import warnings
             warnings.warn(
                 "The `xyz_le` input for Fuselage is DEPRECATED and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
