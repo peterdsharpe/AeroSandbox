@@ -631,8 +631,8 @@ class AeroBuildup(ExplicitAnalysis):
             xsec_b = fuselage.xsecs[sect_id + 1]
 
             ### Some metrics, like effective force location, are area-weighted. Here, we compute those weights.
-            r_a = xsec_a.radius
-            r_b = xsec_b.radius
+            r_a = xsec_a.equivalent_radius(preserve="area") # TODO modify AeroBuildup for improved accuracy on non-circular fuses
+            r_b = xsec_b.equivalent_radius(preserve="area")
 
             xyz_a = xsec_a.xyz_c
             xyz_b = xsec_b.xyz_c

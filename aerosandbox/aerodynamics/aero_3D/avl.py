@@ -541,13 +541,13 @@ class AVL(ExplicitAnalysis):
                         f"{xyz_c[0]} {xyz_c[2] + r}"
                         for xyz_c, r in zip(
                 [xsec.xyz_c for xsec in fuselage.xsecs][::-1],
-                [xsec.radius for xsec in fuselage.xsecs][::-1]
+                [xsec.equivalent_radius(preserve="area") for xsec in fuselage.xsecs][::-1]
             )
                     ] + [
                         f"{xyz_c[0]} {xyz_c[2] - r}"
                         for xyz_c, r in zip(
                 [xsec.xyz_c for xsec in fuselage.xsecs][1:],
-                [xsec.radius for xsec in fuselage.xsecs][1:]
+                [xsec.equivalent_radius(preserve="area") for xsec in fuselage.xsecs][1:]
             )
                     ]
 
