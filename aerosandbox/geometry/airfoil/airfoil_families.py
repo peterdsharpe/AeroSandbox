@@ -9,34 +9,72 @@ _default_n_points_per_side = 200
 
 
 def get_NACA_coordinates(
-        name: str = 'naca2412',
-        n_points_per_side: int = _default_n_points_per_side
+        name: str = None,
+        n_points_per_side: int = _default_n_points_per_side,
+        max_camber: float = None,
+        camber_loc: float = None,
+        thickness: float = None,
 ) -> np.ndarray:
     """
-    Returns the coordinates of a specified 4-digit NACA airfoil.
+    Returns the coordinates of a 4-series NACA airfoil.
+
+    Can EITHER specify `name`, or all three of `max_camber`, `camber_loc`, and `thickness` - not both.
+
     Args:
-        name: Name of the NACA airfoil.
+
+        Either:
+
+            * name: Name of the NACA airfoil, as a string (e.g., "naca2412")
+
+        Or:
+
+            * All three of:
+
+                max_camber: Maximum camber of the airfoil, as a fraction of chord (e.g., 0.02)
+
+                camber_loc: The location of maximum camber, as a fraction of chord (e.g., 0.40)
+
+                thickness: The maximum thickness of the airfoil, as a fraction of chord (e.g., 0.12)
+
         n_points_per_side: Number of points per side of the airfoil (top/bottom).
 
     Returns: The coordinates of the airfoil as a Nx2 ndarray [x, y]
 
     """
-    name = name.lower().strip()
+    ### Validate inputs
+    name_specified = name is not None
+    params_specified = [
+        (max_camber is not None),
+        (camber_loc is not None),
+        (thickness is not None)
+    ]
 
-    if not "naca" in name:
-        raise ValueError("Not a NACA airfoil!")
+    if name_specified:
+        if any(params_specified):
+            raise ValueError(
+                "Cannot specify both `name` and (`max_camber`, `camber_loc`, `thickness`) parameters - must be one or the other.")
 
-    nacanumber = name.split("naca")[1]
-    if not nacanumber.isdigit():
-        raise ValueError("Couldn't parse the number of the NACA airfoil!")
+        name = name.lower().strip()
 
-    if not len(nacanumber) == 4:
-        raise NotImplementedError("Only 4-digit NACA airfoils are currently supported!")
+        if not "naca" in name:
+            raise ValueError("Not a NACA airfoil - name must start with 'naca'!")
 
-    # Parse
-    max_camber = int(nacanumber[0]) * 0.01
-    camber_loc = int(nacanumber[1]) * 0.1
-    thickness = int(nacanumber[2:]) * 0.01
+        nacanumber = name.split("naca")[1]
+        if not nacanumber.isdigit():
+            raise ValueError("Couldn't parse the number of the NACA airfoil!")
+
+        if not len(nacanumber) == 4:
+            raise NotImplementedError("Only 4-digit NACA airfoils are currently supported!")
+
+        # Parse
+        max_camber = int(nacanumber[0]) * 0.01
+        camber_loc = int(nacanumber[1]) * 0.1
+        thickness = int(nacanumber[2:]) * 0.01
+
+    else:
+        if not all(params_specified):
+            raise ValueError(
+                "Must specify either `name` or all three (`max_camber`, `camber_loc`, `thickness`) parameters.")
 
     # Referencing https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_cambered_4-digit_NACA_airfoil
     # from here on out
