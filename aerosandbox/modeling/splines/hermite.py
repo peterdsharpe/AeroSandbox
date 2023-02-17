@@ -1,5 +1,5 @@
 import aerosandbox.numpy as np
-from typing import Union, List
+from typing import Union
 
 
 def linear_hermite_patch(
@@ -8,7 +8,7 @@ def linear_hermite_patch(
         x_b: float,
         f_a: float,
         f_b: float,
-):
+) -> Union[float, np.ndarray]:
     return (x - x_a) * (f_b - f_a) / (x_b - x_a) + f_a
 
 
@@ -21,7 +21,7 @@ def cubic_hermite_patch(
         dfdx_a: float,
         dfdx_b: float,
         extrapolation: str = 'continue',
-):
+) -> Union[float, np.ndarray]:
     dx = x_b - x_a
     t = (x - x_a) / dx  # Nondimensional distance along the patch
     if extrapolation == 'continue':
