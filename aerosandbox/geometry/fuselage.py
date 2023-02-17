@@ -585,19 +585,27 @@ class FuselageXSec(AeroSandboxObject):
 
         ### Set width and height
         radius_specified = (radius is not None)
-        width_height_specified = (width is not None) and (height is not None)
+        width_height_specified = [
+            (width is not None),
+            (height is not None)
+        ]
 
-        if radius_specified and width_height_specified:
-            raise ValueError(
-                "Must specify either just the radius, or both width and height - cannot specify all three.")
-        elif radius_specified and not width_height_specified:
+        if radius_specified:
+            if any(width_height_specified):
+                raise ValueError(
+                    "Cannot specify both `radius` and (`width`, `height`) parameters - must be one or the other."
+                )
+
             self.width = 2 * radius
             self.height = 2 * radius
-        elif not radius_specified and width_height_specified:
+
+        else:
+            if not all(width_height_specified):
+                raise ValueError(
+                    "Must specify either `radius` or both (`width`, `height`) parameters."
+                )
             self.width = width
             self.height = height
-        else:
-            raise ValueError("Must specify either just the radius, or both width and height.")
 
         ### Initialize
         self.xyz_c = np.array(xyz_c)
