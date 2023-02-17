@@ -747,6 +747,32 @@ class FuselageXSec(AeroSandboxObject):
             self.xyz_c[2] + y_2D,
         )
 
+    def equivalent_radius(self,
+                          preserve="area"
+                          ) -> float:
+        """
+        Computes an equivalent radius for non-circular cross-sections. This may be necessary when doing analysis that uses axisymmetric assumptions.
+
+        Can either hold area or perimeter fixed, depending on whether cross-sectional area or wetted area is more important.
+
+        Args:
+
+            preserve: One of:
+
+                * "area": holds the cross-sectional area constant
+
+                * "perimeter": holds the cross-sectional perimeter (i.e., the wetted area of the Fuselage) constant
+
+        Returns: An equivalent radius value.
+
+        """
+        if preserve == "area":
+            return (self.xsec_area() / np.pi) ** 0.5
+        elif preserve == "perimeter":
+            return (self.xsec_perimeter() / (2 * np.pi))
+        else:
+            raise ValueError("Bad value of `preserve`!")
+
     def translate(self,
                   xyz: Union[np.ndarray, List[float]]
                   ) -> "FuselageXSec":
