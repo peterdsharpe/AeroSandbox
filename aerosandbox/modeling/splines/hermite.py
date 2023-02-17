@@ -1,5 +1,5 @@
 import aerosandbox.numpy as np
-from typing import Union, List
+from typing import Union
 
 
 def linear_hermite_patch(
