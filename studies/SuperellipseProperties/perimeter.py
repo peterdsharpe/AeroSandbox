@@ -5,7 +5,7 @@ import aerosandbox.tools.pretty_plots as p
 
 N = 10000
 
-def get_xy(s):
+def get_xy(s, h):
     theta = np.linspace(0, np.pi / 2, N)
     st = np.sin(theta)
     ct = np.cos(theta)
@@ -16,10 +16,12 @@ def get_xy(s):
     x = ct ** (2/s)
     y = st ** (2/s)
 
+    y *= h
+
     return x, y
 
-def plot_xy(s):
-    x, y = get_xy(s)
+def plot_xy(s, h):
+    x, y = get_xy(s, h)
     fig, ax = plt.subplots()
     plt.plot(x, y)
     p.equal()
@@ -27,8 +29,8 @@ def plot_xy(s):
 
 ### Generate data
 @np.vectorize
-def get_arc_length(s):
-    x, y = get_xy(s)
+def get_arc_length(s, h):
+    x, y = get_xy(s, h)
 
     dx = np.diff(x)
     dy = np.diff(y)
@@ -40,7 +42,11 @@ def get_arc_length(s):
     return arc_length
 
 s = np.concatenate([
-    np.linspace(1e-6, 3, 200),
-    np.linspace(3, 50, 100)[1:]
+    np.linspace(1, 3, 50),
+    np.sinspace(3, 50, 20)[1:]
 ])
-arc_lengths = get_arc_length(s)
+h = np.geomspace(1, 100, 50)
+
+S, H = np.meshgrid(s, h)
+
+Arc_lengths = get_arc_length(S, H)

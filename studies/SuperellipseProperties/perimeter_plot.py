@@ -1,16 +1,42 @@
 from pysr import PySRRegressor
-from perimeter import s, arc_lengths
 import matplotlib.pyplot as plt
 import aerosandbox.tools.pretty_plots as p
+import aerosandbox.numpy as np
+from perimeter import S as s, H as h, Arc_lengths
 
-arc_lengths_model = (
-        (-2.2341106 / (((s ** -2.268331) / 1.2180636) + ((s + 0.4997542) * 1.9967787))) + 2.002495
-)
+
+def model(s, h):
+
+    m = """
+(h + ((((((((s - -0.2588574) + -0.88487077) * (h ^ 0.5434004)) ^ 1.1420758) ^ exp(s / -0.90069205)) + h) - -0.09919785) ^ (-1.4812293 / s)))
+    """
+    m = (
+        m
+        .replace("exp", "np.exp")
+        .replace("log", "np.log")
+        .replace("^", "**")
+    )
+
+    return eval(m.strip())
+
 
 fig, ax = plt.subplots()
-plt.plot(s, arc_lengths, "k.", zorder=4, markersize=2)
-p.plot_smooth(s, arc_lengths_model, "-")
-# plt.plot(s, arc_lengths_model/arc_lengths)
-# plt.xlim(0, 5)
-# p.equal()
-p.show_plot()
+p.contour(
+    s,
+    h,
+    100 * (model(s,h) - Arc_lengths) / Arc_lengths,
+    linelabels_format=lambda x: f"{x:+.1f}%",
+    cmap="coolwarm",
+    vmin=-1,
+    vmax=1,
+    levels=np.arange(-10, 10, 0.1),
+    colorbar_label="Model Error [%]"
+)
+plt.xscale('log')
+plt.yscale('log')
+# plt.ylim(1, 10)
+p.show_plot(
+    "Model Error",
+    "s",
+    "h"
+)
