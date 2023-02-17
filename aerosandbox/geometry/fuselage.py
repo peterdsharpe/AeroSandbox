@@ -78,7 +78,8 @@ class Fuselage(AeroSandboxObject):
 
         ### Handle deprecated parameters
         if 'symmetric' in locals():
-            raise Exception("The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!")
+            raise Exception(
+                "The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!")
 
         if 'xyz_le' in locals():
             import warnings
@@ -118,8 +119,6 @@ class Fuselage(AeroSandboxObject):
         """
         Returns the wetted area of the fuselage.
 
-        If the Fuselage is symmetric (i.e. two symmetric wingtip pods),
-        returns the combined wetted area of both pods.
         :return:
         """
         area = 0
@@ -130,27 +129,38 @@ class Fuselage(AeroSandboxObject):
             x_separation = self.xsecs[i + 1].xyz_c[0] - self.xsecs[i].xyz_c[0]
             area += (perimeters[i] + perimeters[i + 1]) / 2 * x_separation
 
-        if self.symmetric:
-            area *= 2
         return area
 
-    def area_projected(self) -> float:
+    def area_projected(self,
+                       type: str = "XY",
+                       ) -> float:
         """
-        Returns the area of the fuselage as projected onto the XY plane (top-down view).
+        Returns the area of the fuselage as projected onto one of the principal planes.
 
-        If the Fuselage is symmetric (i.e. two symmetric wingtip pods),
-        returns the combined projected area of both pods.
-        :return:
+        Args:
+            type: A string, which determines which principal plane to use for projection. One of:
+
+                * "XY", in which case the projected area is onto the XY plane (i.e., top-down)
+
+                * "XZ", in which case the projected area is onto the XZ plane (i.e., side-view)
+
+        Returns: The projected area.
         """
         area = 0
         for i in range(len(self.xsecs) - 1):
-            r_a = self.xsecs[i].radius
-            r_b = self.xsecs[i + 1].radius
             x_separation = self.xsecs[i + 1].xyz_c[0] - self.xsecs[i].xyz_c[0]
-            area += (r_a + r_b) * x_separation
 
-        if self.symmetric:
-            area *= 2
+            if type == "XY":
+                width_a = self.xsecs[i].width
+                width_b = self.xsecs[i + 1].width
+                area += (width_a + width_b) / 2 * x_separation
+            elif type == "XZ":
+                height_a = self.xsecs[i].height
+                height_b = self.xsecs[i + 1].height
+                area += (height_a + height_b) / 2 * x_separation
+            else:
+                raise ValueError("Bad value of `type`!")
+
         return area
 
     def area_base(self) -> float:
@@ -229,9 +239,20 @@ class Fuselage(AeroSandboxObject):
         else:
             return volume
 
-    def x_centroid_projected(self) -> float:
+    def x_centroid_projected(self,
+                             type: str = "XY",
+                             ) -> float:
         """
         Returns the x_g coordinate of the centroid of the planform area.
+
+        Args:
+            type: A string, which determines which principal plane to use for projection. One of:
+
+                * "XY", in which case the projected area is onto the XY plane (i.e., top-down)
+
+                * "XZ", in which case the projected area is onto the XZ plane (i.e., side-view)
+
+        Returns: The x_g coordinate of the centroid.
         """
 
         total_x_area_product = 0
@@ -240,13 +261,20 @@ class Fuselage(AeroSandboxObject):
         for xsec_a, xsec_b in zip(self.xsecs, self.xsecs[1:]):
             x_a = xsec_a.xyz_c[0]
             x_b = xsec_b.xyz_c[0]
-            r_a = xsec_a.radius
-            r_b = xsec_b.radius
+
+            if type == "XY":
+                r_a = xsec_a.width / 2
+                r_b = xsec_b.width / 2
+            elif type == "XZ":
+                r_a = xsec_a.height / 2
+                r_b = xsec_b.height / 2
+            else:
+                raise ValueError("Bad value of `type`!")
 
             dx = x_b - x_a
 
             x_c = x_a + (r_a + 2 * r_b) / (3 * (r_a + r_b)) * dx
-            area = (xsec_a.radius + xsec_b.radius) / 2 * dx
+            area = (r_a + r_b) / 2 * dx
 
             total_area += area
             total_x_area_product += x_c * area
@@ -324,15 +352,6 @@ class Fuselage(AeroSandboxObject):
 
         faces = np.array(faces)
 
-        if self.symmetric:
-            flipped_points = np.array(points)
-            flipped_points[:, 1] = flipped_points[:, 1] * -1
-
-            points, faces = mesh_utils.stack_meshes(
-                (points, faces),
-                (flipped_points, faces)
-            )
-
         return points, faces
 
     def mesh_line(self,
@@ -374,8 +393,8 @@ class Fuselage(AeroSandboxObject):
                 xsec_y_nondim = y_nondim
 
             xsec_point = origin + (
-                    xsec_x_nondim * xsec.radius * yg_local +
-                    xsec_y_nondim * xsec.radius * zg_local
+                    xsec_x_nondim * xsec.width / 2 * yg_local +
+                    xsec_y_nondim * xsec.height / 2 * zg_local
             )
             xsec_points.append(xsec_point)
 
@@ -464,7 +483,8 @@ class Fuselage(AeroSandboxObject):
                 new_xsecs.append(
                     FuselageXSec(
                         xyz_c=xsec_a.xyz_c * a_weight + xsec_b.xyz_c * b_weight,
-                        radius=xsec_a.radius * a_weight + xsec_b.radius * b_weight,
+                        width=xsec_a.width * a_weight + xsec_b.width * b_weight,
+                        height=xsec_a.height * a_weight + xsec_b.height * b_weight,
                         shape=xsec_a.shape * a_weight + xsec_b.shape * b_weight,
                         analysis_specific_options=xsec_a.analysis_specific_options,
                     )
@@ -501,26 +521,34 @@ class Fuselage(AeroSandboxObject):
 
 class FuselageXSec(AeroSandboxObject):
     """
-    Definition for a fuselage cross section ("X-section").
+    Definition for a fuselage cross-section ("X-section").
     """
 
     def __init__(self,
                  xyz_c: Union[np.ndarray, List[float]] = np.array([0, 0, 0]),
-                 radius: float = 0,
+                 radius: float = None,
+                 width: float = None,
+                 height: float = None,
                  shape: float = 2.,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  ):
         """
-        Defines a new fuselage cross section.
+        Defines a new Fuselage cross-section.
+
+        A FuselageXSec is
 
         Args:
 
             xyz_c: An array-like that represents the xyz-coordinates of the center of this fuselage cross section,
             in geometry axes.
 
-            radius: Radius of the fuselage cross section.
+            To define the
 
-            shape: A parameter that determines what shape the cross section is. Should be in the range 1 < shape < infinity.
+            radius: Radius of the fuselage cross-section.
+
+            width:
+
+            shape: A parameter that determines what shape the cross-section is. Should be in the range 1 < shape < infinity.
 
                 In short, here's how to interpret this value:
 
@@ -566,14 +594,29 @@ class FuselageXSec(AeroSandboxObject):
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
+        ### Set width and height
+        radius_specified = (radius is not None)
+        width_height_specified = (width is not None) and (height is not None)
+
+        if radius_specified and width_height_specified:
+            raise ValueError(
+                "Must specify either just the radius, or both width and height - cannot specify all three.")
+        elif radius_specified and not width_height_specified:
+            self.width = 2 * radius
+            self.height = 2 * radius
+        elif not radius_specified and width_height_specified:
+            self.width = width
+            self.height = height
+        else:
+            raise ValueError("Must specify either just the radius, or both width and height.")
+
         ### Initialize
         self.xyz_c = np.array(xyz_c)
-        self.radius = radius
         self.shape = shape
         self.analysis_specific_options = analysis_specific_options
 
     def __repr__(self) -> str:
-        return f"FuselageXSec (xyz_c: {self.xyz_c}, radius: {self.radius}, shape: {self.shape})"
+        return f"FuselageXSec (xyz_c: {self.xyz_c}, width: {self.width}, height: {self.height}, shape: {self.shape})"
 
     def xsec_area(self):
         """
@@ -582,13 +625,13 @@ class FuselageXSec(AeroSandboxObject):
         The computation method is a closed-form approximation for the area of a superellipse. The exact equation for
         the area of a superellipse with shape parameter `s` is:
 
-            area = 4 * r^2 * (gamma(1 + 1/n))^2 / gamma(1 + 2/n)
+            area = width * height * (gamma(1 + 1/n))^2 / gamma(1 + 2/n)
 
         where gamma() is the gamma function. The gamma function is (relatively) computationally expensive to evaluate
         and differentiate, so we replace this area calculation with a closed-form approximation (with essentially no
         loss in accuracy):
 
-            area = 4 * r^2 / (s^-1.8717618013591173 + 1)
+            area = width * height / (s^-1.8717618013591173 + 1)
 
         This approximation has the following properties:
 
@@ -610,23 +653,32 @@ class FuselageXSec(AeroSandboxObject):
         Returns:
 
         """
-        pi_effective = 4 / (self.shape ** -1.8717618013591173 + 1)
-        area = pi_effective * self.radius ** 2
+        area = self.width * self.height / (self.shape ** -1.8717618013591173 + 1)
 
         return area
 
     def xsec_perimeter(self):
         """
-        Computes the FuselageXSec's perimeter. ("Circumference" in the case of a circular cross section.)
+        Computes the FuselageXSec's perimeter. ("Circumference" in the case of a circular cross-section.)
 
         The computation method is a closed-form approximation for the perimeter of a superellipse. The exact equation
         for the perimeter of a superellipse is quite long and is not repeated here for brevity; a Google search will
-        bring it up.
+        bring it up. More importantly, this exact equation can only be represented as an infinite sum - not
+        particularly useful for fast computation.
 
         We replace this exact equation with the following closed-form approximation obtained from symbolic regression:
 
-            perimeter_per_quadrant = 2.0022144 - 2.2341106 / ( s^-2.2698476 / 1.218528 + (s + 0.50136507) * 1.9967787 )
-            perimeter = perimeter_per_quadrant * 4 * radius
+            Imagine a superellipse centered on the origin of a 2D plane. Now, imagine that the superellipse is
+            stretched such that the first quadrant (e.g., x>0, y>0) goes from (1, 0) to (0, h). Assume it has shape
+            parameter s (where, as a reminder, s=1 is a diamond, s=2 is a circle, s=Inf is a square).
+
+            Then, the perimeter of that single quadrant is:
+
+            (h + ((((((s -0.5655713244523656) ^ 0.91736424) ^ exp(s * -0.90069205)) + h) + 0.09919785) ^ (-1.4812293 / s)))
+
+            See `AeroSandbox/studies/SuperellipseProperties` for details about how this was obtained.
+
+        We can extrapolate from here to the general case of a superellipse, as shown in the code below.
 
         This approximation has the following properties:
 
@@ -639,13 +691,23 @@ class FuselageXSec(AeroSandboxObject):
         Returns:
 
         """
-        s = self.shape
-        perimeter_per_quadrant = (
-                (-2.2341106 / (((s ** -2.2698476) / 1.218528) + ((s + 0.50136507) * 1.9967787))) + 2.0022144
-        )
-        perimeter = perimeter_per_quadrant * 4 * self.radius
+        if self.width == 0:
+            return 2 * self.height
+        elif self.height == 0:
+            return 2 * self.width
+        else:
 
-        return perimeter
+            s = self.shape
+            h = np.maximum(self.width / self.height, self.height / self.width)
+            nondim_quadrant_perimeter = (
+                (h + ((((((s - 0.5655713244523656) ** 0.91736424) ** np.exp(s * -0.90069205)) + h) + 0.09919785) ** (
+                        -1.4812293 / s)))
+            )
+            perimeter = 2 * nondim_quadrant_perimeter * np.minimum(self.width, self.height)
+
+            return perimeter
+
+    def get_coordinates(self) -> np.ndarray:
 
     def translate(self,
                   xyz: Union[np.ndarray, List[float]]
