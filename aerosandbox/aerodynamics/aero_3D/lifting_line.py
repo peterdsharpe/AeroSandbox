@@ -1146,8 +1146,8 @@ class LiftingLine(ImplicitAnalysis):
                 xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
                 xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
 
-                r1 = xsec_1.radius
-                r2 = xsec_2.radius
+                r1 = xsec_1.equivalent_radius(preserve="area")
+                r2 = xsec_2.equivalent_radius(preserve="area")
                 points_1 = np.zeros((fuse.circumferential_panels, 3))
                 points_2 = np.zeros((fuse.circumferential_panels, 3))
                 for point_index in range(fuse.circumferential_panels):
