@@ -72,5 +72,31 @@ def test_optimize_through_control_surface_deflections():
     sol = opti.solve()
 
 
+def test_optimize_through_control_surface_deflections_for_CL():
+
+    af = Airfoil("naca0012")
+    af.coordinates = af.coordinates[::5, :]
+
+    opti = asb.Opti()
+
+    d = opti.variable(init_guess=5, lower_bound=-90, upper_bound=90)
+
+    afd = af.add_control_surface(
+        deflection=d
+    )
+
+    CL = afd.CL_function(0, 1e6, 0)
+
+    opti.minimize(
+        (CL - 0.5) ** 2
+    )
+
+    sol = opti.solve()
+
+    afd.substitute_solution(sol)
+
+    afd.draw()
+
+
 if __name__ == '__main__':
     pytest.main()
