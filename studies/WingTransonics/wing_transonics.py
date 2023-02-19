@@ -3,15 +3,15 @@ import aerosandbox.numpy as np
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates
 
 
-def CL_function(alpha, Re, mach, deflection):
+def CL_function(alpha, Re, mach):
     return 2 * np.pi * np.radians(alpha)
 
 
-def CD_function(alpha, Re, mach, deflection):
+def CD_function(alpha, Re, mach):
     return 0 * Re ** 0
 
 
-def CM_function(alpha, Re, mach, deflection):
+def CM_function(alpha, Re, mach):
     return 0 * alpha
 
 

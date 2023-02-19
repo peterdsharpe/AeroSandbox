@@ -68,7 +68,7 @@ class Airfoil(Polygon):
 
                 Must be a callable with that takes exactly these parameters as follows:
 
-                >>> def CL_function(alpha, Re, mach, deflection)
+                >>> def CL_function(alpha, Re, mach)
 
                 where:
 
@@ -77,9 +77,6 @@ class Airfoil(Polygon):
                     * `Re` is the local Reynolds number
 
                     * `mach` is the local Mach number
-
-                    * `deflection` is the deflection of any control surface on the airfoil, given in degrees. Following
-                    convention, a positive control surface deflections corresponds to a downwards deflection of a trailing-edge surface.
 
             CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
             several parameters.
@@ -159,18 +156,17 @@ class Airfoil(Polygon):
                         include_compressibility_effects: bool = True,
                         transonic_buffet_lift_knockdown: float = 0.3,
                         make_symmetric_polars: bool = False,
-                        add_deflections_as_all_moving_surfaces: bool = True,
                         ) -> None:
         """
         Generates airfoil polar surrogate models (CL, CD, CM functions) from XFoil data and assigns them in-place to
         this Airfoil's polar functions.
 
         In other words, when this function is run, the following functions will be added (or overwritten) to the instance:
-            * Airfoil.CL_function(alpha, Re, mach, deflection)
-            * Airfoil.CD_function(alpha, Re, mach, deflection)
-            * Airfoil.CM_function(alpha, Re, mach, deflection)
+            * Airfoil.CL_function(alpha, Re, mach)
+            * Airfoil.CD_function(alpha, Re, mach)
+            * Airfoil.CM_function(alpha, Re, mach)
 
-        Where alpha is in degrees. Right now, deflection is not used.
+        Where alpha is in degrees.
 
         Args:
 
@@ -195,11 +191,6 @@ class Airfoil(Polygon):
             include_compressibility_effects: Includes compressibility effects in the polars, such as wave drag,
             mach tuck, CL effects across normal shocks. Note that accuracy here is dubious in the transonic regime
             and above - you should really specify your own CL/CD/CM models
-
-            add_deflections_as_all_moving_surfaces: If this boolean is flagged `True`, the `deflection=` keyword
-            argument of the generated polar functions directly modifies the angle of attack. This effectively means
-            that you are assuming an all-moving airfoil hinged about the quarter-chord. If this boolean is flagged
-            `False`, the `deflection=` keyword argument will do nothing.
 
         Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
         polars.
@@ -378,9 +369,7 @@ class Airfoil(Polygon):
             y_data=CM_if_separated
         )
 
-        def CL_function(alpha, Re, mach=0, deflection=0):
-            if add_deflections_as_all_moving_surfaces:
-                alpha = alpha + deflection
+        def CL_function(alpha, Re, mach=0):
 
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CL_attached = CL_attached_interpolator({
@@ -433,9 +422,7 @@ class Airfoil(Polygon):
             else:
                 return CL_mach_0
 
-        def CD_function(alpha, Re, mach=0, deflection=0):
-            if add_deflections_as_all_moving_surfaces:
-                alpha = alpha + deflection
+        def CD_function(alpha, Re, mach=0):
 
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             log10_CD_attached = log10_CD_attached_interpolator({
@@ -476,7 +463,6 @@ class Airfoil(Polygon):
                 t_over_c = self.max_thickness()
 
                 mach_crit = transonic.mach_crit_Korn(
-                    # CL=CL_function(alpha, Re, mach, deflection),
                     CL=CL,
                     t_over_c=t_over_c,
                     sweep=0,
@@ -533,9 +519,7 @@ class Airfoil(Polygon):
             else:
                 return 10 ** log10_CD_mach_0
 
-        def CM_function(alpha, Re, mach=0, deflection=0):
-            if add_deflections_as_all_moving_surfaces:
-                alpha = alpha + deflection
+        def CM_function(alpha, Re, mach=0):
 
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CM_attached = CM_attached_interpolator({
@@ -859,9 +843,9 @@ class Airfoil(Polygon):
 
         def is_behind_hinge(xy: np.ndarray) -> np.ndarray:
             return (
-                (xy[:, 0] - hinge_point_x) * np.cosd(deflection / 2) -
-                (xy[:, 1] - hinge_point_y) * np.sind(deflection / 2)
-                > 0
+                    (xy[:, 0] - hinge_point_x) * np.cosd(deflection / 2) -
+                    (xy[:, 1] - hinge_point_y) * np.sind(deflection / 2)
+                    > 0
             )
 
         orig_u = self.upper_coordinates()
@@ -1088,22 +1072,22 @@ class Airfoil(Polygon):
                 that_fraction * that_foil.coordinates
         )
 
-        def CL_function(alpha, Re, mach, deflection):
+        def CL_function(alpha, Re, mach):
             return (
-                    this_fraction * this_foil.CL_function(alpha, Re, mach, deflection) +
-                    that_fraction * that_foil.CL_function(alpha, Re, mach, deflection)
+                    this_fraction * this_foil.CL_function(alpha, Re, mach) +
+                    that_fraction * that_foil.CL_function(alpha, Re, mach)
             )
 
-        def CD_function(alpha, Re, mach, deflection):
+        def CD_function(alpha, Re, mach):
             return (
-                    this_fraction * this_foil.CD_function(alpha, Re, mach, deflection) +
-                    that_fraction * that_foil.CD_function(alpha, Re, mach, deflection)
+                    this_fraction * this_foil.CD_function(alpha, Re, mach) +
+                    that_fraction * that_foil.CD_function(alpha, Re, mach)
             )
 
-        def CM_function(alpha, Re, mach, deflection):
+        def CM_function(alpha, Re, mach):
             return (
-                    this_fraction * this_foil.CM_function(alpha, Re, mach, deflection) +
-                    that_fraction * that_foil.CM_function(alpha, Re, mach, deflection)
+                    this_fraction * this_foil.CM_function(alpha, Re, mach) +
+                    that_fraction * that_foil.CM_function(alpha, Re, mach)
             )
 
         return Airfoil(
@@ -1535,6 +1519,7 @@ class Airfoil(Polygon):
     #     plt.show()
     #
     #     return self
+
 
 if __name__ == '__main__':
     af = Airfoil("naca2412")
