@@ -437,13 +437,13 @@ class AeroBuildup(ExplicitAnalysis):
                 quarter_chord_dir_g[2],
             ]
 
-            vel_dot_quarter_chord = np.dot(
+            vel_dir_dot_quarter_chord_dir = np.dot(
                 vel_dir_g,
                 quarter_chord_dir_g,
                 manual=True
             )
 
-            sweep_rad = np.arcsin(vel_dot_quarter_chord)
+            sweep_rad = np.arcsin(vel_dir_dot_quarter_chord_dir)
 
             ##### Compute Reynolds numbers
             Re_a = op_point.reynolds(xsec_a.chord)
