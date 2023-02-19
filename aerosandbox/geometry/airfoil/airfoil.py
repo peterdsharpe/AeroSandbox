@@ -22,9 +22,9 @@ class Airfoil(Polygon):
                  name: str = "Untitled",
                  coordinates: Union[None, str, np.ndarray] = None,
                  generate_polars: bool = False,
-                 CL_function: Callable[[float, float, float, float], float] = None,
-                 CD_function: Callable[[float, float, float, float], float] = None,
-                 CM_function: Callable[[float, float, float, float], float] = None,
+                 CL_function: Callable[[float, float, float], float] = None,
+                 CD_function: Callable[[float, float, float], float] = None,
+                 CM_function: Callable[[float, float, float], float] = None,
                  ):
         """
         Creates an Airfoil object.
