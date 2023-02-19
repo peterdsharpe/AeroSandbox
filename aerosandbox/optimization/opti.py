@@ -1,10 +1,11 @@
-from typing import Union, List, Dict, Callable, Any
+from typing import Union, List, Dict, Callable, Any, Tuple, Set
 import numpy.typing as npt
 import json
 import casadi as cas
 import aerosandbox.numpy as np
 from aerosandbox.tools import inspect_tools
 from sortedcontainers import SortedDict
+import copy
 
 
 class Opti(cas.Opti):
@@ -508,7 +509,7 @@ class Opti(cas.Opti):
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
               options: Dict = None,  # TODO document
-              ) -> cas.OptiSol:
+              ) -> "OptiSol":
         """
         Solve the optimization problem using CasADi with IPOPT backend.
 
@@ -628,7 +629,10 @@ class Opti(cas.Opti):
             self.callback(callback)
 
         # Do the actual solve
-        sol = super().solve()
+        sol = OptiSol(
+            opti=self,
+            cas_optisol=super().solve()
+        )
 
         if self.save_to_cache_on_solve:
             self.save_solution()
@@ -1101,7 +1105,127 @@ class Opti(cas.Opti):
             raise ValueError("Bad value of `method`!")
 
 
+class OptiSol:
+    def __init__(self,
+                 opti: Opti,
+                 cas_optisol: cas.OptiSol
+                 ):
+        self.opti = opti
+        self._sol = cas_optisol
+
+    def __call__(self, x):
+        return self.value(x)
+
+    def value(self,
+              x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any],
+              recursive: bool = True,
+              warn_on_unknown_types: bool = False
+              ):
+        """
+        Substitutes a solution from CasADi's solver recursively as an in-place operation.
+
+        In-place operation. To make it not in-place, do `y = copy.deepcopy(x)` or similar first.
+        :param sol: OptiSol object.
+        :return:
+        """
+        if not recursive:
+            return self._sol.value(x)
+
+        # If it's a CasADi type, do the conversion, and call it a day.
+        if np.is_casadi_type(x, recursive=False):
+            return self._sol.value(x)
+
+        t = type(x)
+
+        # If it's a Python iterable, recursively convert it, and preserve the type as best as possible.
+        if issubclass(t, list):
+            return [self.value(i) for i in x]
+        if issubclass(t, tuple):
+            return tuple([self.value(i) for i in x])
+        if issubclass(t, set) or issubclass(t, frozenset):
+            return {self.value(i) for i in x}
+        if issubclass(t, dict):
+            return {
+                self.value(k): self.value(v)
+                for k, v in x.items()
+            }
+
+        # Skip certain Python types
+        for type_to_skip in (
+                bool, str,
+                int, float, complex,
+                range,
+                type(None),
+                bytes, bytearray, memoryview
+        ):
+            if issubclass(t, type_to_skip):
+                return x
+
+        # Skip certain CasADi types
+        for type_to_skip in (
+                cas.Opti,
+                cas.OptiSol
+        ):
+            if issubclass(t, type_to_skip):
+                return x
+
+        # If it's any other type, try converting its attribute dictionary, if it has one:
+        try:
+            new_x = copy.copy(x)
+
+            for k, v in x.__dict__.items():
+                setattr(new_x, k, self.value(v))
+
+            return new_x
+
+        except AttributeError:
+            pass
+
+        # Try converting it blindly. This will catch most NumPy-array-like types.
+        try:
+            return self._sol.value(x)
+        except (NotImplementedError, TypeError, ValueError):
+            pass
+
+        # At this point, we're not really sure what type the object is. Raise a warning if directed and return the
+        # item, then hope for the best.
+        if warn_on_unknown_types:
+            import warnings
+            warnings.warn(f"In solution substitution, could not convert an object of type {t}.\n"
+                          f"Returning it and hoping for the best.", UserWarning)
+
+        return x
+
+    def stats(self) -> Dict[str, Any]:
+        return self._sol.stats()
+
+    def value_variables(self):
+        return self._sol.value_variables()
+
+    def value_parameters(self):
+        return self._sol.value_parameters()
+
+
 if __name__ == '__main__':
     import pytest
 
     pytest.main()
+
+    # a = 1
+    # b = 100
+    #
+    # opti = Opti()  # set up an optimization environment
+    #
+    # # Define optimization variables
+    # x = opti.variable(init_guess=0)
+    # y = opti.variable(init_guess=0)
+    #
+    # # Define objective
+    # f = (a - x) ** 2 + b * (y - x ** 2) ** 2
+    # opti.minimize(f)
+    #
+    # # Optimize
+    # sol = opti.solve()
+    #
+    # for i in [x, y]:
+    #     assert sol.value(i) == pytest.approx(1, abs=1e-4)
