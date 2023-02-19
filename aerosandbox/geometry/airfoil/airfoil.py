@@ -821,6 +821,8 @@ class Airfoil(Polygon):
             self,
             deflection: float = 0.,
             hinge_point_x: float = 0.75,
+            modify_coordinates: bool = True,
+            modify_polars: bool = True,
     ) -> 'Airfoil':
         """
         Returns a version of the airfoil with a trailing-edge control surface added at a given point. Implicitly
@@ -833,41 +835,111 @@ class Airfoil(Polygon):
         Returns: an Airfoil object with the new control deflection.
 
         """
-
-        # Make the rotation matrix for the given angle.
-        rotation_matrix = np.rotations.rotation_matrix_2D(-np.pi / 180 * deflection)
-
-        # Find the hinge point
-        hinge_point_y = self.local_camber(hinge_point_x)
-        hinge_point = np.array([hinge_point_x, hinge_point_y])
-
-        def is_behind_hinge(xy: np.ndarray) -> np.ndarray:
-            return (
-                    (xy[:, 0] - hinge_point_x) * np.cosd(deflection / 2) -
-                    (xy[:, 1] - hinge_point_y) * np.sind(deflection / 2)
-                    > 0
+        if modify_coordinates:
+            # Find the hinge point
+            hinge_point_y = np.where(
+                deflection > 0,
+                self.local_camber(hinge_point_x) - self.local_thickness(hinge_point_x) / 2,
+                self.local_camber(hinge_point_x) + self.local_thickness(hinge_point_x) / 2,
             )
 
-        orig_u = self.upper_coordinates()
-        orig_l = self.lower_coordinates()
+            # hinge_point_y = self.local_camber(hinge_point_x)
+            hinge_point = np.reshape(
+                np.array([hinge_point_x, hinge_point_y]),
+                (1, 2)
+            )
 
-        rotation_matrix = np.rotation_matrix_2D(
-            angle=-np.radians(deflection),
-        )
+            def is_behind_hinge(xy: np.ndarray) -> np.ndarray:
+                return (
+                        (xy[:, 0] - hinge_point_x) * np.cosd(deflection / 2) -
+                        (xy[:, 1] - hinge_point_y) * np.sind(deflection / 2)
+                        > 0
+                )
 
-        rot_u = (rotation_matrix @ (orig_u - hinge_point).T).T + hinge_point
-        rot_l = (rotation_matrix @ (orig_l - hinge_point).T).T + hinge_point
+            orig_u = self.upper_coordinates()
+            orig_l = self.lower_coordinates()
 
-        coordinates = np.concatenate([
-            rot_u[is_behind_hinge(rot_u)],
-            orig_u[~is_behind_hinge(orig_u)],
-            orig_l[~is_behind_hinge(orig_l)],
-            rot_l[is_behind_hinge(rot_l)]
-        ], axis=0)
+            rotation_matrix = np.rotation_matrix_2D(
+                angle=-np.radians(deflection),
+            )
+
+            def T(xy):
+                return np.transpose(xy)
+
+            hinge_point_u = np.tile(hinge_point, (np.length(orig_u), 1))
+            hinge_point_l = np.tile(hinge_point, (np.length(orig_l), 1))
+
+            rot_u = T(rotation_matrix @ T(orig_u - hinge_point_u)) + hinge_point_u
+            rot_l = T(rotation_matrix @ T(orig_l - hinge_point_l)) + hinge_point_l
+
+            coordinates_x = np.concatenate([
+                np.where(
+                    is_behind_hinge(rot_u),
+                    rot_u[:, 0],
+                    orig_u[:, 0]
+                ),
+                np.where(
+                    is_behind_hinge(rot_l),
+                    rot_l[:, 0],
+                    orig_l[:, 0]
+                )
+            ])
+            coordinates_y = np.concatenate([
+                np.where(
+                    is_behind_hinge(rot_u),
+                    rot_u[:, 1],
+                    orig_u[:, 1]
+                ),
+                np.where(
+                    is_behind_hinge(rot_l),
+                    rot_l[:, 1],
+                    orig_l[:, 1]
+                )
+            ])
+
+            coordinates = np.stack([
+                coordinates_x,
+                coordinates_y
+            ], axis=1)
+        else:
+            coordinates = self.coordinates
+
+        if modify_polars:
+            effectiveness = 1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291
+            dalpha = deflection * effectiveness
+
+            def CL_function(alpha: float, Re: float, mach: float) -> float:
+                return self.CL_function(
+                    alpha=alpha + dalpha,
+                    Re=Re,
+                    mach=mach,
+                )
+
+            def CD_function(alpha: float, Re: float, mach: float) -> float:
+                return self.CD_function(
+                    alpha=alpha + dalpha,
+                    Re=Re,
+                    mach=mach,
+                )
+
+            def CM_function(alpha: float, Re: float, mach: float) -> float:
+                return self.CM_function(
+                    alpha=alpha + dalpha,
+                    Re=Re,
+                    mach=mach,
+                )
+
+        else:
+            CL_function = self.CL_function
+            CD_function = self.CD_function
+            CM_function = self.CM_function
 
         return Airfoil(
             name=self.name,
-            coordinates=coordinates
+            coordinates=coordinates,
+            CL_function=CL_function,
+            CD_function=CD_function,
+            CM_function=CM_function,
         )
 
     def set_TE_thickness(self,

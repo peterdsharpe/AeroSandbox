@@ -1,4 +1,6 @@
 from aerosandbox.geometry.airfoil import *
+import aerosandbox as asb
+import aerosandbox.numpy as np
 import pytest
 
 
@@ -50,6 +52,24 @@ def test_containts_points(naca4412):
     y_points = np.random.randn(*shape)
     contains = naca4412.contains_points(x_points, y_points)
     assert shape == contains.shape
+
+def test_optimize_through_control_surface_deflections():
+    af = Airfoil("naca2412")
+
+    opti = asb.Opti()
+
+    d = opti.variable(init_guess=5, lower_bound=-90, upper_bound=90)
+
+    afd = af.add_control_surface(
+        deflection=d
+    )
+
+    opti.minimize(
+        (afd.coordinates[0,1] - 0.2) ** 2
+    )
+
+    sol = opti.solve()
+
 
 
 if __name__ == '__main__':
