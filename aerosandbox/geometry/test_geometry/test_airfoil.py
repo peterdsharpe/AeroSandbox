@@ -53,6 +53,7 @@ def test_containts_points(naca4412):
     contains = naca4412.contains_points(x_points, y_points)
     assert shape == contains.shape
 
+
 def test_optimize_through_control_surface_deflections():
     af = Airfoil("naca2412")
 
@@ -65,11 +66,10 @@ def test_optimize_through_control_surface_deflections():
     )
 
     opti.minimize(
-        (afd.coordinates[0,1] - 0.2) ** 2
+        (afd.coordinates[0, 1] - 0.2) ** 2
     )
 
     sol = opti.solve()
-
 
 
 if __name__ == '__main__':
