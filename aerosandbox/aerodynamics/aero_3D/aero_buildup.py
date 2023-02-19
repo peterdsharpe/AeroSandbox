@@ -457,25 +457,32 @@ class AeroBuildup(ExplicitAnalysis):
                 alpha=alpha_generalized_effective,
                 Re=Re_a,
                 mach=mach_normal,
-                deflection=deflection
             )
             xsec_b_args = dict(
                 alpha=alpha_generalized_effective,
                 Re=Re_b,
                 mach=mach_normal,
-                deflection=deflection
             )
 
-            xsec_a_Cl = xsec_a.airfoil.CL_function(**xsec_a_args)
-            xsec_b_Cl = xsec_b.airfoil.CL_function(**xsec_b_args)
+            airfoil_a = xsec_a.airfoil.add_control_surface(
+                deflection=deflection,
+                modify_coordinates=False
+            )
+            airfoil_b = xsec_b.airfoil.add_control_surface(
+                deflection=deflection,
+                modify_coordinates=False
+            )
+
+            xsec_a_Cl = airfoil_a.CL_function(**xsec_a_args)
+            xsec_b_Cl = airfoil_b.CL_function(**xsec_b_args)
             sect_CL = (
                               xsec_a_Cl * a_weight +
                               xsec_b_Cl * b_weight
                       ) * AR_3D_factor ** 0.2  # Models slight decrease in finite-wing CL_max.
 
-            ##### Compute sectional drag at cross sections using lookup functions. Merge them linearly to get section CD.
-            xsec_a_Cdp = xsec_a.airfoil.CD_function(**xsec_a_args)
-            xsec_b_Cdp = xsec_b.airfoil.CD_function(**xsec_b_args)
+            ##### Compute sectional drag at cross-sections using lookup functions. Merge them linearly to get section CD.
+            xsec_a_Cdp = airfoil_a.CD_function(**xsec_a_args)
+            xsec_b_Cdp = airfoil_b.CD_function(**xsec_b_args)
             sect_CDp = (
                     (
                             xsec_a_Cdp * a_weight +
@@ -485,9 +492,9 @@ class AeroBuildup(ExplicitAnalysis):
                 # accounts for extra form factor of tip area, and 3D effects (crossflow trips)
             )
 
-            ##### Compute sectional moment at cross sections using lookup functions. Merge them linearly to get section CM.
-            xsec_a_Cm = xsec_a.airfoil.CM_function(**xsec_a_args)
-            xsec_b_Cm = xsec_b.airfoil.CM_function(**xsec_b_args)
+            ##### Compute sectional moment at cross-sections using lookup functions. Merge them linearly to get section CM.
+            xsec_a_Cm = airfoil_a.CM_function(**xsec_a_args)
+            xsec_b_Cm = airfoil_b.CM_function(**xsec_b_args)
             sect_CM = (
                     xsec_a_Cm * a_weight +
                     xsec_b_Cm * b_weight
