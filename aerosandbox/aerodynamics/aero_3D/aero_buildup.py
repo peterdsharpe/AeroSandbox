@@ -308,7 +308,7 @@ class AeroBuildup(ExplicitAnalysis):
         t = np.exp(-wing_taper)
         neutral_point_deviation_due_to_unsweep = -(
             ((((3.557726 ** (a ** 2.8443985)) * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)) + (
-                        a + -0.89228547)) * -0.16073418)
+                    a + -0.89228547)) * -0.16073418)
         ) * wing_MAC
         aerodynamic_centers = [
             ac + np.array([neutral_point_deviation_due_to_unsweep, 0, 0])
