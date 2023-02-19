@@ -3,9 +3,9 @@ import aerosandbox.numpy as np
 
 af = asb.Airfoil(
     "naca0008",
-    CL_function=lambda alpha, Re, mach, deflection: 2 * np.pi * alpha,
-    CD_function=lambda alpha, Re, mach, deflection: np.zeros_like(alpha),
-    CM_function=lambda alpha, Re, mach, deflection: np.zeros_like(alpha),
+    CL_function=lambda alpha, Re, mach: 2 * np.pi * alpha,
+    CD_function=lambda alpha, Re, mach: np.zeros_like(alpha),
+    CM_function=lambda alpha, Re, mach: np.zeros_like(alpha),
 )
 
 
