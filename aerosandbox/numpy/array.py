@@ -226,6 +226,23 @@ def reshape(a, newshape):
         return _cas.reshape(a.T, newshape[::-1]).T
 
 
+def tile(A, reps):
+    """
+    Construct an array by repeating A the number of times given by reps.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.tile.html
+    """
+    if not is_casadi_type(A):
+        return _onp.tile(A, reps)
+    else:
+        if len(reps) == 1:
+            return _cas.repmat(A, reps[0], 1)
+        elif len(reps) == 2:
+            return _cas.repmat(A, reps[0], reps[1])
+        else:
+            raise ValueError("Cannot have >2D arrays when using CasADi numeric backend!")
+
+
 def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
     """Return an array of zeros with the same shape and type as a given array."""
     if not is_casadi_type(a):
