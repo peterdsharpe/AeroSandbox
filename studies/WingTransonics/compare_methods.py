@@ -54,7 +54,7 @@ import aerosandbox.tools.pretty_plots as p
 fig, ax = plt.subplots()
 
 x = 'mach'
-y = 'CM'
+y = 'CD'
 
 for analysis, data in datas.items():
 
@@ -65,7 +65,8 @@ for analysis, data in datas.items():
         label=analysis,
         # linewidth=1,
         # markersize=3,
-        alpha=0.8
+        alpha=0.8,
+        zorder=4 if "ASB" in analysis else 3
     )
 
 # plt.xlim(left=0)
@@ -74,14 +75,14 @@ for analysis, data in datas.items():
 # plt.xlim(0.6, 0.8)
 # plt.ylim(0, 1)
 
-# plt.xlim(0, 1)
-# plt.ylim(0, 0.02)
+plt.xlim(0, 1)
+plt.ylim(0, 0.05)
 
-# p.set_ticks(0.1, 0.02)
+p.set_ticks(0.1, 0.02, 0.01, 0.002)
 
 p.show_plot(
     "Comparison of Aerodynamic Analysis Methods\nRAE2822 Airfoil, AoA=1 deg, Re=6.5M",
-    x,
+    x.capitalize(),
     y,
-    savefig="C:/Users/peter/Downloads/figs/moment.png"
+    # savefig="C:/Users/peter/Downloads/figs/moment.png"
 )
