@@ -42,10 +42,10 @@ aerobuildup_data = {
 }
 
 datas = {
+    "ASB AeroBuildup"   : aerobuildup_data,
     "XFoil v6 (P-G)"    : get_data(data_folder / "xfoil6.csv"),
     "MSES (Euler + IBL)": get_data(data_folder / "mses.csv"),
     "SU2 (RANS)"        : get_data(data_folder / "su2.csv"),
-    "ASB AeroBuildup"   : aerobuildup_data,
 }
 
 import matplotlib.pyplot as plt
