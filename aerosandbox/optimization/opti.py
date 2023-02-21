@@ -667,7 +667,7 @@ class Opti(cas.Opti):
         n_runs = np.broadcast(*values).size
         run_number = 1
 
-        def run(*args):
+        def run(*args: Tuple[float]) -> "OptiSol":
             # Reconstruct parameter mapping on a run-by-run basis by zipping together keys and this run's values.
             parameter_mappings_for_this_run: [cas.MX, float] = {
                 k: v
@@ -713,12 +713,12 @@ class Opti(cas.Opti):
 
             return sol
 
-        run = np.vectorize(
+        run_vectorized = np.vectorize(
             run,
             otypes=[cas.OptiSol]
         )
 
-        return run(*values)
+        return run_vectorized(*values)
 
     ### Debugging Methods
     def find_variable_declaration(self,
