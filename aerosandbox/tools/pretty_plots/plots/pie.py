@@ -24,9 +24,6 @@ def pie(
     ax = plt.gca()
     n_wedges = len(values)
 
-    ### Set defaults
-    if colors is None:
-        colors = sns.color_palette("husl", n_colors=n_wedges)
 
     ### Check inputs
     if not len(names) == n_wedges:
@@ -52,7 +49,12 @@ def pie(
     order = np.argsort(sort_by)
     names = np.array(names)[order]
     values=np.array(values)[order]
-    colors=np.array(colors)[order]
+
+    if colors is None:
+        # Set default colors
+        colors = sns.color_palette("husl", n_colors=n_wedges)
+    else:
+        colors=np.array(colors)[order]
 
     ### Compute percentages
     values = np.array(values).astype(float)
