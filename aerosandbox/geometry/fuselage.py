@@ -693,18 +693,29 @@ class FuselageXSec(AeroSandboxObject):
                 return 2 * self.height
             elif self.height == 0:
                 return 2 * self.width
-        except RuntimeError: # Will error if width and height are optimization variables, as truthiness is indeterminate
+        except RuntimeError:  # Will error if width and height are optimization variables, as truthiness is indeterminate
             pass
 
         s = self.shape
-        h = np.maximum(self.width / self.height, self.height / self.width)
+        h = np.maximum(
+            self.width / (self.height + 1e-16),
+            self.height / (self.width + 1e-16)
+        )
         nondim_quadrant_perimeter = (
                 h + (((((s - 0.88487077) * h + 0.2588574 / h) ** np.exp(s / -0.90069205)) + h) + 0.09919785) ** (
                 -1.4812293 / s)
         )
         perimeter = 2 * nondim_quadrant_perimeter * np.minimum(self.width, self.height)
 
-        return perimeter
+        return np.where(
+            self.width == 0,
+            2 * self.height,
+            np.where(
+                self.height == 0,
+                2 * self.width,
+                perimeter
+            )
+        )
 
     def get_3D_coordinates(self,
                            theta: Union[float, np.ndarray] = None
@@ -777,7 +788,7 @@ class FuselageXSec(AeroSandboxObject):
 
         """
         if preserve == "area":
-            return (self.xsec_area() / np.pi) ** 0.5
+            return (self.xsec_area() / np.pi + 1e-16) ** 0.5
         elif preserve == "perimeter":
             return (self.xsec_perimeter() / (2 * np.pi))
         else:
