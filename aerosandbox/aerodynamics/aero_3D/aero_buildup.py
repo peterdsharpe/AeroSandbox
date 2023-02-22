@@ -419,12 +419,33 @@ class AeroBuildup(ExplicitAnalysis):
             )  # Models finite-wing increase in alpha_{CL_max}.
 
             ##### Compute the control surface deflection
-            deflection = 0.
+            airfoil_a = xsec_a.airfoil
+            airfoil_b = xsec_b.airfoil
+
             for surf in xsec_a.control_surfaces:
+                try:
+                    if surf.deflection == 0:
+                        continue
+                except RuntimeError:
+                    pass
+
                 if mirror_across_XZ and not surf.symmetric:
-                    deflection -= surf.deflection
+                    deflection = -surf.deflection
                 else:
-                    deflection += surf.deflection
+                    deflection = surf.deflection
+
+                airfoil_a = airfoil_a.add_control_surface(
+                    deflection=deflection,
+                    hinge_point_x=surf.hinge_point,
+                    modify_coordinates=False,
+                    modify_polars=True,
+                )
+                airfoil_b = airfoil_b.add_control_surface(
+                    deflection=deflection,
+                    hinge_point_x=surf.hinge_point,
+                    modify_coordinates=False,
+                    modify_polars=True,
+                )
 
             ##### Compute sweep angle
             xsec_a_quarter_chord = xsec_quarter_chords[sect_id]
@@ -461,15 +482,6 @@ class AeroBuildup(ExplicitAnalysis):
                 alpha=alpha_generalized_effective,
                 Re=Re_b,
                 mach=mach_normal,
-            )
-
-            airfoil_a = xsec_a.airfoil.add_control_surface(
-                deflection=deflection,
-                modify_coordinates=False
-            )
-            airfoil_b = xsec_b.airfoil.add_control_surface(
-                deflection=deflection,
-                modify_coordinates=False
             )
 
             xsec_a_Cl = airfoil_a.CL_function(**xsec_a_args)
