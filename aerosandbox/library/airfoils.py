@@ -24,7 +24,7 @@ def diamond_airfoil(
             for a, b in zip(y_nondim[:-1], y_nondim[1:])
         ] + [[y_nondim[-1]]]
     )
-    y = y * t_over_c
+    y = y * (t_over_c / 2)
 
     coordinates = np.array([x, y]).T
 
