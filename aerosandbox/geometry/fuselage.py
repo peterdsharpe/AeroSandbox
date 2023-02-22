@@ -698,8 +698,8 @@ class FuselageXSec(AeroSandboxObject):
 
         s = self.shape
         h = np.maximum(
-            self.width / (self.height + 1e-16),
-            self.height / (self.width + 1e-16)
+            (self.width + 1e-16) / (self.height + 1e-16),
+            (self.height + 1e-16) / (self.width + 1e-16)
         )
         nondim_quadrant_perimeter = (
                 h + (((((s - 0.88487077) * h + 0.2588574 / h) ** np.exp(s / -0.90069205)) + h) + 0.09919785) ** (
