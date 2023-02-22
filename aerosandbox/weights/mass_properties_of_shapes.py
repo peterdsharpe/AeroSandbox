@@ -29,9 +29,9 @@ def mass_properties_from_radius_of_gyration(
         x_cg: x-position of the center of gravity
         y_cg: y-position of the center of gravity
         z_cg: z-position of the center of gravity
-        radius_of_gyration_x: Radius of gyration along the x-axis [m]
-        radius_of_gyration_y: Radius of gyration along the y-axis [m]
-        radius_of_gyration_z: Radius of gyration along the z-axis [m]
+        radius_of_gyration_x: Radius of gyration along the x-axis, about the center of gravity [m]
+        radius_of_gyration_y: Radius of gyration along the y-axis, about the center of gravity [m]
+        radius_of_gyration_z: Radius of gyration along the z-axis, about the center of gravity [m]
 
     Returns: MassProperties object.
 
