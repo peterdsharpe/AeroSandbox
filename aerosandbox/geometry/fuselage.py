@@ -753,8 +753,8 @@ class FuselageXSec(AeroSandboxObject):
                 60 + 1
             )[:-1]
 
-        st = np.sin(theta)
-        ct = np.cos(theta)
+        st = np.sin(np.mod(theta, 2 * np.pi))
+        ct = np.cos(np.mod(theta, 2 * np.pi))
 
         x_nondim = np.abs(ct) ** (2 / self.shape) * np.where(ct > 0, 1, -1)
         y_nondim = np.abs(st) ** (2 / self.shape) * np.where(st > 0, 1, -1)
