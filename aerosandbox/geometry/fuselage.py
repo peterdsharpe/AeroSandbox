@@ -688,21 +688,23 @@ class FuselageXSec(AeroSandboxObject):
         Returns:
 
         """
-        if self.width == 0:
-            return 2 * self.height
-        elif self.height == 0:
-            return 2 * self.width
-        else:
+        try:
+            if self.width == 0:
+                return 2 * self.height
+            elif self.height == 0:
+                return 2 * self.width
+        except RuntimeError: # Will error if width and height are optimization variables, as truthiness is indeterminate
+            pass
 
-            s = self.shape
-            h = np.maximum(self.width / self.height, self.height / self.width)
-            nondim_quadrant_perimeter = (
-                    h + (((((s - 0.88487077) * h + 0.2588574 / h) ** np.exp(s / -0.90069205)) + h) + 0.09919785) ** (
-                    -1.4812293 / s)
-            )
-            perimeter = 2 * nondim_quadrant_perimeter * np.minimum(self.width, self.height)
+        s = self.shape
+        h = np.maximum(self.width / self.height, self.height / self.width)
+        nondim_quadrant_perimeter = (
+                h + (((((s - 0.88487077) * h + 0.2588574 / h) ** np.exp(s / -0.90069205)) + h) + 0.09919785) ** (
+                -1.4812293 / s)
+        )
+        perimeter = 2 * nondim_quadrant_perimeter * np.minimum(self.width, self.height)
 
-            return perimeter
+        return perimeter
 
     def get_3D_coordinates(self,
                            theta: Union[float, np.ndarray] = None
