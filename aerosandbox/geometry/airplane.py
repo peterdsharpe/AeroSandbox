@@ -496,7 +496,9 @@ class Airplane(AeroSandboxObject):
         if show:
             plt.show()
 
-    def generate_cadquery_geometry(self) -> "Workplane":
+    def generate_cadquery_geometry(self,
+                                   minimum_airfoil_TE_thickness: float = 0.001
+                                   ) -> "Workplane":
         import cadquery as cq
 
         solids = []
@@ -508,6 +510,12 @@ class Airplane(AeroSandboxObject):
             for i, xsec in enumerate(wing.xsecs):
                 csys = wing._compute_frame_of_WingXSec(i)
 
+                af = xsec.airfoil
+                if af.TE_thickness() < minimum_airfoil_TE_thickness:
+                    af = af.set_TE_thickness(
+                        thickness=minimum_airfoil_TE_thickness
+                    )
+
                 xsec_wires.append(
                     cq.Workplane(
                         inPlane=cq.Plane(
@@ -518,7 +526,7 @@ class Airplane(AeroSandboxObject):
                     ).spline(
                         listOfXYTuple=[
                             tuple(xy * xsec.chord)
-                            for xy in xsec.airfoil.set_TE_thickness(0).coordinates
+                            for xy in af.coordinates
                         ]
                     ).close()
                 )
@@ -529,13 +537,16 @@ class Airplane(AeroSandboxObject):
 
             loft = wire_collection.loft(ruled=True, clean=False)
 
+            solids.append(loft)
+
             if wing.symmetric:
                 loft = loft.mirror(
                     mirrorPlane='XZ',
-                    union=True
+                    union=False
                 )
 
-            solids.append(loft)
+                solids.append(loft)
+
 
         for fuse in self.fuselages:
 
@@ -561,7 +572,12 @@ class Airplane(AeroSandboxObject):
                     ).spline(
                         listOfXYTuple=[
                             (y - xsec.xyz_c[1], z - xsec.xyz_c[2])
-                            for x, y, z in zip(*xsec.get_3D_coordinates())
+                            for x, y, z in zip(*xsec.get_3D_coordinates(
+                                theta=np.linspace(
+                                    np.pi / 2, np.pi / 2 + 2 * np.pi,
+                                    361
+                                )
+                            ))
                         ]
                     ).close()
                 )
@@ -581,9 +597,12 @@ class Airplane(AeroSandboxObject):
         return solid.clean()
 
     def export_cadquery_geometry(self,
-                                 filename: str
+                                 filename: str,
+                                 minimum_airfoil_TE_thickness: float = 0.001
                                  ) -> None:
-        solid = self.generate_cadquery_geometry()
+        solid = self.generate_cadquery_geometry(
+            minimum_airfoil_TE_thickness=minimum_airfoil_TE_thickness,
+        )
 
         solid.objects = [
             o.scale(1000)
