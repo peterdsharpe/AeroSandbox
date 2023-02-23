@@ -29,7 +29,7 @@ class Wing(AeroSandboxObject):
     If the wing is symmetric across the XZ plane, just define the right half and supply `symmetric=True` in the
     constructor.
 
-    If the wing is not symmetric across the XZ plane (e.g., a vertical stabilizer), just define the wing.
+    If the wing is not symmetric across the XZ plane (e.g., a single vertical stabilizer), just define the wing.
     """
 
     def __init__(self,
