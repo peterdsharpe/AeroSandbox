@@ -40,13 +40,16 @@ class Polygon(AeroSandboxObject):
                         y: Union[float, np.ndarray],
                         ) -> np.ndarray:
         """
-        Returns a boolean array of whether or not some (x, y) point(s) are contained within the Polygon.
+        Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
 
         Args:
             x: x-coordinate(s) of the query points.
             y: y-coordinate(s) of the query points.
 
-        Returns: A boolean array of the same size as x and y.
+        Returns:
+
+            A boolean array of the same size as x and y, with values corresponding to whether or not the points are
+            inside the Polygon.
 
         """
         x = np.array(x)
