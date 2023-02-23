@@ -208,11 +208,15 @@ def min(a):
         return _cas.mmin(a)
 
 
-def reshape(a, newshape):
-    """Gives a new shape to an array without changing its data."""
+def reshape(a, newshape, order='C'):
+    """
+    Gives a new shape to an array without changing its data.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
+    """
 
     if not is_casadi_type(a):
-        return _onp.reshape(a, newshape)
+        return _onp.reshape(a, newshape, order=order)
     else:
         if isinstance(newshape, int):
             newshape = (newshape, 1)

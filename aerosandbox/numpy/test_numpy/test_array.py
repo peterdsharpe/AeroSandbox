@@ -119,7 +119,85 @@ def test_min():
     assert int(np.min(a)) == int(np.min(b))
 
 
-def test_reshape():
+def test_reshape_1D():
+    a = np.array([1, 2, 3, 4, 5, 6])
+    b = cas.DM(a)
+
+    assert b.shape == (len(a), 1)
+
+    test_inputs = [
+        -1,
+        (3, 2),
+        (2, 3),
+        (6, 1),
+        (1, 6),
+        (-1),
+        (6, -1),
+        (-1, 6),
+    ]
+
+    for i in test_inputs:
+        ra = np.reshape(a, i)
+        rb = np.reshape(b, i)
+        if len(ra.shape) == 1:
+            ra = ra.reshape(-1, 1)
+
+        assert np.all(ra == rb)
+        assert ra.shape == rb.shape
+
+def test_reshape_2D_vec_tall():
+    a = np.array([1, 2, 3, 4, 5, 6]).reshape((6, 1))
+    b = cas.DM(a)
+
+    assert b.shape == (len(a), 1)
+
+    test_inputs = [
+        -1,
+        (3, 2),
+        (2, 3),
+        (6, 1),
+        (1, 6),
+        (-1),
+        (6, -1),
+        (-1, 6),
+    ]
+
+    for i in test_inputs:
+        ra = np.reshape(a, i)
+        rb = np.reshape(b, i)
+        if len(ra.shape) == 1:
+            ra = ra.reshape(-1, 1)
+
+        assert np.all(ra == rb)
+        assert ra.shape == rb.shape
+
+def test_reshape_2D_vec_wide():
+    a = np.array([1, 2, 3, 4, 5, 6]).reshape((1, 6))
+    b = cas.DM(a)
+
+    assert b.shape == (1, 6)
+
+    test_inputs = [
+        -1,
+        (3, 2),
+        (2, 3),
+        (6, 1),
+        (1, 6),
+        (-1),
+        (6, -1),
+        (-1, 6),
+    ]
+
+    for i in test_inputs:
+        ra = np.reshape(a, i)
+        rb = np.reshape(b, i)
+        if len(ra.shape) == 1:
+            ra = ra.reshape(-1, 1)
+
+        assert np.all(ra == rb)
+        assert ra.shape == rb.shape
+
+def test_reshape_2D():
     a = np.array([
         [1, 2, 3],
         [4, 5, 6],
@@ -146,6 +224,7 @@ def test_reshape():
             ra = ra.reshape(-1, 1)
 
         assert np.all(ra == rb)
+        assert ra.shape == rb.shape
 
 
 def test_assert_equal_shape():
