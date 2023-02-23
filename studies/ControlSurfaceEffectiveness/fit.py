@@ -38,14 +38,14 @@ if __name__ == '__main__':
         x_plot, fit(x_plot)
     )
     plt.plot(
-        fit.x_data,
+        fit.x_data + 0.01 * np.random.uniform(-1, 1, fit.x_data.shape),
         fit.y_data,
         ".k",
         alpha=0.1
     )
     plt.ylim(-0.1, 1.1)
     p.show_plot(
-        "",
-        "Elevator Hinge Fraction",
+        "Control Surface Effectiveness",
+        "Control Surface Chord Fraction ($c_{cs} / c_{wing}$)",
         "Effectiveness ($\\frac{d\\delta}{d\\alpha}$ at constant $C_L$)"
     )
