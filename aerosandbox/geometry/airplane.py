@@ -496,6 +496,49 @@ class Airplane(AeroSandboxObject):
         if show:
             plt.show()
 
+    def is_entirely_symmetric(self):
+        """
+        Returns a boolean describing whether the airplane is geometrically entirely symmetric across the XZ-plane.
+        :return: [boolean]
+        """
+        for wing in self.wings:
+            if not wing.is_entirely_symmetric():
+                return False
+
+        # TODO add in logic for fuselages
+
+        return True
+
+    def aerodynamic_center(self, chord_fraction: float = 0.25):
+        """
+        Computes the location of the aerodynamic center of the wing.
+        Uses the generalized methodology described here:
+            https://core.ac.uk/download/pdf/79175663.pdf
+
+        Args:
+            chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
+                Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing.
+                However, wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less.
+                Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability".
+                PDF: https://www.sciencedirect.com/science/article/pii/B9780080982427000031
+
+        Returns: The (x, y, z) coordinates of the aerodynamic center of the airplane.
+        """
+        wing_areas = [wing.area(type="projected") for wing in self.wings]
+        ACs = [wing.aerodynamic_center() for wing in self.wings]
+
+        wing_AC_area_products = [
+            AC * area
+            for AC, area in zip(
+                ACs,
+                wing_areas
+            )
+        ]
+
+        aerodynamic_center = sum(wing_AC_area_products) / sum(wing_areas)
+
+        return aerodynamic_center
+
     def generate_cadquery_geometry(self,
                                    minimum_airfoil_TE_thickness: float = 0.001
                                    ) -> "Workplane":
@@ -546,7 +589,6 @@ class Airplane(AeroSandboxObject):
                 )
 
                 solids.append(loft)
-
 
         for fuse in self.fuselages:
 
@@ -614,49 +656,6 @@ class Airplane(AeroSandboxObject):
             solid,
             fname=filename
         )
-
-    def is_entirely_symmetric(self):
-        """
-        Returns a boolean describing whether the airplane is geometrically entirely symmetric across the XZ-plane.
-        :return: [boolean]
-        """
-        for wing in self.wings:
-            if not wing.is_entirely_symmetric():
-                return False
-
-        # TODO add in logic for fuselages
-
-        return True
-
-    def aerodynamic_center(self, chord_fraction: float = 0.25):
-        """
-        Computes the location of the aerodynamic center of the wing.
-        Uses the generalized methodology described here:
-            https://core.ac.uk/download/pdf/79175663.pdf
-
-        Args:
-            chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
-                Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing.
-                However, wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less.
-                Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability".
-                PDF: https://www.sciencedirect.com/science/article/pii/B9780080982427000031
-
-        Returns: The (x, y, z) coordinates of the aerodynamic center of the airplane.
-        """
-        wing_areas = [wing.area(type="projected") for wing in self.wings]
-        ACs = [wing.aerodynamic_center() for wing in self.wings]
-
-        wing_AC_area_products = [
-            AC * area
-            for AC, area in zip(
-                ACs,
-                wing_areas
-            )
-        ]
-
-        aerodynamic_center = sum(wing_AC_area_products) / sum(wing_areas)
-
-        return aerodynamic_center
 
 
 if __name__ == '__main__':
