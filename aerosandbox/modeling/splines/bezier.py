@@ -23,14 +23,32 @@ def quadratic_bezier_patch_from_tangents(
 
     Args:
         t:
-        x_a:
-        x_b:
-        y_a:
-        y_b:
-        dydx_a:
-        dydx_b:
+        x_a: The x-coordinate of the first endpoint.
+        x_b: The x-coordinate of the second endpoint.
+        y_a: The y-coordinate of the first endpoint.
+        y_b: The y-coordinate of the second endpoint.
+        dydx_a: The derivative of y with respect to x at the first endpoint.
+        dydx_b: The derivative of y with respect to x at the second endpoint.
 
     Returns:
+        x: A scalar or numpy array of scalars representing the x-coordinates of the sampled points.
+        y: A scalar or numpy array of scalars representing the y-coordinates of the sampled points.
+
+    Usage:
+        >>> x_a, x_b = 0, 10
+        >>> y_a, y_b = 0, 5
+        >>> dydx_a, dydx_b = 0.5, -0.5
+        >>>
+        >>> t = np.linspace(0, 1, 50)
+        >>> x, y = quadratic_bezier_patch_from_tangents(
+        >>>     t=t,
+        >>>     x_a=x_a,
+        >>>     x_b=x_b,
+        >>>     y_a=y_a,
+        >>>     y_b=y_b,
+        >>>     dydx_a=dydx_a,
+        >>>     dydx_b=dydx_b
+        >>> )
 
     """
     ### Compute intercept of tangent lines

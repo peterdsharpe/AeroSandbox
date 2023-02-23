@@ -9,6 +9,19 @@ def linear_hermite_patch(
         f_a: float,
         f_b: float,
 ) -> Union[float, np.ndarray]:
+    """
+    Computes the linear Hermite polynomial patch that passes through the given endpoints f_a and f_b.
+
+    Args:
+        x: Scalar or array of values at which to evaluate the patch.
+        x_a: The x-coordinate of the first endpoint.
+        x_b: The x-coordinate of the second endpoint.
+        f_a: The function value at the first endpoint.
+        f_b: The function value at the second endpoint.
+
+    Returns:
+        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or an array if x is an array.
+    """
     return (x - x_a) * (f_b - f_a) / (x_b - x_a) + f_a
 
 
@@ -22,6 +35,24 @@ def cubic_hermite_patch(
         dfdx_b: float,
         extrapolation: str = 'continue',
 ) -> Union[float, np.ndarray]:
+    """
+    Computes the cubic Hermite polynomial patch that passes through the given endpoints and endpoint derivatives.
+
+    Args:
+        x: Scalar or array of values at which to evaluate the patch.
+        x_a: The x-coordinate of the first endpoint.
+        x_b: The x-coordinate of the second endpoint.
+        f_a: The function value at the first endpoint.
+        f_b: The function value at the second endpoint.
+        dfdx_a: The derivative of the function with respect to x at the first endpoint.
+        dfdx_b: The derivative of the function with respect to x at the second endpoint.
+        extrapolation: A string indicating how to handle extrapolation outside of the domain [x_a, x_b]. Valid values are
+                      "continue", which continues the patch beyond the endpoints, and "clip", which clips the patch at the
+                      endpoints. Default is "continue".
+
+    Returns:
+        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or an array if x is an array.
+    """
     dx = x_b - x_a
     t = (x - x_a) / dx  # Nondimensional distance along the patch
     if extrapolation == 'continue':

@@ -1110,23 +1110,83 @@ class OptiSol:
                  opti: Opti,
                  cas_optisol: cas.OptiSol
                  ):
+        """
+        An OptiSol object represents a solution to an optimization problem. This class is a wrapper around CasADi's
+        `OptiSol` class that provides convenient solution query utilities for various Python data types.
+
+        Args:
+            opti: The `Opti` object that generated this solution.
+
+            cas_optisol: The `casadi.OptiSol` object from CasADi's optimization solver.
+
+        Returns:
+            An `OptiSol` object.
+
+        Usage:
+            >>> # Initialize an Opti object.
+            >>> opti = asb.Opti()
+            >>>
+            >>> # Define a scalar variable.
+            >>> x = opti.variable(init_guess=2.0)
+            >>>
+            >>> # Define an objective function.
+            >>> opti.minimize(x ** 2)
+            >>>
+            >>> # Solve the optimization problem. `sol` is now a
+            >>> sol = opti.solve()
+            >>>
+            >>> # Retrieve the value of the variable x in the solution:
+            >>> x_value = sol.value(x)
+            >>>
+            >>> # Or, to be more concise:
+            >>> x_value = sol(x)
+        """
         self.opti = opti
         self._sol = cas_optisol
 
-    def __call__(self, x):
+    def __call__(self, x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any]) -> Any:
+        """
+        A shorthand alias for `sol.value(x)`. See `OptiSol.value()` documentation for details.
+
+        Args:
+            x: A Python data structure to substitute values into, using the solution in this OptiSol object.
+
+        Returns:
+
+            A copy of `x`, where all symbolic optimization variables (recursively substituted at unlimited depth)
+            have been converted to float or array values.
+
+        """
         return self.value(x)
 
     def value(self,
               x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any],
               recursive: bool = True,
               warn_on_unknown_types: bool = False
-              ):
+              ) -> Any:
         """
-        Substitutes a solution from CasADi's solver recursively as an in-place operation.
+        At its simplest: converts a symbolic optimization variable to a concrete float or array value.
 
-        In-place operation. To make it not in-place, do `y = copy.deepcopy(x)` or similar first.
-        :param sol: OptiSol object.
-        :return:
+        More generally: converts any Python data structure (along with any of its contents, recursively, at unlimited
+        depth), replacing any symbolic optimization variables it finds with concrete float or array values.
+
+        Args:
+            x: A Python data structure to substitute values into, using the solution in this OptiSol object.
+
+            recursive: If True, the substitution will be performed recursively. Otherwise, only the top-level data
+                structure will be converted.
+
+            warn_on_unknown_types: If True, a warning will be issued if a data type that cannot be converted or
+            parsed as definitively un-convertable is encountered.
+
+        Returns:
+            A copy of `x`, where all symbolic optimization variables (recursively substituted at unlimited depth)
+            have been converted to float or array values.
+
+        Usage:
+
+
+
         """
         if not recursive:
             return self._sol.value(x)
