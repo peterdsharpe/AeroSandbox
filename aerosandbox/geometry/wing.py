@@ -26,7 +26,7 @@ class Wing(AeroSandboxObject):
 
         Wings are lofted linearly between cross sections.
 
-    If the wing is symmetric across the XZ plane, just define the right half and supply "symmetric = True" in the
+    If the wing is symmetric across the XZ plane, just define the right half and supply `symmetric=True` in the
     constructor.
 
     If the wing is not symmetric across the XZ plane (e.g., a vertical stabilizer), just define the wing.
