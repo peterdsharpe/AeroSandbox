@@ -25,7 +25,6 @@ class Polygon(AeroSandboxObject):
     def n_points(self) -> int:
         """
         Returns the number of points/vertices/coordinates of the polygon.
-        Analogous to len(coordinates)
         """
         try:
             return len(self.coordinates)
