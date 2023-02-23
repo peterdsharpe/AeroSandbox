@@ -46,7 +46,7 @@ class Wing(AeroSandboxObject):
 
             name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
 
-            xsecs: A list of wing cross sections ("xsecs") in the form of WingXSec objects.
+            xsecs: A list of wing cross-sections ("xsecs") in the form of WingXSec objects.
 
             symmetric: Is the wing symmetric across the XZ plane?
 
@@ -1294,7 +1294,7 @@ class ControlSurface(AeroSandboxObject):
             trailing_edge: Is the control surface on the trailing edge? If False, control surface is on the leading
             edge. (e.g., True for flaps, False for slats.)
 
-            hinge_point: The location of the control surface hinge, as a fraction of chord.
+            hinge_point: The location of the control surface hinge, as a fraction of chord. A float in the range of 0 to 1.
 
             symmetric: Is the control surface symmetric? If False, control surface is anti-symmetric. (e.g.,
             True for flaps, False for ailerons.)
