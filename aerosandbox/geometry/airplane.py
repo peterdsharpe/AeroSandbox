@@ -755,21 +755,28 @@ class Airplane(AeroSandboxObject):
 
             sections = ET.SubElement(wingxml, "Sections")
 
+            xyz_le_sects_rel = [
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                for i in range(len(wing.xsecs))
+            ]
+
             for i, xsec in enumerate(wing.xsecs):
 
                 sect = ET.SubElement(sections, "Section")
 
-                xyz_le_sect = wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0)
-                xyz_le_sect_rel = xyz_le_sect - xyz_le_root
+                if i == len(wing.xsecs) - 1:
+                    dihedral = 0
+                else:
+                    dihedral = np.arctan2d(
+                        xyz_le_sects_rel[i + 1][2] - xyz_le_sects_rel[i][2],
+                        xyz_le_sects_rel[i + 1][1] - xyz_le_sects_rel[i][1],
+                    )
 
                 for k, v in {
-                    "y_position"         : xyz_le_sect_rel[1],
+                    "y_position"         : xyz_le_sects_rel[i][1],
                     "Chord"              : xsec.chord,
-                    "xOffset"            : xyz_le_sect_rel[0],
-                    "Dihedral"           : np.arctan2d(
-                        xyz_le_sect_rel[2],
-                        xyz_le_sect_rel[1],
-                    ),
+                    "xOffset"            : xyz_le_sects_rel[i][0],
+                    "Dihedral"           : dihedral,
                     "Twist"              : xsec.twist,
                     "Left_Side_FoilName" : xsec.airfoil.name,
                     "Right_Side_FoilName": xsec.airfoil.name,
@@ -799,21 +806,28 @@ class Airplane(AeroSandboxObject):
 
             sections = ET.SubElement(wingxml, "Sections")
 
+            xyz_le_sects_rel = [
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                for i in range(len(wing.xsecs))
+            ]
+
             for i, xsec in enumerate(wing.xsecs):
 
                 sect = ET.SubElement(sections, "Section")
 
-                xyz_le_sect = wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0)
-                xyz_le_sect_rel = xyz_le_sect - xyz_le_root
+                if i == len(wing.xsecs) - 1:
+                    dihedral = 0
+                else:
+                    dihedral = np.arctan2d(
+                        xyz_le_sects_rel[i + 1][2] - xyz_le_sects_rel[i][2],
+                        xyz_le_sects_rel[i + 1][1] - xyz_le_sects_rel[i][1],
+                    )
 
                 for k, v in {
-                    "y_position"         : xyz_le_sect_rel[1],
+                    "y_position"         : xyz_le_sects_rel[i][1],
                     "Chord"              : xsec.chord,
-                    "xOffset"            : xyz_le_sect_rel[0],
-                    "Dihedral"           : np.arctan2d(
-                        xyz_le_sect_rel[2],
-                        xyz_le_sect_rel[1],
-                    ),
+                    "xOffset"            : xyz_le_sects_rel[i][0],
+                    "Dihedral"           : dihedral,
                     "Twist"              : xsec.twist,
                     "Left_Side_FoilName" : xsec.airfoil.name,
                     "Right_Side_FoilName": xsec.airfoil.name,
@@ -843,21 +857,28 @@ class Airplane(AeroSandboxObject):
 
             sections = ET.SubElement(wingxml, "Sections")
 
+            xyz_le_sects_rel = [
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                for i in range(len(wing.xsecs))
+            ]
+
             for i, xsec in enumerate(wing.xsecs):
 
                 sect = ET.SubElement(sections, "Section")
 
-                xyz_le_sect = wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0)
-                xyz_le_sect_rel = xyz_le_sect - xyz_le_root
+                if i == len(wing.xsecs) - 1:
+                    dihedral = 0
+                else:
+                    dihedral = np.arctan2d(
+                        xyz_le_sects_rel[i + 1][1] - xyz_le_sects_rel[i][1],
+                        xyz_le_sects_rel[i + 1][2] - xyz_le_sects_rel[i][2],
+                    )
 
                 for k, v in {
-                    "y_position"         : xyz_le_sect_rel[2],
+                    "y_position"         : xyz_le_sects_rel[i][2],
                     "Chord"              : xsec.chord,
-                    "xOffset"            : xyz_le_sect_rel[0],
-                    "Dihedral"           : np.arctan2d(
-                        xyz_le_sect_rel[1],
-                        xyz_le_sect_rel[2],
-                    ),
+                    "xOffset"            : xyz_le_sects_rel[i][0],
+                    "Dihedral"           : dihedral,
                     "Twist"              : xsec.twist,
                     "Left_Side_FoilName" : xsec.airfoil.name,
                     "Right_Side_FoilName": xsec.airfoil.name,
