@@ -657,10 +657,249 @@ class Airplane(AeroSandboxObject):
             fname=filename
         )
 
+    def export_AVL(self,
+                   filename,
+                   include_fuselages: bool = True
+                   ):
+        from aerosandbox.aerodynamics.aero_3D.avl import AVL
+        avl = AVL(
+            airplane=self,
+            op_point=None,
+            xyz_ref=self.xyz_ref
+        )
+        avl.write_avl(filepath=filename)
+
+    def export_XFLR(self,
+                    filename,
+                    include_fuselages: bool = False,
+                    mainwing: Wing = None,
+                    elevator: Wing = None,
+                    fin: Wing = None,
+                    ):
+        wings_specified = [
+            mainwing is not None,
+            elevator is not None,
+            fin is not None,
+        ]
+        if all(wings_specified):
+            pass
+        elif any(wings_specified):
+            raise ValueError(
+                "If any wings are specified (`mainwing`, `elevator`, `fin`), then all wings must be specified.")
+        else:
+            n_wings = len(self.wings)
+
+            if n_wings == 0:
+                pass
+            elif n_wings == 1:
+                mainwing = self.wings[0]
+            elif n_wings == 2:
+                mainwing = self.wings[0]
+                elevator = self.wings[1]
+            elif n_wings == 3:
+                mainwing = self.wings[0]
+                elevator = self.wings[1]
+                fin = self.wings[2]
+            else:
+                raise ValueError(
+                    "Could not automatically parse which wings should be assigned to which XFLR5 lifting surfaces, "
+                    "since there are too many. Manually assign these with (`mainwing`, `elevator`, and `fin`) "
+                    "arguments."
+                )
+
+        import xml.etree.ElementTree as ET
+
+        base_xml = f"""\
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE explane>
+<explane version="1.0">
+    <Units>
+        <length_unit_to_meter>1</length_unit_to_meter>
+        <mass_unit_to_kg>1</mass_unit_to_kg>
+    </Units>
+    <Plane>
+        <Name>{self.name}</Name>
+        <Description></Description>
+        <Inertia>
+            <Point_Mass>
+                <Tag></Tag>
+                <Mass>1</Mass>
+                <coordinates>{','.join([str(x) for x in self.xyz_ref])}</coordinates>
+            </Point_Mass>
+        </Inertia>
+        <has_body>false</has_body>
+    </Plane>
+</explane>
+"""
+
+        root = ET.fromstring(base_xml)
+        plane = root.find("Plane")
+
+        if mainwing is not None:
+            wing = mainwing
+            wingxml = ET.SubElement(plane, "wing")
+
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+
+            for k, v in {
+                "Name"      : wing.name,
+                "Type"      : "MAINWING",
+                "Position"  : ",".join([str(x) for x in xyz_le_root]),
+                "Tilt_angle": 0.,
+                "Symetric"  : wing.symmetric,
+                "isFin"     : "false",
+                "isSymFin"  : "false",
+            }.items():
+                subelement = ET.SubElement(wingxml, k)
+                subelement.text = str(v)
+
+            sections = ET.SubElement(wingxml, "Sections")
+
+            for i, xsec in enumerate(wing.xsecs):
+
+                sect = ET.SubElement(sections, "Section")
+
+                xyz_le_sect = wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0)
+                xyz_le_sect_rel = xyz_le_sect - xyz_le_root
+
+                for k, v in {
+                    "y_position"         : xyz_le_sect_rel[1],
+                    "Chord"              : xsec.chord,
+                    "xOffset"            : xyz_le_sect_rel[0],
+                    "Dihedral"           : np.arctan2d(
+                        xyz_le_sect_rel[2],
+                        xyz_le_sect_rel[1],
+                    ),
+                    "Twist"              : xsec.twist,
+                    "Left_Side_FoilName" : xsec.airfoil.name,
+                    "Right_Side_FoilName": xsec.airfoil.name,
+                    "x_number_of_panels" : 8,
+                    "y_number_of_panels" : 8,
+                }.items():
+                    subelement = ET.SubElement(sect, k)
+                    subelement.text = str(v)
+
+        if elevator is not None:
+            wing = elevator
+            wingxml = ET.SubElement(plane, "wing")
+
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+
+            for k, v in {
+                "Name"      : wing.name,
+                "Type"      : "ELEVATOR",
+                "Position"  : ",".join([str(x) for x in xyz_le_root]),
+                "Tilt_angle": 0.,
+                "Symetric"  : wing.symmetric,
+                "isFin"     : "false",
+                "isSymFin"  : "false",
+            }.items():
+                subelement = ET.SubElement(wingxml, k)
+                subelement.text = str(v)
+
+            sections = ET.SubElement(wingxml, "Sections")
+
+            for i, xsec in enumerate(wing.xsecs):
+
+                sect = ET.SubElement(sections, "Section")
+
+                xyz_le_sect = wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0)
+                xyz_le_sect_rel = xyz_le_sect - xyz_le_root
+
+                for k, v in {
+                    "y_position"         : xyz_le_sect_rel[1],
+                    "Chord"              : xsec.chord,
+                    "xOffset"            : xyz_le_sect_rel[0],
+                    "Dihedral"           : np.arctan2d(
+                        xyz_le_sect_rel[2],
+                        xyz_le_sect_rel[1],
+                    ),
+                    "Twist"              : xsec.twist,
+                    "Left_Side_FoilName" : xsec.airfoil.name,
+                    "Right_Side_FoilName": xsec.airfoil.name,
+                    "x_number_of_panels" : 8,
+                    "y_number_of_panels" : 8,
+                }.items():
+                    subelement = ET.SubElement(sect, k)
+                    subelement.text = str(v)
+
+        if fin is not None:
+            wing = fin
+            wingxml = ET.SubElement(plane, "wing")
+
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+
+            for k, v in {
+                "Name"      : wing.name,
+                "Type"      : "FIN",
+                "Position"  : ",".join([str(x) for x in xyz_le_root]),
+                "Tilt_angle": 0.,
+                "Symetric"  : "true",
+                "isFin"     : "true",
+                "isSymFin"  : wing.symmetric,
+            }.items():
+                subelement = ET.SubElement(wingxml, k)
+                subelement.text = str(v)
+
+            sections = ET.SubElement(wingxml, "Sections")
+
+            for i, xsec in enumerate(wing.xsecs):
+
+                sect = ET.SubElement(sections, "Section")
+
+                xyz_le_sect = wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0)
+                xyz_le_sect_rel = xyz_le_sect - xyz_le_root
+
+                for k, v in {
+                    "y_position"         : xyz_le_sect_rel[2],
+                    "Chord"              : xsec.chord,
+                    "xOffset"            : xyz_le_sect_rel[0],
+                    "Dihedral"           : np.arctan2d(
+                        xyz_le_sect_rel[1],
+                        xyz_le_sect_rel[2],
+                    ),
+                    "Twist"              : xsec.twist,
+                    "Left_Side_FoilName" : xsec.airfoil.name,
+                    "Right_Side_FoilName": xsec.airfoil.name,
+                    "x_number_of_panels" : 8,
+                    "y_number_of_panels" : 8,
+                }.items():
+                    subelement = ET.SubElement(sect, k)
+                    subelement.text = str(v)
+
+        ### Indents the XML file properly
+        def indent(elem, level=0):
+            i = "\n" + level * "  "
+            if len(elem):
+                if not elem.text or not elem.text.strip():
+                    elem.text = i + "  "
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+                for elem in elem:
+                    indent(elem, level + 1)
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+            else:
+                if level and (not elem.tail or not elem.tail.strip()):
+                    elem.tail = i
+
+        indent(root)
+
+        xml_string = ET.tostring(
+            root,
+            encoding="UTF-8",
+            xml_declaration=True
+        ).decode()
+
+        with open(filename, "w+") as f:
+            f.write(xml_string)
+
+        return xml_string
+
 
 if __name__ == '__main__':
     import aerosandbox as asb
-    import aerosandbox.numpy as np
+    # import aerosandbox.numpy as np
     import aerosandbox.tools.units as u
 
 
@@ -671,7 +910,7 @@ if __name__ == '__main__':
     naca2412 = asb.Airfoil("naca2412")
     naca0012 = asb.Airfoil("naca0012")
 
-    airplane = asb.Airplane(
+    airplane = Airplane(
         name="Cessna 152",
         wings=[
             asb.Wing(
@@ -775,4 +1014,5 @@ if __name__ == '__main__':
         ]
     )
 
-    airplane.draw_three_view()
+    # airplane.draw_three_view()
+    airplane.export_XFLR("test.xml")
