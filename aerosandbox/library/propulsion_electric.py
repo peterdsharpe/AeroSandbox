@@ -2,10 +2,10 @@ import aerosandbox.numpy as np
 
 
 def motor_electric_performance(
-        voltage=None,
-        current=None,
-        rpm=None,
-        torque=None,
+        voltage: float = None,
+        current: float = None,
+        rpm: float = None,
+        torque: float = None,
         kv=1000,  # rpm/volt
         resistance=0.1,  # ohms
         no_load_current=0.4  # amps
