@@ -125,44 +125,68 @@ class Wing(AeroSandboxObject):
         return new_wing
 
     def span(self,
-             type: str = "planform",
+             type: str = "yz",
+             include_centerline_distance=False,
              _sectional: bool = False,
              ) -> Union[float, List[float]]:
         """
-        Returns the span, with options for various ways of measuring this:
+        Computes the span, with options for various ways of measuring this (see `type` argument).
 
-         * "planform" or "wetted": Adds up YZ-distances of each section piece by piece
-
-         * "y": Adds up the Y-distances of each section piece by piece
-
-         * "z": Adds up the Z-distances of each section piece by piece
-
-         * "y-full": Y-distance between the XZ plane and the tip of the wing. (Can't be used with _sectional).
-
-        If symmetric, this is doubled left/right to obtain the full span. With symmetric wings, note that if the root
-        cross-section is not coincident with the centerline, the fictitious span connecting the left and right root
-        cross-sections is not included. The only exception to this is the "y-full" option, which computes the span to
-        the XZ plane (hence, including the center part).
+        If the wing is symmetric, both left/right sides are included in order to obtain the full span. In the case
+        where the root cross-section is not coincident with the centerline, this function's behavior depends on the
+        `include_centerline_distance` argument.
 
         Args:
-            type: One of the above options, as a string.
+
+            type: One of the following options, as a string:
+
+                * "xyz": First, computes the quarter-chord point of each WingXSec. Then, connects these with
+                straight lines. Then, adds up the lengths of these lines.
+
+                * "xy": Same as "xyz", except it projects each line segment onto the XY plane before adding up the
+                lengths.
+
+                * "yz" (default): Same as "xyz", except it projects each line segment onto the YZ plane
+                before adding up the lengths.
+
+                * "xz": Same as "xyz", except it projects each line segment onto the XZ plane before adding up the
+                lengths. Rarely needed.
+
+                * "x": Same as "xyz", except it only counts the x-components of each line segment when adding up the
+                lengths.
+
+                * "y": Same as "xyz", except it only counts the y-components of each line segment when adding up the
+                lengths.
+
+                * "z": Same as "xyz", except it only counts the z-components of each line segment when adding up the
+                lengths.
+
+            include_centerline_distance: A boolean flag that tells the function what to do if a wing's root is not
+            coincident with the centerline.
+
+                * If True, the distance from the WingXSec closest to the centerline and the centerline itself is
+                included in the span calculation. In other words, the fictitious span connecting the left and right
+                root cross-sections is included.
+
+                * If False, this distance is ignored. In other words, the fictitious span connecting the left and
+                right root cross-sections is not included.
+
+                Note: For computation, either the root WingXSec (i.e., index=0) or the tip WingXSec (i.e., index=-1)
+                is used, whichever is closer to the centerline. This will almost-always be the root WingXSec,
+                but some weird edge cases (e.g., a half-wing defined on the left-hand-side of the airplane,
+                rather than the conventional right-hand side) will result in the tip WingXSec being used.
+
             _sectional: A boolean. If False, returns the total span. If True, returns a list of spans for each of the
                 `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
         """
-        if type == "y-full":
-            if _sectional:
-                raise ValueError("Cannot use `_sectional` with the parameter type as `y-full`!")
-            return self._compute_xyz_of_WingXSec(
-                -1,
-                x_nondim=0.25,
-                y_nondim=0,
-            )[1] * (2 if self.symmetric else 1)
+        if include_centerline_distance and _sectional:
+            raise ValueError("Cannot use `_sectional` with `include_centerline_distance`!")
 
         sectional_spans = []
 
         i_range = range(len(self.xsecs))
 
-        quarter_chord_vectors = [
+        quarter_chord_locations = [
             self._compute_xyz_of_WingXSec(
                 i,
                 x_nondim=0.25,
@@ -173,37 +197,75 @@ class Wing(AeroSandboxObject):
 
         for inner_i, outer_i in zip(i_range, i_range[1:]):
             quarter_chord_vector = (
-                    quarter_chord_vectors[outer_i] -
-                    quarter_chord_vectors[inner_i]
+                    quarter_chord_locations[outer_i] -
+                    quarter_chord_locations[inner_i]
             )
 
-            if type == "planform" or type == "wetted":
+            if type == "xyz":
+                section_span = (
+                                       quarter_chord_vector[0] ** 2 +
+                                       quarter_chord_vector[1] ** 2 +
+                                       quarter_chord_vector[2] ** 2
+                               ) ** 0.5
+
+            elif type == "xy":
+                section_span = (
+                                       quarter_chord_vector[0] ** 2 +
+                                       quarter_chord_vector[1] ** 2
+                               ) ** 0.5
+
+            elif type == "yz":
                 section_span = (
                                        quarter_chord_vector[1] ** 2 +
                                        quarter_chord_vector[2] ** 2
                                ) ** 0.5
+
+            elif type == "xz":
+                section_span = (
+                                       quarter_chord_vector[0] ** 2 +
+                                       quarter_chord_vector[2] ** 2
+                               ) ** 0.5
+
+            elif type == "x":
+                section_span = quarter_chord_vector[0]
+
             elif type == "y":
-                section_span = (
-                    np.fabs(quarter_chord_vector[1])
-                )
+                section_span = quarter_chord_vector[1]
+
             elif type == "z":
-                section_span = (
-                    np.fabs(quarter_chord_vector[2])
-                )
+                section_span = quarter_chord_vector[2]
+
             else:
                 raise ValueError("Bad value of 'type'!")
 
             sectional_spans.append(section_span)
 
-        span = sum(sectional_spans)
-
-        if self.symmetric:
-            span *= 2
-
         if _sectional:
             return sectional_spans
+
+        half_span = sum(sectional_spans)
+
+        if include_centerline_distance and len(self.xsecs) > 0:
+
+            half_span_to_centerline = np.Inf
+
+            for i in i_range:
+                half_span_to_centerline = np.minimum(
+                    half_span_to_centerline,
+                    (
+                            quarter_chord_locations[i][1] ** 2 +
+                            quarter_chord_locations[i][2] ** 2
+                    ) ** 0.5
+                )
+
+            half_span = half_span + half_span_to_centerline
+
+        if self.symmetric:
+            span = 2 * half_span
         else:
-            return span
+            span = half_span
+
+        return span
 
     def area(self,
              type: str = "planform",
