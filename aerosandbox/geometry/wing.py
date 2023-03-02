@@ -133,8 +133,8 @@ class Wing(AeroSandboxObject):
         Computes the span, with options for various ways of measuring this (see `type` argument).
 
         If the wing is symmetric, both left/right sides are included in order to obtain the full span. In the case
-        where the root cross-section is not coincident with the centerline, this function's behavior depends on the
-        `include_centerline_distance` argument.
+        where the root cross-section is not coincident with the center plane (e.g., XZ plane), this function's
+        behavior depends on the `include_centerline_distance` argument.
 
         Args:
 
@@ -143,13 +143,13 @@ class Wing(AeroSandboxObject):
                 * "xyz": First, computes the quarter-chord point of each WingXSec. Then, connects these with
                 straight lines. Then, adds up the lengths of these lines.
 
-                * "xy": Same as "xyz", except it projects each line segment onto the XY plane before adding up the
+                * "xy" or "top": Same as "xyz", except it projects each line segment onto the XY plane before adding up the
                 lengths.
 
-                * "yz" (default): Same as "xyz", except it projects each line segment onto the YZ plane
+                * "yz" (default) or "front": Same as "xyz", except it projects each line segment onto the YZ plane (i.e., front view)
                 before adding up the lengths.
 
-                * "xz": Same as "xyz", except it projects each line segment onto the XZ plane before adding up the
+                * "xz" or "side": Same as "xyz", except it projects each line segment onto the XZ plane before adding up the
                 lengths. Rarely needed.
 
                 * "x": Same as "xyz", except it only counts the x-components of each line segment when adding up the
@@ -162,28 +162,37 @@ class Wing(AeroSandboxObject):
                 lengths.
 
             include_centerline_distance: A boolean flag that tells the function what to do if a wing's root is not
-            coincident with the centerline.
+            coincident with the centerline plane (i.e., XZ plane).
 
-                * If True, the distance from the WingXSec closest to the centerline and the centerline itself is
-                included in the span calculation. In other words, the fictitious span connecting the left and right
-                root cross-sections is included.
+                * If True, we first figure out which WingXSec has its quarter-chord point closest to the centerline
+                plane (i.e., XZ plane). Then, we compute the distance from that quarter-chord point directly to the
+                centerline plane (along Y). We then add that distance to the span calculation. In other words,
+                the fictitious span connecting the left and right root cross-sections is included.
 
                 * If False, this distance is ignored. In other words, the fictitious span connecting the left and
-                right root cross-sections is not included.
+                right root cross-sections is not included. This is the default behavior.
 
                 Note: For computation, either the root WingXSec (i.e., index=0) or the tip WingXSec (i.e., index=-1)
-                is used, whichever is closer to the centerline. This will almost-always be the root WingXSec,
+                is used, whichever is closer to the centerline plane. This will almost-always be the root WingXSec,
                 but some weird edge cases (e.g., a half-wing defined on the left-hand-side of the airplane,
                 rather than the conventional right-hand side) will result in the tip WingXSec being used.
 
             _sectional: A boolean. If False, returns the total span. If True, returns a list of spans for each of the
                 `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
         """
+        # Check inputs
         if include_centerline_distance and _sectional:
             raise ValueError("Cannot use `_sectional` with `include_centerline_distance`!")
 
-        sectional_spans = []
+        # Handle overloaded names
+        if type == "top":
+            type = "xy"
+        elif type == "front":
+            type = "yz"
+        elif type == "side":
+            type = "xz"
 
+        # Figure out where the quarter-chord points of each WingXSec are
         i_range = range(len(self.xsecs))
 
         quarter_chord_locations = [
@@ -194,6 +203,9 @@ class Wing(AeroSandboxObject):
             )
             for i in i_range
         ]
+
+        # Compute sectional spans
+        sectional_spans = []
 
         for inner_i, outer_i in zip(i_range, i_range[1:]):
             quarter_chord_vector = (
@@ -247,18 +259,15 @@ class Wing(AeroSandboxObject):
 
         if include_centerline_distance and len(self.xsecs) > 0:
 
-            half_span_to_centerline = np.Inf
+            half_span_to_XZ_plane = np.Inf
 
             for i in i_range:
-                half_span_to_centerline = np.minimum(
-                    half_span_to_centerline,
-                    (
-                            quarter_chord_locations[i][1] ** 2 +
-                            quarter_chord_locations[i][2] ** 2
-                    ) ** 0.5
+                half_span_to_XZ_plane = np.minimum(
+                    half_span_to_XZ_plane,
+                    np.abs(quarter_chord_locations[i][1])
                 )
 
-            half_span = half_span + half_span_to_centerline
+            half_span = half_span + half_span_to_XZ_plane
 
         if self.symmetric:
             span = 2 * half_span
@@ -269,58 +278,100 @@ class Wing(AeroSandboxObject):
 
     def area(self,
              type: str = "planform",
+             include_centerline_distance=False,
              _sectional: bool = False,
              ) -> Union[float, List[float]]:
         """
-        Computes the wing area, with options for various ways of measuring this:
+        Computes the wing area, with options for various ways of measuring this (see `type` argument):
 
-         * "planform": The typical definition of wing area. Treats the wing as a group of sections represented as
-         thin sheets, each of which is a quadrilateral. Computes the one-sided area of each quadrilateral section,
-         then sums them up.
-
-         * "wetted": The wetted area of the wing (counts both sides of the wing, and accounts for airfoil curvature).
-
-         * projected: area projected onto the XY plane (top-down view)
-
-        If symmetric, this area is doubled left/right to obtain the full wing area. With symmetric wings, note that if the
-        root cross-section is not coincident with the centerline, the fictitious area connecting the left and right
-        root cross-sections is not included.
+        If the wing is symmetric, both left/right sides are included in order to obtain the full area. In the case
+        where the root cross-section is not coincident with the center plane (e.g., XZ plane), this function's
+        behavior depends on the `include_centerline_distance` argument.
 
         Args:
-            type: One of the above options, as a string.
+
+            type: One of the following options, as a string:
+
+                * "planform" (default): First, lofts a quadrilateral mean camber surface between each WingXSec. Then,
+                computes the area of each of these sectional surfaces. Then, sums up all the areas and returns it.
+                When airplane designers refer to "wing area" (in the absence of any other qualifiers),
+                this is typically what they mean.
+
+                * "wetted": Computes the actual surface area of the wing that is in contact with the air. Will
+                typically be a little more than double the "planform" area above; intuitively, this is because it
+                adds both the "top" and "bottom" surface areas. Accounts for airfoil thickness/shape effects.
+
+                * "xy" or "projected" or "top": Same as "planform", but each sectional surface is projected onto the XY plane
+                (i.e., top-down view) before computing the areas. Note that if you try to use this method with a
+                vertically-oriented wing, like most vertical stabilizers, you will get an area near zero.
+
+                * "xz" or "side": Same as "planform", but each sectional surface is projected onto the XZ plane before
+                computing the areas.
+
+            include_centerline_distance: A boolean flag that tells the function what to do if a wing's root chord is
+            not coincident with the centerline plane (i.e., XZ plane).
+
+                * If True, we first figure out which WingXSec is closest to the centerline plane (i.e., XZ plane).
+                Then, we imagine that this WingXSec is extruded along the Y axis to the centerline plane (assuming a
+                straight extrusion to produce a rectangular mid-camber surface). In doing so, we use the wing
+                geometric chord as the extrusion width. We then add the area of this fictitious surface to the area
+                calculation.
+
+                * If False, this function will simply ignore this fictitious wing area. This is the default behavior.
+
             _sectional: A boolean. If False, returns the total area. If True, returns a list of areas for each of the
-                `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
+                `n-1` lofted sections (between the `n` wing cross-sections in wing.xsec).
 
         """
+        # Check inputs
+        if include_centerline_distance and _sectional:
+            raise ValueError("`include_centerline_distance` and `_sectional` cannot both be True!")
 
-        if type == "planform":
-            sectional_spans = self.span(_sectional=True)
-        elif type == "wetted":
-            sectional_spans = self.span(_sectional=True)
-        elif type == "projected":
-            sectional_spans = self.span(type="y", _sectional=True)
-        else:
-            raise ValueError("Bad value of `type`!")
+        # Handle overloaded names
+        if type == "projected" or type == "top":
+            type = "xy"
 
+        elif type == "side":
+            type = "xz"
+
+        # Compute sectional areas. Each method must compute the sectional spans and the effective chords at each
+        # cross-section to use.
         if type == "planform":
-            chords = [xsec.chord for xsec in self.xsecs]
+            sectional_spans = self.span(type="yz", _sectional=True)
+            xsec_chords = [xsec.chord for xsec in self.xsecs]
+
         elif type == "wetted":
-            chords = [
+            sectional_spans = self.span(type="yz", _sectional=True)
+            xsec_chords = [
                 xsec.chord * xsec.airfoil.perimeter()
                 for xsec in self.xsecs
             ]
-        elif type == "projected":
-            chords = [xsec.chord for xsec in self.xsecs]
+
+        elif type == "xy":
+            sectional_spans = self.span(type="y", _sectional=True)
+            xsec_chords = [xsec.chord for xsec in self.xsecs]
+
+        elif type == "yz":
+            raise ValueError("Area of wing projected to the YZ plane is zero.")
+
+            # sectional_spans = self.span(type="yz", _sectional=True)
+            # xsec_chords = [xsec.chord for xsec in self.xsecs]
+
+        elif type == "xz":
+            sectional_spans = self.span(type="z", _sectional=True)
+            xsec_chords = [xsec.chord for xsec in self.xsecs]
+
         else:
             raise ValueError("Bad value of `type`!")
 
         sectional_chords = [
             (inner_chord + outer_chord) / 2
             for inner_chord, outer_chord in zip(
-                chords[1:],
-                chords[:-1]
+                xsec_chords[1:],
+                xsec_chords[:-1]
             )
         ]
+
         sectional_areas = [
             span * chord
             for span, chord in zip(
@@ -328,13 +379,35 @@ class Wing(AeroSandboxObject):
                 sectional_chords
             )
         ]
-        area = sum(sectional_areas)
-
         if _sectional:
             return sectional_areas
 
+        half_area = sum(sectional_areas)
+
+        if include_centerline_distance and len(self.xsecs) > 0:
+
+            half_span_to_centerline = np.Inf
+
+            for i in range(len(self.xsecs)):
+                quarter_chord_location = self._compute_xyz_of_WingXSec(
+                    i,
+                    x_nondim=0.25,
+                    y_nondim=0,
+                )
+
+                half_span_to_centerline = np.minimum(
+                    half_span_to_centerline,
+                    np.abs(quarter_chord_location[1])
+                )
+
+            half_area = half_area + (
+                    half_span_to_centerline * self.mean_geometric_chord()
+            )
+
         if self.symmetric:  # Returns the total area of both the left and right wing halves on mirrored wings.
-            area *= 2
+            area = 2 * half_area
+        else:
+            area = half_area
 
         return area
 
@@ -347,7 +420,8 @@ class Wing(AeroSandboxObject):
          * geometric: geometric aspect ratio, computed in the typical fashion (b^2 / S).
 
          * effective: Differs from the geometric aspect ratio only in the case of symmetric wings whose root
-         cross-section is not on the centerline. In these cases, it counts 50% of the fictitious span as wing span
+         cross-section is not on the centerline. In these cases, it includes the span and area of the fictitious wing
+         center when computing aspect ratio.
 
         Args:
             type: One of the above options, as a string.
@@ -357,11 +431,10 @@ class Wing(AeroSandboxObject):
             return self.span() ** 2 / self.area()
 
         elif type == "effective":
-            effective_span = self.span() + 0.5 * self.xsecs[0].xyz_le[1]
-
-            effective_area = self.area() + 0.5 * self.xsecs[0].xyz_le[1] * self.xsecs[0].chord
-
-            return effective_span ** 2 / effective_area
+            return (
+                    self.span(type="yz", include_centerline_distance=True) ** 2 /
+                    self.area(type="yz", include_centerline_distance=True)
+            )
 
         else:
             raise ValueError("Bad value of `type`!")
