@@ -525,15 +525,29 @@ class Wing(AeroSandboxObject):
 
         return mean_twist
 
-    def mean_sweep_angle(self, x_nondim=0.25) -> float:
+    def mean_sweep_angle(self,
+                         x_nondim=0.25
+                         ) -> float:
         """
         Returns the mean sweep angle (in degrees) of the wing, relative to the x-axis.
         Positive sweep is backwards, negative sweep is forward.
 
-        By changing `x_nondim`, you can change whether it's leading-edge sweep (0), quarter-chord sweep (0.25),
-        trailing-edge sweep (1), or anything else.
+        This is purely measured from root to tip, with no consideration for the sweep of the individual
+        cross-sections in between.
 
-        :return: The mean sweep angle, in degrees.
+        Args:
+
+            x_nondim: The nondimensional x-coordinate of the cross-section to use for sweep angle computation.
+
+                * If you provide 0, it will use the leading edge of the cross-section.
+
+                * If you provide 0.25, it will use the quarter-chord point of the cross-section.
+
+                * If you provide 1, it will use the trailing edge of the cross-section.
+
+        Returns:
+
+            The mean sweep angle, in degrees.
         """
         root_quarter_chord = self._compute_xyz_of_WingXSec(
             0,
