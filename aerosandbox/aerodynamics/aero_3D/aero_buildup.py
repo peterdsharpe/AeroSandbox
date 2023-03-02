@@ -281,8 +281,19 @@ class AeroBuildup(ExplicitAnalysis):
         wing_MAC = wing.mean_aerodynamic_chord()
         wing_taper = wing.taper_ratio()
         wing_sweep = wing.mean_sweep_angle()
-        AR_effective = wing.aspect_ratio(type="effective")
-        AR_geometric = wing.aspect_ratio(type="geometric")
+        wing_dihedral = wing.mean_dihedral_angle()
+
+        if wing.symmetric:
+            AR_e = wing.aspect_ratio(type="effective")
+            AR_g = wing.aspect_ratio(type="geometric")
+            AR_effective = AR_g + (AR_e - AR_g) * np.maximum(np.cosd(wing_dihedral), 0)
+            # Approximately accounts for Trefftz-pane wake continuity.
+
+            AR_geometric = AR_g
+        else:
+            AR_effective = wing.aspect_ratio(type="geometric")
+            AR_geometric = AR_effective
+
         mach = op_point.mach()
         # mach_normal = mach * np.cosd(sweep)
         AR_3D_factor = aerolib.CL_over_Cl(
