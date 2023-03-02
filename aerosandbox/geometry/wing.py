@@ -643,7 +643,7 @@ class Wing(AeroSandboxObject):
             for xsec in self.xsecs
         ]
         separations = self.span(
-            type="wetted",
+            type="yz",
             _sectional=True
         )
 
