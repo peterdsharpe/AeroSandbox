@@ -433,7 +433,7 @@ class Wing(AeroSandboxObject):
         elif type == "effective":
             return (
                     self.span(type="yz", include_centerline_distance=True) ** 2 /
-                    self.area(type="yz", include_centerline_distance=True)
+                    self.area(type="planform", include_centerline_distance=True)
             )
 
         else:
