@@ -569,6 +569,50 @@ class Wing(AeroSandboxObject):
 
         return sweep_deg
 
+    def mean_dihedral_angle(self,
+                            x_nondim=0.25
+                            ) -> float:
+        """
+        Returns the mean dihedral angle (in degrees) of the wing, relative to the XY plane.
+        Positive dihedral is bending up, negative dihedral is bending down.
+
+        This is purely measured from root to tip, with no consideration for the dihedral of the individual
+        cross-sections in between.
+
+        Args:
+
+            x_nondim: The nondimensional x-coordinate of the cross-section to use for sweep angle computation.
+
+                * If you provide 0, it will use the leading edge of the cross-section.
+
+                * If you provide 0.25, it will use the quarter-chord point of the cross-section.
+
+                * If you provide 1, it will use the trailing edge of the cross-section.
+
+        Returns:
+
+            The mean dihedral angle, in degrees
+
+        """
+        root_quarter_chord = self._compute_xyz_of_WingXSec(
+            0,
+            x_nondim=x_nondim,
+            y_nondim=0
+        )
+        tip_quarter_chord = self._compute_xyz_of_WingXSec(
+            -1,
+            x_nondim=x_nondim,
+            y_nondim=0
+        )
+
+        vec = tip_quarter_chord - root_quarter_chord
+        vec_norm = vec / np.linalg.norm(vec)
+
+        return np.arctan2d(
+            vec_norm[2],
+            vec_norm[1],
+        )
+
     def aerodynamic_center(self, chord_fraction: float = 0.25, _sectional=False) -> np.ndarray:
         """
         Computes the location of the aerodynamic center of the wing.
