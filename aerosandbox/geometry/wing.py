@@ -724,6 +724,112 @@ class Wing(AeroSandboxObject):
         else:
             return volume
 
+    def get_control_surface_names(self) -> List[str]:
+        """
+        Gets the names of all control surfaces on this wing.
+
+        Returns:
+
+            A list of control surface names.
+
+        """
+        control_surface_names = []
+        for xsec in self.xsecs:
+            for control_surface in xsec.control_surfaces:
+                control_surface_names.append(control_surface.name)
+
+        return control_surface_names
+
+    def set_control_surface_deflections(self,
+                                        control_surface_mappings: Dict[str, float],
+                                        ) -> None:
+        """
+        Sets the deflection of all control surfaces on this wing, based on the provided mapping.
+
+        Args:
+            control_surface_mappings: A dictionary mapping control surface names to their deflection angles, in degrees.
+
+                Note: control surface names are set in the asb.ControlSurface constructor.
+
+        Returns:
+
+            None. (in-place)
+        """
+        for xsec in self.xsecs:
+            for control_surface in xsec.control_surfaces:
+                if control_surface.name in control_surface_mappings.keys():
+                    control_surface.deflection = control_surface_mappings[control_surface.name]
+
+    def control_surface_area(self,
+                             by_name: Optional[str] = None,
+                             type: Optional[str] = "planform",
+                             ) -> float:
+        """
+        Computes the total area of all control surfaces on this wing, optionally filtered by their name.
+
+        Control surfaces are defined on a section-by-section basis, and are defined in the WingXSec constructor using
+        its `control_surfaces` argument.
+
+        Note: If redundant control surfaces are defined (e.g., elevons, as defined by separate ailerons + elevator),
+        the area will be duplicated.
+
+        If the wing is symmetric, control surfaces on both left/right sides are included in order to obtain the full area.
+
+        Args:
+
+            by_name: If not None, only control surfaces with this name will be included in the area calculation.
+
+                Note: control surface names are set in the asb.ControlSurface constructor.
+
+            type: One of the following options, as a string:
+
+                * "planform" (default): First, lofts a quadrilateral mean camber surface between each WingXSec. Then,
+                computes the area of each of these sectional surfaces. Then, computes what fraction of this area is
+                control surface. Then, sums up all the areas and returns it. When airplane designers refer to
+                "control surface area" (in the absence of any other qualifiers), this is typically what they mean.
+
+                * "wetted": Computes the actual surface area of the control surface that is in contact with the air.
+                Will typically be a little more than double the "planform" area above; intuitively, this is because
+                it adds both the "top" and "bottom" surface areas. Accounts for airfoil thickness/shape effects.
+
+                * "xy" or "projected" or "top": Same as "planform", but each sectional surface is projected onto the XY plane
+                (i.e., top-down view) before computing the areas. Note that if you try to use this method with a
+                vertically-oriented wing, like most vertical stabilizers, you will get an area near zero.
+
+                * "xz" or "side": Same as "planform", but each sectional surface is projected onto the XZ plane before
+                computing the areas.
+
+        """
+        sectional_areas = self.area(
+            type=type,
+            include_centerline_distance=False,
+            _sectional=True
+        )
+
+        control_surface_area = 0.
+
+        for xsec, sect_area in zip(self.xsecs[:-1], sectional_areas):
+            for control_surface in xsec.control_surfaces:
+                if (by_name is None) or (control_surface.name == by_name):
+
+                    if control_surface.trailing_edge:
+                        control_surface_chord_fraction = np.maximum(
+                            1 - control_surface.hinge_point,
+                            0
+                        )
+                    else:
+                        control_surface_chord_fraction = np.maximum(
+                            control_surface.hinge_point,
+                            0
+                        )
+
+                    control_surface_area += control_surface_chord_fraction * sect_area
+
+        if self.symmetric:
+            control_surface_area *= 2
+
+        return control_surface_area
+
     def mesh_body(self,
                   method="quad",
                   chordwise_resolution: int = 36,
@@ -1539,6 +1645,14 @@ if __name__ == '__main__':
                 chord=1,
                 airfoil=Airfoil("naca4412"),
                 twist=0,
+                control_surfaces=[
+                    ControlSurface(
+                        name="Elevator",
+                        trailing_edge=True,
+                        hinge_point=0.75,
+                        deflection=5
+                    )
+                ]
             ),
             WingXSec(
                 xyz_le=[0.5, 1, 0],
@@ -1554,4 +1668,4 @@ if __name__ == '__main__':
             )
         ]
     ).translate([1, 0, 0])
-    wing.subdivide_sections(5).draw()
+    # wing.subdivide_sections(5).draw()
