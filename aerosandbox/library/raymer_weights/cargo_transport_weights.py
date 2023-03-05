@@ -656,7 +656,7 @@ def mass_furnishings(
             0.0577 *
             n_crew ** 0.1 *
             (mass_cargo / u.lbm) ** 0.393 *
-            fuselage.area_wetted() ** 0.75
+            (fuselage.area_wetted() / u.foot ** 2) ** 0.75
     ) * u.lbm
 
 
