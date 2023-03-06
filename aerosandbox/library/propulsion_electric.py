@@ -1,29 +1,55 @@
 import aerosandbox.numpy as np
+from typing import Union, Dict
 
 
 def motor_electric_performance(
-        voltage: float = None,
-        current: float = None,
-        rpm: float = None,
-        torque: float = None,
-        kv=1000,  # rpm/volt
-        resistance=0.1,  # ohms
-        no_load_current=0.4  # amps
-):
+        voltage: Union[float, np.ndarray] = None,
+        current: Union[float, np.ndarray] = None,
+        rpm: Union[float, np.ndarray] = None,
+        torque: Union[float, np.ndarray] = None,
+        kv: float = 1000.,  # rpm/volt
+        resistance: float = 0.1,  # ohms
+        no_load_current: float = 0.4  # amps
+) -> Dict[str, Union[float, np.ndarray]]:
     """
     A function for predicting the performance of an electric motor.
+    
     Performance equations based on Mark Drela's First Order Motor Model:
     http://web.mit.edu/drela/Public/web/qprop/motor1_theory.pdf
+    
     Instructions: Input EXACTLY TWO of the following parameters: voltage, current, rpm, torque.
+    
     Exception: You cannot supply the combination of current and torque - this makes for an ill-posed problem.
-    :param voltage: Voltage across motor terminals [Volts]
-    :param current: Current through motor [Amps]
-    :param rpm: Motor rotation speed [rpm]
-    :param torque: Motor torque [N m]
-    :param kv: voltage constant, in rpm/volt
-    :param resistance: resistance, in ohms
-    :param no_load_current: no-load current, in amps
-    :return: dict of {voltage, current, rpm, torque, efficiency}
+    
+    Note that this function is fully vectorized, so arrays can be supplied to any of the inputs.
+    
+    Args:
+        voltage: Voltage across motor terminals [Volts]
+        
+        current: Current through motor [Amps]
+        
+        rpm: Motor rotation speed [rpm]
+        
+        torque: Motor torque [N m]
+        
+        kv: voltage constant, in rpm/volt
+        
+        resistance: resistance, in ohms
+        
+        no_load_current: no-load current, in amps
+        
+    Returns:
+        A dictionary where keys are: 
+            "voltage", 
+            "current", 
+            "rpm", 
+            "torque",
+            "shaft power", 
+            "electrical power", 
+            "efficiency"
+            "waste heat"
+            
+        And values are corresponding quantities in SI units. 
     """
     # Validate inputs
     voltage_known = voltage is not None
@@ -31,10 +57,14 @@ def motor_electric_performance(
     rpm_known = rpm is not None
     torque_known = torque is not None
 
-    assert (
-                   voltage_known + current_known + rpm_known + torque_known) == 2, "You must give exactly two input arguments."
-    assert not (
-            current_known and torque_known), "You cannot supply the combination of current and torque - this makes for an ill-posed problem."
+    if not (
+            voltage_known + current_known + rpm_known + torque_known == 2
+    ):
+        raise ValueError("You must give exactly two input arguments.")
+
+    if current_known and torque_known:
+        raise ValueError(
+            "You cannot supply the combination of current and torque - this makes for an ill-posed problem.")
 
     kv_rads_per_sec_per_volt = kv * np.pi / 30  # rads/sec/volt
 
