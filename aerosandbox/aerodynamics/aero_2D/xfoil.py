@@ -40,6 +40,7 @@ class XFoil(ExplicitAnalysis):
                  n_crit: float = 9.,
                  xtr_upper: float = 1.,
                  xtr_lower: float = 1.,
+                 hinge_point_x: float = None,
                  full_potential: bool = False,
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
@@ -65,6 +66,9 @@ class XFoil(ExplicitAnalysis):
             xtr_upper: The upper-surface trip location [x/c]
 
             xtr_lower: The lower-surface trip location [x/c]
+
+            hinge_point_x: The x/c location of the hinge point. This is used to calculate hinge moment. If this is
+            None, hinge moment is not calculated.
 
             full_potential: If this is set True, it will turn full-potential mode on. Note that full-potential mode
             is only available in XFoil v7.xx or higher. (Unless you have specifically gone through the trouble of
@@ -114,6 +118,7 @@ class XFoil(ExplicitAnalysis):
         self.n_crit = n_crit
         self.xtr_upper = xtr_upper
         self.xtr_lower = xtr_lower
+        self.hinge_point_x = hinge_point_x
         self.full_potential = full_potential
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
@@ -154,6 +159,14 @@ class XFoil(ExplicitAnalysis):
         if self.mach != 0:
             run_file_contents += [
                 f"m {self.mach}",
+            ]
+
+        # Handle hinge moment
+        if self.hinge_point_x is not None:
+            run_file_contents += [
+                "hinc",
+                f"fnew {self.hinge_point_x} {self.airfoil.local_camber(self.hinge_point_x)}",
+                "fmom",
             ]
 
         if self.full_potential:
@@ -363,12 +376,12 @@ class XFoil(ExplicitAnalysis):
                     output = self._run_xfoil(
                         "\n".join(
                             [
-                                f"a {a}"
+                                f"a {a}" + ("\nfmom" if self.hinge_point_x is not None else "")
                                 for a in alphas_upper
                             ] + [
                                 "init"
                             ] + [
-                                f"a {a}"
+                                f"a {a}" + ("\nfmom" if self.hinge_point_x is not None else "")
                                 for a in alphas_lower
                             ]
                         )
@@ -383,7 +396,7 @@ class XFoil(ExplicitAnalysis):
 
         return self._run_xfoil(
             "\n".join([
-                f"a {a}"
+                f"a {a}" + ("\nfmom" if self.hinge_point_x is not None else "")
                 for a in alphas
             ])
         )
@@ -405,7 +418,7 @@ class XFoil(ExplicitAnalysis):
 
         return self._run_xfoil(
             "\n".join([
-                f"cl {c}"
+                f"cl {c}" + ("\nfmom" if self.hinge_point_x is not None else "")
                 for c in cls
             ])
         )
@@ -418,7 +431,8 @@ if __name__ == '__main__':
     xf = XFoil(
         airfoil=af,
         Re=1e6,
-        # verbose=True
+        hinge_point_x=0.75,
+        # verbose=True,
     )
     result_at_single_alpha = xf.alpha(5)
     result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
