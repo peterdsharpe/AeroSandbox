@@ -207,7 +207,8 @@ def mass_fuselage(
                                                    (wing_to_tail_distance / u.foot) ** -0.051 *
                                                    (L_over_D) ** -0.072 *
                                                    (cruise_op_point.dynamic_pressure() / u.psf) ** 0.241 *
-                                                    (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
+                                                   (advanced_composites["fuselage/nacelle"]
+                                                    if use_advanced_composites else 1)
                                            ) * u.lbm
 
     mass_pressurization_components = (
@@ -250,8 +251,6 @@ def mass_main_landing_gear(
     Returns:
         The mass of the main landing gear [kg].
     """
-    if not is_retractable:
-        raise NotImplementedError('Non-retractable main landing gear are not supported yet.')
 
     ultimate_landing_load_factor = n_gear * 1.5
 
@@ -259,7 +258,8 @@ def mass_main_landing_gear(
             0.095 *
             (ultimate_landing_load_factor * design_mass_TOGW / u.lbm) ** 0.768 *
             (main_gear_length / u.foot / 12) ** 0.409 *
-            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
+            (advanced_composites["landing_gear"] if use_advanced_composites else 1) *
+            (((5.7 - 1.4) / 5.7) if is_retractable else 1)  # derived from Raymer Section 15.2 and 15.3.3 together.
     ) * u.lbm
 
 
@@ -289,8 +289,6 @@ def mass_nose_landing_gear(
     Returns:
         The mass of the nose landing gear [kg].
     """
-    if not is_retractable:
-        raise NotImplementedError('Non-retractable main landing gear are not supported yet.')
 
     ultimate_landing_load_factor = n_gear * 1.5
 
@@ -298,7 +296,8 @@ def mass_nose_landing_gear(
             0.125 *
             (ultimate_landing_load_factor * design_mass_TOGW / u.lbm) ** 0.566 *
             (nose_gear_length / u.foot / 12) ** 0.845 *
-            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
+            (advanced_composites["landing_gear"] if use_advanced_composites else 1) *
+            (((5.7 - 1.4) / 5.7) if is_retractable else 1)  # derived from Raymer Section 15.2 and 15.3.3 together.
     ) * u.lbm
 
 
