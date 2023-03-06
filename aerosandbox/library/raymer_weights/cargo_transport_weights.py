@@ -1,6 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
+from .fudge_factors import advanced_composites
 
 
 # From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
@@ -10,6 +11,7 @@ def mass_wing(
         wing: asb.Wing,
         design_mass_TOGW: float,
         ultimate_load_factor: float,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the wing for a cargo/transport aircraft, according to Raymer's Aircraft Design: A Conceptual
@@ -21,6 +23,9 @@ def mass_wing(
         design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
 
         ultimate_load_factor: Ultimate load factor of the airplane.
+
+        use_advanced_composites: Whether to use advanced composites for the wing. If True, the wing mass is modified
+        accordingly.
 
     Returns:
         Wing mass [kg].
@@ -40,7 +45,8 @@ def mass_wing(
             airfoil_t_over_c ** -0.4 *
             (1 + wing.taper_ratio()) ** 0.1 *
             np.cosd(wing.mean_sweep_angle()) ** -1 *
-            (wing.control_surface_area() / u.foot ** 2) ** 0.1
+            (wing.control_surface_area() / u.foot ** 2) ** 0.1 *
+            (advanced_composites["wing"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -51,6 +57,7 @@ def mass_hstab(
         wing_to_hstab_distance: float,
         fuselage_width_at_hstab_intersection: float,
         aircraft_y_radius_of_gyration: float = None,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the horizontal stabilizer for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -70,6 +77,9 @@ def mass_hstab(
 
         aircraft_y_radius_of_gyration: Radius of gyration of the aircraft about the y-axis [m]. If None, estimates
         this as `0.3 * wing_to_hstab_distance`.
+
+        use_advanced_composites: Whether to use advanced composites for the hstab. If True, the hstab mass is modified
+        accordingly.
 
     Returns:
         The mass of the horizontal stabilizer [kg].
@@ -101,7 +111,8 @@ def mass_hstab(
             (aircraft_y_radius_of_gyration / u.foot) ** 0.704 *
             np.cosd(hstab.mean_sweep_angle()) ** -1 *
             hstab.aspect_ratio() ** 0.166 *
-            (1 + hstab.control_surface_area() / area) ** 0.1
+            (1 + hstab.control_surface_area() / area) ** 0.1 *
+            (advanced_composites["tails"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -112,6 +123,7 @@ def mass_vstab(
         wing_to_vstab_distance: float,
         is_t_tail: bool = False,
         aircraft_z_radius_of_gyration: float = None,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the vertical stabilizer for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -131,6 +143,9 @@ def mass_vstab(
 
         aircraft_z_radius_of_gyration: The z-radius of gyration of the entire airplane [m]. If None, estimates this
         as `1 * wing_to_vstab_distance`.
+
+        use_advanced_composites: Whether to use advanced composites for the vstab. If True, the vstab mass is modified
+        accordingly.
 
     Returns:
         The mass of the vertical stabilizer [kg].
@@ -156,7 +171,8 @@ def mass_vstab(
             (aircraft_z_radius_of_gyration / u.foot) ** 0.875 *
             np.cosd(vstab.mean_sweep_angle()) ** -1 *
             vstab.aspect_ratio() ** 0.35 *
-            vstab_airfoil.max_thickness() ** -0.5
+            vstab_airfoil.max_thickness() ** -0.5 *
+            (advanced_composites["tails"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -169,6 +185,7 @@ def mass_fuselage(
         n_cargo_doors: int = 1,
         has_aft_clamshell_door: bool = False,
         landing_gear_mounted_on_fuselage: bool = False,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the fuselage for a cargo/transport aircraft, according to Raymer's Aircraft Design: A
@@ -194,6 +211,9 @@ def mass_fuselage(
         has_aft_clamshell_door: Whether or not the fuselage has an aft clamshell door.
 
         landing_gear_mounted_on_fuselage: Whether or not the landing gear is mounted on the fuselage.
+
+        use_advanced_composites: Whether to use advanced composites for the fuselage. If True, the fuselage mass is
+        modified accordingly.
 
     Returns:
         The mass of the fuselage [kg].
@@ -227,7 +247,8 @@ def mass_fuselage(
             (fuselage_structural_length / u.foot) ** 0.25 *
             (fuse.area_wetted() / u.foot ** 2) ** 0.302 *
             (1 + K_ws) ** 0.04 *
-            L_over_D ** 0.10  # L/D
+            L_over_D ** 0.10 * # L/D
+            (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -239,6 +260,7 @@ def mass_main_landing_gear(
         n_gear: int = 2,
         n_wheels: int = 12,
         n_shock_struts: int = 4,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the main landing gear for a cargo/transport aircraft, according to Raymer's Aircraft Design:
@@ -259,6 +281,9 @@ def mass_main_landing_gear(
 
         n_shock_struts: number of shock struts.
 
+        use_advanced_composites: Whether to use advanced composites for the landing gear. If True, the landing gear mass
+        is modified accordingly.
+
     Returns:
         mass of the main landing gear [kg].
     """
@@ -275,7 +300,8 @@ def mass_main_landing_gear(
             (main_gear_length / u.inch) ** 0.4 *
             n_wheels ** 0.321 *
             n_shock_struts ** -0.5 *
-            (landing_speed / u.knot) ** 0.1
+            (landing_speed / u.knot) ** 0.1 *
+            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -285,6 +311,7 @@ def mass_nose_landing_gear(
         is_kneeling: bool = False,
         n_gear: int = 1,
         n_wheels: int = 2,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the nose landing gear for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -301,6 +328,9 @@ def mass_nose_landing_gear(
 
         n_wheels: Number of wheels in total on the nose landing gear.
 
+        use_advanced_composites: Whether to use advanced composites for the landing gear. If True, the landing gear mass
+        is modified accordingly.
+
     Returns:
         Mass of nose landing gear [kg].
     """
@@ -314,7 +344,8 @@ def mass_nose_landing_gear(
             (design_mass_TOGW / u.lbm) ** 0.646 *
             ultimate_landing_load_factor ** 0.2 *
             (nose_gear_length / u.inch) ** 0.5 *
-            n_wheels ** 0.45
+            n_wheels ** 0.45 *
+            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -328,6 +359,7 @@ def mass_nacelles(
         is_pylon_mounted: bool = False,
         engines_have_propellers: bool = False,
         engines_have_thrust_reversers: bool = False,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the nacelles for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -351,6 +383,9 @@ def mass_nacelles(
         engines_have_propellers: whether the engines have propellers or not (e.g., a jet)
 
         engines_have_thrust_reversers: whether the engines have thrust reversers or not
+
+        use_advanced_composites: Whether to use advanced composites for the nacelles. If True, the nacelles mass
+        is modified accordingly.
 
     Returns:
         mass of the nacelles [kg]
@@ -379,7 +414,8 @@ def mass_nacelles(
             (ultimate_load_factor) ** 0.119 *
             (mass_per_engine_with_contents / u.lbm) ** 0.611 *
             (n_engines) ** 0.984 *
-            (nacelle_wetted_area / u.foot ** 2) ** 0.224
+            (nacelle_wetted_area / u.foot ** 2) ** 0.224 *
+            (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
     )
 
 
