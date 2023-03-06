@@ -1,7 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
-from .fudge_factors import advanced_composites
+from .raymer_fudge_factors import advanced_composites
 
 
 # From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
