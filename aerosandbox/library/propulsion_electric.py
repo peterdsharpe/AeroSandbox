@@ -48,8 +48,13 @@ def motor_electric_performance(
             "electrical power", 
             "efficiency"
             "waste heat"
-            
-        And values are corresponding quantities in SI units. 
+
+        And values are corresponding quantities in SI units.
+
+        Note that "efficiency" is just (shaft power) / (electrical power), and hence implicitly assumes that the
+        motor is operating as a motor (electrical -> shaft power), and not a generator (shaft power -> electrical).
+        If you want to know the efficiency of the motor as a generator, you can simply calculate it as (electrical
+        power) / (shaft power).
     """
     # Validate inputs
     voltage_known = voltage is not None
@@ -68,6 +73,7 @@ def motor_electric_performance(
 
     kv_rads_per_sec_per_volt = kv * np.pi / 30  # rads/sec/volt
 
+    ### Iterate through the motor equations until all quantities are known.
     while not (voltage_known and current_known and rpm_known and torque_known):
         if rpm_known:
             if current_known and not voltage_known:
