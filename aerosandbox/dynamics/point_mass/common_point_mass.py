@@ -541,17 +541,57 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @property
     def translational_kinetic_energy(self) -> float:
+        """
+        Computes the kinetic energy [J] from translational motion.
+
+        KE = 0.5 * m * v^2
+
+        Returns:
+            Kinetic energy [J]
+        """
         return 0.5 * self.mass_props.mass * self.speed ** 2
 
     @property
-    def kinetic_energy(self):
-        return self.translational_kinetic_energy
+    def rotational_kinetic_energy(self) -> float:
+        """
+        Computes the kinetic energy [J] from rotational motion.
+
+        KE = 0.5 * I * w^2
+
+        Returns:
+            Kinetic energy [J]
+        """
+        return 0.5 * (
+                self.mass_props.Ixx * self.p ** 2 +
+                self.mass_props.Iyy * self.q ** 2 +
+                self.mass_props.Izz * self.r ** 2
+        )
 
     @property
-    def potential_energy(self, g=9.81):
+    def kinetic_energy(self):
         """
-        Gives the potential energy [J] from gravity.
+        Computes the kinetic energy [J] from translational and rotational motion.
+
+        KE = 0.5 * m * v^2 + 0.5 * I * w^2
+
+        Returns:
+            Kinetic energy [J]
+        """
+        return self.translational_kinetic_energy + self.rotational_kinetic_energy
+
+    @property
+    def potential_energy(self,
+                         g: float = 9.81
+                         ):
+        """
+        Computes the potential energy [J] from gravity.
 
         PE = mgh
+
+        Args:
+            g: Acceleration due to gravity [m/s^2]
+
+        Returns:
+            Potential energy [J]
         """
         return self.mass_props.mass * g * self.altitude
