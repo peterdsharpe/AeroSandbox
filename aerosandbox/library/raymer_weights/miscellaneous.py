@@ -2,6 +2,9 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
 
+# From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
+# Table 15.3: Miscellaneous Weights
+
 mass_passenger = 215 * u.lbm  # includes carry-on
 
 
