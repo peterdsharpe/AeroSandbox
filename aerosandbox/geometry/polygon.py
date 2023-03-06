@@ -11,14 +11,18 @@ class Polygon(AeroSandboxObject):
     def x(self) -> np.ndarray:
         """
         Returns the x coordinates of the polygon. Equivalent to Polygon.coordinates[:,0].
-        :return: X coordinates as a vector
+
+        Returns:
+            X coordinates as a vector
         """
         return self.coordinates[:, 0]
 
     def y(self) -> np.ndarray:
         """
         Returns the y coordinates of the polygon. Equivalent to Polygon.coordinates[:,1].
-        :return: Y coordinates as a vector
+
+        Returns:
+            Y coordinates as a vector
         """
         return self.coordinates[:, 1]
 
@@ -94,9 +98,9 @@ class Polygon(AeroSandboxObject):
         dx = np.diff(self.x())
         dy = np.diff(self.y())
         ds = (
-            dx ** 2 +
-            dy ** 2
-        ) ** 0.5
+                     dx ** 2 +
+                     dy ** 2
+             ) ** 0.5
 
         return np.sum(ds)
 
