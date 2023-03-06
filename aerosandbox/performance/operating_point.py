@@ -303,6 +303,16 @@ class OperatingPoint(AeroSandboxObject):
             self.atmosphere.density() / Atmosphere(altitude=0, method="isa").density()
         )
 
+    def energy_altitude(self):
+        """
+        Returns the energy altitude associated with the current flight condition, in meters.
+
+        The energy altitude is the altitude at which a stationary aircraft would have the same total energy (kinetic
+        + gravitational potential) as the aircraft at the current flight condition.
+
+        """
+        return self.atmosphere.altitude + 1 / (2 * 9.81) * self.velocity ** 2
+
     def convert_axes(self,
                      x_from: Union[float, np.ndarray],
                      y_from: Union[float, np.ndarray],
