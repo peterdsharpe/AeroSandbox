@@ -126,10 +126,15 @@ def motor_resistance_from_no_load_current(
 ):
     """
     Estimates the internal resistance of a motor from its no_load_current. Gates quotes R^2=0.93 for this model.
+
     Source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass Optimization for Solar-Regen..."
         https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&context=facpub
-    :param no_load_current: No-load current [amps]
-    :return: motor internal resistance [ohms]
+
+    Args:
+        no_load_current: No-load current [amps]
+
+    Returns:
+        motor internal resistance [ohms]
     """
     return 0.0467 * no_load_current ** -1.892
 
@@ -139,9 +144,14 @@ def mass_ESC(
 ):
     """
     Estimates the mass of an ESC.
-    Informal correlation I did to Hobbyking ESCs in the 8s 100A range
-    :param max_power: maximum power [W]
-    :return: estimated ESC mass [kg]
+
+    Informal correlation I did to Hobbyking ESCs in the 8S LiPo, 100A range
+
+    Args:
+        max_power: maximum power [W]
+
+    Returns:
+        estimated ESC mass [kg]
     """
     return 2.38e-5 * max_power
 
@@ -149,14 +159,23 @@ def mass_ESC(
 def mass_battery_pack(
         battery_capacity_Wh,
         battery_cell_specific_energy_Wh_kg=240,
-        battery_pack_cell_fraction=0.7,  # Figure given by Ed Lovelace in a Feb. 2020 presentation for MIT 16.82
+        battery_pack_cell_fraction=0.7,
 ):
     """
     Estimates the mass of a lithium-polymer battery.
-    :param battery_capacity_Wh: Battery capacity, in Watt-hours [W*h]
-    :param battery_cell_specific_energy: Specific energy of the battery at the CELL level [W*h/kg]
-    :param battery_pack_cell_fraction: Fraction of the battery pack that is cells, by weight.
-    :return: Estimated battery mass [kg]
+
+    Args:
+        battery_capacity_Wh: Battery capacity, in Watt-hours [W*h]
+
+        battery_cell_specific_energy: Specific energy of the battery at the CELL level [W*h/kg]
+
+        battery_pack_cell_fraction: Fraction of the battery pack that is cells, by weight.
+
+            * Note: Ed Lovelace, a battery engineer for Aurora Flight Sciences, gives this figure as 0.70 in a Feb.
+            2020 presentation for MIT 16.82
+
+    Returns:
+        Estimated battery mass [kg]
     """
     return battery_capacity_Wh / battery_cell_specific_energy_Wh_kg / battery_pack_cell_fraction
 
