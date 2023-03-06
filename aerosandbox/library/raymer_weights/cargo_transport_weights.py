@@ -15,7 +15,7 @@ def mass_wing(
     Args:
         wing: The wing object.
 
-        design_mass_TOGW: Design take-off gross weight of the entire airplane [kg].
+        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
 
         ultimate_load_factor: Ultimate load factor of the airplane.
 
@@ -32,7 +32,7 @@ def mass_wing(
     return (
             0.0051 *
             (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.557 *
-            (wing.area() / u.foot ** 2) ** 0.649 *
+            (wing.area('planform') / u.foot ** 2) ** 0.649 *
             wing.aspect_ratio() ** 0.5 *
             airfoil_t_over_c ** -0.4 *
             (1 + wing.taper_ratio()) ** 0.1 *
@@ -149,7 +149,7 @@ def mass_vstab(
             (design_mass_TOGW / u.lbm) ** 0.556 *
             ultimate_load_factor ** 0.536 *
             (wing_to_vstab_distance / u.foot) ** -0.5 *
-            (vstab.area() / u.foot ** 2) ** 0.5 *
+            (vstab.area('planform') / u.foot ** 2) ** 0.5 *
             (aircraft_z_radius_of_gyration / u.foot) ** 0.875 *
             np.cosd(vstab.mean_sweep_angle()) ** -1 *
             vstab.aspect_ratio() ** 0.35 *
@@ -315,7 +315,7 @@ def mass_nose_landing_gear(
     ) * u.lbm
 
 
-def mass_nacelle_group(
+def mass_nacelles(
         nacelle_length: float,
         nacelle_width: float,
         nacelle_height: float,
@@ -327,7 +327,7 @@ def mass_nacelle_group(
         engines_have_thrust_reversers: bool = False,
 ) -> float:
     """
-    Computes the mass of the nacelle group for a cargo/transport aircraft, according to Raymer's Aircraft
+    Computes the mass of the nacelles for a cargo/transport aircraft, according to Raymer's Aircraft
     Design: A Conceptual Approach. Excludes the engine itself and immediate engine peripherals.
 
     Args:
@@ -350,7 +350,7 @@ def mass_nacelle_group(
         engines_have_thrust_reversers: whether the engines have thrust reversers or not
 
     Returns:
-        mass of the nacelle group [kg]
+        mass of the nacelles [kg]
     """
     K_ng = 1.017 if is_pylon_mounted else 1
 
@@ -374,7 +374,7 @@ def mass_nacelle_group(
             (nacelle_length / u.foot) ** 0.10 *
             (nacelle_width / u.foot) ** 0.294 *
             (ultimate_load_factor) ** 0.119 *
-            (mass_engine_and_contents / u.lbm) ** 0.611 *
+            (mass_per_engine_with_contents / u.lbm) ** 0.611 *
             (n_engines) ** 0.984 *
             (nacelle_wetted_area / u.foot ** 2) ** 0.224
     )
@@ -432,15 +432,16 @@ def mass_fuel_system(
         fraction_in_integral_tanks: float = 0.5,
 ) -> float:
     """
-    Computes the mass of the fuel system (e.g., tanks, pumps, but not the fuel itself) for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Computes the mass of the fuel system (e.g., tanks, pumps, but not the fuel itself) for a cargo/transport
+    aircraft, according to Raymer's Aircraft Design: A Conceptual Approach.
 
     Args:
         fuel_volume: The volume of fuel in the aircraft [m^3].
 
         n_tanks: The number of fuel tanks in the aircraft.
 
-        fraction_in_integral_tanks: The fraction of the fuel volume that is in integral tanks, as opposed to protected tanks.
+        fraction_in_integral_tanks: The fraction of the fuel volume that is in integral tanks, as opposed to
+        protected tanks.
 
     Returns:
         The mass of the fuel system [kg].
@@ -470,7 +471,8 @@ def mass_flight_controls(
 
         aircraft_Iyy: The moment of inertia of the aircraft about the y-axis.
 
-        fraction_of_mechanical_controls: The fraction of the flight controls that are mechanical, as opposed to hydraulic.
+        fraction_of_mechanical_controls: The fraction of the flight controls that are mechanical, as opposed to
+        hydraulic.
 
     Returns:
         The mass of the flight controls [kg].
@@ -723,8 +725,8 @@ def mass_military_cargo_handling_system(
         cargo_floor_area: float,
 ):
     """
-    Computes the mass of the military cargo handling system for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Computes the mass of the military cargo handling system for a cargo/transport aircraft, according to Raymer's
+    Aircraft Design: A Conceptual Approach.
 
     Args:
         cargo_floor_area: The floor area of the cargo compartment [meters^2].
