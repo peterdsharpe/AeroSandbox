@@ -37,7 +37,7 @@ class OperatingPoint(AeroSandboxObject):
 
         """
         self.atmosphere = atmosphere
-        self.velocity = velocity  # TODO rename "airspeed"?
+        self.velocity = velocity
         self.alpha = alpha
         self.beta = beta
         self.p = p
