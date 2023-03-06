@@ -421,6 +421,29 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
 
     return Cd_wave
 
+def fuselage_upsweep_drag_area(
+        upsweep_angle_rad: float,
+        fuselage_xsec_area_max: float,
+) -> float:
+    """
+    Calculates the drag area (in m^2) of the aft end of a fuselage with a given upsweep angle.
+
+    Upsweep is the characteristic shape seen on the aft end of many fuselages in transport aircraft, where the
+    centerline of the fuselage is angled upwards near the aft end. This is done to reduce the required landing gear
+    height for adequate takeoff rotation, which in turn reduces mass. This nonzero centerline angle can cause some
+    separation drag, which is predicted here.
+
+    Equation is from Raymer, Aircraft Design: A Conceptual Approach, 5th Ed., Eq. 12.36, pg. 440.
+
+    Args:
+        upsweep_angle_rad: The upsweep angle of the aft end of the fuselage relative to the centerline, in radians.
+
+        fuselage_xsec_area_max: The maximum cross-sectional area of the fuselage, in m^2.
+
+    Returns: The drag area of the aft end of the fuselage [m^2]. This is equivalent to D/q, where D is the drag force
+    and q is the dynamic pressure.
+    """
+    return 3.83 * np.abs(upsweep_angle_rad) ** 2.5 * fuselage_xsec_area_max
 
 if __name__ == "__main__":
     pass
