@@ -114,3 +114,59 @@ def thin_walled_tube_crippling_buckling_critical_load(
     crippling_load = crippling_stress * tube_xsec_area
 
     return crippling_load
+
+
+def plate_buckling_critical_load(
+        length: float,
+        width: float,
+        wall_thickness: float,
+        elastic_modulus: float,
+        side_boundary_condition_type: str = "clamp-clamp",
+):
+    """
+    Computes the critical compressive load (in N) for a plate to buckle via plate buckling.
+
+    Assumes a rectangular plate with dimensions:
+    - length
+    - width
+    - wall_thickness
+
+    A compressive force is applied such that it is aligned with the length dimension of the plate.
+
+    Uses constants from NACA TN3781.
+
+    Args:
+        length: The length of the plate, in m.
+
+        width: The width of the plate, in m.
+
+        wall_thickness: The wall thickness of the plate, in m.
+
+        elastic_modulus: The elastic modulus of the material, in Pa.
+
+        side_boundary_condition_type: The boundary condition type at the sides of the plate. Options are:
+            - "clamp-clamp"
+            - "pin-pin"
+            - "free-free"
+
+    Returns:
+        The critical compressive load (in N) for the plate to buckle via plate buckling.
+
+    """
+
+    if side_boundary_condition_type == "clamp-clamp":
+        K = 6.35  # From NACA TN3781
+    elif side_boundary_condition_type == "pin-pin":
+        K = 3.62  # From NACA TN3781
+    elif side_boundary_condition_type == "free-free":
+        K = 0.385  # From NACA TN3781
+    else:
+        raise ValueError("Invalid `side_boundary_condition_type`.")
+
+    critical_buckling_stress = K * elastic_modulus * (wall_thickness / width) ** 2
+
+    plate_xsec_area = thickness * width
+
+    critical_buckling_load = critical_buckling_stress * plate_xsec_area
+
+    return critical_buckling_load
