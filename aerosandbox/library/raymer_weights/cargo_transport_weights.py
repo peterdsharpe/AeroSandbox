@@ -56,7 +56,7 @@ def mass_hstab(
     Args:
         hstab: The horizontal stabilizer object.
 
-        design_mass_TOGW: Design take-off gross weight of the entire airplane [kg].
+        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
 
         ultimate_load_factor: Ultimate load factor of the airplane.
 
@@ -117,7 +117,7 @@ def mass_vstab(
     Args:
         vstab: The vertical stabilizer object.
 
-        design_mass_TOGW: Design take-off gross weight of the entire airplane [kg].
+        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
 
         ultimate_load_factor: Ultimate load factor of the airplane.
 
@@ -174,7 +174,7 @@ def mass_fuselage(
     Args:
         fuselage: The fuselage object.
 
-        design_mass_TOGW: Design take-off gross weight of the entire airplane [kg].
+        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
 
         ultimate_load_factor: Ultimate load factor of the airplane.
 
@@ -246,7 +246,7 @@ def mass_main_landing_gear(
 
         landing_speed: landing speed [m/s].
 
-        design_mass_TOGW: Design take-off gross weight of the entire airplane [kg].
+        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
 
         is_kneeling: whether the main landing gear is capable of kneeling.
 
@@ -290,7 +290,7 @@ def mass_nose_landing_gear(
     Args:
         nose_gear_length: Length of nose landing gear when fully-extended [m].
 
-        design_mass_TOGW: Design take-off gross weight of the entire airplane [kg].
+        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
 
         is_kneeling: Whether the nose landing gear is capable of kneeling.
 
@@ -477,10 +477,13 @@ def mass_flight_controls(
     Returns:
         The mass of the flight controls [kg].
     """
+
+    ### Compute how many functions the control surfaces are performing (e.g., aileron, elevator, flap, rudder, etc.)
     N_functions_performed_by_controls = 0
     for wing in airplane.wings:
         N_functions_performed_by_controls += len(wing.get_control_surface_names())
 
+    ### Compute the control surface area
     control_surface_area = 0
     for wing in airplane.wings:
         control_surface_area += wing.control_surface_area()
@@ -617,21 +620,21 @@ def mass_electrical(
 
 
 def mass_avionics(
-        uninstalled_avionics_weight: float,
+        mass_uninstalled_avionics: float,
 ):
     """
     Computes the mass of the avionics for a cargo/transport aircraft, according to Raymer's Aircraft
     Design: A Conceptual Approach.
 
     Args:
-        uninstalled_avionics_weight: The weight of the avionics, before installation [kg].
+        mass_uninstalled_avionics: The mass of the avionics, before installation [kg].
 
     Returns:
         The mass of the avionics, as installed [kg].
     """
     return (
             1.73 *
-            (uninstalled_avionics_weight / u.lbm) ** 0.983
+            (mass_uninstalled_avionics / u.lbm) ** 0.983
     ) * u.lbm
 
 
@@ -663,29 +666,32 @@ def mass_furnishings(
 
 
 def mass_air_conditioning(
+        n_crew: int,
         n_pax: int,
         volume_pressurized: float,
-        uninstalled_avionics_weight: float,
+        mass_uninstalled_avionics: float,
 ):
     """
     Computes the mass of the air conditioning system for a cargo/transport aircraft, according to Raymer's Aircraft
     Design: A Conceptual Approach.
 
     Args:
+        n_crew: The number of crew members on the airplane.
+
         n_pax: The number of passengers on the airplane.
 
         volume_pressurized: The volume of the pressurized cabin [meters^3].
 
-        uninstalled_avionics_weight: The weight of the avionics, before installation [kg].
+        mass_uninstalled_avionics: The mass of the avionics, before installation [kg].
 
     Returns:
         The mass of the air conditioning system [kg].
     """
     return (
             62.36 *
-            n_pax ** 0.25 *
+            (n_crew + n_pax) ** 0.25 *
             (volume_pressurized / u.foot ** 3 / 1e3) ** 0.604 *
-            (uninstalled_avionics_weight / u.lbm) ** 0.10
+            (mass_uninstalled_avionics / u.lbm) ** 0.10
     ) * u.lbm
 
 
@@ -697,7 +703,7 @@ def mass_anti_ice(
     Design: A Conceptual Approach.
 
     Args:
-        design_mass_TOGW: The design takeoff gross weight of the airplane [kg].
+        design_mass_TOGW: The design takeoff gross weight of the entire airplane [kg].
 
     Returns:
         The mass of the anti-ice system [kg].
@@ -713,7 +719,7 @@ def mass_handling_gear(
     Design: A Conceptual Approach.
 
     Args:
-        design_mass_TOGW: The design takeoff gross weight of the airplane [kg].
+        design_mass_TOGW: The design takeoff gross weight of the entire airplane [kg].
 
     Returns:
         The mass of the handling gear [kg].
