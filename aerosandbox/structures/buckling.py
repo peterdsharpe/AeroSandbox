@@ -81,6 +81,11 @@ def thin_walled_tube_crippling_buckling_critical_load(
 
         and E is the elastic modulus, t is the wall thickness, and r is the radius.
 
+    For more info, see the Air Force Stress Manual, Section 2.3.2.1:
+    https://engineeringlibrary.org/reference/column-crippling-air-force-stress-manual
+
+    And see Raymer: Aircraft Design: A Conceptual Approach, 5th Edition, pg. 554.
+
     Args:
         elastic_modulus: The elastic modulus of the material, in Pa.
 
