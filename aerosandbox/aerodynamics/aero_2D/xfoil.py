@@ -402,7 +402,8 @@ class XFoil(ExplicitAnalysis):
         )
 
     def cl(self,
-           cl: Union[float, np.ndarray]
+           cl: Union[float, np.ndarray],
+           start_at: Union[float, None] = 0,
            ) -> Dict[str, np.ndarray]:
         """
         Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
@@ -410,11 +411,50 @@ class XFoil(ExplicitAnalysis):
         Args:
             cl: The lift coefficient [-]. Can be either a float or an iterable of floats, such as an array.
 
+            start_at: Chooses whether to split a large sweep into two runs that diverge away from some central value,
+            to improve convergence. As an example, if you wanted to sweep from cl=-1.5 to cl=1.5, you might want to
+            instead do two sweeps and stitch them together: 0 to 1.5, and 0 to -1.5. `start_at` can be either:
+
+                * None, in which case the cl inputs are run as a single sequence in the order given.
+
+                * A float that corresponds to an lift coefficient, in which case the cl inputs are
+                split into two sequences that diverge from the `start_at` value. Successful runs are then sorted by
+                `alpha` before returning.
+
+
         Returns: A dictionary with the XFoil results. Dictionary values are arrays; they may not be the same shape as
         your input array if some points did not converge.
 
         """
         cls = np.array(cl).reshape(-1)
+
+        if np.length(cls) > 1:
+            if start_at is not None:
+                if np.min(cls) < start_at < np.max(cls):
+                    cls = np.sort(cls)
+                    cls_upper = cls[cls > start_at]
+                    cls_lower = cls[cls <= start_at][::-1]
+
+                    output = self._run_xfoil(
+                        "\n".join(
+                            [
+                                f"cl {c}" + ("\nfmom" if self.hinge_point_x is not None else "")
+                                for c in cls_upper
+                            ] + [
+                                "init"
+                            ] + [
+                                f"cl {c}" + ("\nfmom" if self.hinge_point_x is not None else "")
+                                for c in cls_lower
+                            ]
+                        )
+                    )
+
+                    sort_order = np.argsort(output['alpha'])
+                    output = {
+                        k: v[sort_order]
+                        for k, v in output.items()
+                    }
+                    return output
 
         return self._run_xfoil(
             "\n".join([
@@ -435,5 +475,5 @@ if __name__ == '__main__':
         # verbose=True,
     )
     result_at_single_alpha = xf.alpha(5)
-    result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
+    result_at_several_CLs = xf.cl([-0.1, 0.5, 0.7, 0.8, 0.9])
     result_at_multiple_alphas = xf.alpha([3, 5, 60])  # Note: if a result does
