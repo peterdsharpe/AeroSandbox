@@ -231,4 +231,4 @@ def stack_coordinates(
     Returns: A Nx2 ndarray of [x, y] coordinates.
 
     """
-    return np.vstack((x, y)).T
+    return np.stack((x, y), axis=1)
