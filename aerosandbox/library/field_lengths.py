@@ -71,6 +71,9 @@ def field_length_analysis(
 
         maximum_braking_deceleration_g: The maximum deceleration of the aircraft during braking [G].
 
+            This is used when calculating the "brake" portion of the "accelerate-brake" balanced field length, as well
+            as the braking during normal landing.
+
             * Standard brakes are around 0.37 G on dry concrete.
 
             * Advanced brakes with optimum brake pressure control, lift dumpers, and nosewheel braking can be as high
@@ -243,7 +246,7 @@ def field_length_analysis(
     V_approach = V_approach_over_V_stall * V_stall
     V_touchdown = V_liftoff
 
-    landing_airborne_distance = (
+    landing_airborne_distance = ( # From Torenbeek
                                         (V_approach ** 2 - V_touchdown ** 2) / (2 * g) + obstacle_height
                                 ) / gamma_bar_landing
 
