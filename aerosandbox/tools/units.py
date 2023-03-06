@@ -29,9 +29,10 @@ newton = 1
 lbf = slug * foot
 
 # Speed (equivalents in m/s)
-knot = 1.852 * 1000 / hour
+kph = 1000 * meter / hour
+knot = 1.852 * kph
 mph = mile / hour
-fps = foot / 1
+fps = foot / second
 
 # Volume (equivalents in m^3)
 liter = 0.001
