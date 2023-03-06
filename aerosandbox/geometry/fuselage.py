@@ -512,7 +512,7 @@ class FuselageXSec(AeroSandboxObject):
     """
 
     def __init__(self,
-                 xyz_c: Union[np.ndarray, List[float]] = np.array([0, 0, 0]),
+                 xyz_c: Union[np.ndarray, List[float]] = None,
                  radius: float = None,
                  width: float = None,
                  height: float = None,
@@ -578,6 +578,8 @@ class FuselageXSec(AeroSandboxObject):
                 >>> }
         """
         ### Set defaults
+        if xyz_c is None:
+            xyz_c = np.array([0., 0., 0.])
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
