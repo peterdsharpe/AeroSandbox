@@ -106,7 +106,7 @@ class Wing(AeroSandboxObject):
         return f"Wing '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'}, {symmetry_description})"
 
     def translate(self,
-                  xyz: Union[np.ndarray, List]
+                  xyz: Union[np.ndarray, List[float]]
                   ) -> 'Wing':
         """
         Translates the entire Wing by a certain amount.
