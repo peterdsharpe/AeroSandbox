@@ -135,16 +135,27 @@ def mass_motor_electric(
     Estimates the mass of a brushless DC electric motor.
     Curve fit to scraped Hobbyking BLDC motor data as of 2/24/2020.
     Estimated range of validity: 50 < max_power < 10000
-    :param max_power: maximum power [W]
-    :param kv: Voltage constant of the motor, measured in rpm/volt, not rads/sec/volt! [rpm/volt]
-    :param voltage: Operating voltage of the motor [V]
-    :param method: method to use. "burton", "hobbyking", or "astroflight" (increasing level of detail).
-    Burton source: https://dspace.mit.edu/handle/1721.1/112414
-    Hobbyking source: C:\Projects\GitHub\MotorScraper, https://github.com/austinstover/MotorScraper
-    Astroflight source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass Optimization for Solar-Regen..."
-        https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&context=facpub
-        Validity claimed from 1.5 kW to 15 kW, kv from 32 to 1355.
-    :return: estimated motor mass [kg]
+
+    Args:
+        max_power (float): maximum power [W]
+
+        kv_rpm_volt (float): Voltage constant of the motor, measured in rpm/volt, not rads/sec/volt! [rpm/volt]
+
+        voltage (float): Operating voltage of the motor [V]
+
+        method (str): method to use. "burton", "hobbyking", or "astroflight" (increasing level of detail).
+
+            * Burton source: https://dspace.mit.edu/handle/1721.1/112414
+
+            * Hobbyking source: C:\Projects\GitHub\MotorScraper,
+
+            * Astroflight source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass Optimization for
+            Solar-Regen..." https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&context=facpub
+
+                * Validity claimed from 1.5 kW to 15 kW, kv from 32 to 1355.
+
+    Returns:
+        Estimated motor mass [kg]
     """
     if method == "burton":
         return max_power / 4128  # Less sophisticated model. 95% CI (3992, 4263), R^2 = 0.866
