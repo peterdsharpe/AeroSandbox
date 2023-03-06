@@ -3,6 +3,9 @@ import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
 
 
+# From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
+# Section 15.3.2: Cargo/Transport Weights
+
 def mass_wing(
         wing: asb.Wing,
         design_mass_TOGW: float,
