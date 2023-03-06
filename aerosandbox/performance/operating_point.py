@@ -17,16 +17,24 @@ class OperatingPoint(AeroSandboxObject):
                  r: float = 0.,
                  ):
         """
-        An object that represents the instantaneous flight conditions of an aircraft.
+        An object that represents the instantaneous aerodynamic flight conditions of an aircraft.
 
         Args:
-            atmosphere:
-            velocity: The flight velocity, expressed in true airspeed. [m/s]
+            atmosphere: The atmosphere object (of type asb.Atmosphere). Defaults to sea level conditions.
+
+            velocity: The flight velocity, expressed as a true airspeed. [m/s]
+
             alpha: The angle of attack. [degrees]
-            beta: The sideslip angle. (Reminder: convention that a positive beta implies that the oncoming air comes from the pilot's right-hand side.) [degrees]
+
+            beta: The sideslip angle. (Reminder: convention that a positive beta implies that the oncoming air comes
+            from the pilot's right-hand side.) [degrees]
+
             p: The roll rate about the x_b axis. [rad/sec]
+
             q: The pitch rate about the y_b axis. [rad/sec]
+
             r: The yaw rate about the z_b axis. [rad/sec]
+
         """
         self.atmosphere = atmosphere
         self.velocity = velocity  # TODO rename "airspeed"?
