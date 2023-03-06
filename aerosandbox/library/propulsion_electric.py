@@ -234,18 +234,55 @@ def mass_wires(
 ):
     """
     Estimates the mass of wires used for power transmission.
+
     Materials data from: https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistivity-density_product
         All data measured at STP; beware, as this data (especially resistivity) can be a strong function of temperature.
-    :param wire_length: Length of the wire [m]
-    :param max_current: Max current of the wire [Amps]
-    :param allowable_voltage_drop: How much is the voltage allowed to drop along the wire?
-    :param material: Conductive material of the wire ("aluminum")
-    :param insulated: Should we add the mass of the wire's insulator coating? Usually you'll want to leave this True.
-    :param max_voltage: Maximum allowable voltage (used for sizing insulator). 600 is a common off-the-shelf rating.
-    :param wire_packing_factor: What fraction of the enclosed cross section is conductor? This is 1 for a solid-core wire and less than 1 for a stranded wire.
-    :param insulator_density: Density of the wire insulator [kg/m^3]
-    :param insulator_dielectric_strength: Dielectric strength of the wire insulator [V/m]. 12e6 corresponds to rubber.
-    :return: Mass of the wire [kg]
+
+    Args:
+        wire_length (float): Length of the wire [m]
+
+        max_current (float): Max current of the wire [Amps]
+
+        allowable_voltage_drop (float): How much is the voltage allowed to drop along the wire?
+
+        material (str): Conductive material of the wire ("aluminum"). Determines density and resistivity. One of:
+
+            * "sodium"
+
+            * "lithium"
+
+            * "calcium"
+
+            * "potassium"
+
+            * "beryllium"
+
+            * "aluminum"
+
+            * "magnesium"
+
+            * "copper"
+
+            * "silver"
+
+            * "gold"
+
+            * "iron"
+
+        insulated (bool): Should we add the mass of the wire's insulator coating? Usually you'll want to leave this True.
+
+        max_voltage (float): Maximum allowable voltage (used for sizing insulator). 600 is a common off-the-shelf rating.
+
+        wire_packing_factor (float): What fraction of the enclosed cross section is conductor? This is 1 for solid wire,
+            and less for stranded wire.
+
+        insulator_density (float): Density of the insulator [kg/m^3]
+
+        insulator_dielectric_strength (float): Dielectric strength of the insulator [V/m]. The default value of 12e6 corresponds
+        to rubber.
+
+    Returns:
+        Estimated mass of wires [kg]
     """
     if material == "sodium":  # highly reactive with water & oxygen, low physical strength
         density = 970  # kg/m^3
