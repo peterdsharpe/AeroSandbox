@@ -1,8 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union, Tuple, Optional
-from pathlib import Path
-import aerosandbox.geometry.mesh_utilities as mesh_utils
 import copy
 
 
