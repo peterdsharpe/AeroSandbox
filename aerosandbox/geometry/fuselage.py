@@ -10,17 +10,17 @@ class Fuselage(AeroSandboxObject):
 
     Anatomy of a Fuselage:
 
-        A fuselage consists chiefly of a collection of cross sections, or "xsecs". A cross section is a 2D "slice" of
+        A fuselage consists chiefly of a collection of cross-sections, or "xsecs". A cross-section is a 2D "slice" of
         a fuselage. These can be accessed with `Fuselage.xsecs`, which gives a list of xsecs in the Fuselage. Each
         xsec is a FuselageXSec object, a class that is defined separately.
 
-        You may also see references to fuselage "sections", which are different than cross sections (xsecs)! Sections
-        are the portions of the fuselage that are in between xsecs. In other words, a fuselage with N cross sections
+        You may also see references to fuselage "sections", which are different than cross-sections (xsecs)! Sections
+        are the portions of the fuselage that are in between xsecs. In other words, a fuselage with N cross-sections
         (xsecs, FuselageXSec objects) will always have N-1 sections. Sections are never explicitly defined,
-        since you can get all needed information by lofting from the adjacent cross sections. For example,
-        section 0 (the first one) is a loft between cross sections 0 and 1.
+        since you can get all needed information by lofting from the adjacent cross-sections. For example,
+        section 0 (the first one) is a loft between cross-sections 0 and 1.
 
-        Fuselages are lofted linearly between cross sections.
+        Fuselages are lofted linearly between cross-sections.
 
     """
 
@@ -37,7 +37,7 @@ class Fuselage(AeroSandboxObject):
 
             name: Name of the fuselage [optional]. It can help when debugging to give each fuselage a sensible name.
 
-            xsecs: A list of fuselage cross sections ("xsecs") in the form of FuselageXSec objects.
+            xsecs: A list of fuselage cross-sections ("xsecs") in the form of FuselageXSec objects.
 
             analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
             that should be passed on to specific analyses and associated with this specific geometry object.
@@ -188,7 +188,7 @@ class Fuselage(AeroSandboxObject):
     def length(self) -> float:
         """
         Returns the total front-to-back length of the fuselage. Measured as the difference between the x-coordinates
-        of the leading and trailing cross sections.
+        of the leading and trailing cross-sections.
         :return:
         """
         return np.fabs(self.xsecs[-1].xyz_c[0] - self.xsecs[0].xyz_c[0])
@@ -202,7 +202,7 @@ class Fuselage(AeroSandboxObject):
         Args:
 
             _sectional: A boolean. If False, returns the total volume. If True, returns a list of volumes for each of
-            the `n-1` lofted sections (between the `n` fuselage cross sections in fuselage.xsec).
+            the `n-1` lofted sections (between the `n` fuselage cross-sections in fuselage.xsec).
 
         Returns:
 
@@ -526,7 +526,7 @@ class FuselageXSec(AeroSandboxObject):
 
         Args:
 
-            xyz_c: An array-like that represents the xyz-coordinates of the center of this fuselage cross section,
+            xyz_c: An array-like that represents the xyz-coordinates of the center of this fuselage cross-section,
             in geometry axes.
 
             To define the
