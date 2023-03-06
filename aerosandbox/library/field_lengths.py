@@ -3,22 +3,6 @@ import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
 
 
-def V_stall(
-        CL_max: float,
-        s_ref: float,
-        design_mass_TOGW: float,
-        atmosphere: asb.Atmosphere = None
-):
-    if atmosphere is None:
-        atmosphere = asb.Atmosphere(altitude=0)
-
-    weight = design_mass_TOGW * 9.81
-
-    return np.sqrt(
-        2 * weight / (atmosphere.density() * s_ref * CL_max)
-    )
-
-
 def field_length_analysis(
         design_mass_TOGW: float,
         thrust_at_liftoff: float,
