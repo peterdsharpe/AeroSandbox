@@ -214,6 +214,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         return new_instance
 
     def __len__(self):
+        """
+        Returns the length of the (vectorized) state vector of the system.
+
+        If no elements of the state vector are vectorized, returns 1.
+        """
         length = 1
         for v in self.state.values():
             if np.length(v) == 1:
@@ -320,10 +325,15 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         Args:
                 x_from: x-component of the vector, in `from_axes` frame.
+
                 y_from: y-component of the vector, in `from_axes` frame.
+
                 z_from: z-component of the vector, in `from_axes` frame.
-                from_axes: The axes to convert from.
-                to_axes: The axes to convert to.
+
+                from_axes: The axes to convert from. See above for options.
+
+                to_axes: The axes to convert to. See above for options.
+
 
         Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
 
@@ -338,12 +348,15 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                   axes: str = "wind",
                   ) -> None:
         """
-        Adds a force (in whichever axis system you choose) to this dynamics instance.
+        Adds a force (in whichever axis system you choose) to this Dynamics instance.
 
         Args:
             Fx: Force in the x-direction in the axis system chosen. [N]
+
             Fy: Force in the y-direction in the axis system chosen. [N]
+
             Fz: Force in the z-direction in the axis system chosen. [N]
+
             axes: The axis system that the specified force is in. One of:
                 * "geometry"
                 * "body"
@@ -359,6 +372,15 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def add_gravity_force(self,
                           g=9.81
                           ) -> None:
+        """
+        In-place modifies the forces associated with this Dynamics instance: adds a force in the -z direction,
+        equal to the weight of the aircraft.
+
+        Args:
+            g: The gravitational acceleration. [m/s^2]
+
+        Returns: None (in-place)
+        """
         self.add_force(
             Fz=self.mass_props.mass * g,
             axes="earth",
@@ -366,6 +388,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @property
     def op_point(self):
+        """
+        Returns an OperatingPoint object that represents the current state of the dynamics instance.
+
+        This OperatingPoint object is effectively a subset of the state variables, and is used to compute aerodynamic
+        forces and moments.
+        """
         return OperatingPoint(
             atmosphere=Atmosphere(altitude=self.altitude),
             velocity=self.speed,
