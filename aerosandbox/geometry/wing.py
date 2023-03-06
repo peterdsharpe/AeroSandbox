@@ -14,17 +14,17 @@ class Wing(AeroSandboxObject):
 
     Anatomy of a Wing:
 
-        A wing consists chiefly of a collection of cross sections, or "xsecs". A cross section is a 2D "slice" of a
+        A wing consists chiefly of a collection of cross-sections, or "xsecs". A cross-section is a 2D "slice" of a
         wing. These can be accessed with `Wing.xsecs`, which gives a list of xsecs in the Wing. Each xsec is a
         WingXSec object, a class that is defined separately.
 
-        You may also see references to wing "sections", which are different than cross sections (xsecs)! Sections are
-        the portions of the wing that are in between xsecs. In other words, a wing with N cross sections (xsecs,
+        You may also see references to wing "sections", which are different than cross-sections (xsecs)! Sections are
+        the portions of the wing that are in between xsecs. In other words, a wing with N cross-sections (xsecs,
         WingXSec objects) will always have N-1 sections. Sections are never explicitly defined, since you can get all
-        needed information by lofting from the adjacent cross sections. For example, section 0 (the first one) is a
-        loft between cross sections 0 and 1.
+        needed information by lofting from the adjacent cross-sections. For example, section 0 (the first one) is a
+        loft between cross-sections 0 and 1.
 
-        Wings are lofted linearly between cross sections.
+        Wings are lofted linearly between cross-sections.
 
     If the wing is symmetric across the XZ plane, just define the right half and supply `symmetric=True` in the
     constructor.
@@ -178,7 +178,7 @@ class Wing(AeroSandboxObject):
                 rather than the conventional right-hand side) will result in the tip WingXSec being used.
 
             _sectional: A boolean. If False, returns the total span. If True, returns a list of spans for each of the
-                `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
+                `n-1` lofted sections (between the `n` wing cross-sections in wing.xsec).
         """
         # Check inputs
         if include_centerline_distance and _sectional:
@@ -690,7 +690,7 @@ class Wing(AeroSandboxObject):
         Args:
 
             _sectional: A boolean. If False, returns the total volume. If True, returns a list of volumes for each of
-            the `n-1` lofted sections (between the `n` wing cross sections in wing.xsec).
+            the `n-1` lofted sections (between the `n` wing cross-sections in wing.xsec).
 
         Returns:
 
@@ -1083,12 +1083,12 @@ class Wing(AeroSandboxObject):
         Args:
 
             x_nondim: The nondimensional (chord-normalized) x-coordinate that the line should go through. Can either
-            be a single value used at all cross sections, or can be an iterable of values to be used at the
-            respective cross sections.
+            be a single value used at all cross-sections, or can be an iterable of values to be used at the
+            respective cross-sections.
 
             y_nondim: The nondimensional (chord-normalized) y-coordinate that the line should go through. Here,
             y-coordinate means the "vertical" component (think standard 2D airfoil axes). Can either be a single
-            value used at all cross sections, or can be an iterable of values to be used at the respective cross
+            value used at all cross-sections, or can be an iterable of values to be used at the respective cross
             sections.
 
             add_camber: Controls whether camber should be added to the line or not.
@@ -1294,11 +1294,11 @@ class Wing(AeroSandboxObject):
     def _compute_frame_of_WingXSec(
             self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Computes the local reference frame associated with a particular cross section (XSec) of this wing.
+        Computes the local reference frame associated with a particular cross-section (XSec) of this wing.
 
         Args:
 
-            index: Which cross section (as indexed in Wing.xsecs) should we get the frame of?
+            index: Which cross-section (as indexed in Wing.xsecs) should we get the frame of?
 
         Returns:
 
@@ -1350,8 +1350,8 @@ class Wing(AeroSandboxObject):
     def _compute_frame_of_section(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the local reference frame associated with a particular section. (Note that sections and cross
-        sections are different! Cross sections, or xsecs, are the vertices, and sections are the parts in between. In
-        other words, a wing with N cross sections (xsecs) will always have N-1 sections.
+        sections are different! cross-sections, or xsecs, are the vertices, and sections are the parts in between. In
+        other words, a wing with N cross-sections (xsecs) will always have N-1 sections.
 
         Args:
 
@@ -1391,7 +1391,7 @@ class Wing(AeroSandboxObject):
 
 class WingXSec(AeroSandboxObject):
     """
-    Definition for a wing cross section ("X-section").
+    Definition for a wing cross-section ("X-section").
     """
 
     def __init__(self,
@@ -1404,14 +1404,14 @@ class WingXSec(AeroSandboxObject):
                  **deprecated_kwargs,
                  ):
         """
-        Defines a new wing cross section.
+        Defines a new wing cross-section.
 
         Args:
 
-            xyz_le: An array-like that represents the xyz-coordinates of the leading edge of the cross section, in
+            xyz_le: An array-like that represents the xyz-coordinates of the leading edge of the cross-section, in
             geometry axes.
 
-            chord: Chord of the wing at this cross section.
+            chord: Chord of the wing at this cross-section.
 
             twist: Twist angle, in degrees, as defined about the leading edge.
 
@@ -1425,7 +1425,7 @@ class WingXSec(AeroSandboxObject):
 
                     * That direction vector is now the twist axis.
 
-            airfoil: Airfoil associated with this cross section. [aerosandbox.Airfoil]
+            airfoil: Airfoil associated with this cross-section. [aerosandbox.Airfoil]
 
             control_surfaces: A list of control surfaces in the form of ControlSurface objects.
 
