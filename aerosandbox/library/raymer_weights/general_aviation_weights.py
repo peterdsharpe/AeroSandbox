@@ -1,6 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
+from .fudge_factors import advanced_composites
 
 
 # From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
@@ -12,6 +13,7 @@ def mass_wing(
         ultimate_load_factor: float,
         mass_fuel_in_wing: float,
         cruise_op_point: asb.OperatingPoint,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of a wing of a general aviation aircraft, according to Raymer's Aircraft Design: A Conceptual
@@ -30,6 +32,10 @@ def mass_wing(
             optimizer land here.
 
         cruise_op_point: The cruise operating point of the aircraft.
+
+        use_advanced_composites: Whether to use advanced composites for the wing. If True, the wing mass is modified
+        accordingly.
+
     """
     if mass_fuel_in_wing == 0:
         fuel_weight_factor = 1
@@ -57,7 +63,8 @@ def mass_wing(
             (cruise_op_point.dynamic_pressure() / u.psf) ** 0.006 *
             wing.taper_ratio() ** 0.04 *
             (100 * airfoil_t_over_c / cos_sweep) ** -0.3 *
-            (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.49
+            (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.49 *
+            (advanced_composites["wing"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -66,6 +73,7 @@ def mass_hstab(
         design_mass_TOGW: float,
         ultimate_load_factor: float,
         cruise_op_point: asb.OperatingPoint,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of a horizontal stabilizer of a general aviation aircraft, according to Raymer's Aircraft Design:
@@ -79,6 +87,9 @@ def mass_hstab(
         ultimate_load_factor: The ultimate load factor of the aircraft.
 
         cruise_op_point: The cruise operating point of the aircraft.
+
+        use_advanced_composites: Whether to use advanced composites for the horizontal stabilizer. If True, the
+        hstab mass is modified accordingly.
 
     Returns:
         The mass of the horizontal stabilizer [kg].
@@ -99,7 +110,8 @@ def mass_hstab(
             (hstab.area('planform') / u.foot ** 2) ** 0.896 *
             (100 * airfoil_t_over_c / cos_sweep) ** -0.12 *
             (hstab.aspect_ratio() / cos_sweep ** 2) ** 0.043 *
-            hstab.taper_ratio() ** -0.02
+            hstab.taper_ratio() ** -0.02 *
+            (advanced_composites["tails"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -109,7 +121,8 @@ def mass_vstab(
         ultimate_load_factor: float,
         cruise_op_point: asb.OperatingPoint,
         is_t_tail: bool = False,
-):
+        use_advanced_composites: bool = False,
+) -> float:
     """
     Computes the mass of a vertical stabilizer of a general aviation aircraft, according to Raymer's Aircraft Design:
     A Conceptual Approach.
@@ -124,6 +137,9 @@ def mass_vstab(
         cruise_op_point: The cruise operating point of the aircraft.
 
         is_t_tail: Whether the aircraft is a T-tail or not.
+
+        use_advanced_composites: Whether to use advanced composites for the vertical stabilizer. If True, the vstab
+        mass is modified accordingly.
 
     Returns:
         The mass of the vertical stabilizer [kg].
@@ -145,7 +161,8 @@ def mass_vstab(
             (vstab.area('planform') / u.foot ** 2) ** 0.876 *
             (100 * airfoil_t_over_c / cos_sweep) ** -0.49 *
             (vstab.aspect_ratio() / cos_sweep ** 2) ** 0.357 *
-            vstab.taper_ratio() ** 0.039
+            vstab.taper_ratio() ** 0.039 *
+            (advanced_composites["tails"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -156,6 +173,7 @@ def mass_fuselage(
         L_over_D: float,
         cruise_op_point: asb.OperatingPoint,
         wing_to_tail_distance: float,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of a fuselage of a general aviation aircraft, according to Raymer's Aircraft Design: A Conceptual
@@ -175,6 +193,9 @@ def mass_fuselage(
         wing_to_tail_distance: The distance between the wing root-quarter-chord-point and the tail
         root-quarter-chord-point of the aircraft [m].
 
+        use_advanced_composites: Whether to use advanced composites for the fuselage. If True, the fuselage mass is
+        modified accordingly.
+
     Returns:
         The mass of the fuselage [kg].
     """
@@ -185,7 +206,8 @@ def mass_fuselage(
                                                    (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.177 *
                                                    (wing_to_tail_distance / u.foot) ** -0.051 *
                                                    (L_over_D) ** -0.072 *
-                                                   (cruise_op_point.dynamic_pressure() / u.psf) ** 0.241
+                                                   (cruise_op_point.dynamic_pressure() / u.psf) ** 0.241 *
+                                                    (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
                                            ) * u.lbm
 
     mass_pressurization_components = (
@@ -207,6 +229,7 @@ def mass_main_landing_gear(
         design_mass_TOGW: float,
         n_gear: int = 2,
         is_retractable: bool = True,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the main landing gear of a general aviation aircraft, according to Raymer's Aircraft Design:
@@ -221,6 +244,9 @@ def mass_main_landing_gear(
 
         is_retractable: Whether the main landing gear is retractable or not.
 
+        use_advanced_composites: Whether to use advanced composites for the main landing gear. If True, the main
+        landing gear mass is modified accordingly.
+
     Returns:
         The mass of the main landing gear [kg].
     """
@@ -232,7 +258,8 @@ def mass_main_landing_gear(
     return (
             0.095 *
             (ultimate_landing_load_factor * design_mass_TOGW / u.lbm) ** 0.768 *
-            (main_gear_length / u.foot / 12) ** 0.409
+            (main_gear_length / u.foot / 12) ** 0.409 *
+            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
@@ -241,6 +268,7 @@ def mass_nose_landing_gear(
         design_mass_TOGW: float,
         n_gear: int = 1,
         is_retractable: bool = True,
+        use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the nose landing gear of a general aviation aircraft, according to Raymer's Aircraft Design:
@@ -255,6 +283,9 @@ def mass_nose_landing_gear(
 
         is_retractable: Whether the nose landing gear is retractable or not.
 
+        use_advanced_composites: Whether to use advanced composites for the nose landing gear. If True, the nose
+        landing gear mass is modified accordingly.
+
     Returns:
         The mass of the nose landing gear [kg].
     """
@@ -266,7 +297,8 @@ def mass_nose_landing_gear(
     return (
             0.125 *
             (ultimate_landing_load_factor * design_mass_TOGW / u.lbm) ** 0.566 *
-            (nose_gear_length / u.foot / 12) ** 0.845
+            (nose_gear_length / u.foot / 12) ** 0.845 *
+            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
