@@ -1495,6 +1495,11 @@ class WingXSec(AeroSandboxObject):
         if xyz_le is None:
             xyz_le = np.array([0., 0., 0.])
         if airfoil is None:
+            import warnings
+            warnings.warn(
+                "An airfoil is not specified for WingXSec. Defaulting to NACA 0012.",
+                stacklevel=2
+            )
             airfoil = Airfoil("naca0012")
         if control_surfaces is None:
             control_surfaces = []
