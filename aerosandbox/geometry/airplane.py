@@ -543,6 +543,19 @@ class Airplane(AeroSandboxObject):
     def with_control_deflections(self,
                                  control_surface_deflection_mappings: Dict[str, float]
                                  ) -> "Airplane":
+        """
+        Returns a copy of the airplane with the specified control surface deflections applied.
+
+        Args:
+            control_surface_deflection_mappings: A dictionary mapping control surface names to deflections.
+
+                * Keys: Control surface names.
+
+                * Values: Deflections, in degrees. Downwards-positive, following typical convention.
+
+        Returns: A copy of the airplane with the specified control surface deflections applied.
+
+        """
         deflected_airplane = copy.deepcopy(self)
 
         for name, deflection in control_surface_deflection_mappings.items():
