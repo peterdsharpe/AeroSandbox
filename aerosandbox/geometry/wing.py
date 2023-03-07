@@ -1576,10 +1576,10 @@ class ControlSurface(AeroSandboxObject):
 
     def __init__(self,
                  name: str = "Untitled",
-                 trailing_edge: bool = True,
-                 hinge_point: float = 0.75,
                  symmetric: bool = True,
                  deflection: float = 0.0,
+                 hinge_point: float = 0.75,
+                 trailing_edge: bool = True,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  ):
         """
@@ -1590,15 +1590,16 @@ class ControlSurface(AeroSandboxObject):
             name: Name of the control surface [optional]. It can help when debugging to give each control surface a
             sensible name.
 
-            trailing_edge: Is the control surface on the trailing edge? If False, control surface is on the leading
-            edge. (e.g., True for flaps, False for slats.)
-
-            hinge_point: The location of the control surface hinge, as a fraction of chord. A float in the range of 0 to 1.
-
             symmetric: Is the control surface symmetric? If False, control surface is anti-symmetric. (e.g.,
             True for flaps, False for ailerons.)
 
+            hinge_point: The location of the control surface hinge, as a fraction of chord. A float in the range of 0 to 1.
+
             deflection: Control deflection, in degrees. Downwards-positive.
+
+            trailing_edge: Is the control surface on the trailing edge? If False, control surface is on the leading
+            edge. (e.g., True for flaps, False for slats.). Support is experimental for leading-edge control
+            surfaces, be aware that not all modules may treat this correctly.
 
             analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
             that should be passed on to specific analyses and associated with this specific geometry object.
@@ -1630,10 +1631,10 @@ class ControlSurface(AeroSandboxObject):
             analysis_specific_options = {}
 
         self.name = name
-        self.trailing_edge = trailing_edge
-        self.hinge_point = hinge_point
         self.symmetric = symmetric
         self.deflection = deflection
+        self.hinge_point = hinge_point
+        self.trailing_edge = trailing_edge
         self.analysis_specific_options = analysis_specific_options
 
 
