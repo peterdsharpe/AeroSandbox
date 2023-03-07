@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Union, Optional
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
+import copy
 
 
 class Airplane(AeroSandboxObject):
@@ -539,6 +540,25 @@ class Airplane(AeroSandboxObject):
 
         return aerodynamic_center
 
+    def with_control_deflections(self,
+                                 control_surface_deflection_mappings: Dict[str, float]
+                                 ) -> "Airplane":
+        deflected_airplane = copy.deepcopy(self)
+
+        for name, deflection in control_surface_deflection_mappings.items():
+
+            for wi, wing in enumerate(deflected_airplane.wings):
+
+                for xi, xsec in enumerate(wing.xsecs):
+
+                    for csi, surf in enumerate(xsec.control_surfaces):
+
+                        if surf.name == name:
+
+                            surf.deflection = deflection
+
+        return deflected_airplane
+
     def generate_cadquery_geometry(self,
                                    minimum_airfoil_TE_thickness: float = 0.001
                                    ) -> "Workplane":
@@ -945,7 +965,15 @@ if __name__ == '__main__':
                     asb.WingXSec(
                         xyz_le=[0, ft(7), ft(7) * np.sind(1)],
                         chord=ft(5, 4),
-                        airfoil=naca2412
+                        airfoil=naca2412,
+                        control_surfaces=[
+                            asb.ControlSurface(
+                                name="aileron",
+                                symmetric=False,
+                                hinge_point=0.8,
+                                deflection=0
+                            )
+                        ]
                     ),
                     asb.WingXSec(
                         xyz_le=[
@@ -966,7 +994,15 @@ if __name__ == '__main__':
                         xyz_le=[0, 0, 0],
                         chord=ft(3, 8),
                         airfoil=naca0012,
-                        twist=-2
+                        twist=-2,
+                        control_surfaces=[
+                            asb.ControlSurface(
+                                name="elevator",
+                                symmetric=True,
+                                hinge_point=0.75,
+                                deflection=0
+                            )
+                        ]
                     ),
                     asb.WingXSec(
                         xyz_le=[ft(1), ft(10) / 2, 0],
@@ -989,6 +1025,13 @@ if __name__ == '__main__':
                         xyz_le=[ft(0), 0, ft(1)],
                         chord=ft(3, 8),
                         airfoil=naca0012,
+                        control_surfaces=[
+                            asb.ControlSurface(
+                                name="rudder",
+                                hinge_point=0.75,
+                                deflection=0
+                            )
+                        ]
                     ),
                     asb.WingXSec(
                         xyz_le=[ft(0, 8), 0, ft(5)],
@@ -1036,4 +1079,4 @@ if __name__ == '__main__':
     )
 
     # airplane.draw_three_view()
-    airplane.export_XFLR("test.xml")
+    # airplane.export_XFLR("test.xml")
