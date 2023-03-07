@@ -1637,6 +1637,22 @@ class ControlSurface(AeroSandboxObject):
         self.trailing_edge = trailing_edge
         self.analysis_specific_options = analysis_specific_options
 
+    def __repr__(self) -> str:
+        keys = [
+            "name",
+            "symmetric",
+            "deflection",
+            "hinge_point",
+        ]
+        if not self.trailing_edge:
+            keys += ["trailing_edge"]
+
+        info = ", ".join([
+            f"{k}={self.__dict__[k]}"
+            for k in keys
+        ])
+
+        return f"ControlSurface ({info})"
 
 if __name__ == '__main__':
     wing = Wing(
