@@ -17,6 +17,9 @@ preset_view_angles = {
     'left_isometric' : (np.arctan2d(1, 2 ** 0.5), -135, 0),
     'right_isometric': (np.arctan2d(1, 2 ** 0.5), 135, 0)
 }
+preset_view_angles['front'] = preset_view_angles["-YZ"]
+preset_view_angles['top'] = preset_view_angles["XY"]
+preset_view_angles['side'] = preset_view_angles["XZ"]
 
 
 def figure3d(
