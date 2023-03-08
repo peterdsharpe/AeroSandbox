@@ -644,7 +644,7 @@ class Opti(cas.Opti):
                     update_initial_guesses_between_solves=False,
                     verbose=True,
                     solve_kwargs: Dict = None
-                    ) -> np.ndarray[Optional["OptiSol"]]:
+                    ) -> np.ndarray:
 
         # Handle defaults
         if solve_kwargs is None:
