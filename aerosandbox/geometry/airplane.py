@@ -431,7 +431,7 @@ class Airplane(AeroSandboxObject):
         import aerosandbox.tools.pretty_plots as p
 
         if fig is None:
-            fig = plt.figure(figsize=(8, 8), dpi=400)
+            fig, ax = p.figure3d(figsize=(8, 8))
 
         preset_view_angles = np.array([
             ["XZ", "-YZ"],
@@ -461,16 +461,6 @@ class Airplane(AeroSandboxObject):
                     ax.set_yticks([])
                 if preset_view == 'YZ' or preset_view == '-YZ':
                     ax.set_xticks([])
-
-                pane_color = ax.get_facecolor()
-                ax.set_facecolor((0, 0, 0, 0))  # Set transparent
-                #
-                ax.xaxis.pane.set_facecolor(pane_color)
-                ax.xaxis.pane.set_alpha(1)
-                ax.yaxis.pane.set_facecolor(pane_color)
-                ax.yaxis.pane.set_alpha(1)
-                ax.zaxis.pane.set_facecolor(pane_color)
-                ax.zaxis.pane.set_alpha(1)
 
                 self.draw_wireframe(
                     ax=ax,
