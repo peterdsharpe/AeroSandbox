@@ -23,12 +23,13 @@ preset_view_angles['side'] = preset_view_angles["XZ"]
 
 
 def figure3d(
-        *args,
+        nrows: int = 1,
+        ncols: int = 1,
         orthographic: bool = True,
         box_aspect: Tuple[float] = None,
         adjust_colors: bool = True,
         ax_kwargs: Dict = None,
-        **kwargs
+        **fig_kwargs
 ) -> Tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
     """
     Creates a new 3D figure. Args and kwargs are passed into matplotlib.pyplot.figure().
@@ -40,10 +41,7 @@ def figure3d(
     if ax_kwargs is None:
         ax_kwargs = {}
 
-    ### Generate the figure
-    fig = plt.figure(*args, **kwargs)
-
-    ### Generate the axes
+    ### Collect the keyword arguments to be used for each 3D axis
     default_axes_kwargs = dict(
         projection='3d',
         proj_type='ortho' if orthographic else 'persp',
@@ -54,18 +52,31 @@ def figure3d(
         **ax_kwargs,
     }
 
-    ax = fig.add_subplot(**axes_kwargs)
+    ### Generate the 3D axis (or axes)
+    fig, ax = plt.subplots(
+        nrows=nrows,
+        ncols=ncols,
+        subplot_kw=axes_kwargs,
+        **fig_kwargs
+    )
 
     if adjust_colors:
-        pane_color = ax.get_facecolor()
-        ax.set_facecolor((0, 0, 0, 0))  # Set transparent
+        try:
+            axs = ax.flatten()
+        except AttributeError:
+            axs = [ax]
 
-        ax.xaxis.pane.set_facecolor(pane_color)
-        ax.xaxis.pane.set_alpha(1)
-        ax.yaxis.pane.set_facecolor(pane_color)
-        ax.yaxis.pane.set_alpha(1)
-        ax.zaxis.pane.set_facecolor(pane_color)
-        ax.zaxis.pane.set_alpha(1)
+        for a in axs:
+
+            pane_color = a.get_facecolor()
+            a.set_facecolor((0, 0, 0, 0))  # Set transparent
+
+            a.xaxis.pane.set_facecolor(pane_color)
+            a.xaxis.pane.set_alpha(1)
+            a.yaxis.pane.set_facecolor(pane_color)
+            a.yaxis.pane.set_alpha(1)
+            a.zaxis.pane.set_facecolor(pane_color)
+            a.zaxis.pane.set_alpha(1)
 
     return fig, ax
 
