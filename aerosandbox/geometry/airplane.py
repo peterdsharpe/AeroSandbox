@@ -424,32 +424,25 @@ class Airplane(AeroSandboxObject):
             p.show_plot()
 
     def draw_three_view(self,
-                        fig=None,
                         show=True,
                         ):
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
-
-        if fig is None:
-            fig, ax = p.figure3d(figsize=(8, 8))
 
         preset_view_angles = np.array([
             ["XZ", "-YZ"],
             ["XY", "left_isometric"]
         ], dtype="O")
 
-        axes = np.empty_like(preset_view_angles, dtype="O")
+        fig, axs = p.figure3d(
+            nrows=preset_view_angles.shape[0],
+            ncols=preset_view_angles.shape[1],
+            figsize=(8, 8)
+        )
 
-        for i in range(axes.shape[0]):
-            for j in range(axes.shape[1]):
-                ax = fig.add_subplot(
-                    axes.shape[0],
-                    axes.shape[1],
-                    i * axes.shape[0] + j + 1,
-                    projection='3d',
-                    proj_type='ortho',
-                    box_aspect=(1, 1, 1)
-                )
+        for i in range(axs.shape[0]):
+            for j in range(axs.shape[1]):
+                ax = axs[i, j]
 
                 preset_view = preset_view_angles[i, j]
 
@@ -469,18 +462,14 @@ class Airplane(AeroSandboxObject):
                     show=False
                 )
 
-                p.set_preset_3d_view_angle(
-                    preset_view_angles[i, j]
-                )
+                p.set_preset_3d_view_angle(preset_view)
 
-                axes[i, j] = ax
-
-        axes[1, 0].set_xlabel("$x_g$ [m]")
-        axes[1, 0].set_ylabel("$y_g$ [m]")
-        axes[0, 0].set_zlabel("$z_g$ [m]")
-        axes[0, 0].set_xticklabels([])
-        axes[0, 1].set_yticklabels([])
-        axes[0, 1].set_zticklabels([])
+        axs[1, 0].set_xlabel("$x_g$ [m]")
+        axs[1, 0].set_ylabel("$y_g$ [m]")
+        axs[0, 0].set_zlabel("$z_g$ [m]")
+        axs[0, 0].set_xticklabels([])
+        axs[0, 1].set_yticklabels([])
+        axs[0, 1].set_zticklabels([])
 
         plt.subplots_adjust(
             left=-0.08,
