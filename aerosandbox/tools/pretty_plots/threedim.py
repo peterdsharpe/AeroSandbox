@@ -136,8 +136,6 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    figure3d()
-
     t = np.linspace(0, 1, 100)
 
     x = np.sin(4 * 2 * np.pi * t)
@@ -145,7 +143,7 @@ if __name__ == '__main__':
     z = 5 * t
 
     fig, ax = p.figure3d()
-    p.set_preset_3d_view_angle('-YZ')
+    p.set_preset_3d_view_angle('left_isometric')
 
     ax.plot(
         x, y, z, "-"
