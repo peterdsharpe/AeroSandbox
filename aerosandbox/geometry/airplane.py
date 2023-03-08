@@ -294,7 +294,7 @@ class Airplane(AeroSandboxObject):
             plt.sca(ax)
 
         if fuselage_longeron_theta is None:
-            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 4 + 1)[:-1]
+            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
 
         def plot_line(
                 xyz,
