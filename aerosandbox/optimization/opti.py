@@ -693,6 +693,9 @@ class Opti(cas.Opti):
 
             run_number += 1
 
+            import time
+            start_time = time.time()
+
             try:
                 sol = self.solve(
                     parameter_mapping=parameter_mappings_for_this_run,
@@ -703,15 +706,19 @@ class Opti(cas.Opti):
                     self.set_initial_from_sol(sol)
 
                 if verbose:
-                    print("")
+                    stats = sol.stats()
+                    print(f" Solved in {stats['iter_count']} iterations, {time.time() - start_time:.2f} sec.")
+
+                return sol
 
             except RuntimeError:
                 if verbose:
-                    print(" Failed to converge!")
+                    sol = OptiSol(opti=opti, cas_optisol=opti.debug)
+                    stats = sol.stats()
+                    print(f" Failed in {stats['iter_count']} iterations, {time.time() - start_time:.2f} sec.")
 
                 return None
 
-            return sol
 
         run_vectorized = np.vectorize(
             run,
