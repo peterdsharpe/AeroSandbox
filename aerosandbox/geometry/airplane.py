@@ -446,8 +446,6 @@ class Airplane(AeroSandboxObject):
 
                 preset_view = preset_view_angles[i, j]
 
-                if 'isometric' in preset_view:
-                    ax.set_axis_off()
                 if preset_view == 'XY' or preset_view == '-XY':
                     ax.set_zticks([])
                 if preset_view == 'XZ' or preset_view == '-XZ':
@@ -457,8 +455,7 @@ class Airplane(AeroSandboxObject):
 
                 self.draw_wireframe(
                     ax=ax,
-                    fuselage_longeron_theta=np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
-                    if 'isometric' in preset_view else None,
+                    set_axis_visibility=False if 'isometric' in preset_view else None,
                     show=False
                 )
 
