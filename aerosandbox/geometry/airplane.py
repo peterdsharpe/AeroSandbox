@@ -280,6 +280,7 @@ class Airplane(AeroSandboxObject):
                        thick_linewidth=0.5,
                        fuselage_longeron_theta=None,
                        set_equal: bool = True,
+                       set_axis_visibility: bool = None,
                        show: bool = True,
                        ):
         import matplotlib.pyplot as plt
@@ -412,6 +413,12 @@ class Airplane(AeroSandboxObject):
 
         if set_equal:
             p.equal()
+
+        if set_axis_visibility is not None:
+            if set_axis_visibility:
+                ax.set_axis_on()
+            else:
+                ax.set_axis_off()
 
         if show:
             p.show_plot()
