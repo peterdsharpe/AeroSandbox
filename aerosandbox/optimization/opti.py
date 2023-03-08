@@ -1267,25 +1267,25 @@ class OptiSol:
 
 
 if __name__ == '__main__':
-    import pytest
+    # import pytest
 
-    pytest.main()
+    # pytest.main()
 
-    # a = 1
-    # b = 100
-    #
-    # opti = Opti()  # set up an optimization environment
-    #
-    # # Define optimization variables
-    # x = opti.variable(init_guess=0)
-    # y = opti.variable(init_guess=0)
-    #
-    # # Define objective
-    # f = (a - x) ** 2 + b * (y - x ** 2) ** 2
-    # opti.minimize(f)
-    #
-    # # Optimize
-    # sol = opti.solve()
-    #
-    # for i in [x, y]:
-    #     assert sol.value(i) == pytest.approx(1, abs=1e-4)
+    a = 1
+    b = 100
+
+    opti = Opti()  # set up an optimization environment
+
+    # Define optimization variables
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
+
+    # Define objective
+    f = (a - x) ** 2 + b * (y - x ** 2) ** 2
+    opti.minimize(f)
+
+    # Optimize
+    sol = opti.solve()
+
+    for i in [x, y]:
+        assert sol.value(i) == pytest.approx(1, abs=1e-4)
