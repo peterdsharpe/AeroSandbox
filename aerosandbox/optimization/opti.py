@@ -1,4 +1,4 @@
-from typing import Union, List, Dict, Callable, Any, Tuple, Set
+from typing import Union, List, Dict, Callable, Any, Tuple, Set, Optional
 import numpy.typing as npt
 import json
 import casadi as cas
@@ -644,7 +644,7 @@ class Opti(cas.Opti):
                     update_initial_guesses_between_solves=False,
                     verbose=True,
                     solve_kwargs: Dict = None
-                    ) -> np.ndarray:
+                    ) -> np.ndarray[Optional["OptiSol"]]:
 
         # Handle defaults
         if solve_kwargs is None:
@@ -657,8 +657,8 @@ class Opti(cas.Opti):
         }
 
         # Split parameter_mappings up so that it can be passed into run() via np.vectorize
-        keys: tuple[cas.MX] = tuple(parameter_mapping.keys())
-        values: tuple[np.ndarray[float]] = tuple(parameter_mapping.values())
+        keys: Tuple[cas.MX] = tuple(parameter_mapping.keys())
+        values: Tuple[np.ndarray[float]] = tuple(parameter_mapping.values())
 
         # Display an output
         if verbose:
@@ -667,7 +667,7 @@ class Opti(cas.Opti):
         n_runs = np.broadcast(*values).size
         run_number = 1
 
-        def run(*args: Tuple[float]) -> "OptiSol":
+        def run(*args: Tuple[float]) -> Optional["OptiSol"]:
             # Reconstruct parameter mapping on a run-by-run basis by zipping together keys and this run's values.
             parameter_mappings_for_this_run: [cas.MX, float] = {
                 k: v
