@@ -443,15 +443,7 @@ class Airplane(AeroSandboxObject):
         for i in range(axs.shape[0]):
             for j in range(axs.shape[1]):
                 ax = axs[i, j]
-
                 preset_view = preset_view_angles[i, j]
-
-                if preset_view == 'XY' or preset_view == '-XY':
-                    ax.set_zticks([])
-                if preset_view == 'XZ' or preset_view == '-XZ':
-                    ax.set_yticks([])
-                if preset_view == 'YZ' or preset_view == '-YZ':
-                    ax.set_xticks([])
 
                 self.draw_wireframe(
                     ax=ax,
@@ -460,6 +452,27 @@ class Airplane(AeroSandboxObject):
                 )
 
                 p.set_preset_3d_view_angle(preset_view)
+
+                xres = np.diff(ax.get_xticks())[0]
+                yres = np.diff(ax.get_yticks())[0]
+                zres = np.diff(ax.get_zticks())[0]
+
+                p.set_ticks(
+                    xres, xres / 4,
+                    yres, yres / 4,
+                    zres, zres / 4,
+                )
+
+                ax.xaxis.set_tick_params(color='white', which='minor')
+                ax.yaxis.set_tick_params(color='white', which='minor')
+                ax.zaxis.set_tick_params(color='white', which='minor')
+
+                if preset_view == 'XY' or preset_view == '-XY':
+                    ax.set_zticks([])
+                if preset_view == 'XZ' or preset_view == '-XZ':
+                    ax.set_yticks([])
+                if preset_view == 'YZ' or preset_view == '-YZ':
+                    ax.set_xticks([])
 
         axs[1, 0].set_xlabel("$x_g$ [m]")
         axs[1, 0].set_ylabel("$y_g$ [m]")
@@ -478,7 +491,9 @@ class Airplane(AeroSandboxObject):
         )
 
         if show:
-            plt.show()
+            p.show_plot(
+                tight_layout=False,
+            )
 
     def is_entirely_symmetric(self):
         """
