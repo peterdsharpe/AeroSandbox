@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Tuple, Optional
+from typing import List, Dict, Any, Union, Tuple, Optional, Callable
 import copy
 
 
@@ -355,13 +355,29 @@ class Fuselage(AeroSandboxObject):
                   y_nondim: Union[float, List[float]] = 0.,
                   z_nondim: Union[float, List[float]] = 0.,
                   ) -> List[np.ndarray]:
+        """
+        Returns points along a line that goes through each of the FuselageXSec objects in this Fuselage.
+
+        Args:
+
+            y_nondim: The nondimensional (width-normalized) y-coordinate that the line should go through. Can either
+            be a single value used at all cross-sections, or can be an iterable of values to be used at the
+            respective cross-sections.
+
+            z_nondim: The nondimensional (height-normalized) z-coordinate that the line should go through. Can either
+            be a single value used at all cross-sections, or can be an iterable of values to be used at the
+            respective cross-sections.
+
+        Returns: A list of points, where each point is a 3-element array of the form `[x, y, z]`.
+
+        """
 
         points_on_line: List[np.ndarray] = []
 
         try:
             if len(y_nondim) != len(self.xsecs):
                 raise ValueError(
-                    f"If `y_nondim` is an iterable, it needs to be the same length as `Fuselage.xsecs` ({len(self.xsecs)})."
+                    f"If `y_nondim` is an iterable, it should be the same length as `Fuselage.xsecs` ({len(self.xsecs)})."
                 )
         except TypeError:
             pass
@@ -369,7 +385,7 @@ class Fuselage(AeroSandboxObject):
         try:
             if len(z_nondim) != len(self.xsecs):
                 raise ValueError(
-                    f"If `z_nondim` is an iterable, it needs to be the same length as `Fuselage.xsecs` ({len(self.xsecs)})."
+                    f"If `z_nondim` is an iterable, it should be the same length as `Fuselage.xsecs` ({len(self.xsecs)})."
                 )
         except TypeError:
             pass
