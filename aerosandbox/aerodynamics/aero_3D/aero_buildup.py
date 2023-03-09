@@ -330,7 +330,7 @@ class AeroBuildup(ExplicitAnalysis):
             wing._compute_xyz_of_WingXSec(
                 index=i,
                 x_nondim=0.25,
-                y_nondim=0,
+                z_nondim=0,
             )
             for i in range(len(wing.xsecs))
         ]
