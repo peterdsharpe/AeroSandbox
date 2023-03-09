@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Tuple, Union, Optional
+from typing import List, Dict, Any, Tuple, Union, Optional, Callable
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
