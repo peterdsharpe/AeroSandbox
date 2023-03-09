@@ -518,24 +518,14 @@ class Fuselage(AeroSandboxObject):
             yg_local: The y-axis of the local coordinate frame, in aircraft geometry axes.
             zg_local: The z-axis of the local coordinate frame, in aircraft geometry axes.
         """
+        import warnings
+        warnings.warn(
+            "Fuselage._compute_frame_of_FuselageXSec() is deprecated. "
+            "Use FuselageXSec.compute_frame() instead.",
+            DeprecationWarning
+        )
 
-        if index == len(self.xsecs) - 1:
-            index = len(self.xsecs) - 2  # The last FuselageXSec has the same frame as the last section.
-
-        xyz_c_a = self.xsecs[index].xyz_c
-        xyz_c_b = self.xsecs[index + 1].xyz_c
-        vector_between = xyz_c_b - xyz_c_a
-        xg_local_norm = np.linalg.norm(vector_between)
-        if xg_local_norm != 0:
-            xg_local = vector_between / xg_local_norm
-        else:
-            xg_local = np.array([1, 0, 0])
-
-        zg_local = np.array([0, 0, 1])  # TODO
-
-        yg_local = np.cross(zg_local, xg_local)
-
-        return xg_local, yg_local, zg_local
+        return self.xsecs[index].compute_frame()
 
 
 class FuselageXSec(AeroSandboxObject):
@@ -545,6 +535,7 @@ class FuselageXSec(AeroSandboxObject):
 
     def __init__(self,
                  xyz_c: Union[np.ndarray, List[float]] = None,
+                 xyz_normal: Union[np.ndarray, List[float]] = None,
                  radius: float = None,
                  width: float = None,
                  height: float = None,
@@ -554,18 +545,42 @@ class FuselageXSec(AeroSandboxObject):
         """
         Defines a new Fuselage cross-section.
 
-        A FuselageXSec is
+        Fuselage cross-sections are essentially a sketch on a 2D plane.
+
+            * This plane is defined by a center point (`xyz_c`) and a normal vector (`xyz_normal`).
+
+            * The cross-section is a superellipse shape, which is a generalization of a circle and a square.
+
+                It is mathematically defined by three parameters, using `y` and `z` as the two axes:
+
+                    abs(y / width) ^ shape + abs(z / height) ^ shape = 1
+
+                See also: https://en.wikipedia.org/wiki/Superellipse
+
+                There are some notable special cases:
+
+                    * A circle is a special case of a superellipse, where `shape = 2`.
+
+                    * A square is a special case of a superellipse, where `shape = Inf` (in practice, set this to some
+                    high value like 1000).
+
+                    * A diamond is a special case of a superellipse, where `shape = 1`.
+
+        Must specify either `radius` or both `width` and `height`. Cannot specify both.
 
         Args:
 
             xyz_c: An array-like that represents the xyz-coordinates of the center of this fuselage cross-section,
             in geometry axes.
 
-            To define the
+            xyz_normal: An array-like that represents the xyz-coordinates of the normal vector of this fuselage
+            cross-section, in geometry axes.
 
             radius: Radius of the fuselage cross-section.
 
-            width:
+            width: Width of the fuselage cross-section.
+
+            height: Height of the fuselage cross-section.
 
             shape: A parameter that determines what shape the cross-section is. Should be in the range 1 < shape < infinity.
 
@@ -612,6 +627,8 @@ class FuselageXSec(AeroSandboxObject):
         ### Set defaults
         if xyz_c is None:
             xyz_c = np.array([0., 0., 0.])
+        if xyz_normal is None:
+            xyz_normal = np.array([1., 0., 0.])  # points backwards
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -641,6 +658,7 @@ class FuselageXSec(AeroSandboxObject):
 
         ### Initialize
         self.xyz_c = np.array(xyz_c)
+        self.xyz_normal = np.array(xyz_normal)
         self.shape = shape
         self.analysis_specific_options = analysis_specific_options
 
@@ -749,6 +767,33 @@ class FuselageXSec(AeroSandboxObject):
             )
         )
 
+    def compute_frame(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Computes the local coordinate frame of the FuselageXSec, in aircraft geometry axes.
+
+        xg_local is aligned with the FuselageXSec's normal vector.
+
+        zg_local is roughly aligned with the z-axis of the aircraft geometry axes, but projected onto the FuselageXSec's plane.
+
+        yg_local is the cross product of zg_local and xg_local.
+
+        Returns: A tuple:
+            xg_local: The x-axis of the local coordinate frame, in aircraft geometry axes.
+            yg_local: The y-axis of the local coordinate frame, in aircraft geometry axes.
+            zg_local: The z-axis of the local coordinate frame, in aircraft geometry axes.
+
+        """
+        xyz_normal = self.xyz_normal / np.linalg.norm(self.xyz_normal)
+
+        xg_local = xyz_normal
+
+        zg_local = np.array([0, 0, 1])
+        zg_local = zg_local - np.dot(zg_local, xg_local) * xg_local
+
+        yg_local = np.cross(zg_local, xg_local)
+
+        return xg_local, yg_local, zg_local
+
     def get_3D_coordinates(self,
                            theta: Union[float, np.ndarray] = None
                            ) -> Tuple[Union[float, np.ndarray]]:
@@ -760,8 +805,8 @@ class FuselageXSec(AeroSandboxObject):
             theta: Coordinate in the tangential-ish direction to sample points at. Given in the 2D FuselageXSec
             coordinate system, where:
 
-                * x_2D points along the (global) y_g
-                * y_2D points along the (global) z_g
+                * y_2D points along the (global) y_g
+                * z_2D points along the (global) z_g
 
                 In other words, a value of:
 
@@ -788,16 +833,15 @@ class FuselageXSec(AeroSandboxObject):
         st = np.sin(np.mod(theta, 2 * np.pi))
         ct = np.cos(np.mod(theta, 2 * np.pi))
 
-        x_nondim = np.abs(ct) ** (2 / self.shape) * np.where(ct > 0, 1, -1)
-        y_nondim = np.abs(st) ** (2 / self.shape) * np.where(st > 0, 1, -1)
+        y = (self.width / 2) * np.abs(ct) ** (2 / self.shape) * np.where(ct > 0, 1, -1)
+        z = (self.height / 2) * np.abs(st) ** (2 / self.shape) * np.where(st > 0, 1, -1)
 
-        x_2D = x_nondim * self.width / 2
-        y_2D = y_nondim * self.height / 2
+        xg_local, yg_local, zg_local = self.compute_frame()
 
         return (
-            self.xyz_c[0] * np.ones_like(theta),
-            self.xyz_c[1] + x_2D,
-            self.xyz_c[2] + y_2D,
+            self.xyz_c[0] + y * yg_local[0] + z * zg_local[0],
+            self.xyz_c[1] + y * yg_local[1] + z * zg_local[1],
+            self.xyz_c[2] + y * yg_local[2] + z * zg_local[2],
         )
 
     def equivalent_radius(self,
