@@ -454,7 +454,10 @@ class Fuselage(AeroSandboxObject):
         from aerosandbox.geometry.airplane import Airplane
         return Airplane(fuselages=[self]).draw_three_view(*args, **kwargs)
 
-    def subdivide_sections(self, ratio: int) -> "Fuselage":
+    def subdivide_sections(self,
+                           ratio: int,
+                           spacing_function: Callable[[float, float, float], float] = np.linspace
+                           ) -> "Fuselage":
         """
         Generates a new Fuselage that subdivides the existing sections of this Fuselage into several smaller ones. Splits
         each section into N=`ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
@@ -462,16 +465,23 @@ class Fuselage(AeroSandboxObject):
         This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
 
         Args:
+
             ratio: The number of new sections to split each old section into.
+
+            spacing_function: A function that takes in three arguments: the start, end, and number of points to generate.
+
+                The default is `np.linspace`, which generates a linearly-spaced array of points.
+
+                Other options include `np.cosspace`, which generates a cosine-spaced array of points.
 
         Returns: A new Fuselage object with subdivided sections.
 
         """
-        if not ratio >= 2:
+        if not (ratio >= 2 and isinstance(ratio, int)):
             raise ValueError("`ratio` must be an integer greater than or equal to 2.")
 
         new_xsecs = []
-        length_fractions_along_section = np.linspace(0, 1, ratio + 1)[:-1]
+        length_fractions_along_section = spacing_function(0, 1, ratio + 1)[:-1]
 
         for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:]):
             for s in length_fractions_along_section:
