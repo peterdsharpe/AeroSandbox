@@ -199,7 +199,7 @@ class Wing(AeroSandboxObject):
             self._compute_xyz_of_WingXSec(
                 i,
                 x_nondim=0.25,
-                y_nondim=0,
+                z_nondim=0,
             )
             for i in i_range
         ]
@@ -392,7 +392,7 @@ class Wing(AeroSandboxObject):
                 quarter_chord_location = self._compute_xyz_of_WingXSec(
                     i,
                     x_nondim=0.25,
-                    y_nondim=0,
+                    z_nondim=0,
                 )
 
                 half_span_to_centerline = np.minimum(
@@ -552,12 +552,12 @@ class Wing(AeroSandboxObject):
         root_quarter_chord = self._compute_xyz_of_WingXSec(
             0,
             x_nondim=x_nondim,
-            y_nondim=0
+            z_nondim=0
         )
         tip_quarter_chord = self._compute_xyz_of_WingXSec(
             -1,
             x_nondim=x_nondim,
-            y_nondim=0
+            z_nondim=0
         )
 
         vec = tip_quarter_chord - root_quarter_chord
@@ -597,12 +597,12 @@ class Wing(AeroSandboxObject):
         root_quarter_chord = self._compute_xyz_of_WingXSec(
             0,
             x_nondim=x_nondim,
-            y_nondim=0
+            z_nondim=0
         )
         tip_quarter_chord = self._compute_xyz_of_WingXSec(
             -1,
             x_nondim=x_nondim,
-            y_nondim=0
+            z_nondim=0
         )
 
         vec = tip_quarter_chord - root_quarter_chord
@@ -873,7 +873,7 @@ class Wing(AeroSandboxObject):
             spanwise_strips.append(
                 self.mesh_line(
                     x_nondim=x_n,
-                    y_nondim=y_n,
+                    z_nondim=y_n,
                     add_camber=False,
                     spanwise_resolution=spanwise_resolution,
                     spanwise_spacing=spanwise_spacing,
@@ -1012,7 +1012,7 @@ class Wing(AeroSandboxObject):
             spanwise_strips.append(
                 self.mesh_line(
                     x_nondim=x_n,
-                    y_nondim=0,
+                    z_nondim=0,
                     add_camber=add_camber,
                     spanwise_resolution=spanwise_resolution,
                     spanwise_spacing=spanwise_spacing
@@ -1072,11 +1072,9 @@ class Wing(AeroSandboxObject):
 
     def mesh_line(self,
                   x_nondim: Union[float, List[float]] = 0.25,
-                  y_nondim: Union[float, List[float]] = 0,
+                  z_nondim: Union[float, List[float]] = 0,
                   add_camber: bool = True,
-                  spanwise_resolution: int = 1,
-                  spanwise_spacing: str = "cosine"
-                  ) -> np.ndarray:
+                  ) -> List[np.ndarray]:
         """
         Meshes a line that goes through each of the WingXSec objects in this wing.
 
@@ -1086,16 +1084,13 @@ class Wing(AeroSandboxObject):
             be a single value used at all cross-sections, or can be an iterable of values to be used at the
             respective cross-sections.
 
-            y_nondim: The nondimensional (chord-normalized) y-coordinate that the line should go through. Here,
+            z_nondim: The nondimensional (chord-normalized) y-coordinate that the line should go through. Here,
             y-coordinate means the "vertical" component (think standard 2D airfoil axes). Can either be a single
             value used at all cross-sections, or can be an iterable of values to be used at the respective cross
             sections.
 
-            add_camber: Controls whether camber should be added to the line or not.
-
-            spanwise_resolution: Controls the number of times each WingXSec is subdivided.
-
-            spanwise_spacing: Controls the spanwise spacing. Either "cosine" or "uniform".
+            add_camber: Controls whether the camber of each cross-section's airfoil should be added to the line or
+            not. Essentially modifies `z_nondim` to be `z_nondim + camber`.
 
         Returns:
 
@@ -1103,28 +1098,20 @@ class Wing(AeroSandboxObject):
             to the tip. Ignores any wing symmetry (e.g., only gives one side).
 
         """
-
-        if spanwise_spacing == "cosine":
-            space = np.cosspace
-        elif spanwise_spacing == "uniform":
-            space = np.linspace
-        else:
-            raise ValueError("Bad value of 'spanwise_spacing'")
-
-        xsec_points = []
+        points_on_line = []
 
         try:
             if len(x_nondim) != len(self.xsecs):
                 raise ValueError(
-                    "If x_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs."
+                    f"If `x_nondim` is an iterable, it should be the same length as `Wing.xsecs` ({len(self.xsecs)})."
                 )
         except TypeError:
             pass
 
         try:
-            if len(y_nondim) != len(self.xsecs):
+            if len(z_nondim) != len(self.xsecs):
                 raise ValueError(
-                    "If y_nondim is going to be an iterable, it needs to be the same length as Airplane.xsecs."
+                    f"If `z_nondim` is an iterable, it should be the same length as `Wing.xsecs` ({len(self.xsecs)})."
                 )
         except TypeError:
             pass
@@ -1137,38 +1124,22 @@ class Wing(AeroSandboxObject):
                 xsec_x_nondim = x_nondim
 
             try:
-                xsec_y_nondim = y_nondim[i]
+                xsec_z_nondim = z_nondim[i]
             except (TypeError, IndexError):
-                xsec_y_nondim = y_nondim
+                xsec_z_nondim = z_nondim
 
             if add_camber:
-                xsec_y_nondim = xsec_y_nondim + xsec.airfoil.local_camber(x_over_c=x_nondim)
+                xsec_z_nondim = xsec_z_nondim + xsec.airfoil.local_camber(x_over_c=x_nondim)
 
-            xsec_point = self._compute_xyz_of_WingXSec(
-                i,
-                x_nondim=xsec_x_nondim,
-                y_nondim=xsec_y_nondim,
-            )
-            xsec_points.append(xsec_point)
-
-        points_sections = []
-        for i in range(len(xsec_points) - 1):
-            points_section = np.stack([
-                space(
-                    xsec_points[i][dim],
-                    xsec_points[i + 1][dim],
-                    spanwise_resolution + 1
+            points_on_line.append(
+                self._compute_xyz_of_WingXSec(
+                    i,
+                    x_nondim=xsec_x_nondim,
+                    z_nondim=xsec_z_nondim,
                 )
-                for dim in range(3)
-            ], axis=1)
-            if not i == len(xsec_points) - 2:
-                points_section = points_section[:-1, :]
+            )
 
-            points_sections.append(points_section)
-
-        points = np.concatenate(points_sections)
-
-        return points
+        return points_on_line
 
     def draw(self, *args, **kwargs):
         """
@@ -1275,20 +1246,20 @@ class Wing(AeroSandboxObject):
         return self._compute_xyz_of_WingXSec(
             index,
             x_nondim=1,
-            y_nondim=0,
+            z_nondim=0,
         )
 
     def _compute_xyz_of_WingXSec(self,
                                  index,
                                  x_nondim,
-                                 y_nondim,
+                                 z_nondim,
                                  ):
         xg_local, yg_local, zg_local = self._compute_frame_of_WingXSec(index)
         origin = self.xsecs[index].xyz_le
         xsec = self.xsecs[index]
         return origin + (
                 x_nondim * xsec.chord * xg_local +
-                y_nondim * xsec.chord * zg_local
+                z_nondim * xsec.chord * zg_local
         )
 
     def _compute_frame_of_WingXSec(
@@ -1658,6 +1629,7 @@ class ControlSurface(AeroSandboxObject):
         ])
 
         return f"ControlSurface ({info})"
+
 
 if __name__ == '__main__':
     wing = Wing(
