@@ -835,7 +835,7 @@ class FuselageXSec(AeroSandboxObject):
         Args:
             xyz: The amount to translate the FuselageXSec. Given as a 3-element NumPy vector.
 
-        Returns: A new FuselageXSec object.
+        Returns: A copy of this FuselageXSec, translated by `xyz`.
 
         """
         new_xsec = copy.copy(self)
