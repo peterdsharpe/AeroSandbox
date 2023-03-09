@@ -352,24 +352,24 @@ class Fuselage(AeroSandboxObject):
         return points, faces
 
     def mesh_line(self,
-                  x_nondim: Union[float, List[float]] = 0,
-                  y_nondim: Union[float, List[float]] = 0,
-                  chordwise_resolution: int = 1,
-                  ) -> np.ndarray:
-        xsec_points = []
+                  y_nondim: Union[float, List[float]] = 0.,
+                  z_nondim: Union[float, List[float]] = 0.,
+                  ) -> List[np.ndarray]:
+
+        points_on_line: List[np.ndarray] = []
 
         try:
-            if len(x_nondim) != len(self.xsecs):
+            if len(y_nondim) != len(self.xsecs):
                 raise ValueError(
-                    "If x_nondim is going to be an iterable, it needs to be the same length as Fuselage.xsecs."
+                    f"If `y_nondim` is an iterable, it needs to be the same length as `Fuselage.xsecs` ({len(self.xsecs)})."
                 )
         except TypeError:
             pass
 
         try:
-            if len(y_nondim) != len(self.xsecs):
+            if len(z_nondim) != len(self.xsecs):
                 raise ValueError(
-                    "If y_nondim is going to be an iterable, it needs to be the same length as Fuselage.xsecs."
+                    f"If `z_nondim` is an iterable, it needs to be the same length as `Fuselage.xsecs` ({len(self.xsecs)})."
                 )
         except TypeError:
             pass
@@ -377,39 +377,37 @@ class Fuselage(AeroSandboxObject):
         for i, xsec in enumerate(self.xsecs):
 
             origin = xsec.xyz_c
-            xg_local, yg_local, zg_local = self._compute_frame_of_FuselageXSec(i)
-
-            try:
-                xsec_x_nondim = x_nondim[i]
-            except (TypeError, IndexError):
-                xsec_x_nondim = x_nondim
+            xg_local, yg_local, zg_local = xsec.compute_frame()
 
             try:
                 xsec_y_nondim = y_nondim[i]
             except (TypeError, IndexError):
                 xsec_y_nondim = y_nondim
 
+            try:
+                xsec_z_nondim = z_nondim[i]
+            except (TypeError, IndexError):
+                xsec_z_nondim = z_nondim
+
             xsec_point = origin + (
-                    xsec_x_nondim * (xsec.width / 2) * yg_local +
-                    xsec_y_nondim * (xsec.height / 2) * zg_local
+                    xsec_y_nondim * (xsec.width / 2) * yg_local +
+                    xsec_z_nondim * (xsec.height / 2) * zg_local
             )
-            xsec_points.append(xsec_point)
+            points_on_line.append(xsec_point)
 
         mesh_sections = []
-        for i in range(len(xsec_points) - 1):
+        for i in range(len(points_on_line) - 1):
             mesh_section = np.linspace(
-                xsec_points[i],
-                xsec_points[i + 1],
+                points_on_line[i],
+                points_on_line[i + 1],
                 chordwise_resolution + 1
             )
-            if not i == len(xsec_points) - 2:
+            if not i == len(points_on_line) - 2:
                 mesh_section = mesh_section[:-1]
 
             mesh_sections.append(mesh_section)
 
-        mesh = np.concatenate(mesh_sections)
-
-        return mesh
+        return points_on_line
 
     def draw(self, *args, **kwargs):
         """
