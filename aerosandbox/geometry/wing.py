@@ -833,8 +833,6 @@ class Wing(AeroSandboxObject):
     def mesh_body(self,
                   method="quad",
                   chordwise_resolution: int = 36,
-                  spanwise_resolution: int = 1,
-                  spanwise_spacing: str = "uniform",
                   mesh_surface: bool = True,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
@@ -875,8 +873,6 @@ class Wing(AeroSandboxObject):
                     x_nondim=x_n,
                     z_nondim=y_n,
                     add_camber=False,
-                    spanwise_resolution=spanwise_resolution,
-                    spanwise_spacing=spanwise_spacing,
                 )
             )
 
