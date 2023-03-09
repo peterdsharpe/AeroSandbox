@@ -147,6 +147,32 @@ class Airfoil(Polygon):
     def __repr__(self):  # String representation
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
+    def __eq__(self, other: "Airfoil") -> bool:
+        """
+        Checks if two airfoils are equal. Two airfoils are equal if they have the same name, coordinates, and
+        polar functions.
+
+        Args:
+            other: The other airfoil to compare to.
+
+        Returns:
+            True if the two airfoils are equal, False otherwise.
+        """
+        if other is self:  # If they're the same object in memory, they're equal
+            return True
+
+        if not type(self) == type(other):  # If the types are different, they're not equal
+            return False
+
+        # At this point, we know that the types are the same, so we can compare the attributes
+        return all([  # If all of these are true, they're equal
+            self.name == other.name,
+            np.allclose(self.coordinates, other.coordinates),
+            self.CL_function is other.CL_function,
+            self.CD_function is other.CD_function,
+            self.CM_function is other.CM_function,
+        ])
+
     def generate_polars(self,
                         alphas=np.linspace(-15, 15, 21),
                         Res=np.geomspace(1e4, 1e7, 10),
