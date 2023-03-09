@@ -282,8 +282,7 @@ class Fuselage(AeroSandboxObject):
 
     def mesh_body(self,
                   method="quad",
-                  chordwise_resolution: int = 1,
-                  spanwise_resolution: int = 36,
+                  tangential_resolution: int = 36,
                   ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Meshes the fuselage as a solid (thickened) body.
@@ -311,12 +310,12 @@ class Fuselage(AeroSandboxObject):
 
         """
 
-        t = np.linspace(0, 2 * np.pi, spanwise_resolution + 1)[:-1]
+        t = np.linspace(0, 2 * np.pi, tangential_resolution + 1)[:-1]
 
         points = np.concatenate([
             np.stack(
-                xsec.get_3D_coordinates(theta=t)
-                , axis=1
+                xsec.get_3D_coordinates(theta=t),
+                axis=1
             )
             for xsec in self.xsecs
         ],
