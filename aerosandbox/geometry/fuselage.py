@@ -485,7 +485,18 @@ class Fuselage(AeroSandboxObject):
             analysis_specific_options=self.analysis_specific_options
         )
 
-    def _compute_frame_of_FuselageXSec(self, index: int):
+    def _compute_frame_of_FuselageXSec(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Computes the local frame of a FuselageXSec, given the index of the FuselageXSec in the Fuselage.xsecs list.
+
+        Args:
+            index: The index of the FuselageXSec in the Fuselage.xsecs list.
+
+        Returns:  A tuple:
+            xg_local: The x-axis of the local coordinate frame, in aircraft geometry axes.
+            yg_local: The y-axis of the local coordinate frame, in aircraft geometry axes.
+            zg_local: The z-axis of the local coordinate frame, in aircraft geometry axes.
+        """
 
         if index == len(self.xsecs) - 1:
             index = len(self.xsecs) - 2  # The last FuselageXSec has the same frame as the last section.
