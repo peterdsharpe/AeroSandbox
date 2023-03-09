@@ -292,11 +292,22 @@ class Fuselage(AeroSandboxObject):
         `aerosandbox.geometry.mesh_utilities`.
 
         Args:
-            method: Allows choice between "tri" and "quad" meshing.
-            chordwise_resolution: Controls the chordwise resolution of the meshing.
-            spanwise_resolution: Controls the spanwise resolution of the meshing.
 
-        Returns: (points, faces) in standard mesh format.
+            method: A string, which determines whether to mesh the fuselage as a series of quadrilaterals or triangles.
+
+                * "quad" meshes the fuselage as a series of quadrilaterals.
+
+                * "tri" meshes the fuselage as a series of triangles.
+
+            tangential_resolution: An integer, which determines the number of points to use to mesh each cross-section.
+
+        Returns: A tuple of`points` and `faces`, where:
+
+            * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
+
+            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
+
+                * Each row of `faces` is a list of indices into `points`, which specifies a face.
 
         """
 

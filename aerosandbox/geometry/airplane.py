@@ -397,7 +397,7 @@ class Airplane(AeroSandboxObject):
 
             ### Centerline
             plot_line(
-                fuse.mesh_line(x_nondim=0, y_nondim=0),
+                fuse.mesh_line(y_nondim=0, z_nondim=0),
                 linewidth=thin_linewidth
             )
 
