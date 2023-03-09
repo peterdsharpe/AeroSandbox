@@ -335,7 +335,7 @@ class Airplane(AeroSandboxObject):
             ]:
 
                 plot_line(
-                    wing.mesh_line(x_nondim=xy[0], y_nondim=xy[1]),
+                    wing.mesh_line(x_nondim=xy[0], z_nondim=xy[1]),
                     symmetric=wing.symmetric,
                     linewidth=thick_linewidth,
                 )
@@ -346,12 +346,12 @@ class Airplane(AeroSandboxObject):
             thicknesses = np.array([af.local_thickness(x_over_c=x) for af in afs])
 
             plot_line(
-                wing.mesh_line(x_nondim=x, y_nondim=thicknesses / 2, add_camber=True),
+                wing.mesh_line(x_nondim=x, z_nondim=thicknesses / 2, add_camber=True),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
             )
             plot_line(
-                wing.mesh_line(x_nondim=x, y_nondim=-thicknesses / 2, add_camber=True),
+                wing.mesh_line(x_nondim=x, z_nondim=-thicknesses / 2, add_camber=True),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
             )
@@ -770,7 +770,7 @@ class Airplane(AeroSandboxObject):
             wing = mainwing
             wingxml = ET.SubElement(plane, "wing")
 
-            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
                 "Name"      : wing.name,
@@ -787,7 +787,7 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
@@ -821,7 +821,7 @@ class Airplane(AeroSandboxObject):
             wing = elevator
             wingxml = ET.SubElement(plane, "wing")
 
-            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
                 "Name"      : wing.name,
@@ -838,7 +838,7 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
@@ -872,7 +872,7 @@ class Airplane(AeroSandboxObject):
             wing = fin
             wingxml = ET.SubElement(plane, "wing")
 
-            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
                 "Name"      : wing.name,
@@ -889,7 +889,7 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
