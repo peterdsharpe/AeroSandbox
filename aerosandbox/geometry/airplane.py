@@ -573,6 +573,19 @@ class Airplane(AeroSandboxObject):
     def generate_cadquery_geometry(self,
                                    minimum_airfoil_TE_thickness: float = 0.001
                                    ) -> "Workplane":
+        """
+        Uses the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
+
+        Args:
+
+            minimum_airfoil_TE_thickness: The minimum thickness of the trailing edge of the airfoils, as a fraction
+            of each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if
+            necessary. This is useful for avoiding numerical issues in CAD software that can arise from extremely
+            thin (i.e., <1e-6 meters) trailing edges.
+
+        Returns: A CADQuery Workplane object containing the CAD geometry of the airplane.
+
+        """
         import cadquery as cq
 
         solids = []
@@ -679,9 +692,10 @@ class Airplane(AeroSandboxObject):
         Args:
             filename: The filename to export to. Should include the ".step" extension.
 
-            minimum_airfoil_TE_thickness: The minimum thickness of the trailing edge of the airfoils, as a fraction of
-            each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if necessary. This
-            is useful for avoiding numerical issues in CAD software that can arise from extremely thin (i.e., <1e-6 meters) trailing edges.
+            minimum_airfoil_TE_thickness: The minimum thickness of the trailing edge of the airfoils, as a fraction
+            of each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if
+            necessary. This is useful for avoiding numerical issues in CAD software that can arise from extremely
+            thin (i.e., <1e-6 meters) trailing edges.
 
         Returns: None, but exports the airplane geometry to a STEP file.
         """
