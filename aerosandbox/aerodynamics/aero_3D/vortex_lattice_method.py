@@ -4,7 +4,7 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Callable
 import copy
 
 
@@ -45,9 +45,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
                  run_symmetric_if_possible: bool = False,
                  verbose: bool = False,
                  spanwise_resolution: int = 10,
-                 spanwise_spacing: str = "cosine",
+                 spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  chordwise_resolution: int = 10,
-                 chordwise_spacing: str = "cosine",
+                 chordwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  vortex_core_radius: float = 1e-8,
                  align_trailing_vortices_with_wind: bool = False,
                  ):
@@ -62,9 +62,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.verbose = verbose
         self.spanwise_resolution = spanwise_resolution
-        self.spanwise_spacing = spanwise_spacing
+        self.spanwise_spacing_function = spanwise_spacing_function
         self.chordwise_resolution = chordwise_resolution
-        self.chordwise_spacing = chordwise_spacing
+        self.chordwise_spacing_function = chordwise_spacing_function
         self.vortex_core_radius = vortex_core_radius
         self.align_trailing_vortices_with_wind = align_trailing_vortices_with_wind
 
@@ -121,12 +121,15 @@ class VortexLatticeMethod(ExplicitAnalysis):
         is_trailing_edge = []
 
         for wing in self.airplane.wings:
+            wing = wing.subdivide_sections(
+                ratio=self.spanwise_resolution,
+                spacing_function=self.spanwise_spacing_function
+            )
+
             points, faces = wing.mesh_thin_surface(
                 method="quad",
                 chordwise_resolution=self.chordwise_resolution,
-                chordwise_spacing=self.chordwise_spacing,
-                spanwise_resolution=self.spanwise_resolution,
-                spanwise_spacing=self.spanwise_spacing,
+                chordwise_spacing_function=self.chordwise_spacing_function,
                 add_camber=True
             )
             front_left_vertices.append(points[faces[:, 0], :])
@@ -536,7 +539,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
     def calculate_streamlines(self,
                               seed_points: np.ndarray = None,
                               n_steps: int = 300,
-                              length: float = None
+                              length: float = None,
                               ) -> np.ndarray:
         """
         Computes streamlines, starting at specific seed points.
