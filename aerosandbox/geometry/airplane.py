@@ -515,11 +515,12 @@ class Airplane(AeroSandboxObject):
             https://core.ac.uk/download/pdf/79175663.pdf
 
         Args:
+
             chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
-                Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing.
-                However, wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less.
-                Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability".
-                PDF: https://www.sciencedirect.com/science/article/pii/B9780080982427000031
+            Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing. However,
+            wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less. Citing Cook,
+            Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability". PDF:
+            https://www.sciencedirect.com/science/article/pii/B9780080982427000031
 
         Returns: The (x, y, z) coordinates of the aerodynamic center of the airplane.
         """
