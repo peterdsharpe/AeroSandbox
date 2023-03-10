@@ -797,13 +797,23 @@ class Airfoil(Polygon):
 
     def repanel(self,
                 n_points_per_side: int = 100,
+                spacing_function_per_side = np.cosspace,
                 ) -> 'Airfoil':
         """
-        Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
-        :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
-            Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
-            since one point (the leading edge point) is shared by both the upper and lower surfaces.
-        :return: Returns the new airfoil.
+        Returns a repaneled copy of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+
+        Args:
+
+            n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
+
+                Notes: The number of points defining the final airfoil will be `n_points_per_side * 2 - 1`,
+                since one point (the leading edge point) is shared by both the upper and lower surfaces.
+
+            spacing_function_per_side: Determines how to space the points on each side of the airfoil. Can be
+            `np.linspace` or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that returns
+            a spaced array of `n` points between `a` and `b`. [function]
+
+        Returns: A copy of the airfoil with the new coordinates.
         """
 
         upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
@@ -829,10 +839,10 @@ class Airfoil(Polygon):
         ))
 
         # Generate a cosine-spaced list of points from 0 to 1
-        cosspaced_points = np.cosspace(0, 1, n_points_per_side)
+        spaced_points = spacing_function_per_side(0, 1, n_points_per_side)
         s = np.hstack((
-            cosspaced_points,
-            1 + cosspaced_points[1:],
+            spaced_points,
+            1 + spaced_points[1:],
         ))
 
         # Check that there are no duplicate points in the airfoil.
