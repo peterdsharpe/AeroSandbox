@@ -52,6 +52,25 @@ class AeroBuildup(ExplicitAnalysis):
                  xyz_ref: Union[np.ndarray, List[float]] = None,
                  include_wave_drag: bool = True,
                  ):
+        """
+        Initializes a new AeroBuildup analysis as an object.
+
+        Note: to run the analysis, you need to first instantiate the object, then call the .run() method.
+
+        Args:
+            airplane: The airplane to analyze.
+
+            op_point: The operating point to analyze at. Note that this can be vectorized (i.e., attributes of the OperatingPoint
+            object can be arrays, in which case AeroBuildup analysis will be vectorized).
+
+            xyz_ref: The reference point for the aerodynamic forces and moments. This is the point about which the moments are
+            taken, and the point at which the forces are applied. Defaults to the airplane's xyz_ref.
+
+            include_wave_drag: Whether to include wave drag in the analysis. Defaults to True.
+
+        Returns: None
+
+        """
         super().__init__()
 
         ### Set defaults
@@ -64,49 +83,44 @@ class AeroBuildup(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.include_wave_drag = include_wave_drag
 
-    def run(self):
+    def run(self) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
         """
-        Computes the aerodynamic forces.
+        Computes the aerodynamic forces and moments on the airplane.
 
-        Returns a dictionary with keys:
+        Returns: a dictionary with keys:
 
             'F_g' : an [x, y, z] list of forces in geometry axes [N]
-
             'F_b' : an [x, y, z] list of forces in body axes [N]
-
             'F_w' : an [x, y, z] list of forces in wind axes [N]
-
             'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
-
             'M_b' : an [x, y, z] list of moments about body axes [Nm]
-
             'M_w' : an [x, y, z] list of moments about wind axes [Nm]
-
             'L' : the lift force [N]. Definitionally, this is in wind axes.
-
             'Y' : the side force [N]. This is in wind axes.
-
             'D' : the drag force [N]. Definitionally, this is in wind axes.
-
             'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
-
             'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
-
             'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
-
             'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
-
             'CY', the sideforce coefficient [-]. This is in wind axes.
-
             'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
-
             'Cl', the rolling coefficient [-], in body axes
-
             'Cm', the pitching coefficient [-], in body axes
-
             'Cn', the yawing coefficient [-], in body axes
 
         Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+
+        Data types:
+            - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
+
+                - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
+                are floats, not arrays).
+
+                - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
+                array).
+
+            - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
+            floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
         """
 
         ### Compute the forces on each component

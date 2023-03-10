@@ -510,7 +510,7 @@ class Airplane(AeroSandboxObject):
 
     def aerodynamic_center(self, chord_fraction: float = 0.25):
         """
-        Computes the location of the aerodynamic center of the wing.
+        Computes the approximate location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:
             https://core.ac.uk/download/pdf/79175663.pdf
 
