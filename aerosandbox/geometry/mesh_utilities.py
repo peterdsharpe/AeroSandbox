@@ -24,7 +24,14 @@ def stack_meshes(
     Args:
         *meshes: Any number of mesh tuples in standard (points, faces) format.
 
-    Returns: (points, faces) of the combined mesh.
+    Returns: Points and faces of the combined mesh. Standard unstructured mesh format: A tuple of `points` and
+    `faces`, where:
+
+        * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
+
+        * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
+
+            * Each row of `faces` is a list of indices into `points`, which specifies a face.
 
     """
     if len(meshes) == 1:
