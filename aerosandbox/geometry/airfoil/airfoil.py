@@ -144,7 +144,7 @@ class Airfoil(Polygon):
         if CM_function is not None:
             self.CM_function = CM_function
 
-    def __repr__(self):  # String representation
+    def __repr__(self) -> str:
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
     def __eq__(self, other: "Airfoil") -> bool:
@@ -583,8 +583,12 @@ class Airfoil(Polygon):
                      ) -> Union[float, np.ndarray]:
         """
         Returns the local camber of the airfoil at a given point or points.
-        :param x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
-        :return: Local camber of the airfoil (y/c) [1D array].
+
+        Args:
+            x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
+
+        Returns:
+            Local camber of the airfoil (y/c) [1D array].
         """
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
@@ -607,8 +611,12 @@ class Airfoil(Polygon):
                         ) -> Union[float, np.ndarray]:
         """
         Returns the local thickness of the airfoil at a given point or points.
-        :param x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
-        :return: Local thickness of the airfoil (y/c) [1D array].
+
+        Args:
+            x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
+
+        Returns:
+            Local thickness of the airfoil (y/c) [1D array].
         """
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
