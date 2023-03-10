@@ -833,6 +833,7 @@ class Wing(AeroSandboxObject):
     def mesh_body(self,
                   method="quad",
                   chordwise_resolution: int = 36,
+                  chordwise_spacing_function_per_side: Callable[[float, float, float], float] = np.cosspace,
                   mesh_surface: bool = True,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
@@ -878,6 +879,11 @@ class Wing(AeroSandboxObject):
 
             chordwise_resolution: Number of points to use per wing chord, per wing section.
 
+            chordwise_spacing_function_per_side: A function that determines how to space points in the chordwise
+            direction along the top and bottom surfaces. Common values would be `np.linspace` or `np.cosspace`,
+            but it can be any function with the call signature `f(a, b, n)` that returns a spaced array of `n` points
+            between `a` and `b`. [function]
+
             mesh_surface: If True, includes the actual wing surface in the mesh.
 
             mesh_tips: If True, includes the wing tips (both on the inboard-most section and on the outboard-most
@@ -901,7 +907,10 @@ class Wing(AeroSandboxObject):
 
         airfoil_nondim_coordinates = np.array([
             xsec.airfoil
-            .repanel(n_points_per_side=chordwise_resolution + 1)
+            .repanel(
+                n_points_per_side=chordwise_resolution + 1,
+                spacing_function_per_side=chordwise_spacing_function_per_side,
+            )
             .coordinates
             for xsec in self.xsecs
         ])
@@ -992,7 +1001,7 @@ class Wing(AeroSandboxObject):
                           chordwise_resolution: int = 36,
                           chordwise_spacing_function: Callable[[float, float, float], float] = np.cosspace,
                           add_camber: bool = True,
-                          ) -> Tuple[np.ndarray, List[List[int]]]:
+                          ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Meshes the mean camber line of the wing as a thin-sheet body.
 
