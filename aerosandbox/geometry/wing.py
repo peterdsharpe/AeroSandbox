@@ -836,23 +836,60 @@ class Wing(AeroSandboxObject):
                   mesh_surface: bool = True,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
+                  mesh_symmetric: bool = True,
                   ) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Meshes the wing as a solid (thickened) body.
+        Meshes the outer mold line surface of the wing.
 
         Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
         `aerosandbox.geometry.mesh_utilities`.
 
-        Args:
-            method: Allows choice between "tri" and "quad" meshing.
-            chordwise_resolution: Controls the chordwise resolution of the meshing.
-            spanwise_resolution: Controls the spanwise resolution of the meshing.
-            spanwise_spacing: Controls the spanwise spacing of the meshing. Can be "uniform" or "cosine".
-            mesh_surface: Controls whether the actual wing surface is meshed.
-            mesh_tips: Control whether the wing tips (both outside and inside) are meshed.
-            mesh_trailing_edge: Controls whether the wing trailing edge is meshed, in the case of open-TE airfoils.
+        Order of faces:
 
-        Returns: Standard unstructured mesh format: A tuple of`points` and `faces`, where:
+            * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
+
+                * If `mesh_surface` is `True`:
+
+                    * First face is nearest the top-side trailing edge of the wing root.
+
+                    * Proceeds chordwise, along the upper surface of the wing from back to front. Upon reaching the
+                    leading edge, continues along the lower surface of the wing from front to back.
+
+                    * Then, repeats this process for the next spanwise slice of the wing, and so on.
+
+                * If `mesh_trailing_edge` is `True`:
+
+                    * Continues by meshing the trailing edge of the wing. Meshes the inboard trailing edge first, then
+                    proceeds spanwise to the outboard trailing edge.
+
+                * If `mesh_tips` is `True`:
+
+                    * Continues by meshing the wing tips. Meshes the inboard tip first, then meshes the outboard tip.
+
+                    * Within each tip, meshes from the
+
+        Args:
+
+            method: One of the following options, as a string:
+
+                * "tri": Triangular mesh.
+
+                * "quad": Quadrilateral mesh.
+
+            chordwise_resolution: Number of points to use per wing chord, per wing section.
+
+            mesh_surface: If True, includes the actual wing surface in the mesh.
+
+            mesh_tips: If True, includes the wing tips (both on the inboard-most section and on the outboard-most
+            section) in the mesh.
+
+            mesh_trailing_edge: If True, includes the wing trailing edge in the mesh, if the trailing-edge thickness
+            is nonzero.
+
+            mesh_symmetric: Has no effect if the wing is not symmetric. If the wing is symmetric this determines whether
+            the generated mesh is also symmetric, or if if only one side of the wing (right side) is meshed.
+
+        Returns: Standard unstructured mesh format: A tuple of `points` and `faces`, where:
 
             * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
 
@@ -935,7 +972,7 @@ class Wing(AeroSandboxObject):
 
         faces = np.array(faces)
 
-        if self.symmetric:
+        if mesh_symmetric and self.symmetric:
             flipped_points = np.multiply(
                 points,
                 np.array([
@@ -953,9 +990,7 @@ class Wing(AeroSandboxObject):
     def mesh_thin_surface(self,
                           method="tri",
                           chordwise_resolution: int = 36,
-                          spanwise_resolution: int = 1,
-                          chordwise_spacing: str = "cosine",
-                          spanwise_spacing: str = "uniform",
+                          chordwise_spacing_function: Callable[[float, float, float], float] = np.cosspace,
                           add_camber: bool = True,
                           ) -> Tuple[np.ndarray, List[List[int]]]:
         """
@@ -993,13 +1028,16 @@ class Wing(AeroSandboxObject):
 
                 * "tri" meshes the fuselage as a series of triangles.
 
-            chordwise_resolution: Controls the chordwise resolution of the meshing.
-            spanwise_resolution: Controls the spanwise resolution of the meshing.
-            chordwise_spacing: Controls the chordwise spacing of the meshing. Can be "uniform" or "cosine".
-            spanwise_spacing: Controls the spanwise spacing of the meshing. Can be "uniform" or "cosine".
-            add_camber: Controls whether to mesh the thin surface with camber (i.e., mean camber line), or just the flat planform.
+            chordwise_resolution: Determines the number of chordwise panels to use in the meshing. [int]
 
-        Returns: Standard unstructured mesh format: A tuple of`points` and `faces`, where:
+            chordwise_spacing_function: Determines how to space the chordwise panels. Can be `np.linspace` or
+            `np.cosspace`, or any other function of the call signature `f(a, b, n)` that returns a spaced array of
+            `n` points between `a` and `b`. [function]
+
+            add_camber: Controls whether to mesh the thin surface with camber (i.e., mean camber line), or to just
+            mesh the flat planform. [bool]
+
+        Returns: Standard unstructured mesh format: A tuple of `points` and `faces`, where:
 
             * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
 
@@ -1009,14 +1047,7 @@ class Wing(AeroSandboxObject):
 
 
         """
-        if chordwise_spacing == "cosine":
-            space = np.cosspace
-        elif chordwise_spacing == "uniform":
-            space = np.linspace
-        else:
-            raise ValueError("Bad value of 'chordwise_spacing'")
-
-        x_nondim = space(
+        x_nondim = chordwise_spacing_function(
             0,
             1,
             chordwise_resolution + 1
