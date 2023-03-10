@@ -85,10 +85,10 @@ class Propulsor(AeroSandboxObject):
 
         return xg_local, yg_local, zg_local
 
-    def get_3D_coordinates(self,
-                           theta: Union[float, np.ndarray] = None,
-                           l_over_length: Union[float, np.ndarray] = None,
-                           ) -> Tuple[Union[float, np.ndarray]]:
+    def get_disk_3D_coordinates(self,
+                                theta: Union[float, np.ndarray] = None,
+                                l_over_length: Union[float, np.ndarray] = None,
+                                ) -> Tuple[Union[float, np.ndarray]]:
         ### Set defaults
         if theta is None:
             theta = np.linspace(
