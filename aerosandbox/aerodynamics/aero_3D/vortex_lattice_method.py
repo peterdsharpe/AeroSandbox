@@ -88,43 +88,26 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         Returns a dictionary with keys:
 
-            'F_g' : an [x, y, z] list of forces in geometry axes [N]
+            - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
+            - 'F_b' : an [x, y, z] list of forces in body axes [N]
+            - 'F_w' : an [x, y, z] list of forces in wind axes [N]
+            - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+            - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
+            - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+            - 'L' : the lift force [N]. Definitionally, this is in wind axes.
+            - 'Y' : the side force [N]. This is in wind axes.
+            - 'D' : the drag force [N]. Definitionally, this is in wind axes.
+            - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+            - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+            - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+            - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+            - 'CY', the sideforce coefficient [-]. This is in wind axes.
+            - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+            - 'Cl', the rolling coefficient [-], in body axes
+            - 'Cm', the pitching coefficient [-], in body axes
+            - 'Cn', the yawing coefficient [-], in body axes
 
-            'F_b' : an [x, y, z] list of forces in body axes [N]
-
-            'F_w' : an [x, y, z] list of forces in wind axes [N]
-
-            'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
-
-            'M_b' : an [x, y, z] list of moments about body axes [Nm]
-
-            'M_w' : an [x, y, z] list of moments about wind axes [Nm]
-
-            'L' : the lift force [N]. Definitionally, this is in wind axes.
-
-            'Y' : the side force [N]. This is in wind axes.
-
-            'D' : the drag force [N]. Definitionally, this is in wind axes.
-
-            'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
-
-            'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
-
-            'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
-
-            'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
-
-            'CY', the sideforce coefficient [-]. This is in wind axes.
-
-            'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
-
-            'Cl', the rolling coefficient [-], in body axes
-
-            'Cm', the pitching coefficient [-], in body axes
-
-            'Cn', the yawing coefficient [-], in body axes
-
-        Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+        Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
         """
 
         if self.verbose:
