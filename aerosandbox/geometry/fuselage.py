@@ -300,7 +300,7 @@ class Fuselage(AeroSandboxObject):
 
             tangential_resolution: An integer, which determines the number of points to use to mesh each cross-section.
 
-        Returns: A tuple of`points` and `faces`, where:
+        Returns: Standard unstructured mesh format: A tuple of`points` and `faces`, where:
 
             * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
 
@@ -368,7 +368,8 @@ class Fuselage(AeroSandboxObject):
             be a single value used at all cross-sections, or can be an iterable of values to be used at the
             respective cross-sections.
 
-        Returns: A list of points, where each point is a 3-element array of the form `[x, y, z]`.
+        Returns: A list of points, where each point is a 3-element array of the form `[x, y, z]`. Goes from the nose
+        to the tail.
 
         """
 

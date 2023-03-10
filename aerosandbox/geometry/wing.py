@@ -852,7 +852,13 @@ class Wing(AeroSandboxObject):
             mesh_tips: Control whether the wing tips (both outside and inside) are meshed.
             mesh_trailing_edge: Controls whether the wing trailing edge is meshed, in the case of open-TE airfoils.
 
-        Returns: (points, faces) in standard mesh format.
+        Returns: Standard unstructured mesh format: A tuple of`points` and `faces`, where:
+
+            * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
+
+            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
+
+                * Each row of `faces` is a list of indices into `points`, which specifies a face.
 
         """
 
@@ -980,14 +986,27 @@ class Wing(AeroSandboxObject):
                 * Front-right
 
         Args:
-            method: Allows choice between "tri" and "quad" meshing.
+
+            method: A string, which determines whether to mesh the fuselage as a series of quadrilaterals or triangles.
+
+                * "quad" meshes the fuselage as a series of quadrilaterals.
+
+                * "tri" meshes the fuselage as a series of triangles.
+
             chordwise_resolution: Controls the chordwise resolution of the meshing.
             spanwise_resolution: Controls the spanwise resolution of the meshing.
             chordwise_spacing: Controls the chordwise spacing of the meshing. Can be "uniform" or "cosine".
             spanwise_spacing: Controls the spanwise spacing of the meshing. Can be "uniform" or "cosine".
             add_camber: Controls whether to mesh the thin surface with camber (i.e., mean camber line), or just the flat planform.
 
-        Returns: (points, faces) in standard mesh format.
+        Returns: Standard unstructured mesh format: A tuple of`points` and `faces`, where:
+
+            * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
+
+            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
+
+                * Each row of `faces` is a list of indices into `points`, which specifies a face.
+
 
         """
         if chordwise_spacing == "cosine":
@@ -1088,13 +1107,11 @@ class Wing(AeroSandboxObject):
             add_camber: Controls whether the camber of each cross-section's airfoil should be added to the line or
             not. Essentially modifies `z_nondim` to be `z_nondim + camber`.
 
-        Returns:
-
-            points: a Nx3 np.ndarray that gives the coordinates of each point on the meshed line. Goes from the root
-            to the tip. Ignores any wing symmetry (e.g., only gives one side).
+        Returns: A list of points, where each point is a 3-element array of the form `[x, y, z]`. Goes from the root
+        to the tip. Ignores any wing symmetry (e.g., only gives one side).
 
         """
-        points_on_line = []
+        points_on_line: List[np.ndarray] = []
 
         try:
             if len(x_nondim) != len(self.xsecs):
