@@ -658,12 +658,18 @@ class Airfoil(Polygon):
              draw_mcl=True,
              backend="matplotlib",
              show=True
-             ):
+             ) -> None:
         """
         Draw the airfoil object.
-        :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
-        :param backend: Which backend should we use? "plotly" or "matplotlib"
-        :return: None
+
+        Args:
+            draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
+
+            backend: Which backend should we use? "plotly" or "matplotlib"
+
+            show: Should we show the plot? [boolean]
+
+        Returns: None
         """
         x = np.array(self.x()).reshape(-1)
         y = np.array(self.y()).reshape(-1)
@@ -726,7 +732,7 @@ class Airfoil(Polygon):
 
     def LE_index(self) -> int:
         """
-        Returns the index of the leading-edge point.
+        Returns the index of the leading edge point in the airfoil coordinates.
         """
         return np.argmin(self.x())
 

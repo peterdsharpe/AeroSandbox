@@ -733,6 +733,25 @@ class Airplane(AeroSandboxObject):
                     elevator: Wing = None,
                     fin: Wing = None,
                     ):
+        """
+        Exports the airplane geometry to an XFLR5 `.xml` file.
+
+        Args:
+            filename: The filename to export to. Should include the ".xml" extension.
+
+            include_fuselages: Whether to include fuselages in the export.
+
+            mainwing: The main wing of the airplane. If not specified, will default to the first wing in the airplane.
+
+            elevator: The elevator of the airplane. If not specified, will default to the second wing in the airplane.
+
+            fin: The fin of the airplane. If not specified, will default to the third wing in the airplane.
+
+        Returns: None, but exports the airplane geometry to an XFLR5 `.xml` file.
+
+            To import the `.xml` file into XFLR5, go to File -> Import -> Import from XML.
+        """
+
         wings_specified = [
             mainwing is not None,
             elevator is not None,
