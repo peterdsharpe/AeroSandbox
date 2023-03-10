@@ -2,7 +2,7 @@ import aerosandbox.numpy as np
 from typing import Tuple
 
 """
-Documentation of (points, faces) standard format:
+Documentation of (points, faces) standard format, which is an unstructured mesh format:
 
 Meshes are given here in the common (points, faces) format. In this format, `points` is a Nx3 array, where each row 
 gives the 3D coordinates of a vertex in the mesh. Entries into this array are floating-point, generally speaking.
