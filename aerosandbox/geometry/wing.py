@@ -833,7 +833,7 @@ class Wing(AeroSandboxObject):
     def mesh_body(self,
                   method="quad",
                   chordwise_resolution: int = 36,
-                  chordwise_spacing_function_per_side: Callable[[float, float, float], float] = np.cosspace,
+                  chordwise_spacing_function_per_side: Callable[[float, float, float], np.ndarray] = np.cosspace,
                   mesh_surface: bool = True,
                   mesh_tips: bool = True,
                   mesh_trailing_edge: bool = True,
@@ -999,7 +999,7 @@ class Wing(AeroSandboxObject):
     def mesh_thin_surface(self,
                           method="tri",
                           chordwise_resolution: int = 36,
-                          chordwise_spacing_function: Callable[[float, float, float], float] = np.cosspace,
+                          chordwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                           add_camber: bool = True,
                           ) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -1069,8 +1069,6 @@ class Wing(AeroSandboxObject):
                     x_nondim=x_n,
                     z_nondim=0,
                     add_camber=add_camber,
-                    spanwise_resolution=spanwise_resolution,
-                    spanwise_spacing=spanwise_spacing
                 )
             )
 
@@ -1238,7 +1236,7 @@ class Wing(AeroSandboxObject):
 
     def subdivide_sections(self,
                            ratio: int,
-                           spacing_function: Callable[[float, float, float], float] = np.linspace
+                           spacing_function: Callable[[float, float, float], np.ndarray] = np.linspace
                            ) -> "Wing":
         """
         Generates a new Wing that subdivides the existing sections of this Wing into several smaller ones. Splits

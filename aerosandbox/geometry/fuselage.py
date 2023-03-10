@@ -470,7 +470,7 @@ class Fuselage(AeroSandboxObject):
 
     def subdivide_sections(self,
                            ratio: int,
-                           spacing_function: Callable[[float, float, float], float] = np.linspace
+                           spacing_function: Callable[[float, float, float], np.ndarray] = np.linspace
                            ) -> "Fuselage":
         """
         Generates a new Fuselage that subdivides the existing sections of this Fuselage into several smaller ones. Splits
