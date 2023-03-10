@@ -15,8 +15,8 @@ the vertex locations of that face are found.
 
 
 def stack_meshes(
-        *meshes: Tuple[np.ndarray, np.ndarray]
-):
+        *meshes: Tuple[Tuple[np.ndarray, np.ndarray]]
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Takes in a series of tuples (points, faces) and merges them into a single tuple (points, faces). All (points,
     faces) tuples are meshes given in standard format.
@@ -53,7 +53,7 @@ def stack_meshes(
 def convert_mesh_to_polydata_format(
         points: np.ndarray,
         faces: np.ndarray
-):
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     PyVista uses a slightly different convention for the standard (points, faces) format as described above. They
     give `faces` as a single 1D vector of roughly length (M*3), or (M*4) in the case of quadrilateral meshing.
