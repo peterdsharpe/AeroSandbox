@@ -335,7 +335,7 @@ class Airplane(AeroSandboxObject):
             ]:
 
                 plot_line(
-                    wing.mesh_line(x_nondim=xy[0], z_nondim=xy[1]),
+                    np.stack(wing.mesh_line(x_nondim=xy[0], z_nondim=xy[1]), axis=0),
                     symmetric=wing.symmetric,
                     linewidth=thick_linewidth,
                 )
@@ -346,12 +346,12 @@ class Airplane(AeroSandboxObject):
             thicknesses = np.array([af.local_thickness(x_over_c=x) for af in afs])
 
             plot_line(
-                wing.mesh_line(x_nondim=x, z_nondim=thicknesses / 2, add_camber=True),
+                np.stack(wing.mesh_line(x_nondim=x, z_nondim=thicknesses / 2, add_camber=True), axis=0),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
             )
             plot_line(
-                wing.mesh_line(x_nondim=x, z_nondim=-thicknesses / 2, add_camber=True),
+                np.stack(wing.mesh_line(x_nondim=x, z_nondim=-thicknesses / 2, add_camber=True), axis=0),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
             )
@@ -397,7 +397,10 @@ class Airplane(AeroSandboxObject):
 
             ### Centerline
             plot_line(
-                fuse.mesh_line(y_nondim=0, z_nondim=0),
+                np.stack(
+                    fuse.mesh_line(y_nondim=0, z_nondim=0),
+                    axis=0,
+                ),
                 linewidth=thin_linewidth
             )
 

@@ -921,14 +921,17 @@ class Wing(AeroSandboxObject):
         spanwise_strips = []
         for x_n, y_n in zip(x_nondim, y_nondim):
             spanwise_strips.append(
-                self.mesh_line(
-                    x_nondim=x_n,
-                    z_nondim=y_n,
-                    add_camber=False,
+                np.stack(
+                    self.mesh_line(
+                        x_nondim=x_n,
+                        z_nondim=y_n,
+                        add_camber=False,
+                    ),
+                    axis=0
                 )
             )
 
-        points = np.concatenate(spanwise_strips)
+        points = np.concatenate(spanwise_strips, axis=0)
 
         faces = []
 
@@ -1065,10 +1068,13 @@ class Wing(AeroSandboxObject):
         spanwise_strips = []
         for x_n in x_nondim:
             spanwise_strips.append(
-                self.mesh_line(
-                    x_nondim=x_n,
-                    z_nondim=0,
-                    add_camber=add_camber,
+                np.stack(
+                    self.mesh_line(
+                        x_nondim=x_n,
+                        z_nondim=0,
+                        add_camber=add_camber,
+                    ),
+                    axis=0
                 )
             )
 
