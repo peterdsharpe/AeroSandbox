@@ -173,6 +173,7 @@ def mass_fuselage(
         L_over_D: float,
         cruise_op_point: asb.OperatingPoint,
         wing_to_tail_distance: float,
+        pressure_differential: float = 0.0,
         use_advanced_composites: bool = False,
 ) -> float:
     """
@@ -192,6 +193,8 @@ def mass_fuselage(
 
         wing_to_tail_distance: The distance between the wing root-quarter-chord-point and the tail
         root-quarter-chord-point of the aircraft [m].
+
+        pressure_differential: The absolute value of the pressure differential across the fuselage [Pa].
 
         use_advanced_composites: Whether to use advanced composites for the fuselage. If True, the fuselage mass is
         modified accordingly.
