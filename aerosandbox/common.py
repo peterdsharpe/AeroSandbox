@@ -31,7 +31,6 @@ class AeroSandboxObject:
         raise DeprecationWarning(
             "This function is deprecated. Use `sol.value(x)` or even simply `sol(x)` instead, which now works "
             "recursively on complex data structures.",
-            stacklevel=2
         )
 
         # Set defaults
