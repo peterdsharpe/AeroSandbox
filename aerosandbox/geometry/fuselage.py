@@ -412,18 +412,6 @@ class Fuselage(AeroSandboxObject):
             )
             points_on_line.append(xsec_point)
 
-        mesh_sections = []
-        for i in range(len(points_on_line) - 1):
-            mesh_section = np.linspace(
-                points_on_line[i],
-                points_on_line[i + 1],
-                chordwise_resolution + 1
-            )
-            if not i == len(points_on_line) - 2:
-                mesh_section = mesh_section[:-1]
-
-            mesh_sections.append(mesh_section)
-
         return points_on_line
 
     def draw(self, *args, **kwargs):
