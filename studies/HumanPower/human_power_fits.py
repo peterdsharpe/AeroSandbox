@@ -1,4 +1,5 @@
-from aerosandbox.modeling.fitting import *
+import aerosandbox as asb
+import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -23,7 +24,7 @@ for dataset in datasets:
 
     def human_power_model(x, p):
         d = x["d"]
-        logd = cas.log10(d)
+        logd = np.log10(d)
 
         return (
                 p["a"] * d ** (
@@ -32,18 +33,18 @@ for dataset in datasets:
         )  # essentially, a cubic in log-log space
 
 
-    params = fit(
+    params = asb.FittedModel(
         model=human_power_model,
         x_data={"d": durations},
         y_data=powers,
-        param_guesses={
+        parameter_guesses={
             "a" : 408,
             "b0": -0.17,
             "b1": 0.08,
             "b2": -0.04,
         },
         put_residuals_in_logspace=True
-    )
+    ).parameters
 
     # Plot fit
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)

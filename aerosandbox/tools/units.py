@@ -46,6 +46,7 @@ pascal = 1
 torr = 133.3223684211
 atm = 101325
 psi = lbf / inch ** 2
+psf = lbf / foot ** 2
 
 # SI prefixes
 yocto = 1e-24

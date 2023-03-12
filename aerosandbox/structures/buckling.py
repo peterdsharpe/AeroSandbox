@@ -170,7 +170,7 @@ def plate_buckling_critical_load(
 
     critical_buckling_stress = K * elastic_modulus * (wall_thickness / width) ** 2
 
-    plate_xsec_area = thickness * width
+    plate_xsec_area = wall_thickness * width
 
     critical_buckling_load = critical_buckling_stress * plate_xsec_area
 

@@ -1,5 +1,4 @@
 from typing import Union, List, Dict, Callable, Any, Tuple, Set, Optional
-import numpy.typing as npt
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -474,7 +473,7 @@ class Opti(cas.Opti):
                     >>> vector_param = opti.parameter(value=np.linspace(0, 5, 10)) # Initializes a vector parameter of
                     >>> # length 10, with all 10 elements set to a value varying from 0 to 5.
 
-            n_vars: [Optional] Used to manually override the dimensionality of the parameter to create; if not
+            n_params: [Optional] Used to manually override the dimensionality of the parameter to create; if not
             provided, the dimensionality of the parameter is inferred from `value`.
 
                 The only real case where you need to use this argument would be if you are initializing a vector
@@ -482,7 +481,7 @@ class Opti(cas.Opti):
                 For example:
 
                     >>> opti = asb.Opti()
-                    >>> vector_var = opti.parameter(value=5, n_vars=10) # Initializes a vector parameter of length
+                    >>> vector_param = opti.parameter(value=5, n_params=10) # Initializes a vector parameter of length
                     >>> # 10, with all 10 elements set to a value of 5.
 
         Returns:
@@ -1270,7 +1269,7 @@ class OptiSol:
 
 
 if __name__ == '__main__':
-    # import pytest
+    import pytest
 
     # pytest.main()
 

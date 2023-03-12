@@ -14,7 +14,7 @@ class Fuselage(AeroSandboxObject):
         a fuselage. These can be accessed with `Fuselage.xsecs`, which gives a list of xsecs in the Fuselage. Each
         xsec is a FuselageXSec object, a class that is defined separately.
 
-        You may also see references to fuselage "sections", which are different than cross-sections (xsecs)! Sections
+        You may also see references to fuselage "sections", which are different from cross-sections (xsecs)! Sections
         are the portions of the fuselage that are in between xsecs. In other words, a fuselage with N cross-sections
         (xsecs, FuselageXSec objects) will always have N-1 sections. Sections are never explicitly defined,
         since you can get all needed information by lofting from the adjacent cross-sections. For example,
@@ -462,7 +462,7 @@ class Fuselage(AeroSandboxObject):
                            ) -> "Fuselage":
         """
         Generates a new Fuselage that subdivides the existing sections of this Fuselage into several smaller ones. Splits
-        each section into N=`ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
+        each section into N=`ratio` smaller subsections by inserting new cross-sections (xsecs) as needed.
 
         This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
 
@@ -850,9 +850,11 @@ class FuselageXSec(AeroSandboxObject):
                           preserve="area"
                           ) -> float:
         """
-        Computes an equivalent radius for non-circular cross-sections. This may be necessary when doing analysis that uses axisymmetric assumptions.
+        Computes an equivalent radius for non-circular cross-sections. This may be necessary when doing analysis that
+        uses axisymmetric assumptions.
 
-        Can either hold area or perimeter fixed, depending on whether cross-sectional area or wetted area is more important.
+        Can either hold area or perimeter fixed, depending on whether cross-sectional area or wetted area is more
+        important.
 
         Args:
 

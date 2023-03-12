@@ -1,4 +1,4 @@
-from aerosandbox import AeroSandboxObject
+from aerosandbox.common import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Tuple, Union, Optional, Callable
 from aerosandbox.geometry.airfoil import Airfoil
@@ -935,7 +935,7 @@ class Wing(AeroSandboxObject):
 
         faces = []
 
-        num_i = spanwise_resolution * (len(self.xsecs) - 1)
+        num_i = (len(self.xsecs) - 1)
         num_j = len(spanwise_strips) - 1
 
         def index_of(iloc, jloc):

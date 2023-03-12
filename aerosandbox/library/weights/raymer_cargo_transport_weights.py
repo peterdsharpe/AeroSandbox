@@ -2,6 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
 from .raymer_fudge_factors import advanced_composites
+from typing import Union
 
 
 # From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
@@ -171,7 +172,7 @@ def mass_vstab(
             (aircraft_z_radius_of_gyration / u.foot) ** 0.875 *
             np.cosd(vstab.mean_sweep_angle()) ** -1 *
             vstab.aspect_ratio() ** 0.35 *
-            vstab_airfoil.max_thickness() ** -0.5 *
+            airfoil_t_over_c ** -0.5 *
             (advanced_composites["tails"] if use_advanced_composites else 1)
     ) * u.lbm
 
@@ -245,7 +246,7 @@ def mass_fuselage(
             K_lg *
             (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.5 *
             (fuselage_structural_length / u.foot) ** 0.25 *
-            (fuse.area_wetted() / u.foot ** 2) ** 0.302 *
+            (fuselage.area_wetted() / u.foot ** 2) ** 0.302 *
             (1 + K_ws) ** 0.04 *
             L_over_D ** 0.10 * # L/D
             (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)

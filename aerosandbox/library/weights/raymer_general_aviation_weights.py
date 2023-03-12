@@ -386,9 +386,9 @@ def mass_flight_controls(
 
     ### Handle the fuselage argument and get the fuselage length factor
     if fuselage is None:
-        if len(airplanes.fuselages == 0):
+        if len(airplane.fuselages) == 0:
             pass
-        elif len(airplanes.fuselages == 1):
+        elif len(airplane.fuselages) == 1:
             fuselage = airplane.fuselages[0]
         else:
             raise ValueError('More than one fuselage is present in the airplane. Please specify which fuselage to use '
@@ -401,9 +401,9 @@ def mass_flight_controls(
 
     ### Handle the main wing argument and get the wing span factor
     if main_wing is None:
-        if len(airplanes.wings == 0):
+        if len(airplane.wings) == 0:
             pass
-        elif len(airplanes.wings == 1):
+        elif len(airplane.wings) == 1:
             main_wing = airplane.wings[0]
         else:
             raise ValueError('More than one wing is present in the airplane. Please specify which wing is the main'
@@ -510,7 +510,7 @@ def mass_electrical(
 
     fuel_and_avionics_masses = fuel_system_mass + avionics_mass
 
-    returns(
+    return (
         12.57 *
         (fuel_and_avionics_masses / u.lbm) ** 0.51
     ) * u.lbm
