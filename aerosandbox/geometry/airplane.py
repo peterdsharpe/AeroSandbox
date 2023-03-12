@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Union, Optional, Tuple
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
@@ -279,6 +279,9 @@ class Airplane(AeroSandboxObject):
                        thin_linewidth=0.2,
                        thick_linewidth=0.5,
                        fuselage_longeron_theta=None,
+                       use_preset_view_angle: str = None,
+                       set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+                       set_background_pane_alpha: float = None,
                        set_equal: bool = True,
                        set_axis_visibility: bool = None,
                        show: bool = True,
@@ -293,6 +296,22 @@ class Airplane(AeroSandboxObject):
                 raise ValueError("`ax` must be a 3D axis.")
 
             plt.sca(ax)
+
+        ### Set the view angle
+        if use_preset_view_angle is not None:
+            p.set_preset_3d_view_angle(use_preset_view_angle)
+
+        ### Set the background pane color
+        if set_background_pane_color is not None:
+            ax.xaxis.pane.set_facecolor(set_background_pane_color)
+            ax.yaxis.pane.set_facecolor(set_background_pane_color)
+            ax.zaxis.pane.set_facecolor(set_background_pane_color)
+
+        ### Set the background pane alpha
+        if set_background_pane_alpha is not None:
+            ax.xaxis.pane.set_alpha(set_background_pane_alpha)
+            ax.yaxis.pane.set_alpha(set_background_pane_alpha)
+            ax.zaxis.pane.set_alpha(set_background_pane_alpha)
 
         if fuselage_longeron_theta is None:
             fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
