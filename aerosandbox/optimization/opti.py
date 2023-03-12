@@ -719,7 +719,6 @@ class Opti(cas.Opti):
 
                 return None
 
-
         run_vectorized = np.vectorize(
             run,
             otypes=[cas.OptiSol]
@@ -1209,7 +1208,7 @@ class OptiSol:
             return [self.value(i) for i in x]
         if issubclass(t, tuple):
             return tuple([self.value(i) for i in x])
-        if issubclass(t, set) or issubclass(t, frozenset):
+        if issubclass(t, (set, frozenset)):
             return {self.value(i) for i in x}
         if issubclass(t, dict):
             return {
@@ -1218,23 +1217,20 @@ class OptiSol:
             }
 
         # Skip certain Python types
-        for type_to_skip in (
+        if issubclass(t, (
                 bool, str,
                 int, float, complex,
                 range,
                 type(None),
                 bytes, bytearray, memoryview
-        ):
-            if issubclass(t, type_to_skip):
-                return x
+        )):
+            return x
 
         # Skip certain CasADi types
-        for type_to_skip in (
-                cas.Opti,
-                cas.OptiSol
-        ):
-            if issubclass(t, type_to_skip):
-                return x
+        if issubclass(t, (
+                cas.Opti, cas.OptiSol
+        )):
+            return x
 
         # If it's any other type, try converting its attribute dictionary, if it has one:
         try:
