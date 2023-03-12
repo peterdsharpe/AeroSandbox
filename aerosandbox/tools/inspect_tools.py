@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Union
+from typing import List, Union, Tuple, Optional, Set
 from pathlib import Path
 from aerosandbox.tools.string_formatting import has_balanced_parentheses
 
@@ -299,6 +299,204 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
     return arg_names
 
 
+def codegen(
+        x: Any,
+        include_imports: bool = True,
+        indent_str: str = "    ",
+        _required_imports: Optional[Set[str]] = None,
+        _recursion_depth: int = 0,
+) -> Union[str, Tuple[str, Set[str]]]:
+    """
+    Attempts to generate a string of Python code that, when evaluated, would produce the same value as the input.
+
+    Not guaranteed to work for all inputs, but should work for most common cases.
+    """
+    ### Set defaults
+    if _required_imports is None:
+        _required_imports = set()
+
+    import_aliases = {
+        "aerosandbox"      : "asb",
+        "aerosandbox.numpy": "np",
+        "numpy"            : "np",
+    }
+
+    indent = indent_str * _recursion_depth
+    next_indent = indent_str * (_recursion_depth + 1)
+
+    if isinstance(x, (
+            bool, str,
+            int, float, complex,
+            range,
+            type(None),
+            bytes, bytearray, memoryview
+    )):
+        code = repr(x)
+
+    elif isinstance(x, list):
+        if len(x) == 0:
+            code = "[]"
+        else:
+            lines = []
+            lines.append("[")
+            for xi in x:
+                item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
+
+                _required_imports.update(item_required_imports)
+
+                lines.append(next_indent + item_code + ",")
+            lines.append(indent + "]")
+            code = "\n".join(lines)
+
+    elif isinstance(x, tuple):
+        if len(x) == 0:
+            code = "()"
+        else:
+            lines = []
+            lines.append("(")
+            for xi in x:
+                item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
+
+                _required_imports.update(item_required_imports)
+
+                lines.append(next_indent + item_code + ",")
+            lines.append(indent + ")")
+            code = "\n".join(lines)
+
+    elif isinstance(x, (set, frozenset)):
+        if len(x) == 0:
+            code = "set()"
+        else:
+            lines = []
+            lines.append("{")
+            for xi in x:
+                item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
+
+                _required_imports.update(item_required_imports)
+
+                lines.append(next_indent + item_code + ",")
+            lines.append(indent + "}")
+            code = "\n".join(lines)
+
+    elif isinstance(x, dict):
+        if len(x) == 0:
+            code = "{}"
+        else:
+            lines = []
+            lines.append("{")
+            for k, v in x.items():
+                k_code, k_required_imports = codegen(k, _recursion_depth=_recursion_depth + 1)
+                v_code, v_required_imports = codegen(v, _recursion_depth=_recursion_depth + 1)
+
+                _required_imports.update(k_required_imports)
+                _required_imports.update(v_required_imports)
+
+                lines.append(next_indent + k_code + ": " + v_code + ",")
+            lines.append(indent + "}")
+            code = "\n".join(lines)
+
+    elif isinstance(x, np.ndarray):
+        # lines = []
+        # lines.append("np.array([")
+        # for xi in x:
+        #     item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
+        #
+        #     _required_imports.update(item_required_imports)
+        #
+        #     lines.append(next_indent + item_code + ",")
+        # lines.append(indent + "])")
+        # code = "\n".join(lines)
+        _required_imports.add("import numpy as np")
+        code = f"np.{repr(x)}"
+
+    else:  # At this point, we assume it's a class instance, and could be from any package.
+
+        module_name = x.__class__.__module__
+        package_name = module_name.split(".")[0]
+
+        if package_name == "builtins":
+            pre_string = ""
+        # elif package_name in import_aliases:
+        #     pre_string = import_aliases[package_name] + "."
+        else:
+            _required_imports.add(
+                f"from {module_name} import {x.__class__.__name__}"
+            )
+
+        lines = []
+        lines.append(x.__class__.__name__ + "(")
+        for arg_name in inspect.getfullargspec(x.__init__).args[1:]:
+            if hasattr(x, arg_name):
+                arg_value = getattr(x, arg_name)
+
+                if inspect.ismethod(arg_value) or inspect.isfunction(arg_value):
+                    continue
+
+                arg_code, arg_required_imports = codegen(arg_value, _recursion_depth=_recursion_depth + 1)
+
+                _required_imports.update(arg_required_imports)
+
+                lines.append(next_indent + arg_name + "=" + arg_code + ",")
+        lines.append(indent + ")")
+        code = "\n".join(lines)
+
+    # elif isinstance(x, tuple):
+    #     code = "(\n" + f",\n{indent}".join([
+    #         codegen(xi, _recursion_depth=_recursion_depth + 1)
+    #         for xi in x
+    #     ]) + "\n" + indent + ")"
+    #
+    # elif isinstance(x, (set, frozenset)):
+    #     code = "{\n" + f",\n{indent}".join([
+    #         codegen(xi, _recursion_depth=_recursion_depth + 1)
+    #         for xi in x
+    #     ]) + "\n" + indent + "}"
+    #
+    # elif isinstance(x, dict):
+    #     code = "{\n" + f",\n{indent}".join([
+    #         codegen(k, _recursion_depth=_recursion_depth + 1) + ": " + codegen(v)
+    #         for k, v in x.items()
+    #     ]) + "\n" + indent + "}"
+    #
+    # elif isinstance(x, np.ndarray):
+    #     return indent + "np.array(\n" + codegen(x.tolist(), _recursion_depth=_recursion_depth + 1) + "\n" + indent + ")"
+    #
+    # else:  # At this point, we assume it's a class instance, and could be from any package.
+    #
+    #     ### First, we try to identify which package it's from.
+    #     module_name = x.__class__.__module__
+    #     package_name = module_name.split(".")[0]
+    #
+    #     ### We determine what to prefix the class name with, based on common imports.
+    #     if package_name == "builtins":
+    #         package_pre_string = ""
+    #     elif package_name in import_aliases:
+    #         package_pre_string = import_aliases[package_name] + "."
+    #     else:
+    #         package_pre_string = module_name + "."
+    #
+    #     ### Now, we figure out what the keyword arguments to pass to the constructor are.
+    #     constructor_kwargs: Dict[str, Any] = {}
+    #
+    #     for kwarg_name in inspect.getfullargspec(x.__init__).args[1:]:
+    #         if hasattr(x, kwarg_name):
+    #             constructor_kwargs[kwarg_name] = getattr(x, kwarg_name)
+    #
+    #     package_pre_string = "" if package_name == "builtins" else f"{package_name}."
+    #
+    #     return indent + f"{package_pre_string + x.__class__.__name__}(\n" + f",\n".join([
+    #         indent + arg_name + "=" + codegen(arg_value, _recursion_depth=_recursion_depth + 1)
+    #         for arg_name, arg_value in constructor_kwargs.items()
+    #     ]) + "\n" + indent + ")"
+
+    if _recursion_depth == 0:
+        imports = "\n".join(sorted(_required_imports))
+
+        return imports + "\n\n" + code
+    else:
+        return code, _required_imports
+
+
 if __name__ == '__main__':
     def dashes():
         """A quick macro for drawing some dashes, to make the terminal output clearer to distinguish."""
@@ -307,33 +505,43 @@ if __name__ == '__main__':
 
     dashes()
 
-    print("Caller location:\n", get_caller_source_location(stacklevel=1))
+    pc = lambda x: print(codegen(x) + "\n" + "-" * 50)
 
-    dashes()
+    pc(1)
+    pc([1, 2, 3])
+    pc([1, 2, [3, 4, 5], 6])
+    pc({"a": 1, "b": 2})
+    pc(np.array([1, 2, 3]))
+    pc(dict(myarray=np.array([1, 2, 3]), yourarray=np.arange(10)))
+    pc(vanilla)
 
-    print("Caller source code:\n", get_caller_source_code(stacklevel=1))
-
-    dashes()
-
-
-    def my_func():
-        print(
-            get_caller_source_code(
-                stacklevel=2
-            )
-        )
-
-
-    print("Caller source code of a function call:")
-
-    if_you_can_see_this_it_works = my_func()
-
-    dashes()
-
-    print("Arguments of f(a, b):")
-
-    print(
-        get_function_argument_names_from_source_code("f(a, b)")
-    )
-
-    location = get_caller_source_location()
+    # print("Caller location:\n", get_caller_source_location(stacklevel=1))
+    #
+    # dashes()
+    #
+    # print("Caller source code:\n", get_caller_source_code(stacklevel=1))
+    #
+    # dashes()
+    #
+    #
+    # def my_func():
+    #     print(
+    #         get_caller_source_code(
+    #             stacklevel=2
+    #         )
+    #     )
+    #
+    #
+    # print("Caller source code of a function call:")
+    #
+    # if_you_can_see_this_it_works = my_func()
+    #
+    # dashes()
+    #
+    # print("Arguments of f(a, b):")
+    #
+    # print(
+    #     get_function_argument_names_from_source_code("f(a, b)")
+    # )
+    #
+    # location = get_caller_source_location()
