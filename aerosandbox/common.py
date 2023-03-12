@@ -27,6 +27,12 @@ class AeroSandboxObject:
         :param sol: OptiSol object.
         :return:
         """
+        import warnings
+        raise DeprecationWarning(
+            "This function is deprecated. Use `sol.value(x)` or even simply `sol(x)` instead, which now works "
+            "recursively on complex data structures.",
+            stacklevel=2
+        )
 
         # Set defaults
         if inplace is None:
