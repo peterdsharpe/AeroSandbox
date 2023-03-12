@@ -1,3 +1,5 @@
+import numpy as np
+
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union, Tuple, Optional, Callable
@@ -93,6 +95,43 @@ class Fuselage(AeroSandboxObject):
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
         return f"Fuselage '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'})"
+
+    def add_loft(self,
+                 kind: str,
+                 to_xsec: 'FuselageXSec',
+                 from_xsec: 'FuselageXSec' = None,
+                 n_points: int = 5,
+                 spacing: Callable[[float, float, int], np.ndarray] = np.cosspace,
+                 ) -> "Fuselage":
+        raise NotImplementedError
+        ### Set defaults
+        if from_xsec is None:
+            if len(self.xsecs) == 0:
+                from_xsec = FuselageXSec(
+                    xyz_c=[0, 0, 0],
+                    width=0,
+                    height=0,
+                    shape=2
+                )
+            else:
+                from_xsec = self.xsecs[-1]
+
+        ### Define a nondimensional coordinate
+        t = spacing(0, 1, n_points)
+
+        if kind == "linear":
+            new_xsecs = [
+                FuselageXSec(
+                    xyz_c=from_xsec.xyz_c * (1 - ti) + to_xsec.xyz_c * ti,
+                    width=from_xsec.width * (1 - ti) + to_xsec.width * ti,
+                    height=from_xsec.height * (1 - ti) + to_xsec.height * ti,
+                    shape=from_xsec.shape * (1 - ti) + to_xsec.shape * ti,
+                    analysis_specific_options=from_xsec.analysis_specific_options,
+                )
+                for ti in t
+            ]
+
+        self.xsecs.extend(new_xsecs)
 
     def translate(self,
                   xyz: Union[np.ndarray, List[float]]
