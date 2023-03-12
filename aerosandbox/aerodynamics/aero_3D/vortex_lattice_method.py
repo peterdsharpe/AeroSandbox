@@ -121,10 +121,11 @@ class VortexLatticeMethod(ExplicitAnalysis):
         is_trailing_edge = []
 
         for wing in self.airplane.wings:
-            wing = wing.subdivide_sections(
-                ratio=self.spanwise_resolution,
-                spacing_function=self.spanwise_spacing_function
-            )
+            if self.spanwise_resolution > 1:
+                wing = wing.subdivide_sections(
+                    ratio=self.spanwise_resolution,
+                    spacing_function=self.spanwise_spacing_function
+                )
 
             points, faces = wing.mesh_thin_surface(
                 method="quad",
