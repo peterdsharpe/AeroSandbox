@@ -42,6 +42,42 @@ def test_function_argument_names_from_source_code():
             assert get_function_argument_names_from_source_code(input) == expected_output
 
 
+def test_codegen_builtins():
+    for x in [
+        1,
+        1.0,
+        "hello",
+        True,
+        None,
+        [1, 2, 3],
+        (1, 2, 3),
+        {1, 2, 3},
+        {1: 2, 3: 4},
+        dict(cat=1, dog=2),
+        [1, 2, [3, 4, [5, 6]]],
+    ]:
+
+        code, imports = codegen(x)
+        for import_str in imports:
+            exec(import_str)
+        assert eval(code) == x
+
+
+def test_codegen_numpy():
+    import numpy as _np  # doing this to hide the import from the codegen function
+
+    for x in [
+        _np.array([1, 2, 3]),
+        _np.arange(10),
+        _np.arange(12).reshape(3, 4),
+    ]:
+
+        code, imports = codegen(x)
+        for import_str in imports:
+            exec(import_str)
+        assert (eval(code) == x).all()
+
+
 if __name__ == '__main__':
     test_function_argument_names_from_source_code()
     pytest.main()
