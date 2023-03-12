@@ -301,15 +301,57 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
 
 def codegen(
         x: Any,
-        include_imports: bool = True,
         indent_str: str = "    ",
         _required_imports: Optional[Set[str]] = None,
         _recursion_depth: int = 0,
-) -> Union[str, Tuple[str, Set[str]]]:
+) -> Tuple[str, Set[str]]:
     """
     Attempts to generate a string of Python code that, when evaluated, would produce the same value as the input.
+    Also generates the required imports for the code to run.
+
+    In other words, in general, the following should evaluate True:
+
+    >>> code, imports = codegen(x)
+    >>> for import_str in imports:
+    >>>     exec(import_str)
+    >>> eval(code) == x  # Should evaluate True
 
     Not guaranteed to work for all inputs, but should work for most common cases.
+
+    Args:
+
+        x: The object to generate the code of.
+
+        indent_str: The string to use for indentation. Defaults to four spaces.
+
+        _required_imports: A set of strings containing the names of all required imports. This is an internal
+        argument that should not be used by the user.
+
+        _recursion_depth: The current recursion depth. This is an internal argument that should not be used by the user.
+
+    Returns: A tuple containing:
+
+        - The string of Python code that, when evaluated, would produce the same value as the input.
+
+        - A set of strings that, when evaluated, would import all of the required imports for the code to run.
+
+    Examples:
+
+        >>> codegen(5)
+        ('5', set())
+
+        >>> codegen([1, 2, 3])
+        ('[1, 2, 3]', set())
+
+        >>> codegen(np.array([1, 2, 3]))
+        ('np.array([1, 2, 3])', {'import numpy as np'})
+
+        >>> codegen(dict(my_int=4, my_array=np.array([1, 2, 3])))
+        ('{
+        	'my_int': 4,
+        	'my_array': np.array([1, 2, 3]),
+        }', {'import numpy as np'})
+
     """
     ### Set defaults
     if _required_imports is None:
@@ -396,16 +438,6 @@ def codegen(
             code = "\n".join(lines)
 
     elif isinstance(x, np.ndarray):
-        # lines = []
-        # lines.append("np.array([")
-        # for xi in x:
-        #     item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
-        #
-        #     _required_imports.update(item_required_imports)
-        #
-        #     lines.append(next_indent + item_code + ",")
-        # lines.append(indent + "])")
-        # code = "\n".join(lines)
         _required_imports.add("import numpy as np")
         code = f"np.{repr(x)}"
 
@@ -440,61 +472,17 @@ def codegen(
         lines.append(indent + ")")
         code = "\n".join(lines)
 
-    # elif isinstance(x, tuple):
-    #     code = "(\n" + f",\n{indent}".join([
-    #         codegen(xi, _recursion_depth=_recursion_depth + 1)
-    #         for xi in x
-    #     ]) + "\n" + indent + ")"
+    return code, _required_imports
     #
-    # elif isinstance(x, (set, frozenset)):
-    #     code = "{\n" + f",\n{indent}".join([
-    #         codegen(xi, _recursion_depth=_recursion_depth + 1)
-    #         for xi in x
-    #     ]) + "\n" + indent + "}"
+    # if _recursion_depth == 0:
+    #     if len(_required_imports) > 0:
+    #         imports = "\n".join(sorted(_required_imports))
+    #         return imports + "\n\n" + code
     #
-    # elif isinstance(x, dict):
-    #     code = "{\n" + f",\n{indent}".join([
-    #         codegen(k, _recursion_depth=_recursion_depth + 1) + ": " + codegen(v)
-    #         for k, v in x.items()
-    #     ]) + "\n" + indent + "}"
-    #
-    # elif isinstance(x, np.ndarray):
-    #     return indent + "np.array(\n" + codegen(x.tolist(), _recursion_depth=_recursion_depth + 1) + "\n" + indent + ")"
-    #
-    # else:  # At this point, we assume it's a class instance, and could be from any package.
-    #
-    #     ### First, we try to identify which package it's from.
-    #     module_name = x.__class__.__module__
-    #     package_name = module_name.split(".")[0]
-    #
-    #     ### We determine what to prefix the class name with, based on common imports.
-    #     if package_name == "builtins":
-    #         package_pre_string = ""
-    #     elif package_name in import_aliases:
-    #         package_pre_string = import_aliases[package_name] + "."
     #     else:
-    #         package_pre_string = module_name + "."
-    #
-    #     ### Now, we figure out what the keyword arguments to pass to the constructor are.
-    #     constructor_kwargs: Dict[str, Any] = {}
-    #
-    #     for kwarg_name in inspect.getfullargspec(x.__init__).args[1:]:
-    #         if hasattr(x, kwarg_name):
-    #             constructor_kwargs[kwarg_name] = getattr(x, kwarg_name)
-    #
-    #     package_pre_string = "" if package_name == "builtins" else f"{package_name}."
-    #
-    #     return indent + f"{package_pre_string + x.__class__.__name__}(\n" + f",\n".join([
-    #         indent + arg_name + "=" + codegen(arg_value, _recursion_depth=_recursion_depth + 1)
-    #         for arg_name, arg_value in constructor_kwargs.items()
-    #     ]) + "\n" + indent + ")"
-
-    if _recursion_depth == 0:
-        imports = "\n".join(sorted(_required_imports))
-
-        return imports + "\n\n" + code
-    else:
-        return code, _required_imports
+    #         return code
+    # else:
+    #     return code, _required_imports
 
 
 if __name__ == '__main__':
@@ -505,7 +493,47 @@ if __name__ == '__main__':
 
     dashes()
 
-    pc = lambda x: print(codegen(x) + "\n" + "-" * 50)
+    print("Caller location:\n", get_caller_source_location(stacklevel=1))
+
+    dashes()
+
+    print("Caller source code:\n", get_caller_source_code(stacklevel=1))
+
+    dashes()
+
+
+    def my_func():
+        print(
+            get_caller_source_code(
+                stacklevel=2
+            )
+        )
+
+
+    print("Caller source code of a function call:")
+
+    if_you_can_see_this_it_works = my_func()
+
+    dashes()
+
+    print("Arguments of f(a, b):")
+
+    print(
+        get_function_argument_names_from_source_code("f(a, b)")
+    )
+
+    location = get_caller_source_location()
+
+    dashes()
+
+    print("Codegen test:")
+
+
+    def pc(x):
+        code, imports = codegen(x)
+        print("\n".join(sorted(imports)))
+        print(code + "\n" + "-" * 50)
+
 
     pc(1)
     pc([1, 2, 3])
@@ -513,35 +541,3 @@ if __name__ == '__main__':
     pc({"a": 1, "b": 2})
     pc(np.array([1, 2, 3]))
     pc(dict(myarray=np.array([1, 2, 3]), yourarray=np.arange(10)))
-    pc(vanilla)
-
-    # print("Caller location:\n", get_caller_source_location(stacklevel=1))
-    #
-    # dashes()
-    #
-    # print("Caller source code:\n", get_caller_source_code(stacklevel=1))
-    #
-    # dashes()
-    #
-    #
-    # def my_func():
-    #     print(
-    #         get_caller_source_code(
-    #             stacklevel=2
-    #         )
-    #     )
-    #
-    #
-    # print("Caller source code of a function call:")
-    #
-    # if_you_can_see_this_it_works = my_func()
-    #
-    # dashes()
-    #
-    # print("Arguments of f(a, b):")
-    #
-    # print(
-    #     get_function_argument_names_from_source_code("f(a, b)")
-    # )
-    #
-    # location = get_caller_source_location()
