@@ -2,6 +2,7 @@ from aerosandbox.common import AeroSandboxObject
 import aerosandbox.numpy as np
 from aerosandbox.atmosphere._isa_atmo_functions import pressure_isa, temperature_isa
 from aerosandbox.atmosphere._diff_atmo_functions import pressure_differentiable, temperature_differentiable
+import aerosandbox.tools.units as u
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
@@ -37,6 +38,14 @@ class Atmosphere(AeroSandboxObject):
         self.altitude = altitude
         self.method = method
         self._valid_altitude_range = (0, 80000)
+
+    def __repr__(self) -> str:
+        try:
+            altitude_string = f"altitude: {self.altitude:.0f} m ({self.altitude / u.foot:.0f} ft)"
+        except (ValueError, TypeError):
+            altitude_string = f"altitude: {self.altitude} m"
+
+        return f"Atmosphere ({altitude_string}, method: '{self.method}')"
 
     ### The two primary state variables, pressure and temperature, go here!
 
