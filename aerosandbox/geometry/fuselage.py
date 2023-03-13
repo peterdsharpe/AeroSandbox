@@ -209,20 +209,37 @@ class Fuselage(AeroSandboxObject):
         """
         return self.xsecs[-1].xsec_area()
 
-    def fineness_ratio(self) -> float:
+    def fineness_ratio(
+            self,
+            assumed_shape="cylinder",
+    ) -> float:
         """
-        Approximates the fineness ratio using the volume and length.
+        Approximates the fineness ratio using the volume and length. The fineness ratio of a fuselage is defined as:
 
-        Formula derived from a generalization of the relation from a cylindrical fuselage.
+            FR = length / max_diameter
 
-        For a cylindrical fuselage, FR = l/d, where l is the length and d is the diameter.
+        Args:
 
-        Returns:
+            assumed_shape: A string, which determines the assumed shape of the fuselage for the approximation. One of:
+
+                * "cylinder", in which case the fuselage is assumed to have a cylindrical shape.
+
+                * "sears-haack", in which case the fuselage is assumed to have Sears-Haack fuselage shape.
+
+        Returns: An approximate value of the fuselage's fineness ratio.
 
         """
-        return np.sqrt(
-            self.length() ** 3 / self.volume() * np.pi / 4
-        )
+        if assumed_shape == "cylinder":
+            return np.sqrt(
+                self.length() ** 3 / self.volume() * np.pi / 4
+            )
+        elif assumed_shape == "sears-haack":
+            length = self.length()
+
+            r_max = np.sqrt(
+                self.volume() / length / (3 * np.pi ** 2 / 16)
+            )
+            return length / r_max
 
     def length(self) -> float:
         """
