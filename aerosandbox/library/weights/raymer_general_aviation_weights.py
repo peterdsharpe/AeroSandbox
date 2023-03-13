@@ -4,7 +4,7 @@ import aerosandbox.tools.units as u
 from .raymer_fudge_factors import advanced_composites
 
 
-# From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
+# From Raymer: "Aircraft Design: A Conceptual Approach", 5th Ed.
 # Section 15.3.3: General Aviation Weights
 
 def mass_wing(
@@ -37,14 +37,19 @@ def mass_wing(
         accordingly.
 
     """
-    if mass_fuel_in_wing == 0:
-        fuel_weight_factor = 1
-    else:
+    try:
+        fuel_is_in_wing = bool(mass_fuel_in_wing > 0)
+    except RuntimeError:
+        fuel_is_in_wing = True
+
+    if fuel_is_in_wing:
         fuel_weight_factor = np.softmax(
             (mass_fuel_in_wing / u.lbm) ** 0.0035,
             1,
             hardness=1000
         )
+    else:
+        fuel_weight_factor = 1
 
     airfoil_thicknesses = [
         xsec.airfoil.max_thickness()
