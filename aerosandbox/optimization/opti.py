@@ -1304,6 +1304,39 @@ class OptiSol:
     def value_parameters(self):
         return self._sol.value_parameters()
 
+    def show_infeasibilities(self, tol: float = 1e-3) -> None:
+        lbg = self(self.opti.lbg)
+        ubg = self(self.opti.ubg)
+
+        g = self(self.opti.g)
+
+        constraint_violated = np.logical_or(
+            g + tol < lbg,
+            g - tol > ubg
+        )
+
+        lbg_isfinite = np.isfinite(lbg)
+        ubg_isfinite = np.isfinite(ubg)
+
+        for i in np.arange(len(g)):
+            if constraint_violated[i]:
+                print("-" * 50)
+
+                if lbg_isfinite[i] and ubg_isfinite[i]:
+                    if lbg[i] == ubg[i]:
+                        print(f"{lbg[i]} == {g[i]} (violation: {np.abs(g[i] - lbg[i])})")
+                    else:
+                        print(f"{lbg[i]} < {g[i]} < {ubg[i]} (violation: {np.maximum(lbg[i] - g[i], g[i] - ubg[i])})")
+                elif lbg_isfinite[i] and not ubg_isfinite[i]:
+                    print(f"{lbg[i]} < {g[i]} (violation: {lbg[i] - g[i]})")
+                elif not lbg_isfinite[i] and ubg_isfinite[i]:
+                    print(f"{g[i]} < {ubg[i]} (violation: {g[i] - ubg[i]})")
+                else:
+                    raise ValueError(
+                        "Contact the AeroSandbox developers if you see this message; it should be impossible.")
+
+                self.opti.find_constraint_declaration(index=i)
+
 
 if __name__ == '__main__':
     import pytest
