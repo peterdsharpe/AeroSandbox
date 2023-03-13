@@ -508,6 +508,7 @@ class Opti(cas.Opti):
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
               options: Dict = None,  # TODO document
+              behavior_on_failure: str = "raise",
               ) -> "OptiSol":
         """
         Solve the optimization problem using CasADi with IPOPT backend.
@@ -540,18 +541,29 @@ class Opti(cas.Opti):
                 quantities of optimization variables (e.g. for plotting), use the `Opti.debug.value(x)` syntax for
                 each variable `x`.
 
-            verbose: Should we print the output of IPOPT?
+            verbose: Controls the verbosity of the solver. If True, IPOPT will print its progress to the console.
 
-            jit: # TODO
+            jit: Experimental. If True, the optimization problem will be compiled to C++ and then JIT-compiled
+                using the CasADi JIT compiler. This can lead to significant speedups, but may also lead to
+                unexpected behavior, and may not work on all platforms.
 
-            options: # TODO
+            options: [Optional] A dictionary of options to pass to IPOPT. See the IPOPT documentation for a list of
+                available options.
+
+            behavior_on_failure: [Optional] What should we do if the optimization fails? Options are:
+
+                * "raise": Raise an exception. This is the default behavior.
+
+                * "return_last": Returns the solution from the last iteration, and raise a warning.
+
+                    NOTE: The returned solution may not be feasible! (It also may not be optimal.)
 
         Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
-            OptiSol.value(variable).
+            my_optisol(variable).
 
             Example:
                 >>> sol = opti.solve()
-                >>> x_opt = sol.value(x) # Get the value of variable x at the optimum.
+                >>> x_opt = sol(x) # Get the value of variable x at the optimum.
 
         """
         if parameter_mapping is None:
@@ -628,10 +640,25 @@ class Opti(cas.Opti):
             self.callback(callback)
 
         # Do the actual solve
-        sol = OptiSol(
-            opti=self,
-            cas_optisol=super().solve()
-        )
+        if behavior_on_failure == "raise":
+            sol = OptiSol(
+                opti=self,
+                cas_optisol=super().solve()
+            )
+        elif behavior_on_failure == "return_last":
+            try:
+                sol = OptiSol(
+                    opti=self,
+                    cas_optisol=super().solve()
+                )
+            except RuntimeError:
+                import warnings
+                warnings.warn("Optimization failed. Returning last solution.")
+
+                sol = OptiSol(
+                    opti=self,
+                    cas_optisol=self.debug
+                )
 
         if self.save_to_cache_on_solve:
             self.save_solution()
