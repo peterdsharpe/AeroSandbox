@@ -1,6 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
+from typing import Dict, Union
 
 
 # From Torenbeek: "Synthesis of Subsonic Airplane Design", 1976, Delft University Press
@@ -44,7 +45,8 @@ def mass_wing(
         main_gear_mounted_to_wing: bool = True,
         flap_deflection_angle: float = 30,
         strut_y_location: float = None,
-) -> float:
+        return_dict: bool = False,
+) -> Union[float, Dict[str, float]]:
     """
     Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic Airplane Design",
     1976, Appendix C: "Prediction of Wing Structural Weight".
@@ -169,12 +171,15 @@ def mass_wing(
         0.015 * mass_basic,
     )
 
-    mass_wing_group = (
+    mass_wing = (
             mass_basic +
             1.2 * (mass_hld + mass_sp)
     )
 
-    return mass_wing_group
+    if return_dict:
+        return locals()
+    else:
+        return mass_wing
 
 # def mass_hstab(
 #         hstab: asb.Wing,
