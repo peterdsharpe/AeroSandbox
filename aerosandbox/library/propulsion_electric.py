@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from aerosandbox.tools import units as u
 from typing import Union, Dict
 
 
@@ -230,7 +231,9 @@ def mass_wires(
         max_voltage=600,
         wire_packing_factor=1,
         insulator_density=1700,
-        insulator_dielectric_strength=12e6
+        insulator_dielectric_strength=12e6,
+        insulator_min_thickness=0.2e-3,  # silicone wire
+        return_dict: bool = False
 ):
     """
     Estimates the mass of wires used for power transmission.
@@ -281,8 +284,15 @@ def mass_wires(
         insulator_dielectric_strength (float): Dielectric strength of the insulator [V/m]. The default value of 12e6 corresponds
         to rubber.
 
-    Returns:
-        Estimated mass of wires [kg]
+        insulator_min_thickness (float): Minimum thickness of the insulator [m]. This is essentially a gauge limit.
+        The default value is 0.2 mm.
+
+        return_dict (bool): If True, returns a dictionary of all local variables. If False, just returns the wire
+        mass as a float. Defaults to False.
+
+
+    Returns: If `return_dict` is False (default), returns the wire mass as a single number. If `return_dict` is True,
+    returns a dictionary of all local variables.
     """
     if material == "sodium":  # highly reactive with water & oxygen, low physical strength
         density = 970  # kg/m^3
@@ -328,7 +338,11 @@ def mass_wires(
 
     # Insulator mass
     if insulated:
-        insulator_thickness = max_voltage / insulator_dielectric_strength
+        insulator_thickness = np.softmax(
+            4.0 * max_voltage / insulator_dielectric_strength,
+            insulator_min_thickness,
+            softness=0.005 * u.inch,
+        )
         radius_conductor = (area_conductor / wire_packing_factor / np.pi) ** 0.5
         radius_insulator = radius_conductor + insulator_thickness
         area_insulator = np.pi * radius_insulator ** 2 - area_conductor
@@ -338,7 +352,12 @@ def mass_wires(
         mass_insulator = 0
 
     # Total them up
-    return mass_conductor + mass_insulator
+    mass_total = mass_conductor + mass_insulator
+
+    if return_dict:
+        return locals()
+    else:
+        return mass_total
 
 
 if __name__ == '__main__':
