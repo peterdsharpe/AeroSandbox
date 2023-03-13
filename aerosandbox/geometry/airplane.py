@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Union, Optional, Tuple
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
+from aerosandbox.geometry.propulsor import Propulsor
 import copy
 
 
@@ -24,6 +25,7 @@ class Airplane(AeroSandboxObject):
                  xyz_ref: Union[np.ndarray, List] = None,
                  wings: Optional[List[Wing]] = None,
                  fuselages: Optional[List[Fuselage]] = None,
+                 propulsors: Optional[List[Propulsor]] = None,
                  s_ref: Optional[float] = None,
                  c_ref: Optional[float] = None,
                  b_ref: Optional[float] = None,
@@ -44,6 +46,8 @@ class Airplane(AeroSandboxObject):
             wings: A list of Wing objects that are a part of the airplane.
 
             fuselages: A list of Fuselage objects that are a part of the airplane.
+
+            propulsors: A list of Propulsor objects that are a part of the airplane.
 
             s_ref: Reference area. If undefined, it's set from the area of the first Wing object. # Note: will be deprecated
 
@@ -85,6 +89,8 @@ class Airplane(AeroSandboxObject):
             wings: List[Wing] = []
         if fuselages is None:
             fuselages: List[Fuselage] = []
+        if propulsors is None:
+            propulsors: List[Propulsor] = []
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -93,6 +99,7 @@ class Airplane(AeroSandboxObject):
         self.xyz_ref = np.array(xyz_ref)
         self.wings = wings
         self.fuselages = fuselages
+        self.propulsors = propulsors
         self.analysis_specific_options = analysis_specific_options
 
         ### Assign reference values
@@ -446,6 +453,18 @@ class Airplane(AeroSandboxObject):
                         for xsec in fuse.xsecs
                     ], axis=0),
                     linewidth=thick_linewidth
+                )
+
+        ##### Propulsors
+        for prop in self.propulsors:
+
+            ### Disk
+            if prop.length == 0:
+                plot_line(
+                    np.stack(
+                        prop.get_disk_3D_coordinates(),
+                        axis=1
+                    )
                 )
 
         if set_equal:
