@@ -170,7 +170,7 @@ class OperatingPoint(AeroSandboxObject):
 
         def makeline(k, v):
             name = trim_string(str(k).strip(), length=10).rjust(10)
-            item = trim_string(str(v).strip(), length=40).ljust(40)
+            item = trim_string(str(v).strip(), length=120).ljust(120)
 
             line = f"{name}: {item}"
 
