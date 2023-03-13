@@ -49,6 +49,8 @@ def mass_wing(
     Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic Airplane Design",
     1976, Appendix C: "Prediction of Wing Structural Weight".
 
+    Likely more accurate than the Raymer wing weight models.
+
     Args:
 
         wing: The wing object.

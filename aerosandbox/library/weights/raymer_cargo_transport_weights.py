@@ -18,6 +18,9 @@ def mass_wing(
     Computes the mass of the wing for a cargo/transport aircraft, according to Raymer's Aircraft Design: A Conceptual
     Approach.
 
+    Note: Torenbeek's wing mass model is likely more accurate; see `mass_wing()` in `torenbeek_weights.py` (same
+    directory).
+
     Args:
         wing: The wing object.
 
