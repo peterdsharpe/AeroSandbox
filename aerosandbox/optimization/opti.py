@@ -755,8 +755,9 @@ class Opti(cas.Opti):
     ### Debugging Methods
     def find_variable_declaration(self,
                                   index: int,
-                                  use_full_filename: bool = False
-                                  ):
+                                  use_full_filename: bool = False,
+                                  return_string: bool = False,
+                                  ) -> Union[None, str]:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -777,7 +778,7 @@ class Opti(cas.Opti):
         title = f"{'Scalar' if is_scalar else 'Vector'} variable"
         if not is_scalar:
             title += f" (index {index - index_of_first_element} of {n_vars})"
-        print("\n".join([
+        string = "\n".join([
             "",
             f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
             "",
@@ -785,12 +786,17 @@ class Opti(cas.Opti):
             source,
             "```"
         ])
-        )
+
+        if return_string:
+            return string
+        else:
+            print(string)
 
     def find_constraint_declaration(self,
                                     index: int,
-                                    use_full_filename: bool = False
-                                    ):
+                                    use_full_filename: bool = False,
+                                    return_string: bool = False
+                                    ) -> Union[None, str]:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -813,7 +819,7 @@ class Opti(cas.Opti):
         title = f"{'Scalar' if is_scalar else 'Vector'} constraint"
         if not is_scalar:
             title += f" (index {index - index_of_first_element} of {n_cons})"
-        print("\n".join([
+        string = "\n".join([
             "",
             f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
             "",
@@ -821,7 +827,11 @@ class Opti(cas.Opti):
             source,
             "```"
         ])
-        )
+
+        if return_string:
+            return string
+        else:
+            print(string)
 
     ### Advanced Methods
 
