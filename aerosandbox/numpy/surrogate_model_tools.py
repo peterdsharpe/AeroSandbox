@@ -26,6 +26,11 @@ def softmax(
 
         softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to max(x1, x2).
 
+            - Setting `softness` is particularly useful, because it has the same units as each of the function's
+            inputs. For example, if you're taking the softmax of two values that are lengths in units of meters,
+            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
+            of discrepancy between the input values that would be considered physically significant".
+
     Returns:
         Soft maximum of the supplied values.
     """
@@ -89,6 +94,11 @@ def softmin(
         hardness: Hardness parameter. Higher values make this closer to min(x1, x2).
 
         softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to min(x1, x2).
+
+            - Setting `softness` is particularly useful, because it has the same units as each of the function's
+            inputs. For example, if you're taking the softmin of two values that are lengths in units of meters,
+            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
+            of discrepancy between the input values that would be considered physically significant".
 
     Returns:
         Soft minimum of the supplied values.
