@@ -3,6 +3,8 @@ import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
 from typing import Tuple
 
+### See also:
+# https://www.risingup.com/fars/info/23-index.shtml
 
 def limit_load_factors(
         design_mass_TOGW: float,
