@@ -80,21 +80,21 @@ def mass_wing(
     """
 
     # Wing span
-    b = wing.span()
+    span = wing.span()
 
     # Sweep at 50% chord
     sweep_half_chord = wing.mean_sweep_angle(x_nondim=0.5)
-    cos_sweep = np.cosd(sweep_half_chord)
+    cos_sweep_half_chord = np.cosd(sweep_half_chord)
 
     # Structural wing span
-    b_s = b / cos_sweep
+    span_structural = span / cos_sweep_half_chord
 
     # Airfoil thickness over chord ratio at root
     root_t_over_c = wing.xsecs[0].airfoil.max_thickness()
 
     # Torenbeek Eq. C-2
     # `k_no` represents penalties due to skin joints, non-tapered skin, minimum gauge, etc.
-    k_no = 1 + (1.905 / b_s) ** 0.5
+    k_no = 1 + (1.905 / span_structural) ** 0.5
 
     # Torenbeek Eq. C-3
     # `k_lambda` represents penalties due to taper ratio
@@ -112,12 +112,12 @@ def mass_wing(
     k_st = (
             1 +
             9.06e-4 * (
-                    (b * np.cosd(wing.mean_sweep_angle(x_nondim=0))) ** 3 /
+                    (span * np.cosd(wing.mean_sweep_angle(x_nondim=0))) ** 3 /
                     design_mass_TOGW
             ) * (
                     never_exceed_airspeed / 100 / root_t_over_c
             ) ** 2 *
-            cos_sweep
+            cos_sweep_half_chord
     )
 
     # Torenbeek Eq. C-5
@@ -128,7 +128,7 @@ def mass_wing(
         k_b = 1 - (strut_y_location / (wing.span() / 2)) ** 2
 
     ### Use all the above to compute the basic wing structural mass
-    mass_basic = (
+    mass_basic_wing_structure = (
             4.58e-3 *
             k_no *
             k_lambda *
@@ -138,9 +138,9 @@ def mass_wing(
             (
                     k_b * ultimate_load_factor * (0.8 * suspended_mass + 0.2 * design_mass_TOGW)
             ) ** 0.55 *
-            b ** 1.675 *
+            span ** 1.675 *
             root_t_over_c ** -0.45 *
-            cos_sweep ** -1.325
+            cos_sweep_half_chord ** -1.325
     )
 
     S_flaps = wing.control_surface_area()
@@ -151,9 +151,9 @@ def mass_wing(
 
     k_f = k_f1 * k_f2
 
-    mass_tef = S_flaps * (
+    mass_trailing_edge_flaps = S_flaps * (
             2.706 * k_f *
-            (S_flaps * b_s) ** (3 / 16) *
+            (S_flaps * span_structural) ** (3 / 16) *
             (
                     (max_airspeed_for_flaps / 100) ** 2 *
                     np.sind(flap_deflection_angle) *
@@ -162,18 +162,18 @@ def mass_wing(
             ) ** (3 / 4)
     )
 
-    mass_lef = 0
+    mass_leading_edge_devices = 0
 
-    mass_hld = mass_tef + mass_lef
+    mass_high_lift_devices = mass_trailing_edge_flaps + mass_leading_edge_devices
 
-    mass_sp = np.softmax(
+    mass_spoilers_and_speedbrakes = np.softmax(
         12.2 * wing.area(),
-        0.015 * mass_basic,
+        0.015 * mass_basic_wing_structure,
     )
 
     mass_wing = (
-            mass_basic +
-            1.2 * (mass_hld + mass_sp)
+            mass_basic_wing_structure +
+            1.2 * (mass_high_lift_devices + mass_spoilers_and_speedbrakes)
     )
 
     if return_dict:
@@ -191,4 +191,4 @@ def mass_wing(
 #
 #     k_wt = 0.64
 
-# def mass_fuselage # from Torenbeek Appendix D (PDF page 477)
+def mass_fuselage()
