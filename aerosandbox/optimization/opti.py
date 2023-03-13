@@ -1305,6 +1305,16 @@ class OptiSol:
         return self._sol.value_parameters()
 
     def show_infeasibilities(self, tol: float = 1e-3) -> None:
+        """
+        Prints a summary of any violated constraints in the solution.
+
+        Args:
+
+            tol: The tolerance for violation. If the constraint is violated by less than this amount, it will not be
+                printed.
+
+        Returns: None (prints to console)
+        """
         lbg = self(self.opti.lbg)
         ubg = self(self.opti.ubg)
 
