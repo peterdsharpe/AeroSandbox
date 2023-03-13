@@ -183,3 +183,5 @@ def mass_wing(
 # ) -> float:
 #
 #     k_wt = 0.64
+
+# def mass_fuselage # from Torenbeek Appendix D (PDF page 477)
