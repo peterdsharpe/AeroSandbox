@@ -63,6 +63,8 @@ def mass_wing(
 
         suspended_mass: The mass of the aircraft that is suspended from the wing [kg].
 
+        never_exceed_airspeed: The never-exceed airspeed of the aircraft [m/s]. Used for flutter calculations.
+
         max_airspeed_for_flaps: The maximum airspeed at which the flaps are allowed to be deployed [m/s]. In the
         absence of other information, 1.8x stall speed is a good guess.
 
@@ -73,9 +75,11 @@ def mass_wing(
         strut_y_location: The y-location of the strut (if any), relative to the wing's leading edge [m]. If None,
         it is assumed that there is no strut (i.e., the wing is a cantilever beam).
 
-    Returns:
+        return_dict: Whether to return a dictionary of all the intermediate values, or just the final mass. Defaults
+        to False, which returns just the final mass.
 
-        The mass of the wing [kg].
+    Returns: If return_dict is False (default), returns a single value: the mass of the wing [kg]. If return_dict is
+    True, returns a dictionary of all the intermediate values.
 
     """
 
@@ -191,4 +195,9 @@ def mass_wing(
 #
 #     k_wt = 0.64
 
-def mass_fuselage()
+def mass_fuselage(
+        fuselage: asb.Fuselage,
+        design_mass_TOGW: float,
+        ultimate_load_factor: float,
+):
+    pass
