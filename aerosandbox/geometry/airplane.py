@@ -182,18 +182,22 @@ class Airplane(AeroSandboxObject):
              show_kwargs: Dict = None,
              ):
         """
+        Produces an interactive 3D visualization of the airplane.
 
         Args:
 
-            backend: One of:
-                * "plotly" for a Plot.ly backend
+            backend: The visualization backend to use. Options are:
+
+                * "matplotlib" for a Matplotlib backend
                 * "pyvista" for a PyVista backend
+                * "plotly" for a Plot.ly backend
                 * "trimesh" for a trimesh backend
 
             thin_wings: A boolean that determines whether to draw the full airplane (i.e. thickened, 3D bodies), or to use a
             thin-surface representation for any Wing objects.
 
-            show: Should we show the visualization, or just return it?
+            show: A boolean that determines whether to display the object after plotting it. If False, the object is
+            returned but not displayed. If True, the object is displayed and returned.
 
         Returns: The plotted object, in its associated backend format. Also displays the object if `show` is True.
 
@@ -286,6 +290,17 @@ class Airplane(AeroSandboxObject):
                        set_axis_visibility: bool = None,
                        show: bool = True,
                        ):
+        """
+        Draws a wireframe of the airplane on a Matplotlib 3D axis.
+
+        Args:
+
+            ax: The axis to draw on. Must be a 3D axis. If None, creates a new axis.
+
+            color: The color of the wireframe.
+
+            thin_linewidth: The linewidth of the thin lines.
+        """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
