@@ -150,8 +150,8 @@ def mass_wing(
     S_flaps = wing.control_surface_area()
 
     # Torenbeek Eq. C-10
-    k_f1 = 1 # single-slotted; double slotted, fixed hinge # TODO add details
-    k_f2 = 1 # slotted flaps with fixed vane # TODO add details
+    k_f1 = 1  # single-slotted; double slotted, fixed hinge # TODO add details
+    k_f2 = 1  # slotted flaps with fixed vane # TODO add details
 
     k_f = k_f1 * k_f2
 
@@ -185,6 +185,7 @@ def mass_wing(
     else:
         return mass_wing
 
+
 # def mass_hstab(
 #         hstab: asb.Wing,
 #         design_mass_TOGW: float,
@@ -199,5 +200,55 @@ def mass_fuselage(
         fuselage: asb.Fuselage,
         design_mass_TOGW: float,
         ultimate_load_factor: float,
+        never_exceed_airspeed: float,
+        wing_to_tail_distance: float,
 ):
-    pass
+    # TODO Torenbeek Appendix D (PDF page 477)
+
+    # Stage 1: Calculate the weight of the fuselage shell, which carries the primary loads and contributes
+    # approximately 1/3 to 1/2 of the fuselage weight ("gross shell weight").
+
+    # Torenbeek Eq. D-3
+    fuselage.fineness_ratio()
+
+    fuselage_quasi_slenderness_ratio = fuselage.fineness_ratio(assumed_shape="sears_haack")
+
+    k_lambda = np.softmin(
+        0.56 * fuselage.fineness_ratio(assumed_shape="sears_haack")
+    )
+
+    W_sk = 0.05428 * k_lambda * S_g ** 1.07 * never_exceed_airspeed ** 0.743
+
+    W_g = W_sk + W_str + W_fr
+
+
+def mass_propeller(
+        propeller_diameter: float,
+        propeller_power: float,
+        n_blades: int,
+) -> float:
+    """
+    Computes the mass of a propeller.
+
+    From Torenbeek: "Synthesis of Subsonic Airplane Design", 1976, Delft University Press.
+    Table 8-9 (pg. 286, PDF page 306)
+
+    Args:
+
+        propeller_diameter: Propeller diameter, in meters.
+
+        propeller_power: Propeller power, in watts.
+
+        n_blades: Number of propeller blades.
+
+    Returns: Propeller mass, in kilograms.
+
+    """
+    return (
+            0.108 *
+            n_blades *
+            (
+                    (propeller_diameter / u.foot) *
+                    (propeller_power / u.horsepower)
+            ) ** 0.78174
+    ) * u.lbm
