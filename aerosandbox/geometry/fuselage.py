@@ -103,7 +103,7 @@ class Fuselage(AeroSandboxObject):
                  n_points: int = 5,
                  spacing: Callable[[float, float, int], np.ndarray] = np.cosspace,
                  ) -> "Fuselage":
-        raise NotImplementedError
+        raise NotImplementedError # Function under construction!
         ### Set defaults
         if from_xsec is None:
             if len(self.xsecs) == 0:
@@ -120,6 +120,17 @@ class Fuselage(AeroSandboxObject):
         t = spacing(0, 1, n_points)
 
         if kind == "linear":
+            new_xsecs = [
+                FuselageXSec(
+                    xyz_c=from_xsec.xyz_c * (1 - ti) + to_xsec.xyz_c * ti,
+                    width=from_xsec.width * (1 - ti) + to_xsec.width * ti,
+                    height=from_xsec.height * (1 - ti) + to_xsec.height * ti,
+                    shape=from_xsec.shape * (1 - ti) + to_xsec.shape * ti,
+                    analysis_specific_options=from_xsec.analysis_specific_options,
+                )
+                for ti in t
+            ]
+        elif kind == "ellipsoid-nose":
             new_xsecs = [
                 FuselageXSec(
                     xyz_c=from_xsec.xyz_c * (1 - ti) + to_xsec.xyz_c * ti,
