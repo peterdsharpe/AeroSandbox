@@ -397,7 +397,7 @@ def mass_flight_controls(
             fuselage = airplane.fuselages[0]
         else:
             raise ValueError('More than one fuselage is present in the airplane. Please specify which fuselage to use '
-                             'for computing fuel system mass.')
+                             'for computing flight control system mass.')
 
     if fuselage is not None:
         fuselage_length_factor = (fuselage.length() / u.foot) ** 1.536
@@ -568,5 +568,5 @@ def mass_furnishings(
     return np.softmax(
         0.0582 * design_mass_TOGW - 65 * u.lbm,
         0,
-        hardness=1
+        softness=10 * u.lbm,
     )
