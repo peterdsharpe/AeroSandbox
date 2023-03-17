@@ -669,8 +669,9 @@ class Opti(cas.Opti):
                     parameter_mapping: Dict[cas.MX, np.ndarray] = None,
                     update_initial_guesses_between_solves=False,
                     verbose=True,
-                    solve_kwargs: Dict = None
-                    ) -> np.ndarray:
+                    solve_kwargs: Dict = None,
+                    return_callable: bool = False,
+                    ) -> Union[np.ndarray, Callable[[cas.MX], np.ndarray]]:
 
         # Handle defaults
         if solve_kwargs is None:
@@ -739,7 +740,7 @@ class Opti(cas.Opti):
 
             except RuntimeError:
                 if verbose:
-                    sol = OptiSol(opti=opti, cas_optisol=opti.debug)
+                    sol = OptiSol(opti=self, cas_optisol=self.debug)
                     stats = sol.stats()
                     print(f" Failed in {stats['iter_count']} iterations, {time.time() - start_time:.2f} sec.")
 
@@ -747,10 +748,22 @@ class Opti(cas.Opti):
 
         run_vectorized = np.vectorize(
             run,
-            otypes=[cas.OptiSol]
+            otypes='O'  # object output
         )
 
-        return run_vectorized(*values)
+        sols = run_vectorized(*values)
+
+        if return_callable:
+
+            def get_vals(x: cas.MX) -> np.ndarray:
+                return np.vectorize(
+                    lambda sol: sol.value(x) if sol is not None else np.nan
+                )(sols)
+
+            return get_vals
+
+        else:
+            return sols
 
     ### Debugging Methods
     def find_variable_declaration(self,
@@ -1353,10 +1366,11 @@ if __name__ == '__main__':
 
     # pytest.main()
 
-    a = 1
-    b = 100
 
     opti = Opti()  # set up an optimization environment
+
+    a = opti.parameter(1)
+    b = opti.parameter(100)
 
     # Define optimization variables
     x = opti.variable(init_guess=0)
