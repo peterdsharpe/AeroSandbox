@@ -1,6 +1,7 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
-from typing import Union
+from typing import Union, Any
+from aerosandbox.tools.string_formatting import trim_string
 
 
 class MassProperties(AeroSandboxObject):
@@ -77,19 +78,24 @@ class MassProperties(AeroSandboxObject):
         self.Ixz = Ixz
 
     def __repr__(self) -> str:
-        params_to_show = [
-            "mass",
-            "x_cg",
-            "y_cg",
-            "z_cg",
-        ]
 
-        param_data = ", ".join([
-            f"{param}: {self.__getattribute__(param)}"
-            for param in params_to_show
+        def fmt(x: Union[float, Any], width=12) -> str:
+            if isinstance(x, (float, int)):
+                if x == 0:
+                    x = "0"
+                else:
+                    return f"{x:.6g}".rjust(width)
+            return trim_string(str(x).rjust(width), length=40)
+
+        return "\n".join([
+            "MassProperties instance:",
+            f"                 Mass : {fmt(self.mass)}",
+            f"    Center of Gravity : ({fmt(self.x_cg)}, {fmt(self.y_cg)}, {fmt(self.z_cg)})",
+            f"       Inertia Tensor : ",
+            f"            (about CG)  [{fmt(self.Ixx)}, {fmt(self.Ixy)}, {fmt(self.Ixz)}]",
+            f"                        [{fmt(self.Ixy)}, {fmt(self.Iyy)}, {fmt(self.Iyz)}]",
+            f"                        [{fmt(self.Ixz)}, {fmt(self.Iyz)}, {fmt(self.Izz)}]",
         ])
-
-        return f"MassProperties ({param_data})"
 
     def __getitem__(self, index):
         def get_item_of_attribute(a):
