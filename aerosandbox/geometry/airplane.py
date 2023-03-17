@@ -628,7 +628,8 @@ class Airplane(AeroSandboxObject):
         return deflected_airplane
 
     def generate_cadquery_geometry(self,
-                                   minimum_airfoil_TE_thickness: float = 0.001
+                                   minimum_airfoil_TE_thickness: float = 0.001,
+                                   fuselage_tol: float = 1e-4,
                                    ) -> "Workplane":
         """
         Uses the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
@@ -639,6 +640,8 @@ class Airplane(AeroSandboxObject):
             of each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if
             necessary. This is useful for avoiding numerical issues in CAD software that can arise from extremely
             thin (i.e., <1e-6 meters) trailing edges.
+
+            tol: The geometric tolerance (meters) to use when generating the CAD geometry. This is passed directly to the CADQuery
 
         Returns: A CADQuery Workplane object containing the CAD geometry of the airplane.
 
@@ -696,14 +699,10 @@ class Airplane(AeroSandboxObject):
             xsec_wires = []
 
             for i, xsec in enumerate(fuse.xsecs):
-                tol = 1e-4
-                if xsec.xsec_area() ** 0.5 < tol:
-                    if i == 0:
-                        if np.abs(xsec.xyz_c[0] - fuse.xsecs[1].xyz_c[0]) < tol:
-                            continue
-                    if i == len(fuse.xsecs) - 1:
-                        if np.abs(xsec.xyz_c[0] - fuse.xsecs[-2].xyz_c[0]) < tol:
-                            continue
+                if xsec.height < fuselage_tol or xsec.width < fuselage_tol: # If the xsec is so small as to effectively be a point
+                    xsec = copy.deepcopy(xsec) # Modify the xsec to be big enough to not error out.
+                    xsec.width = fuselage_tol
+                    xsec.height = fuselage_tol
 
                 xsec_wires.append(
                     cq.Workplane(
@@ -718,7 +717,7 @@ class Airplane(AeroSandboxObject):
                             for x, y, z in zip(*xsec.get_3D_coordinates(
                                 theta=np.linspace(
                                     np.pi / 2, np.pi / 2 + 2 * np.pi,
-                                    361
+                                    181
                                 )
                             ))
                         ]
