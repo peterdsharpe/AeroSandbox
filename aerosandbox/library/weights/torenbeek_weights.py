@@ -14,6 +14,29 @@ def mass_wing_simple(
         suspended_mass: float,
         main_gear_mounted_to_wing: bool = True,
 ) -> float:
+    """
+    Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic Airplane Design",
+
+    This is the simple version of the wing weight model, which is found in:
+    Section 8.4: Weight Prediction Data and Methods
+    8.4.1: Airframe Structure
+    Eq. 8-12
+
+    Args:
+
+        wing: The wing object. Should be an AeroSandbox Wing object.
+
+        design_mass_TOGW: The design takeoff gross weight of the entire aircraft [kg].
+
+        ultimate_load_factor: The ultimate load factor of the aircraft. 1.5x the limit load factor.
+
+        suspended_mass: The mass of the aircraft that is suspended from the wing [kg].
+
+        main_gear_mounted_to_wing: Whether the main gear is mounted to the wing structure.
+
+    Returns: The mass of the wing [kg].
+
+    """
 
     k_w = np.blend(
         (design_mass_TOGW - 5670) / 2000,
@@ -195,6 +218,63 @@ def mass_wing(
 # ) -> float:
 #
 #     k_wt = 0.64
+
+def mass_fuselage_simple(
+        fuselage: asb.Fuselage,
+        never_exceed_airspeed: float,
+        wing_to_tail_distance: float,
+):
+    """
+    Computes the mass of the fuselage, using Torenbeek's simple version of the calculation.
+
+    Source:
+    Torenbeek: "Synthesis of Subsonic Airplane Design", 1976
+    Section 8.4: Weight Prediction Data and Methods
+    8.4.1: Airframe Structure
+    Eq. 8-16
+
+    Args:
+
+        fuselage: The fuselage object. Should be an AeroSandbox Fuselage object.
+
+        never_exceed_airspeed: The never-exceed airspeed of the aircraft, in m/s.
+
+        wing_to_tail_distance: The distance from the quarter-chord of the wing to the quarter-chord of the tail,
+        in meters.
+
+    Returns: The mass of the fuselage, in kg.
+
+    """
+    widths = [
+        xsec.width
+        for xsec in fuselage.xsecs
+    ]
+
+    max_width = np.softmax(
+        *widths,
+        softness=np.mean(np.array(widths)) * 0.01
+    )
+
+    heights = [
+        xsec.height
+        for xsec in fuselage.xsecs
+    ]
+
+    max_height = np.softmax(
+        *heights,
+        softness=np.mean(np.array(heights)) * 0.01
+    )
+
+    return (
+            0.23 *
+            (
+                    never_exceed_airspeed *
+                    wing_to_tail_distance /
+                    (max_width + max_height)
+            ) ** 0.5 *
+            fuselage.area_wetted() ** 1.2
+    )
+
 
 def mass_fuselage(
         fuselage: asb.Fuselage,
