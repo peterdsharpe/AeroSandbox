@@ -70,7 +70,7 @@ setup(
             'ipyvtklink >= 0.2',
             'trimesh >= 3',
             'sympy >= 1',
-            'cadquery >= 2',
+            'cadquery >= 2; platform_system == "Windows"',
         ],
         "test": [
             'pytest',
