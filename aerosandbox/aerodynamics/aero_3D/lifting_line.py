@@ -125,8 +125,6 @@ class LiftingLine(ImplicitAnalysis):
                 points, faces = wing_section.mesh_thin_surface(
                     method="quad",
                     chordwise_resolution=1,
-                    spanwise_resolution=self.spanwise_resolution,
-                    spanwise_spacing=self.spanwise_spacing,
                     add_camber=False
                 )
                 front_left_vertices.append(points[faces[:, 0], :])

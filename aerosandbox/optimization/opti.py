@@ -1,5 +1,4 @@
 from typing import Union, List, Dict, Callable, Any, Tuple, Set, Optional
-import numpy.typing as npt
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -474,7 +473,7 @@ class Opti(cas.Opti):
                     >>> vector_param = opti.parameter(value=np.linspace(0, 5, 10)) # Initializes a vector parameter of
                     >>> # length 10, with all 10 elements set to a value varying from 0 to 5.
 
-            n_vars: [Optional] Used to manually override the dimensionality of the parameter to create; if not
+            n_params: [Optional] Used to manually override the dimensionality of the parameter to create; if not
             provided, the dimensionality of the parameter is inferred from `value`.
 
                 The only real case where you need to use this argument would be if you are initializing a vector
@@ -482,7 +481,7 @@ class Opti(cas.Opti):
                 For example:
 
                     >>> opti = asb.Opti()
-                    >>> vector_var = opti.parameter(value=5, n_vars=10) # Initializes a vector parameter of length
+                    >>> vector_param = opti.parameter(value=5, n_params=10) # Initializes a vector parameter of length
                     >>> # 10, with all 10 elements set to a value of 5.
 
         Returns:
@@ -509,6 +508,7 @@ class Opti(cas.Opti):
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
               options: Dict = None,  # TODO document
+              behavior_on_failure: str = "raise",
               ) -> "OptiSol":
         """
         Solve the optimization problem using CasADi with IPOPT backend.
@@ -541,18 +541,29 @@ class Opti(cas.Opti):
                 quantities of optimization variables (e.g. for plotting), use the `Opti.debug.value(x)` syntax for
                 each variable `x`.
 
-            verbose: Should we print the output of IPOPT?
+            verbose: Controls the verbosity of the solver. If True, IPOPT will print its progress to the console.
 
-            jit: # TODO
+            jit: Experimental. If True, the optimization problem will be compiled to C++ and then JIT-compiled
+                using the CasADi JIT compiler. This can lead to significant speedups, but may also lead to
+                unexpected behavior, and may not work on all platforms.
 
-            options: # TODO
+            options: [Optional] A dictionary of options to pass to IPOPT. See the IPOPT documentation for a list of
+                available options.
+
+            behavior_on_failure: [Optional] What should we do if the optimization fails? Options are:
+
+                * "raise": Raise an exception. This is the default behavior.
+
+                * "return_last": Returns the solution from the last iteration, and raise a warning.
+
+                    NOTE: The returned solution may not be feasible! (It also may not be optimal.)
 
         Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
-            OptiSol.value(variable).
+            my_optisol(variable).
 
             Example:
                 >>> sol = opti.solve()
-                >>> x_opt = sol.value(x) # Get the value of variable x at the optimum.
+                >>> x_opt = sol(x) # Get the value of variable x at the optimum.
 
         """
         if parameter_mapping is None:
@@ -629,10 +640,25 @@ class Opti(cas.Opti):
             self.callback(callback)
 
         # Do the actual solve
-        sol = OptiSol(
-            opti=self,
-            cas_optisol=super().solve()
-        )
+        if behavior_on_failure == "raise":
+            sol = OptiSol(
+                opti=self,
+                cas_optisol=super().solve()
+            )
+        elif behavior_on_failure == "return_last":
+            try:
+                sol = OptiSol(
+                    opti=self,
+                    cas_optisol=super().solve()
+                )
+            except RuntimeError:
+                import warnings
+                warnings.warn("Optimization failed. Returning last solution.")
+
+                sol = OptiSol(
+                    opti=self,
+                    cas_optisol=self.debug
+                )
 
         if self.save_to_cache_on_solve:
             self.save_solution()
@@ -719,7 +745,6 @@ class Opti(cas.Opti):
 
                 return None
 
-
         run_vectorized = np.vectorize(
             run,
             otypes=[cas.OptiSol]
@@ -730,8 +755,9 @@ class Opti(cas.Opti):
     ### Debugging Methods
     def find_variable_declaration(self,
                                   index: int,
-                                  use_full_filename: bool = False
-                                  ):
+                                  use_full_filename: bool = False,
+                                  return_string: bool = False,
+                                  ) -> Union[None, str]:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -752,7 +778,7 @@ class Opti(cas.Opti):
         title = f"{'Scalar' if is_scalar else 'Vector'} variable"
         if not is_scalar:
             title += f" (index {index - index_of_first_element} of {n_vars})"
-        print("\n".join([
+        string = "\n".join([
             "",
             f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
             "",
@@ -760,12 +786,17 @@ class Opti(cas.Opti):
             source,
             "```"
         ])
-        )
+
+        if return_string:
+            return string
+        else:
+            print(string)
 
     def find_constraint_declaration(self,
                                     index: int,
-                                    use_full_filename: bool = False
-                                    ):
+                                    use_full_filename: bool = False,
+                                    return_string: bool = False
+                                    ) -> Union[None, str]:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -788,7 +819,7 @@ class Opti(cas.Opti):
         title = f"{'Scalar' if is_scalar else 'Vector'} constraint"
         if not is_scalar:
             title += f" (index {index - index_of_first_element} of {n_cons})"
-        print("\n".join([
+        string = "\n".join([
             "",
             f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
             "",
@@ -796,7 +827,11 @@ class Opti(cas.Opti):
             source,
             "```"
         ])
-        )
+
+        if return_string:
+            return string
+        else:
+            print(string)
 
     ### Advanced Methods
 
@@ -1209,7 +1244,7 @@ class OptiSol:
             return [self.value(i) for i in x]
         if issubclass(t, tuple):
             return tuple([self.value(i) for i in x])
-        if issubclass(t, set) or issubclass(t, frozenset):
+        if issubclass(t, (set, frozenset)):
             return {self.value(i) for i in x}
         if issubclass(t, dict):
             return {
@@ -1218,23 +1253,20 @@ class OptiSol:
             }
 
         # Skip certain Python types
-        for type_to_skip in (
+        if issubclass(t, (
                 bool, str,
                 int, float, complex,
                 range,
                 type(None),
                 bytes, bytearray, memoryview
-        ):
-            if issubclass(t, type_to_skip):
-                return x
+        )):
+            return x
 
         # Skip certain CasADi types
-        for type_to_skip in (
-                cas.Opti,
-                cas.OptiSol
-        ):
-            if issubclass(t, type_to_skip):
-                return x
+        if issubclass(t, (
+                cas.Opti, cas.OptiSol
+        )):
+            return x
 
         # If it's any other type, try converting its attribute dictionary, if it has one:
         try:
@@ -1272,9 +1304,52 @@ class OptiSol:
     def value_parameters(self):
         return self._sol.value_parameters()
 
+    def show_infeasibilities(self, tol: float = 1e-3) -> None:
+        """
+        Prints a summary of any violated constraints in the solution.
+
+        Args:
+
+            tol: The tolerance for violation. If the constraint is violated by less than this amount, it will not be
+                printed.
+
+        Returns: None (prints to console)
+        """
+        lbg = self(self.opti.lbg)
+        ubg = self(self.opti.ubg)
+
+        g = self(self.opti.g)
+
+        constraint_violated = np.logical_or(
+            g + tol < lbg,
+            g - tol > ubg
+        )
+
+        lbg_isfinite = np.isfinite(lbg)
+        ubg_isfinite = np.isfinite(ubg)
+
+        for i in np.arange(len(g)):
+            if constraint_violated[i]:
+                print("-" * 50)
+
+                if lbg_isfinite[i] and ubg_isfinite[i]:
+                    if lbg[i] == ubg[i]:
+                        print(f"{lbg[i]} == {g[i]} (violation: {np.abs(g[i] - lbg[i])})")
+                    else:
+                        print(f"{lbg[i]} < {g[i]} < {ubg[i]} (violation: {np.maximum(lbg[i] - g[i], g[i] - ubg[i])})")
+                elif lbg_isfinite[i] and not ubg_isfinite[i]:
+                    print(f"{lbg[i]} < {g[i]} (violation: {lbg[i] - g[i]})")
+                elif not lbg_isfinite[i] and ubg_isfinite[i]:
+                    print(f"{g[i]} < {ubg[i]} (violation: {g[i] - ubg[i]})")
+                else:
+                    raise ValueError(
+                        "Contact the AeroSandbox developers if you see this message; it should be impossible.")
+
+                self.opti.find_constraint_declaration(index=i)
+
 
 if __name__ == '__main__':
-    # import pytest
+    import pytest
 
     # pytest.main()
 

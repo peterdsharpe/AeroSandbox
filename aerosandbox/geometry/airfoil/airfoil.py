@@ -144,8 +144,34 @@ class Airfoil(Polygon):
         if CM_function is not None:
             self.CM_function = CM_function
 
-    def __repr__(self):  # String representation
+    def __repr__(self) -> str:
         return f"Airfoil {self.name} ({self.n_points()} points)"
+
+    def __eq__(self, other: "Airfoil") -> bool:
+        """
+        Checks if two airfoils are equal. Two airfoils are equal if they have the same name, coordinates, and
+        polar functions.
+
+        Args:
+            other: The other airfoil to compare to.
+
+        Returns:
+            True if the two airfoils are equal, False otherwise.
+        """
+        if other is self:  # If they're the same object in memory, they're equal
+            return True
+
+        if not type(self) == type(other):  # If the types are different, they're not equal
+            return False
+
+        # At this point, we know that the types are the same, so we can compare the attributes
+        return all([  # If all of these are true, they're equal
+            self.name == other.name,
+            np.allclose(self.coordinates, other.coordinates),
+            self.CL_function is other.CL_function,
+            self.CD_function is other.CD_function,
+            self.CM_function is other.CM_function,
+        ])
 
     def generate_polars(self,
                         alphas=np.linspace(-15, 15, 21),
@@ -557,8 +583,12 @@ class Airfoil(Polygon):
                      ) -> Union[float, np.ndarray]:
         """
         Returns the local camber of the airfoil at a given point or points.
-        :param x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
-        :return: Local camber of the airfoil (y/c) [1D array].
+
+        Args:
+            x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
+
+        Returns:
+            Local camber of the airfoil (y/c) [1D array].
         """
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
@@ -581,8 +611,12 @@ class Airfoil(Polygon):
                         ) -> Union[float, np.ndarray]:
         """
         Returns the local thickness of the airfoil at a given point or points.
-        :param x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
-        :return: Local thickness of the airfoil (y/c) [1D array].
+
+        Args:
+            x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
+
+        Returns:
+            Local thickness of the airfoil (y/c) [1D array].
         """
         upper = self.upper_coordinates()[::-1]
         lower = self.lower_coordinates()
@@ -632,12 +666,18 @@ class Airfoil(Polygon):
              draw_mcl=True,
              backend="matplotlib",
              show=True
-             ):
+             ) -> None:
         """
         Draw the airfoil object.
-        :param draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
-        :param backend: Which backend should we use? "plotly" or "matplotlib"
-        :return: None
+
+        Args:
+            draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
+
+            backend: Which backend should we use? "plotly" or "matplotlib"
+
+            show: Should we show the plot? [boolean]
+
+        Returns: None
         """
         x = np.array(self.x()).reshape(-1)
         y = np.array(self.y()).reshape(-1)
@@ -700,7 +740,7 @@ class Airfoil(Polygon):
 
     def LE_index(self) -> int:
         """
-        Returns the index of the leading-edge point.
+        Returns the index of the leading edge point in the airfoil coordinates.
         """
         return np.argmin(self.x())
 
@@ -757,13 +797,23 @@ class Airfoil(Polygon):
 
     def repanel(self,
                 n_points_per_side: int = 100,
+                spacing_function_per_side = np.cosspace,
                 ) -> 'Airfoil':
         """
-        Returns a repaneled version of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
-        :param n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
-            Notes: The number of points defining the final airfoil will be n_points_per_side*2-1,
-            since one point (the leading edge point) is shared by both the upper and lower surfaces.
-        :return: Returns the new airfoil.
+        Returns a repaneled copy of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+
+        Args:
+
+            n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
+
+                Notes: The number of points defining the final airfoil will be `n_points_per_side * 2 - 1`,
+                since one point (the leading edge point) is shared by both the upper and lower surfaces.
+
+            spacing_function_per_side: Determines how to space the points on each side of the airfoil. Can be
+            `np.linspace` or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that returns
+            a spaced array of `n` points between `a` and `b`. [function]
+
+        Returns: A copy of the airfoil with the new coordinates.
         """
 
         upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
@@ -789,10 +839,10 @@ class Airfoil(Polygon):
         ))
 
         # Generate a cosine-spaced list of points from 0 to 1
-        cosspaced_points = np.cosspace(0, 1, n_points_per_side)
+        spaced_points = spacing_function_per_side(0, 1, n_points_per_side)
         s = np.hstack((
-            cosspaced_points,
-            1 + cosspaced_points[1:],
+            spaced_points,
+            1 + spaced_points[1:],
         ))
 
         # Check that there are no duplicate points in the airfoil.

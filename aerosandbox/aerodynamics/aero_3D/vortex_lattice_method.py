@@ -4,7 +4,7 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Callable
 import copy
 
 
@@ -45,9 +45,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
                  run_symmetric_if_possible: bool = False,
                  verbose: bool = False,
                  spanwise_resolution: int = 10,
-                 spanwise_spacing: str = "cosine",
+                 spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  chordwise_resolution: int = 10,
-                 chordwise_spacing: str = "cosine",
+                 chordwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  vortex_core_radius: float = 1e-8,
                  align_trailing_vortices_with_wind: bool = False,
                  ):
@@ -62,9 +62,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.verbose = verbose
         self.spanwise_resolution = spanwise_resolution
-        self.spanwise_spacing = spanwise_spacing
+        self.spanwise_spacing_function = spanwise_spacing_function
         self.chordwise_resolution = chordwise_resolution
-        self.chordwise_spacing = chordwise_spacing
+        self.chordwise_spacing_function = chordwise_spacing_function
         self.vortex_core_radius = vortex_core_radius
         self.align_trailing_vortices_with_wind = align_trailing_vortices_with_wind
 
@@ -88,43 +88,26 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         Returns a dictionary with keys:
 
-            'F_g' : an [x, y, z] list of forces in geometry axes [N]
+            - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
+            - 'F_b' : an [x, y, z] list of forces in body axes [N]
+            - 'F_w' : an [x, y, z] list of forces in wind axes [N]
+            - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+            - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
+            - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+            - 'L' : the lift force [N]. Definitionally, this is in wind axes.
+            - 'Y' : the side force [N]. This is in wind axes.
+            - 'D' : the drag force [N]. Definitionally, this is in wind axes.
+            - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+            - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+            - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+            - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+            - 'CY', the sideforce coefficient [-]. This is in wind axes.
+            - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+            - 'Cl', the rolling coefficient [-], in body axes
+            - 'Cm', the pitching coefficient [-], in body axes
+            - 'Cn', the yawing coefficient [-], in body axes
 
-            'F_b' : an [x, y, z] list of forces in body axes [N]
-
-            'F_w' : an [x, y, z] list of forces in wind axes [N]
-
-            'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
-
-            'M_b' : an [x, y, z] list of moments about body axes [Nm]
-
-            'M_w' : an [x, y, z] list of moments about wind axes [Nm]
-
-            'L' : the lift force [N]. Definitionally, this is in wind axes.
-
-            'Y' : the side force [N]. This is in wind axes.
-
-            'D' : the drag force [N]. Definitionally, this is in wind axes.
-
-            'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
-
-            'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
-
-            'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
-
-            'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
-
-            'CY', the sideforce coefficient [-]. This is in wind axes.
-
-            'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
-
-            'Cl', the rolling coefficient [-], in body axes
-
-            'Cm', the pitching coefficient [-], in body axes
-
-            'Cn', the yawing coefficient [-], in body axes
-
-        Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+        Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
         """
 
         if self.verbose:
@@ -138,12 +121,16 @@ class VortexLatticeMethod(ExplicitAnalysis):
         is_trailing_edge = []
 
         for wing in self.airplane.wings:
+            if self.spanwise_resolution > 1:
+                wing = wing.subdivide_sections(
+                    ratio=self.spanwise_resolution,
+                    spacing_function=self.spanwise_spacing_function
+                )
+
             points, faces = wing.mesh_thin_surface(
                 method="quad",
                 chordwise_resolution=self.chordwise_resolution,
-                chordwise_spacing=self.chordwise_spacing,
-                spanwise_resolution=self.spanwise_resolution,
-                spanwise_spacing=self.spanwise_spacing,
+                chordwise_spacing_function=self.chordwise_spacing_function,
                 add_camber=True
             )
             front_left_vertices.append(points[faces[:, 0], :])
@@ -350,6 +337,68 @@ class VortexLatticeMethod(ExplicitAnalysis):
                                        q=True,
                                        r=True,
                                        ):
+        """
+                Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
+
+                Arguments essentially determine which stability derivatives are computed. If a stability derivative is not
+                needed, leaving it False will speed up the computation.
+
+                Args:
+
+                    - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
+                    - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
+                    - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
+                    - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
+                    - r (bool): If True, compute the stability derivatives with respect to the body-axis yaw rate (r).
+
+                Returns: a dictionary with keys:
+
+                    - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
+                    - 'F_b' : an [x, y, z] list of forces in body axes [N]
+                    - 'F_w' : an [x, y, z] list of forces in wind axes [N]
+                    - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+                    - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
+                    - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+                    - 'L' : the lift force [N]. Definitionally, this is in wind axes.
+                    - 'Y' : the side force [N]. This is in wind axes.
+                    - 'D' : the drag force [N]. Definitionally, this is in wind axes.
+                    - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+                    - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+                    - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+                    - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+                    - 'CY', the sideforce coefficient [-]. This is in wind axes.
+                    - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+                    - 'Cl', the rolling coefficient [-], in body axes
+                    - 'Cm', the pitching coefficient [-], in body axes
+                    - 'Cn', the yawing coefficient [-], in body axes
+
+                    Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`, and `r` arguments. For
+                    example, if `alpha=True`, then the following additional keys will be present:
+
+                        - 'CLa', the lift coefficient derivative with respect to alpha [1/rad]
+                        - 'CDa', the drag coefficient derivative with respect to alpha [1/rad]
+                        - 'CYa', the sideforce coefficient derivative with respect to alpha [1/rad]
+                        - 'Cla', the rolling moment coefficient derivative with respect to alpha [1/rad]
+                        - 'Cma', the pitching moment coefficient derivative with respect to alpha [1/rad]
+                        - 'Cna', the yawing moment coefficient derivative with respect to alpha [1/rad]
+                        - 'x_np', the neutral point location in the x direction [m]
+
+                    Nondimensional values are nondimensionalized using reference values in the
+                    VortexLatticeMethod.airplane object.
+
+                    Data types:
+                        - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
+
+                            - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
+                            are floats, not arrays).
+
+                            - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
+                            array).
+
+                        - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
+                        floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
+
+                """
         abbreviations = {
             "alpha": "a",
             "beta" : "b",
@@ -491,7 +540,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
     def calculate_streamlines(self,
                               seed_points: np.ndarray = None,
                               n_steps: int = 300,
-                              length: float = None
+                              length: float = None,
                               ) -> np.ndarray:
         """
         Computes streamlines, starting at specific seed points.

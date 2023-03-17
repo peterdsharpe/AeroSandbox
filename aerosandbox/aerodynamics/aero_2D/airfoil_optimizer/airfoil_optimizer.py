@@ -1,5 +1,9 @@
-from aerosandbox.geometry import *
+import aerosandbox.numpy as np
+from aerosandbox.geometry import Airfoil
+from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_coordinates
 from scipy import optimize
+import matplotlib.pyplot as plt
+import aerosandbox.tools.pretty_plots as p
 
 if __name__ == '__main__':
 
@@ -46,7 +50,7 @@ if __name__ == '__main__':
         lower, upper = unpack(x)
         return Airfoil(
             name="Optimization Airfoil",
-            coordinates=kulfan_coordinates(
+            coordinates=get_kulfan_coordinates(
                 lower_weights=lower,
                 upper_weights=upper,
                 enforce_continuous_LE_radius=enforce_continuous_LE_radius,

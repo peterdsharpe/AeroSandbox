@@ -128,6 +128,12 @@ class XFoil(ExplicitAnalysis):
         self.working_directory = working_directory
 
     def _default_keystrokes(self) -> List[str]:
+        """
+        Returns a list of XFoil keystrokes that are common to all XFoil runs.
+
+        Returns:
+            A list of strings, each of which is a single XFoil keystroke to be followed by <enter>.
+        """
         run_file_contents = []
 
         # Disable graphics

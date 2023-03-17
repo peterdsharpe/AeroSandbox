@@ -21,7 +21,7 @@ minute = 60
 hour = 60 * minute
 day = 24 * hour
 week = 7 * day
-year = 365.25 * day
+year = 365.2425 * day
 month = year / 12
 
 # Force (equivalents in Newtons)
@@ -43,9 +43,22 @@ quart = gallon_us / 4
 
 # Pressure (equivalents in Pa)
 pascal = 1
-torr = 133.3223684211
 atm = 101325
+torr = atm / 760
 psi = lbf / inch ** 2
+psf = lbf / foot ** 2
+
+# Power (equivalents in Watts)
+watt = 1
+horsepower = 550 * foot * lbf / second
+hp = horsepower
+
+# Energy (equivalents in Joules)
+joule = 1
+btu = 1055.05585262
+calorie = 4.184
+kcal = 1000 * calorie
+watt_hour = watt * hour
 
 # SI prefixes
 yocto = 1e-24

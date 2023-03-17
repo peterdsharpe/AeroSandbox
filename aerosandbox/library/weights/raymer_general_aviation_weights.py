@@ -4,7 +4,7 @@ import aerosandbox.tools.units as u
 from .raymer_fudge_factors import advanced_composites
 
 
-# From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
+# From Raymer: "Aircraft Design: A Conceptual Approach", 5th Ed.
 # Section 15.3.3: General Aviation Weights
 
 def mass_wing(
@@ -18,6 +18,9 @@ def mass_wing(
     """
     Computes the mass of a wing of a general aviation aircraft, according to Raymer's Aircraft Design: A Conceptual
     Approach.
+
+    Note: Torenbeek's wing mass model is likely more accurate; see `mass_wing()` in `torenbeek_weights.py` (same
+    directory).
 
     Args:
         wing: The wing object.
@@ -36,15 +39,22 @@ def mass_wing(
         use_advanced_composites: Whether to use advanced composites for the wing. If True, the wing mass is modified
         accordingly.
 
+    Returns: The mass of the wing [kg].
+
     """
-    if mass_fuel_in_wing == 0:
-        fuel_weight_factor = 1
-    else:
+    try:
+        fuel_is_in_wing = bool(mass_fuel_in_wing > 0)
+    except RuntimeError:
+        fuel_is_in_wing = True
+
+    if fuel_is_in_wing:
         fuel_weight_factor = np.softmax(
             (mass_fuel_in_wing / u.lbm) ** 0.0035,
             1,
             hardness=1000
         )
+    else:
+        fuel_weight_factor = 1
 
     airfoil_thicknesses = [
         xsec.airfoil.max_thickness()
@@ -91,8 +101,7 @@ def mass_hstab(
         use_advanced_composites: Whether to use advanced composites for the horizontal stabilizer. If True, the
         hstab mass is modified accordingly.
 
-    Returns:
-        The mass of the horizontal stabilizer [kg].
+    Returns: The mass of the horizontal stabilizer [kg].
     """
     airfoil_thicknesses = [
         xsec.airfoil.max_thickness()
@@ -141,8 +150,7 @@ def mass_vstab(
         use_advanced_composites: Whether to use advanced composites for the vertical stabilizer. If True, the vstab
         mass is modified accordingly.
 
-    Returns:
-        The mass of the vertical stabilizer [kg].
+    Returns: The mass of the vertical stabilizer [kg].
     """
     airfoil_thicknesses = [
         xsec.airfoil.max_thickness()
@@ -173,6 +181,7 @@ def mass_fuselage(
         L_over_D: float,
         cruise_op_point: asb.OperatingPoint,
         wing_to_tail_distance: float,
+        pressure_differential: float = 0.0,
         use_advanced_composites: bool = False,
 ) -> float:
     """
@@ -193,11 +202,12 @@ def mass_fuselage(
         wing_to_tail_distance: The distance between the wing root-quarter-chord-point and the tail
         root-quarter-chord-point of the aircraft [m].
 
+        pressure_differential: The absolute value of the pressure differential across the fuselage [Pa].
+
         use_advanced_composites: Whether to use advanced composites for the fuselage. If True, the fuselage mass is
         modified accordingly.
 
-    Returns:
-        The mass of the fuselage [kg].
+    Returns: The mass of the fuselage [kg].
     """
 
     mass_fuselage_without_pressurization = (
@@ -248,8 +258,7 @@ def mass_main_landing_gear(
         use_advanced_composites: Whether to use advanced composites for the main landing gear. If True, the main
         landing gear mass is modified accordingly.
 
-    Returns:
-        The mass of the main landing gear [kg].
+    Returns: The mass of the main landing gear [kg].
     """
 
     ultimate_landing_load_factor = n_gear * 1.5
@@ -286,8 +295,7 @@ def mass_nose_landing_gear(
         use_advanced_composites: Whether to use advanced composites for the nose landing gear. If True, the nose
         landing gear mass is modified accordingly.
 
-    Returns:
-        The mass of the nose landing gear [kg].
+    Returns: The mass of the nose landing gear [kg].
     """
 
     ultimate_landing_load_factor = n_gear * 1.5
@@ -314,8 +322,7 @@ def mass_engines_installed(
 
         mass_per_engine: The mass of a single engine [kg].
 
-    Returns:
-        The mass of the engines installed on the aircraft [kg].
+    Returns: The mass of the engines installed on the aircraft [kg].
     """
     return (
             2.575 *
@@ -344,8 +351,7 @@ def mass_fuel_system(
         fraction_in_integral_tanks: The fraction of the fuel volume that is in integral tanks, as opposed to
         protected tanks.
 
-    Returns:
-        The mass of the fuel system [kg].
+    Returns: The mass of the fuel system [kg].
     """
     return (
             2.49 *
@@ -380,15 +386,14 @@ def mass_flight_controls(
         main_wing: The main wing to use for computing the flight controls mass. If main_wing is None, or if there are
         no wings in the airplane object, the flight controls mass will be computed without a main wing.
 
-    Returns:
-        The mass of the flight controls [kg].
+    Returns: The mass of the flight controls [kg].
     """
 
     ### Handle the fuselage argument and get the fuselage length factor
     if fuselage is None:
-        if len(airplanes.fuselages == 0):
+        if len(airplane.fuselages) == 0:
             pass
-        elif len(airplanes.fuselages == 1):
+        elif len(airplane.fuselages) == 1:
             fuselage = airplane.fuselages[0]
         else:
             raise ValueError('More than one fuselage is present in the airplane. Please specify which fuselage to use '
@@ -401,9 +406,9 @@ def mass_flight_controls(
 
     ### Handle the main wing argument and get the wing span factor
     if main_wing is None:
-        if len(airplanes.wings == 0):
+        if len(airplane.wings) == 0:
             pass
-        elif len(airplanes.wings == 1):
+        elif len(airplane.wings) == 1:
             main_wing = airplane.wings[0]
         else:
             raise ValueError('More than one wing is present in the airplane. Please specify which wing is the main'
@@ -445,8 +450,7 @@ def mass_hydraulics(
 
         cruise_op_point: The cruise operating point of the aircraft.
 
-    Returns:
-        The mass of the hydraulics [kg].
+    Returns: The mass of the hydraulics [kg].
     """
     mach = cruise_op_point.mach()
 
@@ -482,8 +486,7 @@ def mass_avionics(
     Args:
         mass_uninstalled_avionics: The mass of the avionics, before installation [kg].
 
-    Returns:
-        The mass of the avionics, as installed [kg].
+    Returns: The mass of the avionics, as installed [kg].
     """
     return (
             2.117 *
@@ -504,13 +507,12 @@ def mass_electrical(
 
         avionics_mass: The mass of the avionics [kg].
 
-    Returns:
-        The mass of the electrical system [kg].
+    Returns: The mass of the electrical system [kg].
     """
 
     fuel_and_avionics_masses = fuel_system_mass + avionics_mass
 
-    returns(
+    return (
         12.57 *
         (fuel_and_avionics_masses / u.lbm) ** 0.51
     ) * u.lbm
@@ -538,8 +540,7 @@ def mass_air_conditioning_and_anti_ice(
 
         cruise_op_point: The cruise operating point of the aircraft.
 
-    Returns:
-        The mass of the air conditioning and anti-ice system [kg].
+    Returns: The mass of the air conditioning and anti-ice system [kg].
     """
     mach = cruise_op_point.mach()
 
@@ -562,8 +563,7 @@ def mass_furnishings(
     Args:
         design_mass_TOGW: The design takeoff gross weight of the entire airplane [kg].
 
-    Returns:
-        The mass of the furnishings [kg].
+    Returns: The mass of the furnishings [kg].
     """
     return np.softmax(
         0.0582 * design_mass_TOGW - 65 * u.lbm,

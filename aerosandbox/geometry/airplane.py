@@ -1,9 +1,10 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Union, Optional, Tuple
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
+from aerosandbox.geometry.propulsor import Propulsor
 import copy
 
 
@@ -24,6 +25,7 @@ class Airplane(AeroSandboxObject):
                  xyz_ref: Union[np.ndarray, List] = None,
                  wings: Optional[List[Wing]] = None,
                  fuselages: Optional[List[Fuselage]] = None,
+                 propulsors: Optional[List[Propulsor]] = None,
                  s_ref: Optional[float] = None,
                  c_ref: Optional[float] = None,
                  b_ref: Optional[float] = None,
@@ -44,6 +46,8 @@ class Airplane(AeroSandboxObject):
             wings: A list of Wing objects that are a part of the airplane.
 
             fuselages: A list of Fuselage objects that are a part of the airplane.
+
+            propulsors: A list of Propulsor objects that are a part of the airplane.
 
             s_ref: Reference area. If undefined, it's set from the area of the first Wing object. # Note: will be deprecated
 
@@ -85,6 +89,8 @@ class Airplane(AeroSandboxObject):
             wings: List[Wing] = []
         if fuselages is None:
             fuselages: List[Fuselage] = []
+        if propulsors is None:
+            propulsors: List[Propulsor] = []
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -93,6 +99,7 @@ class Airplane(AeroSandboxObject):
         self.xyz_ref = np.array(xyz_ref)
         self.wings = wings
         self.fuselages = fuselages
+        self.propulsors = propulsors
         self.analysis_specific_options = analysis_specific_options
 
         ### Assign reference values
@@ -182,18 +189,22 @@ class Airplane(AeroSandboxObject):
              show_kwargs: Dict = None,
              ):
         """
+        Produces an interactive 3D visualization of the airplane.
 
         Args:
 
-            backend: One of:
-                * "plotly" for a Plot.ly backend
+            backend: The visualization backend to use. Options are:
+
+                * "matplotlib" for a Matplotlib backend
                 * "pyvista" for a PyVista backend
+                * "plotly" for a Plot.ly backend
                 * "trimesh" for a trimesh backend
 
             thin_wings: A boolean that determines whether to draw the full airplane (i.e. thickened, 3D bodies), or to use a
             thin-surface representation for any Wing objects.
 
-            show: Should we show the visualization, or just return it?
+            show: A boolean that determines whether to display the object after plotting it. If False, the object is
+            returned but not displayed. If True, the object is displayed and returned.
 
         Returns: The plotted object, in its associated backend format. Also displays the object if `show` is True.
 
@@ -279,10 +290,24 @@ class Airplane(AeroSandboxObject):
                        thin_linewidth=0.2,
                        thick_linewidth=0.5,
                        fuselage_longeron_theta=None,
+                       use_preset_view_angle: str = None,
+                       set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+                       set_background_pane_alpha: float = None,
                        set_equal: bool = True,
                        set_axis_visibility: bool = None,
                        show: bool = True,
                        ):
+        """
+        Draws a wireframe of the airplane on a Matplotlib 3D axis.
+
+        Args:
+
+            ax: The axis to draw on. Must be a 3D axis. If None, creates a new axis.
+
+            color: The color of the wireframe.
+
+            thin_linewidth: The linewidth of the thin lines.
+        """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
@@ -293,6 +318,22 @@ class Airplane(AeroSandboxObject):
                 raise ValueError("`ax` must be a 3D axis.")
 
             plt.sca(ax)
+
+        ### Set the view angle
+        if use_preset_view_angle is not None:
+            p.set_preset_3d_view_angle(use_preset_view_angle)
+
+        ### Set the background pane color
+        if set_background_pane_color is not None:
+            ax.xaxis.pane.set_facecolor(set_background_pane_color)
+            ax.yaxis.pane.set_facecolor(set_background_pane_color)
+            ax.zaxis.pane.set_facecolor(set_background_pane_color)
+
+        ### Set the background pane alpha
+        if set_background_pane_alpha is not None:
+            ax.xaxis.pane.set_alpha(set_background_pane_alpha)
+            ax.yaxis.pane.set_alpha(set_background_pane_alpha)
+            ax.zaxis.pane.set_alpha(set_background_pane_alpha)
 
         if fuselage_longeron_theta is None:
             fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
@@ -335,7 +376,7 @@ class Airplane(AeroSandboxObject):
             ]:
 
                 plot_line(
-                    wing.mesh_line(x_nondim=xy[0], y_nondim=xy[1]),
+                    np.stack(wing.mesh_line(x_nondim=xy[0], z_nondim=xy[1]), axis=0),
                     symmetric=wing.symmetric,
                     linewidth=thick_linewidth,
                 )
@@ -346,12 +387,12 @@ class Airplane(AeroSandboxObject):
             thicknesses = np.array([af.local_thickness(x_over_c=x) for af in afs])
 
             plot_line(
-                wing.mesh_line(x_nondim=x, y_nondim=thicknesses / 2, add_camber=True),
+                np.stack(wing.mesh_line(x_nondim=x, z_nondim=thicknesses / 2, add_camber=True), axis=0),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
             )
             plot_line(
-                wing.mesh_line(x_nondim=x, y_nondim=-thicknesses / 2, add_camber=True),
+                np.stack(wing.mesh_line(x_nondim=x, z_nondim=-thicknesses / 2, add_camber=True), axis=0),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
             )
@@ -397,7 +438,10 @@ class Airplane(AeroSandboxObject):
 
             ### Centerline
             plot_line(
-                fuse.mesh_line(x_nondim=0, y_nondim=0),
+                np.stack(
+                    fuse.mesh_line(y_nondim=0, z_nondim=0),
+                    axis=0,
+                ),
                 linewidth=thin_linewidth
             )
 
@@ -409,6 +453,18 @@ class Airplane(AeroSandboxObject):
                         for xsec in fuse.xsecs
                     ], axis=0),
                     linewidth=thick_linewidth
+                )
+
+        ##### Propulsors
+        for prop in self.propulsors:
+
+            ### Disk
+            if prop.length == 0:
+                plot_line(
+                    np.stack(
+                        prop.get_disk_3D_coordinates(),
+                        axis=1
+                    )
                 )
 
         if set_equal:
@@ -510,16 +566,17 @@ class Airplane(AeroSandboxObject):
 
     def aerodynamic_center(self, chord_fraction: float = 0.25):
         """
-        Computes the location of the aerodynamic center of the wing.
+        Computes the approximate location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:
             https://core.ac.uk/download/pdf/79175663.pdf
 
         Args:
+
             chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
-                Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing.
-                However, wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less.
-                Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability".
-                PDF: https://www.sciencedirect.com/science/article/pii/B9780080982427000031
+            Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing. However,
+            wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less. Citing Cook,
+            Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability". PDF:
+            https://www.sciencedirect.com/science/article/pii/B9780080982427000031
 
         Returns: The (x, y, z) coordinates of the aerodynamic center of the airplane.
         """
@@ -573,6 +630,19 @@ class Airplane(AeroSandboxObject):
     def generate_cadquery_geometry(self,
                                    minimum_airfoil_TE_thickness: float = 0.001
                                    ) -> "Workplane":
+        """
+        Uses the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
+
+        Args:
+
+            minimum_airfoil_TE_thickness: The minimum thickness of the trailing edge of the airfoils, as a fraction
+            of each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if
+            necessary. This is useful for avoiding numerical issues in CAD software that can arise from extremely
+            thin (i.e., <1e-6 meters) trailing edges.
+
+        Returns: A CADQuery Workplane object containing the CAD geometry of the airplane.
+
+        """
         import cadquery as cq
 
         solids = []
@@ -673,6 +743,19 @@ class Airplane(AeroSandboxObject):
                                  filename: str,
                                  minimum_airfoil_TE_thickness: float = 0.001
                                  ) -> None:
+        """
+        Exports the airplane geometry to a STEP file.
+
+        Args:
+            filename: The filename to export to. Should include the ".step" extension.
+
+            minimum_airfoil_TE_thickness: The minimum thickness of the trailing edge of the airfoils, as a fraction
+            of each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if
+            necessary. This is useful for avoiding numerical issues in CAD software that can arise from extremely
+            thin (i.e., <1e-6 meters) trailing edges.
+
+        Returns: None, but exports the airplane geometry to a STEP file.
+        """
         solid = self.generate_cadquery_geometry(
             minimum_airfoil_TE_thickness=minimum_airfoil_TE_thickness,
         )
@@ -707,6 +790,25 @@ class Airplane(AeroSandboxObject):
                     elevator: Wing = None,
                     fin: Wing = None,
                     ):
+        """
+        Exports the airplane geometry to an XFLR5 `.xml` file.
+
+        Args:
+            filename: The filename to export to. Should include the ".xml" extension.
+
+            include_fuselages: Whether to include fuselages in the export.
+
+            mainwing: The main wing of the airplane. If not specified, will default to the first wing in the airplane.
+
+            elevator: The elevator of the airplane. If not specified, will default to the second wing in the airplane.
+
+            fin: The fin of the airplane. If not specified, will default to the third wing in the airplane.
+
+        Returns: None, but exports the airplane geometry to an XFLR5 `.xml` file.
+
+            To import the `.xml` file into XFLR5, go to File -> Import -> Import from XML.
+        """
+
         wings_specified = [
             mainwing is not None,
             elevator is not None,
@@ -770,7 +872,7 @@ class Airplane(AeroSandboxObject):
             wing = mainwing
             wingxml = ET.SubElement(plane, "wing")
 
-            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
                 "Name"      : wing.name,
@@ -787,7 +889,7 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
@@ -821,7 +923,7 @@ class Airplane(AeroSandboxObject):
             wing = elevator
             wingxml = ET.SubElement(plane, "wing")
 
-            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
                 "Name"      : wing.name,
@@ -838,7 +940,7 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
@@ -872,7 +974,7 @@ class Airplane(AeroSandboxObject):
             wing = fin
             wingxml = ET.SubElement(plane, "wing")
 
-            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, y_nondim=0)
+            xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
                 "Name"      : wing.name,
@@ -889,7 +991,7 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, y_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 

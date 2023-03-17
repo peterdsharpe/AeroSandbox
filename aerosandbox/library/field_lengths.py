@@ -1,16 +1,17 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
+from typing import Dict
 
 
-def field_length_analysis(
+def field_length_analysis_torenbeek(
         design_mass_TOGW: float,
         thrust_at_liftoff: float,
         lift_over_drag_climb: float,
         CL_max: float,
         s_ref: float,
+        n_engines: int,
         atmosphere: asb.Atmosphere = None,
-        n_engines: int = 1,
         CD_zero_lift: float = 0.03,
         obstacle_height: float = 35 * u.foot,
         friction_coefficient: float = 0.02,
@@ -167,11 +168,12 @@ def field_length_analysis(
         hardness=1 / 0.01
     )
 
-    takeoff_effective_friction_coefficient = (
+    takeoff_effective_friction_coefficient = (  # From Torenbeek, Eq. 5-76; an approximation
             friction_coefficient +
-            0.72 * (CD_zero_lift / CL_max)  # From Torenbeek
+            0.72 * (CD_zero_lift / CL_max)
     )
 
+    # From Torenbeek, Eq. 5-74
     takeoff_acceleration_g = thrust_over_weight_takeoff - takeoff_effective_friction_coefficient
 
     takeoff_ground_roll_distance = V_liftoff ** 2 / (
@@ -234,7 +236,7 @@ def field_length_analysis(
     balanced_field_length = np.softmax(
         balanced_field_length,
         takeoff_total_distance,
-        hardness=10 / takeoff_total_distance
+        softness=takeoff_total_distance / 100,
     )
 
     ##### Landing analysis #####
@@ -246,7 +248,7 @@ def field_length_analysis(
     V_approach = V_approach_over_V_stall * V_stall
     V_touchdown = V_liftoff
 
-    landing_airborne_distance = ( # From Torenbeek
+    landing_airborne_distance = (  # From Torenbeek
                                         (V_approach ** 2 - V_touchdown ** 2) / (2 * g) + obstacle_height
                                 ) / gamma_bar_landing
 
@@ -276,3 +278,159 @@ def field_length_analysis(
         "flight_path_angle_climb"               : flight_path_angle_climb,
         "flight_path_angle_climb_one_engine_out": flight_path_angle_climb_one_engine_out,
     }
+
+
+def field_length_analysis(
+        design_mass_TOGW: float,
+        thrust_at_liftoff: float,
+        lift_over_drag_climb: float,
+        CL_max: float,
+        s_ref: float,
+        n_engines: int,
+        V_engine_failure_balanced_field_length: float,
+        atmosphere: asb.Atmosphere = None,
+        CD_zero_lift: float = 0.03,
+        obstacle_height: float = 35 * u.foot,
+        friction_coefficient: float = 0.02,
+        minimum_V_liftoff_over_V_stall: float = 1.2,
+        maximum_braking_deceleration_g: float = 0.37,
+        inertia_time: float = 2,
+        approach_angle_deg: float = 3,
+) -> Dict[str, float]:
+    ### Set defaults
+    if atmosphere is None:
+        atmosphere = asb.Atmosphere(altitude=0)
+
+    ### Constants
+    g = 9.81  # m/s^2, gravitational acceleration
+
+    ### Compute TWR and climb physics
+    thrust_over_weight_takeoff = thrust_at_liftoff / (design_mass_TOGW * g)
+
+    ##### Compute various accelerations
+    acceleration_friction_and_drag = -g * (  # Based on Torenbeek, Eq. 5-76; an approximation
+            friction_coefficient +
+            0.72 * (CD_zero_lift / CL_max)
+    )
+    acceleration_braking = -g * maximum_braking_deceleration_g
+    acceleration_engines = thrust_at_liftoff / design_mass_TOGW
+
+    acceleration_takeoff = acceleration_engines + acceleration_friction_and_drag
+    acceleration_coasting = acceleration_friction_and_drag
+    acceleration_landing = acceleration_braking
+
+    ##### Normal takeoff analysis #####
+
+    ### V_stall is the stall speed of the airplane.
+    V_stall = np.sqrt(
+        2 * design_mass_TOGW * g / (atmosphere.density() * s_ref * CL_max)
+    )
+
+    ### V_liftoff is the airspeed at the moment of liftoff
+    V_liftoff = minimum_V_liftoff_over_V_stall * V_stall
+
+    takeoff_ground_roll_distance = V_liftoff ** 2 / (2 * acceleration_takeoff)
+
+    ### Compute the airborne distance required to clear the obstacle
+    flight_path_angle_climb = (  # radians, small angle approximation
+            thrust_over_weight_takeoff
+            - 1 / lift_over_drag_climb
+    )
+    flight_path_angle_climb = np.softmax(flight_path_angle_climb, 0, softness=0.001)
+
+    takeoff_airborne_distance = obstacle_height / flight_path_angle_climb
+
+    ### Compute the total distance required for normal takeoff, including obstacle clearance
+    takeoff_total_distance = takeoff_ground_roll_distance + takeoff_airborne_distance
+
+    ##### Normal landing analysis #####
+    landing_airborne_distance = obstacle_height / np.tand(approach_angle_deg)
+
+    V_touchdown = V_liftoff
+
+    landing_ground_roll_distance = (
+            inertia_time * V_touchdown +
+            V_touchdown ** 2 / (2 * -acceleration_landing)
+    )
+
+    landing_total_distance = landing_airborne_distance + landing_ground_roll_distance
+
+    ##### Balanced field length analysis #####
+
+    if n_engines == 1:
+        # If there is only one engine, the worst time *during the ground roll* for the engine to fail is right at liftoff.
+        balanced_field_length = takeoff_ground_roll_distance + (
+                V_liftoff ** 2 / (2 * -acceleration_landing)
+        )
+
+        balanced_field_length_accept = balanced_field_length
+        balanced_field_length_reject = balanced_field_length
+
+    else:
+        acceleration_takeoff_one_engine_out = acceleration_engines * (
+                n_engines - 1) / n_engines + acceleration_friction_and_drag
+
+        ### The flight path angle during a climb with one engine inoperative.
+        flight_path_angle_climb_one_engine_out = (
+                thrust_over_weight_takeoff * (n_engines - 1) / n_engines
+                - 1 / lift_over_drag_climb
+        )
+        flight_path_angle_climb_one_engine_out = np.softmax(flight_path_angle_climb_one_engine_out, 0, softness=0.001)
+
+        balanced_field_length_accept = (
+                (V_engine_failure_balanced_field_length ** 2 / (2 * acceleration_takeoff)) +  # Both engines working
+                ((V_liftoff ** 2 - V_engine_failure_balanced_field_length ** 2) / (
+                        2 * acceleration_takeoff_one_engine_out)) +
+                (obstacle_height / flight_path_angle_climb_one_engine_out)
+        )
+
+        balanced_field_length_reject = (
+                (V_engine_failure_balanced_field_length ** 2 / (2 * acceleration_takeoff)) +  # Both engines working
+                (inertia_time * V_engine_failure_balanced_field_length) +  # Reaction time for pilot / engines
+                (V_engine_failure_balanced_field_length ** 2 / (2 * -acceleration_landing))  # Braking time
+        )
+
+    return {
+        "takeoff_ground_roll_distance"          : takeoff_ground_roll_distance,
+        "takeoff_airborne_distance"             : takeoff_airborne_distance,
+        "takeoff_total_distance"                : takeoff_total_distance,
+        "balanced_field_length_accept"          : balanced_field_length_accept,
+        "balanced_field_length_reject"          : balanced_field_length_reject,
+        "landing_airborne_distance"             : landing_airborne_distance,
+        "landing_ground_roll_distance"          : landing_ground_roll_distance,
+        "landing_total_distance"                : landing_total_distance,
+        "V_stall"                               : V_stall,
+        "V_liftoff"                             : V_liftoff,
+        "V_touchdown"                           : V_touchdown,
+        "flight_path_angle_climb"               : flight_path_angle_climb,
+        "flight_path_angle_climb_one_engine_out": flight_path_angle_climb_one_engine_out,
+    }
+
+
+if __name__ == '__main__':
+    from aerosandbox.tools import units as u
+
+    results = field_length_analysis(
+        design_mass_TOGW=19000 * u.lbm,
+        thrust_at_liftoff=19000 * u.lbf * 0.3,
+        lift_over_drag_climb=20,
+        CL_max=1.9,
+        s_ref=24,
+        n_engines=2,
+        V_engine_failure_balanced_field_length=70,
+        atmosphere=asb.Atmosphere(altitude=0),
+    )
+
+    results_torenbeek= field_length_analysis_torenbeek(
+        design_mass_TOGW=19000 * u.lbm,
+        thrust_at_liftoff=19000 * u.lbf * 0.3,
+        lift_over_drag_climb=20,
+        CL_max=1.9,
+        s_ref=24,
+        n_engines=2,
+        atmosphere=asb.Atmosphere(altitude=0),
+    )
+
+    from pprint import pprint
+
+    pprint(results)

@@ -49,7 +49,7 @@ def test_single_dimensional_polynomial_fitting():
     if plot:
         fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
         plt.plot(x, y, ".", label="Data")
-        plt.plot(x, model(x_data, fitted_parameters), "-", label="Fit")
+        plt.plot(x, model(x_data, fitted_model.parameters), "-", label="Fit")
         plt.xlabel(r"$x$")
         plt.ylabel(r"$y$")
         plt.title(r"Automatic-Differentiable Fitting")

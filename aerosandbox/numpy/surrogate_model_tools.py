@@ -4,7 +4,8 @@ from typing import Tuple, Union
 
 def softmax(
         *args: Tuple[Union[float, _np.ndarray]],
-        hardness: float = 1.0
+        hardness: float = None,
+        softness: float = None,
 ) -> Union[float, _np.ndarray]:
     """
     An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
@@ -14,16 +15,40 @@ def softmax(
     Great writeup by John D Cook here:
         https://www.johndcook.com/soft_maximum.pdf
 
+    Notes: Can provide either `hardness` or `softness`, not both. These are the inverse of each other. If neither is
+    provided, `hardness` is set to 1.
+
     Args:
-        Provide any number of arguments as values to take the softmax of.
+
+        *args: Provide any number of arguments as values to take the softmax of.
 
         hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
+
+        softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to max(x1, x2).
+
+            - Setting `softness` is particularly useful, because it has the same units as each of the function's
+            inputs. For example, if you're taking the softmax of two values that are lengths in units of meters,
+            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
+            of discrepancy between the input values that would be considered physically significant".
 
     Returns:
         Soft maximum of the supplied values.
     """
+    ### Set defaults for hardness/softness
+    if hardness is not None:
+        if softness is not None:
+            raise ValueError("You can't specify both `hardness` and `softness`.")
+    else:
+        if softness is not None:
+            hardness = 1 / softness
+        else:
+            hardness = 1.0
+
     if _np.any(hardness <= 0):
-        raise ValueError("The value of `hardness` must be positive.")
+        if softness is not None:
+            raise ValueError("The value of `softness` must be positive.")
+        else:
+            raise ValueError("The value of `hardness` must be positive.")
 
     if len(args) <= 1:
         raise ValueError("You must call softmax with the value of two or more arrays that you'd like to take the "
@@ -45,6 +70,44 @@ def softmax(
     )
     out = out / hardness
     return out
+
+def softmin(
+        *args: Tuple[Union[float, _np.ndarray]],
+        hardness: float = None,
+        softness: float = None,
+) -> Union[float, _np.ndarray]:
+    """
+    An element-wise softmin between two or more arrays. Related to the logsumexp() function.
+
+    Useful for optimization because it's differentiable and preserves convexity!
+
+    Great writeup by John D Cook here:
+        https://www.johndcook.com/soft_maximum.pdf
+
+    Notes: Can provide either `hardness` or `softness`, not both. These are the inverse of each other. If neither is
+    provided, `hardness` is set to 1.
+
+    Args:
+
+        *args: Provide any number of arguments as values to take the softmin of.
+
+        hardness: Hardness parameter. Higher values make this closer to min(x1, x2).
+
+        softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to min(x1, x2).
+
+            - Setting `softness` is particularly useful, because it has the same units as each of the function's
+            inputs. For example, if you're taking the softmin of two values that are lengths in units of meters,
+            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
+            of discrepancy between the input values that would be considered physically significant".
+
+    Returns:
+        Soft minimum of the supplied values.
+    """
+    return -softmax(
+        *[-arg for arg in args],
+        hardness=hardness,
+        softness=softness
+    )
 
 
 def sigmoid(
