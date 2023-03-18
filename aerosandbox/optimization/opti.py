@@ -666,7 +666,7 @@ class Opti(cas.Opti):
         return sol
 
     def solve_sweep(self,
-                    parameter_mapping: Dict[cas.MX, np.ndarray] = None,
+                    parameter_mapping: Dict[cas.MX, np.ndarray],
                     update_initial_guesses_between_solves=False,
                     verbose=True,
                     solve_kwargs: Dict = None,
@@ -679,6 +679,7 @@ class Opti(cas.Opti):
         solve_kwargs = {
             **dict(
                 verbose=False,
+                max_iter=200,
             ),
             **solve_kwargs
         }
@@ -1365,7 +1366,6 @@ if __name__ == '__main__':
     import pytest
 
     # pytest.main()
-
 
     opti = Opti()  # set up an optimization environment
 
