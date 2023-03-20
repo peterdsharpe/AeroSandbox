@@ -354,15 +354,18 @@ class Opti(cas.Opti):
             constraint: A constraint that you want to hold true at the optimum.
 
                 Inequality example:
+
                 >>> x = opti.variable()
                 >>> opti.subject_to(x >= 5)
 
                 Equality example; also showing that you can directly constrain functions of variables:
+
                 >>> x = opti.variable()
                 >>> f = np.sin(x)
                 >>> opti.subject_to(f == 0.5)
 
                 You can also pass in a list of multiple constraints using list syntax. For example:
+
                 >>> x = opti.variable()
                 >>> opti.subject_to([
                 >>>     x >= 5,
@@ -374,7 +377,8 @@ class Opti(cas.Opti):
             stacklevel of the declaration tracked, which is then presented using
             `aerosandbox.Opti.constraint_declaration()`.
 
-        Returns: The dual variable associated with the new constraint. If the `constraint` input is a list, returns
+        Returns:
+            The dual variable associated with the new constraint. If the `constraint` input is a list, returns
             a list of dual variables.
 
         """

@@ -47,7 +47,7 @@ class AVL(ExplicitAnalysis):
             spanwise_spacing="cosine",
             chordwise_resolution=12,
             chordwise_spacing="cosine",
-            component=None,  # type: int
+            component=None, # This is an int
             no_wake=False,
             no_alpha_beta=False,
             no_load=False,
@@ -63,7 +63,7 @@ class AVL(ExplicitAnalysis):
         WingXSec: dict(
             spanwise_resolution=12,
             spanwise_spacing="cosine",
-            cl_alpha_factor=None,  # type: float
+            cl_alpha_factor=None,  # This is a float
             drag_polar=dict(
                 CL1=0,
                 CD1=0,
@@ -111,7 +111,7 @@ class AVL(ExplicitAnalysis):
 
                 * If AVL is on your system PATH, then you can just leave this as "avl".
 
-                * If AVL is not on your system PATH, thjen you should provide a filepath to the AVL executable.
+                * If AVL is not on your system PATH, then you should provide a filepath to the AVL executable.
 
                 Note that AVL is not on your PATH by default. To tell if AVL is on your system PATH, open up a
                 terminal and type "avl".
