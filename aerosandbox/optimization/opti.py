@@ -80,10 +80,19 @@ class Opti(cas.Opti):
         It is highly, highly recommended that you provide a scale (`scale`) for each variable, especially for
         nonconvex problems, although this is not strictly required.
 
+        Usage notes:
+
+            When using vector variables, individual components of this vector of variables can be accessed via normal
+            indexing. Example:
+                >>> opti = asb.Opti()
+                >>> my_var = opti.variable(n_vars = 5)
+                >>> opti.subject_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
+                >>> my_sum = asb.sum(my_var)  # This will sum up all elements of `my_var`
+
         Args:
 
             init_guess: Initial guess for the optimal value of the variable being initialized. This is where in the
-            design space the optimizer will start looking.
+                design space the optimizer will start looking.
 
                 This can be either a float or a NumPy ndarray; the dimension of the variable (i.e. scalar,
                 vector) that is created will be automatically inferred from the shape of the initial guess you
@@ -116,7 +125,7 @@ class Opti(cas.Opti):
                 this case.
 
             n_vars: [Optional] Used to manually override the dimensionality of the variable to create; if not
-            provided, the dimensionality of the variable is inferred from the initial guess `init_guess`.
+                provided, the dimensionality of the variable is inferred from the initial guess `init_guess`.
 
                 The only real case where you need to use this argument would be if you are initializing a vector
                 variable to a scalar value, but you don't feel like using `init_guess=value * np.ones(n_vars)`.
@@ -140,7 +149,7 @@ class Opti(cas.Opti):
                 If not specified, the code will try to pick a sensible value by defaulting to the `init_guess`.
 
             freeze: [Optional] This boolean tells the optimizer to "freeze" the variable at a specific value. In
-            order to select the determine to freeze the variable at, the optimizer will use the following logic:
+                order to select the determine to freeze the variable at, the optimizer will use the following logic:
 
                     * If you initialize a new variable with the parameter `freeze=True`: the optimizer will freeze
                     the variable at the value of initial guess.
@@ -167,49 +176,40 @@ class Opti(cas.Opti):
                         >>> my_var = opti.variable(init_guess=5, category="Wheel Sizing", freeze=True)
                         >>> # This will freeze my_var at a value of 5 (`freeze` overrides category loading.)
 
-            Motivation for freezing variables:
+                Motivation for freezing variables:
 
-                The ability to freeze variables is exceptionally useful when designing engineering systems. Let's say
-                we're designing an airplane. In the beginning of the design process, we're doing "clean-sheet" design
-                - any variable is up for grabs for us to optimize on, because the airplane doesn't exist yet!
-                However, the farther we get into the design process, the more things get "locked in" - we may have
-                ordered jigs, settled on a wingspan, chosen an engine, et cetera. So, if something changes later (
-                let's say that we discover that one of our assumptions was too optimistic halfway through the design
-                process), we have to make up for that lost margin using only the variables that are still free. To do
-                this, we would freeze the variables that are already decided on.
+                    The ability to freeze variables is exceptionally useful when designing engineering systems. Let's say
+                    we're designing an airplane. In the beginning of the design process, we're doing "clean-sheet" design
+                    - any variable is up for grabs for us to optimize on, because the airplane doesn't exist yet!
+                    However, the farther we get into the design process, the more things get "locked in" - we may have
+                    ordered jigs, settled on a wingspan, chosen an engine, et cetera. So, if something changes later (
+                    let's say that we discover that one of our assumptions was too optimistic halfway through the design
+                    process), we have to make up for that lost margin using only the variables that are still free. To do
+                    this, we would freeze the variables that are already decided on.
 
-                By categorizing variables, you can also freeze entire categories of variables. For example,
-                you can freeze all of the wing design variables for an airplane but leave all of the fuselage
-                variables free.
+                    By categorizing variables, you can also freeze entire categories of variables. For example,
+                    you can freeze all of the wing design variables for an airplane but leave all of the fuselage
+                    variables free.
 
-                This idea of freezing variables can also be used to look at off-design performance - freeze a
-                design, but change the operating conditions.
+                    This idea of freezing variables can also be used to look at off-design performance - freeze a
+                    design, but change the operating conditions.
 
             log_transform: [Optional] Advanced use only. A flag of whether to internally-log-transform this variable
-            before passing it to the optimizer. Good for known positive engineering quantities that become nonsensical
-            if negative (e.g. mass). Log-transforming these variables can also help maintain convexity.
+                before passing it to the optimizer. Good for known positive engineering quantities that become nonsensical
+                if negative (e.g. mass). Log-transforming these variables can also help maintain convexity.
 
             category: [Optional] What category of variables does this belong to? # TODO expand docs
 
             lower_bound: [Optional] If provided, defines a bounds constraint on the new variable that keeps the
-            variable above a given value.
+                variable above a given value.
 
             upper_bound: [Optional] If provided, defines a bounds constraint on the new variable that keeps the
-            variable below a given value.
+                variable below a given value.
 
             _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-            variables are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-            stacklevel of the declaration tracked, which is then presented using
-            `aerosandbox.Opti.variable_declaration()`.
-
-        Usage notes:
-
-            When using vector variables, individual components of this vector of variables can be accessed via normal
-            indexing. Example:
-                >>> opti = asb.Opti()
-                >>> my_var = opti.variable(n_vars = 5)
-                >>> opti.subject_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
-                >>> my_sum = asb.sum(my_var)  # This will sum up all elements of `my_var`
+                variables are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
+                stacklevel of the declaration tracked, which is then presented using
+                `aerosandbox.Opti.variable_declaration()`.
 
         Returns:
             The variable itself as a symbolic CasADi variable (MX type).
@@ -478,7 +478,7 @@ class Opti(cas.Opti):
                     >>> # length 10, with all 10 elements set to a value varying from 0 to 5.
 
             n_params: [Optional] Used to manually override the dimensionality of the parameter to create; if not
-            provided, the dimensionality of the parameter is inferred from `value`.
+                provided, the dimensionality of the parameter is inferred from `value`.
 
                 The only real case where you need to use this argument would be if you are initializing a vector
                 parameter to a scalar value, but you don't feel like using `value=my_value * np.ones(n_vars)`.

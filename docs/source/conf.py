@@ -12,7 +12,7 @@ from pathlib import Path
 
 # sys.path.insert(0,str(asb._asb_root.absolute()))
 for x in os.walk(str(asb._asb_root.absolute())):
-  sys.path.insert(0, x[0])
+    sys.path.insert(0, x[0])
 
 sys.path.insert(0, str(
     Path(__file__).parent.parent.absolute()
@@ -54,3 +54,13 @@ autoapi_ignore = ["*/test_*.py", "*/ignore/*"]
 
 html_theme = 'furo'
 html_static_path = ['_static']
+
+# -- Options for LaTeX output ------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-latex-output
+
+latex_elements = {
+    'papersize'   : 'letterpaper',
+    'pointsize'   : '11pt',
+    'preamble'    : r'\usepackage{enumitem}\setlistdepth{99}',
+    'figure_align': 'htbp',
+}
