@@ -8,15 +8,22 @@
 
 import aerosandbox as asb
 import sys, os
+from pathlib import Path
 
 # sys.path.insert(0,str(asb._asb_root.absolute()))
 for x in os.walk(str(asb._asb_root.absolute())):
   sys.path.insert(0, x[0])
 
+sys.path.insert(0, str(
+    Path(__file__).parent.parent.absolute()
+))
+
 project = 'AeroSandbox'
 copyright = '2023, Peter Sharpe'
 author = 'Peter Sharpe'
 release = asb.__version__
+
+master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
