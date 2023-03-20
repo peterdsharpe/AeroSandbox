@@ -75,7 +75,12 @@ setup(
         "test": [
             'pytest',
             'nbval'
-        ]
+        ],
+        "docs": [
+            'sphinx',
+            'furo',
+            'sphinx-autoapi',
+        ],
     },
     include_package_data=True,
     package_data={
