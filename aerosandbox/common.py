@@ -16,6 +16,24 @@ class AeroSandboxObject:
         """
         pass
 
+    @abstractmethod
+    def __repr__(self):
+        """
+        Forces all subclasses to implement a __repr__ method, which is good practice.
+        """
+
+    def copy(self):
+        """
+        Returns a shallow copy of the object.
+        """
+        return copy.copy(self)
+
+    def deepcopy(self):
+        """
+        Returns a deep copy of the object.
+        """
+        return copy.deepcopy(self)
+
     def substitute_solution(self,
                             sol: cas.OptiSol,
                             inplace: bool = None,
