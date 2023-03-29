@@ -28,7 +28,11 @@ class SurrogateModel(AeroSandboxObject):
     values here as examples that users can inspect in order to see the types required.
     """
 
+    @abstractmethod
     def __init__(self):
+        """
+        SurrogateModel is an abstract class; you should not instantiate it directly.
+        """
         pass
 
     @abstractmethod  # If you subclass SurrogateModel, you must overwrite __call__ so that it's a callable.
