@@ -47,7 +47,8 @@ class AeroSandboxObject:
         """
         import warnings
         warnings.warn(
-            "This function is deprecated. Use `sol.value(x)` or even simply `sol(x)` instead, which now works "
+            "This function is deprecated and will break at some future point.\n"
+            "Use `sol.value(x)` or even simply `sol(x)` instead, which now works\n"
             "recursively on complex data structures.",
             DeprecationWarning
         )
