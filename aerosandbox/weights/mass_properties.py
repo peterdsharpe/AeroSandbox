@@ -129,6 +129,9 @@ class MassProperties(AeroSandboxObject):
             }
         )
 
+    def __neg__(self):
+        return -1 * self
+
     def __add__(self, other: "MassProperties") -> "MassProperties":
         """
         Combines one MassProperties object with another.
@@ -170,6 +173,15 @@ class MassProperties(AeroSandboxObject):
             Iyz=total_inertia_tensor_elements[4],
             Ixz=total_inertia_tensor_elements[5],
         )
+
+    def __radd__(self, other):
+        """
+        Allows sum() to work with MassProperties objects.
+        """
+        if other == 0:
+            return self
+        else:
+            return self.__add__(other)
 
     def __sub__(self, other: "MassProperties") -> "MassProperties":
         """
@@ -230,6 +242,12 @@ class MassProperties(AeroSandboxObject):
             Iyz=self.Iyz * other,
             Ixz=self.Ixz * other,
         )
+
+    def __rmul__(self, other: float) -> "MassProperties":
+        """
+        Allows multiplication of a scalar by a MassProperties object.
+        """
+        return self.__mul__(other)
 
     def __truediv__(self, other: float) -> "MassProperties":
         """
