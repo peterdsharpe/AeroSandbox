@@ -439,7 +439,7 @@ class MassProperties(AeroSandboxObject):
 
         return not any(impossible_conditions)
 
-    def is_point_mass(self):
+    def is_point_mass(self) -> bool:
         """
         Returns True if this MassProperties object corresponds to a point mass, False otherwise.
         """
