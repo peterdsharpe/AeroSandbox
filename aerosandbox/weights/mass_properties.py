@@ -7,6 +7,25 @@ from aerosandbox.tools.string_formatting import trim_string
 class MassProperties(AeroSandboxObject):
     """
     Mass properties of a rigid 3D object.
+
+    ## Notes on Inertia Tensor Definition
+
+    This class uses the standard mathematical definition of the inertia tensor, which is different from the
+    alternative definition used by some CAD and CAE applications (such as SolidWorks, NX, etc.). These differ by a
+    sign flip in the products of inertia.
+
+    Specifically, we define the inertia tensor using the standard convention:
+
+        [ I11  I12  I13 ]   [ Ixx  Ixy  Ixz ]   [sum(m*(y^2+z^2))  -sum(m*x*y)      -sum(m*x*z)      ]
+    I = [ I21  I22  I23 ] = [ Ixy  Iyy  Iyz ] = [-sum(m*x*y)       sum(m*(x^2+z^2)) -sum(m*y*z)      ]
+        [ I31  I32  I33 ]   [ Ixz  Iyz  Izz ]   [-sum(m*x*z)       -sum(m*y*z)       sum(m*(x^2+y^2))]
+
+    Whereas SolidWorks, NX, etc. define the inertia tensor as:
+
+        [ I11  I12  I13 ]   [ Ixx -Ixy -Ixz ]   [sum(m*(y^2+z^2))  -sum(m*x*y)      -sum(m*x*z)      ]
+    I = [ I21  I22  I23 ] = [-Ixy  Iyy -Iyz ] = [-sum(m*x*y)       sum(m*(x^2+z^2)) -sum(m*y*z)      ]
+        [ I31  I32  I33 ]   [-Ixz -Iyz  Izz ]   [-sum(m*x*z)       -sum(m*y*z)       sum(m*(x^2+y^2))]
+
     """
 
     def __init__(self,
