@@ -699,8 +699,8 @@ class Airplane(AeroSandboxObject):
             xsec_wires = []
 
             for i, xsec in enumerate(fuse.xsecs):
-                if xsec.height < fuselage_tol or xsec.width < fuselage_tol: # If the xsec is so small as to effectively be a point
-                    xsec = copy.deepcopy(xsec) # Modify the xsec to be big enough to not error out.
+                if xsec.height < fuselage_tol or xsec.width < fuselage_tol:  # If the xsec is so small as to effectively be a point
+                    xsec = copy.deepcopy(xsec)  # Modify the xsec to be big enough to not error out.
                     xsec.width = fuselage_tol
                     xsec.height = fuselage_tol
 
@@ -807,6 +807,10 @@ class Airplane(AeroSandboxObject):
 
             To import the `.xml` file into XFLR5, go to File -> Import -> Import from XML.
         """
+        if include_fuselages:
+            raise NotImplementedError(
+                "Fuselage export to XFLR5 is not yet implemented."
+            )
 
         wings_specified = [
             mainwing is not None,
@@ -823,21 +827,29 @@ class Airplane(AeroSandboxObject):
 
             if n_wings == 0:
                 pass
-            elif n_wings == 1:
-                mainwing = self.wings[0]
-            elif n_wings == 2:
-                mainwing = self.wings[0]
-                elevator = self.wings[1]
-            elif n_wings == 3:
-                mainwing = self.wings[0]
-                elevator = self.wings[1]
-                fin = self.wings[2]
             else:
-                raise ValueError(
-                    "Could not automatically parse which wings should be assigned to which XFLR5 lifting surfaces, "
-                    "since there are too many. Manually assign these with (`mainwing`, `elevator`, and `fin`) "
-                    "arguments."
+                import warnings
+                warnings.warn(
+                    "No wings were specified (`mainwing`, `elevator`, `fin`). Automatically assigning the first wing "
+                    "to `mainwing`, the second wing to `elevator`, and the third wing to `fin`. If this is not "
+                    "correct, manually specify these with (`mainwing`, `elevator`, and `fin`) arguments."
                 )
+
+                if n_wings == 1:
+                    mainwing = self.wings[0]
+                elif n_wings == 2:
+                    mainwing = self.wings[0]
+                    elevator = self.wings[1]
+                elif n_wings == 3:
+                    mainwing = self.wings[0]
+                    elevator = self.wings[1]
+                    fin = self.wings[2]
+                else:
+                    raise ValueError(
+                        "Could not automatically parse which wings should be assigned to which XFLR5 lifting surfaces, "
+                        "since there are too many. Manually assign these with (`mainwing`, `elevator`, and `fin`) "
+                        "arguments."
+                    )
 
         import xml.etree.ElementTree as ET
 
