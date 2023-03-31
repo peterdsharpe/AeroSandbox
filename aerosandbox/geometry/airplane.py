@@ -5,6 +5,7 @@ import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
 from aerosandbox.geometry.propulsor import Propulsor
+from aerosandbox.weights.mass_properties import MassProperties
 import copy
 
 
@@ -699,8 +700,8 @@ class Airplane(AeroSandboxObject):
             xsec_wires = []
 
             for i, xsec in enumerate(fuse.xsecs):
-                if xsec.height < fuselage_tol or xsec.width < fuselage_tol: # If the xsec is so small as to effectively be a point
-                    xsec = copy.deepcopy(xsec) # Modify the xsec to be big enough to not error out.
+                if xsec.height < fuselage_tol or xsec.width < fuselage_tol:  # If the xsec is so small as to effectively be a point
+                    xsec = copy.deepcopy(xsec)  # Modify the xsec to be big enough to not error out.
                     xsec.width = fuselage_tol
                     xsec.height = fuselage_tol
 
@@ -784,6 +785,7 @@ class Airplane(AeroSandboxObject):
 
     def export_XFLR(self,
                     filename,
+                    mass_props: MassProperties = None,
                     include_fuselages: bool = False,
                     mainwing: Wing = None,
                     elevator: Wing = None,
@@ -794,6 +796,12 @@ class Airplane(AeroSandboxObject):
 
         Args:
             filename: The filename to export to. Should include the ".xml" extension.
+
+            mass_props: The MassProperties object to use when exporting the airplane. If not specified, will default to
+                a 1 kg point mass at the origin.
+
+                - Note: XFLR5 does not natively support user-defined inertia tensors, so we have to synthesize an equivalent
+                set of point masses to represent the inertia tensor.
 
             include_fuselages: Whether to include fuselages in the export.
 
@@ -807,7 +815,16 @@ class Airplane(AeroSandboxObject):
 
             To import the `.xml` file into XFLR5, go to File -> Import -> Import from XML.
         """
+        ### Handle default arguments
+        if mass_props is None:
+            mass_props = MassProperties(
+                mass=1,
+                x_cg=0,
+                y_cg=0,
+                z_cg=0,
+            )
 
+        ### Identify which wings are the main wing, elevator, and fin.
         wings_specified = [
             mainwing is not None,
             elevator is not None,
@@ -823,22 +840,40 @@ class Airplane(AeroSandboxObject):
 
             if n_wings == 0:
                 pass
-            elif n_wings == 1:
-                mainwing = self.wings[0]
-            elif n_wings == 2:
-                mainwing = self.wings[0]
-                elevator = self.wings[1]
-            elif n_wings == 3:
-                mainwing = self.wings[0]
-                elevator = self.wings[1]
-                fin = self.wings[2]
             else:
-                raise ValueError(
-                    "Could not automatically parse which wings should be assigned to which XFLR5 lifting surfaces, "
-                    "since there are too many. Manually assign these with (`mainwing`, `elevator`, and `fin`) "
-                    "arguments."
+                import warnings
+                warnings.warn(
+                    "No wings were specified (`mainwing`, `elevator`, `fin`). Automatically assigning the first wing "
+                    "to `mainwing`, the second wing to `elevator`, and the third wing to `fin`. If this is not "
+                    "correct, manually specify these with (`mainwing`, `elevator`, and `fin`) arguments."
                 )
 
+                if n_wings == 1:
+                    mainwing = self.wings[0]
+                elif n_wings == 2:
+                    mainwing = self.wings[0]
+                    elevator = self.wings[1]
+                elif n_wings == 3:
+                    mainwing = self.wings[0]
+                    elevator = self.wings[1]
+                    fin = self.wings[2]
+                else:
+                    raise ValueError(
+                        "Could not automatically parse which wings should be assigned to which XFLR5 lifting surfaces, "
+                        "since there are too many. Manually assign these with (`mainwing`, `elevator`, and `fin`) "
+                        "arguments."
+                    )
+
+        ### Determine where point masses should be in order to yield the specified mass properties.
+        point_masses = mass_props.generate_possible_set_of_point_masses()
+
+        ### Handle the fuselage
+        if include_fuselages:
+            raise NotImplementedError(
+                "Fuselage export to XFLR5 is not yet implemented."
+            )
+
+        ### Write the XML file.
         import xml.etree.ElementTree as ET
 
         base_xml = f"""\
@@ -853,11 +888,6 @@ class Airplane(AeroSandboxObject):
         <Name>{self.name}</Name>
         <Description></Description>
         <Inertia>
-            <Point_Mass>
-                <Tag></Tag>
-                <Mass>1</Mass>
-                <coordinates>{','.join([str(x) for x in self.xyz_ref])}</coordinates>
-            </Point_Mass>
         </Inertia>
         <has_body>false</has_body>
     </Plane>
@@ -867,6 +897,20 @@ class Airplane(AeroSandboxObject):
         root = ET.fromstring(base_xml)
         plane = root.find("Plane")
 
+        ### Add point masses
+        inertia = plane.find("Inertia")
+        for i, point_mass in enumerate(point_masses):
+            point_mass_xml = ET.SubElement(inertia, "Point_Mass")
+
+            for k, v in {
+                "Tag"         : f"pm{i}",
+                "Mass"        : point_mass.mass,
+                "coordinates" : ",".join([str(x) for x in point_mass.xyz_cg]),
+            }.items():
+                subelement = ET.SubElement(point_mass_xml, k)
+                subelement.text = str(v)
+
+        ### Add the wings
         if mainwing is not None:
             wing = mainwing
             wingxml = ET.SubElement(plane, "wing")
@@ -1191,4 +1235,4 @@ if __name__ == '__main__':
     )
 
     # airplane.draw_three_view()
-    # airplane.export_XFLR("test.xml")
+    airplane.export_XFLR("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))

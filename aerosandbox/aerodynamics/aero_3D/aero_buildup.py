@@ -782,7 +782,7 @@ class AeroBuildup(ExplicitAnalysis):
             def soft_norm(xyz):
                 return (
                         sum([comp ** 2 for comp in xyz])
-                        + 1e-100  # Keeps the derivative from exploding
+                        + 1e-100  # Keeps the derivative from NaNing
                 ) ** 0.5
 
             generalized_alpha = 2 * np.arctan2d(
@@ -884,7 +884,13 @@ class AeroBuildup(ExplicitAnalysis):
             fineness_ratio=fuselage.fineness_ratio(),
             ratio_of_corner_radius_to_body_width=0.5
         )
-        C_f = aerolib.Cf_flat_plate(Re_L=Re) * form_factor
+        C_f_ideal = (
+                        # From the same study as the `fuselage_form_factor` function above. This is done on purpose
+                        # as the form factor in this particular paper is a fit that correlates best using this precise
+                        # definition of C_f_ideal.
+                            3.46 * np.log10(Re) - 5.6
+                    ) ** -2
+        C_f = C_f_ideal * form_factor
         D_skin = C_f * fuselage.area_wetted() * q
 
         ### Wave drag

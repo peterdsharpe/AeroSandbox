@@ -1,12 +1,33 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
-from typing import Union, Any
+from typing import Union, Any, List
 from aerosandbox.tools.string_formatting import trim_string
 
 
 class MassProperties(AeroSandboxObject):
     """
     Mass properties of a rigid 3D object.
+
+    ## Notes on Inertia Tensor Definition
+
+    This class uses the standard mathematical definition of the inertia tensor, which is different from the
+    alternative definition used by some CAD and CAE applications (such as SolidWorks, NX, etc.). These differ by a
+    sign flip in the products of inertia.
+
+    Specifically, we define the inertia tensor using the standard convention:
+
+        [ I11  I12  I13 ]   [ Ixx  Ixy  Ixz ]   [sum(m*(y^2+z^2))  -sum(m*x*y)      -sum(m*x*z)      ]
+    I = [ I21  I22  I23 ] = [ Ixy  Iyy  Iyz ] = [-sum(m*x*y)       sum(m*(x^2+z^2)) -sum(m*y*z)      ]
+        [ I31  I32  I33 ]   [ Ixz  Iyz  Izz ]   [-sum(m*x*z)       -sum(m*y*z)       sum(m*(x^2+y^2))]
+
+    Whereas SolidWorks, NX, etc. define the inertia tensor as:
+
+        [ I11  I12  I13 ]   [ Ixx -Ixy -Ixz ]   [sum(m*(y^2+z^2))  -sum(m*x*y)      -sum(m*x*z)      ]
+    I = [ I21  I22  I23 ] = [-Ixy  Iyy -Iyz ] = [-sum(m*x*y)       sum(m*(x^2+z^2)) -sum(m*y*z)      ]
+        [ I31  I32  I33 ]   [-Ixz -Iyz  Izz ]   [-sum(m*x*z)       -sum(m*y*z)       sum(m*(x^2+y^2))]
+
+    See also: https://en.wikipedia.org/wiki/Moment_of_inertia#Inertia_tensor
+
     """
 
     def __init__(self,
@@ -79,12 +100,12 @@ class MassProperties(AeroSandboxObject):
 
     def __repr__(self) -> str:
 
-        def fmt(x: Union[float, Any], width=12) -> str:
+        def fmt(x: Union[float, Any], width=14) -> str:
             if isinstance(x, (float, int)):
                 if x == 0:
                     x = "0"
                 else:
-                    return f"{x:.6g}".rjust(width)
+                    return f"{x:.8g}".rjust(width)
             return trim_string(str(x).rjust(width), length=40)
 
         return "\n".join([
@@ -129,6 +150,9 @@ class MassProperties(AeroSandboxObject):
             }
         )
 
+    def __neg__(self):
+        return -1 * self
+
     def __add__(self, other: "MassProperties") -> "MassProperties":
         """
         Combines one MassProperties object with another.
@@ -170,6 +194,17 @@ class MassProperties(AeroSandboxObject):
             Iyz=total_inertia_tensor_elements[4],
             Ixz=total_inertia_tensor_elements[5],
         )
+
+    def __radd__(self, other):
+        """
+        Allows sum() to work with MassProperties objects.
+
+        Basically, makes addition commutative.
+        """
+        if other == 0:
+            return self
+        else:
+            return self.__add__(other)
 
     def __sub__(self, other: "MassProperties") -> "MassProperties":
         """
@@ -231,6 +266,12 @@ class MassProperties(AeroSandboxObject):
             Ixz=self.Ixz * other,
         )
 
+    def __rmul__(self, other: float) -> "MassProperties":
+        """
+        Allows multiplication of a scalar by a MassProperties object.
+        """
+        return self.__mul__(other)
+
     def __truediv__(self, other: float) -> "MassProperties":
         """
         Returns a new MassProperties object that is equivalent to if you had divided the mass of the current
@@ -239,8 +280,11 @@ class MassProperties(AeroSandboxObject):
         return self.__mul__(1 / other)
 
     def __eq__(self, other: "MassProperties") -> bool:
+        """
+        Returns True if all expected attributes of the two MassProperties objects are exactly equal.
+        """
         return all([
-            self.__getattribute__(attribute) == other.__getattribute__(attribute)
+            getattr(self, attribute) == getattr(other, attribute)
             for attribute in [
                 "mass",
                 "x_cg",
@@ -257,6 +301,34 @@ class MassProperties(AeroSandboxObject):
 
     def __ne__(self, other: "MassProperties") -> bool:
         return not self.__eq__(other)
+
+    def allclose(self,
+                 other: "MassProperties",
+                 rtol=1e-5,
+                 atol=1e-8,
+                 equal_nan=False
+                 ) -> bool:
+        return all([
+            np.allclose(
+                getattr(self, attribute),
+                getattr(other, attribute),
+                rtol=rtol,
+                atol=atol,
+                equal_nan=equal_nan
+            )
+            for attribute in [
+                "mass",
+                "x_cg",
+                "y_cg",
+                "z_cg",
+                "Ixx",
+                "Iyy",
+                "Izz",
+                "Ixy",
+                "Iyz",
+                "Ixz",
+            ]
+        ])
 
     @property
     def xyz_cg(self):
@@ -276,7 +348,7 @@ class MassProperties(AeroSandboxObject):
         Computes the inverse of the inertia tensor, in a slightly more efficient way than raw inversion by exploiting its known structure.
 
         If you are effectively using this inertia tensor to solve a linear system, you should use a linear algebra
-        solve() method (ideally via Cholseky decomposition) instead, for best speed.
+        solve() method (ideally via Cholesky decomposition) instead, for best speed.
         """
         iIxx, iIyy, iIzz, iIxy, iIyz, iIxz = np.linalg.inv_symmetric_3x3(
             m11=self.Ixx,
@@ -341,6 +413,213 @@ class MassProperties(AeroSandboxObject):
         else:
             return Jxx, Jyy, Jzz, Jxy, Jyz, Jxz
 
+    def is_physically_possible(self) -> bool:
+        """
+        Checks whether it's possible for this MassProperties object to correspond to the mass properties of a real
+        physical object.
+
+        Assumes that all physically-possible objects have a positive mass (or density).
+
+        Some special edge cases:
+
+            - A MassProperties object with mass of 0 (i.e., null object) will return True. Note: this will return
+            True even if the inertia tensor is not zero (which would basically be infinitesimal point masses at
+            infinite distance).
+
+            - A MassProperties object that is a point mass (i.e., inertia tensor is all zeros) will return True.
+
+        Returns:
+            True if the MassProperties object is physically possible, False otherwise.
+        """
+
+        ### This checks the basics
+        impossible_conditions = [
+            self.mass < 0,
+            self.Ixx < 0,
+            self.Iyy < 0,
+            self.Izz < 0,
+        ]
+
+        eigs = np.linalg.eig(self.inertia_tensor)[0]
+
+        # ## This checks that the inertia tensor is positive definite, which is a necessary but not sufficient
+        # condition for an inertia tensor to be physically possible.
+        impossible_conditions.extend([
+            eigs[0] < 0,
+            eigs[1] < 0,
+            eigs[2] < 0,
+        ])
+
+        # ## This checks the triangle inequality, which is a necessary but not sufficient condition for an inertia
+        # tensor to be physically possible.
+        impossible_conditions.extend([
+            eigs[0] + eigs[1] < eigs[2],
+            eigs[0] + eigs[2] < eigs[1],
+            eigs[1] + eigs[2] < eigs[0],
+        ])
+
+        return not any(impossible_conditions)
+
+    def is_point_mass(self) -> bool:
+        """
+        Returns True if this MassProperties object corresponds to a point mass, False otherwise.
+        """
+        return np.allclose(self.inertia_tensor, 0)
+
+    def generate_possible_set_of_point_masses(self,
+                                              method="optimization",
+                                              check_if_already_a_point_mass: bool = True,
+                                              ) -> List["MassProperties"]:
+        """
+        Generates a set of point masses (represented as MassProperties objects with zero inertia tensors), that, when
+        combined, would yield this MassProperties object.
+
+        Note that there are an infinite number of possible sets of point masses that could yield this MassProperties
+        object. This method returns one possible set of point masses, but there are many others.
+
+        Example:
+            >>> mp = MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1, Ixy=0.1, Iyz=-0.1, Ixz=0.1)
+            >>> point_masses = mp.generate_possible_set_of_point_masses()
+            >>> mp.allclose(sum(point_masses))  # Asserts these are equal, within tolerance
+            True
+
+        Args:
+            method: The method to use to generate the set of point masses. Currently, only "barbell" is supported.
+
+        Returns:
+            A list of MassProperties objects, each of which is a point mass (i.e., zero inertia tensor).
+        """
+        if check_if_already_a_point_mass:
+            if self.is_point_mass():
+                return [self]
+
+        if method == "optimization":
+            from aerosandbox.optimization import Opti
+
+            opti = Opti()
+
+            approximate_radius = (self.Ixx + self.Iyy + self.Izz) ** 0.5 / self.mass + 1e-16
+
+            point_masses = [
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg - approximate_radius, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg, scale=approximate_radius),
+                ),
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg + approximate_radius, scale=approximate_radius),
+                ),
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg - approximate_radius, scale=approximate_radius),
+                ),
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg + approximate_radius, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg, scale=approximate_radius),
+                ),
+            ]
+
+            mass_props_reconstructed = sum(point_masses)
+
+            # Add constraints
+            opti.subject_to(mass_props_reconstructed.x_cg == self.x_cg)
+            opti.subject_to(mass_props_reconstructed.y_cg == self.y_cg)
+            opti.subject_to(mass_props_reconstructed.z_cg == self.z_cg)
+            opti.subject_to(mass_props_reconstructed.Ixx == self.Ixx)
+            opti.subject_to(mass_props_reconstructed.Iyy == self.Iyy)
+            opti.subject_to(mass_props_reconstructed.Izz == self.Izz)
+            opti.subject_to(mass_props_reconstructed.Ixy == self.Ixy)
+            opti.subject_to(mass_props_reconstructed.Iyz == self.Iyz)
+            opti.subject_to(mass_props_reconstructed.Ixz == self.Ixz)
+
+            opti.subject_to(point_masses[0].y_cg == self.y_cg)
+            opti.subject_to(point_masses[0].z_cg == self.z_cg)
+            opti.subject_to(point_masses[1].y_cg == self.y_cg)
+
+            opti.subject_to(point_masses[0].x_cg < point_masses[1].x_cg)
+
+            return opti.solve(verbose=False)(point_masses)
+
+
+        elif method == "barbell":
+            raise NotImplementedError("Barbell method not yet implemented!")
+            principle_inertias, principle_axes = np.linalg.eig(self.inertia_tensor)
+
+        else:
+            raise ValueError("Bad value of `method` argument!")
+
+    def export_AVL_mass_file(self,
+                             filename,
+                             ) -> None:
+        """
+        Exports this MassProperties object to an AVL mass file.
+
+        Note: AVL uses the SolidWorks convention for inertia tensors, which is different from the typical
+        mathematical convention, and the convention used by this MassProperties class. In short, these differ by a
+        sign flip in the products of inertia. More details available in the MassProperties docstring. See also:
+        https://en.wikipedia.org/wiki/Moment_of_inertia#Inertia_tensor
+
+        Args:
+            filename: The filename to export to.
+
+        Returns: None
+
+        """
+        lines = [
+            "Lunit = 1.0 m",
+            "Munit = 1.0 kg",
+            "Tunit = 1.0 s",
+            "",
+            "g     = 9.81",
+            "rho   = 1.225",
+            "",
+        ]
+
+        def fmt(x: float) -> str:
+            return f"{x:.16g}".ljust(21)
+
+        lines.extend([
+            " ".join([
+                s.ljust(21) for s in [
+                    "#  mass",
+                    "x_cg",
+                    "y_cg",
+                    "z_cg",
+                    "Ixx",
+                    "Iyy",
+                    "Izz",
+                    "Ixy",
+                    "Ixz",
+                    "Iyz",
+                ]
+            ]),
+            " ".join([
+                fmt(x) for x in [
+                    self.mass,
+                    self.x_cg,
+                    self.y_cg,
+                    self.z_cg,
+                    self.Ixx,
+                    self.Iyy,
+                    self.Izz,
+                    -self.Ixy,
+                    -self.Ixz,
+                    -self.Iyz,
+                ]
+            ])
+        ])
+
+        with open(filename, "w+") as f:
+            f.write("\n".join(lines))
+
 
 if __name__ == '__main__':
     mp1 = MassProperties(
@@ -354,3 +633,15 @@ if __name__ == '__main__':
     assert mps.x_cg == 0.5
 
     assert mp1 + mp2 - mp2 == mp1
+
+    r = lambda: np.random.randn()
+
+    valid = False
+    while not valid:
+        mass_props = MassProperties(
+            mass=r(),
+            x_cg=r(), y_cg=r(), z_cg=r(),
+            Ixx=r(), Iyy=r(), Izz=r(),
+            Ixy=r(), Iyz=r(), Ixz=r(),
+        )
+        valid = mass_props.is_physically_possible()  # adds a bunch of checks
