@@ -439,8 +439,15 @@ class MassProperties(AeroSandboxObject):
 
         return not any(impossible_conditions)
 
+    def is_point_mass(self):
+        """
+        Returns True if this MassProperties object corresponds to a point mass, False otherwise.
+        """
+        return np.allclose(self.inertia_tensor, 0)
+
     def generate_possible_set_of_point_masses(self,
                                               method="optimization",
+                                              check_if_already_a_point_mass: bool = True,
                                               ) -> List["MassProperties"]:
         """
         Generates a set of point masses (represented as MassProperties objects with zero inertia tensors), that, when
@@ -461,12 +468,16 @@ class MassProperties(AeroSandboxObject):
         Returns:
             A list of MassProperties objects, each of which is a point mass (i.e., zero inertia tensor).
         """
+        if check_if_already_a_point_mass:
+            if self.is_point_mass():
+                return [self]
+
         if method == "optimization":
             from aerosandbox.optimization import Opti
 
             opti = Opti()
 
-            approximate_radius = (self.Ixx + self.Iyy + self.Izz) ** 0.5 / self.mass
+            approximate_radius = (self.Ixx + self.Iyy + self.Izz) ** 0.5 / self.mass + 1e-16
 
             point_masses = [
                 MassProperties(
