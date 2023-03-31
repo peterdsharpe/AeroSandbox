@@ -100,12 +100,12 @@ class MassProperties(AeroSandboxObject):
 
     def __repr__(self) -> str:
 
-        def fmt(x: Union[float, Any], width=12) -> str:
+        def fmt(x: Union[float, Any], width=14) -> str:
             if isinstance(x, (float, int)):
                 if x == 0:
                     x = "0"
                 else:
-                    return f"{x:.6g}".rjust(width)
+                    return f"{x:.8g}".rjust(width)
             return trim_string(str(x).rjust(width), length=40)
 
         return "\n".join([
