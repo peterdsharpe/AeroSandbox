@@ -5,6 +5,7 @@ import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
 from aerosandbox.geometry.propulsor import Propulsor
+from aerosandbox.weights.mass_properties import MassProperties
 import copy
 
 
@@ -784,6 +785,7 @@ class Airplane(AeroSandboxObject):
 
     def export_XFLR(self,
                     filename,
+                    mass_props: MassProperties = None,
                     include_fuselages: bool = False,
                     mainwing: Wing = None,
                     elevator: Wing = None,
@@ -794,6 +796,9 @@ class Airplane(AeroSandboxObject):
 
         Args:
             filename: The filename to export to. Should include the ".xml" extension.
+
+            mass_props: The MassProperties object to use when exporting the airplane. If not specified, will default to
+            a 1 kg point mass at the origin.
 
             include_fuselages: Whether to include fuselages in the export.
 
@@ -807,11 +812,16 @@ class Airplane(AeroSandboxObject):
 
             To import the `.xml` file into XFLR5, go to File -> Import -> Import from XML.
         """
-        if include_fuselages:
-            raise NotImplementedError(
-                "Fuselage export to XFLR5 is not yet implemented."
+        ### Handle default arguments
+        if mass_props is None:
+            mass_props = MassProperties(
+                mass=1,
+                x_cg=0,
+                y_cg=0,
+                z_cg=0,
             )
 
+        ### Identify which wings are the main wing, elevator, and fin.
         wings_specified = [
             mainwing is not None,
             elevator is not None,
@@ -851,6 +861,16 @@ class Airplane(AeroSandboxObject):
                         "arguments."
                     )
 
+        ### Determine where point masses should be in order to yield the specified mass properties.
+        point_masses = mass_props.generate_possible_set_of_point_masses()
+
+        ### Handle the fuselage
+        if include_fuselages:
+            raise NotImplementedError(
+                "Fuselage export to XFLR5 is not yet implemented."
+            )
+
+        ### Write the XML file.
         import xml.etree.ElementTree as ET
 
         base_xml = f"""\
@@ -865,11 +885,6 @@ class Airplane(AeroSandboxObject):
         <Name>{self.name}</Name>
         <Description></Description>
         <Inertia>
-            <Point_Mass>
-                <Tag></Tag>
-                <Mass>1</Mass>
-                <coordinates>{','.join([str(x) for x in self.xyz_ref])}</coordinates>
-            </Point_Mass>
         </Inertia>
         <has_body>false</has_body>
     </Plane>
@@ -878,6 +893,19 @@ class Airplane(AeroSandboxObject):
 
         root = ET.fromstring(base_xml)
         plane = root.find("Plane")
+
+        ### Add point masses
+        inertia = plane.find("Inertia")
+        for i, point_mass in enumerate(point_masses):
+            point_mass_xml = ET.SubElement(inertia, "Point_Mass")
+
+            for k, v in {
+                "Tag"         : f"pm{i}",
+                "Mass"        : point_mass.mass,
+                "coordinates" : ",".join([str(x) for x in point_mass.xyz_cg]),
+            }.items():
+                subelement = ET.SubElement(point_mass_xml, k)
+                subelement.text = str(v)
 
         if mainwing is not None:
             wing = mainwing
@@ -1203,4 +1231,4 @@ if __name__ == '__main__':
     )
 
     # airplane.draw_three_view()
-    # airplane.export_XFLR("test.xml")
+    airplane.export_XFLR("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))
