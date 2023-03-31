@@ -263,7 +263,7 @@ class MassProperties(AeroSandboxObject):
         Returns True if all expected attributes of the two MassProperties objects are exactly equal.
         """
         return all([
-            self.__getattribute__(attribute) == other.__getattribute__(attribute)
+            getattr(self, attribute) == getattr(other, attribute)
             for attribute in [
                 "mass",
                 "x_cg",
@@ -280,6 +280,34 @@ class MassProperties(AeroSandboxObject):
 
     def __ne__(self, other: "MassProperties") -> bool:
         return not self.__eq__(other)
+
+    def allclose(self,
+                 other: "MassProperties",
+                 rtol=1e-5,
+                 atol=1e-8,
+                 equal_nan=False
+                 ) -> bool:
+        return all([
+            np.allclose(
+                getattr(self, attribute),
+                getattr(other, attribute),
+                rtol=rtol,
+                atol=atol,
+                equal_nan=equal_nan
+            )
+            for attribute in [
+                "mass",
+                "x_cg",
+                "y_cg",
+                "z_cg",
+                "Ixx",
+                "Iyy",
+                "Izz",
+                "Ixy",
+                "Iyz",
+                "Ixz",
+            ]
+        ])
 
     @property
     def xyz_cg(self):
