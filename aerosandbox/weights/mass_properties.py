@@ -26,6 +26,8 @@ class MassProperties(AeroSandboxObject):
     I = [ I21  I22  I23 ] = [-Ixy  Iyy -Iyz ] = [-sum(m*x*y)       sum(m*(x^2+z^2)) -sum(m*y*z)      ]
         [ I31  I32  I33 ]   [-Ixz -Iyz  Izz ]   [-sum(m*x*z)       -sum(m*y*z)       sum(m*(x^2+y^2))]
 
+    See also: https://en.wikipedia.org/wiki/Moment_of_inertia#Inertia_tensor
+
     """
 
     def __init__(self,
@@ -553,6 +555,70 @@ class MassProperties(AeroSandboxObject):
 
         else:
             raise ValueError("Bad value of `method` argument!")
+
+    def export_AVL_mass_file(self,
+                             filename,
+                             ) -> None:
+        """
+        Exports this MassProperties object to an AVL mass file.
+
+        Note: AVL uses the SolidWorks convention for inertia tensors, which is different from the typical
+        mathematical convention, and the convention used by this MassProperties class. In short, these differ by a
+        sign flip in the products of inertia. More details available in the MassProperties docstring. See also:
+        https://en.wikipedia.org/wiki/Moment_of_inertia#Inertia_tensor
+
+        Args:
+            filename: The filename to export to.
+
+        Returns: None
+
+        """
+        lines = [
+            "Lunit = 1.0 m",
+            "Munit = 1.0 kg",
+            "Tunit = 1.0 s",
+            "",
+            "g     = 9.81",
+            "rho   = 1.225",
+            "",
+        ]
+
+        def fmt(x: float) -> str:
+            return f"{x:.16g}".ljust(21)
+
+        lines.extend([
+            " ".join([
+                s.ljust(21) for s in [
+                    "#  mass",
+                    "x_cg",
+                    "y_cg",
+                    "z_cg",
+                    "Ixx",
+                    "Iyy",
+                    "Izz",
+                    "Ixy",
+                    "Ixz",
+                    "Iyz",
+                ]
+            ]),
+            " ".join([
+                fmt(x) for x in [
+                    self.mass,
+                    self.x_cg,
+                    self.y_cg,
+                    self.z_cg,
+                    self.Ixx,
+                    self.Iyy,
+                    self.Izz,
+                    -self.Ixy,
+                    -self.Ixz,
+                    -self.Iyz,
+                ]
+            ])
+        ])
+
+        with open(filename, "w+") as f:
+            f.write("\n".join(lines))
 
 
 if __name__ == '__main__':
