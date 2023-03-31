@@ -798,7 +798,10 @@ class Airplane(AeroSandboxObject):
             filename: The filename to export to. Should include the ".xml" extension.
 
             mass_props: The MassProperties object to use when exporting the airplane. If not specified, will default to
-            a 1 kg point mass at the origin.
+                a 1 kg point mass at the origin.
+
+                - Note: XFLR5 does not natively support user-defined inertia tensors, so we have to synthesize an equivalent
+                set of point masses to represent the inertia tensor.
 
             include_fuselages: Whether to include fuselages in the export.
 
