@@ -675,6 +675,7 @@ class Opti(cas.Opti):
                     verbose=True,
                     solve_kwargs: Dict = None,
                     return_callable: bool = False,
+                    garbage_collect_between_runs: bool = False,
                     ) -> Union[np.ndarray, Callable[[cas.MX], np.ndarray]]:
 
         # Handle defaults
@@ -700,6 +701,11 @@ class Opti(cas.Opti):
         run_number = 1
 
         def run(*args: Tuple[float]) -> Optional["OptiSol"]:
+            # Collect garbage before each run, to avoid memory issues.
+            if garbage_collect_between_runs:
+                import gc
+                gc.collect()
+
             # Reconstruct parameter mapping on a run-by-run basis by zipping together keys and this run's values.
             parameter_mappings_for_this_run: [cas.MX, float] = {
                 k: v
