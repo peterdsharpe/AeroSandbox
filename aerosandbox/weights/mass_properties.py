@@ -177,6 +177,8 @@ class MassProperties(AeroSandboxObject):
     def __radd__(self, other):
         """
         Allows sum() to work with MassProperties objects.
+
+        Basically, makes addition commutative.
         """
         if other == 0:
             return self
@@ -257,6 +259,9 @@ class MassProperties(AeroSandboxObject):
         return self.__mul__(1 / other)
 
     def __eq__(self, other: "MassProperties") -> bool:
+        """
+        Returns True if all expected attributes of the two MassProperties objects are exactly equal.
+        """
         return all([
             self.__getattribute__(attribute) == other.__getattribute__(attribute)
             for attribute in [
