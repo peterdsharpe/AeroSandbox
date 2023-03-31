@@ -907,6 +907,7 @@ class Airplane(AeroSandboxObject):
                 subelement = ET.SubElement(point_mass_xml, k)
                 subelement.text = str(v)
 
+        ### Add the wings
         if mainwing is not None:
             wing = mainwing
             wingxml = ET.SubElement(plane, "wing")
