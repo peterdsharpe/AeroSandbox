@@ -359,6 +359,53 @@ class MassProperties(AeroSandboxObject):
         else:
             return Jxx, Jyy, Jzz, Jxy, Jyz, Jxz
 
+    def is_physically_possible(self) -> bool:
+        """
+        Checks whether it's possible for this MassProperties object to correspond to the mass properties of a real
+        physical object.
+
+        Assumes that all physically-possible objects have a positive mass (or density).
+
+        Some special edge cases:
+
+            - A MassProperties object with mass of 0 (i.e., null object) will return True. Note: this will return
+            True even if the inertia tensor is not zero (which would basically be infinitesimal point masses at
+            infinite distance).
+
+            - A MassProperties object that is a point mass (i.e., inertia tensor is all zeros) will return True.
+
+        Returns:
+            True if the MassProperties object is physically possible, False otherwise.
+        """
+
+        ### This checks the basics
+        impossible_conditions = [
+            self.mass < 0,
+            self.Ixx < 0,
+            self.Iyy < 0,
+            self.Izz < 0,
+        ]
+
+        eigs = np.linalg.eig(self.inertia_tensor)[0]
+
+        # ## This checks that the inertia tensor is positive definite, which is a necessary but not sufficient
+        # condition for an inertia tensor to be physically possible.
+        impossible_conditions.extend([
+            eigs[0] < 0,
+            eigs[1] < 0,
+            eigs[2] < 0,
+        ])
+
+        # ## This checks the triangle inequality, which is a necessary but not sufficient condition for an inertia
+        # tensor to be physically possible.
+        impossible_conditions.extend([
+            eigs[0] + eigs[1] < eigs[2],
+            eigs[0] + eigs[2] < eigs[1],
+            eigs[1] + eigs[2] < eigs[0],
+        ])
+
+        return not any(impossible_conditions)
+
 
 if __name__ == '__main__':
     mp1 = MassProperties(
