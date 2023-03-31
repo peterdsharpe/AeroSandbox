@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
-from typing import Union, Any
+from typing import Union, Any, List
 from aerosandbox.tools.string_formatting import trim_string
 
 
@@ -439,6 +439,91 @@ class MassProperties(AeroSandboxObject):
 
         return not any(impossible_conditions)
 
+    def generate_possible_set_of_point_masses(self,
+                                              method="optimization",
+                                              ) -> List["MassProperties"]:
+        """
+        Generates a set of point masses (represented as MassProperties objects with zero inertia tensors), that, when
+        combined, would yield this MassProperties object.
+
+        Note that there are an infinite number of possible sets of point masses that could yield this MassProperties
+        object. This method returns one possible set of point masses, but there are many others.
+
+        Example:
+            >>> mp = MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1, Ixy=0.1, Iyz=-0.1, Ixz=0.1)
+            >>> point_masses = mp.generate_possible_set_of_point_masses()
+            >>> mp.allclose(sum(point_masses))  # Asserts these are equal, within tolerance
+            True
+
+        Args:
+            method: The method to use to generate the set of point masses. Currently, only "barbell" is supported.
+
+        Returns:
+            A list of MassProperties objects, each of which is a point mass (i.e., zero inertia tensor).
+        """
+        if method == "optimization":
+            from aerosandbox.optimization import Opti
+
+            opti = Opti()
+
+            approximate_radius = (self.Ixx + self.Iyy + self.Izz) ** 0.5 / self.mass
+
+            point_masses = [
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg - approximate_radius, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg, scale=approximate_radius),
+                ),
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg + approximate_radius, scale=approximate_radius),
+                ),
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg - approximate_radius, scale=approximate_radius),
+                ),
+                MassProperties(
+                    mass=self.mass / 4,
+                    x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
+                    y_cg=opti.variable(init_guess=self.y_cg + approximate_radius, scale=approximate_radius),
+                    z_cg=opti.variable(init_guess=self.z_cg, scale=approximate_radius),
+                ),
+            ]
+
+            mass_props_reconstructed = sum(point_masses)
+
+            # Add constraints
+            opti.subject_to(mass_props_reconstructed.x_cg == self.x_cg)
+            opti.subject_to(mass_props_reconstructed.y_cg == self.y_cg)
+            opti.subject_to(mass_props_reconstructed.z_cg == self.z_cg)
+            opti.subject_to(mass_props_reconstructed.Ixx == self.Ixx)
+            opti.subject_to(mass_props_reconstructed.Iyy == self.Iyy)
+            opti.subject_to(mass_props_reconstructed.Izz == self.Izz)
+            opti.subject_to(mass_props_reconstructed.Ixy == self.Ixy)
+            opti.subject_to(mass_props_reconstructed.Iyz == self.Iyz)
+            opti.subject_to(mass_props_reconstructed.Ixz == self.Ixz)
+
+            opti.subject_to(point_masses[0].y_cg == self.y_cg)
+            opti.subject_to(point_masses[0].z_cg == self.z_cg)
+            opti.subject_to(point_masses[1].y_cg == self.y_cg)
+
+            opti.subject_to(point_masses[0].x_cg < point_masses[1].x_cg)
+
+            return opti.solve(verbose=False)(point_masses)
+
+
+        elif method == "barbell":
+            raise NotImplementedError("Barbell method not yet implemented!")
+            principle_inertias, principle_axes = np.linalg.eig(self.inertia_tensor)
+
+        else:
+            raise ValueError("Bad value of `method` argument!")
+
 
 if __name__ == '__main__':
     mp1 = MassProperties(
@@ -452,3 +537,15 @@ if __name__ == '__main__':
     assert mps.x_cg == 0.5
 
     assert mp1 + mp2 - mp2 == mp1
+
+    r = lambda: np.random.randn()
+
+    valid = False
+    while not valid:
+        mass_props = MassProperties(
+            mass=r(),
+            x_cg=r(), y_cg=r(), z_cg=r(),
+            Ixx=r(), Iyy=r(), Izz=r(),
+            Ixy=r(), Iyz=r(), Ixz=r(),
+        )
+        valid = mass_props.is_physically_possible()  # adds a bunch of checks
