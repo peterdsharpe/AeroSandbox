@@ -294,7 +294,7 @@ class MassProperties(AeroSandboxObject):
         Computes the inverse of the inertia tensor, in a slightly more efficient way than raw inversion by exploiting its known structure.
 
         If you are effectively using this inertia tensor to solve a linear system, you should use a linear algebra
-        solve() method (ideally via Cholseky decomposition) instead, for best speed.
+        solve() method (ideally via Cholesky decomposition) instead, for best speed.
         """
         iIxx, iIyy, iIzz, iIxy, iIyz, iIxz = np.linalg.inv_symmetric_3x3(
             m11=self.Ixx,
