@@ -130,19 +130,6 @@ Among many other discplines:
 </tr>
 </table>
 
-Use AeroSandbox as a pure structural toolkit:
-
-<table>
-	<tr width="50%">
-		<td>
-			<p align="center">
-				Structural optimization of a composite tube spar
-			</p>
-			<img src="./media/images/beam-optimization.png" alt="Beam optimization">
-		</td>
-	</tr>
-</table>
-
 Easily interface AeroSandbox with all your favorite tools:
 
 <table>
