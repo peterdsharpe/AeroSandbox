@@ -90,7 +90,7 @@ Use AeroSandbox as a pure aerodynamics toolkit:
 		</td>
 		<td width="50%">
 			<p align="center">
-				Optimize a wing planform, using an arbitrary objective and constraints
+				Aerodynamic shape optimization of a wing planform, using an arbitrary objective and constraints
 			</p>
 			<img src="./media/images/wing_optimization.png" alt="Wing optimization">
 		</td>
@@ -212,7 +212,7 @@ The only exception to this rule is when units are explicitly noted via variable 
 
 All angles are in radians, except for α and β which are in degrees due to long-standing aerospace convention. (In any case, units are marked on all function docstrings.)
 
-If you wish to use other units, consider using `aerosandbox.tools.units` to convert easily.
+If you wish to use other units, consider using [`aerosandbox.tools.units`](./aerosandbox/tools/units.py) to convert easily.
 
 ## Project Details
 
@@ -232,13 +232,15 @@ or [GitHub Sponsors](https://github.com/sponsors/peterdsharpe/)! Proceeds will g
 
 ### Bugs
 
-Please, please report all bugs by creating a new issue at [https://github.com/peterdsharpe/AeroSandbox/issues](https://github.com/peterdsharpe/AeroSandbox/issues)!
+Please, please report all bugs by [creating a new issue](https://github.com/peterdsharpe/AeroSandbox/issues)!
 
 ### Versioning
 
-AeroSandbox loosely uses [semantic versioning](https://semver.org/), which should give you an idea of whether or not you can probably expect backward-compatibility and/or new features from any given update. However, the code is a work in progress and things change rapidly - for the time being, please freeze your version of AeroSandbox for any serious deployments. Commercial users: I'm more than happy to discuss consulting work for active AeroSandbox support if this package proves helpful!
+AeroSandbox loosely uses [semantic versioning](https://semver.org/), which should give you an idea of whether or not you can probably expect backward-compatibility and/or new features from any given update.
 
-### Citation
+For more details, see the [changelog](./CHANGELOG.md).
+
+### Citation & Commercial Use
 
 If you find AeroSandbox useful in a research publication, please cite it using the following BibTeX snippet:
 
@@ -250,6 +252,10 @@ If you find AeroSandbox useful in a research publication, please cite it using t
     year = {2021}
 }
 ```
+
+As the MIT License applies, use AeroSandbox for anything you want (attribution appreciated, but not required).
+
+Commercial users: I'm more than happy to discuss consulting work for active AeroSandbox support if this package proves helpful - use the email address in the header of this README to get in touch.
 
 ### License
 
