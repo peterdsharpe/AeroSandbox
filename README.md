@@ -8,7 +8,6 @@ by [Peter Sharpe](https://peterdsharpe.github.io) (<pds [at] mit [dot] edu>)
 [![PyPI](https://img.shields.io/pypi/v/aerosandbox.svg)](https://pypi.python.org/pypi/aerosandbox)
 [![Documentation Status](https://readthedocs.org/projects/aerosandbox/badge/?version=master)](https://aerosandbox.readthedocs.io/en/master/?badge=master)
 
-
 ## Overview
 
 **AeroSandbox is a Python package for design optimization of engineered systems such as aircraft.**
@@ -18,6 +17,47 @@ At its heart, AeroSandbox is an optimization suite that combines the ease-of-use
 This automatic differentiation dramatically improves optimization performance on large problems: **design problems with tens of thousands of decision variables solve in seconds on a laptop**.
 
 AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physics models, allowing you to **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.**
+
+## Examples
+
+Use AeroSandbox to design and optimize entire aircraft:
+
+<table>
+    <tr>
+        <td>
+            <p align="center">
+                <a href="https://github.com/peterdsharpe/Feather-RC-Glider"><i>Feather</i> (an ultra-lightweight 1-meter-class RC motor glider)</a>
+            </p>
+            <img src="https://raw.githubusercontent.com/peterdsharpe/Feather-RC-Glider/master/CAD/feather.png" width="500">
+        </td>
+        <td>
+            <p align="center">
+                <a href="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing"><i>SEAWAY-Mini</i> (a solar-electric, 13' wingspan seaplane)</a>
+            </p>
+            <img src="https://raw.githubusercontent.com/peterdsharpe/solar-seaplane-preliminary-sizing/main/CAD/renders/seaway_mini_packet_Page_1.png" width="500">
+        </td>
+    </tr>
+</table>
+
+AeroSandbox places an extreme emphasis on practicality and usability - you can use it to support real-world aircraft development programs, all the way from your very first sketch to your first-flight and even beyond:
+
+<table>
+    <tr>
+        <td>
+            <p align="center" width="500">
+                <a href="https://github.com/peterdsharpe/DawnDesignTool">Initial concept sketches + sizing of <i>Dawn</i> (a solar-electric airplane for climate science research) in AeroSandbox, Spring 2020</a>
+            </p>
+            <img src="./media/images/dawn1-first-sketch.png" width="500" alt="Dawn initial design">
+        </td>
+        <td>
+            <p align="center">
+                <a href="https://youtu.be/CyTzx9UCvyo"><i>Dawn</i> (later renamed <i>SACOS</i>) in first flight, Fall 2022</a>
+            </p>
+            <p align="center"><a href="https://www.electra.aero/news/sacos-first-flight">(Thanks to so, so many wonderful people!)</a></p>
+            <img src="./media/images/SACOS%20First%20Flight.jpg" width="500" alt="SACOS first flight">
+        </td>
+    </tr>
+</table>
 
 ![VLM Image](media/images/vlm3_with_control_surfaces.png)
 *VLM simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
