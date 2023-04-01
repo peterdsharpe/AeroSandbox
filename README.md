@@ -22,39 +22,39 @@ AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physic
 
 Use AeroSandbox to design and optimize entire aircraft:
 
-<table style="table-layout: fixed; width: 100%;">
+<table>
     <tr>
-        <td style="width:50%;">
+        <td width="50%">
             <p align="center">
                 <a href="https://github.com/peterdsharpe/Feather-RC-Glider"><i>Feather</i> (an ultra-lightweight 1-meter-class RC motor glider)</a>
             </p>
-            <img src="https://raw.githubusercontent.com/peterdsharpe/Feather-RC-Glider/master/CAD/feather.png" width="500" alt="Feather first page">
+            <img src="https://raw.githubusercontent.com/peterdsharpe/Feather-RC-Glider/master/CAD/feather.png" alt="Feather first page">
         </td>
-        <td style="width:50%;">
+        <td width="50%">
             <p align="center">
                 <a href="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing"><i>SEAWAY-Mini</i> (a solar-electric, 13' wingspan seaplane)</a>
             </p>
-            <img src="https://raw.githubusercontent.com/peterdsharpe/solar-seaplane-preliminary-sizing/main/CAD/renders/seaway_mini_packet_Page_1.png" width="500" alt="Seaway-Mini first page">
+            <img src="https://raw.githubusercontent.com/peterdsharpe/solar-seaplane-preliminary-sizing/main/CAD/renders/seaway_mini_packet_Page_1.png" alt="Seaway-Mini first page">
         </td>
     </tr>
 </table>
 
 Use AeroSandbox to support real-world aircraft development programs, all the way from your very first sketch to your first-flight and even beyond:
 
-<table style="table-layout: fixed; width: 100%;">
+<table>
     <tr>
-        <td style="width:50%;">
-            <p align="center" width="500">
+        <td width="50%">
+            <p align="center">
                 <a href="https://github.com/peterdsharpe/DawnDesignTool">Initial concept sketches + sizing of <i>Dawn</i> (a solar-electric airplane for climate science research) in AeroSandbox, Spring 2020</a>
             </p>
-            <img src="./media/images/dawn1-first-sketch.png" width="500" alt="Dawn initial design">
+            <img src="./media/images/dawn1-first-sketch.png" alt="Dawn initial design">
         </td>
-        <td style="width:50%;">
+        <td width="50%">
             <p align="center">
                 <a href="https://youtu.be/CyTzx9UCvyo"><i>Dawn</i> (later renamed <i>SACOS</i>) in first flight, Fall 2022</a>
             </p>
             <p align="center"><a href="https://www.electra.aero/news/sacos-first-flight">(Thanks to so, so many wonderful people!)</a></p>
-            <img src="./media/images/SACOS%20First%20Flight.jpg" width="500" alt="SACOS first flight">
+            <img src="./media/images/SACOS%20First%20Flight.jpg" alt="SACOS first flight">
         </td>
     </tr>
 </table>
@@ -63,17 +63,17 @@ Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all a
 
 <table>
 	<tr>
-		<td>
+		<td width="50%">
 			<p align="center">
 				<a href="https://github.com/peterdsharpe/DawnDesignTool">Exploring how big a solar airplane needs to be to fly, as a function of seasonality and latitude</a>
 			</p>
-			<img src="https://github.com/peterdsharpe/DawnDesignTool/raw/master/docs/30kg_payload.svg" width="500" alt="Dawn seasonality latitude tradespace">
+			<img src="https://github.com/peterdsharpe/DawnDesignTool/raw/master/docs/30kg_payload.svg" alt="Dawn seasonality latitude tradespace">
 		</td>
-		<td>
+		<td width="50%">
 			<p align="center">
 				<a href="https://www.popularmechanics.com/military/aviation/a13938789/mit-developing-mach-08-rocket-drone-for-the-air-force/">Exploring how the mission range of <i>Firefly</i>, a Mach 0.8 rocket drone, changes if we add an altitude limit, simultaneously optimizing aircraft design and trajectories</a>
 			</p>
-			<img src="./media/images/firefly-range-ceiling-trade.png" width="500" alt="Firefly range ceiling trade">
+			<img src="./media/images/firefly-range-ceiling-trade.png" alt="Firefly range ceiling trade">
 		</td>
 	</tr>
 </table>
@@ -82,17 +82,17 @@ Use AeroSandbox as a pure aerodynamics toolkit:
 
 <table>
 	<tr>
-		<td>
+		<td width="50%">
 			<p align="center">
 				VLM simulation of a glider, aileron deflections of +-30°
 			</p>
-			<img src="./media/images/vlm3_with_control_surfaces.png" width="500" alt="VLM simulation">
+			<img src="./media/images/vlm3_with_control_surfaces.png" alt="VLM simulation">
 		</td>
-		<td>
+		<td width="50%">
 			<p align="center">
 				Panel simulation of a wing (extruded NACA2412, α=15°, AR=4)
 			</p>
-			<img src="./media/images/panel1_naca4412.png" width="500" alt="Panel simulation">
+			<img src="./media/images/panel1_naca4412.png" alt="Panel simulation">
 		</td>
 	</tr>
 </table>
@@ -100,12 +100,12 @@ Use AeroSandbox as a pure aerodynamics toolkit:
 Use AeroSandbox as a pure structural toolkit:
 
 <table>
-	<tr>
+	<tr width="50%">
 		<td>
 			<p align="center">
 				Structural optimization of a composite tube spar
 			</p>
-			<img src="./media/images/beam-optimization.png" width="300" alt="Beam optimization">
+			<img src="./media/images/beam-optimization.png" alt="Beam optimization">
 		</td>
 	</tr>
 </table>
