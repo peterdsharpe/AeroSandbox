@@ -110,6 +110,36 @@ Use AeroSandbox as a pure structural toolkit:
 	</tr>
 </table>
 
+Use AeroSandbox with all your favorite tools:
+
+<table>
+    <tr>
+        <td width="33%">
+            <p align="center">
+                Other conceptual design tools (AVL, XFLR5, XFoil, ASWING, MSES, etc.)
+            </p>
+            <img src="./media/images/airfoil_contours.png" alt="XFoil">
+        </td> 
+          <td width="33%">
+                <p align="center">
+                    CAD tools via STEP export (SolidWorks, Fusion 360, etc.)
+                </p>
+				<p>(STL, OBJ, etc. supported too)</p>
+                <img src="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing/raw/main/CAD/renders/raytrace.JPG" alt="CAD">
+            </td>
+          <td width="33%">
+			<p align="center">
+				User-provided models (e.g., for custom aerodynamics, structures, propulsion, etc.), such as optimizing flight through an arbitrary wind field
+			</p>
+			<img src="./media/images/wind_speeds_model.png" alt="Wind speed">
+		</td>
+	</tr>
+</table>
+
+Use AeroSandbox purely as an optimization solver or as a solver for nonlinear systems of equations (or ODEs, PDEs)
+
+
+
 ## Getting Started
 
 ### Installation
