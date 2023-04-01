@@ -33,19 +33,26 @@ def get_perf(kv):
 
     return sol(perf)
 
+kvs = np.geomspace(400, 2000, 7)
+
+colors = plt.get_cmap("rainbow_r")(np.linspace(0, 1, len(kvs)))
 
 fig, ax = plt.subplots()
-for kv in np.linspace(500, 1000, 6):
+for i, kv in enumerate(kvs):
     perf = get_perf(kv)
     plt.plot(
         perf['rpm'],
         perf['efficiency'],
-        label=f"{kv:.0f} kv"
+        label=f"{kv:.0f} kv",
+        color=p.adjust_lightness(colors[i],0.7),
+        alpha=0.7
     )
 
-plt.xlim(left=0)
+plt.xlim(0, 10000)
+plt.ylim(0, 1)
+p.set_ticks(2000, 500, 0.2, 0.05)
 p.show_plot(
-    "",
+    "Motor kv vs. Motor Efficiency Curve",
     "RPM",
     "Efficiency [-]"
 )

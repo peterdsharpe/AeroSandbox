@@ -8,11 +8,6 @@ AeroSandbox Documentation
 
 by `Peter Sharpe <https://peterdsharpe.github.io>`_ (<pds [at] mit [dot] edu>)
 
-.. image:: https://pepy.tech/badge/aerosandbox
-.. image:: https://pepy.tech/badge/aerosandbox/month
-.. image:: https://github.com/peterdsharpe/AeroSandbox/workflows/Tests/badge.svg
-.. image:: https://img.shields.io/pypi/v/aerosandbox.svg
-
 **AeroSandbox is a Python package for design optimization of engineered systems such as aircraft.**
 
 At its heart, AeroSandbox is an optimization suite that combines the ease-of-use of familiar NumPy syntax with the power of modern automatic differentiation.

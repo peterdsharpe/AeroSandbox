@@ -194,34 +194,38 @@ class Airfoil(Polygon):
 
         Where alpha is in degrees.
 
+        Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
+        polars.
+
         Args:
 
-            alphas: The range of alphas to sample from XFoil at.
+            alphas: The range of alphas to sample from XFoil at. Given in degrees.
 
-            Res: The range of Reynolds numbers to sample from XFoil at.
+            Res: The range of Reynolds numbers to sample from XFoil at. Dimensionless.
 
             cache_filename: A path-like filename (ideally a "*.json" file) that can be used to cache the XFoil
-            results, making it much faster to regenerate the results.
+                results, making it much faster to regenerate the results.
 
                 * If the file does not exist, XFoil will be run, and a cache file will be created.
 
                 * If the file does exist, XFoil will not be run, and the cache file will be read instead.
 
             xfoil_kwargs: Keyword arguments to pass into the AeroSandbox XFoil module. See the aerosandbox.XFoil
-            constructor for options.
+                constructor for options.
 
             unstructured_interpolated_model_kwargs: Keyword arguments to pass into the UnstructuredInterpolatedModels
-            that contain the polars themselves. See the aerosandbox.UnstructuredInterpolatedModel constructor for
-            options.
+                that contain the polars themselves. See the aerosandbox.UnstructuredInterpolatedModel constructor for
+                options.
 
             include_compressibility_effects: Includes compressibility effects in the polars, such as wave drag,
-            mach tuck, CL effects across normal shocks. Note that accuracy here is dubious in the transonic regime
-            and above - you should really specify your own CL/CD/CM models
+                mach tuck, CL effects across normal shocks. Note that accuracy here is dubious in the transonic regime
+                and above - you should really specify your own CL/CD/CM models
 
-        Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
-        polars.
+        Returns: None (in-place), adds the following functions to the instance:
 
-        Returns: None (in-place)
+            * Airfoil.CL_function(alpha, Re, mach)
+            * Airfoil.CD_function(alpha, Re, mach)
+            * Airfoil.CM_function(alpha, Re, mach)
 
         """
         if self.coordinates is None:

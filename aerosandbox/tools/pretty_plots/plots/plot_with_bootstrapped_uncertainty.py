@@ -137,8 +137,6 @@ if __name__ == '__main__':
     y_true = np.abs(x - 5)  # np.sin(x)
     y_noisy = y_true + 0.1 * np.random.randn(len(x))
 
-    y_noisy *= 1e3
-
     ### Plot spline regression
     fig, ax = plt.subplots(dpi=300)
     x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
