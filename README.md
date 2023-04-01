@@ -28,18 +28,18 @@ Use AeroSandbox to design and optimize entire aircraft:
             <p align="center">
                 <a href="https://github.com/peterdsharpe/Feather-RC-Glider"><i>Feather</i> (an ultra-lightweight 1-meter-class RC motor glider)</a>
             </p>
-            <img src="https://raw.githubusercontent.com/peterdsharpe/Feather-RC-Glider/master/CAD/feather.png" width="500">
+            <img src="https://raw.githubusercontent.com/peterdsharpe/Feather-RC-Glider/master/CAD/feather.png" width="500" alt="Feather first page">
         </td>
         <td>
             <p align="center">
                 <a href="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing"><i>SEAWAY-Mini</i> (a solar-electric, 13' wingspan seaplane)</a>
             </p>
-            <img src="https://raw.githubusercontent.com/peterdsharpe/solar-seaplane-preliminary-sizing/main/CAD/renders/seaway_mini_packet_Page_1.png" width="500">
+            <img src="https://raw.githubusercontent.com/peterdsharpe/solar-seaplane-preliminary-sizing/main/CAD/renders/seaway_mini_packet_Page_1.png" width="500" alt="Seaway-Mini first page">
         </td>
     </tr>
 </table>
 
-AeroSandbox places an extreme emphasis on practicality and usability - you can use it to support real-world aircraft development programs, all the way from your very first sketch to your first-flight and even beyond:
+Use AeroSandbox to support real-world aircraft development programs, all the way from your very first sketch to your first-flight and even beyond:
 
 <table>
     <tr>
@@ -57,6 +57,25 @@ AeroSandbox places an extreme emphasis on practicality and usability - you can u
             <img src="./media/images/SACOS%20First%20Flight.jpg" width="500" alt="SACOS first flight">
         </td>
     </tr>
+</table>
+
+Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all at the earliest stages of conceptual design *where these insights make the most difference*:
+
+<table>
+	<tr>
+		<td>
+			<p align="center">
+				<a href="https://github.com/peterdsharpe/DawnDesignTool">Exploring how big a solar airplane needs to be to fly, as a function of seasonality and latitude</a>
+			</p>
+			<img src="https://github.com/peterdsharpe/DawnDesignTool/raw/master/docs/30kg_payload.svg" width="500" alt="Dawn seasonality latitude tradespace">
+		</td>
+		<td>
+			<p align="center">
+				<a href="https://www.popularmechanics.com/military/aviation/a13938789/mit-developing-mach-08-rocket-drone-for-the-air-force/">Exploring how the range of <i>Firefly</i>, a Mach 0.8 rocket drone, changes if we add an altitude limit</a>
+			</p>
+			<img src="./media/images/firefly-range-ceiling-trade.png" width="500" alt="Firefly range ceiling trade">
+		</td>
+	</tr>
 </table>
 
 ![VLM Image](media/images/vlm3_with_control_surfaces.png)
