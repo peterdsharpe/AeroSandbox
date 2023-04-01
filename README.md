@@ -110,7 +110,7 @@ Use AeroSandbox as a pure structural toolkit:
 	</tr>
 </table>
 
-Use AeroSandbox with all your favorite tools:
+Easily interface AeroSandbox with all your favorite tools:
 
 <table>
     <tr>
