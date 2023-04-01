@@ -1,3 +1,5 @@
+from math import pi
+
 # Lengths (equivalents in meters)
 meter = 1
 inch = 0.0254
@@ -11,6 +13,7 @@ kg = 1
 gram = 0.001
 slug = 14.59390
 lbm = 0.45359237
+pound = lbm
 short_ton = 2000 * lbm
 long_ton = 2240 * lbm
 oz = lbm / 16
@@ -27,12 +30,18 @@ month = year / 12
 # Force (equivalents in Newtons)
 newton = 1
 lbf = slug * foot
+pound_force = lbf
 
 # Speed (equivalents in m/s)
 kph = 1000 * meter / hour
 knot = 1.852 * kph
 mph = mile / hour
 fps = foot / second
+
+# Rotational Speed (equivalents in radians/second)
+rads_per_sec = 1
+rps = 2 * pi
+rpm = rps / 60
 
 # Volume (equivalents in m^3)
 liter = 0.001
@@ -52,6 +61,9 @@ psf = lbf / foot ** 2
 watt = 1
 horsepower = 550 * foot * lbf / second
 hp = horsepower
+
+# Current (equivalents in Amperes)
+amp = 1
 
 # Energy (equivalents in Joules)
 joule = 1
