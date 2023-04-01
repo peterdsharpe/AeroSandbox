@@ -140,7 +140,7 @@ Use AeroSandbox with all your favorite tools:
 	</tr>
 </table>
 
-Or, throw all the aircraft-specific code out entirely, and use AeroSandbox purely as an optimization solver or as a solver for nonlinear systems of equations (or ODEs, or PDEs):
+Or, throw all the airplane-design-specific code out entirely, and use AeroSandbox purely as an optimization solver or as a solver for nonlinear systems of equations (or ODEs, or PDEs):
 
 <table>
 	<tr>
@@ -159,7 +159,7 @@ Or, throw all the aircraft-specific code out entirely, and use AeroSandbox purel
 </tr>
 </table>
 
-And much, much more.
+And much, much more. Best of all, combine these tools arbitrarily without any loss in optimization speed and without any tedious derivative math, all thanks to AeroSandbox's end-to-end automatic-differentiability.
 
 ## Getting Started
 
