@@ -18,6 +18,10 @@ This automatic differentiation dramatically improves optimization performance on
 
 AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physics models, allowing you to **simultaneously optimize an aircraft's aerodynamics, structures, propulsion, mission trajectory, stability, and more.**
 
+```
+pip install aerosandbox[full]
+```
+
 ## Examples
 
 Use AeroSandbox to design and optimize entire aircraft:
@@ -136,9 +140,26 @@ Use AeroSandbox with all your favorite tools:
 	</tr>
 </table>
 
-Use AeroSandbox purely as an optimization solver or as a solver for nonlinear systems of equations (or ODEs, PDEs)
+Or, throw all the aircraft-specific code out entirely, and use AeroSandbox purely as an optimization solver or as a solver for nonlinear systems of equations (or ODEs, or PDEs):
 
+<table>
+	<tr>
+		<td width="50%">
+			<p align="center">
+				<a href="https://github.com/peterdsharpe/AeroSandbox/blob/develop/tutorial/01%20-%20Optimization%20and%20Math/01%20-%202D%20Rosenbrock.ipynb">Optimize the 2D Rosenbrock function</a>
+			</p>
+			<img src="./media/images/optimization.png" alt="Optimization">
+		</td>
+		<td width="50%">
+			<p align="center">
+				Specify the Falkner Skan ODE (nonlinear, 3rd-order BVP) and let AeroSandbox automatically take care of the discretization, solution, and even inverse solving.
+			</p>
+			<img src="./media/images/falkner-skan.png" alt="FS ODE">
+		</td>
+</tr>
+</table>
 
+And much, much more.
 
 ## Getting Started
 
