@@ -61,7 +61,8 @@ setup(
         'matplotlib >= 3.3.1',
         'seaborn >= 0.11',
         'tqdm >= 4',
-        'sortedcontainers > 2'
+        'sortedcontainers > 2',
+        'joblib >= 1',
     ],
     extras_require={
         "full": [
