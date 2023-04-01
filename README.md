@@ -148,7 +148,7 @@ Or, throw all the airplane-design-specific code out entirely, and use AeroSandbo
 		</td>
 		<td width="50%">
 			<p align="center">
-				Specify the Falkner Skan ODE (nonlinear, 3rd-order BVP) and let AeroSandbox automatically take care of the discretization, solution, and even inverse solving.
+				<a href="https://github.com/peterdsharpe/AeroSandbox/tree/develop/tutorial/03%20-%20Trajectory%20Optimization%20and%20Optimal%20Control/01%20-%20Solving%20ODEs%20with%20AeroSandbox">Specify the Falkner Skan ODE (nonlinear, 3rd-order BVP) and let AeroSandbox automatically take care of the discretization, solution, and even inverse solving.</a>
 			</p>
 			<img src="./media/images/falkner-skan.png" alt="FS ODE">
 		</td>
