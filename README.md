@@ -78,11 +78,24 @@ Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all a
 	</tr>
 </table>
 
-![VLM Image](media/images/vlm3_with_control_surfaces.png)
-*VLM simulation of a glider, aileron deflections of +-30°. Runtime of 0.35 sec on a typical laptop (i7-8750H).*
+Use AeroSandbox as a pure aerodynamics toolkit to analyze aerodynamic phenomena during conceptual design:
 
-![PANEL Image](media/images/panel1_naca4412.png)
-*Panel simulation of a wing (extruded NACA2412, α=15°, AR=4). Note the strong three-dimensionality of the flow near the tip.*
+<table>
+	<tr>
+		<td>
+			<p align="center">
+				VLM simulation of a glider, aileron deflections of +-30°
+			</p>
+			<img src="./media/images/vlm3_with_control_surfaces.png" width="500" alt="VLM simulation">
+		</td>
+		<td>
+			<p align="center">
+				Panel simulation of a wing (extruded NACA2412, α=15°, AR=4)
+			</p>
+			<img src="./media/images/panel1_naca4412.png" width="500" alt="Panel simulation">
+		</td>
+	</tr>
+</table>
 
 ## Getting Started
 
