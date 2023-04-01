@@ -38,7 +38,7 @@ setup(
     name='AeroSandbox',
     author='Peter Sharpe',
     version=get_version("aerosandbox/__init__.py"),
-    description='A Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, aircraft design optimization, and the like. Work in progress!',
+    description='AeroSandbox is a Python package for design optimization of engineered systems such as aircraft.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://peterdsharpe.github.io/AeroSandbox/',
