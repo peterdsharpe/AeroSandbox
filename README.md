@@ -90,11 +90,44 @@ Use AeroSandbox as a pure aerodynamics toolkit:
 		</td>
 		<td width="50%">
 			<p align="center">
-				Panel simulation of a wing (extruded NACA2412, α=15°, AR=4)
+				Optimize a wing planform, using an arbitrary objective and constraints
 			</p>
-			<img src="./media/images/panel1_naca4412.png" alt="Panel simulation">
+			<img src="./media/images/wing_optimization.png" alt="Wing optimization">
 		</td>
 	</tr>
+</table>
+
+Among many other discplines:
+
+<table>
+	<tr>
+		<td width="50%">
+			<p align="center">
+				Structural optimization of a composite tube spar
+			</p>
+			<img src="./media/images/beam-optimization.png" alt="Beam optimization">
+		</td>
+		<td width="50%">
+			<p align="center">
+				Electric motor and propeller matching
+			</p>
+			<img src="./media/images/stability.png" alt="Stability and control design">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<p align="center">
+				<a href="https://github.com/peterdsharpe/transport-aircraft">Unconventional Propulsion (e.g., LH2)</a>
+			</p>
+			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/three_view.png" alt="LH2 airplane three-view">
+		</td>
+		<td>
+			<p align="center">
+				Detailed weights estimation for airplanes from micro-UAVs to airliners
+			</p>
+			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/mass_budget.png" alt="Mass Budget">
+		</td>
+</tr>
 </table>
 
 Use AeroSandbox as a pure structural toolkit:
