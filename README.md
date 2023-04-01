@@ -109,21 +109,21 @@ Among many other discplines:
 		</td>
 		<td width="50%">
 			<p align="center">
-				Electric motor and propeller matching
+				Electric motor analysis for propeller matching
 			</p>
-			<img src="./media/images/stability.png" alt="Stability and control design">
+			<img src="./media/images/motor_perf.png" alt="Motor performance">
 		</td>
 	</tr>
 	<tr>
 		<td>
 			<p align="center">
-				<a href="https://github.com/peterdsharpe/transport-aircraft">Unconventional Propulsion (e.g., LH2)</a>
+				<a href="https://github.com/peterdsharpe/transport-aircraft">Tools to analyze unconventional propulsion (e.g., LH2)</a>
 			</p>
 			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/three_view.png" alt="LH2 airplane three-view">
 		</td>
 		<td>
 			<p align="center">
-				Detailed weights estimation for airplanes from micro-UAVs to airliners
+				Detailed weights estimation for aircraft ranging from micro-UAVs to airliners
 			</p>
 			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/mass_budget.png" alt="Mass Budget">
 		</td>
