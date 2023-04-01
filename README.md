@@ -78,7 +78,7 @@ Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all a
 	</tr>
 </table>
 
-Use AeroSandbox as a pure aerodynamics toolkit to analyze aerodynamic phenomena during conceptual design:
+Use AeroSandbox as a pure aerodynamics toolkit:
 
 <table>
 	<tr>
@@ -93,6 +93,19 @@ Use AeroSandbox as a pure aerodynamics toolkit to analyze aerodynamic phenomena 
 				Panel simulation of a wing (extruded NACA2412, α=15°, AR=4)
 			</p>
 			<img src="./media/images/panel1_naca4412.png" width="500" alt="Panel simulation">
+		</td>
+	</tr>
+</table>
+
+Use AeroSandbox as a pure structural toolkit:
+
+<table>
+	<tr>
+		<td>
+			<p align="center">
+				Structural optimization of a composite tube spar
+			</p>
+			<img src="./media/images/beam-optimization.png" width="500" alt="Beam optimization">
 		</td>
 	</tr>
 </table>
