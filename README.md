@@ -116,13 +116,13 @@ Among many other discplines:
 	</tr>
 	<tr>
 		<td>
-			<p align="center">
+			<p align="center" valign="top">
 				<a href="https://github.com/peterdsharpe/transport-aircraft">Tools to analyze unconventional propulsion (e.g., LH2)</a>
 			</p>
 			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/three_view.png" alt="LH2 airplane three-view">
 		</td>
 		<td>
-			<p align="center">
+			<p align="center" valign="top">
 				Detailed weights estimation for aircraft ranging from micro-UAVs to airliners
 			</p>
 			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/mass_budget.png" alt="Mass Budget">
