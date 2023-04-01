@@ -71,7 +71,7 @@ Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all a
 		</td>
 		<td>
 			<p align="center">
-				<a href="https://www.popularmechanics.com/military/aviation/a13938789/mit-developing-mach-08-rocket-drone-for-the-air-force/">Exploring how the mission range of <i>Firefly</i>, a Mach 0.8 rocket drone, changes if we add an altitude limit</a>
+				<a href="https://www.popularmechanics.com/military/aviation/a13938789/mit-developing-mach-08-rocket-drone-for-the-air-force/">Exploring how the mission range of <i>Firefly</i>, a Mach 0.8 rocket drone, changes if we add an altitude limit, simultaneously optimizing aircraft design and trajectories</a>
 			</p>
 			<img src="./media/images/firefly-range-ceiling-trade.png" width="500" alt="Firefly range ceiling trade">
 		</td>
