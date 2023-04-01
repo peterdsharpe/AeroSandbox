@@ -129,7 +129,7 @@ Use AeroSandbox with all your favorite tools:
             </td>
           <td width="33%">
 			<p align="center">
-				User-provided models (e.g., for custom aerodynamics, structures, propulsion, etc.), such as optimizing flight through an arbitrary wind field
+				User-provided models and code (e.g., for custom aerodynamics, structures, or propulsion; or for optimizing flight through a given wind field, as shown below) 
 			</p>
 			<img src="./media/images/wind_speeds_model.png" alt="Wind speed">
 		</td>
