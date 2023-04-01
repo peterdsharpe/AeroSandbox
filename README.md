@@ -22,15 +22,15 @@ AeroSandbox also comes with dozens of end-to-end-differentiable aerospace physic
 
 Use AeroSandbox to design and optimize entire aircraft:
 
-<table>
+<table style="table-layout: fixed; width: 100%;">
     <tr>
-        <td>
+        <td style="width:50%;">
             <p align="center">
                 <a href="https://github.com/peterdsharpe/Feather-RC-Glider"><i>Feather</i> (an ultra-lightweight 1-meter-class RC motor glider)</a>
             </p>
             <img src="https://raw.githubusercontent.com/peterdsharpe/Feather-RC-Glider/master/CAD/feather.png" width="500" alt="Feather first page">
         </td>
-        <td>
+        <td style="width:50%;">
             <p align="center">
                 <a href="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing"><i>SEAWAY-Mini</i> (a solar-electric, 13' wingspan seaplane)</a>
             </p>
@@ -41,15 +41,15 @@ Use AeroSandbox to design and optimize entire aircraft:
 
 Use AeroSandbox to support real-world aircraft development programs, all the way from your very first sketch to your first-flight and even beyond:
 
-<table>
+<table style="table-layout: fixed; width: 100%;">
     <tr>
-        <td>
+        <td style="width:50%;">
             <p align="center" width="500">
                 <a href="https://github.com/peterdsharpe/DawnDesignTool">Initial concept sketches + sizing of <i>Dawn</i> (a solar-electric airplane for climate science research) in AeroSandbox, Spring 2020</a>
             </p>
             <img src="./media/images/dawn1-first-sketch.png" width="500" alt="Dawn initial design">
         </td>
-        <td>
+        <td style="width:50%;">
             <p align="center">
                 <a href="https://youtu.be/CyTzx9UCvyo"><i>Dawn</i> (later renamed <i>SACOS</i>) in first flight, Fall 2022</a>
             </p>
@@ -105,7 +105,7 @@ Use AeroSandbox as a pure structural toolkit:
 			<p align="center">
 				Structural optimization of a composite tube spar
 			</p>
-			<img src="./media/images/beam-optimization.png" width="500" alt="Beam optimization">
+			<img src="./media/images/beam-optimization.png" width="300" alt="Beam optimization">
 		</td>
 	</tr>
 </table>
