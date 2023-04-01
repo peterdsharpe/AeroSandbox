@@ -13,4 +13,3 @@ ipyvtklink~=0.2.2
 trimesh~=3.18.3
 sympy~=1.11.1
 cadquery~=2.2.0
-joblib~=1.2.0
