@@ -144,7 +144,9 @@ Easily interface AeroSandbox with all your favorite tools:
                 <p align="center">
                     CAD tools via STEP export (SolidWorks, Fusion 360, etc.)
                 </p>
-				<p>(STL, OBJ, etc. supported too)</p>
+				<p align="center">
+				(STL, OBJ, etc. supported too)
+				</p>
                 <img src="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing/raw/main/CAD/renders/raytrace.JPG" alt="CAD">
             </td>
           <td width="33%" valign="top">
