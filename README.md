@@ -24,13 +24,13 @@ Use AeroSandbox to design and optimize entire aircraft:
 
 <table>
     <tr>
-        <td width="50%">
+        <td style="width: 50%; vertical-align:top">
             <p align="center">
                 <a href="https://github.com/peterdsharpe/Feather-RC-Glider"><i>Feather</i> (an ultra-lightweight 1-meter-class RC motor glider)</a>
             </p>
             <img src="https://raw.githubusercontent.com/peterdsharpe/Feather-RC-Glider/master/CAD/feather.png" alt="Feather first page">
         </td>
-        <td width="50%">
+        <td style="width: 50%; vertical-align:top">
             <p align="center">
                 <a href="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing"><i>SEAWAY-Mini</i> (a solar-electric, 13' wingspan seaplane)</a>
             </p>
@@ -43,13 +43,13 @@ Use AeroSandbox to support real-world aircraft development programs, all the way
 
 <table>
     <tr>
-        <td width="50%">
+        <td style="width: 50%; vertical-align:top">
             <p align="center">
                 <a href="https://github.com/peterdsharpe/DawnDesignTool">Initial concept sketches + sizing of <i>Dawn</i> (a solar-electric airplane for climate science research) in AeroSandbox, Spring 2020</a>
             </p>
             <img src="./media/images/dawn1-first-sketch.png" alt="Dawn initial design">
         </td>
-        <td width="50%">
+        <td style="width: 50%; vertical-align:top">
             <p align="center">
                 <a href="https://youtu.be/CyTzx9UCvyo"><i>Dawn</i> (later renamed <i>SACOS</i>) in first flight, Fall 2022</a>
             </p>
@@ -63,13 +63,13 @@ Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all a
 
 <table>
 	<tr>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				<a href="https://github.com/peterdsharpe/DawnDesignTool">Exploring how big a solar airplane needs to be to fly, as a function of seasonality and latitude</a>
 			</p>
 			<img src="https://github.com/peterdsharpe/DawnDesignTool/raw/master/docs/30kg_payload.svg" alt="Dawn seasonality latitude tradespace">
 		</td>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				<a href="https://www.popularmechanics.com/military/aviation/a13938789/mit-developing-mach-08-rocket-drone-for-the-air-force/">Exploring how the mission range of <i>Firefly</i>, a Mach 0.8 rocket drone, changes if we add an altitude limit, simultaneously optimizing aircraft design and trajectories</a>
 			</p>
@@ -82,13 +82,13 @@ Use AeroSandbox as a pure aerodynamics toolkit:
 
 <table>
 	<tr>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				VLM simulation of a glider, aileron deflections of +-30°
 			</p>
 			<img src="./media/images/vlm3_with_control_surfaces.png" alt="VLM simulation">
 		</td>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				Aerodynamic shape optimization of a wing planform, using an arbitrary objective and constraints
 			</p>
@@ -101,13 +101,13 @@ Among many other discplines:
 
 <table>
 	<tr>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				Structural optimization of a composite tube spar
 			</p>
 			<img src="./media/images/beam-optimization.png" alt="Beam optimization">
 		</td>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				Electric motor analysis for propeller matching
 			</p>
@@ -134,20 +134,20 @@ Easily interface AeroSandbox with all your favorite tools:
 
 <table>
     <tr>
-        <td width="33%">
+        <td style="width: 33%; vertical-align:top">
             <p align="center">
                 Other conceptual design tools (AVL, XFLR5, XFoil, ASWING, MSES, etc.)
             </p>
             <img src="./media/images/airfoil_contours.png" alt="XFoil">
         </td> 
-          <td width="33%">
+          <td style="width: 33%; vertical-align:top">
                 <p align="center">
                     CAD tools via STEP export (SolidWorks, Fusion 360, etc.)
                 </p>
 				<p>(STL, OBJ, etc. supported too)</p>
                 <img src="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing/raw/main/CAD/renders/raytrace.JPG" alt="CAD">
             </td>
-          <td width="33%">
+          <td style="width: 33%; vertical-align:top">
 			<p align="center">
 				User-provided models and code (e.g., for custom aerodynamics, structures, or propulsion; or for optimizing flight through a given wind field, as shown below) 
 			</p>
@@ -160,13 +160,13 @@ Or, throw all the airplane-design-specific code out entirely, and use AeroSandbo
 
 <table>
 	<tr>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				<a href="https://github.com/peterdsharpe/AeroSandbox/blob/develop/tutorial/01%20-%20Optimization%20and%20Math/01%20-%202D%20Rosenbrock.ipynb">Optimize the 2D Rosenbrock function</a>
 			</p>
 			<img src="./media/images/optimization.png" alt="Optimization">
 		</td>
-		<td width="50%">
+		<td style="width: 50%; vertical-align:top">
 			<p align="center">
 				<a href="https://github.com/peterdsharpe/AeroSandbox/tree/develop/tutorial/03%20-%20Trajectory%20Optimization%20and%20Optimal%20Control/01%20-%20Solving%20ODEs%20with%20AeroSandbox">Specify the Falkner Skan ODE (nonlinear, 3rd-order BVP) and let AeroSandbox automatically take care of the discretization, solution, and even inverse solving.</a>
 			</p>
