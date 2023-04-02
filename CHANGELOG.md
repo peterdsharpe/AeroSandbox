@@ -34,13 +34,17 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-#### 4.0.5
+#### 4.0.6
 
-- Started changelog
+
 
 -----
 
 # Latest (master / release), and previous versions
+
+#### 4.0.5
+
+- Better documentation only, improved README, etc.
 
 #### 4.0.4
 
