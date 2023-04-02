@@ -147,7 +147,7 @@ Easily interface AeroSandbox with all your favorite tools:
 				<p align="center">
 				(STL, OBJ, etc. supported too)
 				</p>
-                <img src="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing/raw/main/CAD/renders/raytrace.JPG" alt="CAD">
+                <img src="https://github.com/peterdsharpe/solar-seaplane-preliminary-sizing/raw/main/CAD/renders/raytrace-lowres.jpg" alt="CAD">
             </td>
           <td width="33%" valign="top">
 			<p align="center">
