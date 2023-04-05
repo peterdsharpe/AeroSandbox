@@ -47,7 +47,7 @@ def interp(x, xp, fp, left=None, right=None, period=None):
                 raise NotImplementedError(
                     "Haven't yet implemented handling for if xp is outside the period.")  # Not easy to implement because casadi doesn't have a sort feature.
 
-            x = _cas.mod(x, period)
+            x = _cas.fmod(x, period)
 
         ### Make sure x isn't an int
         if isinstance(x, int):

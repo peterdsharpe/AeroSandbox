@@ -38,7 +38,7 @@ setup(
     name='AeroSandbox',
     author='Peter Sharpe',
     version=get_version("aerosandbox/__init__.py"),
-    description='A Python 3 package for playing around with aerodynamics ideas related to vortex lattice methods, coupled viscous/inviscid methods, automatic differentiation for gradient computation, aircraft design optimization, and the like. Work in progress!',
+    description='AeroSandbox is a Python package for design optimization of engineered systems such as aircraft.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://peterdsharpe.github.io/AeroSandbox/',
@@ -56,12 +56,12 @@ setup(
     install_requires=[
         'numpy >= 1.20.0',
         'scipy >= 1.7.0',
-        'casadi >= 3.5.5',
+        'casadi >= 3.6.0',
         'pandas >= 1',
         'matplotlib >= 3.3.1',
         'seaborn >= 0.11',
         'tqdm >= 4',
-        'sortedcontainers > 2'
+        'sortedcontainers > 2',
     ],
     extras_require={
         "full": [
