@@ -65,4 +65,4 @@ def mod(x1, x2):
         return _onp.mod(x1, x2)
 
     else:
-        return _cas.mod(x1, x2)
+        return _cas.fmod(x1, x2)
