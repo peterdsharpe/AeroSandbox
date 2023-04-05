@@ -36,7 +36,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 #### 4.0.6
 
-
+- Better documentation. Added a hotfix to support CasADi 3.6.0, which made a breaking change by removing `casadi.mod`.
 
 -----
 
