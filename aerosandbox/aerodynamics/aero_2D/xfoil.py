@@ -127,6 +127,9 @@ class XFoil(ExplicitAnalysis):
         self.timeout = timeout
         self.working_directory = working_directory
 
+    def __repr__(self):
+        return f"XFoil(airfoil={self.airfoil}, Re={self.Re}, mach={self.mach}, n_crit={self.n_crit})"
+
     def _default_keystrokes(self) -> List[str]:
         """
         Returns a list of XFoil keystrokes that are common to all XFoil runs.
