@@ -157,9 +157,33 @@ class AVL(ExplicitAnalysis):
             f"xyz_ref={self.xyz_ref}",
         ]) + "\n)"
 
+    def open_interactive(self):
+        """
+        Opens up a new terminal window and runs AVL interactively. This is useful for detailed analysis or debugging.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+
+            ### Alternatively, work in another directory:
+            if self.working_directory is not None:
+                directory = Path(self.working_directory)  # For debugging
+
+            ### Handle the airplane file
+            airplane_file = "airplane.avl"
+            self.write_avl(directory / airplane_file)
+
+            ### Open up AVL
+            import sys, os
+            if sys.platform == "win32":
+                # cd to directory, then run AVL
+                os.system(f'start cmd /k "cd {directory} && {self.avl_command} {airplane_file}"')
+            else:
+                raise NotImplementedError(
+                    "Ability to auto-launch interactive AVL sessions isn't yet implemented for non-Windows OSes."
+                )
+
     def run(self,
             run_command: str = None,
-            open_interactive=False,
             ) -> Dict[str, float]:
         """
         Private function to run AVL.
@@ -202,20 +226,6 @@ class AVL(ExplicitAnalysis):
             keystrokes = "\n".join(keystroke_file_contents)
 
             command = f'{self.avl_command} {airplane_file}'
-
-            ### Run interactive, if directed to:
-            if open_interactive:
-                ### Opens up a new terminal window and runs AVL in interactive mode.
-                ### This is useful for debugging.
-                import sys, os
-
-                if sys.platform == "win32":
-                    # cd to directory, then run AVL
-                    os.system(f'start cmd /k "cd {directory} && {command}"')
-                else:
-                    raise NotImplementedError(
-                        "Ability to auto-launch interactive AVL sessions isn't yet implemented for non-Windows OSes."
-                    )
 
             ### Execute
             try:
