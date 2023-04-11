@@ -151,7 +151,11 @@ class AVL(ExplicitAnalysis):
         self.ground_effect_height = ground_effect_height
 
     def __repr__(self):
-        return f"AVL(\n\tairplane={self.airplane},\n\top_point={self.op_point}\n)"
+        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+            f"airplane={self.airplane}",
+            f"op_point={self.op_point}",
+            f"xyz_ref={self.xyz_ref}",
+        ]) + "\n)"
 
     def run(self,
             run_command: str = None,

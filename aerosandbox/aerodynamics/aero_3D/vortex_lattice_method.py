@@ -82,6 +82,13 @@ class VortexLatticeMethod(ExplicitAnalysis):
             # except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
             #     pass
 
+    def __repr__(self):
+        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+            f"airplane={self.airplane}",
+            f"op_point={self.op_point}",
+            f"xyz_ref={self.xyz_ref}",
+        ]) + "\n)"
+
     def run(self) -> Dict[str, Any]:
         """
         Computes the aerodynamic forces.
