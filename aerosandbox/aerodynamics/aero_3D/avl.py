@@ -157,9 +157,11 @@ class AVL(ExplicitAnalysis):
             f"xyz_ref={self.xyz_ref}",
         ]) + "\n)"
 
-    def open_interactive(self):
+    def open_interactive(self) -> None:
         """
-        Opens up a new terminal window and runs AVL interactively. This is useful for detailed analysis or debugging.
+        Opens a new terminal window and runs AVL interactively. This is useful for detailed analysis or debugging.
+
+        Returns: None
         """
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
@@ -175,8 +177,17 @@ class AVL(ExplicitAnalysis):
             ### Open up AVL
             import sys, os
             if sys.platform == "win32":
-                # cd to directory, then run AVL
-                os.system(f'start cmd /k "cd {directory} && {self.avl_command} {airplane_file}"')
+                # Run AVL
+                print("Running AVL interactively in a new window, quit it to continue...")
+
+                command = f'cmd /k "cd {directory} && {self.avl_command} {airplane_file} && exit"'
+
+                process = subprocess.Popen(
+                    command,
+                    creationflags=subprocess.CREATE_NEW_CONSOLE,
+                )
+                process.wait()
+
             else:
                 raise NotImplementedError(
                     "Ability to auto-launch interactive AVL sessions isn't yet implemented for non-Windows OSes."
