@@ -47,7 +47,7 @@ class AVL(ExplicitAnalysis):
             spanwise_spacing="cosine",
             chordwise_resolution=12,
             chordwise_spacing="cosine",
-            component=None, # This is an int
+            component=None,  # This is an int
             no_wake=False,
             no_alpha_beta=False,
             no_load=False,
@@ -145,7 +145,7 @@ class AVL(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.avl_command = avl_command
         self.verbose = verbose
-        self.timeout=timeout
+        self.timeout = timeout
         self.working_directory = working_directory
         self.ground_effect = ground_effect
         self.ground_effect_height = ground_effect_height
@@ -159,6 +159,7 @@ class AVL(ExplicitAnalysis):
 
     def run(self,
             run_command: str = None,
+            open_interactive=False,
             ) -> Dict[str, float]:
         """
         Private function to run AVL.
@@ -201,6 +202,20 @@ class AVL(ExplicitAnalysis):
             keystrokes = "\n".join(keystroke_file_contents)
 
             command = f'{self.avl_command} {airplane_file}'
+
+            ### Run interactive, if directed to:
+            if open_interactive:
+                ### Opens up a new terminal window and runs AVL in interactive mode.
+                ### This is useful for debugging.
+                import sys, os
+
+                if sys.platform == "win32":
+                    # cd to directory, then run AVL
+                    os.system(f'start cmd /k "cd {directory} && {command}"')
+                else:
+                    raise NotImplementedError(
+                        "Ability to auto-launch interactive AVL sessions isn't yet implemented for non-Windows OSes."
+                    )
 
             ### Execute
             try:
