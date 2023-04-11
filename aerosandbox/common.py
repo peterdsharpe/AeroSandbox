@@ -331,7 +331,7 @@ class ImplicitAnalysis(AeroSandboxObject):
 
             if not self.opti_provided and not self.opti.x.shape == (0, 1):
                 sol = self.opti.solve()
-                self.substitute_solution(sol)
+                self.__dict__ = sol(self.__dict__)
 
         return init_wrapped
 
