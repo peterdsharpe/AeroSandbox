@@ -34,13 +34,19 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-#### 4.0.6
+#### 4.0.7
 
-- Better documentation. Added a hotfix to support CasADi 3.6.0, which made a breaking change by removing `casadi.mod`.
+- Added `asb.AVL.open_interactive()`, to interactively launch an AVL session.
+- Improved `__repr__` methods throughout for better readability.
+- 
 
 -----
 
 # Latest (master / release), and previous versions
+
+#### 4.0.6
+
+- Better documentation. Added a hotfix to support CasADi 3.6.0, which made a breaking change by removing `casadi.mod`.
 
 #### 4.0.5
 
