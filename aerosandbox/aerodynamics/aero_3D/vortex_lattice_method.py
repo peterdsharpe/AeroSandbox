@@ -488,7 +488,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         return run_base
 
-    def get_induced_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
+    def get_induced_velocity_at_points(self,
+                                       points: np.ndarray,
+                                       ) -> np.ndarray:
         """
         Computes the induced velocity at a set of points in the flowfield.
 
@@ -523,7 +525,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         return V_induced
 
-    def get_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
+    def get_velocity_at_points(self,
+                               points: np.ndarray
+                               ) -> np.ndarray:
         """
         Computes the velocity at a set of points in the flowfield.
 
