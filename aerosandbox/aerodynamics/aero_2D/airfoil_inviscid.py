@@ -3,7 +3,7 @@ from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
 import aerosandbox.numpy as np
-from typing import Union, List
+from typing import Union, List, Optional
 
 
 class AirfoilInviscid(ImplicitAnalysis):
@@ -34,6 +34,12 @@ class AirfoilInviscid(ImplicitAnalysis):
         self._setup_unknowns()
         self._enforce_governing_equations()
         self._calculate_forces()
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+            f"airfoils={self.airfoils}",
+            f"op_point={self.op_point}",
+        ]) + "\n)"
 
     def _setup_unknowns(self):
         for airfoil in self.airfoils:
@@ -252,9 +258,9 @@ if __name__ == '__main__':
             Airfoil("e423")
             .repanel(n_points_per_side=50),
             Airfoil("naca6408")
-            .repanel(n_points_per_side=25)
+            .repanel(n_points_per_side=50)
             .scale(0.4, 0.4)
-            .rotate(np.radians(-20))
+            .rotate(np.radians(-25))
             .translate(0.9, -0.05),
         ],
         op_point=OperatingPoint(

@@ -83,6 +83,13 @@ class AeroBuildup(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.include_wave_drag = include_wave_drag
 
+    def __repr__(self):
+        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+            f"airplane={self.airplane}",
+            f"op_point={self.op_point}",
+            f"xyz_ref={self.xyz_ref}",
+        ]) + "\n)"
+
     def run(self) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
         """
         Computes the aerodynamic forces and moments on the airplane.
