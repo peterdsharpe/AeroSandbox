@@ -180,10 +180,11 @@ class AVL(ExplicitAnalysis):
                 # Run AVL
                 print("Running AVL interactively in a new window, quit it to continue...")
 
-                command = f'cmd /k "cd {directory} && {self.avl_command} {airplane_file} && exit"'
+                command = f'cmd /k "{self.avl_command} {airplane_file}"'
 
                 process = subprocess.Popen(
                     command,
+                    cwd=directory,
                     creationflags=subprocess.CREATE_NEW_CONSOLE,
                 )
                 process.wait()

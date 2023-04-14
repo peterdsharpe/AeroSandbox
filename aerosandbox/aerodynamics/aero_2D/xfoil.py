@@ -371,10 +371,11 @@ class XFoil(ExplicitAnalysis):
                 # Run XFoil
                 print("Running XFoil interactively in a new window, quit it to continue...")
 
-                command = f'cmd /k "cd {directory} && {self.xfoil_command} {airfoil_file} && exit"'
+                command = f'cmd /k "{self.xfoil_command} {airfoil_file}"'
 
                 process = subprocess.Popen(
                     command,
+                    cwd=directory,
                     creationflags=subprocess.CREATE_NEW_CONSOLE
                 )
                 process.wait()
