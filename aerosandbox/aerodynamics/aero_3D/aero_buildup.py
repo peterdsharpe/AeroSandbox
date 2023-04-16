@@ -1105,11 +1105,11 @@ if __name__ == '__main__':
     from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal, set_ticks
 
     fig, ax = plt.subplots(2, 2)
-    alpha = np.linspace(-10, 10, 1000)
+    alpha = np.linspace(-20, 20, 1000)
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(
-            velocity=100,
+            velocity=10,
             alpha=alpha,
             beta=0
         ),
@@ -1144,7 +1144,6 @@ if __name__ == '__main__':
         "`asb.AeroBuildup` Aircraft Aerodynamics"
     )
 
-    fig, ax = plt.subplots(figsize=(7, 6))
     Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 200), np.linspace(-90, 90, 200))
     aero = AeroBuildup(
         airplane=airplane,
@@ -1154,6 +1153,52 @@ if __name__ == '__main__':
             beta=Beta.flatten()
         ),
     ).run()
-    contour(Beta, Alpha, aero["CL"].reshape(Alpha.shape), levels=30)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    contour(
+        Beta, Alpha, aero["CL"].reshape(Alpha.shape),
+        colorbar_label="Lift Coefficient $C_L$ [-]",
+        linelabels_format=lambda x: f"{x:.2f}",
+        linelabels_fontsize=7,
+        cmap="coolwarm_r"
+    )
+    plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"])))
     equal()
-    show_plot("AeroBuildup", r"$\beta$ [deg]", r"$\alpha$ [deg]")
+    show_plot(
+        "`asb.AeroBuildup` Aircraft Aerodynamics"
+        r"Sideslip angle $\beta$ [deg]",
+        r"Angle of Attack $\alpha$ [deg]"
+    )
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    contour(
+        Beta, Alpha, aero["CD"].reshape(Alpha.shape),
+        colorbar_label="Drag Coefficient $C_D$ [-]",
+        linelabels_format=lambda x: f"{x:.2f}",
+        linelabels_fontsize=7,
+        z_log_scale=True,
+        cmap="Oranges"
+    )
+    equal()
+    show_plot(
+        "`asb.AeroBuildup` Aircraft Aerodynamics"
+        r"Sideslip angle $\beta$ [deg]",
+        r"Angle of Attack $\alpha$ [deg]"
+    )
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    contour(
+        Beta, Alpha, (aero["CL"] / aero["CD"]).reshape(Alpha.shape),
+        levels=15,
+        colorbar_label="Finesse $C_L / C_D$ [-]",
+        linelabels_format=lambda x: f"{x:.0f}",
+        linelabels_fontsize=7,
+        cmap="Spectral"
+    )
+    plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"] / aero["CD"])))
+    equal()
+    show_plot(
+        "`asb.AeroBuildup` Aircraft Aerodynamics"
+        r"Sideslip angle $\beta$ [deg]",
+        r"Angle of Attack $\alpha$ [deg]"
+    )
