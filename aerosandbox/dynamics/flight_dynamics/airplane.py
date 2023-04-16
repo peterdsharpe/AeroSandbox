@@ -3,6 +3,7 @@ from aerosandbox.performance import OperatingPoint
 from aerosandbox.weights import MassProperties
 import aerosandbox.numpy as np
 
+
 def get_modes(
         airplane: Airplane,
         op_point: OperatingPoint,
@@ -121,7 +122,9 @@ if __name__ == '__main__':
     import aerosandbox as asb
     import aerosandbox.numpy as np
 
-    print(
+    from pprint import pprint
+
+    pprint(
         get_modes(
             airplane=asb.Airplane(
                 s_ref=9,
