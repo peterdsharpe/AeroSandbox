@@ -813,21 +813,29 @@ class AeroBuildup(ExplicitAnalysis):
         eta = jorgensen_eta(fuselage.fineness_ratio())
         volume = fuselage.volume()
 
-        approximate_diameter = (volume / length + 1e-100) ** 0.5
+        def softmax_scalefree(x: List[float]) -> float:
+            if len(x) == 1:
+                return x[0]
+            else:
+                return np.softmax(
+                    *x,
+                    softness=np.maximum(
+                        np.max(np.array(x)) * 0.01,
+                        1e-16,
+                    )
+                )
 
-        y_span_effective = np.softmax(
-            *[
+        y_span_effective = softmax_scalefree(
+            [
                 xsec.width
                 for xsec in fuselage.xsecs
             ],
-            softness=0.01 * approximate_diameter
         )
-        z_span_effective = np.softmax(
-            *[
+        z_span_effective = softmax_scalefree(
+            [
                 xsec.height
                 for xsec in fuselage.xsecs
             ],
-            softness=0.01 * approximate_diameter
         )
 
         def compute_section_aerodynamics(
