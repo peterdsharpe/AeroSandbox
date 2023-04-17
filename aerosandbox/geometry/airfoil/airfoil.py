@@ -11,6 +11,7 @@ from scipy import interpolate
 from typing import Callable, Union, Any, Dict
 import json
 from pathlib import Path
+import os
 
 
 class Airfoil(Polygon):
@@ -270,6 +271,9 @@ class Airfoil(Polygon):
 
         ### Analyze airfoil with XFoil, if needed
         if data is None:
+            ### If a cache filename is given, ensure that the directory exists.
+            if cache_filename is not None:
+                os.makedirs(os.path.dirname(cache_filename), exist_ok=True)
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
@@ -801,7 +805,7 @@ class Airfoil(Polygon):
 
     def repanel(self,
                 n_points_per_side: int = 100,
-                spacing_function_per_side = np.cosspace,
+                spacing_function_per_side=np.cosspace,
                 ) -> 'Airfoil':
         """
         Returns a repaneled copy of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
