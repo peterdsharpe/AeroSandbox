@@ -21,14 +21,14 @@ airplane = asb.Airplane(
                     airfoil=sd7037,
                 ),
                 asb.WingXSec(
-                    xyz_le=[0, 1, 0],
+                    xyz_le=[0, 0.5, 0],
                     chord=1,
                     twist=2,
                     airfoil=sd7037,
                 ),
                 asb.WingXSec(
-                    xyz_le=[0.5, 4, 0],
-                    chord=0.5,
+                    xyz_le=[0.7, 4, 0],
+                    chord=0.3,
                     twist=3,
                     airfoil=sd7037,
                 )
