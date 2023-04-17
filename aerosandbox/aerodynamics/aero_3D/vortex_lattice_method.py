@@ -718,7 +718,7 @@ if __name__ == '__main__':
 
     sys.path.insert(0, str(geometry_folder))
 
-    from vanilla import airplane as vanilla
+    from UniqueWing import airplane as vanilla
 
     ### Do the AVL run
     vlm = VortexLatticeMethod(
@@ -732,8 +732,8 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        spanwise_resolution=12,
-        chordwise_resolution=12,
+        spanwise_resolution=2,
+        chordwise_resolution=2,
     )
 
     res = vlm.run()
