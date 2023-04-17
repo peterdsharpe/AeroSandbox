@@ -39,6 +39,8 @@ Also, for at least one version before a breaking change, AeroSandbox development
 - Added `asb.AVL.open_interactive()`, to interactively launch an AVL session.
 - Improved `__repr__` methods throughout for better readability.
 - Updated `asb.AeroBuildup` to add induced drag on a whole-airplane level, not per-lifting-object. In general, this will result in slightly higher induced drag, and also improves optimization pressure - for example, tandem-wing configurations are no longer unrealistically attractive, since the induced drag scales superlinearly with respect to total lift.
+- Improved `asb.Airfoil.generate_polars()` to not error out when a cache filename iis provided where the containing directory does not yet exist. (Instead, it now creates the directory.) Fixed a bug in `generate_polars()` that now allows any Reynolds number input list to be specified when calling XFoil.
+- Added `asb.Airfoil.plot_polars()` to make polar functions more interpretable.
 
 -----
 
