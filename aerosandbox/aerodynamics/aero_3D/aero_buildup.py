@@ -1162,21 +1162,26 @@ if __name__ == '__main__':
         ),
     ).run()
 
+
+    def show():
+        equal()
+        show_plot(
+            "`asb.AeroBuildup` Aircraft Aerodynamics",
+            r"Sideslip angle $\beta$ [deg]",
+            r"Angle of Attack $\alpha$ [deg]"
+        )
+
+
     fig, ax = plt.subplots(figsize=(6, 5))
     contour(
         Beta, Alpha, aero["CL"].reshape(Alpha.shape),
         colorbar_label="Lift Coefficient $C_L$ [-]",
         linelabels_format=lambda x: f"{x:.2f}",
         linelabels_fontsize=7,
-        cmap="coolwarm_r"
+        cmap="RdBu"
     )
     plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"])))
-    equal()
-    show_plot(
-        "`asb.AeroBuildup` Aircraft Aerodynamics"
-        r"Sideslip angle $\beta$ [deg]",
-        r"Angle of Attack $\alpha$ [deg]"
-    )
+    show()
 
     fig, ax = plt.subplots(figsize=(6, 5))
     contour(
@@ -1185,14 +1190,9 @@ if __name__ == '__main__':
         linelabels_format=lambda x: f"{x:.2f}",
         linelabels_fontsize=7,
         z_log_scale=True,
-        cmap="Oranges"
+        cmap="YlOrRd"
     )
-    equal()
-    show_plot(
-        "`asb.AeroBuildup` Aircraft Aerodynamics"
-        r"Sideslip angle $\beta$ [deg]",
-        r"Angle of Attack $\alpha$ [deg]"
-    )
+    show()
 
     fig, ax = plt.subplots(figsize=(6, 5))
     contour(
@@ -1201,12 +1201,7 @@ if __name__ == '__main__':
         colorbar_label="Finesse $C_L / C_D$ [-]",
         linelabels_format=lambda x: f"{x:.0f}",
         linelabels_fontsize=7,
-        cmap="Spectral"
+        cmap="RdBu"
     )
     plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"] / aero["CD"])))
-    equal()
-    show_plot(
-        "`asb.AeroBuildup` Aircraft Aerodynamics"
-        r"Sideslip angle $\beta$ [deg]",
-        r"Angle of Attack $\alpha$ [deg]"
-    )
+    show()
