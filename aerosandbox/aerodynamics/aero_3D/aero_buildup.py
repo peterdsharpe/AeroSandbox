@@ -1098,6 +1098,8 @@ class AeroBuildup(ExplicitAnalysis):
 if __name__ == '__main__':
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
     import os
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
 
     for wing in airplane.wings:
         for xsec in wing.xsecs:
@@ -1110,8 +1112,6 @@ if __name__ == '__main__':
         airplane=airplane,
         op_point=OperatingPoint(alpha=0, beta=1),
     ).run()
-
-    from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal, set_ticks
 
     fig, ax = plt.subplots(2, 2)
     alpha = np.linspace(-20, 20, 1000)
@@ -1128,28 +1128,28 @@ if __name__ == '__main__':
     plt.plot(alpha, aero["CL"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L$")
-    set_ticks(5, 1, 0.5, 0.1)
+    p.set_ticks(5, 1, 0.5, 0.1)
 
     plt.sca(ax[0, 1])
     plt.plot(alpha, aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_D$")
-    set_ticks(5, 1, 0.05, 0.01)
+    p.set_ticks(5, 1, 0.05, 0.01)
     plt.ylim(bottom=0)
 
     plt.sca(ax[1, 0])
     plt.plot(alpha, aero["Cm"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_m$")
-    set_ticks(5, 1, 0.5, 0.1)
+    p.set_ticks(5, 1, 0.5, 0.1)
 
     plt.sca(ax[1, 1])
     plt.plot(alpha, aero["CL"] / aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L/C_D$")
-    set_ticks(5, 1, 10, 2)
+    p.set_ticks(5, 1, 10, 2)
 
-    show_plot(
+    p.show_plot(
         "`asb.AeroBuildup` Aircraft Aerodynamics"
     )
 
@@ -1165,8 +1165,9 @@ if __name__ == '__main__':
 
 
     def show():
-        equal()
-        show_plot(
+        p.set_ticks(15, 5, 15, 5)
+        p.equal()
+        p.show_plot(
             "`asb.AeroBuildup` Aircraft Aerodynamics",
             r"Sideslip angle $\beta$ [deg]",
             r"Angle of Attack $\alpha$ [deg]"
@@ -1174,35 +1175,38 @@ if __name__ == '__main__':
 
 
     fig, ax = plt.subplots(figsize=(6, 5))
-    contour(
+    p.contour(
         Beta, Alpha, aero["CL"].reshape(Alpha.shape),
         colorbar_label="Lift Coefficient $C_L$ [-]",
         linelabels_format=lambda x: f"{x:.2f}",
         linelabels_fontsize=7,
-        cmap="RdBu"
+        cmap="RdBu",
+        alpha=0.6
     )
     plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"])))
     show()
 
     fig, ax = plt.subplots(figsize=(6, 5))
-    contour(
+    p.contour(
         Beta, Alpha, aero["CD"].reshape(Alpha.shape),
         colorbar_label="Drag Coefficient $C_D$ [-]",
         linelabels_format=lambda x: f"{x:.2f}",
         linelabels_fontsize=7,
         z_log_scale=True,
-        cmap="YlOrRd"
+        cmap="YlOrRd",
+        alpha=0.6
     )
     show()
 
     fig, ax = plt.subplots(figsize=(6, 5))
-    contour(
+    p.contour(
         Beta, Alpha, (aero["CL"] / aero["CD"]).reshape(Alpha.shape),
         levels=15,
         colorbar_label="Finesse $C_L / C_D$ [-]",
         linelabels_format=lambda x: f"{x:.0f}",
         linelabels_fontsize=7,
-        cmap="RdBu"
+        cmap="RdBu",
+        alpha=0.6
     )
     plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"] / aero["CD"])))
     show()
