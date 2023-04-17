@@ -1,12 +1,12 @@
 import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 import copy
 from typing import Dict, Any
 import casadi as cas
 
 
-class AeroSandboxObject:
+class AeroSandboxObject(ABC):
 
     @abstractmethod
     def __init__(self):
@@ -15,12 +15,6 @@ class AeroSandboxObject:
         (extend) it instead.
         """
         pass
-
-    @abstractmethod
-    def __repr__(self):
-        """
-        Forces all subclasses to implement a __repr__ method, which is good practice.
-        """
 
     def copy(self):
         """
