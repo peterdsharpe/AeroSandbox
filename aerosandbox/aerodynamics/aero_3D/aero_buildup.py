@@ -1097,12 +1097,13 @@ class AeroBuildup(ExplicitAnalysis):
 
 if __name__ == '__main__':
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
+    import os
 
     for wing in airplane.wings:
         for xsec in wing.xsecs:
             xsec.airfoil.generate_polars(
                 alphas=np.linspace(-12, 12, 25),
-                cache_filename=rf"C:\Users\PeterSharpe\Downloads\test\{xsec.airfoil.name}.dat"
+                cache_filename=os.path.join(os.path.expanduser('~'), 'Downloads', 'test', f'{xsec.airfoil.name}.dat')
             )
 
     aero = AeroBuildup(
