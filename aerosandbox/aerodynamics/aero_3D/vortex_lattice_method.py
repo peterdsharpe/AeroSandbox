@@ -732,8 +732,8 @@ if __name__ == '__main__':
             q=0,
             r=0,
         ),
-        spanwise_resolution=10,
-        chordwise_resolution=1,
+        spanwise_resolution=2,
+        chordwise_resolution=2,
     )
 
     res = vlm.run()

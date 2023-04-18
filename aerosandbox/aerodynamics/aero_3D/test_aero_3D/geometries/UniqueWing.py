@@ -34,6 +34,20 @@ airplane = asb.Airplane(
                 )
             ]
         )
+        # asb.Wing(
+        #     name="H-stab",
+        #     symmetric=False,
+        #     xsecs=[
+        #         asb.WingXSec(
+        #             xyz_le=[0, 0, 0],
+        #             chord=0.7,
+        #         ),
+        #         asb.WingXSec(
+        #             xyz_le=[0.14, 1.25, 0],
+        #             chord=0.42
+        #         ),
+        #     ]
+        # ).translate([4, 0, 0]),
     ]
 )
 
