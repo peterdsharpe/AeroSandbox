@@ -106,9 +106,9 @@ elif integrator == "aerosandbox":
             phi=opti.variable(init_guess=dyn_init.phi * np.ones_like(time), scale=1e-1),
             theta=opti.variable(init_guess=dyn_init.theta * np.ones_like(time), scale=1e-1),
             psi=opti.variable(init_guess=dyn_init.psi * np.ones_like(time), scale=1e-1),
-            p=opti.variable(init_guess=np.zeros_like(time),scale=1e-2),
-            q=opti.variable(init_guess=np.zeros_like(time),scale=1e-2),
-            r=opti.variable(init_guess=np.zeros_like(time),scale=1e-2),
+            p=opti.variable(init_guess=np.zeros_like(time), scale=1e-2),
+            q=opti.variable(init_guess=np.zeros_like(time), scale=1e-2),
+            r=opti.variable(init_guess=np.zeros_like(time), scale=1e-2),
         )
     )
 
