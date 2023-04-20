@@ -8,6 +8,7 @@ from aerosandbox.library.aerodynamics import transonic
 import aerosandbox.library.aerodynamics as aerolib
 import copy
 from typing import Union, List, Dict, Any
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree import softmax_scalefree
 
 
 class AeroBuildup(ExplicitAnalysis):
@@ -173,15 +174,6 @@ class AeroBuildup(ExplicitAnalysis):
 
         ##### Add in the induced drag
         Q = self.op_point.dynamic_pressure()
-
-        def softmax_scalefree(x: List[float]) -> float:
-            if len(x) == 1:
-                return x[0]
-            else:
-                return np.softmax(
-                    *x,
-                    softness=np.max(np.array(x)) * 0.01
-                )
 
         y_span_effective = softmax_scalefree([comp["y_span_effective"] for comp in aero_components])
         z_span_effective = softmax_scalefree([comp["z_span_effective"] for comp in aero_components])
@@ -812,18 +804,6 @@ class AeroBuildup(ExplicitAnalysis):
         q = op_point.dynamic_pressure()
         eta = jorgensen_eta(fuselage.fineness_ratio())
         volume = fuselage.volume()
-
-        def softmax_scalefree(x: List[float]) -> float:
-            if len(x) == 1:
-                return x[0]
-            else:
-                return np.softmax(
-                    *x,
-                    softness=np.maximum(
-                        np.max(np.array(x)) * 0.01,
-                        1e-16,
-                    )
-                )
 
         y_span_effective = softmax_scalefree(
             [
