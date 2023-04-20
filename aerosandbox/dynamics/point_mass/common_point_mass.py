@@ -431,7 +431,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             elif isinstance(vehicle_model, str):  # Interpret the string as a filepath to a .stl or similar
                 try:
                     pv.read(filename=vehicle_model)
-                except:
+                except Exception:
                     raise ValueError("Could not parse `vehicle_model`!")
             else:
                 raise TypeError("`vehicle_model` should be an Airplane or PolyData object.")

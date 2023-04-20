@@ -411,7 +411,7 @@ class Opti(cas.Opti):
         else:  # Constraint is not valid because it is not MX type or is parametric.
             try:
                 constraint_satisfied = np.all(self.value(constraint))  # Determine if the constraint is true
-            except:
+            except Exception:
                 raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
                     doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
                     {constraint}""")
@@ -423,7 +423,7 @@ class Opti(cas.Opti):
                     RHS = constraint.dep(1)
                     LHS_value = self.value(LHS)
                     RHS_value = self.value(RHS)
-                except:
+                except Exception:
                     raise ValueError(
                         """Could not evaluate the LHS and RHS of the constraint - are you sure you passed in a comparative expression?""")
 

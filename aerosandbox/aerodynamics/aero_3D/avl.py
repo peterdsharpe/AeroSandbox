@@ -712,7 +712,7 @@ class AVL(ExplicitAnalysis):
             if cast_outputs_to_float:
                 try:  # Try to convert the value into a float. If you can't, return a NaN
                     value = float(value)
-                except:
+                except Exception:
                     value = np.nan
 
             if key in items.keys():  # If you already have this key

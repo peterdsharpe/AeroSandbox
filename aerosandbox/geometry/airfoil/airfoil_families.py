@@ -228,7 +228,7 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
                           ]
             if len(line_items) == 2:
                 raw_coordinates.append(line_items)
-        except:
+        except Exception:
             pass
 
     if len(raw_coordinates) == 0:

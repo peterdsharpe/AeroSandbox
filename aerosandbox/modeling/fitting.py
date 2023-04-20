@@ -302,7 +302,7 @@ class FittedModel(SurrogateModel):
         for param_name in params:
             try:
                 params_solved[param_name] = sol.value(params[param_name])
-            except:
+            except Exception:
                 params_solved[param_name] = np.nan
 
         ### Store all the data and inputs

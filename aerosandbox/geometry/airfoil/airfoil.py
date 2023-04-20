@@ -99,10 +99,10 @@ class Airfoil(Polygon):
         if coordinates is None:  # If no coordinates are given
             try:  # See if it's a NACA airfoil
                 self.coordinates = get_NACA_coordinates(name=self.name)
-            except:
+            except Exception:
                 try:  # See if it's in the UIUC airfoil database
                     self.coordinates = get_UIUC_coordinates(name=self.name)
-                except:
+                except Exception:
                     pass
         else:
 

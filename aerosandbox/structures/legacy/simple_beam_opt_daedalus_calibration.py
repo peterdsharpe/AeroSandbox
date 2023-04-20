@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
     try:
         sol = opti.solve()
-    except:
+    except Exception:
         print("Failed!")
         sol = opti.debug
 
