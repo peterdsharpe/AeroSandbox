@@ -42,6 +42,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 - Improved `asb.Airfoil.generate_polars()` to not error out when a cache filename iis provided where the containing directory does not yet exist. (Instead, it now creates the directory.) Fixed a bug in `generate_polars()` that now allows any Reynolds number input list to be specified when calling XFoil.
 - Added `asb.Airfoil.plot_polars()` to make polar functions more interpretable.
 - Added an optional `color` attribute to `Wing`, `Fuselage`, and `Propulsor` objects. This will control the color that the component is drawn with during visualization; currently only works with the `Airplane.draw_wireframe()` and `Airplane.draw_three_view()` methods, but will be extended to others later.
+- Updated pinned CasADi version to 3.6.1. Note that CasADi MUST be v3.6.0 or higher, otherwise automatic differentiation errors may occur due to undefined primitives. This shouldn't be an issue, as this is now pinned in ASB's setup.py.
 
 -----
 
