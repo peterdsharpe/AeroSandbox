@@ -369,6 +369,13 @@ class Airplane(AeroSandboxObject):
 
         ##### Wings
         for wing in self.wings:
+            try:
+                if wing.color is not None:
+                    color_to_use = wing.color
+                else:
+                    color_to_use = color
+            except AttributeError:
+                color_to_use = color
 
             ### LE and TE lines
             for xy in [
@@ -380,6 +387,7 @@ class Airplane(AeroSandboxObject):
                     np.stack(wing.mesh_line(x_nondim=xy[0], z_nondim=xy[1]), axis=0),
                     symmetric=wing.symmetric,
                     linewidth=thick_linewidth,
+                    color=color_to_use
                 )
 
             ### Top and Bottom lines
@@ -391,11 +399,13 @@ class Airplane(AeroSandboxObject):
                 np.stack(wing.mesh_line(x_nondim=x, z_nondim=thicknesses / 2, add_camber=True), axis=0),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
+                color=color_to_use
             )
             plot_line(
                 np.stack(wing.mesh_line(x_nondim=x, z_nondim=-thicknesses / 2, add_camber=True), axis=0),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
+                color=color_to_use
             )
 
             ### Airfoils
@@ -425,6 +435,13 @@ class Airplane(AeroSandboxObject):
 
         ##### Fuselages
         for fuse in self.fuselages:
+            try:
+                if fuse.color is not None:
+                    color_to_use = fuse.color
+                else:
+                    color_to_use = color
+            except AttributeError:
+                color_to_use = color
 
             ### Bulkheads
             perimeters_xyz = [
@@ -434,7 +451,8 @@ class Airplane(AeroSandboxObject):
             for i, perim in enumerate(perimeters_xyz):
                 plot_line(
                     np.stack(perim, axis=1),
-                    linewidth=thick_linewidth if i == 0 or i == len(fuse.xsecs) - 1 else thin_linewidth
+                    linewidth=thick_linewidth if i == 0 or i == len(fuse.xsecs) - 1 else thin_linewidth,
+                    color=color_to_use
                 )
 
             ### Centerline
@@ -443,7 +461,8 @@ class Airplane(AeroSandboxObject):
                     fuse.mesh_line(y_nondim=0, z_nondim=0),
                     axis=0,
                 ),
-                linewidth=thin_linewidth
+                linewidth=thin_linewidth,
+                color=color_to_use
             )
 
             ### Longerons
@@ -453,11 +472,19 @@ class Airplane(AeroSandboxObject):
                         np.array(xsec.get_3D_coordinates(theta=theta))
                         for xsec in fuse.xsecs
                     ], axis=0),
-                    linewidth=thick_linewidth
+                    linewidth=thick_linewidth,
+                    color=color_to_use
                 )
 
         ##### Propulsors
         for prop in self.propulsors:
+            try:
+                if prop.color is not None:
+                    color_to_use = prop.color
+                else:
+                    color_to_use = color
+            except AttributeError:
+                color_to_use = color
 
             ### Disk
             if prop.length == 0:
@@ -465,7 +492,8 @@ class Airplane(AeroSandboxObject):
                     np.stack(
                         prop.get_disk_3D_coordinates(),
                         axis=1
-                    )
+                    ),
+                    color=color_to_use
                 )
 
         if set_equal:
