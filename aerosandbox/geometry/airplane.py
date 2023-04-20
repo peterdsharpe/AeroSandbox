@@ -931,9 +931,9 @@ class Airplane(AeroSandboxObject):
             point_mass_xml = ET.SubElement(inertia, "Point_Mass")
 
             for k, v in {
-                "Tag"         : f"pm{i}",
-                "Mass"        : point_mass.mass,
-                "coordinates" : ",".join([str(x) for x in point_mass.xyz_cg]),
+                "Tag"        : f"pm{i}",
+                "Mass"       : point_mass.mass,
+                "coordinates": ",".join([str(x) for x in point_mass.xyz_cg]),
             }.items():
                 subelement = ET.SubElement(point_mass_xml, k)
                 subelement.text = str(v)
