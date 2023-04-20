@@ -728,10 +728,11 @@ class Airplane(AeroSandboxObject):
             xsec_wires = []
 
             for i, xsec in enumerate(fuse.xsecs):
+
                 if xsec.height < fuselage_tol or xsec.width < fuselage_tol:  # If the xsec is so small as to effectively be a point
                     xsec = copy.deepcopy(xsec)  # Modify the xsec to be big enough to not error out.
-                    xsec.width = fuselage_tol
-                    xsec.height = fuselage_tol
+                    xsec.height = np.maximum(xsec.height, fuselage_tol)
+                    xsec.width = np.maximum(xsec.width, fuselage_tol)
 
                 xsec_wires.append(
                     cq.Workplane(
