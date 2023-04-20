@@ -1301,7 +1301,7 @@ class OptiSol:
 
             return new_x
 
-        except AttributeError:
+        except (AttributeError, TypeError):
             pass
 
         # Try converting it blindly. This will catch most NumPy-array-like types.
