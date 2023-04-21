@@ -1,14 +1,14 @@
 
-import numpy as np
-import aerosandbox as asb
+# import numpy as np
 from aerosandbox import ImplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
-import casadi as cas
+from aerosandbox.aerodynamics.aero_3D.singularities.point_source import \
+    calculate_induced_velocity_point_source
+import aerosandbox.numpy as np
 from typing import Dict, Any, List, Callable
-import copy
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
@@ -20,7 +20,7 @@ def wide(array):
     return np.reshape(array, (1, -1))
 
 
-class LiftingLine(ImplicitAnalysis):
+class NlLiftingLine(ImplicitAnalysis):
     """
     An implicit aerodynamics analysis based on lifting line theory, with modifications for nonzero sweep
     and dihedral + multiple wings.
@@ -46,10 +46,10 @@ class LiftingLine(ImplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
-                 run_symmetric_if_possible=True,
+                 run_symmetric_if_possible : bool = False,
                  verbose=True,
                  spanwise_resolution=8,  # TODO document
-                 spanwise_spacing="cosine",  # TODO document,
+                 spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  vortex_core_radius: float = 1e-8,
                  ):
         """
@@ -75,30 +75,48 @@ class LiftingLine(ImplicitAnalysis):
         super().__init__()
 
         ### Initialize
+        # self.is_trailing_edge = None
         self.airplane = airplane
         self.op_point = op_point
-        self.run_symmetric_if_possible = run_symmetric_if_possible
         self.verbose = verbose
         self.spanwise_resolution = spanwise_resolution
-        self.spanwise_spacing = spanwise_spacing
+        self.spanwise_spacing_function = spanwise_spacing_function
         self.vortex_core_radius = vortex_core_radius
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
-        if self.run_symmetric_if_possible:
-            try:
-                self.run_symmetric = (  # Satisfies assumptions
-                        self.op_point.beta == 0 and
-                        self.op_point.p == 0 and
-                        self.op_point.r == 0 and
-                        self.airplane.is_entirely_symmetric()
-                )
-            except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
-                pass
+        if run_symmetric_if_possible:
+            raise NotImplementedError("LL with symmetry detection not yet implemented!")
+            # try:
+            #     self.run_symmetric = (  # Satisfies assumptions
+            #             self.op_point.beta == 0 and
+            #             self.op_point.p == 0 and
+            #             self.op_point.r == 0 and
+            #             self.airplane.is_entirely_symmetric()
+            #     )
+            # except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
+            #     pass
 
-    def run(self) -> Dict:
+    def run(self) -> Dict[str, Any]:
         self.setup_mesh()
-
+        self.calculate_vortex_strengths()
+        self._calculate_forces()
+        return {
+            "F_g": self.force_total_geometry,
+            "F_b": self.force_total_body,
+            "F_w": self.force_total_wind,
+            "M_g": self.moment_total_geometry,
+            "M_b": self.moment_total_body,
+            "M_w": self.moment_total_wind,
+            "CL": self.CL,
+            "CD": self.CD,
+            "CDi": self.CDi,
+            "CDp": self.CDp,
+            "CY": self.CY,
+            "Cl": self.Cl,
+            "Cm": self.Cm,
+            "Cn": self.Cn,
+        }
     def setup_mesh(self) -> None:
         if self.verbose:
             print("Meshing...")
@@ -111,19 +129,13 @@ class LiftingLine(ImplicitAnalysis):
         CL_functions = []
         CD_functions = []
         CM_functions = []
-        wing_ids = []
+        is_trailing_edge = []
 
-        for wing_id, wing in enumerate(self.airplane.wings):  # Iterate through wings
-            for xsec_a, xsec_b in zip(
-                    wing.xsecs[:-1],
-                    wing.xsecs[1:]
-            ):  # Iterate through pairs of wing cross sections
-                wing_section = Wing(
-                    xsecs=[
-                        xsec_a,  # Inside cross section
-                        xsec_b  # Outside cross section
-                    ],
-                    symmetric=wing.symmetric
+        for wing in self.airplane.wings:
+            if self.spanwise_resolution > 1:
+                wing_section = wing.subdivide_sections(
+                    ratio=self.spanwise_resolution,
+                    spacing_function=self.spanwise_spacing_function
                 )
 
                 points, faces = wing_section.mesh_thin_surface(
@@ -135,17 +147,19 @@ class LiftingLine(ImplicitAnalysis):
                 back_left_vertices.append(points[faces[:, 1], :])
                 back_right_vertices.append(points[faces[:, 2], :])
                 front_right_vertices.append(points[faces[:, 3], :])
-                wing_ids.append(wing_id * np.ones(len(faces)))
+                chordwise_resolution = 1
+                is_trailing_edge.append(
+                    (np.arange(len(faces)) + 1) % chordwise_resolution == 0
+                )
 
-                if self.spanwise_spacing == 'uniform':
-                    y_nondim_vertices = np.linspace(0, 1, self.spanwise_resolution + 1)
-                elif self.spanwise_spacing == 'cosine':
-                    y_nondim_vertices = np.cosspace(0, 1, self.spanwise_resolution + 1)
-                else:
-                    raise Exception("Bad value of `LiftingLine.spanwise_spacing`!")
-
+            for xsec_a, xsec_b in zip(
+                    wing.xsecs[:-1],
+                    wing.xsecs[1:]
+            ):
+                y_nondim_vertices = self.spanwise_spacing_function(0, 1, self.spanwise_resolution + 1)
                 y_nondim = (y_nondim_vertices[:-1] + y_nondim_vertices[1:]) / 2
-                if wing_section.symmetric:
+
+                if wing.symmetric:
                     y_nondim = np.concatenate([y_nondim, y_nondim])
 
                 for y_nondim_i in y_nondim:
@@ -168,11 +182,64 @@ class LiftingLine(ImplicitAnalysis):
                         xsec_b.airfoil.CM_function(alpha, Re, mach) * (y_nondim)
                     )
 
+        # for wing in self.airplane.wings:  # Iterate through wings
+        #     for xsec_a, xsec_b in zip(
+        #             wing.xsecs[:-1],
+        #             wing.xsecs[1:]
+        #     ):  # Iterate through pairs of wing cross sections
+        #         wing_section = Wing(
+        #             xsecs=[
+        #                 xsec_a,  # Inside cross section
+        #                 xsec_b  # Outside cross section
+        #             ],
+        #             symmetric=wing.symmetric
+        #         )
+        #
+        #         points, faces = wing_section.mesh_thin_surface(
+        #             method="quad",
+        #             chordwise_resolution=1,
+        #             add_camber=False
+        #         )
+        #         front_left_vertices.append(points[faces[:, 0], :])
+        #         back_left_vertices.append(points[faces[:, 1], :])
+        #         back_right_vertices.append(points[faces[:, 2], :])
+        #         front_right_vertices.append(points[faces[:, 3], :])
+        #         chordwise_resolution = 1
+        #         is_trailing_edge.append(
+        #              (np.arange(len(faces)) + 1) % chordwise_resolution == 0
+        #         )
+        #
+        #         y_nondim_vertices = self.spanwise_spacing_function(0, 1, self.spanwise_resolution + 1)
+        #
+        #         y_nondim = (y_nondim_vertices[:-1] + y_nondim_vertices[1:]) / 2
+        #         if wing_section.symmetric:
+        #             y_nondim = np.concatenate([y_nondim, y_nondim])
+        #
+        #         for y_nondim_i in y_nondim:
+        #             CL_functions.append(
+        #                 lambda alpha, Re, mach,
+        #                        xsec_a=xsec_a, xsec_b=xsec_b, y_nondim=y_nondim_i:
+        #                 xsec_a.airfoil.CL_function(alpha, Re, mach) * (1 - y_nondim) +
+        #                 xsec_b.airfoil.CL_function(alpha, Re, mach) * (y_nondim)
+        #             )
+        #             CD_functions.append(
+        #                 lambda alpha, Re, mach,
+        #                        xsec_a=xsec_a, xsec_b=xsec_b, y_nondim=y_nondim_i:
+        #                 xsec_a.airfoil.CD_function(alpha, Re, mach) * (1 - y_nondim) +
+        #                 xsec_b.airfoil.CD_function(alpha, Re, mach) * (y_nondim)
+        #             )
+        #             CM_functions.append(
+        #                 lambda alpha, Re, mach,
+        #                        xsec_a=xsec_a, xsec_b=xsec_b, y_nondim=y_nondim_i:
+        #                 xsec_a.airfoil.CM_function(alpha, Re, mach) * (1 - y_nondim) +
+        #                 xsec_b.airfoil.CM_function(alpha, Re, mach) * (y_nondim)
+        #             )
+
         front_left_vertices = np.concatenate(front_left_vertices)
         back_left_vertices = np.concatenate(back_left_vertices)
         back_right_vertices = np.concatenate(back_right_vertices)
         front_right_vertices = np.concatenate(front_right_vertices)
-        wing_ids = np.concatenate(wing_ids)
+        is_trailing_edge = np.concatenate(is_trailing_edge)
 
         ### Compute panel statistics
         diag1 = front_right_vertices - back_left_vertices
@@ -181,6 +248,7 @@ class LiftingLine(ImplicitAnalysis):
         cross_norm = np.linalg.norm(cross, axis=1)
         normal_directions = cross / tall(cross_norm)
         areas = cross_norm / 2
+        self.n_panels = len(areas)
 
         # Compute the location of points of interest on each panel
         left_vortex_vertices = 0.75 * front_left_vertices + 0.25 * back_left_vertices
@@ -198,10 +266,10 @@ class LiftingLine(ImplicitAnalysis):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
+        self.is_trailing_edge = is_trailing_edge
         self.CL_functions = CL_functions  # type: list # of callables
         self.CD_functions = CD_functions  # type: list # of callables
         self.CM_functions = CM_functions  # type: list # of callables
-        self.wing_ids = wing_ids
         self.normal_directions = normal_directions
         self.areas = areas
         self.left_vortex_vertices = left_vortex_vertices
@@ -290,20 +358,47 @@ class LiftingLine(ImplicitAnalysis):
             vortex_strengths=vortex_strengths,
         )
 
+
         rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             points
         )
 
         freestream_velocities = self.steady_freestream_velocity + rotation_freestream_velocities
 
-        V = V_induced + freestream_velocities
+        if self.airplane.fuselages:
+            V_induced_fuselage = self.calculate_fuselage_influences(
+                 points=self.vortex_centers
+            )
+            V = V_induced + V_induced_fuselage + freestream_velocities
+        else:
+            V = V_induced + freestream_velocities
         return V
 
-    def compute_solution_quantities(self, vortex_strengths: np.ndarray) -> Dict:
+    # def _setup_geometry(self):
+    #     if self.verbose:
+    #         print("Calculating the vortex center velocity influence matrix...")
+    #     self.V_induced_centers = self.get_induced_velocity_at_points(self.vortex_centers)
+    #
+    #     if self.verbose:
+    #         print("Calculating fuselage influences...")
+    #     self.beta = (1 - self.op_point.mach()) ** 1/2
+    #     self.fuselage_velocities = self.calculate_fuselage_influences(self.vortex_centers)
+    #     # TODO do this
+
+    def calculate_vortex_strengths(self):
+        if self.verbose:
+            print("Calculating vortex strengths...")
+
+        # n_panels = len(self.vortex_centers)
+        # Set up implicit solve (explicit is not possible for general nonlinear problem)
+        vortex_strengths = self.opti.variable(init_guess=np.zeros(shape=self.n_panels))
+
+        # Find velocities
         velocities = self.get_velocity_at_points(
             points=self.vortex_centers,
             vortex_strengths=vortex_strengths
-        )
+        )  # TODO just a reminder, fuse added here
+
         velocity_magnitudes = np.linalg.norm(velocities, axis=1)
         velocity_directions = velocities / tall(velocity_magnitudes)
 
@@ -316,9 +411,20 @@ class LiftingLine(ImplicitAnalysis):
                 self.chords /
                 self.op_point.atmosphere.kinematic_viscosity()
         )  # TODO add multiply by cos_sweeps
-        machs = velocity_magnitudes / self.op_point.atmosphere.speed_of_sound()
+        machs = velocity_magnitudes / self.op_point.atmosphere.speed_of_sound()    # TODO incorporate sweep effects here!
 
-        CLs, CDs, CMs = [
+        # Get perpendicular parameters
+        # self.cos_sweeps = (
+        #                           self.velocities[:, 0] * -self.local_forward_directions[:, 0] +
+        #                           self.velocities[:, 1] * -self.local_forward_directions[:, 1] +
+        #                           self.velocities[:, 2] * -self.local_forward_directions[:, 2]
+        #                   ) / self.velocity_magnitudes
+        # self.chord_perpendiculars = self.chords * self.cos_sweeps
+        # self.velocity_magnitude_perpendiculars = self.velocity_magnitudes * self.cos_sweeps
+        # self.Res_perpendicular = self.Res * self.cos_sweeps
+        # self.machs_perpendicular = self.machs * self.cos_sweeps
+
+        CLs, self.CDs, CMs = [
             np.array([
                 polar_function(
                     alpha=alphas[i],
@@ -337,19 +443,375 @@ class LiftingLine(ImplicitAnalysis):
         Vi_cross_li = np.cross(velocities, self.vortex_bound_leg, axis=1)
         Vi_cross_li_magnitudes = np.linalg.norm(Vi_cross_li, axis=1)
 
+        # self.opti.subject_to([
+        #     self.vortex_strengths * Vi_cross_li_magnitudes ==
+        #     0.5 * self.velocity_magnitude_perpendiculars ** 2 * self.CL_locals * self.areas
+        # ])
         residuals = (
                 vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitudes ** 2 / self.areas - CLs
         )
+        self.opti.subject_to([
+            residuals == 0
+        ])
 
-        return {
-            "residuals": residuals,
-            "alphas"   : alphas,
-            "Res"      : Res,
-            "machs"    : machs,
-            "CLs"      : CLs,
-            "CDs"      : CDs,
-            "CMs"      : CMs,
-        }
+        sol = self.opti.solve(verbose=False)
+        self.vortex_strengths = sol.value(vortex_strengths)
+
+    def _calculate_forces(self):
+
+        if self.verbose:
+            print("Calculating induced forces on each panel...")
+        # Calculate the induced velocity at the center of each bound leg
+
+        velocities = self.get_velocity_at_points(
+            points=self.vortex_centers,
+            vortex_strengths=self.vortex_strengths
+        )  # TODO just a reminder, fuse added here
+
+        velocity_magnitudes = np.linalg.norm(velocities, axis=1)
+
+        # Calculate forces_inviscid_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES,
+        # not WIND AXES or BODY AXES.
+        Vi_cross_li = np.cross(velocities, self.vortex_bound_leg, axis=1)
+        forces_inviscid_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
+        moments_inviscid_geometry = np.cross(
+            np.add(self.vortex_centers, -wide(np.array(self.airplane.xyz_ref))),
+            forces_inviscid_geometry
+        )
+
+        # Calculate total forces and moments
+        force_inviscid_geometry = np.sum(forces_inviscid_geometry, axis=0)
+        moment_inviscid_geometry = np.sum(moments_inviscid_geometry, axis=0)
+
+        if self.verbose:
+            print("Calculating profile forces and moments...")
+        forces_profile_geometry = (
+                (0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes))
+                * self.CDs * self.areas
+        )
+        moments_profile_geometry = np.cross(
+            np.add(self.vortex_centers, -wide(np.array(self.airplane.xyz_ref))),
+            forces_profile_geometry
+        )
+        force_profile_geometry = np.sum(forces_profile_geometry, axis=0)
+        moment_profile_geometry = np.sum(moments_profile_geometry, axis=0)
+
+        # Inviscid force from geometry to body and wind axes
+        force_inviscid_body = self.op_point.convert_axes(
+            force_inviscid_geometry[0], force_inviscid_geometry[1], force_inviscid_geometry[2],
+            from_axes="geometry",
+            to_axes="body"
+        )
+        force_inviscid_wind = self.op_point.convert_axes(
+            force_inviscid_body[0], force_inviscid_body[1], force_inviscid_body[2],
+            from_axes="body",
+            to_axes="wind"
+        )
+        moment_inviscid_body = self.op_point.convert_axes(
+            moment_profile_geometry[0], moment_profile_geometry[1], moment_profile_geometry[2],
+            from_axes="geometry",
+            to_axes="body"
+        )
+        moment_inviscid_wind = self.op_point.convert_axes(
+            moment_inviscid_body[0], moment_inviscid_body[1], moment_inviscid_body[2],
+            from_axes="body",
+            to_axes="wind"
+        )
+
+        # Profile force from geometry to body and wind axes
+        force_profile_body = self.op_point.convert_axes(
+            force_profile_geometry[0], force_profile_geometry[1], force_profile_geometry[2],
+            from_axes="geometry",
+            to_axes="body"
+        )
+        force_profile_wind = self.op_point.convert_axes(
+            force_profile_body[0], force_profile_body[1], force_profile_body[2],
+            from_axes="body",
+            to_axes="wind"
+        )
+        moment_profile_body = self.op_point.convert_axes(
+            moment_profile_geometry[0], moment_profile_geometry[1], moment_profile_geometry[2],
+            from_axes="geometry",
+            to_axes="body"
+        )
+        moment_profile_wind = self.op_point.convert_axes(
+            moment_profile_body[0], moment_profile_body[1], moment_profile_body[2],
+            from_axes="body",
+            to_axes="wind"
+        )
+
+        if self.verbose:
+            print("Calculating total forces and moments...")
+        self.force_total_geometry = force_inviscid_geometry + force_profile_geometry
+        self.force_total_body = force_inviscid_body + force_profile_body
+        self.force_total_wind = force_inviscid_wind + force_profile_wind
+        self.moment_total_geometry = moment_inviscid_geometry + moment_profile_geometry
+        self.moment_total_body = moment_inviscid_body + moment_profile_body
+        self.moment_total_wind = moment_inviscid_wind + moment_profile_wind
+
+        ### Save things to the instance for later access
+        L = -self.force_total_wind[2]
+        D = -self.force_total_wind[0]
+        Di = -force_inviscid_wind[0]
+        Dp = -force_profile_wind[0]
+        Y = self.force_total_wind[1]
+        l_b = self.moment_total_body[0]
+        m_b = self.moment_total_body[1]
+        n_b = self.moment_total_body[2]
+
+        # Calculate nondimensional forces
+        q = self.op_point.dynamic_pressure()
+        s_ref = self.airplane.s_ref
+        b_ref = self.airplane.b_ref
+        c_ref = self.airplane.c_ref
+        self.CL = L / q / s_ref
+        self.CD = D / q / s_ref
+        self.CDi = Di / q / s_ref
+        self.CDp = Dp / q / s_ref
+        self.CY = Y / q / s_ref
+        self.Cl = l_b / q / s_ref / b_ref
+        self.Cm = m_b / q / s_ref / c_ref
+        self.Cn = n_b / q / s_ref / b_ref
+
+    def calculate_fuselage_influences(self, points: np.ndarray) -> np.ndarray:
+
+        this_fuse_centerline_points = []  # fuselage sections centres
+        this_fuse_radii = []
+
+        for fuse in self.airplane.fuselages:  # iterating through the airplane fuselages
+            for xsec_num in range(len(fuse.xsecs)): # iterating for the current fuselage sections
+                this_fuse_xsec = fuse.xsecs[xsec_num]
+                this_fuse_centerline_points.append(this_fuse_xsec.xyz_c)
+                this_fuse_radii.append(this_fuse_xsec.width / 2)
+
+        this_fuse_centerline_points = np.stack(
+                                        this_fuse_centerline_points,
+                                        axis=0)
+        this_fuse_centerline_points = (this_fuse_centerline_points[1:, :] +
+                                       this_fuse_centerline_points[:-1, :]) / 2
+        this_fuse_radii = np.array(this_fuse_radii)
+
+        areas = np.pi * this_fuse_radii ** 2
+        freestream_x_component = self.op_point.compute_freestream_velocity_geometry_axes()[
+            0]  # TODO add in rotation corrections, add in doublets for alpha
+        sigmas = freestream_x_component * np.diff(areas)
+
+        u_induced_fuse, v_induced_fuse, w_induced_fuse = calculate_induced_velocity_point_source(
+             x_field=tall(points[:, 0]),
+             y_field=tall(points[:, 1]),
+             z_field=tall(points[:, 2]),
+             x_source=wide(this_fuse_centerline_points[:, 0]),
+             y_source=wide(this_fuse_centerline_points[:, 1]),
+             z_source=wide(this_fuse_centerline_points[:, 2]),
+             sigma=wide(sigmas),
+             viscous_radius=0.0001,
+        )
+
+        # # Compressibility
+        # dy *= self.beta
+        # dz *= self.beta
+
+        # For now, we're just putting a point source at the middle... # TODO make an actual line source
+        # source_x = (dx[:, 1:] + dx[:, :-1]) / 2
+        # source_y = (dy[:, 1:] + dy[:, :-1]) / 2
+        # source_z = (dz[:, 1:] + dz[:, :-1]) / 2
+
+        fuselage_influences_x = np.sum(u_induced_fuse, axis=1)
+        fuselage_influences_y = np.sum(v_induced_fuse, axis=1)
+        fuselage_influences_z = np.sum(w_induced_fuse, axis=1)
+
+        fuselage_influences = np.stack([
+            fuselage_influences_x, fuselage_influences_y, fuselage_influences_z
+        ], axis=1)
+
+        return fuselage_influences
+
+    # def get_induced_velocity_at_point(self, point):
+    #     if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
+    #         print("WARNING: This method should only be used after a solution has been found!!!\n"
+    #               "Running anyway for debugging purposes - this is likely to not work.")
+    #
+    #     Vij_x, Vij_y, Vij_z = self.calculate_Vij(point)
+    #
+    #     # vortex_strengths = self.opti.debug.value(self.vortex_strengths)
+    #
+    #     Vi_x = Vij_x @ self.vortex_strengths
+    #     Vi_y = Vij_y @ self.vortex_strengths
+    #     Vi_z = Vij_z @ self.vortex_strengths
+    #
+    #     get = lambda x: self.opti.debug.value(x)
+    #     Vi_x = get(Vi_x)
+    #     Vi_y = get(Vi_y)
+    #     Vi_z = get(Vi_z)
+    #
+    #     Vi = np.vstack((Vi_x, Vi_y, Vi_z)).T
+    #
+    #     return Vi
+
+    # def get_velocity_at_point(self, point):
+    #     # Input: a Nx3 numpy array of points that you would like to know the velocities at.
+    #     # Output: a Nx3 numpy array of the velocities at those points.
+    #
+    #     Vi = self.get_induced_velocity_at_point(point) + self.calculate_fuselage_influences(
+    #         point)  # TODO just a reminder, fuse added here
+    #
+    #     freestream = self.op_point.compute_freestream_velocity_geometry_axes()
+    #
+    #     V = cas.transpose(cas.transpose(Vi) + freestream)
+    #     return V
+    #
+    # def calculate_streamlines(self,
+    #                           seed_points=None,  # will be auto-calculated if not specified
+    #                           n_steps=100,  # minimum of 2
+    #                           length=None  # will be auto-calculated if not specified
+    #                           ):
+    #
+    #     if length is None:
+    #         length = self.airplane.c_ref * 5
+    #     if seed_points is None:
+    #         seed_points = (self.back_left_vertices + self.back_right_vertices) / 2
+    #
+    #     # Resolution
+    #     length_per_step = length / n_steps
+    #
+    #     # Initialize
+    #     streamlines = [seed_points]
+    #
+    #     # Iterate
+    #     for step_num in range(1, n_steps):
+    #         update_amount = self.get_velocity_at_point(streamlines[-1])
+    #         norm_update_amount = np.sqrt(
+    #             update_amount[:, 0] ** 2 + update_amount[:, 1] ** 2 + update_amount[:, 2] ** 2)
+    #         update_amount = length_per_step * update_amount / norm_update_amount
+    #         streamlines.append(streamlines[-1] + update_amount)
+    #
+    #     self.streamlines = streamlines
+    #
+    # def draw(self,
+    #          data_to_plot=None,
+    #          data_name=None,
+    #          show=True,
+    #          draw_streamlines=True,
+    #          recalculate_streamlines=False
+    #          ):
+    #     """
+    #     Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
+    #     To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
+    #     :return:
+    #     """
+    #
+    #     # TODO rewrite me
+    #
+    #     if self.verbose:
+    #         print("Drawing...")
+    #
+    #     if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
+    #         print("WARNING: This method should only be used after a solution has been found!\n"
+    #               "Running anyway for debugging purposes - this is likely to not work...")
+    #
+    #     # Do substitutions
+    #     get = lambda x: self.opti.debug.value(x)
+    #     front_left_vertices = get(self.front_left_vertices)
+    #     front_right_vertices = get(self.front_right_vertices)
+    #     back_left_vertices = get(self.back_left_vertices)
+    #     back_right_vertices = get(self.back_right_vertices)
+    #     left_vortex_vertices = get(self.left_vortex_vertices)
+    #     right_vortex_vertices = get(self.right_vortex_vertices)
+    #     self.vortex_strengths = get(self.vortex_strengths)
+    #     try:
+    #         data_to_plot = get(data_to_plot)
+    #     except NotImplementedError:
+    #         pass
+    #
+    #     if data_to_plot is None:
+    #         CL_locals = get(self.CL_locals)
+    #         chords = get(self.chords)
+    #         c_ref = get(self.airplane.c_ref)
+    #         data_name = "Cl * c / c_ref"
+    #         data_to_plot = CL_locals * chords / c_ref
+    #
+    #     from aerosandbox.visualization.plotly_Figure3D import Figure3D
+    #     fig = Figure3D()
+    #
+    #     for index in range(len(front_left_vertices)):
+    #         fig.add_quad(
+    #             points=[
+    #                 front_left_vertices[index, :],
+    #                 front_right_vertices[index, :],
+    #                 back_right_vertices[index, :],
+    #                 back_left_vertices[index, :],
+    #             ],
+    #             intensity=data_to_plot[index],
+    #             outline=True,
+    #             mirror=self.run_symmetric and self.use_symmetry[index]
+    #         )
+    #         fig.add_line(
+    #             points=[
+    #                 left_vortex_vertices[index],
+    #                 right_vortex_vertices[index]
+    #             ],
+    #             mirror=self.run_symmetric and self.use_symmetry[index]
+    #         )
+    #
+    #     # Fuselages
+    #     for fuse_id in range(len(self.airplane.fuselages)):
+    #         fuse = self.airplane.fuselages[fuse_id]  # type: Fuselage
+    #
+    #         for xsec_id in range(len(fuse.xsecs) - 1):
+    #             xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
+    #             xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
+    #
+    #             r1 = xsec_1.equivalent_radius(preserve="area")
+    #             r2 = xsec_2.equivalent_radius(preserve="area")
+    #             points_1 = np.zeros((fuse.circumferential_panels, 3))
+    #             points_2 = np.zeros((fuse.circumferential_panels, 3))
+    #             for point_index in range(fuse.circumferential_panels):
+    #                 from aerosandbox.numpy import rotation_matrix_3D
+    #                 rot = rotation_matrix_3D(
+    #                     2 * cas.pi * point_index / fuse.circumferential_panels,
+    #                     [1, 0, 0],
+    #                     True
+    #                 ).toarray()
+    #                 points_1[point_index, :] = rot @ np.array([0, 0, r1])
+    #                 points_2[point_index, :] = rot @ np.array([0, 0, r2])
+    #             points_1 = points_1 + np.array(xsec_1.xyz_c).reshape(-1)
+    #             points_2 = points_2 + np.array(xsec_2.xyz_c).reshape(-1)
+    #
+    #             for point_index in range(fuse.circumferential_panels):
+    #
+    #                 fig.add_quad(points=[
+    #                     points_1[(point_index) % fuse.circumferential_panels, :],
+    #                     points_1[(point_index + 1) % fuse.circumferential_panels, :],
+    #                     points_2[(point_index + 1) % fuse.circumferential_panels, :],
+    #                     points_2[(point_index) % fuse.circumferential_panels, :],
+    #                 ],
+    #                     intensity=0,
+    #                 )
+    #
+    #     if draw_streamlines:
+    #         if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
+    #             if self.verbose:
+    #                 print("Calculating streamlines...")
+    #             seed_points = (back_left_vertices + back_right_vertices) / 2
+    #             self.calculate_streamlines(seed_points=seed_points)
+    #
+    #         if self.verbose:
+    #             print("Parsing streamline data...")
+    #         n_streamlines = self.streamlines[0].shape[0]
+    #         n_timesteps = len(self.streamlines)
+    #
+    #         for streamlines_num in range(n_streamlines):
+    #             streamline = [self.streamlines[ts][streamlines_num, :] for ts in range(n_timesteps)]
+    #             fig.add_streamline(
+    #                 points=streamline,
+    #                 mirror=self.run_symmetric
+    #             )
+    #
+    #     return fig.draw(
+    #         show=show,
+    #         colorbar_title=data_name
+    #     )
+
 
     def calculate_streamlines(self,
                               seed_points: np.ndarray = None,
@@ -387,8 +849,8 @@ class LiftingLine(ImplicitAnalysis):
         if length is None:
             length = self.airplane.c_ref * 5
         if seed_points is None:
-            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge]
-            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge]
+            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge.astype(bool)]
+            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge.astype(bool)]
             N_streamlines_target = 200
             seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
 
@@ -431,6 +893,8 @@ class LiftingLine(ImplicitAnalysis):
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
         :return:
         """
+        if show_kwargs is None:
+            show_kwargs = {}
 
         if c is None:
             c = self.vortex_strengths
@@ -463,12 +927,13 @@ class LiftingLine(ImplicitAnalysis):
             return fig.draw(
                 show=show,
                 colorbar_title=colorbar_label
+                **show_kwargs,
             )
 
         elif backend == "pyvista":
             import pyvista as pv
             plotter = pv.Plotter()
-            plotter.title = "ASB VortexLatticeMethod"
+            plotter.title = "ASB LiftingLineMethod"
             plotter.add_axes()
             plotter.show_grid(color='gray')
 
@@ -510,692 +975,45 @@ class LiftingLine(ImplicitAnalysis):
                     )
 
             if show:
-                plotter.show()
+                plotter.show(**show_kwargs)
             return plotter
-
-
-
 
         else:
             raise ValueError("Bad value of `backend`!")
 
-    def _setup_geometry(self):
-        if self.verbose:
-            print("Calculating the vortex center velocity influence matrix...")
-        self.Vij_x, self.Vij_y, self.Vij_z = self.calculate_Vij(self.vortex_centers)
+if __name__ == '__main__':
+    ### Import Vanilla Airplane
+    import aerosandbox as asb
 
-        if self.verbose:
-            print("Calculating fuselage influences...")
-        self.beta = np.sqrt(1 - self.op_point.mach())
-        self.fuselage_velocities = self.calculate_fuselage_influences(self.vortex_centers)
-        # TODO do this
+    from pathlib import Path
 
-    def _setup_operating_point(self):
-        if self.verbose:
-            print("Calculating the freestream influence...")
-        self.steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
-        self.rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            self.vortex_centers)
-        self.freestream_velocities = cas.transpose(self.steady_freestream_velocity + cas.transpose(
-            self.rotation_freestream_velocities))  # Nx3, represents the freestream velocity at each vortex center
+    geometry_folder = Path(__file__).parent / "test_aero_3D" / "geometries"
 
-    def _calculate_vortex_strengths(self):
-        if self.verbose:
-            print("Calculating vortex strengths...")
+    import sys
 
-        # Set up implicit solve (explicit is not possible for general nonlinear problem)
-        self.vortex_strengths = self.opti.variable(self.n_panels)
-        self.opti.set_initial(self.vortex_strengths, 0)
+    sys.path.insert(0, str(geometry_folder))
 
-        # Find velocities
-        self.induced_velocities = cas.horzcat(
-            self.Vij_x @ self.vortex_strengths,
-            self.Vij_y @ self.vortex_strengths,
-            self.Vij_z @ self.vortex_strengths,
-        )
-        self.velocities = self.induced_velocities + self.freestream_velocities + self.fuselage_velocities  # TODO just a reminder, fuse added here
-        self.alpha_eff_perpendiculars = cas.atan2(
-            (
-                    self.velocities[:, 0] * self.normal_directions[:, 0] +
-                    self.velocities[:, 1] * self.normal_directions[:, 1] +
-                    self.velocities[:, 2] * self.normal_directions[:, 2]
-            ),
-            (
-                    self.velocities[:, 0] * -self.local_forward_directions[:, 0] +
-                    self.velocities[:, 1] * -self.local_forward_directions[:, 1] +
-                    self.velocities[:, 2] * -self.local_forward_directions[:, 2]
-            )
-        ) * (180 / cas.pi)
-        self.velocity_magnitudes = np.sqrt(
-            self.velocities[:, 0] ** 2 +
-            self.velocities[:, 1] ** 2 +
-            self.velocities[:, 2] ** 2
-        )
-        self.Res = self.op_point.density * self.velocity_magnitudes * self.chords / self.op_point.viscosity
-        self.machs = [self.op_point.mach] * self.n_panels  # TODO incorporate sweep effects here!
+    from UniqueWing import airplane as vanilla
 
-        # Get perpendicular parameters
-        self.cos_sweeps = (
-                                  self.velocities[:, 0] * -self.local_forward_directions[:, 0] +
-                                  self.velocities[:, 1] * -self.local_forward_directions[:, 1] +
-                                  self.velocities[:, 2] * -self.local_forward_directions[:, 2]
-                          ) / self.velocity_magnitudes
-        self.chord_perpendiculars = self.chords * self.cos_sweeps
-        self.velocity_magnitude_perpendiculars = self.velocity_magnitudes * self.cos_sweeps
-        self.Res_perpendicular = self.Res * self.cos_sweeps
-        self.machs_perpendicular = self.machs * self.cos_sweeps
+    ### Do the AVL run
+    LL = NlLiftingLine(
+        airplane=vanilla,
+        op_point=asb.OperatingPoint(
+            atmosphere=asb.Atmosphere(altitude=0),
+            velocity=10,
+            alpha=0,
+            beta=0,
+            p=0,
+            q=0,
+            r=0,
+        ),
+        verbose = True,
+        spanwise_resolution = 3,
+    )
 
-        CL_locals = [
-            self.CL_functions[i](
-                alpha=self.alpha_eff_perpendiculars[i],
-                Re=self.Res_perpendicular[i],
-                mach=self.machs_perpendicular[i],
-            ) for i in range(self.n_panels)
-        ]
-        CDp_locals = [
-            self.CD_functions[i](
-                alpha=self.alpha_eff_perpendiculars[i],
-                Re=self.Res_perpendicular[i],
-                mach=self.machs_perpendicular[i],
-            ) for i in range(self.n_panels)
-        ]
-        Cm_locals = [
-            self.CM_functions[i](
-                alpha=self.alpha_eff_perpendiculars[i],
-                Re=self.Res_perpendicular[i],
-                mach=self.machs_perpendicular[i],
-            ) for i in range(self.n_panels)
-        ]
-        self.CL_locals = cas.vertcat(*CL_locals)
-        self.CDp_locals = cas.vertcat(*CDp_locals)
-        self.Cm_locals = cas.vertcat(*Cm_locals)
+    res = LL.run()
 
-        self.Vi_cross_li = cas.horzcat(
-            self.velocities[:, 1] * self.vortex_bound_leg[:, 2] - self.velocities[:, 2] * self.vortex_bound_leg[:, 1],
-            self.velocities[:, 2] * self.vortex_bound_leg[:, 0] - self.velocities[:, 0] * self.vortex_bound_leg[:, 2],
-            self.velocities[:, 0] * self.vortex_bound_leg[:, 1] - self.velocities[:, 1] * self.vortex_bound_leg[:, 0],
-        )
-        Vi_cross_li_magnitudes = np.sqrt(
-            self.Vi_cross_li[:, 0] ** 2 +
-            self.Vi_cross_li[:, 1] ** 2 +
-            self.Vi_cross_li[:, 2] ** 2
-        )
+    for k, v in res.items():
+        print(f"{str(k).rjust(10)} : {v}")
 
-        # self.opti.subject_to([
-        #     self.vortex_strengths * Vi_cross_li_magnitudes ==
-        #     0.5 * self.velocity_magnitude_perpendiculars ** 2 * self.CL_locals * self.areas
-        # ])
-        self.opti.subject_to([
-            self.vortex_strengths * Vi_cross_li_magnitudes * 2 / self.velocity_magnitude_perpendiculars ** 2 / self.areas ==
-            self.CL_locals
-        ])
-
-    def _calculate_forces(self):
-
-        if self.verbose:
-            print("Calculating induced forces...")
-        self.forces_inviscid_geometry = self.op_point.density * self.Vi_cross_li * self.vortex_strengths
-        force_total_inviscid_geometry = cas.vertcat(
-            cas.sum1(self.forces_inviscid_geometry[:, 0]),
-            cas.sum1(self.forces_inviscid_geometry[:, 1]),
-            cas.sum1(self.forces_inviscid_geometry[:, 2]),
-        )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        if self.run_symmetric:
-            forces_inviscid_geometry_from_symmetry = cas.if_else(
-                self.use_symmetry,
-                reflect_over_XZ_plane(self.forces_inviscid_geometry),
-                0
-            )
-            force_total_inviscid_geometry_from_symmetry = cas.vertcat(
-                cas.sum1(forces_inviscid_geometry_from_symmetry[:, 0]),
-                cas.sum1(forces_inviscid_geometry_from_symmetry[:, 1]),
-                cas.sum1(forces_inviscid_geometry_from_symmetry[:, 2]),
-            )
-            force_total_inviscid_geometry += force_total_inviscid_geometry_from_symmetry
-        self.force_total_inviscid_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_total_inviscid_geometry
-
-        if self.verbose:
-            print("Calculating induced moments...")
-        self.moments_inviscid_geometry = cas.cross(
-            cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
-            self.forces_inviscid_geometry
-        )
-        moment_total_inviscid_geometry = cas.vertcat(
-            cas.sum1(self.moments_inviscid_geometry[:, 0]),
-            cas.sum1(self.moments_inviscid_geometry[:, 1]),
-            cas.sum1(self.moments_inviscid_geometry[:, 2]),
-        )  # Remember, this is in GEOMETRY AXES, not WIND AXES or BODY AXES.
-        if self.run_symmetric:
-            moments_inviscid_geometry_from_symmetry = cas.if_else(
-                self.use_symmetry,
-                -reflect_over_XZ_plane(self.moments_inviscid_geometry),
-                0
-            )
-            moment_total_inviscid_geometry_from_symmetry = cas.vertcat(
-                cas.sum1(moments_inviscid_geometry_from_symmetry[:, 0]),
-                cas.sum1(moments_inviscid_geometry_from_symmetry[:, 1]),
-                cas.sum1(moments_inviscid_geometry_from_symmetry[:, 2]),
-            )
-            moment_total_inviscid_geometry += moment_total_inviscid_geometry_from_symmetry
-        self.moment_total_inviscid_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_total_inviscid_geometry
-
-        if self.verbose:
-            print("Calculating profile forces...")
-        self.forces_profile_geometry = (
-                (0.5 * self.op_point.density * self.velocity_magnitudes * self.velocities)
-                * self.CDp_locals * self.areas
-        )
-        force_total_profile_geometry = cas.vertcat(
-            cas.sum1(self.forces_profile_geometry[:, 0]),
-            cas.sum1(self.forces_profile_geometry[:, 1]),
-            cas.sum1(self.forces_profile_geometry[:, 2]),
-        )
-        if self.run_symmetric:
-            forces_profile_geometry_from_symmetry = cas.if_else(
-                self.use_symmetry,
-                reflect_over_XZ_plane(self.forces_profile_geometry),
-                0
-            )
-            force_total_profile_geometry_from_symmetry = cas.vertcat(
-                cas.sum1(forces_profile_geometry_from_symmetry[:, 0]),
-                cas.sum1(forces_profile_geometry_from_symmetry[:, 1]),
-                cas.sum1(forces_profile_geometry_from_symmetry[:, 2]),
-            )
-            force_total_profile_geometry += force_total_profile_geometry_from_symmetry
-        self.force_total_profile_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ force_total_profile_geometry
-
-        if self.verbose:
-            print("Calculating profile moments...")
-        self.moments_profile_geometry = cas.cross(
-            cas.transpose(cas.transpose(self.vortex_centers) - self.airplane.xyz_ref),
-            self.forces_profile_geometry
-        )
-        moment_total_profile_geometry = cas.vertcat(
-            cas.sum1(self.moments_profile_geometry[:, 0]),
-            cas.sum1(self.moments_profile_geometry[:, 1]),
-            cas.sum1(self.moments_profile_geometry[:, 2]),
-        )
-        if self.run_symmetric:
-            moments_profile_geometry_from_symmetry = cas.if_else(
-                self.use_symmetry,
-                -reflect_over_XZ_plane(self.moments_profile_geometry),
-                0
-            )
-            moment_total_profile_geometry_from_symmetry = cas.vertcat(
-                cas.sum1(moments_profile_geometry_from_symmetry[:, 0]),
-                cas.sum1(moments_profile_geometry_from_symmetry[:, 1]),
-                cas.sum1(moments_profile_geometry_from_symmetry[:, 2]),
-            )
-            moment_total_profile_geometry += moment_total_profile_geometry_from_symmetry
-        self.moment_total_profile_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_total_profile_geometry
-
-        if self.verbose:
-            print("Calculating pitching moments...")
-        bound_leg_YZ = self.vortex_bound_leg
-        bound_leg_YZ[:, 0] = 0
-        self.moments_pitching_geometry = (
-                (0.5 * self.op_point.density * self.velocity_magnitudes ** 2) *
-                self.Cm_locals * self.chords ** 2 * bound_leg_YZ
-        )
-        moment_total_pitching_geometry = cas.vertcat(
-            cas.sum1(self.moments_pitching_geometry[:, 0]),
-            cas.sum1(self.moments_pitching_geometry[:, 1]),
-            cas.sum1(self.moments_pitching_geometry[:, 2]),
-        )
-        if self.run_symmetric:
-            moments_pitching_geometry_from_symmetry = cas.if_else(
-                self.use_symmetry,
-                -reflect_over_XZ_plane(self.moments_pitching_geometry),
-                0
-            )
-            moment_total_pitching_geometry_from_symmetry = cas.vertcat(
-                cas.sum1(moments_pitching_geometry_from_symmetry[:, 0]),
-                cas.sum1(moments_pitching_geometry_from_symmetry[:, 1]),
-                cas.sum1(moments_pitching_geometry_from_symmetry[:, 2]),
-            )
-            moment_total_pitching_geometry += moment_total_pitching_geometry_from_symmetry
-        self.moment_total_pitching_wind = cas.transpose(
-            self.op_point.compute_rotation_matrix_wind_to_geometry()) @ moment_total_pitching_geometry
-
-        if self.verbose:
-            print("Calculating total forces and moments...")
-        self.force_total_wind = self.force_total_inviscid_wind + self.force_total_profile_wind
-        self.moment_total_wind = self.moment_total_inviscid_wind + self.moment_total_profile_wind
-
-        # Calculate dimensional forces
-        self.lift_force = -self.force_total_wind[2]
-        self.drag_force = -self.force_total_wind[0]
-        self.drag_force_induced = -self.force_total_inviscid_wind[0]
-        self.drag_force_profile = -self.force_total_profile_wind[0]
-        self.side_force = self.force_total_wind[1]
-
-        # Calculate nondimensional forces
-        q = self.op_point.dynamic_pressure()
-        s_ref = self.airplane.s_ref
-        b_ref = self.airplane.b_ref
-        c_ref = self.airplane.c_ref
-        self.CL = self.lift_force / q / s_ref
-        self.CD = self.drag_force / q / s_ref
-        self.CDi = self.drag_force_induced / q / s_ref
-        self.CDp = self.drag_force_profile / q / s_ref
-        self.CY = self.side_force / q / s_ref
-        self.Cl = self.moment_total_wind[0] / q / s_ref / b_ref
-        self.Cm = self.moment_total_wind[1] / q / s_ref / c_ref
-        self.Cn = self.moment_total_wind[2] / q / s_ref / b_ref
-
-        # Solves divide by zero error
-        self.CL_over_CD = cas.if_else(self.CD == 0, 0, self.CL / self.CD)
-
-    def calculate_Vij(self,
-                      points,  # type: cas.MX
-                      align_trailing_vortices_with_freestream=True,  # Otherwise, aligns with x-axis
-                      ):
-        # Calculates Vij, the velocity influence matrix (First index is collocation point number, second index is vortex number).
-        # points: the list of points (Nx3) to calculate the velocity influence at.
-
-        n_points = points.shape[0]
-
-        # Make a and b vectors.
-        # a: Vector from all collocation points to all horseshoe vortex left vertices.
-        #   # First index is collocation point #, second is vortex #.
-        # b: Vector from all collocation points to all horseshoe vortex right vertices.
-        #   # First index is collocation point #, second is vortex #.
-        a_x = points[:, 0] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 0]), n_points, 1)
-        a_y = points[:, 1] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 1]), n_points, 1)
-        a_z = points[:, 2] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 2]), n_points, 1)
-        b_x = points[:, 0] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 0]), n_points, 1)
-        b_y = points[:, 1] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 1]), n_points, 1)
-        b_z = points[:, 2] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 2]), n_points, 1)
-
-        if align_trailing_vortices_with_freestream:
-            freestream_direction = self.op_point.compute_freestream_direction_geometry_axes()
-            u_x = freestream_direction[0]
-            u_y = freestream_direction[1]
-            u_z = freestream_direction[2]
-        else:
-            u_x = 1
-            u_y = 0
-            u_z = 0
-
-        # Do some useful arithmetic
-        a_cross_b_x = a_y * b_z - a_z * b_y
-        a_cross_b_y = a_z * b_x - a_x * b_z
-        a_cross_b_z = a_x * b_y - a_y * b_x
-        a_dot_b = a_x * b_x + a_y * b_y + a_z * b_z
-
-        a_cross_u_x = a_y * u_z - a_z * u_y
-        a_cross_u_y = a_z * u_x - a_x * u_z
-        a_cross_u_z = a_x * u_y - a_y * u_x
-        a_dot_u = a_x * u_x + a_y * u_y + a_z * u_z
-
-        b_cross_u_x = b_y * u_z - b_z * u_y
-        b_cross_u_y = b_z * u_x - b_x * u_z
-        b_cross_u_z = b_x * u_y - b_y * u_x
-        b_dot_u = b_x * u_x + b_y * u_y + b_z * u_z
-
-        norm_a = np.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
-        norm_b = np.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
-        norm_a_inv = 1 / norm_a
-        norm_b_inv = 1 / norm_b
-
-        # Handle the special case where the collocation point is along a bound vortex leg
-        a_cross_b_squared = (
-                a_cross_b_x ** 2 +
-                a_cross_b_y ** 2 +
-                a_cross_b_z ** 2
-        )
-        a_dot_b = cas.if_else(a_cross_b_squared < 1e-8, a_dot_b + 1, a_dot_b)
-        a_cross_u_squared = (
-                a_cross_u_x ** 2 +
-                a_cross_u_y ** 2 +
-                a_cross_u_z ** 2
-        )
-        a_dot_u = cas.if_else(a_cross_u_squared < 1e-8, a_dot_u + 1, a_dot_u)
-        b_cross_u_squared = (
-                b_cross_u_x ** 2 +
-                b_cross_u_y ** 2 +
-                b_cross_u_z ** 2
-        )
-        b_dot_u = cas.if_else(b_cross_u_squared < 1e-8, b_dot_u + 1, b_dot_u)
-
-        # Calculate Vij
-        term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
-        term2 = norm_a_inv / (norm_a - a_dot_u)
-        term3 = norm_b_inv / (norm_b - b_dot_u)
-
-        Vij_x = 1 / (4 * np.pi) * (
-                a_cross_b_x * term1 +
-                a_cross_u_x * term2 -
-                b_cross_u_x * term3
-        )
-        Vij_y = 1 / (4 * np.pi) * (
-                a_cross_b_y * term1 +
-                a_cross_u_y * term2 -
-                b_cross_u_y * term3
-        )
-        Vij_z = 1 / (4 * np.pi) * (
-                a_cross_b_z * term1 +
-                a_cross_u_z * term2 -
-                b_cross_u_z * term3
-        )
-        if self.run_symmetric:  # If it's a symmetric problem, you've got to add the other side's influence.
-
-            # If it is symmetric, re-do it with flipped coordinates
-
-            # Make a and b vectors.
-            # a: Vector from all collocation points to all horseshoe vortex left vertices.
-            #   # First index is collocation point #, second is vortex #.
-            # b: Vector from all collocation points to all horseshoe vortex right vertices.
-            #   # First index is collocation point #, second is vortex #.
-            a_x = points[:, 0] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 0]), n_points, 1)
-            a_y = points[:, 1] - cas.repmat(cas.transpose(-self.right_vortex_vertices[:, 1]), n_points, 1)
-            a_z = points[:, 2] - cas.repmat(cas.transpose(self.right_vortex_vertices[:, 2]), n_points, 1)
-            b_x = points[:, 0] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 0]), n_points, 1)
-            b_y = points[:, 1] - cas.repmat(cas.transpose(-self.left_vortex_vertices[:, 1]), n_points, 1)
-            b_z = points[:, 2] - cas.repmat(cas.transpose(self.left_vortex_vertices[:, 2]), n_points, 1)
-
-            # Do some useful arithmetic
-            a_cross_b_x = a_y * b_z - a_z * b_y
-            a_cross_b_y = a_z * b_x - a_x * b_z
-            a_cross_b_z = a_x * b_y - a_y * b_x
-            a_dot_b = a_x * b_x + a_y * b_y + a_z * b_z
-
-            a_cross_u_x = a_y * u_z - a_z * u_y
-            a_cross_u_y = a_z * u_x - a_x * u_z
-            a_cross_u_z = a_x * u_y - a_y * u_x
-            a_dot_u = a_x * u_x + a_y * u_y + a_z * u_z
-
-            b_cross_u_x = b_y * u_z - b_z * u_y
-            b_cross_u_y = b_z * u_x - b_x * u_z
-            b_cross_u_z = b_x * u_y - b_y * u_x
-            b_dot_u = b_x * u_x + b_y * u_y + b_z * u_z
-
-            norm_a = np.sqrt(a_x ** 2 + a_y ** 2 + a_z ** 2)
-            norm_b = np.sqrt(b_x ** 2 + b_y ** 2 + b_z ** 2)
-            norm_a_inv = 1 / norm_a
-            norm_b_inv = 1 / norm_b
-
-            # Handle the special case where the collocation point is along a bound vortex leg
-            a_cross_b_squared = (
-                    a_cross_b_x ** 2 +
-                    a_cross_b_y ** 2 +
-                    a_cross_b_z ** 2
-            )
-            a_dot_b = cas.if_else(a_cross_b_squared < 1e-8, a_dot_b + 1, a_dot_b)
-            a_cross_u_squared = (
-                    a_cross_u_x ** 2 +
-                    a_cross_u_y ** 2 +
-                    a_cross_u_z ** 2
-            )
-            a_dot_u = cas.if_else(a_cross_u_squared < 1e-8, a_dot_u + 1, a_dot_u)
-            b_cross_u_squared = (
-                    b_cross_u_x ** 2 +
-                    b_cross_u_y ** 2 +
-                    b_cross_u_z ** 2
-            )
-            b_dot_u = cas.if_else(b_cross_u_squared < 1e-8, b_dot_u + 1, b_dot_u)
-
-            # Calculate Vij
-            term1 = (norm_a_inv + norm_b_inv) / (norm_a * norm_b + a_dot_b)
-            term2 = norm_a_inv / (norm_a - a_dot_u)
-            term3 = norm_b_inv / (norm_b - b_dot_u)
-
-            Vij_x_from_symmetry = 1 / (4 * np.pi) * (
-                    a_cross_b_x * term1 +
-                    a_cross_u_x * term2 -
-                    b_cross_u_x * term3
-            )
-            Vij_y_from_symmetry = 1 / (4 * np.pi) * (
-                    a_cross_b_y * term1 +
-                    a_cross_u_y * term2 -
-                    b_cross_u_y * term3
-            )
-            Vij_z_from_symmetry = 1 / (4 * np.pi) * (
-                    a_cross_b_z * term1 +
-                    a_cross_u_z * term2 -
-                    b_cross_u_z * term3
-            )
-
-            Vij_x += cas.transpose(cas.if_else(self.use_symmetry, cas.transpose(Vij_x_from_symmetry), 0))
-            Vij_y += cas.transpose(cas.if_else(self.use_symmetry, cas.transpose(Vij_y_from_symmetry), 0))
-            Vij_z += cas.transpose(cas.if_else(self.use_symmetry, cas.transpose(Vij_z_from_symmetry), 0))
-
-        return Vij_x, Vij_y, Vij_z
-
-    def calculate_fuselage_influences(self,
-                                      points,  # type: cas.MX
-                                      ):
-        n_points = points.shape[0]
-
-        fuselage_influences_x = cas.GenDM_zeros(n_points, 1)
-        fuselage_influences_y = cas.GenDM_zeros(n_points, 1)
-        fuselage_influences_z = cas.GenDM_zeros(n_points, 1)
-
-        for fuse_num in range(len(self.airplane.fuselages)):
-            this_fuse_centerline_points = self.fuse_centerline_points[fuse_num]
-            this_fuse_radii = self.fuse_radii[fuse_num]
-
-            dx = points[:, 0] - cas.repmat(cas.transpose(this_fuse_centerline_points[:, 0]), n_points, 1)
-            dy = points[:, 1] - cas.repmat(cas.transpose(this_fuse_centerline_points[:, 1]), n_points, 1)
-            dz = points[:, 2] - cas.repmat(cas.transpose(this_fuse_centerline_points[:, 2]), n_points, 1)
-
-            # # Compressibility
-            # dy *= self.beta
-            # dz *= self.beta
-
-            # For now, we're just putting a point source at the middle... # TODO make an actual line source
-            source_x = (dx[:, 1:] + dx[:, :-1]) / 2
-            source_y = (dy[:, 1:] + dy[:, :-1]) / 2
-            source_z = (dz[:, 1:] + dz[:, :-1]) / 2
-
-            areas = cas.pi * this_fuse_radii ** 2
-            freestream_x_component = self.op_point.compute_freestream_velocity_geometry_axes()[
-                0]  # TODO add in rotation corrections, add in doublets for alpha
-            strengths = freestream_x_component * cas.diff(areas)
-
-            denominator = 4 * cas.pi * (source_x ** 2 + source_y ** 2 + source_z ** 2) ** 1.5
-            u = cas.transpose(strengths * cas.transpose(source_x / denominator))
-            v = cas.transpose(strengths * cas.transpose(source_y / denominator))
-            w = cas.transpose(strengths * cas.transpose(source_z / denominator))
-
-            fuselage_influences_x += cas.sum2(u)
-            fuselage_influences_y += cas.sum2(v)
-            fuselage_influences_z += cas.sum2(w)
-
-        fuselage_influences = cas.horzcat(
-            fuselage_influences_x,
-            fuselage_influences_y,
-            fuselage_influences_z
-        )
-
-        return fuselage_influences
-
-    def get_induced_velocity_at_point(self, point):
-        if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
-            print("WARNING: This method should only be used after a solution has been found!!!\n"
-                  "Running anyway for debugging purposes - this is likely to not work.")
-
-        Vij_x, Vij_y, Vij_z = self.calculate_Vij(point)
-
-        # vortex_strengths = self.opti.debug.value(self.vortex_strengths)
-
-        Vi_x = Vij_x @ self.vortex_strengths
-        Vi_y = Vij_y @ self.vortex_strengths
-        Vi_z = Vij_z @ self.vortex_strengths
-
-        get = lambda x: self.opti.debug.value(x)
-        Vi_x = get(Vi_x)
-        Vi_y = get(Vi_y)
-        Vi_z = get(Vi_z)
-
-        Vi = np.vstack((Vi_x, Vi_y, Vi_z)).T
-
-        return Vi
-
-    def get_velocity_at_point(self, point):
-        # Input: a Nx3 numpy array of points that you would like to know the velocities at.
-        # Output: a Nx3 numpy array of the velocities at those points.
-
-        Vi = self.get_induced_velocity_at_point(point) + self.calculate_fuselage_influences(
-            point)  # TODO just a reminder, fuse added here
-
-        freestream = self.op_point.compute_freestream_velocity_geometry_axes()
-
-        V = cas.transpose(cas.transpose(Vi) + freestream)
-        return V
-
-    def calculate_streamlines(self,
-                              seed_points=None,  # will be auto-calculated if not specified
-                              n_steps=100,  # minimum of 2
-                              length=None  # will be auto-calculated if not specified
-                              ):
-
-        if length is None:
-            length = self.airplane.c_ref * 5
-        if seed_points is None:
-            seed_points = (self.back_left_vertices + self.back_right_vertices) / 2
-
-        # Resolution
-        length_per_step = length / n_steps
-
-        # Initialize
-        streamlines = [seed_points]
-
-        # Iterate
-        for step_num in range(1, n_steps):
-            update_amount = self.get_velocity_at_point(streamlines[-1])
-            norm_update_amount = np.sqrt(
-                update_amount[:, 0] ** 2 + update_amount[:, 1] ** 2 + update_amount[:, 2] ** 2)
-            update_amount = length_per_step * update_amount / norm_update_amount
-            streamlines.append(streamlines[-1] + update_amount)
-
-        self.streamlines = streamlines
-
-    def draw(self,
-             data_to_plot=None,
-             data_name=None,
-             show=True,
-             draw_streamlines=True,
-             recalculate_streamlines=False
-             ):
-        """
-        Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
-        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
-        :return:
-        """
-
-        # TODO rewrite me
-
-        if self.verbose:
-            print("Drawing...")
-
-        if self.verbose and not self.opti.return_status() == 'Solve_Succeeded':
-            print("WARNING: This method should only be used after a solution has been found!\n"
-                  "Running anyway for debugging purposes - this is likely to not work...")
-
-        # Do substitutions
-        get = lambda x: self.opti.debug.value(x)
-        front_left_vertices = get(self.front_left_vertices)
-        front_right_vertices = get(self.front_right_vertices)
-        back_left_vertices = get(self.back_left_vertices)
-        back_right_vertices = get(self.back_right_vertices)
-        left_vortex_vertices = get(self.left_vortex_vertices)
-        right_vortex_vertices = get(self.right_vortex_vertices)
-        self.vortex_strengths = get(self.vortex_strengths)
-        try:
-            data_to_plot = get(data_to_plot)
-        except NotImplementedError:
-            pass
-
-        if data_to_plot is None:
-            CL_locals = get(self.CL_locals)
-            chords = get(self.chords)
-            c_ref = get(self.airplane.c_ref)
-            data_name = "Cl * c / c_ref"
-            data_to_plot = CL_locals * chords / c_ref
-
-        from aerosandbox.visualization.plotly_Figure3D import Figure3D
-        fig = Figure3D()
-
-        for index in range(len(front_left_vertices)):
-            fig.add_quad(
-                points=[
-                    front_left_vertices[index, :],
-                    front_right_vertices[index, :],
-                    back_right_vertices[index, :],
-                    back_left_vertices[index, :],
-                ],
-                intensity=data_to_plot[index],
-                outline=True,
-                mirror=self.run_symmetric and self.use_symmetry[index]
-            )
-            fig.add_line(
-                points=[
-                    left_vortex_vertices[index],
-                    right_vortex_vertices[index]
-                ],
-                mirror=self.run_symmetric and self.use_symmetry[index]
-            )
-
-        # Fuselages
-        for fuse_id in range(len(self.airplane.fuselages)):
-            fuse = self.airplane.fuselages[fuse_id]  # type: Fuselage
-
-            for xsec_id in range(len(fuse.xsecs) - 1):
-                xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
-                xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
-
-                r1 = xsec_1.equivalent_radius(preserve="area")
-                r2 = xsec_2.equivalent_radius(preserve="area")
-                points_1 = np.zeros((fuse.circumferential_panels, 3))
-                points_2 = np.zeros((fuse.circumferential_panels, 3))
-                for point_index in range(fuse.circumferential_panels):
-                    from aerosandbox.numpy import rotation_matrix_3D
-                    rot = rotation_matrix_3D(
-                        2 * cas.pi * point_index / fuse.circumferential_panels,
-                        [1, 0, 0],
-                        True
-                    ).toarray()
-                    points_1[point_index, :] = rot @ np.array([0, 0, r1])
-                    points_2[point_index, :] = rot @ np.array([0, 0, r2])
-                points_1 = points_1 + np.array(xsec_1.xyz_c).reshape(-1)
-                points_2 = points_2 + np.array(xsec_2.xyz_c).reshape(-1)
-
-                for point_index in range(fuse.circumferential_panels):
-
-                    fig.add_quad(points=[
-                        points_1[(point_index) % fuse.circumferential_panels, :],
-                        points_1[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index + 1) % fuse.circumferential_panels, :],
-                        points_2[(point_index) % fuse.circumferential_panels, :],
-                    ],
-                        intensity=0,
-                    )
-
-        if draw_streamlines:
-            if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
-                if self.verbose:
-                    print("Calculating streamlines...")
-                seed_points = (back_left_vertices + back_right_vertices) / 2
-                self.calculate_streamlines(seed_points=seed_points)
-
-            if self.verbose:
-                print("Parsing streamline data...")
-            n_streamlines = self.streamlines[0].shape[0]
-            n_timesteps = len(self.streamlines)
-
-            for streamlines_num in range(n_streamlines):
-                streamline = [self.streamlines[ts][streamlines_num, :] for ts in range(n_timesteps)]
-                fig.add_streamline(
-                    points=streamline,
-                    mirror=self.run_symmetric
-                )
-
-        return fig.draw(
-            show=show,
-            colorbar_title=data_name
-        )
+    LL.draw()
