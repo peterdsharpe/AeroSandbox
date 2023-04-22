@@ -341,7 +341,6 @@ class ImplicitAnalysis(AeroSandboxObject):
             super().__init__(self.message)
 
     @property
-    @abstractmethod
     def opti(self):
         try:
             return self._opti
@@ -349,12 +348,10 @@ class ImplicitAnalysis(AeroSandboxObject):
             raise self.ImplicitAnalysisInitError()
 
     @opti.setter
-    @abstractmethod
     def opti(self, value: Opti):
         self._opti = value
 
     @property
-    @abstractmethod
     def opti_provided(self):
         try:
             return self._opti_provided
@@ -362,6 +359,5 @@ class ImplicitAnalysis(AeroSandboxObject):
             raise self.ImplicitAnalysisInitError()
 
     @opti_provided.setter
-    @abstractmethod
     def opti_provided(self, value: bool):
         self._opti_provided = value
