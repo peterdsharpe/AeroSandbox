@@ -682,14 +682,17 @@ class Airfoil(Polygon):
         plt.legend(
             title="Reynolds Number",
             labels=[eng_string(Re) for Re in Res],
-            ncols=2,
+            ncol=2,
+            # Note: `ncol` is old syntax; preserves backwards-compatibility with matplotlib 3.5.x.
+            # New matplotlib versions use `ncols` instead.
             fontsize=8,
             loc='lower right'
         )
 
         if show:
             p.show_plot(
-                f"Polar Functions for {self.name} Airfoil"
+                f"Polar Functions for {self.name} Airfoil",
+                legend=False,
             )
 
     def local_camber(self,
