@@ -422,7 +422,7 @@ class OperatingPoint(AeroSandboxObject):
             axis="y",
         )
         beta_rotation = np.rotation_matrix_3D(
-            angle=np.radians(-self.beta),
+            angle=np.radians(self.beta),
             axis="z",
         )
         axes_flip = np.rotation_matrix_3D(
