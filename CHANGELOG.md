@@ -34,6 +34,12 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+#### 4.0.8
+
+-----
+
+# Latest (master / release), and previous versions
+
 #### 4.0.7
 
 - BREAKING: Critical bugfix in `asb.OperatingPoint.compute_rotation_matrix_wind_to_geometry()`, which in turn affects `asb.OperatingPoint.compute_freestream_direction_geometry_axes()`: A sign was reversed in the rotation matrix calculation for the sideslip angle beta. This resulted in the sign convention for beta (sideslip) being flipped, ultimately causing a sign error. In practice, this bug affected `asb.VortexLatticeMethod` analyses with nonzero beta, causing flipped signs for `CY, Cn`, etc. This bug was introduced in AeroSandbox v4.0.0, and was present in all versions of AeroSandbox v4.0.0-v4.0.6. This bug did not affect `asb.AeroBuildup` or any other aerodynamics analysis methods. (Thanks to @carlitador for catching this.)
@@ -44,10 +50,6 @@ Also, for at least one version before a breaking change, AeroSandbox development
 - Added `asb.Airfoil.plot_polars()` to make polar functions more interpretable.
 - Added an optional `color` attribute to `Wing`, `Fuselage`, and `Propulsor` objects, which can be set during instantiation or manually set afterwards. This will control the color that the component is drawn with during visualization; currently only works with the `Airplane.draw_wireframe()` and `Airplane.draw_three_view()` methods, but will be extended to others later.
 - Updated pinned CasADi version to 3.6.1. Note that CasADi MUST be v3.6.0 or higher, otherwise automatic differentiation errors may occur due to undefined primitives. This shouldn't be an issue, as this is now pinned in ASB's setup.py.
-
------
-
-# Latest (master / release), and previous versions
 
 #### 4.0.6
 
