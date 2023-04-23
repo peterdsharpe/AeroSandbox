@@ -224,7 +224,7 @@ class AeroBuildup(ExplicitAnalysis):
         else:
             raise ValueError(
                 "Airplane must have a reference area and length attributes.\n"
-                "(`Airplane.s_ref`, `Airplane.c_ref`, `airplane.b_ref`)"
+                "(`Airplane.s_ref`, `Airplane.c_ref`, `Airplane.b_ref`)"
             )
 
         ##### Add nondimensional forces, and nondimensional quantities.
