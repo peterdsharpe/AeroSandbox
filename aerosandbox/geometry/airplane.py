@@ -465,7 +465,8 @@ class Airplane(AeroSandboxObject):
                     plot_line(
                         line,
                         symmetric=wing.symmetric,
-                        linewidth=thick_linewidth if i == 0 or i == len(wing.xsecs) - 1 else thin_linewidth
+                        linewidth=thick_linewidth if i == 0 or i == len(wing.xsecs) - 1 else thin_linewidth,
+                        color=color_to_use
                     )
 
         ##### Fuselages
