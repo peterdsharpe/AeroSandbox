@@ -17,10 +17,13 @@ class Propulsor(AeroSandboxObject):
                  xyz_normal: Union[np.ndarray, List[float]] = None,
                  radius: float = 1.,
                  length: float = 0.,
+                 color: Optional[Union[str, Tuple[float]]] = None,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  ):
         """
         Defines a new propulsor object.
+
+        TODO add docs
         """
         ### Set defaults
         if xyz_c is None:
@@ -35,6 +38,7 @@ class Propulsor(AeroSandboxObject):
         self.xyz_normal = np.array(xyz_normal)
         self.radius = radius
         self.length = length
+        self.color = color
         self.analysis_specific_options = analysis_specific_options
 
     def __repr__(self) -> str:
@@ -137,6 +141,7 @@ class Propulsor(AeroSandboxObject):
         new_propulsor = copy.deepcopy(self)
         new_propulsor.xyz_c = new_propulsor.xyz_c + np.array(xyz)
         return new_propulsor
+
 
 if __name__ == '__main__':
     p_disk = Propulsor(radius=3)

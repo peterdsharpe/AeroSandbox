@@ -19,7 +19,7 @@ def spy(
     """
     try:
         matrix = matrix.toarray()
-    except:
+    except Exception:
         pass
     abs_m = np.abs(matrix)
     sparsity_pattern = abs_m >= 1e-16

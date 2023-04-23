@@ -38,7 +38,7 @@ opti.solver('ipopt', p_opts, s_opts)
 
 try:
     sol = opti.solve()
-except:
+except Exception:
     print("Warning: Failed!")
     sol = opti.debug
 

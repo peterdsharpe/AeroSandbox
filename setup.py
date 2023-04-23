@@ -56,7 +56,7 @@ setup(
     install_requires=[
         'numpy >= 1.20.0',
         'scipy >= 1.7.0',
-        'casadi >= 3.6.0',
+        'casadi ~= 3.6.0',
         'pandas >= 1',
         'matplotlib >= 3.3.1',
         'seaborn >= 0.11',

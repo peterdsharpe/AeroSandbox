@@ -67,3 +67,27 @@ def minimum(
             x1,
             x2,
         )
+
+
+def max(x):
+    """
+    Return the maximum of an array or maximum along an axis.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.max.html
+    """
+    if not is_casadi_type(x, recursive=True):
+        return _onp.max(x)
+    else:
+        return _cas.mmax(x)
+
+
+def min(x):
+    """
+    Return the minimum of an array or minimum along an axis.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.min.html
+    """
+    if not is_casadi_type(x, recursive=True):
+        return _onp.min(x)
+    else:
+        return _cas.mmin(x)

@@ -29,17 +29,33 @@ class Fuselage(AeroSandboxObject):
     def __init__(self,
                  name: Optional[str] = "Untitled",
                  xsecs: List['FuselageXSec'] = None,
+                 color: Optional[Union[str, Tuple[float]]] = None,
                  analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
                  **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
                  ):
         """
-        Defines a new fuselage.
+        Defines a new fuselage object.
 
         Args:
 
             name: Name of the fuselage [optional]. It can help when debugging to give each fuselage a sensible name.
 
             xsecs: A list of fuselage cross-sections ("xsecs") in the form of FuselageXSec objects.
+
+            color: Determines what color to use for this component when drawing the airplane. Optional,
+                and for visualization purposes only. If left as None, a default color will be chosen at the time of
+                drawing (usually, black). Can be any color format recognized by MatPlotLib, namely:
+
+                * A RGB or RGBA tuple of floats in the interval [0, 1], e.g., (0.1, 0.2, 0.5, 0.3)
+
+                * Case-insensitive hex RGB or RGBA string, e.g., '#0f0f0f80'
+
+                * String representation of float value in closed interval [0, 1] for grayscale values, e.g.,
+                    '0.8' for light gray
+
+                * Single character shorthand notation for basic colors, e.g., 'k' -> black, 'r' -> red
+
+                See also: https://matplotlib.org/stable/tutorials/colors/colors.html
 
             analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
             that should be passed on to specific analyses and associated with this specific geometry object.
@@ -74,6 +90,7 @@ class Fuselage(AeroSandboxObject):
         ### Initialize
         self.name = name
         self.xsecs = xsecs
+        self.color = color
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated parameters

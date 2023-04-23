@@ -1,12 +1,12 @@
 import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 import copy
 from typing import Dict, Any
 import casadi as cas
 
 
-class AeroSandboxObject:
+class AeroSandboxObject(ABC):
 
     @abstractmethod
     def __init__(self):
@@ -15,12 +15,6 @@ class AeroSandboxObject:
         (extend) it instead.
         """
         pass
-
-    @abstractmethod
-    def __repr__(self):
-        """
-        Forces all subclasses to implement a __repr__ method, which is good practice.
-        """
 
     def copy(self):
         """
@@ -331,7 +325,7 @@ class ImplicitAnalysis(AeroSandboxObject):
 
             if not self.opti_provided and not self.opti.x.shape == (0, 1):
                 sol = self.opti.solve()
-                self.substitute_solution(sol)
+                self.__dict__ = sol(self.__dict__)
 
         return init_wrapped
 
@@ -347,7 +341,6 @@ class ImplicitAnalysis(AeroSandboxObject):
             super().__init__(self.message)
 
     @property
-    @abstractmethod
     def opti(self):
         try:
             return self._opti
@@ -355,12 +348,10 @@ class ImplicitAnalysis(AeroSandboxObject):
             raise self.ImplicitAnalysisInitError()
 
     @opti.setter
-    @abstractmethod
     def opti(self, value: Opti):
         self._opti = value
 
     @property
-    @abstractmethod
     def opti_provided(self):
         try:
             return self._opti_provided
@@ -368,6 +359,5 @@ class ImplicitAnalysis(AeroSandboxObject):
             raise self.ImplicitAnalysisInitError()
 
     @opti_provided.setter
-    @abstractmethod
     def opti_provided(self, value: bool):
         self._opti_provided = value

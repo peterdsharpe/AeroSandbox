@@ -8,6 +8,7 @@ from aerosandbox.library.aerodynamics import transonic
 import aerosandbox.library.aerodynamics as aerolib
 import copy
 from typing import Union, List, Dict, Any
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree import softmax_scalefree
 
 
 class AeroBuildup(ExplicitAnalysis):
@@ -83,6 +84,13 @@ class AeroBuildup(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.include_wave_drag = include_wave_drag
 
+    def __repr__(self):
+        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+            f"airplane={self.airplane}",
+            f"op_point={self.op_point}",
+            f"xyz_ref={self.xyz_ref}",
+        ]) + "\n)"
+
     def run(self) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
         """
         Computes the aerodynamic forces and moments on the airplane.
@@ -125,27 +133,33 @@ class AeroBuildup(ExplicitAnalysis):
 
         ### Compute the forces on each component
         aero_components = [
-                              self.wing_aerodynamics(wing=wing) for wing in
+                              self.wing_aerodynamics(
+                                  wing=wing,
+                                  include_induced_drag=False
+                              ) for wing in
                               self.airplane.wings
                           ] + [
-                              self.fuselage_aerodynamics(fuselage=fuse) for fuse in
+                              self.fuselage_aerodynamics(
+                                  fuselage=fuse,
+                                  include_induced_drag=False
+                              ) for fuse in
                               self.airplane.fuselages
                           ]
 
         ### Sum up the forces
         aero_total = {
             "F_g": [0., 0., 0.],
-            "F_b": [0., 0., 0.],
-            "F_w": [0., 0., 0.],
+            # "F_b": [0., 0., 0.],
+            # "F_w": [0., 0., 0.],
             "M_g": [0., 0., 0.],
             "M_b": [0., 0., 0.],
             "M_w": [0., 0., 0.],
-            "L"  : 0.,
-            "Y"  : 0.,
-            "D"  : 0.,
-            "l_b": 0.,
-            "m_b": 0.,
-            "n_b": 0.,
+            # "L"  : 0.,
+            # "Y"  : 0.,
+            # "D"  : 0.,
+            # "l_b": 0.,
+            # "m_b": 0.,
+            # "n_b": 0.,
         }
 
         for k in aero_total.keys():
@@ -157,6 +171,50 @@ class AeroBuildup(ExplicitAnalysis):
                     ]
                 else:
                     aero_total[k] = aero_total[k] + aero_component[k]
+
+        ##### Add in the induced drag
+        Q = self.op_point.dynamic_pressure()
+
+        y_span_effective = softmax_scalefree([comp["y_span_effective"] for comp in aero_components])
+        z_span_effective = softmax_scalefree([comp["z_span_effective"] for comp in aero_components])
+
+        _, sideforce, lift = self.op_point.convert_axes(
+            *aero_total['F_g'],
+            from_axes="geometry",
+            to_axes="wind"
+        )
+
+        D_induced = (
+                lift ** 2 / (Q * np.pi * y_span_effective ** 2 + 1e-100) +
+                sideforce ** 2 / (Q * np.pi * z_span_effective ** 2 + 1e-100)
+        )
+
+        D_induced_g = self.op_point.convert_axes(
+            -D_induced, 0, 0,
+            from_axes="wind",
+            to_axes="geometry"
+        )
+
+        for i in range(3):
+            aero_total['F_g'][i] += D_induced_g[i]
+
+        ##### Add in other metrics
+        aero_total["F_b"] = self.op_point.convert_axes(
+            *aero_total["F_g"],
+            from_axes="geometry",
+            to_axes="body"
+        )
+        aero_total["F_w"] = self.op_point.convert_axes(
+            *aero_total["F_g"],
+            from_axes="geometry",
+            to_axes="wind"
+        )
+        aero_total["L"] = -aero_total["F_w"][2]
+        aero_total["Y"] = aero_total["F_w"][1]
+        aero_total["D"] = -aero_total["F_w"][0]
+        aero_total["l_b"] = aero_total["M_b"][0]
+        aero_total["m_b"] = aero_total["M_b"][1]
+        aero_total["n_b"] = aero_total["M_b"][2]
 
         ##### Compute dimensionalization factor
         if self.airplane.s_ref is not None:
@@ -333,6 +391,7 @@ class AeroBuildup(ExplicitAnalysis):
 
     def wing_aerodynamics(self,
                           wing: Wing,
+                          include_induced_drag: bool = True,
                           ) -> Dict[str, Any]:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a wing in isolation.
@@ -357,6 +416,16 @@ class AeroBuildup(ExplicitAnalysis):
         wing_taper = wing.taper_ratio()
         wing_sweep = wing.mean_sweep_angle()
         wing_dihedral = wing.mean_dihedral_angle()
+
+        ###
+        y_span_effective = wing.span(
+            type="y",
+            include_centerline_distance=True,
+        )
+        z_span_effective = wing.span(
+            type="z",
+            include_centerline_distance=True,
+        )
 
         if wing.symmetric:
             AR_e = wing.aspect_ratio(type="effective")
@@ -598,12 +667,14 @@ class AeroBuildup(ExplicitAnalysis):
             )
 
             ##### Compute induced drag from local CL and full-wing properties (AR, e)
-            sect_CDi = (
-                    sect_CL ** 2 / (np.pi * AR_effective * oswalds_efficiency)
-            )
+            if include_induced_drag:
+                sect_CDi = (
+                        sect_CL ** 2 / (np.pi * AR_effective * oswalds_efficiency)
+                )
 
-            ##### Total the drag.
-            sect_CD = sect_CDp + sect_CDi
+                sect_CD = sect_CDp + sect_CDi
+            else:
+                sect_CD = sect_CDp
 
             ##### Go to dimensional quantities using the area.
             area = areas[sect_id]
@@ -683,22 +754,26 @@ class AeroBuildup(ExplicitAnalysis):
         M_w = op_point.convert_axes(*M_b, from_axes="body", to_axes="wind")
 
         return {
-            "F_g": F_g,
-            "F_b": F_b,
-            "F_w": F_w,
-            "M_g": M_g,
-            "M_b": M_b,
-            "M_w": M_w,
-            "L"  : -F_w[2],
-            "Y"  : F_w[1],
-            "D"  : -F_w[0],
-            "l_b": M_b[0],
-            "m_b": M_b[1],
-            "n_b": M_b[2]
+            "F_g"               : F_g,
+            "F_b"               : F_b,
+            "F_w"               : F_w,
+            "M_g"               : M_g,
+            "M_b"               : M_b,
+            "M_w"               : M_w,
+            "L"                 : -F_w[2],
+            "Y"                 : F_w[1],
+            "D"                 : -F_w[0],
+            "l_b"               : M_b[0],
+            "m_b"               : M_b[1],
+            "n_b"               : M_b[2],
+            "y_span_effective"  : y_span_effective,
+            "z_span_effective"  : z_span_effective,
+            "oswalds_efficiency": oswalds_efficiency
         }
 
     def fuselage_aerodynamics(self,
                               fuselage: Fuselage,
+                              include_induced_drag: bool = True
                               ) -> Dict[str, Any]:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a fuselage in isolation.
@@ -721,12 +796,27 @@ class AeroBuildup(ExplicitAnalysis):
         """
         ##### Alias a few things for convenience
         op_point = self.op_point
-        Re = op_point.reynolds(reference_length=fuselage.length())
+        length = fuselage.length()
+        Re = op_point.reynolds(reference_length=length)
         fuse_options = self.get_options(fuselage)
 
         ##### Compute general fuselage properties
         q = op_point.dynamic_pressure()
         eta = jorgensen_eta(fuselage.fineness_ratio())
+        volume = fuselage.volume()
+
+        y_span_effective = softmax_scalefree(
+            [
+                xsec.width
+                for xsec in fuselage.xsecs
+            ],
+        )
+        z_span_effective = softmax_scalefree(
+            [
+                xsec.height
+                for xsec in fuselage.xsecs
+            ],
+        )
 
         def compute_section_aerodynamics(
                 sect_id: int,
@@ -939,6 +1029,28 @@ class AeroBuildup(ExplicitAnalysis):
             F_g[i] += D_profile_g[i]
             M_g[i] += M_g_from_D_profile[i]
 
+        ### Compute the induced drag, if relevant
+        if include_induced_drag:
+            _, sideforce, lift = op_point.convert_axes(
+                *F_g,
+                from_axes="geometry",
+                to_axes="wind"
+            )
+
+            D_induced = (
+                    lift ** 2 / (op_point.dynamic_pressure() * np.pi * y_span_effective ** 2) +
+                    sideforce ** 2 / (op_point.dynamic_pressure() * np.pi * z_span_effective ** 2)
+            )
+
+            D_induced_g = op_point.convert_axes(
+                -D_induced, 0, 0,
+                from_axes="wind",
+                to_axes="geometry",
+            )
+
+            for i in range(3):
+                F_g[i] += D_induced_g[i]
+
         ##### Convert F_g and M_g to body and wind axes for reporting.
         F_b = op_point.convert_axes(*F_g, from_axes="geometry", to_axes="body")
         F_w = op_point.convert_axes(*F_b, from_axes="body", to_axes="wind")
@@ -946,37 +1058,47 @@ class AeroBuildup(ExplicitAnalysis):
         M_w = op_point.convert_axes(*M_b, from_axes="body", to_axes="wind")
 
         return {
-            "F_g": F_g,
-            "F_b": F_b,
-            "F_w": F_w,
-            "M_g": M_g,
-            "M_b": M_b,
-            "M_w": M_w,
-            "L"  : -F_w[2],
-            "Y"  : F_w[1],
-            "D"  : -F_w[0],
-            "l_b": M_b[0],
-            "m_b": M_b[1],
-            "n_b": M_b[2]
+            "F_g"             : F_g,
+            "F_b"             : F_b,
+            "F_w"             : F_w,
+            "M_g"             : M_g,
+            "M_b"             : M_b,
+            "M_w"             : M_w,
+            "L"               : -F_w[2],
+            "Y"               : F_w[1],
+            "D"               : -F_w[0],
+            "l_b"             : M_b[0],
+            "m_b"             : M_b[1],
+            "n_b"             : M_b[2],
+            "y_span_effective": y_span_effective,
+            "z_span_effective": z_span_effective,
         }
 
 
 if __name__ == '__main__':
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
+    import os
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+    for wing in airplane.wings:
+        for xsec in wing.xsecs:
+            xsec.airfoil.generate_polars(
+                alphas=np.linspace(-12, 12, 25),
+                cache_filename=os.path.join(os.path.expanduser('~'), 'Downloads', 'test', f'{xsec.airfoil.name}.dat')
+            )
 
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(alpha=0, beta=1),
     ).run()
 
-    from aerosandbox.tools.pretty_plots import plt, show_plot, contour, equal, set_ticks
-
     fig, ax = plt.subplots(2, 2)
-    alpha = np.linspace(-10, 10, 1000)
+    alpha = np.linspace(-20, 20, 1000)
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(
-            velocity=100,
+            velocity=10,
             alpha=alpha,
             beta=0
         ),
@@ -986,41 +1108,85 @@ if __name__ == '__main__':
     plt.plot(alpha, aero["CL"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L$")
-    set_ticks(5, 1, 0.5, 0.1)
+    p.set_ticks(5, 1, 0.5, 0.1)
 
     plt.sca(ax[0, 1])
     plt.plot(alpha, aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_D$")
-    set_ticks(5, 1, 0.05, 0.01)
+    p.set_ticks(5, 1, 0.05, 0.01)
     plt.ylim(bottom=0)
 
     plt.sca(ax[1, 0])
     plt.plot(alpha, aero["Cm"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_m$")
-    set_ticks(5, 1, 0.5, 0.1)
+    p.set_ticks(5, 1, 0.5, 0.1)
 
     plt.sca(ax[1, 1])
     plt.plot(alpha, aero["CL"] / aero["CD"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L/C_D$")
-    set_ticks(5, 1, 10, 2)
+    p.set_ticks(5, 1, 10, 2)
 
-    show_plot(
+    p.show_plot(
         "`asb.AeroBuildup` Aircraft Aerodynamics"
     )
 
-    fig, ax = plt.subplots(figsize=(7, 6))
     Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 200), np.linspace(-90, 90, 200))
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(
             velocity=10,
-            alpha=Alpha,
-            beta=Beta
+            alpha=Alpha.flatten(),
+            beta=Beta.flatten()
         ),
     ).run()
-    contour(Beta, Alpha, aero["CL"], levels=30)
-    equal()
-    show_plot("AeroBuildup", r"$\beta$ [deg]", r"$\alpha$ [deg]")
+
+
+    def show():
+        p.set_ticks(15, 5, 15, 5)
+        p.equal()
+        p.show_plot(
+            "`asb.AeroBuildup` Aircraft Aerodynamics",
+            r"Sideslip angle $\beta$ [deg]",
+            r"Angle of Attack $\alpha$ [deg]"
+        )
+
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    p.contour(
+        Beta, Alpha, aero["CL"].reshape(Alpha.shape),
+        colorbar_label="Lift Coefficient $C_L$ [-]",
+        linelabels_format=lambda x: f"{x:.2f}",
+        linelabels_fontsize=7,
+        cmap="RdBu",
+        alpha=0.6
+    )
+    plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"])))
+    show()
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    p.contour(
+        Beta, Alpha, aero["CD"].reshape(Alpha.shape),
+        colorbar_label="Drag Coefficient $C_D$ [-]",
+        linelabels_format=lambda x: f"{x:.2f}",
+        linelabels_fontsize=7,
+        z_log_scale=True,
+        cmap="YlOrRd",
+        alpha=0.6
+    )
+    show()
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    p.contour(
+        Beta, Alpha, (aero["CL"] / aero["CD"]).reshape(Alpha.shape),
+        levels=15,
+        colorbar_label="Finesse $C_L / C_D$ [-]",
+        linelabels_format=lambda x: f"{x:.0f}",
+        linelabels_fontsize=7,
+        cmap="RdBu",
+        alpha=0.6
+    )
+    plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"] / aero["CD"])))
+    show()

@@ -127,6 +127,9 @@ class XFoil(ExplicitAnalysis):
         self.timeout = timeout
         self.working_directory = working_directory
 
+    def __repr__(self):
+        return f"XFoil(airfoil={self.airfoil}, Re={self.Re}, mach={self.mach}, n_crit={self.n_crit})"
+
     def _default_keystrokes(self) -> List[str]:
         """
         Returns a list of XFoil keystrokes that are common to all XFoil runs.
@@ -345,6 +348,43 @@ class XFoil(ExplicitAnalysis):
 
             return output
 
+    def open_interactive(self) -> None:
+        """
+        Opens a new terminal window and runs XFoil interactively. This is useful for detailed analysis or debugging.
+
+        Returns: None
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+
+            ### Alternatively, work in another directory:
+            if self.working_directory is not None:
+                directory = Path(self.working_directory)  # For debugging
+
+            ### Handle the airplane file
+            airfoil_file = "airfoil.dat"
+            self.airfoil.write_dat(directory / airfoil_file)
+
+            ### Open up AVL
+            import sys, os
+            if sys.platform == "win32":
+                # Run XFoil
+                print("Running XFoil interactively in a new window, quit it to continue...")
+
+                command = f'cmd /k "{self.xfoil_command} {airfoil_file}"'
+
+                process = subprocess.Popen(
+                    command,
+                    cwd=directory,
+                    creationflags=subprocess.CREATE_NEW_CONSOLE
+                )
+                process.wait()
+
+            else:
+                raise NotImplementedError(
+                    "Ability to auto-launch interactive XFoil sessions isn't yet implemented for non-Windows OSes."
+                )
+
     def alpha(self,
               alpha: Union[float, np.ndarray],
               start_at: Union[float, None] = 0,
@@ -479,6 +519,7 @@ if __name__ == '__main__':
         Re=1e6,
         hinge_point_x=0.75,
         # verbose=True,
+        # working_directory=str(Path.home() / "Downloads" / "test"),
     )
     result_at_single_alpha = xf.alpha(5)
     result_at_several_CLs = xf.cl([-0.1, 0.5, 0.7, 0.8, 0.9])

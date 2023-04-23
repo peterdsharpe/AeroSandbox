@@ -8,9 +8,10 @@ from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL
 from aerosandbox.library.aerodynamics import transonic
 from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 from scipy import interpolate
-from typing import Callable, Union, Any, Dict
+from typing import Callable, Union, Any, Dict, List
 import json
 from pathlib import Path
+import os
 
 
 class Airfoil(Polygon):
@@ -98,10 +99,10 @@ class Airfoil(Polygon):
         if coordinates is None:  # If no coordinates are given
             try:  # See if it's a NACA airfoil
                 self.coordinates = get_NACA_coordinates(name=self.name)
-            except:
+            except Exception:
                 try:  # See if it's in the UIUC airfoil database
                     self.coordinates = get_UIUC_coordinates(name=self.name)
-                except:
+                except Exception:
                     pass
         else:
 
@@ -173,9 +174,16 @@ class Airfoil(Polygon):
             self.CM_function is other.CM_function,
         ])
 
+    def has_polars(self) -> bool:
+        return (
+                hasattr(self, "CL_function") and
+                hasattr(self, "CD_function") and
+                hasattr(self, "CM_function")
+        )
+
     def generate_polars(self,
-                        alphas=np.linspace(-15, 15, 21),
-                        Res=np.geomspace(1e4, 1e7, 10),
+                        alphas=np.linspace(-13, 13, 27),
+                        Res=np.geomspace(1e3, 1e8, 12),
                         cache_filename: str = None,
                         xfoil_kwargs: Dict[str, Any] = None,
                         unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
@@ -270,6 +278,9 @@ class Airfoil(Polygon):
 
         ### Analyze airfoil with XFoil, if needed
         if data is None:
+            ### If a cache filename is given, ensure that the directory exists.
+            if cache_filename is not None:
+                os.makedirs(os.path.dirname(cache_filename), exist_ok=True)
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
@@ -320,15 +331,19 @@ class Airfoil(Polygon):
         ### Make the interpolators for attached aerodynamics
         from aerosandbox.modeling import UnstructuredInterpolatedModel
 
+        attached_alphas_to_use = (
+            alphas[::2] if len(alphas) > 20 else alphas
+        )
+
         alpha_resample = np.concatenate([
-            np.array([-180, -150, -120, -90, -60, -30]),
-            alphas[::2],
-            np.array([30, 60, 90, 120, 150, 180])
+            np.linspace(-180, attached_alphas_to_use.min(), 10)[:-1],
+            attached_alphas_to_use,
+            np.linspace(attached_alphas_to_use.max(), 180, 10)[1:],
         ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
         Re_resample = np.concatenate([
-            np.array([1e0, 1e1, 1e2, 1e3]),
+            Res.min() / 10 ** np.arange(1, 5)[::-1],
             Res,
-            np.array([1e8, 1e9, 1e10, 1e11, 1e12])
+            Res.max() * 10 ** np.arange(1, 5),
         ])  # This is the list of points that we're going to resample from the XFoil runs for our InterpolatedModel, using an RBF.
 
         x_data = {
@@ -582,6 +597,104 @@ class Airfoil(Polygon):
         self.CD_function = CD_function
         self.CM_function = CM_function
 
+    def plot_polars(self,
+                    alphas: Union[np.ndarray, List[float]] = np.linspace(-20, 20, 500),
+                    Res: Union[np.ndarray, List[float]] = 10 ** np.arange(3, 9),
+                    mach: float = 0.,
+                    show: bool = True,
+                    Re_colors=None,
+                    ) -> None:
+        import matplotlib.pyplot as plt
+        import aerosandbox.tools.pretty_plots as p
+
+        fig, ax = plt.subplots(2, 2, figsize=(8, 7))
+        plt.sca(ax[0, 0])
+        plt.title("Lift Coefficient")
+        plt.xlabel(r"Angle of Attack $\alpha$ [deg]")
+        plt.ylabel(r"Lift Coefficient $C_L$")
+        p.set_ticks(5, 1, 0.5, 0.1)
+        plt.sca(ax[0, 1])
+        plt.title("Drag Coefficient")
+        plt.xlabel(r"Angle of Attack $\alpha$ [deg]")
+        plt.ylabel(r"Drag Coefficient $C_D$")
+        plt.ylim(bottom=0, top=0.05)
+        p.set_ticks(5, 1, 0.01, 0.002)
+        plt.sca(ax[1, 0])
+        plt.title("Moment Coefficient")
+        plt.xlabel(r"Angle of Attack $\alpha$ [deg]")
+        plt.ylabel(r"Moment Coefficient $C_m$")
+        p.set_ticks(5, 1, 0.05, 0.01)
+        plt.sca(ax[1, 1])
+        plt.title("Lift-to-Drag Ratio")
+        plt.xlabel(r"Angle of Attack $\alpha$ [deg]")
+        plt.ylabel(r"Lift-to-Drag Ratio $C_L/C_D$")
+        p.set_ticks(5, 1, 20, 5)
+
+        if Re_colors is None:
+            Re_colors = plt.get_cmap('rainbow')(np.linspace(0, 1, len(Res)))
+            Re_colors = [
+                p.adjust_lightness(color, 0.7)
+                for color in Re_colors
+            ]
+
+        for i, Re in enumerate(Res):
+            kwargs = dict(
+                alpha=alphas,
+                Re=Re,
+                mach=mach
+            )
+
+            plt.sca(ax[0, 0])
+            plt.plot(
+                alphas,
+                self.CL_function(**kwargs),
+                color=Re_colors[i],
+                alpha=0.7
+            )
+
+            plt.sca(ax[0, 1])
+            plt.plot(
+                alphas,
+                self.CD_function(**kwargs),
+                color=Re_colors[i],
+                alpha=0.7
+            )
+
+            plt.sca(ax[1, 0])
+            plt.plot(
+                alphas,
+                self.CM_function(**kwargs),
+                color=Re_colors[i],
+                alpha=0.7
+            )
+
+            plt.sca(ax[1, 1])
+            plt.plot(
+                alphas,
+                self.CL_function(**kwargs) / self.CD_function(**kwargs),
+                color=Re_colors[i],
+                alpha=0.7
+            )
+
+        from aerosandbox.tools.string_formatting import eng_string
+
+        plt.sca(ax[0, 0])
+        plt.legend(
+            title="Reynolds Number",
+            labels=[eng_string(Re) for Re in Res],
+            ncol=2,
+            # Note: `ncol` is old syntax; preserves backwards-compatibility with matplotlib 3.5.x.
+            # New matplotlib versions use `ncols` instead.
+            fontsize=8,
+            loc='lower right'
+        )
+
+        if show:
+            p.show_plot(
+                f"Polar Functions for {self.name} Airfoil",
+                legend=False,
+            )
+
     def local_camber(self,
                      x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
                      ) -> Union[float, np.ndarray]:
@@ -801,7 +914,7 @@ class Airfoil(Polygon):
 
     def repanel(self,
                 n_points_per_side: int = 100,
-                spacing_function_per_side = np.cosspace,
+                spacing_function_per_side=np.cosspace,
                 ) -> 'Airfoil':
         """
         Returns a repaneled copy of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
@@ -1648,5 +1761,11 @@ class Airfoil(Polygon):
 
 
 if __name__ == '__main__':
-    af = Airfoil("naca2412")
-    af.add_control_surface(45).draw()
+    af = Airfoil("ag36")
+    af.draw()
+    af.generate_polars(
+        alphas=np.linspace(-10, 15, 61),
+    )
+    af.plot_polars(
+        Res=np.geomspace(1e4, 1e6, 6)
+    )

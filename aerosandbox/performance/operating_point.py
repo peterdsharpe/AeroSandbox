@@ -422,13 +422,15 @@ class OperatingPoint(AeroSandboxObject):
             axis="y",
         )
         beta_rotation = np.rotation_matrix_3D(
-            angle=np.radians(-self.beta),
+            angle=np.radians(self.beta),
             axis="z",
         )
         axes_flip = np.rotation_matrix_3D(
             angle=np.pi,
             axis="y",
-        )  # Since in geometry axes, X is downstream by convention, while in wind axes, X is upstream by convetion. Same with Z being up/down respectively.
+        )
+        # Since in geometry axes, X is downstream by convention, while in wind axes, X is upstream by convention.
+        # Same with Z being up/down respectively.
 
         r = axes_flip @ alpha_rotation @ beta_rotation  # where "@" is the matrix multiplication operator
 

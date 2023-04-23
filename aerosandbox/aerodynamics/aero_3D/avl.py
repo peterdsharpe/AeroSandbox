@@ -47,7 +47,7 @@ class AVL(ExplicitAnalysis):
             spanwise_spacing="cosine",
             chordwise_resolution=12,
             chordwise_spacing="cosine",
-            component=None, # This is an int
+            component=None,  # This is an int
             no_wake=False,
             no_alpha_beta=False,
             no_load=False,
@@ -145,10 +145,54 @@ class AVL(ExplicitAnalysis):
         self.xyz_ref = xyz_ref
         self.avl_command = avl_command
         self.verbose = verbose
-        self.timeout=timeout
+        self.timeout = timeout
         self.working_directory = working_directory
         self.ground_effect = ground_effect
         self.ground_effect_height = ground_effect_height
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+            f"airplane={self.airplane}",
+            f"op_point={self.op_point}",
+            f"xyz_ref={self.xyz_ref}",
+        ]) + "\n)"
+
+    def open_interactive(self) -> None:
+        """
+        Opens a new terminal window and runs AVL interactively. This is useful for detailed analysis or debugging.
+
+        Returns: None
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+
+            ### Alternatively, work in another directory:
+            if self.working_directory is not None:
+                directory = Path(self.working_directory)  # For debugging
+
+            ### Handle the airplane file
+            airplane_file = "airplane.avl"
+            self.write_avl(directory / airplane_file)
+
+            ### Open up AVL
+            import sys, os
+            if sys.platform == "win32":
+                # Run AVL
+                print("Running AVL interactively in a new window, quit it to continue...")
+
+                command = f'cmd /k "{self.avl_command} {airplane_file}"'
+
+                process = subprocess.Popen(
+                    command,
+                    cwd=directory,
+                    creationflags=subprocess.CREATE_NEW_CONSOLE,
+                )
+                process.wait()
+
+            else:
+                raise NotImplementedError(
+                    "Ability to auto-launch interactive AVL sessions isn't yet implemented for non-Windows OSes."
+                )
 
     def run(self,
             run_command: str = None,
@@ -668,7 +712,7 @@ class AVL(ExplicitAnalysis):
             if cast_outputs_to_float:
                 try:  # Try to convert the value into a float. If you can't, return a NaN
                     value = float(value)
-                except:
+                except Exception:
                     value = np.nan
 
             if key in items.keys():  # If you already have this key

@@ -58,7 +58,10 @@ def get_caller_source_location(
 
     filename = Path(frame_info.filename)
     lineno = frame_info.lineno
-    code_context = "".join(frame_info.code_context)
+    if frame_info.code_context is not None:
+        code_context = "".join(frame_info.code_context)
+    else:
+        code_context = ""
 
     return filename, lineno, code_context
 

@@ -182,7 +182,7 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
                     cos = zero
                 else:
                     raise ValueError()
-            except:
+            except Exception:
                 sin = np.sin(x)
                 cos = np.cos(x)
             return sin, cos
@@ -352,7 +352,7 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
                         cos = zero
                     else:
                         raise ValueError()
-                except:
+                except Exception:
                     sin = np.sin(x)
                     cos = np.cos(x)
                 return sin, cos

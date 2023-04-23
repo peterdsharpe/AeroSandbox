@@ -19,6 +19,7 @@ def contour(
         extendrect: bool = True,
         linelabels_format: Union[str, Callable[[float], str]] = eng_string,
         linelabels_fontsize: float = 8,
+        max_side_length_nondim: float = np.Inf,
         colorbar_label: str = None,
         z_log_scale: bool = False,
         contour_kwargs: Dict = None,
@@ -185,13 +186,47 @@ def contour(
 
     ### Now, with all the kwargs merged, do the actual plotting:
 
-    try:
+    try:  ### If this works, then the data is gridded (i.e. X and Y are 2D arrays)
         cont = plt.contour(X, Y, Z, **contour_kwargs)
         contf = plt.contourf(X, Y, Z, **contourf_kwargs)
-    except TypeError as e:
+
+    except TypeError as e:  ### If this fails, then the data is unstructured (i.e. X and Y are 1D arrays)
+
+        ### Drop all NaN values
+        mask = np.logical_not(
+            np.logical_or.reduce(
+                [np.isnan(X), np.isnan(Y), np.isnan(Z)]
+            )
+        )
+        X = X[mask]
+        Y = Y[mask]
+        Z = Z[mask]
+
+        ### Create the triangulation
+        tri = mpl.tri.Triangulation(X, Y)
+
+        ### Filter out extrapolation that's too large
+        # See also: https://stackoverflow.com/questions/42426095/matplotlib-contour-contourf-of-concave-non-gridded-data
+        X_scale = np.nanmax(X) - np.nanmin(X)
+        Y_scale = np.nanmax(Y) - np.nanmin(Y)
+
+        triangles = tri.triangles
+        xtri = X[triangles] - np.roll(X[triangles], 1, axis=1)
+        ytri = Y[triangles] - np.roll(Y[triangles], 1, axis=1)
+        maxi = np.max(
+            np.sqrt(
+                (xtri / X_scale) ** 2 +
+                (ytri / Y_scale) ** 2
+            ),
+            axis=1
+        )
+
+        tri.set_mask(maxi > max_side_length_nondim)
+
         try:
-            cont = plt.tricontour(X, Y, Z, **contour_kwargs)
-            contf = plt.tricontourf(X, Y, Z, **contourf_kwargs)
+
+            cont = plt.tricontour(tri, Z, **contour_kwargs)
+            contf = plt.tricontourf(tri, Z, **contourf_kwargs)
         except TypeError:
             raise e
 
