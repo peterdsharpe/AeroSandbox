@@ -1,11 +1,14 @@
 import inspect
-from typing import Callable, Any, Union
+from typing import Callable, Any, Union, Optional
 
 
 def black_box(
         function: Callable[[Any], float],
         n_in: int = None,
         n_out: int = 1,
+        fd_method: str ='forward',
+        fd_step: Optional[float] = None,
+        fd_step_iter: Optional[bool] = None,
 ) -> Callable[[Any], float]:
     """
     Wraps a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization problems.
@@ -20,6 +23,11 @@ def black_box(
 
         n_out:
 
+        fd_method: One of:
+            - 'forward'
+            - 'backward'
+            - 'central'
+            - 'smoothed'
 
     Returns:
 
@@ -38,6 +46,15 @@ def black_box(
     if n_out > 1:
         raise NotImplementedError("Black boxes with multiple outputs are not yet supported.")
 
+    ### Compute finite-differencing options
+    fd_options = {}
+
+    if fd_step is not None:
+        fd_options['h'] = fd_step
+
+    if fd_step_iter is not None:
+        fd_options['h_iter'] = fd_step_iter
+
     import casadi as cas
 
     class BlackBox(cas.Callback):
@@ -49,6 +66,8 @@ def black_box(
                 self.__class__.__name__,
                 dict(
                     enable_fd=True,
+                    fd_method=fd_method,
+                    fd_options=fd_options,
                 )
             )
 
@@ -114,11 +133,14 @@ def black_box(
                 else:
                     input = parameter.default
 
-            print(input)
+            # print(input)
 
             inputs.append(input)
 
         return wrapped_function(*inputs)
+
+    wrapped_function_with_kwargs_support.wrapped_function = wrapped_function
+    wrapped_function_with_kwargs_support.wrapper_class = BlackBox
 
     return wrapped_function_with_kwargs_support
 

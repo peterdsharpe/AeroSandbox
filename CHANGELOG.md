@@ -36,6 +36,8 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 #### 4.0.8
 
+- Added first experimental ability to support black-box functions in optimization, available in `aerosandbox.modeling.black_box`. This is a very early prototype, and the API is subject to change.
+
 -----
 
 # Latest (master / release), and previous versions
