@@ -3,10 +3,10 @@ from typing import Callable, Any, Union
 
 
 def black_box(
-        function: Callable[[Any], Union[float, tuple]],
+        function: Callable[[Any], float],
         n_in: int = None,
         n_out: int = 1,
-) -> Callable[[Any], Union[float, tuple]]:
+) -> Callable[[Any], float]:
     """
     Wraps a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization problems.
 
@@ -24,13 +24,19 @@ def black_box(
     Returns:
 
     """
+    ### Grab the signature of the function to be wrapped - we'll need it.
     signature = inspect.signature(function)
 
+    ### Handle default arguments.
     if n_in is None:
         n_in = len(signature.parameters)
 
     if n_out is None:
         n_out = 1
+
+    ### Add limitations
+    if n_out > 1:
+        raise NotImplementedError("Black boxes with multiple outputs are not yet supported.")
 
     import casadi as cas
 
