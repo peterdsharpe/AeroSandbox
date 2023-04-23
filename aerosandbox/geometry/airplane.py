@@ -106,19 +106,54 @@ class Airplane(AeroSandboxObject):
         ### Assign reference values
         try:
             main_wing = self.wings[0]
-            if s_ref is None:
-                s_ref = main_wing.area()
-            if c_ref is None:
-                c_ref = main_wing.mean_aerodynamic_chord()
-            if b_ref is None:
-                b_ref = main_wing.span()
         except IndexError:
-            s_ref = 1
-            c_ref = 1
-            b_ref = 1
-        self.s_ref = s_ref
-        self.c_ref = c_ref
-        self.b_ref = b_ref
+            main_wing = None
+
+        try:
+            main_fuse = self.fuselages[0]
+        except IndexError:
+            main_fuse = None
+
+        if s_ref is not None:
+            self.s_ref = s_ref
+        else:
+            if main_wing is not None:
+                self.s_ref = main_wing.area()
+            else:
+                if main_fuse is not None:
+                    self.s_ref = main_fuse.area_projected()
+                else:
+                    raise ValueError(
+                        "`s_ref` was not provided, and a value cannot be inferred automatically from wings or fuselages.\n"
+                        "You must set this manually when instantiating your asb.Airplane object.")
+
+        if c_ref is not None:
+            self.c_ref = c_ref
+        else:
+            if main_wing is not None:
+                self.c_ref = main_wing.mean_aerodynamic_chord()
+            else:
+                if main_fuse is not None:
+                    self.c_ref = main_fuse.length()
+                else:
+                    raise ValueError(
+                        "`c_ref` was not provided, and a value cannot be inferred automatically from wings or fuselages.\n"
+                        "You must set this manually when instantiating your asb.Airplane object."
+                    )
+
+        if b_ref is not None:
+            self.b_ref = b_ref
+        else:
+            if main_wing is not None:
+                self.b_ref = main_wing.span(include_centerline_distance=True)
+            else:
+                if main_fuse is not None:
+                    self.b_ref = main_fuse.area_projected() / main_fuse.length()
+                else:
+                    raise ValueError(
+                        "`b_ref` was not provided, and a value cannot be inferred automatically from wings or fuselages.\n"
+                        "You must set this manually when instantiating your asb.Airplane object."
+                    )
 
     def __repr__(self):
         n_wings = len(self.wings)
