@@ -418,25 +418,59 @@ class AeroBuildup(ExplicitAnalysis):
         wing_dihedral = wing.mean_dihedral_angle()
 
         ###
-        y_span_effective = wing.span(
-            type="y",
-            include_centerline_distance=True,
-        )
-        z_span_effective = wing.span(
-            type="z",
-            include_centerline_distance=True,
-        )
+        # y_span_effective = wing.span(
+        #     type="y",
+        #     include_centerline_distance=True,
+        # )
+        # z_span_effective = wing.span(
+        #     type="z",
+        #     include_centerline_distance=True,
+        # )
+        #
+        # AR_with_center = wing.aspect_ratio(type="effective")
+        # AR_without_center = wing.aspect_ratio(type="geometric")
 
         if wing.symmetric:
-            AR_e = wing.aspect_ratio(type="effective")
-            AR_g = wing.aspect_ratio(type="geometric")
-            AR_effective = AR_g + (AR_e - AR_g) * np.maximum(np.cosd(wing_dihedral), 0)
-            # Approximately accounts for Trefftz-pane wake continuity.
+            # AR_effective = AR_without_center + (AR_with_center - AR_without_center) * np.maximum(np.cosd(wing_dihedral),
+            #                                                                                      0)
+            # # Approximately accounts for Trefftz-pane wake continuity.
+            #
+            # AR_geometric = AR_without_center
 
-            AR_geometric = AR_g
+            span_0_dihedral = wing.span(include_centerline_distance=True)
+            span_90_dihedral = wing.span(include_centerline_distance=False) * 0.5
+
+            area_0_dihedral = wing.area(include_centerline_distance=True)
+            area_90_dihedral = wing.area(include_centerline_distance=False) * 0.5
+
+            dihedral_factor = np.sind(wing_dihedral) ** 2
+
+            span_effective = (
+                span_0_dihedral +
+                (span_90_dihedral - span_0_dihedral) * dihedral_factor
+            )
+
+            area_effective = (
+                area_0_dihedral +
+                (area_90_dihedral - area_0_dihedral) * dihedral_factor
+            )
+
+            y_span_effective = wing.span(type="y", include_centerline_distance=True)
+            z_span_effective = wing.span(type="z", include_centerline_distance=False) / 2 ** 0.6
+            # Note: The 0.6 constant is tuned from calibration to VLM experiment.
+
         else:
-            AR_effective = wing.aspect_ratio(type="geometric")
-            AR_geometric = AR_effective
+            # AR_effective = AR_without_center
+            # AR_geometric = AR_without_center
+
+            y_span_effective = wing.span(type="y", include_centerline_distance=False)
+            z_span_effective = wing.span(type="z", include_centerline_distance=False)
+
+            span_effective = wing.span(type="yz", include_centerline_distance=False)
+            area_effective = wing.area(type="planform", include_centerline_distance=False)
+
+
+        AR_effective = span_effective ** 2 / area_effective
 
         mach = op_point.mach()
         # mach_normal = mach * np.cosd(sweep)
@@ -653,9 +687,7 @@ class AeroBuildup(ExplicitAnalysis):
                     (
                             xsec_a_Cdp * a_weight +
                             xsec_b_Cdp * b_weight
-                    ) *
-                    (1 + 0.2 / AR_geometric * np.cosd(alpha_generalized_effective) ** 2)
-                # accounts for extra form factor of tip area, and 3D effects (crossflow trips)
+                    )
             )
 
             ##### Compute sectional moment at cross-sections using lookup functions. Merge them linearly to get section CM.
