@@ -7,7 +7,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.point_source import \
     calculate_induced_velocity_point_source
 import aerosandbox.numpy as np
 from typing import Dict, Any, Callable
-
+import casadi as cas
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
 def tall(array):
@@ -261,9 +261,10 @@ class NlLiftingLine(ImplicitAnalysis):
         if self.verbose:
             print("Calculating vortex center strengths...")
 
-        n_panels = len(self.vortex_centers)
+        self.n_panels = (self.areas.shape[0])
+
         # Set up implicit solve (explicit is not possible for general nonlinear problem)
-        vortex_strengths = self.opti.variable(init_guess=np.zeros(shape=n_panels))
+        vortex_strengths = self.opti.variable(init_guess=np.zeros(shape=self.n_panels))
 
         # Find velocities
         velocities = self.get_velocity_at_points(
@@ -356,7 +357,7 @@ class NlLiftingLine(ImplicitAnalysis):
         force_inviscid_geometry = np.sum(forces_inviscid_geometry, axis=0)
         moment_inviscid_geometry = np.sum(moments_inviscid_geometry, axis=0)
 
-        get = lambda x: self.opti.debug.value(x)
+        get = lambda x: self.sol(x)
         self.CDs = get(self.CDs)
         self.CLs = get(self.CLs)
 
@@ -517,7 +518,7 @@ class NlLiftingLine(ImplicitAnalysis):
             points
         )
 
-        freestream_velocities = self.steady_freestream_velocity + rotation_freestream_velocities
+        freestream_velocities = np.add(wide(self.steady_freestream_velocity), rotation_freestream_velocities)
 
         if self.airplane.fuselages:
             V_induced_fuselage = self.calculate_fuselage_influences(
@@ -817,25 +818,20 @@ if __name__ == '__main__':
 
     from UniqueWing import airplane as vanilla
 
-    op_point = asb.OperatingPoint(
-        atmosphere=asb.Atmosphere(altitude=0),
-        velocity=10,  # m/s
-        alpha=0
-    )
-
     ### Do the AVL run
     LL_aeros = NlLiftingLine(
         airplane=vanilla,
-        op_point= op_point,
+        op_point= asb.OperatingPoint(
+                  atmosphere=asb.Atmosphere(altitude=0),
+                  velocity=10,  # m/s
+                  alpha=0),
         verbose = True,
-        spanwise_resolution = 10)
-    # ).run()
-    #        for op in op_point
-    # ]
+        spanwise_resolution = 10,
+        )
+
     res = LL_aeros.run()
 
     for k, v in res.items():
         print(f"{str(k).rjust(10)} : {v}")
 
     LL_aeros.draw()
-
