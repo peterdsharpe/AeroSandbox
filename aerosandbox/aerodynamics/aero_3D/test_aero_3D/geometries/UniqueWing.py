@@ -1,7 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
-sd7037 = asb.Airfoil("sd7037")
+sd7037 = asb.Airfoil("naca0012", generate_polars=True)
 
 airplane = asb.Airplane(
     name="Vanilla",

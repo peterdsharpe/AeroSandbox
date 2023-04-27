@@ -297,7 +297,7 @@ class NlLiftingLine(ImplicitAnalysis):
         # self.Res_perpendicular = self.Res * self.cos_sweeps
         # self.machs_perpendicular = self.machs * self.cos_sweeps
 
-        CLs, self.CDs, CMs = [
+        self.CLs, self.CDs, CMs = [
             np.array([
                 polar_function(
                     alpha=alphas[i],
@@ -321,14 +321,14 @@ class NlLiftingLine(ImplicitAnalysis):
         #     0.5 * self.velocity_magnitude_perpendiculars ** 2 * self.CL_locals * self.areas
         # ])
         residuals = (
-                vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitudes ** 2 / self.areas - CLs
+                vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitudes ** 2 / self.areas - self.CLs
         )
         self.opti.subject_to([
             residuals == 0
         ])
 
-        sol = self.opti.solve(verbose=False)
-        self.vortex_strengths = sol.value(vortex_strengths)
+        self.sol = self.opti.solve(verbose=False)
+        self.vortex_strengths = self.sol.value(vortex_strengths)
 
     def calculate_forces(self):
 
@@ -358,13 +358,13 @@ class NlLiftingLine(ImplicitAnalysis):
 
         get = lambda x: self.opti.debug.value(x)
         self.CDs = get(self.CDs)
+        self.CLs = get(self.CLs)
 
         if self.verbose:
             print("Calculating profile forces and moments...")
-        forces_profile_geometry = (
-                (0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes))
-                * tall(self.CDs) * tall(self.areas)
-        )
+        forces_profile_geometry = (0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes)) \
+                                  * tall(self.CDs) * tall(self.areas)
+
         moments_profile_geometry = np.cross(
             np.add(self.vortex_centers, -wide(np.array(self.airplane.xyz_ref))),
             forces_profile_geometry
@@ -815,27 +815,27 @@ if __name__ == '__main__':
 
     sys.path.insert(0, str(geometry_folder))
 
-    from vanilla import airplane as vanilla
+    from UniqueWing import airplane as vanilla
 
-    ### Do the AVL run
-    LL = NlLiftingLine(
-        airplane=vanilla,
-        op_point=asb.OperatingPoint(
-            atmosphere=asb.Atmosphere(altitude=0),
-            velocity=10,
-            alpha=0,
-            beta=0,
-            p=0,
-            q=0,
-            r=0,
-        ),
-        verbose = True,
-        spanwise_resolution = 10,
+    op_point = asb.OperatingPoint(
+        atmosphere=asb.Atmosphere(altitude=0),
+        velocity=10,  # m/s
+        alpha=0
     )
 
-    res = LL.run()
+    ### Do the AVL run
+    LL_aeros = NlLiftingLine(
+        airplane=vanilla,
+        op_point= op_point,
+        verbose = True,
+        spanwise_resolution = 10)
+    # ).run()
+    #        for op in op_point
+    # ]
+    res = LL_aeros.run()
 
     for k, v in res.items():
         print(f"{str(k).rjust(10)} : {v}")
 
-    LL.draw()
+    LL_aeros.draw()
+
