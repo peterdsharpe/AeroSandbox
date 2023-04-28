@@ -8,7 +8,7 @@ def test_lifting_line():
     op_point = asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=0),
             velocity=10,  # m/s
-            alpha=np.linspace(-8,8,11)
+            alpha=np.linspace(-6,6,11)
         )
     LL_aeros = [asb.NlLiftingLine(
         airplane=airplane,
@@ -31,29 +31,16 @@ def test_lifting_line():
 
     plt.sca(ax[0])
     plt.plot(op_point.alpha, LL_aero["CL"])
-    plt.xlabel(r"$\alpha$ [deg]")
-    plt.ylabel(r"$C_L$")
-    p.set_ticks(2, 0.5, 0.05, 0.01)
 
     plt.sca(ax[1])
     plt.plot(op_point.alpha, LL_aero["CD"])
-    plt.xlabel(r"$\alpha$ [deg]")
-    plt.ylabel(r"$C_D$")
-    p.set_ticks(2, 0.5, 0.005, 0.001)
-    plt.ylim(bottom=0)
-    # plt.savefig('NL_LL.png', format='png', dpi=600)
-
-    # p.show_plot(
-    #     "`NL LL` Aircraft Aerodynamics"
-    # )
-
 
     vlm_aeros = [asb.VortexLatticeMethod(
         airplane=airplane,
         op_point=op,
         verbose=True,
         spanwise_resolution=10,
-        chordwise_resolution=10,
+        chordwise_resolution=25,
     ).run()
        for op in op_point
     ]
@@ -66,21 +53,11 @@ def test_lifting_line():
             for aero in vlm_aeros
         ])
 
-    # fig, ax = plt.subplots(1, 2)
-
     plt.sca(ax[0])
     plt.plot(op_point.alpha, vlm_aero["CL"])
-    plt.xlabel(r"$\alpha$ [deg]")
-    plt.ylabel(r"$C_L$")
-    p.set_ticks(2, 0.5, 0.05, 0.01)
-    plt.legend(labels=["NL LL", "VLM"])
 
     plt.sca(ax[1])
     plt.plot(op_point.alpha, vlm_aero["CD"])
-    plt.xlabel(r"$\alpha$ [deg]")
-    plt.ylabel(r"$C_D$")
-    p.set_ticks(2, 0.5, 0.0025, 0.001)
-    plt.ylim(bottom=0)
 
     AVL_aeros = [asb.AVL(
         airplane=airplane,
@@ -98,13 +75,11 @@ def test_lifting_line():
             for aero in AVL_aeros
         ])
 
-    # fig, ax = plt.subplots(1, 2)
-
     plt.sca(ax[0])
     plt.plot(op_point.alpha, AVL_aero["CL"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L$")
-    p.set_ticks(2, 0.5, 0.1, 0.01)
+    p.set_ticks(2, 0.5, 0.05, 0.01)
     plt.legend(labels=["NL LL", "VLM", "AVL"])
 
     plt.sca(ax[1])
