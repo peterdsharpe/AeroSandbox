@@ -482,7 +482,7 @@ class NlLiftingLine(ImplicitAnalysis):
             y_right=wide(self.right_vortex_vertices[:, 1]),
             z_right=wide(self.right_vortex_vertices[:, 2]),
             trailing_vortex_direction=self.steady_freestream_direction,
-            gamma=tall(vortex_strengths),
+            gamma=wide(vortex_strengths),
             vortex_core_radius=self.vortex_core_radius
         )
         u_induced = np.sum(u_induced, axis=1)
@@ -559,7 +559,7 @@ class NlLiftingLine(ImplicitAnalysis):
              x_source=wide(this_fuse_centerline_points[:, 0]),
              y_source=wide(this_fuse_centerline_points[:, 1]),
              z_source=wide(this_fuse_centerline_points[:, 2]),
-             sigma=wide(sigmas),
+             sigma=tall(sigmas),
              viscous_radius=0.0001,
         )
 
