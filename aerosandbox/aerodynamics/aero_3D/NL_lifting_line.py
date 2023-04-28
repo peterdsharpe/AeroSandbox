@@ -385,7 +385,7 @@ class NlLiftingLine(ImplicitAnalysis):
             to_axes="wind"
         )
         moment_inviscid_body = self.op_point.convert_axes(
-            moment_profile_geometry[0], moment_profile_geometry[1], moment_profile_geometry[2],
+            moment_inviscid_geometry[0], moment_inviscid_geometry[1], moment_inviscid_geometry[2],
             from_axes="geometry",
             to_axes="body"
         )
