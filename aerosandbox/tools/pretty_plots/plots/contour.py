@@ -22,6 +22,9 @@ def contour(
         max_side_length_nondim: float = np.Inf,
         colorbar_label: str = None,
         z_log_scale: bool = False,
+        mask: np.ndarray = None,
+        drop_nans: bool = None,
+        # smooth: Union[bool, int] = False, # TODO implement
         contour_kwargs: Dict = None,
         contourf_kwargs: Dict = None,
         colorbar_kwargs: Dict = None,
@@ -40,11 +43,11 @@ def contour(
         https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontourf.html
 
     Args:
-        X: See contour docs.
+        X: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
 
-        Y: See contour docs.
+        Y: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
 
-        Z: See contour docs.
+        Z: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
 
         levels: See contour docs.
 
@@ -104,6 +107,12 @@ def contour(
     if Y is None:
         Y = np.arange(Z.shape[0])
 
+    is_gridded = not (  # Determine if the data is gridded or not (i.e., contour vs. tricontour)
+            X.ndim == 1 and
+            Y.ndim == 1 and
+            Z.ndim == 1
+    )
+
     ### Set defaults
     if cmap is None:
         cmap = mpl.colormaps.get_cmap('viridis')
@@ -124,7 +133,7 @@ def contour(
     if extend is not None:
         shared_kwargs["extend"] = extend
     if z_log_scale:
-        if np.any(Z) <= 0:
+        if np.any(Z <= 0):
             raise ValueError(
                 "All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!"
             )
@@ -184,23 +193,50 @@ def contour(
         **linelabels_kwargs
     }
 
-    ### Now, with all the kwargs merged, do the actual plotting:
+    if drop_nans is None:
+        if is_gridded:
+            drop_nans = False
+        else:
+            drop_nans = True
 
-    try:  ### If this works, then the data is gridded (i.e. X and Y are 2D arrays)
-        cont = plt.contour(X, Y, Z, **contour_kwargs)
-        contf = plt.contourf(X, Y, Z, **contourf_kwargs)
+    ### Now, with all the kwargs merged, prep for the actual plotting.
+    if mask is not None:
+        X = X[mask]
+        Y = Y[mask]
+        Z = Z[mask]
 
-    except TypeError as e:  ### If this fails, then the data is unstructured (i.e. X and Y are 1D arrays)
+        is_gridded = False
 
-        ### Drop all NaN values
-        mask = np.logical_not(
+    if drop_nans:
+        nanmask = np.logical_not(
             np.logical_or.reduce(
                 [np.isnan(X), np.isnan(Y), np.isnan(Z)]
             )
         )
-        X = X[mask]
-        Y = Y[mask]
-        Z = Z[mask]
+
+        X = X[nanmask]
+        Y = Y[nanmask]
+        Z = Z[nanmask]
+
+        is_gridded = False
+
+    # if smooth:
+    #     if isinstance(smooth, bool):
+    #         smoothing_factor = 3
+    #     else:
+    #         try:
+    #             smoothing_factor = int(smooth)
+    #         except TypeError:
+    #             raise TypeError("`smooth` must be an integer (the smoothing factor) or a boolean!")
+
+    ### Do the actual plotting
+
+    if is_gridded:
+
+        cont = plt.contour(X, Y, Z, **contour_kwargs)
+        contf = plt.contourf(X, Y, Z, **contourf_kwargs)
+
+    else:  ### If this fails, then the data is unstructured (i.e. X and Y are 1D arrays)
 
         ### Create the triangulation
         tri = mpl.tri.Triangulation(X, Y)
@@ -223,12 +259,8 @@ def contour(
 
         tri.set_mask(maxi > max_side_length_nondim)
 
-        try:
-
-            cont = plt.tricontour(tri, Z, **contour_kwargs)
-            contf = plt.tricontourf(tri, Z, **contourf_kwargs)
-        except TypeError:
-            raise e
+        cont = plt.tricontour(tri, Z, **contour_kwargs)
+        contf = plt.tricontourf(tri, Z, **contourf_kwargs)
 
     if colorbar:
         from matplotlib import cm
@@ -244,7 +276,9 @@ def contour(
 
         if z_log_scale:
 
-            if Z_ratio >= 1e2:
+            cbar.ax.tick_params(which="minor", labelsize=8)
+
+            if Z_ratio >= 10 ** 2.05:
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
                 cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
                 cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
@@ -253,7 +287,9 @@ def contour(
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
                 cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
                 cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
-                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.LogFormatterSciNotation())
+                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.LogFormatterSciNotation(
+                    minor_thresholds=(np.inf, np.inf)
+                ))
             else:
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
                 cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(100)))
@@ -273,11 +309,11 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    x = np.linspace(0, 1, 300)
-    y = np.linspace(0, 1, 200)
+    x = np.linspace(0, 1, 100)
+    y = np.linspace(0, 1, 100)
     X, Y = np.meshgrid(x, y)
 
-    Z_ratio = 1.5
+    Z_ratio = 8
 
     Z = 10 ** (
             Z_ratio / 2 * np.cos(
@@ -285,17 +321,21 @@ if __name__ == '__main__':
     )
     )
 
+    # Z += 0.1 * np.random.randn(*Z.shape)
+
     fig, ax = plt.subplots(figsize=(6, 6))
 
     cmap = plt.get_cmap("rainbow")
 
     cont, contf, cbar = contour(
-        X, Y, Z,
+        X, Y, np.abs(Z),
+        # drop_nans=True,
         z_log_scale=True,
         cmap=cmap,
         levels=20,
         colorbar_label="Colorbar label"
     )
+    # plt.clim(0.1, 10)
     p.show_plot(
         "Title",
         "X label",
