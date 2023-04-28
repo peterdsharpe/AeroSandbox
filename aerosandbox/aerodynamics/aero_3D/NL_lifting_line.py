@@ -559,7 +559,7 @@ class NlLiftingLine(ImplicitAnalysis):
              x_source=wide(this_fuse_centerline_points[:, 0]),
              y_source=wide(this_fuse_centerline_points[:, 1]),
              z_source=wide(this_fuse_centerline_points[:, 2]),
-             sigma=tall(sigmas),
+             sigma=wide(sigmas),
              viscous_radius=0.0001,
         )
 
