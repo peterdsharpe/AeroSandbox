@@ -21,6 +21,8 @@ def contour(
         linelabels_fontsize: float = 8,
         max_side_length_nondim: float = np.Inf,
         colorbar_label: str = None,
+        x_log_scale: bool = False,
+        y_log_scale: bool = False,
         z_log_scale: bool = False,
         mask: np.ndarray = None,
         drop_nans: bool = None,
@@ -112,6 +114,17 @@ def contour(
             Y.ndim == 1 and
             Z.ndim == 1
     )
+
+    ### Check inputs for sanity
+    for k, v in dict(
+        X=X,
+        Y=Y,
+        Z=Z,
+    ).items():
+        if np.all(np.isnan(v)):
+            raise ValueError(
+                f"All values of '{k}' are NaN!"
+            )
 
     ### Set defaults
     if cmap is None:
@@ -261,6 +274,11 @@ def contour(
 
         cont = plt.tricontour(tri, Z, **contour_kwargs)
         contf = plt.tricontourf(tri, Z, **contourf_kwargs)
+
+    if x_log_scale:
+        plt.xscale("log")
+    if y_log_scale:
+        plt.yscale("log")
 
     if colorbar:
         from matplotlib import cm
