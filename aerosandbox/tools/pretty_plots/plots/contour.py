@@ -117,9 +117,9 @@ def contour(
 
     ### Check inputs for sanity
     for k, v in dict(
-        X=X,
-        Y=Y,
-        Z=Z,
+            X=X,
+            Y=Y,
+            Z=Z,
     ).items():
         if np.all(np.isnan(v)):
             raise ValueError(
@@ -253,24 +253,43 @@ def contour(
 
         ### Create the triangulation
         tri = mpl.tri.Triangulation(X, Y)
+        t = tri.triangles
 
         ### Filter out extrapolation that's too large
         # See also: https://stackoverflow.com/questions/42426095/matplotlib-contour-contourf-of-concave-non-gridded-data
-        X_scale = np.nanmax(X) - np.nanmin(X)
-        Y_scale = np.nanmax(Y) - np.nanmin(Y)
+        if x_log_scale:
+            X_nondim = (
+                               np.log(X[t]) - np.roll(np.log(X[t]), 1, axis=1)
+                       ) / (np.nanmax(np.log(X)) - np.nanmin(np.log(X)))
+        else:
+            X_nondim = (
+                               X[t] - np.roll(X[t], 1, axis=1)
+                       ) / (np.nanmax(X) - np.nanmin(X))
 
-        triangles = tri.triangles
-        xtri = X[triangles] - np.roll(X[triangles], 1, axis=1)
-        ytri = Y[triangles] - np.roll(Y[triangles], 1, axis=1)
-        maxi = np.max(
+        if y_log_scale:
+            Y_nondim = (
+                               np.log(Y[t]) - np.roll(np.log(Y[t]), 1, axis=1)
+                       ) / (np.nanmax(np.log(Y)) - np.nanmin(np.log(Y)))
+        else:
+            Y_nondim = (
+                               Y[t] - np.roll(Y[t], 1, axis=1)
+                       ) / (np.nanmax(Y) - np.nanmin(Y))
+
+        side_length_nondim = np.max(
             np.sqrt(
-                (xtri / X_scale) ** 2 +
-                (ytri / Y_scale) ** 2
+                X_nondim ** 2 +
+                Y_nondim ** 2
             ),
             axis=1
         )
 
-        tri.set_mask(maxi > max_side_length_nondim)
+        if np.all(side_length_nondim > max_side_length_nondim):
+            raise ValueError(
+                "All triangles in the triangulation are too large to be plotted!\n"
+                "Try increasing `max_side_length_nondim`!"
+            )
+
+        tri.set_mask(side_length_nondim > max_side_length_nondim)
 
         cont = plt.tricontour(tri, Z, **contour_kwargs)
         contf = plt.tricontourf(tri, Z, **contourf_kwargs)
@@ -346,8 +365,11 @@ if __name__ == '__main__':
     cmap = plt.get_cmap("rainbow")
 
     cont, contf, cbar = contour(
-        X, Y, np.abs(Z),
-        # drop_nans=True,
+        X,
+        Y,
+        np.abs(Z),
+        drop_nans=True,
+        # x_log_scale=True,
         z_log_scale=True,
         cmap=cmap,
         levels=20,
