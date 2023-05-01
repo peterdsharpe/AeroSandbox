@@ -43,7 +43,7 @@ Use AeroSandbox to design and optimize entire aircraft:
     </tr>
 </table>
 
-Use AeroSandbox to support real-world aircraft development programs, all the way from your very first sketch to your first-flight and even beyond:
+Use AeroSandbox to support real-world aircraft development programs, all the way from your very first sketch to your first-flight and beyond:
 
 <table>
     <tr>
