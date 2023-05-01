@@ -81,7 +81,7 @@ Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all a
 		</td>
 		<td width="33%" valign="top">
 			<p align="center">
-				<a href="https://github.com/peterdsharpe/transport-aircraft">Exploring how many LH2 aircraft classes an airline would need for effective market coverage</a>
+				<a href="https://github.com/peterdsharpe/transport-aircraft">Exploring how many LH2 aircraft classes an airline fleet needs to cover the market, considering off-design performance</a>
 			</p>
 			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/lh2_market_segmentation_2.svg" alt="LH2 Market Coverage">
 		</td>
