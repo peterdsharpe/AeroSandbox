@@ -10,6 +10,7 @@ def plot_smooth(
         color=None,
         label=None,
         resample_resolution: int = 500,
+        drop_nans: bool = False,
         **kwargs,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -62,6 +63,7 @@ def plot_smooth(
     Returns: A tuple `(x, y)` of the resampled points on the interpolated curve. Both `x` and `y` are 1D ndarrays.
 
     """
+    ### Parse *args
     argslist = list(args)
 
     if len(args) == 3:
@@ -82,7 +84,19 @@ def plot_smooth(
         y = argslist.pop(0)
         fmt = '.-'
     elif len(args) == 0:
-        raise ValueError("Missing plot data. Use syntax `plot_smooth(x, y, fmt, *args, **kwargs)'.")
+        raise ValueError("Missing plot data. Use syntax `plot_smooth(x, y, fmt, **kwargs)'.")
+    else:
+        raise ValueError("Unrecognized syntax. Use syntax `plot_smooth(x, y, fmt, **kwargs)'.")
+
+    if drop_nans:
+        nanmask = np.logical_not(
+            np.logical_or.reduce(
+                [np.isnan(x), np.isnan(y)]
+            )
+        )
+
+        x = x[nanmask]
+        y = y[nanmask]
 
     bspline = interpolate.make_interp_spline(
         x=np.linspace(0, 1, np.length(y)),
