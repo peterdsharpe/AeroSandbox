@@ -67,17 +67,23 @@ Use AeroSandbox to explore counterintuitive, complicated design tradeoffs, all a
 
 <table>
 	<tr>
-		<td width="50%" valign="top">
+		<td width="33%" valign="top">
 			<p align="center">
 				<a href="https://github.com/peterdsharpe/DawnDesignTool">Exploring how big a solar airplane needs to be to fly, as a function of seasonality and latitude</a>
 			</p>
 			<img src="https://github.com/peterdsharpe/DawnDesignTool/raw/master/docs/30kg_payload.svg" alt="Dawn seasonality latitude tradespace">
 		</td>
-		<td width="50%" valign="top">
+		<td width="33%" valign="top">
 			<p align="center">
 				<a href="https://www.popularmechanics.com/military/aviation/a13938789/mit-developing-mach-08-rocket-drone-for-the-air-force/">Exploring how the mission range of <i>Firefly</i>, a Mach 0.8 rocket drone, changes if we add an altitude limit, simultaneously optimizing aircraft design and trajectories</a>
 			</p>
 			<img src="./media/images/firefly-range-ceiling-trade.png" alt="Firefly range ceiling trade">
+		</td>
+		<td width="33%" valign="top">
+			<p align="center">
+				<a href="https://github.com/peterdsharpe/transport-aircraft">Exploring how many LH2 aircraft classes an airline would need for effective market coverage</a>
+			</p>
+			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/lh2_market_segmentation_2.svg" alt="LH2 Market Coverage">
 		</td>
 	</tr>
 </table>
@@ -123,7 +129,7 @@ Among many other discplines:
 			<p align="center" valign="top">
 				<a href="https://github.com/peterdsharpe/transport-aircraft">Tools to analyze unconventional propulsion (e.g., LH2)</a>
 			</p>
-			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/three_view.png" alt="LH2 airplane three-view">
+			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/three_view_annotated.svg" alt="LH2 airplane three-view">
 		</td>
 		<td>
 			<p align="center" valign="top">
