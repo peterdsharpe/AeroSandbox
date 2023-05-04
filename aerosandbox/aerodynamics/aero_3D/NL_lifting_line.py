@@ -6,7 +6,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
 from aerosandbox.aerodynamics.aero_3D.singularities.point_source import \
     calculate_induced_velocity_point_source
 import aerosandbox.numpy as np
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, List
 import casadi as cas
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
@@ -44,11 +44,13 @@ class NlLiftingLine(ImplicitAnalysis):
     def __init__(self,
                  airplane: Airplane,
                  op_point: OperatingPoint,
+                 xyz_ref: List[float] = None,
                  run_symmetric_if_possible : bool = False,
-                 verbose=True,
+                 verbose: bool = False,
                  spanwise_resolution=8,  # TODO document
                  spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  vortex_core_radius: float = 1e-8,
+                 align_trailing_vortices_with_wind: bool = False,
                  ):
         """
         Initializes and conducts a LiftingLine analysis.
@@ -73,13 +75,18 @@ class NlLiftingLine(ImplicitAnalysis):
         super().__init__()
 
         ### Initialize
-        # self.is_trailing_edge = None
+
+        if xyz_ref is None:
+            xyz_ref = airplane.xyz_ref
+
         self.airplane = airplane
         self.op_point = op_point
+        self.xyz_ref = xyz_ref
         self.verbose = verbose
         self.spanwise_resolution = spanwise_resolution
         self.spanwise_spacing_function = spanwise_spacing_function
         self.vortex_core_radius = vortex_core_radius
+        self.align_trailing_vortices_with_wind = align_trailing_vortices_with_wind
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
@@ -95,29 +102,44 @@ class NlLiftingLine(ImplicitAnalysis):
             # except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
             #     pass
 
+    def __repr__(self):
+        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+            f"airplane={self.airplane}",
+            f"op_point={self.op_point}",
+            f"xyz_ref={self.xyz_ref}",
+        ]) + "\n)"
+
     def run(self) -> Dict[str, Any]:
+        """
+                Computes the aerodynamic forces.
 
-        self.setup_mesh()                    # construct the mesh geometry
-        self.calculate_vortex_strengths()    # compute vortex strength at each vortex center
-        self.calculate_forces()              # compute viscous and inviscid forces
+                Returns a dictionary with keys:
 
-        return {
-            "F_g": self.force_total_geometry,
-            "F_b": self.force_total_body,
-            "F_w": self.force_total_wind,
-            "M_g": self.moment_total_geometry,
-            "M_b": self.moment_total_body,
-            "M_w": self.moment_total_wind,
-            "CL": self.CL,
-            "CD": self.CD,
-            "CDi": self.CDi,
-            "CDp": self.CDp,
-            "CY": self.CY,
-            "Cl": self.Cl,
-            "Cm": self.Cm,
-            "Cn": self.Cn,
-        }
-    def setup_mesh(self) -> None:
+                    - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
+                    - 'F_b' : an [x, y, z] list of forces in body axes [N]
+                    - 'F_w' : an [x, y, z] list of forces in wind axes [N]
+                    - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+                    - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
+                    - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+                    - 'L' : the lift force [N]. Definitionally, this is in wind axes.
+                    - 'Y' : the side force [N]. This is in wind axes.
+                    - 'D' : the drag force [N]. Definitionally, this is in wind axes.
+                    - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+                    - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+                    - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+                    - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+                    - 'CY', the sideforce coefficient [-]. This is in wind axes.
+                    - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+                    - 'Cl', the rolling coefficient [-], in body axes
+                    - 'Cm', the pitching coefficient [-], in body axes
+                    - 'Cn', the yawing coefficient [-], in body axes
+
+                Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
+                """
+        # self.setup_mesh()                    # construct the mesh geometry
+        # self.calculate_vortex_strengths()    # compute vortex strength at each vortex center
+        # self.calculate_forces()              # compute viscous and inviscid forces
+
         if self.verbose:
             print("Meshing...")
 
@@ -229,6 +251,7 @@ class NlLiftingLine(ImplicitAnalysis):
         self.chord_vectors = chord_vectors
         self.chords = chords
 
+        ##### Setup Operating Point
         if self.verbose:
             print("Calculating the freestream influence...")
         steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
@@ -257,7 +280,7 @@ class NlLiftingLine(ImplicitAnalysis):
     #     self.fuselage_velocities = self.calculate_fuselage_influences(self.vortex_centers)
     #     # TODO do this
 
-    def calculate_vortex_strengths(self):
+        ##### Calculate Vortex Strengths
         if self.verbose:
             print("Calculating vortex center strengths...")
 
@@ -298,7 +321,7 @@ class NlLiftingLine(ImplicitAnalysis):
         # self.Res_perpendicular = self.Res * self.cos_sweeps
         # self.machs_perpendicular = self.machs * self.cos_sweeps
 
-        self.CLs, self.CDs, CMs = [
+        CLs, CDs, CMs = [
             np.array([
                 polar_function(
                     alpha=alphas[i],
@@ -318,20 +341,24 @@ class NlLiftingLine(ImplicitAnalysis):
         Vi_cross_li_magnitudes = np.linalg.norm(Vi_cross_li, axis=1)
 
         # self.opti.subject_to([
-        #     self.vortex_strengths * Vi_cross_li_magnitudes ==
-        #     0.5 * self.velocity_magnitude_perpendiculars ** 2 * self.CL_locals * self.areas
+        #     vortex_strengths * Vi_cross_li_magnitudes ==
+        #     0.5 * velocity_magnitudes ** 2 * self.CLs * self.areas
         # ])
         residuals = (
-                vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitudes ** 2 / self.areas - self.CLs
+                vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitudes ** 2 / areas - CLs
         )
         self.opti.subject_to([
             residuals == 0
         ])
 
         self.sol = self.opti.solve(verbose=False)
-        self.vortex_strengths = self.sol.value(vortex_strengths)
+        self.vortex_strengths = self.sol(vortex_strengths)
 
-    def calculate_forces(self):
+        ##### Calculate forces
+        ### Calculate Near-Field Forces and Moments
+        # Governing Equation: The force on a straight, small vortex filament is F = rho * cross(V, l) * gamma,
+        # where rho is density, V is the velocity vector, cross() is the cross product operator,
+        # l is the vector of the filament itself, and gamma is the circulation.
 
         if self.verbose:
             print("Calculating induced forces on each panel...")
@@ -346,10 +373,11 @@ class NlLiftingLine(ImplicitAnalysis):
 
         # Calculate forces_inviscid_geometry, the force on the ith panel. Note that this is in GEOMETRY AXES,
         # not WIND AXES or BODY AXES.
-        Vi_cross_li = np.cross(velocities, self.vortex_bound_leg, axis=1)
+        Vi_cross_li = np.cross(velocities, vortex_bound_leg, axis=1)
+
         forces_inviscid_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
         moments_inviscid_geometry = np.cross(
-            np.add(self.vortex_centers, -wide(np.array(self.airplane.xyz_ref))),
+            np.add(vortex_centers, -wide(np.array(self.xyz_ref))),
             forces_inviscid_geometry
         )
 
@@ -358,98 +386,158 @@ class NlLiftingLine(ImplicitAnalysis):
         moment_inviscid_geometry = np.sum(moments_inviscid_geometry, axis=0)
 
         get = lambda x: self.sol(x)
-        self.CDs = get(self.CDs)
-        self.CLs = get(self.CLs)
+        CDs = get(CDs)
+        CLs = get(CLs)
+        CMs = get(CMs)
 
         if self.verbose:
             print("Calculating profile forces and moments...")
         forces_profile_geometry = (0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes)) \
-                                  * tall(self.CDs) * tall(self.areas)
+                                  * tall(CDs) * tall(areas)
 
         moments_profile_geometry = np.cross(
-            np.add(self.vortex_centers, -wide(np.array(self.airplane.xyz_ref))),
+            np.add(vortex_centers, -wide(np.array(self.xyz_ref))),
             forces_profile_geometry
         )
         force_profile_geometry = np.sum(forces_profile_geometry, axis=0)
         moment_profile_geometry = np.sum(moments_profile_geometry, axis=0)
 
-        # Inviscid force from geometry to body and wind axes
-        force_inviscid_body = self.op_point.convert_axes(
-            force_inviscid_geometry[0], force_inviscid_geometry[1], force_inviscid_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        )
-        force_inviscid_wind = self.op_point.convert_axes(
-            force_inviscid_body[0], force_inviscid_body[1], force_inviscid_body[2],
-            from_axes="body",
-            to_axes="wind"
-        )
-        moment_inviscid_body = self.op_point.convert_axes(
-            moment_inviscid_geometry[0], moment_inviscid_geometry[1], moment_inviscid_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        )
-        moment_inviscid_wind = self.op_point.convert_axes(
-            moment_inviscid_body[0], moment_inviscid_body[1], moment_inviscid_body[2],
-            from_axes="body",
-            to_axes="wind"
-        )
+        # # Inviscid force from geometry to body and wind axes
+        # force_inviscid_body = np.array(self.op_point.convert_axes(
+        #     force_inviscid_geometry[0], force_inviscid_geometry[1], force_inviscid_geometry[2],
+        #     from_axes="geometry",
+        #     to_axes="body"
+        # ))
+        # force_inviscid_wind = np.array(self.op_point.convert_axes(
+        #     force_inviscid_body[0], force_inviscid_body[1], force_inviscid_body[2],
+        #     from_axes="body",
+        #     to_axes="wind"
+        # ))
+        # moment_inviscid_body = np.array(self.op_point.convert_axes(
+        #     moment_inviscid_geometry[0], moment_inviscid_geometry[1], moment_inviscid_geometry[2],
+        #     from_axes="geometry",
+        #     to_axes="body"
+        # ))
+        # moment_inviscid_wind = np.array(self.op_point.convert_axes(
+        #     moment_inviscid_body[0], moment_inviscid_body[1], moment_inviscid_body[2],
+        #     from_axes="body",
+        #     to_axes="wind"
+        # ))
+        #
+        # # Profile force from geometry to body and wind axes
+        # force_profile_body = np.array(self.op_point.convert_axes(
+        #     force_profile_geometry[0], force_profile_geometry[1], force_profile_geometry[2],
+        #     from_axes="geometry",
+        #     to_axes="body"
+        # ))
+        # force_profile_wind = np.array(self.op_point.convert_axes(
+        #     force_profile_body[0], force_profile_body[1], force_profile_body[2],
+        #     from_axes="body",
+        #     to_axes="wind"
+        # ))
+        # moment_profile_body = np.array(self.op_point.convert_axes(
+        #     moment_profile_geometry[0], moment_profile_geometry[1], moment_profile_geometry[2],
+        #     from_axes="geometry",
+        #     to_axes="body"
+        # ))
+        # moment_profile_wind = np.array(self.op_point.convert_axes(
+        #     moment_profile_body[0], moment_profile_body[1], moment_profile_body[2],
+        #     from_axes="body",
+        #     to_axes="wind"
+        # ))
 
-        # Profile force from geometry to body and wind axes
-        force_profile_body = self.op_point.convert_axes(
-            force_profile_geometry[0], force_profile_geometry[1], force_profile_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        )
-        force_profile_wind = self.op_point.convert_axes(
-            force_profile_body[0], force_profile_body[1], force_profile_body[2],
-            from_axes="body",
-            to_axes="wind"
-        )
-        moment_profile_body = self.op_point.convert_axes(
-            moment_profile_geometry[0], moment_profile_geometry[1], moment_profile_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        )
-        moment_profile_wind = self.op_point.convert_axes(
-            moment_profile_body[0], moment_profile_body[1], moment_profile_body[2],
-            from_axes="body",
-            to_axes="wind"
-        )
+        # computing constant pitching moment
+        # bound_leg_YZ = self.vortex_bound_leg
+        # bound_leg_YZ[:, 0] = 0
+        # moments_pitching_geometry = (0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes)) \
+        #                           * tall(self.CMs) * tall(self.chords) ** 2 * bound_leg_YZ
+        # moment_pitching_geometry = np.sum(moments_pitching_geometry, axis=0)
+        # self.moment_pitching_body = self.op_point.convert_axes(
+        #     moment_pitching_geometry[0], moment_pitching_geometry[1], moment_pitching_geometry[2],
+        #     from_axes="geometry",
+        #     to_axes="body"
+        # )
+
 
         if self.verbose:
             print("Calculating total forces and moments...")
-        self.force_total_geometry = np.add(force_inviscid_geometry, force_profile_geometry)
-        self.force_total_body = np.add(force_inviscid_body, force_profile_body)
-        self.force_total_wind = np.add(force_inviscid_wind, force_profile_wind)
-        self.moment_total_geometry = np.add(moment_inviscid_geometry, moment_profile_geometry)
-        self.moment_total_body = np.add(moment_inviscid_body, moment_profile_body)
-        self.moment_total_wind = np.add(moment_inviscid_wind, moment_profile_wind)
+        force_total_geometry = np.add(force_inviscid_geometry, force_profile_geometry)
+
+        force_total_body = np.array(self.op_point.convert_axes(
+            force_total_geometry[0], force_total_geometry[1], force_total_geometry[2],
+            from_axes="geometry",
+            to_axes="body"
+        ))
+        force_total_wind = np.array(self.op_point.convert_axes(
+            force_total_body[0], force_total_body[1], force_total_body[2],
+            from_axes="body",
+            to_axes="wind"
+        ))
+
+
+        # self.force_total_body = np.add(force_inviscid_body, force_profile_body)
+        # self.force_total_wind = np.add(force_inviscid_wind, force_profile_wind)
+        moment_total_geometry = np.add(moment_inviscid_geometry, moment_profile_geometry)
+
+        moment_total_body = np.array(self.op_point.convert_axes(
+            moment_total_geometry[0], moment_total_geometry[1], moment_total_geometry[2],
+            from_axes="geometry",
+            to_axes="body"
+        ))
+        moment_total_wind = np.array(self.op_point.convert_axes(
+                moment_total_body[0], moment_total_body[1], moment_total_body[2],
+                from_axes="body",
+                to_axes="wind"
+            ))
+        # self.moment_total_body = np.add(moment_inviscid_body, moment_profile_body)
+        # self.moment_total_wind = np.add(moment_inviscid_wind, moment_profile_wind)
 
         ### Save things to the instance for later access
-        L = -self.force_total_wind[2]
-        D = -self.force_total_wind[0]
-        Di = -force_inviscid_wind[0]
-        Dp = -force_profile_wind[0]
-        Y = self.force_total_wind[1]
-        l_b = self.moment_total_body[0]
-        m_b = self.moment_total_body[1]
-        n_b = self.moment_total_body[2]
+        L = -force_total_wind[2]
+        D = -force_total_wind[0]
+        # Di = -force_inviscid_wind[0]
+        # Dp = -force_profile_wind[0]
+        Y = force_total_wind[1]
+        l_b = moment_total_body[0]
+        m_b = moment_total_body[1]
+        n_b = moment_total_body[2]
 
         # Calculate nondimensional forces
         q = self.op_point.dynamic_pressure()
         s_ref = self.airplane.s_ref
         b_ref = self.airplane.b_ref
         c_ref = self.airplane.c_ref
-        self.CL = L / q / s_ref
-        self.CD = D / q / s_ref
-        self.CDi = Di / q / s_ref
-        self.CDp = Dp / q / s_ref
-        self.CY = Y / q / s_ref
-        self.Cl = l_b / q / s_ref / b_ref
-        self.Cm = m_b / q / s_ref / c_ref
-        self.Cn = n_b / q / s_ref / b_ref
+        CL = L / q / s_ref
+        CD = D / q / s_ref
+        # CDi = Di / q / s_ref
+        # CDp = Dp / q / s_ref
+        CY = Y / q / s_ref
+        Cl = l_b / q / s_ref / b_ref
+        Cm = m_b / q / s_ref / c_ref
+        Cn = n_b / q / s_ref / b_ref
 
+        return {
+            "F_g": force_total_geometry,
+            "F_b": force_total_body,
+            "F_w": force_total_wind,
+            "M_g": moment_total_geometry,
+            "M_b": moment_total_body,
+            "M_w": moment_total_wind,
+            "L": L,
+            "D": D,
+            "Y": Y,
+            "l_b": l_b,
+            "m_b": m_b,
+            "n_b": n_b,
+            "CL": CL,
+            "CD": CD,
+            # "CDi": CDi,
+            # "CDp": CDp,
+            "CY": CY,
+            "Cl": Cl,
+            "Cm": Cm,
+            "Cn": Cn,
+        }
 
     def get_induced_velocity_at_points(self,
                                        points: np.ndarray,
@@ -481,7 +569,11 @@ class NlLiftingLine(ImplicitAnalysis):
             x_right=wide(self.right_vortex_vertices[:, 0]),
             y_right=wide(self.right_vortex_vertices[:, 1]),
             z_right=wide(self.right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=self.steady_freestream_direction,
+            trailing_vortex_direction=(
+                self.steady_freestream_direction
+                if self.align_trailing_vortices_with_wind else
+                np.array([1, 0, 0])
+            ),
             gamma=wide(vortex_strengths),
             vortex_core_radius=self.vortex_core_radius
         )
@@ -514,17 +606,17 @@ class NlLiftingLine(ImplicitAnalysis):
         )
 
 
-        rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
+        rotation_freestream_velocities = np.array(self.op_point.compute_rotation_velocity_geometry_axes(
             points
-        )
+        ))
 
         freestream_velocities = np.add(wide(self.steady_freestream_velocity), rotation_freestream_velocities)
 
         if self.airplane.fuselages:
-            V_induced_fuselage = self.calculate_fuselage_influences(
+            self.V_induced_fuselage = self.calculate_fuselage_influences(
                  points=self.vortex_centers
             )
-            V = V_induced + V_induced_fuselage + freestream_velocities
+            V = V_induced + self.V_induced_fuselage + freestream_velocities
         else:
             V = V_induced + freestream_velocities
         return V
