@@ -239,9 +239,16 @@ def solar_flux(
 
         latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
 
-        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+        day_of_year: The day of the year, represented in the Julian day format (i.e., 1 == Jan. 1, 365 == Dec. 31). This
+            accounts for seasonal variations in the sun's position in the sky.
 
-        time: Time after local solar noon [seconds]
+        time: The time of day, measured as the time elapsed after local solar noon [seconds]. Should range from 0 to
+            86,400 (the number of seconds in a day). Local solar noon is the time of day when the sun is at its highest
+            point in the sky, directly above the observer's local meridian. This is the time when the sun's rays are most
+            directly overhead and solar flux is at its peak for a given location. Solar noon does not necessarily occur
+            at exactly 12:00 PM local standard time, as it depends on your longitude, the equation of time, and the time
+            of year. (Also, don't forget to account for Daylight Savings Time, if that's a relevant consideration for
+            your location and season.) Typically, local solar noon is +- 15 minutes from 12:00 PM local standard time.
 
         altitude: Altitude of the panel above sea level [meters]. This affects atmospheric absorption and scattering
         characteristics.
