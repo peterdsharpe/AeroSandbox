@@ -251,10 +251,10 @@ def solar_flux(
             your location and season.) Typically, local solar noon is +- 15 minutes from 12:00 PM local standard time.
 
         altitude: Altitude of the panel above sea level [meters]. This affects atmospheric absorption and scattering
-        characteristics.
+            characteristics.
 
         panel_azimuth_angle: The azimuth angle of the panel normal [degrees] (the compass direction in which the
-        panel normal is tilted). Irrelevant if the panel tilt angle is 0 (e.g., the panel is horizontal).
+            panel normal is tilted). Irrelevant if the panel tilt angle is 0 (e.g., the panel is horizontal).
 
             * 0 corresponds to North, 90 corresponds to East.
 
@@ -284,7 +284,7 @@ def solar_flux(
             result in enough increased back-scattering (multipathing) that you have a smidge more illumination.
 
         albedo: The fraction of light that hits the ground that is reflected. Affects illumination from re-scattering
-        when panels are tilted. Typical values for general terrestrial surfaces are 0.2, which is the default here.
+            when panels are tilted. Typical values for general terrestrial surfaces are 0.2, which is the default here.
 
             * Other values, taken from the Earthscan source (citation above):
 
