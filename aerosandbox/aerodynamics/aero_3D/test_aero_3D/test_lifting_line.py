@@ -8,13 +8,13 @@ def test_lifting_line():
     op_point = asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=0),
             velocity=10,  # m/s
-            alpha=np.linspace(-6,6,11)
+            alpha=np.linspace(-8,8,8)
         )
     LL_aeros = [asb.NlLiftingLine(
         airplane=airplane,
         op_point=op,
         verbose=True,
-        spanwise_resolution=10,
+        spanwise_resolution=3,
     ).run()
             for op in op_point
     ]
@@ -27,7 +27,7 @@ def test_lifting_line():
             for aero in LL_aeros
         ])
 
-    fig, ax = plt.subplots(1, 2)
+    fig, ax = plt.subplots(1, 3)
 
     plt.sca(ax[0])
     plt.plot(op_point.alpha, LL_aero["CL"])
@@ -35,12 +35,15 @@ def test_lifting_line():
     plt.sca(ax[1])
     plt.plot(op_point.alpha, LL_aero["CD"])
 
+    plt.sca(ax[2])
+    plt.plot(op_point.alpha, LL_aero["Cm"])
+
     vlm_aeros = [asb.VortexLatticeMethod(
         airplane=airplane,
         op_point=op,
         verbose=True,
         spanwise_resolution=10,
-        chordwise_resolution=25,
+        chordwise_resolution=10,
     ).run()
        for op in op_point
     ]
@@ -58,6 +61,9 @@ def test_lifting_line():
 
     plt.sca(ax[1])
     plt.plot(op_point.alpha, vlm_aero["CD"])
+
+    plt.sca(ax[2])
+    plt.plot(op_point.alpha, vlm_aero["Cm"])
 
     AVL_aeros = [asb.AVL(
         airplane=airplane,
@@ -79,7 +85,7 @@ def test_lifting_line():
     plt.plot(op_point.alpha, AVL_aero["CL"])
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_L$")
-    p.set_ticks(2, 0.5, 0.05, 0.01)
+    p.set_ticks(2, 0.5, 0.1, 0.01)
     plt.legend(labels=["NL LL", "VLM", "AVL"])
 
     plt.sca(ax[1])
@@ -87,12 +93,20 @@ def test_lifting_line():
     plt.xlabel(r"$\alpha$ [deg]")
     plt.ylabel(r"$C_D$")
     p.set_ticks(2, 0.5, 0.005, 0.001)
+
+
+    plt.sca(ax[2])
+    plt.plot(op_point.alpha, AVL_aero["Cm"])
+    plt.xlabel(r"$\alpha$")
+    plt.ylabel(r"$C_m$")
+    # p.set_ticks(2, 0.5, 0.005, 0.001)
     plt.legend(labels=["NL LL", "VLM", "AVL"])
     p.show_plot(
-        title="`NL LL, VLM, AVL` naca0015 Aircraft",
+        title="`NL LL, VLM, AVL` Aircraft",
         # savefig="NL_LL&VLM&AVL_0015_Notwist.png"
     )
 
 if __name__ == '__main__':
-     test_lifting_line()
+    test_lifting_line()
+    airplane.draw()
      # pytest.main()

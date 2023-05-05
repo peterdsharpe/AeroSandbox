@@ -1,7 +1,9 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
-sd7037 = asb.Airfoil("naca4412", generate_polars=True)
+sd7037 = asb.Airfoil("sd7037")
+
+sd7037.generate_polars(cache_filename="cache/sd7037")
 
 airplane = asb.Airplane(
     name="Vanilla",
@@ -9,7 +11,7 @@ airplane = asb.Airplane(
     wings=[
         asb.Wing(
             name="Wing",
-            symmetric=False,
+            symmetric=True,
             xsecs=[
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
@@ -24,7 +26,7 @@ airplane = asb.Airplane(
                     airfoil=sd7037,
                 ),
                 asb.WingXSec(
-                    xyz_le=[0, 4, 0],
+                    xyz_le=[0.5, 4, 1],
                     chord=1,
                     twist=0,
                     airfoil=sd7037,
