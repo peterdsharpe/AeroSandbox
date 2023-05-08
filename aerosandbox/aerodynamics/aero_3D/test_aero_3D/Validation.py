@@ -78,7 +78,7 @@ LL_aeros = [
         airplane=airplane,
         op_point=op,
         xyz_ref=xyz_ref,
-        spanwise_resolution=10,
+        spanwise_resolution=4,
         verbose=True
     ).run()
     for op in op_point
