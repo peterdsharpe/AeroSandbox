@@ -14,7 +14,7 @@ def test_lifting_line():
         airplane=airplane,
         op_point=op,
         verbose=True,
-        spanwise_resolution=3,
+        spanwise_resolution=8,
     ).run()
             for op in op_point
     ]

@@ -112,28 +112,28 @@ class NlLiftingLine(ImplicitAnalysis):
 
     def run(self) -> Dict[str, Any]:
         """
-                Computes the aerodynamic forces.
+            Computes the aerodynamic forces.
 
-                Returns a dictionary with keys:
+            Returns a dictionary with keys:
 
-                    - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
-                    - 'F_b' : an [x, y, z] list of forces in body axes [N]
-                    - 'F_w' : an [x, y, z] list of forces in wind axes [N]
-                    - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
-                    - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
-                    - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
-                    - 'L' : the lift force [N]. Definitionally, this is in wind axes.
-                    - 'Y' : the side force [N]. This is in wind axes.
-                    - 'D' : the drag force [N]. Definitionally, this is in wind axes.
-                    - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
-                    - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
-                    - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
-                    - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
-                    - 'CY', the sideforce coefficient [-]. This is in wind axes.
-                    - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
-                    - 'Cl', the rolling coefficient [-], in body axes
-                    - 'Cm', the pitching coefficient [-], in body axes
-                    - 'Cn', the yawing coefficient [-], in body axes
+                - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
+                - 'F_b' : an [x, y, z] list of forces in body axes [N]
+                - 'F_w' : an [x, y, z] list of forces in wind axes [N]
+                - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+                - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
+                - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+                - 'L' : the lift force [N]. Definitionally, this is in wind axes.
+                - 'Y' : the side force [N]. This is in wind axes.
+                - 'D' : the drag force [N]. Definitionally, this is in wind axes.
+                - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+                - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+                - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+                - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+                - 'CY', the sideforce coefficient [-]. This is in wind axes.
+                - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+                - 'Cl', the rolling coefficient [-], in body axes
+                - 'Cm', the pitching coefficient [-], in body axes
+                - 'Cn', the yawing coefficient [-], in body axes
 
                 Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
                 """
@@ -158,6 +158,8 @@ class NlLiftingLine(ImplicitAnalysis):
             self.spacing_function = np.linspace
         elif self.spanwise_spacing_function == 'cosine':
             self.spacing_function = np.cosspace
+        else:
+            raise Exception("Bad value of `LiftingLine.spanwise_spacing`!")
 
         for wing in self.airplane.wings:        # subdivide the wing in more spanwise sections
             if self.spanwise_resolution > 1:
@@ -171,6 +173,7 @@ class NlLiftingLine(ImplicitAnalysis):
                     chordwise_resolution=1,
                     add_camber=False
                 )
+
                 front_left_vertices.append(points[faces[:, 0], :])
                 back_left_vertices.append(points[faces[:, 1], :])
                 back_right_vertices.append(points[faces[:, 2], :])
@@ -180,21 +183,12 @@ class NlLiftingLine(ImplicitAnalysis):
                     (np.arange(len(faces)) + 1) % chordwise_resolution == 0
                 )
 
-            for xsec_a, xsec_b in zip(         # iterating for the cross sections present in the initial wing geometry
+            for xsec_a, xsec_b in zip(         # iterating through the cross sections present in the initial wing geometry
                     wing.xsecs[:-1],
                     wing.xsecs[1:]
             ):
-                # y_nondim_vertices = self.spanwise_spacing_function(         # take the vertices in the same places where
-                #                         0,                                  # the cross sections of subdivide_sections will be put
-                #                         1,
-                #                         self.spanwise_resolution + 1
-                # )
-                if self.spanwise_spacing_function == 'uniform':
-                    y_nondim_vertices = np.linspace(0, 1, self.spanwise_resolution + 1)
-                elif self.spanwise_spacing_function == 'cosine':
-                    y_nondim_vertices = np.cosspace(0, 1, self.spanwise_resolution + 1)
-                else:
-                    raise Exception("Bad value of `LiftingLine.spanwise_spacing`!")
+
+                y_nondim_vertices = self.spacing_function(0, 1, self.spanwise_resolution + 1)
 
                 y_nondim = (y_nondim_vertices[:-1] + y_nondim_vertices[1:]) / 2
 
@@ -240,11 +234,14 @@ class NlLiftingLine(ImplicitAnalysis):
         right_vortex_vertices = 0.75 * front_right_vertices + 0.25 * back_right_vertices
         vortex_centers = (left_vortex_vertices + right_vortex_vertices) / 2
         vortex_bound_leg = right_vortex_vertices - left_vortex_vertices
+        vortex_bound_leg_norm = np.linalg.norm(vortex_bound_leg, axis=1)
         chord_vectors = (
                 (back_left_vertices + back_right_vertices) / 2 -
                 (front_left_vertices + front_right_vertices) / 2
         )
         chords = np.linalg.norm(chord_vectors, axis=1)
+        wing_directions = vortex_bound_leg / tall(vortex_bound_leg_norm)
+        local_forward_direction = np.cross(normal_directions, wing_directions)
 
         ### Save things to the instance for later access
         self.front_left_vertices = front_left_vertices
@@ -263,6 +260,7 @@ class NlLiftingLine(ImplicitAnalysis):
         self.vortex_bound_leg = vortex_bound_leg
         self.chord_vectors = chord_vectors
         self.chords = chords
+        self.local_forward_direction = local_forward_direction
 
         ##### Setup Operating Point
         if self.verbose:
@@ -281,17 +279,6 @@ class NlLiftingLine(ImplicitAnalysis):
         self.steady_freestream_velocity = steady_freestream_velocity
         self.steady_freestream_direction = steady_freestream_direction
         self.freestream_velocities = freestream_velocities
-
-    # def _setup_geometry(self):
-    #     if self.verbose:
-    #         print("Calculating the vortex center velocity influence matrix...")
-    #     self.V_induced_centers = self.get_induced_velocity_at_points(self.vortex_centers)
-    #
-    #     if self.verbose:
-    #         print("Calculating fuselage influences...")
-    #     self.beta = (1 - self.op_point.mach()) ** 1/2
-    #     self.fuselage_velocities = self.calculate_fuselage_influences(self.vortex_centers)
-    #     # TODO do this
 
         ##### Calculate Vortex Strengths
         if self.verbose:
@@ -316,24 +303,16 @@ class NlLiftingLine(ImplicitAnalysis):
             np.sum(velocity_directions * self.normal_directions, axis=1)
         )
 
+        # Get perpendicular parameters
+        cos_sweeps = np.sum(velocity_directions * -local_forward_direction, axis=1)
+
         Res = (
                 velocity_magnitudes *
                 self.chords /
                 self.op_point.atmosphere.kinematic_viscosity()
-        )  # TODO add multiply by cos_sweeps
+        )  * cos_sweeps
 
-        machs = velocity_magnitudes / self.op_point.atmosphere.speed_of_sound()    # TODO incorporate sweep effects here!
-
-        # Get perpendicular parameters
-        # self.cos_sweeps = (
-        #                           self.velocities[:, 0] * -self.local_forward_directions[:, 0] +
-        #                           self.velocities[:, 1] * -self.local_forward_directions[:, 1] +
-        #                           self.velocities[:, 2] * -self.local_forward_directions[:, 2]
-        #                   ) / self.velocity_magnitudes
-        # self.chord_perpendiculars = self.chords * self.cos_sweeps
-        # self.velocity_magnitude_perpendiculars = self.velocity_magnitudes * self.cos_sweeps
-        # self.Res_perpendicular = self.Res * self.cos_sweeps
-        # self.machs_perpendicular = self.machs * self.cos_sweeps
+        machs = velocity_magnitudes / self.op_point.atmosphere.speed_of_sound() * cos_sweeps
 
         CLs, CDs, CMs = [
             np.array([
@@ -356,10 +335,12 @@ class NlLiftingLine(ImplicitAnalysis):
 
         # self.opti.subject_to([
         #     vortex_strengths * Vi_cross_li_magnitudes ==
-        #     0.5 * velocity_magnitudes ** 2 * self.CLs * self.areas
+        #     0.5 * velocity_magnitude_perpendiculars ** 2 * self.CLs * self.areas
         # ])
+        velocity_magnitude_perpendiculars = velocity_magnitudes * cos_sweeps
+
         residuals = (
-                vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitudes ** 2 / areas - CLs
+                vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitude_perpendiculars ** 2 / areas - CLs
         )
         self.opti.subject_to([
             residuals == 0
@@ -383,7 +364,7 @@ class NlLiftingLine(ImplicitAnalysis):
         velocities = self.get_velocity_at_points(
             points=self.vortex_centers,
             vortex_strengths=self.vortex_strengths
-        )  # TODO just a reminder, fuse added here
+        )  # fuse added here
 
         velocity_magnitudes = np.linalg.norm(velocities, axis=1)
 
@@ -443,7 +424,7 @@ class NlLiftingLine(ImplicitAnalysis):
 
         # Compute pitching moment
 
-        bound_leg_YZ = self.vortex_bound_leg
+        bound_leg_YZ = vortex_bound_leg
         bound_leg_YZ[:, 0] = 0
         moments_pitching_geometry = (0.5 * self.op_point.atmosphere.density() *  tall(velocity_magnitudes ** 2)) \
                                   * tall(CMs) * tall(chords ** 2) * bound_leg_YZ
@@ -614,14 +595,15 @@ class NlLiftingLine(ImplicitAnalysis):
         this_fuse_radii = []
 
         for fuse in self.airplane.fuselages:  # iterating through the airplane fuselages
-            for xsec_num in range(len(fuse.xsecs)): # iterating for the current fuselage sections
+            for xsec_num in range(len(fuse.xsecs)): # iterating through the current fuselage sections
                 this_fuse_xsec = fuse.xsecs[xsec_num]
                 this_fuse_centerline_points.append(this_fuse_xsec.xyz_c)
                 this_fuse_radii.append(this_fuse_xsec.width / 2)
 
         this_fuse_centerline_points = np.stack(
                                         this_fuse_centerline_points,
-                                        axis=0)
+                                        axis=0
+        )
         this_fuse_centerline_points = (this_fuse_centerline_points[1:, :] +
                                        this_fuse_centerline_points[:-1, :]) / 2
         this_fuse_radii = np.array(this_fuse_radii)
@@ -905,7 +887,7 @@ if __name__ == '__main__':
                   velocity=10,  # m/s
                   alpha=5),
         verbose = True,
-        spanwise_resolution = 10,
+        spanwise_resolution = 2,
         )
 
     res = LL_aeros.run()

@@ -309,12 +309,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
         s_ref = self.airplane.s_ref
         b_ref = self.airplane.b_ref
         c_ref = self.airplane.c_ref
-        CL = L / q / s_ref
-        CD = D / q / s_ref
-        CY = Y / q / s_ref
-        Cl = l_b / q / s_ref / b_ref
-        Cm = m_b / q / s_ref / c_ref
-        Cn = n_b / q / s_ref / b_ref
+        self.CL = L / q / s_ref
+        self.CD = D / q / s_ref
+        self.CY = Y / q / s_ref
+        self.Cl = l_b / q / s_ref / b_ref
+        self.Cm = m_b / q / s_ref / c_ref
+        self.Cn = n_b / q / s_ref / b_ref
 
         return {
             "F_g": force_geometry,
@@ -329,12 +329,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
             "l_b": l_b,
             "m_b": m_b,
             "n_b": n_b,
-            "CL" : CL,
-            "CD" : CD,
-            "CY" : CY,
-            "Cl" : Cl,
-            "Cm" : Cm,
-            "Cn" : Cn,
+            "CL" : self.CL,
+            "CD" : self.CD,
+            "CY" : self.CY,
+            "Cl" : self.Cl,
+            "Cm" : self.Cm,
+            "Cn" : self.Cn,
         }
 
     def run_with_stability_derivatives(self,
@@ -744,7 +744,7 @@ if __name__ == '__main__':
             r=0,
         ),
         spanwise_resolution=10,
-        chordwise_resolution=1,
+        chordwise_resolution=10,
     )
 
     res = vlm.run()
