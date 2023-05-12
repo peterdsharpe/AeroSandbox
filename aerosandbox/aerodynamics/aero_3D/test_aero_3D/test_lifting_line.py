@@ -42,7 +42,7 @@ def test_lifting_line():
         airplane=airplane,
         op_point=op,
         verbose=True,
-        spanwise_resolution=10,
+        spanwise_resolution=1,
         chordwise_resolution=10,
     ).run()
        for op in op_point
@@ -99,11 +99,9 @@ def test_lifting_line():
     plt.plot(op_point.alpha, AVL_aero["Cm"])
     plt.xlabel(r"$\alpha$")
     plt.ylabel(r"$C_m$")
-    # p.set_ticks(2, 0.5, 0.005, 0.001)
     plt.legend(labels=["NL LL", "VLM", "AVL"])
     p.show_plot(
         title="`NL LL, VLM, AVL` Aircraft",
-        # savefig="NL_LL&VLM&AVL_0015_Notwist.png"
     )
 
 if __name__ == '__main__':
