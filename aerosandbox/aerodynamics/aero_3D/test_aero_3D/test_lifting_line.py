@@ -70,8 +70,8 @@ def test_lifting_line():
         op_point=op,
         verbose=True,
     ).run()
-                 for op in op_point
-                 ]
+        for op in op_point
+    ]
 
     AVL_aero = {}
 

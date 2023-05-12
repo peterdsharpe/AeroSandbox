@@ -7,6 +7,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.point_source import \
     calculate_induced_velocity_point_source
 import aerosandbox.numpy as np
 from typing import Dict, Any, Callable, List
+import copy
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
@@ -47,7 +48,7 @@ class NlLiftingLine(ImplicitAnalysis):
                  xyz_ref: List[float] = None,
                  run_symmetric_if_possible : bool = False,
                  verbose: bool = False,
-                 spanwise_resolution=4,  # TODO document
+                 spanwise_resolution=8,  # TODO document
                  # spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  spanwise_spacing_function = "cosine",
                  vortex_core_radius: float = 1e-8,
@@ -103,6 +104,7 @@ class NlLiftingLine(ImplicitAnalysis):
             # except RuntimeError:  # Required because beta, p, r, etc. may be non-numeric (e.g. opti variables)
             #     pass
 
+
     def __repr__(self):
         return self.__class__.__name__ + "(\n\t" + "\n\t".join([
             f"airplane={self.airplane}",
@@ -110,36 +112,40 @@ class NlLiftingLine(ImplicitAnalysis):
             f"xyz_ref={self.xyz_ref}",
         ]) + "\n)"
 
-    def run(self) -> Dict[str, Any]:
+
+
+    def run(self, solve: bool = True) -> Dict[str, Any]:
         """
-            Computes the aerodynamic forces.
+        Computes the aerodynamic forces.
 
-            Returns a dictionary with keys:
+        Returns a dictionary with keys:
+            - 'residuals': a list of residuals for each horseshoe element
+            - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
+            - 'F_b' : an [x, y, z] list of forces in body axes [N]
+            - 'F_w' : an [x, y, z] list of forces in wind axes [N]
+            - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+            - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
+            - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+            - 'L' : the lift force [N]. Definitionally, this is in wind axes.
+            - 'Y' : the side force [N]. This is in wind axes.
+            - 'D' : the drag force [N]. Definitionally, this is in wind axes.
+            - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+            - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+            - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+            - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+            - 'CY', the sideforce coefficient [-]. This is in wind axes.
+            - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+            - 'CDi' the induced drag coefficient
+            - 'CDp' the profile drag coefficient
+            - 'Cl', the rolling coefficient [-], in body axes
+            - 'Cm', the pitching coefficient [-], in body axes
+            - 'Cn', the yawing coefficient [-], in body axes
 
-                - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
-                - 'F_b' : an [x, y, z] list of forces in body axes [N]
-                - 'F_w' : an [x, y, z] list of forces in wind axes [N]
-                - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
-                - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
-                - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
-                - 'L' : the lift force [N]. Definitionally, this is in wind axes.
-                - 'Y' : the side force [N]. This is in wind axes.
-                - 'D' : the drag force [N]. Definitionally, this is in wind axes.
-                - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
-                - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
-                - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
-                - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
-                - 'CY', the sideforce coefficient [-]. This is in wind axes.
-                - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
-                - 'Cl', the rolling coefficient [-], in body axes
-                - 'Cm', the pitching coefficient [-], in body axes
-                - 'Cn', the yawing coefficient [-], in body axes
+        Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
+        """
 
-                Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
-                """
-        # self.setup_mesh()                    # construct the mesh geometry
-        # self.calculate_vortex_strengths()    # compute vortex strength at each vortex center
-        # self.calculate_forces()              # compute viscous and inviscid forces
+        self.solve = solve          # is it is True (default), NL_lifting_line is a standalone solver. If False, it
+                                    # is expected to constrain the residuals to zero in the outer optimization problem
 
         if self.verbose:
             print("Meshing...")
@@ -284,11 +290,12 @@ class NlLiftingLine(ImplicitAnalysis):
         if self.verbose:
             print("Calculating vortex center strengths...")
 
-        self.n_panels = (areas.shape[0])
+        self.n_panels = areas.shape[0]
 
         # Set up implicit solve (explicit is not possible for general nonlinear problem)
         vortex_strengths = self.opti.variable(init_guess=np.zeros(shape=self.n_panels))
                                               # scale =self.op_point.velocity) )
+        self.vortex_strengths = vortex_strengths
 
         # Find velocities
         velocities = self.get_velocity_at_points(
@@ -342,14 +349,16 @@ class NlLiftingLine(ImplicitAnalysis):
         residuals = (
                 vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitude_perpendiculars ** 2 / areas - CLs
         )
-        self.opti.subject_to([
-            residuals == 0
-        ])
 
-        self.sol = self.opti.solve(verbose=False)
-        self.vortex_strengths = self.sol(vortex_strengths)
-        self.opti.set_initial(self.sol.value_variables())  # NEW LINE: Initialize primals from last solution
-        self.opti.set_initial(self.opti.lam_g, self.sol.value(self.opti.lam_g)) # NEW LINE: Initialize duals from last solution
+        if self.solve:
+            self.opti.subject_to([
+                residuals == 0
+            ])
+
+            self.sol = self.opti.solve(verbose=False)
+            self.vortex_strengths = self.sol(vortex_strengths)
+            self.opti.set_initial(self.sol.value_variables())  # NEW LINE: Initialize primals from last solution
+            self.opti.set_initial(self.opti.lam_g, self.sol.value(self.opti.lam_g)) # NEW LINE: Initialize duals from last solution
 
         ##### Calculate forces
         ### Calculate Near-Field Forces and Moments
@@ -382,9 +391,11 @@ class NlLiftingLine(ImplicitAnalysis):
         force_inviscid_geometry = np.sum(forces_inviscid_geometry, axis=0)
         moment_inviscid_geometry = np.sum(moments_inviscid_geometry, axis=0)
 
-        get = lambda x: self.sol(x)
-        CDs = get(CDs)
-        CMs = get(CMs)
+        if self.solve:
+            get = lambda x: self.sol(x)
+            CDs = get(CDs)
+            CMs = get(CMs)
+            residuals = get(residuals)
 
         if self.verbose:
             print("Calculating profile forces and moments...")
@@ -485,6 +496,7 @@ class NlLiftingLine(ImplicitAnalysis):
         self.CL_over_CD = np.where(self.CD == 0, 0, self.CL / self.CD)
 
         return {
+            "residuals": residuals,
             "F_g": force_total_geometry,
             "F_b": force_total_body,
             "F_w": force_total_wind,
