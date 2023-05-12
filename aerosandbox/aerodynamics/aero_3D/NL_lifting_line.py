@@ -169,12 +169,12 @@ class NlLiftingLine(ImplicitAnalysis):
 
         for wing in self.airplane.wings:        # subdivide the wing in more spanwise sections
             if self.spanwise_resolution > 1:
-                wing_section = wing.subdivide_sections(
+                wing = wing.subdivide_sections(
                     ratio=self.spanwise_resolution,
                     spacing_function=self.spacing_function
                 )
 
-                points, faces = wing_section.mesh_thin_surface(
+                points, faces = wing.mesh_thin_surface(
                     method="quad",
                     chordwise_resolution=1,
                     add_camber=False
@@ -189,37 +189,14 @@ class NlLiftingLine(ImplicitAnalysis):
                     (np.arange(len(faces)) + 1) % chordwise_resolution == 0
                 )
 
-            for xsec_a, xsec_b in zip(         # iterating through the cross sections present in the initial wing geometry
+            for xsec_a, xsec_b in zip(         # iterating through the cross-sections in the wing geometry
                     wing.xsecs[:-1],
                     wing.xsecs[1:]
             ):
 
-                y_nondim_vertices = self.spacing_function(0, 1, self.spanwise_resolution + 1)
-
-                y_nondim = (y_nondim_vertices[:-1] + y_nondim_vertices[1:]) / 2
-
-                if wing.symmetric:
-                    y_nondim = np.concatenate([y_nondim, y_nondim])
-
-                for y_nondim_i in y_nondim:
-                    CL_functions.append(
-                        lambda alpha, Re, mach,
-                               xsec_a=xsec_a, xsec_b=xsec_b, y_nondim=y_nondim_i:
-                        xsec_a.airfoil.CL_function(alpha, Re, mach) * (1 - y_nondim) +
-                        xsec_b.airfoil.CL_function(alpha, Re, mach) * (y_nondim)
-                    )
-                    CD_functions.append(
-                        lambda alpha, Re, mach,
-                               xsec_a=xsec_a, xsec_b=xsec_b, y_nondim=y_nondim_i:
-                        xsec_a.airfoil.CD_function(alpha, Re, mach) * (1 - y_nondim) +
-                        xsec_b.airfoil.CD_function(alpha, Re, mach) * (y_nondim)
-                    )
-                    CM_functions.append(
-                        lambda alpha, Re, mach,
-                               xsec_a=xsec_a, xsec_b=xsec_b, y_nondim=y_nondim_i:
-                        xsec_a.airfoil.CM_function(alpha, Re, mach) * (1 - y_nondim) +
-                        xsec_b.airfoil.CM_function(alpha, Re, mach) * (y_nondim)
-                    )
+                CL_functions.append( xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CL_function )
+                CD_functions.append( xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CD_function )
+                CM_functions.append( xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CM_function )
 
         front_left_vertices = np.concatenate(front_left_vertices)
         back_left_vertices = np.concatenate(back_left_vertices)
@@ -357,8 +334,6 @@ class NlLiftingLine(ImplicitAnalysis):
 
             self.sol = self.opti.solve(verbose=False)
             self.vortex_strengths = self.sol(vortex_strengths)
-            self.opti.set_initial(self.sol.value_variables())  # NEW LINE: Initialize primals from last solution
-            self.opti.set_initial(self.opti.lam_g, self.sol.value(self.opti.lam_g)) # NEW LINE: Initialize duals from last solution
 
         ##### Calculate forces
         ### Calculate Near-Field Forces and Moments
@@ -399,8 +374,10 @@ class NlLiftingLine(ImplicitAnalysis):
 
         if self.verbose:
             print("Calculating profile forces and moments...")
-        forces_profile_geometry = (0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes)) \
+        forces_profile_geometry = (
+                                  0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes)
                                   * tall(CDs) * tall(areas)
+                                  )
 
         moments_profile_geometry = np.cross(
             np.add(vortex_centers, -wide(np.array(self.xyz_ref))),
@@ -514,9 +491,10 @@ class NlLiftingLine(ImplicitAnalysis):
             "CDi": CDi,
             "CDp": CDp,
             "CY": self.CY,
+            "CL_over_CD": self.CL_over_CD,
             "Cl": self.Cl,
             "Cm": self.Cm,
-            "Cn": self.Cn,
+            "Cn": self.Cn
         }
 
     def get_induced_velocity_at_points(self,
