@@ -884,7 +884,7 @@ if __name__ == '__main__':
                   velocity=10,  # m/s
                   alpha=0),
         verbose = True,
-        spanwise_resolution = 4,
+        spanwise_resolution = 5,
         )
 
     res = LL_aeros.run()
