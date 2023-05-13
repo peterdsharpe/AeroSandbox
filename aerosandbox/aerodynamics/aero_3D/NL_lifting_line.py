@@ -477,7 +477,7 @@ class NlLiftingLine(ImplicitAnalysis):
         self.Cm = m_b / q / s_ref / c_ref
         self.Cn = n_b / q / s_ref / b_ref
 
-        self.CL_over_CD = np.where(self.CD == 0, 0, self.CL / self.CD)
+        self.CL_over_CD = np.where(self.CD == 0, 0, np.array(self.CL / self.CD))
 
         return {
             "residuals": residuals,
