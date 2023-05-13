@@ -3,9 +3,7 @@ import aerosandbox.numpy as np
 
 sd7037 = asb.Airfoil("sd7037")
 
-# sd7037.generate_polars(cache_filename="./cache/sd7037")
-naca0012 = asb.Airfoil("naca0012")
-# naca0012.generate_polars(cache_filename="./cache/naca0012")
+sd7037.generate_polars(cache_filename="./cache/sd7037")
 
 airplane = asb.Airplane(
     name="Vanilla",
@@ -13,25 +11,25 @@ airplane = asb.Airplane(
     wings=[
         asb.Wing(
             name="Wing",
-            symmetric=True,
+            symmetric=False,
             xsecs=[
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=1,
                     twist=0,
-                    airfoil=naca0012,
+                    airfoil=sd7037,
                 ),
                 asb.WingXSec(
                     xyz_le=[0, 0.5, 0],
                     chord=1,
                     twist=0,
-                    airfoil=naca0012,
+                    airfoil=sd7037,
                 ),
                 asb.WingXSec(
-                    xyz_le=[0.3, 3.5, 0],
+                    xyz_le=[0.5, 3.5, 0],
                     chord=1,
                     twist=0,
-                    airfoil=naca0012,
+                    airfoil=sd7037,
                 )
             ]
         )

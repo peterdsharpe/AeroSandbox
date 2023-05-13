@@ -168,8 +168,7 @@ class Airfoil(Polygon):
         # At this point, we know that the types are the same, so we can compare the attributes
         return all([  # If all of these are true, they're equal
             self.name == other.name,
-            np.allclose(self.coordinates, other.coordinates) if
-            self.coordinates.shape[0] == other.coordinates.shape[0] else False,
+            np.allclose(self.coordinates, other.coordinates),
             self.CL_function is other.CL_function,
             self.CD_function is other.CD_function,
             self.CM_function is other.CM_function,

@@ -194,16 +194,9 @@ class NlLiftingLine(ImplicitAnalysis):
                     wing.xsecs[1:]
             ):
 
-
-                CL_functions.append(xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CL_function)
-                CD_functions.append(xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CD_function)
-                CM_functions.append(xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CM_function)
-
-            if wing.symmetric:
-
-                CL_functions.extend(CL_functions)
-                CD_functions.extend(CD_functions)
-                CM_functions.extend(CM_functions)
+                CL_functions.append( xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CL_function )
+                CD_functions.append( xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CD_function )
+                CM_functions.append( xsec_a.airfoil.blend_with_another_airfoil(xsec_b.airfoil).CM_function )
 
         front_left_vertices = np.concatenate(front_left_vertices)
         back_left_vertices = np.concatenate(back_left_vertices)
@@ -882,9 +875,9 @@ if __name__ == '__main__':
         op_point= asb.OperatingPoint(
                   atmosphere=asb.Atmosphere(altitude=0),
                   velocity=10,  # m/s
-                  alpha=0),
+                  alpha=5),
         verbose = True,
-        spanwise_resolution = 4,
+        spanwise_resolution = 2,
         )
 
     res = LL_aeros.run()
