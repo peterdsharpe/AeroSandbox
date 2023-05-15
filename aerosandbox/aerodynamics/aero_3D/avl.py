@@ -265,7 +265,7 @@ class AVL(ExplicitAnalysis):
                 warnings.warn(
                     "AVL run timed out!\n"
                     "If this was not expected, try increasing the `timeout` parameter\n"
-                    "when you create this AeroSandbox XFoil instance.",
+                    "when you create this AeroSandbox AVL instance.",
                     stacklevel=2
                 )
 
