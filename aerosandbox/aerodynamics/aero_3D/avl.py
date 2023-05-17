@@ -265,14 +265,25 @@ class AVL(ExplicitAnalysis):
                 warnings.warn(
                     "AVL run timed out!\n"
                     "If this was not expected, try increasing the `timeout` parameter\n"
-                    "when you create this AeroSandbox XFoil instance.",
+                    "when you create this AeroSandbox AVL instance.",
                     stacklevel=2
                 )
 
             ##### Parse the output file
             # Read the file
-            with open(directory / output_filename, "r") as f:
-                output_data = f.read()
+            try:
+                with open(directory / output_filename, "r") as f:
+                    output_data = f.read()
+            except FileNotFoundError:
+                raise FileNotFoundError(
+                    "It appears AVL didn't produce an output file, probably because it crashed.\n"
+                    "To troubleshoot, try some combination of the following:\n"
+                    "\t - In the AVL constructor, verify that either AVL is on PATH or that the `avl_command` parameter is set.\n"
+                    "\t - In the AVL constructor, run with `verbose=True`.\n"
+                    "\t - In the AVL constructor, set the `working_directory` parameter to a known folder to see the AVL input and output files.\n"
+                    "\t - In the AVL constructor, set the `timeout` parameter to a large number to see if AVL is just taking a long time to run.\n"
+                    "\t - On Windows, use `avl.open_interactive()` to run AVL interactively in a new window.\n"
+                )
 
             res = self.parse_unformatted_data_output(output_data, data_identifier=" =", overwrite=False)
 

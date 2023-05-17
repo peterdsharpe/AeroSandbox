@@ -72,7 +72,7 @@ def mass_wing(
 ) -> Union[float, Dict[str, float]]:
     """
     Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic Airplane Design",
-    1976, Appendix C: "Prediction of Wing Structural Weight".
+    1976, Appendix C: "Prediction of Wing Structural Weight" (PDF page 451).
 
     Likely more accurate than the Raymer wing weight models.
 
@@ -193,10 +193,11 @@ def mass_wing(
 
     mass_high_lift_devices = mass_trailing_edge_flaps + mass_leading_edge_devices
 
-    mass_spoilers_and_speedbrakes = np.softmax(
-        12.2 * wing.area(),
-        0.015 * mass_basic_wing_structure,
-    )
+    # mass_spoilers_and_speedbrakes = np.softmax(
+    #     12.2 * wing.area() * spoilers_and_speedbrakes_area_fraction,
+    #     0.015 * mass_basic_wing_structure,
+    # )
+    mass_spoilers_and_speedbrakes = 0.015 * mass_basic_wing_structure
 
     mass_wing = (
             mass_basic_wing_structure +

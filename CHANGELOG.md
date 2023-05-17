@@ -7,7 +7,7 @@ This log keeps track of any major or breaking changes to AeroSandbox. It is not 
 
 Note that AeroSandbox development makes a good effort to adhere to [semantic versioning](https://semver.org/), so significant breaking changes will be accompanied by a major version bump (e.g., 3.x.x -> 4.x.x). If a breaking change is extremely minor, it might only be accompanied by a minor version bump (e.g., 4.0.x -> 4.1.x). Every effort will be made to keep breaking changes out of patch version (e.g., 4.0.0 -> 4.0.1), but this is impossible to guarantee, especially since Python is dynamically typed and lets you do whatever you want with it. So, it's recommended that serious industrial users write a test or two and run them after updating AeroSandbox. (If you find a breaking change, please [open an issue on GitHub](https://github.com/peterdsharpe/AeroSandbox/issues)!)
 
-Note that AeroSandbox does not consider reordering keyword arguments to be a breaking change - so use keyword arguments whenever possible! (This is a good practice anyway, since it makes your code more readable.) In other words, replace this:
+Note that AeroSandbox does not consider reordering keyword arguments or adding new ones to be a breaking change - so use keyword arguments whenever possible! (This is a good practice anyway, since it makes your code more readable.) In other words, replace this:
 
 ```python
 def my_function(a, b):
@@ -39,6 +39,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 - Added first experimental ability to support black-box functions in optimization, available in `aerosandbox.modeling.black_box`. This is a very early prototype, and the API is subject to change.
 - Fixed a bug in `asb.Airplane` auto-generation of s_ref, c_ref, and b_ref that would cause hard-coded s_ref values in the constructor to not be applied to the Airplane instance. Also, adds the capability for auto-generation of reference values from fuselages, if no wing is present.
 - Fixed a bug within `asb.AeroBuildup` effective span calculation for symmetric wings that were used to represent doubled vertical stabilizers. Now, if you create an aircraft with twin vertical stabilizers, the Trefftz-plane wake will correctly not carry over between the two vstabs. (If you have a symmetric horizontal stabilizer, it will still carry over - currently this is a function of effective dihedral angle.)
+- Fixed Torenbeek wing weight model to use a simpler model for speedbrake / spoiler weight. This resolves a (possible?) error in the wing weight model due to an ambiguity in the source text (Torenbeek's "Synthesis of Subsonic Airplane Design", Appendix C) about what area they were referring to.
 
 -----
 

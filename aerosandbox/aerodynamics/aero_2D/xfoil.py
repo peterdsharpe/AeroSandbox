@@ -327,7 +327,13 @@ class XFoil(ExplicitAnalysis):
             except FileNotFoundError:
                 raise FileNotFoundError(
                     "It appears XFoil didn't produce an output file, probably because it crashed.\n"
-                    "Try running with `verbose=True` in the XFoil constructor to see what's going on."
+                    "To troubleshoot, try some combination of the following:\n"
+                    "\t - In the XFoil constructor, verify that either XFoil is on PATH or that the `xfoil_command` parameter is set.\n"
+                    "\t - In the XFoil constructor, run with `verbose=True`.\n"
+                    "\t - In the XFoil constructor, set the `working_directory` parameter to a known folder to see the XFoil input and output files.\n"
+                    "\t - In the XFoil constructor, set the `timeout` parameter to a large number to see if XFoil is just taking a long time to run.\n"
+                    "\t - On Windows, use `XFoil.open_interactive()` to run XFoil interactively in a new window.\n"
+                    "\t - Try allowing XFoil to repanel the airfoil by setting `repanel=True` in the XFoil constructor.\n"
                 )
 
             def str_to_float(s: str) -> float:
