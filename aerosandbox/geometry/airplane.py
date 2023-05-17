@@ -841,6 +841,8 @@ class Airplane(AeroSandboxObject):
                    include_fuselages: bool = True
                    ):
         # TODO include option for mass file export as well
+        # Use MassProperties.export_AVL_mass...
+
         from aerosandbox.aerodynamics.aero_3D.avl import AVL
         avl = AVL(
             airplane=self,
