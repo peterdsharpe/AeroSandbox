@@ -36,7 +36,7 @@ plt.yscale('log')
 
 fit = asb.FittedModel(
     # model = lambda x, p: p['a'] * x ** p['b'],
-    model=lambda x, p: p['min'] + p['a'] * x ** p['b'],
+    model=lambda x, p: p['min'] + p['a'] * (x / 1e6) ** p['b'],
     x_data=power,
     y_data=mass,
     parameter_guesses={
@@ -50,7 +50,7 @@ fit = asb.FittedModel(
         'b'  : (0, None),
     },
     put_residuals_in_logspace=True,
-    # residual_norm_type="L1"
+    residual_norm_type="L1"
 )
 # plt.xlim(left=0)
 # plt.ylim(bottom=0)
