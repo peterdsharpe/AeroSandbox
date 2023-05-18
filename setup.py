@@ -70,7 +70,7 @@ setup(
             'ipyvtklink >= 0.2',
             'trimesh >= 3',
             'sympy >= 1',
-            'cadquery >= 2; "3.8" <= python_version < "3.11"',
+            'cadquery >= 2; python_version >="3.8", <"3.11"',
         ],
         "test": [
             'pytest',
