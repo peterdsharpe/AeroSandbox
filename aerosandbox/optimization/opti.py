@@ -618,6 +618,7 @@ class Opti(cas.Opti):
             "ipopt.max_cpu_time"         : max_runtime,
             "ipopt.mu_strategy"          : "adaptive",
             "ipopt.fast_step_computation": "yes",
+            "detect_simple_bounds"       : True,
         }
 
         if jit:
