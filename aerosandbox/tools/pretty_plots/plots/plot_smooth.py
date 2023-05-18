@@ -204,3 +204,26 @@ def plot_smooth(
     )
 
     return x_resample, y_resample
+
+if __name__ == '__main__':
+    import aerosandbox.numpy as np
+
+    # t = np.linspace(0, 1, 12)  # Parametric variable
+    # x = np.cos(2 * np.pi * t)
+    # y = np.cos(2 * np.pi * t ** 4) - t
+    #
+    # fig, ax = plt.subplots()
+    # plot_smooth(
+    #     x, y, color='purple'
+    # )
+    # plt.show()
+
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 1, 8)
+    plot_smooth(
+        x, np.exp(-10 * x**0.5), color='goldenrod',
+        function_of="x",
+        # markersize=0,
+        resample_resolution=2000
+    )
+    plt.show()
