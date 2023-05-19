@@ -96,6 +96,7 @@ def plot_with_bootstrapped_uncertainty(
     )
 
     if draw_line:
+        import matplotlib.pyplot as plt
         line, = plt.plot(
             x_fit,
             y_median_and_ci[1, :],
@@ -106,6 +107,7 @@ def plot_with_bootstrapped_uncertainty(
             color = line.get_color()
 
     if draw_ci:
+        import matplotlib.pyplot as plt
         plt.fill_between(
             x_fit,
             y_median_and_ci[0, :],
@@ -116,6 +118,7 @@ def plot_with_bootstrapped_uncertainty(
             linewidth=0
         )
     if draw_data:
+        import matplotlib.pyplot as plt
         line, = plt.plot(
             x,
             y,
