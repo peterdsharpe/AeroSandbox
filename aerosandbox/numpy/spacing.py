@@ -39,13 +39,19 @@ def cosspace(
     mean = (stop + start) / 2
     amp = (stop - start) / 2
     ones = 0 * start + 1
-    return mean + amp * _onp.cos(
+    spaced_array = mean + amp * _onp.cos(
         linspace(
             _onp.pi * ones,
             0 * ones,
             num
         )
     )
+
+    # Fix the endpoints, which might not be exactly right due to floating-point error.
+    spaced_array[0] = start
+    spaced_array[-1] = stop
+
+    return spaced_array
 
 
 def sinspace(
@@ -78,12 +84,19 @@ def sinspace(
     if reverse_spacing:
         return sinspace(stop, start, num)[::-1]
     ones = 0 * start + 1
-    return start + (stop - start) * (1 - _onp.cos(linspace(
+    spaced_array = (
+            start + (stop - start) * (1 - _onp.cos(linspace(
         0 * ones,
         _onp.pi / 2 * ones,
         num
     ))
-                                     )
+                                      )
+    )
+    # Fix the endpoints, which might not be exactly right due to floating-point error.
+    spaced_array[0] = start
+    spaced_array[-1] = stop
+
+    return spaced_array
 
 
 def logspace(
@@ -119,4 +132,10 @@ def geomspace(
     else:
         if start <= 0 or stop <= 0:
             raise ValueError("Both start and stop must be positive!")
-        return _onp.log10(10 ** linspace(start, stop, num))
+        spaced_array = _onp.log10(10 ** linspace(start, stop, num))
+
+        # Fix the endpoints, which might not be exactly right due to floating-point error.
+        spaced_array[0] = start
+        spaced_array[-1] = stop
+
+        return spaced_array

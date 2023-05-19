@@ -9,6 +9,7 @@ def plot_smooth(
         *args,
         color=None,
         label=None,
+        function_of: str = None,
         resample_resolution: int = 500,
         drop_nans: bool = False,
         **kwargs,
@@ -98,15 +99,76 @@ def plot_smooth(
         x = x[nanmask]
         y = y[nanmask]
 
-    bspline = interpolate.make_interp_spline(
-        x=np.linspace(0, 1, np.length(y)),
-        y=np.stack(
-            (x, y), axis=1
+    # At this point, x, y, and fmt are defined.
+
+    ### Resample points
+
+    if function_of is None:
+        # Compute the relative spacing of points
+        dx = np.diff(x)
+        dy = np.diff(y)
+
+        x_rng = np.nanmax(x) - np.nanmin(x)
+        y_rng = np.nanmax(y) - np.nanmin(y)
+
+        dx_norm = dx / x_rng
+        dy_norm = dy / y_rng
+
+        ds_norm = np.sqrt(dx_norm ** 2 + dy_norm ** 2)
+
+        s_norm = np.concatenate([
+            [0],
+            np.nancumsum(ds_norm) / np.nansum(ds_norm)
+        ])
+
+        bspline = interpolate.make_interp_spline(
+            x=s_norm,
+            y=np.stack(
+                (x, y), axis=1
+            )
         )
-    )
-    result = bspline(np.linspace(0, 1, resample_resolution))
-    x_resample = result[:, 0]
-    y_resample = result[:, 1]
+        result = bspline(np.linspace(0, 1, resample_resolution))
+        x_resample = result[:, 0]
+        y_resample = result[:, 1]
+
+    elif function_of == "x":
+        x_resample = np.linspace(
+            np.nanmin(x),
+            np.nanmax(x),
+            resample_resolution
+        )
+
+        mask = ~np.isnan(x) & ~np.isnan(y)
+        x = x[mask]
+        y = y[mask]
+
+        order = np.argsort(x)
+
+        y_resample = interpolate.PchipInterpolator(
+            x=x[order],
+            y=y[order],
+        )(x_resample)
+
+    elif function_of == "y":
+
+        y_resample = np.linspace(
+            np.nanmin(y),
+            np.nanmax(y),
+            resample_resolution
+        )
+
+        mask = ~np.isnan(x) & ~np.isnan(y)
+        x = x[mask]
+        y = y[mask]
+
+        order = np.argsort(y)
+
+        x_resample = interpolate.PchipInterpolator(
+            x=y[order],
+            y=x[order],
+        )(y_resample)
+
+    ### Plot
 
     scatter_kwargs = {
         **kwargs,
@@ -142,3 +204,26 @@ def plot_smooth(
     )
 
     return x_resample, y_resample
+
+if __name__ == '__main__':
+    import aerosandbox.numpy as np
+
+    # t = np.linspace(0, 1, 12)  # Parametric variable
+    # x = np.cos(2 * np.pi * t)
+    # y = np.cos(2 * np.pi * t ** 4) - t
+    #
+    # fig, ax = plt.subplots()
+    # plot_smooth(
+    #     x, y, color='purple'
+    # )
+    # plt.show()
+
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 1, 8)
+    plot_smooth(
+        x, np.exp(-10 * x**0.5), color='goldenrod',
+        function_of="x",
+        # markersize=0,
+        resample_resolution=2000
+    )
+    plt.show()

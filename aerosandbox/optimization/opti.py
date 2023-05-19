@@ -393,6 +393,7 @@ class Opti(cas.Opti):
         # If it's a proper constraint (MX-type and non-parametric),
         # pass it into the parent class Opti formulation and be done with it.
         if isinstance(constraint, cas.MX) and not self.advanced.is_parametric(constraint):
+            # constraint = cas.cse(constraint)
             super().subject_to(constraint)
             dual = self.dual(constraint)
 
@@ -440,6 +441,12 @@ class Opti(cas.Opti):
                 # many decision variables using the Opti.variable(freeze=True) syntax.
                 raise RuntimeError(f"""The problem is infeasible due to a constraint that always evaluates False. 
                 This can happen if you've frozen too many decision variables, leading to an overconstrained problem.""")
+
+    def minimize(self,
+                 f: cas.MX,
+                 ) -> None:
+        # f = cas.cse(f)
+        super().minimize(f)
 
     def parameter(self,
                   value: Union[float, np.ndarray] = 0.,
@@ -511,6 +518,7 @@ class Opti(cas.Opti):
               callback: Callable[[int], Any] = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
+              detect_simple_bounds: bool = False,  # TODO document
               options: Dict = None,  # TODO document
               behavior_on_failure: str = "raise",
               ) -> "OptiSol":
@@ -618,6 +626,7 @@ class Opti(cas.Opti):
             "ipopt.max_cpu_time"         : max_runtime,
             "ipopt.mu_strategy"          : "adaptive",
             "ipopt.fast_step_computation": "yes",
+            "detect_simple_bounds"       : detect_simple_bounds,
         }
 
         if jit:
@@ -1225,16 +1234,42 @@ class OptiSol:
         """
         return self.value(x)
 
+    def _value_scalar(self, x: Union[cas.MX, np.ndarray, float, int]) -> Union[float, np.ndarray]:
+        """
+        Gets the value of a variable at the solution point. For developer use - see following paragraph.
+
+        This method is basically a less-powerful version of calling either `sol(x)` or `sol.value(x)` - if you're a
+            user and not a developer, you almost-certainly want to use one of those methods instead, as those are less
+            fragile with respect to various input data types. This method exists only as an abstraction to make it easier
+            for other developers to subclass OptiSol, if they wish to intercept the variable substitution process.
+
+        Args:
+            x:
+
+        Returns:
+
+        """
+        return self._sol.value(x)
+
     def value(self,
               x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any],
               recursive: bool = True,
               warn_on_unknown_types: bool = False
               ) -> Any:
         """
-        At its simplest: converts a symbolic optimization variable to a concrete float or array value.
+        Gets the value of a variable (or a data structure) at the solution point. This solution point is the optimum,
+            if the optimization process solved successfully.
 
-        More generally: converts any Python data structure (along with any of its contents, recursively, at unlimited
-        depth), replacing any symbolic optimization variables it finds with concrete float or array values.
+        On a computer science level, this method converts a symbolic optimization variable to a concrete float or
+            array value. More generally, it converts any Python data structure (along with any of its contents,
+            recursively, at unlimited depth), replacing any symbolic optimization variables it finds with concrete float
+            or array values.
+
+        Note that, for convenience, you can simply call:
+        >>> sol(x)
+        if you prefer. This is equivalent to calling this method with the syntax:
+        >>> sol.value(x)
+        (these are aliases of each other)
 
         Args:
             x: A Python data structure to substitute values into, using the solution in this OptiSol object.
@@ -1243,11 +1278,11 @@ class OptiSol:
                 structure will be converted.
 
             warn_on_unknown_types: If True, a warning will be issued if a data type that cannot be converted or
-            parsed as definitively un-convertable is encountered.
+                parsed as definitively un-convertable is encountered.
 
         Returns:
             A copy of `x`, where all symbolic optimization variables (recursively substituted at unlimited depth)
-            have been converted to float or array values.
+                have been converted to float or array values.
 
         Usage:
 
@@ -1255,11 +1290,11 @@ class OptiSol:
 
         """
         if not recursive:
-            return self._sol.value(x)
+            return self._value_scalar(x)
 
         # If it's a CasADi type, do the conversion, and call it a day.
         if np.is_casadi_type(x, recursive=False):
-            return self._sol.value(x)
+            return self._value_scalar(x)
 
         t = type(x)
 
@@ -1288,7 +1323,7 @@ class OptiSol:
 
         # Skip certain CasADi types
         if issubclass(t, (
-                cas.Opti, cas.OptiSol
+                cas.Opti, cas.OptiSol,
         )):
             return x
 
@@ -1306,7 +1341,7 @@ class OptiSol:
 
         # Try converting it blindly. This will catch most NumPy-array-like types.
         try:
-            return self._sol.value(x)
+            return self._value_scalar(x)
         except (NotImplementedError, TypeError, ValueError):
             pass
 

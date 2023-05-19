@@ -484,7 +484,7 @@ class MassProperties(AeroSandboxObject):
             True
 
         Args:
-            method: The method to use to generate the set of point masses. Currently, only "barbell" is supported.
+            method: The method to use to generate the set of point masses. Currently, only "optimization" is supported.
 
         Returns:
             A list of MassProperties objects, each of which is a point mass (i.e., zero inertia tensor).

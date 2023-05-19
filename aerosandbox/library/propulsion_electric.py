@@ -122,6 +122,89 @@ def motor_electric_performance(
     }
 
 
+def electric_propeller_propulsion_analysis(
+        total_thrust,
+        n_engines,
+        propeller_diameter,
+        op_point,
+        propeller_tip_mach,
+        motor_kv,
+        motor_no_load_current,
+        motor_resistance,
+        wire_resistance,
+        battery_voltage,
+        gearbox_ratio=1,
+        gearbox_efficiency=1,
+        esc_efficiency=0.98,
+        battery_discharge_efficiency=0.985,
+) -> Dict[str, float]:
+
+    ### Propeller Analysis
+    propulsive_area_per_propeller = (np.pi / 4) * propeller_diameter ** 2
+    propulsive_area_total = propulsive_area_per_propeller * n_engines
+
+    propeller_wake_dynamic_pressure = op_point.dynamic_pressure() + total_thrust / propulsive_area_total
+    propeller_wake_velocity = (
+                                  # Derived from the above pressure jump relation, with adjustments to avoid singularity at zero velocity
+                                      2 * total_thrust / (propulsive_area_total * op_point.atmosphere.density())
+                                      + op_point.velocity ** 2
+                              ) ** 0.5
+
+    propeller_tip_speed = propeller_tip_mach * op_point.atmosphere.speed_of_sound()
+    propeller_rads_per_sec = propeller_tip_speed / (propeller_diameter / 2)
+    propeller_rpm = propeller_rads_per_sec * 60 / (2 * np.pi)
+
+    propeller_advance_ratio = op_point.velocity / propeller_tip_speed
+
+    air_power = total_thrust * op_point.velocity
+
+    from propulsion_propeller import propeller_shaft_power_from_thrust
+
+    shaft_power = propeller_shaft_power_from_thrust(
+        thrust_force=total_thrust,
+        area_propulsive=propulsive_area_total,
+        airspeed=op_point.velocity,
+        rho=op_point.atmosphere.density(),
+        propeller_coefficient_of_performance=0.90,
+    )
+
+    propeller_efficiency = air_power / shaft_power
+
+    ### Motor Analysis
+    motor_rpm = propeller_rpm / gearbox_ratio
+    motor_rads_per_sec = motor_rpm * 2 * np.pi / 60
+
+    motor_torque_per_motor = shaft_power / n_engines / motor_rads_per_sec / gearbox_efficiency
+
+    motor_parameters_per_motor = motor_electric_performance(
+        rpm=motor_rpm,
+        torque=motor_torque_per_motor,
+        kv=motor_kv,
+        no_load_current=motor_no_load_current,
+        resistance=motor_resistance,
+    )
+
+    motor_electrical_power = motor_parameters_per_motor["electrical power"] * n_engines
+
+    motor_efficiency = shaft_power / motor_electrical_power
+
+    ### ESC Analysis
+    esc_electrical_power = motor_electrical_power / esc_efficiency
+
+    ### Wire Analysis
+    wire_power_loss = (esc_electrical_power / battery_voltage) ** 2 * wire_resistance
+    wire_efficiency = esc_electrical_power / (esc_electrical_power + wire_power_loss)
+
+    ### Battery Analysis
+    battery_power = (esc_electrical_power + wire_power_loss) / battery_discharge_efficiency
+    battery_current = battery_power / battery_voltage
+
+    ### Overall
+    overall_efficiency = air_power / battery_power
+
+    return locals()
+
+
 def motor_resistance_from_no_load_current(
         no_load_current
 ):
