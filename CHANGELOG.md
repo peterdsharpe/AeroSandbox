@@ -40,6 +40,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 - Fixed a bug in `asb.Airplane` auto-generation of s_ref, c_ref, and b_ref that would cause hard-coded s_ref values in the constructor to not be applied to the Airplane instance. Also, adds the capability for auto-generation of reference values from fuselages, if no wing is present.
 - Fixed a bug within `asb.AeroBuildup` effective span calculation for symmetric wings that were used to represent doubled vertical stabilizers. Now, if you create an aircraft with twin vertical stabilizers, the Trefftz-plane wake will correctly not carry over between the two vstabs. (If you have a symmetric horizontal stabilizer, it will still carry over - currently this is a function of effective dihedral angle.)
 - Fixed Torenbeek wing weight model to use a simpler model for speedbrake / spoiler weight. This resolves a (possible?) error in the wing weight model due to an ambiguity in the source text (Torenbeek's "Synthesis of Subsonic Airplane Design", Appendix C) about what area they were referring to.
+- Fixed a bug with uncertainty bootstrapping in `aerosandbox.tools.pretty_plots`, when normalizing input data.
 
 -----
 

@@ -1,7 +1,7 @@
-from aerosandbox.tools.pretty_plots.utilities.natural_univariate_spline import NaturalUnivariateSpline as Spline
 import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
+
+from aerosandbox.tools.pretty_plots.utilities.natural_univariate_spline import NaturalUnivariateSpline as Spline
 
 
 def plot_with_bootstrapped_uncertainty(
@@ -35,21 +35,25 @@ def plot_with_bootstrapped_uncertainty(
 
     ### Prepare for normalization
     if normalize:
-        x_min = np.min(x)
-        x_rng = np.max(x) - x_min
-        y_min = np.min(y)
-        y_rng = np.max(y) - y_min
+        x_min = np.nanmin(x)
+        x_rng = np.nanmax(x) - x_min
+        y_min = np.nanmin(y)
+        y_rng = np.nanmax(y) - y_min
 
-        x_normalize = lambda xi: (xi - x_min) / x_rng
-        y_normalize = lambda yi: (yi - y_min) / y_rng
-        x_unnormalize = lambda xi: xi * x_rng + x_min
-        y_unnormalize = lambda yi: yi * y_rng + y_min
+        x_normalize = lambda x: (x - x_min) / x_rng
+        y_normalize = lambda y: (y - y_min) / y_rng
+        x_unnormalize = lambda x_n: x_n * x_rng + x_min
+        y_unnormalize = lambda y_n: y_n * y_rng + y_min
+
+        y_stdev_scaled = y_stdev / y_rng
 
     else:
-        x_normalize = lambda xi: xi
-        y_normalize = lambda yi: yi
-        x_unnormalize = lambda xi: xi
-        y_unnormalize = lambda yi: yi
+        x_normalize = lambda x: x
+        y_normalize = lambda y: y
+        x_unnormalize = lambda x_n: x_n
+        y_unnormalize = lambda y_n: y_n
+
+        y_stdev_scaled = y_stdev
 
     ### Prepare for the bootstrap
     x_fit = np.linspace(
@@ -74,8 +78,8 @@ def plot_with_bootstrapped_uncertainty(
         y_bootstrap_fits[i, :] = y_unnormalize(Spline(
             x=x_normalize(x),
             y=y_normalize(y),
-            w=weights / y_normalize(y_stdev),
-            s=len(x) * (y_normalize(y).max() - y_normalize(y).min()) ** 0.5,
+            w=weights / y_stdev_scaled,
+            s=len(x),
             k=spline_degree,
             ext='extrapolate'
         )(x_normalize(x_fit)))
@@ -134,18 +138,22 @@ if __name__ == '__main__':
 
     ### Generate data
     x = np.linspace(0, 10, 101)
-    y_true = np.abs(x - 5)  # np.sin(x)
-    y_noisy = y_true + 0.1 * np.random.randn(len(x))
+    y_true = np.sin(x - 5)  # np.sin(x)
+
+    y_stdev = 0.1
+
+    y_noisy = y_true + y_stdev * np.random.randn(len(x))
 
     ### Plot spline regression
     fig, ax = plt.subplots(dpi=300)
     x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
         x,
         y_noisy,
-        y_stdev=0.1 * np.std(y_noisy),
+        y_stdev=y_stdev,
         label_line="Best Estimate",
         label_data="Data",
         label_ci="95% CI",
+        # normalize=False,
     )
     ax.plot(x, y_true, "k", label="True Function", alpha=0.2)
 
