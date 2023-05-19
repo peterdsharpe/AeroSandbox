@@ -393,6 +393,7 @@ class Opti(cas.Opti):
         # If it's a proper constraint (MX-type and non-parametric),
         # pass it into the parent class Opti formulation and be done with it.
         if isinstance(constraint, cas.MX) and not self.advanced.is_parametric(constraint):
+            # constraint = cas.cse(constraint)
             super().subject_to(constraint)
             dual = self.dual(constraint)
 
@@ -440,6 +441,12 @@ class Opti(cas.Opti):
                 # many decision variables using the Opti.variable(freeze=True) syntax.
                 raise RuntimeError(f"""The problem is infeasible due to a constraint that always evaluates False. 
                 This can happen if you've frozen too many decision variables, leading to an overconstrained problem.""")
+
+    def minimize(self,
+                 f: cas.MX,
+                 ) -> None:
+        # f = cas.cse(f)
+        super().minimize(f)
 
     def parameter(self,
                   value: Union[float, np.ndarray] = 0.,
@@ -511,6 +518,7 @@ class Opti(cas.Opti):
               callback: Callable[[int], Any] = None,
               verbose: bool = True,
               jit: bool = False,  # TODO document, add unit tests for jit
+              detect_simple_bounds: bool = False,  # TODO document
               options: Dict = None,  # TODO document
               behavior_on_failure: str = "raise",
               ) -> "OptiSol":
@@ -618,7 +626,7 @@ class Opti(cas.Opti):
             "ipopt.max_cpu_time"         : max_runtime,
             "ipopt.mu_strategy"          : "adaptive",
             "ipopt.fast_step_computation": "yes",
-            "detect_simple_bounds"       : True,
+            "detect_simple_bounds"       : detect_simple_bounds,
         }
 
         if jit:
