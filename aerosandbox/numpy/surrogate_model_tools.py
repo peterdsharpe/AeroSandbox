@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 
 def softmax(
-        *args: Tuple[Union[float, _np.ndarray]],
+        *args: Union[float, _np.ndarray],
         hardness: float = None,
         softness: float = None,
 ) -> Union[float, _np.ndarray]:
@@ -71,8 +71,9 @@ def softmax(
     out = out / hardness
     return out
 
+
 def softmin(
-        *args: Tuple[Union[float, _np.ndarray]],
+        *args: Union[float, _np.ndarray],
         hardness: float = None,
         softness: float = None,
 ) -> Union[float, _np.ndarray]:
