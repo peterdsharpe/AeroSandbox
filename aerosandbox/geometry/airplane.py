@@ -383,11 +383,11 @@ class Airplane(AeroSandboxObject):
                 **kwargs
         ):
             if symmetric:
-                xyz = np.vstack([
+                xyz = np.concatenate([
                     xyz,
-                    [np.nan] * 3,
+                    np.array([np.nan] * 3).reshape((1, -1)),
                     xyz * np.array([1, -1, 1])
-                ])
+                ], axis=0)
 
             ax.plot(
                 xyz[:, 0],
@@ -1303,4 +1303,4 @@ if __name__ == '__main__':
     )
 
     # airplane.draw_three_view()
-    airplane.export_XFLR("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))
+    # airplane.export_XFLR("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))
