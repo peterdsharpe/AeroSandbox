@@ -34,6 +34,11 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+
+-----
+
+# Latest (master / release), and previous versions
+
 #### 4.0.8
 
 - Added first experimental ability to support black-box functions in optimization, available in `aerosandbox.modeling.black_box`. This is a very early prototype, and the API is subject to change.
@@ -41,10 +46,6 @@ Also, for at least one version before a breaking change, AeroSandbox development
 - Fixed a bug within `asb.AeroBuildup` effective span calculation for symmetric wings that were used to represent doubled vertical stabilizers. Now, if you create an aircraft with twin vertical stabilizers, the Trefftz-plane wake will correctly not carry over between the two vstabs. (If you have a symmetric horizontal stabilizer, it will still carry over - currently this is a function of effective dihedral angle.)
 - Fixed Torenbeek wing weight model to use a simpler model for speedbrake / spoiler weight. This resolves a (possible?) error in the wing weight model due to an ambiguity in the source text (Torenbeek's "Synthesis of Subsonic Airplane Design", Appendix C) about what area they were referring to.
 - Fixed a bug with uncertainty bootstrapping in `aerosandbox.tools.pretty_plots`, when normalizing input data.
-
------
-
-# Latest (master / release), and previous versions
 
 #### 4.0.7
 
