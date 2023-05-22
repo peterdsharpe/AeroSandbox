@@ -3,67 +3,82 @@ import aerosandbox.numpy as np
 
 def estimate_noise_standard_deviation(
         data: np.ndarray,
-        reconstructor_order: int = None,
-):
+        estimator_order: int = None,
+) -> float:
+    """
+    Estimates the standard deviation of the random noise in a time-series dataset.
+
+    Relies on several assumptions:
+
+    - The noise is normally-distributed and independent between samples (i.e. white noise).
+
+    - The noise is stationary and homoscedastic (i.e., the noise standard deviation is constant).
+
+    - The noise is uncorrelated with the signal.
+
+    - The sample rate of the data is significantly higher than the highest-frequency component of the signal. (In
+        practice, this ratio need not be more than ~5:1, if higher-order estimators are used. At a minimum, however,
+        this ratio must be greater than 2:1, corresponding to the Nyquist frequency.)
+
+    The algorithm used in this function is a highly-optimized version of the math described in this repository,
+    part of an upcoming paper: https://github.com/peterdsharpe/aircraft-polar-reconstruction-from-flight-test
+
+    The repository is currently private, but will be public at some point; if you would like access to it,
+    please contact Peter Sharpe at pds@mit.edu.
+
+    Args:
+
+        data: A 1D NumPy array of time-series data.
+
+        estimator_order: The order of the estimator to use. Higher orders are generally more accurate, up to the
+            point where sample error starts to dominate. If None, a reasonable estimator order will be chosen automatically.
+
+    Returns: An estimate of the standard deviation of the data's noise component.
+
+    """
     if len(data) < 2:
         raise ValueError("Data must have at least 2 points.")
 
-    if reconstructor_order is None:
-        reconstructor_order = min(
+    if estimator_order is None:
+        estimator_order = min(
             max(
                 1,
-                len(data) // 2
+                len(data) // 4
             ),
-            10
+            1000
         )
-    print(reconstructor_order)
 
     ##### Noise Variance Reconstruction #####
-    from scipy.special import comb
 
     N = len(data)
-    d = reconstructor_order
+    d = estimator_order
 
-    variance = 0
-    for i in range(N - d + 1):
-        sample_stdev = 0
-        for j in range(d + 1):
-            sample_stdev += comb(d, j, exact=True) * (-1) ** j * data[i + j - 1]
-        variance += sample_stdev ** 2
+    def f(x):
+        """Returns the natural log of the factorial of x."""
+        from scipy.special import gammaln
+        return gammaln(x + 1)
 
-    variance /= (N - d) * comb(2 * d, d, exact=True)
+    f_d = f(d)
+    f_2d = f(2 * d)
+    ln_N_minus_d = np.log(N - d)
 
-    return variance ** 0.5
+    coefficients = np.zeros(d + 1)
+    for j in range(d + 1):
+        coefficients[j] = np.exp(
+            2 * f_d - f(j) - f(d - j) - 0.5 * (ln_N_minus_d + f_2d)
+        ) * (-1) ** j
 
-    # from scipy.special import comb, binom
-    # denominator = np.sqrt(comb(2 * reconstructor_order, reconstructor_order))
-    #
-    # for _ in range(reconstructor_order):
-    #     data = np.diff(data) / denominator ** (1 / reconstructor_order)
-    #
-    # estimated_noise_standard_deviation = np.std(data)
-    #
-    # return estimated_noise_standard_deviation
-
-
-import numpy as np
-from scipy.special import gammaln
-
-
-def calculate_sigma(s, d):
-    N = len(s)
-    f = np.zeros(N - d)
-    for i in range(N - d):
-        for k in range(d + 1):
-            f[i] += ((-1) ** k) * np.exp(gammaln(d + 1) - gammaln(k + 1) - gammaln(d - k + 1)) * s[i + k]
-    sigma_squared = np.sum(f ** 2) / (np.exp(gammaln(2 * d + 1) - 2 * gammaln(d + 1)) * (N - d))
-    return sigma_squared
+    sample_stdev = np.convolve(data, coefficients[::-1], 'valid')
+    noise_variance = np.sum(sample_stdev ** 2)
+    return noise_variance ** 0.5
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    t = np.linspace(0, 1, 1000)
-    y = np.sin(2 * np.pi * t) + 0.1 * np.random.randn(len(t))
+    N = 1000000
+    f_sample_over_f_signal = 1000
+
+    t = np.arange(N)
+    y = np.sin(2 * np.pi / f_sample_over_f_signal * t) + 0.1 * np.random.randn(len(t))
 
     print(estimate_noise_standard_deviation(y))
-    print(calculate_sigma(y, 1000) ** 0.5)
