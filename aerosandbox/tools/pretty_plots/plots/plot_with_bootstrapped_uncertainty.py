@@ -1,4 +1,5 @@
 from typing import Union, Iterable, Tuple, Optional, Callable
+import matplotlib.pyplot as plt
 
 import numpy as np
 
