@@ -14,7 +14,7 @@ def estimate_noise_standard_deviation(
                 1,
                 len(data) // 2
             ),
-            100
+            10
         )
     print(reconstructor_order)
 
@@ -24,18 +24,14 @@ def estimate_noise_standard_deviation(
     N = len(data)
     d = reconstructor_order
 
-    variance = sum([
-        sum([
-            comb(d, j, exact=True) * (-1) ** j * data[i + j - 1]
-            for j in range(d + 1)
-        ]) ** 2
-        for i in range(N - d + 1)
-    ])
+    variance = 0
+    for i in range(N - d + 1):
+        sample_stdev = 0
+        for j in range(d + 1):
+            sample_stdev += comb(d, j, exact=True) * (-1) ** j * data[i + j - 1]
+        variance += sample_stdev ** 2
 
-    variance /= (
-            comb(2 * d, d, exact=True) *
-            (N - d)
-    )
+    variance /= (N - d) * comb(2 * d, d, exact=True)
 
     return variance ** 0.5
 
@@ -49,16 +45,18 @@ def estimate_noise_standard_deviation(
     #
     # return estimated_noise_standard_deviation
 
+
 import numpy as np
-from scipy.special import logsumexp, gammaln
+from scipy.special import gammaln
+
 
 def calculate_sigma(s, d):
     N = len(s)
-    f = np.zeros(N-d)
-    for i in range(N-d):
-        for k in range(d+1):
-            f[i] += ((-1)**k) * np.exp(gammaln(d+1) - gammaln(k+1) - gammaln(d-k+1)) * s[i+k]
-    sigma_squared = np.sum(f**2) / (np.exp(gammaln(2*d+1) - 2*gammaln(d+1)) * (N-d))
+    f = np.zeros(N - d)
+    for i in range(N - d):
+        for k in range(d + 1):
+            f[i] += ((-1) ** k) * np.exp(gammaln(d + 1) - gammaln(k + 1) - gammaln(d - k + 1)) * s[i + k]
+    sigma_squared = np.sum(f ** 2) / (np.exp(gammaln(2 * d + 1) - 2 * gammaln(d + 1)) * (N - d))
     return sigma_squared
 
 
