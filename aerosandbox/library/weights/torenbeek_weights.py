@@ -59,39 +59,39 @@ def mass_wing_simple(
     )
 
 
-def mass_high_lift(
+def mass_wing_high_lift_devices(
         wing: asb.Wing,
         max_airspeed_for_flaps: float,
         flap_deflection_angle: float = 30,
         k_f1: float = 1.0,
         k_f2: float = 1.0
-        ):
-    '''
-    The function mass_high_lift() is designed to estimate the weight of the high-lift devices 
-    on an airplane wing. It uses Torenbeek's method, which is based on multiple factors 
+        ) -> float:
+    """
+    The function mass_high_lift() is designed to estimate the weight of the high-lift devices
+    on an airplane wing. It uses Torenbeek's method, which is based on multiple factors
     like wing design and flap deflection.
 
     Args:
 
         wing, an instance of AeroSandbox's Wing class,
-        
-        max_airspeed_for_flaps, the maximum airspeed at which the flaps can be deployed, 
-        
+
+        max_airspeed_for_flaps, the maximum airspeed at which the flaps can be deployed [m/s]
+
         flap_deflection_angle, the angle to which the flaps can be deflected (default value is 30 degrees).
-    
+
         k_f1, configuration factor 1, with values:
-                = 1.0  for single slotted; double slotted, fixed hinge
-                = 1.15 for double: slotted, 4-bar movement; single slotted Fowler
-                = 1.3  for double slotted Fowler 
-                = 1.45 for triple slotted Fowler
+                = 1.0  for single-slotted; double-slotted, fixed hinge
+                = 1.15 for double: slotted, 4-bar movement; single-slotted Fowler
+                = 1.3  for double-slotted Fowler
+                = 1.45 for triple-slotted Fowler
 
         k_f2, configuration factor 2, with values:
-                = 1.0  for slotted flaps with fixed vane 
-                = 1.25 for double slotted flaps with "variable geometry", i.e. ex- tending 
+                = 1.0  for slotted flaps with fixed vane
+                = 1.25 for double-slotted flaps with "variable geometry", i.e., extending
                            flaps with separately moving vanes or auxiliary flaps
-    
-    Returns mass of the high lift system as float
-    '''
+
+    Returns mass of the high-lift system [kg]
+    """
     # S_flaps represents the total area of the control surfaces (flaps) on the wing.
     S_flaps = wing.control_surface_area()
 
@@ -128,7 +128,7 @@ def mass_high_lift(
 
     return mass_high_lift_devices
 
-def mass_basic_wing_structure(
+def mass_wing_basic_structure(
         wing: asb.Wing,
         design_mass_TOGW: float,
         ultimate_load_factor: float,
@@ -142,8 +142,8 @@ def mass_basic_wing_structure(
     """
     Computes the mass of the basic structure of the wing of an aircraft, according to 
     Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction 
-    of Wing Structural Weight". This is the basic wing structure without moveables like spoilers, 
-    high lift devices etc
+    of Wing Structural Weight". This is the basic wing structure without movables like spoilers,
+    high-lift devices, etc.
 
     Likely more accurate than the Raymer wing weight models.
 
@@ -153,26 +153,26 @@ def mass_basic_wing_structure(
 
         design_mass_TOGW: The design takeoff gross weight of the entire aircraft [kg].
 
-        ultimate_load_factor: The ultimate load factor of the aircraft. 1.5x the limit load factor.
+        ultimate_load_factor: The ultimate load factor of the aircraft [-]. 1.5x the limit load factor.
 
         suspended_mass: The mass of the aircraft that is suspended from the wing [kg]. It should exclude 
         any wing attachments that are not part of the wing structure.
 
         never_exceed_airspeed: The never-exceed airspeed of the aircraft [m/s]. Used for flutter calculations.
 
-        main_gear_mounted_to_wing: Whether the main gear is mounted to the wing structure.
+        main_gear_mounted_to_wing: Whether the main gear is mounted to the wing structure. Boolean.
 
-        strut_y_location: The y-location of the strut (if any), relative to the wing's leading edge [m]. If None,
+        strut_y_location: The y-location of the strut (if any), relative to the wing's leading edge [meters]. If None,
         it is assumed that there is no strut (i.e., the wing is a cantilever beam).
 
         k_e: represents weight knockdowns due to bending moment relief from engines mounted in front of elastic axis.
         see Torenbeek unlabeled equations, between C-3 and C-4. 
-                k_e = 1.0 if engines not wing mounted, 
+                k_e = 1.0 if engines are not wing mounted,
                 k_e = 0.95 (default) two wing mounted engines in front of the elastic axis and 
                 k_e = 0.90 four wing-mounted engines in front of the elastic axis
 
         return_dict: Whether to return a dictionary of all the intermediate values, or just the final mass. Defaults
-        to False, which returns just the final mass.
+        to False, which returns just the final mass [kg].
 
     Returns: If return_dict is False (default), returns a single value: the mass of the basic wing [kg]. If return_dict is
     True, returns a dictionary of all the intermediate values.
@@ -215,7 +215,7 @@ def mass_basic_wing_structure(
             ) ** 2 *
             cos_sweep_half_chord
     )
- 
+
     # Torenbeek Eq. C-5
     # `k_b` represents weight knockdowns due to bending moment relief from strut location.
     if strut_y_location is None:
@@ -245,36 +245,36 @@ def mass_basic_wing_structure(
         return mass_wing_basic
 
 
-def mass_spoilers_and_speedbrakes(
+def mass_wing_spoilers_and_speedbrakes(
     wing: asb.Wing,
     mass_basic_wing: float
-    ):
-    '''
+    ) -> float:
+    """
     The function mass_spoilers_and_speedbrakes() estimates the weight of the spoilers and speedbrakes
-    according to Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction 
+    according to Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction
     of Wing Structural Weight".
 
-    N.B. the weight is coming out unrealistic and approx. 20-30% of the weight of the wing. This needs 
+    N.B. the weight is coming out unrealistic and approx. 20-30% of the weight of the wing. This needs
     a correction. It uses normally the 12.2 kg/m^2 wing area.
 
     Args:
-        
+
         wing: an instance of AeroSandbox's Wing class.
-        
-        mass_basic_wing: the basic weight of the wing (without spoilers, speedbrakes, flaps, slats).
-    
-    Returns the mass of the spoilers and speed brakes
+
+        mass_basic_wing: The basic weight of the wing (without spoilers, speedbrakes, flaps, slats) [kg]
+
+    Returns: The mass of the spoilers and speed brakes [kg]
 
     N.B. the weight estimation using the 12.2 kg/m^2 figure comes out too high if using
     the wing as a referenced area. Reduced to 1.5% of the basic wing mass.
-    '''
+    """
     #mass_spoilers_and_speedbrakes = np.softmax(
     #                                            12.2 * wing.area(),
     #                                            0.015 * mass_basic_wing
     #                                            )
-    
+
     mass_spoilers_and_speedbrakes = 0.015 * mass_basic_wing
-    
+
     return mass_spoilers_and_speedbrakes
 
 def mass_wing(
@@ -325,29 +325,29 @@ def mass_wing(
 
     """
 
-    # high lift mass estimation
-    mass_high_lift_devices = mass_high_lift(
-                                                    wing,
-                                                    max_airspeed_for_flaps,
-                                                    flap_deflection_angle,
+    # High-lift mass estimation
+    mass_high_lift_devices = mass_wing_high_lift_devices(
+                                                    wing=wing,
+                                                    max_airspeed_for_flaps=max_airspeed_for_flaps,
+                                                    flap_deflection_angle=flap_deflection_angle,
                                                     )
-    # basic wing mass estimation
-    mass_basic_wing = mass_basic_wing_structure(
-                                                    wing,
-                                                    design_mass_TOGW,
-                                                    ultimate_load_factor,
-                                                    suspended_mass,
-                                                    never_exceed_airspeed,
-                                                    main_gear_mounted_to_wing,
-                                                    strut_y_location,
+    # Basic wing structure mass estimation
+    mass_basic_wing = mass_wing_basic_structure(
+                                                    wing=wing,
+                                                    design_mass_TOGW=design_mass_TOGW,
+                                                    ultimate_load_factor=ultimate_load_factor,
+                                                    suspended_mass=suspended_mass,
+                                                    never_exceed_airspeed=never_exceed_airspeed,
+                                                    main_gear_mounted_to_wing=main_gear_mounted_to_wing,
+                                                    strut_y_location=strut_y_location,
                                                     )
-    # spoilers and speedbrake estimation
-    mass_spoilers_speedbrakes = mass_spoilers_and_speedbrakes(
-                                                    wing,
-                                                    mass_basic_wing
+    # spoilers and speedbrake mass estimation
+    mass_spoilers_speedbrakes = mass_wing_spoilers_and_speedbrakes(
+                                                    wing=wing,
+                                                    mass_basic_wing=mass_basic_wing
                                                     )
 
-    mass_wing = (
+    mass_wing_total = (
             mass_basic_wing +
             1.2 * (mass_high_lift_devices + mass_spoilers_speedbrakes)
     )
@@ -355,7 +355,7 @@ def mass_wing(
     if return_dict:
         return locals()
     else:
-        return mass_wing
+        return mass_wing_total
 
 
 
