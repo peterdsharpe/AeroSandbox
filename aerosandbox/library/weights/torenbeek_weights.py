@@ -68,8 +68,8 @@ def mass_wing_high_lift_devices(
 ) -> float:
     """
     The function mass_high_lift() is designed to estimate the weight of the high-lift devices
-    on an airplane wing. It uses Torenbeek's method, which is based on multiple factors
-    like wing design and flap deflection.
+        on an airplane wing. It uses Torenbeek's method, which is based on multiple factors
+        like wing design and flap deflection.
 
     Args:
 
@@ -142,9 +142,9 @@ def mass_wing_basic_structure(
 ) -> Union[float, Dict[str, float]]:
     """
     Computes the mass of the basic structure of the wing of an aircraft, according to 
-    Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction 
-    of Wing Structural Weight". This is the basic wing structure without movables like spoilers,
-    high-lift devices, etc.
+        Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction
+        of Wing Structural Weight". This is the basic wing structure without movables like spoilers,
+        high-lift devices, etc.
 
     Likely more accurate than the Raymer wing weight models.
 
@@ -157,26 +157,26 @@ def mass_wing_basic_structure(
         ultimate_load_factor: The ultimate load factor of the aircraft [-]. 1.5x the limit load factor.
 
         suspended_mass: The mass of the aircraft that is suspended from the wing [kg]. It should exclude 
-        any wing attachments that are not part of the wing structure.
+            any wing attachments that are not part of the wing structure.
 
         never_exceed_airspeed: The never-exceed airspeed of the aircraft [m/s]. Used for flutter calculations.
 
         main_gear_mounted_to_wing: Whether the main gear is mounted to the wing structure. Boolean.
 
         strut_y_location: The y-location of the strut (if any), relative to the wing's leading edge [meters]. If None,
-        it is assumed that there is no strut (i.e., the wing is a cantilever beam).
+            it is assumed that there is no strut (i.e., the wing is a cantilever beam).
 
         k_e: represents weight knockdowns due to bending moment relief from engines mounted in front of elastic axis.
-        see Torenbeek unlabeled equations, between C-3 and C-4. 
+            see Torenbeek unlabeled equations, between C-3 and C-4.
                 k_e = 1.0 if engines are not wing mounted,
                 k_e = 0.95 (default) two wing mounted engines in front of the elastic axis and 
                 k_e = 0.90 four wing-mounted engines in front of the elastic axis
 
         return_dict: Whether to return a dictionary of all the intermediate values, or just the final mass. Defaults
-        to False, which returns just the final mass [kg].
+            to False, which returns just the final mass [kg].
 
     Returns: If return_dict is False (default), returns a single value: the mass of the basic wing [kg]. If return_dict is
-    True, returns a dictionary of all the intermediate values.
+        True, returns a dictionary of all the intermediate values.
 
     """
 
@@ -252,11 +252,11 @@ def mass_wing_spoilers_and_speedbrakes(
 ) -> float:
     """
     The function mass_spoilers_and_speedbrakes() estimates the weight of the spoilers and speedbrakes
-    according to Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction
-    of Wing Structural Weight".
+        according to Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction
+        of Wing Structural Weight".
 
     N.B. the weight is coming out unrealistic and approx. 20-30% of the weight of the wing. This needs
-    a correction. It uses normally the 12.2 kg/m^2 wing area.
+        a correction. It uses normally the 12.2 kg/m^2 wing area.
 
     Args:
 
@@ -267,7 +267,7 @@ def mass_wing_spoilers_and_speedbrakes(
     Returns: The mass of the spoilers and speed brakes [kg]
 
     N.B. the weight estimation using the 12.2 kg/m^2 figure comes out too high if using
-    the wing as a referenced area. Reduced to 1.5% of the basic wing mass.
+        the wing as a referenced area. Reduced to 1.5% of the basic wing mass.
     """
     # mass_spoilers_and_speedbrakes = np.softmax(
     #                                            12.2 * wing.area(),
@@ -293,7 +293,7 @@ def mass_wing(
 ) -> Union[float, Dict[str, float]]:
     """
     Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic Airplane Design",
-    1976, Appendix C: "Prediction of Wing Structural Weight".
+        1976, Appendix C: "Prediction of Wing Structural Weight".
 
     Likely more accurate than the Raymer wing weight models.
 
@@ -317,13 +317,13 @@ def mass_wing(
         flap_deflection_angle: The maximum deflection angle of the flaps [deg].
 
         strut_y_location: The y-location of the strut (if any), relative to the wing's leading edge [m]. If None,
-        it is assumed that there is no strut (i.e., the wing is a cantilever beam).
+            it is assumed that there is no strut (i.e., the wing is a cantilever beam).
 
         return_dict: Whether to return a dictionary of all the intermediate values, or just the final mass. Defaults
-        to False, which returns just the final mass.
+            to False, which returns just the final mass.
 
     Returns: If return_dict is False (default), returns a single value: the mass of the wing [kg]. If return_dict is
-    True, returns a dictionary of all the intermediate values.
+        True, returns a dictionary of all the intermediate values.
 
     """
 
