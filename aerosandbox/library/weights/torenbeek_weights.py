@@ -77,7 +77,7 @@ def mass_wing_high_lift_devices(
 
         max_airspeed_for_flaps, the maximum airspeed at which the flaps can be deployed [m/s]
 
-        flap_deflection_angle, the angle to which the flaps can be deflected (default value is 30 degrees).
+        flap_deflection_angle, the angle to which the flaps can be deflected [deg]. Default value is 30 degrees.
 
         k_f1, configuration factor 1, with values:
                 = 1.0  for single-slotted; double-slotted, fixed hinge
@@ -86,7 +86,7 @@ def mass_wing_high_lift_devices(
                 = 1.45 for triple-slotted Fowler
 
         k_f2, configuration factor 2, with values:
-                = 1.0  for slotted flaps with fixed vane
+                = 1.0  for slotted flaps with fixed vanes
                 = 1.25 for double-slotted flaps with "variable geometry", i.e., extending
                            flaps with separately moving vanes or auxiliary flaps
 
