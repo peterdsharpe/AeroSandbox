@@ -65,7 +65,7 @@ def mass_wing_high_lift_devices(
         flap_deflection_angle: float = 30,
         k_f1: float = 1.0,
         k_f2: float = 1.0
-        ) -> float:
+) -> float:
     """
     The function mass_high_lift() is designed to estimate the weight of the high-lift devices
     on an airplane wing. It uses Torenbeek's method, which is based on multiple factors
@@ -127,6 +127,7 @@ def mass_wing_high_lift_devices(
     mass_high_lift_devices = mass_trailing_edge_flaps + mass_leading_edge_devices
 
     return mass_high_lift_devices
+
 
 def mass_wing_basic_structure(
         wing: asb.Wing,
@@ -246,9 +247,9 @@ def mass_wing_basic_structure(
 
 
 def mass_wing_spoilers_and_speedbrakes(
-    wing: asb.Wing,
-    mass_basic_wing: float
-    ) -> float:
+        wing: asb.Wing,
+        mass_basic_wing: float
+) -> float:
     """
     The function mass_spoilers_and_speedbrakes() estimates the weight of the spoilers and speedbrakes
     according to Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction
@@ -268,7 +269,7 @@ def mass_wing_spoilers_and_speedbrakes(
     N.B. the weight estimation using the 12.2 kg/m^2 figure comes out too high if using
     the wing as a referenced area. Reduced to 1.5% of the basic wing mass.
     """
-    #mass_spoilers_and_speedbrakes = np.softmax(
+    # mass_spoilers_and_speedbrakes = np.softmax(
     #                                            12.2 * wing.area(),
     #                                            0.015 * mass_basic_wing
     #                                            )
@@ -276,6 +277,7 @@ def mass_wing_spoilers_and_speedbrakes(
     mass_spoilers_and_speedbrakes = 0.015 * mass_basic_wing
 
     return mass_spoilers_and_speedbrakes
+
 
 def mass_wing(
         wing: asb.Wing,
@@ -327,25 +329,25 @@ def mass_wing(
 
     # High-lift mass estimation
     mass_high_lift_devices = mass_wing_high_lift_devices(
-                                                    wing=wing,
-                                                    max_airspeed_for_flaps=max_airspeed_for_flaps,
-                                                    flap_deflection_angle=flap_deflection_angle,
-                                                    )
+        wing=wing,
+        max_airspeed_for_flaps=max_airspeed_for_flaps,
+        flap_deflection_angle=flap_deflection_angle,
+    )
     # Basic wing structure mass estimation
     mass_basic_wing = mass_wing_basic_structure(
-                                                    wing=wing,
-                                                    design_mass_TOGW=design_mass_TOGW,
-                                                    ultimate_load_factor=ultimate_load_factor,
-                                                    suspended_mass=suspended_mass,
-                                                    never_exceed_airspeed=never_exceed_airspeed,
-                                                    main_gear_mounted_to_wing=main_gear_mounted_to_wing,
-                                                    strut_y_location=strut_y_location,
-                                                    )
+        wing=wing,
+        design_mass_TOGW=design_mass_TOGW,
+        ultimate_load_factor=ultimate_load_factor,
+        suspended_mass=suspended_mass,
+        never_exceed_airspeed=never_exceed_airspeed,
+        main_gear_mounted_to_wing=main_gear_mounted_to_wing,
+        strut_y_location=strut_y_location,
+    )
     # spoilers and speedbrake mass estimation
     mass_spoilers_speedbrakes = mass_wing_spoilers_and_speedbrakes(
-                                                    wing=wing,
-                                                    mass_basic_wing=mass_basic_wing
-                                                    )
+        wing=wing,
+        mass_basic_wing=mass_basic_wing
+    )
 
     mass_wing_total = (
             mass_basic_wing +
@@ -356,8 +358,6 @@ def mass_wing(
         return locals()
     else:
         return mass_wing_total
-
-
 
 
 # def mass_hstab(
