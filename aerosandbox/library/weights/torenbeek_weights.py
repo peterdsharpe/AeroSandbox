@@ -15,7 +15,8 @@ def mass_wing_simple(
         main_gear_mounted_to_wing: bool = True,
 ) -> float:
     """
-    Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic Airplane Design",
+    Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic 
+    Airplane Design",
 
     This is the simple version of the wing weight model, which is found in:
     Section 8.4: Weight Prediction Data and Methods
@@ -264,13 +265,16 @@ def mass_spoilers_and_speedbrakes(
     
     Returns the mass of the spoilers and speed brakes
 
-    N.B. the weight comes out way too heavy comes out as 30% of the weight of the wing. that is 
-    unacceptable and needs correction.
+    N.B. the weight estimation using the 12.2 kg/m^2 figure comes out too high if using
+    the wing as a referenced area. Reduced to 1.5% of the basic wing mass.
     '''
-    mass_spoilers_and_speedbrakes = np.softmax(
-                                                12.2 * wing.area(),
-                                                0.015 * mass_basic_wing
-                                                )
+    #mass_spoilers_and_speedbrakes = np.softmax(
+    #                                            12.2 * wing.area(),
+    #                                            0.015 * mass_basic_wing
+    #                                            )
+    
+    mass_spoilers_and_speedbrakes = 0.015 * mass_basic_wing
+    
     return mass_spoilers_and_speedbrakes
 
 def mass_wing(
