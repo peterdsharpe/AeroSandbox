@@ -1,4 +1,4 @@
-﻿Manufacturer,Model,Application(s),Power,SFC (TO) [shp],Airflow (TO) [lb/shp hr],OPR (TO) [lb/s],Number of Spools,LPC Stages,HPC Stages,HPT Stages,IPT Stages,LPT Stages,Length [in],Width/Diameter [in],Weight (dry) [lb]
+﻿Manufacturer,Model,Application(s),Power (TO) [shp],SFC (TO) [shp],Airflow (TO) [lb/shp hr],OPR (TO) [lb/s],Number of Spools,LPC Stages,HPC Stages,HPT Stages,IPT Stages,LPT Stages,Length [in],Width/Diameter [in],Weight (dry) [lb]
 Allison,250-B15,(see T63-A-100),,,,,,,,,,,,,
 Allison,250-B17,Mantis,380,,4,,1 + FT,,6 + 1C,2,,2,44.8,22.5,195
 Allison,250-B17C,"P68TP, A36, GZ22",420,0.657,4,7.2,1 + FT,,6 + 1C,2,,2,45,22.5,195
