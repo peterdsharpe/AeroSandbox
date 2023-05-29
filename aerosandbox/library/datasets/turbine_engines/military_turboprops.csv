@@ -1,0 +1,651 @@
+﻿Manufacturer,Model,Application(s),Power (TO) [shp],SFC (TO) [shp],Airflow (TO) [lb/shp hr],OPR (TO) [lb/s],Number of Spools,LPC Stages,HPC Stages,HPT Stages,IPT Stages,LPT Stages,Length [in],Width/Diameter [in],Weight (dry) [lb]
+Allison,250-B15,(see T63-A-100),,,,,,,,,,,,,
+Allison,250-B17,Mantis,380,,4,,1 + FT,,6 + 1C,2,,2,44.8,22.5,195
+Allison,250-B17C,"P68TP, A36, GZ22",420,0.657,4,7.2,1 + FT,,6 + 1C,2,,2,45,22.5,195
+Allison,250-B17D,"RTAF 5, L/M90TP",420,0.657,4,7.2,1 + FT,,6 + 1C,2,,2,44.9,22.6,195
+Allison,250-B17F,L/M90TP,450,0.657,4,7.9,1 + FT,,4 + 1C,2,,2,44.9,22.6,212
+Allison,250-C18,"TH-57A, MD 500M",317,0.64,4,7.2,1 + FT,,6 + 1C,2,,2,40.4,22.5,141
+Allison,250-C18A,"OH-58A, MD 500M",317,0.64,4,7.2,1 + FT,,6 + 1C,2,,2,40.4,22.5,141
+Allison,250-C18C,"OH-58A, MD 500M",317,0.64,4,7.2,1 + FT,,6 + 1C,2,,2,40.4,22.5,141
+Allison,250-C20,BO105C/CB,400,0.65,4,7.2,1 + FT,,6 + 1C,2,,2,40.8,23.2,158
+Allison,250-C20B,"OH-58C, MD 500D/MD, A109A, BO105CBS/CBS-4/CBS-5/M/P, Kania, CH-14",420,0.65,4,7.2,1 + FT,,6 + 1C,2,,2,40.8,23.2,158
+MTU,250-MTU-C20B,BO105M/P,420,0.65,4,7.2,1 + FT,,6 + 1C,2,,2,40.8,23.2,158
+Allison,250-C20F,AS355M/M2,420,,,,1 + FT,,6 + 1C,2,,2,40.8,23.2,158
+Allison,250-C20J,"TH-57B/C/D, TH-67A",420,0.65,4,7.2,1 + FT,,6 + 1C,2,,2,40.8,23.2,158
+Allison,250-C20R,QH-50E,450,,4,7.2,1 + FT,,6 + 1C,2,,2,40.9,23.2,159
+Allison,250-C20R/1,"A109A Mk.2, A190 EOA, A109CM",450,0.608,,7.9,1 + FT,,4 + 1C,2,,2,40.9,23.2,159
+Allison,250-C20R/2,"Ka-226, SW-4",450,0.608,,7.9,1 + FT,,4 + 1C,2,,2,40.9,23.2,159
+Allison,250-C20W,"RQ-8A, MQ-8B",420,0.65,4,7.2,1 + FT,,6 + 1C,2,,2,40.8,22.6,159
+Allison,250-C28C,BO105LS/LS-A1/LS-A3,500,0.606,4,8.4,1 + FT,,1C,2,,2,47.3,25.1,230
+Allison,250-C30,"AH-6J, MH-6J, MD 530MG, FT600, S-76A, ULB/MD530F",650,,,,1 + FT,,1C,2,,2,,,
+Allison,250-C30L,Bell 406CS,650,0.592,6,8.6,1 + FT,,1C,2,,2,43.2,25.5,258
+Allison,250-C30R,"AH-58D, OH-58D",650,0.592,6,8.4,1 + FT,,1C,2,,2,43.2,25.5,258
+Allison,250-C30R/1,"AH-58D, OH-58D",650,0.592,6,8.4,1 + FT,,1C,2,,2,43.2,25.5,258
+Allison,250-C30R/2,"AH-58D, OH-58D",650,0.592,6,8.4,1 + FT,,1C,2,,2,43.2,25.5,258
+Allison,250-C30R/3,"AH-58D, OH-58D/F",650,0.592,6,8.4,1 + FT,,1C,2,,2,43.2,25.5,258
+Allison,250-C30R/3M,"AH-6J, MH-6J, AH-58D, OH-58D",650,0.592,6,8.4,1 + FT,,1C,2,,2,43.2,25.5,258
+Allison,250-C30S,"AUH-76A, S-75, S-76A-2",650,0.592,6,8.4,1 + FT,,1C,2,,2,43.2,25.5,258
+Allison,250-C30U,(see T703-AD-700),,,,,,,,,,,,,
+Allison (Rolls-Royce),250-C47B,MQ-8C,650,0.58,6,9.2,1 + FT,,1C,2,,2,43.2,25.7,279
+Allison (Rolls-Royce),250-C47E,"MQ-8C, MD 540A/F (not produced)",700,,,,1 + FT,,1C,2,,2,43.2,25.7,290
+Boeing,502-2E,,175,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-7B,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-8,(see T50-BO-8),,,,,,,,,,,,,
+Boeing,502-8A,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-8B,,210,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-10B,,270,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-10C,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-10F,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-10V,(see T50-BO-4),,,,,,,,,,,,,
+Boeing,502-10VB,,325,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-10VC,(see T50-BO-8A),,,,,,,,,,,,,
+Boeing,502-11,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-11B,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-12B,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-W,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,502-14,(see T50-BO-10),,,,,,,,,,,,,
+Boeing,520-2,(see YT60-BO-2A),,,,,,,,,,,,,
+Boeing,520-4,,475,,,,1 + FT,,1C,1,,1,54.1,25.1,250
+Boeing,520-6,,550,0.67,5.5,6,1,,1C,1,,,54.1,25.1,250
+Boeing,520-8,,550,0.67,5.5,6,1 + FT,,1C,1,,1,54.1,25.1,250
+Boeing,550-1,(see T50-BO-12),,,,,,,,,,,,,
+Allison,AE1107C,(see T406-AD-400),,,,,,,,,,,,,
+Allison (Rolls-Royce),AE2100D2A,C-27J,4637,0.41,,16.6,1 + FT,,14,2,,2,124.1,46.3,1641
+Allison (Rolls-Royce),AE2100D3,"C-130J, AC-130J, CC-130J Hercules, EC-130J, HC-130J, KC-130J, MC-130J, WC-130J Hercules C.4/C.5, E-3E (candidate engine)",4637,0.41,,16.6,1 + FT,,14,2,,2,124.1,46.3,1641
+Allison (Rolls-Royce),AE2100H,Atlantique ATL3 (not produced),,,,,1 + FT,,14,2,,2,,,
+Allison (Rolls-Royce),AE2100J,US-2,4591,,,,1 + FT,,14,2,,2,118.1,52.9,1641
+Ivchenko,AI-20D-6,"An-12, Il-18, Il-20M, Il-38, Be-12",4080,0.529,46,8,1,,10,3,,,,,
+Ivchenko,AI-20DM,An-32,5112,,,,1,,10,3,,,,,
+Ivchenko,AI-20K,"An-10/10A, An-12, Il-18V",3840,,,,1,,10,3,,,,,
+Ivchenko,AI-24,An-24V-1,2448,,,,1,,10,3,,,92.4,42.3,1323
+Ivchenko,AI-24A,"An-24V-2, An-24RV",2448,,,,1,,10,3,,,,,
+Ivchenko,AI-24T,"An-24T, An-26",2560,0.51,32,7.1,1,,10,3,,,,,
+Ivchenko,AI-24TV,An-30,,,,,1,,10,3,,,,,
+Ivchenko-Progress Motor Sich,AI-450T,Akinci,750,,,,,,,,,,,,
+Safran,Aneto,AW249 (candidate engine),2500,,,,1 + FT,,3 + 1C,2,,2,,,
+Turbomeca/AVIC,Ardiden 1H,"Dhruv Mk.3/4, HAL LCH, EC155, A149, KMH (candidate engine)",993,,,,1 + FT,,2C,1,,1,,,
+Turbomeca/AVIC,Ardiden 1U,HAL LOH/LUH,1070,,,,1 + FT,,2C,1,,1,,,
+Turbomeca/AVIC,Ardiden 3C/WZ16,AC352,1800,,,,1 + FT,,2C,1,,1,,,
+Turbomeca,Arriel 1A,SA365C,641,0.573,,9,1 + FT,,1 + 1C,2,,1,42.9,22.4,265
+Turbomeca,Arriel 1A1,SA365C1,641,0.573,,9,1 + FT,,1 + 1C,2,,1,42.9,22.4,265
+Turbomeca,Arriel 1A2,SA365C2,641,0.573,,9,1 + FT,,1 + 1C,2,,1,42.9,22.4,265
+Turbomeca,Arriel 1B,AS350B/BA,641,0.573,,9,1 + FT,,1 + 1C,2,,1,42.9,22.4,265
+Turbomeca,Arriel 1C,AS365N,660,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1C1,"AS365N1, S-76A+",700,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1C2,AS365N2,700,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1D,AS350B1/L1,684,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1D1,"AS350B2/L2/BB, Squirrel HT.1/2, AS550, KA128",732,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1E,BK117C1,708,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1E2,"BK117C1/C2, EC145, UH-72A",738,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1K,A109K/KN,,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1K1,A109KM,738,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1M,AS365MA/SA,691,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1M1,"AS365K, AS565AA/CA/UA",783,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1S,S-76A+,700,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 1S1,S-76A++/C,723,,,,1 + FT,,1 + 1C,2,,1,60.6,31,
+Turbomeca,Arriel 2B,AS550C3,848,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 2B1,EC130B4,848,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 2B1A,Z11,,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 2C,"AS365N3/N3+, AS565AB/SB/UB, H410A",839,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 2C1,EC155B,839,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 2C2,"EC155B1, MH-65C/D",944,,,,1 + FT,,1 + 1C,2,,1,39.9,22.7,
+Turbomeca,Arriel 2E,"H145M, UH-72B",1039,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 2S1,S-76C+,856,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arriel 2S2,S-76C+,,,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Arrius 1A1,AS555AN/MN/SN/UN,480,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2B1,EC635T1,,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2B1A,EC635T1,,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2B1A1,EC635T1,,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2B2,EC635T2/T2+,,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2F,EC120B,,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2G1,Ka-226T,670,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2K1,A109LUH/CM/K/K2/M/KM/KN/SP,,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Arrius 2K2,A109LUH/CM/K/K2/M/KM/KN/SP,,,,,1 + FT,,1C,1,,1,,,
+Turbomeca,Artouste I,SE313B,360,,,,1,,1 + 1C,3,,,,,
+Turbomeca,Artouste IIC5,SE313B,360,,7,3.9,1,,1 + 1C,3,,,,,
+Turbomeca,Artouste IIC6,SE313B,360,,7,3.9,1,,1 + 1C,3,,,,,
+Turbomeca,Artouste IIIB,"SA315B, SA316B",570,0.76,10,5.2,1,,1 + 1C,3,,,,,
+Turbomeca,Artouste IIID,SA316C,,,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou I,,,,,,1,,1 + 1C,3,,,50,18,
+Turbomeca,Astazou II,Skyvan 1A,495,,,,1,,1 + 1C,3,,,50,18,
+Turbomeca,Astazou III,,591,0.643,6,,1,,1 + 1C,3,,,56.3,18,324
+Turbomeca,Astazou III-2,,645,0.65,,,1,,1 + 1C,3,,,,,330
+Turbomeca,Astazou IIIA,SA318C,523,0.623,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou IIIA,SA341,590,0.65,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou IIIB,SA341H,,,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou IIIC,SA341F,,,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou IIIC2,SA341F,,,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou IIIN,,590,0.65,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou IIIN2,Gazelle AH.2/HT.2/HT.3/HCC.4,590,0.65,,,1,,1 + 1C,3,,,,,
+Turbomeca,Astazou XII,Skyvan 2,690,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XIV,SA342L,858,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XIVA,,600,0.53,7,7.6,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XIVB,SA319F,573,0.624,,,1,,2 + 1C,3,,,56.3,,366
+Turbomeca,Astazou XIVC,,870,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XIVD,,870,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XIVF,SA319C/F,591,0.624,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XIVH,SA342K,,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XIVM,SA342M,,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XVID,Jetstream T.1/T.2,940,0.5,7,8.2,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XVIG,IA 58A,978,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XVIII,,,,,,1,,2 + 1C,3,,,,,
+Turbomeca,Astazou XX,SA361,1005,0.508,,,1,,3 + 1C,4,,,60.2,28.4,430
+Turbomeca,Astazou XXB,SA361H,1400,,,,1,,3 + 1C,4,,,60.2,28.4,
+Turbomeca,Bastan IVA,IA 60 Guarani III,930,,,,1,,1 + 1C,3,,,,,
+Turbomeca,Bastan ??,SE.117 (not produced),760,,,,1,,1 + 1C,3,,,,,
+Rolls-Royce,Clyde,Wyvern TF.2 (not produced),4030,0.71,42,6,1 + FT,9,1C,1,,1,,,2800
+GE,CT7-2A,EH101 prototypes,1625,0.473,,,1 + FT,,5 + 1C,2,,2,47,26,442
+GE,CT7-2E1,AW149,1980,,,,1 + FT,,5 + 1C,2,,2,47,26,492
+GE,CT7-6A1,"CH-148 Petrel, CH-149 Chimo (not produced)",2145,0.445,,19,1 + FT,,5 + 1C,2,,2,48.2,26,493
+GE,CT7-7A,CN-235-10,1700,0.474,,14,1 + FT,,5 + 1C,2,,2,96,29,783
+GE,CT7-8A,"H-92A, S-92",2740,,,,1 + FT,,5 + 1C,2,,2,48.8,26,542
+GE,CT7-8A1,CH-148,2712,,,,1 + FT,,5 + 1C,2,,2,48.8,26,542
+GE,CT7-8A6,VH-92A,2769,,,,1 + FT,,5 + 1C,2,,2,48.8,26,542
+GE,CT7-8A7,CH-148,2788,,,,1 + FT,,5 + 1C,2,,2,48.8,26,542
+GE,CT7-8B5,(see YT706-GE-700),2769,,,,1 + FT,,5 + 1C,2,,2,48.8,26,542
+GE,CT7-8E,VH-71A,2739,,,,1 + FT,,5 + 1C,2,,2,48.8,26,542
+GE,CT7-8F5,"NH90 NFH/TTH, MH-60M",2762,,,,1 + FT,,5 + 1C,2,,2,48.8,26,542
+GE,CT7-9C,"CN-235-100/110/200/220/300, AC-235",1750,,,,1 + FT,,5 + 1C,2,,2,96,29,805
+GE,CT7-9C3,"CN-235-300/330, HC-144A/B",1750,,,,1 + FT,,5 + 1C,2,,2,96,29,807
+IHI,CT58-IHI-110-1,KV107/II-3/II-4/II-5,1400,,,,2,,10,2,,2,59,16,315
+IHI,CT58-IHI-110-2,,1400,,,,2,,10,2,,2,59,16,335
+IHI,CT58-IHI-140-1,KV107/IIA-3/IIA-4/IIA-5/IIA-SM-1/IIA-SM-2/IIA-SM-3/IIA-SM-4/IIA-SM-17,1400,,,,2,,10,2,,2,59,16,340
+IHI,CT58-IHI-140-2,,1400,,,,2,,10,2,,2,59,16,340
+GE,CT64-820-1,"CC-115, DHC-5A",2825,,,,2,,14,2,,2,,,
+GE,CT64-820-2,(see T64-GE-P4D),,,,,,,,,,,,,
+GE,CT64-820-3,"CC-115, DHC-5A",3060,,,,2,,14,2,,2,,,
+GE,CT64-820-4,"CC-115D, DHC-5D",3133,,,,2,,14,2,,2,110.2,40.4,1145
+LHTEC,CTS800-4A,"T129A/B, T625",1360,0.448,,14.1,1 + FT,,2C,2,,2,41.2,27.5,383
+LHTEC,CTS800-4N,"UH-1H, Lynx AH.9A/Mk.21B, Super Lynx 300/Mk.100, AW159, Wildcat AH1/HMA2",1360,0.448,,14.1,1 + FT,,2C,2,,2,41.2,27.5,383
+Progress,D-136,"Mi-26, Mi-26MS/T/TZ/T2/T2V",11400,0.456,562,18.7,2 + FT,6,7,1,1,2,146.3,55.2,2315
+Rolls-Royce,Dart RDa.1,Athena T.1A,1400,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.6 Mk.510,Turbo Mustang III,1660,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.6 Mk.514-7,F27 Mk.300M,1715,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.7 Mk.21,"Br.1050 Alize, Br.1050M Alize-M",2100,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.7 Mk.528-7E,F27 Mk.400M,2000,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.7 Mk.529-8,TC-4C,2016,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.7 Mk.532-7,F27 Mk.400M,2150,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.7 Mk.536-7R,"F27 Mk.500M, C-31A",2210,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.8 Mk.101,A.W.660 Argosy C.1,2582,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.8 Mk.102,A.W.660 Argosy C.1,2582,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.8 Mk.150,Andover CC.1,2016,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.8 Mk.151,Andover CC.2,2016,,,,1,,2C,3,,,,,
+Rolls-Royce,Dart RDa.12 Mk.201,"Andover C.1, DHC-5C (not produced)",3115,,,,1,,2C,3,,,,,
+Armstrong Siddeley,Double Mamba ASMD.1,"Gannet AS.1/T.2, B-88 YB.1",2960,,,,1,,10,??,,,102.3,52.8,2170
+Armstrong Siddeley,Double Mamba ASMD.3,Gannet AS.4/COD.4/T.5/ECM.6,3145,,,,1,,10,??,,,102.3,52.8,2170
+Armstrong Siddeley,Double Mamba ASMD.4,Gannet AEW.3,3875,,,,1,,10,??,,,102.3,52.8,2170
+Armstrong Siddeley,Double Mamba ASMD.8,Gannet AEW.3,3875,,,,1,,10,??,,,102.3,52.8,2170
+Napier,Eland NEl.6 Mk.504A,CC-109 (CL-66),3500,,,,,,,,,,,,
+Napier,Eland NEl.7,Rotodyne,2800,,,,,,,,,,,,
+Napier,Gazelle NGa.1,,1260,,,,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle NGa.2 Mk.101,Belvedere HC.1,1465,0.74,16,6.3,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle NGa.3,,,,,,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle NGa.4,,,,,,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle NGa.13 Mk.161,Wessex HAS.1,1450,0.74,16,5.9,1 + FT,,11,2,,1,75,42.5,940
+Napier,Gazelle NGa.13/2 Mk.162,Wessex HAS.31,1540,0.75,16,6.1,1 + FT,,11,2,,1,75,42.5,940
+Napier,Gazelle NGa.18,,,,,,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle NGa.22 Mk.165,Wessex HAS.3,1600,0.69,17,5.9,1 + FT,,11,2,,1,75,42.5,884
+Napier,Gazelle NGa.22 Mk.165C,Wessex HAS.31B,1600,0.69,17,5.9,1 + FT,,11,2,,1,75,42.5,884
+Napier,Gazelle 501,,,,,,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle 503,,,,,,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle 512,,,,,,1 + FT,,11,2,,1,75,42.5,928
+Napier,Gazelle 514,,,,,,1 + FT,,11,2,,1,75,42.5,928
+GE,GE12,Demonstrator for US Army,1500,0.4,,,2,,5 + 1C,2,,2,,,
+GE,GE38-1B,(see T408-GE-400),,,,,,,,,,,,,
+Rolls-Royce,Gem ?? Mk.???,Super Lynx Mk.95/Mk.99,,,,,3,4,1C,1,1,2,,,
+Rolls-Royce,Gem 2-1001,"Lynx AH.1/HAS.2/Mk.2/Mk.21/Mk.23/Mk.25/Mk.80/Mk.86/Mk.89,",825,0.52,,12,3,4,1C,1,1,2,43.4,23.5,393
+,,Lynx HT.1/Mk.22/Mk.24/Mk.26 (not produced),,,,,,,,,,,,,
+Piaggio,Gem 2-1004D,A129,825,0.52,,,3,4,1C,1,1,2,,,360
+Rolls-Royce,Gem 41-1,Lynx HAS.3/HAS.3S/HAS.3ICE/HAS.3GM/Mk.4/AH.5/AH.7/HMA.8/AH.9,1000,,,,3,4,1C,1,1,2,,,404
+Rolls-Royce,Gem 41-1 Mk.101,,1000,,,,3,4,1C,1,1,2,,,404
+Rolls-Royce,Gem 41-1 Mk.202,,1000,,,,3,4,1C,1,1,2,,,404
+Rolls-Royce,Gem 42-1 Mk.204,"Lynx Mk.81/Mk.88, Super Lynx Mk.95",1000,0.49,,13,3,4,1C,1,1,2,43.2,23.5,404
+Rolls-Royce,Gem 42-1 Mk.205,"Lynx Mk.81/Mk.88, Super Lynx Mk.95",1000,0.49,,13,3,4,1C,1,1,2,43.2,23.5,404
+Rolls-Royce,Gem 42-1 Mk.1017,Super Lynx Mk.21A,1000,0.49,,13,3,4,1C,1,1,2,43.2,23.5,404
+Rolls-Royce,Gem 43 Mk.1020,,1000,0.49,,,3,4,1C,1,1,2,,,
+Rolls-Royce,Gem 47-1,Lynx AH.28,,,,,3,4,1C,1,1,2,,,
+Rolls-Royce,Gem 60,Lynx-3,,,,,3,4,1C,1,1,2,,,
+de Havilland,Gnome H.1000 Mk.101,Whirlwind HAR.9/HAR.10,1050,,,,1 + FT,,10,2,,1,,,
+de Havilland,Gnome H.1000 Mk.110,Wessex HC.2/HC.4/HU.5/Mk.52/Mk.53/Mk.54,1350,,,,,,,,,,,,
+de Havilland,Gnome H.1000 Mk.111,Wessex HC.2/HU.5,1350,,,,,,,,,,,,
+de Havilland (Bristol Siddeley),Gnome H.1200,HKP-4A/B/D,1250,,,,,,,,,,,,
+de Havilland (Bristol Siddeley),Gnome H.1400,"Sea King HAS.1, Whirlwind HCC.12, HKP-4C",1400,,,,1 + FT,,10,2,,1,54.8,22.7,326
+de Havilland (Bristol Siddeley),Gnome H.1400-1,"Sea King HAS.2/AEW.2/HAR.3/HC.4, A101G",1535,,,,1 + FT,,10,2,,1,54.8,22.7,326
+de Havilland (Bristol Siddeley),Gnome H.1400-2,Sea King HAS.5/AEW.5/HAS.6/ASW.6,1660,0.62,14,8.5,1 + FT,,10,2,,1,54.8,22.7,326
+de Havilland (Bristol Siddeley),Gnome H.1400-3,,1720,,,,1 + FT,,10,2,,1,54.8,22.7,326
+de Havilland (Bristol Siddeley),Gnome H.1600,,1600,,,,1 + FT,,11,2,,2,,,
+de Havilland (Bristol Siddeley),Gnome H.1800,,1750,,15,9.9,1 + FT,,11,2,,2,,,
+de Havilland,Gnome P.1000,,1050,,,,1 + FT,,10,2,,1,,,
+de Havilland (Bristol Siddeley),Gnome P.1200,,1250,,,,,,,,,,,,
+de Havilland (Bristol Siddeley),Gnome P.1400-3,,1720,,,,1 + FT,,10,2,,1,54.8,22.7,326
+Glushenkov (OMKB),GTD-3BM,Ka-25,990,,,,,,,,,,,,
+Glushenkov (OMKB),GTD-3F,Ka-25,900,,,,,,,,,,,,
+Glushenkov (OMKB),GTD-350,Mi-2RM/URN/URP/US,394,0.84,5,6.1,1 + FT,,7 + 1C,1,,2,54.4,24.8,307
+PZL Rzeszów,GTD-350W,,414,0.84,5,6.1,1 + FT,,7 + 1C,1,,2,,,
+Soyuz,GTE-400,Ka-118,400,,,,,,,,,,,,
+Honeywell,HTS900,"OH-58F Block II, ARH-70 (not produced)",925,0.54,,,1 + FT,,1 + 1C,1,,1,,,
+Pratt Whitney,JFTD12A-4A,CH-54A,4500,,,,2,,9,2,,2,,,
+Pratt Whitney,JFTD12A-5A,CH-54B,4800,0.69,51,6.8,2,,9,2,,2,,,
+Avco Lycoming,LTC 1K-4C,CL-84,1500,,,,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming,LTC 1K-4K,XV-15A,1550,,,,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming,LTP 101-600A-1A,P.166-DL3,620,0.544,,8.5,1 + FT,,1 + 1C,1,,1,37.4,23.3,325
+Avco Lycoming,LTP 101-700A-1A,P.166-DLR-MAR,700,0.544,,,1 + FT,,1 + 1C,1,,1,37.4,23.3,325
+Avco Lycoming,LTS 101-650B-1,"BK117A3M, CH-143",550,0.577,,8.4,1 + FT,,1 + 1C,1,,1,31.1,25.4,273
+Avco Lycoming,LTS 101-750B-2,HH-65A/B/C,690,0.57,,8.8,1 + FT,,1 + 1C,1,,1,32.4,24.7,268
+Motorlet,M601D-11,PZL-130TM,604,,,,1 + FT,,,,,,66,25.6,450
+Motorlet,M601E-11,PZL-130TB,751,,,,1 + FT,,,,,,66,25.6,457
+Motorlet,M601E-11A,,705,,,,1 + FT,,,,,,66,25.6,457
+Motorlet,M601F,,777,,,,1 + FT,,,,,,66,25.6,457
+Turbomeca,Makila 1A,,,,,,1 + FT,,3 + 1C,2,,2,54.9,20.3,535
+Turbomeca,Makila 1A1,"AS332B/B1/F/F1, AS532AC/AL/SC/UB/UC/UL, Puma HC.2",1877,0.481,,,1 + FT,,3 + 1C,2,,2,54.9,20.3,535
+Turbomeca,Makila 1A2,"AS332, AS532A2/U2",2100,,,,1 + FT,,3 + 1C,2,,2,54.9,20.3,535
+Turbomeca,Makila 1A4,EC725,2382,,,,1 + FT,,3 + 1C,2,,2,54.9,20.3,535
+Turbomeca,Makila 2A,,2415,,,,1 + FT,,3 + 1C,2,,2,54.9,20.3,535
+Turbomeca,Makila 2A1,EC725,2382,,,,1 + FT,,3 + 1C,2,,2,,,
+Turbomeca,Makila 2B,,,,,,1 + FT,,3 + 1C,2,,2,54.9,20.3,535
+Armstrong Siddeley,Mamba ASMa.1,Br.960-1 Vultur prototype,980,,,,1,,10,2,,,90.2,33,850
+Armstrong Siddeley,Mamba ASMa.3,"Apollo AW.55, Athena T.1, Balliol T.1 prototypes, Br.960-1 Vultur prototype",1010,,,,1,,10,2,,,90.2,33,850
+Armstrong Siddeley,Mamba ASMa.5,Development engine,,,,,1,,10,2,,,90.2,33,850
+Armstrong Siddeley,Mamba ASMa.6,Seamew AS.1/2,1650,0.69,21.5,6,1,,10,2,,,90.2,33,850
+Snecma,M138,A400M (candidate engine),,,,,,,,,,,,,
+Mitsubishi,MG6-10,Drones,70,0.43,,4.5,1,,1,1,,,10,8,
+MTU/Turbomeca/Rolls-Royce,MTR390-2C,Tiger,1556,0.46,7,14,1 + FT,,2C,1,,2,42.4,26.9,373
+MTU/Turbomeca/Rolls-Royce,MTR390-E,,,,,,1 + FT,,2C,1,,2,42.4,26.9,373
+Napier,Naiad,,1500,,17.2,5.5,,,,,,,,,
+Napier,Double Naiad,YA.5 prototype (engine cancelled),,,,,,,,,,,,,
+Blackburn,Nimbus BnN.1,,,,,,1 + FT,,2 + 1C,2,,2,,,
+Blackburn,Nimbus BnN.2,,,,,,1 + FT,,2 + 1C,2,,2,,,
+Blackburn,Nimbus BnN.2/1,,,,,,1 + FT,,2 + 1C,2,,2,,,
+Blackburn,Nimbus BnN.2/2,,,,,,1 + FT,,2 + 1C,2,,2,,,
+Bristol Siddeley,Nimbus Mk.103/503,Wasp HAS.1,1050,,,,1 + FT,,2 + 1C,2,,1,73.7,38.7,670
+Bristol Siddeley (Rolls-Royce),Nimbus Mk.105/502,Scout AH.1,685,,,,1 + FT,,2 + 1C,2,,1,,,
+Kuznetsov,NK-12M,Tu-95M 'Bear-A',14795,0.36,143,13,1,,14,5,,,236.2,45.3,5181
+Kuznetsov,NK-12MK,A-90 'Casp-B',,,,,1,,14,5,,,,,
+Bristol,Proteus 755,Britannia C.1/C.2,3925,,,,,,,,,,,,
+Pratt Whitney Canada,PT6A-20,(see T74-CP-700),,,,,,,,,,,,,
+Pratt Whitney Canada,PT6A-25,T-34C,715,0.63,,,1 + FT,,3 + 1C,2,,1,62,19,353
+Pratt Whitney Canada,PT6A-25A,"PC-7, PZL-130T/TE",650,0.63,,,1 + FT,,3 + 1C,2,,1,62,19,343
+Pratt Whitney Canada,PT6A-25C,"EMB-312 Tucano, PZL-103TD",750,0.595,,,1 + FT,,3 + 1C,2,,1,62,19,335
+Pratt Whitney Canada,PT6A-27,"UV-18A/B, UV-20A, CC-138, G-21G Turbo-Goose",620,0.602,7,6.7,1 + FT,,3 + 1C,2,,1,62,19,328
+Pratt Whitney Canada,PT6A-28,RU-27J,750,0.595,,,1 + FT,,3 + 1C,2,,1,62,19,344
+Pratt Whitney Canada,PT6A-29,(see T74-CP-702),,,,,,,,,,,,,
+Pratt Whitney Canada,PT6A-34,"UV-18C, EMB-111, IAI 201/202",750,0.595,,,1 + FT,,3 + 1C,2,,1,62,19,331
+Pratt Whitney Canada,PT6A-34B,"T-44A/C, King Air H90",750,0.595,,,1 + FT,,3 + 1C,2,,1,62,19,344
+Pratt Whitney Canada,PT6A-38,C-12A,750,,,,1 + FT,,3 + 1C,2,,1,62,19,
+Pratt Whitney Canada,PT6A-41,"C-12C/D/L, NC-12B/N, RC-12D/G/H, TC-12B, UC-12B/D",850,0.591,,,1 + FT,,3 + 1C,2,,2,67,19,403
+Pratt Whitney Canada,PT6A-42,"C-12E/F/R/T/U/V, RC-12F/M, UC-12F/M",850,,,,,,,,,,,,
+Pratt Whitney Canada,PT6A-45R,(see T101-CP-100),,,,,,,,,,,,,
+Pratt Whitney Canada,PT6A-50,"EO-5C, TO-5C, C-7B, RC-7B",,,,,1 + FT,,3 + 1C,2,,2,,,
+Pratt Whitney Canada,PT6A-60A,"MC-12S/W, UC-12W",1050,0.548,,,1 + FT,,3 + 1C,2,,2,72,19,475
+Pratt Whitney Canada,PT6A-62,"PC-9A/B/Mk.2, PZL-130TC/TP",1150,0.567,,,1 + FT,,3 + 1C,2,,2,70,19,454
+Pratt Whitney Canada,PT6A-65AR,C-23B/C/D,1425,,,,,,,,,,,,
+Pratt Whitney Canada,PT6A-65B,"C-12J, UC-12J, C-145A, MC-145B",1100,0.536,10,10,1 + FT,,4 + 1C,2,,2,74,19,481
+Pratt Whitney Canada,PT6A-66,Saras (prototype),850,0.62,,,1 + FT,,4 + 1C,2,,2,70,19,470
+Pratt Whitney Canada,PT6A-67,RC-12X,1100,0.547,,,1 + FT,,4 + 1C,2,,2,76,19,506
+Pratt Whitney Canada,PT6A-67B,U-28A,1200,0.552,,,1 + FT,,4 + 1C,2,,2,,19,515
+Pratt Whitney Canada,PT6A-67D,"RC-12K/N/P/Q, Saras",1220,0.53,,,1 + FT,,4 + 1C,2,,2,,,
+Pratt Whitney Canada,PT6A-68,"T-6A/B/C, AT-6C, JPATS PC-9 Mk.II, CT-156, EMB-312H",1250,0.54,,,1 + FT,,4 + 1C,2,,2,71.3,22.2,573
+Pratt Whitney Canada,PT6A-68B,,1600,,,,1 + FT,,4 + 1C,2,,2,71.4,22.2,593
+Pratt Whitney Canada,PT6A-68C,"A-29B, EMB-314",1600,,,,1 + FT,,4 + 1C,2,,2,71.8,22.4,600
+Pratt Whitney Canada,PT6A-68D,,1600,,,,1 + FT,,4 + 1C,2,,2,71.7,22.4,600
+Pratt Whitney Canada,PT6A-68T,Hurkus-A/-B/-C,1600,,,,1 + FT,,4 + 1C,2,,2,71.8,22.4,600
+Pratt Whitney Canada,PT6A-114,U-27A,675,0.64,,,1 + FT,,3 + 1C,2,,1,62,19,350
+Pratt Whitney Canada,PT6B-36,S-76B,960,,,,1 + FT,,4 + 1C,2,,2,59.2,19.5,384
+Pratt Whitney Canada,PT6B-37A,TH-119,917,,,,1 + FT,,4 + 1C,2,,2,59.2,22.6,408
+Pratt Whitney Canada,PT6B-67A,Z-8F,,,,,1 + FT,,4 + 1C,2,,2,59.2,19.5,
+Pratt Whitney Canada,PT6C-67C,"AW139M, HH-139A, VH-139A, US139, MH-139A",1531,,,,,,,,,,,,
+Pratt Whitney Canada,PT6T-3D,"CH-146, S-69",1800,0.601,,,1 + FT,,4 + 1C,2,,2,65.2,44.5,690
+Pratt Whitney Canada,PW119C,C-146A,2180,,,,2 + FT,1C,1C,1,1,2,81,31,887
+Pratt Whitney Canada,PW120A,"CT-142, E-9A",2000,0.485,,,2 + FT,1C,1C,1,1,2,84,31,933
+Pratt Whitney Canada,PW123E,"RO-6A, C-147A",2380,,,,2 + FT,1C,1C,1,1,2,84,33,
+Pratt Whitney Canada,PW127G,C-295M/W,2920,,,,2 + FT,1C,1C,1,1,2,84,33,1060
+Pratt Whitney Canada,PW150A,An-132D,5492,,,,2 + FT,1C,1C,1,1,2,84,33,1060
+Pratt Whitney Canada,PW150??,USMC HLR (proposed engine),,,,,2 + FT,1C,1C,1,1,2,84,33,1060
+Pratt Whitney Canada,PW180,A400M (candidate engine),,,,,,,,,,,,,
+Pratt Whitney Canada,PW206B,EC635P1,710,0.548,,,1 + FT,,1C,1,,1,,,
+Pratt Whitney Canada,PW206B2,EC635P2/P2+,817,,,,1 + FT,,1C,1,,1,,,
+Pratt Whitney Canada,PW206C,"A109LUH, MH-68A",732,,,,1 + FT,,1C,1,,1,,,
+Pratt Whitney Canada,PW206E,MH-90,646,,,,1 + FT,,1C,1,,1,,,
+Pratt Whitney Canada,PW207D,"MQ-18A, A160T, Eagle Eye (not produced)",572,,,,1 + FT,,1C,1,,1,,,
+Pratt Whitney Canada,PW207K,Ansat/-M,,,,,1 + FT,,1C,1,,1,,,
+Pratt Whitney Canada,PW209T,Bell 400/440 (not produced),1000,,,,,,,,,,,,
+Pratt Whitney Canada,PW210A,AW169M,1000,,,,1 + FT,,2 + 1C,1,,2,,,
+Armstrong Siddeley,Python ASP.3,Wyvern S.4,3560,0.805,52.5,5.4,1,,14,2,,,123.2,54,3450
+PZL Rzeszów,PZL-10W,W-3A/AE/P/PL/RM/RR,888,0.6,10,7.4,1 + FT,,6 + 1A,2,,1,73.8,30.1,310
+Rolls-Royce,RS.360-07,WG-13,900,0.5,7,12.2,2 + FT,4,1C,1,1,2,,,
+Rolls-Royce/Turbomeca,RTM 321,Technology demonstrator,,,,,1 + FT,,3 + 1C,2,,2,,,
+Rolls-Royce/Turbomeca,RTM 322-01,S-70C (test aircraft),2100,,,,1 + FT,,3 + 1C,2,,2,46.1,25.9,
+Rolls-Royce/Turbomeca,RTM 322-01/8,"Merlin HM.1 (EH101 Mk.111), EH101 Mk.512/Mk.514/Mk.515/Mk.516, US101 (candidate engine)",2200,0.45,,14,1 + FT,,3 + 1C,2,,2,46.1,25.9,539
+Rolls-Royce/Turbomeca,RTM 322-02/8,"Merlin HC.3 (EH101 Mk.411), CH-149 (candidate engine)",2200,0.45,,14,1 + FT,,3 + 1C,2,,2,46.1,25.9,539
+Rolls-Royce/Turbomeca,RTM 322-01/9,"NH90 NFH/TTH, HKP-14 (option)",2430,0.42,,16,1 + FT,,3 + 1C,2,,2,46.1,25.9,499
+Rolls-Royce/Turbomeca,RTM 322-01/9A,"NH90 NFH/TTH, X3",2270,,,,1 + FT,,3 + 1C,2,,2,46.1,25.9,499
+Rolls-Royce/Turbomeca,RTM 322-01/12,Apache AH1,,0.45,,,1 + FT,,3 + 1C,2,,2,46.1,25.9,539
+Westinghouse,T30-W,(engine cancelled),,,,,,,,,,,,,
+GE,XT31-GE-1,XP-81,1700,0.87,,6.1,1,,14,1,,,116,36,1905
+GE,XT31-GE-2,XF2R-1,1700,0.87,,6.1,1,,14,1,,,116,36,1905
+GE,XT31-GE-3,(engine cancelled),1700,0.87,,6.1,1,,14,1,,,116,36,1905
+Pratt Whitney,T32-P,(engine cancelled),,,,,,,,,,,,,
+Fredrich Flader,XT33-FF-1,(engine cancelled),5900,0.59,,4.7,1,,11,2,,,154.9,51.4,4805
+Pratt Whitney,YT34-P-1,"YC-124B, YKC-124B",,,,,,,,,,,,,
+Pratt Whitney,T34-P-2,,5700,,,,,,,,,,,,
+Pratt Whitney,T34-P-3,C-133A,6000,,,,,,,,,,,,
+Pratt Whitney,T34-P-5,YC-97J,,,,,,,,,,,,,
+Pratt Whitney,T34-P-6,YC-121F,,,,,,,,,,,,,
+Pratt Whitney,T34-P-7W,"C-133A, B-377SG",6500,,,,,,,,,,,,
+Pratt Whitney,T34-P-7WA,C-133A,6500,,,,,,,,,,,,
+Pratt Whitney,T34-P-9W,C-133B,7500,,,,,,,,,,,,
+Pratt Whitney,YT34-P-12A,(engine cancelled),,,,,,,,,,,,,
+Wright,XT35-W-1,XB-52 (early candidate engine),5500,0.74,,4.3,1,,2C,2,,,152,59,4450
+Chrysler,T36-D,(engine cancelled),,,,,,,,,,,,,
+Turbodyne,XT37-NA-1,MX-562,7500,,,6,1,,14,3,,,167,44.2,5050
+Turbodyne,XT37-NA-3,YB-35A,10000,0.67,,6,1,,14,2,,,167,46,6000
+Allison,XT38-A-5,"XF-88B, T-29E",,,,,,,,,,,,,
+Allison,T38-A-6,,,,,,,,,,,,,,
+Allison,T38-A-10,YH-16A,,,,,,,,,,,,,
+Allison,XT39-A-1,(engine cancelled),9000,0.53,,6.2,1,,16,4,,,176,39,3700
+Allison,XT40-A-1,XF-84H,5850,,,,1,,17,4,,,167,39,2500
+Allison,XT40-A-2,XA2D-1,5100,,,,1,,17,4,,,167,39,2500
+Allison,XT40-A-4,XP5Y-1,,,,,1,,17,4,,,167,39,2500
+Allison,XT40-A-5,,,,,,1,,17,4,,,167,39,2500
+Allison,YT40-A-6,"XA2D-1, XA2J-1, XFV-1",5100,0.63,,6.3,1,,17,4,,,167,39,2500
+Allison,YT40-A-10,R3Y-1/-2,5850,,,,1,,17,4,,,167,39,2500
+Allison,YT40-A-14,"XFV-1, XFY-1, X-18",7100,,,,1,,17,4,,,167,39,2500
+Allison,T40-A-20,,,,,,1,,17,4,,,167,39,2500
+Allison,T40-A-22,,,,,,1,,17,4,,,167,39,2500
+GE,XT41-GE-1,(engine cancelled),2700,,,,1,,14,2,,,89.9,40,2400
+De Laval,T42-DL,(engine cancelled),,,,,,,,,,,,,
+Wright,XT43-W-1,(engine cancelled),10000,,,,1,,14,3,,,163.6,45,6400
+Allison,T44-A,(engine cancelled),,,,,,,,,,,,,
+Pratt Whitney,XT45-P-1,XB-52 (early candidate engine),10000,0.596,,,1,,13,3,,,183,54,
+Fairchild,T46-F,(engine cancelled),,,,,,,,,,,,,
+Wright,T47-W,(engine cancelled),,,,,,,,,,,,,
+Pratt Whitney,T48-P,(engine cancelled),,,,,,,,,,,,,
+Wright,YT49-W-1,XB-47D,9600,,,,,,,,,,,,
+Boeing,XT50-BO-1,XL-19B,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,T50-BO-2,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,T50-BO-4,,270,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,T50-BO-6,,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,T50-BO-8,QH-50C,300,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,T50-BO-8A,QH-50C,300,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,T50-BO-10,,330,0.87,4.1,4.35,1 + FT,,1C,1,,1,37.2,22.5,215
+Boeing,T50-BO-12,QH-50D,,,,,1 + FT,,1C,1,,1,37.2,22.5,215
+Continental,XT51-T-1,"XL-19C, XH-39",280,,,,,,,,,,,,
+Continental,XT51-T-3,XH-13F,425,,,,,,,,,,,,
+Pratt Whitney,T52-P,(engine cancelled),,,,,,,,,,,,,
+Avco Lycoming,YT53-L-1,"XH-40 (UH-1 prototype), VZ-2, VZ-3, VZ-4",700,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-1A,"UH-1A, YH-40 (UH-1 pre-production)",770,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-1B,HH-43A/B,825,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-2,,,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-3,OA1A,960,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-3A,"OA1A/B/C, JOA1A",960,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-5,UH-1B,960,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-7,OA1A/B,1005,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-9A,UH-1D,1100,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-11,"AH-1A, TH-1E, UH-1B/C/D/E/L, AB205A",1100,0.7,11,6.1,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-11A,"HH-43F, QH-43G",1100,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-11B,,1100,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-11C,,1100,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-11D,UH-1B/C/D,1100,,,,1 + FT,,5 + 1C,1,,1,,,
+Avco Lycoming,T53-L-13,"AH-1G/Q, EH-1H, HH-1H/K, TH-1L, UH-1H/L/M/V, CH-118 Iroquois, AB205A-1",1400,0.58,13,7.4,1 + FT,,5 + 1C,2,,2,,,
+Avco Lycoming,T53-L-13A,,1400,0.58,13,7.4,1 + FT,,5 + 1C,2,,2,,,
+Avco Lycoming,T53-L-13B,"EH-1H, HH-1H, UH-1H/M/V",1400,0.58,,7.4,1 + FT,,5 + 1C,2,,2,47.6,23,545
+KHI,T53-K-13B2,HH-1H,1400,0.58,,7.4,1 + FT,,5 + 1C,2,,2,47.6,23,540
+Avco Lycoming,T53-L-15,"OA1B/C, JOA1C, RV-1C",1150,,,,1 + FT,,5 + 1C,2,,2,,,
+Avco Lycoming,T53-L-17A,"Kaman K-Max, CQ-24A",1500,0.59,13,7.4,1 + FT,,5 + 1C,2,,2,47.6,23,545
+Avco Lycoming,T53-L-701,"OV-1D, TCH-1A",1400,0.58,13,7.4,1 + FT,,5 + 1C,2,,2,,,
+Avco Lycoming,T53-L-701A,"OV-1D, RV-1D, TCH-1A, XC-2",1400,0.59,,7.4,1 + FT,,5 + 1C,2,,2,58.4,23,693
+Avco Lycoming,T53-L-703,"AH-1E/F/P/S, TH-1H, UH-1HP, TAH-1F/S",1800,0.568,,8,1 + FT,,7 + 1C,2,,2,47.6,23,545
+KHI,T53-K-703,"AH-1E, UH-1J",1800,0.568,,8,1 + FT,,7 + 1C,2,,2,47.6,23,545
+Allison,T54-A-2,(engine cancelled),7500,,,,,,,,,,,,
+Allison,T54-A-3,XFV-2 (not produced),,,,,,,,,,,,,
+Allison,T54-A-16,FV-2 (not produced),,,,,,,,,,,,,
+Avco Lycoming,T55-L-5,"CH-47A, ACH-47A",2200,,,,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming,T55-L-7,"CH-47A, XC-143A, X-19",2650,,,,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming,T55-L-7C,"CH-47B, Bell 309 (not produced)",2850,,,,1 + FT,,7 + 1C,2,,2,44,24.2,590
+Avco Lycoming,YT55-L-9,PA48 Enforcer,2500,0.608,,,1 + FT,,7 + 1C,2,,2,62.2,24.2,799
+Avco Lycoming,T55-L-11A,"CH-47C, CH-147 Chinook",3500,0.55,25,8,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming,T55-L-11C,"CH-47C, CH-147 Chinook",3500,0.55,25,8,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming,T55-L-11E,Chinook HC.1/HC.1B,3750,0.55,,8,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming,T55-L-712,"CH-47D, MH-47D, Chinook HC.1/HC.1B",3750,0.52,,8.2,1 + FT,,7 + 1C,2,,2,48.5,28.7,760
+Avco Lycoming,T55-L-712E,CH-47C+,3750,0.52,,8.2,1 + FT,,7 + 1C,2,,2,48.5,28.7,760
+Avco Lycoming,T55-L-712F,Chinook HC.2/HC.2A,3750,0.52,,8.2,1 + FT,,7 + 1C,2,,2,48.5,28.7,760
+KHI,T55-K-712,CH-47-414,3750,0.52,,7.4,1 + FT,,7 + 1C,2,,2,48.5,28.7,540
+Avco Lycoming (Textron Lycoming),T55-L-714,"CH-47D, MH-47E",4867,0.503,29,9.3,1 + FT,,7 + 1C,2,,2,48.5,28.7,800
+Avco Lycoming (Textron Lycoming),T55-L-714A,"CH-47F, MH-47G",4867,0.5,,9.3,1 + FT,,7 + 1C,2,,2,48.5,28.7,832
+Avco Lycoming (Honeywell),T55-GA-715B,USMC HLR (candidate engine),6000,,,,1 + FT,,7 + 1C,2,,2,,,
+Avco Lycoming (Honeywell),T55-L-71X,SB-1,,,,,1 + FT,,7 + 1C,2,,2,48.5,28.7,832
+Allison,XT56-A-1,YC-130A,3250,,,,1,,14,4,,,,,
+Allison,XT56-A-2,XHCH-1,3250,,,,1,,14,4,,,,,
+Allison,T56-A-3,YC-131C,3250,,,,1,,14,4,,,,,
+Allison,T56-A-4,"C-131H, VC-131H",,,,,1,,14,4,,,,,
+Allison,T56-A-5,YH-16B,2100,,,,1,,14,4,,,,,
+Allison,T56-A-7,"C-130A, CC-130E/NT Hercules",3750,,,,1,,14,4,,,,,
+Allison,T56-A-7A,"C-130B/E/F/G, CC-130E/NT Hercules",3750,,32,,1,,14,4,,,,,
+Allison,T56-A-7B,"C-130B/E/F/G, CC-130E/NT Hercules",3750,,32,,1,,14,4,,,,,
+Allison,T56-A-8A,"C-2A, E-2A",4100,,,,1,,14,4,,,,,
+Allison,T56-A-8B,"C-2A, E-2A",4100,,,,1,,14,4,,,,,
+Allison,T56-A-9,C-130A/D,3750,,,,1,,14,4,,,,,
+Allison,T56-A-9D,C-130A/D,3750,,,,1,,14,4,,,,,
+Allison,T56-A-9E,C-130A/D,3750,,,,1,,14,4,,,,,
+Allison,T56-A-10W,P-3A,4200,0.52,32,9.3,1,,14,4,,,,,
+Allison,T56-A-10WA,P-3A,4200,0.52,32,9.3,1,,14,4,,,,,
+Allison,T56-A-11,C-130A,4050,,,,1,,14,4,,,,,
+Allison,T56-A-14,"P-3B/C, CP-140",4591,0.54,32,9.6,1,,14,4,,,146.3,49,1885
+IHI,T56-IHI-14,P-3C,4591,0.595,32,9.5,1,,14,4,,,146.3,49,1885
+Allison,T56-A-14,"P-3B/C, EP-3E, CP-140",4591,0.54,32,9.6,1,,14,4,,,146.3,49,1885
+Allison,T56-A-14A,"P-3B/C, CP-140",4591,0.54,32,9.6,1,,14,4,,,146.3,49,1885
+Allison,T56-A-15,"C-130H/K, AC-130W, EC-130E, HC-130H/N/P, MC-130W, TC-130H, Hercules C.1/C.3, CC-130H",4591,0.54,32,9.6,1,,14,4,,,146.3,44.6,1848
+Allison,T56-A-15A,"C-130H/K, AC-130W, EC-130E, HC-130H/N/P, MC-130W, TC-130H, Hercules C.1/C.3, CC-130H",4591,0.54,32,9.6,1,,14,4,,,146.3,44.6,1848
+Allison,T56-A-16,"EC-130Q, LC-130R, NC-130F",4591,,32,9.3,1,,14,4,,,146.3,44.6,1841
+Allison,T56-A-16A,"EC-130Q, LC-130R",4591,,32,9.3,1,,14,4,,,146.3,44.6,1841
+Allison,T56-A-17,C-130E,4050,,,,1,,14,4,,,,,
+Allison,T56-A-18,Demonstrator for US Navy,5000,,32,9.7,1,,14,4,,,146.3,44.6,1841
+Allison,T56-A-422,"C-2A, E-2C",4910,,,,1,,14,4,,,146.3,44.6,1841
+Allison,T56-A-423,EC-130Q,4591,,32,9.3,1,,14,4,,,146.3,44.6,1841
+Allison,T56-A-425,"C-2A, E-2C",4591,,32,9.7,1,,14,4,,,146.3,44.6,1899
+Allison,T56-A-425A,E-2C,4591,,32,9.7,1,,14,4,,,146.3,44.6,1899
+Allison,T56-A-427,E-2C+/D,5250,0.47,,12,1,,14,4,,,146.1,48.3,1940
+Allison,T56-A-427A,E-2C+/D,5250,0.47,,12,1,,14,4,,,146.1,48.3,1940
+Pratt Whitney,T57-P-1,XC-132A,15000,0.55,,,,,,,,,,,6600
+GE,T58-GE-1,"CH-3B/C, SH-3A, S-61A",1290,,,,2,,10,2,,1,59,20.9,315
+GE,YT58-GE-2A,"K-16B, VZ-5",1325,,,,2,,10,2,,1,59,20.9,315
+GE,T58-GE-2,AB204AS,1325,,,,2,,10,2,,1,59,20.9,315
+GE,T58-GE-3,"TH-1F, UH-1F/P",1290,,,,2,,10,2,,1,59,20.9,309
+GE,T58-GE-5,"CH-3E, HH-3E/F, SH-3E/F, S-67, S-72",1500,0.6,,8.4,2,,10,2,,1,59,20.9,335
+GE,T58-GE-6,"CH-46A, YUH-2A",1250,,,8.2,2,,10,2,,1,59,20.9,305
+GE,T58-GE-8B,"SH-2F, UH-2A/B/C, SH-3G, HH-52A, CH-113A",1250,,,8.2,2,,10,2,,1,59,20.9,305
+GE,YT58-GE-8D,X-22A,1250,,,8.2,2,,10,2,,1,59,20.9,305
+GE,T58-GE-8E,,1350,,,8.2,2,,10,2,,1,59,20.2,305
+GE,T58-GE-8F,"HH-2C/D, SH-2F, UH-2C, SH-3G, CH-124A/B",1350,0.6,,8.2,2,,10,2,,1,59,20.2,305
+GE,T58-GE-10,"HH-2D, HH-3F, SH-3D/G/H, ASH-3A/D/TS, CH-46D/F, UH-46D/F, AS-61R",1400,0.62,14,8.4,2,,10,2,,1,59,20.2,350
+GE,T58-GE-14,,1400,,,,2,,10,2,,2,63.3,24.2,440
+GE,T58-GE-16,"CH-46E, HH-46E",1870,0.53,14,8.4,2,,10,2,,2,63.3,24.2,440
+GE,T58-GE-16A,"CH-46E, HH-46E",1870,0.53,14,8.4,2,,10,2,,2,63.3,24.2,440
+GE,T58-GE-100,"ASH-3H, CH-124A/B",1500,,,,2,,10,2,,1,59,20.9,335
+GE,T58-GE-400B,"UH-3D, VH-3D",1500,,,,2,,10,2,,1,59,20.9,335
+GE,T58-GE-402,"SH-3H, UH-3H, CH-46D/E, HH-46D",1500,,,,2,,10,2,,1,59,20.9,335
+Boeing,YT60-BO-2A,,475,,,,,,,,,,,,
+Allison,T61-A,Super Hercules (engine cancelled),,,,,,,,,,,,,
+Solar,T62-S,(APU applications),,,,,,,,,,,,,
+Allison,T63-A-1,KD-10 (not produced),,,4,,2,,6 + 1C,2,,2,,,
+Allison,T63-A-5A,"AH-6B, EH-6B, MH-6B, OH-6A, YQH-50E, XV-11A, QH-50F (not produced)",252,,4,7.2,2,,6 + 1C,2,,2,,,
+Allison,T63-A-100,O-2T,317,,4,7.2,2,,6 + 1C,2,,2,,,
+Allison,T63-A-700,"OH-58A, CH-158",317,,4,7.2,2,,6 + 1C,2,,2,,,
+Allison,T63-A-720,OH-58C,418,0.69,4,7.3,2,,6 + 1C,2,,2,40.8,23.2,158
+GE,T64-GE-1,CH-53A,3080,,,,1 + FT,,14,2,,2,,,
+GE,T64-GE-3,HH-53B,3080,,,,1 + FT,,14,2,,2,,,
+GE,YT64-GE-4,YCV-7A,2850,,,,1 + FT,,14,2,,2,,,
+GE,T64-GE-5,XC-142A,3080,,,,1 + FT,,14,2,,2,,,
+GE,T64-GE-6,"CH-53A, TH-53A, XV-9A",2850,,,,1 + FT,,14,2,,2,,,
+GE,T64-GE-6B,"CH-53A, TH-53A",3080,,,,1 + FT,,14,2,,2,,,
+GE,T64-GE-7,"CH-53C, HH-53B/C/H",3925,,,,1 + FT,,14,2,,2,,,
+MTU,T64-MTU-7,CH-53G,3925,0.48,,13,1 + FT,,14,2,,2,79,20.1,712
+GE,T64-GE-7A,"CH-53C, HH-53C",3936,0.47,,14.1,1 + FT,,14,2,,2,79,20.1,720
+GE,T64-GE-10,"CV-7A, C-8A, DHC-5, PJ2",2736,,,,1 + FT,,14,2,,2,,,
+IHI,T64-IHI-10,PS-1,2736,,,,1 + FT,,14,2,,2,,,
+IHI,T64-IHI-10J,"US-1A, YS-11E",2736,,,12.5,1 + FT,,14,2,,2,79,21.1,1240
+GE,T64-GE-16A,"CH-53A, YAH-56A",3485,0.48,27,13,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-100,"MH-53J, TH-53A, S-65A",4330,0.48,29,14.9,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-412,"CH-53D, Ya’sur 2000 (not produced)",3695,,,,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-413,"CH-53D, RH-53A, VH-53D",3925,0.47,29,14.1,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-413A,"CH-53D, RH-53D, VH-53D",3925,0.47,29,14.1,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-415,"RH-53D/E, MH-53J/M, TH-53B",4380,0.47,29,14.8,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-416,"CH-53E, MH-53E",4380,,,,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-416A,"CH-53E, MH-53E",4380,,,,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-419,MH-53E,4750,,,14.9,1 + FT,,14,2,,2,79,24.2,755
+GE,T64-GE-716,,3925,,,,1 + FT,,14,2,,2,79,24.2,720
+GE,T64-GE-P4C,DHC-5B (not produced),,,,,1 + FT,,14,2,,2,110,20.1,
+Fiat,T64-GE-P4D,"G222, G222RM/VS",2938,,,,1 + FT,,14,2,,2,110,20.1,1188
+GE,T64-GE-P4D-1,C-27A,3400,0.48,27,13.2,1 + FT,,14,2,,2,110,20.1,1188
+GE,T64-GE-S4D-1,S-64B,3780,,,,1 + FT,,14,2,,2,,,
+GE,T64-GE-T4C-2,,4330,,,,1 + FT,,14,2,,2,79,20.1,720
+Continental,T65-T-1,(engine cancelled),335,0.71,3,6,1 + FT,,1 + 1C,2,,1,,,
+Solar,T66-S,(engine cancelled),,,,,,,,,,,,,
+Continental,XT67-T-1,UH-1D flight test,1700,0.57,7,7.9,1 + FT,,2 + 1C,2,,1,,,
+Rolls Royce,T68-RR,(engine cancelled),,,,,,,,,,,,,
+Continental,T69-T,(engine cancelled),,,,,,,,,,,,,
+Westinghouse,T70-W,(engine cancelled),,,,,,,,,,,,,
+Allison,T71-A-5,YB-47C (engine cancelled),,,,,,,,,,,,,
+Continental,T72-T,(see XT67-T-1),,,,,,,,,,,,,
+Pratt Whitney,T73-P-1,CH-54A,4500,0.69,,,1 + FT,,9,2,,2,,34,920
+Pratt Whitney,T73-P-700,CH-54B,4800,0.688,,,1 + FT,,9,2,,2,,34,935
+Pratt Whitney Canada,T74-CP-700,"U-21A, RU-21A/D, VC-6A/B",550,,,,1 + FT,,3 + 1C,2,,1,62,19,
+Pratt Whitney Canada,T74-CP-702,RU-21B/C/E,620,,,,1 + FT,,3 + 1C,2,,1,62,19,
+Garrett,T76-G-10,OV-10A,715,0.6,,8.6,1,,2,3,,,43,27,341
+Garrett,T76-G-12,OV-10A,715,0.6,,8.6,1,,2,3,,,43,27,341
+Garrett,T76-G-416,OV-10A,715,,,,1,,2,3,,,43,27,
+Garrett,T76-G-417,OV-10A,715,,,,1,,2,3,,,43,27,
+Garrett,T76-G-420,OV-10D,1040,,,,1,,2,3,,,43,27,
+Garrett,T76-G-421,OV-10D,1040,,,,1,,2,3,,,43,27,
+Allison,XT78-A-2,P-3A (engine cancelled),4800,,,,1,,14,4,,,,,
+Allison,T80-A,(engine cancelled),,,,,,,,,,,,,
+Sunstrand,T100-SP,(engine cancelled),,,,,,,,,,,,,
+Pratt Whitney Canada,T101-CP-100,C-23A/B,850,0.553,,,1 + FT,,3 + 1C,2,,2,72,19,448
+Pratt Whitney Canada,T400-CP-400,"AH-1J/Q, UH-1N, VH-1N, CH-135, Bell 309, Bell 412+ (not produced)",1530,,,,,,,,,,,,
+Pratt Whitney Canada,T400-WV-402,AH-1T,1450,,,,,,,,,,,,
+Avco Lycoming,T405-LD,(engine cancelled),,,,,,,,,,,,,
+Allison (Rolls-Royce),T406-AD-400,"CV-22A/B, HV-22A/B, MV-22A/B, USMC HLR (proposed)",6456,0.426,36,16.7,1 + FT,,14,2,,2,77.9,24.5,998
+GE,T407-GE,"P-7A, P-9A (not produced)",6000,,,,1 + FT,,5 + 1C,2,,3,,,
+GE,T408-GE-400,CH-53K,7500,,,18.6,1 + FT,,5 + 1C,2,,3,57.5,27,1105
+GE,T700-GE-401,"AH-1W/Z, SH-2G, TAH-1W, HH-60D, SH-60B, AH-1T+ prototype, YAH-63A",1720,0.464,,17,1 + FT,,5 + 1C,2,,2,46,25,441
+GE,T700-GE-401C,"AH-1Z, UH-1Y, HH-60H/J/T, MH-60J/R/S/T, SH-60B/F/H, UH-60N, S-70B/C, X-49A",1800,0.459,,18,1 + FT,,5 + 1C,2,,2,46,25,458
+IHI,T700-IHI-401C,"UH-60J/JA, S-70J/K",1800,0.459,,18,1 + FT,,5 + 1C,2,,2,46,25,458
+GE,T700-GE-700,"EH-60A/C, HH-60G/U, MH-60A/D/G, UH-60A/P/Q, VH-60N, S-70A, YUH-61A, AH-1T+ prototype, HH-60A/E (not produced)",1622,0.465,10,17,1 + FT,,5 + 1C,2,,2,46,25,437
+GE,T700-GE-701,"AH-1Z, AH-64A",1720,0.464,,17,1 + FT,,5 + 1C,2,,2,46,25,438
+GE,T700-GE-701A,S-70C,1720,0.465,,17,1 + FT,,5 + 1C,2,,2,46,25,438
+GE,T700-GE-701B,,,,,,1 + FT,,5 + 1C,2,,2,46,25,456
+GE,T700-GE-701C,"EH-60L, HH-60G/L/M, MH-60G/K/L, NSH-60R, UH-60L/V, S-70A/C, S-70A-9, AH-64A/D, AH-1Z",1890,0.462,,18,1 + FT,,5 + 1C,2,,2,46,25,456
+GE,T700-GE-701D,"AH-64E, HH-60U/W, UH-60M/V",1944,0.465,,18,1 + FT,,5 + 1C,2,,2,46,25,456
+TEI,T700-TEI-701D,T-70,1944,0.465,,18,1 + FT,,5 + 1C,2,,2,46,25,456
+Hanwha Techwin,T700/701K,"KUH-1, MUH-1",1600,,,,1 + FT,,5 + 1C,2,,2,46,25,438
+GE,T700-GE-T6A,"EH101 Mk.110/112/410, US101 (candidate engine)",2000,0.45,,18,1 + FT,,5 + 1C,2,,2,48.2,25,485
+GE,T700-GE-T6A-1,CH-149,2100,,,,1 + FT,,5 + 1C,2,,2,48.2,25,493
+GE,T700-GE-T6C,,2040,,,,1 + FT,,5 + 1C,2,,2,48.2,25,
+GE,T700-GE-T6E,"NH90 NFH/TTH, HKP-14 (option)",2270,0.434,,19,1 + FT,,5 + 1C,2,,2,48.2,25,531
+GE,T700-GE-T6E-1,"NH90 NFH/TTH, HKP-14 (option)",2270,0.434,,19,1 + FT,,5 + 1C,2,,2,48.2,25,537
+GE,T700-GE-??,"Ka-64, AW249 (candidate engine)",,,,19,1 + FT,,5 + 1C,2,,2,,,
+Allison,T701-A-401X,S-92M (not produced),,,,,,,,,,,,,
+Allison,T701-A-700,XCH-62A (not produced),8080,,,,,,,,,,,,
+Avco Lycoming,T702-LD-400,(see LTS-101-750B-2),,,,,,,,,,,,,
+Allison,T703-AD-700A,"OH-58D, Combat Scout 406 (proposed)",650,0.58,,8.6,1 + FT,,1C,2,,2,43.2,25.1,225
+GE,YT706-GE-700,"MH-60M, S-97",2638,,,,1 + FT,,5 + 1C,2,,2,48.2,25,531
+LHTEC,T800-LHT-800,"A129I, RAH-66A (not produced), Panther 800 (not produced)",1400,0.448,,14.1,1 + FT,,2C,2,,2,33.2,26.1,315
+LHTEC,T800-LHT-801,"RAH-66A, Battlefield Lynx 800 (not produced)",1560,0.46,,14.1,1 + FT,,2C,2,,2,,,
+LHTEC,T800-LHT-802,RAH-66A (not produced),1608,0.46,,14.1,1 + FT,,2C,2,,2,,,
+ATEC,T900-HPW-900,"UH-60X, AH-64X (re-engine candidate)",3000,,,,,,,,,,,,
+GE,T901-GE-900,"UH-60X, AH-64F, Bell 360",3000,,,,,,,,,,,,
+Turbomeca/Agusta,TAA230,A106,260,,,,,,,,,,,,
+Turbomeca,TM333-1A,AS565UB (candidate engine),,,,,1 + FT,,2 + 1C,1,,1,,,
+Turbomeca,TM333-2B2,Dhruv,1105,0.529,,,1 + FT,,2 + 1C,1,,1,41.1,28,345
+Turbomeca,TM333-2M2,"Cheetal, Chetan",1105,0.529,,,1 + FT,,2 + 1C,1,,1,41.1,28,345
+Europrop,TP400-D6,A400M,10000,,,22,2 + FT,5,,,1,3,137.8,,4035
+Garrett,TPE331-1-101F,AU-23A,705,,,,1,,2C,3,,,,26,336
+Garrett,TPE331-2-201A,Skyvan 3M/3M-200,715,0.556,,8.3,1,,2C,3,,,,26,336
+Garrett,TPE331-2-201C,C-212A/AV/B/C/E,715,0.556,,8.3,1,,2C,3,,,,26,336
+Garrett,TPE331-3A-301W,C-10A (not produced),840,0.548,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-3UW-304G,Merlin IVA,904,0.548,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-5-251C,C-211-100,840,0.577,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-5-251K,Turbo Commander 690/690A/680B,840,0.577,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-5-252C,C-212-100,840,0.577,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-5-252D,Do 228-101/-202,840,0.577,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-5-252K,Turbo Commander 690A/690B,840,0.577,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-5-254K,Jetprop Commander 690C/690D,840,0.577,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-5-255K,"Turbo Commander 690/690A/690B, Jetprop Commander 690C/690D",840,0.577,,10.3,1,,2C,3,,,43,26,355
+Garrett,TPE331-10,"C-212-10, Altair, Mariner",984,0.55,,10.8,1,,2C,3,,,,26,380
+Garrett,TPE331-10-501K,Commander 980/1000,984,0.55,,10.8,1,,2C,3,,,46,26,380
+Garrett,TPE331-10R,C-41A,984,0.55,,10.8,1,,2C,3,,,,26,380
+Garrett,TPE331-10R-511C,C-212-200M,984,0.55,,10.8,1,,2C,3,,,,26,380
+Garrett,TPE331-10R-512C,C-212-200M,984,0.55,,10.8,1,,2C,3,,,,26,380
+Garrett,TPE331-10R-513C,C-212-300M,984,0.55,,10.8,1,,2C,3,,,,26,380
+Garrett,TPE331-10T,MQ-9A,984,0.55,,10.8,1,,2C,3,,,,26,380
+Garrett,TPE331-10T-516K,"Turbo Commander 690A/690B, Commander 840/900",984,0.55,,10.8,1,,2C,3,,,46,26,380
+Garrett,TPE331-10UF,Jetstream T.3,984,0.55,,10.8,1,,2C,3,,,46,26,380
+Garrett,TPE331-11-601W,IA 66 prototype,1000,0.53,,10.8,1,,2C,3,,,46,26,400
+Garrett,TPE331-11U-601G,C-26A,1000,0.53,,10.8,1,,2C,3,,,46,26,400
+Garrett,TPE331-11U-611G,C-26A,1000,0.53,,10.8,1,,2C,3,,,46,26,400
+Garrett,TPE331-11U-612G,C-26A,1000,0.53,,10.8,1,,2C,3,,,,,
+Pratt Whitney Canada,TPE331-12B,"EMB-312S, Tucano T.1, HTT-40",1151,0.53,,10.8,1,,2C,3,,,,,
+Garrett,TPE331-12UA-701G,"C-26B/E, RC-26B",1151,0.522,,10.8,1,,2C,3,,,46,26,400
+Garrett,TPE331-12UAR-701G,C-26B,1151,0.522,,10.8,1,,2C,3,,,46,26,400
+Garrett,TPE331-12UHR-701G,UC-26C,1151,0.522,,10.8,1,,2C,3,,,,,
+Garrett (Allied-Signal),TPE331-14F-801L,"G520, G520T",1312,0.515,,11,1,,2C,3,,,53,32,620
+Garrett (Allied-Signal),TPE331-14GR-801E,An-38-100,1723,0.51,,11.4,1,,2C,3,,,53,36,620
+Garrett (Allied-Signal),TPE331-14HR-801E,An-38-100,1723,0.51,,11.4,1,,2C,3,,,53,36,633
+Garrett (Allied-Signal),TPE331-15A,S-2/AT/ET/E(UP)/T,1712,0.51,,11,1,,2C,3,,,,,
+Rolls-Royce,Trent RB.50,Prototype,750,,,,1,,2C,1,,,,,
+TEI,TS1400,T625 (candidate engine),1370,,,,,,,,,,,,
+Mitsubishi,TS1-10,OH-1,800,,,,,,,,,,,,
+Turbomeca,Turmo IIIC,SA321A,1480,0.603,13,5.9,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Turmo IIIC3,SA321B/D/G,1480,0.603,13,5.9,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Turmo IIIC4,SA330B,1384,0.632,13,5.8,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Turmo IIIC5,,1500,0.632,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Turmo IIIC6,SA321F/G/H/J/Ja/K/L/M,1550,0.632,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Turmo IIIC7,,1610,0.632,,,1 + FT,,1 + 1C,2,,1,,,
+Turbomeca,Turmo IIID,Br.941,1200,,,,1 + FT,,1 + 1C,2,,2,,,
+Turbomeca,Turmo IIID3,Br.941S,1480,0.616,13,5.9,1 + FT,,1 + 1C,2,,2,,,
+Turbomeca,Turmo IIIE,SA321H,1480,0.603,,,1 + FT,,1 + 1C,2,,2,,,
+Turbomeca,Turmo IIIE6,,1584,0.603,,,1 + FT,,1 + 1C,2,,2,,,
+Turbomeca,Turmo IVA,(see Civil Turboshaft specifications),,,,,,,,,,,,,
+Turbomeca,Turmo IVB,"SA330B, Puma HC.1",1575,,,,1 + FT,,1 + 1C,2,,??,,,
+Turbomeca,Turmo IVC,SA330H/L,1417,0.629,,,1 + FT,,1 + 1C,2,,??,,,
+Isotov (Klimov),TV2-117A,"Mi-8Mi-9, Mi-14GP",1670,0.6,18,6.6,1 + FT,,10,2,,2,111.5,29.3,745
+Isotov (Klimov),TV2-117TG,"Mi-8TG, Mi-38",,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117B,Ka-32,,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117BK,,2170,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117KM,Ka-27,,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117M,Mi-14,1900,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117MT,"Mi-17/P, Mi-24",1900,,,,1 + FT,,10,2,,2,82.1,28.5,628
+Isotov (Klimov),TV3-117V,"Mi-24, Mi-25, Mi-35/P",2100,0.463,,9,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117VK,"Ka-28, Ka-29TB",2200,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117VM,"Mi-17, Mi-38 (proposed)",2000,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117VM-02,Mi-17,2000,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117VMA,"Mi-24, Mi-28A, Ka-31, Ka-32S/T, Ka-50/K/Sh, Ka-52/K",2200,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117VMA-02,Ka-32S/T,2200,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117VMA-03,Mi-28N (proposed),2200,,,,1 + FT,,10,2,,2,,,
+Isotov (Klimov),TV3-117VMA-F,"Ka-32S/T, Ka-50/K/Sh, Ka-52/K, Mi-28N (proposed)",2200,,,,1 + FT,,10,2,,2,,,
+Klimov,TV7-117ST,Il-112,3500,,,,1 + FT,,5 + 1C,2,,2,,,
+Klimov,TV7-117VK,"Ka-50/K/Sh, Ka-52/K",,,,,1 + FT,,5 + 1C,2,,2,,,
+Gluschenkov,TVD-10,M28,,,,,,,,,,,,,
+Baranov (OMSK),TVD-20-03,An-38-200,1380,0.506,,,1 + FT,,7 + 1C,2,,2,69.7,33.5,628
+PZL Rzeszów,TWD-10W,W-3L/RM/U,888,0.6,10,7.4,1 + FT,,6 + 1A,2,,1,73.8,30.1,310
+Rolls-Royce,Tyne RTy.12 Mk.101,Belfast C.1,5460,0.45,,13.5,2,6,9,1,,3,109,43.2,2219
+Rolls-Royce,Tyne RTy.12 Mk.515/50,CC-106,5730,,,13.5,2,6,9,1,,3,109,43.2,2219
+Rolls-Royce,Tyne RTy.20 Mk.21,Atlantic ATL2 (Br.1150),5856,0.47,47,14,2,6,9,1,,3,109,43.2,2203
+Rolls-Royce,Tyne RTy.20 Mk.22,"C-160A/D/F/G/H/NG/R/P/T/Z, C-160AAA/ASF/S/SE (not produced)",6100,0.47,,14,2,6,9,1,,3,109,43.2,2203
+Rolls-Royce,Tyne RTy.20 Mk.801,G222T,5480,0.453,,14,2,6,9,1,,3,109,43.2,2187
+Rolls-Royce,Tyne RTy.22,,7075,,,,2,6,9,1,,3,,,
+Rolls-Royce,Tyne RTy.32,,8400,,,,2,6,9,1,,3,,,
+Klimov,VK-650V,Ka-226 (proposed),,,,,,,,,,,,,
+Klimov,VK-1600V,Ka-62 (proposed),,,,,,,,,,,,,
+Klimov,VK-2500,"Mi-14, Mi-17, Mi-24, Mi-25, Mi-35, Mi-28/N, Ka-27, Ka-28, Ka-29, Ka-31,Ka-32A/A1/A2/S/T, Ka-50/K/Sh, Ka-52/K (proposed)",,,,,,,,,,,,,
+Dongan,WJ-5A,SH-5,3150,,,,,,,,,,,,
+Dongan,WJ-5E,Y-7-200,2400,,,,,,,,,,,,
+Zhuzhou,WJ-6,"Y-8, AG600",4250,,,,,,,,,,,,
+WoJiang,WJ-6C,Y-9,,,,,,,,,,,,,
+??,WZ-5,Z-6 (not produced),,,,,,,,,,,,,
+Changzhou Lan Xiang,WZ-6,Z-8/A,,,,,,,,,,,,,
+Zhuzhou,WZ-8A,Z-9B/EC/EH,,,,,,,,,,,,,
+Zhuzhou,WZ-8C,"Z-9WA, H410A, Z-19",,,,,,,,,,,,,
+??,WZ-9,Z-10,1340,,,,,,,,,,,,
+??,WZ-10,Z-20,2400,,,,,,,,,,,,
+??,WZ-16,Z-10 (proposed),1667,,,,,,,,,,,,
