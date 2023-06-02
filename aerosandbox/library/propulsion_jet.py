@@ -63,7 +63,7 @@ def mass_turbofan(
     f_exit = 0.4
     r_core = 12
 
-    ### Fan size in dumb units
+    ### Fan size in imperial units
     d_fan_ft = diameter_fan * m_to_ft
     d_fan_in = d_fan_ft * 12
 
