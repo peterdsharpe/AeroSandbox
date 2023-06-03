@@ -79,6 +79,10 @@ def thermal_efficiency_turboshaft(
 
     See studies in `/AeroSandbox/studies/TurbineStudies/make_turboshaft_fits.py` for model details.
 
+    Thermal efficiency knockdown at partial power is based on:
+        Ingmar Geiß, "Sizing of the Series Hybrid-electric Propulsion System of General Aviation Aircraft", 2020.
+        PhD Thesis, University of Stuttgart. Page 18, Figure 3.2.
+
     Args:
 
         mass_turboshaft: The mass of the turboshaft engine. [kg]
@@ -102,8 +106,50 @@ def thermal_efficiency_turboshaft(
 
     ideal_efficiency = 1 - (1 / overall_pressure_ratio) ** ((1.4 - 1) / 1.4)
 
-    return np.blend(
+    thermal_efficiency_at_full_power = np.blend(
         p["a"] + (np.log10(mass_turboshaft) - p["wcen"]) / p["wscl"],
         value_switch_high=ideal_efficiency,
         value_switch_low=0,
+    )
+
+    p = {
+        'B0': 0.05658,
+        'B1': 2.567,
+        'B2': -2.612,
+        'B3': 0.9858
+    }
+
+    thermal_efficiency_knockdown_from_partial_power = (
+            p["B0"]
+            + p["B1"] * throttle_setting
+            + p["B2"] * throttle_setting ** 2
+            + p["B3"] * throttle_setting ** 3
+    )
+
+    return (
+            thermal_efficiency_at_full_power
+            * thermal_efficiency_knockdown_from_partial_power
+    )
+
+
+if __name__ == '__main__':
+
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 1)
+    plt.plot(
+        x,
+        thermal_efficiency_turboshaft(1000, throttle_setting=x) / thermal_efficiency_turboshaft(1000),
+    )
+    ax.xaxis.set_major_formatter(p.ticker.PercentFormatter(1))
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    p.set_ticks(0.1, 0.05, 0.1, 0.05)
+
+    p.show_plot(
+        "Turboshaft: Thermal Efficiency at Partial Power",
+        "Throttle Setting [-]",
+        "Thermal Efficiency Knockdown [-]\n$\eta / \eta_\mathrm{full-power}$"
     )
