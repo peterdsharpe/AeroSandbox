@@ -11,7 +11,7 @@ def overall_pressure_ratio_turboshaft_technology_limit(
     Based on an envelope of data for both civilian and military turboshafts (including RC-scale turboshafts), available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
-    See study in `/AeroSandbox/studies/TurbineStudies/make_fit_overall_pressure_ratio.py` for model details.
+    See study in `/AeroSandbox/studies/TurboshaftStudies/make_fit_overall_pressure_ratio.py` for model details.
 
     Args:
 
@@ -39,7 +39,7 @@ def power_turboshaft(
     Based on data for both civilian and military turboshafts, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
-    See studies in `/AeroSandbox/studies/TurbineStudies/make_fit_power.py` for model details.
+    See studies in `/AeroSandbox/studies/TurboshaftStudies/make_fit_power.py` for model details.
 
     Args:
 
@@ -77,7 +77,7 @@ def thermal_efficiency_turboshaft(
     Based on data for both civilian and military turboshafts, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
-    See studies in `/AeroSandbox/studies/TurbineStudies/make_turboshaft_fits.py` for model details.
+    See studies in `/AeroSandbox/studies/TurboshaftStudies/make_turboshaft_fits.py` for model details.
 
     Thermal efficiency knockdown at partial power is based on:
         Ingmar Geiß, "Sizing of the Series Hybrid-electric Propulsion System of General Aviation Aircraft", 2020.
