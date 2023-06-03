@@ -19,7 +19,17 @@ def plot_with_bootstrapped_uncertainty(
         n_bootstraps=2000,
         n_fit_points=500,
         spline_degree=3,
+        x_log_scale: bool = False,
+        y_log_scale: bool = False,
 ):
+    x = np.array(x)
+    y = np.array(y)
+
+    ### Log-transform the data if desired
+    if x_log_scale:
+        x = np.log(x)
+    if y_log_scale:
+        y = np.log(y)
 
     ### Make sure `ci` is a NumPy array
     if ci is None:
@@ -48,6 +58,14 @@ def plot_with_bootstrapped_uncertainty(
         normalize=True,
     )
 
+    ### Undo the log-transform if desired
+    if x_log_scale:
+        x = np.exp(x)
+        x_fit = np.exp(x_fit)
+    if y_log_scale:
+        y = np.exp(y)
+        y_bootstrap_fits = np.exp(y_bootstrap_fits)
+
     ### Plot the best-estimator line
     line, = plt.plot(
         x_fit,
@@ -58,6 +76,11 @@ def plot_with_bootstrapped_uncertainty(
     )
     if color is None:
         color = line.get_color()
+
+    if x_log_scale:
+        plt.xscale('log')
+    if y_log_scale:
+        plt.yscale('log')
 
     ### Plot the confidence intervals
     if len(ci) != 0:
@@ -120,7 +143,7 @@ if __name__ == '__main__':
     y_noisy = y_true + y_stdev * np.random.randn(len(x))
 
     ### Plot spline regression
-    fig, ax = plt.subplots(dpi=300)
+    fig, ax = plt.subplots()
     x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
         x,
         y_noisy,
@@ -138,3 +161,24 @@ if __name__ == '__main__':
         r"$y$",
         legend=False
     )
+
+    ### Generate data
+    x = np.geomspace(10, 1000, 1000)
+    y_true = 3 * x ** 0.5
+
+    y_stdev = 0.1
+
+    y_noisy = y_true * y_stdev * np.random.lognormal(size=len(x))
+
+    fig, ax = plt.subplots()
+    x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
+        x,
+        y_noisy,
+        ci=[0.75, 0.95],
+        label_line="Best Estimate",
+        label_data="Data (True Function + Noise)",
+        # normalize=False,
+        x_log_scale=True,
+        y_log_scale=True,
+    )
+    p.show_plot()
