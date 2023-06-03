@@ -113,7 +113,7 @@ def thermal_efficiency_turboshaft(
     )
 
     p = {
-        'B0': 0.05658,
+        'B0': 0.0592,  # Modified from Geiß thesis such that B values sum to 1 by construction. Orig: 0.05658
         'B1': 2.567,
         'B2': -2.612,
         'B3': 0.9858
