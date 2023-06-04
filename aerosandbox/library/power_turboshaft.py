@@ -6,7 +6,7 @@ def overall_pressure_ratio_turboshaft_technology_limit(
 ) -> float:
     """
     Estimates the maximum-practically-achievable overall pressure ratio (OPR) of a turboshaft engine, as a function
-    of its mass.
+    of its mass. A regression to historical data.
 
     Based on an envelope of data for both civilian and military turboshafts (including RC-scale turboshafts), available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
@@ -34,7 +34,7 @@ def power_turboshaft(
         overall_pressure_ratio: float = None,
 ) -> float:
     """
-    Estimates the maximum rated power of a turboshaft engine.
+    Estimates the maximum rated power of a turboshaft engine. A regression to historical data.
 
     Based on data for both civilian and military turboshafts, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
