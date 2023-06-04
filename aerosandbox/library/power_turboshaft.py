@@ -72,7 +72,7 @@ def thermal_efficiency_turboshaft(
         throttle_setting: float = 1,
 ) -> float:
     """
-    Estimates the thermal efficiency of a turboshaft engine.
+    Estimates the thermal efficiency of a turboshaft engine. A regression to historical data.
 
     Based on data for both civilian and military turboshafts, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
