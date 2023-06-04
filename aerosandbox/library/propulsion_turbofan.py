@@ -1,6 +1,61 @@
 import aerosandbox.numpy as np
 
 
+def thrust_turbofan(
+        mass_turbofan: float,
+) -> float:
+    """
+    Estimates the maximum rated dry thrust of a turbofan engine. A regression to historical data.
+
+    Based on data for both civilian and military turbofans, available in:
+    `aerosandbox/library/datasets/turbine_engines/data.xlsx`
+
+    Applicable to both turbojets and turbofans, and with sizes ranging from micro-turbines (<1 kg) to large transport
+    aircraft turbofans.
+
+    See studies in `/AeroSandbox/studies/TurbofanStudies/make_fit_thrust.py` for model details.
+
+    Args:
+
+        mass_turbofan: The mass of the turbofan engine. [kg]
+
+    Returns:
+
+        The maximum (rated takeoff) dry thrust of the turbofan engine. [N]
+    """
+    p = {'a': 12050.719283568596, 'w': 0.9353861810025565}
+
+    return (
+            p["a"] * mass_turbofan ** p["w"]
+    )
+
+
+def thrust_specific_fuel_consumption_turbofan(
+        mass_turbofan: float,
+        bypass_ratio: float,
+) -> float:
+    """
+    Estimates the thrust-specific fuel consumption (TSFC) of a turbofan engine. A regression to historical data.
+
+    Based on data for both civilian and military turbofans, available in:
+    `aerosandbox/library/datasets/turbine_engines/data.xlsx`
+
+    Applicable to both turbojets and turbofans, and with sizes ranging from micro-turbines (<1 kg) to large transport
+    aircraft turbofans.
+
+    See studies in `/AeroSandbox/studies/TurbofanStudies/make_fit_tsfc.py` for model details.
+
+    """
+    p = {'a'   : 3.2916082331121034e-05, 'Weight [kg]': -0.07792863839756586, 'BPR': -0.3438158689838915,
+         'BPR2': 0.29880079602955967}
+
+    return (
+            p["a"]
+            * mass_turbofan ** p["Weight [kg]"]
+            * (bypass_ratio + p["BPR2"]) ** p["BPR"]
+    )
+
+
 def mass_turbofan(
         m_dot_core_corrected,
         overall_pressure_ratio,
