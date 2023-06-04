@@ -42,10 +42,10 @@ fit = asb.FittedModel(
         "a"   : (0, None),
         "BPR2": (0, None),
     },
-    verbose=True,
+    # verbose=True,
     residual_norm_type="L1",
     put_residuals_in_logspace=True,
-    # verbose=False
+    verbose=False
 )
 
 print(f"Fit for TSFC:")
