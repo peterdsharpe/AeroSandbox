@@ -6,9 +6,9 @@ import seaborn as sns
 sns.set(font_scale=1)
 
 datasets = [
-    "Healthy Men",
-    "First-Class Athletes",
-    "World-Class Athletes",
+    "Healthy_Men",
+    "First-Class_Athletes",
+    "World-Class_Athletes",
 ]
 
 for dataset in datasets:

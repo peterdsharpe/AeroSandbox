@@ -58,7 +58,7 @@ Use AeroSandbox to support real-world aircraft development programs, all the way
                 <a href="https://youtu.be/CyTzx9UCvyo"><i>Dawn</i> (later renamed <i>SACOS</i>) in first flight, Fall 2022</a>
             </p>
             <p align="center"><a href="https://www.electra.aero/news/sacos-first-flight">(Thanks to so, so many wonderful people!)</a></p>
-            <img src="./media/images/SACOS%20First%20Flight%20Zoomed.jpg" alt="SACOS first flight">
+            <img src="./media/images/SACOS%20First%20Flight%20Zoomed.jpg" alt="SACOS_First_Flight">
         </td>
     </tr>
 </table>
@@ -258,7 +258,7 @@ If you find AeroSandbox useful in a research publication, please cite it using t
 
 ```bibtex
 @mastersthesis{aerosandbox,
-    title = {AeroSandbox: A Differentiable Framework for Aircraft Design Optimization},
+    title = {AeroSandbox: A_Differentiable_Framework_for_Aircraft_Design_Optimization},
     author = {Sharpe, Peter D.},
     school = {Massachusetts Institute of Technology},
     year = {2021}
