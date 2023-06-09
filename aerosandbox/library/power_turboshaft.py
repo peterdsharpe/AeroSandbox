@@ -151,5 +151,5 @@ if __name__ == '__main__':
     p.show_plot(
         "Turboshaft: Thermal Efficiency at Partial Power",
         "Throttle Setting [-]",
-        "Thermal Efficiency Knockdown [-]\n$\eta / \eta_\mathrm{full-power}$"
+        "Thermal Efficiency Knockdown\nrelative to Design Point [-]\n$\eta / \eta_\mathrm{max}$"
     )
