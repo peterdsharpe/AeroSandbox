@@ -3,6 +3,7 @@ import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
 from typing import Tuple
 
+
 ### See also:
 # https://www.risingup.com/fars/info/23-index.shtml
 
@@ -11,10 +12,25 @@ def limit_load_factors(
         category: str = "normal",
 ) -> Tuple[float, float]:
     """
-    From FAR Part 23: "Airworthiness Standards: Normal, Utility, Acrobatic, and Commuter Category Airplanes"
+    Computes the required limit load factors for FAR Part 23 certification.
 
+    From FAR Part 23: "Airworthiness Standards: Normal, Utility, Acrobatic, and Commuter Category Airplanes"
     Section 23.337: "Limit maneuvering load factors"
 
+    Args:
+
+        design_mass_TOGW: The design takeoff gross weight of the aircraft [kg].
+
+        category: The category of the aircraft. Valid values are:
+
+            - "normal"
+            - "utility"
+            - "acrobatic"
+            - "commuter"
+
+    Returns:
+        A tuple with (positive load factor, negative load factor). These are the maximum positive and negative limit load
+        factors that the aircraft should withstand for Part 23 certification.
 
     """
     ### Compute positive load factor
