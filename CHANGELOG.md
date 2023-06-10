@@ -34,13 +34,16 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-#### 4.0.9
-
-- 
-
 -----
 
 # Latest (master / release), and previous versions
+
+
+#### 4.0.9
+
+- Added turboshaft modeling capabilities in `aerosandbox.library.power_turboshaft`. Added turbine engine database in `aerosandbox/library/datasets/turbine_engines`.
+- Added tools for uncertainty quantification of time-series datasets.
+- Better docs throughout.
 
 #### 4.0.8
 
