@@ -153,3 +153,35 @@ if __name__ == '__main__':
         "Throttle Setting [-]",
         "Thermal Efficiency Knockdown\nrelative to Design Point [-]\n$\eta / \eta_\mathrm{max}$"
     )
+
+    ##### Do Weight/OPR Efficiency Plot #####
+
+    fig, ax = plt.subplots()
+    mass = np.geomspace(1e0, 1e4, 300)
+    opr = np.geomspace(1, 100, 500)
+
+    Mass, Opr = np.meshgrid(mass, opr)
+
+    Mask = overall_pressure_ratio_turboshaft_technology_limit(Mass) > Opr
+
+    cont, contf, cbar = p.contour(
+        Mass,
+        Opr,
+        thermal_efficiency_turboshaft(Mass, Opr),
+        mask=Mask,
+        linelabels_format=lambda x: f"{x:.0%}",
+        x_log_scale=True,
+        colorbar_label="Thermal Efficiency [%]",
+        cmap="turbo_r",
+    )
+
+    cbar.ax.yaxis.set_major_formatter(p.ticker.PercentFormatter(1, decimals=0))
+
+    p.set_ticks(None, None, 5, 1)
+
+    p.show_plot(
+        "Turboshaft Model: Thermal Efficiency vs. Weight and OPR",
+        "Engine Weight [kg]",
+        "Overall Pressure Ratio [-]",
+        dpi=300
+    )
