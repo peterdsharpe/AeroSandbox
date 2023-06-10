@@ -43,6 +43,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 - Added turboshaft modeling capabilities in `aerosandbox.library.power_turboshaft`. Added turbine engine database in `aerosandbox/library/datasets/turbine_engines`.
 - Added tools for uncertainty quantification of time-series datasets.
+- BREAKING, but minor change: Renamed `propulsion_jet` to `propulsion_turbofan` for consistency with other propulsion models. (Thanks to @carlitador for catching this.)
 - Better docs throughout.
 
 #### 4.0.8
