@@ -73,10 +73,11 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
     plt.scatter(
-        df["Weight [kg]"],
+        df["Weight [kg]"] * np.random.uniform(0.9, 1.1, len(df)),
         # df["Power [W]"],
-        df["OPR"],
-        alpha=0.4,
+        df["OPR"] * np.random.uniform(0.95, 1.05, len(df)),
+        s=10,
+        alpha=0.3,
         label="Data"
     )
     x = np.geomspace(

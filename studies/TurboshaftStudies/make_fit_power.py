@@ -64,8 +64,8 @@ if __name__ == '__main__':
     )
 
     plt.scatter(
-        df["Weight [kg]"],
-        df["Power [W]"],
+        df["Weight [kg]"] * np.random.uniform(0.95, 1.05, size=len(df)),
+        df["Power [W]"] * np.random.uniform(0.95, 1.05, size=len(df)),
         s=10,
         c=df["OPR"],
         cmap=cmap,

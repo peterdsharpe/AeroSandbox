@@ -68,14 +68,14 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
     plt.semilogx(
-        df["Weight [kg]"],
-        df["knockdown"],
-        ".", alpha=0.3,
+        df["Weight [kg]"] * np.random.uniform(0.9, 1.1, len(df)), # Add jitter
+        df["knockdown"] * np.random.uniform(0.95, 1.05, len(df)), # Add jitter
+        ".", alpha=0.4,
         label="Data"
     )
     x = np.geomspace(
-        df["Weight [kg]"].min() / 10,
-        df["Weight [kg]"].max() * 10,
+        df["Weight [kg]"].min() / 3,
+        df["Weight [kg]"].max() * 3,
         100
     )
     y = np.blend(
@@ -90,9 +90,9 @@ if __name__ == '__main__':
     )
     plt.annotate(
         text="Model is smoothly bounded by 0 and Brayton efficiency",
-        xy=(0.02, 0.02),
+        xy=(0.98, 0.02),
         xycoords="axes fraction",
-        ha="left",
+        ha="right",
         fontsize=9
     )
 
