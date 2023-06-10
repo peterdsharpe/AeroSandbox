@@ -34,7 +34,7 @@ def power_turboshaft(
         overall_pressure_ratio: float = None,
 ) -> float:
     """
-    Estimates the maximum rated power of a turboshaft engine. A regression to historical data.
+    Estimates the maximum rated power of a turboshaft engine, given its mass. A regression to historical data.
 
     Based on data for both civilian and military turboshafts, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
