@@ -48,34 +48,26 @@ def estimate_noise_standard_deviation(
         estimator_order = min(
             max(
                 1,
-                len(data) // 4
+                int(len(data) ** 0.5)
             ),
             1000
         )
 
     ##### Noise Variance Reconstruction #####
+    from scipy.special import gammaln
+    ln_factorial = lambda x: gammaln(x + 1)
 
-    N = len(data)
-    d = estimator_order
+    ### For speed, pre-compute the log-factorial of integers from 1 to estimator_order
+    ln_f = ln_factorial(np.arange(estimator_order + 1))
 
-    def f(x):
-        """Returns the natural log of the factorial of x."""
-        from scipy.special import gammaln
-        return gammaln(x + 1)
-
-    f_d = f(d)
-    f_2d = f(2 * d)
-    ln_N_minus_d = np.log(N - d)
-
-    coefficients = np.zeros(d + 1)
-    for j in range(d + 1):
-        coefficients[j] = np.exp(
-            2 * f_d - f(j) - f(d - j) - 0.5 * (ln_N_minus_d + f_2d)
-        ) * (-1) ** j
+    ### Create a convolutional kernel to vectorize the summation
+    coefficients = np.exp(
+        2 * ln_f[estimator_order] - ln_f - ln_f[::-1] - 0.5 * ln_factorial(2 * estimator_order)
+    ) * (-1) ** np.arange(estimator_order + 1)
+    coefficients -= np.mean(coefficients) # Remove any bias introduced by floating-point error
 
     sample_stdev = np.convolve(data, coefficients[::-1], 'valid')
-    noise_variance = np.sum(sample_stdev ** 2)
-    return noise_variance ** 0.5
+    return np.mean(sample_stdev ** 2) ** 0.5
 
 
 def bootstrap_fits(
