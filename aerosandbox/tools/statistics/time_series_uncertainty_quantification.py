@@ -1,3 +1,4 @@
+import warnings
 from typing import Union, Iterable, List, Tuple
 
 from tqdm import tqdm
@@ -73,6 +74,8 @@ def estimate_noise_standard_deviation(
 def bootstrap_fits(
         x: np.ndarray,
         y: np.ndarray,
+        x_noise_stdev: Union[None, float] = 0.,
+        y_noise_stdev: Union[None, float] = None,
         n_bootstraps: int = 2000,
         fit_points: Union[int, Iterable[float], None] = 300,
         spline_degree: int = 3,
@@ -133,41 +136,36 @@ def bootstrap_fits(
     x = x[~isnan]
     y = y[~isnan]
 
-    ### Sort the data
-    order = np.argsort(x)
-    x = x[order]
-    y = y[order]
-
-    ### Determine which x-points to resample at
-    if fit_points is None:
-        x_fit = None
-        if normalize:
-            raise ValueError("If `fit_points` is None, `normalize` must be False.")
-    elif isinstance(fit_points, int):
-        x_fit = np.linspace(
-            np.min(x),
-            np.max(x),
-            fit_points
-        )
-    else:
-        x_fit = np.array(fit_points)
-
     ### Compute the standard deviation of the noise
-    y_stdev = estimate_noise_standard_deviation(y)
+    if x_noise_stdev is None:
+        x_noise_stdev = estimate_noise_standard_deviation(x)
+        print(f"Estimated x-component of noise standard deviation: {x_noise_stdev}")
+    if y_noise_stdev is None:
+        y_noise_stdev = estimate_noise_standard_deviation(y)
+        print(f"Estimated y-component of noise standard deviation: {y_noise_stdev}")
+
+    ### Sort the data by x-value
+    sort_indices = np.argsort(x)
+    x = x[sort_indices]
+    y = y[sort_indices]
 
     ### Prepare for normalization
-    if normalize:
-        x_min = np.min(x)
-        x_rng = np.max(x) - x_min
-        y_min = np.min(y)
-        y_rng = np.max(y) - y_min
+    x_min = np.min(x)
+    x_max = np.max(x)
+    x_rng = x_max - x_min
 
+    y_min = np.min(y)
+    y_max = np.max(y)
+    y_rng = y_max - y_min
+
+    if normalize:
         x_normalize = lambda x: (x - x_min) / x_rng
         y_normalize = lambda y: (y - y_min) / y_rng
         # x_unnormalize = lambda x_n: x_n * x_rng + x_min
         y_unnormalize = lambda y_n: y_n * y_rng + y_min
 
-        y_stdev_scaled = y_stdev / y_rng
+        x_stdev_normalized = x_noise_stdev / x_rng
+        y_stdev_normalized = y_noise_stdev / y_rng
 
     else:
         x_normalize = lambda x: x
@@ -175,38 +173,73 @@ def bootstrap_fits(
         # x_unnormalize = lambda x_n: x_n
         y_unnormalize = lambda y_n: y_n
 
-        y_stdev_scaled = y_stdev
+        x_stdev_normalized = x_noise_stdev
+        y_stdev_normalized = y_noise_stdev
 
-    splines = []
+    with tqdm(total=n_bootstraps, desc="Bootstrapping", unit=" samples") as progress_bar:
+        splines = []
+        n_valid_splines = 0
+        n_attempted_splines = 0
 
-    for _ in tqdm(range(n_bootstraps), desc="Bootstrapping", unit=" samples"):
-        ### Obtain a bootstrap resample
-        ### Here, instead of truly resampling, we just pick weights that effectively mimic a resample.
-        ### A computationally-efficient way to pick weights is the following clever trick with uniform sampling:
-        splits = np.random.rand(len(x) + 1) * len(x)  # "limit" bootstrapping
-        splits[0] = 0
-        splits[-1] = len(x)
+        while n_valid_splines < n_bootstraps:
 
-        weights = np.diff(np.sort(splits))
+            n_attempted_splines += 1
 
-        splines.append(
-            Spline(
-                x=x_normalize(x),
-                y=y_normalize(y),
-                w=weights / y_stdev_scaled,
-                s=len(x),
-                k=spline_degree,
-                ext='extrapolate'
-            )
-        )
+            ### Obtain a bootstrap resample
+            indices = np.random.choice(len(x), size=len(x), replace=True)
+
+            x_sample = x[indices] + np.random.normal(scale=x_noise_stdev, size=len(x))
+            y_sample = y[indices]
+
+            order = np.argsort(x_sample)
+            x_sample = x_sample[order]
+            y_sample = y_sample[order]
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=UserWarning)
+                spline = Spline(
+                    x=x_normalize(x_sample),
+                    y=y_normalize(y_sample),
+                    w=np.ones_like(x) / y_stdev_normalized,
+                    s=len(x),
+                    k=spline_degree,
+                    ext='extrapolate'
+                )
+
+            if not np.isnan(spline(x_normalize((x_min + x_max) / 2))):
+                n_valid_splines += 1
+                progress_bar.update(1)
+                splines.append(spline)
+            else:
+                continue
 
     if fit_points is None:
         return splines
+
     else:
+        ### Determine which x-points to resample at
+        if fit_points is None:
+            x_fit = None
+            if normalize:
+                raise ValueError("If `fit_points` is None, `normalize` must be False.")
+        elif isinstance(fit_points, int):
+            x_fit = np.linspace(
+                np.min(x),
+                np.max(x),
+                fit_points
+            )
+        else:
+            x_fit = np.array(fit_points)
+
+        ### Evaluate the splines at the x-points
         y_bootstrap_fits = np.array([
             y_unnormalize(spline(x_normalize(x_fit)))
             for spline in splines
         ])
+
+        ### Throw an error if all of the splines are NaN
+        if np.all(np.isnan(y_bootstrap_fits)):
+            raise ValueError("All of the splines are NaN. This is likely due to a poor choice of `spline_degree`.")
 
         return x_fit, y_bootstrap_fits
 
