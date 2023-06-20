@@ -245,11 +245,56 @@ def bootstrap_fits(
 
 
 if __name__ == '__main__':
-    np.random.seed(0)
-    N = 1000
-    f_sample_over_f_signal = 1000
+    # np.random.seed(1)
+    # N = 1000
+    # f_sample_over_f_signal = 1000
+    #
+    # t = np.arange(N)
+    # y = np.sin(2 * np.pi / f_sample_over_f_signal * t) + 0.1 * np.random.randn(len(t))
+    #
+    # print(estimate_noise_standard_deviation(y))
 
-    t = np.arange(N)
-    y = np.sin(2 * np.pi / f_sample_over_f_signal * t) + 0.1 * np.random.randn(len(t))
+    d = dict(np.load("raw_data.npz"))
 
-    print(estimate_noise_standard_deviation(y))
+    x = d["airspeed"]
+    y = d["voltage"] * d["current"]
+
+    # estimate_noise_standard_deviation(x)
+    #
+    # x_fit, y_bootstrap_fits = bootstrap_fits(
+    #     x, y,
+    #     x_stdev=None,
+    #     y_stdev=None,
+    #     n_bootstraps=20,
+    #     spline_degree=5,
+    # )
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+
+    p.plot_with_bootstrapped_uncertainty(
+        x, y,
+        x_stdev=None,
+        y_stdev=estimate_noise_standard_deviation(y[np.argsort(x)]),
+        ci=[0.75, 0.95],
+        color="coral",
+        n_bootstraps=100,
+        n_fit_points=200,
+        # ci_to_alpha_mapping=lambda ci: 0.4,
+        normalize=False,
+        spline_degree=3,
+    )
+    plt.xlim(x.min(), x.max())
+    plt.ylim(-10, 800)
+    p.set_ticks(1, 0.25, 100, 25)
+    plt.legend(
+        loc="lower right"
+    )
+    p.show_plot(
+        xlabel="Cruise Airspeed [m/s]",
+        ylabel="Electrical Power Required [W]",
+        title="Raw Data",
+        legend=False,
+        dpi=300
+    )
