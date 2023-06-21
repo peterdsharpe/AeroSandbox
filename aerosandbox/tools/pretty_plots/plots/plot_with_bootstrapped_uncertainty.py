@@ -2,7 +2,6 @@ from typing import Union, Iterable, Tuple, Optional, Callable
 import matplotlib.pyplot as plt
 
 import numpy as np
-
 from aerosandbox.tools.statistics import time_series_uncertainty_quantification as tsuq
 
 
@@ -10,15 +9,19 @@ def plot_with_bootstrapped_uncertainty(
         x: np.ndarray,
         y: np.ndarray,
         ci: Optional[Union[float, Iterable[float], np.ndarray]] = 0.95,
+        x_stdev: Union[None, float] = 0.,
+        y_stdev: Union[None, float] = None,
         color: Optional[Union[str, Tuple[float]]] = None,
         draw_data: bool = True,
         label_line: Union[bool, str] = "Best Estimate",
         label_ci: bool = True,
         label_data: Union[bool, str] = "Raw Data",
+        line_alpha: float = 0.9,
         ci_to_alpha_mapping: Callable[[float], float] = lambda ci: 0.8 * (1 - ci) ** 0.4,
         n_bootstraps=2000,
         n_fit_points=500,
         spline_degree=3,
+        normalize: bool=True,
         x_log_scale: bool = False,
         y_log_scale: bool = False,
 ):
@@ -41,7 +44,7 @@ def plot_with_bootstrapped_uncertainty(
             ci = [ci]
     ci = np.array(ci)
 
-    ### Make sure `ci` is sorted'
+    ### Make sure `ci` is sorted
     ci = np.sort(ci)
 
     ### Make sure `ci` is in bounds
@@ -52,10 +55,12 @@ def plot_with_bootstrapped_uncertainty(
     x_fit, y_bootstrap_fits = tsuq.bootstrap_fits(
         x=x,
         y=y,
+        x_noise_stdev=x_stdev,
+        y_noise_stdev=y_stdev,
         n_bootstraps=n_bootstraps,
         fit_points=n_fit_points,
         spline_degree=spline_degree,
-        normalize=True,
+        normalize=normalize,
     )
 
     ### Undo the log-transform if desired
@@ -73,6 +78,7 @@ def plot_with_bootstrapped_uncertainty(
         color=color,
         label=label_line,
         zorder=2,
+        alpha=line_alpha,
     )
     if color is None:
         color = line.get_color()
@@ -120,7 +126,8 @@ def plot_with_bootstrapped_uncertainty(
             y,
             ".k",
             label=label_data,
-            alpha=0.5,
+            alpha=0.25,
+            markersize=5,
             markeredgewidth=0,
             zorder=1,
         )
@@ -135,7 +142,7 @@ if __name__ == '__main__':
     np.random.seed(0)
 
     ### Generate data
-    x = np.linspace(0, 20, 101)
+    x = np.linspace(0, 20, 1001)
     y_true = np.sin(x - 5)  # np.sin(x)
 
     y_stdev = 0.5
@@ -143,16 +150,15 @@ if __name__ == '__main__':
     y_noisy = y_true + y_stdev * np.random.randn(len(x))
 
     ### Plot spline regression
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(dpi=300)
     x_fit, y_bootstrap_fits = plot_with_bootstrapped_uncertainty(
         x,
         y_noisy,
         ci=[0.75, 0.95],
         label_line="Best Estimate",
         label_data="Data (True Function + Noise)",
-        # normalize=False,
     )
-    ax.plot(x, y_true, "k", label="True Function", alpha=0.8, zorder=1)
+    ax.plot(x, y_true, "k--", label="True Function (Hidden)", alpha=0.8, zorder=1)
     plt.legend(ncols=2)
 
     p.show_plot(
