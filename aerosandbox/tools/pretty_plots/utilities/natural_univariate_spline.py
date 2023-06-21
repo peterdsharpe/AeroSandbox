@@ -62,16 +62,21 @@ if __name__ == '__main__':
     x = np.linspace(0, 10)
     y = np.sin(x)
 
-    interpolator = NaturalUnivariateSpline(
+    us = interpolate.UnivariateSpline(
+        x,
+        y,
+    )
+
+    nus = NaturalUnivariateSpline(
         x,
         y,
         # s=0
     )
 
     x_plot = np.linspace(-5, 15)
-    y_plot = interpolator(x_plot)
 
     fig, ax = plt.subplots()
     plt.plot(x, y, ".k", label="Data")
-    plt.plot(x_plot, y_plot, "--", label="Interpolation")
+    plt.plot(x_plot, nus(x_plot), "--", label="Natural Univariate Spline")
+    plt.plot(x_plot, us(x_plot), "--", label="Univariate Spline")
     p.show_plot()
