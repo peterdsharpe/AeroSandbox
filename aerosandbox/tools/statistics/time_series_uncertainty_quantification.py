@@ -203,7 +203,6 @@ def bootstrap_fits(
                     w=np.ones_like(x) / y_stdev_normalized,
                     s=len(x),
                     k=spline_degree,
-                    ext='extrapolate'
                 )
 
             if not np.isnan(spline(x_normalize((x_min + x_max) / 2))):
