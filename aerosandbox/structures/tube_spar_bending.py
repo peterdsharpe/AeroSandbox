@@ -66,7 +66,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             >>> opti.minimize(mass / 100)
             >>> sol = opti.solve()
             >>>
-            >>> beam.substitute_solution(sol)
+            >>> beam = sol(beam)
             >>>
             >>> print(f"{sol.value(mass)} kg")
             >>>
