@@ -77,8 +77,8 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             length: Length of the spar [m]. Spar is assumed to go from y=0 (cantilever support) to y=length (free tip).
 
             diameter_function: The diameter of the tube as a function of the distance along the spar y. Refers to the
-            nominal diameter (e.g. the arithmetic mean of the inner diameter and outer diameter of the tube; the
-            "centerline" diameter). In terms of data types, can be one of:
+                nominal diameter (e.g., the arithmetic mean of the inner diameter and outer diameter of the tube; the
+                "centerline" diameter). In terms of data types, this can be one of:
 
                 * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
                 can freely vary along the length of the spar.
@@ -93,7 +93,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
 
             wall_thickness_function: The wall thickness of the tube as a function of the distance along the spar y. In
-            terms of data types, can be one of:
+                terms of data types, this can be one of:
 
                 * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
                 can freely vary along the length of the spar.
@@ -110,8 +110,8 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             bending_point_forces: Not yet implemented; will allow for inclusion of point loads in the future.
 
             bending_distributed_force_function: The (distributed) load per unit span applied to the spar,
-            as a function of the distance along the spar y. Should be in units of force per unit length. In terms of
-            data types, can be one of:
+                as a function of the distance along the spar y. Should be in units of force per unit length. In terms of
+                data types, this can be one of:
 
                 * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
                 can freely vary along the length of the spar.
@@ -126,10 +126,10 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
 
             points_per_point_load: Controls the discretization resolution of the beam. [int] When point load support
-            is added, this will be the number of nodes between each individual point load.
+                is added, this will be the number of nodes between each individual point load.
 
             elastic_modulus_function: The elastic modulus [Pa] of the spar as a function of the distance along the
-            spar y. In terms of data types, can be one of:
+                spar y. In terms of data types, can be one of:
 
                 * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
                 can freely vary along the length of the spar.
@@ -144,10 +144,10 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
 
             EI_guess: Provides an initial guess for the bending stiffness EI, which is used in problems where spar
-            diameter and thickness is not known at the outset. If not provided, a heuristic will be used to calculate this.
+                diameter and thickness is not known at the outset. If not provided, a heuristic will be used to calculate this.
 
             assume_thin_tube: Makes assumptions that are applicable in the limit of a thin-walled (wall_thickness <<
-            diameter) tube. This greatly increases numerical stability.
+                diameter) tube. This greatly increases numerical stability.
 
                 Relative error of this assumption in the thin-walled limit is:
 
