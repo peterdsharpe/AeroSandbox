@@ -603,9 +603,9 @@ class Opti(cas.Opti):
 
         ### Map any parameters to needed values
         for k, v in parameter_mapping.items():
-            size_k = np.product(k.shape)
+            size_k = np.prod(k.shape)
             try:
-                size_v = np.product(v.shape)
+                size_v = np.prod(v.shape)
             except AttributeError:
                 size_v = 1
             if size_k != size_v:
