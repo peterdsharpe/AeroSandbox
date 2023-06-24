@@ -208,8 +208,11 @@ def get_coordinates_from_raw_dat(
 ) -> np.ndarray:
     """
     Returns a Nx2 ndarray of airfoil coordinates from the raw text of a airfoil *.dat file.
+
     Args:
-        raw_text: The raw text of the *.dat file, as read by file.readlines()
+
+        raw_text: A list of strings, where each string is one line of the *.dat file. One good way to get this input
+            is to read the file via the `with open(file, "r") as file:`, `file.readlines()` interface.
 
     Returns: A Nx2 ndarray of airfoil coordinates [x, y].
 
