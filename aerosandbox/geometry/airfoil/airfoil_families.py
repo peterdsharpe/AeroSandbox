@@ -4,6 +4,7 @@ from aerosandbox.geometry.polygon import stack_coordinates
 import re
 from typing import Union
 import os
+from typing import List
 
 _default_n_points_per_side = 200
 
@@ -126,13 +127,13 @@ def get_NACA_coordinates(
 
 
 def get_kulfan_coordinates(
-        lower_weights=-0.2 * np.ones(5),  # type: np.ndarray
-        upper_weights=0.2 * np.ones(5),  # type: np.ndarray
-        enforce_continuous_LE_radius=True,
-        TE_thickness=0.,  # type: float
-        n_points_per_side=_default_n_points_per_side,  # type: int
-        N1=0.5,  # type: float
-        N2=1.0,  # type: float
+        lower_weights: np.ndarray = -0.2 * np.ones(5),
+        upper_weights: np.ndarray = 0.2 * np.ones(5),
+        enforce_continuous_LE_radius: bool = True,
+        TE_thickness: float = 0.,
+        n_points_per_side: int = _default_n_points_per_side,
+        N1: float = 0.5,
+        N2: float = 1.0,
 ) -> np.ndarray:
     """
     Calculates the coordinates of a Kulfan (CST) airfoil.
@@ -202,7 +203,9 @@ def get_kulfan_coordinates(
     return coordinates
 
 
-def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
+def get_coordinates_from_raw_dat(
+        raw_text: List[str]
+) -> np.ndarray:
     """
     Returns a Nx2 ndarray of airfoil coordinates from the raw text of a airfoil *.dat file.
     Args:
@@ -213,7 +216,7 @@ def get_coordinates_from_raw_dat(raw_text) -> np.ndarray:
     """
     raw_coordinates = []
 
-    def is_number(s):  # determines whether a string is representable as a float
+    def is_number(s: str) -> bool:  # determines whether a string is representable as a float
         try:
             float(s)
         except ValueError:
