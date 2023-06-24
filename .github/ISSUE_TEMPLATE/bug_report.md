@@ -1,13 +1,4 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
----
-
-## Bug Description
+## Bug Description / Observed Behavior
 
 ## Steps to Reproduce
 
@@ -17,6 +8,6 @@ assignees: ''
 
 * Operating System:
 * Python Version:
-* AeroSandbox Verion:
+* AeroSandbox Version:
 
 ## Other Information
