@@ -8,6 +8,9 @@ np.seterr(all='raise')
 
 @pytest.fixture
 def types():
+    ### Float data types
+    scalar_float = 1.
+
     ### NumPy data types
     scalar_np = np.array(1)
     vector_np = np.array([1, 1])
@@ -26,7 +29,7 @@ def types():
     ])
 
     ### Create lists of possible variable types for scalars, vectors, and matrices.
-    scalar_options = [scalar_cas, scalar_np]
+    scalar_options = [scalar_float, scalar_cas, scalar_np]
     vector_options = [vector_cas, vector_np, vector_dynamic]
     matrix_options = [matrix_np, matrix_dynamic]
 
