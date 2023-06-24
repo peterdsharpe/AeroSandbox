@@ -99,11 +99,18 @@ class Airfoil(Polygon):
         if coordinates is None:  # If no coordinates are given
             try:  # See if it's a NACA airfoil
                 self.coordinates = get_NACA_coordinates(name=self.name)
-            except Exception:
+            except (ValueError, NotImplementedError):
                 try:  # See if it's in the UIUC airfoil database
                     self.coordinates = get_UIUC_coordinates(name=self.name)
-                except Exception:
+                except FileNotFoundError:
                     pass
+                except UnicodeDecodeError:
+                    import warnings
+                    warnings.warn(
+                        f"Airfoil {self.name} was found in the UIUC airfoil database, but could not be parsed.\n"
+                        f"Check for any non-Unicode-compatible characters in the file, or specify the airfoil "
+                        f"coordinates yourself.",
+                    )
         else:
 
             try:  # If coordinates is a string, assume it's a filepath to a .dat file
