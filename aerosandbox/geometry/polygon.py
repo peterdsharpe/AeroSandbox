@@ -372,18 +372,49 @@ class Polygon(AeroSandboxObject):
         similarity = intersection / union if union != 0 else 0
         return similarity
 
+    def draw(self,
+             set_equal=True,
+             color=None,
+             **kwargs
+             ):
+        """
+        Draws the Polygon on the current matplotlib axis.
 
-def stack_coordinates(
-        x: np.ndarray,
-        y: np.ndarray
-) -> np.ndarray:
-    """
-    Stacks a pair of x, y coordinate arrays into a Nx2 ndarray.
-    Args:
-        x: A 1D ndarray of x-coordinates
-        y: A 1D ndarray of y-coordinates
+        Args:
 
-    Returns: A Nx2 ndarray of [x, y] coordinates.
+            set_equal: Whether to set the aspect ratio of the plot to be equal.
 
-    """
-    return np.stack((x, y), axis=1)
+            **kwargs: Keyword arguments to pass to the matplotlib Polygon artist.
+
+        Returns: None (draws on the current matplotlib axis)
+
+        """
+        import matplotlib.pyplot as plt
+
+        if color is None:
+            color = plt.gca()._get_lines.get_next_color()
+
+        plt.fill(
+            self.x(),
+            self.y(),
+            color=color,
+            alpha=0.5,
+            **kwargs
+        )
+
+        if set_equal:
+            plt.gca().set_aspect("equal", adjustable='box')
+
+
+if __name__ == '__main__':
+
+    theta = np.linspace(0, 2 * np.pi, 1000)
+    r = np.sin(theta) * np.sqrt(np.abs(np.cos(theta))) / (np.sin(theta) + 7 / 5) - 2 * np.sin(theta) + 2
+    heart = Polygon(np.stack((r * np.cos(theta), r * np.sin(theta)), axis=1))
+
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    heart.draw()
+    heart.scale(0.7, 0.7).translate(2, 1).rotate(np.radians(15)).draw()
+    plt.show()
