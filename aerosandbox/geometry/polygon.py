@@ -25,8 +25,6 @@ class Polygon(AeroSandboxObject):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-
-
     def x(self) -> np.ndarray:
         """
         Returns the x coordinates of the polygon. Equivalent to Polygon.coordinates[:,0].
