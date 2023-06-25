@@ -46,46 +46,6 @@ class Polygon(AeroSandboxObject):
             except AttributeError:
                 return 0
 
-    def contains_points(self,
-                        x: Union[float, np.ndarray],
-                        y: Union[float, np.ndarray],
-                        ) -> Union[float, np.ndarray]:
-        """
-        Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
-
-        Note: This function is unfortunately not automatic-differentiable.
-
-        Args:
-            x: x-coordinate(s) of the query points.
-            y: y-coordinate(s) of the query points.
-
-        Returns:
-
-            A boolean array of the same size as x and y, with values corresponding to whether the points are
-            inside the Polygon.
-
-        """
-        x = np.array(x)
-        y = np.array(y)
-        try:
-            input_shape = (x + y).shape
-        except ValueError as e:  # If arrays are not broadcastable
-            raise ValueError("Inputs x and y could not be broadcast together!") from e
-
-        x = x.reshape(-1, 1)
-        y = y.reshape(-1, 1)
-
-        points = np.hstack((x, y))
-
-        contained = path.Path(
-            vertices=self.coordinates
-        ).contains_points(
-            points
-        )
-        contained = np.array(contained).reshape(input_shape)
-
-        return contained
-
     def scale(self,
               scale_x: float = 1.,
               scale_y: float = 1.,
@@ -331,6 +291,46 @@ class Polygon(AeroSandboxObject):
                 f.write(string)
 
         return string
+
+    def contains_points(self,
+                        x: Union[float, np.ndarray],
+                        y: Union[float, np.ndarray],
+                        ) -> Union[float, np.ndarray]:
+        """
+        Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
+
+        Note: This function is unfortunately not automatic-differentiable.
+
+        Args:
+            x: x-coordinate(s) of the query points.
+            y: y-coordinate(s) of the query points.
+
+        Returns:
+
+            A boolean array of the same size as x and y, with values corresponding to whether the points are
+            inside the Polygon.
+
+        """
+        x = np.array(x)
+        y = np.array(y)
+        try:
+            input_shape = (x + y).shape
+        except ValueError as e:  # If arrays are not broadcastable
+            raise ValueError("Inputs x and y could not be broadcast together!") from e
+
+        x = x.reshape(-1, 1)
+        y = y.reshape(-1, 1)
+
+        points = np.hstack((x, y))
+
+        contained = path.Path(
+            vertices=self.coordinates
+        ).contains_points(
+            points
+        )
+        contained = np.array(contained).reshape(input_shape)
+
+        return contained
 
     def as_shapely_polygon(self):
         """
