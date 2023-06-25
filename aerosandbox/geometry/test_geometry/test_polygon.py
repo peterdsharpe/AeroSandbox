@@ -29,6 +29,13 @@ def test_contains_points():
     )
 
     assert p.contains_points(0.5, 0.5) == True
+    assert p.contains_points(-0.1, 0.5) == False
+    assert p.contains_points(0.5, -0.1) == False
+    assert p.contains_points(-0.1, -0.1) == False
+    assert p.contains_points(1.1, 1.1) == False
+    assert p.contains_points(1.0, 1.0) == True
+    assert p.contains_points(0.5, 1.0) == True
+    assert p.contains_points(0.5, 1.1) == False
 
     assert np.all(p.contains_points(
         x=np.array([0.5, 0.5, -0.1, -0.1]),
