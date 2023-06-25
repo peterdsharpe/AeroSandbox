@@ -95,13 +95,13 @@ class Fuselage(AeroSandboxObject):
 
         ### Handle deprecated parameters
         if 'symmetric' in locals():
-            raise Exception(
+            raise DeprecationWarning(
                 "The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!")
 
         if 'xyz_le' in locals():
             import warnings
             warnings.warn(
-                "The `xyz_le` input for Fuselage is DEPRECATED and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
+                "The `xyz_le` input for Fuselage is pending deprecation and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
                 stacklevel=2
             )
             self.xsecs = [

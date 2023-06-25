@@ -109,7 +109,7 @@ class Wing(AeroSandboxObject):
         if 'xyz_le' in locals():
             import warnings
             warnings.warn(
-                "The `xyz_le` input for Wing is DEPRECATED and will be removed in a future version. Use Wing().translate(xyz) instead.",
+                "The `xyz_le` input for Wing is pending deprecation and will be removed in a future version. Use Wing().translate(xyz) instead.",
                 stacklevel=2
             )
             self.xsecs = [
