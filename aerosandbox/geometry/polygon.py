@@ -384,7 +384,8 @@ class Polygon(AeroSandboxObject):
 
             set_equal: Whether to set the aspect ratio of the plot to be equal.
 
-            **kwargs: Keyword arguments to pass to the matplotlib Polygon artist.
+            **kwargs: Keyword arguments to pass to the matplotlib.pyplot.fill function.
+                See: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.fill.html
 
         Returns: None (draws on the current matplotlib axis)
 
