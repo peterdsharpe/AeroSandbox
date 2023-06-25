@@ -49,14 +49,22 @@ class NaturalUnivariateSpline(interpolate.PPoly):
             s = m - (2 * m) ** 0.5  # Identical default to UnivariateSpline's `s` argument.
 
         ### Deprecate and warn
+        import warnings
         if ext is not None:
-            raise DeprecationWarning(
-                "The `ext` argument is deprecated, as a NaturalUnivariateSpline implies extrapolation.")
+            warnings.warn(
+                "The `ext` argument is deprecated, as a NaturalUnivariateSpline implies extrapolation.",
+                DeprecationWarning
+            )
         if bbox is not None:
-            raise DeprecationWarning(
-                "The `bbox` argument is deprecated, as a NaturalUnivariateSpline implies extrapolation.")
+            warnings.warn(
+                "The `bbox` argument is deprecated, as a NaturalUnivariateSpline implies extrapolation.",
+                DeprecationWarning
+            )
         if check_finite is not None:
-            raise DeprecationWarning("The `check_finite` argument is deprecated.")
+            warnings.warn(
+                "The `check_finite` argument is deprecated.",
+                DeprecationWarning
+            )
 
         ### Compute the t, c, and k parameters for a UnivariateSpline
         tck = interpolate.splrep(
