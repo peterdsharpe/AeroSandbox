@@ -17,6 +17,9 @@ def e216():
 
 
 def test_fake_airfoil():
+    """
+    Tests what happens when you create an airfoil that's not in the UIUC database, and you don't supply coordinates.
+    """
     a = Airfoil("dae12")
     assert a.coordinates is None
     assert a.n_points() == 0
