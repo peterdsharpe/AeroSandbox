@@ -127,8 +127,8 @@ def get_NACA_coordinates(
 
 
 def get_kulfan_coordinates(
-        lower_weights: np.ndarray = -0.2 * np.ones(5),
-        upper_weights: np.ndarray = 0.2 * np.ones(5),
+        lower_weights: np.ndarray = -0.2 * np.ones(10),
+        upper_weights: np.ndarray = 0.2 * np.ones(10),
         enforce_continuous_LE_radius: bool = True,
         TE_thickness: float = 0.,
         n_points_per_side: int = _default_n_points_per_side,
@@ -136,13 +136,10 @@ def get_kulfan_coordinates(
         N2: float = 1.0,
 ) -> np.ndarray:
     """
-    Calculates the coordinates of a Kulfan (CST) airfoil.
-    To make a Kulfan (CST) airfoil, use the following syntax:
-
-    >>> import aerosandbox as asb
-    >>> asb.Airfoil("My Airfoil Name", coordinates=asb.get_kulfan_coordinates(*args))
+    Calculates the coordinates of a Kulfan (CST) airfoil, given its weights.
 
     More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
+
     Notes on N1, N2 (shape factor) combinations:
         * 0.5, 1: Conventional airfoil
         * 0.5, 0.5: Elliptic airfoil
@@ -151,14 +148,29 @@ def get_kulfan_coordinates(
         * 0.75, 0.25: Low-drag projectile
         * 1, 0.001: Cone or wedge airfoil
         * 0.001, 0.001: Rectangle, circular duct, or circular rod.
-    :param lower_weights: An iterable of the Kulfan weights to use for the lower surface.
-    :param upper_weights: An iterable of the Kulfan weights to use for the upper surface.
-    :param enforce_continuous_LE_radius: Enforces a continuous leading-edge radius by discarding the first lower weight.
-    :param TE_thickness: The trailing edge thickness to add, in terms of y/c.
-    :param n_points_per_side: The number of points to discretize with.
-    :param N1: LE shape factor; see above.
-    :param N2: TE shape factor; see above.
-    :return: The coordinates of the airfoil as a Nx2 array.
+
+    To make a Kulfan (CST) airfoil, use the following syntax:
+
+    >>> import aerosandbox as asb
+    >>> asb.Airfoil("My Airfoil Name", coordinates=asb.get_kulfan_coordinates(*args))
+
+    Args:
+        lower_weights (iterable): The Kulfan weights to use for the lower surface.
+
+        upper_weights (iterable): The Kulfan weights to use for the upper surface.
+
+        enforce_continuous_LE_radius (bool): Enforces a continuous leading-edge radius by discarding the first lower weight.
+
+        TE_thickness (float): The trailing-edge thickness to add, in terms of y/c.
+
+        n_points_per_side (int): The number of points to discretize with, when generating the coordinates.
+
+        N1 (float): LE shape factor. See notes above.
+
+        N2 (float): TE shape factor. See notes above.
+
+    Returns:
+        np.ndarray: The coordinates of the airfoil as a Nx2 array.
     """
 
     if enforce_continuous_LE_radius:
