@@ -16,6 +16,17 @@ class Polygon(AeroSandboxObject):
         """
         self.coordinates = coordinates
 
+    def __repr__(self):
+        return f"Polygon ({self.n_points()} points)"
+
+    def __eq__(self, other):
+        return np.all(self.coordinates == other.coordinates)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+
     def x(self) -> np.ndarray:
         """
         Returns the x coordinates of the polygon. Equivalent to Polygon.coordinates[:,0].

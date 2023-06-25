@@ -49,5 +49,67 @@ def test_contains_points():
     assert shape == contains.shape
 
 
+def test_equality():
+    p1 = Polygon(
+        coordinates=np.array([
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+        ])
+    )
+
+    p2 = p1.deepcopy()
+
+    assert p1 == p2
+
+    assert not p1 == p2.translate(0.1, 0)
+
+
+def test_translate_scale_rotate():
+    p1 = Polygon(
+        coordinates=np.array([
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+        ])
+    )
+    p2 = (
+        p1
+        .translate(1, 1)
+        .rotate(np.pi / 2, 1, 1)
+        .scale(2, 1)
+        .rotate(3 * np.pi / 2, 2, 1)
+        .scale(1, 0.5)
+        .translate(-2, -0.5)
+    )
+
+    assert np.allclose(
+        p1.coordinates,
+        p2.coordinates
+    )
+
+
+def test_jaccard_similarity():
+    p1 = Polygon(
+        coordinates=np.array([
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+        ])
+    )
+    p2 = p1.copy()
+
+    assert p1.jaccard_similarity(p2) == pytest.approx(1)
+    assert p1.jaccard_similarity(p2.translate(0.5, 0)) == pytest.approx(1 / 3)
+    assert p1.jaccard_similarity(p2.translate(1, 0)) == pytest.approx(0)
+    assert p1.jaccard_similarity(p2.translate(1.5, 0)) == pytest.approx(0)
+    assert p1.jaccard_similarity(p2.translate(0.5, 0.5)) == pytest.approx(1 / 7)
+    assert p1.jaccard_similarity(p2.translate(1, 1)) == pytest.approx(0)
+
+
 if __name__ == '__main__':
+    # test_translate_scale_rotate()
     pytest.main()
