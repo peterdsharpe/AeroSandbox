@@ -128,11 +128,11 @@ def get_NACA_coordinates(
 def get_kulfan_coordinates(
         lower_weights: np.ndarray = -0.2 * np.ones(10),
         upper_weights: np.ndarray = 0.2 * np.ones(10),
-        enforce_continuous_LE_radius: bool = True,
         TE_thickness: float = 0.,
         n_points_per_side: int = _default_n_points_per_side,
         N1: float = 0.5,
         N2: float = 1.0,
+        **deprecated_kwargs
 ) -> np.ndarray:
     """
     Calculates the coordinates of a Kulfan (CST) airfoil, given its weights.
@@ -159,8 +159,6 @@ def get_kulfan_coordinates(
 
         upper_weights (iterable): The Kulfan weights to use for the upper surface.
 
-        enforce_continuous_LE_radius (bool): Enforces a continuous leading-edge radius by discarding the first lower weight.
-
         TE_thickness (float): The trailing-edge thickness to add, in terms of y/c.
 
         n_points_per_side (int): The number of points to discretize with, when generating the coordinates.
@@ -173,8 +171,15 @@ def get_kulfan_coordinates(
         np.ndarray: The coordinates of the airfoil as a Nx2 array.
     """
 
-    if enforce_continuous_LE_radius:
-        lower_weights[0] = -1 * upper_weights[0]
+    if "enforce_continuous_LE_radius" in locals():
+        import warnings
+        warnings.warn(
+            "The `enforce_continuous_LE_radius` argument is deprecated. If you want this behavior, just discard the\n"
+            "first lower weight instead.",
+            PendingDeprecationWarning
+        )
+        if enforce_continuous_LE_radius:
+            lower_weights[0] = -1 * upper_weights[0]
 
     x_lower = np.cosspace(0, 1, n_points_per_side)
     x_upper = x_lower[::-1]
