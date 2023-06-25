@@ -1,6 +1,5 @@
 import aerosandbox.numpy as np
 from scipy.special import comb
-from aerosandbox.geometry.polygon import stack_coordinates
 import re
 from typing import Union
 import os
@@ -123,7 +122,7 @@ def get_NACA_coordinates(
     x = np.concatenate((x_U, x_L))
     y = np.concatenate((y_U, y_L))
 
-    return stack_coordinates(x, y)
+    return np.stack((x, y), axis=1)
 
 
 def get_kulfan_coordinates(

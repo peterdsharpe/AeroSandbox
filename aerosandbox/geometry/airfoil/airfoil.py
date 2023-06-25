@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox import AeroSandboxObject
-from aerosandbox.geometry.polygon import Polygon, stack_coordinates
+from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
     get_kulfan_coordinates, get_file_coordinates
 from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
@@ -985,7 +985,7 @@ class Airfoil(Polygon):
 
         return Airfoil(
             name=self.name,
-            coordinates=stack_coordinates(x, y),
+            coordinates=np.stack((x, y), axis=1),
             CL_function=self.CL_function,
             CD_function=self.CD_function,
             CM_function=self.CM_function,
@@ -1218,7 +1218,7 @@ class Airfoil(Polygon):
 
         return Airfoil(
             name=self.name,
-            coordinates=stack_coordinates(x, y)
+            coordinates=np.stack((x, y), axis=1)
         )
 
     def translate(self,
@@ -1239,7 +1239,7 @@ class Airfoil(Polygon):
 
         return Airfoil(
             name=self.name,
-            coordinates=stack_coordinates(x, y)
+            coordinates=np.stack((x, y), axis=1)
         )
 
     def rotate(self,
