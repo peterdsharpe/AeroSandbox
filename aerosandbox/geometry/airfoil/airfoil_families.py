@@ -138,6 +138,7 @@ def get_kulfan_coordinates(
     Calculates the coordinates of a Kulfan (CST) airfoil, given its weights.
 
     More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
+    Mirror: https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
 
     Notes on N1, N2 (shape factor) combinations:
         * 0.5, 1: Conventional airfoil
