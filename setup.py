@@ -71,6 +71,7 @@ setup(
             'trimesh >= 3',
             'sympy >= 1',
             'cadquery >= 2; python_version >="3.8" and python_version <"3.11"',
+            'shapely >= 2',
         ],
         "test": [
             'pytest',

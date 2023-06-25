@@ -1378,32 +1378,6 @@ class Airfoil(Polygon):
 
         return string
 
-    def write_sldcrv(self,
-                     filepath: str = None
-                     ):
-        """
-        Writes a .sldcrv (SolidWorks curve) file corresponding to this airfoil to a filepath.
-
-        Args:
-            filepath: A filepath (including the filename and .sldcrv extension) [string]
-                if None, this function returns the .sldcrv file as a string.
-
-        Returns: None
-
-        """
-        string = "\n".join(
-            [
-                "%f %f 0" % tuple(coordinate)
-                for coordinate in self.coordinates
-            ]
-        )
-
-        if filepath is not None:
-            with open(filepath, "w+") as f:
-                f.write(string)
-
-        return string
-
     # def get_xfoil_data(self,
     #                    a_start=-6,  # type: float
     #                    a_end=12,  # type: float

@@ -225,6 +225,66 @@ class Polygon(AeroSandboxObject):
 
         return J
 
+    def write_sldcrv(self,
+                     filepath: str = None
+                     ):
+        """
+        Writes a .sldcrv (SolidWorks curve) file corresponding to this Polygon to a filepath.
+
+        Args:
+            filepath: A filepath (including the filename and .sldcrv extension) [string]
+                if None, this function returns the .sldcrv file as a string.
+
+        Returns: None
+
+        """
+        string = "\n".join(
+            [
+                "%f %f 0" % tuple(coordinate)
+                for coordinate in self.coordinates
+            ]
+        )
+
+        if filepath is not None:
+            with open(filepath, "w+") as f:
+                f.write(string)
+
+        return string
+
+    def as_shapely_polygon(self):
+        """
+        Returns a Shapely Polygon object representing this polygon.
+
+        Shapely is a Python library for 2D geometry operations. While it is more powerful than this class (e.g.,
+            allows for union/intersection calculation between Polygons), it is not automatic-differentiable.
+        """
+        import shapely
+        return shapely.Polygon(self.coordinates)
+
+    def jaccard_similarity(self,
+                           other: "Polygon"
+                           ):
+        """
+        Calculates the Jaccard similarity between this polygon and another polygon.
+
+        Note: This function is unfortunately not automatic-differentiable.
+
+        Args:
+            other: The other polygon to compare to.
+
+        Returns:
+            The Jaccard similarity between this polygon and the other polygon.
+                * 0 if the polygons are completely disjoint
+                * 1 if the polygons are identical
+
+        """
+        p1 = self.as_shapely_polygon()
+        p2 = other.as_shapely_polygon()
+        intersection = p1.intersection(p2).area
+        union = p1.area + p2.area - intersection
+        similarity = intersection / union if union != 0 else 0
+        return similarity
+
 
 def stack_coordinates(
         x: np.ndarray,
