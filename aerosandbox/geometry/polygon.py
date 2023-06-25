@@ -53,6 +53,8 @@ class Polygon(AeroSandboxObject):
         """
         Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
 
+        Note: This function is unfortunately not automatic-differentiable.
+
         Args:
             x: x-coordinate(s) of the query points.
             y: y-coordinate(s) of the query points.
@@ -83,6 +85,85 @@ class Polygon(AeroSandboxObject):
         contained = np.array(contained).reshape(input_shape)
 
         return contained
+
+    def scale(self,
+              scale_x: float = 1.,
+              scale_y: float = 1.,
+              ) -> 'Polygon':
+        """
+        Scales a Polygon about the origin.
+        Args:
+            scale_x: Amount to scale in the x-direction.
+            scale_y: Amount to scale in the y-direction.
+
+        Returns: The scaled Polygon.
+        """
+        x = self.x() * scale_x
+        y = self.y() * scale_y
+
+        return Polygon(
+            coordinates=np.stack((x, y), axis=1)
+        )
+
+    def translate(self,
+                  translate_x: float = 0.,
+                  translate_y: float = 0.,
+                  ) -> 'Polygon':
+        """
+        Translates a Polygon by a given amount.
+        Args:
+            translate_x: Amount to translate in the x-direction
+            translate_y: Amount to translate in the y-direction
+
+        Returns: The translated Polygon.
+
+        """
+        x = self.x() + translate_x
+        y = self.y() + translate_y
+
+        return Polygon(
+            coordinates=np.stack((x, y), axis=1)
+        )
+
+    def rotate(self,
+               angle: float,
+               x_center: float = 0.,
+               y_center: float = 0.
+               ) -> 'Polygon':
+        """
+        Rotates a Polygon clockwise by the specified amount, in radians.
+
+        Rotates about the point (x_center, y_center), which is (0, 0) by default.
+
+        Args:
+            angle: Angle to rotate, counterclockwise, in radians.
+
+            x_center: The x-coordinate of the center of rotation.
+
+            y_center: The y-coordinate of the center of rotation.
+
+        Returns: The rotated Polygon.
+
+        """
+
+        coordinates = np.copy(self.coordinates)
+
+        ### Translate
+        translation = np.array([x_center, y_center])
+        coordinates -= translation
+
+        ### Rotate
+        rotation_matrix = np.rotation_matrix_2D(
+            angle=angle,
+        )
+        coordinates = (rotation_matrix @ coordinates.T).T
+
+        ### Translate
+        coordinates += translation
+
+        return Polygon(
+            coordinates=coordinates
+        )
 
     def area(self) -> float:
         """
