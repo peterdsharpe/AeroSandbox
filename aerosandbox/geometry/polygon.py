@@ -5,8 +5,16 @@ from typing import Union
 
 
 class Polygon(AeroSandboxObject):
-    def __init__(self, coordinates):
-        self.coordinates = coordinates  # Nx2 NumPy ndarray
+    def __init__(self,
+                 coordinates: np.ndarray
+                 ):
+        """
+        Creates a polygon object.
+
+        Args:
+            coordinates: An Nx2 NumPy ndarray of [x, y] coordinates for the polygon.
+        """
+        self.coordinates = coordinates
 
     def x(self) -> np.ndarray:
         """
@@ -41,7 +49,7 @@ class Polygon(AeroSandboxObject):
     def contains_points(self,
                         x: Union[float, np.ndarray],
                         y: Union[float, np.ndarray],
-                        ) -> np.ndarray:
+                        ) -> Union[float, np.ndarray]:
         """
         Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
 
@@ -51,7 +59,7 @@ class Polygon(AeroSandboxObject):
 
         Returns:
 
-            A boolean array of the same size as x and y, with values corresponding to whether or not the points are
+            A boolean array of the same size as x and y, with values corresponding to whether the points are
             inside the Polygon.
 
         """
