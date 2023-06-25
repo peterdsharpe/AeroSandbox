@@ -4,7 +4,7 @@ from aerosandbox.geometry.polygon import stack_coordinates
 import re
 from typing import Union
 import os
-from typing import List
+from typing import List, Optional
 
 _default_n_points_per_side = 200
 
@@ -219,23 +219,30 @@ def get_coordinates_from_raw_dat(
     """
     raw_coordinates = []
 
-    def is_number(s: str) -> bool:  # determines whether a string is representable as a float
+    def is_number(s: str) -> bool:
+        # Determines whether a string is representable as a float
         try:
             float(s)
         except ValueError:
             return False
         return True
 
+    def parse_line(line: str) -> Optional[List[float]]:
+        # Given a single line of a `*.dat` file, tries to parse it into a list of two floats [x, y].
+        # If not possible, returns None.
+        line_split = re.split(r'[;|,|\s|\t]', line)
+        line_items = [s for s in line_split
+                      if s != "" and is_number(s)
+                      ]
+        if len(line_items) == 2 and all([is_number(i) for i in line_items]):
+            return line_items
+        else:
+            return None
+
     for line in raw_text:
-        try:
-            line_split = re.split(r'[; |, |\*|\n]', line)
-            line_items = [s for s in line_split
-                          if s != "" and is_number(s)
-                          ]
-            if len(line_items) == 2:
-                raw_coordinates.append(line_items)
-        except Exception:
-            pass
+        parsed_line = parse_line(line)
+        if parsed_line is not None:
+            raw_coordinates.append(parsed_line)
 
     if len(raw_coordinates) == 0:
         raise ValueError("Could not read any coordinates from the `raw_text` input!")
