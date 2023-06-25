@@ -321,10 +321,6 @@ class FittedModel(SurrogateModel):
         super().__call__(x)
         return self.model(x, self.parameters)
 
-    def plot_fit(self):
-        raise DeprecationWarning(
-            "Use FittedModel.plot() instead, which generalizes plotting to non-fitted surrogate models")
-
     def goodness_of_fit(self,
                         type="R^2"
                         ):
