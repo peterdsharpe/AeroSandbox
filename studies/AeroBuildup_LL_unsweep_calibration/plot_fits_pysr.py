@@ -10,6 +10,7 @@ pysr_model = """
 """
 
 import sympy as sym
+
 a, s, t = sym.symbols('a s t')
 pysr_model_sympy = eval(pysr_model.replace("^", "**").replace("\n", "")).simplify()
 pysr_model_lambda = sym.lambdify([a, s, t], pysr_model_sympy)
@@ -43,7 +44,7 @@ if __name__ == '__main__':
     dev = pysr_model_lambda(a, s, t)
 
     interpolator = interpolate.LinearNDInterpolator(
-        np.vstack([df["AR"], df["sweep"], df["taper"]]).T,
+        np.stack([df["AR"], df["sweep"], df["taper"]], axis=1),
         ((df["ab_xnp"] - df["vlm_xnp"]) / (df["MAC"])).values,
         rescale=True
     )
@@ -51,11 +52,11 @@ if __name__ == '__main__':
     plt.plot(
         sweep_plot,
         interpolator(
-            np.vstack([
+            np.stack([
                 AR * np.ones_like(sweep_plot),
                 sweep_plot,
                 taper * np.ones_like(sweep_plot)
-            ]).T
+            ], axis=1)
         ),
         label="Data"
     )

@@ -23,7 +23,7 @@ y_data = y_data[~bad_data]
 
 # x_data["cos_sweep"] = np.cosd(x_data["sweep"])
 
-X = np.vstack(tuple(x_data.values())).T
+X = np.stack(tuple(x_data.values()), axis=1)
 
 y = y_data
 
