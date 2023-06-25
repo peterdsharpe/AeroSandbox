@@ -14,7 +14,7 @@ class Polygon(AeroSandboxObject):
         Args:
             coordinates: An Nx2 NumPy ndarray of [x, y] coordinates for the polygon.
         """
-        self.coordinates = coordinates
+        self.coordinates = np.array(coordinates)
 
     def __repr__(self):
         return f"Polygon ({self.n_points()} points)"
@@ -116,12 +116,9 @@ class Polygon(AeroSandboxObject):
         Returns: The rotated Polygon.
 
         """
-
-        coordinates = np.copy(self.coordinates)
-
         ### Translate
-        translation = np.array([x_center, y_center])
-        coordinates -= translation
+        translation = np.array([x_center, y_center]).reshape((1, 2))
+        coordinates = self.coordinates - translation
 
         ### Rotate
         rotation_matrix = np.rotation_matrix_2D(
@@ -130,7 +127,7 @@ class Polygon(AeroSandboxObject):
         coordinates = (rotation_matrix @ coordinates.T).T
 
         ### Translate
-        coordinates += translation
+        coordinates = coordinates + translation
 
         return Polygon(
             coordinates=coordinates

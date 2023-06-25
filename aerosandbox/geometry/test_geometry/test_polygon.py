@@ -109,6 +109,8 @@ def test_jaccard_similarity():
     assert p1.jaccard_similarity(p2.translate(0.5, 0.5)) == pytest.approx(1 / 7)
     assert p1.jaccard_similarity(p2.translate(1, 1)) == pytest.approx(0)
 
+    assert p1.jaccard_similarity(p2.rotate(np.pi / 2, 0.5, 0.5)) == pytest.approx(1)
+
 
 if __name__ == '__main__':
     # test_translate_scale_rotate()
