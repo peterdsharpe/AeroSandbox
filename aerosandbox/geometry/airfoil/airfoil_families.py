@@ -209,7 +209,7 @@ def get_kulfan_coordinates(
 
     x = np.concatenate([x_upper, x_lower])
     y = np.concatenate([y_upper, y_lower])
-    coordinates = np.vstack((x, y)).T
+    coordinates = np.stack((x, y), axis=1)
 
     return coordinates
 
