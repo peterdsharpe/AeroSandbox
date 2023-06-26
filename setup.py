@@ -50,7 +50,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
     ],
-    keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation',
+    keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation structures propulsion',
     packages=find_packages(exclude=['docs', 'media', 'examples', 'studies']),
     python_requires='>=3.7',
     install_requires=[
