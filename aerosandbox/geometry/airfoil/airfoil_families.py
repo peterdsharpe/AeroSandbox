@@ -128,6 +128,7 @@ def get_NACA_coordinates(
 def get_kulfan_coordinates(
         lower_weights: np.ndarray = -0.2 * np.ones(10),
         upper_weights: np.ndarray = 0.2 * np.ones(10),
+        leading_edge_weight: float = 0.,
         TE_thickness: float = 0.,
         n_points_per_side: int = _default_n_points_per_side,
         N1: float = 0.5,
@@ -181,40 +182,48 @@ def get_kulfan_coordinates(
         if enforce_continuous_LE_radius:
             lower_weights[0] = -1 * upper_weights[0]
 
-    x_lower = np.cosspace(0, 1, n_points_per_side)
-    x_upper = x_lower[::-1]
+    x = np.cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
 
-    x_lower = x_lower[1:]  # Trim off the nose coordinate so there are no duplicates
+    # Class function
+    C = (x) ** N1 * (1 - x) ** N2
 
-    def shape(w, x):
-        # Class function
-        C = x ** N1 * (1 - x) ** N2
-
+    def shape_function(w):
         # Shape function (Bernstein polynomials)
-        n = len(w) - 1  # Order of Bernstein polynomials
+        n = np.length(w) - 1  # Order of Bernstein polynomials
 
         K = comb(n, np.arange(n + 1))  # Bernstein polynomial coefficients
 
+        dims = (np.length(x), np.length(w))
+
+        def wide(vector):
+            return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
+
+        def tall(vector):
+            return np.tile(vector.reshape((dims[0], 1)), (1, dims[1]))
+
         S_matrix = (
-                w * K * np.expand_dims(x, 1) ** np.arange(n + 1) *
-                np.expand_dims(1 - x, 1) ** (n - np.arange(n + 1))
-        )  # Polynomial coefficient * weight matrix
-        # S = np.sum(S_matrix, axis=1)
-        S = np.array([np.sum(S_matrix[i, :]) for i in range(S_matrix.shape[0])])
+                wide(w * K) * tall(x) ** wide(np.arange(n + 1)) *
+                tall(1 - x) ** wide(n - np.arange(n + 1))
+        )  # Bernstein polynomial coefficients * weight matrix
+        S = np.sum(S_matrix, axis=1)
 
         # Calculate y output
         y = C * S
         return y
 
-    y_lower = shape(lower_weights, x_lower)
-    y_upper = shape(upper_weights, x_upper)
+    y_lower = shape_function(lower_weights)
+    y_upper = shape_function(upper_weights)
 
-    # TE thickness
-    y_lower -= x_lower * TE_thickness / 2
-    y_upper += x_upper * TE_thickness / 2
+    # Add trailing-edge (TE) thickness
+    y_lower -= x * TE_thickness / 2
+    y_upper += x * TE_thickness / 2
 
-    x = np.concatenate([x_upper, x_lower])
-    y = np.concatenate([y_upper, y_lower])
+    # Add Kulfan's leading-edge-modification (LEM)
+    y_lower += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(lower_weights) - 1.5)
+    y_upper += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(upper_weights) - 1.5)
+
+    x = np.concatenate((x[::-1], x[1:]))
+    y = np.concatenate((y_upper[::-1], y_lower[1:]))
     coordinates = np.stack((x, y), axis=1)
 
     return coordinates
