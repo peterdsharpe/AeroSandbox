@@ -991,6 +991,66 @@ class Airfoil(Polygon):
             CM_function=self.CM_function,
         )
 
+    def normalize(
+            self,
+    ) -> 'Airfoil':
+        """
+        Returns a copy of the Airfoil with a new set of `coordinates`, such that:
+            - The leading edge (LE) is at (0, 0)
+            - The trailing edge (TE) is at (1, 0)
+            - The chord length is equal to 1
+
+        The trailing-edge (TE) point is defined as the midpoint of the line segment connecting the first and last coordinate points (upper and lower surface TE points, respectively). The TE point is not necessarily one of the original points in the airfoil coordinates (`Airfoil.coordinates`); in general, it will not be one of the points if the TE thickness is nonzero.
+
+        The leading-edge (LE) point is defined as the coordinate point with the largest Euclidian distance from the trailing edge. (In other words, if you were to center a circle on the trailing edge and progressively grow it, what's the last coordinate point that it would intersect?) The LE point is always one of the original points in the airfoil coordinates.
+
+        The chord is defined as the Euclidian distance between the LE and TE points.
+
+        Coordinate modifications to achieve the constraints described above (LE @ origin, TE at (1, 0), and chord of 1) are done by means of a translation and rotation.
+
+        Returns: A copy of the airfoil with the new coordinates.
+        """
+
+        ### Step 1: Translate so that the LE point is at (0, 0).
+        x_te = (self.x()[0] + self.x()[-1]) / 2
+        y_te = (self.y()[0] + self.y()[-1]) / 2
+
+        distance_to_te = (
+                                 (self.x() - x_te) ** 2 +
+                                 (self.y() - y_te) ** 2
+                         ) ** 0.5
+
+        le_index = np.argmax(distance_to_te)
+
+        x_le = self.x()[le_index]
+        y_le = self.y()[le_index]
+
+        newfoil = self.translate(
+            translate_x=-x_le,
+            translate_y=-y_le,
+        )
+
+        ### Step 2: Scale so that the chord length is 1.
+        scale_factor = 1 / distance_to_te[le_index]
+
+        newfoil = newfoil.scale(
+            scale_x=scale_factor,
+            scale_y=scale_factor,
+        )
+
+        ### Step 3: Rotate so that the trailing edge is at (1, 0).
+
+        x_te = (newfoil.x()[0] + newfoil.x()[-1]) / 2
+        y_te = (newfoil.y()[0] + newfoil.y()[-1]) / 2
+
+        angle = np.arctan2(y_te, x_te)
+
+        newfoil = newfoil.rotate(
+            angle=-angle,
+        )
+
+        return newfoil
+
     def add_control_surface(
             self,
             deflection: float = 0.,
