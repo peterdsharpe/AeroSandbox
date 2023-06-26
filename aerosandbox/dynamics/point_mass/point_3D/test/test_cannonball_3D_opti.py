@@ -78,7 +78,7 @@ def get_trajectory(
 
     sol = opti.solve(verbose=verbose)
 
-    dyn.substitute_solution(sol)
+    dyn = sol(dyn)
 
     if plot:
         import matplotlib.pyplot as plt;

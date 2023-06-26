@@ -68,7 +68,7 @@ for i in range(len(masses)):
 
         sol = opti.solve()
         opti.set_initial(sol.value_variables())
-        beam_sol = copy.deepcopy(beam).substitute_solution(sol)
+        beam_sol = sol(beam)
 
         Spar_Masses[i, j] = beam_sol.mass
 

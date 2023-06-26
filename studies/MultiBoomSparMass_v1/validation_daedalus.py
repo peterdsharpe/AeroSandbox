@@ -44,7 +44,7 @@ except Exception:
 
 import copy
 
-beam_sol = copy.deepcopy(beam).substitute_solution(sol)
+beam_sol = sol(beam)
 
 print(f"Beam mass: {beam_sol.mass} kg")
 print(f"Wing spar mass: {2 * beam_sol.mass} kg (Wing spar consists of two of these beams)")

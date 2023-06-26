@@ -47,7 +47,7 @@ def test_block_move_fixed_time():
 
     sol = opti.solve()
 
-    dyn.substitute_solution(sol)
+    dyn = sol(dyn)
 
     assert dyn.x_e[0] == pytest.approx(0)
     assert dyn.x_e[-1] == pytest.approx(1)
@@ -99,7 +99,7 @@ def test_block_move_minimum_time():
 
     sol = opti.solve()
 
-    dyn.substitute_solution(sol)
+    dyn = sol(dyn)
 
     assert dyn.x_e[0] == pytest.approx(0)
     assert dyn.x_e[-1] == pytest.approx(1)

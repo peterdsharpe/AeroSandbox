@@ -70,7 +70,7 @@ opti.set_value(span, 40)
 
 sol = opti.solve()
 opti.set_initial(sol.value_variables())
-beam_sol = copy.deepcopy(beam).substitute_solution(sol)
+beam_sol = sol(beam)
 
 import matplotlib.pyplot as plt
 import seaborn as sns

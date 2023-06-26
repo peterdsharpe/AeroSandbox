@@ -61,7 +61,7 @@ def test_rocket():
     ### Solve
     sol = opti.solve(verbose=False)
     print(f"Solved in {sol.stats()['iter_count']} iterations.")
-    dyn.substitute_solution(sol)
+    dyn = sol(dyn)
 
     assert dyn.mass_props.mass[-1] == pytest.approx(290049.81034472014, rel=0.05)
     assert np.abs(dyn.w_e).max() == pytest.approx(1448, rel=0.05)

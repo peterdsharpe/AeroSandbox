@@ -62,7 +62,7 @@ s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
 opti.solver('ipopt', p_opts, s_opts)
 
 sol = opti.solve()
-beam_sol = copy.deepcopy(beam).substitute_solution(sol)
+beam_sol = sol(beam)
 
 spar_mass = beam_sol.mass * 2
 

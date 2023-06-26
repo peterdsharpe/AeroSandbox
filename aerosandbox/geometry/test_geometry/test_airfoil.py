@@ -96,7 +96,7 @@ def test_optimize_through_control_surface_deflections_for_CL():
 
     sol = opti.solve()
 
-    afd.substitute_solution(sol)
+    afd = sol(afd)
 
     afd.draw()
 

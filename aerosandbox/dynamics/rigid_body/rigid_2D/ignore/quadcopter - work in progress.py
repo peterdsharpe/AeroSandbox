@@ -56,7 +56,7 @@ def test_quadcopter_navigation():
     opti.minimize(effort)
 
     sol = opti.solve()
-    dyn.substitute_solution(sol)
+    dyn = sol(dyn)
 
     assert sol.value(effort) == pytest.approx(0.714563, rel=0.01)
 
@@ -112,7 +112,7 @@ def test_quadcopter_flip():
     opti.minimize(time_final)
 
     sol = opti.solve(verbose=False)
-    dyn.substitute_solution(sol)
+    dyn = sol(dyn)
 
     assert sol.value(time_final) == pytest.approx(0.824, abs=0.01)
 
