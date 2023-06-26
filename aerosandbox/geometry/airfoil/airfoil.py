@@ -943,7 +943,7 @@ class Airfoil(Polygon):
         upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
         lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
 
-        # Find distances between coordinates, assuming linear interpolation
+        # Find the streamwise distances between coordinates, assuming linear interpolation
         upper_distances_between_points = (
                                                  (upper_original_coors[:-1, 0] - upper_original_coors[1:, 0]) ** 2 +
                                                  (upper_original_coors[:-1, 1] - upper_original_coors[1:, 1]) ** 2
