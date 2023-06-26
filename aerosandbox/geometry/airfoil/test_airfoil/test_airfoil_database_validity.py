@@ -61,12 +61,22 @@ def check_validity(af: asb.Airfoil):
 
 def test_airfoil_database_validity():
     afs = get_airfoil_database()
+
+    failed_airfoils_and_errors = {}
+
     for af in afs:
         try:
             check_validity(af)
         except UserWarning as e:  # If a UserWarning is raised, print it and continue.
             print(e)
-        # If a ValueError is raised, let it propagate up to the test runner.
+        except ValueError as e:
+            failed_airfoils_and_errors[af.name] = e
+
+    if len(failed_airfoils_and_errors) > 0:
+        raise ValueError(
+            f"The following airfoils failed the validity test:\n"
+            "\n".join(f"{af_name}: {error}" for af_name, error in failed_airfoils_and_errors.items())
+        )
 
 
 if __name__ == '__main__':
