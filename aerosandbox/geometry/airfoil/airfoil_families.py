@@ -248,10 +248,8 @@ def get_coordinates_from_raw_dat(
         # Given a single line of a `*.dat` file, tries to parse it into a list of two floats [x, y].
         # If not possible, returns None.
         line_split = re.split(r'[;|,|\s|\t]', line)
-        line_items = [s for s in line_split
-                      if s != "" and is_number(s)
-                      ]
-        if len(line_items) == 2 and all([is_number(i) for i in line_items]):
+        line_items = [s for s in line_split if s != ""]
+        if len(line_items) == 2 and all([is_number(item) for item in line_items]):
             return line_items
         else:
             return None
