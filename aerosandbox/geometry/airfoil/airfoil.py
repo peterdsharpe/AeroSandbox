@@ -866,7 +866,7 @@ class Airfoil(Polygon):
         """
         Returns the index of the leading edge point in the airfoil coordinates.
         """
-        return np.argmin(self.x())
+        return int(np.argmin(self.x()))
 
     def lower_coordinates(self) -> np.ndarray:
         """
