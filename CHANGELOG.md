@@ -34,6 +34,9 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+- Lots of modifications to the airfoil database stored in `aerosandbox/geometry/airfoil/airfoil_database`. A few (<5) particularly unusable airfoils were removed. With many others (~50), airfoil coordinates were tweaked to prevent self-intersection (i.e., parts of the airfoil where the upper and lower surfaces cross each other). Generally, modifications were near the trailing edge, and on the lower surface when possible (less sensitive boundary layer), and no more than 0.1% of the chord. Several airfoils with duplicated coordinates had these removed. Several airfoils that were egregiously not normalized (e.g., scaled for x/c from 0 to 100, not 0 to 1) were rescaled appropriately.
+- Reworked the `asb.Airfoil.repanel()` method to use `scipy.interpolate.CubicSpline` rather than `PChipInterpolator`. This allows for more precise control over LE/TE boundary conditions, so that it is less likely (but not impossible) to produce self-intersecting geometries when repaneling very-low-resolution airfoils. Upsampled airfoils will be ever-so-slightly different, which may have miniscule but nonzero changes on existing code. Also rewrote code for better readability.
+
 -----
 
 # Latest (master / release), and previous versions

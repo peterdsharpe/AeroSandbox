@@ -934,58 +934,44 @@ class Airfoil(Polygon):
                 since one point (the leading edge point) is shared by both the upper and lower surfaces.
 
             spacing_function_per_side: Determines how to space the points on each side of the airfoil. Can be
-            `np.linspace` or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that returns
-            a spaced array of `n` points between `a` and `b`. [function]
+                `np.linspace` or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that returns
+                a spaced array of `n` points between `a` and `b`. [function]
 
         Returns: A copy of the airfoil with the new coordinates.
         """
 
-        upper_original_coors = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
-        lower_original_coors = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
+        old_upper_coordinates = self.upper_coordinates()  # Note: includes leading edge point, be careful about duplicates
+        old_lower_coordinates = self.lower_coordinates()  # Note: includes leading edge point, be careful about duplicates
 
         # Find the streamwise distances between coordinates, assuming linear interpolation
-        upper_distances_between_points = (
-                                                 (upper_original_coors[:-1, 0] - upper_original_coors[1:, 0]) ** 2 +
-                                                 (upper_original_coors[:-1, 1] - upper_original_coors[1:, 1]) ** 2
-                                         ) ** 0.5
-        lower_distances_between_points = (
-                                                 (lower_original_coors[:-1, 0] - lower_original_coors[1:, 0]) ** 2 +
-                                                 (lower_original_coors[:-1, 1] - lower_original_coors[1:, 1]) ** 2
-                                         ) ** 0.5
-        upper_distances_from_TE = np.hstack((0, np.cumsum(upper_distances_between_points)))
-        lower_distances_from_LE = np.hstack((0, np.cumsum(lower_distances_between_points)))
-        upper_distances_from_TE_normalized = upper_distances_from_TE / upper_distances_from_TE[-1]
-        lower_distances_from_LE_normalized = lower_distances_from_LE / lower_distances_from_LE[-1]
+        upper_distances_between_points = np.linalg.norm(np.diff(old_upper_coordinates, axis=0), axis=1)
+        lower_distances_between_points = np.linalg.norm(np.diff(old_lower_coordinates, axis=0), axis=1)
+        upper_distances_from_TE = np.concatenate(([0], np.cumsum(upper_distances_between_points)))
+        lower_distances_from_LE = np.concatenate(([0], np.cumsum(lower_distances_between_points)))
 
-        distances_from_TE_normalized = np.hstack((
-            upper_distances_from_TE_normalized,
-            1 + lower_distances_from_LE_normalized[1:]
-        ))
+        new_upper_coordinates = interpolate.CubicSpline(
+            x=upper_distances_from_TE,
+            y=old_upper_coordinates,
+            axis=0,
+            bc_type=(
+                (2, (0, 0)),
+                (1, (0, -1)),
+            )
+        )(spacing_function_per_side(0, upper_distances_from_TE[-1], n_points_per_side))
 
-        # Generate a cosine-spaced list of points from 0 to 1
-        spaced_points = spacing_function_per_side(0, 1, n_points_per_side)
-        s = np.hstack((
-            spaced_points,
-            1 + spaced_points[1:],
-        ))
-
-        # Check that there are no duplicate points in the airfoil.
-        if np.any(np.diff(distances_from_TE_normalized) == 0):
-            raise ValueError(
-                "This airfoil has a duplicated point (i.e. two adjacent points with the same (x, y) coordinates), so you can't repanel it!")
-
-        x = interpolate.PchipInterpolator(
-            distances_from_TE_normalized,
-            self.x(),
-        )(s)
-        y = interpolate.PchipInterpolator(
-            distances_from_TE_normalized,
-            self.y(),
-        )(s)
+        new_lower_coordinates = interpolate.CubicSpline(
+            x=lower_distances_from_LE,
+            y=old_lower_coordinates,
+            axis=0,
+            bc_type=(
+                (1, (0, -1)),
+                (2, (0, 0)),
+            )
+        )(spacing_function_per_side(0, lower_distances_from_LE[-1], n_points_per_side))
 
         return Airfoil(
             name=self.name,
-            coordinates=np.stack((x, y), axis=1),
+            coordinates=np.concatenate((new_upper_coordinates, new_lower_coordinates[1:, :]), axis=0),
             CL_function=self.CL_function,
             CD_function=self.CD_function,
             CM_function=self.CM_function,
