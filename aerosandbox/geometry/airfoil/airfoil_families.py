@@ -3,7 +3,7 @@ from scipy.special import comb
 import re
 from typing import Union
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 _default_n_points_per_side = 200
 
@@ -138,6 +138,8 @@ def get_kulfan_coordinates(
     """
     Given a set of Kulfan parameters, computes the coordinates of the resulting airfoil.
 
+    This function is the inverse of `get_kulfan_parameters()`.
+
     Kulfan parameters are a highly-efficient and flexible way to parameterize the shape of an airfoil. The particular
     flavor of Kulfan parameterization used in AeroSandbox is the "CST with LEM" method, which is described in various
     papers linked below. In total, the Kulfan parameterization consists of:
@@ -159,13 +161,14 @@ def get_kulfan_coordinates(
             * https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
 
     * Kulfan, Brenda "Modification of CST Airfoil Representation Methodology" (2020). Unpublished note:
-        Describes the optional "Leading Edge Modification" (LEM) addition to the Kulfan (CST) airfoil parameterization.
+        Describes the optional "Leading-Edge Modification" (LEM) addition to the Kulfan (CST) airfoil parameterization.
         Mirrors:
             * https://www.brendakulfan.com/_files/ugd/169bff_16a868ad06af4fea946d299c6028fb13.pdf
             * https://www.researchgate.net/publication/343615711_Modification_of_CST_Airfoil_Representation_Methodology
 
     * Masters, D.A. "Geometric Comparison of Aerofoil Shape Parameterization Methods" (2017). AIAA Journal.
-        Compares the Kulfan (CST) airfoil parameterization to other airfoil parameterizations.
+        Compares the Kulfan (CST) airfoil parameterization to other airfoil parameterizations. Also has further notes
+        on the LEM addition.
         Mirrors:
             * https://arc.aiaa.org/doi/10.2514/1.J054943
             * https://research-information.bris.ac.uk/ws/portalfiles/portal/91793513/SP_Journal_RED.pdf
@@ -194,9 +197,9 @@ def get_kulfan_coordinates(
 
         n_points_per_side (int): The number of points to discretize with, when generating the coordinates.
 
-        N1 (float): LE shape factor. See notes above.
+        N1 (float): The shape factor corresponding to the leading edge of the airfoil. See above for examples.
 
-        N2 (float): TE shape factor. See notes above.
+        N2 (float): The shape factor corresponding to the trailing edge of the airfoil. See above for examples.
 
     Returns:
         np.ndarray: The coordinates of the airfoil as a Nx2 array.
@@ -257,6 +260,181 @@ def get_kulfan_coordinates(
     coordinates = np.stack((x, y), axis=1)
 
     return coordinates
+
+
+def get_kulfan_parameters(
+        coordinates: np.ndarray,
+        n_weights_per_side: int = 10,
+        N1: float = 0.5,
+        N2: float = 1.0,
+        n_points_per_side: int = _default_n_points_per_side,
+        normalize: bool = True,
+) -> Dict[str, Union[np.ndarray, float]]:
+    """
+    Given a set of airfoil coordinates, reconstructs the Kulfan parameters that would recreate that airfoil. Uses a
+    curve fitting (optimization) process.
+
+    This function is the inverse of `get_kulfan_coordinates()`.
+
+    Kulfan parameters are a highly-efficient and flexible way to parameterize the shape of an airfoil. The particular
+    flavor of Kulfan parameterization used in AeroSandbox is the "CST with LEM" method, which is described in various
+    papers linked below. In total, the Kulfan parameterization consists of:
+
+    * A vector of weights corresponding to the lower surface of the airfoil
+    * A vector of weights corresponding to the upper surface of the airfoil
+    * A scalar weight corresponding to the strength of a leading-edge camber mode shape of the airfoil (optional)
+    * The trailing-edge (TE) thickness of the airfoil (optional)
+
+    These Kulfan parameters are also referred to as CST (Class/Shape Transformation) parameters.
+
+    References on Kulfan (CST) airfoils:
+
+    * Kulfan, Brenda "Universal Parametric Geometry Representation Method" (2008). AIAA Journal of Aircraft.
+        Describes the basic Kulfan (CST) airfoil parameterization.
+        Mirrors:
+            * https://arc.aiaa.org/doi/10.2514/1.29958
+            * https://www.brendakulfan.com/_files/ugd/169bff_6738e0f8d9074610942c53dfaea8e30c.pdf
+            * https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
+
+    * Kulfan, Brenda "Modification of CST Airfoil Representation Methodology" (2020). Unpublished note:
+        Describes the optional "Leading-Edge Modification" (LEM) addition to the Kulfan (CST) airfoil parameterization.
+        Mirrors:
+            * https://www.brendakulfan.com/_files/ugd/169bff_16a868ad06af4fea946d299c6028fb13.pdf
+            * https://www.researchgate.net/publication/343615711_Modification_of_CST_Airfoil_Representation_Methodology
+
+    * Masters, D.A. "Geometric Comparison of Aerofoil Shape Parameterization Methods" (2017). AIAA Journal.
+        Compares the Kulfan (CST) airfoil parameterization to other airfoil parameterizations. Also has further notes
+        on the LEM addition.
+        Mirrors:
+            * https://arc.aiaa.org/doi/10.2514/1.J054943
+            * https://research-information.bris.ac.uk/ws/portalfiles/portal/91793513/SP_Journal_RED.pdf
+
+    Notes on N1, N2 (shape factor) combinations:
+        * 0.5, 1: Conventional airfoil
+        * 0.5, 0.5: Elliptic airfoil
+        * 1, 1: Biconvex airfoil
+        * 0.75, 0.75: Sears-Haack body (radius distribution)
+        * 0.75, 0.25: Low-drag projectile
+        * 1, 0.001: Cone or wedge airfoil
+        * 0.001, 0.001: Rectangle, circular duct, or circular rod.
+
+    The following demonstrates the reversibility of this function:
+
+    >>> import aerosandbox as asb
+    >>> from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
+    >>>
+    >>> af = asb.Airfoil("dae11")  # A conventional airfoil
+    >>> params = get_kulfan_parameters(
+    >>>     coordinates=af.coordinates,
+    >>> )
+    >>> af_reconstructed = asb.Airfoil(
+    >>>     name="Reconstructed Airfoil",
+    >>>     coordinates=get_kulfan_coordinates(
+    >>>         **params
+    >>>     )
+
+    Args:
+
+        coordinates (np.ndarray): The coordinates of the airfoil as a Nx2 array.
+
+        n_weights_per_side (int): The number of Kulfan weights to use per side of the airfoil.
+
+        N1 (float): The shape factor corresponding to the leading edge of the airfoil. See above for examples.
+
+        N2 (float): The shape factor corresponding to the trailing edge of the airfoil. See above for examples.
+
+        n_points_per_side (int): The number of points to discretize with, when formulating the curve-fitting
+            optimization problem.
+
+    Returns:
+        A dictionary containing the Kulfan parameters. The keys are:
+            * "lower_weights" (np.ndarray): The weights corresponding to the lower surface of the airfoil.
+            * "upper_weights" (np.ndarray): The weights corresponding to the upper surface of the airfoil.
+            * "TE_thickness" (float): The trailing-edge thickness of the airfoil.
+            * "leading_edge_weight" (float): The strength of the leading-edge camber mode shape of the airfoil.
+
+        These can be passed directly into `get_kulfan_coordinates()` to reconstruct the airfoil.
+    """
+
+    from airfoil import Airfoil
+
+    target_airfoil = Airfoil(
+        name="Target Airfoil",
+        coordinates=coordinates
+    )
+
+    if normalize:
+        target_airfoil = target_airfoil.normalize()
+
+    import aerosandbox.numpy as np
+
+    x = np.cosspace(0, 1, n_points_per_side)
+    target_thickness = target_airfoil.local_thickness(x_over_c=x)
+    target_camber = target_airfoil.local_camber(x_over_c=x)
+
+    target_y_upper = target_camber + target_thickness / 2
+    target_y_lower = target_camber - target_thickness / 2
+
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
+
+    # Class function
+    C = (x) ** N1 * (1 - x) ** N2
+
+    def shape_function(w):
+        # Shape function (Bernstein polynomials)
+        n = np.length(w) - 1  # Order of Bernstein polynomials
+
+        K = comb(n, np.arange(n + 1))  # Bernstein polynomial coefficients
+
+        dims = (np.length(x), np.length(w))
+
+        def wide(vector):
+            return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
+
+        def tall(vector):
+            return np.tile(vector.reshape((dims[0], 1)), (1, dims[1]))
+
+        S_matrix = (
+                wide(w * K) * tall(x) ** wide(np.arange(n + 1)) *
+                tall(1 - x) ** wide(n - np.arange(n + 1))
+        )  # Bernstein polynomial coefficients * weight matrix
+        S = np.sum(S_matrix, axis=1)
+
+        # Calculate y output
+        y = C * S
+        return y
+
+    opti = asb.Opti()
+    lower_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
+    upper_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
+    TE_thickness = opti.variable(init_guess=0, lower_bound=0)
+    leading_edge_weight = opti.variable(init_guess=0)
+
+    y_lower = shape_function(lower_weights)
+    y_upper = shape_function(upper_weights)
+
+    # Add trailing-edge (TE) thickness
+    y_lower -= x * TE_thickness / 2
+    y_upper += x * TE_thickness / 2
+
+    # Add Kulfan's leading-edge-modification (LEM)
+    y_lower += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(lower_weights) - 1.5)
+    y_upper += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(upper_weights) - 1.5)
+
+    opti.minimize(
+        np.sum((y_lower - target_y_lower) ** 2) +
+        np.sum((y_upper - target_y_upper) ** 2)
+    )
+
+    sol = opti.solve()
+
+    return {
+        "lower_weights"      : sol.value(lower_weights),
+        "upper_weights"      : sol.value(upper_weights),
+        "TE_thickness"       : sol.value(TE_thickness),
+        "leading_edge_weight": sol.value(leading_edge_weight),
+    }
 
 
 def get_coordinates_from_raw_dat(
@@ -359,3 +537,24 @@ def get_UIUC_coordinates(
             ) from e
 
     return get_coordinates_from_raw_dat(raw_text)
+
+
+if __name__ == '__main__':
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
+
+    # af = asb.Airfoil("dae11")
+    af = asb.Airfoil(
+        coordinates=get_kulfan_coordinates(
+            lower_weights=np.array([-0.2, -0.2, -0.1]),
+            upper_weights=np.array([0.2, 0.2, 0.1]),
+            leading_edge_weight=0.05,
+        )
+    )
+    af.draw(backend="plotly")
+
+    kulfan_params = get_kulfan_parameters(
+        coordinates=af.coordinates,
+        n_weights_per_side=3,
+        # callback_plot_interval=1000,
+    )
