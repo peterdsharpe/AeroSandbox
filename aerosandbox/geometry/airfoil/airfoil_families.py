@@ -361,6 +361,8 @@ def get_kulfan_parameters(
     target_airfoil = Airfoil(
         name="Target Airfoil",
         coordinates=coordinates
+    ).repanel(
+        n_points_per_side=n_points_per_side
     )
 
     if normalize:
@@ -545,7 +547,7 @@ if __name__ == '__main__':
     import aerosandbox as asb
     import aerosandbox.numpy as np
 
-    af = asb.Airfoil("dae11").normalize().repanel(500)
+    af = asb.Airfoil("e377").normalize()
     af.draw(backend="plotly")
 
     kulfan_params = get_kulfan_parameters(
