@@ -17,7 +17,17 @@ def get_airfoil_database() -> List[asb.Airfoil]:
     return afs
 
 
-def check_validity(af: asb.Airfoil):
+def check_validity(af: asb.Airfoil) -> None:
+    """
+    Checks whether a given Airfoil is valid.
+
+    If the Airfoil is valid, does nothing (returns None).
+
+    If it's egregiously invalid, raises a ValueError.
+
+    If it's valid, but strange enough to warrant human review to double-check it, raises a UserWarning.
+
+    """
     if af.n_points() < 4:
         raise ValueError(f"Airfoil {af.name} has too few points (n_points = {af.n_points()})!")
 
@@ -48,15 +58,38 @@ def check_validity(af: asb.Airfoil):
     if af.y().min() < -0.5:
         raise UserWarning(f"Airfoil {af.name} has unusually low y_min (y_min = {af.y().min()})!")
 
+    ## Check for any duplicate points
     ds = np.linalg.norm(np.diff(af.coordinates, axis=0), axis=1)
+
+    if np.any(ds <= 0):
+        raise ValueError(f"Airfoil {af.name} has duplicate points (index = {np.argmin(ds)})!")
 
     if ds.max() > 0.8:
         raise UserWarning(f"Airfoil {af.name} has unusually large ds_max (ds_max = {ds.max()})!")
 
+    ## Check for any negative thickness regions
     x_thicknesses = np.linspace(af.x().min(), af.x().max(), 501)
     thicknesses = af.local_thickness(x_over_c=x_thicknesses)
     if np.any(thicknesses < 0):
         raise ValueError(f"Airfoil {af.name} has negative thickness @ x = {x_thicknesses[np.argmin(thicknesses)]}!")
+
+    ### Make sure the TE thickness is nonnegative
+    if af.TE_thickness() < 0:
+        raise ValueError(f"Airfoil {af.name} has negative trailing edge thickness {af.TE_thickness()}!")
+
+    ### Make sure the TE angle is not exactly zero, or negative, if the TE thickness is zero.
+    if af.TE_thickness() <= 0:
+        if af.TE_angle() <= 0:
+            raise ValueError(f"Airfoil {af.name} has trailing edge angle {af.TE_angle()}!")
+
+    ### See if Shapely has any complaints
+    try:
+        import shapely
+        if not af.as_shapely_polygon().is_valid:
+            raise ValueError(f"Airfoil {af.name} is not a valid Shapely polygon!")
+
+    except ImportError:
+        pass
 
 
 def test_airfoil_database_validity():
@@ -79,6 +112,17 @@ def test_airfoil_database_validity():
         )
 
 
+def debug_draw(af: asb.Airfoil):
+    if isinstance(af, str):
+        af = asb.Airfoil(af)
+
+    af.draw(
+        draw_mcl=False, backend='plotly', show=False
+    ).update_layout(
+        yaxis=dict(scaleanchor=None)
+    ).show()
+
+
 if __name__ == '__main__':
 
     afs = get_airfoil_database()
@@ -89,4 +133,4 @@ if __name__ == '__main__':
             print(e)
             af.draw()
 
-    pytest.main()
+    # pytest.main()
