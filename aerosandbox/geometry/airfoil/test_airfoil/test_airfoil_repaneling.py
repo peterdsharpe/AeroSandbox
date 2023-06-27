@@ -19,7 +19,7 @@ def get_airfoil_database() -> List[asb.Airfoil]:
 def test_repaneling_validity():
     try:
         import shapely
-    except IndexError:
+    except ModuleNotFoundError:
         pytest.skip("Shapely not installed; skipping this test.")
 
     afs = get_airfoil_database()
