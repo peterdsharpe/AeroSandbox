@@ -312,18 +312,16 @@ def get_UIUC_coordinates(
 
     Returns: The coordinates of the airfoil as a Nx2 ndarray [x, y]
     """
+    from aerosandbox import _asb_root
 
-    name = name.lower().strip()
-
-    import importlib.resources
-    from aerosandbox.geometry.airfoil import airfoil_database
+    airfoil_database_root = _asb_root / "geometry" / "airfoil" / "airfoil_database"
 
     try:
-        with importlib.resources.open_text(airfoil_database, name) as f:
+        with open(airfoil_database_root / name) as f:
             raw_text = f.readlines()
     except FileNotFoundError as e:
         try:
-            with importlib.resources.open_text(airfoil_database, name + '.dat') as f:
+            with open(airfoil_database_root / f"{name}.dat") as f:
                 raw_text = f.readlines()
         except FileNotFoundError as e:
             raise FileNotFoundError(
