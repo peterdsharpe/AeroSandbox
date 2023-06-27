@@ -332,7 +332,7 @@ class XFoil(ExplicitAnalysis):
                     for column in columns
                 }
 
-            except FileNotFoundError:
+            except (FileNotFoundError, IndexError):
                 raise FileNotFoundError(
                     "It appears XFoil didn't produce an output file, probably because it crashed.\n"
                     "To troubleshoot, try some combination of the following:\n"
