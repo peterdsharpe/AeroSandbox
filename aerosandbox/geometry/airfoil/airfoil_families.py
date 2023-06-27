@@ -136,10 +136,39 @@ def get_kulfan_coordinates(
         **deprecated_kwargs
 ) -> np.ndarray:
     """
-    Calculates the coordinates of a Kulfan (CST) airfoil, given its weights.
+    Given a set of Kulfan parameters, computes the coordinates of the resulting airfoil.
 
-    More on Kulfan (CST) airfoils: http://brendakulfan.com/docs/CST2.pdf
-    Mirror: https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
+    Kulfan parameters are a highly-efficient and flexible way to parameterize the shape of an airfoil. The particular
+    flavor of Kulfan parameterization used in AeroSandbox is the "CST with LEM" method, which is described in various
+    papers linked below. In total, the Kulfan parameterization consists of:
+
+    * A vector of weights corresponding to the lower surface of the airfoil
+    * A vector of weights corresponding to the upper surface of the airfoil
+    * A scalar weight corresponding to the strength of a leading-edge camber mode shape of the airfoil (optional)
+    * The trailing-edge (TE) thickness of the airfoil (optional)
+
+    These Kulfan parameters are also referred to as CST (Class/Shape Transformation) parameters.
+
+    References on Kulfan (CST) airfoils:
+
+    * Kulfan, Brenda "Universal Parametric Geometry Representation Method" (2008). AIAA Journal of Aircraft.
+        Describes the basic Kulfan (CST) airfoil parameterization.
+        Mirrors:
+            * https://arc.aiaa.org/doi/10.2514/1.29958
+            * https://www.brendakulfan.com/_files/ugd/169bff_6738e0f8d9074610942c53dfaea8e30c.pdf
+            * https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
+
+    * Kulfan, Brenda "Modification of CST Airfoil Representation Methodology" (2020). Unpublished note:
+        Describes the optional "Leading Edge Modification" (LEM) addition to the Kulfan (CST) airfoil parameterization.
+        Mirrors:
+            * https://www.brendakulfan.com/_files/ugd/169bff_16a868ad06af4fea946d299c6028fb13.pdf
+            * https://www.researchgate.net/publication/343615711_Modification_of_CST_Airfoil_Representation_Methodology
+
+    * Masters, D.A. "Geometric Comparison of Aerofoil Shape Parameterization Methods" (2017). AIAA Journal.
+        Compares the Kulfan (CST) airfoil parameterization to other airfoil parameterizations.
+        Mirrors:
+            * https://arc.aiaa.org/doi/10.2514/1.J054943
+            * https://research-information.bris.ac.uk/ws/portalfiles/portal/91793513/SP_Journal_RED.pdf
 
     Notes on N1, N2 (shape factor) combinations:
         * 0.5, 1: Conventional airfoil
@@ -156,6 +185,7 @@ def get_kulfan_coordinates(
     >>> asb.Airfoil("My Airfoil Name", coordinates=asb.get_kulfan_coordinates(*args))
 
     Args:
+
         lower_weights (iterable): The Kulfan weights to use for the lower surface.
 
         upper_weights (iterable): The Kulfan weights to use for the upper surface.
