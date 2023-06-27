@@ -427,7 +427,9 @@ def get_kulfan_parameters(
         np.sum((y_upper - target_y_upper) ** 2)
     )
 
-    sol = opti.solve()
+    sol = opti.solve(
+        verbose=False
+    )
 
     return {
         "lower_weights"      : sol.value(lower_weights),
@@ -543,18 +545,20 @@ if __name__ == '__main__':
     import aerosandbox as asb
     import aerosandbox.numpy as np
 
-    # af = asb.Airfoil("dae11")
-    af = asb.Airfoil(
-        coordinates=get_kulfan_coordinates(
-            lower_weights=np.array([-0.2, -0.2, -0.1]),
-            upper_weights=np.array([0.2, 0.2, 0.1]),
-            leading_edge_weight=0.05,
-        )
-    )
+    af = asb.Airfoil("dae11").normalize().repanel(500)
     af.draw(backend="plotly")
 
     kulfan_params = get_kulfan_parameters(
         coordinates=af.coordinates,
-        n_weights_per_side=3,
-        # callback_plot_interval=1000,
+        n_weights_per_side=10,
     )
+
+    af_reconstructed = asb.Airfoil(
+        name="Reconstructed DAE11",
+        coordinates=get_kulfan_coordinates(
+            **kulfan_params
+        ),
+    )
+    af_reconstructed.draw(backend="plotly")
+
+    print(af.jaccard_similarity(af_reconstructed))
