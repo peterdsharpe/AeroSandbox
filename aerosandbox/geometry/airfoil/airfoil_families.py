@@ -356,7 +356,7 @@ def get_kulfan_parameters(
         These can be passed directly into `get_kulfan_coordinates()` to reconstruct the airfoil.
     """
 
-    from airfoil import Airfoil
+    from aerosandbox.geometry.airfoil import Airfoil
 
     target_airfoil = Airfoil(
         name="Target Airfoil",
