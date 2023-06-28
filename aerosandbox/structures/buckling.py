@@ -126,6 +126,7 @@ def plate_buckling_critical_load(
         width: float,
         wall_thickness: float,
         elastic_modulus: float,
+        poissons_ratio: float = 0.33,
         side_boundary_condition_type: str = "clamp-clamp",
 ):
     """
@@ -139,6 +140,11 @@ def plate_buckling_critical_load(
     A compressive force is applied such that it is aligned with the length dimension of the plate.
 
     Uses constants from NACA TN3781.
+
+    Methdology taken from "Stress Analysis Manual," Air Force Flight Dynamic Laboratory, Oct. 1986.
+    Section 6.3: Axial Compression of Flat Plates
+    Reproduced at "Engineering Library":
+    https://engineeringlibrary.org/reference/analysis-of-plates-axial-compression-air-force-stress-manual
 
     Args:
         length: The length of the plate, in m.
@@ -168,10 +174,10 @@ def plate_buckling_critical_load(
     else:
         raise ValueError("Invalid `side_boundary_condition_type`.")
 
-    critical_buckling_stress = K * elastic_modulus * (wall_thickness / width) ** 2
-
-    plate_xsec_area = wall_thickness * width
-
-    critical_buckling_load = critical_buckling_stress * plate_xsec_area
+    critical_buckling_load = (
+            K * np.pi ** 2 * elastic_modulus /
+            (12 * (1 - poissons_ratio ** 2)) *
+            wall_thickness ** 3 / width
+    )
 
     return critical_buckling_load
