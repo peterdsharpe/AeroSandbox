@@ -118,7 +118,7 @@ class MassProperties(AeroSandboxObject):
             f"                        [{fmt(self.Ixz)}, {fmt(self.Iyz)}, {fmt(self.Izz)}]",
         ])
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> "MassProperties":
         def get_item_of_attribute(a):
             if np.isscalar(a):  # If NumPy says its a scalar, return it.
                 return a
@@ -150,13 +150,16 @@ class MassProperties(AeroSandboxObject):
             }
         )
 
-    def __neg__(self):
+    def __neg__(self) -> "MassProperties":
         return -1 * self
 
     def __add__(self, other: "MassProperties") -> "MassProperties":
         """
         Combines one MassProperties object with another.
         """
+        if not isinstance(other, MassProperties):
+            raise TypeError("MassProperties objects can only be added to other MassProperties objects.")
+
         total_mass = self.mass + other.mass
         total_x_cg = (self.mass * self.x_cg + other.mass * other.x_cg) / total_mass
         total_y_cg = (self.mass * self.y_cg + other.mass * other.y_cg) / total_mass
@@ -195,7 +198,7 @@ class MassProperties(AeroSandboxObject):
             Ixz=total_inertia_tensor_elements[5],
         )
 
-    def __radd__(self, other):
+    def __radd__(self, other: "MassProperties") -> "MassProperties":
         """
         Allows sum() to work with MassProperties objects.
 
@@ -210,43 +213,7 @@ class MassProperties(AeroSandboxObject):
         """
         Subtracts one MassProperties object from another. (opposite of __add__() )
         """
-        new_mass = self.mass - other.mass
-        new_x_cg = (self.x_cg * self.mass - other.x_cg * other.mass) / (self.mass - other.mass)
-        new_y_cg = (self.y_cg * self.mass - other.y_cg * other.mass) / (self.mass - other.mass)
-        new_z_cg = (self.z_cg * self.mass - other.z_cg * other.mass) / (self.mass - other.mass)
-        self_inertia_tensor_elements = self.get_inertia_tensor_about_point(
-            x=new_x_cg,
-            y=new_y_cg,
-            z=new_z_cg,
-            return_tensor=False
-        )
-        other_inertia_tensor_elements = other.get_inertia_tensor_about_point(
-            x=new_x_cg,
-            y=new_y_cg,
-            z=new_z_cg,
-            return_tensor=False
-        )
-
-        new_inertia_tensor_elements = [
-            I__ - J__
-            for I__, J__ in zip(
-                self_inertia_tensor_elements,
-                other_inertia_tensor_elements
-            )
-        ]
-
-        return MassProperties(
-            mass=new_mass,
-            x_cg=new_x_cg,
-            y_cg=new_y_cg,
-            z_cg=new_z_cg,
-            Ixx=new_inertia_tensor_elements[0],
-            Iyy=new_inertia_tensor_elements[1],
-            Izz=new_inertia_tensor_elements[2],
-            Ixy=new_inertia_tensor_elements[3],
-            Iyz=new_inertia_tensor_elements[4],
-            Ixz=new_inertia_tensor_elements[5],
-        )
+        return self.__add__(-other)
 
     def __mul__(self, other: float) -> "MassProperties":
         """
@@ -268,7 +235,7 @@ class MassProperties(AeroSandboxObject):
 
     def __rmul__(self, other: float) -> "MassProperties":
         """
-        Allows multiplication of a scalar by a MassProperties object.
+        Allows multiplication of a scalar by a MassProperties object. Makes multiplication commutative.
         """
         return self.__mul__(other)
 
@@ -283,6 +250,9 @@ class MassProperties(AeroSandboxObject):
         """
         Returns True if all expected attributes of the two MassProperties objects are exactly equal.
         """
+        if not isinstance(other, MassProperties):
+            raise TypeError("MassProperties objects can only be compared to other MassProperties objects.")
+
         return all([
             getattr(self, attribute) == getattr(other, attribute)
             for attribute in [
