@@ -126,8 +126,8 @@ def get_NACA_coordinates(
 
 
 def get_kulfan_coordinates(
-        lower_weights: np.ndarray = -0.2 * np.ones(10),
-        upper_weights: np.ndarray = 0.2 * np.ones(10),
+        lower_weights: np.ndarray = -0.2 * np.ones(8),
+        upper_weights: np.ndarray = 0.2 * np.ones(8),
         leading_edge_weight: float = 0.,
         TE_thickness: float = 0.,
         n_points_per_side: int = _default_n_points_per_side,
@@ -264,7 +264,7 @@ def get_kulfan_coordinates(
 
 def get_kulfan_parameters(
         coordinates: np.ndarray,
-        n_weights_per_side: int = 10,
+        n_weights_per_side: int = 8,
         N1: float = 0.5,
         N2: float = 1.0,
         n_points_per_side: int = _default_n_points_per_side,
@@ -556,15 +556,16 @@ if __name__ == '__main__':
 
     kulfan_params = get_kulfan_parameters(
         coordinates=af.coordinates,
-        n_weights_per_side=10,
+        n_weights_per_side=8,
     )
 
     af_reconstructed = asb.Airfoil(
-        name="Reconstructed DAE11",
+        name="Reconstructed Airfoil",
         coordinates=get_kulfan_coordinates(
             **kulfan_params
         ),
     )
     af_reconstructed.draw(backend="plotly")
 
+    print(kulfan_params)
     print(af.jaccard_similarity(af_reconstructed))
