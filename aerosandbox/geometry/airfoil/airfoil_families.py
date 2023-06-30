@@ -268,7 +268,8 @@ def get_kulfan_parameters(
         N1: float = 0.5,
         N2: float = 1.0,
         n_points_per_side: int = _default_n_points_per_side,
-        normalize: bool = True,
+        normalize_coordinates: bool = True,
+        use_leading_edge_modification: bool = True,
 ) -> Dict[str, Union[np.ndarray, float]]:
     """
     Given a set of airfoil coordinates, reconstructs the Kulfan parameters that would recreate that airfoil. Uses a
@@ -365,7 +366,7 @@ def get_kulfan_parameters(
         n_points_per_side=n_points_per_side
     )
 
-    if normalize:
+    if normalize_coordinates:
         target_airfoil = target_airfoil.normalize()
 
     import aerosandbox.numpy as np
@@ -411,7 +412,10 @@ def get_kulfan_parameters(
     lower_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
     upper_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
     TE_thickness = opti.variable(init_guess=0, lower_bound=0)
-    leading_edge_weight = opti.variable(init_guess=0)
+    if use_leading_edge_modification:
+        leading_edge_weight = opti.variable(init_guess=0)
+    else:
+        leading_edge_weight = 0
 
     y_lower = shape_function(lower_weights)
     y_upper = shape_function(upper_weights)
