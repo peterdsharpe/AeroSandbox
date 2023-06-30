@@ -329,7 +329,7 @@ def contour(
                 ))
             else:
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
-                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(100)))
+                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(100) / 10))
                 cbar.ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
                 cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
@@ -350,7 +350,7 @@ if __name__ == '__main__':
     y = np.linspace(0, 1, 100)
     X, Y = np.meshgrid(x, y)
 
-    Z_ratio = 8
+    Z_ratio = 1
 
     Z = 10 ** (
             Z_ratio / 2 * np.cos(
