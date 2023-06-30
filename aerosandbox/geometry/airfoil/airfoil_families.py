@@ -252,8 +252,8 @@ def get_kulfan_coordinates(
     y_upper += x * TE_thickness / 2
 
     # Add Kulfan's leading-edge-modification (LEM)
-    y_lower += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(lower_weights) - 1.5)
-    y_upper += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(upper_weights) - 1.5)
+    y_lower += leading_edge_weight * (x) * (1 - x) ** (np.length(lower_weights) + 0.5)
+    y_upper += leading_edge_weight * (x) * (1 - x) ** (np.length(upper_weights) + 0.5)
 
     x = np.concatenate((x[::-1], x[1:]))
     y = np.concatenate((y_upper[::-1], y_lower[1:]))
@@ -421,8 +421,8 @@ def get_kulfan_parameters(
     y_upper += x * TE_thickness / 2
 
     # Add Kulfan's leading-edge-modification (LEM)
-    y_lower += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(lower_weights) - 1.5)
-    y_upper += leading_edge_weight * (x ** 0.5) * (1 - x) ** (np.length(upper_weights) - 1.5)
+    y_lower += leading_edge_weight * (x) * (1 - x) ** (np.length(lower_weights) + 0.5)
+    y_upper += leading_edge_weight * (x) * (1 - x) ** (np.length(upper_weights) + 0.5)
 
     opti.minimize(
         np.sum((y_lower - target_y_lower) ** 2) +
