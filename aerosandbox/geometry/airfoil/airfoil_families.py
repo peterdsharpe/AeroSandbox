@@ -222,11 +222,11 @@ def get_kulfan_coordinates(
 
     def shape_function(w):
         # Shape function (Bernstein polynomials)
-        n = np.length(w) - 1  # Order of Bernstein polynomials
+        N = np.length(w) - 1  # Order of Bernstein polynomials
 
-        K = comb(n, np.arange(n + 1))  # Bernstein polynomial coefficients
+        K = comb(N, np.arange(N + 1))  # Bernstein polynomial coefficients
 
-        dims = (np.length(x), np.length(w))
+        dims = (np.length(w), np.length(x))
 
         def wide(vector):
             return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
@@ -235,13 +235,13 @@ def get_kulfan_coordinates(
             return np.tile(vector.reshape((dims[0], 1)), (1, dims[1]))
 
         S_matrix = (
-                wide(w * K) * tall(x) ** wide(np.arange(n + 1)) *
-                tall(1 - x) ** wide(n - np.arange(n + 1))
+                tall(K) * wide(x) ** tall(np.arange(N + 1)) *
+                wide(1 - x) ** tall(N - np.arange(N + 1))
         )  # Bernstein polynomial coefficients * weight matrix
-        S = np.sum(S_matrix, axis=1)
+        S_x = np.sum(tall(w) * S_matrix, axis=0)
 
         # Calculate y output
-        y = C * S
+        y = C * S_x
         return y
 
     y_lower = shape_function(lower_weights)
@@ -385,11 +385,11 @@ def get_kulfan_parameters(
 
     def shape_function(w):
         # Shape function (Bernstein polynomials)
-        n = np.length(w) - 1  # Order of Bernstein polynomials
+        N = np.length(w) - 1  # Order of Bernstein polynomials
 
-        K = comb(n, np.arange(n + 1))  # Bernstein polynomial coefficients
+        K = comb(N, np.arange(N + 1))  # Bernstein polynomial coefficients
 
-        dims = (np.length(x), np.length(w))
+        dims = (np.length(w), np.length(x))
 
         def wide(vector):
             return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
@@ -398,13 +398,13 @@ def get_kulfan_parameters(
             return np.tile(vector.reshape((dims[0], 1)), (1, dims[1]))
 
         S_matrix = (
-                wide(w * K) * tall(x) ** wide(np.arange(n + 1)) *
-                tall(1 - x) ** wide(n - np.arange(n + 1))
+                tall(K) * wide(x) ** tall(np.arange(N + 1)) *
+                wide(1 - x) ** tall(N - np.arange(N + 1))
         )  # Bernstein polynomial coefficients * weight matrix
-        S = np.sum(S_matrix, axis=1)
+        S_x = np.sum(tall(w) * S_matrix, axis=0)
 
         # Calculate y output
-        y = C * S
+        y = C * S_x
         return y
 
     opti = asb.Opti()
