@@ -336,7 +336,11 @@ class FittedModel(SurrogateModel):
 
                     https://en.wikipedia.org/wiki/Coefficient_of_determination
 
-                * "deviation" or "Linf": The maximum deviation of the fit from any of the data points.
+                * "mean_absolute_error" or "mae" or "L1": The mean absolute error of the fit.
+
+                * "root_mean_squared_error" or "rms" or "L2": The root mean squared error of the fit.
+
+                * "max_absolute_error" or "Linf": The maximum deviation of the fit from any of the data points.
 
         Returns: The metric of the goodness of the fit.
 
@@ -359,8 +363,26 @@ class FittedModel(SurrogateModel):
 
             return R_squared
 
-        elif type == "deviation" or type == "Linf":
+        elif type == "mean_absolute_error" or type == "mae" or type == "L1":
+            return np.mean(np.abs(self.y_data - self(self.x_data)))
+
+        elif type == "root_mean_squared_error" or type == "rms" or type == "L2":
+            return np.sqrt(np.mean((self.y_data - self(self.x_data)) ** 2))
+
+        elif type == "max_absolute_error" or type == "Linf":
             return np.max(np.abs(self.y_data - self(self.x_data)))
 
         else:
-            raise ValueError("Bad value of `type`!")
+            valid_types = [
+                "R^2",
+                "mean_absolute_error", "mae", "L1",
+                "root_mean_squared_error", "rms", "L2",
+                "max_absolute_error", "Linf"
+            ]
+
+            valid_types_formatted = [
+                f"    * \"{valid_type}\""
+                for valid_type in valid_types
+            ]
+
+            raise ValueError("Bad value of `type`! Valid values are:\n" + "\n".join(valid_types_formatted))
