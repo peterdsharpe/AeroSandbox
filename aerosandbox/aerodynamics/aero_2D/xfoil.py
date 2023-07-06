@@ -104,8 +104,8 @@ class XFoil(ExplicitAnalysis):
                 To add XFoil to your path, modify your system's environment variables. (Google how to do this for
                 your OS.)
 
-            xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE
-                -> PPAR, both with default settings, 160 nodes)
+            xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE,
+                with default settings, 160 nodes)
 
             verbose: Controls whether or not XFoil output is printed to command line.
 
@@ -157,8 +157,8 @@ class XFoil(ExplicitAnalysis):
         if self.xfoil_repanel:
             run_file_contents += [
                 "pane",
-                "ppar",
-                "",
+                # "ppar",
+                # "",
             ]
 
         # Enter oper mode
@@ -308,7 +308,7 @@ class XFoil(ExplicitAnalysis):
                         "XFoil returned a floating point exception. This is probably because you are trying to start\n"
                         "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
                         "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
-                        "your XFoil run at a less-aggressive operating point.")
+                        "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point.")
                 elif e.returncode == 1:
                     raise RuntimeError(
                         f"Command '{command}' returned non-zero exit status 1.\n"
@@ -526,7 +526,6 @@ class XFoil(ExplicitAnalysis):
 
 if __name__ == '__main__':
     af = Airfoil("naca2412").repanel(n_points_per_side=100)
-    # af.coordinates[:, 1] *= 30
 
     xf = XFoil(
         airfoil=af,
