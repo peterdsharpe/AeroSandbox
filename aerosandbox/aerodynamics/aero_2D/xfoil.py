@@ -341,7 +341,7 @@ class XFoil(ExplicitAnalysis):
                     "\t - In the XFoil constructor, set the `working_directory` parameter to a known folder to see the XFoil input and output files.\n"
                     "\t - In the XFoil constructor, set the `timeout` parameter to a large number to see if XFoil is just taking a long time to run.\n"
                     "\t - On Windows, use `XFoil.open_interactive()` to run XFoil interactively in a new window.\n"
-                    "\t - Try allowing XFoil to repanel the airfoil by setting `repanel=True` in the XFoil constructor.\n"
+                    "\t - Try allowing XFoil to repanel the airfoil by setting `xfoil_repanel=True` in the XFoil constructor.\n"
                 )
 
             def str_to_float(s: str) -> float:
