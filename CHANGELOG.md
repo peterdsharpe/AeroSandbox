@@ -34,7 +34,9 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-
+- Fixed a bug in `asb.Airfoil.add_control_surface` that resulted in duplicated leading-edge nodes.
+- Added new ability to draw shaded 3D renderings of airplanes with Matplotlib backend, using Matplotlib 3.7.0 features. Available through `asb.Airplane.draw_three_view()` or `asb.Airplane.draw(backend="matplotlib", ...)`.
+- Recast the Kulfan airfoil parameterization problem as a least-squares problem, resulting in a 20x speedup in converting an airfoil coordinate set to CST parameters. Available in `aerosandbox.geometry.airfoil.airfoil_families` in `get_kulfan_parameters()`. New behavior is added as the default, but the old behavior is still available as `get_kulfan_parameters(method="opti")` (as opposed to `"least_squares"`).
 
 -----
 
