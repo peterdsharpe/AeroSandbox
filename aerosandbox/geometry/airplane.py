@@ -344,6 +344,10 @@ class Airplane(AeroSandboxObject):
 
             thin_linewidth: The linewidth of the thin lines.
         """
+        ### Set defaults
+        if fuselage_longeron_theta is None:
+            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
+
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
@@ -372,9 +376,6 @@ class Airplane(AeroSandboxObject):
             ax.xaxis.pane.set_alpha(set_background_pane_alpha)
             ax.yaxis.pane.set_alpha(set_background_pane_alpha)
             ax.zaxis.pane.set_alpha(set_background_pane_alpha)
-
-        if fuselage_longeron_theta is None:
-            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
 
         def plot_line(
                 xyz,
