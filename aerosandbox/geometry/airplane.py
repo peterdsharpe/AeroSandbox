@@ -409,9 +409,8 @@ class Airplane(AeroSandboxObject):
             ax.zaxis.pane.set_alpha(set_background_pane_alpha)
 
         def plot_line(
-                xyz,
-                symmetric=False,
-                fmt="-",
+                xyz: np.ndarray,
+                symmetric: bool = False,
                 color=color,
                 linewidth=0.4,
                 **kwargs
@@ -420,7 +419,7 @@ class Airplane(AeroSandboxObject):
                 xyz = np.concatenate([
                     xyz,
                     np.array([[np.nan] * 3]),
-                    xyz * np.array([1, -1, 1])
+                    xyz * np.array([[1, -1, 1]])
                 ], axis=0)
 
             ax.plot(
