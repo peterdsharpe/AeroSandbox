@@ -548,8 +548,24 @@ class Airplane(AeroSandboxObject):
             p.show_plot()
 
     def draw_three_view(self,
-                        show=True,
+                        style: str = "shaded",
+                        show: bool = True,
                         ):
+        """
+        Draws a standard 4-panel three-view diagram of the airplane using Matplotlib backend. Creates a new figure.
+
+        Args:
+
+            style: Determines what drawing style to use for the three-view. A string, one of:
+
+                * "shaded"
+                * "wireframe"
+
+            show: A boolean of whether to show the figure after creating it, or to hold it so   that the user can modify the figure further before showing.
+
+        Returns:
+
+        """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
@@ -569,11 +585,19 @@ class Airplane(AeroSandboxObject):
                 ax = axs[i, j]
                 preset_view = preset_view_angles[i, j]
 
-                self.draw_wireframe(
-                    ax=ax,
-                    set_axis_visibility=False if 'isometric' in preset_view else None,
-                    show=False
-                )
+                if style == "shaded":
+                    self.draw(
+                        backend="matplotlib",
+                        ax=ax,
+                        set_axis_visibility=False if 'isometric' in preset_view else None,
+                        show=False
+                    )
+                elif style == "wireframe":
+                    self.draw_wireframe(
+                        ax=ax,
+                        set_axis_visibility=False if 'isometric' in preset_view else None,
+                        show=False
+                    )
 
                 p.set_preset_3d_view_angle(preset_view)
 
