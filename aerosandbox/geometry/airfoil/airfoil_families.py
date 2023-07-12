@@ -499,7 +499,7 @@ def get_kulfan_parameters(
                 wide(1 - x) ** tall(N - np.arange(N + 1))
         )  # Bernstein polynomial coefficients * weight matrix
 
-        leading_edge_weight_row = x * (1 - x) ** (n_weights_per_side + 0.5)
+        leading_edge_weight_row = x * np.maximum(1 - x, 0) ** (n_weights_per_side + 0.5)
 
         trailing_edge_thickness_row = np.where(
             is_upper,
