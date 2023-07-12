@@ -225,6 +225,7 @@ class Airplane(AeroSandboxObject):
              use_preset_view_angle: str = None,
              set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
              set_background_pane_alpha: float = None,
+             set_lims: bool = True,
              set_equal: bool = True,
              set_axis_visibility: bool = None,
              show: bool = True,
@@ -293,9 +294,10 @@ class Airplane(AeroSandboxObject):
                 ),
             )
 
-            ax.set_xlim(points[:, 0].min(), points[:, 0].max())
-            ax.set_ylim(points[:, 1].min(), points[:, 1].max())
-            ax.set_zlim(points[:, 2].min(), points[:, 2].max())
+            if set_lims:
+                ax.set_xlim(points[:, 0].min(), points[:, 0].max())
+                ax.set_ylim(points[:, 1].min(), points[:, 1].max())
+                ax.set_zlim(points[:, 2].min(), points[:, 2].max())
 
             if set_equal:
                 p.equal()
@@ -360,6 +362,7 @@ class Airplane(AeroSandboxObject):
                        use_preset_view_angle: str = None,
                        set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
                        set_background_pane_alpha: float = None,
+                       set_lims: bool=True,
                        set_equal: bool = True,
                        set_axis_visibility: bool = None,
                        show: bool = True,
@@ -562,6 +565,12 @@ class Airplane(AeroSandboxObject):
                     ),
                     color=color_to_use
                 )
+
+        if set_lims:
+            points, _ = self.mesh_body()
+            ax.set_xlim(points[:, 0].min(), points[:, 0].max())
+            ax.set_ylim(points[:, 1].min(), points[:, 1].max())
+            ax.set_zlim(points[:, 2].min(), points[:, 2].max())
 
         if set_equal:
             p.equal()
