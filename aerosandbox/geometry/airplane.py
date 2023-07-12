@@ -348,12 +348,14 @@ class Airplane(AeroSandboxObject):
         import aerosandbox.tools.pretty_plots as p
 
         if ax is None:
-            fig, ax = p.figure3d(figsize=(8, 8))
+            ax = plt.gca()
+            if not p.ax_is_3d(ax):
+                _, ax = p.figure3d(figsize=(8, 8))
         else:
             if not p.ax_is_3d(ax):
                 raise ValueError("`ax` must be a 3D axis.")
 
-            plt.sca(ax)
+        plt.sca(ax)
 
         ### Set the view angle
         if use_preset_view_angle is not None:
@@ -385,7 +387,7 @@ class Airplane(AeroSandboxObject):
             if symmetric:
                 xyz = np.concatenate([
                     xyz,
-                    np.array([np.nan] * 3).reshape((1, -1)),
+                    np.array([[np.nan] * 3]),
                     xyz * np.array([1, -1, 1])
                 ], axis=0)
 
@@ -1302,5 +1304,5 @@ if __name__ == '__main__':
         ]
     )
 
-    # airplane.draw_three_view()
+    airplane.draw_three_view()
     # airplane.export_XFLR("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))
