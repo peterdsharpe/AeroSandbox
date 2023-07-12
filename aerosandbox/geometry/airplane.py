@@ -383,9 +383,8 @@ class Airplane(AeroSandboxObject):
         import aerosandbox.tools.pretty_plots as p
 
         if ax is None:
-            ax = plt.gca()
-            if not p.ax_is_3d(ax):
-                _, ax = p.figure3d(figsize=(8, 8))
+            _, ax = p.figure3d(figsize=(8, 8), computed_zorder=False)
+
         else:
             if not p.ax_is_3d(ax):
                 raise ValueError("`ax` must be a 3D axis.")
