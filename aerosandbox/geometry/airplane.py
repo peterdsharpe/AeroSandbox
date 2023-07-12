@@ -622,9 +622,17 @@ class Airplane(AeroSandboxObject):
                         show=False
                     )
                 elif style == "wireframe":
+                    if preset_view == "XZ":
+                        fuselage_longeron_theta = [np.pi / 2, 3 * np.pi / 2]
+                    elif preset_view == "XY":
+                        fuselage_longeron_theta = [0, np.pi]
+                    else:
+                        fuselage_longeron_theta = None
+
                     self.draw_wireframe(
                         ax=ax,
                         set_axis_visibility=False if 'isometric' in preset_view else None,
+                        fuselage_longeron_theta=fuselage_longeron_theta,
                         show=False
                     )
 
