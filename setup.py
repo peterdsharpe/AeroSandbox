@@ -58,7 +58,7 @@ setup(
         'scipy >= 1.7.0',
         'casadi ~= 3.6.0',
         'pandas >= 1',
-        'matplotlib >= 3.3.1',
+        'matplotlib >= 3.7.0',
         'seaborn >= 0.11',
         'tqdm >= 4',
         'sortedcontainers > 2',

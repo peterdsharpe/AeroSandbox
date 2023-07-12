@@ -425,7 +425,6 @@ class Airplane(AeroSandboxObject):
                 xyz[:, 0],
                 xyz[:, 1],
                 xyz[:, 2],
-                fmt,
                 color=color,
                 linewidth=linewidth,
                 **kwargs
