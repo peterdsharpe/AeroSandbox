@@ -52,7 +52,7 @@ setup(
     ],
     keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation structures propulsion',
     packages=find_packages(exclude=['docs', 'media', 'examples', 'studies']),
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     install_requires=[
         'numpy >= 1.20.0, <1.25a0',
         'scipy >= 1.7.0',
