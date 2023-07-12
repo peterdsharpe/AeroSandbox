@@ -58,7 +58,7 @@ Use AeroSandbox to support real-world aircraft development programs, all the way
             <p align="center">
                 <a href="https://youtu.be/CyTzx9UCvyo"><i>Dawn</i> (later renamed <i>SACOS</i>) in first flight, Fall 2022</a>
             </p>
-            <p align="center"><a href="https://www.electra.aero/news/sacos-first-flight">(Thanks to so, so many wonderful people!)</a></p>
+            <p align="center"><a href="https://www.electra.aero/news/sacos-first-flight">(A massive build effort with excellent engineering and coordination by Electra.aero!)</a></p>
             <img src="./media/images/SACOS%20First%20Flight%20Zoomed.jpg" alt="SACOS first flight">
         </td>
     </tr>
