@@ -221,6 +221,12 @@ class Airplane(AeroSandboxObject):
     def draw(self,
              backend: str = "pyvista",
              thin_wings: bool = False,
+             ax=None,
+             use_preset_view_angle: str = None,
+             set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+             set_background_pane_alpha: float = None,
+             set_equal: bool = True,
+             set_axis_visibility: bool = None,
              show: bool = True,
              show_kwargs: Dict = None,
              ):
@@ -255,13 +261,35 @@ class Airplane(AeroSandboxObject):
             import aerosandbox.tools.pretty_plots as p
             from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-            fig, ax = p.figure3d()
+            if ax is None:
+                _, ax = p.figure3d(figsize=(8, 8), computed_zorder=False)
+
+            else:
+                if not p.ax_is_3d(ax):
+                    raise ValueError("`ax` must be a 3D axis.")
+
+            plt.sca(ax)
+
+            ### Set the view angle
+            if use_preset_view_angle is not None:
+                p.set_preset_3d_view_angle(use_preset_view_angle)
+
+            ### Set the background pane color
+            if set_background_pane_color is not None:
+                ax.xaxis.pane.set_facecolor(set_background_pane_color)
+                ax.yaxis.pane.set_facecolor(set_background_pane_color)
+                ax.zaxis.pane.set_facecolor(set_background_pane_color)
+
+            ### Set the background pane alpha
+            if set_background_pane_alpha is not None:
+                ax.xaxis.pane.set_alpha(set_background_pane_alpha)
+                ax.yaxis.pane.set_alpha(set_background_pane_alpha)
+                ax.zaxis.pane.set_alpha(set_background_pane_alpha)
 
             ax.add_collection(
                 Poly3DCollection(
-                    points[faces],
-                    edgecolors="k",
-                    linewidths=0.2,
+                    points[faces], facecolors='lightgray', edgecolors=(0, 0, 0, 0.1),
+                    linewidths=0.5, alpha=0.8, shade=True,
                 ),
             )
 
@@ -269,11 +297,14 @@ class Airplane(AeroSandboxObject):
             ax.set_ylim(points[:, 1].min(), points[:, 1].max())
             ax.set_zlim(points[:, 2].min(), points[:, 2].max())
 
-            p.equal()
+            if set_equal:
+                p.equal()
 
-            ax.set_xlabel("$x_g$")
-            ax.set_ylabel("$y_g$")
-            ax.set_zlabel("$z_g$")
+            if set_axis_visibility is not None:
+                if set_axis_visibility:
+                    ax.set_axis_on()
+                else:
+                    ax.set_axis_off()
 
             if show:
                 p.show_plot()
