@@ -28,6 +28,7 @@ def figure3d(
         orthographic: bool = True,
         box_aspect: Tuple[float] = None,
         adjust_colors: bool = True,
+        computed_zorder: bool = True,
         ax_kwargs: Dict = None,
         **fig_kwargs
 ) -> Tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
@@ -46,6 +47,7 @@ def figure3d(
         projection='3d',
         proj_type='ortho' if orthographic else 'persp',
         box_aspect=box_aspect,
+        computed_zorder=computed_zorder,
     )
     axes_kwargs = {  # Overwrite any of the computed kwargs with user-provided ones, where applicable.
         **default_axes_kwargs,

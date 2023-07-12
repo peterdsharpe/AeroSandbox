@@ -221,6 +221,13 @@ class Airplane(AeroSandboxObject):
     def draw(self,
              backend: str = "pyvista",
              thin_wings: bool = False,
+             ax=None,
+             use_preset_view_angle: str = None,
+             set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+             set_background_pane_alpha: float = None,
+             set_lims: bool = True,
+             set_equal: bool = True,
+             set_axis_visibility: bool = None,
              show: bool = True,
              show_kwargs: Dict = None,
              ):
@@ -255,25 +262,51 @@ class Airplane(AeroSandboxObject):
             import aerosandbox.tools.pretty_plots as p
             from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-            fig, ax = p.figure3d()
+            if ax is None:
+                _, ax = p.figure3d(figsize=(8, 8), computed_zorder=False)
+
+            else:
+                if not p.ax_is_3d(ax):
+                    raise ValueError("`ax` must be a 3D axis.")
+
+            plt.sca(ax)
+
+            ### Set the view angle
+            if use_preset_view_angle is not None:
+                p.set_preset_3d_view_angle(use_preset_view_angle)
+
+            ### Set the background pane color
+            if set_background_pane_color is not None:
+                ax.xaxis.pane.set_facecolor(set_background_pane_color)
+                ax.yaxis.pane.set_facecolor(set_background_pane_color)
+                ax.zaxis.pane.set_facecolor(set_background_pane_color)
+
+            ### Set the background pane alpha
+            if set_background_pane_alpha is not None:
+                ax.xaxis.pane.set_alpha(set_background_pane_alpha)
+                ax.yaxis.pane.set_alpha(set_background_pane_alpha)
+                ax.zaxis.pane.set_alpha(set_background_pane_alpha)
 
             ax.add_collection(
                 Poly3DCollection(
-                    points[faces],
-                    edgecolors="k",
-                    linewidths=0.2,
+                    points[faces], facecolors='lightgray', edgecolors=(0, 0, 0, 0.1),
+                    linewidths=0.5, alpha=0.8, shade=True,
                 ),
             )
 
-            ax.set_xlim(points[:, 0].min(), points[:, 0].max())
-            ax.set_ylim(points[:, 1].min(), points[:, 1].max())
-            ax.set_zlim(points[:, 2].min(), points[:, 2].max())
+            if set_lims:
+                ax.set_xlim(points[:, 0].min(), points[:, 0].max())
+                ax.set_ylim(points[:, 1].min(), points[:, 1].max())
+                ax.set_zlim(points[:, 2].min(), points[:, 2].max())
 
-            p.equal()
+            if set_equal:
+                p.equal()
 
-            ax.set_xlabel("$x_g$")
-            ax.set_ylabel("$y_g$")
-            ax.set_zlabel("$z_g$")
+            if set_axis_visibility is not None:
+                if set_axis_visibility:
+                    ax.set_axis_on()
+                else:
+                    ax.set_axis_off()
 
             if show:
                 p.show_plot()
@@ -329,6 +362,7 @@ class Airplane(AeroSandboxObject):
                        use_preset_view_angle: str = None,
                        set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
                        set_background_pane_alpha: float = None,
+                       set_lims: bool=True,
                        set_equal: bool = True,
                        set_axis_visibility: bool = None,
                        show: bool = True,
@@ -344,16 +378,21 @@ class Airplane(AeroSandboxObject):
 
             thin_linewidth: The linewidth of the thin lines.
         """
+        ### Set defaults
+        if fuselage_longeron_theta is None:
+            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
+
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
         if ax is None:
-            fig, ax = p.figure3d(figsize=(8, 8))
+            _, ax = p.figure3d(figsize=(8, 8), computed_zorder=False)
+
         else:
             if not p.ax_is_3d(ax):
                 raise ValueError("`ax` must be a 3D axis.")
 
-            plt.sca(ax)
+        plt.sca(ax)
 
         ### Set the view angle
         if use_preset_view_angle is not None:
@@ -371,13 +410,9 @@ class Airplane(AeroSandboxObject):
             ax.yaxis.pane.set_alpha(set_background_pane_alpha)
             ax.zaxis.pane.set_alpha(set_background_pane_alpha)
 
-        if fuselage_longeron_theta is None:
-            fuselage_longeron_theta = np.linspace(0, 2 * np.pi, 8 + 1)[:-1]
-
         def plot_line(
-                xyz,
-                symmetric=False,
-                fmt="-",
+                xyz: np.ndarray,
+                symmetric: bool = False,
                 color=color,
                 linewidth=0.4,
                 **kwargs
@@ -385,15 +420,14 @@ class Airplane(AeroSandboxObject):
             if symmetric:
                 xyz = np.concatenate([
                     xyz,
-                    np.array([np.nan] * 3).reshape((1, -1)),
-                    xyz * np.array([1, -1, 1])
+                    np.array([[np.nan] * 3]),
+                    xyz * np.array([[1, -1, 1]])
                 ], axis=0)
 
             ax.plot(
                 xyz[:, 0],
                 xyz[:, 1],
                 xyz[:, 2],
-                fmt,
                 color=color,
                 linewidth=linewidth,
                 **kwargs
@@ -532,6 +566,12 @@ class Airplane(AeroSandboxObject):
                     color=color_to_use
                 )
 
+        if set_lims:
+            points, _ = self.mesh_body()
+            ax.set_xlim(points[:, 0].min(), points[:, 0].max())
+            ax.set_ylim(points[:, 1].min(), points[:, 1].max())
+            ax.set_zlim(points[:, 2].min(), points[:, 2].max())
+
         if set_equal:
             p.equal()
 
@@ -545,8 +585,24 @@ class Airplane(AeroSandboxObject):
             p.show_plot()
 
     def draw_three_view(self,
-                        show=True,
+                        style: str = "shaded",
+                        show: bool = True,
                         ):
+        """
+        Draws a standard 4-panel three-view diagram of the airplane using Matplotlib backend. Creates a new figure.
+
+        Args:
+
+            style: Determines what drawing style to use for the three-view. A string, one of:
+
+                * "shaded"
+                * "wireframe"
+
+            show: A boolean of whether to show the figure after creating it, or to hold it so   that the user can modify the figure further before showing.
+
+        Returns:
+
+        """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
@@ -566,11 +622,27 @@ class Airplane(AeroSandboxObject):
                 ax = axs[i, j]
                 preset_view = preset_view_angles[i, j]
 
-                self.draw_wireframe(
-                    ax=ax,
-                    set_axis_visibility=False if 'isometric' in preset_view else None,
-                    show=False
-                )
+                if style == "shaded":
+                    self.draw(
+                        backend="matplotlib",
+                        ax=ax,
+                        set_axis_visibility=False if 'isometric' in preset_view else None,
+                        show=False
+                    )
+                elif style == "wireframe":
+                    if preset_view == "XZ":
+                        fuselage_longeron_theta = [np.pi / 2, 3 * np.pi / 2]
+                    elif preset_view == "XY":
+                        fuselage_longeron_theta = [0, np.pi]
+                    else:
+                        fuselage_longeron_theta = None
+
+                    self.draw_wireframe(
+                        ax=ax,
+                        set_axis_visibility=False if 'isometric' in preset_view else None,
+                        fuselage_longeron_theta=fuselage_longeron_theta,
+                        show=False
+                    )
 
                 p.set_preset_3d_view_angle(preset_view)
 
@@ -1302,5 +1374,5 @@ if __name__ == '__main__':
         ]
     )
 
-    # airplane.draw_three_view()
+    airplane.draw_three_view()
     # airplane.export_XFLR("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))
