@@ -949,25 +949,38 @@ class Airfoil(Polygon):
         upper_distances_from_TE = np.concatenate(([0], np.cumsum(upper_distances_between_points)))
         lower_distances_from_LE = np.concatenate(([0], np.cumsum(lower_distances_between_points)))
 
-        new_upper_coordinates = interpolate.CubicSpline(
-            x=upper_distances_from_TE,
-            y=old_upper_coordinates,
-            axis=0,
-            bc_type=(
-                (2, (0, 0)),
-                (1, (0, -1)),
-            )
-        )(spacing_function_per_side(0, upper_distances_from_TE[-1], n_points_per_side))
+        try:
+            new_upper_coordinates = interpolate.CubicSpline(
+                x=upper_distances_from_TE,
+                y=old_upper_coordinates,
+                axis=0,
+                bc_type=(
+                    (2, (0, 0)),
+                    (1, (0, -1)),
+                )
+            )(spacing_function_per_side(0, upper_distances_from_TE[-1], n_points_per_side))
 
-        new_lower_coordinates = interpolate.CubicSpline(
-            x=lower_distances_from_LE,
-            y=old_lower_coordinates,
-            axis=0,
-            bc_type=(
-                (1, (0, -1)),
-                (2, (0, 0)),
-            )
-        )(spacing_function_per_side(0, lower_distances_from_LE[-1], n_points_per_side))
+            new_lower_coordinates = interpolate.CubicSpline(
+                x=lower_distances_from_LE,
+                y=old_lower_coordinates,
+                axis=0,
+                bc_type=(
+                    (1, (0, -1)),
+                    (2, (0, 0)),
+                )
+            )(spacing_function_per_side(0, lower_distances_from_LE[-1], n_points_per_side))
+
+        except ValueError as e:
+            if not (
+                    (np.all(np.diff(upper_distances_from_TE)) > 0) and
+                    (np.all(np.diff(lower_distances_from_LE)) > 0)
+            ):
+                raise ValueError(
+                    "It looks like your Airfoil has a duplicate point. Try removing the duplicate point and "
+                    "re-running Airfoil.repanel()."
+                )
+            else:
+                raise e
 
         return Airfoil(
             name=self.name,
@@ -1077,7 +1090,7 @@ class Airfoil(Polygon):
                 )
 
             orig_u = self.upper_coordinates()
-            orig_l = self.lower_coordinates()
+            orig_l = self.lower_coordinates()[1:, :]
 
             rotation_matrix = np.rotation_matrix_2D(
                 angle=-np.radians(deflection),
