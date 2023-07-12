@@ -270,6 +270,7 @@ def get_kulfan_parameters(
         n_points_per_side: int = _default_n_points_per_side,
         normalize_coordinates: bool = True,
         use_leading_edge_modification: bool = True,
+        method: str = "least_squares",
 ) -> Dict[str, Union[np.ndarray, float]]:
     """
     Given a set of airfoil coordinates, reconstructs the Kulfan parameters that would recreate that airfoil. Uses a
@@ -356,41 +357,136 @@ def get_kulfan_parameters(
 
         These can be passed directly into `get_kulfan_coordinates()` to reconstruct the airfoil.
     """
-
     from aerosandbox.geometry.airfoil import Airfoil
 
-    target_airfoil = Airfoil(
-        name="Target Airfoil",
-        coordinates=coordinates
-    ).repanel(
-        n_points_per_side=n_points_per_side
-    )
+    if method == "opti":
 
-    if normalize_coordinates:
-        target_airfoil = target_airfoil.normalize()
+        target_airfoil = Airfoil(
+            name="Target Airfoil",
+            coordinates=coordinates
+        ).repanel(
+            n_points_per_side=n_points_per_side
+        )
 
-    import aerosandbox.numpy as np
+        if normalize_coordinates:
+            target_airfoil = target_airfoil.normalize()
 
-    x = np.cosspace(0, 1, n_points_per_side)
-    target_thickness = target_airfoil.local_thickness(x_over_c=x)
-    target_camber = target_airfoil.local_camber(x_over_c=x)
+        x = np.cosspace(0, 1, n_points_per_side)
+        target_thickness = target_airfoil.local_thickness(x_over_c=x)
+        target_camber = target_airfoil.local_camber(x_over_c=x)
 
-    target_y_upper = target_camber + target_thickness / 2
-    target_y_lower = target_camber - target_thickness / 2
+        target_y_upper = target_camber + target_thickness / 2
+        target_y_lower = target_camber - target_thickness / 2
 
-    import aerosandbox as asb
-    import aerosandbox.numpy as np
+        # Class function
+        C = (x) ** N1 * (1 - x) ** N2
 
-    # Class function
-    C = (x) ** N1 * (1 - x) ** N2
+        def shape_function(w):
+            # Shape function (Bernstein polynomials)
+            N = np.length(w) - 1  # Order of Bernstein polynomials
 
-    def shape_function(w):
+            K = comb(N, np.arange(N + 1))  # Bernstein polynomial coefficients
+
+            dims = (np.length(w), np.length(x))
+
+            def wide(vector):
+                return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
+
+            def tall(vector):
+                return np.tile(vector.reshape((dims[0], 1)), (1, dims[1]))
+
+            S_matrix = (
+                    tall(K) * wide(x) ** tall(np.arange(N + 1)) *
+                    wide(1 - x) ** tall(N - np.arange(N + 1))
+            )  # Bernstein polynomial coefficients * weight matrix
+            S_x = np.sum(tall(w) * S_matrix, axis=0)
+
+            # Calculate y output
+            y = C * S_x
+            return y
+
+        opti = asb.Opti()
+        lower_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
+        upper_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
+        TE_thickness = opti.variable(init_guess=0, lower_bound=0)
+        if use_leading_edge_modification:
+            leading_edge_weight = opti.variable(init_guess=0)
+        else:
+            leading_edge_weight = 0
+
+        y_lower = shape_function(lower_weights)
+        y_upper = shape_function(upper_weights)
+
+        # Add trailing-edge (TE) thickness
+        y_lower -= x * TE_thickness / 2
+        y_upper += x * TE_thickness / 2
+
+        # Add Kulfan's leading-edge-modification (LEM)
+        y_lower += leading_edge_weight * (x) * (1 - x) ** (np.length(lower_weights) + 0.5)
+        y_upper += leading_edge_weight * (x) * (1 - x) ** (np.length(upper_weights) + 0.5)
+
+        opti.minimize(
+            np.sum((y_lower - target_y_lower) ** 2) +
+            np.sum((y_upper - target_y_upper) ** 2)
+        )
+
+        sol = opti.solve(
+            verbose=False
+        )
+
+        return {
+            "lower_weights"      : sol.value(lower_weights),
+            "upper_weights"      : sol.value(upper_weights),
+            "TE_thickness"       : sol.value(TE_thickness),
+            "leading_edge_weight": sol.value(leading_edge_weight),
+        }
+
+    elif method == "least_squares":
+
+        """
+        
+        The goal here is to set up this fitting problem as a least-squares problem (likely an overconstrained one, 
+        but keeping it general for now. This will then be solved with np.linalg.lstsq(A, b), where A will (likely) 
+        not be square.
+        
+        The columns of the A matrix will correspond to our unknowns, which are going to be a 1D vector `x` packed in as:
+            * upper_weights from 0 to n_weights_per_side - 1
+            * lower_weights from 0 to n_weights_per_side - 1
+            * leading_edge_weight
+            * trailing_edge_thickness
+            
+        See `get_kulfan_coordinates()` for more details on the meaning of these variables.
+        
+        The rows of the A matrix will correspond to each row of the given airfoil coordinates (i.e., a single vertex 
+        on the airfoil). The idea here is to express each vertex as a linear combination of the unknowns, and then
+        solve for the unknowns that minimize the error between the given airfoil coordinates and the reconstructed
+        airfoil coordinates.
+        
+        """
+
+        if normalize_coordinates:
+            coordinates = Airfoil(
+                name="Target Airfoil",
+                coordinates=coordinates
+            ).normalize().coordinates
+
+        n_coordinates = np.length(coordinates)
+
+        x = coordinates[:, 0]
+        y = coordinates[:, 1]
+
+        LE_index = np.argmin(x)
+        is_upper = np.arange(len(x)) <= LE_index
+
+        # Class function
+        C = (x) ** N1 * (1 - x) ** N2
+
         # Shape function (Bernstein polynomials)
-        N = np.length(w) - 1  # Order of Bernstein polynomials
+        N = n_weights_per_side - 1  # Order of Bernstein polynomials
 
         K = comb(N, np.arange(N + 1))  # Bernstein polynomial coefficients
 
-        dims = (np.length(w), np.length(x))
+        dims = (n_weights_per_side, n_coordinates)
 
         def wide(vector):
             return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
@@ -402,47 +498,51 @@ def get_kulfan_parameters(
                 tall(K) * wide(x) ** tall(np.arange(N + 1)) *
                 wide(1 - x) ** tall(N - np.arange(N + 1))
         )  # Bernstein polynomial coefficients * weight matrix
-        S_x = np.sum(tall(w) * S_matrix, axis=0)
 
-        # Calculate y output
-        y = C * S_x
-        return y
+        leading_edge_weight_row = x * (1 - x) ** (n_weights_per_side + 0.5)
 
-    opti = asb.Opti()
-    lower_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
-    upper_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
-    TE_thickness = opti.variable(init_guess=0, lower_bound=0)
-    if use_leading_edge_modification:
-        leading_edge_weight = opti.variable(init_guess=0)
+        trailing_edge_thickness_row = np.where(
+            is_upper,
+            x / 2,
+            -x / 2
+        )
+
+        A = np.concatenate([
+            np.where(wide(is_upper), 0, wide(C) * S_matrix).T,
+            np.where(wide(is_upper), wide(C) * S_matrix, 0).T,
+            np.reshape(leading_edge_weight_row, (n_coordinates, 1)),
+            np.reshape(trailing_edge_thickness_row, (n_coordinates, 1)),
+        ], axis=1)
+
+        b = y
+
+        # Solve least-squares problem
+        x, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
+
+        lower_weights = x[:n_weights_per_side]
+        upper_weights = x[n_weights_per_side:2 * n_weights_per_side]
+        leading_edge_weight = x[-2]
+        trailing_edge_thickness = x[-1]
+
+        # If you got a negative trailing-edge thickness, then resolve the problem with a TE_thickness = 0 constraint.
+        if trailing_edge_thickness < 0:
+
+            x, _, _, _ = np.linalg.lstsq(A[:, :-1], b, rcond=None)
+
+            lower_weights = x[:n_weights_per_side]
+            upper_weights = x[n_weights_per_side:2 * n_weights_per_side]
+            leading_edge_weight = x[-1]
+            trailing_edge_thickness = 0
+
+        return {
+            "lower_weights"      : lower_weights,
+            "upper_weights"      : upper_weights,
+            "TE_thickness"       : trailing_edge_thickness,
+            "leading_edge_weight": leading_edge_weight,
+        }
+
     else:
-        leading_edge_weight = 0
-
-    y_lower = shape_function(lower_weights)
-    y_upper = shape_function(upper_weights)
-
-    # Add trailing-edge (TE) thickness
-    y_lower -= x * TE_thickness / 2
-    y_upper += x * TE_thickness / 2
-
-    # Add Kulfan's leading-edge-modification (LEM)
-    y_lower += leading_edge_weight * (x) * (1 - x) ** (np.length(lower_weights) + 0.5)
-    y_upper += leading_edge_weight * (x) * (1 - x) ** (np.length(upper_weights) + 0.5)
-
-    opti.minimize(
-        np.sum((y_lower - target_y_lower) ** 2) +
-        np.sum((y_upper - target_y_upper) ** 2)
-    )
-
-    sol = opti.solve(
-        verbose=False
-    )
-
-    return {
-        "lower_weights"      : sol.value(lower_weights),
-        "upper_weights"      : sol.value(upper_weights),
-        "TE_thickness"       : sol.value(TE_thickness),
-        "leading_edge_weight": sol.value(leading_edge_weight),
-    }
+        raise ValueError(f"Invalid method '{method}'.")
 
 
 def get_coordinates_from_raw_dat(
