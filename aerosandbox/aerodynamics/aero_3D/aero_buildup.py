@@ -678,10 +678,10 @@ class AeroBuildup(ExplicitAnalysis):
             xsec_a_Cdp = xsec_a_airfoil_aero["CD"]
             xsec_b_Cdp = xsec_b_airfoil_aero["CD"]
             sect_CDp = (
-                    (
-                            xsec_a_Cdp * a_weight +
-                            xsec_b_Cdp * b_weight
-                    )
+                (
+                        xsec_a_Cdp * a_weight +
+                        xsec_b_Cdp * b_weight
+                )
             )
 
             ##### Compute sectional moment at cross-sections using lookup functions. Merge them linearly to get section CM.
