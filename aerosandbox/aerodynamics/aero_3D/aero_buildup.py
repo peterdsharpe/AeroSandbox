@@ -930,12 +930,12 @@ class AeroBuildup(ExplicitAnalysis):
             )  # Matches Drela, Flight Vehicle Aerodynamics Eqn. 6.75 in the small-alpha limit.
             # Note that no delta_x should be here; dA/dx * dx = dA.
 
-            # Direction of force is midway between the normal to the axis of revolution of the body and the
-            # normal to the free-stream velocity, according to:
-            # Ward, via Jorgensen
-            force_normal_potential_flow = force_potential_flow * np.cosd(generalized_alpha / 2)
-            force_axial_potential_flow = -force_potential_flow * np.sind(generalized_alpha / 2)
-            # Reminder: axial force is defined positive-aft
+            # Make the direction of the force perpendicular to the velocity vector
+            force_potential_flow_g = op_point.convert_axes(
+                0, 0, -force_potential_flow,
+                from_axes="wind",
+                to_axes="geometry",
+            )
 
             ##### Viscous Forces
             ### Jorgensen model
@@ -958,15 +958,16 @@ class AeroBuildup(ExplicitAnalysis):
                     mean_geometric_radius
             )
 
-            ##### Viscous crossflow acts exactly normal to vehicle axis, definitionally.
+            ##### Viscous crossflow acts exactly normal to fuselage section axis, definitionally.
             # (Axial viscous forces accounted for on a total-body basis)
-
-            normal_force = force_normal_potential_flow + force_viscous_crossflow
-            axial_force = force_axial_potential_flow
+            force_viscous_crossflow_g = [
+                force_viscous_crossflow * normal_direction_g[i]
+                for i in range(3)
+            ]
 
             ##### Compute the force vector in geometry axes
             sect_F_g = [
-                normal_force * normal_direction_g[i] + axial_force * axial_direction_g[i]
+                force_potential_flow_g[i] + force_viscous_crossflow_g[i]
                 for i in range(3)
             ]
 
