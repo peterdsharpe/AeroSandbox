@@ -175,8 +175,14 @@ class AeroBuildup(ExplicitAnalysis):
         ##### Add in the induced drag
         Q = self.op_point.dynamic_pressure()
 
-        y_span_effective = softmax_scalefree([comp["y_span_effective"] for comp in aero_components])
-        z_span_effective = softmax_scalefree([comp["z_span_effective"] for comp in aero_components])
+        y_span_effective_squared = softmax_scalefree([
+            comp["y_span_effective"] ** 2 * comp["oswalds_efficiency"]
+            for comp in aero_components
+        ])
+        z_span_effective_squared = softmax_scalefree([
+            comp["z_span_effective"] ** 2 * comp["oswalds_efficiency"]
+            for comp in aero_components
+        ])
 
         _, sideforce, lift = self.op_point.convert_axes(
             *aero_total['F_g'],
@@ -185,8 +191,8 @@ class AeroBuildup(ExplicitAnalysis):
         )
 
         D_induced = (
-                lift ** 2 / (Q * np.pi * y_span_effective ** 2 + 1e-100) +
-                sideforce ** 2 / (Q * np.pi * z_span_effective ** 2 + 1e-100)
+                lift ** 2 / (Q * np.pi * y_span_effective_squared + 1e-100) +
+                sideforce ** 2 / (Q * np.pi * z_span_effective_squared + 1e-100)
         )
 
         D_induced_g = self.op_point.convert_axes(
@@ -1102,20 +1108,21 @@ class AeroBuildup(ExplicitAnalysis):
         M_w = op_point.convert_axes(*M_b, from_axes="body", to_axes="wind")
 
         return {
-            "F_g"             : F_g,
-            "F_b"             : F_b,
-            "F_w"             : F_w,
-            "M_g"             : M_g,
-            "M_b"             : M_b,
-            "M_w"             : M_w,
-            "L"               : -F_w[2],
-            "Y"               : F_w[1],
-            "D"               : -F_w[0],
-            "l_b"             : M_b[0],
-            "m_b"             : M_b[1],
-            "n_b"             : M_b[2],
-            "y_span_effective": y_span_effective,
-            "z_span_effective": z_span_effective,
+            "F_g"               : F_g,
+            "F_b"               : F_b,
+            "F_w"               : F_w,
+            "M_g"               : M_g,
+            "M_b"               : M_b,
+            "M_w"               : M_w,
+            "L"                 : -F_w[2],
+            "Y"                 : F_w[1],
+            "D"                 : -F_w[0],
+            "l_b"               : M_b[0],
+            "m_b"               : M_b[1],
+            "n_b"               : M_b[2],
+            "y_span_effective"  : y_span_effective,
+            "z_span_effective"  : z_span_effective,
+            "oswalds_efficiency": 0.95,
         }
 
 
