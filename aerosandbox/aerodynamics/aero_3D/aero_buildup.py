@@ -673,16 +673,28 @@ class AeroBuildup(ExplicitAnalysis):
                 mach=mach_normal,
             )
 
-            xsec_a_Cl = airfoil_a.CL_function(**xsec_a_args)
-            xsec_b_Cl = airfoil_b.CL_function(**xsec_b_args)
+            import neuralfoil as nf
+            xsec_a_airfoil_aero = nf.get_aero_from_airfoil(
+                airfoil_a,
+                alpha=alpha_generalized_effective,
+                Re=Re_a,
+            )
+            xsec_b_airfoil_aero = nf.get_aero_from_airfoil(
+                airfoil_b,
+                alpha=alpha_generalized_effective,
+                Re=Re_b,
+            )
+
+            xsec_a_Cl = xsec_a_airfoil_aero["CL"]
+            xsec_b_Cl = xsec_b_airfoil_aero["CL"]
             sect_CL = (
                               xsec_a_Cl * a_weight +
                               xsec_b_Cl * b_weight
                       ) * AR_3D_factor ** 0.2  # Models slight decrease in finite-wing CL_max.
 
             ##### Compute sectional drag at cross-sections using lookup functions. Merge them linearly to get section CD.
-            xsec_a_Cdp = airfoil_a.CD_function(**xsec_a_args)
-            xsec_b_Cdp = airfoil_b.CD_function(**xsec_b_args)
+            xsec_a_Cdp = xsec_a_airfoil_aero["CD"]
+            xsec_b_Cdp = xsec_b_airfoil_aero["CD"]
             sect_CDp = (
                     (
                             xsec_a_Cdp * a_weight +
@@ -691,8 +703,8 @@ class AeroBuildup(ExplicitAnalysis):
             )
 
             ##### Compute sectional moment at cross-sections using lookup functions. Merge them linearly to get section CM.
-            xsec_a_Cm = airfoil_a.CM_function(**xsec_a_args)
-            xsec_b_Cm = airfoil_b.CM_function(**xsec_b_args)
+            xsec_a_Cm = xsec_a_airfoil_aero["CM"]
+            xsec_b_Cm = xsec_b_airfoil_aero["CM"]
             sect_CM = (
                     xsec_a_Cm * a_weight +
                     xsec_b_Cm * b_weight
