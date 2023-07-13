@@ -452,13 +452,13 @@ class AeroBuildup(ExplicitAnalysis):
             dihedral_factor = np.sind(wing_dihedral) ** 2
 
             span_effective = (
-                span_0_dihedral +
-                (span_90_dihedral - span_0_dihedral) * dihedral_factor
+                    span_0_dihedral +
+                    (span_90_dihedral - span_0_dihedral) * dihedral_factor
             )
 
             area_effective = (
-                area_0_dihedral +
-                (area_90_dihedral - area_0_dihedral) * dihedral_factor
+                    area_0_dihedral +
+                    (area_90_dihedral - area_0_dihedral) * dihedral_factor
             )
 
             y_span_effective = wing.span(type="y", include_centerline_distance=True)
@@ -474,7 +474,6 @@ class AeroBuildup(ExplicitAnalysis):
 
             span_effective = wing.span(type="yz", include_centerline_distance=False)
             area_effective = wing.area(type="planform", include_centerline_distance=False)
-
 
         AR_effective = span_effective ** 2 / area_effective
 
