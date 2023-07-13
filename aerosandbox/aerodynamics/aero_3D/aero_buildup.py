@@ -616,31 +616,6 @@ class AeroBuildup(ExplicitAnalysis):
             airfoil_a = xsec_a.airfoil
             airfoil_b = xsec_b.airfoil
 
-            for surf in xsec_a.control_surfaces:
-                try:
-                    if surf.deflection == 0:
-                        continue
-                except RuntimeError:
-                    pass
-
-                if mirror_across_XZ and not surf.symmetric:
-                    deflection = -surf.deflection
-                else:
-                    deflection = surf.deflection
-
-                airfoil_a = airfoil_a.add_control_surface(
-                    deflection=deflection,
-                    hinge_point_x=surf.hinge_point,
-                    modify_coordinates=False,
-                    modify_polars=True,
-                )
-                airfoil_b = airfoil_b.add_control_surface(
-                    deflection=deflection,
-                    hinge_point_x=surf.hinge_point,
-                    modify_coordinates=False,
-                    modify_polars=True,
-                )
-
             ##### Compute sweep angle
             xsec_a_quarter_chord = xsec_quarter_chords[sect_id]
             xsec_b_quarter_chord = xsec_quarter_chords[sect_id + 1]
@@ -666,27 +641,29 @@ class AeroBuildup(ExplicitAnalysis):
             ##### Compute Mach numbers
             mach_normal = mach * np.cos(sweep_rad)
 
-            ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
-            xsec_a_args = dict(
-                alpha=alpha_generalized_effective,
-                Re=Re_a,
-                mach=mach_normal,
-            )
-            xsec_b_args = dict(
-                alpha=alpha_generalized_effective,
-                Re=Re_b,
-                mach=mach_normal,
-            )
+            ##### Compute effective alpha due to control surface deflections
+            effective_d_alpha = 0.
+            for surf in xsec_a.control_surfaces:
 
+                effectiveness = 1 - np.maximum(0, surf.hinge_point + 1e-16) ** 2.751428551177291
+
+                if mirror_across_XZ and not surf.symmetric:
+                    deflection = -surf.deflection
+                else:
+                    deflection = surf.deflection
+
+                effective_d_alpha += deflection * effectiveness
+
+            ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
             import neuralfoil as nf
             xsec_a_airfoil_aero = nf.get_aero_from_airfoil(
                 airfoil_a,
-                alpha=alpha_generalized_effective,
+                alpha=alpha_generalized_effective + effective_d_alpha,
                 Re=Re_a,
             )
             xsec_b_airfoil_aero = nf.get_aero_from_airfoil(
                 airfoil_b,
-                alpha=alpha_generalized_effective,
+                alpha=alpha_generalized_effective + effective_d_alpha,
                 Re=Re_b,
             )
 
