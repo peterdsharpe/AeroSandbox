@@ -158,25 +158,24 @@ def CDA_control_surface_gaps(
     return CDA_side_gaps + CDA_hinge_gap
 
 
-def CDA_bolts_and_rivets(
+def CDA_protruding_bolt_or_rivet(
         diameter: float,
         kind: str = "flush_rivet"
 ):
     S_ref = np.pi * diameter ** 2 / 4
 
-    if kind == "flush_rivet":
-        CDA = 0.002 * S_ref
-    elif kind == "round_rivet":
-        CDA = 0.04 * S_ref
-    elif kind == "flat_head_bolt":
-        CDA == 0.02 * S_ref
-    elif kind == "round_head_bolt":
-        CDA == 0.32 * S_ref
-    elif kind == "cylindrical_bolt":
-        CDA == 0.42 * S_ref
-    elif kind == "hex_bolt":
-        CDA == 0.80 * S_ref
-    else:
+    CD_factors = {
+        "flush_rivet"     : 0.002,
+        "round_rivet"     : 0.04,
+        "flat_head_bolt"  : 0.02,
+        "round_head_bolt" : 0.32,
+        "cylindrical_bolt": 0.42,
+        "hex_bolt"        : 0.80,
+    }
+
+    try:
+        CDA = CD_factors[kind] * S_ref
+    except KeyError:
         raise ValueError("Invalid `kind` of bolt or rivet.")
 
     return CDA
