@@ -992,7 +992,8 @@ class Airfoil(Polygon):
 
     def normalize(
             self,
-    ) -> 'Airfoil':
+            return_dict: bool = False,
+    ) -> Union['Airfoil', Dict[str, Union['Airfoil', float]]]:
         """
         Returns a copy of the Airfoil with a new set of `coordinates`, such that:
             - The leading edge (LE) is at (0, 0)
@@ -1007,7 +1008,37 @@ class Airfoil(Polygon):
 
         Coordinate modifications to achieve the constraints described above (LE @ origin, TE at (1, 0), and chord of 1) are done by means of a translation and rotation.
 
-        Returns: A copy of the airfoil with the new coordinates.
+        Args:
+
+            return_dict: Determines the output type of the function.
+                - If `False` (default), returns a copy of the Airfoil with the new coordinates.
+                - If `True`, returns a dictionary with keys:
+                
+                        - "airfoil": a copy of the Airfoil with the new coordinates
+
+                        - "x_translation": the amount by which the airfoil's LE was translated in the x-direction
+
+                        - "y_translation": the amount by which the airfoil's LE was translated in the y-direction
+
+                        - "scale_factor": the amount by which the airfoil was scaled (if >1, the airfoil had to get
+                            bigger)
+
+                        - "rotation_angle": the angle (in degrees) by which the airfoil was rotated about the LE.
+                            Sign convention is that positive angles rotate the airfoil counter-clockwise.
+
+                    All of thes values represent the "required change", e.g.:
+
+                        - "x_translation" is the amount by which the airfoil's LE had to be translated in the
+                            x-direction to get it to the origin.
+
+                        - "rotation_angle" is the angle (in degrees) by which the airfoil had to be rotated (CCW).
+
+        Returns: Depending on the value of `return_dict`, either:
+
+            - A copy of the airfoil with the new coordinates (default), or
+
+            - A dictionary with keys "airfoil", "x_translation", "y_translation", "scale_factor", and "rotation_angle".
+                documentation for `return_tuple` for more information.
         """
 
         ### Step 1: Translate so that the LE point is at (0, 0).
@@ -1021,12 +1052,12 @@ class Airfoil(Polygon):
 
         le_index = np.argmax(distance_to_te)
 
-        x_le = self.x()[le_index]
-        y_le = self.y()[le_index]
+        x_translation = -self.x()[le_index]
+        y_translation = -self.y()[le_index]
 
         newfoil = self.translate(
-            translate_x=-x_le,
-            translate_y=-y_le,
+            translate_x=x_translation,
+            translate_y=y_translation,
         )
 
         ### Step 2: Scale so that the chord length is 1.
@@ -1042,13 +1073,22 @@ class Airfoil(Polygon):
         x_te = (newfoil.x()[0] + newfoil.x()[-1]) / 2
         y_te = (newfoil.y()[0] + newfoil.y()[-1]) / 2
 
-        angle = np.arctan2(y_te, x_te)
+        rotation_angle = -np.arctan2(y_te, x_te)
 
         newfoil = newfoil.rotate(
-            angle=-angle,
+            angle=rotation_angle,
         )
 
-        return newfoil
+        if not return_dict:
+            return newfoil
+        else:
+            return {
+                "airfoil"       : newfoil,
+                "x_translation" : x_translation,
+                "y_translation" : y_translation,
+                "scale_factor"  : scale_factor,
+                "rotation_angle": rotation_angle,
+            }
 
     def add_control_surface(
             self,
