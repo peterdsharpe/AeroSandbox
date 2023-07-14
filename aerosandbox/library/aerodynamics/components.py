@@ -69,3 +69,12 @@ def CDA_control_linkage(
     )
 
     return side_drag_multiplier * covered_drag_multiplier * linkage_length_multiplier * CDA_raw
+
+def CDA_control_surface_gaps():
+    pass
+
+def CDA_control_surface_hinges():
+    pass
+
+def CDA_pitot_static_tube():
+    pass
