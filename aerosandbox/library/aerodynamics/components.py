@@ -9,7 +9,11 @@ def CDA_control_linkage(
         is_top: Union[bool, np.ndarray] = False,
 ) -> Union[float, np.ndarray]:
     """
-    Computes the drag coefficient of a typical control usage as used on a well-manufactured RC airplane.
+    Computes the drag area (CDA) of a typical control usage as used on a well-manufactured RC airplane.
+
+    The drag area (CDA) is defined as: CDA == D / q, where:
+        - D is the drag force (dimensionalized, e.g., in Newtons)
+        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
     See study with original data at `AeroSandbox/studies/LinkageDrag`.
 
@@ -72,14 +76,58 @@ def CDA_control_linkage(
 
 
 def CDA_control_surface_gaps(
-        local_chord,
-        control_surface_span,
-        local_thickness_over_chord=0.12,
-        control_surface_hinge_x=0.75,
-        n_side_gaps=2,
-        side_gap_width=None,
-        hinge_gap_width=None,
-):
+        local_chord: float,
+        control_surface_span: float,
+        local_thickness_over_chord: float=0.12,
+        control_surface_hinge_x: float=0.75,
+        n_side_gaps: int=2,
+        side_gap_width: float=None,
+        hinge_gap_width: float=None,
+) -> float:
+    """
+    Computes the drag area (CDA) of the gaps associated with a typical wing control surface.
+    (E.g., aileron, flap, elevator, rudder).
+
+    The drag area (CDA) is defined as: CDA == D / q, where:
+        - D is the drag force (dimensionalized, e.g., in Newtons)
+        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
+
+    This drag area consists of two sources:
+        1. Chordwise gaps at the side edges of the control surface ("side gaps")
+        2. Spanwise gaps at the hinge line of the control surface ("hinge gap")
+
+    Args:
+
+        local_chord: The local chord of the wing at the midpoint of the control surface. [meters]
+
+        control_surface_span: The span of the control surface. [meters]
+
+        local_thickness_over_chord: The local thickness-to-chord ratio of the wing at the midpoint of the control
+            surface. [nondimensional] For example, this is 0.12 for a NACA0012 airfoil.
+
+        control_surface_hinge_x: The x-location of the hinge line of the control surface, as a fraction of the local
+            chord. [nondimensional] Defaults to x_hinge / c = 0.75, which is typical for an aileron.
+
+        n_side_gaps: The number of "side gaps" to count on this control surface when computing drag. Defaults to 2 (
+            i.e., one inboard gap, one outboard gap), which is the simplest case of a wing with a single partial-span
+            aileron. However, there may be cases where it is best to reduce this to 1 or 0. For example:
+
+                * A wing with a single full-span aileron would have 1 side gap (at the wing root, but not at the tip).
+
+                * A wing with a flap and aileron that share a chordwise gap would be best modeled by setting
+                    n_side_gaps = 1 ( so that no double-counting occurs).
+
+        side_gap_width: The width of the chordwise gaps at the side edges of the control surface [meters]. If this is
+            left as the default (None), then a typical value will be computed based on the local chord and control surface
+            span.
+
+        hinge_gap_width: The width of the spanwise gap at the hinge line of the control surface [meters]. If this is
+            left as the default (None), then a typical value will be computed based on the local chord.
+
+    Returns: The drag area [m^2] of the gaps associated with the control surface. This should be added to the "clean"
+        wing drag to get a more realistic drag estimate.
+
+    """
     if side_gap_width is None:
         side_gap_width = np.maximum(
             np.maximum(
