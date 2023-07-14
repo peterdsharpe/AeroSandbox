@@ -1087,7 +1087,7 @@ class Airfoil(Polygon):
                 "x_translation" : x_translation,
                 "y_translation" : y_translation,
                 "scale_factor"  : scale_factor,
-                "rotation_angle": rotation_angle,
+                "rotation_angle": np.degrees(rotation_angle),
             }
 
     def add_control_surface(
