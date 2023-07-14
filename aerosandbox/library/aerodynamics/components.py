@@ -12,13 +12,17 @@ def CDA_control_linkage(
     Computes the drag area (CDA) of a typical control usage as used on a well-manufactured RC airplane.
 
     The drag area (CDA) is defined as: CDA == D / q, where:
+
         - D is the drag force (dimensionalized, e.g., in Newtons)
+
         - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
     See study with original data at `AeroSandbox/studies/LinkageDrag`.
 
     Data from:
+
         * Hepperle, Martin. "Drag of Linkages". https://www.mh-aerotools.de/airfoils/linkage.htm
+
         * Summarizes data from "Werner Würz, published in the papers of the ISF-Seminar in December 1989 in Baden, Switzerland."
 
     Args:
@@ -30,7 +34,7 @@ def CDA_control_linkage(
         is_covered: A boolean of whether an aerodynamic fairing is placed around the linkage.
 
         is_top: A boolean of whether the linkage is on the top surface of the wing (True) or the bottom surface (
-        False). Differences in local boundary layer and inviscid effects cause local velocity changes.
+            False). Differences in local boundary layer and inviscid effects cause local velocity changes.
 
     Returns: The drag area [m^2] of the control linkage.
 
@@ -89,11 +93,15 @@ def CDA_control_surface_gaps(
     (E.g., aileron, flap, elevator, rudder).
 
     The drag area (CDA) is defined as: CDA == D / q, where:
+
         - D is the drag force (dimensionalized, e.g., in Newtons)
+
         - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
     This drag area consists of two sources:
+
         1. Chordwise gaps at the side edges of the control surface ("side gaps")
+
         2. Spanwise gaps at the hinge line of the control surface ("hinge gap")
 
     Args:
@@ -174,11 +182,17 @@ def CDA_protruding_bolt_or_rivet(
         diameter: The diameter of the bolt or rivet. [meters]
 
         kind: The type of bolt or rivet. Valid options are:
+
             - "flush_rivet"
+
             - "round_rivet"
+
             - "flat_head_bolt"
+
             - "round_head_bolt"
+
             - "cylindrical_bolt"
+
             - "hex_bolt"
 
     Returns: The drag area [m^2] of the bolt or rivet.
@@ -212,7 +226,9 @@ def CDA_perpendicular_sheet_metal_joint(
         (E.g., spanwise on the wing, or circumferential on the fuselage).
 
     The drag area (CDA) is defined as: CDA == D / q, where:
+
         - D is the drag force (dimensionalized, e.g., in Newtons)
+
         - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
     Args:
@@ -222,18 +238,31 @@ def CDA_perpendicular_sheet_metal_joint(
         sheet_metal_thickness: The thickness of the sheet metal. [meters]
 
         kind: The type of joint. Valid options are:
+
             - "butt_joint_with_inside_joiner"
+
             - "butt_joint_with_inside_weld"
+
             - "butt_joint_with_outside_joiner"
+
             - "butt_joint_with_outside_weld"
+
             - "lap_joint_forward_facing_step"
+
             - "lap_joint_backward_facing_step"
+
             - "lap_joint_forward_facing_step_with_bevel"
+
             - "lap_joint_backward_facing_step_with_bevel"
+
             - "lap_joint_forward_facing_step_with_rounded_bevel"
+
             - "lap_joint_backward_facing_step_with_rounded_bevel"
+
             - "flush_lap_joint_forward_facing_step"
+
             - "flush_lap_joint_backward_facing_step"
+
 
     Returns: The drag area [m^2] of the sheet metal joint.
 
