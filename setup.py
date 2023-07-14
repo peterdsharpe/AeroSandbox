@@ -61,7 +61,8 @@ setup(
         'matplotlib >= 3.7.0',
         'seaborn >= 0.11',
         'tqdm >= 4',
-        'sortedcontainers > 2',
+        'sortedcontainers >= 2',
+        'neuralfoil >= 0.1.4'
     ],
     extras_require={
         "full": [
