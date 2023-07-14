@@ -162,6 +162,27 @@ def CDA_protruding_bolt_or_rivet(
         diameter: float,
         kind: str = "flush_rivet"
 ):
+    """
+    Computes the drag area (CDA) of a protruding bolt or rivet.
+
+    The drag area (CDA) is defined as: CDA == D / q, where:
+        - D is the drag force (dimensionalized, e.g., in Newtons)
+        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
+
+    Args:
+
+        diameter: The diameter of the bolt or rivet. [meters]
+
+        kind: The type of bolt or rivet. Valid options are:
+            - "flush_rivet"
+            - "round_rivet"
+            - "flat_head_bolt"
+            - "round_head_bolt"
+            - "cylindrical_bolt"
+            - "hex_bolt"
+
+    Returns: The drag area [m^2] of the bolt or rivet.
+    """
     S_ref = np.pi * diameter ** 2 / 4
 
     CD_factors = {
