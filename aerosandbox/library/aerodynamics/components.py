@@ -78,11 +78,11 @@ def CDA_control_linkage(
 def CDA_control_surface_gaps(
         local_chord: float,
         control_surface_span: float,
-        local_thickness_over_chord: float=0.12,
-        control_surface_hinge_x: float=0.75,
-        n_side_gaps: int=2,
-        side_gap_width: float=None,
-        hinge_gap_width: float=None,
+        local_thickness_over_chord: float = 0.12,
+        control_surface_hinge_x: float = 0.75,
+        n_side_gaps: int = 2,
+        side_gap_width: float = None,
+        hinge_gap_width: float = None,
 ) -> float:
     """
     Computes the drag area (CDA) of the gaps associated with a typical wing control surface.
@@ -198,6 +198,67 @@ def CDA_protruding_bolt_or_rivet(
         CDA = CD_factors[kind] * S_ref
     except KeyError:
         raise ValueError("Invalid `kind` of bolt or rivet.")
+
+    return CDA
+
+
+def CDA_perpendicular_sheet_metal_joint(
+        joint_width: float,
+        sheet_metal_thickness: float,
+        kind: str = "butt_joint_with_inside_joiner"
+):
+    """
+    Computes the drag area (CDA) of a sheet metal joint that is perpendicular to the flow.
+        (E.g., spanwise on the wing, or circumferential on the fuselage).
+
+    The drag area (CDA) is defined as: CDA == D / q, where:
+        - D is the drag force (dimensionalized, e.g., in Newtons)
+        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
+
+    Args:
+
+        joint_width: The width of the joint (perpendicular to the airflow, e.g., spanwise on a wing). [meters]
+
+        sheet_metal_thickness: The thickness of the sheet metal. [meters]
+
+        kind: The type of joint. Valid options are:
+            - "butt_joint_with_inside_joiner"
+            - "butt_joint_with_inside_weld"
+            - "butt_joint_with_outside_joiner"
+            - "butt_joint_with_outside_weld"
+            - "lap_joint_forward_facing_step"
+            - "lap_joint_backward_facing_step"
+            - "lap_joint_forward_facing_step_with_bevel"
+            - "lap_joint_backward_facing_step_with_bevel"
+            - "lap_joint_forward_facing_step_with_rounded_bevel"
+            - "lap_joint_backward_facing_step_with_rounded_bevel"
+            - "flush_lap_joint_forward_facing_step"
+            - "flush_lap_joint_backward_facing_step"
+
+    Returns: The drag area [m^2] of the sheet metal joint.
+
+    """
+    S_ref = joint_width * sheet_metal_thickness
+
+    CD_factors = {
+        "butt_joint_with_inside_joiner"                    : 0.01,
+        "butt_joint_with_inside_weld"                      : 0.01,
+        "butt_joint_with_outside_joiner"                   : 0.70,
+        "butt_joint_with_outside_weld"                     : 0.51,
+        "lap_joint_forward_facing_step"                    : 0.40,
+        "lap_joint_backward_facing_step"                   : 0.22,
+        "lap_joint_forward_facing_step_with_bevel"         : 0.11,
+        "lap_joint_backward_facing_step_with_bevel"        : 0.24,
+        "lap joint_forward_facing_step_with_rounded_bevel" : 0.04,
+        "lap_joint_backward_facing_step_with_rounded_bevel": 0.16,
+        "flush_lap_joint_forward_facing_step"              : 0.13,
+        "flush_lap_joint_backward_facing_step"             : 0.07,
+    }
+
+    try:
+        CDA = CD_factors[kind] * S_ref
+    except KeyError:
+        raise ValueError("Invalid `kind` of sheet metal joint.")
 
     return CDA
 
