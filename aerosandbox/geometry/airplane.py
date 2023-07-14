@@ -294,6 +294,21 @@ class Airplane(AeroSandboxObject):
                 ),
             )
 
+            for prop in self.propulsors:
+
+                ### Disk
+                if prop.length == 0:
+                    ax.add_collection(
+                        Poly3DCollection(
+                            np.stack([np.stack(
+                                prop.get_disk_3D_coordinates(),
+                                axis=1
+                            )], axis=0),
+                            facecolors='darkgray', edgecolors=(0, 0, 0, 0.2),
+                            linewidths=0.5, alpha=0.2, shade=False,
+                        )
+                    )
+
             if set_lims:
                 ax.set_xlim(points[:, 0].min(), points[:, 0].max())
                 ax.set_ylim(points[:, 1].min(), points[:, 1].max())
@@ -362,7 +377,7 @@ class Airplane(AeroSandboxObject):
                        use_preset_view_angle: str = None,
                        set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
                        set_background_pane_alpha: float = None,
-                       set_lims: bool=True,
+                       set_lims: bool = True,
                        set_equal: bool = True,
                        set_axis_visibility: bool = None,
                        show: bool = True,
