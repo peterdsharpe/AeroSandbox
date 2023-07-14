@@ -165,7 +165,7 @@ def mass_wing_basic_structure(
 
         main_gear_mounted_to_wing: Whether the main gear is mounted to the wing structure. Boolean.
 
-        strut_y_location: The y-location of the strut (if any), relative to the wing's leading edge [meters]. If None,
+        strut_y_location: The spanwise-location of the strut (if any), as measured from the wing root [meters]. If None,
             it is assumed that there is no strut (i.e., the wing is a cantilever beam).
 
         k_e: represents weight knockdowns due to bending moment relief from engines mounted in front of elastic axis.
