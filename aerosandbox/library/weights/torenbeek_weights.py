@@ -16,12 +16,14 @@ def mass_wing_simple(
 ) -> float:
     """
     Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic 
-    Airplane Design",
+    Airplane Design".
 
     This is the simple version of the wing weight model, which is found in:
     Section 8.4: Weight Prediction Data and Methods
     8.4.1: Airframe Structure
     Eq. 8-12
+
+    A more detailed version of the wing weight model is available in the `mass_wing()` function in this same module.
 
     Args:
 
@@ -35,7 +37,7 @@ def mass_wing_simple(
 
         main_gear_mounted_to_wing: Whether the main gear is mounted to the wing structure.
 
-    Returns: The mass of the wing [kg].
+    Returns: The total mass of the wing [kg].
 
     """
 
@@ -90,7 +92,7 @@ def mass_wing_high_lift_devices(
                 = 1.25 for double-slotted flaps with "variable geometry", i.e., extending
                            flaps with separately moving vanes or auxiliary flaps
 
-    Returns mass of the high-lift system [kg]
+    Returns: Mass of the wing's high-lift system [kg]
     """
     # S_flaps represents the total area of the control surfaces (flaps) on the wing.
     S_flaps = wing.control_surface_area()
