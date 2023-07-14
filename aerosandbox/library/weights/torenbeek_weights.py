@@ -92,7 +92,7 @@ def mass_wing_high_lift_devices(
                 = 1.25 for double-slotted flaps with "variable geometry", i.e., extending
                            flaps with separately moving vanes or auxiliary flaps
 
-    Returns: Mass of the wing's high-lift system [kg]
+    Returns: Mass of the wing's high-lift system only [kg]
     """
     # S_flaps represents the total area of the control surfaces (flaps) on the wing.
     S_flaps = wing.control_surface_area()
@@ -266,7 +266,7 @@ def mass_wing_spoilers_and_speedbrakes(
 
         mass_basic_wing: The basic weight of the wing (without spoilers, speedbrakes, flaps, slats) [kg]
 
-    Returns: The mass of the spoilers and speed brakes [kg]
+    Returns: The mass of the spoilers and speed brakes only [kg]
 
     N.B. the weight estimation using the 12.2 kg/m^2 figure comes out too high if using
         the wing as a referenced area. Reduced to 1.5% of the basic wing mass.
@@ -324,8 +324,8 @@ def mass_wing(
         return_dict: Whether to return a dictionary of all the intermediate values, or just the final mass. Defaults
             to False, which returns just the final mass.
 
-    Returns: If return_dict is False (default), returns a single value: the mass of the wing [kg]. If return_dict is
-        True, returns a dictionary of all the intermediate values.
+    Returns: If return_dict is False (default), returns a single value: the total mass of the wing [kg]. If
+        return_dict is True, returns a dictionary of all the intermediate values.
 
     """
 
