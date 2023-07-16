@@ -305,7 +305,7 @@ class Airplane(AeroSandboxObject):
                                 axis=1
                             )], axis=0),
                             facecolors='darkgray', edgecolors=(0, 0, 0, 0.2),
-                            linewidths=0.5, alpha=0.2, shade=False,
+                            linewidths=0.5, alpha=0.35, shade=True, zorder=4,
                         )
                     )
 
@@ -629,7 +629,8 @@ class Airplane(AeroSandboxObject):
         fig, axs = p.figure3d(
             nrows=preset_view_angles.shape[0],
             ncols=preset_view_angles.shape[1],
-            figsize=(8, 8)
+            figsize=(8, 8),
+            computed_zorder=False,
         )
 
         for i in range(axs.shape[0]):
