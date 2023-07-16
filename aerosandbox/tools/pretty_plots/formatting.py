@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 from typing import Union
-from .labellines import labelLines
+from aerosandbox.tools.pretty_plots.labellines import labelLines
 import aerosandbox.numpy as np
-from .threedim import ax_is_3d
+from aerosandbox.tools.pretty_plots.threedim import ax_is_3d
 
 
 def show_plot(
