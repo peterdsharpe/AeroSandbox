@@ -604,6 +604,115 @@ class Airfoil(Polygon):
         self.CD_function = CD_function
         self.CM_function = CM_function
 
+    def get_aero_from_neuralfoil(self,
+                                 alpha: Union[float, np.ndarray],
+                                 Re: Union[float, np.ndarray],
+                                 mach: Union[float, np.ndarray] = 0.,
+                                 model_size: str = "large",
+                                 include_360_deg_effects: bool = True,
+                                 ) -> Dict[str, Union[float, np.ndarray]]:
+        if self.coordinates is None:
+            raise ValueError("Cannot do aerodynamic analysis on an airfoil that you don't have the coordinates of!")
+
+        import neuralfoil as nf
+        nf_aero = nf.get_aero_from_airfoil(
+            airfoil=self,
+            alpha=alpha,
+            Re=Re,
+            model_size=model_size
+        )
+
+        CL = nf_aero["CL"]
+        CD = nf_aero["CD"]
+        CM = nf_aero["CM"]
+        Cpmin_0 = nf_aero["Cpmin"]
+        Top_Xtr = nf_aero["Top_Xtr"]
+        Bot_Xtr = nf_aero["Bot_Xtr"]
+
+        ### TODO add mach effects
+
+        # Step 1: compute Mcrit
+
+        # Step 2: adjust CL, CM, Cpmin by prandtl-glauert
+        gamma = 1.4
+        beta_squared_ideal = 1 - mach ** 2
+        beta = np.softmax(
+            beta_squared_ideal,
+            -beta_squared_ideal,
+            softness=0.1  # Empirically tuned to data
+        ) ** 0.5
+
+        ### Prandtl-Glauert
+        # Cpmin = Cpmin_0 / beta
+
+        ### Karman-Tsien
+        # Cpmin = Cpmin_0 / (
+        #     beta ** 0.5
+        #     + mach ** 2 / (1 + beta ** 0.5) * (Cpmin_0 / 2)
+        # )
+
+        ### Laitone's rule
+        Cpmin = Cpmin_0 / (
+                beta ** 0.5
+                + (mach ** 2) * (1 + (gamma - 1) / 2 * mach ** 2) / (1 + beta ** 0.5) * (Cpmin_0 / 2)
+        )
+
+        if include_360_deg_effects:
+            from aerosandbox.aerodynamics.aero_2D.airfoil_polar_functions import airfoil_coefficients_post_stall
+
+            CL_if_separated, CD_if_separated, CM_if_separated = airfoil_coefficients_post_stall(
+                airfoil=self,
+                alpha=alpha
+            )
+
+            # These values are so high because NeuralFoil extrapolates quite well past stall
+            alpha_stall_positive = 20
+            alpha_stall_negative = -20
+
+            # This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
+            # ~90% separated, and a value of -1 means the flow is ~90% attached.
+            is_separated = np.softmax(
+                alpha - alpha_stall_positive,
+                alpha_stall_negative - alpha
+            ) / 3
+
+            CL = np.blend(
+                is_separated,
+                CL_if_separated,
+                CL
+            )
+            CD = np.exp(np.blend(
+                is_separated,
+                np.log(CD_if_separated),
+                np.log(CD)
+            ))
+            CM = np.blend(
+                is_separated,
+                CM_if_separated,
+                CM
+            )
+
+            Top_Xtr = np.blend(
+                is_separated,
+                0.5 - 0.5 * np.tanh(10 * np.sind(alpha)),
+                Top_Xtr
+            )
+            Bot_Xtr = np.blend(
+                is_separated,
+                0.5 + 0.5 * np.tanh(10 * np.sind(alpha)),
+                Bot_Xtr
+            )
+
+
+        return {
+            "CL"     : CL,
+            "CD"     : CD,
+            "CM"     : CM,
+            "Cpmin"  : Cpmin,
+            "Top_Xtr": Top_Xtr,
+            "Bot_Xtr": Bot_Xtr,
+        }
+
     def plot_polars(self,
                     alphas: Union[np.ndarray, List[float]] = np.linspace(-20, 20, 500),
                     Res: Union[np.ndarray, List[float]] = 10 ** np.arange(3, 9),
@@ -1841,11 +1950,43 @@ class Airfoil(Polygon):
 
 
 if __name__ == '__main__':
-    af = Airfoil("ag36")
-    af.draw()
-    af.generate_polars(
-        alphas=np.linspace(-10, 15, 61),
-    )
-    af.plot_polars(
-        Res=np.geomspace(1e4, 1e6, 6)
-    )
+    af = Airfoil("dae11")
+
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+    fig, ax = plt.subplots(3, 2, figsize=(6.4, 6.4), dpi=200)
+
+    alpha = np.linspace(-90, 90, 500)
+    sizes = ["xxsmall", "xsmall", "small", "medium", "large", "xlarge", "xxlarge", "xxxlarge"]
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(sizes)))[::-1]
+
+    for i, ms in enumerate(sizes):
+        aero = af.get_aero_from_neuralfoil(
+            alpha=alpha,
+            Re=1e5,
+            model_size=ms,
+        )
+
+        kwargs=dict(
+            alpha=0.5,
+            color=colors[i],
+        )
+        ax[0, 0].plot(alpha, aero["CL"], **kwargs)
+        ax[1, 0].plot(alpha, aero["CD"], **kwargs)
+        ax[2, 0].plot(alpha, aero["CM"], **kwargs)
+        ax[0, 1].plot(alpha, aero["Cpmin"], **kwargs)
+        ax[1, 1].plot(alpha, aero["Top_Xtr"], **kwargs)
+        ax[2, 1].plot(alpha, aero["Bot_Xtr"], **kwargs)
+
+    ax[1, 0].set_yscale('log')
+
+    p.show_plot()
+
+    # af.draw()
+    # af.generate_polars(
+    #     alphas=np.linspace(-10, 15, 61),
+    # )
+    # af.plot_polars(
+    #     Res=np.geomspace(1e4, 1e6, 6)
+    # )
