@@ -67,10 +67,13 @@ def show_plot(
                 individual_axes_and_limits[ax.zaxis] = ax.get_zlim()
 
             for i_ax, lims in individual_axes_and_limits.items():
-                if i_ax.get_scale() == "log":
 
-                    default_major_locator_class = mt.LogLocator
-                    default_minor_locator_class = mt.LogLocator
+                maj_loc = None
+                maj_fmt = None
+                min_loc = None
+                min_fmt = None
+
+                if i_ax.get_scale() == "log":
 
                     def linlogfmt(x, pos, ticks=[1.], default="", base=10):
                         if x < 0:
@@ -136,117 +139,108 @@ def show_plot(
                                     )
                         return default
 
-
                     ratio = lims[1] / lims[0]
 
                     i_ax.set_tick_params(which="minor", labelsize=8)
 
                     if ratio < 10:
-                        if isinstance(i_ax.get_major_locator(), default_major_locator_class):
-                            i_ax.set_major_locator(mt.MaxNLocator(
-                                nbins=6,
-                                steps=[1, 2, 5, 10],
-                                min_n_ticks=4,
-                            ))
-                            i_ax.set_major_formatter(mt.ScalarFormatter())
-                        if isinstance(i_ax.get_minor_locator(), default_minor_locator_class):
+                        maj_loc = mt.MaxNLocator(
+                            nbins=6,
+                            steps=[1, 2, 5, 10],
+                            min_n_ticks=4,
+                        )
+                        maj_fmt = mt.ScalarFormatter()
 
-                            class LogAutoMinorLocator(mt.AutoMinorLocator):
-                                """
-                                Dynamically find minor tick positions based on the positions of
-                                major ticks. The scale must be linear with major ticks evenly spaced.
-                                """
-                                def __call__(self):
-                                    majorlocs = self.axis.get_majorticklocs()
-                                    try:
-                                        majorstep = majorlocs[1] - majorlocs[0]
-                                    except IndexError:
-                                        # Need at least two major ticks to find minor tick locations
-                                        # TODO: Figure out a way to still be able to display minor
-                                        # ticks without two major ticks visible. For now, just display
-                                        # no ticks at all.
-                                        return []
+                        class LogAutoMinorLocator(mt.AutoMinorLocator):
+                            """
+                            Dynamically find minor tick positions based on the positions of
+                            major ticks. The scale must be linear with major ticks evenly spaced.
+                            """
 
-                                    if self.ndivs is None:
+                            def __call__(self):
+                                majorlocs = self.axis.get_majorticklocs()
+                                try:
+                                    majorstep = majorlocs[1] - majorlocs[0]
+                                except IndexError:
+                                    # Need at least two major ticks to find minor tick locations
+                                    # TODO: Figure out a way to still be able to display minor
+                                    # ticks without two major ticks visible. For now, just display
+                                    # no ticks at all.
+                                    return []
 
-                                        majorstep_no_exponent = 10 ** (np.log10(majorstep) % 1)
+                                if self.ndivs is None:
 
-                                        if np.isclose(majorstep_no_exponent, [1.0, 2.5, 5.0, 10.0]).any():
-                                            ndivs = 5
-                                        else:
-                                            ndivs = 4
+                                    majorstep_no_exponent = 10 ** (np.log10(majorstep) % 1)
+
+                                    if np.isclose(majorstep_no_exponent, [1.0, 2.5, 5.0, 10.0]).any():
+                                        ndivs = 5
                                     else:
-                                        ndivs = self.ndivs
+                                        ndivs = 4
+                                else:
+                                    ndivs = self.ndivs
 
-                                    minorstep = majorstep / ndivs
+                                minorstep = majorstep / ndivs
 
-                                    vmin, vmax = self.axis.get_view_interval()
-                                    if vmin > vmax:
-                                        vmin, vmax = vmax, vmin
+                                vmin, vmax = self.axis.get_view_interval()
+                                if vmin > vmax:
+                                    vmin, vmax = vmax, vmin
 
-                                    t0 = majorlocs[0]
-                                    tmin = ((vmin - t0) // minorstep + 1) * minorstep
-                                    tmax = ((vmax - t0) // minorstep + 1) * minorstep
-                                    locs = np.arange(tmin, tmax, minorstep) + t0
+                                t0 = majorlocs[0]
+                                tmin = ((vmin - t0) // minorstep + 1) * minorstep
+                                tmax = ((vmax - t0) // minorstep + 1) * minorstep
+                                locs = np.arange(tmin, tmax, minorstep) + t0
 
-                                    return self.raise_if_exceeds(locs)
+                                return self.raise_if_exceeds(locs)
 
-                            i_ax.set_minor_locator(LogAutoMinorLocator())
-                            i_ax.set_minor_formatter(mt.NullFormatter())
+                        min_loc = LogAutoMinorLocator()
+                        min_fmt = mt.NullFormatter()
 
                     elif ratio < 10 ** 1.5:
-                        if isinstance(i_ax.get_major_locator(), default_major_locator_class):
-                            i_ax.set_major_locator(mt.LogLocator(subs=np.arange(1, 10)))
-                            i_ax.set_major_formatter(mt.FuncFormatter(partial(linlogfmt, ticks=[1, 2, 5], default=r"$^{^|}$")))
-                        if isinstance(i_ax.get_minor_locator(), default_minor_locator_class):
-                            i_ax.set_minor_locator(mt.LogLocator(numticks=999, subs=np.arange(10, 100) / 10))
-                            i_ax.set_minor_formatter(mt.NullFormatter())
+                        maj_loc = mt.LogLocator(subs=np.arange(1, 10))
+                        maj_fmt = mt.FuncFormatter(
+                            partial(linlogfmt, ticks=[1, 2, 5], default=r"$^{^|}$")
+                        )
+                        min_loc = mt.LogLocator(numticks=999, subs=np.arange(10, 100) / 10)
+                        min_fmt = mt.NullFormatter()
                     elif ratio < 10 ** 2.5:
-                        if isinstance(i_ax.get_major_locator(), default_major_locator_class):
-                            i_ax.set_major_locator(mt.LogLocator())
-                            i_ax.set_major_formatter(mt.FuncFormatter(partial(logfmt, ticks=[1])))
-                        if isinstance(i_ax.get_minor_locator(), default_minor_locator_class):
-                            i_ax.set_minor_locator(mt.LogLocator(numticks=999, subs=np.arange(1, 10)))
-                            i_ax.set_minor_formatter(mt.FuncFormatter(partial(logfmt, ticks=[2, 5])))
+                        maj_loc = mt.LogLocator()
+                        maj_fmt = mt.FuncFormatter(partial(logfmt, ticks=[1]))
+                        min_loc = mt.LogLocator(numticks=999, subs=np.arange(1, 10))
+                        min_fmt = mt.FuncFormatter(partial(logfmt, ticks=[2, 5]))
                     elif ratio < 10 ** 8:
-                        if isinstance(i_ax.get_major_locator(), default_major_locator_class):
-                            i_ax.set_major_locator(mt.LogLocator())
-                            i_ax.set_major_formatter(mt.FuncFormatter(partial(logfmt, ticks=[1])))
-                        if isinstance(i_ax.get_minor_locator(), default_minor_locator_class):
-                            i_ax.set_minor_locator(mt.LogLocator(numticks=999, subs=np.arange(1, 10)))
-                            i_ax.set_minor_formatter(mt.FuncFormatter(partial(logfmt, ticks=[1])))
+                        maj_loc = mt.LogLocator()
+                        maj_fmt = mt.FuncFormatter(partial(logfmt, ticks=[1]))
+                        min_loc = mt.LogLocator(numticks=999, subs=np.arange(1, 10))
+                        min_fmt = mt.FuncFormatter(partial(logfmt, ticks=[1]))
                     elif ratio < 10 ** 16:
-                        if isinstance(i_ax.get_major_locator(), default_major_locator_class):
-                            i_ax.set_major_locator(mt.LogLocator())
-                            i_ax.set_major_formatter(mt.LogFormatterSciNotation())
-                        if isinstance(i_ax.get_minor_locator(), default_minor_locator_class):
-                            i_ax.set_minor_locator(mt.LogLocator(numticks=999, subs=np.arange(1, 10)))
-                            i_ax.set_minor_formatter(mt.NullFormatter())
+                        maj_loc = mt.LogLocator()
+                        maj_fmt = mt.LogFormatterSciNotation()
+                        min_loc = mt.LogLocator(numticks=999, subs=np.arange(1, 10))
+                        min_fmt = mt.NullFormatter()
                     else:
                         pass
 
                 elif i_ax.get_scale() == "linear":
+                    maj_loc = mt.MaxNLocator(
+                        nbins='auto',
+                        steps=[1, 2, 5, 10],
+                        min_n_ticks=3,
+                    )
 
-                    default_major_locator_class = mt.AutoLocator
-                    default_minor_locator_class = mt.NullLocator
-
-                    if isinstance(i_ax.get_major_locator(), default_major_locator_class):
-                        i_ax.set_major_locator(
-                            mt.MaxNLocator(
-                                nbins='auto',
-                                steps=[1, 2, 5, 10],
-                                min_n_ticks=3,
-                            )
-                        )
-
-                    if isinstance(i_ax.get_minor_locator(), default_minor_locator_class):
-                        i_ax.set_minor_locator(
-                            mt.AutoMinorLocator()
-                        )
+                    min_loc = mt.AutoMinorLocator()
 
                 else:
-                    import warnings
-                    warnings.warn(f"Axis scale {i_ax.get_scale()} not recognized.")
+                    raise ValueError(f"Axis scale {i_ax.get_scale()} not recognized.")
+
+                if len(i_ax.get_major_ticks() + i_ax.get_minor_ticks()) != 0: # Unless the user has manually set the ticks to be empty
+                    if maj_loc is not None:
+                        i_ax.set_major_locator(maj_loc)
+                    if maj_fmt is not None:
+                        i_ax.set_major_formatter(maj_fmt)
+                    if min_loc is not None:
+                        i_ax.set_minor_locator(min_loc)
+                    if min_fmt is not None:
+                        i_ax.set_minor_formatter(min_fmt)
 
     ### Determine if a legend should be shown
     if legend is None:
