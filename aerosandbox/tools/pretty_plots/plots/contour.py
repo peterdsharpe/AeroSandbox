@@ -317,19 +317,19 @@ def contour(
 
             if Z_ratio >= 10 ** 2.05:
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
-                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
+                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
                 cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
                 cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
             elif Z_ratio >= 10 ** 1.5:
                 cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
-                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
+                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
                 cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
                 cbar.ax.yaxis.set_minor_formatter(mpl.ticker.LogFormatterSciNotation(
                     minor_thresholds=(np.inf, np.inf)
                 ))
             else:
-                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(10)))
-                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(100) / 10))
+                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
+                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10, 100) / 10))
                 cbar.ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
                 cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
