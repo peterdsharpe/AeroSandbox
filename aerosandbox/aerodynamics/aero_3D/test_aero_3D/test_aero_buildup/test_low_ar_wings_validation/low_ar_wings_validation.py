@@ -4,11 +4,6 @@ import aerosandbox.numpy as np
 AR = 2
 taper = 0.1
 
-af = asb.Airfoil("naca0010")
-af.generate_polars(
-    cache_filename="../cache/naca0010.json"
-)
-
 sweep_position_x_over_c = 1
 
 wing = asb.Wing(
@@ -21,7 +16,7 @@ wing = asb.Wing(
                 0
             ],
             chord=taper ** -0.5,
-            airfoil=af
+            airfoil=asb.Airfoil("naca0010")
         ),
         asb.WingXSec(
             xyz_le=[
@@ -30,7 +25,7 @@ wing = asb.Wing(
                 0
             ],
             chord=taper ** 0.5,
-            airfoil=af
+            airfoil=asb.Airfoil("naca0010")
         )
     ]
 ).subdivide_sections(5)
