@@ -150,7 +150,6 @@ if __name__ == '__main__':
     ax.plot(
         x, y, z, "-"
     )
-    p.set_ticks(*([1, 1] * 3))
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
