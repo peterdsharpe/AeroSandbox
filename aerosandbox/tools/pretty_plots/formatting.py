@@ -48,16 +48,11 @@ def show_plot(
                         ax.grid(True, 'major', axis='y', linewidth=1.6)
                         ax.grid(True, 'minor', axis='y', linewidth=0.7)
                 else:
-                    pass  # TODO
-                    # if any(line.get_visible() for line in ax.get_xgridlines()):
-                    #     ax.grid(True, 'major', axis='x', linewidth=1.6)
-                    #     ax.grid(True, 'minor', axis='x', linewidth=0.7)
-                    # if any(line.get_visible() for line in ax.get_ygridlines()):
-                    #     ax.grid(True, 'major', axis='y', linewidth=1.6)
-                    #     ax.grid(True, 'minor', axis='y', linewidth=0.7)
-                    # if any(line.get_visible() for line in ax.get_zgridlines()):
-                    #     ax.grid(True, 'major', axis='z', linewidth=1.6)
-                    #     ax.grid(True, 'minor', axis='z', linewidth=0.7)
+                    for i_ax in [ax.xaxis, ax.yaxis, ax.zaxis]:
+                        i_ax._axinfo["grid"].update(dict(
+                            linewidth=0.7,
+                        ))
+                        i_ax.set_tick_params(which="minor", color=(0, 0, 0, 0))
 
     if set_ticks:
 
