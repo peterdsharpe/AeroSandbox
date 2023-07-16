@@ -6,6 +6,7 @@ import aerosandbox.numpy as np
 from aerosandbox.tools.pretty_plots.threedim import ax_is_3d
 from functools import partial
 
+
 def show_plot(
         title: str = None,
         xlabel: str = None,
@@ -59,8 +60,8 @@ def show_plot(
         for ax in axes:
 
             individual_axes_and_limits = {
-                ax.xaxis : ax.get_xlim(),
-                ax.yaxis : ax.get_ylim(),
+                ax.xaxis: ax.get_xlim(),
+                ax.yaxis: ax.get_ylim(),
             }
             if hasattr(ax, "zaxis"):
                 individual_axes_and_limits[ax.zaxis] = ax.get_zlim()
