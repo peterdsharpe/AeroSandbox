@@ -610,6 +610,7 @@ class Airfoil(Polygon):
                                  mach: Union[float, np.ndarray] = 0.,
                                  model_size: str = "large",
                                  control_surfaces: List["ControlSurface"] = None,
+                                 control_surface_strategy="polar_modification",
                                  transonic_buffet_lift_knockdown: float = 0.3,
                                  include_360_deg_effects: bool = True,
                                  ) -> Dict[str, Union[float, np.ndarray]]:
@@ -620,17 +621,50 @@ class Airfoil(Polygon):
 
         alpha = np.mod(alpha + 180, 360) - 180  # Enforce periodicity of alpha
 
+        ##### Evaluate the control surfaces of the airfoil
+        airfoil = self
+
+        effective_d_alpha = 0.
+        effective_CD_multiplier_from_control_surfaces = 1.
+
+        if control_surface_strategy == "polar_modification":
+
+            for surf in control_surfaces:
+
+                effectiveness = 1 - np.maximum(0, surf.hinge_point + 1e-16) ** 2.751428551177291
+                # From XFoil-based study at `/AeroSandbox/studies/ControlSurfaceEffectiveness/`
+
+                effective_d_alpha += surf.deflection * effectiveness
+
+                effective_CD_multiplier_from_control_surfaces *= (
+                        2 + (surf.deflection / 11.5) ** 2 - (1 + (surf.deflection / 11.5) ** 2) ** 0.5
+                )
+                # From fit to wind tunnel data from Hoerner, "Fluid Dynamic Drag", 1965. Page 13-13, Figure 32,
+                # "Variation of section drag coefficient of a horizontal tail surface at constant C_L"
+
+        elif control_surface_strategy == "coordinate_modification":
+
+            for surf in control_surfaces:
+                airfoil = airfoil.add_control_surface(
+                    deflection=surf.deflection,
+                    hinge_point_x=surf.hinge_point,
+                )
+
+        else:
+            raise ValueError("Invalid `control_surface_strategy`!\n"
+                             "Valid options are \"polar_modification\" or \"coordinate_modification\".")
+
         ##### Use NeuralFoil to evaluate the incompressible aerodynamics of the airfoil
         import neuralfoil as nf
         nf_aero = nf.get_aero_from_airfoil(
-            airfoil=self,
-            alpha=alpha,
+            airfoil=airfoil,
+            alpha=alpha + effective_d_alpha,
             Re=Re,
             model_size=model_size
         )
 
         CL = nf_aero["CL"]
-        CD = nf_aero["CD"]
+        CD = nf_aero["CD"] * effective_CD_multiplier_from_control_surfaces
         CM = nf_aero["CM"]
         Cpmin_0 = nf_aero["Cpmin"]
         Top_Xtr = nf_aero["Top_Xtr"]
@@ -641,7 +675,7 @@ class Airfoil(Polygon):
             from aerosandbox.aerodynamics.aero_2D.airfoil_polar_functions import airfoil_coefficients_post_stall
 
             CL_if_separated, CD_if_separated, CM_if_separated = airfoil_coefficients_post_stall(
-                airfoil=self,
+                airfoil=airfoil,
                 alpha=alpha
             )
             import aerosandbox.library.aerodynamics as lib_aero
