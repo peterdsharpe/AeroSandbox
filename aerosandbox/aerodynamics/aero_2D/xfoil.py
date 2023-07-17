@@ -269,8 +269,7 @@ class XFoil(ExplicitAnalysis):
 
             ### Execute
             try:
-                command = f'{self.xfoil_command} {airfoil_file}'
-                # command = f'{self.xfoil_command} {airfoil_file}'
+                # command = f'{self.xfoil_command} {airfoil_file}' # Old syntax; try this if calls are not working
                 command = [self.xfoil_command, airfoil_file]
                 proc = subprocess.Popen(
                     command,
