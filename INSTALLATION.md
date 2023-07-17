@@ -9,6 +9,7 @@ In short:
 More detail:
 
 1. First, install Python via the Anaconda distribution, [available here](https://www.anaconda.com/products/individual). During the installation, it is recommended that you add Python to your PATH ("[What does this mean?](https://janelbrandon.medium.com/understanding-the-path-variable-6eae0936e976)"), which can be conveniently done by checking a checkbox.
+   2. The minimum-required Python version is given in [this file](./setup.py) in a line beginning with `python_requires = `. At the time of writing (July 2023), the minimum required Python version is 3.8.
 
 2. Verify that your installation has completed correctly by opening up a Terminal (Command Prompt on Windows) and executing the following commands. You should see something similar to the below:
 	
