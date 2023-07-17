@@ -232,15 +232,16 @@ def show_plot(
                 else:
                     raise ValueError(f"Axis scale {i_ax.get_scale()} not recognized.")
 
-                if len(i_ax.get_major_ticks() + i_ax.get_minor_ticks()) != 0: # Unless the user has manually set the ticks to be empty
+                if len(i_ax.get_major_ticks()) != 0:  # Unless the user has manually set the ticks to be empty
                     if maj_loc is not None:
                         i_ax.set_major_locator(maj_loc)
-                    if maj_fmt is not None:
-                        i_ax.set_major_formatter(maj_fmt)
                     if min_loc is not None:
                         i_ax.set_minor_locator(min_loc)
-                    if min_fmt is not None:
-                        i_ax.set_minor_formatter(min_fmt)
+
+                if maj_fmt is not None:
+                    i_ax.set_major_formatter(maj_fmt)
+                if min_fmt is not None:
+                    i_ax.set_minor_formatter(min_fmt)
 
     ### Determine if a legend should be shown
     if legend is None:
