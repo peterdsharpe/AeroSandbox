@@ -58,14 +58,14 @@ def test_containts_points(naca4412):
 
 
 def test_optimize_through_control_surface_deflections():
-    af = Airfoil("naca2412")
+    af = Airfoil("naca0012")
 
     opti = asb.Opti()
 
     d = opti.variable(init_guess=5, lower_bound=-90, upper_bound=90)
 
     afd = af.add_control_surface(
-        deflection=d
+        deflection=d, hinge_point_x=0.75
     )
 
     opti.minimize(
@@ -73,6 +73,10 @@ def test_optimize_through_control_surface_deflections():
     )
 
     sol = opti.solve()
+    print(sol(d))
+    sol(afd).draw()
+
+    assert sol(d) == pytest.approx(np.arctan2d(-0.2, 0.25), abs=1)
 
 
 def test_optimize_through_control_surface_deflections_for_CL():
