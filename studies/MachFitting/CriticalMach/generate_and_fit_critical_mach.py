@@ -27,17 +27,11 @@ Cp_L = lambda Cp0, M: Cp0 / (
         + (M ** 2) * (1 + (gamma - 1) / 2 * M ** 2) / (1 + (1 - M ** 2) ** 0.5) * (Cp0 / 2)
 )
 
-
-Cp0 = -np.concatenate([
-    np.linspace(0.001, 0.1, 80),
-    np.geomspace(0.1, 10, 401)[1:],
-    np.geomspace(10, 100, 21)[1:],
-    ])
-
+M = np.linspace(0.001, 0.999, 500)
 
 ### First, solve with PG
 opti = asb.Opti()
-M = opti.variable(init_guess=0.5, n_vars=len(Cp0), lower_bound=0, upper_bound=1)
+Cp0 = opti.variable(init_guess=-1.5, n_vars=len(M), upper_bound=0)
 
 opti.subject_to([
     Cp_crit(M) == Cp_PG(Cp0, M),
@@ -46,7 +40,7 @@ sol = opti.solve()
 
 ### Then, use the PG solution as an initial guess to solve with Laitone's rule
 opti = asb.Opti()
-M = opti.variable(init_guess=sol(M), lower_bound=0, upper_bound=1)
+Cp0 = opti.variable(init_guess=sol(Cp0), upper_bound=0)
 
 opti.subject_to([
     Cp_crit(M) == Cp_L(Cp0, M),
@@ -54,7 +48,7 @@ opti.subject_to([
 sol = opti.solve()
 
 ### Finalize data
-# Cp0 = Cp0
+Cp0 = sol(Cp0)
 M_crit = sol(M)
 
 if __name__ == '__main__':
