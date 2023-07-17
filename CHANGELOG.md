@@ -34,13 +34,19 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+-----
+
+# Latest (master / release), and previous versions
+
+#### 4.1.0
+
+- In general, uses NeuralFoil throughout instead of XFoil. `asb.Airfoil` no longer needs to have its `generate_polars()` method called before assembling an airplane object. In general, the old "polar functions" of `Airfoil` (e.g., `Airfoil.CL_function()`) are no longer used.
+- Added `asb.Airfoil.get_aero_from_neuralfoil()`, which is the standard rapid airfoil aerodynamics analysis method in AeroSandbox now.
 - Significant backend change in `asb.AeroBuildup` to use NeuralFoil instead of XFoil for airfoil analysis. This is a significant mathematical change, but it should be transparent to the user. Nevertheless, bumping minor version because this change has the potential to cause differences in power-users' workflows (i.e., if they're hacking Airfoil.xfoil_data or Airfoil.generate_polars() to make custom polars).
 - Made a change in `asb.AeroBuildup` within the `.fuselage_aerodynamics()` method that causes fuselage potential flow lift (via slender body theory) to act in the local-wind-normal direction, not halfway between the body-axes-$z$ and wind-axes-$z$ vector as before. The new implementation agrees with Drela's Flight Vehicle Aerodynamics (and intuition), but disagrees with Jorgensen 1977, a NASA TR on fuselage aero. In general, new aero predictions are verified as more realistic (no longer generate a suction force from potential flow in edge cases, satisfying d'Alembert). In general, this results in slightly higher (~5%) fuselage drag prediction, and negligible changes to fuselage lift prediction. For most airplanes this will make no difference, but for lifting-body-type aircraft this may be perceptible. As a bonus, optimization should be better-behaved through `asb.AeroBuildup` analyses with fuselages now.
 - Added lots of new tools for computing drag of various miscellaneous components in `aerosandbox.library.aerodynamics.components`.
 
 -----
-
-# Latest (master / release), and previous versions
 
 #### 4.0.11
 
