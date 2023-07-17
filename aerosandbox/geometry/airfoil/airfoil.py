@@ -758,7 +758,7 @@ class Airfoil(Polygon):
                     ) ** -0.5504677038358711
 
         ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
-        gamma = 1.4
+        gamma = 1.4 # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
         beta_squared_ideal = 1 - mach ** 2
         beta = np.softmax(
             beta_squared_ideal,
@@ -771,19 +771,19 @@ class Airfoil(Polygon):
         CM = CM / beta
 
         # Prandtl-Glauert
-        # Cpmin = Cpmin_0 / beta
+        Cpmin = Cpmin_0 / beta
 
         # Karman-Tsien
         # Cpmin = Cpmin_0 / (
-        #     beta ** 0.5
-        #     + mach ** 2 / (1 + beta ** 0.5) * (Cpmin_0 / 2)
+        #     beta
+        #     + mach ** 2 / (1 + beta) * (Cpmin_0 / 2)
         # )
 
         # Laitone's rule
-        Cpmin = Cpmin_0 / (
-                beta ** 0.5
-                + (mach ** 2) * (1 + (gamma - 1) / 2 * mach ** 2) / (1 + beta ** 0.5) * (Cpmin_0 / 2)
-        )
+        # Cpmin = Cpmin_0 / (
+        #         beta
+        #         + (mach ** 2) * (1 + (gamma - 1) / 2 * mach ** 2) / (1 + beta) * (Cpmin_0 / 2)
+        # )
 
         ### Step 3: modify CL based on buffet and supersonic considerations
         # Accounts approximately for the lift drop due to buffet.
@@ -858,10 +858,10 @@ class Airfoil(Polygon):
         else:
             has_aerodynamic_center_shift = (mach - mach_crit) / 0.25
 
-        CM = np.blend(
+        CM = CM + np.blend(
             has_aerodynamic_center_shift,
-            CM - 0.25 * CL,
-            CM,
+            -0.25 * np.cosd(alpha) * CL - 0.25 * np.sind(alpha) * CD,
+            0,
         )
 
         return {
@@ -873,6 +873,7 @@ class Airfoil(Polygon):
             "Bot_Xtr"  : Bot_Xtr,
             "mach_crit": mach_crit,
             "mach_dd"  : mach_dd,
+            "Cpmin_0"  : Cpmin_0,
         }
 
     def plot_polars(self,
@@ -2127,6 +2128,7 @@ if __name__ == '__main__':
         aero = af.get_aero_from_neuralfoil(
             alpha=alpha,
             Re=1e6,
+            mach=0.3,
             model_size=ms,
         )
 
@@ -2134,7 +2136,7 @@ if __name__ == '__main__':
             alpha=0.5,
             color=colors[i],
         )
-        for a, key in zip(ax.T.flatten(), ["CL", "CD", "CM", "Cpmin", "M_crit", "Top_Xtr", "Bot_Xtr"]):
+        for a, key in zip(ax.T.flatten(), ["CL", "CD", "CM", "Cpmin", "mach_crit", "Top_Xtr", "Bot_Xtr", "Cpmin_0"]):
             a.plot(alpha, aero[key], **kwargs)
             if key == "CD":
                 a.set_yscale('log')
