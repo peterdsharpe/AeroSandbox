@@ -1,3 +1,4 @@
+from operator import is_
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
@@ -30,12 +31,6 @@ def interp(x, xp, fp, left=None, right=None, period=None):
         )
 
     else:
-        ### If xp or x are CasADi types, this is unsupported :(
-        if is_casadi_type([x, xp], recursive=True):
-            raise NotImplementedError(
-                "Unfortunately, CasADi doesn't yet support a dispatch for x or xp as CasADi types."
-            )
-
         ### Handle period argument
         if period is not None:
             if any(
@@ -62,12 +57,14 @@ def interp(x, xp, fp, left=None, right=None, period=None):
         ### Make sure xp is an iterable
         xp = array(xp, dtype=float)
 
+
         ### Do the interpolation
-        f = _cas.interp1d(
-            xp,
-            fp,
-            x
-        )
+        if is_casadi_type([x, xp], recursive=True):
+            grid = [xp.shape[0]] # size of grid, list is used since can be multi-dimensional
+            cas_interp = _cas.interpolant('cs_interp','linear',grid,1,{"inline": True})
+            f = cas_interp(x,xp,fp)
+        else:
+            f = _cas.interp1d(xp, fp, x)
 
         ### Handle left/right
         if left is not None:
