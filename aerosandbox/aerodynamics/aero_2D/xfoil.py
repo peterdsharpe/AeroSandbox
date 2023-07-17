@@ -57,9 +57,11 @@ class XFoil(ExplicitAnalysis):
 
             airfoil: The airfoil to analyze. Should be an AeroSandbox Airfoil object.
 
-            Re: The chord-referenced Reynolds number
+            Re: The chord-referenced Reynolds number. Set this to 0 to run in inviscid mode.
 
-            mach: The freestream Mach number
+            mach: The freestream Mach number. Note that XFoil 6.xx uses the Karman-Tsien compressibility correction,
+                which breaks down once supersonic flow is present (i.e., past M_crit). XFoil 7.xx has a full-potential
+                solver that is theoretically-valid for weak shocks (perhaps up to M_crit + 0.05 or so).
 
             n_crit: The critical Tollmein-Schlichting wave amplification factor, as part of the "e^n" transition
                 criterion. This is a measure of freestream turbulence and surface roughness. The following reference conditions
