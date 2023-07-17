@@ -7,11 +7,6 @@ def ft(feet, inches=0.):  # Converts feet (and inches) to meters
     return feet * u.foot + inches * u.inch
 
 
-naca2412 = asb.Airfoil("naca2412")
-naca0012 = asb.Airfoil("naca0012")
-naca2412.generate_polars(cache_filename="assets/naca2412.json")
-naca0012.generate_polars(cache_filename="assets/naca0012.json")
-
 airplane = asb.Airplane(
     name="Cessna 152",
     wings=[
@@ -21,12 +16,12 @@ airplane = asb.Airplane(
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=ft(5, 4),
-                    airfoil=naca2412
+                    airfoil=asb.Airfoil("naca2412")
                 ),
                 asb.WingXSec(
                     xyz_le=[0, ft(7), ft(7) * np.sind(1)],
                     chord=ft(5, 4),
-                    airfoil=naca2412
+                    airfoil=asb.Airfoil("naca2412")
                 ),
                 asb.WingXSec(
                     xyz_le=[
@@ -35,7 +30,7 @@ airplane = asb.Airplane(
                         ft(33, 4) / 2 * np.sind(1)
                     ],
                     chord=ft(3, 8 + 1 / 2),
-                    airfoil=naca0012
+                    airfoil=asb.Airfoil("naca0012")
                 )
             ],
             symmetric=True
@@ -46,13 +41,13 @@ airplane = asb.Airplane(
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=ft(3, 8),
-                    airfoil=naca0012,
+                    airfoil=asb.Airfoil("naca0012"),
                     twist=-2
                 ),
                 asb.WingXSec(
                     xyz_le=[ft(1), ft(10) / 2, 0],
                     chord=ft(2, 4 + 3 / 8),
-                    airfoil=naca0012,
+                    airfoil=asb.Airfoil("naca0012"),
                     twist=-2
                 )
             ],
@@ -64,17 +59,17 @@ airplane = asb.Airplane(
                 asb.WingXSec(
                     xyz_le=[ft(-5), 0, 0],
                     chord=ft(8, 8),
-                    airfoil=naca0012,
+                    airfoil=asb.Airfoil("naca0012"),
                 ),
                 asb.WingXSec(
                     xyz_le=[ft(0), 0, ft(1)],
                     chord=ft(3, 8),
-                    airfoil=naca0012,
+                    airfoil=asb.Airfoil("naca0012"),
                 ),
                 asb.WingXSec(
                     xyz_le=[ft(0, 8), 0, ft(5)],
                     chord=ft(2, 8),
-                    airfoil=naca0012,
+                    airfoil=asb.Airfoil("naca0012"),
                 ),
             ]
         ).translate([ft(16, 11) - ft(3, 8), 0, ft(-2)])
