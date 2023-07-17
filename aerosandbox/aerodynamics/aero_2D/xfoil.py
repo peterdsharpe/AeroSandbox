@@ -138,7 +138,9 @@ class XFoil(ExplicitAnalysis):
     def __repr__(self):
         return f"XFoil(airfoil={self.airfoil}, Re={self.Re}, mach={self.mach}, n_crit={self.n_crit})"
 
-    def _default_keystrokes(self) -> List[str]:
+    def _default_keystrokes(self,
+                            output_filename: str,
+                            ) -> List[str]:
         """
         Returns a list of XFoil keystrokes that are common to all XFoil runs.
 
@@ -211,7 +213,7 @@ class XFoil(ExplicitAnalysis):
         # Set polar accumulation
         run_file_contents += [
             "pacc",
-            "",
+            f"{output_filename}",
             "",
         ]
 
@@ -251,12 +253,10 @@ class XFoil(ExplicitAnalysis):
             self.airfoil.write_dat(directory / airfoil_file)
 
             # Handle the keystroke file
-            keystrokes = self._default_keystrokes()
+            keystrokes = self._default_keystrokes(output_filename=output_filename)
             keystrokes += [run_command]
             keystrokes += [
-                "pwrt",
-                f"{output_filename}",
-                "",
+                "pacc",  # End polar accumulation
                 "",
                 "quit"
             ]
@@ -270,6 +270,8 @@ class XFoil(ExplicitAnalysis):
             ### Execute
             try:
                 command = f'{self.xfoil_command} {airfoil_file}'
+                # command = f'{self.xfoil_command} {airfoil_file}'
+                command = [self.xfoil_command, airfoil_file]
                 proc = subprocess.Popen(
                     command,
                     cwd=directory,
