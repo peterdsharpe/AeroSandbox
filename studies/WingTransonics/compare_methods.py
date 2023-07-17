@@ -33,12 +33,13 @@ def get_data(filename):
 
 machs = np.linspace(0, 1.3, 500)
 airfoil = asb.Airfoil("rae2822")
-airfoil.generate_polars(cache_filename="./cache/rae2822.json")
+ab_aero = airfoil.get_aero_from_neuralfoil(1, 6.5e6, machs, model_size="xxxlarge")
+
 aerobuildup_data = {
     "mach": machs,
-    "CL"  : airfoil.CL_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
-    "CD"  : airfoil.CD_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
-    "CM"  : airfoil.CM_function(1, 6.5e6, machs, 0) * np.ones_like(machs),
+    "CL": ab_aero["CL"],
+    "CD": ab_aero["CD"],
+    "CM": ab_aero["CM"],
 }
 
 datas = {
@@ -75,10 +76,9 @@ for analysis, data in datas.items():
 # plt.xlim(0.6, 0.8)
 # plt.ylim(0, 1)
 
-plt.xlim(0, 1)
-plt.ylim(0, 0.05)
-
-p.set_ticks(0.1, 0.02, 0.01, 0.002)
+plt.xlim(0, 1.4)
+# plt.ylim(0, 0.05)
+plt.yscale('log')
 
 p.show_plot(
     "Comparison of Aerodynamic Analysis Methods\nRAE2822 Airfoil, AoA=1 deg, Re=6.5M",

@@ -609,11 +609,14 @@ class Airfoil(Polygon):
                                  Re: Union[float, np.ndarray],
                                  mach: Union[float, np.ndarray] = 0.,
                                  model_size: str = "large",
+                                 control_surfaces: List["ControlSurface"] = None,
                                  transonic_buffet_lift_knockdown: float = 0.3,
                                  include_360_deg_effects: bool = True,
                                  ) -> Dict[str, Union[float, np.ndarray]]:
         if self.coordinates is None:
             raise ValueError("Cannot do aerodynamic analysis on an airfoil that you don't have the coordinates of!")
+        if control_surfaces is None:
+            control_surfaces = []
 
         alpha = np.mod(alpha + 180, 360) - 180  # Enforce periodicity of alpha
 
@@ -730,7 +733,7 @@ class Airfoil(Polygon):
         ) ** 0.5
 
         CL = CL / beta
-        CD = CD / beta
+        # CD = CD / beta
         CM = CM / beta
 
         # Prandtl-Glauert
@@ -828,13 +831,14 @@ class Airfoil(Polygon):
         )
 
         return {
-            "CL"     : CL,
-            "CD"     : CD,
-            "CM"     : CM,
-            "Cpmin"  : Cpmin,
-            "Top_Xtr": Top_Xtr,
-            "Bot_Xtr": Bot_Xtr,
-            "M_crit" : mach_crit,
+            "CL"       : CL,
+            "CD"       : CD,
+            "CM"       : CM,
+            "Cpmin"    : Cpmin,
+            "Top_Xtr"  : Top_Xtr,
+            "Bot_Xtr"  : Bot_Xtr,
+            "mach_crit": mach_crit,
+            "mach_dd"  : mach_dd,
         }
 
     def plot_polars(self,
