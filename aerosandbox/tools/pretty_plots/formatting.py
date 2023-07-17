@@ -229,8 +229,8 @@ def show_plot(
 
                     min_loc = mt.AutoMinorLocator()
 
-                else:
-                    raise ValueError(f"Axis scale {i_ax.get_scale()} not recognized.")
+                else: # For any other scale, just use the default tick locations
+                    continue
 
                 if len(i_ax.get_major_ticks()) != 0:  # Unless the user has manually set the ticks to be empty
                     if maj_loc is not None:
