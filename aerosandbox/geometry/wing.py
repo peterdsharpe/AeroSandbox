@@ -469,9 +469,7 @@ class Wing(AeroSandboxObject):
                     return False
                 if not xsec.twist == 0:  # Surface has to be untwisted
                     return False
-                if not xsec.airfoil.CL_function(0, 1e6, 0, 0) == 0:  # Surface has to have a symmetric airfoil.
-                    return False
-                if not xsec.airfoil.CM_function(0, 1e6, 0, 0) == 0:  # Surface has to have a symmetric airfoil.
+                if not np.allclose(xsec.airfoil.local_camber(), 0):  # Surface has to have a symmetric airfoil.
                     return False
 
         return True
