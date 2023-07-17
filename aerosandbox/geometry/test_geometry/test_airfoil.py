@@ -88,21 +88,25 @@ def test_optimize_through_control_surface_deflections_for_CL():
 
     d = opti.variable(init_guess=5, lower_bound=-90, upper_bound=90)
 
-    afd = af.add_control_surface(
-        deflection=d
+    aero = af.get_aero_from_neuralfoil(
+        alpha=0,
+        Re=1e6,
+        mach=0,
+        control_surfaces=[
+            asb.ControlSurface(
+                deflection=d,
+                hinge_point=0.75
+            )
+        ]
     )
 
-    CL = afd.CL_function(0, 1e6, 0)
-
     opti.minimize(
-        (CL - 0.5) ** 2
+        (aero["CL"] - 0.5) ** 2
     )
 
     sol = opti.solve()
 
-    afd = sol(afd)
-
-    afd.draw()
+    assert sol(d) == pytest.approx(7.32, abs=1)
 
 
 if __name__ == '__main__':
