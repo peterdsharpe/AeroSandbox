@@ -10,6 +10,7 @@ def w() -> Wing:
                 xyz_le=np.array([1, 1, 0]),
                 chord=0.5,
                 twist=5,
+                airfoil=Airfoil("mh60"),
                 control_surfaces=[
                     ControlSurface(
                         symmetric=True,
@@ -20,6 +21,7 @@ def w() -> Wing:
                 xyz_le=np.array([2, 2, 0]),
                 chord=0.5,
                 twist=5,
+                airfoil=Airfoil("mh60"),
                 control_surfaces=[
                     ControlSurface(
                         symmetric=True
