@@ -73,9 +73,13 @@ class XFoil(ExplicitAnalysis):
                 - average wind tunnel:      9 (default)
                 - dirty wind tunnel:        4-8
 
-            xtr_upper: The upper-surface trip location [x/c]
+            xtr_upper: The upper-surface forced transition location [x/c], where the boundary layer will be
+                automatically tripped to turbulent. Set to 1 to disable forced transition (default). Note that if the
+                Reynolds number is sufficiently low, it is possible for the flow to re-laminarize after being tripped.
 
-            xtr_lower: The lower-surface trip location [x/c]
+            xtr_lower: The lower-surface forced transition location [x/c], where the boundary layer will be
+                automatically tripped to turbulent. Set to 1 to disable forced transition (default). Note that if the
+                Reynolds number is sufficiently low, it is possible for the flow to re-laminarize after being tripped.
 
             hinge_point_x: The x/c location of the hinge point. This is used to calculate the hinge moment. If this is
                 None, the hinge moment is not calculated.
@@ -88,7 +92,7 @@ class XFoil(ExplicitAnalysis):
 
             max_iter: How many iterations should we let XFoil do?
 
-            xfoil_command: The command-line argument to call XFoil.
+            xfoil_command: The command-line argument to call XFoil, given as a string or a Path-like object.
 
                 * If XFoil is on your system PATH, then you can just leave this as "xfoil".
 
@@ -107,9 +111,9 @@ class XFoil(ExplicitAnalysis):
                 your OS.)
 
             xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE,
-                with default settings, 160 nodes)
+                with default settings, 160 nodes). Boolean, defaults to True.
 
-            verbose: Controls whether or not XFoil output is printed to command line.
+            verbose: Controls whether or not XFoil output is printed to command line. Defaults to False.
 
             timeout: Controls how long any individual XFoil run (i.e. alpha sweep) is allowed to run before the
                 process is killed. Given in units of seconds. To disable timeout, set this to None.
