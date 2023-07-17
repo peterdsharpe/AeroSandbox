@@ -612,10 +612,6 @@ class AeroBuildup(ExplicitAnalysis):
                 # TODO Can estimate airfoil's alpha_{Cl=0} by camber + thin airfoil theory + viscous decambering knockdown.
             )  # Models finite-wing increase in alpha_{CL_max}.
 
-            ##### Compute the control surface deflection
-            airfoil_a = xsec_a.airfoil
-            airfoil_b = xsec_b.airfoil
-
             ##### Compute sweep angle
             xsec_a_quarter_chord = xsec_quarter_chords[sect_id]
             xsec_b_quarter_chord = xsec_quarter_chords[sect_id + 1]
@@ -642,38 +638,30 @@ class AeroBuildup(ExplicitAnalysis):
             mach_normal = mach * np.cos(sweep_rad)
 
             ##### Compute effective alpha due to control surface deflections
-            effective_d_alpha = 0.
-            effective_CD_markup_from_control_surfaces = 1.
+            symmetry_treated_control_surfaces = []
 
             for surf in xsec_a.control_surfaces:
-
-                effectiveness = 1 - np.maximum(0, surf.hinge_point + 1e-16) ** 2.751428551177291
-                # From XFoil-based study at `/AeroSandbox/studies/ControlSurfaceEffectiveness/`
-
                 if mirror_across_XZ and not surf.symmetric:
-                    deflection = -surf.deflection
-                else:
-                    deflection = surf.deflection
-
-                effective_d_alpha += deflection * effectiveness
-
-                effective_CD_markup_from_control_surfaces *= (
-                        2 + (deflection / 11.5) ** 2 - (1 + (deflection / 11.5) ** 2) ** 0.5
-                )
-                # From fit to wind tunnel data from Hoerner, "Fluid Dynamic Drag", 1965. Page 13-13, Figure 32,
-                # "Variation of section drag coefficient of a horizontal tail surface at constant C_L"
+                    surf = surf.copy()
+                    surf.deflection = -surf.deflection
+                symmetry_treated_control_surfaces.append(surf)
 
             ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
-            import neuralfoil as nf
-            xsec_a_airfoil_aero = nf.get_aero_from_airfoil(
-                airfoil_a,
-                alpha=alpha_generalized_effective + effective_d_alpha,
-                Re=Re_a,
+            kwargs = dict(
+                model_size="medium",
+                alpha=alpha_generalized_effective,
+                mach=mach_normal,
+                control_surfaces=symmetry_treated_control_surfaces,
+                control_surface_strategy="polar_modification"
             )
-            xsec_b_airfoil_aero = nf.get_aero_from_airfoil(
-                airfoil_b,
-                alpha=alpha_generalized_effective + effective_d_alpha,
+
+            xsec_a_airfoil_aero = xsec_a.airfoil.get_aero_from_neuralfoil(
+                Re=Re_a,
+                **kwargs
+            )
+            xsec_b_airfoil_aero = xsec_b.airfoil.get_aero_from_neuralfoil(
                 Re=Re_b,
+                **kwargs
             )
 
             xsec_a_Cl = xsec_a_airfoil_aero["CL"]
@@ -684,8 +672,8 @@ class AeroBuildup(ExplicitAnalysis):
                       ) * AR_3D_factor ** 0.2  # Models slight decrease in finite-wing CL_max.
 
             ##### Compute sectional drag at cross-sections using lookup functions. Merge them linearly to get section CD.
-            xsec_a_Cdp = xsec_a_airfoil_aero["CD"] * effective_CD_markup_from_control_surfaces
-            xsec_b_Cdp = xsec_b_airfoil_aero["CD"] * effective_CD_markup_from_control_surfaces
+            xsec_a_Cdp = xsec_a_airfoil_aero["CD"]
+            xsec_b_Cdp = xsec_b_airfoil_aero["CD"]
             sect_CDp = (
                 (
                         xsec_a_Cdp * a_weight +
