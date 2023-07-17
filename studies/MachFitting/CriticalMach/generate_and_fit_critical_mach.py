@@ -58,71 +58,88 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     # plt.plot(sol(M), ".")
     # p.sns.displot(sol(M), bins=51)
-    plt.plot(Cp0, sol(M), "-")
+    plt.plot(Cp0, M, ".k", label="Data", alpha=0.5)
+
+    # fit = asb.FittedModel(
+    #     model=lambda x, p: (p["o"] - x + p["a"] * (-x) ** p["b"]) ** p["c"],
+    #     x_data=Cp0,
+    #     y_data=M,
+    #     parameter_guesses={
+    #         "a": 0.653,
+    #         "b": 0.643,
+    #         "c": -0.553,
+    #         "o": 0.999,
+    #     },
+    # )
+    # plt.plot(Cp0, fit(Cp0), "-", label="Fit", alpha=0.5)
+
     plt.xlim(-6, 0)
+    plt.ylim(0.2, 1)
     p.show_plot(
         title="Critical Mach Number vs. $C_{p0}$",
         xlabel="Incompressible Pressure Coefficient $C_{p0}$ [-]",
         ylabel="Critical Mach Number [-]",
     )
 
-### Fit an explicit function to the data using PySR
-from pysr import PySRRegressor
+    # ### Fit an explicit function to the data using PySR
+    # from pysr import PySRRegressor
+    #
+    # model = PySRRegressor(
+    #     niterations=1000000,  # < Increase me for better results
+    #     population_size=50,
+    #     ncyclesperiteration=700,
+    #     binary_operators=[
+    #         "+",
+    #         "-",
+    #         "*",
+    #         "/",
+    #         "pow",
+    #     ],
+    #     unary_operators=[
+    #         # "cos",
+    #         "exp",
+    #         "log",
+    #         # "sin",
+    #         # "tan",
+    #         # "inv(x) = 1/x",
+    #         # ^ Custom operator (julia syntax)
+    #     ],
+    #     # complexity_of_operators={
+    #     #     "*"  : 1,
+    #     #     "+"  : 1,
+    #     #     "pow": 2,
+    #     #     "exp": 2,
+    #     #     "log": 2,
+    #     #     # "cos": 3,
+    #     #     # "sin": 3,
+    #     #     # "tan": 5,
+    #     # },
+    #     # complexity_of_constants=0.5,
+    #     # complexity_of_variables=2,
+    #     constraints={
+    #         'pow': (-1, 5),
+    #         # 'sin': 5,
+    #         # 'cos': 5,
+    #         # 'tan': 5,
+    #     },
+    #     maxsize=20,
+    #     output_jax_format=True,
+    #     # batching=True,
+    #     # batch_size=500,
+    #     # warm_start=True,
+    #     # extra_sympy_mappings={"inv": lambda x: 1 / x},
+    #     # ^ Define operator for SymPy as well
+    #     # loss="loss(prediction, target, weight) = weight * (prediction - target) ^ 2",
+    #     # ^ Custom loss function (julia syntax)
+    # )
+    #
+    # model.fit(
+    #     np.stack([
+    #         Cp0,
+    #     ], axis=1),
+    #     M_crit,
+    #     variable_names=[
+    #         "Cp0",
+    #     ],
+    # )
 
-# model = PySRRegressor(
-#     niterations=1000000,  # < Increase me for better results
-#     population_size=50,
-#     ncyclesperiteration=700,
-#     binary_operators=[
-#         "+",
-#         "-",
-#         "*",
-#         "/",
-#         "pow",
-#     ],
-#     unary_operators=[
-#         # "cos",
-#         "exp",
-#         "log",
-#         # "sin",
-#         # "tan",
-#         # "inv(x) = 1/x",
-#         # ^ Custom operator (julia syntax)
-#     ],
-#     complexity_of_operators={
-#         "*"  : 1,
-#         "+"  : 1,
-#         "pow": 2,
-#         "exp": 2,
-#         "log": 2,
-#         # "cos": 3,
-#         # "sin": 3,
-#         # "tan": 5,
-#     },
-#     # complexity_of_constants=0.5,
-#     complexity_of_variables=2,
-#     constraints={
-#         'pow': (-1, 5),
-#         # 'sin': 5,
-#         # 'cos': 5,
-#         # 'tan': 5,
-#     },
-#     maxsize=40,
-#     # batching=True,
-#     # batch_size=500,
-#     # warm_start=True,
-#     # extra_sympy_mappings={"inv": lambda x: 1 / x},
-#     # ^ Define operator for SymPy as well
-#     # loss="loss(prediction, target, weight) = weight * (prediction - target) ^ 2",
-#     # ^ Custom loss function (julia syntax)
-# )
-#
-# model.fit(
-#     np.stack([
-#         Cp0,
-#     ], axis=1),
-#     M_crit,
-#     variable_names=[
-#         "Cp0",
-#     ],
-# )
