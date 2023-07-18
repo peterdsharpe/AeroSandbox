@@ -49,7 +49,7 @@ import aerosandbox.tools.pretty_plots as p
 fig, ax = plt.subplots()
 
 x = 'mach'
-y = 'CL'
+y = 'CD'
 
 for analysis, data in datas.items():
 
