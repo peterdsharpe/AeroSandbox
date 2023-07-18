@@ -37,10 +37,10 @@ ab_aero = airfoil.get_aero_from_neuralfoil(1, 6.5e6, machs, model_size="xxxlarge
 ab_aero["mach"] = machs
 
 datas = {
-    "ASB AeroBuildup"   : ab_aero,
-    "XFoil v6 (P-G)"    : get_data(data_folder / "xfoil6.csv"),
-    "MSES (Euler + IBL)": get_data(data_folder / "mses.csv"),
-    "SU2 (RANS)"        : get_data(data_folder / "su2.csv"),
+    "ASB AeroBuildup"        : ab_aero,
+    "XFoil v6 (Karman-Tsien)": get_data(data_folder / "xfoil6.csv"),
+    "MSES (Euler + IBL)"     : get_data(data_folder / "mses.csv"),
+    "SU2 (RANS)"             : get_data(data_folder / "su2.csv"),
 }
 
 import matplotlib.pyplot as plt
