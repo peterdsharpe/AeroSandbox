@@ -197,8 +197,15 @@ def show_plot(
 
                     elif ratio < 10 ** 1.5:
                         maj_loc = mt.LogLocator(subs=np.arange(1, 10))
+                        # if i_ax.axis_name == "x":
+                        #     default = r"$^{^|}$"
+                        # elif i_ax.axis_name == "y":
+                        #     default = r"–"
+                        # else:
+                        #     default = ""
+
                         maj_fmt = mt.FuncFormatter(
-                            partial(linlogfmt, ticks=[1, 2, 5], default=r"$^{^|}$")
+                            partial(linlogfmt, ticks=[1, 2, 5])
                         )
                         min_loc = mt.LogLocator(numticks=999, subs=np.arange(10, 100) / 10)
                         min_fmt = mt.NullFormatter()
