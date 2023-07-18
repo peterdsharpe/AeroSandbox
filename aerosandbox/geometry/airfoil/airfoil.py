@@ -738,7 +738,9 @@ class Airfoil(Polygon):
         """
         Below is a function that computes the critical Mach number from the incompressible Cp_min.
         
-        It's based on a Laitone-rule compressibility correction (similar to Prandtl-Glauert or Karman-Tsien, but higher order).
+        It's based on a Laitone-rule compressibility correction (similar to Prandtl-Glauert or Karman-Tsien, 
+        but higher order), together with the Cp_sonic relation. When the Laitone-rule Cp equals Cp_sonic, we have reached
+        the critical Mach number.
         
         This approach does not admit explicit solution for the Cp0 -> M_crit relation, so we instead regress a 
         relationship out using symbolic regression. In effect, this is a curve fit to synthetic data.
@@ -757,13 +759,16 @@ class Airfoil(Polygon):
                             + 0.6582431351007195 * (-Cpmin_0) ** 0.6724789439840343
                     ) ** -0.5504677038358711
 
+        mach_dd = mach_crit + (0.1 / 80) ** (1 / 3)  # drag divergence Mach number
+        # Relation taken from W.H. Mason's Korn Equation
+
         ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
         gamma = 1.4 # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
         beta_squared_ideal = 1 - mach ** 2
         beta = np.softmax(
             beta_squared_ideal,
             -beta_squared_ideal,
-            softness=0.1  # Empirically tuned to data
+            softness=0.5  # Empirically tuned to data
         ) ** 0.5
 
         CL = CL / beta
@@ -788,23 +793,25 @@ class Airfoil(Polygon):
         ### Step 3: modify CL based on buffet and supersonic considerations
         # Accounts approximately for the lift drop due to buffet.
         buffet_factor = np.blend(
-            40 * (mach - mach_crit - (0.1 / 80) ** (1 / 3) - 0.06) * (mach - 1.1),
+            50 * (mach - (mach_dd + 0.04)), # Tuned to RANS CFD data empirically
+            np.blend(
+                (mach - 1) / 0.1,
+                1,
+                0.5
+            ),
             1,
-            transonic_buffet_lift_knockdown
         )
 
         # Accounts for the fact that theoretical CL_alpha goes from 2 * pi (subsonic) to 4 (supersonic),
         # following linearized supersonic flow on a thin airfoil.
         cla_supersonic_ratio_factor = np.blend(
-            10 * (mach - 1),
+            (mach - 1) / 0.1,
             4 / (2 * np.pi),
             1,
         )
         CL = CL * buffet_factor * cla_supersonic_ratio_factor
 
         # Step 4: Account for wave drag
-        mach_dd = mach_crit + (0.1 / 80) ** (1 / 3)  # drag divergence Mach number
-
         t_over_c = self.max_thickness()
 
         CD_wave = np.where(
@@ -848,15 +855,14 @@ class Airfoil(Polygon):
         CD = CD + CD_wave
 
         # Step 5: If beyond M_crit or if separated, move the airfoil aerodynamic center back to x/c = 0.5 (Mach tuck)
+        has_aerodynamic_center_shift = (mach - (mach_dd + 0.06)) / 0.06
 
         if include_360_deg_effects:
             has_aerodynamic_center_shift = np.softmax(
                 is_separated,
-                (mach - mach_crit) / 0.25,
+                has_aerodynamic_center_shift,
                 softness=0.1
             )
-        else:
-            has_aerodynamic_center_shift = (mach - mach_crit) / 0.25
 
         CM = CM + np.blend(
             has_aerodynamic_center_shift,
