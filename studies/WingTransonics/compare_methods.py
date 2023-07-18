@@ -34,16 +34,10 @@ def get_data(filename):
 machs = np.linspace(0, 1.3, 500)
 airfoil = asb.Airfoil("rae2822")
 ab_aero = airfoil.get_aero_from_neuralfoil(1, 6.5e6, machs, model_size="xxxlarge")
-
-aerobuildup_data = {
-    "mach": machs,
-    "CL": ab_aero["CL"],
-    "CD": ab_aero["CD"],
-    "CM": ab_aero["CM"],
-}
+ab_aero["mach"] = machs
 
 datas = {
-    "ASB AeroBuildup"   : aerobuildup_data,
+    "ASB AeroBuildup"   : ab_aero,
     "XFoil v6 (P-G)"    : get_data(data_folder / "xfoil6.csv"),
     "MSES (Euler + IBL)": get_data(data_folder / "mses.csv"),
     "SU2 (RANS)"        : get_data(data_folder / "su2.csv"),
@@ -55,14 +49,13 @@ import aerosandbox.tools.pretty_plots as p
 fig, ax = plt.subplots()
 
 x = 'mach'
-y = 'CD'
+y = 'CL'
 
 for analysis, data in datas.items():
 
     plt.plot(
         data[x],
         data[y],
-        "-",
         label=analysis,
         # linewidth=1,
         # markersize=3,
