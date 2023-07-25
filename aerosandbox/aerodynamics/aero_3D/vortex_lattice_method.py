@@ -1,4 +1,4 @@
-import numpy as np
+import aerosandbox.numpy as np
 from aerosandbox import ExplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
