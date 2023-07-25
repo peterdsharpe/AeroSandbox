@@ -816,6 +816,8 @@ class Airplane(AeroSandboxObject):
                         thickness=minimum_airfoil_TE_thickness
                     )
 
+                LE_index = af.LE_index()
+
                 xsec_wires.append(
                     cq.Workplane(
                         inPlane=cq.Plane(
@@ -826,7 +828,12 @@ class Airplane(AeroSandboxObject):
                     ).spline(
                         listOfXYTuple=[
                             tuple(xy * xsec.chord)
-                            for xy in af.coordinates
+                            for xy in af.coordinates[:LE_index, :]
+                        ]
+                    ).spline(
+                        listOfXYTuple=[
+                            tuple(xy * xsec.chord)
+                            for xy in af.coordinates[LE_index:, :]
                         ]
                     ).close()
                 )
