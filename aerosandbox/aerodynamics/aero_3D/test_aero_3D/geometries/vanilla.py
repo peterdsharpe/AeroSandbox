@@ -35,10 +35,12 @@ airplane = asb.Airplane(
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=0.7,
+                    airfoil=asb.Airfoil("naca0012")
                 ),
                 asb.WingXSec(
                     xyz_le=[0.14, 1.25, 0],
-                    chord=0.42
+                    chord=0.42,
+                    airfoil=asb.Airfoil("naca0012")
                 ),
             ]
         ).translate([4, 0, 0]),
@@ -48,10 +50,12 @@ airplane = asb.Airplane(
                 asb.WingXSec(
                     xyz_le=[0, 0, 0],
                     chord=0.7,
+                    airfoil=asb.Airfoil("naca0012")
                 ),
                 asb.WingXSec(
                     xyz_le=[0.14, 0, 1],
-                    chord=0.42
+                    chord=0.42,
+                    airfoil=asb.Airfoil("naca0012")
                 )
             ]
         ).translate([4, 0, 0])
