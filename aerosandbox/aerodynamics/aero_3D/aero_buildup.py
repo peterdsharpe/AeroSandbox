@@ -1106,13 +1106,6 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    for wing in airplane.wings:
-        for xsec in wing.xsecs:
-            xsec.airfoil.generate_polars(
-                alphas=np.linspace(-12, 12, 25),
-                cache_filename=os.path.join(os.path.expanduser('~'), 'Downloads', 'test', f'{xsec.airfoil.name}.dat')
-            )
-
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(alpha=0, beta=1),
@@ -1207,7 +1200,7 @@ if __name__ == '__main__':
     p.contour(
         Beta, Alpha, (aero["CL"] / aero["CD"]).reshape(Alpha.shape),
         levels=15,
-        colorbar_label="Finesse $C_L / C_D$ [-]",
+        colorbar_label="$C_L / C_D$ [-]",
         linelabels_format=lambda x: f"{x:.0f}",
         linelabels_fontsize=7,
         cmap="RdBu",
