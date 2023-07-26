@@ -48,34 +48,47 @@ if __name__ == '__main__':
     xa = xf_run["alpha"]
     xCL = xf_run["CL"]
     xCD = xf_run["CD"]
+    na = alpha
+    nf_aero = af.get_aero_from_neuralfoil(
+        alpha=na,
+        Re=Re,
+        mach=0,
+    )
+
 
     plt.sca(ax[0, 0])
-    plt.plot(ma, mCL)
-    plt.plot(xa, xCL, ".")
+    plt.plot(ma, mCL, label="`Airfoil.generate_polars()`")
+    plt.plot(na, nf_aero["CL"], label="NeuralFoil")
+    plt.plot(xa, xCL, ".k")
     plt.xlabel("Angle of Attack [deg]")
     plt.ylabel("Lift Coefficient $C_L$ [-]")
+    plt.legend(fontsize=8)
 
     plt.sca(ax[0, 1])
     plt.plot(ma, mCD)
-    plt.plot(xa, xCD, ".")
+    plt.plot(na, nf_aero["CD"])
+    plt.plot(xa, xCD, ".k")
+    plt.xlim(-10, 15)
     plt.ylim(0, 0.05)
     plt.xlabel("Angle of Attack [deg]")
     plt.ylabel("Drag Coefficient $C_D$ [-]")
 
     plt.sca(ax[1, 0])
     plt.plot(mCD, mCL)
-    plt.plot(xCD, xCL, ".")
+    plt.plot(nf_aero["CD"], nf_aero["CL"])
+    plt.plot(xCD, xCL, ".k")
     plt.xlim(0, 0.05)
     plt.xlabel("Drag Coefficient $C_D$ [-]")
     plt.ylabel("Lift Coefficient $C_L$ [-]")
 
     plt.sca(ax[1, 1])
     plt.plot(ma, mCL / mCD)
-    plt.plot(xa, xCL / xCD, ".")
+    plt.plot(na, nf_aero["CL"] / nf_aero["CD"])
+    plt.plot(xa, xCL / xCD, ".k")
     plt.xlabel("Angle of Attack [deg]")
     plt.ylabel("Lift-to-Drag Ratio $C_L/C_D$ [-]")
 
-    show_plot()
+    show_plot(legend=False)
 
     ##### Test optimization
     opti = asb.Opti()
