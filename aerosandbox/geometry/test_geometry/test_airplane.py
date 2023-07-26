@@ -235,10 +235,6 @@ def a() -> asb.Airplane:
 
     ### Wing
     wing_airfoil = asb.Airfoil("b737c").repanel(100)
-    wing_airfoil.generate_polars(
-        cache_filename="cache/b737c.json",
-        include_compressibility_effects=True,
-    )
 
     wing_span = 214 * u.foot
     wing_half_span = wing_span / 2
@@ -307,12 +303,6 @@ def a() -> asb.Airplane:
     ]).subdivide_sections(3)
 
     ### Horizontal Stabilizer
-    hstab_airfoil = asb.Airfoil("naca0012")
-    hstab_airfoil.generate_polars(
-        cache_filename="cache/naca0012.json",
-        include_compressibility_effects=True
-    )
-
     hstab_span = 70.8 * u.foot
     hstab_half_span = hstab_span / 2
 
@@ -320,17 +310,15 @@ def a() -> asb.Airplane:
 
     hstab_LE_sweep_deg = 39
 
-    elevator = asb.ControlSurface(
-        name="All-moving Elevator",
-        deflection=0
-    )
-
     hstab_root = asb.WingXSec(
         xyz_le=[0, 0, 0],
         chord=hstab_root_chord,
-        airfoil=hstab_airfoil,
+        airfoil=asb.Airfoil("naca0012"),
         control_surfaces=[
-            elevator
+            asb.ControlSurface(
+                name="All-moving Elevator",
+                deflection=0
+            )
         ]
     )
     hstab_tip = asb.WingXSec(
@@ -340,7 +328,7 @@ def a() -> asb.Airplane:
             0
         ],
         chord=0.35 * hstab_root_chord,
-        airfoil=hstab_airfoil
+        airfoil=asb.Airfoil("naca0012")
     )
 
     # Assemble the hstab
@@ -361,12 +349,6 @@ def a() -> asb.Airplane:
     ]).subdivide_sections(3)
 
     ### Vertical Stabilizer
-    vstab_airfoil = asb.Airfoil("naca0008")
-    vstab_airfoil.generate_polars(
-        cache_filename="cache/naca0008.json",
-        include_compressibility_effects=True
-    )
-
     vstab_span = 29.6 * u.foot
 
     vstab_root_chord = 22 * u.foot
@@ -376,7 +358,7 @@ def a() -> asb.Airplane:
     vstab_root = asb.WingXSec(
         xyz_le=[0, 0, 0],
         chord=vstab_root_chord,
-        airfoil=vstab_airfoil
+        airfoil=asb.Airfoil("naca0008")
     )
     vstab_tip = asb.WingXSec(
         xyz_le=[
@@ -385,7 +367,7 @@ def a() -> asb.Airplane:
             vstab_span,
         ],
         chord=0.35 * vstab_root_chord,
-        airfoil=vstab_airfoil
+        airfoil=asb.Airfoil("naca0008")
     )
 
     # Assemble the vstab
