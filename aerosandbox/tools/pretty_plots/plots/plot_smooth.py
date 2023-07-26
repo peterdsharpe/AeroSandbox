@@ -91,8 +91,9 @@ def plot_smooth(
 
     if drop_nans:
         nanmask = np.logical_not(
-            np.logical_or.reduce(
-                [np.isnan(x), np.isnan(y)]
+            np.logical_or(
+                np.isnan(x),
+                np.isnan(y)
             )
         )
 
