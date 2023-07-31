@@ -13,13 +13,14 @@ def show_plot(
         ylabel: str = None,
         dpi: float = None,
         savefig: Union[str, List[str]] = None,
+        savefig_transparent: bool = True,
         tight_layout: bool = True,
         legend: bool = None,
         legend_inline: bool = False,
         legend_frame: bool = True,
-        show: bool = True,
         pretty_grids: bool = True,
         set_ticks: bool = True,
+        show: bool = True,
 ):
     """
     Makes a matplotlib Figure (and all its constituent Axes) look "nice", then displays it.
@@ -47,6 +48,9 @@ def show_plot(
             * If a list of strings is given, saves the figure to each of those paths.
                 (E.g., `savefig=["my_plot.png", "my_plot.pdf"]`)
 
+        savefig_transparent: If True, saves the figure with a transparent background. If False, saves the figure with
+            a white background. Only has an effect if `savefig` is not None.
+
         tight_layout: If True, calls `plt.tight_layout()` to adjust the spacing of individual Axes. If False, skips
             this step.
 
@@ -72,10 +76,6 @@ def show_plot(
         legend_frame: Boolean that controls whether a frame (rectangular background box) is displayed around the legend.
             Default is True.
 
-        show: Boolean that controls whether the plot is displayed after all plot changes are applied. Default is
-            True. You may want to set this to False if you want to make additional manual changes to the plot before
-            displaying it. Default is True.
-
         pretty_grids: Boolean that controls whether the gridlines are formatted have linewidths that are (subjectively)
             more readable.
 
@@ -83,6 +83,10 @@ def show_plot(
             subjectively) more readable.
 
             Works with both linear and log scales, and with both 2D and 3D plots.
+
+        show: Boolean that controls whether the plot is displayed after all plot changes are applied. Default is
+            True. You may want to set this to False if you want to make additional manual changes to the plot before
+            displaying it. Default is True.
 
     Returns: None (completely in-place function). If `show=True` (default), displays the plot after applying changes.
 
@@ -340,7 +344,7 @@ def show_plot(
             savefig = [savefig]
 
         for savefig_i in savefig:
-            plt.savefig(savefig_i, transparent=True)
+            plt.savefig(savefig_i, transparent=savefig_transparent)
 
     if show:
         plt.show()
