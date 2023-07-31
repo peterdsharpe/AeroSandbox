@@ -165,6 +165,36 @@ class Airfoil(Polygon):
             np.allclose(self.coordinates, other.coordinates),
         ])
 
+    def to_kulfan_airfoil(self,
+                          n_weights_per_side: int = 8,
+                          N1: float = 0.5,
+                          N2: float = 1.0,
+                          normalize_coordinates: bool = True,
+                          use_leading_edge_modification: bool = True,
+                          ) -> "KulfanAirfoil":
+
+        from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
+        from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
+
+        parameters = get_kulfan_parameters(
+            coordinates=self.coordinates,
+            n_weights_per_side=n_weights_per_side,
+            N1=N1,
+            N2=N2,
+            normalize_coordinates=normalize_coordinates,
+            use_leading_edge_modification=use_leading_edge_modification,
+        )
+
+        return KulfanAirfoil(
+            name=self.name,
+            lower_weights=parameters["lower_weights"],
+            upper_weights=parameters["upper_weights"],
+            leading_edge_weight=parameters["leading_edge_weight"],
+            TE_thickness=parameters["TE_thickness"],
+            N1=N1,
+            N2=N2,
+        )
+
     def generate_polars(self,
                         alphas=np.linspace(-13, 13, 27),
                         Res=np.geomspace(1e3, 1e8, 12),
