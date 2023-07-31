@@ -204,15 +204,15 @@ def get_kulfan_coordinates(
     Returns:
         np.ndarray: The coordinates of the airfoil as a Nx2 array.
     """
-
-    if "enforce_continuous_LE_radius" in locals():
+    if len(deprecated_kwargs) > 0:
         import warnings
         warnings.warn(
-            "The `enforce_continuous_LE_radius` argument is deprecated. If you want this behavior, just discard the\n"
-            "first lower weight instead.",
-            PendingDeprecationWarning
+            "The following arguments are deprecated and will be removed in a future version:\n"
+            f"{deprecated_kwargs}",
+            DeprecationWarning
         )
-        if enforce_continuous_LE_radius:
+
+        if deprecated_kwargs.get("enforce_continuous_LE_radius", False):
             lower_weights[0] = -1 * upper_weights[0]
 
     x = np.cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
