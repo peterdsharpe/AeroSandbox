@@ -102,6 +102,7 @@ class Airfoil(Polygon):
             import warnings
             warnings.warn(
                 f"Airfoil {self.name} had no coordinates assigned, and could not parse the `coordinates` input!",
+                UserWarning,
                 stacklevel=2,
             )
 
