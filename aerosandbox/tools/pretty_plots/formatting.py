@@ -22,8 +22,7 @@ def show_plot(
         set_ticks: bool = True,
 ):
     """
-    Makes a matplotlib Figure (and all its constituent axes) look "nice" following Peter Sharpe's visual preferences,
-    then displays it.
+    Makes a matplotlib Figure (and all its constituent Axes) look "nice", then displays it.
 
     Arguments control whether various changes (from the default matplotlib settings) are made to the plot.
 
