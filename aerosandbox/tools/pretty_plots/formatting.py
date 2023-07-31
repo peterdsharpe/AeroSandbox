@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker as mt
-from typing import Union
+from typing import Union, List
 from aerosandbox.tools.pretty_plots.labellines import labelLines
 import aerosandbox.numpy as np
 from aerosandbox.tools.pretty_plots.threedim import ax_is_3d
@@ -12,7 +12,7 @@ def show_plot(
         xlabel: str = None,
         ylabel: str = None,
         dpi: float = None,
-        savefig: str = None,
+        savefig: Union[str, List[str]] = None,
         tight_layout: bool = True,
         legend: bool = None,
         legend_inline: bool = False,
@@ -22,17 +22,70 @@ def show_plot(
         set_ticks: bool = True,
 ):
     """
-    Finalize and show a plot.
-    Args:
-        title:
-        xlabel:
-        ylabel:
-        tight_layout:
-        legend:
-        show:
-        pretty_grids:
+    Makes a matplotlib Figure (and all its constituent axes) look "nice" following Peter Sharpe's visual preferences,
+    then displays it.
 
-    Returns:
+    Arguments control whether various changes (from the default matplotlib settings) are made to the plot.
+
+    One argument in particular, `show` (a boolean), controls whether the plot is displayed.
+
+    Args:
+
+        title: If given, sets the title of the plot. If the Figure has multiple axes, this sets the Figure-level
+            suptitle instead of setting the individual Axis title.
+
+        xlabel: If given, sets the xlabel of the plot on the current Axis. (Equivalent to `plt.xlabel(my_label)`)
+
+        ylabel: If given, sets the ylabel of the plot on the current Axis. (Equivalent to `plt.ylabel(my_label)`)
+
+        dpi: If given, sets the dpi (display resolution, in Dots Per Inch) of the Figure.
+
+        savefig: If given, saves the figure to the given path(s).
+
+            * If a string is given, saves the figure to that path.
+                (E.g., `savefig="my_plot.png"`)
+
+            * If a list of strings is given, saves the figure to each of those paths.
+                (E.g., `savefig=["my_plot.png", "my_plot.pdf"]`)
+
+        tight_layout: If True, calls `plt.tight_layout()` to adjust the spacing of individual Axes. If False, skips
+            this step.
+
+        legend: This value can be True, False, or None.
+
+            * If True, displays a legend on the current Axis.
+
+            * If False, does not add a legend on the current Axis. (However, does not delete any existing legends.)
+
+            * If None (default), goes through some logic to determine whether a legend should be displayed. If there
+                is only one line on the current Axis, no legend is displayed. If there are multiple lines, a legend is (
+                in general) displayed.
+
+        legend_inline: Boolean that controls whether an "inline" legend is displayed.
+
+            * If True, displays an "inline" legend, where the labels are next to the lines instead of in a box.
+
+            * If False (default), displays a traditional legend.
+
+            Only has an effect if `legend=True` (or `legend=None`, and logic determines that a legend should be
+            displayed).
+
+        legend_frame: Boolean that controls whether a frame (rectangular background box) is displayed around the legend.
+            Default is True.
+
+        show: Boolean that controls whether the plot is displayed after all plot changes are applied. Default is
+            True. You may want to set this to False if you want to make additional manual changes to the plot before
+            displaying it. Default is True.
+
+        pretty_grids: Boolean that controls whether the gridlines are formatted have linewidths that are (subjectively)
+            more readable.
+
+        set_ticks: Boolean that controls whether the tick and grid locations + labels are formatted to be (
+            subjectively) more readable.
+
+            Works with both linear and log scales, and with both 2D and 3D plots.
+
+    Returns: None (completely in-place function). If `show=True` (default), displays the plot after applying changes.
 
     """
     fig = plt.gcf()
@@ -236,7 +289,7 @@ def show_plot(
 
                     min_loc = mt.AutoMinorLocator()
 
-                else: # For any other scale, just use the default tick locations
+                else:  # For any other scale, just use the default tick locations
                     continue
 
                 if len(i_ax.get_major_ticks()) != 0:  # Unless the user has manually set the ticks to be empty
@@ -283,7 +336,13 @@ def show_plot(
     if dpi is not None:
         fig.set_dpi(dpi)
     if savefig is not None:
-        plt.savefig(savefig)
+
+        if not isinstance(savefig, (list, tuple, set)):
+            savefig = [savefig]
+
+        for savefig_i in savefig:
+            plt.savefig(savefig_i, transparent=True)
+
     if show:
         plt.show()
 
