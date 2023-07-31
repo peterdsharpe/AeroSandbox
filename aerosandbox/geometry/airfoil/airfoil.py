@@ -838,7 +838,7 @@ class Airfoil(Polygon):
         return np.max(self.local_thickness(x_over_c=x_over_c_sample))
 
     def draw(self,
-             draw_mcl=True,
+             draw_mcl=False,
              draw_markers=True,
              backend="matplotlib",
              show=True
@@ -863,6 +863,8 @@ class Airfoil(Polygon):
 
         if backend == "matplotlib":
             import matplotlib.pyplot as plt
+            import aerosandbox.tools.pretty_plots as p
+
             color = '#280887'
             plt.plot(
                 x, y,
@@ -872,12 +874,13 @@ class Airfoil(Polygon):
             if draw_mcl:
                 plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
             plt.axis("equal")
-            plt.xlabel(r"$x/c$")
-            plt.ylabel(r"$y/c$")
-            plt.title(f"{self.name} Airfoil")
-            plt.tight_layout()
             if show:
-                plt.show()
+                p.show_plot(
+                    title=f"{self.name} Airfoil",
+                    xlabel=r"$x/c$",
+                    ylabel=r"$y/c$",
+
+                )
 
         elif backend == "plotly":
             from aerosandbox.visualization.plotly import go

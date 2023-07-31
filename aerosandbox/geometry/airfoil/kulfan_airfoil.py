@@ -105,6 +105,17 @@ class KulfanAirfoil(Airfoil):
             coordinates=self.coordinates
         )
 
+    def draw(self,
+             *args,
+             draw_markers=False,
+             **kwargs
+             ):
+        return self.to_airfoil().draw(
+            *args,
+            draw_markers=draw_markers,
+            **kwargs
+        )
+
     def get_aero_from_neuralfoil(self,
                                  alpha: Union[float, np.ndarray],
                                  Re: Union[float, np.ndarray],
