@@ -1042,6 +1042,7 @@ class Airfoil(Polygon):
 
     def draw(self,
              draw_mcl=True,
+             draw_markers=True,
              backend="matplotlib",
              show=True
              ) -> None:
@@ -1066,7 +1067,10 @@ class Airfoil(Polygon):
         if backend == "matplotlib":
             import matplotlib.pyplot as plt
             color = '#280887'
-            plt.plot(x, y, ".-", zorder=11, color=color)
+            plt.plot(
+                x, y,
+                ".-" if draw_markers else "-",
+                zorder=11, color=color)
             plt.fill(x, y, zorder=10, color=color, alpha=0.2)
             if draw_mcl:
                 plt.plot(x_mcl, y_mcl, "-", zorder=4, color=color, alpha=0.4)
@@ -1085,7 +1089,7 @@ class Airfoil(Polygon):
                 go.Scatter(
                     x=x,
                     y=y,
-                    mode="lines+markers",
+                    mode="lines+markers" if draw_markers else "lines",
                     name="Airfoil",
                     fill="toself",
                     line=dict(
@@ -1098,7 +1102,7 @@ class Airfoil(Polygon):
                     go.Scatter(
                         x=x_mcl,
                         y=y_mcl,
-                        mode="lines+markers",
+                        mode="lines",
                         name="Mean Camber Line (MCL)",
                         line=dict(
                             color="navy"
