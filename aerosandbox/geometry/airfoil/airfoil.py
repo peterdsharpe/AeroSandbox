@@ -1659,34 +1659,34 @@ class Airfoil(Polygon):
         Returns: A new airfoil that is a blend of this airfoil and another one.
 
         """
-        this_foil = self.repanel(n_points_per_side=n_points_per_side)
-        that_foil = airfoil.repanel(n_points_per_side=n_points_per_side)
-        this_fraction = 1 - blend_fraction
-        that_fraction = blend_fraction
+        foil_a = self.repanel(n_points_per_side=n_points_per_side)
+        foil_b = airfoil.repanel(n_points_per_side=n_points_per_side)
+        a_fraction = 1 - blend_fraction
+        b_fraction = blend_fraction
 
-        name = f"{this_fraction * 100:.0f}% {self.name}, {that_fraction * 100:.0f}% {airfoil.name}"
+        name = f"{a_fraction * 100:.0f}% {self.name}, {b_fraction * 100:.0f}% {airfoil.name}"
 
         coordinates = (
-                this_fraction * this_foil.coordinates +
-                that_fraction * that_foil.coordinates
+                a_fraction * foil_a.coordinates +
+                b_fraction * foil_b.coordinates
         )
 
         def CL_function(alpha, Re, mach):
             return (
-                    this_fraction * this_foil.CL_function(alpha, Re, mach) +
-                    that_fraction * that_foil.CL_function(alpha, Re, mach)
+                    a_fraction * foil_a.CL_function(alpha, Re, mach) +
+                    b_fraction * foil_b.CL_function(alpha, Re, mach)
             )
 
         def CD_function(alpha, Re, mach):
             return (
-                    this_fraction * this_foil.CD_function(alpha, Re, mach) +
-                    that_fraction * that_foil.CD_function(alpha, Re, mach)
+                    a_fraction * foil_a.CD_function(alpha, Re, mach) +
+                    b_fraction * foil_b.CD_function(alpha, Re, mach)
             )
 
         def CM_function(alpha, Re, mach):
             return (
-                    this_fraction * this_foil.CM_function(alpha, Re, mach) +
-                    that_fraction * that_foil.CM_function(alpha, Re, mach)
+                    a_fraction * foil_a.CM_function(alpha, Re, mach) +
+                    b_fraction * foil_b.CM_function(alpha, Re, mach)
             )
 
         return Airfoil(
