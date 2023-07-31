@@ -22,10 +22,7 @@ class Airfoil(Polygon):
     def __init__(self,
                  name: str = "Untitled",
                  coordinates: Union[None, str, np.ndarray] = None,
-                 generate_polars: bool = False,
-                 CL_function: Callable[[float, float, float], float] = None,
-                 CD_function: Callable[[float, float, float], float] = None,
-                 CM_function: Callable[[float, float, float], float] = None,
+                 **deprecated_keyword_arguments
                  ):
         """
         Creates an Airfoil object.
@@ -64,33 +61,7 @@ class Airfoil(Polygon):
                     "dae11"), coordinates will be loaded from that. Note that the string you provide must be exactly
                     the name of the associated *.dat file in the UIUC database.
 
-            CL_function: A function that gives the sectional lift coefficient of the airfoil as a function of several
-            parameters.
-
-                Must be a callable with that takes exactly these parameters as follows:
-
-                >>> def CL_function(alpha, Re, mach)
-
-                where:
-
-                    * `alpha` is the local angle of attack, in degrees
-
-                    * `Re` is the local Reynolds number
-
-                    * `mach` is the local Mach number
-
-            CD_function: A function that gives the sectional drag coefficient of the airfoil as a function of
-            several parameters.
-
-                Has the exact same syntax as `CL_function`, see above.
-
-            CM_function: A function that gives the sectional moment coefficient of the airfoil (about the
-            quarter-chord) as a function of several parameters.
-
-                Has the exact same syntax as `CL_function`, see above.
-
         """
-
         ### Handle the airfoil name
         self.name = name
 
@@ -134,23 +105,38 @@ class Airfoil(Polygon):
                 stacklevel=2,
             )
 
-        ### Handle getting default polars
-        if generate_polars:
-            self.generate_polars()
-        else:
-            self.CL_function = default_CL_function
-            self.CD_function = default_CD_function
-            self.CM_function = default_CM_function
+        ### Handle deprecated keyword arguments
+        if len(deprecated_keyword_arguments) > 0:
+            import warnings
+            warnings.warn(
+                "The `generate_polars`, `CL_function`, `CD_function`, and `CM_function` keyword arguments to the "
+                "Airfoil constructor will be deprecated in an upcoming release. Their functionality is replaced"
+                "by `Airfoil.get_aero_from_neuralfoil()`, which is faster and has better properties for optimization.",
+                PendingDeprecationWarning
+            )
 
-        ### Overwrite any default polars with those provided
-        if CL_function is not None:
-            self.CL_function = CL_function
+            generate_polars = deprecated_keyword_arguments.get("generate_polars", False)
+            CL_function = deprecated_keyword_arguments.get("CL_function", None)
+            CD_function = deprecated_keyword_arguments.get("CD_function", None)
+            CM_function = deprecated_keyword_arguments.get("CM_function", None)
 
-        if CD_function is not None:
-            self.CD_function = CD_function
+            ### Handle getting default polars
+            if generate_polars:
+                self.generate_polars()
+            else:
+                self.CL_function = default_CL_function
+                self.CD_function = default_CD_function
+                self.CM_function = default_CM_function
 
-        if CM_function is not None:
-            self.CM_function = CM_function
+            ### Overwrite any default polars with those provided
+            if CL_function is not None:
+                self.CL_function = CL_function
+
+            if CD_function is not None:
+                self.CD_function = CD_function
+
+            if CM_function is not None:
+                self.CM_function = CM_function
 
     def __repr__(self) -> str:
         return f"Airfoil {self.name} ({self.n_points()} points)"
@@ -763,7 +749,7 @@ class Airfoil(Polygon):
         # Relation taken from W.H. Mason's Korn Equation
 
         ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
-        gamma = 1.4 # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
+        gamma = 1.4  # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
         beta_squared_ideal = 1 - mach ** 2
         beta = np.softmax(
             beta_squared_ideal,
@@ -793,7 +779,7 @@ class Airfoil(Polygon):
         ### Step 3: modify CL based on buffet and supersonic considerations
         # Accounts approximately for the lift drop due to buffet.
         buffet_factor = np.blend(
-            50 * (mach - (mach_dd + 0.04)), # Tuned to RANS CFD data empirically
+            50 * (mach - (mach_dd + 0.04)),  # Tuned to RANS CFD data empirically
             np.blend(
                 (mach - 1) / 0.1,
                 1,
