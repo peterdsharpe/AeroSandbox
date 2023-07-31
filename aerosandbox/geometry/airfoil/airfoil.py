@@ -618,276 +618,42 @@ class Airfoil(Polygon):
                                  model_size: str = "large",
                                  control_surfaces: List["ControlSurface"] = None,
                                  control_surface_strategy="polar_modification",
-                                 transonic_buffet_lift_knockdown: float = 0.3,
                                  include_360_deg_effects: bool = True,
                                  ) -> Dict[str, Union[float, np.ndarray]]:
-        if self.coordinates is None:
-            raise ValueError("Cannot do aerodynamic analysis on an airfoil that you don't have the coordinates of!")
-        if control_surfaces is None:
-            control_surfaces = []
 
-        alpha = np.mod(alpha + 180, 360) - 180  # Enforce periodicity of alpha
-
-        ##### Evaluate the control surfaces of the airfoil
         airfoil = self
 
-        effective_d_alpha = 0.
-        effective_CD_multiplier_from_control_surfaces = 1.
-
         if control_surface_strategy == "polar_modification":
-
-            for surf in control_surfaces:
-
-                effectiveness = 1 - np.maximum(0, surf.hinge_point + 1e-16) ** 2.751428551177291
-                # From XFoil-based study at `/AeroSandbox/studies/ControlSurfaceEffectiveness/`
-
-                effective_d_alpha += surf.deflection * effectiveness
-
-                effective_CD_multiplier_from_control_surfaces *= (
-                        2 + (surf.deflection / 11.5) ** 2 - (1 + (surf.deflection / 11.5) ** 2) ** 0.5
-                )
-                # From fit to wind tunnel data from Hoerner, "Fluid Dynamic Drag", 1965. Page 13-13, Figure 32,
-                # "Variation of section drag coefficient of a horizontal tail surface at constant C_L"
+            pass
 
         elif control_surface_strategy == "coordinate_modification":
-
             for surf in control_surfaces:
                 airfoil = airfoil.add_control_surface(
                     deflection=surf.deflection,
                     hinge_point_x=surf.hinge_point,
                 )
+            control_surfaces = []
 
         else:
             raise ValueError("Invalid `control_surface_strategy`!\n"
                              "Valid options are \"polar_modification\" or \"coordinate_modification\".")
 
-        ##### Use NeuralFoil to evaluate the incompressible aerodynamics of the airfoil
-        import neuralfoil as nf
-        nf_aero = nf.get_aero_from_airfoil(
-            airfoil=airfoil,
-            alpha=alpha + effective_d_alpha,
-            Re=Re,
-            model_size=model_size
+        airfoil_normalization = airfoil.normalize(return_dict=True)
+
+        kulfan_airfoil = airfoil_normalization["airfoil"].to_kulfan_airfoil(
+            n_weights_per_side=8,
+            N1=0.5,
+            N2=1.0,
         )
 
-        CL = nf_aero["CL"]
-        CD = nf_aero["CD"] * effective_CD_multiplier_from_control_surfaces
-        CM = nf_aero["CM"]
-        Cpmin_0 = nf_aero["Cpmin"]
-        Top_Xtr = nf_aero["Top_Xtr"]
-        Bot_Xtr = nf_aero["Bot_Xtr"]
-
-        ##### Extend aerodynamic data to 360 degrees (post-stall) using wind tunnel behavior here.
-        if include_360_deg_effects:
-            from aerosandbox.aerodynamics.aero_2D.airfoil_polar_functions import airfoil_coefficients_post_stall
-
-            CL_if_separated, CD_if_separated, CM_if_separated = airfoil_coefficients_post_stall(
-                airfoil=airfoil,
-                alpha=alpha
-            )
-            import aerosandbox.library.aerodynamics as lib_aero
-
-            # These values are so high because NeuralFoil extrapolates quite well past stall
-            alpha_stall_positive = 20
-            alpha_stall_negative = -20
-
-            # This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
-            # ~90% separated, and a value of -1 means the flow is ~90% attached.
-            is_separated = np.softmax(
-                alpha - alpha_stall_positive,
-                alpha_stall_negative - alpha
-            ) / 3
-
-            CL = np.blend(
-                is_separated,
-                CL_if_separated,
-                CL
-            )
-            CD = np.exp(np.blend(
-                is_separated,
-                np.log(CD_if_separated + lib_aero.Cf_flat_plate(Re_L=Re, method="turbulent")),
-                np.log(CD)
-            ))
-            CM = np.blend(
-                is_separated,
-                CM_if_separated,
-                CM
-            )
-            """
-
-            Separated Cpmin_0 model is a very rough fit to Figure 3 of:
-
-            Shademan & Naghib-Lahouti, "Effects of aspect ratio and inclination angle on aerodynamic loads of a flat 
-            plate", Advances in Aerodynamics. 
-            https://www.researchgate.net/publication/342316140_Effects_of_aspect_ratio_and_inclination_angle_on_aerodynamic_loads_of_a_flat_plate
-
-            """
-            Cpmin_0 = np.blend(
-                is_separated,
-                -1 - 0.5 * np.sind(alpha) ** 2,
-                Cpmin_0
-            )
-
-            Top_Xtr = np.blend(
-                is_separated,
-                0.5 - 0.5 * np.tanh(10 * np.sind(alpha)),
-                Top_Xtr
-            )
-            Bot_Xtr = np.blend(
-                is_separated,
-                0.5 + 0.5 * np.tanh(10 * np.sind(alpha)),
-                Bot_Xtr
-            )
-
-        ###### Add compressibility effects
-
-        ### Step 1: compute mach_crit, the critical Mach number
-        """
-        Below is a function that computes the critical Mach number from the incompressible Cp_min.
-        
-        It's based on a Laitone-rule compressibility correction (similar to Prandtl-Glauert or Karman-Tsien, 
-        but higher order), together with the Cp_sonic relation. When the Laitone-rule Cp equals Cp_sonic, we have reached
-        the critical Mach number.
-        
-        This approach does not admit explicit solution for the Cp0 -> M_crit relation, so we instead regress a 
-        relationship out using symbolic regression. In effect, this is a curve fit to synthetic data.
-         
-        See fits at: /AeroSandbox/studies/MachFitting/CriticalMach/
-        """
-        Cpmin_0 = np.softmin(
-            Cpmin_0,
-            0,
-            softness=0.001
+        return kulfan_airfoil.get_aero_from_neuralfoil(
+            alpha=alpha + airfoil_normalization["rotation_angle"],
+            Re=Re / airfoil_normalization["scale_factor"],
+            mach=mach,
+            model_size=model_size,
+            control_surfaces=control_surfaces,
+            include_360_deg_effects=include_360_deg_effects
         )
-
-        mach_crit = (
-                            1.011571026701678
-                            - Cpmin_0
-                            + 0.6582431351007195 * (-Cpmin_0) ** 0.6724789439840343
-                    ) ** -0.5504677038358711
-
-        mach_dd = mach_crit + (0.1 / 80) ** (1 / 3)  # drag divergence Mach number
-        # Relation taken from W.H. Mason's Korn Equation
-
-        ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
-        gamma = 1.4  # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
-        beta_squared_ideal = 1 - mach ** 2
-        beta = np.softmax(
-            beta_squared_ideal,
-            -beta_squared_ideal,
-            softness=0.5  # Empirically tuned to data
-        ) ** 0.5
-
-        CL = CL / beta
-        # CD = CD / beta
-        CM = CM / beta
-
-        # Prandtl-Glauert
-        Cpmin = Cpmin_0 / beta
-
-        # Karman-Tsien
-        # Cpmin = Cpmin_0 / (
-        #     beta
-        #     + mach ** 2 / (1 + beta) * (Cpmin_0 / 2)
-        # )
-
-        # Laitone's rule
-        # Cpmin = Cpmin_0 / (
-        #         beta
-        #         + (mach ** 2) * (1 + (gamma - 1) / 2 * mach ** 2) / (1 + beta) * (Cpmin_0 / 2)
-        # )
-
-        ### Step 3: modify CL based on buffet and supersonic considerations
-        # Accounts approximately for the lift drop due to buffet.
-        buffet_factor = np.blend(
-            50 * (mach - (mach_dd + 0.04)),  # Tuned to RANS CFD data empirically
-            np.blend(
-                (mach - 1) / 0.1,
-                1,
-                0.5
-            ),
-            1,
-        )
-
-        # Accounts for the fact that theoretical CL_alpha goes from 2 * pi (subsonic) to 4 (supersonic),
-        # following linearized supersonic flow on a thin airfoil.
-        cla_supersonic_ratio_factor = np.blend(
-            (mach - 1) / 0.1,
-            4 / (2 * np.pi),
-            1,
-        )
-        CL = CL * buffet_factor * cla_supersonic_ratio_factor
-
-        # Step 4: Account for wave drag
-        t_over_c = self.max_thickness()
-
-        CD_wave = np.where(
-            mach < mach_crit,
-            0,
-            np.where(
-                mach < mach_dd,
-                20 * (mach - mach_crit) ** 4,
-                np.where(
-                    mach < 0.97,
-                    cubic_hermite_patch(
-                        mach,
-                        x_a=mach_dd,
-                        x_b=0.97,
-                        f_a=20 * (0.1 / 80) ** (4 / 3),
-                        f_b=0.8 * t_over_c,
-                        dfdx_a=0.1,
-                        dfdx_b=0.8 * t_over_c * 8
-                    ),
-                    np.where(
-                        mach < 1.1,
-                        cubic_hermite_patch(
-                            mach,
-                            x_a=0.97,
-                            x_b=1.1,
-                            f_a=0.8 * t_over_c,
-                            f_b=0.8 * t_over_c,
-                            dfdx_a=0.8 * t_over_c * 8,
-                            dfdx_b=-0.8 * t_over_c * 8,
-                        ),
-                        np.blend(
-                            8 * 2 * (mach - 1.1) / (1.2 - 0.8),
-                            0.8 * 0.8 * t_over_c,
-                            1.2 * 0.8 * t_over_c,
-                        )
-                    )
-                )
-            )
-        )
-
-        CD = CD + CD_wave
-
-        # Step 5: If beyond M_crit or if separated, move the airfoil aerodynamic center back to x/c = 0.5 (Mach tuck)
-        has_aerodynamic_center_shift = (mach - (mach_dd + 0.06)) / 0.06
-
-        if include_360_deg_effects:
-            has_aerodynamic_center_shift = np.softmax(
-                is_separated,
-                has_aerodynamic_center_shift,
-                softness=0.1
-            )
-
-        CM = CM + np.blend(
-            has_aerodynamic_center_shift,
-            -0.25 * np.cosd(alpha) * CL - 0.25 * np.sind(alpha) * CD,
-            0,
-        )
-
-        return {
-            "CL"       : CL,
-            "CD"       : CD,
-            "CM"       : CM,
-            "Cpmin"    : Cpmin,
-            "Top_Xtr"  : Top_Xtr,
-            "Bot_Xtr"  : Bot_Xtr,
-            "mach_crit": mach_crit,
-            "mach_dd"  : mach_dd,
-            "Cpmin_0"  : Cpmin_0,
-        }
 
     def plot_polars(self,
                     alphas: Union[np.ndarray, List[float]] = np.linspace(-20, 20, 500),
