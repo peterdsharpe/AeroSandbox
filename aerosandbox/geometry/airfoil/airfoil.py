@@ -162,17 +162,7 @@ class Airfoil(Polygon):
         return all([  # If all of these are true, they're equal
             self.name == other.name,
             np.allclose(self.coordinates, other.coordinates),
-            self.CL_function is other.CL_function,
-            self.CD_function is other.CD_function,
-            self.CM_function is other.CM_function,
         ])
-
-    def has_polars(self) -> bool:
-        return (
-                hasattr(self, "CL_function") and
-                hasattr(self, "CD_function") and
-                hasattr(self, "CM_function")
-        )
 
     def generate_polars(self,
                         alphas=np.linspace(-13, 13, 27),
