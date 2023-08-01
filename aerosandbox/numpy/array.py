@@ -237,7 +237,9 @@ def roll(a, shift, axis: int = None):
 
 def max(a, axis=None):
     """
-    Returns the maximum value of an array.
+    Return the maximum of an array or maximum along an axis.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.max.html
     """
 
     if not is_casadi_type(a, recursive=False):
@@ -272,7 +274,9 @@ def max(a, axis=None):
 
 def min(a, axis=None):
     """
-    Returns the minimum value of an array.
+    Return the minimum of an array or minimum along an axis.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.min.html
     """
 
     if not is_casadi_type(a, recursive=False):
