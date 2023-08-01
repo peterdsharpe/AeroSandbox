@@ -134,7 +134,7 @@ def diag(v, k=0):
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diag.html
     """
-    if not is_casadi_type(v):
+    if not is_casadi_type(v, recursive=False):
         return _onp.diag(v, k=k)
 
     else:
@@ -206,7 +206,7 @@ def roll(a, shift, axis: int = None):
         Output array, with the same shape as a.
 
     """
-    if not is_casadi_type(a):
+    if not is_casadi_type(a, recursive=False):
         return _onp.roll(a, shift, axis=axis)
     else:
         if axis is None:
@@ -264,7 +264,7 @@ def reshape(a, newshape, order='C'):
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
     """
 
-    if not is_casadi_type(a):
+    if not is_casadi_type(a, recursive=False):
         return _onp.reshape(a, newshape, order=order)
     else:
         if isinstance(newshape, int):
@@ -285,7 +285,7 @@ def tile(A, reps):
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.tile.html
     """
-    if not is_casadi_type(A):
+    if not is_casadi_type(A, recursive=False):
         return _onp.tile(A, reps)
     else:
         if len(reps) == 1:
@@ -298,7 +298,7 @@ def tile(A, reps):
 
 def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
     """Return an array of zeros with the same shape and type as a given array."""
-    if not is_casadi_type(a):
+    if not is_casadi_type(a, recursive=False):
         return _onp.zeros_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
         return _onp.zeros(shape=length(a))
@@ -306,7 +306,7 @@ def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
 
 def ones_like(a, dtype=None, order='K', subok=True, shape=None):
     """Return an array of ones with the same shape and type as a given array."""
-    if not is_casadi_type(a):
+    if not is_casadi_type(a, recursive=False):
         return _onp.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
         return _onp.ones(shape=length(a))
@@ -314,7 +314,7 @@ def ones_like(a, dtype=None, order='K', subok=True, shape=None):
 
 def empty_like(prototype, dtype=None, order='K', subok=True, shape=None):
     """Return a new array with the same shape and type as a given array."""
-    if not is_casadi_type(prototype):
+    if not is_casadi_type(prototype, recursive=False):
         return _onp.empty_like(prototype, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
         return zeros_like(prototype)
@@ -322,7 +322,7 @@ def empty_like(prototype, dtype=None, order='K', subok=True, shape=None):
 
 def full_like(a, fill_value, dtype=None, order='K', subok=True, shape=None):
     """Return a full array with the same shape and type as a given array."""
-    if not is_casadi_type(a):
+    if not is_casadi_type(a, recursive=False):
         return _onp.full_like(a, fill_value, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
         return fill_value * ones_like(a)
