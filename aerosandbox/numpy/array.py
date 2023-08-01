@@ -243,7 +243,10 @@ def max(a, axis=None):
     """
 
     if not is_casadi_type(a, recursive=False):
-        return _onp.max(a)
+        return _onp.max(
+            a,
+            axis=axis,
+        )
 
     else:
 
