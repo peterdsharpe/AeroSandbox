@@ -84,6 +84,72 @@ def test_stack():
         stack((c, c), axis=2)
 
 
+def test_diag_onp():
+    # Test on 1D array
+    a = np.array([1, 2, 3])
+    assert np.all(np.diag(a) == np.diag(a, k=0))
+    assert np.all(
+        np.diag(a, k=1) == np.array([
+            [0, 1, 0, 0],
+            [0, 0, 2, 0],
+            [0, 0, 0, 3],
+            [0, 0, 0, 0]
+        ])
+    )
+    assert np.all(
+        np.diag(a, k=-1) == np.array([
+            [0, 0, 0, 0],
+            [1, 0, 0, 0],
+            [0, 2, 0, 0],
+            [0, 0, 3, 0]
+        ])
+    )
+
+    # Test on 2D square array
+    b = np.array([[1, 2], [3, 4]])
+    assert np.all(np.diag(b) == np.array([1, 4]))
+    assert np.all(np.diag(b, k=1) == np.array([2]))
+    assert np.all(np.diag(b, k=-1) == np.array([3]))
+
+    # Test on non-square 2D array
+    c = np.array([[1, 2, 3], [4, 5, 6]])
+    assert np.all(np.diag(c) == np.array([1, 5]))
+    assert np.all(np.diag(c, k=1) == np.array([2, 6]))
+    assert np.all(np.diag(c, k=-1) == np.array([4]))
+
+
+def test_diag_casadi():
+    # Test on 1D array
+    a = cas.SX(np.array([1, 2, 3]))
+    assert np.all(np.diag(a) == np.diag(a, k=0))
+    assert np.all(
+        np.diag(a, k=1) == np.array([
+            [0, 1, 0, 0],
+            [0, 0, 2, 0],
+            [0, 0, 0, 3],
+            [0, 0, 0, 0]
+        ])
+    )
+    assert np.all(
+        np.diag(a, k=-1) == np.array([
+            [0, 0, 0, 0],
+            [1, 0, 0, 0],
+            [0, 2, 0, 0],
+            [0, 0, 3, 0]
+        ])
+    )
+
+    # Test on 2D square array
+    b = cas.SX(np.array([[1, 2], [3, 4]]))
+    assert np.all(np.diag(b) == np.array([1, 4]))
+    assert np.all(np.diag(b, k=1) == np.array([2]))
+    assert np.all(np.diag(b, k=-1) == np.array([3]))
+
+    # # Test on non-square 2D array
+    # c = cas.SX(np.array([[1, 2, 3], [4, 5, 6]]))
+    # assert np.all(np.diag(c) == np.array([1, 5]))
+    # assert np.all(np.diag(c, k=1) == np.array([2, 6]))
+    # assert np.all(np.diag(c, k=-1) == np.array([4]))
 
 def test_roll_onp():
     # Test on 1D array
@@ -141,6 +207,7 @@ def test_roll_casadi_2d():
     # Shift along both axes
     assert np.all(cas.DM(np.roll(a, (2, 3), axis=(0, 1))) == np.roll(a_np, (2, 3), axis=(0, 1)))
 
+
 def test_max():
     a = cas.SX([1, 2, 3])
     b = [1, 2, 3]
@@ -181,6 +248,7 @@ def test_reshape_1D():
         assert np.all(ra == rb)
         assert ra.shape == rb.shape
 
+
 def test_reshape_2D_vec_tall():
     a = np.array([1, 2, 3, 4, 5, 6]).reshape((6, 1))
     b = cas.DM(a)
@@ -207,6 +275,7 @@ def test_reshape_2D_vec_tall():
         assert np.all(ra == rb)
         assert ra.shape == rb.shape
 
+
 def test_reshape_2D_vec_wide():
     a = np.array([1, 2, 3, 4, 5, 6]).reshape((1, 6))
     b = cas.DM(a)
@@ -232,6 +301,7 @@ def test_reshape_2D_vec_wide():
 
         assert np.all(ra == rb)
         assert ra.shape == rb.shape
+
 
 def test_reshape_2D():
     a = np.array([
@@ -301,6 +371,5 @@ if __name__ == '__main__':
     # s2 = np.roll(a, 90, axis=0)
     #
     # assert np.all(cas.DM(s1) == cas.DM(s2))
-
 
     pytest.main()

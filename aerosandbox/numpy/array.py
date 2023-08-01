@@ -138,15 +138,41 @@ def diag(v, k=0):
         return _onp.diag(v, k=k)
 
     else:
-        if k != 0:
-            raise NotImplementedError("Should be super possible, just haven't had the need yet.")
 
-        if 1 in v.shape:
-            return _cas.diag(v)
-        elif v.shape[0] == v.shape[1]:
-            raise NotImplementedError("Should be super possible, just haven't had the need yet.")
+        if 1 in v.shape:  # If v is a 1D array, construct a diagonal matrix
+            if v.shape[0] == 1:
+                v = v.T
+
+            if k == 0:
+                return _cas.diag(v)
+
+            else:
+                n = v.shape[0]
+                res = type(v).zeros(n + abs(k), n + abs(k))
+                for i in range(n):
+                    if k >= 0:
+                        res[i, i + k] = v[i]
+                    else:
+                        res[i - k, i] = v[i]
+                return res
+
+        elif v.shape[0] == v.shape[1]:  # If v is a square matrix, extract the diagonal
+
+            n = v.shape[0]
+
+            if k >= 0:
+                return array([
+                    v[i, i + k]
+                    for i in range(n - k)
+                ])
+            else:
+                return array([
+                    v[i - k, i]
+                    for i in range(n + k)
+                ])
+
         else:
-            raise ValueError("Cannot return the diagonal of a non-square matrix.")
+            raise NotImplementedError("Haven't yet added logic for non-square matrices.")
 
 
 def roll(a, shift, axis: int = None):
