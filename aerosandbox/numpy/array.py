@@ -235,26 +235,77 @@ def roll(a, shift, axis: int = None):
             raise ValueError("'axis' must be None, an integer or a tuple of integers")
 
 
-def max(a):
+def max(a, axis=None):
     """
     Returns the maximum value of an array.
     """
 
-    try:
+    if not is_casadi_type(a, recursive=False):
         return _onp.max(a)
-    except TypeError:
-        return _cas.mmax(a)
+
+    else:
+
+        if axis is None:
+            return _cas.mmax(a)
+
+        if axis == 0:
+            if a.shape[1] == 1:
+                return _cas.mmax(a)
+            else:
+                return array([
+                    _cas.mmax(a[:, i])
+                    for i in range(a.shape[1])
+                ])
+
+        elif axis == 1:
+            if a.shape[0] == 1:
+                return _cas.mmax(a)
+            else:
+                return array([
+                    _cas.mmax(a[i, :])
+                    for i in range(a.shape[0])
+                ])
+
+        else:
+            raise ValueError(f'Invalid axis {axis} for CasADi array.')
 
 
-def min(a):
+def min(a, axis=None):
     """
     Returns the minimum value of an array.
     """
 
-    try:
-        return _onp.min(a)
-    except TypeError:
-        return _cas.mmin(a)
+    if not is_casadi_type(a, recursive=False):
+        return _onp.min(
+            a=a,
+            axis=axis,
+        )
+
+    else:
+
+        if axis is None:
+            return _cas.mmin(a)
+
+        if axis == 0:
+            if a.shape[1] == 1:
+                return _cas.mmin(a)
+            else:
+                return array([
+                    _cas.mmin(a[:, i])
+                    for i in range(a.shape[1])
+                ])
+
+        elif axis == 1:
+            if a.shape[0] == 1:
+                return _cas.mmin(a)
+            else:
+                return array([
+                    _cas.mmin(a[i, :])
+                    for i in range(a.shape[0])
+                ])
+
+        else:
+            raise ValueError(f'Invalid axis {axis} for CasADi array.')
 
 
 def reshape(a, newshape, order='C'):
