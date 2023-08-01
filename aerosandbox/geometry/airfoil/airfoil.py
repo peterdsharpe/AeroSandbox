@@ -1,8 +1,6 @@
 import aerosandbox.numpy as np
-from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.polygon import Polygon
-from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, \
-    get_kulfan_coordinates, get_file_coordinates
+from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, get_file_coordinates
 from aerosandbox.geometry.airfoil.default_airfoil_aerodynamics import default_CL_function, default_CD_function, \
     default_CM_function
 from aerosandbox.library.aerodynamics import transonic
