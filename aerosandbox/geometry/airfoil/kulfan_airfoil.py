@@ -393,9 +393,51 @@ class KulfanAirfoil(Airfoil):
             "Cpmin_0"  : Cpmin_0,
         }
 
-    def local_camber(self,
-                     x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-                     ) -> Union[float, np.ndarray]:
+    def upper_coordinates(self,
+                          x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)[::-1],
+                          ) -> np.ndarray:
+        # Class function
+        C = (x_over_c) ** self.N1 * (1 - x_over_c) ** self.N2
+
+        from scipy.special import comb
+
+        def shape_function(w):
+            # Shape function (Bernstein polynomials)
+            N = np.length(w) - 1  # Order of Bernstein polynomials
+
+            K = comb(N, np.arange(N + 1))  # Bernstein polynomial coefficients
+
+            dims = (np.length(w), np.length(x_over_c))
+
+            def wide(vector):
+                return np.tile(np.reshape(vector, (1, dims[1])), (dims[0], 1))
+
+            def tall(vector):
+                return np.tile(np.reshape(vector, (dims[0], 1)), (1, dims[1]))
+
+            S_matrix = (
+                    tall(K) * wide(x_over_c) ** tall(np.arange(N + 1)) *
+                    wide(1 - x_over_c) ** tall(N - np.arange(N + 1))
+            )  # Bernstein polynomial coefficients * weight matrix
+            S_x = np.sum(tall(w) * S_matrix, axis=0)
+
+            # Calculate y output
+            y = C * S_x
+            return y
+
+        y_upper = shape_function(self.upper_weights)
+
+        # Add trailing-edge (TE) thickness
+        y_upper += x_over_c * self.TE_thickness / 2
+
+        # Add Kulfan's leading-edge-modification (LEM)
+        y_upper += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.upper_weights) + 0.5)
+
+        return y_upper
+
+    def lower_coordinates(self,
+                          x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+                          ) -> np.ndarray:
         # Class function
         C = (x_over_c) ** self.N1 * (1 - x_over_c) ** self.N2
 
@@ -426,63 +468,30 @@ class KulfanAirfoil(Airfoil):
             return y
 
         y_lower = shape_function(self.lower_weights)
-        y_upper = shape_function(self.upper_weights)
 
         # Add trailing-edge (TE) thickness
         y_lower -= x_over_c * self.TE_thickness / 2
-        y_upper += x_over_c * self.TE_thickness / 2
 
         # Add Kulfan's leading-edge-modification (LEM)
         y_lower += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.lower_weights) + 0.5)
-        y_upper += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.upper_weights) + 0.5)
+
+        return y_lower
+
+    def local_camber(self,
+                     x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+                     ) -> Union[float, np.ndarray]:
+        y_upper = self.upper_coordinates(x_over_c=x_over_c)
+        y_lower = self.lower_coordinates(x_over_c=x_over_c)
 
         return (y_upper + y_lower) / 2
 
     def local_thickness(self,
-                     x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-                     ) -> Union[float, np.ndarray]:
-        # Class function
-        C = (x_over_c) ** self.N1 * (1 - x_over_c) ** self.N2
-
-        from scipy.special import comb
-
-        def shape_function(w):
-            # Shape function (Bernstein polynomials)
-            N = np.length(w) - 1  # Order of Bernstein polynomials
-
-            K = comb(N, np.arange(N + 1))  # Bernstein polynomial coefficients
-
-            dims = (np.length(w), np.length(x_over_c))
-
-            def wide(vector):
-                return np.tile(np.reshape(vector, (1, dims[1])), (dims[0], 1))
-
-            def tall(vector):
-                return np.tile(np.reshape(vector, (dims[0], 1)), (1, dims[1]))
-
-            S_matrix = (
-                    tall(K) * wide(x_over_c) ** tall(np.arange(N + 1)) *
-                    wide(1 - x_over_c) ** tall(N - np.arange(N + 1))
-            )  # Bernstein polynomial coefficients * weight matrix
-            S_x = np.sum(tall(w) * S_matrix, axis=0)
-
-            # Calculate y output
-            y = C * S_x
-            return y
-
-        y_lower = shape_function(self.lower_weights)
-        y_upper = shape_function(self.upper_weights)
-
-        # Add trailing-edge (TE) thickness
-        y_lower -= x_over_c * self.TE_thickness / 2
-        y_upper += x_over_c * self.TE_thickness / 2
-
-        # Add Kulfan's leading-edge-modification (LEM)
-        y_lower += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.lower_weights) + 0.5)
-        y_upper += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.upper_weights) + 0.5)
+                        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+                        ) -> Union[float, np.ndarray]:
+        y_upper = self.upper_coordinates(x_over_c=x_over_c)
+        y_lower = self.lower_coordinates(x_over_c=x_over_c)
 
         return (y_upper - y_lower)
-
 
     def blend_with_another_airfoil(self,
                                    airfoil: Union["KulfanAirfoil", Airfoil],
