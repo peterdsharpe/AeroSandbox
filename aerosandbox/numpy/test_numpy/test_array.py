@@ -84,26 +84,62 @@ def test_stack():
         stack((c, c), axis=2)
 
 
-def test_roll_onp():
-    a = [1, 2, 3]
-    b = [3, 1, 2]
 
-    assert np.all(np.roll(a, 1) == b)
+def test_roll_onp():
+    # Test on 1D array
+    a = np.arange(1, 101)  # Large array
+    b = np.concatenate([np.arange(91, 101), np.arange(1, 91)])
+
+    assert np.all(np.roll(a, 10) == b)
+
+    # Test negative shift on 1D array
+    assert np.all(np.roll(a, -10) == np.roll(a, 90))
+
+    # Test shift larger than array size
+    assert np.all(np.roll(a, 110) == np.roll(a, 10))
 
 
 def test_roll_casadi():
-    b = np.array([[3, 1, 2]])
-    a = cas.SX(b)
+    # Test on 1D array
+    a_np = np.arange(1, 101)
+    a = cas.SX(a_np)
+    b = cas.SX(np.concatenate([np.arange(91, 101), np.arange(1, 91)]))
 
-    assert np.all(cas.DM(np.roll(a, 1)) == b)
+    assert np.all(cas.DM(np.roll(a, 10)) == b)
+
+    # Test negative shift on 1D array
+    assert np.all(cas.DM(np.roll(a, -10)) == cas.DM(np.roll(a, 90)))
+
+    # Test shift larger than array size
+    assert np.all(cas.DM(np.roll(a, 110)) == cas.DM(np.roll(a, 10)))
 
 
 def test_roll_casadi_2d():
-    a = np.array([[1, 2, 3], [4, 5, 6]])
-    b = cas.SX(a)
+    # Test on 2D array
+    a_np = np.reshape(np.arange(1, 101), (10, 10))  # 2D array
+    a = cas.SX(a_np)
 
-    assert np.all(cas.DM(np.roll(b, 1, axis=1)) == np.roll(a, 1, axis=1))
+    # Shift along axis 1
+    assert np.all(cas.DM(np.roll(a, 2, axis=1)) == np.roll(a_np, 2, axis=1))
 
+    # Shift along axis 0
+    assert np.all(cas.DM(np.roll(a, 2, axis=0)) == np.roll(a_np, 2, axis=0))
+
+    # Shift along both axes
+    assert np.all(cas.DM(np.roll(a, (2, 3), axis=(0, 1))) == np.roll(a_np, (2, 3), axis=(0, 1)))
+
+    # Test on non-square 2D array
+    a_np = np.reshape(np.arange(1, 201), (10, 20))  # non-square 2D array
+    a = cas.SX(a_np)
+
+    # Shift along axis 1
+    assert np.all(cas.DM(np.roll(a, 2, axis=1)) == np.roll(a_np, 2, axis=1))
+
+    # Shift along axis 0
+    assert np.all(cas.DM(np.roll(a, 2, axis=0)) == np.roll(a_np, 2, axis=0))
+
+    # Shift along both axes
+    assert np.all(cas.DM(np.roll(a, (2, 3), axis=(0, 1))) == np.roll(a_np, (2, 3), axis=(0, 1)))
 
 def test_max():
     a = cas.SX([1, 2, 3])
@@ -256,4 +292,15 @@ def test_assert_equal_shape():
 
 
 if __name__ == '__main__':
+    # # Test on 1D array
+    # a_np = np.arange(1, 101)
+    # a = cas.SX(a_np)
+    # b = cas.SX(np.concatenate([np.arange(91, 101), np.arange(1, 91)]))
+    #
+    # s1 = np.roll(a, -10, axis=0)
+    # s2 = np.roll(a, 90, axis=0)
+    #
+    # assert np.all(cas.DM(s1) == cas.DM(s2))
+
+
     pytest.main()

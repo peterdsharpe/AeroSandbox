@@ -160,9 +160,19 @@ def roll(a, shift, axis: int = None):
     Parameters
     ----------
     a : array_like
+
         Input array.
-    shift : int
-        The number of places by which elements are shifted.
+
+    shift : int or tuple of ints
+
+        The number of places by which elements are shifted. If a tuple, then axis must be a tuple of the same size,
+        and each of the given axes is shifted by the corresponding number. If an int while axis is a tuple of ints,
+        then the same value is used for all given axes.
+
+    axis : int or tuple of ints, optional
+
+        Axis or axes along which elements are shifted. By default, the array is flattened before shifting,
+        after which the original shape is restored.
 
     Returns
     -------
@@ -172,18 +182,31 @@ def roll(a, shift, axis: int = None):
     """
     if not is_casadi_type(a):
         return _onp.roll(a, shift, axis=axis)
-    else:  # TODO add some checking to make sure shift < len(a), or shift is modulo'd down by len(a).
-        # assert shift < a.shape[axis]
-        if 1 in a.shape and axis == 0:
-            return _cas.vertcat(a[-shift, :], a[:-shift, :])
-        elif axis == 0:
-            return _cas.vertcat(a.T[:, -shift], a.T[:, :-shift]).T
-        elif axis == 1:
-            return _cas.horzcat(a[:, -shift], a[:, :-shift])
-        elif axis is None:
-            return roll(a, shift=shift, axis=0)
+    else:
+        if axis is None:
+            a_flat = reshape(a, -1)
+            result = roll(a_flat, shift, axis=0)
+            return reshape(result, a.shape)
+        elif isinstance(axis, int):
+            shift = shift % a.shape[axis]  # shift can be negative
+            if shift != 0:
+                slice1 = [slice(None)] * 2
+                slice1[axis] = slice(-shift, None)
+                slice2 = [slice(None)] * 2
+                slice2[axis] = slice(-shift)
+                result = concatenate([a[tuple(slice1)], a[tuple(slice2)]], axis=axis)
+            else:
+                result = a
+            return result
+        elif isinstance(axis, tuple):
+            result = a
+            if not isinstance(shift, tuple):
+                shift = (shift,) * len(axis)
+            for ax, sh in zip(axis, shift):
+                result = roll(result, sh, ax)
+            return result
         else:
-            raise Exception("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
+            raise ValueError("'axis' must be None, an integer or a tuple of integers")
 
 
 def max(a):
