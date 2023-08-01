@@ -497,6 +497,13 @@ class KulfanAirfoil(Airfoil):
 
         return (y_upper - y_lower)
 
+    def TE_angle(self):
+        return np.degrees(
+            np.arctan(self.upper_weights[-1]) -
+            np.arctan(self.lower_weights[-1]) +
+            np.arctan(self.TE_thickness)
+        )
+
     def blend_with_another_airfoil(self,
                                    airfoil: Union["KulfanAirfoil", Airfoil],
                                    blend_fraction: float = 0.5,
