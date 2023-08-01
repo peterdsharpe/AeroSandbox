@@ -513,6 +513,27 @@ class KulfanAirfoil(Airfoil):
             np.arctan(self.TE_thickness)
         )
 
+    def area(self):
+
+        def get_area_of_side(weights):
+            from scipy.special import beta, comb
+
+            N = np.length(weights) - 1
+            i = np.arange(N + 1)
+            area_of_each_mode = comb(N, i) * beta(
+                self.N1 + i + 1,
+                self.N2 + N - i + 1
+            )
+            return np.sum(
+                area_of_each_mode * weights
+            )
+
+        return (
+                get_area_of_side(self.upper_weights) -
+                get_area_of_side(self.lower_weights) +
+                (self.TE_thickness / 2)
+        )
+
     def blend_with_another_airfoil(self,
                                    airfoil: Union["KulfanAirfoil", Airfoil],
                                    blend_fraction: float = 0.5,
