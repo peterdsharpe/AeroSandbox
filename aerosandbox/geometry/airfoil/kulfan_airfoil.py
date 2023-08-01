@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.geometry.airfoil.airfoil import Airfoil
-from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_coordinates, get_kulfan_parameters
+from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
 from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 from typing import Union, Dict, List
 
@@ -83,14 +83,7 @@ class KulfanAirfoil(Airfoil):
 
     @property
     def coordinates(self) -> np.ndarray:
-        return get_kulfan_coordinates(
-            lower_weights=self.lower_weights,
-            upper_weights=self.upper_weights,
-            leading_edge_weight=self.leading_edge_weight,
-            TE_thickness=self.TE_thickness,
-            N1=self.N1,
-            N2=self.N2,
-        )
+        return self.to_airfoil().coordinates
 
     @coordinates.setter
     def coordinates(self, value):
@@ -99,10 +92,21 @@ class KulfanAirfoil(Airfoil):
                         "Instead, you can either modify the Kulfan parameters directly, or use the "
                         "more general (coordinate-parameterized) `asb.Airfoil` class.")
 
-    def to_airfoil(self) -> Airfoil:
+    def to_airfoil(self,
+                   n_coordinates_per_side=200
+                   ) -> Airfoil:
+        x_upper = np.cosspace(1, 0, n_coordinates_per_side)[:-1]
+        y_upper = self.upper_coordinates(x_upper)
+
+        x_lower = np.cosspace(0, 1, n_coordinates_per_side)
+        y_lower = self.lower_coordinates(x_lower)
+
         return Airfoil(
             name=self.name,
-            coordinates=self.coordinates
+            coordinates=np.concatenate([
+                np.stack([x_upper, y_upper], axis=1),
+                np.stack([x_lower, y_lower], axis=1)
+            ], axis=0)
         )
 
     def draw(self,
