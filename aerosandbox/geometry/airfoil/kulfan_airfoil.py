@@ -82,6 +82,15 @@ class KulfanAirfoil(Airfoil):
         ])
 
     @property
+    def kulfan_parameters(self):
+        return {
+            "lower_weights"      : self.lower_weights,
+            "upper_weights"      : self.upper_weights,
+            "leading_edge_weight": self.leading_edge_weight,
+            "TE_thickness"       : self.TE_thickness,
+        }
+
+    @property
     def coordinates(self) -> np.ndarray:
         return self.to_airfoil().coordinates
 
