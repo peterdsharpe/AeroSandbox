@@ -1,6 +1,6 @@
 import numpy as _onp
 import casadi as _cas
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Sequence
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
@@ -36,7 +36,7 @@ def array(array_like, dtype=None):
         )
 
 
-def concatenate(arrays: Tuple, axis: int = 0):
+def concatenate(arrays: Sequence, axis: int = 0):
     """
     Join a sequence of arrays along an existing axis. Returns a NumPy array if possible; if not, returns a CasADi array.
 
@@ -55,7 +55,7 @@ def concatenate(arrays: Tuple, axis: int = 0):
             raise ValueError("CasADi-backend arrays can only be 1D or 2D, so `axis` must be 0 or 1.")
 
 
-def stack(arrays: Tuple, axis: int = 0):
+def stack(arrays: Sequence, axis: int = 0):
     """
     Join a sequence of arrays along a new axis. Returns a NumPy array if possible; if not, returns a CasADi array.
 
