@@ -366,6 +366,8 @@ def field_length_analysis(
         balanced_field_length_accept = balanced_field_length
         balanced_field_length_reject = balanced_field_length
 
+        flight_path_angle_climb_one_engine_out = -1 / lift_over_drag_climb
+
     else:
         acceleration_takeoff_one_engine_out = acceleration_engines * (
                 n_engines - 1) / n_engines + acceleration_friction_and_drag
