@@ -111,7 +111,7 @@ class Airfoil(Polygon):
                 "The `generate_polars`, `CL_function`, `CD_function`, and `CM_function` keyword arguments to the "
                 "Airfoil constructor will be deprecated in an upcoming release. Their functionality is replaced"
                 "by `Airfoil.get_aero_from_neuralfoil()`, which is faster and has better properties for optimization.",
-                PendingDeprecationWarning
+                DeprecationWarning
             )
 
             generate_polars = deprecated_keyword_arguments.get("generate_polars", False)
