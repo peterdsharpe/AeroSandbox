@@ -233,7 +233,7 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
     Args:
         source_code: A line of Python source code that includes a function call. Can be a multi-line piece of source code (e.g., includes '\n').
 
-    Returns: A list of strings containing all of the function arguments. If keyword arguments are found, includes both the key and the value, as-written.
+    Returns: A list of strings containing all the function arguments. If keyword arguments are found, includes both the key and the value, as-written.
 
     """
 
@@ -337,7 +337,7 @@ def codegen(
 
         - The string of Python code that, when evaluated, would produce the same value as the input.
 
-        - A set of strings that, when evaluated, would import all of the required imports for the code to run.
+        - A set of strings that, when evaluated, would import all the required imports for the code to run.
 
     Examples:
 
