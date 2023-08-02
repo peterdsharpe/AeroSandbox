@@ -353,82 +353,82 @@ af = asb.Airfoil(
 # af.draw()
 pprint(aero)
 
-### Animate
-import matplotlib
-
-matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
-from matplotlib.animation import ArtistAnimation
-
-fig, ax = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
-p.show_plot(show=False)
-ax[0].set_title("Airfoil Shape")
-ax[0].set_xlabel("$x/c$")
-ax[0].set_ylabel("$y/c$")
-
-ax[1].set_xlabel("Iteration")
-ax[1].set_ylabel("Lift-to-Drag Ratio $C_L/C_D$ [-]")
-plt.tight_layout()
-
-from matplotlib.colors import LinearSegmentedColormap
-cmap = LinearSegmentedColormap.from_list(
-    "custom_cmap",
-    colors=[
-        p.adjust_lightness(c, 0.8) for c in
-        ["orange", "darkseagreen", "dodgerblue"]
-    ]
-)
-
-colors = cmap(np.linspace(0, 1, len(airfoil_history)))
-
-ims = []
-for i in range(len(airfoil_history)):
-    plt.sca(ax[0])
-    plt.plot(
-        airfoil_history[i].x(),
-        airfoil_history[i].y(),
-        "-",
-        color=colors[i],
-        alpha=0.2,
-    )
-    plt.axis('equal')
-
-    plt.sca(ax[1])
-    if i > 0:
-        p.plot_color_by_value(
-            np.arange(i),
-            np.array([
-                np.mean(aero_history[j]["CL"] / aero_history[j]["CD"])
-                for j in range(i)
-            ]),
-            ".-",
-            c=np.arange(i),
-            cmap=cmap,
-            clim=(0, len(airfoil_history)),
-            alpha=0.8
-        )
-
-
-    plt.suptitle(f"Optimization Progress")
-
-    ims.append([
-        *ax[0].get_children(),
-        *ax[1].get_children(),
-        *fig.get_children(),
-    ])
-
-ims.extend([ims[-1]] * 30)
-
-ani = ArtistAnimation(fig, ims, interval=100)
-
-# writer = animation.PillowWriter(fps=15,
-#                                 metadata=dict(artist='Me'),
-#                                 bitrate=1800)
-# ani.save('scatter.gif', writer=writer)
-
-writer = matplotlib.animation.PillowWriter(fps=10)
-
-ani.save("airfoil_optimization.gif", writer=writer)
-
-plt.show()
+# ### Animate
+# import matplotlib
+#
+# matplotlib.use("TkAgg")
+# import matplotlib.pyplot as plt
+# import aerosandbox.tools.pretty_plots as p
+# from matplotlib.animation import ArtistAnimation
+#
+# fig, ax = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
+# p.show_plot(show=False)
+# ax[0].set_title("Airfoil Shape")
+# ax[0].set_xlabel("$x/c$")
+# ax[0].set_ylabel("$y/c$")
+#
+# ax[1].set_xlabel("Iteration")
+# ax[1].set_ylabel("Lift-to-Drag Ratio $C_L/C_D$ [-]")
+# plt.tight_layout()
+#
+# from matplotlib.colors import LinearSegmentedColormap
+# cmap = LinearSegmentedColormap.from_list(
+#     "custom_cmap",
+#     colors=[
+#         p.adjust_lightness(c, 0.8) for c in
+#         ["orange", "darkseagreen", "dodgerblue"]
+#     ]
+# )
+#
+# colors = cmap(np.linspace(0, 1, len(airfoil_history)))
+#
+# ims = []
+# for i in range(len(airfoil_history)):
+#     plt.sca(ax[0])
+#     plt.plot(
+#         airfoil_history[i].x(),
+#         airfoil_history[i].y(),
+#         "-",
+#         color=colors[i],
+#         alpha=0.2,
+#     )
+#     plt.axis('equal')
+#
+#     plt.sca(ax[1])
+#     if i > 0:
+#         p.plot_color_by_value(
+#             np.arange(i),
+#             np.array([
+#                 np.mean(aero_history[j]["CL"] / aero_history[j]["CD"])
+#                 for j in range(i)
+#             ]),
+#             ".-",
+#             c=np.arange(i),
+#             cmap=cmap,
+#             clim=(0, len(airfoil_history)),
+#             alpha=0.8
+#         )
+#
+#
+#     plt.suptitle(f"Optimization Progress")
+#
+#     ims.append([
+#         *ax[0].get_children(),
+#         *ax[1].get_children(),
+#         *fig.get_children(),
+#     ])
+#
+# ims.extend([ims[-1]] * 30)
+#
+# ani = ArtistAnimation(fig, ims, interval=100)
+#
+# # writer = animation.PillowWriter(fps=15,
+# #                                 metadata=dict(artist='Me'),
+# #                                 bitrate=1800)
+# # ani.save('scatter.gif', writer=writer)
+#
+# writer = matplotlib.animation.PillowWriter(fps=10)
+#
+# ani.save("airfoil_optimization.gif", writer=writer)
+#
+# plt.show()
