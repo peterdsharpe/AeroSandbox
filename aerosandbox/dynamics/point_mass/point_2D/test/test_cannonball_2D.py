@@ -63,7 +63,7 @@ def get_trajectory(
     dyn = dyn.get_new_instance_with_state(res.y)
 
     if plot:
-        import matplotlib.pyplot as plt;
+        import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
         fig, ax = plt.subplots()

@@ -81,7 +81,7 @@ def get_trajectory(
     dyn = sol(dyn)
 
     if plot:
-        import matplotlib.pyplot as plt;
+        import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
         fig, ax = plt.subplots()
