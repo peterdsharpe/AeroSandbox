@@ -131,7 +131,10 @@ def show_plot(
 
                 if i_ax.get_scale() == "log":
 
-                    def linlogfmt(x, pos, ticks=[1.], default="", base=10):
+                    def linlogfmt(x, pos, ticks=None, default="", base=10):
+                        if ticks is None:
+                            ticks = [1.]
+
                         if x < 0:
                             sign_string = "-"
                             x = -x

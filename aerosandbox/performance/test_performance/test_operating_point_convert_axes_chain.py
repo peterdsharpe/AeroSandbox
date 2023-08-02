@@ -9,8 +9,11 @@ op_point = asb.OperatingPoint(alpha=10, beta=5)
 
 
 def chain_conversion(
-        axes: List[str] = ["geometry", "body", "geometry"]
+        axes: List[str] = None
 ):
+    if axes is None:
+        axes = ["geometry", "body", "geometry"]
+
     x, y, z = copy.deepcopy(vector)
     for from_axes, to_axes in zip(axes, axes[1:]):
         x, y, z = op_point.convert_axes(
