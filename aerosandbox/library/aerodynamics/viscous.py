@@ -432,30 +432,6 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
     return Cd_wave
 
 
-def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
-    """
-    Wave drag_force coefficient prediction using the low-fidelity Korn Equation method;
-    derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
-
-    :param Cl: Sectional lift coefficient
-    :param t_over_c: thickness-to-chord ratio
-    :param sweep: sweep angle, in degrees
-    :param kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
-    :return: Wave drag coefficient
-    """
-    smooth_abs_Cl = np.softmax(Cl, -Cl, hardness=10)
-
-    mach = np.fmax(mach, 0)
-    Mdd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - smooth_abs_Cl / (10 * np.cosd(sweep) ** 3)
-    Mcrit = Mdd - (0.1 / 80) ** (1 / 3)
-    Cd_wave = np.where(
-        mach > Mcrit,
-        20 * (mach - Mcrit) ** 4,
-        0
-    )
-
-    return Cd_wave
-
 def fuselage_upsweep_drag_area(
         upsweep_angle_rad: float,
         fuselage_xsec_area_max: float,
@@ -480,16 +456,16 @@ def fuselage_upsweep_drag_area(
     """
     return 3.83 * np.abs(upsweep_angle_rad) ** 2.5 * fuselage_xsec_area_max
 
+
 if __name__ == "__main__":
     pass
     # # Run some checks
     # import matplotlib.pyplot as plt
     # import matplotlib.style as style
     # import plotly.express as px
-    # import plotly.graph_objects as go
-    # import dash
+    # from plotly import io
     #
-    # style.use("seaborn")
+    # io.renderers.default = "browser"
     #
     # # # E216 checks
     # alpha_inputs = np.linspace(-6, 12, 200)
@@ -572,7 +548,7 @@ if __name__ == "__main__":
     #     log_y=True,
     #     labels={"x": "alphas", "y": "Re", "z": "CL/CD"}
     # ).show()
-
+    #
     # # Cd_wave_e216 check
     # CL_inputs = np.linspace(-0.4, 1)
     # mach_inputs = np.linspace(0.3, 1)
@@ -594,8 +570,8 @@ if __name__ == "__main__":
     #     labels={"x": "CL", "y": "Mach", "z": "CD_wave"},
     #     range_z=(0, 200e-4)
     # ).show()
-
-    # Cd_wave_rae2822 check
+    #
+    # # Cd_wave_rae2822 check
     # CL_inputs = np.linspace(-0.4, 1)
     # mach_inputs = np.linspace(0.3, 1)
     # CLs = []
@@ -616,7 +592,7 @@ if __name__ == "__main__":
     #     labels={"x": "CL", "y": "Mach", "z": "CD_wave"},
     #     # range_z=(0, 200e-4)
     # ).show()
-
+    #
     # # Cd_wave_Korn check
     # CL_inputs = np.linspace(-0.4, 1)
     # mach_inputs = np.linspace(0.3, 1)
@@ -627,18 +603,18 @@ if __name__ == "__main__":
     #     for mach in mach_inputs:
     #         CLs.append(CL)
     #         machs.append(mach)
-    #         CD_waves.append(Cd_wave_Korn(CL, t_over_c=0.121, mach=mach, kappa_A=0.95))
+    #         CD_waves.append(float(Cd_wave_Korn(CL, t_over_c=0.121, mach=mach, kappa_A=0.95)))
     # px.scatter_3d(
     #     x=CLs,
     #     y=machs,
     #     z=CD_waves,
-    #     size=np.ones_like(CD_waves),
+    #     size=list(np.ones_like(CD_waves)),
     #     color=CD_waves,
     #     title="Korn Equation",
     #     labels={"x": "CL", "y": "Mach", "z": "CD_wave"},
     #     range_z=(0, 200e-4)
     # ).show()
-
+    #
     # # # Cylinder Drag Check
     # Res = np.logspace(-1, 8, 300)
     # CDs = Cd_cylinder(Res)
