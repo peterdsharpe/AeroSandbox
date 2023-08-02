@@ -301,6 +301,9 @@ def calculate_induced_velocity_line_singularities(
     except TypeError:
         N = x_panels.shape[0]
 
+    u_field = 0.
+    v_field = 0.
+
     for i in range(N - 1):
         u, v = _calculate_induced_velocity_line_singularity(
             x_field=x_field,
@@ -314,12 +317,8 @@ def calculate_induced_velocity_line_singularities(
             sigma_start=sigma[i],
             sigma_end=sigma[i + 1],
         )
-        if i == 0:
-            u_field = u
-            v_field = v
-        else:
-            u_field += u
-            v_field += v
+        u_field += u
+        v_field += v
 
     return u_field, v_field
 
