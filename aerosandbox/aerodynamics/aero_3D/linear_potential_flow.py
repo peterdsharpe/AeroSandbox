@@ -324,6 +324,8 @@ class LinearPotentialFlow(ExplicitAnalysis):
                         ratio=options["spanwise_resolution"],
                         spacing_function=options["spanwise_spacing_function"],
                     )
+                else:
+                    subdivided_wing = wing
 
                 points, faces = subdivided_wing.mesh_thin_surface(
                     method="quad",
