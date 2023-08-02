@@ -586,7 +586,7 @@ class AeroBuildup(ExplicitAnalysis):
                 vel_vector_g_from_freestream[i] + vel_vector_g_from_rotation[i]
                 for i in range(3)
             ]
-            vel_mag_g = np.sqrt(sum([comp ** 2 for comp in vel_vector_g]))
+            vel_mag_g = np.sqrt(sum(comp ** 2 for comp in vel_vector_g))
             vel_dir_g = [
                 vel_vector_g[i] / vel_mag_g
                 for i in range(3)
@@ -719,7 +719,7 @@ class AeroBuildup(ExplicitAnalysis):
                 )
                 for i in range(3)
             ]
-            L_direction_g_mag = np.sqrt(sum([comp ** 2 for comp in L_direction_g_unnormalized]))
+            L_direction_g_mag = np.sqrt(sum(comp ** 2 for comp in L_direction_g_unnormalized))
             L_direction_g = [
                 L_direction_g_unnormalized[i] / L_direction_g_mag
                 for i in range(3)
