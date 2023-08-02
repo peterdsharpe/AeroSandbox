@@ -34,6 +34,8 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+- Rework of fuselage aerodynamics calculation to be much more accurate in moment prediction (and stability derivative prediction).  This involves a much more precise moment integration based on slender body theory (potential flow around a line-source-doublet), and removing various unnecessary coordinate system conversions.
+
 -----
 
 # Latest (master / release), and previous versions
