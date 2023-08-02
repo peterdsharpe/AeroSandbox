@@ -177,10 +177,17 @@ def Cd_flat_plate_normal():
     return 2.202
 
 
+import warnings
+
+
 def Cl_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil, 2D XFoil data
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9892
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     return 0.2568 + 0.1206 * alpha - 0.002018 * alpha ** 2
 
 
@@ -188,6 +195,10 @@ def Cd_profile_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil in incompressible flow.
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9713
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     Re_c = np.maximum(Re_c, 1)
     log_Re = np.log(Re_c)
 
@@ -213,6 +224,10 @@ def Cl_e216(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < Inf.
     # See: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\e216
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
 
@@ -246,6 +261,10 @@ def Cd_profile_e216(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < 10^6.
     # see: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\e216
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
 
@@ -283,6 +302,10 @@ def Cd_wave_e216(Cl, mach, sweep=0.):
     :return: Wave drag coefficient.
     """
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
@@ -310,6 +333,10 @@ def Cl_rae2822(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < 10^6.
     # See: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\rae2822
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
 
@@ -340,6 +367,10 @@ def Cd_profile_rae2822(alpha, Re_c):
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < Inf.
     # see: C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\XFoil Drag Fitting\e216
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
 
@@ -378,6 +409,10 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
     :return: Wave drag coefficient.
     """
 
+    warnings.warn(
+        "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
+        DeprecationWarning,
+    )
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
