@@ -1,0 +1,10 @@
+    3  4  5  7
+    3  4  6  7
+    0.734   0.824   0.0 | MACHin  CLIFin  ALFAin
+    4  2                             | ISMOM  IFFBC  [ DOUXin DOUYin SRCEin ]
+    10000000   9.000          | REYNin ACRIT [ KTRTYP ]
+    1.000    1.000                   | XTR1 XTR2
+    0.990  1.2                       | MCRIT  MUCON
+    0    0                           | ISMOVE  ISPRES
+    0    0                           | NMODN   NPOSN
+
