@@ -3,6 +3,13 @@ import warnings
 from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
 
 
+warnings.warn(
+    "This file is deprecated.\n"
+    "You can use `asb.Airfoil.get_aero_from_neuralfoil()` instead\n"
+    "to get airfoil aerodynamics for any airfoil.",
+    DeprecationWarning
+)
+
 def print_default_warning():
     warnings.warn("\n".join([
         "Warning: Using a placeholder aerodynamics model for this Airfoil!",
