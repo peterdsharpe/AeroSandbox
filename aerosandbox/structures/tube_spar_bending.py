@@ -389,7 +389,7 @@ if __name__ == '__main__':
     opti.minimize(mass / (lift / 9.81))
     sol = opti.solve()
 
-    beam.substitute_solution(sol)
+    beam = sol(beam)
 
     print(f"{sol.value(mass)} kg per half-wing")
 

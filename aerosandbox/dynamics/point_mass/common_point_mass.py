@@ -23,7 +23,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         For each control variable, self.control_var = 0
         """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def state(self) -> Dict[str, Union[float, np.ndarray]]:
         """
         Returns the state variables of this Dynamics instance as a Dict.
@@ -145,7 +146,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             )
         }
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
         pass
 
