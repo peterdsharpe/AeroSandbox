@@ -300,11 +300,7 @@ fuse = asb.Fuselage(
 )
 
 ### Wing
-wing_airfoil = asb.Airfoil("b737c").repanel(100)
-wing_airfoil.generate_polars(
-    cache_filename="cache/b737c.json",
-    include_compressibility_effects=True,
-)
+wing_airfoil = asb.Airfoil("b737c")
 
 wing_span = opti.variable(
     init_guess=214 * u.foot,
@@ -389,11 +385,6 @@ wing = asb.Wing(
 
 ### Horizontal Stabilizer
 hstab_airfoil = asb.Airfoil("naca0012")
-hstab_airfoil.generate_polars(
-    cache_filename="cache/naca0012.json",
-    include_compressibility_effects=True,
-    make_symmetric_polars=True,
-)
 
 hstab_span = opti.variable(
     init_guess=70.8 * u.foot,
@@ -460,11 +451,6 @@ hstab = asb.Wing(
 
 ### Vertical Stabilizer
 vstab_airfoil = asb.Airfoil("naca0008")
-vstab_airfoil.generate_polars(
-    cache_filename="cache/naca0008.json",
-    include_compressibility_effects=True,
-    make_symmetric_polars=True,
-)
 
 vstab_span = opti.variable(
     init_guess=33 * u.foot,

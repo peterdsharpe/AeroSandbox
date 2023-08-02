@@ -86,17 +86,6 @@ airplane = asb.Airplane(
     ]
 )
 
-for i, wing in enumerate(airplane.wings):
-    for j, xsec in enumerate(wing.xsecs):
-        af = xsec.airfoil
-        af.generate_polars(
-            cache_filename=f"cache/{af.name}.json",
-            xfoil_kwargs=dict(
-                xfoil_repanel="naca" in af.name.lower()
-            )
-        )
-        airplane.wings[i].xsecs[j].airfoil = af
-
 op_point = asb.OperatingPoint(
     velocity=100,
     alpha=5,

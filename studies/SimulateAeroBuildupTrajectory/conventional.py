@@ -5,9 +5,6 @@ from aerosandbox.library import airfoils
 wing_airfoil = asb.Airfoil("sd7037").repanel()
 tail_airfoil = asb.Airfoil("naca0010")
 
-wing_airfoil.generate_polars(cache_filename="cache/sd7037")
-tail_airfoil.generate_polars(cache_filename="cache/naca0010")
-
 ### Define the 3D geometry you want to analyze/optimize.
 # Here, all distances are in meters and all angles are in degrees.
 airplane = asb.Airplane(
