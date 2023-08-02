@@ -38,6 +38,15 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.1.1
+
+- Added `asb.KulfanAirfoil`, which is a new subclass of `asb.Airfoil` with the underlying parameterization as Kulfan (CST) parameters rather than a coordinate array. Useful for design optimization, as CST parameters can be optimized through, but raw coordinate arrays cannot.
+- Added transonic airfoils from TASOPT to the AeroSandbox airfoil database. See them, for example, with `asb.Airfoil("tasopt-c090")`.
+- Extend capabilities for `aerosandbox.numpy` functions `np.max`, `np.min`, `np.diag`.
+- Added new tutorials on airfoil analysis and airfoil shape optimization. (Roughly in the path `/tutorials/Aerodynamics/...2D Aero Tools/NeuralFoil`)
+- Begin work on a unified potential flow model for 3D aerodynamics, which will allow easy switching between different modeling assumptions.
+- Added an improvement to Airplane geometry export to STEP thanks to @Zcaic, which now makes a leading-edge line part of each Wing. Improves STEP accuracy.
+
 #### 4.1.0
 
 - In general, uses NeuralFoil throughout instead of XFoil. `asb.Airfoil` no longer needs to have its `generate_polars()` method called before assembling an airplane object. In general, the old "polar functions" of `Airfoil` (e.g., `Airfoil.CL_function()`) are no longer used.
