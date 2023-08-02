@@ -1041,9 +1041,6 @@ class Airfoil(Polygon):
         return Airfoil(
             name=self.name,
             coordinates=np.concatenate((new_upper_coordinates, new_lower_coordinates[1:, :]), axis=0),
-            CL_function=self.CL_function,
-            CD_function=self.CD_function,
-            CM_function=self.CM_function,
         )
 
     def normalize(
