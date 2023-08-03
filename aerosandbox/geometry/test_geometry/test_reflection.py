@@ -99,7 +99,7 @@ def test_cas_rectangular_wide():
 
 def test_np_3D():
     with pytest.raises(ValueError):
-        reflect_over_XZ_plane(np.arange(2 * 3 * 4).reshape(shape=(2, 3, 4)))
+        reflect_over_XZ_plane(np.arange(2 * 3 * 4).reshape((2, 3, 4)))
 
 
 if __name__ == '__main__':
