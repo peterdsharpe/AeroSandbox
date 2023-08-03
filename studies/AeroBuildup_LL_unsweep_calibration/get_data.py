@@ -157,7 +157,7 @@ if __name__ == '__main__':
     #     "$x_{np}$ [m]"
     # )
 
-    cm = plt.get_cmap('rainbow')
+    cm = plt.cm.get_cmap('rainbow')
     clim = (0, 1)
 
     fig, ax = plt.subplots()

@@ -362,7 +362,7 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(figsize=(6, 6))
 
-    cmap = plt.get_cmap("rainbow")
+    cmap = plt.cm.get_cmap("rainbow")
 
     cont, contf, cbar = contour(
         X,

@@ -733,7 +733,7 @@ class Airfoil(Polygon):
         p.set_ticks(5, 1, 20, 5)
 
         if Re_colors is None:
-            Re_colors = plt.get_cmap('rainbow')(np.linspace(0, 1, len(Res)))
+            Re_colors = plt.cm.get_cmap('rainbow')(np.linspace(0, 1, len(Res)))
             Re_colors = [
                 p.adjust_lightness(color, 0.7)
                 for color in Re_colors

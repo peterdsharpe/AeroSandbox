@@ -39,7 +39,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    cm = plt.get_cmap("crest")
+    cm = plt.cm.get_cmap("crest")
     # cm = p.sns.husl_palette(as_cmap=True)
     norm = plt.Normalize(0, 1)
 

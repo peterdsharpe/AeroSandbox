@@ -172,7 +172,7 @@ p.show_plot(dpi=80)
 
 # fig, ax = plt.subplots()
 # plt.plot(dyn.xe, dyn.altitude, "k")
-# sc = plt.scatter(dyn.xe, dyn.altitude, c=dyn.speed, cmap=plt.get_cmap("rainbow"), zorder=4)
+# sc = plt.scatter(dyn.xe, dyn.altitude, c=dyn.speed, cmap=plt.cm.get_cmap("rainbow"), zorder=4)
 # plt.axis('equal')
 # plt.colorbar(label="Airspeed [m/s]")
 # show_plot("Trajectory using `asb.AeroBuildup` Flight Dynamics", "$x_e$", "$-z_e$")

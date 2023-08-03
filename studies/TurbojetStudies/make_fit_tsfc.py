@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
 
-    cmap = plt.get_cmap("turbo")
+    cmap = plt.cm.get_cmap("turbo")
     norm = p.mpl.colors.Normalize(
         vmin=0,
         vmax=10

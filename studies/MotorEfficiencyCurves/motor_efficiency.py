@@ -35,7 +35,7 @@ def get_perf(kv):
 
 kvs = np.geomspace(400, 2000, 7)
 
-colors = plt.get_cmap("rainbow_r")(np.linspace(0, 1, len(kvs)))
+colors = plt.cm.get_cmap("rainbow_r")(np.linspace(0, 1, len(kvs)))
 
 fig, ax = plt.subplots()
 for i, kv in enumerate(kvs):

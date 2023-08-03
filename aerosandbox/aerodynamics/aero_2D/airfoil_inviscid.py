@@ -213,7 +213,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             color=speed,
             density=2.5,
             arrowsize=0,
-            cmap=plt.get_cmap('coolwarm_r'),
+            cmap=plt.cm.get_cmap('coolwarm_r'),
         )
         CB = plt.colorbar(
             orientation="horizontal",
