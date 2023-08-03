@@ -14,4 +14,4 @@ trimesh~=3.18.3
 sympy~=1.11.1
 cadquery~=2.3.1
 shapely~=2.0.1
-neuralfoil~=0.1.4
+neuralfoil~=0.1.9
