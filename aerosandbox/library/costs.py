@@ -42,8 +42,7 @@ def modified_DAPCA_IV_production_cost_analysis(
 
         design_maximum_airspeed: The design maximum airspeed of the aircraft, in m/s.
 
-        n_airplanes_produced: The number of airplanes produced or the number to be produced in 5 years, whichever is
-        less.
+        n_airplanes_produced: The number of airplanes to be produced.
 
         n_engines_per_aircraft: The number of engines per aircraft.
 
@@ -86,7 +85,8 @@ def modified_DAPCA_IV_production_cost_analysis(
         manufacturing_wrap_rate_2012_dollars: The manufacturing wrap rate in 2012 dollars.
 
     Returns:
-        A dictionary of costs, to produce all `n_airplanes_produced` airplanes, in present-day dollars.
+
+        A dictionary of costs required to produce all `n_airplanes_produced` airplanes, in present-day dollars.
 
         Keys and values are as follows:
 
@@ -110,11 +110,11 @@ def modified_DAPCA_IV_production_cost_analysis(
             - "manufacturing_materials": Manufacturing materials cost. From Raymer: "Includes all raw materials and
             purchased hardware and equipment."
 
-            - "engine_cost": Engine cost.
+            - "engines": Engine cost.
 
-            - "avionics_cost": Avionics cost.
+            - "avionics": Avionics cost.
 
-            - "total_cost": Total cost.
+            - "total": Total cost. (Sum of all other costs above.)
 
     """
     # Abbreviated constants for readability
@@ -179,8 +179,8 @@ def modified_DAPCA_IV_production_cost_analysis(
         for k, v in costs_2012_dollars.items()
     }
 
-    ### Add engine and avionics costs
-    costs["engine_cost"] = cost_per_engine * n_engines_per_aircraft * n_airplanes_produced
+    ### Add the engine(s) and avionics costs
+    costs["engines"] = cost_per_engine * n_engines_per_aircraft * n_airplanes_produced
     costs["avionics"] = cost_avionics_per_airplane * n_airplanes_produced
 
     ### Total all costs and return
