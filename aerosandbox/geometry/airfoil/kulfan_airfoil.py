@@ -3,6 +3,7 @@ from aerosandbox.geometry.airfoil.airfoil import Airfoil
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
 from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 from typing import Union, Dict, List
+import warnings
 
 
 class KulfanAirfoil(Airfoil):
@@ -19,20 +20,27 @@ class KulfanAirfoil(Airfoil):
         self.name = name
 
         ### Check to see if the airfoil is a "known" airfoil, based on its name.
-        try:
-            coordinate_airfoil = Airfoil(name)
-        except UserWarning:
-            pass
-
         if (
                 lower_weights is None and
                 upper_weights is None
         ):  # Try to fall back on parameters from the coordinate airfoil, if it's something from the UIUC database
-            try:
-                coordinate_airfoil = Airfoil(name)
-                if coordinate_airfoil.coordinates is None:
-                    raise UserWarning
 
+            class IgnoreUserWarnings:  # A context manager to ignore UserWarnings
+                def __enter__(self):
+                    warnings.filterwarnings("ignore", category=UserWarning)
+
+                def __exit__(self, exc_type, exc_val, exc_tb):
+                    warnings.resetwarnings()
+
+            with IgnoreUserWarnings():
+                coordinate_airfoil = Airfoil(name)
+
+            if coordinate_airfoil.coordinates is None:
+                raise ValueError("You must either:\n"
+                                 "\t* Specify both `lower_weights` and `upper_weights`, at minimum"
+                                 "\t* Give an airfoil `name` corresponding to an airfoil in the UIUC database, or a NACA airfoil.")
+
+            else:
                 parameters = get_kulfan_parameters(
                     coordinates=coordinate_airfoil.coordinates,
                     n_weights_per_side=8,
@@ -46,11 +54,6 @@ class KulfanAirfoil(Airfoil):
                 upper_weights = parameters["upper_weights"]
                 leading_edge_weight = parameters["leading_edge_weight"]
                 TE_thickness = parameters["TE_thickness"]
-
-            except UserWarning:
-                raise ValueError("You must either:\n"
-                                 "\t* Specify both `lower_weights` and `upper_weights`, at minimum"
-                                 "\t* Give an airfoil `name` corresponding to an airfoil in the UIUC database, or a NACA airfoil.")
 
         ### Handle the Kulfan parameters
         self.lower_weights = lower_weights
