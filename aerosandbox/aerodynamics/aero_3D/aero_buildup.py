@@ -134,42 +134,42 @@ class AeroBuildup(ExplicitAnalysis):
             return self.op_point.convert_axes(*self.M_g, from_axes="geometry", to_axes="wind")
 
         @cached_property
-        def L() -> Union[float, np.ndarray]:
+        def L(self) -> Union[float, np.ndarray]:
             """
             The lift force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[2]
 
         @cached_property
-        def Y() -> Union[float, np.ndarray]:
+        def Y(self) -> Union[float, np.ndarray]:
             """
             The side force [N]. Definitionally, this is in wind axes.
             """
             return self.F_w[1]
 
         @cached_property
-        def D() -> Union[float, np.ndarray]:
+        def D(self) -> Union[float, np.ndarray]:
             """
             The drag force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[0]
 
         @cached_property
-        def l_b() -> Union[float, np.ndarray]:
+        def l_b(self) -> Union[float, np.ndarray]:
             """
             The rolling moment [Nm] in body axes. Positive is roll-right.
             """
             return self.M_b[0]
 
         @cached_property
-        def m_b() -> Union[float, np.ndarray]:
+        def m_b(self) -> Union[float, np.ndarray]:
             """
             The pitching moment [Nm] in body axes. Positive is nose-up.
             """
             return self.M_b[1]
 
         @cached_property
-        def n_b() -> Union[float, np.ndarray]:
+        def n_b(self) -> Union[float, np.ndarray]:
             """
             The yawing moment [Nm] in body axes. Positive is nose-right.
             """
@@ -715,7 +715,7 @@ class AeroBuildup(ExplicitAnalysis):
             mach_normal = mach * np.cos(sweep_rad)
 
             ##### Compute effective alpha due to control surface deflections
-            symmetry_treated_control_surfaces = []
+            symmetry_treated_control_surfaces: List[ControlSurface] = []
 
             for surf in xsec_a.control_surfaces:
                 if mirror_across_XZ and not surf.symmetric:
@@ -725,7 +725,6 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
             kwargs = dict(
-                model_size="medium",
                 alpha=alpha_generalized_effective,
                 mach=mach_normal,
                 control_surfaces=symmetry_treated_control_surfaces,
