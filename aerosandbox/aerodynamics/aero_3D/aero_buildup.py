@@ -251,7 +251,7 @@ class AeroBuildup(ExplicitAnalysis):
                                        p=True,
                                        q=True,
                                        r=True,
-                                       ):
+                                       ) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
         """
         Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
 
