@@ -9,6 +9,8 @@ import aerosandbox.library.aerodynamics as aerolib
 import copy
 from typing import Union, List, Dict, Any
 from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree import softmax_scalefree
+from dataclasses import dataclass
+from functools import cached_property
 
 
 class AeroBuildup(ExplicitAnalysis):
@@ -91,6 +93,137 @@ class AeroBuildup(ExplicitAnalysis):
             f"xyz_ref={self.xyz_ref}",
         ]) + "\n)"
 
+    # @dataclass
+    # class AeroResults:
+    #     s_ref: float  # Reference area [m^2]
+    #     c_ref: float  # Reference chord [m]
+    #     b_ref: float  # Reference span [m]
+    #     op_point: OperatingPoint
+    #     F_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of forces in geometry axes [N]
+    #     M_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of moments about geometry axes [Nm]
+    #
+    #     def __getitem__(self, key):
+    #         return getattr(self, key)
+    #
+    #     def __setitem__(self, key, value):
+    #         setattr(self, key, value)
+
+
+
+    @dataclass(frozen=True)
+    class AeroComponentResults:
+        s_ref: float  # Reference area [m^2]
+        c_ref: float  # Reference chord [m]
+        b_ref: float  # Reference span [m]
+        op_point: OperatingPoint
+        F_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of forces in geometry axes [N]
+        M_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of moments about geometry axes [Nm]
+        y_span_effective: float  # Effective span in the geometry-Y direction [m]
+        z_span_effective: float  # Effective span in the geometry-Z direction [m]
+        oswalds_efficiency: float  # Oswald's efficiency factor [-]
+
+        # def __add__(self, other: "AeroResults"):
+        #     """
+        #     Adds two AeroResults objects together, elementwise.
+        #     """
+        #     ### Check that the two AeroResults objects are compatible
+        #     if not all([
+        #         self.s_ref == other.s_ref,
+        #         self.c_ref == other.c_ref,
+        #         self.b_ref == other.b_ref,
+        #         self.op_point == other.op_point,
+        #     ]):
+        #         raise ValueError("Cannot add two AeroResults objects that are not compatible.")
+        #
+        #     ### Do the sum
+        #     return AeroBuildup.AeroComponentResults(
+        #         s_ref=self.s_ref,
+        #         c_ref=self.c_ref,
+        #         b_ref=self.b_ref,
+        #         op_point=self.op_point,
+        #         F_g=[a + b for a, b in zip(self.F_g, other.F_g)],
+        #         M_g=[a + b for a, b in zip(self.M_g, other.M_g)],
+        #     )
+        #
+        # def __radd__(self, other):
+        #     """
+        #     Adds two AeroResults objects together, elementwise.
+        #     """
+        #     if other == 0:
+        #         return self
+        #     else:
+        #         return self.__add__(other)
+
+        @cached_property
+        def F_b(self) -> List[Union[float, np.ndarray]]:
+            """
+            An [x, y, z] list of forces in body axes [N]
+            """
+            return self.op_point.convert_axes(*self.F_g, from_axes="geometry", to_axes="body")
+
+        @cached_property
+        def F_w(self) -> List[Union[float, np.ndarray]]:
+            """
+            An [x, y, z] list of forces in wind axes [N]
+            """
+            return self.op_point.convert_axes(*self.F_g, from_axes="geometry", to_axes="wind")
+
+        @cached_property
+        def M_b(self) -> List[Union[float, np.ndarray]]:
+            """
+            An [x, y, z] list of moments about body axes [Nm]
+            """
+            return self.op_point.convert_axes(*self.M_g, from_axes="geometry", to_axes="body")
+
+        @cached_property
+        def M_w(self) -> List[Union[float, np.ndarray]]:
+            """
+            An [x, y, z] list of moments about wind axes [Nm]
+            """
+            return self.op_point.convert_axes(*self.M_g, from_axes="geometry", to_axes="wind")
+
+        @cached_property
+        def L() -> Union[float, np.ndarray]:
+            """
+            The lift force [N]. Definitionally, this is in wind axes.
+            """
+            return -self.F_w[2]
+
+        @cached_property
+        def Y() -> Union[float, np.ndarray]:
+            """
+            The side force [N]. Definitionally, this is in wind axes.
+            """
+            return self.F_w[1]
+
+        @cached_property
+        def D() -> Union[float, np.ndarray]:
+            """
+            The drag force [N]. Definitionally, this is in wind axes.
+            """
+            return -self.F_w[0]
+
+        @cached_property
+        def l_b() -> Union[float, np.ndarray]:
+            """
+            The rolling moment [Nm] in body axes. Positive is roll-right.
+            """
+            return self.M_b[0]
+
+        @cached_property
+        def m_b() -> Union[float, np.ndarray]:
+            """
+            The pitching moment [Nm] in body axes. Positive is nose-up.
+            """
+            return self.M_b[1]
+
+        @cached_property
+        def n_b() -> Union[float, np.ndarray]:
+            """
+            The yawing moment [Nm] in body axes. Positive is nose-right.
+            """
+            return self.M_b[2]
+
     def run(self) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
         """
         Computes the aerodynamic forces and moments on the airplane.
@@ -147,45 +280,29 @@ class AeroBuildup(ExplicitAnalysis):
                           ]
 
         ### Sum up the forces
-        aero_total = {
-            "F_g": [0., 0., 0.],
-            # "F_b": [0., 0., 0.],
-            # "F_w": [0., 0., 0.],
-            "M_g": [0., 0., 0.],
-            "M_b": [0., 0., 0.],
-            "M_w": [0., 0., 0.],
-            # "L"  : 0.,
-            # "Y"  : 0.,
-            # "D"  : 0.,
-            # "l_b": 0.,
-            # "m_b": 0.,
-            # "n_b": 0.,
-        }
-
-        for k in aero_total.keys():
-            for aero_component in aero_components:
-                if isinstance(aero_total[k], list):
-                    aero_total[k] = [
-                        aero_total[k][i] + aero_component[k][i]
-                        for i in range(3)
-                    ]
-                else:
-                    aero_total[k] = aero_total[k] + aero_component[k]
+        F_g_total = [
+            sum([comp.F_g[i] for comp in aero_components])
+            for i in range(3)
+        ]
+        M_g_total = [
+            sum([comp.M_g[i] for comp in aero_components])
+            for i in range(3)
+        ]
 
         ##### Add in the induced drag
         Q = self.op_point.dynamic_pressure()
 
         y_span_effective_squared = softmax_scalefree([
-            comp["y_span_effective"] ** 2 * comp["oswalds_efficiency"]
+            comp.y_span_effective ** 2 * comp.oswalds_efficiency
             for comp in aero_components
         ])
         z_span_effective_squared = softmax_scalefree([
-            comp["z_span_effective"] ** 2 * comp["oswalds_efficiency"]
+            comp.z_span_effective ** 2 * comp.oswalds_efficiency
             for comp in aero_components
         ])
 
         _, sideforce, lift = self.op_point.convert_axes(
-            *aero_total['F_g'],
+            *F_g_total,
             from_axes="geometry",
             to_axes="wind"
         )
@@ -202,48 +319,57 @@ class AeroBuildup(ExplicitAnalysis):
         )
 
         for i in range(3):
-            aero_total['F_g'][i] += D_induced_g[i]
+            F_g_total[i] += D_induced_g[i]
+
+        ##### Start to assemble the output
+        output = {
+            "F_g": F_g_total,
+            "M_g": M_g_total,
+        }
 
         ##### Add in other metrics
-        aero_total["F_b"] = self.op_point.convert_axes(
-            *aero_total["F_g"],
+        output["F_b"] = self.op_point.convert_axes(
+            *F_g_total,
             from_axes="geometry",
             to_axes="body"
         )
-        aero_total["F_w"] = self.op_point.convert_axes(
-            *aero_total["F_g"],
+        output["F_w"] = self.op_point.convert_axes(
+            *F_g_total,
             from_axes="geometry",
             to_axes="wind"
         )
-        aero_total["L"] = -aero_total["F_w"][2]
-        aero_total["Y"] = aero_total["F_w"][1]
-        aero_total["D"] = -aero_total["F_w"][0]
-        aero_total["l_b"] = aero_total["M_b"][0]
-        aero_total["m_b"] = aero_total["M_b"][1]
-        aero_total["n_b"] = aero_total["M_b"][2]
+        output["M_b"] = self.op_point.convert_axes(
+            *M_g_total,
+            from_axes="geometry",
+            to_axes="body"
+        )
+        output["M_w"] = self.op_point.convert_axes(
+            *M_g_total,
+            from_axes="geometry",
+            to_axes="wind"
+        )
+
+        output["L"] = -output["F_w"][2]
+        output["Y"] = output["F_w"][1]
+        output["D"] = -output["F_w"][0]
+        output["l_b"] = output["M_b"][0]
+        output["m_b"] = output["M_b"][1]
+        output["n_b"] = output["M_b"][2]
 
         ##### Compute dimensionalization factor
-        if self.airplane.s_ref is not None:
-            qS = self.op_point.dynamic_pressure() * self.airplane.s_ref
-            c = self.airplane.c_ref
-            b = self.airplane.b_ref
-        else:
-            raise ValueError(
-                "Airplane must have a reference area and length attributes.\n"
-                "(`Airplane.s_ref`, `Airplane.c_ref`, `Airplane.b_ref`)"
-            )
+        qS = self.op_point.dynamic_pressure() * self.airplane.s_ref
+        c = self.airplane.c_ref
+        b = self.airplane.b_ref
 
         ##### Add nondimensional forces, and nondimensional quantities.
-        aero_total["CL"] = aero_total["L"] / qS
-        aero_total["CY"] = aero_total["Y"] / qS
-        aero_total["CD"] = aero_total["D"] / qS
-        aero_total["Cl"] = aero_total["l_b"] / qS / b
-        aero_total["Cm"] = aero_total["m_b"] / qS / c
-        aero_total["Cn"] = aero_total["n_b"] / qS / b
+        output["CL"] = output["L"] / qS
+        output["CY"] = output["Y"] / qS
+        output["CD"] = output["D"] / qS
+        output["Cl"] = output["l_b"] / qS / b
+        output["Cm"] = output["m_b"] / qS / c
+        output["Cn"] = output["n_b"] / qS / b
 
-        self.output = aero_total
-
-        return aero_total
+        return output
 
     def run_with_stability_derivatives(self,
                                        alpha=True,
@@ -398,7 +524,7 @@ class AeroBuildup(ExplicitAnalysis):
     def wing_aerodynamics(self,
                           wing: Wing,
                           include_induced_drag: bool = True,
-                          ) -> Dict[str, Any]:
+                          ) -> AeroComponentResults:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a wing in isolation.
 
@@ -770,34 +896,22 @@ class AeroBuildup(ExplicitAnalysis):
                     F_g[i] += sect_F_g[i]
                     M_g[i] += sect_M_g[i]
 
-        ##### Convert F_g and M_g to body and wind axes for reporting.
-        F_b = op_point.convert_axes(*F_g, from_axes="geometry", to_axes="body")
-        F_w = op_point.convert_axes(*F_b, from_axes="body", to_axes="wind")
-        M_b = op_point.convert_axes(*M_g, from_axes="geometry", to_axes="body")
-        M_w = op_point.convert_axes(*M_b, from_axes="body", to_axes="wind")
-
-        return {
-            "F_g"               : F_g,
-            "F_b"               : F_b,
-            "F_w"               : F_w,
-            "M_g"               : M_g,
-            "M_b"               : M_b,
-            "M_w"               : M_w,
-            "L"                 : -F_w[2],
-            "Y"                 : F_w[1],
-            "D"                 : -F_w[0],
-            "l_b"               : M_b[0],
-            "m_b"               : M_b[1],
-            "n_b"               : M_b[2],
-            "y_span_effective"  : y_span_effective,
-            "z_span_effective"  : z_span_effective,
-            "oswalds_efficiency": oswalds_efficiency
-        }
+        return self.AeroComponentResults(
+            s_ref=self.airplane.s_ref,
+            c_ref=self.airplane.c_ref,
+            b_ref=self.airplane.b_ref,
+            op_point=op_point,
+            F_g=F_g,
+            M_g=M_g,
+            y_span_effective=y_span_effective,
+            z_span_effective=z_span_effective,
+            oswalds_efficiency=oswalds_efficiency
+        )
 
     def fuselage_aerodynamics(self,
                               fuselage: Fuselage,
                               include_induced_drag: bool = True
-                              ) -> Dict[str, Any]:
+                              ) -> AeroComponentResults:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a fuselage in isolation.
 
@@ -1136,29 +1250,17 @@ class AeroBuildup(ExplicitAnalysis):
             for i in range(3):
                 F_g[i] += D_induced_g[i]
 
-        ##### Convert F_g and M_g to body and wind axes for reporting.
-        F_b = op_point.convert_axes(*F_g, from_axes="geometry", to_axes="body")
-        F_w = op_point.convert_axes(*F_b, from_axes="body", to_axes="wind")
-        M_b = op_point.convert_axes(*M_g, from_axes="geometry", to_axes="body")
-        M_w = op_point.convert_axes(*M_b, from_axes="body", to_axes="wind")
-
-        return {
-            "F_g"               : F_g,
-            "F_b"               : F_b,
-            "F_w"               : F_w,
-            "M_g"               : M_g,
-            "M_b"               : M_b,
-            "M_w"               : M_w,
-            "L"                 : -F_w[2],
-            "Y"                 : F_w[1],
-            "D"                 : -F_w[0],
-            "l_b"               : M_b[0],
-            "m_b"               : M_b[1],
-            "n_b"               : M_b[2],
-            "y_span_effective"  : y_span_effective,
-            "z_span_effective"  : z_span_effective,
-            "oswalds_efficiency": 0.95,
-        }
+        return self.AeroComponentResults(
+            s_ref=self.airplane.s_ref,
+            c_ref=self.airplane.c_ref,
+            b_ref=self.airplane.b_ref,
+            op_point=op_point,
+            F_g=F_g,
+            M_g=M_g,
+            y_span_effective=y_span_effective,
+            z_span_effective=z_span_effective,
+            oswalds_efficiency=0.95,
+        )
 
 
 if __name__ == '__main__':
