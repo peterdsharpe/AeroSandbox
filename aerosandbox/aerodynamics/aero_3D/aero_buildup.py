@@ -93,23 +93,6 @@ class AeroBuildup(ExplicitAnalysis):
             f"xyz_ref={self.xyz_ref}",
         ]) + "\n)"
 
-    # @dataclass
-    # class AeroResults:
-    #     s_ref: float  # Reference area [m^2]
-    #     c_ref: float  # Reference chord [m]
-    #     b_ref: float  # Reference span [m]
-    #     op_point: OperatingPoint
-    #     F_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of forces in geometry axes [N]
-    #     M_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of moments about geometry axes [Nm]
-    #
-    #     def __getitem__(self, key):
-    #         return getattr(self, key)
-    #
-    #     def __setitem__(self, key, value):
-    #         setattr(self, key, value)
-
-
-
     @dataclass(frozen=True)
     class AeroComponentResults:
         s_ref: float  # Reference area [m^2]
@@ -121,38 +104,6 @@ class AeroBuildup(ExplicitAnalysis):
         y_span_effective: float  # Effective span in the geometry-Y direction [m]
         z_span_effective: float  # Effective span in the geometry-Z direction [m]
         oswalds_efficiency: float  # Oswald's efficiency factor [-]
-
-        # def __add__(self, other: "AeroResults"):
-        #     """
-        #     Adds two AeroResults objects together, elementwise.
-        #     """
-        #     ### Check that the two AeroResults objects are compatible
-        #     if not all([
-        #         self.s_ref == other.s_ref,
-        #         self.c_ref == other.c_ref,
-        #         self.b_ref == other.b_ref,
-        #         self.op_point == other.op_point,
-        #     ]):
-        #         raise ValueError("Cannot add two AeroResults objects that are not compatible.")
-        #
-        #     ### Do the sum
-        #     return AeroBuildup.AeroComponentResults(
-        #         s_ref=self.s_ref,
-        #         c_ref=self.c_ref,
-        #         b_ref=self.b_ref,
-        #         op_point=self.op_point,
-        #         F_g=[a + b for a, b in zip(self.F_g, other.F_g)],
-        #         M_g=[a + b for a, b in zip(self.M_g, other.M_g)],
-        #     )
-        #
-        # def __radd__(self, other):
-        #     """
-        #     Adds two AeroResults objects together, elementwise.
-        #     """
-        #     if other == 0:
-        #         return self
-        #     else:
-        #         return self.__add__(other)
 
         @cached_property
         def F_b(self) -> List[Union[float, np.ndarray]]:
