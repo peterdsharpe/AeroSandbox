@@ -29,12 +29,14 @@ def oswalds_efficiency(
         aspect_ratio: float,
         sweep: float = 0.,
         fuselage_diameter_to_span_ratio: float = 0.,
+        method="nita_scholz",
 ) -> float:
     """
     Computes the Oswald's efficiency factor for a planar, tapered, swept wing.
 
     Based on "Estimating the Oswald Factor from Basic Aircraft Geometrical Parameters"
     by M. Nita, D. Scholz; Hamburg Univ. of Applied Sciences, 2012.
+    https://www.fzt.haw-hamburg.de/pers/Scholz/OPerA/OPerA_PUB_DLRK_12-09-10.pdf
 
     Implementation of Section 5 from the above paper.
 
@@ -68,9 +70,30 @@ def oswalds_efficiency(
             1 + f(taper_ratio - delta_lambda) * aspect_ratio
     )
 
-    fuselage_wake_contraction_correction_factor = 1 - 2 * (fuselage_diameter_to_span_ratio) ** 2
+    ### Correction factors, with nomenclature from Nita & Scholz
+    k_e_F = 1 - 2 * (fuselage_diameter_to_span_ratio) ** 2
+    k_e_D0 = np.mean([
+        0.873,  # jet transport
+        0.864,  # business jet
+        0.804,  # turboprop
+        0.804,  # general aviation
+    ])
+    k_e_M = 1
+    # Compressibility correction not added because it only becomes significant well after M_crit, after which wave
+    # drag dominates. Nita & Scholz also do not provide a model that extrapolates sensibly beyond M=0.9 or so,
+    # so value is limited.
 
-    e = e_theo * fuselage_wake_contraction_correction_factor
+    if method == "nita_scholz":
+        e = e_theo * k_e_F * k_e_D0 * k_e_M
+    elif method == "kroo":
+        mach_correction_factor = 1
+        Q = 1 / (e_theo * k_e_F)
+        from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
+        P = 0.38 * Cf_flat_plate(Re_L=1e6)
+
+        e = mach_correction_factor / (
+                Q + P * np.pi * aspect_ratio
+        )
 
     return e
 
@@ -146,7 +169,7 @@ def CL_over_Cl(
     ### Formulation from Raymer, Sect. 12.4.1; citing DATCOM.
     # Comparison to experiment suggests this is the most accurate.
     # Symbolically simplified to remove the PG singularity.
-    eta = 0.95
+    eta = 1.0
     CL_ratio = aspect_ratio / (
             2 + (
             4 + (aspect_ratio ** 2 * beta_squared / eta ** 2) + (np.tand(sweep) * aspect_ratio / eta) ** 2
