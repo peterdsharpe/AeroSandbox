@@ -145,13 +145,13 @@ class KulfanAirfoil(Airfoil):
                 (np.length(self.lower_weights) != 8) or
                 (np.length(self.upper_weights) != 8)
         ):
-            raise ValueError("NeuralFoil is only trained to handle exactly 8 CST coefficients per side.")
+            raise NotImplementedError("NeuralFoil is only trained to handle exactly 8 CST coefficients per side.")
 
         if (
                 self.N1 != 0.5 or
                 self.N2 != 1.0
         ):
-            raise ValueError("NeuralFoil is only trained to handle airfoils with N1 = 0.5 and N2 = 1.0.")
+            raise NotImplementedError("NeuralFoil is only trained to handle airfoils with N1 = 0.5 and N2 = 1.0.")
 
         ### Set up inputs
         if control_surfaces is None:
@@ -556,18 +556,12 @@ class KulfanAirfoil(Airfoil):
         ### Determine parameters for the blended airfoil
         name = f"{a_fraction * 100:.0f}% {self.name}, {b_fraction * 100:.0f}% {airfoil.name}"
 
-        if not all([
-            foil_a.N1 == foil_b.N1,
-            foil_a.N2 == foil_b.N2,
-        ]):
-            raise ValueError("In order to blend two airfoils, they must have the same N1 and N2 parameters.")
-
         return KulfanAirfoil(
             name=name,
             lower_weights=a_fraction * foil_a.lower_weights + b_fraction * foil_b.lower_weights,
             upper_weights=a_fraction * foil_a.upper_weights + b_fraction * foil_b.upper_weights,
             leading_edge_weight=a_fraction * foil_a.leading_edge_weight + b_fraction * foil_b.leading_edge_weight,
             TE_thickness=a_fraction * foil_a.TE_thickness + b_fraction * foil_b.TE_thickness,
-            N1=foil_a.N1,
-            N2=foil_a.N2,
+            N1=a_fraction * foil_a.N1 + b_fraction * foil_b.N1,
+            N2=a_fraction * foil_a.N2 + b_fraction * foil_b.N2,
         )
