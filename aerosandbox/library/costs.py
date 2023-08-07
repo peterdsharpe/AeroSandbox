@@ -226,12 +226,16 @@ def electric_aircraft_direct_operating_cost_analysis(
     Any costs that are not included here are considered indirect costs. These indirect costs would include,
     but are not limited to: advertisement, administrative costs, depreciation of non-airframe assets, and taxes.
 
+    Airframe maintenance costs are estimated from:
+        Moore, et al., "Unlocking Low-Cost Regional Air Mobility through...", AIAA Aviation 2023.
+
     Airport fees estimated for the Phoenix-Mesa Gateway Airport, due to public availability of the fee schedule:
     https://www.gatewayairport.com/documents/documentlibrary/wgaa%20organizational%20documents/airport%20rates%20charges%20-%20effective%20march%201,%202017.pdf
 
     Args:
 
-        production_cost_per_airframe: The cost to produce a single airframe, in present-day dollars.
+        production_cost_per_airframe: The cost to produce a single airframe, in present-day dollars. May be estimated
+            using the `modified_DAPCA_IV_production_cost_analysis()` function.
 
         nominal_cruise_airspeed: The nominal cruise airspeed of the aircraft, in m/s.
 
