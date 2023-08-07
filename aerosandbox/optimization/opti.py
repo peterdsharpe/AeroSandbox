@@ -1321,7 +1321,8 @@ class OptiSol:
                 int, float, complex,
                 range,
                 type(None),
-                bytes, bytearray, memoryview
+                bytes, bytearray, memoryview,
+                type,
         )):
             return x
 
