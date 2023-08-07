@@ -294,7 +294,8 @@ def electric_aircraft_direct_operating_cost_analysis(
             * "airport_passenger_facility_charge"
             * "indirect"
 
-        One key, "total", is also included, which is the sum of all of the above costs.
+        One key, "total", is also included, which is the sum of all of the above costs. Once again, this is
+            expressed in units of present-day dollars per passenger-mile.
 
     """
 
