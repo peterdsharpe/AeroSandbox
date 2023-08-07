@@ -123,7 +123,7 @@ def modified_DAPCA_IV_production_cost_analysis(
     Q = n_airplanes_produced
 
     ### Estimate labor hours
-    hours = {}
+    hours = dict()
 
     hours["engineering"] = 5.18 * W ** 0.777 * V ** 0.894 * Q ** 0.163
     hours["tooling"] = 7.22 * W ** 0.777 * V ** 0.696 * Q ** 0.263
@@ -150,7 +150,7 @@ def modified_DAPCA_IV_production_cost_analysis(
     }
 
     ### Convert labor hours to labor costs in 2012 dollars
-    costs_2012_dollars = {}
+    costs_2012_dollars = dict()
 
     costs_2012_dollars["engineering_labor"] = hours["engineering"] * engineering_wrap_rate_2012_dollars
     costs_2012_dollars["tooling_labor"] = hours["tooling"] * tooling_wrap_rate_2012_dollars
