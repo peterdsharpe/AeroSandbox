@@ -39,6 +39,7 @@ def test_wing_aero_3D_matches_2D_in_high_AR_limit():
         alpha=op_point.alpha,
         Re=op_point.reynolds(reference_length=1),
         mach=op_point.mach(),
+        model_size="large"
     )
     expected_aero = {
         "CL": airfoil_only_aero["CL"],
@@ -54,6 +55,7 @@ def test_wing_aero_3D_matches_2D_in_high_AR_limit():
         airplane=airplane,
         op_point=op_point,
         xyz_ref=xyz_ref,
+        model_size="large"
     ).run()
 
     ### Compare
