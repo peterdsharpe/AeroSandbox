@@ -492,6 +492,7 @@ class AeroBuildup(ExplicitAnalysis):
                 )
 
                 run_base["x_np"] = self.xyz_ref[0] - (Cma / CLa * self.airplane.c_ref)
+
             if d == "beta":
                 Cnb = run_base["Cnb"]
                 CYb = np.where(
