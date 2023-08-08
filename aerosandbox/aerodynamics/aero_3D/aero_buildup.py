@@ -354,29 +354,29 @@ class AeroBuildup(ExplicitAnalysis):
             - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
             - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
             - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
-            - 'L' : the lift force [N]. Definitionally, this is in wind axes.
-            - 'Y' : the side force [N]. This is in wind axes.
-            - 'D' : the drag force [N]. Definitionally, this is in wind axes.
-            - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
-            - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
-            - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
-            - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
-            - 'CY', the sideforce coefficient [-]. This is in wind axes.
-            - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
-            - 'Cl', the rolling coefficient [-], in body axes
-            - 'Cm', the pitching coefficient [-], in body axes
-            - 'Cn', the yawing coefficient [-], in body axes
+            - 'L'   : the lift force [N]. Definitionally, this is in wind axes.
+            - 'Y'   : the side force [N]. This is in wind axes.
+            - 'D'   : the drag force [N]. Definitionally, this is in wind axes.
+            - 'l_b' : the rolling moment, in body axes [Nm]. Positive is roll-right.
+            - 'm_b' : the pitching moment, in body axes [Nm]. Positive is pitch-up.
+            - 'n_b' : the yawing moment, in body axes [Nm]. Positive is nose-right.
+            - 'CL'  : the lift coefficient [-]. Definitionally, this is in wind axes.
+            - 'CY'  : the sideforce coefficient [-]. This is in wind axes.
+            - 'CD'  : the drag coefficient [-]. Definitionally, this is in wind axes.
+            - 'Cl'  : the rolling coefficient [-], in body axes
+            - 'Cm'  : the pitching coefficient [-], in body axes
+            - 'Cn'  : the yawing coefficient [-], in body axes
 
             Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`, and `r` arguments. For
             example, if `alpha=True`, then the following additional keys will be present:
 
-                - 'CLa', the lift coefficient derivative with respect to alpha [1/rad]
-                - 'CDa', the drag coefficient derivative with respect to alpha [1/rad]
-                - 'CYa', the sideforce coefficient derivative with respect to alpha [1/rad]
-                - 'Cla', the rolling moment coefficient derivative with respect to alpha [1/rad]
-                - 'Cma', the pitching moment coefficient derivative with respect to alpha [1/rad]
-                - 'Cna', the yawing moment coefficient derivative with respect to alpha [1/rad]
-                - 'x_np', the neutral point location in the x direction [m]
+                - 'CLa' : the lift coefficient derivative with respect to alpha [1/rad]
+                - 'CDa' : the drag coefficient derivative with respect to alpha [1/rad]
+                - 'CYa' : the sideforce coefficient derivative with respect to alpha [1/rad]
+                - 'Cla' : the rolling moment coefficient derivative with respect to alpha [1/rad]
+                - 'Cma' : the pitching moment coefficient derivative with respect to alpha [1/rad]
+                - 'Cna' : the yawing moment coefficient derivative with respect to alpha [1/rad]
+                - 'x_np': the neutral point location in the x direction [m]
 
             Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
 
@@ -1176,8 +1176,8 @@ class AeroBuildup(ExplicitAnalysis):
             )
 
             D_induced = (
-                (lift ** 2 + sideforce ** 2) /
-                (op_point.dynamic_pressure() * np.pi * span_effective ** 2)
+                    (lift ** 2 + sideforce ** 2) /
+                    (op_point.dynamic_pressure() * np.pi * span_effective ** 2)
             )
 
             D_induced_g = op_point.convert_axes(
