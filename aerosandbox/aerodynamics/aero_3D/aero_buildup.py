@@ -883,7 +883,6 @@ class AeroBuildup(ExplicitAnalysis):
         ##### Compute general fuselage properties
         q = op_point.dynamic_pressure()
         eta = jorgensen_eta(fuselage.fineness_ratio())
-        volume = fuselage.volume()
 
         span_effective = softmax_scalefree(
             [
