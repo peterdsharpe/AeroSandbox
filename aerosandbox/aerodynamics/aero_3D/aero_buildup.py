@@ -484,13 +484,23 @@ class AeroBuildup(ExplicitAnalysis):
 
             ### Try to compute and append neutral point, if possible
             if d == "alpha":
-                run_base["x_np"] = self.xyz_ref[0] - (
-                        run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
+                Cma = run_base["Cma"]
+                CLa = np.where(
+                    run_base["CLa"] == 0,
+                    np.nan,
+                    run_base["CLa"],
                 )
+
+                run_base["x_np"] = self.xyz_ref[0] - (Cma / CLa * self.airplane.c_ref)
             if d == "beta":
-                run_base["x_np_lateral"] = self.xyz_ref[0] - (
-                        run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
+                Cnb = run_base["Cnb"]
+                CYb = np.where(
+                    run_base["CYb"] == 0,
+                    np.nan,
+                    run_base["CYb"],
                 )
+
+                run_base["x_np_lateral"] = self.xyz_ref[0] - (Cnb / CYb * self.airplane.b_ref)
 
         return run_base
 
