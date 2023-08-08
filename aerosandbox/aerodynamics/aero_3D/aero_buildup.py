@@ -96,13 +96,20 @@ class AeroBuildup(ExplicitAnalysis):
     @dataclass(frozen=True)
     class AeroComponentResults:
         s_ref: float  # Reference area [m^2]
+
         c_ref: float  # Reference chord [m]
+
         b_ref: float  # Reference span [m]
+
         op_point: OperatingPoint
+
         F_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of forces in geometry axes [N]
+
         M_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of moments about geometry axes [Nm]
-        y_span_effective: float  # Effective span in the geometry-Y direction [m]
-        z_span_effective: float  # Effective span in the geometry-Z direction [m]
+
+        span_effective: float
+        # The effective span of the component's Trefftz-plane wake, used for induced drag calculations. [m]
+
         oswalds_efficiency: float  # Oswald's efficiency factor [-]
 
         @cached_property
@@ -243,12 +250,8 @@ class AeroBuildup(ExplicitAnalysis):
         ##### Add in the induced drag
         Q = self.op_point.dynamic_pressure()
 
-        y_span_effective_squared = softmax_scalefree([
-            comp.y_span_effective ** 2 * comp.oswalds_efficiency
-            for comp in aero_components
-        ])
-        z_span_effective_squared = softmax_scalefree([
-            comp.z_span_effective ** 2 * comp.oswalds_efficiency
+        span_effective_squared = softmax_scalefree([
+            comp.span_effective ** 2 * comp.oswalds_efficiency
             for comp in aero_components
         ])
 
@@ -259,8 +262,8 @@ class AeroBuildup(ExplicitAnalysis):
         )
 
         D_induced = (
-                lift ** 2 / (Q * np.pi * y_span_effective_squared + 1e-100) +
-                sideforce ** 2 / (Q * np.pi * z_span_effective_squared + 1e-100)
+                (lift ** 2 + sideforce ** 2) /
+                (Q * np.pi * span_effective_squared)
         )
 
         D_induced_g = self.op_point.convert_axes(
@@ -390,21 +393,29 @@ class AeroBuildup(ExplicitAnalysis):
                 floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
 
         """
-        abbreviations = {
+        do_analysis: Dict[str, bool] = {
+            "alpha": alpha,
+            "beta" : beta,
+            "p"    : p,
+            "q"    : q,
+            "r"    : r,
+        }
+
+        abbreviations: Dict[str, str] = {
             "alpha": "a",
             "beta" : "b",
             "p"    : "p",
             "q"    : "q",
             "r"    : "r",
         }
-        finite_difference_amounts = {
+        finite_difference_amounts: Dict[str, float] = {
             "alpha": 0.001,
             "beta" : 0.001,
             "p"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
             "q"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
             "r"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
-        scaling_factors = {
+        scaling_factors: Dict[str, float] = {
             "alpha": np.degrees(1),
             "beta" : np.degrees(1),
             "p"    : (2 * self.op_point.velocity) / self.airplane.b_ref,
@@ -424,23 +435,35 @@ class AeroBuildup(ExplicitAnalysis):
         # for these terms. (Curiously, this contrasts with integration, where there is an "integrand" and a "variable
         # of integration".)
 
-        for derivative_denominator in abbreviations.keys():
-            if not locals()[derivative_denominator]:  # Basically, if the parameter from the function input is not True,
+        for d in do_analysis.keys():
+            if not do_analysis[d]:  # Basically, if the parameter from the function input is not True,
                 continue  # Skip this run.
                 # This way, you can (optionally) speed up this routine if you only need static derivatives,
                 # or longitudinal derivatives, etc.
 
             # These lines make a copy of the original operating point, incremented by the finite difference amount
             # along the variable defined by derivative_denominator.
-            incremented_op_point = copy.copy(original_op_point)
-            incremented_op_point.__setattr__(
-                derivative_denominator,
-                original_op_point.__getattribute__(derivative_denominator) + finite_difference_amounts[
-                    derivative_denominator]
+            alpha_increment = finite_difference_amounts["alpha"] if d == "alpha" else 0.
+            beta_increment = finite_difference_amounts["beta"] if d == "beta" else 0.
+            p_increment = finite_difference_amounts["p"] if d == "p" else 0.
+            q_increment = finite_difference_amounts["q"] if d == "q" else 0.
+            r_increment = finite_difference_amounts["r"] if d == "r" else 0.
+
+            incremented_op_point = OperatingPoint(
+                velocity=original_op_point.velocity,
+                alpha=original_op_point.alpha + alpha_increment,
+                beta=original_op_point.beta + beta_increment,
+                p=original_op_point.p + p_increment,
+                q=original_op_point.q + q_increment,
+                r=original_op_point.r + r_increment,
             )
 
-            aerobuildup_incremented = copy.copy(self)
-            aerobuildup_incremented.op_point = incremented_op_point
+            aerobuildup_incremented = AeroBuildup(
+                airplane=self.airplane,
+                op_point=incremented_op_point,
+                xyz_ref=self.xyz_ref,
+                include_wave_drag=self.include_wave_drag,
+            )
             run_incremented = aerobuildup_incremented.run()
 
             for derivative_numerator in [
@@ -451,21 +474,20 @@ class AeroBuildup(ExplicitAnalysis):
                 "Cm",
                 "Cn",
             ]:
-                derivative_name = derivative_numerator + abbreviations[derivative_denominator]  # Gives "CLa"
+                derivative_name = derivative_numerator + abbreviations[d]  # Gives "CLa"
                 run_base[derivative_name] = (
                         (  # Finite-difference out the derivatives
-                                run_incremented[derivative_numerator] - run_base[
-                            derivative_numerator]
-                        ) / finite_difference_amounts[derivative_denominator]
-                        * scaling_factors[derivative_denominator]
+                                run_incremented[derivative_numerator] - run_base[derivative_numerator]
+                        ) / finite_difference_amounts[d]
+                        * scaling_factors[d]
                 )
 
             ### Try to compute and append neutral point, if possible
-            if derivative_denominator == "alpha":
+            if d == "alpha":
                 run_base["x_np"] = self.xyz_ref[0] - (
                         run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
                 )
-            if derivative_denominator == "beta":
+            if d == "beta":
                 run_base["x_np_lateral"] = self.xyz_ref[0] - (
                         run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
                 )
@@ -500,25 +522,7 @@ class AeroBuildup(ExplicitAnalysis):
         wing_sweep = wing.mean_sweep_angle()
         wing_dihedral = wing.mean_dihedral_angle()
 
-        ###
-        # y_span_effective = wing.span(
-        #     type="y",
-        #     include_centerline_distance=True,
-        # )
-        # z_span_effective = wing.span(
-        #     type="z",
-        #     include_centerline_distance=True,
-        # )
-        #
-        # AR_with_center = wing.aspect_ratio(type="effective")
-        # AR_without_center = wing.aspect_ratio(type="geometric")
-
         if wing.symmetric:
-            # AR_effective = AR_without_center + (AR_with_center - AR_without_center) * np.maximum(np.cosd(wing_dihedral),
-            #                                                                                      0)
-            # # Approximately accounts for Trefftz-pane wake continuity.
-            #
-            # AR_geometric = AR_without_center
 
             span_0_dihedral = wing.span(include_centerline_distance=True)
             span_90_dihedral = wing.span(include_centerline_distance=False) * 0.5
@@ -538,17 +542,7 @@ class AeroBuildup(ExplicitAnalysis):
                     (area_90_dihedral - area_0_dihedral) * dihedral_factor
             )
 
-            y_span_effective = wing.span(type="y", include_centerline_distance=True)
-            z_span_effective = wing.span(type="z", include_centerline_distance=False) / 2 ** 0.6
-            # Note: The 0.6 constant is tuned from calibration to VLM experiment.
-
         else:
-            # AR_effective = AR_without_center
-            # AR_geometric = AR_without_center
-
-            y_span_effective = wing.span(type="y", include_centerline_distance=False)
-            z_span_effective = wing.span(type="z", include_centerline_distance=False)
-
             span_effective = wing.span(type="yz", include_centerline_distance=False)
             area_effective = wing.area(type="planform", include_centerline_distance=False)
 
@@ -853,8 +847,7 @@ class AeroBuildup(ExplicitAnalysis):
             op_point=op_point,
             F_g=F_g,
             M_g=M_g,
-            y_span_effective=y_span_effective,
-            z_span_effective=z_span_effective,
+            span_effective=span_effective,
             oswalds_efficiency=oswalds_efficiency
         )
 
@@ -892,14 +885,11 @@ class AeroBuildup(ExplicitAnalysis):
         eta = jorgensen_eta(fuselage.fineness_ratio())
         volume = fuselage.volume()
 
-        y_span_effective = softmax_scalefree(
+        span_effective = softmax_scalefree(
             [
                 xsec.width
                 for xsec in fuselage.xsecs
-            ],
-        )
-        z_span_effective = softmax_scalefree(
-            [
+            ] + [
                 xsec.height
                 for xsec in fuselage.xsecs
             ],
@@ -1187,8 +1177,8 @@ class AeroBuildup(ExplicitAnalysis):
             )
 
             D_induced = (
-                    lift ** 2 / (op_point.dynamic_pressure() * np.pi * y_span_effective ** 2) +
-                    sideforce ** 2 / (op_point.dynamic_pressure() * np.pi * z_span_effective ** 2)
+                (lift ** 2 + sideforce ** 2) /
+                (op_point.dynamic_pressure() * np.pi * span_effective ** 2)
             )
 
             D_induced_g = op_point.convert_axes(
@@ -1207,8 +1197,7 @@ class AeroBuildup(ExplicitAnalysis):
             op_point=op_point,
             F_g=F_g,
             M_g=M_g,
-            y_span_effective=y_span_effective,
-            z_span_effective=z_span_effective,
+            span_effective=span_effective,
             oswalds_efficiency=0.95,
         )
 
