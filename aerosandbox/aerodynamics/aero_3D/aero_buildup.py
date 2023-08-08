@@ -53,6 +53,7 @@ class AeroBuildup(ExplicitAnalysis):
                  airplane: Airplane,
                  op_point: OperatingPoint,
                  xyz_ref: Union[np.ndarray, List[float]] = None,
+                 model_size: str = "medium",
                  include_wave_drag: bool = True,
                  ):
         """
@@ -84,6 +85,7 @@ class AeroBuildup(ExplicitAnalysis):
         self.airplane = airplane
         self.op_point = op_point
         self.xyz_ref = xyz_ref
+        self.model_size = model_size
         self.include_wave_drag = include_wave_drag
 
     def __repr__(self):
@@ -733,7 +735,8 @@ class AeroBuildup(ExplicitAnalysis):
                 alpha=alpha_generalized_effective,
                 mach=mach_normal,
                 control_surfaces=symmetry_treated_control_surfaces,
-                control_surface_strategy="polar_modification"
+                control_surface_strategy="polar_modification",
+                model_size=self.model_size,
             )
 
             xsec_a_airfoil_aero = xsec_a.airfoil.get_aero_from_neuralfoil(
