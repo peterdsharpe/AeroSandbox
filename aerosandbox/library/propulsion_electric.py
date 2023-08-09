@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
+from aerosandbox.performance.operating_point import OperatingPoint
 from typing import Union, Dict
 
 
@@ -123,21 +124,81 @@ def motor_electric_performance(
 
 
 def electric_propeller_propulsion_analysis(
-        total_thrust,
-        n_engines,
-        propeller_diameter,
-        op_point,
-        propeller_tip_mach,
-        motor_kv,
-        motor_no_load_current,
-        motor_resistance,
-        wire_resistance,
-        battery_voltage,
-        gearbox_ratio=1,
-        gearbox_efficiency=1,
-        esc_efficiency=0.98,
-        battery_discharge_efficiency=0.985,
+        total_thrust: float,
+        n_engines: int,
+        propeller_diameter: float,
+        op_point: OperatingPoint,
+        motor_kv: float,
+        motor_no_load_current: float,
+        motor_resistance: float,
+        wire_resistance: float,
+        battery_voltage: float,
+        propeller_tip_mach: float = 0.50,
+        gearbox_ratio: float = 1,
+        gearbox_efficiency: float = 1,
+        esc_efficiency: float = 0.98,
+        battery_discharge_efficiency: float = 0.985,
 ) -> Dict[str, float]:
+    """
+    Performs a propulsion analysis for an electric propeller-driven aircraft.
+
+    May be used for single-engine or multi-engine aircraft, so long as all engines / propellers are identical.
+
+    Args:
+
+        total_thrust: Total thrust force produced by all engines at the cruise operating point [N].
+
+        n_engines: Number of engines on the aircraft.
+
+        propeller_diameter: Diameter of each of the propellers [m].
+
+        op_point: The cruise operating point. Must be an AeroSandbox OperatingPoint object.
+
+        motor_kv: Motor voltage constant [rpm/volt].
+
+        motor_no_load_current: Motor no-load current [amps].
+
+        motor_resistance: Motor resistance [ohms].
+
+        wire_resistance: Round-trip resistance of the wires connecting the ESC to the battery [ohms].
+
+        battery_voltage: Battery voltage [volts].
+
+        propeller_tip_mach: Mach number at the propeller tip. Defaults to 0.50. From a propulsive efficiency
+            perspective, you want this to be as high as possible while still keeping the tip speed (hypotenuse of the
+            velocity triangle) below the critical Mach number of the propeller blade airfoil. This is because motor
+            efficiency and specific power tend to be better at high-speed low-torque conditions, and also the propeller
+            aerodynamics tend to be better at low solidity. But there may be reasons to lower this, such as propeller
+            structural considerations or noise considerations (with noise being a *strong* function of tip Mach).
+
+        gearbox_ratio: Gearbox reduction ratio. Defaults to 1 (no gearbox). For example, a `gearbox_ratio` of 5 is a 5:1
+            reduction, meaning that the propeller turns 5 times slower than the motor.
+
+        gearbox_efficiency: Gearbox efficiency. Defaults to 1, only because the `gearbox_ratio` defaults to 1 (no
+            gearbox), and so this represents no losses. If you have a gearbox, you should probably use a value of 0.98 or
+            so.
+
+        esc_efficiency: Efficiency of the electronic speed controller (ESC), sometimes called the inverter. Defaults to
+            0.98, which is a reasonable value for a high-quality ESC at a large (>5 kW) scale. Small components will
+            lower efficiencies than this.
+
+        battery_discharge_efficiency: Coulobmic efficiency of the battery in discharge only (i.e., not round-trip).
+            Defaults to 0.985, which is a reasonable value for a high-quality lithium-polymer battery. Other battery
+            chemistries will have different values.
+
+    Returns: A dictionary of various parameters of the propulsion analysis. Of particular note are the following keys:
+
+        * "air_power": The power delivered to the air (thrust * velocity) [W]
+        * "shaft_power": The power at the propeller shaft (after the gearbox; rotational speed * torque) [W]
+        * "motor_electrical_power": The electrical power input to the motor [W]
+        * "esc_electrical_power": The electrical power input to the ESC [W]
+        * "battery_power": The power draw from the battery [W].
+
+        * "propeller_efficiency": The propulsive efficiency of the propeller, defined as (air_power / shaft_power).
+        * "motor_efficiency": The efficiency of the motor, defined as (shaft_power / motor_electrical_power).
+        * "overall_efficiency": The overall efficiency of the propulsion system, defined as (air_power / battery_power).
+
+    """
 
     ### Propeller Analysis
     propulsive_area_per_propeller = (np.pi / 4) * propeller_diameter ** 2
