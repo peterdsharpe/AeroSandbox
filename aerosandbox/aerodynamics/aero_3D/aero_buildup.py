@@ -892,6 +892,7 @@ class AeroBuildup(ExplicitAnalysis):
         op_point = self.op_point
         length = fuselage.length()
         Re = op_point.reynolds(reference_length=length)
+        mach = op_point.mach()
         fuse_options = self.get_options(fuselage)
 
         ##### Compute general fuselage properties
@@ -1019,7 +1020,7 @@ class AeroBuildup(ExplicitAnalysis):
 
         ##### Now, need to add in viscous aerodynamics from profile drag sources
         ### Base Drag
-        base_drag_coefficient = fuselage_base_drag_coefficient(mach=op_point.mach())
+        base_drag_coefficient = fuselage_base_drag_coefficient(mach=mach)
         drag_base = base_drag_coefficient * fuselage.area_base() * q
 
         ### Skin friction drag
@@ -1042,12 +1043,12 @@ class AeroBuildup(ExplicitAnalysis):
         if self.include_wave_drag:
             sears_haack_drag_area = transonic.sears_haack_drag_from_volume(
                 volume=fuselage.volume(),
-                length=fuselage.length()
+                length=length
             )  # Units of area
             sears_haack_C_D_wave = sears_haack_drag_area / S_ref
 
             C_D_wave = transonic.approximate_CD_wave(
-                mach=op_point.mach(),
+                mach=mach,
                 mach_crit=critical_mach(
                     fineness_ratio_nose=fuse_options["nose_fineness_ratio"]
                 ),
@@ -1098,8 +1099,8 @@ class AeroBuildup(ExplicitAnalysis):
             )
             for s, radius in zip(sin_generalized_alphas, mean_aerodynamic_radii)
         ]
-        M_n_sect = [
-            s * op_point.mach()
+        mach_n_sect = [
+            s * mach
             for s in sin_generalized_alphas
         ]
 
@@ -1108,7 +1109,7 @@ class AeroBuildup(ExplicitAnalysis):
                 Re_n_sect[i] != 0,
                 aerolib.Cd_cylinder(
                     Re_D=Re_n_sect[i],
-                    mach=M_n_sect[i]
+                    mach=mach_n_sect[i]
                 ),  # Replace with 1.20 from Jorgensen Table 1 if this isn't working well
                 0,
             )
