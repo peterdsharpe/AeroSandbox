@@ -243,6 +243,7 @@ def test_cambered_fuselage(
 
 
 if __name__ == '__main__':
+    pass
     # asb.Airplane(fuselages=[make_fuselage()]).draw_three_view()
     # # test_derivatives_at_zero_geometric_angles(asb.AVL)
     # test_derivatives_at_zero_geometric_angles(asb.AeroBuildup)
