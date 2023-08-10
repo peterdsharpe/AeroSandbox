@@ -122,6 +122,15 @@ class KulfanAirfoil(Airfoil):
             ], axis=0)
         )
 
+    def repanel(self,
+                n_points_per_side: int = 100,
+                spacing_function_per_side=np.cosspace,
+                ) -> 'Airfoil':
+        return self.to_airfoil(
+            n_coordinates_per_side=n_points_per_side,
+            spacing_function_per_side=spacing_function_per_side
+        )
+
     def draw(self,
              *args,
              draw_markers=False,
