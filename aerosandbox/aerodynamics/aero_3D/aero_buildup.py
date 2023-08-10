@@ -554,13 +554,52 @@ class AeroBuildup(ExplicitAnalysis):
         wing_sweep = wing.mean_sweep_angle()
         wing_dihedral = wing.mean_dihedral_angle()
 
+        ##### Compute the wing span properties
+        sectional_spans = wing.span(
+            type="yz",
+            include_centerline_distance=False,
+            _sectional=True,
+        )
+        half_span = sum(sectional_spans)
+        if len(wing.xsecs) > 0:
+            span_inboard_to_YZ_plane = np.Inf
+            for i in range(len(wing.xsecs)):
+                span_inboard_to_YZ_plane = np.minimum(
+                    span_inboard_to_YZ_plane,
+                    np.abs(wing._compute_xyz_of_WingXSec(
+                        i,
+                        x_nondim=0.25, z_nondim=0
+                    )[1])
+                )
+        else:
+            span_inboard_to_YZ_plane = 0
+
+        ##### Compute the wing area properties
+        xsec_chords = [xsec.chord for xsec in wing.xsecs]
+        sectional_chords = [
+            (inner_chord + outer_chord) / 2
+            for inner_chord, outer_chord in zip(
+                xsec_chords[1:],
+                xsec_chords[:-1]
+            )
+        ]
+        sectional_areas = [
+            span * chord
+            for span, chord in zip(
+                sectional_spans,
+                sectional_chords
+            )
+        ]
+        half_area = sum(sectional_areas)
+        area_inboard_to_YZ_plane = span_inboard_to_YZ_plane * wing_MAC
+
         if wing.symmetric:
 
-            span_0_dihedral = wing.span(include_centerline_distance=True)
-            span_90_dihedral = wing.span(include_centerline_distance=False) * 0.5
+            span_0_dihedral = 2 * (half_span + span_inboard_to_YZ_plane * 0.5)
+            span_90_dihedral = half_span
 
-            area_0_dihedral = wing.area(include_centerline_distance=True)
-            area_90_dihedral = wing.area(include_centerline_distance=False) * 0.5
+            area_0_dihedral = 2 * (half_area + area_inboard_to_YZ_plane * 0.5)
+            area_90_dihedral = half_area
 
             dihedral_factor = np.sind(wing_dihedral) ** 2
 
@@ -575,8 +614,8 @@ class AeroBuildup(ExplicitAnalysis):
             )
 
         else:
-            span_effective = wing.span(type="yz", include_centerline_distance=False)
-            area_effective = wing.area(type="planform", include_centerline_distance=False)
+            span_effective = half_span
+            area_effective = half_area
 
         AR_effective = span_effective ** 2 / area_effective
 
@@ -995,6 +1034,7 @@ class AeroBuildup(ExplicitAnalysis):
             for sect_direction in sect_directions
         ]
 
+        # Drela, Flight Vehicle Aerodynamics Eq. 6.77
         lift_force_at_nose = [
             rho_V_squared
             * xsec_areas[-1]
@@ -1002,6 +1042,7 @@ class AeroBuildup(ExplicitAnalysis):
             for i in range(3)
         ]
 
+        # Drela, Flight Vehicle Aerodynamics Eq. 6.78
         moment_at_nose_due_to_open_tail = [
             -1 * rho_V_squared
             * sum(sect_lengths)
