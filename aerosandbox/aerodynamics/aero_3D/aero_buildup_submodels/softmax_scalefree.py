@@ -8,7 +8,7 @@ def softmax_scalefree(x: List[float]) -> float:
     else:
         softness = np.max(np.array(
             [1e-6] + x
-        )) * 0.05
+        )) * 0.01
 
         return np.softmax(
             *x,
