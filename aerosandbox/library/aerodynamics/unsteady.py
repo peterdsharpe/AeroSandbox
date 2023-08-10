@@ -398,3 +398,4 @@ if __name__ == "__main__":
     plt.xlabel("Reduced time")
     plt.ylabel("$C_\ell$")
     plt.title("Guassian Pitch Maneuver Through Top-Hat Gust")
+    plt.show()
