@@ -245,17 +245,29 @@ def test_cambered_fuselage(
 def test_fuselage_with_base_drag(
         AeroAnalysis: Type = asb.AeroBuildup,
 ):
+    def r(x): # radius as a function of distance along the fuselage, x
+        return 0.1 * x ** 0.5 * (2 - x)
+
+    def z(x): # vertical displacement (in geometry axes) of the centerline, as a function of distance along fuselage, x
+        return 0.15 * x * (2 - x)
+
+    def dzdx(x): # derivative of z(x) with respect to x
+        return 0.15 * ((2 - x) - x)
+
+    def A(x): # cross-sectional area as a function of distance along fuselage, x
+        return np.pi * r(x) ** 2
+
     fuselage = asb.Fuselage(
         xsecs=[
             asb.FuselageXSec(
                 xyz_c=[
                     xi,
                     0,
-                    xi * (2 - xi) * 0.15
+                    z(xi)
                 ],
-                radius=xi ** 0.5 * (2 - xi) * 0.1
+                radius=r(xi)
             )
-            for xi in np.sinspace(0, 1, 20)
+            for xi in np.sinspace(0, 1, 100)
         ]
     )
     fuselage.draw_three_view()
@@ -274,7 +286,7 @@ def test_fuselage_with_base_drag(
             alpha=0,
             beta=0,
         ),
-        xyz_ref=np.array([0.5, 0, 0]),
+        xyz_ref=np.array([0.0, 0, 0]),
     )
 
     try:
@@ -288,12 +300,42 @@ def test_fuselage_with_base_drag(
 
     # TODO add assertions
 
-    # assert aero["Cm"] == pytest.approx(0, abs=1e-3)
-    # assert aero["Cn"] == pytest.approx(0, abs=1e-3)
+    ##### Slender body theory
+    l = 1 # length of fuselage
+    alpha_rad = np.radians(analysis.op_point.alpha)
 
+    from scipy import integrate
+
+    def alpha_tilde(x):
+        return alpha_rad - dzdx(x)
+
+    CL = (
+        2 / airplane.s_ref * A(l) * alpha_tilde(l)
+    )
+    print(f"CL_slb: {CL}")
+    assert aero["CL"] == pytest.approx(CL, abs=0.01)
+
+    Cm = (
+        2 / airplane.s_ref / airplane.c_ref *
+        (
+            (fuselage.volume() - l * A(l)) * alpha_rad + l * A(l) * dzdx(l)
+            - integrate.quad(lambda xi: A(xi) * dzdx(xi), 0, l)[0]
+        )
+    )
+
+    print(f"Cm_slb: {Cm}")
+    assert aero["Cm"] == pytest.approx(Cm, rel=0.5) # this is not-strictly-speaking exact, hence the large tolerance
+    assert aero["Cn"] == pytest.approx(0, abs=1e-3)
+
+    Cma = (
+        2 / airplane.s_ref / airplane.c_ref *
+        (fuselage.volume() - l * A(l))
+    )
+
+    # print(f"Cma_slb: {Cma}")
     # assert aero["Cma"] == pytest.approx(
-    #     2 * fuselage.volume() / airplane.s_ref / airplane.c_ref,
-    #     rel=0.5 # this is not-strictly-speaking exact, hence the large tolerance
+    #     Cma,
+    #     rel=0.5
     # )
     # assert aero["Cnb"] == pytest.approx(
     #     -2 * fuselage.volume() / airplane.s_ref / airplane.b_ref,
@@ -312,5 +354,5 @@ if __name__ == '__main__':
     # test_derivatives_at_incidence(asb.AeroBuildup)
     # # test_cambered_fuselage(asb.AVL)
     # test_cambered_fuselage(asb.AeroBuildup)
-    test_fuselage_with_base_drag(asb.AVL)
+    # test_fuselage_with_base_drag(asb.AVL)
     test_fuselage_with_base_drag(asb.AeroBuildup)
