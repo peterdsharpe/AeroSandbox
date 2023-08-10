@@ -231,19 +231,22 @@ class AeroBuildup(ExplicitAnalysis):
         """
 
         ### Compute the forces on each component
-        aero_components = [
-                              self.wing_aerodynamics(
-                                  wing=wing,
-                                  include_induced_drag=False
-                              ) for wing in
-                              self.airplane.wings
-                          ] + [
-                              self.fuselage_aerodynamics(
-                                  fuselage=fuse,
-                                  include_induced_drag=False
-                              ) for fuse in
-                              self.airplane.fuselages
-                          ]
+        wing_aero_components = [
+            self.wing_aerodynamics(
+                wing=wing,
+                include_induced_drag=False
+            )
+            for wing in self.airplane.wings
+        ]
+        fuselage_aero_components = [
+            self.fuselage_aerodynamics(
+                fuselage=fuse,
+                include_induced_drag=False
+            )
+            for fuse in self.airplane.fuselages
+        ]
+
+        aero_components = wing_aero_components + fuselage_aero_components
 
         ### Sum up the forces
         F_g_total = [
@@ -330,6 +333,16 @@ class AeroBuildup(ExplicitAnalysis):
         output["Cl"] = output["l_b"] / qS / b
         output["Cm"] = output["m_b"] / qS / c
         output["Cn"] = output["n_b"] / qS / b
+
+        ##### Add the component aerodynamics, for reference
+        output["wing_aero_components"] = wing_aero_components
+        output["fuselage_aero_components"] = fuselage_aero_components
+
+        ##### Add the drag breakdown
+        output["D_profile"] = sum([
+            comp.D for comp in aero_components
+        ])
+        output["D_induced"] = D_induced
 
         return output
 
