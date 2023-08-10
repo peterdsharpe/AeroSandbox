@@ -201,7 +201,7 @@ def test_cambered_fuselage(
             for xi in np.sinspace(0, 1, 20)
         ]
     )
-    # fuse.draw_three_view()
+    # fuselage.draw_three_view()
 
     airplane = asb.Airplane(
         fuselages=[fuselage],
@@ -234,12 +234,71 @@ def test_cambered_fuselage(
 
     assert aero["Cma"] == pytest.approx(
         2 * fuselage.volume() / airplane.s_ref / airplane.c_ref,
-        rel=0.5 # this is not-strictly-speaking exact, hence the large tolerance
+        rel=0.5  # this is not-strictly-speaking exact, hence the large tolerance
     )
     assert aero["Cnb"] == pytest.approx(
         -2 * fuselage.volume() / airplane.s_ref / airplane.b_ref,
-        rel=0.5 # this is not-strictly-speaking exact, hence the large tolerance
+        rel=0.5  # this is not-strictly-speaking exact, hence the large tolerance
     )
+
+
+def test_fuselage_with_base_drag(
+        AeroAnalysis: Type = asb.AeroBuildup,
+):
+    fuselage = asb.Fuselage(
+        xsecs=[
+            asb.FuselageXSec(
+                xyz_c=[
+                    xi,
+                    0,
+                    xi * (2 - xi) * 0.15
+                ],
+                radius=xi ** 0.5 * (2 - xi) * 0.1
+            )
+            for xi in np.sinspace(0, 1, 20)
+        ]
+    )
+    fuselage.draw_three_view()
+
+    airplane = asb.Airplane(
+        fuselages=[fuselage],
+        s_ref=1,
+        c_ref=1,
+        b_ref=1,
+    )
+
+    analysis = AeroAnalysis(
+        airplane=airplane,
+        op_point=asb.OperatingPoint(
+            velocity=100,
+            alpha=0,
+            beta=0,
+        ),
+        xyz_ref=np.array([0.5, 0, 0]),
+    )
+
+    try:
+        aero = analysis.run_with_stability_derivatives()
+    except AttributeError:
+        aero = analysis.run()
+
+    print(f"Aerodynamic coefficients with {AeroAnalysis.__name__}:")
+    for key in ["CL", "Cm", "Cma", "Cn", "Cnb"]:
+        print(f"{key.rjust(10)}: {aero[key]:20.4f}")
+
+    # TODO add assertions
+
+    # assert aero["Cm"] == pytest.approx(0, abs=1e-3)
+    # assert aero["Cn"] == pytest.approx(0, abs=1e-3)
+
+    # assert aero["Cma"] == pytest.approx(
+    #     2 * fuselage.volume() / airplane.s_ref / airplane.c_ref,
+    #     rel=0.5 # this is not-strictly-speaking exact, hence the large tolerance
+    # )
+    # assert aero["Cnb"] == pytest.approx(
+    #     -2 * fuselage.volume() / airplane.s_ref / airplane.b_ref,
+    #     rel=0.5 # this is not-strictly-speaking exact, hence the large tolerance
+    # )
 
 
 if __name__ == '__main__':
@@ -253,3 +312,5 @@ if __name__ == '__main__':
     # test_derivatives_at_incidence(asb.AeroBuildup)
     # # test_cambered_fuselage(asb.AVL)
     # test_cambered_fuselage(asb.AeroBuildup)
+    test_fuselage_with_base_drag(asb.AVL)
+    test_fuselage_with_base_drag(asb.AeroBuildup)
