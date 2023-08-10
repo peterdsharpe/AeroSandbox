@@ -10,6 +10,9 @@ tail_airfoil = asb.Airfoil("naca0010")
 airplane = asb.Airplane(
     name="Peter's Glider",
     xyz_ref=[0.18 * 0.32, 0, 0],  # CG location
+    s_ref=0.292,
+    c_ref=0.151,
+    b_ref=2,
     wings=[
         asb.Wing(
             name="Main Wing",
@@ -149,9 +152,9 @@ for k in keys:
 
         println(
             k,
-            ab[k],
-            av[k],
-            vl[k] if k in vl.keys() else ' ' * 5 + '-',
+            float(ab[k]),
+            float(av[k]),
+            float(vl[k]) if k in vl.keys() else ' ' * 5 + '-',
             differences_text
         )
 
