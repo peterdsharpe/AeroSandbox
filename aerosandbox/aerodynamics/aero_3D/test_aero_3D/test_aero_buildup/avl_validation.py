@@ -98,16 +98,19 @@ op_point = asb.OperatingPoint(
 ab = asb.AeroBuildup(
     airplane,
     op_point,
+    xyz_ref=airplane.xyz_ref
 ).run_with_stability_derivatives()
 
 av = asb.AVL(
     airplane,
-    op_point
+    op_point,
+    xyz_ref=airplane.xyz_ref
 ).run()
 
 vl = asb.VortexLatticeMethod(
     airplane,
-    op_point
+    op_point,
+    xyz_ref=airplane.xyz_ref
 ).run_with_stability_derivatives()
 
 keys = set()
@@ -147,7 +150,7 @@ for k in keys:
 
         differences = ab[k] != pytest.approx(av[k], rel=rel, abs=abs)
         differences_text = '*' if differences else ''
-        if differences and ('D' in k):
+        if 'D' in k:
             differences_text = 'Expected'
 
         println(
