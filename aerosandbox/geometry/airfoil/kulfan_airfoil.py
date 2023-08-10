@@ -105,13 +105,14 @@ class KulfanAirfoil(Airfoil):
                         "more general (coordinate-parameterized) `asb.Airfoil` class.")
 
     def to_airfoil(self,
-                   n_coordinates_per_side=200
+                   n_coordinates_per_side=200,
+                   spacing_function_per_side=np.cosspace,
                    ) -> Airfoil:
-        x_upper = np.cosspace(1, 0, n_coordinates_per_side)[:-1]
-        y_upper = self.upper_coordinates(x_upper)
+        x_upper = spacing_function_per_side(1, 0, n_coordinates_per_side)[:-1]
+        upper = self.upper_coordinates(x_over_c=x_upper)
 
-        x_lower = np.cosspace(0, 1, n_coordinates_per_side)
-        y_lower = self.lower_coordinates(x_lower)
+        x_lower = spacing_function_per_side(0, 1, n_coordinates_per_side)
+        lower = self.lower_coordinates(x_over_c=x_lower)
 
         return Airfoil(
             name=self.name,
