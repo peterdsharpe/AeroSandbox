@@ -95,89 +95,95 @@ class AeroBuildup(ExplicitAnalysis):
             f"xyz_ref={self.xyz_ref}",
         ]) + "\n)"
 
-    @dataclass(frozen=True)
+    @dataclass
     class AeroComponentResults:
         s_ref: float  # Reference area [m^2]
-
         c_ref: float  # Reference chord [m]
-
         b_ref: float  # Reference span [m]
-
         op_point: OperatingPoint
-
         F_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of forces in geometry axes [N]
-
         M_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of moments about geometry axes [Nm]
-
         span_effective: float
         # The effective span of the component's Trefftz-plane wake, used for induced drag calculations. [m]
-
         oswalds_efficiency: float  # Oswald's efficiency factor [-]
 
-        @cached_property
+        def __repr__(self):
+            F_w = self.F_w
+            M_b = self.M_b
+            return self.__class__.__name__ + "(\n\t" + "\n\t".join([
+                f"L={-F_w[2]}",
+                f"Y={F_w[1]}",
+                f"D={-F_w[0]}",
+                f"l_b={M_b[0]}",
+                f"m_b={M_b[1]}",
+                f"n_b={M_b[2]}",
+                f"span_effective={self.span_effective}, oswalds_efficiency={self.oswalds_efficiency}",
+            ]) + "\n)"
+
+        @property
         def F_b(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of forces in body axes [N]
             """
             return self.op_point.convert_axes(*self.F_g, from_axes="geometry", to_axes="body")
 
-        @cached_property
+        @property
         def F_w(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of forces in wind axes [N]
             """
             return self.op_point.convert_axes(*self.F_g, from_axes="geometry", to_axes="wind")
 
-        @cached_property
+        @property
         def M_b(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of moments about body axes [Nm]
             """
             return self.op_point.convert_axes(*self.M_g, from_axes="geometry", to_axes="body")
 
-        @cached_property
+        @property
         def M_w(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of moments about wind axes [Nm]
             """
             return self.op_point.convert_axes(*self.M_g, from_axes="geometry", to_axes="wind")
 
-        @cached_property
+        @property
         def L(self) -> Union[float, np.ndarray]:
             """
             The lift force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[2]
 
-        @cached_property
+        @property
         def Y(self) -> Union[float, np.ndarray]:
             """
             The side force [N]. Definitionally, this is in wind axes.
             """
             return self.F_w[1]
 
-        @cached_property
+        @property
         def D(self) -> Union[float, np.ndarray]:
             """
             The drag force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[0]
 
-        @cached_property
+        @property
         def l_b(self) -> Union[float, np.ndarray]:
             """
             The rolling moment [Nm] in body axes. Positive is roll-right.
             """
             return self.M_b[0]
 
-        @cached_property
+        @property
         def m_b(self) -> Union[float, np.ndarray]:
             """
             The pitching moment [Nm] in body axes. Positive is nose-up.
             """
             return self.M_b[1]
 
-        @cached_property
+        @property
         def n_b(self) -> Union[float, np.ndarray]:
             """
             The yawing moment [Nm] in body axes. Positive is nose-right.
