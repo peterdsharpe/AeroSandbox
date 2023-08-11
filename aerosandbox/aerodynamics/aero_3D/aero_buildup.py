@@ -464,27 +464,22 @@ class AeroBuildup(ExplicitAnalysis):
 
             # These lines make a copy of the original operating point, incremented by the finite difference amount
             # along the variable defined by derivative_denominator.
-            alpha_increment = finite_difference_amounts["alpha"] if d == "alpha" else 0.
-            beta_increment = finite_difference_amounts["beta"] if d == "beta" else 0.
-            p_increment = finite_difference_amounts["p"] if d == "p" else 0.
-            q_increment = finite_difference_amounts["q"] if d == "q" else 0.
-            r_increment = finite_difference_amounts["r"] if d == "r" else 0.
+            incremented_op_point = self.op_point.copy()
+            if d == "alpha":
+                incremented_op_point.alpha += finite_difference_amounts["alpha"]
+            elif d == "beta":
+                incremented_op_point.beta += finite_difference_amounts["beta"]
+            elif d == "p":
+                incremented_op_point.p += finite_difference_amounts["p"]
+            elif d == "q":
+                incremented_op_point.q += finite_difference_amounts["q"]
+            elif d == "r":
+                incremented_op_point.r += finite_difference_amounts["r"]
+            else:
+                raise ValueError(f"Invalid value of d: {d}!")
 
-            incremented_op_point = OperatingPoint(
-                velocity=original_op_point.velocity,
-                alpha=original_op_point.alpha + alpha_increment,
-                beta=original_op_point.beta + beta_increment,
-                p=original_op_point.p + p_increment,
-                q=original_op_point.q + q_increment,
-                r=original_op_point.r + r_increment,
-            )
-
-            aerobuildup_incremented = AeroBuildup(
-                airplane=self.airplane,
-                op_point=incremented_op_point,
-                xyz_ref=self.xyz_ref,
-                include_wave_drag=self.include_wave_drag,
-            )
+            aerobuildup_incremented = self.copy()
+            aerobuildup_incremented.op_point = incremented_op_point
             run_incremented = aerobuildup_incremented.run()
 
             for derivative_numerator in [
