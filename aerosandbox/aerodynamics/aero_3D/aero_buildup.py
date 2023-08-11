@@ -788,7 +788,6 @@ class AeroBuildup(ExplicitAnalysis):
                 alpha=alpha_generalized_effective,
                 mach=mach_normal,
                 control_surfaces=symmetry_treated_control_surfaces,
-                control_surface_strategy="polar_modification",
                 model_size=self.model_size,
             )
 
