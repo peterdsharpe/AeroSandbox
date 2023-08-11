@@ -661,28 +661,10 @@ class Airfoil(Polygon):
                                  mach: Union[float, np.ndarray] = 0.,
                                  model_size: str = "large",
                                  control_surfaces: List["ControlSurface"] = None,
-                                 control_surface_strategy="polar_modification",
                                  include_360_deg_effects: bool = True,
                                  ) -> Dict[str, Union[float, np.ndarray]]:
 
-        airfoil = self
-
-        if control_surface_strategy == "polar_modification":
-            pass
-
-        elif control_surface_strategy == "coordinate_modification":
-            for surf in control_surfaces:
-                airfoil = airfoil.add_control_surface(
-                    deflection=surf.deflection,
-                    hinge_point_x=surf.hinge_point,
-                )
-            control_surfaces = []
-
-        else:
-            raise ValueError("Invalid `control_surface_strategy`!\n"
-                             "Valid options are \"polar_modification\" or \"coordinate_modification\".")
-
-        airfoil_normalization = airfoil.normalize(return_dict=True)
+        airfoil_normalization = self.normalize(return_dict=True)
 
         kulfan_airfoil = airfoil_normalization["airfoil"].to_kulfan_airfoil(
             n_weights_per_side=8,
