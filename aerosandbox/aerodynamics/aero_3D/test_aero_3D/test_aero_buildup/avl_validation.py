@@ -10,6 +10,9 @@ tail_airfoil = asb.Airfoil("naca0010")
 airplane = asb.Airplane(
     name="Peter's Glider",
     xyz_ref=[0.18 * 0.32, 0, 0],  # CG location
+    s_ref=0.292,
+    c_ref=0.151,
+    b_ref=2,
     wings=[
         asb.Wing(
             name="Main Wing",
@@ -95,16 +98,19 @@ op_point = asb.OperatingPoint(
 ab = asb.AeroBuildup(
     airplane,
     op_point,
+    xyz_ref=airplane.xyz_ref
 ).run_with_stability_derivatives()
 
 av = asb.AVL(
     airplane,
-    op_point
+    op_point,
+    xyz_ref=airplane.xyz_ref
 ).run()
 
 vl = asb.VortexLatticeMethod(
     airplane,
-    op_point
+    op_point,
+    xyz_ref=airplane.xyz_ref
 ).run_with_stability_derivatives()
 
 keys = set()
@@ -144,14 +150,14 @@ for k in keys:
 
         differences = ab[k] != pytest.approx(av[k], rel=rel, abs=abs)
         differences_text = '*' if differences else ''
-        if differences and ('D' in k):
+        if 'D' in k:
             differences_text = 'Expected'
 
         println(
             k,
-            ab[k],
-            av[k],
-            vl[k] if k in vl.keys() else ' ' * 5 + '-',
+            float(ab[k]),
+            float(av[k]),
+            float(vl[k]) if k in vl.keys() else ' ' * 5 + '-',
             differences_text
         )
 

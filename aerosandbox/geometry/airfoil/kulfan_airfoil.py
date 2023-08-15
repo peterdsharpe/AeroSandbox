@@ -105,20 +105,30 @@ class KulfanAirfoil(Airfoil):
                         "more general (coordinate-parameterized) `asb.Airfoil` class.")
 
     def to_airfoil(self,
-                   n_coordinates_per_side=200
+                   n_coordinates_per_side=200,
+                   spacing_function_per_side=np.cosspace,
                    ) -> Airfoil:
-        x_upper = np.cosspace(1, 0, n_coordinates_per_side)[:-1]
-        y_upper = self.upper_coordinates(x_upper)
+        x_upper = spacing_function_per_side(1, 0, n_coordinates_per_side)[:-1]
+        upper = self.upper_coordinates(x_over_c=x_upper)
 
-        x_lower = np.cosspace(0, 1, n_coordinates_per_side)
-        y_lower = self.lower_coordinates(x_lower)
+        x_lower = spacing_function_per_side(0, 1, n_coordinates_per_side)
+        lower = self.lower_coordinates(x_over_c=x_lower)
 
         return Airfoil(
             name=self.name,
             coordinates=np.concatenate([
-                np.stack([x_upper, y_upper], axis=1),
-                np.stack([x_lower, y_lower], axis=1)
+                upper,
+                lower
             ], axis=0)
+        )
+
+    def repanel(self,
+                n_points_per_side: int = 100,
+                spacing_function_per_side=np.cosspace,
+                ) -> 'Airfoil':
+        return self.to_airfoil(
+            n_coordinates_per_side=n_points_per_side,
+            spacing_function_per_side=spacing_function_per_side
         )
 
     def draw(self,
@@ -410,7 +420,7 @@ class KulfanAirfoil(Airfoil):
         }
 
     def upper_coordinates(self,
-                          x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)[::-1],
+                          x_over_c: Union[float, np.ndarray] = np.linspace(1, 0, 101),
                           ) -> np.ndarray:
         # Class function
         C = (x_over_c) ** self.N1 * (1 - x_over_c) ** self.N2
@@ -449,7 +459,10 @@ class KulfanAirfoil(Airfoil):
         # Add Kulfan's leading-edge-modification (LEM)
         y_upper += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.upper_weights) + 0.5)
 
-        return y_upper
+        return np.stack((
+            x_over_c,
+            y_upper,
+        ), axis=1)
 
     def lower_coordinates(self,
                           x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
@@ -491,23 +504,26 @@ class KulfanAirfoil(Airfoil):
         # Add Kulfan's leading-edge-modification (LEM)
         y_lower += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.lower_weights) + 0.5)
 
-        return y_lower
+        return np.stack((
+            x_over_c,
+            y_lower
+        ), axis=1)
 
     def local_camber(self,
                      x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
                      ) -> Union[float, np.ndarray]:
-        y_upper = self.upper_coordinates(x_over_c=x_over_c)
-        y_lower = self.lower_coordinates(x_over_c=x_over_c)
+        upper = self.upper_coordinates(x_over_c=x_over_c)
+        lower = self.lower_coordinates(x_over_c=x_over_c)
 
-        return (y_upper + y_lower) / 2
+        return (upper[:, 1] + lower[:, 1]) / 2
 
     def local_thickness(self,
                         x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
                         ) -> Union[float, np.ndarray]:
-        y_upper = self.upper_coordinates(x_over_c=x_over_c)
-        y_lower = self.lower_coordinates(x_over_c=x_over_c)
+        upper = self.upper_coordinates(x_over_c=x_over_c)
+        lower = self.lower_coordinates(x_over_c=x_over_c)
 
-        return (y_upper - y_lower)
+        return (upper[:, 1] - lower[:, 1])
 
     def TE_angle(self):
         return np.degrees(
