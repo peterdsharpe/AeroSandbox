@@ -460,7 +460,7 @@ class KulfanAirfoil(Airfoil):
         y_upper += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.upper_weights) + 0.5)
 
         return np.stack((
-            x_over_c,
+            np.reshape(x_over_c, (-1)),
             y_upper,
         ), axis=1)
 
@@ -505,7 +505,7 @@ class KulfanAirfoil(Airfoil):
         y_lower += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.lower_weights) + 0.5)
 
         return np.stack((
-            x_over_c,
+            np.reshape(x_over_c, (-1)),
             y_lower
         ), axis=1)
 
