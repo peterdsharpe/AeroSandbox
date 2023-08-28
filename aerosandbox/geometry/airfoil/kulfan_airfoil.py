@@ -553,6 +553,70 @@ class KulfanAirfoil(Airfoil):
                 (self.TE_thickness / 2)
         )
 
+    def set_TE_thickness(self,
+                         thickness: float = 0.,
+                         ) -> 'KulfanAirfoil':
+        """
+        Creates a modified copy of the KulfanAirfoil that has a specified trailing-edge thickness.
+
+        Note that the trailing-edge thickness is given nondimensionally (e.g., as a fraction of chord).
+
+        Args:
+            thickness: The target trailing-edge thickness, given nondimensionally (e.g., as a fraction of chord).
+
+        Returns: The modified KulfanAirfoil.
+
+        """
+        return KulfanAirfoil(
+            name=self.name,
+            lower_weights=self.lower_weights,
+            upper_weights=self.upper_weights,
+            leading_edge_weight=self.leading_edge_weight,
+            TE_thickness=thickness,
+            N1=self.N1,
+            N2=self.N2,
+        )
+
+    def scale(self,
+              scale_x: float = 1.,
+              scale_y: float = 1.,
+              ) -> "KulfanAirfoil":
+        """
+        Scales a KulfanAirfoil about the origin.
+
+        Args:
+
+            scale_x: Amount to scale in the x-direction. Note: not supported by KulfanAirfoil due to inherent limitations of parameterization; only given here so that argument symmetry to Airfoil.scale() is retained. Will raise a warning if modified.
+
+            scale_y: Amount to scale in the y-direction. Scaling by a negative y-value will result in `lower_weights` and `upper_weights` being flipped as appropriate.
+
+        Returns: A copy of the KulfanAirfoil with appropriate scaling applied.
+        """
+        if scale_x != 1:
+            warnings.warn("Scaling a KulfanAirfoil in the x-direction is not supported. "
+                          "The airfoil will be scaled in the y-direction only.")
+
+        if scale_y >= 0:
+            return KulfanAirfoil(
+                name=self.name,
+                lower_weights=self.lower_weights * scale_y,
+                upper_weights=self.upper_weights * scale_y,
+                leading_edge_weight=self.leading_edge_weight * scale_y,
+                TE_thickness=self.TE_thickness * scale_y,
+                N1=self.N1,
+                N2=self.N2,
+            )
+        else:
+            return KulfanAirfoil(
+                name=self.name,
+                lower_weights=self.upper_weights * scale_y,
+                upper_weights=self.lower_weights * scale_y,
+                leading_edge_weight=self.leading_edge_weight * scale_y,
+                TE_thickness=self.TE_thickness * (-1 * scale_y),
+                N1=self.N1,
+                N2=self.N2,
+            )
+
     def blend_with_another_airfoil(self,
                                    airfoil: Union["KulfanAirfoil", Airfoil],
                                    blend_fraction: float = 0.5,
