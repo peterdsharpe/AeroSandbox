@@ -201,7 +201,7 @@ def electric_aircraft_direct_operating_cost_analysis(
         flight_hours_per_year: float = 1200,
         airframe_lifetime_years: float = 20,
         airframe_eol_resale_value_fraction: float = 0.4,
-        battery_cost_per_kWh_capacity: float = 150.0,
+        battery_cost_per_kWh_capacity: float = 500.0,
         battery_cycle_life: float = 1500,
         real_interest_rate: float = 0.04,
         electricity_cost_per_kWh: float = 0.145,
@@ -260,7 +260,10 @@ def electric_aircraft_direct_operating_cost_analysis(
         airframe_eol_resale_value_fraction: The expect resale value of the airframe at the end of its lifetime,
             expressed as a fraction of the airframe's production cost.
 
-        battery_cost_per_kWh_capacity: The cost of the battery, per kWh of capacity, in present-day dollars.
+        battery_cost_per_kWh_capacity: The replacement cost of the battery pack, per kWh of capacity, in present-day
+            dollars. Note that this is a pack-level cost (as opposed to cell-level), so includes the cost of the
+            battery management system, cooling system, fire-suppressing foam, etc. Should include the labor cost to
+            replace the battery pack as well.
 
         battery_cycle_life: The number of charge/discharge cycles that the battery is expected to last before full
             replacement is required.
