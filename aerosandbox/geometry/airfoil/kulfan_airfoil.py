@@ -588,7 +588,7 @@ class KulfanAirfoil(Airfoil):
 
             scale_x: Amount to scale in the x-direction. Note: not supported by KulfanAirfoil due to inherent
                 limitations of parameterization; only given here so that argument symmetry to Airfoil.scale() is
-                retained. Will raise a ValueError if modified, along with instructions to use `Airfoil` if needed.
+                retained. Raises a ValueError if modified, along with instructions to use `Airfoil` if needed.
 
             scale_y: Amount to scale in the y-direction. Scaling by a negative y-value will result in `lower_weights`
                 and `upper_weights` being flipped as appropriate.
