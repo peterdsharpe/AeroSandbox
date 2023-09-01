@@ -1383,11 +1383,17 @@ class Airfoil(Polygon):
               ) -> 'Airfoil':
         """
         Scales an Airfoil about the origin.
-        Args:
-            scale_x: Amount to scale in the x-direction.
-            scale_y: Amount to scale in the y-direction.
 
-        Returns: The scaled Airfoil.
+        Args:
+
+            scale_x: Amount to scale in the x-direction.
+
+            scale_y: Amount to scale in the y-direction. Scaling by a negative y-value will result in coordinates
+                being re-ordered such that the order of the coordinates is still correct (i.e., starts from the
+                upper-surface trailing edge, continues along the upper surface to the nose, then continues along the
+                lower surface to the trailing edge).
+
+        Returns: A copy of the Airfoil with appropriate scaling applied.
         """
         x = self.x() * scale_x
         y = self.y() * scale_y
