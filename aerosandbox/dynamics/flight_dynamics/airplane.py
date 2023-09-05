@@ -35,8 +35,8 @@ def get_modes(
     # Z_w = QS / m / u0 * Cza
     # Z_q = QS / m * c / (2 * u0) * Czq
     # M_u = QS * c / Iyy / u0 * Cmu
-    M_w = QS * c / Iyy / u0 * Cma # Units: 1/(meter * sec)
-    M_q = QS * c / Iyy * c / (2 * u0) * Cmq # Units: 1/sec
+    M_w = QS * c / Iyy / u0 * Cma  # Units: 1/(meter * sec)
+    M_q = QS * c / Iyy * c / (2 * u0) * Cmq  # Units: 1/sec
 
     modes = {}
 
@@ -129,58 +129,79 @@ def get_modes(
 if __name__ == '__main__':
     import aerosandbox as asb
     import aerosandbox.numpy as np
+    from aerosandbox.tools import units as u
 
     from pprint import pprint
 
+    # Numbers below are from:
+    # Caughey, David A., "Introduction to Aircraft Stability and Control, Course Notes for M&AE 5070", 2011
+    # https://courses.cit.cornell.edu/mae5070/Caughey_2011_04.pdf
     airplane = asb.Airplane(
-        s_ref=9,
-        c_ref=0.90,
-        b_ref=10,
-    )
-    op_point = asb.OperatingPoint(velocity=10)
-    aero = dict(
-        CL=0.46,
-        CD=0.11,
-        Cm=0.141,
-        CLa=5.736,
-        # CYa = 0,
-        # Cla = 0,
-        Cma=-1.59,
-        # Cna = 0,
-        # CLb = 0,
-        CYb=-0.380,
-        Clb=-0.208,
-        # Cmb=0,
-        Cnb=0.0294,
-        # CLp =0,
-        CYp=-0.325,
-        Clp=-0.593,
-        # Cmp=0,
-        Cnp=-0.041,
-        CLq=10.41,
-        # CYq=0,
-        # Clq=0,
-        Cmq=-25.05,
-        # Cnq=0,
-        # CLr=0,
-        CYr=0.194,
-        Clr=0.143,
-        # Cmr=0,
-        Cnr=-0.048
+        name='Boeing 737-800',
+        s_ref=1260 * u.foot ** 2,
+        c_ref=11 * u.foot,
+        b_ref=113 * u.foot,
     )
 
-    mass_props = asb.mass_properties_from_radius_of_gyration(
-        mass=op_point.dynamic_pressure() * airplane.s_ref * aero["CL"] / 9.81,
-        radius_of_gyration_x=0.5 * airplane.b_ref,
-        radius_of_gyration_y=3 * airplane.c_ref,
-        radius_of_gyration_z=0.5 * airplane.b_ref,
+    aero = dict(
+        CL=1.83443,
+        CD=0.13037,
+        Cm=0,
+        CLa=5.542930,
+        Cma=-2.044696,
+        CYb=-1.103873,
+        Clb=-0.374933,
+        Cnb=0.239877,
+        CYp=0.800161,
+        Clp=-0.449404,
+        Cnp=-0.255028,
+        CLq=18.973344,
+        Cmq=-74.997742,
+        CYr=0.796001,
+        Clr=0.364638,
+        Cnr=-0.434410
     )
+
+    mass_props_TOGW = asb.MassProperties(
+        mass=77146,
+        x_cg=65.2686 * u.foot,
+        y_cg=0.0,
+        z_cg=1.16559 * u.foot,
+        Ixx=706684,
+        Iyy=0.270824e7,
+        Izz=0.330763e7,
+        Ixy=0.0,
+        Iyz=0.0,
+        Ixz=26994.4,
+    )
+
+    op_point = asb.OperatingPoint(
+        atmosphere=asb.Atmosphere(
+            altitude=2438.399975619396,
+            method='differentiable',
+        ),
+        velocity=85.64176936131635,
+    )
+
+    assert np.allclose(
+        aero["CL"],
+        mass_props_TOGW.mass * 9.81 / op_point.dynamic_pressure() / airplane.s_ref,
+        rtol=0.001
+    )
+
+    eigenvalues_from_AVL = {
+        'phugoid'        : -0.0171382 + 0.145072j, # Real is wrong (2x)
+        'short_period'   : -0.439841 + 0.842195j, # Pretty close
+        'roll_subsidence': -1.35132, # get_modes says -1.81
+        'dutch_roll'     : -0.385418 + 1.52695j, # Imag is wrong (1.5x)
+        'spiral'         : -0.0573017, # Too small, get_modes says -0.17
+    }
 
     pprint(
         get_modes(
             airplane=airplane,
             op_point=op_point,
-            mass_props=mass_props,
+            mass_props=mass_props_TOGW,
             aero=aero
         )
     )
