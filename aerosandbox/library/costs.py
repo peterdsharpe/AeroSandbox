@@ -417,7 +417,6 @@ def electric_aircraft_direct_operating_cost_analysis(
 
     return costs_per_paxmi
 
-
 if __name__ == '__main__':
     res = electric_aircraft_direct_operating_cost_analysis(
         production_cost_per_airframe=3.0e6,
