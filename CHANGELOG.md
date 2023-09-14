@@ -34,6 +34,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+- Added cost modeling capabilities for electric aircraft, in `aerosandbox.library.costs.electric_aircraft_costs.py`.
 - Rework of fuselage aerodynamics calculation to be much more accurate in moment prediction (and stability derivative prediction).  This involves a much more precise moment integration based on slender body theory (potential flow around a line-source-doublet), and removing various unnecessary coordinate system conversions.
 -  Added deprecation warning on `/aerosandbox/geometry/airfoil/default_airfoil_aerodynamics.py`, which is superseded by `asb.Airfoil.get_aero_from_neuralfoil()`.
 - BREAKING: In aircraft cost model (the DAPCA IV model in `/aerosandbox/library/costs.py`, adjusted key names on the dictionary output  to be consistent with each other. This  is a breaking change, but because this is a relatively new feature and buried very deep into the cost library, it's  expected that this will affect very few users.
