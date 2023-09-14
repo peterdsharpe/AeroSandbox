@@ -14,7 +14,7 @@ from aerosandbox.aerodynamics import *
 from aerosandbox.propulsion import *
 from aerosandbox.structures import *
 
-__version__ = "4.1.1"
+__version__ = "4.1.2"
 
 
 def docs():
