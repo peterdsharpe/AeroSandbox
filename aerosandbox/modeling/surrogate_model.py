@@ -24,8 +24,9 @@ class SurrogateModel(AeroSandboxObject):
 
             * The type of this variable should be a float or an np.ndarray.
 
-    Even if you don't have any real x_data or y_data to add as SurrogateModel.x_data or SurrogateModel.y_data, it's recommended (but not required) that you add
-    values here as examples that users can inspect in order to see the types required.
+    Even if you don't have any real x_data or y_data to add as SurrogateModel.x_data or SurrogateModel.y_data,
+        it's recommended (but not required) that you add values here as examples that users can inspect in order to see
+        the data types and array shapes required.
     """
 
     @abstractmethod
