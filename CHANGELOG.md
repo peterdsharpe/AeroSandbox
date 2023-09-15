@@ -34,6 +34,8 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+- Various plotting-related syntax changes to address deprecation warnings in Matplotlib 3.8.0.
+
 -----
 
 # Latest (master / release), and previous versions
