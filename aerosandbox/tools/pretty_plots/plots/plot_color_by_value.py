@@ -106,9 +106,21 @@ def plot_color_by_value(
     return lines, sm, cbar
 
 if __name__ == '__main__':
-    plt.figure()
-    x = np.linspace(0, 10, 100)
-    y = np.sin(x)
-    c = x
-    plot_color_by_value(x, y, c=c, colorbar=True)
-    plt.show()
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+    fig, ax = plt.subplots()
+    x = np.linspace(-1, 1, 500)
+    y = np.sin(10 * x)
+    c = np.sin((10 * x) ** 2)
+    plot_color_by_value(
+        x, y,
+        c=c,
+        clim=(-1, 1),
+        colorbar=True, colorbar_label="Colorbar Label"
+    )
+    p.show_plot(
+        "Title",
+        "X Axis",
+        "Y Axis",
+    )
