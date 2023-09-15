@@ -36,7 +36,7 @@ p.contour(
     Beta, Alpha, aero["L"], colorbar_label="Lift $L$ [N]",
     # levels=100,
     linelabels_format=lambda s: eng_string(s, unit="N"),
-    cmap=plt.cm.get_cmap("coolwarm")
+    cmap=p.mpl.colormaps.get_cmap("coolwarm")
 )
 p.equal()
 p.show_plot("3D Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")

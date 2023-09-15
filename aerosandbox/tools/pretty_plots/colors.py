@@ -33,7 +33,7 @@ def get_discrete_colors_from_colormap(
     Returns: A Nx4 array of (R, G, B, A) colors.
 
     """
-    cmap = mpl.cm.get_cmap(cmap)
+    cmap = mpl.colormaps.get_cmap(cmap)
     colors = cmap(np.linspace(lower_bound, upper_bound, N))
     return colors
 

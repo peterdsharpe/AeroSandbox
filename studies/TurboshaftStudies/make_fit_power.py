@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
 
-    cmap = plt.cm.get_cmap("turbo")
+    cmap = p.mpl.colormaps.get_cmap("turbo")
     norm = p.mpl.colors.Normalize(
         vmin=df["OPR"].min(),
         vmax=df["OPR"].max()

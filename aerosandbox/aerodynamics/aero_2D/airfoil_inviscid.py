@@ -171,6 +171,8 @@ class AirfoilInviscid(ImplicitAnalysis):
 
     def draw_streamlines(self, res=200, show=True):
         import matplotlib.pyplot as plt
+        import aerosandbox.tools.pretty_plots as p
+
         fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 
         plt.xlim(-0.5, 1.5)
@@ -213,7 +215,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             color=speed,
             density=2.5,
             arrowsize=0,
-            cmap=plt.cm.get_cmap('coolwarm_r'),
+            cmap=p.mpl.colormaps.get_cmap('coolwarm_r'),
         )
         CB = plt.colorbar(
             orientation="horizontal",

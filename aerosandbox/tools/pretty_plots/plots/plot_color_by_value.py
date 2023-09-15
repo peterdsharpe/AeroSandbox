@@ -45,7 +45,7 @@ def plot_color_by_value(
     Returns:
 
     """
-    cmap = mpl.cm.get_cmap(cmap)
+    cmap = mpl.colormaps.get_cmap(cmap)
 
     x = np.array(x)
     y = np.array(y)
