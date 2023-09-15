@@ -98,9 +98,17 @@ def plot_color_by_value(
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     if colorbar:
         if colorbar_label is None:
-            cbar = plt.colorbar(sm)
+            cbar = plt.colorbar(sm, ax=plt.gca())
         else:
-            cbar = plt.colorbar(sm, label=colorbar_label)
+            cbar = plt.colorbar(sm, ax=plt.gca(), label=colorbar_label)
     else:
         cbar = None
     return lines, sm, cbar
+
+if __name__ == '__main__':
+    plt.figure()
+    x = np.linspace(0, 10, 100)
+    y = np.sin(x)
+    c = x
+    plot_color_by_value(x, y, c=c, colorbar=True)
+    plt.show()
