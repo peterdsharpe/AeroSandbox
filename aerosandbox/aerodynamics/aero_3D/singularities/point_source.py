@@ -54,9 +54,9 @@ def calculate_induced_velocity_point_source(
     Returns: u, v, and w:
         The x-, y-, and z-direction induced velocities.
     """
-    dx = x_field - x_source
-    dy = y_field - y_source
-    dz = z_field - z_source
+    dx = np.add(x_field, -x_source)
+    dy = np.add(y_field, -y_source)
+    dz = np.add(z_field, -z_source)
 
     r_squared = (
             dx ** 2 +
@@ -73,11 +73,11 @@ def calculate_induced_velocity_point_source(
         else:
             return x ** -1.5
 
-    grad_phi_multiplier = sigma * smoothed_x_15_inv(r_squared) / (4 * np.pi)
+    grad_phi_multiplier = np.multiply(sigma, smoothed_x_15_inv(r_squared)) / (4 * np.pi)
 
-    u = grad_phi_multiplier * dx
-    v = grad_phi_multiplier * dy
-    w = grad_phi_multiplier * dz
+    u = np.multiply(grad_phi_multiplier, dx)
+    v = np.multiply(grad_phi_multiplier, dy)
+    w = np.multiply(grad_phi_multiplier, dz)
 
     return u, v, w
 
