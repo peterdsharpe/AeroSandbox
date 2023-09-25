@@ -89,6 +89,10 @@ def plot_smooth(
     else:
         raise ValueError("Unrecognized syntax. Use syntax `plot_smooth(x, y, fmt, **kwargs)'.")
 
+    ### Ensure types are correct (e.g., if a list or Pandas Series is passed in)
+    x = np.array(x)
+    y = np.array(y)
+
     if drop_nans:
         nanmask = np.logical_not(
             np.logical_or(
@@ -111,6 +115,11 @@ def plot_smooth(
 
         x_rng = np.nanmax(x) - np.nanmin(x)
         y_rng = np.nanmax(y) - np.nanmin(y)
+
+        if x_rng == 0:
+            x_rng = 1
+        if y_rng == 0:
+            y_rng = 1
 
         dx_norm = dx / x_rng
         dy_norm = dy / y_rng
