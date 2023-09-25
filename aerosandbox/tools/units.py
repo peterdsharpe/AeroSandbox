@@ -102,6 +102,7 @@ mi = mile
 nmi = naut_mile
 kilogram = kg
 sec = second
+s = second
 min = minute
 hr = hour
 wk = week
