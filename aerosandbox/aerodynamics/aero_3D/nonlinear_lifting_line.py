@@ -319,6 +319,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         self.CLs = CLs
         self.CDs = CDs
         self.CMs = CMs
+        self.alphas = alphas
 
         Vi_cross_li = np.cross(velocities, self.vortex_bound_leg, axis=1)
         Vi_cross_li_magnitudes = np.linalg.norm(Vi_cross_li, axis=1)
