@@ -424,7 +424,7 @@ class LiftingLine(ImplicitAnalysis):
              ):
         """
         Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
-        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
+        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = sol(ap).
         :return:
         """
 
@@ -1080,7 +1080,7 @@ class LiftingLine(ImplicitAnalysis):
              ):
         """
         Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
-        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = ap.substitute_solution(sol).
+        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = sol(ap).
         :return:
         """
 
