@@ -1505,30 +1505,9 @@ class Airfoil(Polygon):
                 b_fraction * foil_b.coordinates
         )
 
-        def CL_function(alpha, Re, mach):
-            return (
-                    a_fraction * foil_a.CL_function(alpha, Re, mach) +
-                    b_fraction * foil_b.CL_function(alpha, Re, mach)
-            )
-
-        def CD_function(alpha, Re, mach):
-            return (
-                    a_fraction * foil_a.CD_function(alpha, Re, mach) +
-                    b_fraction * foil_b.CD_function(alpha, Re, mach)
-            )
-
-        def CM_function(alpha, Re, mach):
-            return (
-                    a_fraction * foil_a.CM_function(alpha, Re, mach) +
-                    b_fraction * foil_b.CM_function(alpha, Re, mach)
-            )
-
         return Airfoil(
             name=name,
             coordinates=coordinates,
-            CL_function=CL_function,
-            CD_function=CD_function,
-            CM_function=CM_function,
         )
 
     # def normalize(self):
