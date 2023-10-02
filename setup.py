@@ -7,38 +7,26 @@ https://github.com/pypa/sampleproject
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
-from os import path
-import codecs
-
-here = path.abspath(path.dirname(__file__))
+from pathlib import Path
+import importlib
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+README_path = Path(__file__).parent / "README.md"
+with open(README_path, encoding='utf-8') as f:
     long_description = f.read()
 
-
-### Set up tools to get version
-def read(rel_path):
-    here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, rel_path), 'r') as fp:
-        return fp.read()
-
-
-def get_version(rel_path):
-    for line in read(rel_path).splitlines():
-        if line.startswith('__version__'):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
-    else:
-        raise RuntimeError("Unable to find version string.")
-
+### Get the version number dynamically
+version = importlib.import_module(
+    "aerosandbox.__init__",
+    package="aerosandbox"
+).__version__
 
 ### Do the setup
 setup(
     name='AeroSandbox',
     author='Peter Sharpe',
-    version=get_version("aerosandbox/__init__.py"),
-    description='AeroSandbox is a Python package for design optimization of engineered systems such as aircraft.',
+    version=version,
+    description='AeroSandbox is a Python package that helps you design and optimize aircraft and other engineered systems.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://peterdsharpe.github.io/AeroSandbox/',
@@ -51,7 +39,7 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     keywords='aerodynamics airplane cfd mdo mdao aircraft design aerospace optimization automatic differentiation structures propulsion',
-    packages=find_packages(exclude=['docs', 'media', 'examples', 'studies']),
+    packages=find_packages(exclude=['docs', 'media', 'studies', 'tutorial']),
     python_requires='>=3.8',
     install_requires=[
         'numpy >= 1.20.0, <1.25a0',
