@@ -35,8 +35,8 @@ def run_tests():
         import pytest
     except ModuleNotFoundError:
         raise ModuleNotFoundError("Please install `pytest` (`pip install pytest`) to run AeroSandbox unit tests.")
-    import matplotlib.pyplot as plt
 
+    import matplotlib.pyplot as plt
     with plt.ion():  # Disable blocking plotting
 
         pytest.main([str(_asb_root)])
