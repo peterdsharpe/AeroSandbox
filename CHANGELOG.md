@@ -34,6 +34,8 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+- Added save/load capabilities for AeroSandboxObjects (parent class of Airplane, Wing, Airfoil, etc.) via `AeroSandboxObject.save()` and `asb.load()`.
+
 -----
 
 # Latest (master / release), and previous versions
