@@ -50,6 +50,7 @@ setup(
         'seaborn >= 0.11',
         'tqdm >= 4',
         'sortedcontainers >= 2',
+        'dill >= 0.3',
         'neuralfoil >= 0.1.9'
     ],
     extras_require={

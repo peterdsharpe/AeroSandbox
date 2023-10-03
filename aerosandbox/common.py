@@ -2,11 +2,17 @@ import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
 from abc import abstractmethod, ABC
 import copy
-from typing import Dict, Any
+from typing import Dict, Any, Union
 import casadi as cas
+import dill
+from pathlib import Path
+import sys
+import warnings
 
 
 class AeroSandboxObject(ABC):
+
+    _asb_metadata: Dict[str, str] = None
 
     @abstractmethod
     def __init__(self):
@@ -15,6 +21,61 @@ class AeroSandboxObject(ABC):
         (extend) it instead.
         """
         pass
+
+    def save(self,
+             filename: Union[str, Path] = None,
+             verbose: bool = True,
+             automatically_add_extension: bool = True,
+             ) -> None:
+        """
+        Saves the object to a binary file, using the `dill` library.
+
+        Creates a .asb file, which is a binary file that can be loaded with `aerosandbox.load()`. This can be loaded
+            into memory in a different Python session or a different computer, and it will be exactly the same as when it
+            was saved.
+
+        Args:
+
+            filename: The filename to save this object to. Should be a .asb file.
+
+            verbose: If True, prints messages to console on successful save.
+
+            automatically_add_extension: If True, automatically adds the .asb extension to the filename if it doesn't
+                already have it. If False, does not add the extension.
+
+        Returns: None (writes to file)
+
+        """
+
+        if filename is None:
+            try:
+                filename = self.name
+            except AttributeError:
+                filename = "untitled"
+
+        filename = Path(filename)
+
+        if filename.suffix == "" and automatically_add_extension:
+            filename = filename.with_suffix(".asb")
+
+        if verbose:
+            print(f"Saving {str(self)} to:\n\t{filename}...")
+
+        import aerosandbox as asb
+
+        self._asb_metadata = {
+            "python_version": ".".join([
+                str(sys.version_info.major),
+                str(sys.version_info.minor),
+                str(sys.version_info.micro),
+            ]),
+            "asb_version"   : asb.__version__
+        }
+        with open(filename, "wb") as f:
+            dill.dump(
+                obj=self,
+                file=f,
+            )
 
     def copy(self):
         """
@@ -141,6 +202,94 @@ class AeroSandboxObject(ABC):
 
         else:
             return convert(self)
+
+
+def load(
+        filename: Union[str, Path],
+        verbose: bool = True,
+) -> AeroSandboxObject:
+    """
+    Loads an AeroSandboxObject from a file.
+
+    Upon load, will compare metadata from the file to the current Python version and AeroSandbox version. If there are
+    any discrepancies, will raise a warning.
+
+    Args:
+
+        filename: The filename to load from. Should be a .asb file.
+
+        verbose: If True, prints messages to console on successful load.
+
+    Returns: An AeroSandboxObject.
+
+    """
+    filename = Path(filename)
+
+    # Load the object from file
+    with open(filename, "rb") as f:
+        obj = dill.load(f)
+
+    # At this point, the object is loaded
+    try:
+        metadata = obj._asb_metadata
+    except AttributeError:
+        warnings.warn(
+            "This object was saved without metadata. This may cause compatibility issues.",
+            stacklevel=2
+        )
+        return obj
+
+    # Check if the Python version is different
+    try:
+        saved_python_version = metadata["python_version"]
+        current_python_version = ".".join([
+            str(sys.version_info.major),
+            str(sys.version_info.minor),
+            str(sys.version_info.micro),
+        ])
+
+        saved_python_version_split = saved_python_version.split(".")
+        current_python_version_split = current_python_version.split(".")
+
+        if any([
+            saved_python_version_split[0] != current_python_version_split[0],
+            saved_python_version_split[1] != current_python_version_split[1],
+        ]):
+            warnings.warn(
+                f"This object was saved with Python {saved_python_version}, but you are currently using Python {current_python_version}.\n"
+                f"This may cause compatibility issues.",
+                stacklevel=2,
+            )
+
+    except KeyError:
+        warnings.warn(
+            "This object was saved without Python version info metadata. This may cause compatibility issues.",
+            stacklevel=2
+        )
+
+    # Check if the AeroSandbox version is different
+    import aerosandbox as asb
+
+    try:
+        saved_asb_version = metadata["asb_version"]
+
+        if saved_asb_version != asb.__version__:
+            warnings.warn(
+                f"This object was saved with AeroSandbox {saved_asb_version}, but you are currently using AeroSandbox {asb.__version__}.\n"
+                f"This may cause compatibility issues.",
+                stacklevel=2,
+            )
+
+    except KeyError:
+        warnings.warn(
+            "This object was saved without AeroSandbox version info metadata. This may cause compatibility issues.",
+            stacklevel=2
+        )
+
+    if verbose:
+        print(f"Loaded {str(obj)} from:\n\t{filename}")
+
+    return obj
 
 
 class ExplicitAnalysis(AeroSandboxObject):
