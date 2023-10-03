@@ -57,6 +57,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if xyz_ref is None:
             xyz_ref = airplane.xyz_ref
 
+        ### Initialize
         self.airplane = airplane
         self.op_point = op_point
         self.xyz_ref = xyz_ref
