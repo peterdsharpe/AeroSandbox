@@ -162,49 +162,49 @@ class NonlinearLiftingLine(ImplicitAnalysis):
                     spacing_function=self.spanwise_spacing_function
                 )
 
-                points, faces = wing.mesh_thin_surface(
-                    method="quad",
-                    chordwise_resolution=1,
-                    add_camber=False,
-                )
+            points, faces = wing.mesh_thin_surface(
+                method="quad",
+                chordwise_resolution=1,
+                add_camber=False,
+            )
 
-                front_left_vertices.append(points[faces[:, 0], :])
-                back_left_vertices.append(points[faces[:, 1], :])
-                back_right_vertices.append(points[faces[:, 2], :])
-                front_right_vertices.append(points[faces[:, 3], :])
+            front_left_vertices.append(points[faces[:, 0], :])
+            back_left_vertices.append(points[faces[:, 1], :])
+            back_right_vertices.append(points[faces[:, 2], :])
+            front_right_vertices.append(points[faces[:, 3], :])
 
-                wing_airfoils = []
-                wing_control_surfaces = []
+            wing_airfoils = []
+            wing_control_surfaces = []
 
-                for xsec_a, xsec_b in zip(wing.xsecs[:-1], wing.xsecs[1:]):  # Do the right side
-                    wing_airfoils.append(
-                        xsec_a.airfoil.blend_with_another_airfoil(
-                            airfoil=xsec_b.airfoil,
-                            blend_fraction=0.5,
-                        )
+            for xsec_a, xsec_b in zip(wing.xsecs[:-1], wing.xsecs[1:]):  # Do the right side
+                wing_airfoils.append(
+                    xsec_a.airfoil.blend_with_another_airfoil(
+                        airfoil=xsec_b.airfoil,
+                        blend_fraction=0.5,
                     )
-                    wing_control_surfaces.append(xsec_a.control_surfaces)
+                )
+                wing_control_surfaces.append(xsec_a.control_surfaces)
 
+            airfoils.extend(wing_airfoils)
+            control_surfaces.extend(wing_control_surfaces)
+
+            if wing.symmetric:  # Do the left side, if applicable
                 airfoils.extend(wing_airfoils)
-                control_surfaces.extend(wing_control_surfaces)
 
-                if wing.symmetric:  # Do the left side, if applicable
-                    airfoils.extend(wing_airfoils)
+                def mirror_control_surface(surf: ControlSurface) -> ControlSurface:
+                    if surf.symmetric:
+                        return surf
+                    else:
+                        surf = surf.copy()
+                        surf.deflection *= -1
+                        return surf
 
-                    def mirror_control_surface(surf: ControlSurface) -> ControlSurface:
-                        if surf.symmetric:
-                            return surf
-                        else:
-                            surf = surf.copy()
-                            surf.deflection *= -1
-                            return surf
+                symmetric_wing_control_surfaces = [
+                    [mirror_control_surface(surf) for surf in surfs]
+                    for surfs in wing_control_surfaces
+                ]
 
-                    symmetric_wing_control_surfaces = [
-                        [mirror_control_surface(surf) for surf in surfs]
-                        for surfs in wing_control_surfaces
-                    ]
-
-                    control_surfaces.extend(symmetric_wing_control_surfaces)
+                control_surfaces.extend(symmetric_wing_control_surfaces)
 
         front_left_vertices = np.concatenate(front_left_vertices)
         back_left_vertices = np.concatenate(back_left_vertices)
