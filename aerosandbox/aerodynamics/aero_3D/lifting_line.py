@@ -3,6 +3,7 @@ from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
     calculate_induced_velocity_horseshoe
+from aerosandbox.aerodynamics.aero_3D.singularities.point_source import calculate_induced_velocity_point_source
 from typing import Dict, Any, List, Callable, Union
 from aerosandbox.aerodynamics.aero_3D.aero_buildup import AeroBuildup
 from dataclasses import dataclass
@@ -82,6 +83,7 @@ class LiftingLine(ExplicitAnalysis):
         self.airplane = airplane
         self.op_point = op_point
         self.xyz_ref = xyz_ref
+        self.model_size = model_size
         self.verbose = verbose
         self.spanwise_resolution = spanwise_resolution
         self.spanwise_spacing_function = spanwise_spacing_function
@@ -648,33 +650,47 @@ class LiftingLine(ExplicitAnalysis):
                       self.op_point.atmosphere.kinematic_viscosity()
               ) * cos_sweeps
 
-        ### Do a central finite-difference in alpha to obtain CL0 and CLa quantities
-        finite_difference_alpha_amount = 1  # degree
+        # ### Do a central finite-difference in alpha to obtain CL0 and CLa quantities
+        # finite_difference_alpha_amount = 1  # degree
+        #
+        # aero_finite_differences = [
+        #     af.get_aero_from_neuralfoil(
+        #         alpha=alpha_geometrics[i] + finite_difference_alpha_amount * np.array([-1, 1]),
+        #         Re=Res[i],
+        #         mach=machs[i],
+        #         control_surfaces=control_surfaces[i]
+        #     )
+        #     for i, af in enumerate(airfoils)
+        # ]
+        #
+        # CLs_at_alpha_geometric = [
+        #     np.mean(aero["CL"])
+        #     for aero in aero_finite_differences
+        # ]
+        # CLas = [
+        #     np.diff(aero["CL"])[0] / (2 * np.radians(finite_difference_alpha_amount))
+        #     for aero in aero_finite_differences
+        # ]
+        #
+        # # Regularize CLas to always be positive and not-too-close-to-zero
+        # CLas = [
+        #     np.softmax(CLa, 1, softness=0.5)
+        #     for CLa in CLas
+        # ]
 
-        aero_finite_differences = [
+        ### OVERWRITE CL pre-calculation with more theory-based CLa (improves Cma prediction accuracy due to FD error)
+        CLs_at_alpha_geometric = [
             af.get_aero_from_neuralfoil(
-                alpha=alpha_geometrics[i] + finite_difference_alpha_amount * np.array([-1, 1]),
+                alpha=alpha_geometrics[i],
                 Re=Res[i],
                 mach=machs[i],
-                control_surfaces=control_surfaces[i]
-            )
+                control_surfaces=control_surfaces[i],
+                model_size=self.model_size,
+            )["CL"]
             for i, af in enumerate(airfoils)
         ]
 
-        CLs_at_alpha_geometric = [
-            np.mean(aero["CL"])
-            for aero in aero_finite_differences
-        ]
-        CLas = [
-            np.diff(aero["CL"])[0] / (2 * np.radians(finite_difference_alpha_amount))
-            for aero in aero_finite_differences
-        ]
-
-        # Regularize CLas to always be positive and not-too-close-to-zero
-        CLas = [
-            np.softmax(CLa, 1, softness=0.5)
-            for CLa in CLas
-        ]
+        CLas = 2 * np.pi * np.ones(len(CLs_at_alpha_geometric))
 
         ##### Setup Geometry
         ### Calculate AIC matrix
@@ -731,16 +747,17 @@ class LiftingLine(ExplicitAnalysis):
         ##### Evaluate the aerodynamics with induced effects
         alpha_induced = np.degrees(alpha_influence_matrix @ vortex_strengths)
 
-        alphas = alpha_geometrics + alpha_induced
+        alphas = tall(alpha_geometrics) + tall(alpha_induced)
 
         aeros = [
             af.get_aero_from_neuralfoil(
                 alpha=alphas[i],
                 Re=Res[i],
                 mach=machs[i],
-                control_surfaces=self.control_surfaces[i],
+                control_surfaces=control_surfaces[i],
+                model_size=self.model_size,
             )
-            for i, af in enumerate(self.airfoils)
+            for i, af in enumerate(airfoils)
         ]
         CLs = np.array([aero["CL"] for aero in aeros])
         CDs = np.array([aero["CD"] for aero in aeros])
@@ -888,7 +905,7 @@ class LiftingLine(ExplicitAnalysis):
 
         if self.airplane.fuselages:
             V_induced_fuselage = self.calculate_fuselage_influences(
-                points=self.vortex_centers
+                points=points
             )
             V = V_induced + V_induced_fuselage + freestream_velocities
         else:
