@@ -34,11 +34,15 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-- Added save/load capabilities for AeroSandboxObjects (parent class of Airplane, Wing, Airfoil, etc.) via `AeroSandboxObject.save()` and `asb.load()`.
 
 -----
 
 # Latest (master / release), and previous versions
+
+#### 4.1.4
+
+- Added `asb.LiftingLine`, which is an experimental new 3D aerodynamics analysis method. Basic method is a lifting line theory method (with sweep and dihedral accounting), where the linearized sectional data is taken from NeuralFoil results for improved accuracy. Fuselage modeling is handled through a semi-empirical method (essentially, falling back on `asb.AeroBuildup`). Preliminary testing on full-aircraft configurations indicates good agreement with other solvers, but production use should likely wait until more testing is performed in future versions.
+- Added save/load capabilities for AeroSandboxObjects (parent class of Airplane, Wing, Airfoil, etc.) via `AeroSandboxObject.save()` and `asb.load()`.
 
 #### 4.1.3
 
