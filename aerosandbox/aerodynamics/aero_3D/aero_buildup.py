@@ -1272,7 +1272,6 @@ class AeroBuildup(ExplicitAnalysis):
 
 if __name__ == '__main__':
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
-    import os
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
