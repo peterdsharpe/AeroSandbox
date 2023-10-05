@@ -575,13 +575,14 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
         freestream_velocities = np.add(wide(self.steady_freestream_velocity), rotation_freestream_velocities)
 
-        if self.airplane.fuselages:
-            V_induced_fuselage = self.calculate_fuselage_influences(
-                points=points
-            )
-            V = V_induced + V_induced_fuselage + freestream_velocities
-        else:
-            V = V_induced + freestream_velocities
+        V = V_induced + freestream_velocities
+
+        # if self.airplane.fuselages:
+        #     V_induced_fuselage = self.calculate_fuselage_influences(
+        #         points=points
+        #     )
+        #     V = V + V_induced_fuselage
+
         return V
 
     def calculate_fuselage_influences(self, points: np.ndarray) -> np.ndarray:
