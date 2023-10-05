@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Callable, Union
 from aerosandbox.aerodynamics.aero_3D.aero_buildup import AeroBuildup
 from dataclasses import dataclass
 
+
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
 def tall(array):
@@ -642,13 +643,13 @@ class LiftingLine(ExplicitAnalysis):
         machs = self.op_point.mach() * cos_sweeps
 
         Res = (
-            self.op_point.velocity *
-            chords /
-            self.op_point.atmosphere.kinematic_viscosity()
-        ) * cos_sweeps
+                      self.op_point.velocity *
+                      chords /
+                      self.op_point.atmosphere.kinematic_viscosity()
+              ) * cos_sweeps
 
         ### Do a central finite-difference in alpha to obtain CL0 and CLa quantities
-        finite_difference_alpha_amount = 1 # degree
+        finite_difference_alpha_amount = 1  # degree
 
         aero_finite_differences = [
             af.get_aero_from_neuralfoil(
@@ -726,7 +727,6 @@ class LiftingLine(ExplicitAnalysis):
 
         vortex_strengths = np.linalg.solve(A, b)
         self.vortex_strengths = vortex_strengths
-
 
         ##### Evaluate the aerodynamics with induced effects
         alpha_induced = np.degrees(alpha_influence_matrix @ vortex_strengths)
@@ -813,7 +813,6 @@ class LiftingLine(ExplicitAnalysis):
             F_g=force_total_geometry,
             M_g=moment_total_geometry,
         )
-
 
     def get_induced_velocity_at_points(self,
                                        points: np.ndarray,
@@ -1171,6 +1170,7 @@ class LiftingLine(ExplicitAnalysis):
             #             mirror=self.run_symmetric
             #         )
 
+
 if __name__ == '__main__':
     import aerosandbox as asb
     import aerosandbox.numpy as np
@@ -1178,7 +1178,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
-    airplane=asb.Airplane(
+    airplane = asb.Airplane(
         wings=[
             asb.Wing(
                 symmetric=False,
