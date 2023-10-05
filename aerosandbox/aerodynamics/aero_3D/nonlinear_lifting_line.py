@@ -577,7 +577,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
         if self.airplane.fuselages:
             V_induced_fuselage = self.calculate_fuselage_influences(
-                points=self.vortex_centers
+                points=points
             )
             V = V_induced + V_induced_fuselage + freestream_velocities
         else:
