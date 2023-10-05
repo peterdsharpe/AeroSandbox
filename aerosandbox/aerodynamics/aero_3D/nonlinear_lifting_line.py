@@ -28,7 +28,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
     Nonlinear, and includes viscous effects based on 2D data.
 
     Usage example:
-        >>> analysis = asb.LiftingLine(
+        >>> analysis = asb.NonlinearLiftingLine(
         >>>     airplane=my_airplane,
         >>>     op_point=asb.OperatingPoint(
         >>>         velocity=100, # m/s
@@ -55,7 +55,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
                  align_trailing_vortices_with_wind: bool = False,
                  ):
         """
-        Initializes and conducts a LiftingLine analysis.
+        Initializes and conducts a NonlinearLiftingLine analysis.
 
         Args:
 
@@ -521,7 +521,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
                 vortex_strengths = self.vortex_strengths
             except AttributeError:
                 raise ValueError(
-                    "`LiftingLine.vortex_strengths` doesn't exist, so you need to pass in the `vortex_strengths` parameter.")
+                    "`NonlinearLiftingLine.vortex_strengths` doesn't exist, so you need to pass in the `vortex_strengths` parameter.")
 
         u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
             x_field=tall(points[:, 0]),
@@ -758,7 +758,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         elif backend == "pyvista":
             import pyvista as pv
             plotter = pv.Plotter()
-            plotter.title = "ASB LiftingLineMethod"
+            plotter.title = "ASB NonlinearLiftingLine"
             plotter.add_axes()
             plotter.show_grid(color='gray')
 
