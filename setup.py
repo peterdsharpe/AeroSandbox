@@ -8,7 +8,6 @@ https://github.com/pypa/sampleproject
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 from pathlib import Path
-import importlib
 
 # Get the long description from the README file
 README_path = Path(__file__).parent / "README.md"
@@ -16,10 +15,15 @@ with open(README_path, encoding='utf-8') as f:
     long_description = f.read()
 
 ### Get the version number dynamically
-version = importlib.import_module(
-    "aerosandbox.__init__",
-    package="aerosandbox"
-).__version__
+init_path = Path(__file__).parent / "aerosandbox" / "__init__.py"
+
+with open(init_path) as f:
+    for line in f:
+        if line.startswith("__version__"):
+            version = line.split("=")[1].strip().strip('"').strip("'")
+            break
+    else:
+        raise RuntimeError("Unable to find version string.")
 
 ### Do the setup
 setup(
