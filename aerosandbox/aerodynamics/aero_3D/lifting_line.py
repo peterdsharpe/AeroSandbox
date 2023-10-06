@@ -48,7 +48,7 @@ class LiftingLine(ExplicitAnalysis):
                  model_size: str = "medium",
                  run_symmetric_if_possible: bool = False,
                  verbose: bool = False,
-                 spanwise_resolution: int = 10,
+                 spanwise_resolution: int = 4,
                  spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
                  vortex_core_radius: float = 1e-8,
                  align_trailing_vortices_with_wind: bool = False,
@@ -1225,7 +1225,7 @@ if __name__ == '__main__':
                         airfoil=asb.Airfoil("naca0012")
                     ),
                 ]
-            ).subdivide_sections(20)
+            )
         ]
     )
 
@@ -1237,9 +1237,54 @@ if __name__ == '__main__':
             beta=0,
         ),
         xyz_ref=[0.25, 0, 0],
-        spanwise_resolution=1,
+        spanwise_resolution=5,
     )
 
     aero = ll.run()
 
     print(aero["CL"])
+    print(aero["CL"] / aero["CD"])
+
+
+    @np.vectorize
+    def get_aero(resolution):
+        return LiftingLine(
+            airplane=airplane,
+            op_point=OperatingPoint(
+                velocity=100,
+                alpha=5,
+                beta=0,
+            ),
+            xyz_ref=[0.25, 0, 0],
+            spanwise_resolution=resolution,
+        ).run()
+
+    resolutions = 1 + np.arange(20)
+    aeros = get_aero(resolutions)
+
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
+
+    fig, ax = plt.subplots(3, 1)
+    ax[0].semilogx(
+        resolutions,
+        [aero["CL"] for aero in aeros]
+    )
+    ax[0].plot(
+        resolutions,
+        np.array([aero["CL"] for aero in aeros]) * (resolutions) / (resolutions + 0.3),
+        # np.array([aero["CL"] for aero in aeros]) * (resolutions) / (resolutions + 0.3),
+    )
+    ax[1].plot(
+        resolutions,
+        [aero["CD"] for aero in aeros]
+    )
+    ax[1].plot(
+        resolutions,
+        np.array([aero["CD"] for aero in aeros]) * (resolutions + 0.2) / (resolutions),
+    )
+    ax[2].plot(
+        resolutions,
+        [aero["CL"] / aero["CD"] for aero in aeros]
+    )
+    p.show_plot()
