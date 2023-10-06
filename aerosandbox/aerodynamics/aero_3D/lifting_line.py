@@ -618,11 +618,21 @@ class LiftingLine(ExplicitAnalysis):
             print("Calculating the freestream influence...")
         steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
         steady_freestream_direction = steady_freestream_velocity / np.linalg.norm(steady_freestream_velocity)
+
+        steady_freestream_velocities = np.tile(
+            wide(steady_freestream_velocity),
+            reps=(self.n_panels, 1)
+        )
+        steady_freestream_directions = np.tile(
+            wide(steady_freestream_direction),
+            reps=(self.n_panels, 1)
+        )
+
         rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
             points=vortex_centers
         )
 
-        freestream_velocities = np.add(wide(steady_freestream_velocity), rotation_freestream_velocities)
+        freestream_velocities = steady_freestream_velocities + rotation_freestream_velocities
         # Nx3, represents the freestream velocity at each panel collocation point (c)
 
         # freestream_influences = np.sum(freestream_velocities * normal_directions, axis=1)
@@ -634,11 +644,14 @@ class LiftingLine(ExplicitAnalysis):
 
         ##### Compute the linearization quantities (CL0 and CLa) of each airfoil section
         alpha_geometrics = 90 - np.arccosd(
-            np.sum(steady_freestream_direction * normal_directions, axis=1)
+            np.sum(
+                steady_freestream_directions * normal_directions,
+                axis=1
+            )
         )
 
         cos_sweeps = np.sum(
-            steady_freestream_direction * -local_forward_direction,
+            steady_freestream_directions * -local_forward_direction,
             axis=1
         )
 
@@ -730,12 +743,12 @@ class LiftingLine(ExplicitAnalysis):
         if self.verbose:
             print("Calculating vortex center strengths (assembling and solving linear system)...")
 
-        V_freestream_cross_li = np.cross(steady_freestream_velocity, self.vortex_bound_leg, axisa=0, axisb=1)
+        V_freestream_cross_li = np.cross(steady_freestream_velocities, self.vortex_bound_leg, axis=1)
         V_freestream_cross_li_magnitudes = np.linalg.norm(V_freestream_cross_li, axis=1)
 
         velocity_magnitude_perpendiculars = self.op_point.velocity * cos_sweeps
 
-        A = alpha_influence_matrix * wide(CLas) - np.diag(
+        A = alpha_influence_matrix * np.tile(wide(CLas), (self.n_panels, 1)) - np.diag(
             2 * V_freestream_cross_li_magnitudes / velocity_magnitude_perpendiculars ** 2 / areas
         )
 
