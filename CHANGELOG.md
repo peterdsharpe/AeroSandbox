@@ -34,11 +34,13 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-- Added improvements to `asb.LiftingLine` to ensure mixed-backend compatibility.
-
 -----
 
 # Latest (master / release), and previous versions
+
+#### 4.1.5
+
+- Added improvements to `asb.LiftingLine` to ensure mixed-backend compatibility.
 
 #### 4.1.4
 
