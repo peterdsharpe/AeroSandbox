@@ -554,11 +554,11 @@ class MassProperties(AeroSandboxObject):
         ]
 
         def fmt(x: float) -> str:
-            return f"{x:.16g}".ljust(21)
+            return f"{x:.8g}".ljust(14)
 
         lines.extend([
             " ".join([
-                s.ljust(21) for s in [
+                s.ljust(14) for s in [
                     "#  mass",
                     "x_cg",
                     "y_cg",
