@@ -219,7 +219,7 @@ def electric_propeller_propulsion_analysis(
 
     air_power = total_thrust * op_point.velocity
 
-    from propulsion_propeller import propeller_shaft_power_from_thrust
+    from aerosandbox.library.propulsion_propeller import propeller_shaft_power_from_thrust
 
     shaft_power = propeller_shaft_power_from_thrust(
         thrust_force=total_thrust,
