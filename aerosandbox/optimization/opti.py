@@ -1430,8 +1430,11 @@ if __name__ == '__main__':
     f = (a - x) ** 2 + b * (y - x ** 2) ** 2
     opti.minimize(f)
 
+    opti.subject_to([
+        x ** 2 + y ** 2 <= 1
+    ])
+
     # Optimize
     sol = opti.solve()
 
-    for i in [x, y]:
-        assert sol.value(i) == pytest.approx(1, abs=1e-4)
+    assert sol([x, y]) == pytest.approx([0.7864, 0.6177], abs=1e-3)
