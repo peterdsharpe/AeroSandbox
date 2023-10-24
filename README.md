@@ -93,17 +93,23 @@ Use AeroSandbox as a pure aerodynamics toolkit:
 
 <table>
 	<tr>
-		<td width="50%" valign="top">
+		<td width="33%" valign="top">
 			<p align="center">
-				VLM simulation of a glider, aileron deflections of +-30°
+				<a href="https://github.com/peterdsharpe/AeroSandbox/blob/master/tutorial/06%20-%20Aerodynamics/01%20-%20AeroSandbox%203D%20Aerodynamics%20Tools/01%20-%20Vortex%20Lattice%20Method/01%20-%20Vortex%20Lattice%20Method.ipynb">VLM simulation of a glider, aileron deflections of +-30°</a>
 			</p>
 			<img src="./media/images/vlm3_with_control_surfaces.png" alt="VLM simulation">
 		</td>
-		<td width="50%" valign="top">
+		<td width="33%" valign="top">
 			<p align="center">
-				Aerodynamic shape optimization of a wing planform, using an arbitrary objective and constraints
+				<a href="https://github.com/peterdsharpe/AeroSandbox/blob/master/tutorial/06%20-%20Aerodynamics/01%20-%20AeroSandbox%203D%20Aerodynamics%20Tools/01%20-%20Vortex%20Lattice%20Method/01%20-%20Vortex%20Lattice%20Method.ipynb">Aerodynamic shape optimization of a wing planform, using an arbitrary objective and constraints</a>
 			</p>
 			<img src="./media/images/wing_optimization.png" alt="Wing optimization">
+		</td>
+		<td width="33%" valign="top">
+			<p align="center">
+				<a href="https://github.com/peterdsharpe/AeroSandbox/blob/master/tutorial/06%20-%20Aerodynamics/02%20-%20AeroSandbox%202D%20Aerodynamics%20Tools/02%20-%20NeuralFoil%20Optimization.ipynb">Optimize airfoil shapes with aerodynamic, structural, and manufacturing considerations</a>
+			</p>
+			<img src="./media/images/airfoil_optimization.png" alt="Airfoil optimization">
 		</td>
 	</tr>
 </table>
@@ -120,7 +126,7 @@ Among many other discplines:
 		</td>
 		<td width="50%" valign="top">
 			<p align="center">
-				Electric motor analysis for propeller matching
+				<a href="https://github.com/peterdsharpe/AeroSandbox/blob/master/aerosandbox/library/propulsion_electric.py">Electric motor analysis for propeller matching</a>
 			</p>
 			<img src="./media/images/motor_perf.png" alt="Motor performance">
 		</td>
@@ -134,7 +140,7 @@ Among many other discplines:
 		</td>
 		<td>
 			<p align="center" valign="top">
-				Detailed weights estimation for aircraft ranging from micro-UAVs to airliners
+				<a href="https://github.com/peterdsharpe/AeroSandbox/tree/master/aerosandbox/library/weights">Detailed weights estimation for aircraft ranging from micro-UAVs to airliners</a>
 			</p>
 			<img src="https://github.com/peterdsharpe/transport-aircraft/raw/master/figures/mass_budget.png" alt="Mass Budget">
 		</td>
@@ -220,8 +226,8 @@ One final point to note: **all inputs and outputs to AeroSandbox are expressed i
 
 The only exception to this rule is when units are explicitly noted via variable name suffix. For example:
 
-* `battery_capacity` -> Joules
-* `battery_capacity_watt_hours` -> Watt-hours.
+* `battery_capacity` → Joules
+* `battery_capacity_watt_hours` → Watt-hours.
 
 All angles are in radians, except for α and β which are in degrees due to long-standing aerospace convention. (In any case, units are marked on all function docstrings.)
 
