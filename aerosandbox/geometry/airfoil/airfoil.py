@@ -1,6 +1,10 @@
 import aerosandbox.numpy as np
 from aerosandbox.geometry.polygon import Polygon
-from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates, get_file_coordinates
+from aerosandbox.geometry.airfoil.airfoil_families import (
+    get_NACA_coordinates,
+    get_UIUC_coordinates,
+    get_file_coordinates
+)
 from aerosandbox.library.aerodynamics import transonic
 from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
 from scipy import interpolate
