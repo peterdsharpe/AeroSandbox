@@ -604,8 +604,9 @@ class Opti(cas.Opti):
         ### Map any parameters to needed values
         for k, v in parameter_mapping.items():
             if not np.is_casadi_type(k, recursive=False):
-                raise TypeError(f"All keys in `parameter_mapping` must be CasADi parameters; you gave an object of type \'{type(k).__name__}\'.\n"
-                                f"In general, make sure all keys are the result of calling `opti.parameter()`.")
+                raise TypeError(
+                    f"All keys in `parameter_mapping` must be CasADi parameters; you gave an object of type \'{type(k).__name__}\'.\n"
+                    f"In general, make sure all keys are the result of calling `opti.parameter()`.")
 
             size_k = np.prod(k.shape)
             try:
