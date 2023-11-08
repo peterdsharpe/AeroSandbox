@@ -222,14 +222,21 @@ You can print documentation and examples for any AeroSandbox object by using the
 
 ### Usage Details
 
-One final point to note: **all inputs and outputs to AeroSandbox are expressed in base SI units, or derived units thereof** (e.g., m, N, kg, m/s, J, Pa) - "an elegant unit system, for a more civilized age".
+#### Units
 
-The only exception to this rule is when units are explicitly noted via variable name suffix. For example:
+One final point to note: **all inputs and outputs to AeroSandbox are expressed in base SI units, or derived units thereof** (e.g., m, kg, sec, N, m/s, J, Pa). Since this unit system is [coherent](https://en.wikipedia.org/wiki/Coherence_(units_of_measurement)), an [enormous number of quantities](https://en.wikipedia.org/wiki/SI_derived_unit) can be converted without any scaling factors. This improves readability and reduces the likelihood of errors.
 
-* `battery_capacity` → Joules
-* `battery_capacity_watt_hours` → Watt-hours.
+There are only two exceptions to this SI-everywhere rule:
+1. If alternate units are noted in a variable name's suffix. For example:
 
-All angles are in radians, except for α and β which are in degrees due to long-standing aerospace convention. (In any case, units are marked on all function docstrings.)
+   * `battery_capacity` → Joules
+   * `battery_capacity_watt_hours` → Watt-hours
+   * `aircraft_endurance` → Seconds
+   * `aircraft_endurance_hours` → Hours
+
+2. Angle of attack (`alpha`, α) and sideslip angle (`beta`, β) are given in degrees due to long-standing aerospace convention. All other angles and angular rates use radians. 
+ 
+Also, in case of any confusion on the units of a function's inputs and outputs, units are listed on all function docstrings.
 
 If you wish to use other units, consider using [`aerosandbox.tools.units`](./aerosandbox/tools/units.py) to convert easily.
 
