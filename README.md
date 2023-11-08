@@ -279,7 +279,7 @@ If you find AeroSandbox useful in a research publication, please cite it using t
 }
 ```
 
-As the MIT License applies, use AeroSandbox for anything you want; attribution is strongly appreciated.
+As the MIT License applies, use AeroSandbox for anything you want (commercial or noncommercial). Attribution is strongly appreciated but not required.
 
 Commercial users: I'm more than happy to discuss consulting work for active AeroSandbox support if this package proves helpful - use the email address in the header of this README to get in touch.
 
