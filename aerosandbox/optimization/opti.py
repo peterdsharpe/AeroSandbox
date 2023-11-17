@@ -448,6 +448,12 @@ class Opti(cas.Opti):
         # f = cas.cse(f)
         super().minimize(f)
 
+    def maximize(self,
+                 f: cas.MX,
+                 ) -> None:
+        # f = cas.cse(f)
+        super().minimize(-1 * f)
+
     def parameter(self,
                   value: Union[float, np.ndarray] = 0.,
                   n_params: int = None,
