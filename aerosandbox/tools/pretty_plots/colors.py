@@ -15,6 +15,20 @@ palettes = {
         "#E377C2",  # From Matplotlib "tab10", pink
         "#7F7F7F",  # From Matplotlib "tab10", gray
     ],
+    "pales": [
+        "#C87A7A",
+        "#B1866E",
+        "#9B8E6E",
+        "#90926E",
+        "#85956D",
+        "#77986D",
+        "#6E9973",
+        "#6F9882",
+        "#719690",
+        "#73959C",
+        "#7692B1",
+        "#868CBC",
+    ]
 }
 
 
@@ -63,4 +77,4 @@ def get_last_line_color():
         line = lines[-1]
         return line._color
     except IndexError:
-        return palettes["categorical"][0]
+        return palettes["categorical"][0] # TODO make this just the first color in the current palette
