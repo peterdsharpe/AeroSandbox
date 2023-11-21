@@ -40,6 +40,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 #### 4.1.5
 
+- PENDING DEPRECATION added: `asb.Airplane.export_XFLR()` has been renamed to `asb.Airplane.export_XFLR5_xml()`. This clarifies that the output is an XFLR5 XML file (which needs to be imported through the Plane menu in XFLR5), not an XFLR5 .xfl file - a point of user confusion. For now, both will work, but the old name will trigger a warning, and eventually will be removed. 
 - Added improvements to `asb.LiftingLine` to ensure mixed-backend compatibility.
 
 #### 4.1.4
