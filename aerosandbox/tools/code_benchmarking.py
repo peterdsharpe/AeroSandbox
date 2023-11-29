@@ -32,7 +32,11 @@ def time_function(
     runtimes = []
 
     t, result = time_function_once()
-    runtimes.append(t)
+
+    if t == 0:
+        t = 1e-2
+    else:
+        runtimes.append(t)
 
     if (desired_runtime is not None) and (repeats is None):
         repeats = int(desired_runtime // t) - 1
@@ -43,8 +47,11 @@ def time_function(
 
     for _ in range(repeats):
         t, _ = time_function_once()
-        runtimes.append(t)
+        if t != 0:
+            runtimes.append(t)
 
+    if len(runtimes) == 0:
+        runtimes = [0.]
 
     return (
         runtime_reduction(runtimes),
