@@ -5,12 +5,14 @@ from aerosandbox.tools.pretty_plots.labellines import labelLines
 import aerosandbox.numpy as np
 from aerosandbox.tools.pretty_plots.threedim import ax_is_3d
 from functools import partial
+from pathlib import Path
 
 
 def show_plot(
         title: str = None,
         xlabel: str = None,
         ylabel: str = None,
+        zlabel: str = None,
         dpi: float = None,
         savefig: Union[str, List[str]] = None,
         savefig_transparent: bool = True,
@@ -20,6 +22,7 @@ def show_plot(
         legend_frame: bool = True,
         pretty_grids: bool = True,
         set_ticks: bool = True,
+        rotate_axis_labels: bool = True,
         show: bool = True,
 ):
     """
@@ -34,9 +37,11 @@ def show_plot(
         title: If given, sets the title of the plot. If the Figure has multiple axes, this sets the Figure-level
             suptitle instead of setting the individual Axis title.
 
-        xlabel: If given, sets the xlabel of the plot on the current Axis. (Equivalent to `plt.xlabel(my_label)`)
+        xlabel: If given, sets the xlabel of all axes. (Equivalent to `ax.set_xlabel(my_label)`)
 
-        ylabel: If given, sets the ylabel of the plot on the current Axis. (Equivalent to `plt.ylabel(my_label)`)
+        ylabel: If given, sets the ylabel of all axes. (Equivalent to `ax.set_ylabel(my_label)`)
+
+        zlabel: If given, sets the zlabel of all axes, if the axis is 3D. (Equivalent to `ax.set_zlabel(my_label)`)
 
         dpi: If given, sets the dpi (display resolution, in Dots Per Inch) of the Figure.
 
@@ -93,6 +98,7 @@ def show_plot(
     """
     fig = plt.gcf()
     axes = fig.get_axes()
+    axes_with_3D = [ax for ax in axes if ax_is_3d(ax)]
 
     if pretty_grids:
         for ax in axes:
@@ -112,7 +118,6 @@ def show_plot(
                         i_ax.set_tick_params(which="minor", color=(0, 0, 0, 0))
 
     if set_ticks:
-
         for ax in axes:
 
             individual_axes_and_limits = {
@@ -311,40 +316,67 @@ def show_plot(
 
     ### Determine if a legend should be shown
     if legend is None:
-        lines = plt.gca().lines
-        if len(lines) <= 1:
-            legend = False
-        else:
-            legend = False
-            for line in lines:
-                if line.get_label()[0] != "_":
+        legend = False
+
+        for ax in axes:
+            lines = ax.get_lines()
+            if len(lines) > 1:
+                if not all(line.get_label()[0] == "_" for line in lines):
                     legend = True
                     break
 
+    # Make axis labels if needed
     if xlabel is not None:
-        plt.xlabel(xlabel)
+        for ax in axes:
+            ax.set_xlabel(xlabel)
     if ylabel is not None:
-        plt.ylabel(ylabel)
+        for ax in axes:
+            ax.set_ylabel(ylabel)
+    if zlabel is not None:
+        if len(axes_with_3D) == 0:
+            import warnings
+            warnings.warn(
+                "You specified a `zlabel`, but there are no 3D axes in this figure. Ignoring `zlabel`.",
+                stacklevel=2
+            )
+
+        for ax in axes_with_3D:
+            ax.set_zlabel(zlabel)
+
+    # Rotate axis labels if needed
+    if rotate_axis_labels:
+        for ax in axes:
+            if not ax_is_3d(ax):
+                ax.set_ylabel(
+                    ax.get_ylabel(),
+                    rotation=0,
+                    ha="right",
+                    va="center",
+                )
+
     if title is not None:
-        if len(axes) <= 1:
-            plt.title(title)
-        else:
+        if len(axes) > 1:
             plt.suptitle(title)
+        else:
+            plt.title(title)
+
     if tight_layout:
         plt.tight_layout()
+
     if legend:
         if legend_inline:  # Display an inline (matplotlib-label-lines) legend instead
-            labelLines(
-                lines=plt.gca().get_lines(),
-            )
-        else:  # Display a traditional legend
+            for ax in axes:
+                labelLines(
+                    lines=ax.get_lines(),
+                )
+        else:  # Display a traditional legend on the last axis
             plt.legend(frameon=legend_frame)
     if dpi is not None:
         fig.set_dpi(dpi)
     if savefig is not None:
 
         if not isinstance(savefig, (list, tuple, set)):
-            savefig = [savefig]
+            savefig: List[Union[str, Path]] = [savefig]
 
         for savefig_i in savefig:
             plt.savefig(savefig_i, transparent=savefig_transparent)
