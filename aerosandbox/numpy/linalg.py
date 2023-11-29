@@ -101,14 +101,14 @@ def det(A):
         return _cas.det(A)
 
 
-def norm(x, ord=None, axis=None):
+def norm(x, ord=None, axis=None, keepdims=False):
     """
     Matrix or vector norm.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
     """
     if not is_casadi_type(x):
-        return _onp.linalg.norm(x, ord=ord, axis=axis)
+        return _onp.linalg.norm(x, ord=ord, axis=axis, keepdims=keepdims)
 
     else:
 
@@ -132,24 +132,24 @@ def norm(x, ord=None, axis=None):
                 ord = 'fro'
 
         if ord == 1:
-            # return _cas.norm_1(x)
-            return sum(
+            # norm = _cas.norm_1(x)
+            norm = sum(
                 abs(x),
                 axis=axis
             )
         elif ord == 2:
-            # return _cas.norm_2(x)
-            return sum(
+            # norm = _cas.norm_2(x)
+            norm = sum(
                 x ** 2,
                 axis=axis
             ) ** 0.5
         elif ord == 'fro' or ord == "frobenius":
-            return _cas.norm_fro(x)
+            norm = _cas.norm_fro(x)
         elif ord == 'inf' or _onp.isinf(ord):
-            return _cas.norm_inf()
+            norm = _cas.norm_inf()
         else:
             try:
-                return sum(
+                norm = sum(
                     abs(x) ** ord,
                     axis=axis
                 ) ** (1 / ord)
@@ -158,6 +158,12 @@ def norm(x, ord=None, axis=None):
                 raise ValueError("Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
                                  "as a last-ditch effort, but that didn't work.")
 
+        if keepdims:
+            new_shape = list(x.shape)
+            new_shape[axis] = 1
+            return _cas.reshape(norm, new_shape)
+        else:
+            return norm
 
 def inv_symmetric_3x3(
         m11,
