@@ -18,9 +18,11 @@ Exact code implementation of each method is [here](./nd_rosenbrock/run_times.py)
 
 ![benchmark_nd_rosenbrock](./nd_rosenbrock/benchmark_nd_rosenbrock.png)
 
+An effect not readily shown in this plot is that often other gradient-based methods (especially SLSQP) won't converge, which is not surprising given the terrible initial guesses provided. In contrast, AeroSandbox is able to converge to the optimum for all tested $N$.
+
 ## AeroSandbox vs. Disciplined Optimization Methods
 
-Here, we compare the performance of AeroSandbox (with CasADi backend) to existing methods using disciplined optimization techniques. AeroSandbox offers faster practical and asymptotic optimization performance than existing disciplined optimization methods, demonstrating the magnitude of acceleration that is possible.
+Here, we compare the performance of AeroSandbox (with CasADi backend) to existing methods that use disciplined optimization techniques. 
 
 One disciplined optimization method used in aircraft design is geometric programming, with the [GPkit](https://github.com/convexengineering/gpkit) package an example implementation of this. Here, we compare the performance of AeroSandbox to GPkit on the GP-compatible [beam problem](https://gpkit.readthedocs.io/en/latest/examples.html#simple-beam) given in the GPkit documentation. 
 
