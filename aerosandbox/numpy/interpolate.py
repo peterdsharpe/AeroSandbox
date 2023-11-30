@@ -1,4 +1,3 @@
-from operator import is_
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type

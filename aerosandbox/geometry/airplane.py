@@ -946,14 +946,28 @@ class Airplane(AeroSandboxObject):
         )
         avl.write_avl(filepath=filename)
 
-    def export_XFLR(self,
-                    filename,
-                    mass_props: MassProperties = None,
-                    include_fuselages: bool = False,
-                    mainwing: Wing = None,
-                    elevator: Wing = None,
-                    fin: Wing = None,
-                    ):
+    def export_XFLR(self, *args, **kwargs):
+        import warnings
+
+        warnings.warn(
+            "`Airplane.export_XFLR()` has been renamed to `Airplane.export_XFLR5_xml()`, to clarify\n"
+            "that it exports to XFLR5's XML format, not to a XFL file.\n"
+            "\n"
+            "Please update your code to use `Airplane.export_XFLR5_xml()` instead.\n"
+            "\n"
+            "This function will be removed in a future version of AeroSandbox.",
+            PendingDeprecationWarning
+        )
+        return self.export_XFLR5_xml(*args, **kwargs)
+
+    def export_XFLR5_xml(self,
+                         filename,
+                         mass_props: MassProperties = None,
+                         include_fuselages: bool = False,
+                         mainwing: Wing = None,
+                         elevator: Wing = None,
+                         fin: Wing = None,
+                         ):
         """
         Exports the airplane geometry to an XFLR5 `.xml` file.
 
@@ -1398,4 +1412,4 @@ if __name__ == '__main__':
     )
 
     airplane.draw_three_view()
-    # airplane.export_XFLR("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))
+    # airplane.export_XFLR5_xml("test.xml", mass_props=asb.MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1))

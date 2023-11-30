@@ -17,5 +17,5 @@ Lectures, Videos, GitHub repos, blog posts:
 Academic literature:
 
 * Griewank and Walther, "Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation", 2008. Great comprehensive overview.
-* ["Automatic Diffferentiation in Machine Learning: a Survey" on ArXiV by Baydin et. al.](https://arxiv.org/abs/1502.05767) is another great read.
+* ["Automatic Differentiation in Machine Learning: a Survey" on ArXiV by Baydin et. al.](https://arxiv.org/abs/1502.05767) is another great read.
 * ["Automatic differentiation of algorithms"](https://www.sciencedirect.com/science/article/pii/S0377042700004222?via%3Dihub) by Bartholomew-Biggs, et. al.
