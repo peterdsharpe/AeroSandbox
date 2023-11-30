@@ -38,6 +38,13 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.1.6
+
+- Fixed I/O error with AVL, where too many digits of precision would cause AVL to read .mass files incorrectly
+- Added `asb.Opti.maximize()`, a convenience function that is a simple pass-through to `.minimize(-1 * x)`. Improves readability for users who are less familiar with optimization.
+- Added support for the `keepdims` argument in aerosandbox.numpy.linalg.norm().
+- Added optimization benchmarks in the tutorials, in `/tutorials/01 - Optimization and Math/01 - Optimization Benchmark Problems/`
+
 #### 4.1.5
 
 - PENDING DEPRECATION added: `asb.Airplane.export_XFLR()` has been renamed to `asb.Airplane.export_XFLR5_xml()`. This clarifies that the output is an XFLR5 XML file (which needs to be imported through the Plane menu in XFLR5), not an XFLR5 .xfl file - a point of user confusion. For now, both will work, but the old name will trigger a warning, and eventually will be removed. 
