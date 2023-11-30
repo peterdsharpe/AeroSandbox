@@ -2,7 +2,7 @@ from aerosandbox.tools.code_benchmarking import time_function
 import aerosandbox as asb
 import aerosandbox.numpy as np
 from scipy import optimize
-import random, itertools
+import itertools
 import matplotlib.patheffects as path_effects
 
 
@@ -111,24 +111,20 @@ if __name__ == '__main__':
         "Genetic"    : solve_scipy_genetic,
     }
 
-    if False:
+    if False:  # If True, runs the benchmark and appends data to respective *.csv files
         for solver_name, solver in solvers.items():
             print(f"Running {solver_name}...")
-            solver(N=2)
+            solver(N=5)
 
-            N_ideal = 2.0
+            N_ideal = 5.0
             Ns_attempted = []
 
             while True:
                 N_ideal *= 1.1
-                # print(f"Trying N_ideal={N_ideal}...")
 
                 N = np.round(N_ideal).astype(int)
                 if N in Ns_attempted:
                     continue
-
-                # if 4 <= N <= 7:
-                #     continue
 
                 print(f"Trying N={N}...")
                 Ns_attempted.append(N)
@@ -136,8 +132,6 @@ if __name__ == '__main__':
                 try:
                     t, nfev = time_function(
                         lambda: solver(N=N),
-                        # desired_runtime=0.25,
-                        # runtime_reduction=lambda x: np.percentile(x, 5)
                     )
                 except ValueError:
                     continue
@@ -160,18 +154,12 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(figsize=(5.2, 4))
 
-    # Define a list of distinguishable colors
-    import copy
-    colors = p.sns.husl_palette(
+    fallback_colors = itertools.cycle(p.sns.husl_palette(
         n_colors=len(solvers) - 1,
-        h=0,
-        s=0.25,
-        l=0.6,
-    )
-    fallback_colors = itertools.cycle(colors)
+        h=0, s=0.25, l=0.6,
+    ))
 
     name_remaps = {
-        # "aerosandbox": "AeroSandbox",
         "Nelder-Mead": "Nelder\nMead",
     }
 
@@ -181,23 +169,25 @@ if __name__ == '__main__':
 
     notables = ["AeroSandbox"]
 
-    for i, solver_name in enumerate(solvers.keys()):
+    for i, solver_name in enumerate(solvers.keys()):  # For each solver...
 
+        # Reads the data from file
         df = pd.read_csv(f"{solver_name.lower()}_times.csv", header=None, names=["N", "t", "nfev"])
         aggregate_cols = [col for col in df.columns if col != 'N']
         df = df.groupby('N', as_index=False)[aggregate_cols].mean()
         df = df.sort_values('N')
 
+        # Determines which columns to plot
         x = df["N"].values
         y = df["nfev"].values
 
-        label = solver_name
-
-        if label in color_remaps:
-            color = color_remaps[label]
+        # Figures out which color to use
+        if solver_name in color_remaps:
+            color = color_remaps[solver_name]
         else:
             color = next(fallback_colors)
 
+        # Plots the raw data
         line, = plt.plot(
             x, y, ".",
             alpha=0.2,
@@ -205,6 +195,7 @@ if __name__ == '__main__':
         )
 
 
+        # Makes a curve fit and plots that
         def model(x, p):
             return (
                 p["c"]
@@ -246,31 +237,14 @@ if __name__ == '__main__':
             resample_resolution=10000
         )
 
-        if label in name_remaps:
-            label_to_write = name_remaps[label]
+        # Writes the label for each plot
+        if solver_name in name_remaps:
+            label_to_write = name_remaps[solver_name]
         else:
-            label_to_write = label
+            label_to_write = solver_name
 
-        if label in notables:
-            # txt = ax.annotate(
-            #     label,
-            #     xy=(x[-1], fit(x[-1])),
-            #     xytext=(0, -8),
-            #     textcoords="offset points",
-            #     fontsize=10,
-            #     zorder=5,
-            #     alpha=0.9,
-            #     color=color,
-            #     horizontalalignment='right',
-            #     verticalalignment='top',
-            #     path_effects=[
-            #         path_effects.withStroke(linewidth=2, foreground=ax.get_facecolor(),
-            #                                 alpha=0.8,
-            #                                 ),
-            #     ],
-            #     rotation=33
-            # )
-            txt = ax.annotate(
+        if solver_name in notables:
+            ax.annotate(
                 label_to_write,
                 xy=(x[-1], fit(x[-1])),
                 xytext=(-5, -45),
@@ -288,7 +262,7 @@ if __name__ == '__main__':
                 ],
             )
         else:
-            txt = ax.annotate(
+            ax.annotate(
                 label_to_write,
                 xy=(x[-1], fit(x[-1])),
                 xytext=(4, 0),

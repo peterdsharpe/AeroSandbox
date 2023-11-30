@@ -1,134 +1,223 @@
 from aerosandbox.tools.code_benchmarking import time_function
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from scipy import optimize
-import random, itertools
+import itertools
 import matplotlib.patheffects as path_effects
+import pytest
 
-
-# Problem is unimodal for N=2, N=3, and N>=8. Bimodal for 4<=N<=7. Global min is always a vector of ones.
-
-def get_initial_guess(N):
-    rng = np.random.default_rng(0)
-    return rng.uniform(-10, 10, N)
-
-def objective(x):
-    return np.mean(
-        100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2
-    )
 
 def solve_aerosandbox(N=10):
-    opti = asb.Opti()  # set up an optimization environment
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
 
-    x = opti.variable(init_guess=get_initial_guess(N))
-    opti.minimize(objective(x))
+    L = 6  # m, overall beam length
+    EI = 1.1e4  # N*m^2, bending stiffness
+    q = 110 * np.ones(N)  # N/m, distributed load
 
-    try:
-        sol = opti.solve(verbose=False, max_iter=100000000)  # solve
-    except RuntimeError:
-        raise ValueError(f"N={N} failed!")
+    x = np.linspace(0, L, N)  # m, node locations
 
-    if not np.allclose(sol(x), 1, atol=1e-4):
-        raise ValueError(f"N={N} failed!")
+    opti = asb.Opti()
 
-    return sol.stats()['n_call_nlp_f']
+    w = opti.variable(init_guess=np.zeros(N))  # m, displacement
 
-
-def solve_scipy_bfgs(N=10):
-    res = optimize.minimize(
-        fun=objective,
-        x0=get_initial_guess(N),
-        method="BFGS",
-        tol=1e-8,
-        options=dict(
-            maxiter=np.Inf,
-        )
+    th = opti.derivative_of(  # rad, slope
+        w, with_respect_to=x,
+        derivative_init_guess=np.zeros(N),
     )
 
-    if not np.allclose(res.x, 1, atol=1e-4):
-        raise ValueError(f"N={N} failed!")
-
-    return res.nfev
-
-
-def solve_scipy_slsqp(N=10):
-    res = optimize.minimize(
-        fun=objective,
-        x0=get_initial_guess(N),
-        method="SLSQP",
-        tol=1e-8,
-        options=dict(
-            maxiter=1000000000,
-        )
+    M = opti.derivative_of(  # N*m, moment
+        th * EI, with_respect_to=x,
+        derivative_init_guess=np.zeros(N),
     )
 
-    if not np.allclose(res.x, 1, atol=1e-4):
-        raise ValueError(f"N={N} failed!")
-
-    return res.nfev
-
-
-def solve_scipy_nm(N=10):
-    res = optimize.minimize(
-        fun=objective,
-        x0=get_initial_guess(N),
-        method="Nelder-Mead",
-        options=dict(
-            maxiter=np.Inf,
-            maxfev=np.Inf,
-            xatol=1e-8,
-            adaptive=True,
-        )
+    V = opti.derivative_of(  # N, shear
+        M, with_respect_to=x,
+        derivative_init_guess=np.zeros(N),
     )
 
-    if not np.allclose(res.x, 1, atol=1e-4):
-        raise ValueError(f"N={N} failed!")
-
-    return res.nfev
-
-
-def solve_scipy_genetic(N=10):
-    res = optimize.differential_evolution(
-        func=objective,
-        bounds=[(-10, 10)] * N,
-        maxiter=1000000000,
-        x0=get_initial_guess(N),
+    opti.constrain_derivative(
+        variable=V, with_respect_to=x,
+        derivative=q,
     )
 
-    if not np.allclose(res.x, 1, atol=1e-4):
-        raise ValueError(f"N={N} failed!")
+    opti.subject_to([
+        w[0] == 0,
+        th[0] == 0,
+        M[-1] == 0,
+        V[-1] == 0,
+    ])
 
-    return res.nfev
+    sol = opti.solve(verbose=False)
+
+    print(sol(w[-1]))
+    assert sol(w[-1]) == pytest.approx(1.62, abs=0.01)
+
+    return sol.stats()['n_call_nlp_f']  # return number of function evaluations
+
+
+eps = 1e-20  # has to be quite large for consistent cvxopt printouts;
+
+
+def solve_gpkit_cvxopt(N=10):
+    import numpy as np
+    from gpkit import parse_variables, Model, ureg
+    from gpkit.small_scripts import mag
+
+    class Beam(Model):
+        """Discretization of the Euler beam equations for a distributed load.
+
+        Variables
+        ---------
+        EI    [N*m^2]   Bending stiffness
+        dx    [m]       Length of an element
+        L   5 [m]       Overall beam length
+
+        Boundary Condition Variables
+        ----------------------------
+        V_tip     eps [N]     Tip loading
+        M_tip     eps [N*m]   Tip moment
+        th_base   eps [-]     Base angle
+        w_base    eps [m]     Base deflection
+
+        Node Variables of length N
+        --------------------------
+        q  100*np.ones(N) [N/m]    Distributed load
+        V                 [N]      Internal shear
+        M                 [N*m]    Internal moment
+        th                [-]      Slope
+        w                 [m]      Displacement
+
+        Upper Unbounded
+        ---------------
+        w_tip
+
+        """
+
+        @parse_variables(__doc__, globals())
+        def setup(self, N=4):
+            # minimize tip displacement (the last w)
+            self.cost = self.w_tip = w[-1]
+            return {
+                "definition of dx"        : L == (N - 1) * dx,
+                "boundary_conditions"     : [
+                    V[-1] >= V_tip,
+                    M[-1] >= M_tip,
+                    th[0] >= th_base,
+                    w[0] >= w_base
+                ],
+                # below: trapezoidal integration to form a piecewise-linear
+                #        approximation of loading, shear, and so on
+                # shear and moment increase from tip to base (left > right)
+                "shear integration"       :
+                    V[:-1] >= V[1:] + 0.5 * dx * (q[:-1] + q[1:]),
+                "moment integration"      :
+                    M[:-1] >= M[1:] + 0.5 * dx * (V[:-1] + V[1:]),
+                # slope and displacement increase from base to tip (right > left)
+                "theta integration"       :
+                    th[1:] >= th[:-1] + 0.5 * dx * (M[1:] + M[:-1]) / EI,
+                "displacement integration":
+                    w[1:] >= w[:-1] + 0.5 * dx * (th[1:] + th[:-1])
+            }
+
+    b = Beam(N=N, substitutions={"L": 6, "EI": 1.1e4, "q": 110 * np.ones(N)})
+    sol = b.solve('cvxopt', verbosity=0)
+
+    assert sol("w")[-1].to('m').magnitude == pytest.approx(1.62, abs=0.01)
+
+    return np.nan
+
+
+def solve_gpkit_mosek(N=10):
+    import numpy as np
+    from gpkit import parse_variables, Model, ureg
+    from gpkit.small_scripts import mag
+
+    class Beam(Model):
+        """Discretization of the Euler beam equations for a distributed load.
+
+        Variables
+        ---------
+        EI    [N*m^2]   Bending stiffness
+        dx    [m]       Length of an element
+        L   5 [m]       Overall beam length
+
+        Boundary Condition Variables
+        ----------------------------
+        V_tip     eps [N]     Tip loading
+        M_tip     eps [N*m]   Tip moment
+        th_base   eps [-]     Base angle
+        w_base    eps [m]     Base deflection
+
+        Node Variables of length N
+        --------------------------
+        q  100*np.ones(N) [N/m]    Distributed load
+        V                 [N]      Internal shear
+        M                 [N*m]    Internal moment
+        th                [-]      Slope
+        w                 [m]      Displacement
+
+        Upper Unbounded
+        ---------------
+        w_tip
+
+        """
+
+        @parse_variables(__doc__, globals())
+        def setup(self, N=4):
+            # minimize tip displacement (the last w)
+            self.cost = self.w_tip = w[-1]
+            return {
+                "definition of dx"        : L == (N - 1) * dx,
+                "boundary_conditions"     : [
+                    V[-1] >= V_tip,
+                    M[-1] >= M_tip,
+                    th[0] >= th_base,
+                    w[0] >= w_base
+                ],
+                # below: trapezoidal integration to form a piecewise-linear
+                #        approximation of loading, shear, and so on
+                # shear and moment increase from tip to base (left > right)
+                "shear integration"       :
+                    V[:-1] >= V[1:] + 0.5 * dx * (q[:-1] + q[1:]),
+                "moment integration"      :
+                    M[:-1] >= M[1:] + 0.5 * dx * (V[:-1] + V[1:]),
+                # slope and displacement increase from base to tip (right > left)
+                "theta integration"       :
+                    th[1:] >= th[:-1] + 0.5 * dx * (M[1:] + M[:-1]) / EI,
+                "displacement integration":
+                    w[1:] >= w[:-1] + 0.5 * dx * (th[1:] + th[:-1])
+            }
+
+    b = Beam(N=N, substitutions={"L": 6, "EI": 1.1e4, "q": 110 * np.ones(N)})
+    sol = b.solve('mosek_conif', verbosity=0)
+
+    assert sol("w")[-1].to('m').magnitude == pytest.approx(1.62, abs=0.01)
+
+    return np.nan
 
 
 if __name__ == '__main__':
 
     solvers = {
-        "AeroSandbox": solve_aerosandbox,
-        "BFGS" : solve_scipy_bfgs,
-        "SLSQP": solve_scipy_slsqp,
-        "Nelder-Mead": solve_scipy_nm,
-        "Genetic"    : solve_scipy_genetic,
+        "AeroSandbox" : solve_aerosandbox,
+        "GPkit_cvxopt": solve_gpkit_cvxopt,
+        "GPkit_mosek" : solve_gpkit_mosek,
     }
 
-    if False:
+    if False:  # If True, runs the benchmark and appends data to respective *.csv files
         for solver_name, solver in solvers.items():
             print(f"Running {solver_name}...")
-            solver(N=2)
+            solver(N=5)
 
-            N_ideal = 2.0
+            N_ideal = 5.0
             Ns_attempted = []
 
             while True:
                 N_ideal *= 1.1
-                # print(f"Trying N_ideal={N_ideal}...")
 
                 N = np.round(N_ideal).astype(int)
                 if N in Ns_attempted:
                     continue
-
-                # if 4 <= N <= 7:
-                #     continue
 
                 print(f"Trying N={N}...")
                 Ns_attempted.append(N)
@@ -136,8 +225,6 @@ if __name__ == '__main__':
                 try:
                     t, nfev = time_function(
                         lambda: solver(N=N),
-                        # desired_runtime=0.25,
-                        # runtime_reduction=lambda x: np.percentile(x, 5)
                     )
                 except ValueError:
                     continue
@@ -160,19 +247,14 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(figsize=(5.2, 4))
 
-    # Define a list of distinguishable colors
-    import copy
-    colors = p.sns.husl_palette(
+    fallback_colors = itertools.cycle(p.sns.husl_palette(
         n_colors=len(solvers) - 1,
-        h=0,
-        s=0.25,
-        l=0.6,
-    )
-    fallback_colors = itertools.cycle(colors)
+        h=0, s=0.25, l=0.6,
+    ))
 
     name_remaps = {
-        # "aerosandbox": "AeroSandbox",
-        "Nelder-Mead": "Nelder\nMead",
+        "GPkit_cvxopt": "GPkit\n(cvxopt)",
+        "GPkit_mosek" : "GPkit\n(mosek)",
     }
 
     color_remaps = {
@@ -181,23 +263,25 @@ if __name__ == '__main__':
 
     notables = ["AeroSandbox"]
 
-    for i, solver_name in enumerate(solvers.keys()):
+    for i, solver_name in enumerate(solvers.keys()):  # For each solver...
 
+        # Reads the data from file
         df = pd.read_csv(f"{solver_name.lower()}_times.csv", header=None, names=["N", "t", "nfev"])
         aggregate_cols = [col for col in df.columns if col != 'N']
         df = df.groupby('N', as_index=False)[aggregate_cols].mean()
         df = df.sort_values('N')
 
+        # Determines which columns to plot
         x = df["N"].values
-        y = df["nfev"].values
+        y = df["t"].values
 
-        label = solver_name
-
-        if label in color_remaps:
-            color = color_remaps[label]
+        # Figures out which color to use
+        if solver_name in color_remaps:
+            color = color_remaps[solver_name]
         else:
             color = next(fallback_colors)
 
+        # Plots the raw data
         line, = plt.plot(
             x, y, ".",
             alpha=0.2,
@@ -205,14 +289,13 @@ if __name__ == '__main__':
         )
 
 
+        # Makes a curve fit and plots that
         def model(x, p):
             return (
-                p["c"]
-                + np.exp(p["b1"] * np.log(x) + p["a1"])
-                + np.exp(p["b2"] * np.log(x) + p["a2"])
+                    p["c"]
+                    + np.exp(p["b1"] * np.log(x) + p["a1"])
+                    + np.exp(p["b2"] * np.log(x) + p["a2"])
             )
-
-            # return p["a"] * x ** p["b"] + p["c"]
 
 
         fit = asb.FittedModel(
@@ -220,18 +303,16 @@ if __name__ == '__main__':
             x_data=x,
             y_data=y,
             parameter_guesses={
-                "a1": 0,
-                "b1": 2,
+                "a1": 1,
+                "b1": 1,
                 "a2": 1,
                 "b2": 3,
-                "c": 0,
+                "c" : 0,
             },
             parameter_bounds={
-                "a1": [0, np.inf],
                 "b1": [0, 10],
-                "a2": [0, np.inf],
                 "b2": [0, 10],
-                "c": [0, np.min(y)],
+                "c" : [0, np.min(y)],
             },
             residual_norm_type="L1",
             put_residuals_in_logspace=True,
@@ -246,31 +327,14 @@ if __name__ == '__main__':
             resample_resolution=10000
         )
 
-        if label in name_remaps:
-            label_to_write = name_remaps[label]
+        # Writes the label for each plot
+        if solver_name in name_remaps:
+            label_to_write = name_remaps[solver_name]
         else:
-            label_to_write = label
+            label_to_write = solver_name
 
-        if label in notables:
-            # txt = ax.annotate(
-            #     label,
-            #     xy=(x[-1], fit(x[-1])),
-            #     xytext=(0, -8),
-            #     textcoords="offset points",
-            #     fontsize=10,
-            #     zorder=5,
-            #     alpha=0.9,
-            #     color=color,
-            #     horizontalalignment='right',
-            #     verticalalignment='top',
-            #     path_effects=[
-            #         path_effects.withStroke(linewidth=2, foreground=ax.get_facecolor(),
-            #                                 alpha=0.8,
-            #                                 ),
-            #     ],
-            #     rotation=33
-            # )
-            txt = ax.annotate(
+        if solver_name in notables:
+            ax.annotate(
                 label_to_write,
                 xy=(x[-1], fit(x[-1])),
                 xytext=(-5, -45),
@@ -288,7 +352,7 @@ if __name__ == '__main__':
                 ],
             )
         else:
-            txt = ax.annotate(
+            ax.annotate(
                 label_to_write,
                 xy=(x[-1], fit(x[-1])),
                 xytext=(4, 0),
@@ -308,21 +372,19 @@ if __name__ == '__main__':
 
     plt.xscale("log")
     plt.yscale("log")
-    plt.xlim(left=1, right=1e4)
-    plt.ylim(bottom=10)
 
     from aerosandbox.tools.string_formatting import eng_string
 
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: eng_string(x)))
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: eng_string(x)))
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: f"{x:.4g}"))
 
     p.show_plot(
-        "AeroSandbox vs.\nBlack-Box Optimization Methods",
-        # "\nfor the N-Dimensional Rosenbrock Problem",
+        "AeroSandbox vs. Disciplined Methods"
+        "\nfor the GP-Compatible Beam Problem",
         "\nProblem Size\n(# of Design Variables)",
-        "Computational\nCost\n\n(# of Function\nEvaluations)",
+        "Computational\nCost\n\n(Wall-clock\nruntime,\nin seconds)",
         set_ticks=False,
         legend=False,
         dpi=600,
-        savefig="benchmark_nd_rosenbrock.pdf"
+        savefig=["benchmark_gp_beam.pdf", "benchmark_gp_beam.png"]
     )

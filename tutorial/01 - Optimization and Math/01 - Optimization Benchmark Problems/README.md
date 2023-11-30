@@ -16,4 +16,8 @@ The performance of AeroSandbox (with CasADi backend) is compared against existin
 
 ![benchmark_nd_rosenbrock](./nd_rosenbrock/benchmark_nd_rosenbrock.png)
 
+## AeroSandbox vs. Disciplined Optimization Methods
 
+In this chart, runtime is used instead of function evaluations, because the GPkit API doesn't easily expose this information from the underlying solver.
+
+![benchmark_gp_beam](./gp_beam/benchmark_gp_beam.png)
