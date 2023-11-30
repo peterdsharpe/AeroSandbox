@@ -4,9 +4,10 @@ import aerosandbox.numpy as np
 
 def eng_string(
         x: float,
-        unit: str = None,
+        unit: str = "",
         format='%.3g',
-        si=True
+        si=True,
+        add_space_after_number: bool = None,
 ) -> str:
     '''
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
@@ -41,6 +42,7 @@ def eng_string(
           1230.0 -> "1.23 kN"
       -1230000.0 -> "-1.23 MN"
     '''
+
     sign = ''
     if x < 0:
         x = -x
@@ -49,24 +51,36 @@ def eng_string(
         return format % 0
     elif np.isnan(x):
         return "NaN"
+
     exp = int(np.floor(np.log10(x)))
     exp3 = exp - (exp % 3)
     x3 = x / (10 ** exp3)
 
-    if si and exp3 >= -24 and exp3 <= 24 and exp3 != 0:
-        exp3_text = 'yzafpnμm kMGTPEZY'[(exp3 + 24) // 3]
-    elif exp3 == 0:
-        exp3_text = ''
-    else:
-        exp3_text = f'e{exp3}'
+    if exp3 == 0:
+        suffix = ''
+    elif si and exp3 >= -24 and exp3 <= 24:
+        suffix = 'yzafpnμm kMGTPEZY'[(exp3 + 24) // 3]
 
-    if unit is not None:
-        if si:
-            exp3_text = " " + exp3_text + unit
+        if add_space_after_number is None:
+            add_space_after_number = (unit != "")
+
+        if add_space_after_number:
+            suffix = " " + suffix + unit
         else:
-            exp3_text = exp3_text + " " + unit
+            suffix = suffix + unit
 
-    return ('%s' + format + '%s') % (sign, x3, exp3_text)
+    else:
+        suffix = f'e{exp3}'
+
+        if add_space_after_number:
+            add_space_after_number = (unit != "")
+
+        if add_space_after_number:
+            suffix = suffix + " " + unit
+        else:
+            suffix = suffix + unit
+
+    return ('%s' + format + '%s') % (sign, x3, suffix)
 
 
 def latex_sci_notation_string(
