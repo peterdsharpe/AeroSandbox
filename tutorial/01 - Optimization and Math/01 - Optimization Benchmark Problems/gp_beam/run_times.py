@@ -5,6 +5,8 @@ import itertools
 import matplotlib.patheffects as path_effects
 import pytest
 
+eps = 1e-20  # has to be quite large for consistent cvxopt printouts;
+
 
 def solve_aerosandbox(N=10):
     import aerosandbox as asb
@@ -55,7 +57,53 @@ def solve_aerosandbox(N=10):
     return sol.stats()['n_call_nlp_f']  # return number of function evaluations
 
 
-eps = 1e-20  # has to be quite large for consistent cvxopt printouts;
+def solve_aerosandbox_forced_GP(N=10):
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
+
+    L = 6  # m, overall beam length
+    EI = 1.1e4  # N*m^2, bending stiffness
+    q = 110 * np.ones(N)  # N/m, distributed load
+
+    x = np.linspace(0, L, N)  # m, node locations
+
+    opti = asb.Opti()
+
+    w = opti.variable(init_guess=np.ones(N), log_transform=True)  # m, displacement
+
+    th = opti.derivative_of(  # rad, slope
+        w, with_respect_to=x,
+        derivative_init_guess=np.ones(N),
+    )
+
+    M = opti.derivative_of(  # N*m, moment
+        th * EI, with_respect_to=x,
+        derivative_init_guess=np.ones(N),
+    )
+
+    V = opti.derivative_of(  # N, shear
+        M, with_respect_to=x,
+        derivative_init_guess=np.ones(N),
+    )
+
+    opti.constrain_derivative(
+        variable=V, with_respect_to=x,
+        derivative=q,
+    )
+
+    opti.subject_to([
+        w[0] >= eps,
+        th[0] >= eps,
+        M[-1] >= eps,
+        V[-1] <= eps,
+    ])
+
+    opti.minimize(w[-1])
+
+    sol = opti.solve(verbose=False)
+    assert sol(w[-1]) == pytest.approx(1.62, abs=0.01)
+
+    return sol.stats()['n_call_nlp_f']  # return number of function evaluations
 
 
 def solve_gpkit_cvxopt(N=10):
@@ -199,9 +247,10 @@ def solve_gpkit_mosek(N=10):
 if __name__ == '__main__':
 
     solvers = {
-        "AeroSandbox" : solve_aerosandbox,
-        "GPkit_cvxopt": solve_gpkit_cvxopt,
-        "GPkit_mosek" : solve_gpkit_mosek,
+        "AeroSandbox"          : solve_aerosandbox,
+        "AeroSandbox_forced_gp": solve_aerosandbox_forced_GP,
+        "GPkit_cvxopt"         : solve_gpkit_cvxopt,
+        "GPkit_mosek"          : solve_gpkit_mosek,
     }
 
     if False:  # If True, runs the benchmark and appends data to respective *.csv files
@@ -245,7 +294,7 @@ if __name__ == '__main__':
     import aerosandbox.tools.pretty_plots as p
     import pandas as pd
 
-    fig, ax = plt.subplots(figsize=(5.2, 4))
+    fig, ax = plt.subplots(figsize=(5.5, 4))
 
     fallback_colors = itertools.cycle(p.sns.husl_palette(
         n_colors=len(solvers) - 1,
@@ -253,8 +302,9 @@ if __name__ == '__main__':
     ))
 
     name_remaps = {
-        "GPkit_cvxopt": "GPkit\n(cvxopt)",
-        "GPkit_mosek" : "GPkit\n(mosek)",
+        "GPkit_cvxopt"         : "GPkit\n(cvxopt)",
+        "GPkit_mosek"          : "GPkit\n(mosek)",
+        "AeroSandbox_forced_gp": "AeroSandbox\n(forced to use\nGP formulation)",
     }
 
     color_remaps = {
@@ -381,7 +431,7 @@ if __name__ == '__main__':
     p.show_plot(
         "AeroSandbox vs. Disciplined Methods"
         "\nfor the GP-Compatible Beam Problem",
-        "\nProblem Size\n(# of Design Variables)",
+        "Problem Size\n(# of Beam Discretization Points)",
         "Computational\nCost\n\n(Wall-clock\nruntime,\nin seconds)",
         set_ticks=False,
         legend=False,
