@@ -208,11 +208,19 @@ class Airfoil(Polygon):
             return False
 
         # At this point, we know that the types are the same, so we can compare the attributes
-        return all([  # If all of these are true, they're equal
-            self.name == other.name,
-            np.allclose(self.coordinates, other.coordinates) if
-            self.coordinates.shape == other.coordinates.shape else False,
-        ])
+        if self.name != other.name:  # If the names are different, they're not equal
+            return False
+
+        if self.coordinates.shape != other.coordinates.shape:  # If the coordinates are different shapes, they're not equal
+            return False
+
+        try:
+            return np.allclose(
+                self.coordinates,
+                other.coordinates
+            )
+        except Exception:
+            return False
 
     def to_kulfan_airfoil(self,
                           n_weights_per_side: int = 8,
