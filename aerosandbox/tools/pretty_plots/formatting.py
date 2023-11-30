@@ -15,7 +15,7 @@ def show_plot(
         zlabel: str = None,
         dpi: float = None,
         savefig: Union[str, List[str]] = None,
-        savefig_transparent: bool = True,
+        savefig_transparent: bool = False,
         tight_layout: bool = True,
         legend: bool = None,
         legend_inline: bool = False,
