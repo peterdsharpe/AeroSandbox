@@ -5,7 +5,7 @@ import itertools
 import matplotlib.patheffects as path_effects
 import pytest
 
-eps = 1e-20  # has to be quite large for consistent cvxopt printouts;
+eps = 1e-6  # has to be quite large for consistent cvxopt printouts;
 
 
 def solve_aerosandbox(N=10):
@@ -65,40 +65,30 @@ def solve_aerosandbox_forced_GP(N=10):
     EI = 1.1e4  # N*m^2, bending stiffness
     q = 110 * np.ones(N)  # N/m, distributed load
 
-    x = np.linspace(0, L, N)  # m, node locations
+    dx = L / (N - 1)
 
     opti = asb.Opti()
 
     w = opti.variable(init_guess=np.ones(N), log_transform=True)  # m, displacement
-
-    th = opti.derivative_of(  # rad, slope
-        w, with_respect_to=x,
-        derivative_init_guess=np.ones(N),
-    )
-
-    M = opti.derivative_of(  # N*m, moment
-        th * EI, with_respect_to=x,
-        derivative_init_guess=np.ones(N),
-    )
-
-    V = opti.derivative_of(  # N, shear
-        M, with_respect_to=x,
-        derivative_init_guess=np.ones(N),
-    )
-
-    opti.constrain_derivative(
-        variable=V, with_respect_to=x,
-        derivative=q,
-    )
+    th = opti.variable(init_guess=np.ones(N), log_transform=True)  # rad, slope
+    M = opti.variable(init_guess=np.ones(N), log_transform=True)  # N*m, moment
+    V = opti.variable(init_guess=np.ones(N), log_transform=True)  # N, shear
 
     opti.subject_to([
-        w[0] >= eps,
-        th[0] >= eps,
-        M[-1] >= eps,
-        V[-1] <= eps,
+        np.log(V)[:-1] >= np.log(V[1:] + 0.5 * dx * (q[:-1] + q[1:])),
+        np.log(M)[:-1] >= np.log(M[1:] + 0.5 * dx * (V[:-1] + V[1:])),
+        np.log(th)[1:] >= np.log(th[:-1] + 0.5 * dx * (M[1:] + M[:-1]) / EI),
+        np.log(w)[1:] >= np.log(w[:-1] + 0.5 * dx * (th[1:] + th[:-1])),
     ])
 
-    opti.minimize(w[-1])
+    opti.subject_to([
+        np.log(V)[-1] >= np.log(eps),
+        np.log(M)[-1] >= np.log(eps),
+        np.log(th)[0] >= np.log(eps),
+        np.log(w)[0] >= np.log(eps),
+    ])
+
+    opti.minimize(np.log(w)[-1])
 
     sol = opti.solve(verbose=False)
     assert sol(w[-1]) == pytest.approx(1.62, abs=0.01)
