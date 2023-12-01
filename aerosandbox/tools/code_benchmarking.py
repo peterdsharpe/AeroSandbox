@@ -11,7 +11,19 @@ def time_function(
 ) -> Tuple[float, Any]:
     """
     Runs a given callable and tells you how long it took to run, in seconds. Also returns the result of the function
-        (if any), for good measure. Args: func:
+        (if any), for good measure.
+
+    Args:
+
+        func: The function to run. Should take no arguments; use a lambda function or functools.partial if you need
+            to pass arguments.
+
+        repeats: The number of times to run the function. If None, runs until desired_runtime is met.
+
+        desired_runtime: The desired runtime of the function, in seconds. If None, runs until repeats is met.
+
+        runtime_reduction: A function that takes in a list of runtimes and returns a reduced value. For example,
+            np.min will return the minimum runtime, np.mean will return the mean runtime, etc. Default is np.min.
 
     Returns: A Tuple of (time_taken, result).
         - time_taken is a float of the time taken to run the function, in seconds.
@@ -22,10 +34,10 @@ def time_function(
         raise ValueError("You can't specify both repeats and desired_runtime!")
 
     def time_function_once():
-        start_ns = time.time_ns()
+        start_ns = time.perf_counter_ns()
         result = func()
         return (
-            (time.time_ns() - start_ns) / 1e9,
+            (time.perf_counter_ns() - start_ns) / 1e9,
             result
         )
 
