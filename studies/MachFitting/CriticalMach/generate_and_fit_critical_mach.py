@@ -37,10 +37,21 @@ opti.subject_to([
     Cp_crit(M) == Cp_PG(Cp0, M),
 ])
 sol = opti.solve()
+Cp0_PG = sol(Cp0)
+
+### Then, use the PG solution as an initial guess to solve with KT
+opti = asb.Opti()
+Cp0 = opti.variable(init_guess=Cp0_PG, upper_bound=0)
+
+opti.subject_to([
+    Cp_crit(M) == Cp_KT(Cp0, M),
+])
+sol = opti.solve()
+Cp0_KT = sol(Cp0)
 
 ### Then, use the PG solution as an initial guess to solve with Laitone's rule
 opti = asb.Opti()
-Cp0 = opti.variable(init_guess=sol(Cp0), upper_bound=0)
+Cp0 = opti.variable(init_guess=Cp0_KT, upper_bound=0)
 
 opti.subject_to([
     Cp_crit(M) == Cp_L(Cp0, M),
@@ -58,7 +69,10 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     # plt.plot(sol(M), ".")
     # p.sns.displot(sol(M), bins=51)
-    plt.plot(Cp0, M, ".k", label="Data", alpha=0.5)
+    # plt.plot(Cp0, M, ".k", label="Data", alpha=0.5)
+    plt.plot(Cp0_PG, M, "--", label="Prandtl-Glauert")
+    plt.plot(Cp0_KT, M, "-.", label="Karman-Tsien")
+    plt.plot(Cp0, M, ":", label="Laitone's Rule")
 
     # fit = asb.FittedModel(
     #     model=lambda x, p: (p["o"] - x + p["a"] * (-x) ** p["b"]) ** p["c"],
@@ -78,7 +92,7 @@ if __name__ == '__main__':
     p.show_plot(
         title="Critical Mach Number vs. $C_{p0}$",
         xlabel="Incompressible Pressure Coefficient $C_{p0}$ [-]",
-        ylabel="Critical Mach Number [-]",
+        ylabel="Critical\nMach\nNumber [-]",
     )
 
     # ### Fit an explicit function to the data using PySR
