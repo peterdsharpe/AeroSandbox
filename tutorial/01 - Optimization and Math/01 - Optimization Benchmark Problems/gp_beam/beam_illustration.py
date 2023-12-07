@@ -96,5 +96,6 @@ if __name__ == '__main__':
         "Cantilever Beam Problem",
         # r"$x$ [m]",
         # r"$w$ [m]",
+        dpi=600,
         savefig="beam_illustration.svg"
     )
