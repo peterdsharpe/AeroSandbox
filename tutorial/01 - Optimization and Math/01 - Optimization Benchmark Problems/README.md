@@ -30,6 +30,8 @@ This problem is a structural analysis of a cantilever beam with a distributed lo
 
 > In this example we consider a beam subjected to a uniformly distributed transverse force along its length. The beam has fixed geometry so we are not optimizing its shape, rather we are simply solving a discretization of the Euler-Bernoulli beam bending equations using GP.
 
+![beam](gp_beam/beam_illustration.svg)
+
 In this chart, runtime is used instead of function evaluations, because the GPkit API doesn't easily expose this information from the underlying solver.
 
 Exact code implementation of each method is [here](./gp_beam/run_times.py).
