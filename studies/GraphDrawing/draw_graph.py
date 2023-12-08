@@ -1,41 +1,3 @@
-# from casadi import *
-# from casadi.tools import *
-#
-# #! An SX graph
-# a = SX.sym("a")
-# b = SX.sym("b")
-#
-# c = sin(a**5 + b)
-#
-# c = c - b/ sqrt(fabs(c))
-# print(c)
-#
-# dotdraw(c)
-#
-# #! An SX
-#
-# dotdraw(SX.sym("x",Sparsity.lower(3)))
-#
-# dotdraw(SX.sym("x",Sparsity.lower(3))**2)
-#
-# #! An MX graph
-# x = MX.sym("x",Sparsity.lower(2))
-# y = MX.sym("y",Sparsity.lower(2))
-#
-# z = MX.sym("z",4,2)
-#
-# zz = x+y
-#
-# dotdraw(zz)
-#
-# f = Function("magic", [z,y],[z+x[0,0],x-y])
-#
-# z,z2 = f(vertcat(x,y),zz.T)
-#
-# z = z[:2,:] +x + cos(x) - sin(x) / tan(z2)
-#
-# dotdraw(z)
-
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import casadi as cas
@@ -69,7 +31,7 @@ aero = optimized_airfoil.get_aero_from_neuralfoil(
 
 from casadi.tools import dotdraw, dotsave, dotgraph
 
-# dotsave(cas.cse(aero["CL"]))
+# dotdraw(cas.cse(aero["CL"]))
 
 # optimized_airfoil = sol(optimized_airfoil)
 # aero = sol(aero)
