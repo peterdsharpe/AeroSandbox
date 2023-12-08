@@ -46,10 +46,10 @@ setup(
     packages=find_packages(exclude=['docs', 'media', 'studies', 'tutorial']),
     python_requires='>=3.8',
     install_requires=[
-        'numpy >= 1.20.0, <1.25a0',
+        'numpy >= 1.20.0',
         'scipy >= 1.7.0',
-        'casadi ~= 3.6.0',
-        'pandas >= 1',
+        'casadi >= 3.6.4',
+        'pandas >= 2',
         'matplotlib >= 3.7.0',
         'seaborn >= 0.11',
         'tqdm >= 4',
