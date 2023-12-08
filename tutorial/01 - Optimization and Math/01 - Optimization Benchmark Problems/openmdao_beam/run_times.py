@@ -477,7 +477,7 @@ if __name__ == '__main__':
             ax.annotate(
                 label_to_write,
                 xy=(x[-1], fit(x[-1])),
-                xytext=(-5, -45),
+                xytext=(-5, -25),
                 textcoords="offset points",
                 fontsize=10,
                 zorder=5,
@@ -512,6 +512,7 @@ if __name__ == '__main__':
 
     plt.xscale("log")
     plt.yscale("log")
+    plt.xlim(right=1e3)
 
     from aerosandbox.tools.string_formatting import eng_string
 
@@ -519,8 +520,8 @@ if __name__ == '__main__':
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: f"{x:.4g}"))
 
     p.show_plot(
-        "AeroSandbox vs. Disciplined Methods"
-        "\nfor the GP-Compatible Beam Problem",
+        "AeroSandbox vs. Analytical-Gradient Methods"
+        "\nfor the Beam Design Optimization Problem",
         "Problem Size\n(# of Beam Discretization Points)",
         "Computational\nCost\n\n(Wall-clock\nruntime,\nin seconds)",
         set_ticks=False,
