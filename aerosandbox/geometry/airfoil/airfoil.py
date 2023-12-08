@@ -894,8 +894,8 @@ class Airfoil(Polygon):
 
         Returns: None
         """
-        x = np.array(self.x()).reshape(-1)
-        y = np.array(self.y()).reshape(-1)
+        x = np.reshape(np.array(self.x()), -1)
+        y = np.reshape(np.array(self.y()), -1)
         if draw_mcl:
             x_mcl = np.linspace(np.min(x), np.max(x), len(x))
             y_mcl = self.local_camber(x_mcl)
