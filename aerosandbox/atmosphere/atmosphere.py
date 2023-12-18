@@ -32,7 +32,8 @@ class Atmosphere(AeroSandboxObject):
             altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
             
             method: Method of atmosphere modeling to use. Either:
-                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere; useful for optimization
+                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere; useful for optimization.
+                    Mean absolute error of pressure relative to the ISA is 0.02% over 0-100 km altitude range.
                 * "isa" - the International Standard Atmosphere, exactly reproduced
 
             temperature_deviation: A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This is useful for modeling

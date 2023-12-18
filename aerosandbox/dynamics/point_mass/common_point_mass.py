@@ -420,7 +420,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             import aerosandbox.tools.pretty_plots as p
 
             if vehicle_model is None:
-                default_vehicle_stl = _asb_root / "dynamics/visualization/default_assets/yf23.stl"
+                default_vehicle_stl = _asb_root / "dynamics/visualization/default_assets/talon.stl"
                 vehicle_model = pv.read(str(default_vehicle_stl))
             elif isinstance(vehicle_model, pv.PolyData):
                 pass
@@ -478,13 +478,34 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             plotter.add_axes()
             plotter.show_grid(color='gray')
 
+            ### Set up interpolators for dynamics instances
+            from scipy import interpolate
+            state_interpolators = {
+                k: interpolate.InterpolatedUnivariateSpline(
+                    x=np.arange(len(self)),
+                    y=v * np.ones(len(self)),
+                    check_finite=True,
+                )
+                for k, v in self.state.items()
+            }
+            control_interpolators = {
+                k: interpolate.InterpolatedUnivariateSpline(
+                    x=np.arange(len(self)),
+                    y=v * np.ones(len(self)),
+                    check_finite=True,
+                )
+                for k, v in self.control_variables.items()
+            }
+
             ### Draw the vehicle
-            for i in np.unique(
-                    np.round(
-                        np.linspace(0, len(self) - 1, n_vehicles_to_draw)
-                    )
-            ).astype(np.int64):
-                dyn = self[i]
+            for i in np.linspace(0, len(self) - 1, n_vehicles_to_draw):
+                dyn = self.get_new_instance_with_state({
+                    k: float(v(i))
+                    for k, v in state_interpolators.items()
+                })
+                for k, v in control_interpolators.items():
+                    setattr(dyn, k, float(v(i)))
+
                 try:
                     phi = dyn.phi
                 except AttributeError:
@@ -499,7 +520,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     psi = dyn.track
 
                 x_cg_b, y_cg_b, z_cg_b = dyn.convert_axes(
-                    dyn.mass_props.x_cg,
+                    dyn.mass_props.x_cg, # TODO fix this and make this per-point
                     dyn.mass_props.y_cg,
                     dyn.mass_props.z_cg,
                     from_axes=cg_axes,
@@ -508,9 +529,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
                 this_vehicle = copy.deepcopy(vehicle_model)
                 this_vehicle.translate([
-                    -x_cg_b,
-                    -y_cg_b,
-                    -z_cg_b,
+                    -np.mean(x_cg_b),
+                    -np.mean(y_cg_b),
+                    -np.mean(z_cg_b),
                 ], inplace=True)
                 this_vehicle.points *= scale_vehicle_model
                 this_vehicle.rotate_x(np.degrees(phi), inplace=True)
