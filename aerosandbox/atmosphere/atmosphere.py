@@ -87,6 +87,36 @@ class Atmosphere(AeroSandboxObject):
 
         return rho
 
+    def density_altitude(
+            self,
+            method: str = "approximate"
+    ):
+        """
+        Returns the density altitude, in meters.
+
+        See https://en.wikipedia.org/wiki/Density_altitude
+        """
+        if method.lower() == "approximate":
+            temperature_sea_level = 288.15
+            pressure_sea_level = 101325
+
+            temperature_ratio = self.temperature() / temperature_sea_level
+            pressure_ratio = self.pressure() / pressure_sea_level
+
+            lapse_rate = 0.0065  # K/m, ISA temperature lapse rate in troposphere
+
+            return (
+                    (temperature_sea_level / lapse_rate) *
+                    (
+                            1 - (pressure_ratio / temperature_ratio) ** (
+                            (9.80665 / (gas_constant_air * lapse_rate) - 1) ** -1)
+                    )
+            )
+        elif method.lower() == "exact":
+            raise NotImplementedError("Exact density altitude calculation not yet implemented.")
+        else:
+            raise ValueError("Bad value of 'method'!")
+
     def speed_of_sound(self):
         """
         Returns the speed of sound, in m/s.
