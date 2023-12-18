@@ -21,7 +21,8 @@ class Atmosphere(AeroSandboxObject):
 
     def __init__(self,
                  altitude: float = 0.,  # meters
-                 method: str = "differentiable"
+                 method: str = "differentiable",
+                 temperature_deviation: float = 0.  # Kelvin
                  ):
         """
         Initialize a new Atmosphere.
@@ -31,12 +32,16 @@ class Atmosphere(AeroSandboxObject):
             altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
             
             method: Method of atmosphere modeling to use. Either:
-                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere
-                * "isa" - the International Standard Atmosphere
+                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere; useful for optimization
+                * "isa" - the International Standard Atmosphere, exactly reproduced
+
+            temperature_deviation: A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This is useful for modeling
+                the impact of temperature on density altitude, for example.
                 
         """
         self.altitude = altitude
         self.method = method
+        self.temperature_deviation = temperature_deviation
         self._valid_altitude_range = (0, 80000)
 
     def __repr__(self) -> str:
@@ -65,9 +70,9 @@ class Atmosphere(AeroSandboxObject):
         Returns the temperature, in Kelvin.
         """
         if self.method.lower() == "isa":
-            return temperature_isa(self.altitude)
+            return temperature_isa(self.altitude) + self.temperature_deviation
         elif self.method.lower() == "differentiable":
-            return temperature_differentiable(self.altitude)
+            return temperature_differentiable(self.altitude) + self.temperature_deviation
         else:
             raise ValueError("Bad value of 'type'!")
 
