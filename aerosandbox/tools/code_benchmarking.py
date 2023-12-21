@@ -3,11 +3,38 @@ from typing import Tuple, Any, Callable
 import aerosandbox.numpy as np
 
 
+class Timer(object):
+    """
+    A context manager for timing things. Use it like this:
+
+    with Timer("My timer"):  # You can optionally give it a name
+        # Do stuff
+
+    Results are printed to stdout. You can access the runtime (in seconds) directly with:
+
+    with Timer("My timer") as t:
+        # Do stuff
+    print(t.runtime)
+    """
+
+    def __init__(self, name=None):
+        self.name = name
+
+    def __enter__(self):
+        self.t_start = time.perf_counter_ns()
+
+    def __exit__(self, type, value, traceback):
+        self.runtime = (time.perf_counter_ns() - self.t_start) / 1e9
+        if self.name:
+            print(f'[{self.name}]')
+        print(f'Elapsed: {runtime} sec')
+
+
 def time_function(
         func: Callable,
         repeats: int = None,
         desired_runtime: float = None,
-        runtime_reduction = np.min,
+        runtime_reduction=np.min,
 ) -> Tuple[float, Any]:
     """
     Runs a given callable and tells you how long it took to run, in seconds. Also returns the result of the function
@@ -70,9 +97,11 @@ def time_function(
         result
     )
 
+
 if __name__ == '__main__':
 
     def f():
         time.sleep(0.1)
+
 
     print(time_function(f, desired_runtime=1))
