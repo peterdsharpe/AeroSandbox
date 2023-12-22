@@ -12,9 +12,25 @@ class Timer(object):
 
     Results are printed to stdout. You can access the runtime (in seconds) directly with:
 
-    with Timer("My timer") as t:
-        # Do stuff
-    print(t.runtime)
+    >>> with Timer("My timer") as t:
+    >>>     # Do stuff
+    >>> print(t.runtime)  # You can dynamically access the runtime of any completed Timer, if desired
+
+    Nested timers are also supported. For example, this code:
+    >>> with Timer("a"):
+    >>>     with Timer("b"):
+    >>>         with Timer("c"):
+    >>>             f()
+
+    yields the following console output:
+
+        [a] Timing...
+        	[b] Timing...
+        		[c] Timing...
+        		[c] Elapsed: 100 msec
+        	[b] Elapsed: 100 msec
+        [a] Elapsed: 100 msec
+
     """
     number_running: int = 0  # The number of Timers currently running
 
