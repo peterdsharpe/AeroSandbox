@@ -612,8 +612,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             if draw_ground_plane:
                 ### Plane
                 grid = pv.StructuredGrid()
-                xlim = (self.x_e.min(), self.x_e.max())
-                ylim = (self.y_e.min(), self.y_e.max())
+                xlim = (x_e.min(), x_e.max())
+                ylim = (y_e.min(), y_e.max())
 
                 grid.points = np.array([
                     [xlim[0], ylim[0], 0],
