@@ -16,18 +16,56 @@ class Timer(object):
         # Do stuff
     print(t.runtime)
     """
+    number_running: int = 0  # The number of Timers currently running
 
-    def __init__(self, name=None):
-        self.name = name
+    def __init__(self,
+                 name: str = None
+                 ):
+        self.name: str = name
+        self.runtime: float = np.nan
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}: " + (
+            "Running..."
+            if np.isnan(self.runtime) else
+            f"Finished, elapsed: ({self._format_time(self.runtime)})"
+        )
+
+    @staticmethod
+    def _format_time(time_seconds):
+        from aerosandbox.tools.string_formatting import eng_string
+        from aerosandbox.tools import units as u
+
+        if time_seconds < u.minute:
+            return eng_string(time_seconds, unit="sec")
+        elif time_seconds < u.hour:
+            return eng_string(time_seconds / u.minute, unit="min")
+        elif time_seconds < u.day:
+            return eng_string(time_seconds / u.hour, unit="hour")
+        elif time_seconds < u.year:
+            return eng_string(time_seconds / u.day, unit="day")
+        else:
+            return eng_string(time_seconds / u.year, unit="year")
+
+    def _print(self, s: str, number_running_mod: int = 0):
+        header = "\t" * (self.__class__.number_running - 1 + number_running_mod)
+        if self.name:
+            header += f"[{self.name}] "
+        print(header + s)
 
     def __enter__(self):
+        self.__class__.number_running += 1
+        self._print("Timing...")
         self.t_start = time.perf_counter_ns()
 
     def __exit__(self, type, value, traceback):
-        self.runtime = (time.perf_counter_ns() - self.t_start) / 1e9
-        if self.name:
-            print(f'[{self.name}]')
-        print(f'Elapsed: {runtime} sec')
+        self.t_end = time.perf_counter_ns()
+        self.__class__.number_running -= 1
+        self.runtime = (self.t_end - self.t_start) / 1e9
+        self._print(
+            f"Elapsed: {self._format_time(self.runtime)}",
+            number_running_mod=1
+        )
 
 
 def time_function(
@@ -105,3 +143,8 @@ if __name__ == '__main__':
 
 
     print(time_function(f, desired_runtime=1))
+
+    with Timer("a") as a:
+        with Timer("b") as b:
+            with Timer("c") as c:
+                f()
