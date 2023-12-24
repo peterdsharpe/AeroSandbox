@@ -495,6 +495,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 k: interpolate.InterpolatedUnivariateSpline(
                     x=np.arange(len(self)),
                     y=v * np.ones(len(self)),
+                    k=np.clip(len(self), 1, 3),
                     check_finite=True,
                 )
                 for k, v in self.state.items()
@@ -503,6 +504,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 k: interpolate.InterpolatedUnivariateSpline(
                     x=np.arange(len(self)),
                     y=v * np.ones(len(self)),
+                    k=np.clip(len(self), 1, 3),
                     check_finite=True,
                 )
                 for k, v in self.control_variables.items()
