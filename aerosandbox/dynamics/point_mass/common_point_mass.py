@@ -409,12 +409,17 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def draw(self,
              vehicle_model: Airplane = None,
              backend: str = "pyvista",
+             plotter=None,
              draw_axes: bool = True,
+             draw_global_axes: bool = True,
+             draw_global_grid: bool = True,
              scale_vehicle_model: Union[float, None] = None,
              n_vehicles_to_draw: int = 10,
              cg_axes: str = "geometry",
-             draw_altitude_drape=True,
-             draw_ground_plane=True,
+             draw_altitude_drape: bool = True,
+             draw_ground_plane: bool = True,
+             vehicle_color=None,
+             trajectory_line_color=None,
              show: bool = True,
              ):
         if backend == "pyvista":
@@ -456,7 +461,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 [z_e.min(), z_e.max()],
             ])
 
-            if scale_vehicle_model is None: # Compute an auto-scaling factor
+            if scale_vehicle_model is None:  # Compute an auto-scaling factor
                 trajectory_size = np.max(np.diff(trajectory_bounds, axis=1))
 
                 vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
@@ -465,7 +470,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 scale_vehicle_model = 0.8 * trajectory_size / vehicle_size / n_vehicles_to_draw
 
             ### Initialize the plotter
-            plotter = pv.Plotter()
+            if plotter is None:
+                plotter = pv.Plotter()
 
             # Set the window title
             title = "ASB Dynamics"
@@ -478,8 +484,10 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             plotter.title = title
 
             # Draw axes and grid
-            plotter.add_axes()
-            plotter.show_grid(color='gray')
+            if draw_global_axes:
+                plotter.add_axes()
+            if draw_global_grid:
+                plotter.show_grid(color='gray')
 
             ### Set up interpolators for dynamics instances
             from scipy import interpolate
@@ -523,7 +531,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     psi = dyn.track
 
                 x_cg_b, y_cg_b, z_cg_b = dyn.convert_axes(
-                    dyn.mass_props.x_cg, # TODO fix this and make this per-point
+                    dyn.mass_props.x_cg,  # TODO fix this and make this per-point
                     dyn.mass_props.y_cg,
                     dyn.mass_props.z_cg,
                     from_axes=cg_axes,
@@ -547,7 +555,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 ], inplace=True)
                 plotter.add_mesh(
                     this_vehicle,
-                    color=p.adjust_lightness(p.palettes["categorical"][0], 1.3),
+                    color=(
+                        p.adjust_lightness(p.palettes["categorical"][0], 1.3)
+                        if vehicle_color is None
+                        else vehicle_color
+                    ),
                     opacity=0.95,
                     specular=0.5,
                     specular_power=15,
@@ -586,13 +598,16 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             polyline = pv.Spline(path)
             plotter.add_mesh(
                 polyline,
-                color=p.adjust_lightness(p.palettes["categorical"][0], 1.0),
+                color=(
+                    p.adjust_lightness(p.palettes["categorical"][0], 1.3)
+                    if trajectory_line_color is None
+                    else trajectory_line_color
+                ),
                 line_width=3,
             )
 
             if draw_altitude_drape:
                 ### Drape
-
 
                 points = np.concatenate([
                     path,
