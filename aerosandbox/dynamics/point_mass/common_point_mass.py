@@ -407,7 +407,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         )
 
     def draw(self,
-             vehicle_model: Airplane = None,
+             vehicle_model: Union[Airplane, "PolyData"] = None,
              backend: str = "pyvista",
              plotter=None,
              draw_axes: bool = True,
@@ -416,10 +416,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
              scale_vehicle_model: Union[float, None] = None,
              n_vehicles_to_draw: int = 10,
              cg_axes: str = "geometry",
+             draw_trajectory_line: bool = True,
+             trajectory_line_color=None,
              draw_altitude_drape: bool = True,
              draw_ground_plane: bool = True,
+             draw_wingtip_ribbon: bool = True,
+             set_sky_background: bool = True,
              vehicle_color=None,
-             trajectory_line_color=None,
              show: bool = True,
              ):
         if backend == "pyvista":
@@ -432,7 +435,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             elif isinstance(vehicle_model, pv.PolyData):
                 pass
             elif isinstance(vehicle_model, Airplane):
-                vehicle_model = vehicle_model.draw(
+                vehicle_model: pv.PolyData = vehicle_model.draw(
                     backend="pyvista",
                     show=False
                 )
@@ -461,17 +464,30 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 [z_e.min(), z_e.max()],
             ])
 
+            vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
+
+            # trajectory_size = np.max(np.diff(trajectory_bounds, axis=1))  # Max dimension
+            # vehicle_size = np.max(np.diff(vehicle_bounds, axis=1))  # Max dimension
+
             if scale_vehicle_model is None:  # Compute an auto-scaling factor
-                trajectory_size = np.max(np.diff(trajectory_bounds, axis=1))
-
-                vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
-                vehicle_size = np.max(np.diff(vehicle_bounds, axis=1))
-
-                scale_vehicle_model = 0.8 * trajectory_size / vehicle_size / n_vehicles_to_draw
+                if len(self) == 1:
+                    scale_vehicle_model = 1
+                else:
+                    path_length = np.sum(
+                        (np.diff(x_e) ** 2 + np.diff(y_e) ** 2 + np.diff(z_e) ** 2) ** 0.5
+                    )
+                    vehicle_length = np.diff(vehicle_bounds[0, :])
+                    scale_vehicle_model = 0.5 * path_length / vehicle_length / n_vehicles_to_draw
 
             ### Initialize the plotter
             if plotter is None:
                 plotter = pv.Plotter()
+
+            if set_sky_background:
+                plotter.set_background(
+                    color="#FFFFFF",
+                    top="#A5B8D7",
+                )
 
             # Set the window title
             title = "ASB Dynamics"
@@ -597,53 +613,86 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 z_e,
             ], axis=1)
 
-            polyline = pv.Spline(path)
-            plotter.add_mesh(
-                polyline,
-                color=(
-                    p.adjust_lightness(p.palettes["categorical"][0], 1.3)
-                    if trajectory_line_color is None
-                    else trajectory_line_color
-                ),
-                line_width=3,
-            )
+            if len(self) > 1:
+                if draw_trajectory_line:
+                    polyline = pv.Spline(path)
+                    plotter.add_mesh(
+                        polyline,
+                        color=(
+                            p.adjust_lightness(p.palettes["categorical"][0], 1.3)
+                            if trajectory_line_color is None
+                            else trajectory_line_color
+                        ),
+                        line_width=3,
+                    )
 
-            if draw_altitude_drape:
-                ### Drape
+                if draw_wingtip_ribbon:
 
-                points = np.concatenate([
-                    path,
-                    path * np.array([[1, 1, 0]])
-                ], axis=0)
+                    left_wingtip_points = np.array(self.convert_axes(
+                        0, scale_vehicle_model * vehicle_bounds[1, 0], 0,
+                        from_axes="body",
+                        to_axes="earth"
+                    )).T + path
+                    plotter.add_mesh(
+                        pv.Spline(left_wingtip_points),
+                        color="pink",
+                    )
+                    right_wingtip_points = np.array(self.convert_axes(
+                        0, scale_vehicle_model * vehicle_bounds[1, 1], 0,
+                        from_axes="body",
+                        to_axes="earth"
+                    )).T + path
+                    plotter.add_mesh(
+                        pv.Spline(right_wingtip_points),
+                        color="pink",
+                    )
 
-                grid = pv.StructuredGrid()
-                grid.points = points
-                grid.dimensions = len(path), 2, 1
+                    grid = pv.StructuredGrid()
+                    grid.points = np.concatenate([
+                        left_wingtip_points,
+                        right_wingtip_points,
+                    ], axis=0)
+                    grid.dimensions = len(left_wingtip_points), 2, 1
 
-                plotter.add_mesh(
-                    grid,
-                    color="black",
-                    opacity=0.5,
-                )
+                    plotter.add_mesh(
+                        grid,
+                        color="pink",
+                        opacity=0.5,
+                    )
 
-            if draw_ground_plane:
-                ### Plane
-                grid = pv.StructuredGrid()
-                xlim = (x_e.min(), x_e.max())
-                ylim = (y_e.min(), y_e.max())
+                if draw_altitude_drape:
+                    ### Drape
+                    grid = pv.StructuredGrid()
+                    grid.points = np.concatenate([
+                        path,
+                        path * np.array([[1, 1, 0]])
+                    ], axis=0)
+                    grid.dimensions = len(path), 2, 1
 
-                grid.points = np.array([
-                    [xlim[0], ylim[0], 0],
-                    [xlim[1], ylim[0], 0],
-                    [xlim[0], ylim[1], 0],
-                    [xlim[1], ylim[1], 0]
-                ])
-                grid.dimensions = 2, 2, 1
-                plotter.add_mesh(
-                    grid,
-                    color="darkkhaki",
-                    opacity=0.5
-                )
+                    plotter.add_mesh(
+                        grid,
+                        color="black",
+                        opacity=0.5,
+                    )
+
+                if draw_ground_plane:
+                    ### Plane
+                    grid = pv.StructuredGrid()
+                    xlim = (x_e.min(), x_e.max())
+                    ylim = (y_e.min(), y_e.max())
+
+                    grid.points = np.array([
+                        [xlim[0], ylim[0], 0],
+                        [xlim[1], ylim[0], 0],
+                        [xlim[0], ylim[1], 0],
+                        [xlim[1], ylim[1], 0]
+                    ])
+                    grid.dimensions = 2, 2, 1
+                    plotter.add_mesh(
+                        grid,
+                        color="darkkhaki",
+                        opacity=0.5
+                    )
 
             ### Finalize the plotter
             plotter.camera.up = (0, 0, -1)
