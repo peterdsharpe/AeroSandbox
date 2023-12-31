@@ -390,10 +390,10 @@ def get_kulfan_parameters(
             dims = (np.length(w), np.length(x))
 
             def wide(vector):
-                return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
+                return np.tile(np.reshape(vector, (1, dims[1])), (dims[0], 1))
 
             def tall(vector):
-                return np.tile(vector.reshape((dims[0], 1)), (1, dims[1]))
+                return np.tile(np.reshape(vector, (dims[0], 1)), (1, dims[1]))
 
             S_matrix = (
                     tall(K) * wide(x) ** tall(np.arange(N + 1)) *
@@ -489,10 +489,10 @@ def get_kulfan_parameters(
         dims = (n_weights_per_side, n_coordinates)
 
         def wide(vector):
-            return np.tile(vector.reshape((1, dims[1])), (dims[0], 1))
+            return np.tile(np.reshape(vector, (1, dims[1])), (dims[0], 1))
 
         def tall(vector):
-            return np.tile(vector.reshape((dims[0], 1)), (1, dims[1]))
+            return np.tile(np.reshape(vector, (dims[0], 1)), (1, dims[1]))
 
         S_matrix = (
                 tall(K) * wide(x) ** tall(np.arange(N + 1)) *

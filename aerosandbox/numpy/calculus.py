@@ -1,14 +1,25 @@
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.conditionals import where as _where
+from aerosandbox.numpy.arithmetic_dyadic import mod as _mod
 
 
-def diff(a, n=1, axis=-1):
+def diff(a, n=1, axis=-1, period=None):
     """
     Calculate the n-th discrete difference along the given axis.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diff.html
     """
+    if period is not None:
+        original_result = diff(a, n=n, axis=axis)
+        remainder = _mod(original_result, period)
+        return _where(
+            remainder > period / 2,
+            remainder - period,
+            remainder
+        )
+
     if not is_casadi_type(a):
         return _onp.diff(a, n=n, axis=axis)
 
@@ -42,3 +53,10 @@ def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is di
         integral[-1] = integral[-1] + x[-1] * 0.5
 
     return integral
+
+
+if __name__ == '__main__':
+    import numpy as np
+
+    a = np.linspace(-500, 500, 21) % 360 - 180
+    print(diff(a, period=360))

@@ -56,10 +56,11 @@ def eng_string(
     exp3 = exp - (exp % 3)
     x3 = x / (10 ** exp3)
 
-    if exp3 == 0:
-        suffix = ''
-    elif si and exp3 >= -24 and exp3 <= 24:
-        suffix = 'yzafpnμm kMGTPEZY'[(exp3 + 24) // 3]
+    if si and exp3 >= -24 and exp3 <= 24:
+        if exp3 == 0:
+            suffix = ""
+        else:
+            suffix = 'yzafpnμm kMGTPEZY'[(exp3 + 24) // 3]
 
         if add_space_after_number is None:
             add_space_after_number = (unit != "")
@@ -80,7 +81,7 @@ def eng_string(
         else:
             suffix = suffix + unit
 
-    return ('%s' + format + '%s') % (sign, x3, suffix)
+    return f"{sign}{format % x3}{suffix}"
 
 
 def latex_sci_notation_string(

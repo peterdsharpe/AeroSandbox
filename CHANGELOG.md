@@ -38,6 +38,11 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.1.7
+- Minimal changes; mostly more documentation and backend upgrades (e.g., new PyPI upload process). 
+- Minor refactoring of `np.reshape` methods from array methods to functions, for clarity.
+- Exploring reasons why NumPy 1.25.0 seems to have different optimization behavior than versions preceding. Currently ASB is pinned to NumPy<1.25.0a0; hoping to release pin in upcoming version.
+
 #### 4.1.6
 
 - Fixed I/O error with AVL, where too many digits of precision would cause AVL to read .mass files incorrectly

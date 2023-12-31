@@ -115,7 +115,7 @@ class Polygon(AeroSandboxObject):
 
         """
         ### Translate
-        translation = np.array([x_center, y_center]).reshape((1, 2))
+        translation = np.reshape(np.array([x_center, y_center]), (1, 2))
         coordinates = self.coordinates - translation
 
         ### Rotate
@@ -324,8 +324,8 @@ class Polygon(AeroSandboxObject):
         except ValueError as e:  # If arrays are not broadcastable
             raise ValueError("Inputs x and y could not be broadcast together!") from e
 
-        x = x.reshape(-1, 1)
-        y = y.reshape(-1, 1)
+        x = np.reshape(x, (-1, 1))
+        y = np.reshape(y, (-1, 1))
 
         points = np.hstack((x, y))
 

@@ -21,7 +21,8 @@ class Atmosphere(AeroSandboxObject):
 
     def __init__(self,
                  altitude: float = 0.,  # meters
-                 method: str = "differentiable"
+                 method: str = "differentiable",
+                 temperature_deviation: float = 0.  # Kelvin
                  ):
         """
         Initialize a new Atmosphere.
@@ -31,12 +32,17 @@ class Atmosphere(AeroSandboxObject):
             altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
             
             method: Method of atmosphere modeling to use. Either:
-                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere
-                * "isa" - the International Standard Atmosphere
+                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere; useful for optimization.
+                    Mean absolute error of pressure relative to the ISA is 0.02% over 0-100 km altitude range.
+                * "isa" - the International Standard Atmosphere, exactly reproduced
+
+            temperature_deviation: A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This is useful for modeling
+                the impact of temperature on density altitude, for example.
                 
         """
         self.altitude = altitude
         self.method = method
+        self.temperature_deviation = temperature_deviation
         self._valid_altitude_range = (0, 80000)
 
     def __repr__(self) -> str:
@@ -65,9 +71,9 @@ class Atmosphere(AeroSandboxObject):
         Returns the temperature, in Kelvin.
         """
         if self.method.lower() == "isa":
-            return temperature_isa(self.altitude)
+            return temperature_isa(self.altitude) + self.temperature_deviation
         elif self.method.lower() == "differentiable":
-            return temperature_differentiable(self.altitude)
+            return temperature_differentiable(self.altitude) + self.temperature_deviation
         else:
             raise ValueError("Bad value of 'type'!")
 
@@ -80,6 +86,36 @@ class Atmosphere(AeroSandboxObject):
         rho = self.pressure() / (self.temperature() * gas_constant_air)
 
         return rho
+
+    def density_altitude(
+            self,
+            method: str = "approximate"
+    ):
+        """
+        Returns the density altitude, in meters.
+
+        See https://en.wikipedia.org/wiki/Density_altitude
+        """
+        if method.lower() == "approximate":
+            temperature_sea_level = 288.15
+            pressure_sea_level = 101325
+
+            temperature_ratio = self.temperature() / temperature_sea_level
+            pressure_ratio = self.pressure() / pressure_sea_level
+
+            lapse_rate = 0.0065  # K/m, ISA temperature lapse rate in troposphere
+
+            return (
+                    (temperature_sea_level / lapse_rate) *
+                    (
+                            1 - (pressure_ratio / temperature_ratio) ** (
+                            (9.80665 / (gas_constant_air * lapse_rate) - 1) ** -1)
+                    )
+            )
+        elif method.lower() == "exact":
+            raise NotImplementedError("Exact density altitude calculation not yet implemented.")
+        else:
+            raise ValueError("Bad value of 'method'!")
 
     def speed_of_sound(self):
         """

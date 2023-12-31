@@ -449,7 +449,7 @@ class Airplane(AeroSandboxObject):
             )
 
         def reshape(x):
-            return np.array(x).reshape((1, 3))
+            return np.reshape(np.array(x), (1, 3))
 
         ##### Wings
         for wing in self.wings:

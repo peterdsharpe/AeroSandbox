@@ -328,10 +328,13 @@ def reshape(a, newshape, order='C'):
         if isinstance(newshape, int):
             newshape = (newshape, 1)
 
-        if len(newshape) == 1:
+        elif len(newshape) == 1:
             newshape = (newshape[0], 1)
 
-        if len(newshape) > 2:
+        elif len(newshape) == 2:
+            newshape = tuple(newshape)
+
+        elif len(newshape) > 2:
             raise ValueError("CasADi data types are limited to no more than 2 dimensions.")
 
         return _cas.reshape(a.T, newshape[::-1]).T

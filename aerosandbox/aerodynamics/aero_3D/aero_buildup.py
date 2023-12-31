@@ -786,7 +786,7 @@ class AeroBuildup(ExplicitAnalysis):
             ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
             kwargs = dict(
                 alpha=alpha_generalized_effective,
-                mach=mach_normal,
+                mach=mach_normal if self.include_wave_drag else 0.,
                 control_surfaces=symmetry_treated_control_surfaces,
                 model_size=self.model_size,
             )

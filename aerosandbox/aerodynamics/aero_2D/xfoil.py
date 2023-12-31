@@ -431,7 +431,7 @@ class XFoil(ExplicitAnalysis):
         your input array if some points did not converge.
 
         """
-        alphas = np.array(alpha).reshape(-1)
+        alphas = np.reshape(np.array(alpha), -1)
 
         if np.length(alphas) > 1:
             if start_at is not None:
@@ -493,7 +493,7 @@ class XFoil(ExplicitAnalysis):
         your input array if some points did not converge.
 
         """
-        cls = np.array(cl).reshape(-1)
+        cls = np.reshape(np.array(cl), -1)
 
         if np.length(cls) > 1:
             if start_at is not None:
