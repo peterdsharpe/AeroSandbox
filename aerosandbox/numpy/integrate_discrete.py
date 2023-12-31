@@ -5,7 +5,7 @@ from aerosandbox.numpy.array import length, roll, concatenate
 from aerosandbox.numpy.calculus import diff
 
 
-def integrate_discrete_segments(
+def integrate_discrete_intervals(
         f: Union[_onp.ndarray, _cas.MX],
         x: Union[_onp.ndarray, _cas.MX] = None,
         multiply_by_dx: bool = True,
@@ -14,13 +14,20 @@ def integrate_discrete_segments(
 ):
     """
     Given a set of points (x_i, f_i) from a function, computes the integral of that function over each set of
-    adjacent points.
+    adjacent points ("intervals").
 
-    In general, N points will yield N-1 integrals (one for each "gap" between points).
+    In general, N points will yield N-1 integrals (one for each "interval" between points).
 
     Args:
         f: A 1D array of function values.
-        x: A 1D array of x-values. If not specified, defaults to the indices of f.
+
+        x: A 1D array of x-values where the function was evaluated. If not specified, defaults to the indices of f.
+            Should be the same length as f and should be monotonically increasing (i.e. x[i] < x[i+1], with no duplicated points).
+
+        multiply_by_dx: Whether to multiply the integral by the width of the segment. Defaults to True.
+            - If True, summing the integrals will yield the integral of the function over the entire domain (x[0] to x[-1])
+            - If False, you can think of the output as the "average function value" over each interval.
+
         method: The integration method to use. Options are:
             - "forward_euler"
             - "backward_euler"
@@ -30,7 +37,8 @@ def integrate_discrete_segments(
             - "cubic"
             Note that some methods, like "cubic", approximate each segment interval by looking beyond just the integral itself (i.e., f(a) and f(b)),
              and so are not possible near the endpoints of the array.
-        method_endpoints: The integration method to use at the endpoints. Options are:
+
+        method_endpoints: The integration method to use at the endpoints, for those higher-order methods that require handling. Options are:
             - "lower_order" (default)
             - "ignore" (i.e. return the integral of the interior points only - note that this may result in a different number of integrals than segments!)
             - "periodic"
@@ -168,14 +176,14 @@ def integrate_discrete_segments(
         if method_endpoints == "simpson":
 
             # Do the left endpoint(s)
-            avg_f_left_intervals = integrate_discrete_segments(
+            avg_f_left_intervals = integrate_discrete_intervals(
                 f=f[:2 + remaining_endpoint_intervals[0]],
                 x=x[:2 + remaining_endpoint_intervals[0]],
                 multiply_by_dx=False,
                 method="forward_simpson",
                 method_endpoints="ignore",
             )
-            avg_f_right_intervals = integrate_discrete_segments(
+            avg_f_right_intervals = integrate_discrete_intervals(
                 f=f[-(2 + remaining_endpoint_intervals[1]):],
                 x=x[-(2 + remaining_endpoint_intervals[1]):],
                 multiply_by_dx=False,
@@ -192,14 +200,14 @@ def integrate_discrete_segments(
         elif method_endpoints == "trapezoidal":
 
             # Do the left endpoint(s)
-            avg_f_left_intervals = integrate_discrete_segments(
+            avg_f_left_intervals = integrate_discrete_intervals(
                 f=f[:1 + remaining_endpoint_intervals[0]],
                 x=x[:1 + remaining_endpoint_intervals[0]],
                 multiply_by_dx=False,
                 method="trapezoidal",
                 method_endpoints="ignore",
             )
-            avg_f_right_intervals = integrate_discrete_segments(
+            avg_f_right_intervals = integrate_discrete_intervals(
                 f=f[-(1 + remaining_endpoint_intervals[1]):],
                 x=x[-(1 + remaining_endpoint_intervals[1]):],
                 multiply_by_dx=False,
@@ -264,7 +272,7 @@ if __name__ == '__main__':
     x = np.linspace(a, b, 100)
     f = f(x)
 
-    approx_intervals = integrate_discrete_segments(
+    approx_intervals = integrate_discrete_intervals(
         f=f,
         x=x,
         multiply_by_dx=True,
