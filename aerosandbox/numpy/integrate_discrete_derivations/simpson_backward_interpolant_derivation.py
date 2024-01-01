@@ -2,7 +2,7 @@ import sympy as s
 from sympy import init_printing
 init_printing()
 
-# "Forward" -> gets the integral from x1 to x2, by analogy to forward Euler
+# "Backward" -> gets the integral from x2 to x3, by analogy to backward Euler
 
 # Define the symbols
 x1, x2, x3 = s.symbols('x1 x2 x3', real=True)

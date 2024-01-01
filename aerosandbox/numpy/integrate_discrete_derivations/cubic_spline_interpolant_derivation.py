@@ -2,6 +2,8 @@ import sympy as s
 from sympy import init_printing
 init_printing()
 
+# Gets the integral from x2 to x3, looking at the cubic spline interpolant from x1...x4
+
 # Define the symbols
 x1, x2, x3, x4 = s.symbols('x1 x2 x3 x4', real=True)
 f1, f2, f3, f4 = s.symbols('f1 f2 f3 f4', real=True)
