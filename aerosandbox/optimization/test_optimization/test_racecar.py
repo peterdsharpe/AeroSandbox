@@ -2,6 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
 
+
 def test_racecar(
         N=100,
         plot=False
