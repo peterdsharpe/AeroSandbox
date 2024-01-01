@@ -9,7 +9,7 @@ def test_bounds():
     opti.minimize(x)
     sol = opti.solve()
 
-    assert sol.value(x) == pytest.approx(7)
+    assert sol(x) == pytest.approx(7)
 
 
 if __name__ == '__main__':

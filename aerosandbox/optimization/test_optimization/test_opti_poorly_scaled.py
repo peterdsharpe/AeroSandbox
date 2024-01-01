@@ -31,8 +31,8 @@ def test_opti_poorly_scaled_constraints(constraint_jacobian_condition_number=1e1
     sol = opti.solve()
 
     # Check
-    assert sol.value(x) == pytest.approx(0.9, abs=1e-4)
-    assert sol.value(y) == pytest.approx(0.81, abs=1e-4)
+    assert sol(x) == pytest.approx(0.9, abs=1e-4)
+    assert sol(y) == pytest.approx(0.81, abs=1e-4)
 
 
 def test_opti_poorly_scaled_objective(objective_hessian_condition_number=1e10):
@@ -51,9 +51,9 @@ def test_opti_poorly_scaled_objective(objective_hessian_condition_number=1e10):
     sol = opti.solve()
 
     # Check
-    assert sol.value(x) == pytest.approx(0, abs=1e-2)
-    assert sol.value(y) == pytest.approx(0, abs=1e-2)
-    assert sol.value(f) == pytest.approx(0, abs=1e-4)
+    assert sol(x) == pytest.approx(0, abs=1e-2)
+    assert sol(y) == pytest.approx(0, abs=1e-2)
+    assert sol(f) == pytest.approx(0, abs=1e-4)
 
 
 if __name__ == '__main__':

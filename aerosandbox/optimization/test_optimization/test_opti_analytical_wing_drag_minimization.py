@@ -28,11 +28,11 @@ def test_normal_problem():
 
     sol = opti.solve()
 
-    print(f"Chord = {sol.value(chord)}")
-    print(f"Span = {sol.value(span)}")
+    print(f"Chord = {sol(chord)}")
+    print(f"Span = {sol(span)}")
 
-    assert sol.value(chord) == pytest.approx(0.2288630528244024)
-    assert sol.value(span) == pytest.approx(4.369425242121806)
+    assert sol(chord) == pytest.approx(0.2288630528244024)
+    assert sol(span) == pytest.approx(4.369425242121806)
 
 
 def test_log_transformed_problem():
@@ -51,11 +51,11 @@ def test_log_transformed_problem():
 
     sol = opti.solve()
 
-    print(f"Chord = {sol.value(chord)}")
-    print(f"Span = {sol.value(span)}")
+    print(f"Chord = {sol(chord)}")
+    print(f"Span = {sol(span)}")
 
-    assert sol.value(chord) == pytest.approx(0.2288630528244024)
-    assert sol.value(span) == pytest.approx(4.369425242121806)
+    assert sol(chord) == pytest.approx(0.2288630528244024)
+    assert sol(span) == pytest.approx(4.369425242121806)
 
 
 def test_log_transformed_negativity_error():
@@ -81,11 +81,11 @@ def test_fixed_variable():
 
     sol = opti.solve()
 
-    print(f"Chord = {sol.value(chord)}")
-    print(f"Span = {sol.value(span)}")
+    print(f"Chord = {sol(chord)}")
+    print(f"Span = {sol(span)}")
 
-    assert sol.value(chord) == pytest.approx(1)
-    assert sol.value(span) == pytest.approx(1)
+    assert sol(chord) == pytest.approx(1)
+    assert sol(span) == pytest.approx(1)
 
 
 def test_fully_fixed_problem():
@@ -104,11 +104,11 @@ def test_fully_fixed_problem():
 
     sol = opti.solve()
 
-    print(f"Chord = {sol.value(chord)}")
-    print(f"Span = {sol.value(span)}")
+    print(f"Chord = {sol(chord)}")
+    print(f"Span = {sol(span)}")
 
-    assert sol.value(chord) == pytest.approx(1)
-    assert sol.value(span) == pytest.approx(1)
+    assert sol(chord) == pytest.approx(1)
+    assert sol(span) == pytest.approx(1)
 
 
 def test_overconstrained_fully_fixed_problem():
@@ -128,11 +128,11 @@ def test_overconstrained_fully_fixed_problem():
 
     sol = opti.solve()
 
-    print(f"Chord = {sol.value(chord)}")
-    print(f"Span = {sol.value(span)}")
+    print(f"Chord = {sol(chord)}")
+    print(f"Span = {sol(span)}")
 
-    # assert sol.value(chord) == pytest.approx(1)
-    # assert sol.value(span) == pytest.approx(1)
+    # assert sol(chord) == pytest.approx(1)
+    # assert sol(span) == pytest.approx(1)
 
 
 if __name__ == '__main__':

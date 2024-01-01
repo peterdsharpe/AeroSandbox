@@ -37,11 +37,11 @@ def test_rosenbrock_constrained(plot=False):
         for r_value in r_values
     ]
     fs = [
-        sol.value(f)
+        sol(f)
         for sol in sols
     ]
     duals = [
-        sol.value(dual)  # Ensure the dual can be evaluated
+        sol(dual)  # Ensure the dual can be evaluated
         for sol in sols
     ]
 

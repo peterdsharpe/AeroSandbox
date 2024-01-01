@@ -10,7 +10,7 @@ def test_bounds():
 
     sol = opti.solve()
 
-    assert sol.value(x) == pytest.approx(3)
+    assert sol(x) == pytest.approx(3)
 
 
 if __name__ == '__main__':

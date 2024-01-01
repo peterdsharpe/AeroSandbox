@@ -37,7 +37,7 @@ def test_2D_rosenbrock():  # 2-dimensional rosenbrock
     sol = opti.solve()
 
     for i in [x, y]:
-        assert sol.value(i) == pytest.approx(1, abs=1e-4)
+        assert sol(i) == pytest.approx(1, abs=1e-4)
 
 
 def test_2D_rosenbrock_circle_constrained():  # 2-dimensional rosenbrock, constrained to be within the unit circle.
@@ -58,8 +58,8 @@ def test_2D_rosenbrock_circle_constrained():  # 2-dimensional rosenbrock, constr
     sol = opti.solve()
 
     # Check
-    assert sol.value(x) == pytest.approx(0.7864, abs=1e-4)
-    assert sol.value(y) == pytest.approx(0.6177, abs=1e-4)
+    assert sol(x) == pytest.approx(0.7864, abs=1e-4)
+    assert sol(y) == pytest.approx(0.6177, abs=1e-4)
     # (Solution also given here: https://www.mathworks.com/help/optim/ug/example-nonlinear-constrained-minimization.html#brg0p3g-2 )
 
 
@@ -81,7 +81,7 @@ def test_ND_rosenbrock_constrained(N=10):  # N-dimensional rosenbrock
     sol = opti.solve()  # solve
 
     for i in range(N):
-        assert sol.value(x[i]) == pytest.approx(1, abs=1e-4)
+        assert sol(x[i]) == pytest.approx(1, abs=1e-4)
 
 
 def test_2D_rosenbrock_frozen():
@@ -98,9 +98,9 @@ def test_2D_rosenbrock_frozen():
     # Optimize
     sol = opti.solve()
 
-    assert sol.value(x) == pytest.approx(0.161, abs=1e-3)
-    assert sol.value(y) == pytest.approx(0, abs=1e-3)
-    assert sol.value(f) == pytest.approx(0.771, abs=1e-3)
+    assert sol(x) == pytest.approx(0.161, abs=1e-3)
+    assert sol(y) == pytest.approx(0, abs=1e-3)
+    assert sol(f) == pytest.approx(0.771, abs=1e-3)
 
 
 if __name__ == '__main__':

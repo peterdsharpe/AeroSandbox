@@ -74,7 +74,7 @@ def test_rocket_control_problem(plot=False):
 
     sol = opti.solve()  # solve
 
-    assert sol.value(a_max) == pytest.approx(0.02181991952, rel=1e-3)  # solved externally with Julia JuMP
+    assert sol(a_max) == pytest.approx(0.02181991952, rel=1e-3)  # solved externally with Julia JuMP
 
     if plot:
         import matplotlib.pyplot as plt
@@ -84,7 +84,7 @@ def test_rocket_control_problem(plot=False):
         fig, ax = plt.subplots(1, 1, figsize=(8, 6), dpi=200)
         for i, val, lab in zip(np.arange(3), [x, v, a], ["$x$", "$v$", "$a$"]):
             plt.subplot(3, 1, i + 1)
-            plt.plot(sol.value(val), label=lab)
+            plt.plot(sol(val), label=lab)
             plt.xlabel(r"Time [s]")
             plt.ylabel(lab)
             plt.legend()

@@ -28,7 +28,7 @@ def test_opti():
     sol = opti.solve()
 
     for i in [x, y]:
-        assert sol.value(i) == pytest.approx(1, abs=1e-4)
+        assert sol(i) == pytest.approx(1, abs=1e-4)
 
 
 def test_save_opti(tmp_path):
@@ -68,12 +68,12 @@ def test_save_and_load_opti(tmp_path):
     sol = opti.solve()
     opti.save_solution()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(1)
-    assert sol.value(y) == pytest.approx(1)
-    assert sol.value(f) == pytest.approx(0)
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(1)
+    assert sol(f) == pytest.approx(0)
 
     ### Round 2 optimization: Cat 1 is fixed from before; slightly different objective now
     opti = asb.Opti(
@@ -90,12 +90,12 @@ def test_save_and_load_opti(tmp_path):
     # Optimize, save to cache, print
     sol = opti.solve()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(1)
-    assert sol.value(y) == pytest.approx(2)
-    assert sol.value(f) == pytest.approx(1)
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(2)
+    assert sol(f) == pytest.approx(1)
 
 
 def test_save_and_load_opti_uncategorized(tmp_path):
@@ -116,12 +116,12 @@ def test_save_and_load_opti_uncategorized(tmp_path):
     sol = opti.solve()
     opti.save_solution()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(1)
-    assert sol.value(y) == pytest.approx(1)
-    assert sol.value(f) == pytest.approx(0)
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(1)
+    assert sol(f) == pytest.approx(0)
 
     ### Round 2 optimization: Cat 1 is fixed from before; slightly different objective now
     opti = asb.Opti(
@@ -138,12 +138,12 @@ def test_save_and_load_opti_uncategorized(tmp_path):
     # Optimize, save to cache, print
     sol = opti.solve()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(1)
-    assert sol.value(y) == pytest.approx(1)
-    assert sol.value(f) == pytest.approx(2)
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(1)
+    assert sol(f) == pytest.approx(2)
 
 
 def test_save_and_load_opti_vectorized(tmp_path):
@@ -165,12 +165,12 @@ def test_save_and_load_opti_vectorized(tmp_path):
     sol = opti.solve()
     opti.save_solution()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(1)
-    assert sol.value(y) == pytest.approx(2)
-    assert sol.value(f) == pytest.approx(0)
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(2)
+    assert sol(f) == pytest.approx(0)
 
     ### Round 2 optimization: Cat 1 is fixed from before; slightly different objective now
     opti = asb.Opti(
@@ -187,12 +187,12 @@ def test_save_and_load_opti_vectorized(tmp_path):
     # Optimize, save to cache, print
     sol = opti.solve()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(1)
-    assert sol.value(y) == pytest.approx(4)
-    assert sol.value(f) == pytest.approx(12)
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(4)
+    assert sol(f) == pytest.approx(12)
 
 
 def test_save_and_load_opti_freeze_override(tmp_path):
@@ -214,12 +214,12 @@ def test_save_and_load_opti_freeze_override(tmp_path):
     sol = opti.solve()
     opti.save_solution()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(1)
-    assert sol.value(y) == pytest.approx(1)
-    assert sol.value(f) == pytest.approx(0)
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(1)
+    assert sol(f) == pytest.approx(0)
 
     ### Round 2 optimization: Cat 1 is fixed from before but then overridden; slightly different objective now
     opti = asb.Opti(
@@ -236,12 +236,12 @@ def test_save_and_load_opti_freeze_override(tmp_path):
     # Optimize, save to cache, print
     sol = opti.solve()
     for i in ["x", "y", "f"]:
-        print(f"{i}: {sol.value(eval(i))}")
+        print(f"{i}: {sol(eval(i))}")
 
     # Test
-    assert sol.value(x) == pytest.approx(3)
-    assert sol.value(y) == pytest.approx(2)
-    assert sol.value(f) == pytest.approx(1)
+    assert sol(x) == pytest.approx(3)
+    assert sol(y) == pytest.approx(2)
+    assert sol(f) == pytest.approx(1)
 
 
 if __name__ == '__main__':

@@ -83,7 +83,7 @@ def test_opti_hanging_chain_with_callback(plot=False):
         callback=my_callback
     )
 
-    assert sol.value(potential_energy) == pytest.approx(626.462, abs=1e-3)
+    assert sol(potential_energy) == pytest.approx(626.462, abs=1e-3)
 
     if plot:
         plt.show()

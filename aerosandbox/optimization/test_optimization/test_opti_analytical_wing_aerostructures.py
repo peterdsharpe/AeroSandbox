@@ -83,7 +83,7 @@ def test_gpkit_style_solve():
 
     sol = opti.solve()
 
-    assert sol.value(D) == pytest.approx(303.1, abs=0.1)
+    assert sol(D) == pytest.approx(303.1, abs=0.1)
 
 
 def test_geometric_program_solve():
@@ -132,7 +132,7 @@ def test_geometric_program_solve():
 
     sol = opti.solve()
 
-    assert sol.value(D) == pytest.approx(303.1, abs=0.1)
+    assert sol(D) == pytest.approx(303.1, abs=0.1)
 
 
 def test_non_log_transformed_solve():
@@ -186,7 +186,7 @@ def test_non_log_transformed_solve():
 
     sol = opti.solve()
 
-    assert sol.value(D) == pytest.approx(303.1, abs=0.1)
+    assert sol(D) == pytest.approx(303.1, abs=0.1)
 
 
 if __name__ == '__main__':
