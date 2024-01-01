@@ -44,12 +44,14 @@ def integrate_discrete_intervals(
             - "periodic"
 
     """
+    # Determine if an x-array was specified, and calculate dx.
     x_is_specified = (x is not None)
     if not x_is_specified:
         x = _onp.arange(length(f))
 
     dx = x[1:] - x[:-1]
 
+    # Implement integration methods
     if method in ["forward_euler", "forward", "left", "left_riemann"]:
         avg_f = f[:-1]
 
@@ -175,51 +177,61 @@ def integrate_discrete_intervals(
 
         if method_endpoints == "simpson":
 
-            # Do the left endpoint(s)
-            avg_f_left_intervals = integrate_discrete_intervals(
-                f=f[:2 + remaining_endpoint_intervals[0]],
-                x=x[:2 + remaining_endpoint_intervals[0]],
-                multiply_by_dx=False,
-                method="forward_simpson",
-                method_endpoints="ignore",
-            )
-            avg_f_right_intervals = integrate_discrete_intervals(
-                f=f[-(2 + remaining_endpoint_intervals[1]):],
-                x=x[-(2 + remaining_endpoint_intervals[1]):],
-                multiply_by_dx=False,
-                method="backward_simpson",
-                method_endpoints="ignore",
-            )
+            if remaining_endpoint_intervals[0] != 0:
+                avg_f_left_intervals = integrate_discrete_intervals(
+                    f=f[:2 + remaining_endpoint_intervals[0]],
+                    x=x[:2 + remaining_endpoint_intervals[0]],
+                    multiply_by_dx=False,
+                    method="forward_simpson",
+                    method_endpoints="ignore",
+                )
+                avg_f = concatenate((
+                    avg_f_left_intervals,
+                    avg_f
+                ))
 
-            avg_f = concatenate((
-                avg_f_left_intervals,
-                avg_f,
-                avg_f_right_intervals,
-            ))
+            if remaining_endpoint_intervals[1] != 0:
+                avg_f_right_intervals = integrate_discrete_intervals(
+                    f=f[-(2 + remaining_endpoint_intervals[1]):],
+                    x=x[-(2 + remaining_endpoint_intervals[1]):],
+                    multiply_by_dx=False,
+                    method="backward_simpson",
+                    method_endpoints="ignore",
+                )
+                avg_f = concatenate((
+                    avg_f,
+                    avg_f_right_intervals,
+                ))
 
         elif method_endpoints == "trapezoidal":
 
-            # Do the left endpoint(s)
-            avg_f_left_intervals = integrate_discrete_intervals(
-                f=f[:1 + remaining_endpoint_intervals[0]],
-                x=x[:1 + remaining_endpoint_intervals[0]],
-                multiply_by_dx=False,
-                method="trapezoidal",
-                method_endpoints="ignore",
-            )
-            avg_f_right_intervals = integrate_discrete_intervals(
-                f=f[-(1 + remaining_endpoint_intervals[1]):],
-                x=x[-(1 + remaining_endpoint_intervals[1]):],
-                multiply_by_dx=False,
-                method="trapezoidal",
-                method_endpoints="ignore",
-            )
+            if remaining_endpoint_intervals[0] != 0:
+                avg_f_left_intervals = integrate_discrete_intervals(
+                    f=f[:1 + remaining_endpoint_intervals[0]],
+                    x=x[:1 + remaining_endpoint_intervals[0]],
+                    multiply_by_dx=False,
+                    method="trapezoidal",
+                    method_endpoints="ignore",
+                )
 
-            avg_f = concatenate((
-                avg_f_left_intervals,
-                avg_f,
-                avg_f_right_intervals,
-            ))
+                avg_f = concatenate((
+                    avg_f_left_intervals,
+                    avg_f
+                ))
+
+            if remaining_endpoint_intervals[1] != 0:
+                avg_f_right_intervals = integrate_discrete_intervals(
+                    f=f[-(1 + remaining_endpoint_intervals[1]):],
+                    x=x[-(1 + remaining_endpoint_intervals[1]):],
+                    multiply_by_dx=False,
+                    method="trapezoidal",
+                    method_endpoints="ignore",
+                )
+
+                avg_f = concatenate((
+                    avg_f,
+                    avg_f_right_intervals,
+                ))
 
     elif method_endpoints == "ignore":
         pass
