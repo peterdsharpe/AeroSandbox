@@ -3,7 +3,7 @@ import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.conditionals import where as _where
 from aerosandbox.numpy.arithmetic_dyadic import mod as _mod
-from aerosandbox.numpy.array import array, concatenate
+from aerosandbox.numpy.array import array, concatenate, reshape
 
 
 def diff(a, n=1, axis=-1, period=None):
@@ -38,9 +38,14 @@ def gradient(
         f,
         *varargs,
         axis=None,
-        edge_order=1
+        edge_order=1,
+        n=1,
 ):
-    if not is_casadi_type(f) and all([not is_casadi_type(vararg) for vararg in varargs]):
+    if (
+            not is_casadi_type(f)
+            and all([not is_casadi_type(vararg) for vararg in varargs])
+            and n == 1
+    ):
         return _onp.gradient(
             f,
             *varargs,
@@ -64,7 +69,7 @@ def gradient(
             dxes = []
 
             for i, vararg in enumerate(varargs):
-                if np.prod(array(vararg).shape) == 1:  # If it's a scalar, you have dx values
+                if _onp.prod(array(vararg).shape) == 1:  # If it's a scalar, you have dx values
                     dxes.append(
                         vararg * _onp.ones(shape[i] - 1)
                     )
@@ -110,7 +115,7 @@ def gradient(
             dx = dxes[axis]
             dx_shape = [1] * len(shape)
             dx_shape[axis] = shape[axis] - 1
-            dx = np.reshape(dx, dx_shape)
+            dx = reshape(dx, dx_shape)
 
             def get_slice(slice_obj: slice):
                 slices = [slice(None)] * len(shape)
@@ -129,56 +134,80 @@ def gradient(
                     - f[get_slice(slice(None, -2))]
             )
 
-            grad_f = (
-                             hm ** 2 * dfp + hp ** 2 * dfm
-                     ) / (
-                             hm * hp * (hm + hp)
-                     )
+            if n == 1:
+                grad_f = (
+                                 hm ** 2 * dfp + hp ** 2 * dfm
+                         ) / (
+                                 hm * hp * (hm + hp)
+                         )
 
-            if edge_order == 1:
-                # First point
-                df_f = dfm[get_slice(slice(0, 1))]
-                h_f = hm[get_slice(slice(0, 1))]
-                grad_f_first = df_f / h_f
+                if edge_order == 1:
+                    # First point
+                    df_f = dfm[get_slice(slice(0, 1))]
+                    h_f = hm[get_slice(slice(0, 1))]
+                    grad_f_first = df_f / h_f
 
-                # Last point
-                df_l = dfp[get_slice(slice(-1, None))]
-                h_l = hp[get_slice(slice(-1, None))]
-                grad_f_last = df_l / h_l
+                    # Last point
+                    df_l = dfp[get_slice(slice(-1, None))]
+                    h_l = hp[get_slice(slice(-1, None))]
+                    grad_f_last = df_l / h_l
 
-            elif edge_order == 2:
-                # First point
-                dfm_f = dfm[get_slice(slice(0, 1))]
-                dfp_f = dfp[get_slice(slice(0, 1))]
-                hm_f = hm[get_slice(slice(0, 1))]
-                hp_f = hp[get_slice(slice(0, 1))]
-                grad_f_first = (
-                                       2 * dfm_f * hm_f * hp_f + dfm_f * hp_f ** 2 - dfp_f * hm_f ** 2
-                               ) / (
-                                       hm_f * hp_f * (hm_f + hp_f)
-                               )
+                elif edge_order == 2:
+                    # First point
+                    dfm_f = dfm[get_slice(slice(0, 1))]
+                    dfp_f = dfp[get_slice(slice(0, 1))]
+                    hm_f = hm[get_slice(slice(0, 1))]
+                    hp_f = hp[get_slice(slice(0, 1))]
+                    grad_f_first = (
+                                           2 * dfm_f * hm_f * hp_f + dfm_f * hp_f ** 2 - dfp_f * hm_f ** 2
+                                   ) / (
+                                           hm_f * hp_f * (hm_f + hp_f)
+                                   )
 
-                # Last point
-                dfm_l = dfm[get_slice(slice(-1, None))]
-                dfp_l = dfp[get_slice(slice(-1, None))]
-                hm_l = hm[get_slice(slice(-1, None))]
-                hp_l = hp[get_slice(slice(-1, None))]
-                grad_f_last = (
-                                      -dfm_l * hp_l ** 2 + dfp_l * hm_l ** 2 + 2 * dfp_l * hm_l * hp_l
-                              ) / (
-                                      hm_l * hp_l * (hm_l + hp_l)
-                              )
+                    # Last point
+                    dfm_l = dfm[get_slice(slice(-1, None))]
+                    dfp_l = dfp[get_slice(slice(-1, None))]
+                    hm_l = hm[get_slice(slice(-1, None))]
+                    hp_l = hp[get_slice(slice(-1, None))]
+                    grad_f_last = (
+                                          -dfm_l * hp_l ** 2 + dfp_l * hm_l ** 2 + 2 * dfp_l * hm_l * hp_l
+                                  ) / (
+                                          hm_l * hp_l * (hm_l + hp_l)
+                                  )
+
+                else:
+                    raise ValueError("Invalid edge_order.")
+
+                grad_f = concatenate((
+                    grad_f_first,
+                    grad_f,
+                    grad_f_last
+                ), axis=axis)
+
+                return grad_f
+
+            elif n == 2:
+                # grad_grad_f = 2 * (dfp * hm - dfm * hp) / (hm * hp * (hm + hp))
+                grad_grad_f = (
+                        2 / (hm + hp) * (
+                        dfp / hp - dfm / hm
+                )
+                )
+
+                grad_grad_f_first = grad_grad_f[get_slice(slice(0, 1))]
+                grad_grad_f_last = grad_grad_f[get_slice(slice(-1, None))]
+
+                grad_grad_f = concatenate((
+                    grad_grad_f_first,
+                    grad_grad_f,
+                    grad_grad_f_last
+                ), axis=axis)
+
+                return grad_grad_f
 
             else:
-                raise ValueError("Invalid edge_order.")
-
-            grad_f = concatenate((
-                grad_f_first,
-                grad_f,
-                grad_f_last
-            ), axis=axis)
-
-            return grad_f
+                raise ValueError(
+                    "A second-order reconstructor only supports first derivatives (n=1) and second derivatives (n=2).")
 
 
 def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is different
@@ -218,14 +247,14 @@ if __name__ == '__main__':
     x = np.cumsum(np.arange(10))
     y = x ** 2
 
-    # print(gradient(y, x, edge_order=1))
-    # print(gradient(y, x, method="quadratic", edge_order=1))
+    print(gradient(y, x, edge_order=1))
+    print(gradient(y, x, edge_order=1))
+    print(gradient(y, x, edge_order=1, n=2))
 
     from aerosandbox.tools.code_benchmarking import Timer
     import casadi as cas
 
-
-    with Timer("np"):
-        print(gradient(np.eye(50), 2, 1))
-    with Timer("custom"):
-        print(gradient(cas.MX_eye(50), 2, 1))
+    # with Timer("np"):
+    #     print(gradient(np.eye(50), 2, 1))
+    # with Timer("custom"):
+    #     print(gradient(cas.MX_eye(50), 2, 1))

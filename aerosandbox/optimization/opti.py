@@ -953,7 +953,7 @@ class Opti(cas.Opti):
                       with_respect_to: Union[np.ndarray, cas.MX],
                       derivative_init_guess: Union[float, np.ndarray],  # TODO add default
                       derivative_scale: Union[float, np.ndarray] = None,
-                      method: str = "midpoint",
+                      method: str = "trapezoidal",
                       explicit: bool = False,  # TODO implement explicit
                       _stacklevel: int = 1,
                       ) -> cas.MX:
@@ -1061,8 +1061,16 @@ class Opti(cas.Opti):
             )
 
             self.constrain_derivative(
-                derivative=derivative,
-                variable=variable,
+                derivative=(
+                    derivative / derivative_scale
+                    if derivative_scale is not None
+                    else derivative
+                ),
+                variable=(
+                    variable / derivative_scale
+                    if derivative_scale is not None
+                    else variable
+                ),
                 with_respect_to=with_respect_to,
                 method=method,
                 _stacklevel=_stacklevel + 1
@@ -1077,7 +1085,7 @@ class Opti(cas.Opti):
                              derivative: cas.MX,
                              variable: cas.MX,
                              with_respect_to: Union[np.ndarray, cas.MX],
-                             method: str = "midpoint",
+                             method: str = "trapezoidal",
                              _stacklevel: int = 1,
                              ) -> None:
         """
@@ -1144,52 +1152,25 @@ class Opti(cas.Opti):
 
         """
         try:
-            d_var = np.diff(variable)
-        except ValueError:
-            d_var = np.diff(np.zeros_like(with_respect_to))
-
-        try:
             derivative[0]
         except (TypeError, IndexError):
             derivative = np.full_like(with_respect_to, fill_value=derivative)
 
-        d_time = np.diff(with_respect_to)  # Calculate the timestep
-
         # TODO scale constraints by variable scale?
         # TODO make
+        from aerosandbox.numpy.integrate_discrete import integrate_discrete_intervals
 
-        if method == "forward euler" or method == "forward" or method == "forwards":
-            # raise NotImplementedError
-            self.subject_to(
-                d_var == derivative[:-1] * d_time,
-                _stacklevel=_stacklevel + 1
-            )
+        integrals = integrate_discrete_intervals(
+            f = derivative,
+            x = with_respect_to,
+            multiply_by_dx=True,
+            method=method
+        )
+        duals = self.subject_to(
+            np.diff(variable) == integrals,
+        )
 
-        elif method == "backward euler" or method == "backward" or method == "backwards":
-            # raise NotImplementedError
-            self.subject_to(
-                d_var == derivative[1:] * d_time,
-                _stacklevel=_stacklevel + 1
-            )
-
-        elif method == "midpoint" or method == "trapezoid" or method == "trapezoidal":
-            self.subject_to(
-                d_var == np.trapz(derivative) * d_time,
-                _stacklevel=_stacklevel + 1
-            )
-
-        elif method == "simpson":
-            raise NotImplementedError
-
-        elif method == "runge-kutta" or method == "rk4":
-            raise NotImplementedError
-
-        elif method == "runge-kutta-3/8":
-            raise NotImplementedError
-
-        else:
-            raise ValueError("Bad value of `method`!")
-
+        return duals
 
 class OptiSol:
     def __init__(self,
