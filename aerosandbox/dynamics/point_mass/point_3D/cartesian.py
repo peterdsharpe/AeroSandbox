@@ -99,7 +99,8 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         return (
                 self.u_e ** 2 +
                 self.v_e ** 2 +
-                self.w_e ** 2
+                self.w_e ** 2 +
+                1e-200 # To avoid gradient singularities
         ) ** 0.5
 
     @property
@@ -114,7 +115,8 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             -self.w_e,
             (
                     self.u_e ** 2 +
-                    self.v_e ** 2
+                    self.v_e ** 2 +
+                    1e-200 # To avoid gradient singularities
             ) ** 0.5
         )
 
@@ -129,7 +131,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         """
         return np.arctan2(
             self.v_e,
-            self.u_e,
+            self.u_e + 1e-200 # To avoid gradient singularities,
         )
 
     def convert_axes(self,
