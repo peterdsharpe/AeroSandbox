@@ -268,6 +268,9 @@ def integrate_discrete_squared_curvature(
     Performs this by constructing a cubic spline interpolant using Bernstein polynomials and exactly integrating
     the squared second derivative of that interpolant.
     """
+    x_is_specified = (x is not None)
+    if not x_is_specified:
+        x = _onp.arange(length(f))
 
     x1 = x[:-3]
     x2 = x[1:-2]
