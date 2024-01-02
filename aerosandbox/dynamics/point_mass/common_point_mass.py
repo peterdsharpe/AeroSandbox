@@ -245,7 +245,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def constrain_derivatives(self,
                               opti: Opti,
                               time: np.ndarray,
-                              method: str = "midpoint",
+                              method: str = "trapezoidal",
                               which: Union[str, List[str], Tuple[str]] = "all",
                               _stacklevel=1,
                               ):
