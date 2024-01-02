@@ -99,7 +99,7 @@ def integrate_discrete_intervals(
         degree = 2
         remaining_endpoint_intervals = (0, 1)
 
-    elif method in ["backward_simpson", "backward_simpsons"]:
+    elif method in ["backward_simpson", "simpson_backward"]:
         x1 = x[:-2]
         x2 = x[1:-1]
         x3 = x[2:]
