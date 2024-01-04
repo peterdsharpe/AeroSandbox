@@ -1168,6 +1168,7 @@ class Opti(cas.Opti):
         )
         duals = self.subject_to(
             np.diff(variable) == integrals,
+            _stacklevel=_stacklevel + 1
         )
 
         return duals
