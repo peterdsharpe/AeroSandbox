@@ -1154,7 +1154,7 @@ class Opti(cas.Opti):
         try:
             derivative[0]
         except (TypeError, IndexError):
-            derivative = np.full_like(with_respect_to, fill_value=derivative)
+            derivative = np.ones_like(with_respect_to) * derivative
 
         # TODO scale constraints by variable scale?
         # TODO make
