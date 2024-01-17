@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import matplotlib.transforms as transforms
 
 def hline(
         y,
@@ -15,16 +15,20 @@ def hline(
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()
-    xlim = ax.get_xlim()
     plt.axhline(y=y, ls=linestyle, color=color, **kwargs)
     if text is not None:
-        plt.text(
-            x=text_xloc * xlim[1] + (1 - text_xloc) * xlim[0],
-            y=y,
-            s=text,
+        trans = transforms.blended_transform_factory(
+            ax.transAxes, ax.transData
+        )
+        plt.annotate(
+            text=text,
+            xy=(text_xloc, y),
+            xytext=(0, 0),
+            xycoords=trans,
+            textcoords="offset points",
+            ha=text_ha,
+            va=text_va,
             color=color,
-            horizontalalignment=text_ha,
-            verticalalignment=text_va,
             **text_kwargs
         )
 
@@ -43,16 +47,20 @@ def vline(
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()
-    ylim = ax.get_ylim()
     plt.axvline(x=x, ls=linestyle, color=color, **kwargs)
     if text is not None:
-        plt.text(
-            x=x,
-            y=text_yloc * ylim[1] + (1 - text_yloc) * ylim[0],
-            s=text,
+        trans = transforms.blended_transform_factory(
+            ax.transData, ax.transAxes
+        )
+        plt.annotate(
+            text=text,
+            xy=(x, text_yloc),
+            xytext=(0, 0),
+            xycoords=trans,
+            textcoords="offset points",
+            ha=text_ha,
+            va=text_va,
             color=color,
-            horizontalalignment=text_ha,
-            verticalalignment=text_va,
             rotation=90,
             **text_kwargs
         )
