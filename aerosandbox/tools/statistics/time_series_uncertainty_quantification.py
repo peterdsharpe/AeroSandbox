@@ -5,6 +5,8 @@ from tqdm import tqdm
 
 import aerosandbox.numpy as np
 from aerosandbox.tools.pretty_plots.utilities.natural_univariate_spline import NaturalUnivariateSpline as Spline
+from scipy import signal
+from aerosandbox.tools.code_benchmarking import Timer
 
 
 def estimate_noise_standard_deviation(
@@ -29,9 +31,6 @@ def estimate_noise_standard_deviation(
     The algorithm used in this function is a highly-optimized version of the math described in this repository,
     part of an upcoming paper: https://github.com/peterdsharpe/aircraft-polar-reconstruction-from-flight-test
 
-    The repository is currently private, but will be public at some point; if you would like access to it,
-    please contact Peter Sharpe at pds@mit.edu.
-
     Args:
 
         data: A 1D NumPy array of time-series data.
@@ -46,28 +45,34 @@ def estimate_noise_standard_deviation(
         raise ValueError("Data must have at least 2 points.")
 
     if estimator_order is None:
-        estimator_order = min(
-            max(
-                1,
-                int(len(data) ** 0.5)
-            ),
-            1000
-        )
+        estimator_order = int(np.clip(len(data) ** 0.5, 1, 1000))
 
     ##### Noise Variance Reconstruction #####
     from scipy.special import gammaln
     ln_factorial = lambda x: gammaln(x + 1)
 
     ### For speed, pre-compute the log-factorial of integers from 1 to estimator_order
-    ln_f = ln_factorial(np.arange(estimator_order + 1))
+    # ln_f = ln_factorial(np.arange(estimator_order + 1))
+    ln_f = np.cumsum(
+        np.log(
+            np.concatenate([
+                [1],
+                np.arange(1, estimator_order + 1)
+            ])
+        )
+    )
 
     ### Create a convolutional kernel to vectorize the summation
-    coefficients = np.exp(
-        2 * ln_f[estimator_order] - ln_f - ln_f[::-1] - 0.5 * ln_factorial(2 * estimator_order)
-    ) * (-1) ** np.arange(estimator_order + 1)
-    coefficients -= np.mean(coefficients) # Remove any bias introduced by floating-point error
+    log_coeffs = (
+            2 * ln_f[estimator_order] - ln_f - ln_f[::-1] - 0.5 * ln_factorial(2 * estimator_order)
+    )
+    indices = np.nonzero(log_coeffs >= np.log(1e-20) + log_coeffs[estimator_order // 2])[0]
+    coefficients = np.exp(log_coeffs[indices[0]:indices[-1] + 1])
+    coefficients[::2] *= -1  # Flip the sign on every other coefficient
+    coefficients -= np.mean(coefficients)  # Remove any bias introduced by floating-point error
 
-    sample_stdev = np.convolve(data, coefficients[::-1], 'valid')
+    # sample_stdev = signal.convolve(data, coefficients[::-1], 'valid')
+    sample_stdev = signal.oaconvolve(data, coefficients[::-1], 'valid')
     return np.mean(sample_stdev ** 2) ** 0.5
 
 
@@ -244,56 +249,56 @@ def bootstrap_fits(
 
 
 if __name__ == '__main__':
-    # np.random.seed(1)
-    # N = 1000
-    # f_sample_over_f_signal = 1000
-    #
-    # t = np.arange(N)
-    # y = np.sin(2 * np.pi / f_sample_over_f_signal * t) + 0.1 * np.random.randn(len(t))
-    #
-    # print(estimate_noise_standard_deviation(y))
+    np.random.seed(1)
+    N = 1000
+    f_sample_over_f_signal = 1000
 
-    d = dict(np.load("raw_data.npz"))
+    t = np.arange(N)
+    y = np.sin(2 * np.pi / f_sample_over_f_signal * t) + 0.1 * np.random.randn(len(t))
 
-    x = d["airspeed"]
-    y = d["voltage"] * d["current"]
+    print(estimate_noise_standard_deviation(y, 1))
 
-    # estimate_noise_standard_deviation(x)
+    # d = dict(np.load("raw_data.npz"))
     #
-    # x_fit, y_bootstrap_fits = bootstrap_fits(
+    # x = d["airspeed"]
+    # y = d["voltage"] * d["current"]
+    #
+    # # estimate_noise_standard_deviation(x)
+    # #
+    # # x_fit, y_bootstrap_fits = bootstrap_fits(
+    # #     x, y,
+    # #     x_stdev=None,
+    # #     y_stdev=None,
+    # #     n_bootstraps=20,
+    # #     spline_degree=5,
+    # # )
+    # import matplotlib.pyplot as plt
+    # import aerosandbox.tools.pretty_plots as p
+    #
+    # fig, ax = plt.subplots(figsize=(7, 4))
+    #
+    # p.plot_with_bootstrapped_uncertainty(
     #     x, y,
     #     x_stdev=None,
-    #     y_stdev=None,
-    #     n_bootstraps=20,
-    #     spline_degree=5,
+    #     y_stdev=estimate_noise_standard_deviation(y[np.argsort(x)]),
+    #     ci=[0.75, 0.95],
+    #     color="coral",
+    #     n_bootstraps=100,
+    #     n_fit_points=200,
+    #     # ci_to_alpha_mapping=lambda ci: 0.4,
+    #     normalize=False,
+    #     spline_degree=3,
     # )
-    import matplotlib.pyplot as plt
-    import aerosandbox.tools.pretty_plots as p
-
-    fig, ax = plt.subplots(figsize=(7, 4))
-
-    p.plot_with_bootstrapped_uncertainty(
-        x, y,
-        x_stdev=None,
-        y_stdev=estimate_noise_standard_deviation(y[np.argsort(x)]),
-        ci=[0.75, 0.95],
-        color="coral",
-        n_bootstraps=100,
-        n_fit_points=200,
-        # ci_to_alpha_mapping=lambda ci: 0.4,
-        normalize=False,
-        spline_degree=3,
-    )
-    plt.xlim(x.min(), x.max())
-    plt.ylim(-10, 800)
-    p.set_ticks(1, 0.25, 100, 25)
-    plt.legend(
-        loc="lower right"
-    )
-    p.show_plot(
-        xlabel="Cruise Airspeed [m/s]",
-        ylabel="Electrical Power Required [W]",
-        title="Raw Data",
-        legend=False,
-        dpi=300
-    )
+    # plt.xlim(x.min(), x.max())
+    # plt.ylim(-10, 800)
+    # p.set_ticks(1, 0.25, 100, 25)
+    # plt.legend(
+    #     loc="lower right"
+    # )
+    # p.show_plot(
+    #     xlabel="Cruise Airspeed [m/s]",
+    #     ylabel="Electrical Power Required [W]",
+    #     title="Raw Data",
+    #     legend=False,
+    #     dpi=300
+    # )
