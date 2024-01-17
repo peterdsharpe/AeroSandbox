@@ -93,7 +93,7 @@ def gradient(
             return [
                 gradient(
                     f,
-                    *varargs,
+                    varargs[axis_i],
                     axis=axis_i,
                     edge_order=edge_order
                 )
