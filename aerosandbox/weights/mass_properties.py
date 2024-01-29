@@ -119,10 +119,24 @@ class MassProperties(AeroSandboxObject):
         ])
 
     def __getitem__(self, index) -> "MassProperties":
+        """
+        Indexes one item from each attribute of an MassProperties instance.
+        Returns a new MassProperties instance.
+
+        Args:
+            index: The index that is being called; e.g.,:
+                >>> first_mass_props = mass_props[0]
+
+        Returns: A new MassProperties instance, where each attribute is subscripted at the given value, if possible.
+
+        """
+        l = len(self)
+        if index >= l or index < -l:
+            raise IndexError("Index is out of range!")
+
         def get_item_of_attribute(a):
             if np.isscalar(a):  # If NumPy says its a scalar, return it.
                 return a
-
             try:
                 return a[index]
             except TypeError:  # object is not subscriptable
@@ -149,6 +163,40 @@ class MassProperties(AeroSandboxObject):
                 for k, v in inputs.items()
             }
         )
+
+    def __len__(self):
+        length = 1
+        for v in [
+            self.mass,
+            self.x_cg,
+            self.y_cg,
+            self.z_cg,
+            self.Ixx,
+            self.Iyy,
+            self.Izz,
+            self.Ixy,
+            self.Iyz,
+            self.Ixz,
+        ]:
+            if np.length(v) == 1:
+                try:
+                    v[0]
+                    length = 1
+                except (TypeError, IndexError, KeyError) as e:
+                    pass
+            elif length == 0 or length == 1:
+                length = np.length(v)
+            elif length == np.length(v):
+                pass
+            else:
+                raise ValueError("State variables are appear vectorized, but of different lengths!")
+        return length
+
+    def __array__(self, dtype="O"):
+        """
+        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        """
+        return np.fromiter([self], dtype=dtype).reshape(())
 
     def __neg__(self) -> "MassProperties":
         return -1 * self

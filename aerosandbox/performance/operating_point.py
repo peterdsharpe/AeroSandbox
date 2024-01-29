@@ -196,11 +196,14 @@ class OperatingPoint(AeroSandboxObject):
 
         Args:
             index: The index that is being called; e.g.,:
-                >>> first_dyn = op_point[0]
+                >>> first_op_point = op_point[0]
 
         Returns: A new OperatingPoint instance, where each attribute is subscripted at the given value, if possible.
 
         """
+        l = len(self)
+        if index >= l or index < -l:
+            raise IndexError("Index is out of range!")
 
         def get_item_of_attribute(a):
             try:
@@ -220,17 +223,27 @@ class OperatingPoint(AeroSandboxObject):
         return new_instance
 
     def __len__(self):
-        length = 1
+        length = 0
         for v in self.state.values():
             if np.length(v) == 1:
-                pass
-            elif length == 1:
+                try:
+                    v[0]
+                    length = 1
+                except (TypeError, IndexError, KeyError) as e:
+                    pass
+            elif length == 0 or length == 1:
                 length = np.length(v)
             elif length == np.length(v):
                 pass
             else:
                 raise ValueError("State variables are appear vectorized, but of different lengths!")
         return length
+
+    def __array__(self, dtype="O"):
+        """
+        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        """
+        return np.fromiter([self], dtype=dtype).reshape(())
 
     def dynamic_pressure(self):
         """
