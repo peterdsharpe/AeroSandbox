@@ -337,7 +337,24 @@ def reshape(a, newshape, order='C'):
         elif len(newshape) > 2:
             raise ValueError("CasADi data types are limited to no more than 2 dimensions.")
 
-        return _cas.reshape(a.T, newshape[::-1]).T
+        if order == "C":
+            return _cas.reshape(a.T, newshape[::-1]).T
+        elif order == "F":
+            return _cas.reshape(a, newshape)
+        else:
+            raise NotImplementedError("Only C and F orders are supported.")
+
+
+def ravel(a, order='C'):
+    """
+    Returns a contiguous flattened array.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.ravel.html
+    """
+    if not is_casadi_type(a, recursive=False):
+        return _onp.ravel(a, order=order)
+    else:
+        return reshape(a, -1, order=order)
 
 
 def tile(A, reps):

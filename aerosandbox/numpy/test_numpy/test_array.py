@@ -304,13 +304,13 @@ def test_reshape_2D_vec_wide():
 
 
 def test_reshape_2D():
-    a = np.array([
+    a_np = np.array([
         [1, 2, 3],
         [4, 5, 6],
         [7, 8, 9],
         [10, 11, 12],
     ])
-    b = cas.DM(a)
+    a_cas = cas.DM(a_np)
 
     test_inputs = [
         -1,
@@ -324,13 +324,22 @@ def test_reshape_2D():
     ]
 
     for i in test_inputs:
-        ra = np.reshape(a, i)
-        rb = np.reshape(b, i)
-        if len(ra.shape) == 1:
-            ra = ra.reshape(-1, 1)
+        res_np = np.reshape(a_np, i)
+        res_cas = np.reshape(a_cas, i)
+        if len(res_np.shape) == 1:
+            res_np = res_np.reshape(-1, 1)
 
-        assert np.all(ra == rb)
-        assert ra.shape == rb.shape
+        assert np.all(res_np == res_cas)
+        assert res_np.shape == res_cas.shape
+
+    for i in test_inputs:
+        res_np = np.reshape(a_np, i, order="F")
+        res_cas = np.reshape(a_cas, i, order="F")
+        if len(res_np.shape) == 1:
+            res_np = res_np.reshape(-1, 1)
+
+        assert np.all(res_np == res_cas)
+        assert res_np.shape == res_cas.shape
 
 
 def test_assert_equal_shape():
