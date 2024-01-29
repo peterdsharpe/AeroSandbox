@@ -67,6 +67,9 @@ def integrate_discrete_intervals(
         remaining_endpoint_intervals = (0, 0)
 
     elif method in ["trapezoidal", "trapezoid", "trapz", "midpoint"]:
+        if method == "midpoint":
+            raise PendingDeprecationWarning("The 'midpoint' method will be deprecated at a future point, since 'trapezoidal' is the more accurate term here.")
+
         avg_f = (f[1:] + f[:-1]) / 2
 
         degree = 1
