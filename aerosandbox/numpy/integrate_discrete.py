@@ -13,8 +13,8 @@ def integrate_discrete_intervals(
         method_endpoints: str = "lower_order",
 ):
     """
-    Given a set of points (x_i, f_i) from a function, computes the integral of that function over each set of
-    adjacent points ("intervals").
+    Given a set of sampled points (x_i, f_i) from a function, computes the integral of that function over each set of
+    adjacent points ("intervals"). Does this via a reconstruction approach, with several methods available.
 
     In general, N points will yield N-1 integrals (one for each "interval" between points).
 
@@ -264,13 +264,13 @@ def integrate_discrete_squared_curvature(
         method: str = "hybrid_simpson_cubic",
 ):
     """
-    Given a set of points (x_i, f_i) from a function f(x), computes the following quantity:
+    Given a set of sampled points (x_i, f_i) from a function f(x), computes the following quantity:
 
         int_{x[0]}^{x[-1]} (f''(x))^2 dx
 
     This is useful for regularization of smooth curves (i.e., encouraging smooth functions as optimization results).
 
-    Performs this through one of several methods, specified by `method`:
+    Performs this through one of several reconstruction-based methods, specified by `method`:
 
         * "cubic": On each interval, reconstructs a piecewise cubic polynomial. This cubic is the unique polynomial
         that passes through the two points at the endpoints of the interval, plus the next point beyond each endpoint
@@ -290,7 +290,7 @@ def integrate_discrete_squared_curvature(
 
             These two quadratics are then analytically differentiated twice, squared, and integrated over the
             interval. This requires much less calculation, since the quadratics have uniform curvature over the
-            interval, causing a lot of things to simplify. The result is then the arithmetic mean of the results of this
+            interval, causing a lot of things to simplify. The result is then computed by combining the results of this
             process for the two quadratic reconstructions.
 
             This is similar to a Simpson's rule integration, balanced between the two sides of the interval. In
@@ -568,7 +568,9 @@ def integrate_discrete_squared_curvature(
 
         a = res_backward_simpson[slice(None, -1)]
         b = res_forward_simpson[slice(1, None)]
-        middle_intervals = (a + b) / 2
+
+        # middle_intervals = (a + b) / 2
+        middle_intervals = ((a ** 2 + b ** 2) / 2 + 1e-100) ** 0.5  # This is more accurate across all frequencies
 
         last_interval = res_backward_simpson[slice(-1, None)]
 
@@ -580,36 +582,6 @@ def integrate_discrete_squared_curvature(
 
         return res
 
-    elif method in ["subgradient"]:  # TODO: Is this a duplicate of simpson?
-        x1 = x[:-3]
-        x2 = x[1:-2]
-        x3 = x[2:-1]
-        x4 = x[3:]
-
-        f1 = f[:-3]
-        f2 = f[1:-2]
-        f3 = f[2:-1]
-        f4 = f[3:]
-
-        h = x3 - x2
-        hm = x2 - x1
-        hp = x4 - x3
-
-        dfm = f2 - f1
-        df = f3 - f2
-        dfp = f4 - f3
-
-        slope = df / h
-        slopep = dfp / hp
-        slopem = dfm / hm
-
-        ddfp = slopep - slope
-        ddfm = slope - slopem
-        return (
-                ddfp ** 2 / h +
-                ddfm ** 2 / h
-        ) / 2
-
     elif method in ["hybrid_simpson_cubic"]:
         from aerosandbox.numpy.calculus import gradient
         dfdx = gradient(
@@ -619,12 +591,9 @@ def integrate_discrete_squared_curvature(
         )
 
         h = x[1:] - x[:-1]
-        f1 = f[:-1]
-        f2 = f[1:]
+        df = f[1:] - f[:-1]
         dfdx1 = dfdx[:-1]
         dfdx2 = dfdx[1:]
-
-        df = f2 - f1
 
         res = (
                 4 * (dfdx1 ** 2 + dfdx1 * dfdx2 + dfdx2 ** 2) / h
@@ -712,7 +681,6 @@ if __name__ == '__main__':
         f=f_vals,
         x=x_vals,
         # method="simpson"
-        # method="subgradient",
         method="hybrid_simpson_cubic",
     )
     integral = np.sum(approx)
