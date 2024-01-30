@@ -14,7 +14,7 @@ exact = s.simplify(s.integrate(d2fdx2 ** 2, (x, 0, 1)))
 print(float(exact))
 
 def get_approx(period=10, method="cubic"):
-    x_vals = np.cosspace(0, 1, n_samples).astype(float)
+    x_vals = np.linspace(0, 1, n_samples).astype(float)
     f_vals = s.lambdify(
         x,
         f.subs(k, (n_samples - 1) / period),
@@ -40,8 +40,8 @@ periods = np.geomspace(1, 10000, 201)
 
 import matplotlib.pyplot as plt
 import aerosandbox.tools.pretty_plots as p
-fig, ax = plt.subplots(2, 1)
-for method in ["cubic", "simpson", "subgradient", "hybrid_simpson_cubic"]:
+fig, ax = plt.subplots(2, 1, figsize=(6, 8))
+for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
     approxes = np.vectorize(
         lambda period: get_approx(period, method=method)
     )(periods)
@@ -51,4 +51,13 @@ for method in ["cubic", "simpson", "subgradient", "hybrid_simpson_cubic"]:
 plt.xlabel("Period [samples]")
 ax[0].set_ylabel("Relative Error")
 ax[1].set_ylabel("Approximation")
+plt.sca(ax[1])
+p.hline(
+    float(exact),
+    color="k",
+    linestyle="--",
+    label="Exact",
+    alpha=0.5
+)
+
 p.show_plot()
