@@ -1,6 +1,7 @@
 import numpy as _onp
 import casadi as _cas
 from typing import Tuple, Iterable, Union
+from aerosandbox.numpy.conditionals import where
 
 from aerosandbox.numpy.determine_type import is_casadi_type
 
@@ -65,4 +66,28 @@ def mod(x1, x2):
         return _onp.mod(x1, x2)
 
     else:
-        return _cas.fmod(x1, x2)
+        out = _cas.fmod(x1, x2)
+        out = where(
+            x1 < 0,
+            out + x2,
+            out
+        )
+        return out
+
+
+def centered_mod(x1, x2):
+    """
+    Return element-wise remainder of division, centered on zero.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.mod.html
+    """
+    if not is_casadi_type(x1) and not is_casadi_type(x2):
+        remainder = _onp.mod(x1, x2)
+        return where(
+            remainder > x2 / 2,
+            remainder - x2,
+            remainder
+        )
+
+    else:
+        return _cas.remainder(x1, x2)

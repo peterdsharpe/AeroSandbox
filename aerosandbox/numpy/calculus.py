@@ -1,8 +1,7 @@
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
-from aerosandbox.numpy.conditionals import where as _where
-from aerosandbox.numpy.arithmetic_dyadic import mod as _mod
+from aerosandbox.numpy.arithmetic_dyadic import centered_mod as _centered_mod
 from aerosandbox.numpy.array import array, concatenate, reshape
 
 
@@ -13,12 +12,9 @@ def diff(a, n=1, axis=-1, period=None):
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diff.html
     """
     if period is not None:
-        original_result = diff(a, n=n, axis=axis)
-        remainder = _mod(original_result, period)
-        return _where(
-            remainder > period / 2,
-            remainder - period,
-            remainder
+        return _centered_mod(
+            diff(a, n=n, axis=axis),
+            period
         )
 
     if not is_casadi_type(a):
@@ -97,7 +93,7 @@ def gradient(
             return [
                 gradient(
                     f,
-                    *varargs,
+                    varargs[axis_i],
                     axis=axis_i,
                     edge_order=edge_order
                 )
@@ -239,22 +235,35 @@ def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is di
 
 
 if __name__ == '__main__':
-    import numpy as np
+    import aerosandbox as asb
+    import aerosandbox.numpy as np
 
-    # a = np.linspace(-500, 500, 21) % 360 - 180
-    # print(diff(a, period=360))
-
-    x = np.cumsum(np.arange(10))
-    y = x ** 2
-
-    print(gradient(y, x, edge_order=1))
-    print(gradient(y, x, edge_order=1))
-    print(gradient(y, x, edge_order=1, n=2))
-
-    from aerosandbox.tools.code_benchmarking import Timer
     import casadi as cas
 
-    # with Timer("np"):
-    #     print(gradient(np.eye(50), 2, 1))
-    # with Timer("custom"):
-    #     print(gradient(cas.MX_eye(50), 2, 1))
+    print(diff(cas.DM([355, 5]), period=360))
+    #
+    # # a = np.linspace(-500, 500, 21) % 360 - 180
+    # # print(diff(a, period=360))
+    #
+    # x = np.cumsum(np.arange(10))
+    # y = x ** 2
+    #
+    # print(gradient(y, x, edge_order=1))
+    # print(gradient(y, x, edge_order=1))
+    # print(gradient(y, x, edge_order=1, n=2))
+    #
+    # opti = asb.Opti()
+    # x = opti.variable(init_guess=[355, 5])
+    # d = diff(x, period=360)
+    # opti.subject_to([
+    #     # x[0] == 3,
+    #     x[0] > 180,
+    #     x[1] < 180,
+    #     d < 20,
+    #     d > -20
+    # ])
+    # opti.maximize(np.sum(np.cosd(x)))
+    # sol = opti.solve(
+    #     behavior_on_failure="return_last"
+    # )
+    # print(sol.value(x))

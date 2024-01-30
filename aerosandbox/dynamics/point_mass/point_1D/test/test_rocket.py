@@ -38,7 +38,7 @@ def test_rocket():
         derivative=-alpha * thrust,
         variable=dyn.mass_props.mass,
         with_respect_to=time,
-        method="midpoint",
+        method="trapezoidal",
     )
 
     ### Boundary conditions

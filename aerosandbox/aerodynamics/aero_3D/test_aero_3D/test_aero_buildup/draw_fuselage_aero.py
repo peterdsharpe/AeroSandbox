@@ -35,8 +35,13 @@ from aerosandbox.tools.string_formatting import eng_string
 p.contour(
     Beta, Alpha, aero["L"], colorbar_label="Lift $L$ [N]",
     # levels=100,
-    linelabels_format=lambda s: eng_string(s, unit="N"),
+    linelabels_format=lambda s: f"{s:.2g} N",
     cmap=p.mpl.colormaps.get_cmap("coolwarm")
 )
 p.equal()
-p.show_plot("3D Fuselage Lift", r"$\beta$ [deg]", r"$\alpha$ [deg]")
+plt.xlabel(r"$\beta$ [deg]")
+plt.ylabel(r"$\alpha$ [deg]")
+p.show_plot(
+    "3D Fuselage Lift",
+    rotate_axis_labels=False
+)

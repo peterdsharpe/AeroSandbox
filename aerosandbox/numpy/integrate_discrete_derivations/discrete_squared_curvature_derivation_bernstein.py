@@ -7,13 +7,14 @@ init_printing()
 
 # Define the symbols
 hm, h, hp = s.symbols("hm h hp", real=True)
-dfm, df, dfp = s.symbols("dfm df dfp", real=True)
 
 x1, x2, x3, x4 = s.symbols('x1 x2 x3 x4', real=True)
 # f1, f2, f3, f4 = s.symbols('f1 f2 f3 f4', real=True)
 
-f1 = 0
-f2 = dfm
+dfm, df, dfp = s.symbols("dfm df dfp", real=True)
+
+f1 = s.symbols("f1", real=True)
+f2 = f1 + dfm
 f3 = f2 + df
 f4 = f3 + dfp
 
@@ -77,7 +78,8 @@ f = c1 * b1 + c2 * b2 + c3 * b3 + c4 * b4
 f1_cubic = f.subs(q, q1)  # .simplify()
 f4_cubic = f.subs(q, q4)  # .simplify()
 
-# factors = [q1, q4]
+factors = [dfm, df, dfp]
+# factors = [ddfm, ddfp]
 # factors = [f1, f2, f3, f4]
 
 # Solve for c2 and c3
@@ -91,8 +93,8 @@ sol = s.solve(
         c3,
     ],
 )
-c2_sol = simplify(sol[c2].factor([dfm, df, dfp]))
-c3_sol = simplify(sol[c3].factor([dfm, df, dfp]))
+c2_sol = simplify(sol[c2].factor(factors))
+c3_sol = simplify(sol[c3].factor(factors))
 
 # f = c1 * b1 + c2_sol * b2 + c3_sol * b3 + c4 * b4
 
@@ -100,10 +102,10 @@ dfdx = f.diff(q) / h
 df2dx = dfdx.diff(q) / h
 
 res = s.integrate(df2dx ** 2, (q, q2, q3)) * h
-res = simplify(res.factor([dfm, df, dfp]))
+res = simplify(res.factor(factors))
 res = simplify(res)
 
-res = simplify(res.subs({c2: c2_sol, c3: c3_sol}).factor([dfm, df, dfp]))
+res = simplify(res.subs({c2: c2_sol, c3: c3_sol}).factor(factors))
 
 cse = s.cse(
     res,
@@ -124,24 +126,30 @@ if __name__ == '__main__':
     a = 0
     b = 4
 
+
     def example_f(x):
-        return x ** 3
+        return x ** 3 + 1
+
 
     h_val = b - a
     hm_val = 1
-    hp_val = 3
+    hp_val = 1
     df_val = example_f(b) - example_f(a)
     dfm_val = example_f(a) - example_f(a - hm_val)
     dfp_val = example_f(b + hp_val) - example_f(b)
+    ddfm_val = df_val - dfm_val
+    ddfp_val = dfp_val - df_val
 
     subs = {
-            h: h_val,
-            hm: hm_val,
-            hp: hp_val,
-            df: df_val,
-            dfm: dfm_val,
-            dfp: dfp_val,
-        }
+        h  : h_val,
+        hm : hm_val,
+        hp : hp_val,
+        df : df_val,
+        dfm: dfm_val,
+        dfp: dfp_val,
+        # ddfm: ddfm_val,
+        # ddfp: ddfp_val,
+    }
 
     exact = s.N(
         s.integrate(
@@ -156,4 +164,4 @@ if __name__ == '__main__':
 
     print(f"exact: {exact}")
     print(f"eqn: {eqn}")
-    print(f"ratio: {exact/eqn}")
+    print(f"ratio: {exact / eqn}")
