@@ -11,8 +11,8 @@ def quad(
         full_output: bool = False,
         variable_of_integration: _cas.MX = None,
 ) -> Union[
-    tuple[float, float],
-    tuple[float, float, dict]
+    Tuple[float, float],
+    Tuple[float, float, dict]
 ]:
     if np.is_casadi_type(func):
 
