@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib.container import ErrorbarContainer
 from matplotlib.dates import DateConverter, num2date
 
-from .utils import ensure_float, maximum_bipartite_matching, always_iterable
+from aerosandbox.tools.pretty_plots.labellines.utils import ensure_float, maximum_bipartite_matching, always_iterable
 
 
 # Label line with line2D label data
@@ -105,10 +105,15 @@ def labelLine(
         line.set_label(None)
 
     if align:
-        # Compute the slope and label rotation
-        screen_dx, screen_dy = ax.transData.transform(
-            (xfa, ya)
-        ) - ax.transData.transform((xfb, yb))
+        if ax.get_aspect() == "auto":
+            # Compute the slope and label rotation
+            screen_dx, screen_dy = (
+                    ax.transData.transform((xfb, yb)) -
+                    ax.transData.transform((xfa, ya))
+            )
+        elif isinstance(ax.get_aspect(), (float, int)):
+            screen_dx = xfb - xfa
+            screen_dy = (yb - ya) * ax.get_aspect()
         rotation = (degrees(atan2(screen_dy, screen_dx)) + 90) % 180 - 90
     else:
         rotation = 0
@@ -285,3 +290,27 @@ def labelLines(
         )
 
     return txts
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    x_plt = np.linspace(0, 2, 1000)
+    y_plt = 0.1 * np.sin(2 * np.pi * x_plt)
+    line, = plt.plot(x_plt, y_plt, label="hi")
+
+    # plt.axis("equal")
+    # print(ax.get_aspect())
+
+    labelLine(line, x=1)
+    plt.show()
+
+    x = 1
+    label = None
+    align = True
+    drop_label = False
+    yoffset = 0
+    yoffset_logspace = False
+    outline_color = "auto"
+    outline_width = 8
