@@ -183,7 +183,6 @@ def gradient(
                 return grad_f
 
             elif n == 2:
-                # grad_grad_f = 2 * (dfp * hm - dfm * hp) / (hm * hp * (hm + hp))
                 grad_grad_f = (
                         2 / (hm + hp) * (
                         dfp / hp - dfm / hm
