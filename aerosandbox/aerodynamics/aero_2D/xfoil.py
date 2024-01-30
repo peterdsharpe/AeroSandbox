@@ -9,6 +9,11 @@ import warnings
 import os
 
 
+# Define XFoilError
+class XFoilError(Exception):
+    pass
+
+
 class XFoil(ExplicitAnalysis):
     """
 
@@ -40,7 +45,7 @@ class XFoil(ExplicitAnalysis):
                  n_crit: float = 9.,
                  xtr_upper: float = 1.,
                  xtr_lower: float = 1.,
-                 hinge_point_x: float = None,
+                 hinge_point_x: float = 0.75,
                  full_potential: bool = False,
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
@@ -177,22 +182,20 @@ class XFoil(ExplicitAnalysis):
         # Handle Re
         if self.Re != 0:
             run_file_contents += [
-                f"v {self.Re}",
+                f"v {self.Re:.8g}",
             ]
 
         # Handle mach
-        if self.mach != 0:
-            run_file_contents += [
-                f"m {self.mach}",
-            ]
+        run_file_contents += [
+            f"m {self.mach:.8g}",
+        ]
 
         # Handle hinge moment
-        if self.hinge_point_x is not None:
-            run_file_contents += [
-                "hinc",
-                f"fnew {self.hinge_point_x} {self.airfoil.local_camber(self.hinge_point_x)}",
-                "fmom",
-            ]
+        run_file_contents += [
+            "hinc",
+            f"fnew {float(self.hinge_point_x):.8g} {float(self.airfoil.local_camber(self.hinge_point_x)):.8g}",
+            "fmom",
+        ]
 
         if self.full_potential:
             run_file_contents += [
@@ -211,8 +214,8 @@ class XFoil(ExplicitAnalysis):
         if not (self.xtr_upper == 1 and self.xtr_lower == 1 and self.n_crit == 9):
             run_file_contents += [
                 "vpar",
-                f"xtr {self.xtr_upper} {self.xtr_lower}",
-                f"n {self.n_crit}",
+                f"xtr {self.xtr_upper:.8g} {self.xtr_lower:.8g}",
+                f"n {self.n_crit:.8g}",
                 "",
             ]
 
@@ -330,16 +333,7 @@ class XFoil(ExplicitAnalysis):
             try:
                 with open(directory / output_filename) as f:
                     lines = f.readlines()
-
-                title_line = lines[10]
-                columns = title_line.split()
-
-                output = {
-                    column: []
-                    for column in columns
-                }
-
-            except (FileNotFoundError, IndexError):
+            except FileNotFoundError:
                 raise FileNotFoundError(
                     "It appears XFoil didn't produce an output file, probably because it crashed.\n"
                     "To troubleshoot, try some combination of the following:\n"
@@ -351,14 +345,68 @@ class XFoil(ExplicitAnalysis):
                     "\t - Try allowing XFoil to repanel the airfoil by setting `xfoil_repanel=True` in the XFoil constructor.\n"
                 )
 
+            try:
+                separator_line = None
+                for i, line in enumerate(lines):
+                    # The first line with at least 30 "-" in it is the separator line.
+                    if line.count("-") >= 30:
+                        separator_line = i
+                        break
+
+                if separator_line is None:
+                    raise IndexError
+
+                title_line = lines[i - 1]
+                columns = title_line.split()
+
+                data_lines = lines[i + 1:]
+
+            except IndexError:
+                raise XFoilError(
+                    "XFoil output file is malformed; it doesn't have the expected number of lines.\n"
+                    "For debugging, the raw output file from XFoil is printed below:\n"
+                    + "\n".join(lines)
+                )
+
             def str_to_float(s: str) -> float:
                 try:
                     return float(s)
                 except ValueError:
                     return np.nan
 
-            for line in lines[12:]:
+            for pointno, line in enumerate(data_lines):
                 data = [str_to_float(entry) for entry in line.split()]
+
+                if len(data) == 10 and len(columns) == 8:
+                    # This is a monkey-patch for a bug in XFoil v6.99, which causes polar output files to be malformed
+                    # when including both Cpmin ("cinc") and hinge moment ("hinc") in the same run.
+                    columns = [
+                        "alpha",
+                        "CL",
+                        "CD",
+                        "CDp",
+                        "CM",
+                        "Cpmin",
+                        "Xcpmin",
+                        "Chinge",
+                        "Top_Xtr",
+                        "Bot_Xtr",
+                    ]
+
+                if not len(data) == len(columns):
+                    raise XFoilError(
+                        "XFoil output file is malformed; the header and data have different numbers of columns.\n"
+                        "In previous testing, this occurs due to a bug in XFoil itself, with certain input combos.\n"
+                        "For debugging, the raw output file from XFoil is printed below:\n"
+                        + "\n".join(lines)
+                    )
+
+                if pointno == 0:
+                    output = {
+                        column: []
+                        for column in columns
+                    }
+
                 for i in range(len(columns)):
                     output[columns[i]].append(data[i])
 
