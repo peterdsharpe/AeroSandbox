@@ -111,13 +111,13 @@ class AeroBuildup(ExplicitAnalysis):
             F_w = self.F_w
             M_b = self.M_b
             return self.__class__.__name__ + "(\n\t" + "\n\t".join([
-                f"L={-F_w[2]}",
-                f"Y={F_w[1]}",
-                f"D={-F_w[0]}",
-                f"l_b={M_b[0]}",
-                f"m_b={M_b[1]}",
-                f"n_b={M_b[2]}",
-                f"span_effective={self.span_effective}, oswalds_efficiency={self.oswalds_efficiency}",
+                f"L={-F_w[2]},",
+                f"Y={F_w[1]},",
+                f"D={-F_w[0]},",
+                f"l_b={M_b[0]},",
+                f"m_b={M_b[1]},",
+                f"n_b={M_b[2]},",
+                f"span_effective={self.span_effective}, oswalds_efficiency={self.oswalds_efficiency},",
             ]) + "\n)"
 
         @property
