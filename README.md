@@ -279,13 +279,13 @@ If you find AeroSandbox useful in a research publication, please cite it using t
 }
 ```
 
-As the MIT License applies, use AeroSandbox for anything you want (commercial or noncommercial). Attribution is strongly appreciated but not required.
-
 Commercial users: I'm more than happy to discuss consulting work for active AeroSandbox support if this package proves helpful - use the email address in the header of this README to get in touch.
 
-### License
+#### License
 
-[MIT License, terms here](LICENSE.txt). Basically: use AeroSandbox for anything you want; no warranty express or implied.
+[MIT License applies, full terms here](LICENSE.txt). In short: use AeroSandbox for anything you want (commercial or non-commercial). AeroSandbox is released in hope that it will be useful but without any warranty of merchantability (either express or implied). 
+
+If you use AeroSandbox, attribution is appreciated.
 
 ## Stargazers over time
 
