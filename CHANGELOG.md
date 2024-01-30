@@ -34,9 +34,29 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+
 -----
 
 # Latest (master / release), and previous versions
+
+#### 4.2.0
+
+- Fixed I/O error with XFoil. XFoil outputs may have mislabeled columns if both CP and hinge moments are requested. This is a bug in XFoil, but AeroSandbox now detects and corrects for it.
+- Added `Atmosphere.density_altitude()`, which returns the density altitude.
+- Added a `Timer` context manager in `aerosandbox.tools.code_benchmarking`, for code profiling.
+- Improved visualization of Dynamics-class instances with PyVista; now, an altitude drape, ground plane, and wingtip ribbon can be drawn.
+- Fixed a bug in `asb.AeroBuildup` where wave drag could continue to be added via airfoil aerodynamics even if the user specified `include_wave_drag=False`.
+- Added a `period` argument to `asb.numpy.diff()` which allows for `diff`ing periodic variables (e.g., heading angle) without wraparound error.
+- Added `asb.numpy.integrate_discrete` module, which has higher-order integrators for pre-sampled functions (e.g., useful when doing direct collocation trajectory optimization). 
+- Added `asb.numpy.integrate` module, which copies `scipy.integrate` and provides `quad` (quadrature) and `solve_ivp` (ODE solve) functions.
+- Added `asb.numpy.gradient()` as a new function.
+- Fixed a bug in the `asb.numpy.mod()` function, which previous had slight discrepancies against NumPy's implementation for negative inputs.
+- Fixed singularities in some dynamics instances when converting to speed-gamma-track representations due to zero-speed points.
+- Added new tools for uncertainty quantification of time-series datasets, available in `aerosandbox.tools.statistics`.
+- Fixed an issue where trying to put `asb.OperatingPoint` objects into a NumPy object array would result in an infinite recursion (due to iterability of singleton `OperatingPoint` objects). Same fix applied to `asb.MassProperties` and ASB Dynamics-class instances.
+- Added support for `order` argument in `asb.numpy.reshape()`.
+
+-----
 
 #### 4.1.7
 - Minimal changes; mostly more documentation and backend upgrades (e.g., new PyPI upload process). 
