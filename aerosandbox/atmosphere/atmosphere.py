@@ -187,37 +187,73 @@ class Atmosphere(AeroSandboxObject):
 
 if __name__ == "__main__":
     # Make AeroSandbox Atmosphere
-    altitude = np.linspace(-5e3, 100e3, 1000)
+    altitude = np.linspace(0, 100e3, 1000)
+
     atmo_diff = Atmosphere(altitude=altitude)
     atmo_isa = Atmosphere(altitude=altitude, method="isa")
 
-    from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot, set_ticks
+    import matplotlib.pyplot as plt
+    import aerosandbox.tools.pretty_plots as p
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(1, 3, figsize=(7, 4), sharey=True)
+    for atmo in [atmo_isa, atmo_diff]:
+        label = f"{atmo.method}"
+        fmt = "-" if atmo.method == "isa" else "--"
+        alpha = 0.8
+        ax[0].semilogx(
+            atmo.pressure() / 101325,
+            altitude / u.foot,
+            fmt,
+            label=label,
+            alpha=alpha,
+        )
+        ax[0].set_xlabel("Pressure [atm]")
+        ax[0].set_xlim(left=0)
+        ax[1].plot(
+            atmo.temperature() - 273.15,
+            altitude / u.foot,
+            fmt,
+            label=label,
+            alpha=alpha,
+        )
+        ax[1].set_xlabel("Temperature [$^\circ$C]")
+        ax[1].set_xlim(right=20)
 
-    plt.plot(
+        ax[2].semilogx(
+            atmo.density(),
+            altitude / u.foot,
+            fmt,
+            label=label,
+            alpha=alpha,
+        )
+        ax[2].set_xlabel(r"Density [$\rm kg/m^3$]")
+        ax[2].set_xlim(left=0)
+
+    for a in ax:
+        a.set_ylim(altitude.min() / u.foot, altitude.max() / u.foot)
+    ax[0].set_ylabel("Altitude [ft]")
+    plt.legend(title="Method")
+    p.show_plot(
+        f"Atmosphere",
+        rotate_axis_labels=False,
+        legend=False
+    )
+
+    fig, ax = plt.subplots(1, 2, sharey=True)
+    ax[0].plot(
         (
                 (atmo_diff.pressure() - atmo_isa.pressure()) / atmo_isa.pressure()
         ) * 100,
         altitude / 1e3,
     )
-    set_ticks(0.2, 0.1, 20, 10)
-    plt.xlim(-1, 1)
-    show_plot(
-        "AeroSandbox Atmosphere vs. ISA Atmosphere",
-        "Pressure, Relative Error [%]",
-        "Altitude [km]"
-    )
-
-    fig, ax = plt.subplots()
-    plt.plot(
+    ax[0].set_xlabel("Pressure, Relative Error [%]")
+    ax[1].plot(
         atmo_diff.temperature() - atmo_isa.temperature(),
         altitude / 1e3,
     )
-    set_ticks(1, 0.5, 20, 10)
-    plt.xlim(-5, 5)
-    show_plot(
+    ax[1].set_xlabel("Temperature, Absolute Error [K]")
+
+    ax[0].set_ylabel("Altitude [km]")
+    p.show_plot(
         "AeroSandbox Atmosphere vs. ISA Atmosphere",
-        "Temperature, Absolute Error [K]",
-        "Altitude [km]"
     )
