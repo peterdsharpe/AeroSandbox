@@ -424,7 +424,9 @@ class AVL(ExplicitAnalysis):
         {airplane_options["profile_drag_coefficient"]}
         """)
 
-        control_surface_counter = 1
+        control_surface_counter = 0
+        airfoil_counter = 0
+
         for wing in airplane.wings:
 
             wing_options = self.get_options(wing)
@@ -434,7 +436,7 @@ class AVL(ExplicitAnalysis):
                 spacing_line += f"   {wing_options['spanwise_resolution']}   {self.AVL_spacing_parameters[wing_options['spanwise_spacing']]}"
 
             avl_file += clean(f"""\
-            #{"=" * 50}
+            #{"=" * 79}
             SURFACE
             {wing.name}
             #Nchordwise  Cspace  [Nspanwise   Sspace]
@@ -490,13 +492,12 @@ class AVL(ExplicitAnalysis):
             for i, xsec in enumerate(wing.xsecs[:-1]):
                 for surf in xsec.control_surfaces:
                     xhinge = surf.hinge_point if surf.trailing_edge else -surf.hinge_point
-                    xyz_hinge_vector = wing._compute_frame_of_section(i)[1]
                     sign_dup = 1 if surf.symmetric else -1
 
                     command = clean(f"""\
                         CONTROL
                         #name, gain, Xhinge, XYZhvec, SgnDup
-                        all_deflections {surf.deflection} {xhinge} {xyz_hinge_vector[0]} {xyz_hinge_vector[1]} {xyz_hinge_vector[2]} {sign_dup}
+                        {surf.name} 1 {xhinge:.8g} 0 0 0 {sign_dup}
                         """)
 
                     control_surface_commands[i].append(command)
@@ -507,14 +508,20 @@ class AVL(ExplicitAnalysis):
 
                 xsec_options = self.get_options(xsec)
 
-                xsec_def_line = f"{xsec.xyz_le[0]} {xsec.xyz_le[1]} {xsec.xyz_le[2]} {xsec.chord} {xsec.twist}"
+                xsec_def_line = f"{xsec.xyz_le[0]:.8g} {xsec.xyz_le[1]:.8g} {xsec.xyz_le[2]:.8g} {xsec.chord:.8g} {xsec.twist:.8g}"
                 if not wing_options["wing_level_spanwise_spacing"]:
                     xsec_def_line += f"   {xsec_options['spanwise_resolution']}   {self.AVL_spacing_parameters[xsec_options['spanwise_spacing']]}"
+
+
 
                 if xsec_options["cl_alpha_factor"] is None:
                     claf_line = f"{1 + 0.77 * xsec.airfoil.max_thickness()}  # Computed using rule from avl_doc.txt"
                 else:
                     claf_line = f"{xsec_options['cl_alpha_factor']}"
+
+                af_filepath = Path(str(filepath) + f".af{airfoil_counter}")
+                airfoil_counter += 1
+                xsec.airfoil.repanel(50).write_dat(filepath=af_filepath, include_name=True)
 
                 avl_file += clean(f"""\
                 #{"-" * 50}
@@ -522,8 +529,8 @@ class AVL(ExplicitAnalysis):
                 #Xle    Yle    Zle     Chord   Ainc  [Nspanwise   Sspace]
                 {xsec_def_line}
                 
-                AIRFOIL
-                {xsec.airfoil.repanel(50).write_dat(filepath=None, include_name=False)}
+                AFIL
+                {af_filepath}
                 
                 CLAF
                 {claf_line}
@@ -559,6 +566,9 @@ class AVL(ExplicitAnalysis):
             BFIL
             {fuse_filepath}
             
+            TRANSLATE
+            0 {np.mean([x.xyz_c[1] for x in fuse.xsecs]):.8g} 0
+            
             """)
 
         if filepath is not None:
@@ -593,13 +603,13 @@ class AVL(ExplicitAnalysis):
             contents += [fuselage.name]
 
         contents += [
-                        f"{xyz_c[0]} {xyz_c[2] + r}"
+                        f"{xyz_c[0]:.8g} {xyz_c[2] + r:.8g}"
                         for xyz_c, r in zip(
                 [xsec.xyz_c for xsec in fuselage.xsecs][::-1],
                 [xsec.equivalent_radius(preserve="area") for xsec in fuselage.xsecs][::-1]
             )
                     ] + [
-                        f"{xyz_c[0]} {xyz_c[2] - r}"
+                        f"{xyz_c[0]:.8g} {xyz_c[2] - r:.8g}"
                         for xyz_c, r in zip(
                 [xsec.xyz_c for xsec in fuselage.xsecs][1:],
                 [xsec.equivalent_radius(preserve="area") for xsec in fuselage.xsecs][1:]
