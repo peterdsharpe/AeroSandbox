@@ -946,7 +946,7 @@ class Airplane(AeroSandboxObject):
         )
         avl.write_avl(filepath=filename)
 
-    def export_XFLR(self, *args, **kwargs):
+    def export_XFLR(self, *args, **kwargs) -> str:
         import warnings
 
         warnings.warn(
@@ -967,7 +967,7 @@ class Airplane(AeroSandboxObject):
                          mainwing: Wing = None,
                          elevator: Wing = None,
                          fin: Wing = None,
-                         ):
+                         ) -> str:
         """
         Exports the airplane geometry to an XFLR5 `.xml` file.
 
@@ -1270,6 +1270,17 @@ class Airplane(AeroSandboxObject):
 
         return xml_string
 
+    def export_OpenVSP_vspscript(self,
+                       filename,
+                       ):
+        from aerosandbox.geometry.openvsp_io.asb_to_openvsp.airplane_vspscript_generator import generate_airplane
+
+        vspscript_code = generate_airplane(self)
+
+        with open(filename, "w+") as f:
+            f.write(vspscript_code)
+
+        return vspscript_code
 
 if __name__ == '__main__':
     import aerosandbox as asb
