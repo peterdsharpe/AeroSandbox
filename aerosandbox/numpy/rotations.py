@@ -133,7 +133,7 @@ def rotation_matrix_from_euler_angles(
         roll_angle: The roll angle, which is a rotation about the x-axis. [radians]
         pitch_angle: The pitch angle, which is a rotation about the y-axis. [radians]
         yaw_angle: The yaw angle, which is a rotation about the z-axis. [radians]
-        as_array:
+        as_array: If True, returns a 3x3 array-like. If False, returns a list-of-lists.
 
     Returns:
 
