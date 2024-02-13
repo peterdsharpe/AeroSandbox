@@ -12,7 +12,10 @@ from textwrap import indent, dedent
 _openvsp_version = "3.36.0"
 
 
-def wrap_script(script: str) -> str:
+def wrap_script(
+        script: str,
+        set_geom_draw_type_to_shade: bool = True,
+) -> str:
     """
     Wraps the internal parts of a VSPScript file with a main() function.
 
@@ -33,7 +36,7 @@ def wrap_script(script: str) -> str:
     Returns: The script, wrapped with a main() function.
 
     """
-    script = script + """
+    script = script + """\
     
 //==== Check For API Errors ====//
 while ( GetNumTotalErrors() > 0 )
@@ -41,7 +44,22 @@ while ( GetNumTotalErrors() > 0 )
     ErrorObj err = PopLastError();
     Print( err.GetErrorString() );
 }
-    """
+"""
+
+    if set_geom_draw_type_to_shade:
+        script = script + """\
+
+{
+    array<string> @geomids = FindGeoms();
+    
+    for (int i = 0; i < geomids.size(); i++)
+    {
+        Print(geomids[i]);
+        SetGeomDrawType( geomids[i], GEOM_DRAW_SHADE );
+    }
+}
+        
+"""
 
     import aerosandbox as asb
     return f"""\
