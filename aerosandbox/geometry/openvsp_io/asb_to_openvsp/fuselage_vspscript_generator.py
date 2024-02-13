@@ -80,7 +80,7 @@ Update();
     string xsec_surf = GetXSecSurf( fid, {i} );
     xsec_surf = GetXSecSurf( fid, {i} );
     string xsec = GetXSec( xsec_surf, {i} );
-    SetParmVal( fid, "Super_Width", "XSecCurve_{i}", {xsec.width} ); // Hacking around more OpenVSP bugs; this triggers the curve to be included in an update
+    SetParmVal( fid, "Super_Width", "XSecCurve_{i}", {xsec.width} ); // This is a hack that triggers VSP to update the curve
     SetParmVal( fid, "Super_Height", "XSecCurve_{i}", {xsec.height} );
     SetParmVal( fid, "Super_M", "XSecCurve_{i}", {xsec.shape} );
     SetParmVal( fid, "Super_N", "XSecCurve_{i}", {xsec.shape} );
