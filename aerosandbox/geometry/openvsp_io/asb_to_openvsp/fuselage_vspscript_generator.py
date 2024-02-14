@@ -4,7 +4,11 @@ from textwrap import indent, dedent
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 
-def generate_fuselage(fuselage: Fuselage, include_main=True) -> str:
+def generate_fuselage(
+        fuselage: Fuselage,
+        include_main=True,
+        continuity_type: str = "C2",
+) -> str:
     """
     Generates a VSPScript file for a Fuselage object.
 
@@ -55,6 +59,15 @@ Update();
     # TODO symmetry here
 
     script += """//==== Set Fuselage Section Options ====//\n"""
+    if continuity_type == "C0":
+        continuity_type_string = "0.0"
+    elif continuity_type == "C1":
+        continuity_type_string = "1.0"
+    elif continuity_type == "C2":
+        continuity_type_string = "2.0"
+    else:
+        raise ValueError("Continuity type must be 'C0', 'C1', or 'C2'.")
+
     for i, xsec in enumerate(fuselage.xsecs):
         script += f"""\
 // ASB Section {i}, VSP Section {i}
@@ -67,7 +80,7 @@ SetParmVal( fid, "TopLAngleSet", "XSec_{i}", 0.0 );
 SetParmVal( fid, "TopLAngle", "XSec_{i}", 0.0 );
 SetParmVal( fid, "TopLStrengthSet", "XSec_{i}", 0.0 );
 SetParmVal( fid, "TopLStrength", "XSec_{i}", 0.5 );
-SetParmVal( fid, "ContinuityTop", "XSec_{i}", 2.0 );
+SetParmVal( fid, "ContinuityTop", "XSec_{i}", {continuity_type_string} );
 Update();
 
 """
