@@ -5,7 +5,10 @@ from textwrap import indent, dedent
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 
-def generate_wing(wing: Wing, include_main=True) -> str:
+def generate_wing(
+        wing: Wing,
+        include_main=True
+) -> str:
     """
     Generates a VSPScript file for a Wing object.
 

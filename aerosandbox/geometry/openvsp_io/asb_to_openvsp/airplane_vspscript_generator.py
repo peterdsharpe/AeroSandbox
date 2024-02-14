@@ -7,7 +7,10 @@ from aerosandbox.geometry.openvsp_io.asb_to_openvsp.fuselage_vspscript_generator
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp.propulsor_vspscript_generator import generate_propulsor
 
 
-def generate_airplane(airplane: Airplane, include_main=True) -> str:
+def generate_airplane(
+        airplane: Airplane,
+        include_main=True,
+) -> str:
     """
     Generates a VSPScript file for an Airplane object.
 
