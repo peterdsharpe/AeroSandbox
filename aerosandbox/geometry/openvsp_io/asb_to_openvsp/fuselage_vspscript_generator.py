@@ -28,6 +28,9 @@ ChangeXSecShape( GetXSecSurf( fid, 4 ), 4, XS_SUPER_ELLIPSE );
     if len(fuselage.xsecs) < 2:
         raise ValueError("Fuselages must have at least 2 cross sections.")
     else:
+        script += f"""\
+SetParmVal( fid, "XLocPercent", "XSec_3", 1.0 ); // Causes all sections to be generated at x/L = 1, so they don't conflict
+        """
         for i in range(len(fuselage.xsecs) - 1):
             script += f"""\
 InsertXSec( fid, 3, XS_SUPER_ELLIPSE ); // FuselageXSecs {i} to {i + 1}
