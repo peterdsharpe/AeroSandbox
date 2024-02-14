@@ -52,9 +52,8 @@ while ( GetNumTotalErrors() > 0 )
 {
     array<string> @geomids = FindGeoms();
     
-    for (int i = 0; i < geomids.size(); i++)
+    for (uint i = 0; i < geomids.length(); i++)
     {
-        Print(geomids[i]);
         SetGeomDrawType( geomids[i], GEOM_DRAW_SHADE );
     }
 }
