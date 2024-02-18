@@ -612,7 +612,7 @@ class XFoil(ExplicitAnalysis):
 
         output = self._run_xfoil(
             "\n".join(commands),
-            read_bl_data_from="alpha"
+            read_bl_data_from="alpha" if include_bl_data else None
         )
 
         sort_order = np.argsort(output['alpha'])
@@ -685,7 +685,7 @@ class XFoil(ExplicitAnalysis):
 
         output = self._run_xfoil(
             "\n".join(commands),
-            read_bl_data_from="cl"
+            read_bl_data_from="cl" if include_bl_data else None
         )
 
         sort_order = np.argsort(output['alpha'])
