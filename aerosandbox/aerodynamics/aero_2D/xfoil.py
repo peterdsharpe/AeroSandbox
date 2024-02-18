@@ -710,6 +710,6 @@ if __name__ == '__main__':
     result_at_single_alpha = xf.alpha(5, include_bl_data=True)
 
     result_at_several_CLs = xf.cl([-0.1, 0.5, 0.7, 0.8, 0.9], include_bl_data=True)
-    
+
     result_at_multiple_alphas = xf.alpha([3, 5, 60], include_bl_data=True)
     # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
