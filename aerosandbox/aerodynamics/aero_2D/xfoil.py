@@ -52,7 +52,7 @@ class XFoil(ExplicitAnalysis):
                  xfoil_repanel: bool = True,
                  verbose: bool = False,
                  timeout: Union[float, int, None] = 30,
-                 working_directory: str = None,
+                 working_directory: Union[Path, str] = None,
                  ):
         """
         Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
@@ -144,7 +144,7 @@ class XFoil(ExplicitAnalysis):
         self.xfoil_repanel = xfoil_repanel
         self.verbose = verbose
         self.timeout = timeout
-        self.working_directory = working_directory
+        self.working_directory = Path(working_directory)
 
     def __repr__(self):
         return f"XFoil(airfoil={self.airfoil}, Re={self.Re}, mach={self.mach}, n_crit={self.n_crit})"
@@ -235,6 +235,7 @@ class XFoil(ExplicitAnalysis):
 
     def _run_xfoil(self,
                    run_command: str,
+                   read_bl_data_from: str = None,
                    ) -> Dict[str, np.ndarray]:
         """
         Private function to run XFoil.
@@ -415,6 +416,100 @@ class XFoil(ExplicitAnalysis):
                 for k, v in output.items()
             }
 
+            # Read the BL data
+            if read_bl_data_from is not None:
+                if read_bl_data_from == "alpha":
+                    dump_filenames = directory.glob("dump_a_*.txt")
+                    cpwr_filenames = directory.glob("cpwr_a_*.txt")
+
+                    alpha_to_dump_mapping = {
+                        float(dump_filename.stem.split("_")[-1]): dump_filename
+                        for dump_filename in dump_filenames
+                    }
+                    alpha_to_cpwr_mapping = {
+                        float(cpwr_filename.stem.split("_")[-1]): cpwr_filename
+                        for cpwr_filename in cpwr_filenames
+                    }
+
+                    bl_data_for_each_alpha = []
+
+                    for alpha in output["alpha"]:
+                        dump_filename = alpha_to_dump_mapping[
+                            min(alpha_to_dump_mapping.keys(), key=lambda x: abs(x - alpha))
+                        ]
+                        cpwr_filename = alpha_to_cpwr_mapping[
+                            min(alpha_to_cpwr_mapping.keys(), key=lambda x: abs(x - alpha))
+                        ]
+
+                        import pandas as pd
+                        dump_data = pd.read_csv(
+                            dump_filename,
+                            sep="\s+",
+                            names=["s", "x", "y", "Ue/Vinf", "Dstar", "Theta", "Cf", "H"],
+                            skiprows=1,
+                        )
+                        cpwr_data = pd.read_csv(
+                            cpwr_filename,
+                            sep="\s+",
+                            names=["x", "y", "Cp"],
+                            skiprows=3,
+                        )
+
+                        dump_data["Cp"] = cpwr_data["Cp"]
+
+                        bl_data_for_each_alpha.append(dump_data)
+
+                    output["bl_data"] = np.fromiter(bl_data_for_each_alpha, dtype="O")
+
+                elif read_bl_data_from == "cl":
+                    dump_filenames = directory.glob("dump_cl_*.txt")
+                    cpwr_filenames = directory.glob("cpwr_cl_*.txt")
+
+                    cl_to_dump_mapping = {
+                        float(dump_filename.stem.split("_")[-1]): dump_filename
+                        for dump_filename in dump_filenames
+                    }
+                    cl_to_cpwr_mapping = {
+                        float(cpwr_filename.stem.split("_")[-1]): cpwr_filename
+                        for cpwr_filename in cpwr_filenames
+                    }
+
+                    bl_data_for_each_cl = []
+
+                    for cl in output["CL"]:
+                        dump_filename = cl_to_dump_mapping[
+                            min(cl_to_dump_mapping.keys(), key=lambda x: abs(x - cl))
+                        ]
+                        cpwr_filename = cl_to_cpwr_mapping[
+                            min(cl_to_cpwr_mapping.keys(), key=lambda x: abs(x - cl))
+                        ]
+
+                        import pandas as pd
+                        dump_data = pd.read_csv(
+                            dump_filename,
+                            sep="\s+",
+                            names=["s", "x", "y", "Ue/Vinf", "Dstar", "Theta", "Cf", "H"],
+                            skiprows=1,
+                        )
+                        cpwr_data = pd.read_csv(
+                            cpwr_filename,
+                            sep="\s+",
+                            names=["x", "y", "Cp"],
+                            skiprows=3,
+                        )
+
+                        dump_data["Cp"] = cpwr_data["Cp"]
+
+                        bl_data_for_each_cl.append(dump_data)
+
+                    output["bl_data"] = np.fromiter(bl_data_for_each_cl, dtype="O")
+
+                else:
+
+                    raise ValueError(
+                        "The `read_bl_data_from` parameter must be either 'alpha' or 'cl'."
+                    )
+
             return output
 
     def open_interactive(self) -> None:
@@ -457,6 +552,7 @@ class XFoil(ExplicitAnalysis):
     def alpha(self,
               alpha: Union[float, np.ndarray],
               start_at: Union[float, None] = 0,
+              include_bl_data: bool = False,
               ) -> Dict[str, np.ndarray]:
         """
         Execute XFoil at a given angle of attack, or at a sequence of angles of attack.
@@ -480,45 +576,56 @@ class XFoil(ExplicitAnalysis):
 
         """
         alphas = np.reshape(np.array(alpha), -1)
+        alphas = np.sort(alphas)
 
-        if np.length(alphas) > 1:
-            if start_at is not None:
-                if np.min(alphas) < start_at < np.max(alphas):
-                    alphas = np.sort(alphas)
-                    alphas_upper = alphas[alphas > start_at]
-                    alphas_lower = alphas[alpha <= start_at][::-1]
+        commands = []
 
-                    output = self._run_xfoil(
-                        "\n".join(
-                            [
-                                f"a {a}" + ("\nfmom" if self.hinge_point_x is not None else "")
-                                for a in alphas_upper
-                            ] + [
-                                "init"
-                            ] + [
-                                f"a {a}" + ("\nfmom" if self.hinge_point_x is not None else "")
-                                for a in alphas_lower
-                            ]
-                        )
-                    )
+        def schedule_run(alpha: float):
 
-                    sort_order = np.argsort(output['alpha'])
-                    output = {
-                        k: v[sort_order]
-                        for k, v in output.items()
-                    }
-                    return output
+            commands.append(f"a {alpha}")
 
-        return self._run_xfoil(
-            "\n".join([
-                f"a {a}" + ("\nfmom" if self.hinge_point_x is not None else "")
-                for a in alphas
-            ])
+            if self.hinge_point_x is not None:
+                commands.append("fmom")
+
+            if include_bl_data:
+                commands.append(f"dump dump_a_{alpha:.8f}.txt")
+                commands.append(f"cpwr cpwr_a_{alpha:.8f}.txt")
+
+        if (
+                len(alphas) > 1 and
+                (start_at is not None) and
+                (np.min(alphas) < start_at < np.max(alphas))
+        ):
+            alphas_upper = alphas[alphas > start_at]
+            alphas_lower = alphas[alpha <= start_at][::-1]
+
+            for a in alphas_upper:
+                schedule_run(a)
+
+            commands.append("init")
+
+            for a in alphas_lower:
+                schedule_run(a)
+        else:
+            for a in alphas:
+                schedule_run(a)
+
+        output = self._run_xfoil(
+            "\n".join(commands),
+            read_bl_data_from="alpha"
         )
+
+        sort_order = np.argsort(output['alpha'])
+        output = {
+            k: v[sort_order]
+            for k, v in output.items()
+        }
+        return output
 
     def cl(self,
            cl: Union[float, np.ndarray],
            start_at: Union[float, None] = 0,
+           include_bl_data: bool = False,
            ) -> Dict[str, np.ndarray]:
         """
         Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
@@ -542,41 +649,51 @@ class XFoil(ExplicitAnalysis):
 
         """
         cls = np.reshape(np.array(cl), -1)
+        cls = np.sort(cls)
 
-        if np.length(cls) > 1:
-            if start_at is not None:
-                if np.min(cls) < start_at < np.max(cls):
-                    cls = np.sort(cls)
-                    cls_upper = cls[cls > start_at]
-                    cls_lower = cls[cls <= start_at][::-1]
+        commands = []
 
-                    output = self._run_xfoil(
-                        "\n".join(
-                            [
-                                f"cl {c}" + ("\nfmom" if self.hinge_point_x is not None else "")
-                                for c in cls_upper
-                            ] + [
-                                "init"
-                            ] + [
-                                f"cl {c}" + ("\nfmom" if self.hinge_point_x is not None else "")
-                                for c in cls_lower
-                            ]
-                        )
-                    )
+        def schedule_run(cl: float):
 
-                    sort_order = np.argsort(output['alpha'])
-                    output = {
-                        k: v[sort_order]
-                        for k, v in output.items()
-                    }
-                    return output
+            commands.append(f"cl {cl}")
 
-        return self._run_xfoil(
-            "\n".join([
-                f"cl {c}" + ("\nfmom" if self.hinge_point_x is not None else "")
-                for c in cls
-            ])
+            if self.hinge_point_x is not None:
+                commands.append("fmom")
+
+            if include_bl_data:
+                commands.append(f"dump dump_cl_{cl:.8f}.txt")
+                commands.append(f"cpwr cpwr_cl_{cl:.8f}.txt")
+
+        if (
+                len(cls) > 1 and
+                (start_at is not None) and
+                (np.min(cls) < start_at < np.max(cls))
+        ):
+            cls_upper = cls[cls > start_at]
+            cls_lower = cls[cls <= start_at][::-1]
+
+            for c in cls_upper:
+                schedule_run(c)
+
+            commands.append("init")
+
+            for c in cls_lower:
+                schedule_run(c)
+        else:
+            for c in cls:
+                schedule_run(c)
+
+        output = self._run_xfoil(
+            "\n".join(commands),
+            read_bl_data_from="cl"
         )
+
+        sort_order = np.argsort(output['alpha'])
+        output = {
+            k: v[sort_order]
+            for k, v in output.items()
+        }
+        return output
 
 
 if __name__ == '__main__':
@@ -587,8 +704,12 @@ if __name__ == '__main__':
         Re=1e6,
         hinge_point_x=0.75,
         # verbose=True,
-        # working_directory=str(Path.home() / "Downloads" / "test"),
+        working_directory=str(Path.home() / "Downloads" / "test"),
     )
-    result_at_single_alpha = xf.alpha(5)
-    result_at_several_CLs = xf.cl([-0.1, 0.5, 0.7, 0.8, 0.9])
-    result_at_multiple_alphas = xf.alpha([3, 5, 60])  # Note: if a result does
+
+    result_at_single_alpha = xf.alpha(5, include_bl_data=True)
+
+    result_at_several_CLs = xf.cl([-0.1, 0.5, 0.7, 0.8, 0.9], include_bl_data=True)
+    
+    result_at_multiple_alphas = xf.alpha([3, 5, 60], include_bl_data=True)
+    # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
