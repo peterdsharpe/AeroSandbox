@@ -1,4 +1,4 @@
-HN-808	Planeur<3.5m		© Norbert Habbe
+HN-808	Planeur<3.5m		 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000163		
 0.996057	0.000712		
@@ -102,13 +102,13 @@ HN-808	Planeur<3.5m		© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 10,32 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 2,02 %
-Wölbungsrücklage(xf): 46,86 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 2,02 %
+Wlbungsrcklage(xf): 46,86 %
 Momentenbeiwert(cm0): -0,0770
-Nullauftrieb(a 0): -2,8532 °
-Stoßfreier Eintritt: 0,1968 °
-Ca bei stoßfreiem Eintritt: 0,3344
+Nullauftrieb(a 0): -2,8532 
+Stofreier Eintritt: 0,1968 
+Ca bei stofreiem Eintritt: 0,3344
 Auftriebsanstieg: 6,7968
 Neutralpunktlage: 25,79 %
 Profiltyp: Profil

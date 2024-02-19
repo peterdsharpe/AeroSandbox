@@ -1,4 +1,4 @@
-HN-409	Planeur>3.5m © Norbert Habbe
+HN-409	Planeur>3.5m  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00019		
 0.99606	0.00081		
@@ -102,13 +102,13 @@ HN-409	Planeur>3.5m © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	10.48	%		
-Dickenrücklage(xd):	30.62	%		
-Profilwölbung(f):	2.55	%		
-Wölbungsrücklage(xf):	45.82	%		
+Dickenrcklage(xd):	30.62	%		
+Profilwlbung(f):	2.55	%		
+Wlbungsrcklage(xf):	45.82	%		
 Momentenbeiwert(cm0):	-0.0949			
-Nullauftrieb(a0):	-3.5558	°		
-Stoßfreier	Eintritt:	0.3743	°	
-Ca	bei	stoßfreiem	Eintritt:	0.431
+Nullauftrieb(a0):	-3.5558			
+Stofreier	Eintritt:	0.3743		
+Ca	bei	stofreiem	Eintritt:	0.431
 Auftriebsanstieg:	6.8027			
 Neutralpunktlage:	25.78	%
 Profiltyp:	Profil	

@@ -1,4 +1,4 @@
-HN-227	F3J © Norbert Habbe
+HN-227	F3J  Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000167		
 0.996057	0.000712		
@@ -102,13 +102,13 @@ HN-227	F3J © Norbert Habbe
 1.000000	0.000000			
 Profilbeiwerte				
 Profildicke(d):	9	%		
-Dickenrücklage(xd):	30.62	%		
-Profilwölbung(f):	2.35	%		
-Wölbungsrücklage(xf):	45.82	%		
+Dickenrcklage(xd):	30.62	%		
+Profilwlbung(f):	2.35	%		
+Wlbungsrcklage(xf):	45.82	%		
 Momentenbeiwert(cm0):	-0.0865			
-Nullauftrieb(a0):	-3.2471	°		
-Stoßfreier	Eintritt:	0.3637	°	
-Ca	bei	stoßfreiem	Eintritt:	0.3959
+Nullauftrieb(a0):	-3.2471			
+Stofreier	Eintritt:	0.3637		
+Ca	bei	stofreiem	Eintritt:	0.3959
 Auftriebsanstieg:	6.7249			
 Neutralpunktlage:	25.68	%
 Profiltyp:	Profil	

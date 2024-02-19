@@ -1,4 +1,4 @@
-HN-418	Planeur © Norbert Habbe
+HN-418	Planeur  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00014		
 0.99606	0.00058		
@@ -102,13 +102,13 @@ HN-418	Planeur © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	8.55	%		
-Dickenrücklage(xd):	28.71	%		
-Profilwölbung(f):	2.48	%		
-Wölbungsrücklage(xf):	44.77	%		
+Dickenrcklage(xd):	28.71	%		
+Profilwlbung(f):	2.48	%		
+Wlbungsrcklage(xf):	44.77	%		
 Momentenbeiwert(cm0):	-0.0781			
-Nullauftrieb(a0):	-3.0106	°		
-Stoßfreier	Eintritt:	0.5662	°	
-Ca	bei	stoßfreiem	Eintritt:	0.3922
+Nullauftrieb(a0):	-3.0106			
+Stofreier	Eintritt:	0.5662		
+Ca	bei	stofreiem	Eintritt:	0.3922
 Auftriebsanstieg:	6.7131			
 Neutralpunktlage:	25.5	%
 Profiltyp:	Profil	

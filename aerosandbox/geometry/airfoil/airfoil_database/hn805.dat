@@ -1,4 +1,4 @@
-HN-805	F3F		© Norbert Habbe
+HN-805	F3F		 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000123		
 0.996057	0.000527		
@@ -102,13 +102,13 @@ HN-805	F3F		© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 7,85 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 1,55 %
-Wölbungsrücklage(xf): 45,29 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 1,55 %
+Wlbungsrcklage(xf): 45,29 %
 Momentenbeiwert(cm0): -0,0578
-Nullauftrieb(a 0): -2,1706 °
-Stoßfreier Eintritt: 0,2329 °
-Ca bei stoßfreiem Eintritt: 0,2636
+Nullauftrieb(a 0): -2,1706 
+Stofreier Eintritt: 0,2329 
+Ca bei stofreiem Eintritt: 0,2636
 Auftriebsanstieg: 6,6732
 Neutralpunktlage: 25,58 %
 Profiltyp: Profil

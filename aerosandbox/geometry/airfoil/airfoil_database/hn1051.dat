@@ -1,4 +1,4 @@
-HN-1051 Planeur © Norbert Habbe
+HN-1051 Planeur  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00013		
 0.99601	0.00056		
@@ -102,13 +102,13 @@ HN-1051 Planeur © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	8.55	%		
-Dickenrücklage(xd):	28.71	%		
-Profilwölbung(f):	2	%		
-Wölbungsrücklage(xf):	50	%		
+Dickenrcklage(xd):	28.71	%		
+Profilwlbung(f):	2	%		
+Wlbungsrcklage(xf):	50	%		
 Momentenbeiwert(cm0):	-0.0695			
-Nullauftrieb(a0):	-2.588	°		
-Stoßfreier	Eintritt:	0.2523	°	
-Ca	bei	stoßfreiem	Eintritt:	0.3115
+Nullauftrieb(a0):	-2.588			
+Stofreier	Eintritt:	0.2523		
+Ca	bei	stofreiem	Eintritt:	0.3115
 Auftriebsanstieg:	6.7163			
 Neutralpunktlage:	25.49	%
 Profiltyp:	Profil	

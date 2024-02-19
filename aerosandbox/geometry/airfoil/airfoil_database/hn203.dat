@@ -1,4 +1,4 @@
-HN-203	Planeur>3.5m © Norbert Habbe
+HN-203	Planeur>3.5m  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00018		
 0.99606	0.00075		
@@ -102,13 +102,13 @@ HN-203	Planeur>3.5m © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	10.8	%		
-Dickenrücklage(xd):	31.59	%		
-Profilwölbung(f):	2.34	%		
-Wölbungsrücklage(xf):	42.7	%		
+Dickenrcklage(xd):	31.59	%		
+Profilwlbung(f):	2.34	%		
+Wlbungsrcklage(xf):	42.7	%		
 Momentenbeiwert(cm0):	-0.084			
-Nullauftrieb(a0):	-3.2016	°		
-Stoßfreier	Eintritt:	0.4648	°	
-Ca	bei	stoßfreiem	Eintritt:	0.402
+Nullauftrieb(a0):	-3.2016			
+Stofreier	Eintritt:	0.4648		
+Ca	bei	stofreiem	Eintritt:	0.402
 Auftriebsanstieg:	6.7997			
 Neutralpunktlage:	25.87	%
 Profiltyp:	Profil	

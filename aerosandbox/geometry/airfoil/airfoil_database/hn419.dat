@@ -1,4 +1,4 @@
-HN-419	HLG	© Norbert Habbe
+HN-419	HLG	 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000156		
 0.996057	0.000645		
@@ -102,13 +102,13 @@ HN-419	HLG	© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 7,78 %
-Dickenrücklage(xd): 27,30 %
-Profilwölbung(f): 2,38 %
-Wölbungsrücklage(xf): 43,73 %
+Dickenrcklage(xd): 27,30 %
+Profilwlbung(f): 2,38 %
+Wlbungsrcklage(xf): 43,73 %
 Momentenbeiwert(cm0): -0,0826
-Nullauftrieb(a 0): -3,1688 °
-Stoßfreier Eintritt: 0,4893 °
-Ca bei stoßfreiem Eintritt: 0,4011
+Nullauftrieb(a 0): -3,1688 
+Stofreier Eintritt: 0,4893 
+Ca bei stofreiem Eintritt: 0,4011
 Auftriebsanstieg: 6,6739
 Neutralpunktlage: 25,35 %
 Profiltyp: Profil

@@ -1,4 +1,4 @@
-HN-801	BASIC	© Norbert Habbe
+HN-801	BASIC	 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000151		
 0.996057	0.000644		
@@ -102,13 +102,13 @@ HN-801	BASIC	© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 8,50 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 2,00 %
-Wölbungsrücklage(xf): 45,29 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 2,00 %
+Wlbungsrcklage(xf): 45,29 %
 Momentenbeiwert(cm0): -0,0746
-Nullauftrieb(a 0): -2,8008 °
-Stoßfreier Eintritt: 0,3004 °
-Ca bei stoßfreiem Eintritt: 0,3401
+Nullauftrieb(a 0): -2,8008 
+Stofreier Eintritt: 0,3004 
+Ca bei stofreiem Eintritt: 0,3401
 Auftriebsanstieg: 6,7055
 Neutralpunktlage: 25,63 %
 Profiltyp: Profil

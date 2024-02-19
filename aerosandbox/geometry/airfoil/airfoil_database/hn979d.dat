@@ -1,4 +1,4 @@
-HN979D	HLG		© Norbert Habbe
+HN979D	HLG		 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000124		
 0.996057	0.000513		
@@ -102,13 +102,13 @@ HN979D	HLG		© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 6,55 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 1,75 %
-Wölbungsrücklage(xf): 46,86 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 1,75 %
+Wlbungsrcklage(xf): 46,86 %
 Momentenbeiwert(cm0): -0,0615
-Nullauftrieb(a 0): -2,3118 °
-Stoßfreier Eintritt: 0,2485 °
-Ca bei stoßfreiem Eintritt: 0,2808
+Nullauftrieb(a 0): -2,3118 
+Stofreier Eintritt: 0,2485 
+Ca bei stofreiem Eintritt: 0,2808
 Auftriebsanstieg: 6,6107
 Neutralpunktlage: 25,45 %
 Profiltyp: Profil

@@ -1,4 +1,4 @@
-HN-163TA F3B ©Norbert Habe
+HN-163TA F3B Norbert Habe
 1.00000	0.00000		
 0.99901	0.00013		
 0.99606	0.00058		
@@ -102,13 +102,13 @@ HN-163TA F3B ©Norbert Habe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	8,65	%		
-Dickenrücklage(xd):	30,62	%		
-Profilwölbung(f):	1,65	%		
-Wölbungsrücklage(xf):	43,73	%		
+Dickenrcklage(xd):	30,62	%		
+Profilwlbung(f):	1,65	%		
+Wlbungsrcklage(xf):	43,73	%		
 Momentenbeiwert(cm0):	-0,0623			
-Nullauftrieb(a0):	-2,3487	°		
-Stoßfreier	Eintritt:	0,2731	°	
-Ca	bei	stoßfreiem	Eintritt:	0,2875
+Nullauftrieb(a0):	-2,3487			
+Stofreier	Eintritt:	0,2731		
+Ca	bei	stofreiem	Eintritt:	0,2875
 Auftriebsanstieg:	6,7144			
 Neutralpunktlage:	25,64	%
 Profiltyp:	Profil	

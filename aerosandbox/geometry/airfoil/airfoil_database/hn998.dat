@@ -1,4 +1,4 @@
-HN-998	HLG	© Norbert Habbe
+HN-998	HLG	 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000191		
 0.996057	0.000806		
@@ -102,13 +102,13 @@ HN-998	HLG	© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 6,88 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 2,97 %
-Wölbungsrücklage(xf): 46,86 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 2,97 %
+Wlbungsrcklage(xf): 46,86 %
 Momentenbeiwert(cm0): -0,1081
-Nullauftrieb(a 0): -4,0493 °
-Stoßfreier Eintritt: 0,4004 °
-Ca bei stoßfreiem Eintritt: 0,4879
+Nullauftrieb(a 0): -4,0493 
+Stofreier Eintritt: 0,4004 
+Ca bei stofreiem Eintritt: 0,4879
 Auftriebsanstieg: 6,6259
 Neutralpunktlage: 25,50 %
 Profiltyp: Profil

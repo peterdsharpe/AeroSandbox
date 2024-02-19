@@ -1,4 +1,4 @@
-HN-997B	HLG	© Norbert Habbe
+HN-997B	HLG	 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000184		
 0.996057	0.000759		
@@ -102,13 +102,13 @@ HN-997B	HLG	© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 7,52 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 2,85 %
-Wölbungsrücklage(xf): 46,86 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 2,85 %
+Wlbungsrcklage(xf): 46,86 %
 Momentenbeiwert(cm0): -0,0998
-Nullauftrieb(a 0): -3,7516 °
-Stoßfreier Eintritt: 0,4036 °
-Ca bei stoßfreiem Eintritt: 0,4556
+Nullauftrieb(a 0): -3,7516 
+Stofreier Eintritt: 0,4036 
+Ca bei stofreiem Eintritt: 0,4556
 Auftriebsanstieg: 6,6592
 Neutralpunktlage: 25,52 %
 Profiltyp: Profil

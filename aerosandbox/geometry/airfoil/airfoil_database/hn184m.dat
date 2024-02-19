@@ -1,4 +1,4 @@
-HN-184M	Planeur © Norbert Habbe
+HN-184M	Planeur  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00017		
 0.99606	0.00073		
@@ -102,13 +102,13 @@ HN-184M	Planeur © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	8.55	%		
-Dickenrücklage(xd):	30.62	%		
-Profilwölbung(f):	2.38	%		
-Wölbungsrücklage(xf):	45.82	%		
+Dickenrcklage(xd):	30.62	%		
+Profilwlbung(f):	2.38	%		
+Wlbungsrcklage(xf):	45.82	%		
 Momentenbeiwert(cm0):	-0.0885			
-Nullauftrieb(a0):	-3.3195	°		
-Stoßfreier	Eintritt:	0.3489	°	
-Ca	bei	stoßfreiem	Eintritt:	0.4023
+Nullauftrieb(a0):	-3.3195			
+Stofreier	Eintritt:	0.3489		
+Ca	bei	stofreiem	Eintritt:	0.4023
 Auftriebsanstieg:	6.707			
 Neutralpunktlage:	25.63	%
 Profiltyp:	Profil	

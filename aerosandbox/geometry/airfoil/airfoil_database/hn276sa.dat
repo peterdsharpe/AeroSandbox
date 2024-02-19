@@ -1,4 +1,4 @@
-HN-276SA Aile volante © Norbert Habbe
+HN-276SA Aile volante  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00006		
 0.99600	0.00026		
@@ -102,13 +102,13 @@ HN-276SA Aile volante © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	8.85	%		
-Dickenrücklage(xd):	28.71	%		
-Profilwölbung(f):	0.35	%		
-Wölbungsrücklage(xf):	46.86	%		
+Dickenrcklage(xd):	28.71	%		
+Profilwlbung(f):	0.35	%		
+Wlbungsrcklage(xf):	46.86	%		
 Momentenbeiwert(cm0):	-0.0121			
-Nullauftrieb(a0):	-0.4566	°		
-Stoßfreier	Eintritt:	0.0585	°	
-Ca	bei	stoßfreiem	Eintritt:	0.0565
+Nullauftrieb(a0):	-0.4566			
+Stofreier	Eintritt:	0.0585		
+Ca	bei	stofreiem	Eintritt:	0.0565
 Auftriebsanstieg:	6.7293			
 Neutralpunktlage:	25.47	%
 Profiltyp:	Profil	

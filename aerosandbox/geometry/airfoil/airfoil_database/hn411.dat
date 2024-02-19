@@ -1,4 +1,4 @@
-HN-411	Planeur>3.5m © Norbert Habbe
+HN-411	Planeur>3.5m  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00018		
 0.99606	0.00077		
@@ -102,13 +102,13 @@ HN-411	Planeur>3.5m © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	11.15	%		
-Dickenrücklage(xd):	30.62	%		
-Profilwölbung(f):	2.38	%		
-Wölbungsrücklage(xf):	45.29	%		
+Dickenrcklage(xd):	30.62	%		
+Profilwlbung(f):	2.38	%		
+Wlbungsrcklage(xf):	45.29	%		
 Momentenbeiwert(cm0):	-0.0879			
-Nullauftrieb(a0):	-3.3034	°		
-Stoßfreier	Eintritt:	0.371	°	
-Ca	bei	stoßfreiem	Eintritt:	0.4029
+Nullauftrieb(a0):	-3.3034			
+Stofreier	Eintritt:	0.371		
+Ca	bei	stofreiem	Eintritt:	0.4029
 Auftriebsanstieg:	6.8314			
 Neutralpunktlage:	25.84	%
 Profiltyp:	Profil	

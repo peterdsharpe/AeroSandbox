@@ -1,4 +1,4 @@
-HN-785SR	F3F		© Norbert Habbe
+HN-785SR	F3F		 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000119		
 0.996057	0.000511		
@@ -102,13 +102,13 @@ HN-785SR	F3F		© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 7,85 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 1,48 %
-Wölbungsrücklage(xf): 45,29 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 1,48 %
+Wlbungsrcklage(xf): 45,29 %
 Momentenbeiwert(cm0): -0,0552
-Nullauftrieb(a 0): -2,0728 °
-Stoßfreier Eintritt: 0,2222 °
-Ca bei stoßfreiem Eintritt: 0,2517
+Nullauftrieb(a 0): -2,0728 
+Stofreier Eintritt: 0,2222 
+Ca bei stofreiem Eintritt: 0,2517
 Auftriebsanstieg: 6,6732
 Neutralpunktlage: 25,58 %
 Profiltyp: Profil

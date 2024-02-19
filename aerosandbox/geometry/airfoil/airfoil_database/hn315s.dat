@@ -1,4 +1,4 @@
-HN-315S Aile volante © Norbert Habbe
+HN-315S Aile volante  Norbert Habbe
 1.00000	0.00000		
 0.99646	0.00021		
 0.98625	0.00104		
@@ -62,13 +62,13 @@ HN-315S Aile volante © Norbert Habbe
 1.00000	0.00000
 Profilbeiwerte
 Profildicke(d): 8,00 %
-Dickenrücklage(xd): 26,21 %
-Profilwölbung(f): 0,00 %
-Wölbungsrücklage(xf): 0,00 %
+Dickenrcklage(xd): 26,21 %
+Profilwlbung(f): 0,00 %
+Wlbungsrcklage(xf): 0,00 %
 Momentenbeiwert(cm0): 0,0000
-Nullauftrieb(a0): 0,0000 °
-Stoßfreier Eintritt: 0,0000 °
-Ca bei stoßfreiem Eintritt: 0,0000
+Nullauftrieb(a0): 0,0000 
+Stofreier Eintritt: 0,0000 
+Ca bei stofreiem Eintritt: 0,0000
 Auftriebsanstieg: 6,7041
 Neutralpunktlage: 25,48 %
 Profiltyp: Tropfen

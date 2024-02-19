@@ -1,4 +1,4 @@
-HN-417	F3J	© Norbert Habbe
+HN-417	F3J	 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000153		
 0.996057	0.000629		
@@ -102,13 +102,13 @@ HN-417	F3J	© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 8,05 %
-Dickenrücklage(xd): 27,30 %
-Profilwölbung(f): 2,28 %
-Wölbungsrücklage(xf): 43,73 %
+Dickenrcklage(xd): 27,30 %
+Profilwlbung(f): 2,28 %
+Wlbungsrcklage(xf): 43,73 %
 Momentenbeiwert(cm0): -0,0791
-Nullauftrieb(a 0): -3,0352 °
-Stoßfreier Eintritt: 0,4690 °
-Ca bei stoßfreiem Eintritt: 0,3843
+Nullauftrieb(a 0): -3,0352 
+Stofreier Eintritt: 0,4690 
+Ca bei stofreiem Eintritt: 0,3843
 Auftriebsanstieg: 6,6875
 Neutralpunktlage: 25,36 %
 Profiltyp: Profil

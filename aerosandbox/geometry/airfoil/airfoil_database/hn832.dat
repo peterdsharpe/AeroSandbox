@@ -1,4 +1,4 @@
-HN-832	Planeur>3.5m © Norbert Habbe
+HN-832	Planeur>3.5m  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00017		
 0.99606	0.00075		
@@ -102,13 +102,13 @@ HN-832	Planeur>3.5m © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	11.35	%		
-Dickenrücklage(xd):	29.66	%		
-Profilwölbung(f):	2.36	%		
-Wölbungsrücklage(xf):	46.86	%		
+Dickenrcklage(xd):	29.66	%		
+Profilwlbung(f):	2.36	%		
+Wlbungsrcklage(xf):	46.86	%		
 Momentenbeiwert(cm0):	-0.0859			
-Nullauftrieb(a0):	-3.2197	°		
-Stoßfreier	Eintritt:	0.3217	°	
-Ca	bei	stoßfreiem	Eintritt:	0.3883
+Nullauftrieb(a0):	-3.2197			
+Stofreier	Eintritt:	0.3217		
+Ca	bei	stofreiem	Eintritt:	0.3883
 Auftriebsanstieg:	6.8439			
 Neutralpunktlage:	25.78	%
 Profiltyp:	Profil	

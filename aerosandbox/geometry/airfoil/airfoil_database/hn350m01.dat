@@ -1,4 +1,4 @@
-HN-350M01 F3J © Norbert Habbe
+HN-350M01 F3J  Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000149		
 0.996057	0.000643		
@@ -102,13 +102,13 @@ HN-350M01 F3J © Norbert Habbe
 1.000000	0.000000			
 Profilbeiwerte				
 Profildicke(d):	9	%		
-Dickenrücklage(xd):	30.62	%		
-Profilwölbung(f):	1.95	%		
-Wölbungsrücklage(xf):	44.77	%		
+Dickenrcklage(xd):	30.62	%		
+Profilwlbung(f):	1.95	%		
+Wlbungsrcklage(xf):	44.77	%		
 Momentenbeiwert(cm0):	-0.0729			
-Nullauftrieb(a0):	-2.739	°		
-Stoßfreier	Eintritt:	0.3023	°	
-Ca	bei	stoßfreiem	Eintritt:	0.3335
+Nullauftrieb(a0):	-2.739			
+Stofreier	Eintritt:	0.3023		
+Ca	bei	stofreiem	Eintritt:	0.3335
 Auftriebsanstieg:	6.7303			
 Neutralpunktlage:	25.66	%
 Profiltyp:	Profil	

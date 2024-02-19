@@ -1,4 +1,4 @@
-HN-032	F3F	© Norbert Habbe
+HN-032	F3F	 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000148		
 0.996057	0.000610		
@@ -102,13 +102,13 @@ HN-032	F3F	© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 7,83 %
-Dickenrücklage(xd): 28,71 %
-Profilwölbung(f): 1,74 %
-Wölbungsrücklage(xf): 48,43 %
+Dickenrcklage(xd): 28,71 %
+Profilwlbung(f): 1,74 %
+Wlbungsrcklage(xf): 48,43 %
 Momentenbeiwert(cm0): -0,0653
-Nullauftrieb(a 0): -2,4390 °
-Stoßfreier Eintritt: 0,2542 °
-Ca bei stoßfreiem Eintritt: 0,2953
+Nullauftrieb(a 0): -2,4390 
+Stofreier Eintritt: 0,2542 
+Ca bei stofreiem Eintritt: 0,2953
 Auftriebsanstieg: 6,6844
 Neutralpunktlage: 25,52 %
 Profiltyp: Profil

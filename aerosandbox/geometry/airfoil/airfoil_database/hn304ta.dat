@@ -1,4 +1,4 @@
-HN-304TA Planeur>3.5m © Norbert Habbe
+HN-304TA Planeur>3.5m  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00018		
 0.99606	0.00079		
@@ -102,13 +102,13 @@ HN-304TA Planeur>3.5m © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	11.05	%		
-Dickenrücklage(xd):	30.62	%		
-Profilwölbung(f):	2.41	%		
-Wölbungsrücklage(xf):	45.82	%		
+Dickenrcklage(xd):	30.62	%		
+Profilwlbung(f):	2.41	%		
+Wlbungsrcklage(xf):	45.82	%		
 Momentenbeiwert(cm0):	-0.0897			
-Nullauftrieb(a0):	-3.3613	°		
-Stoßfreier	Eintritt:	0.3536	°	
-Ca	bei	stoßfreiem	Eintritt:	0.4074
+Nullauftrieb(a0):	-3.3613			
+Stofreier	Eintritt:	0.3536		
+Ca	bei	stofreiem	Eintritt:	0.4074
 Auftriebsanstieg:	6.831			
 Neutralpunktlage:	25.82	%
 Profiltyp:	Profil	

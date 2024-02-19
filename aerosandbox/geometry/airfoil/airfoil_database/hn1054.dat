@@ -1,4 +1,4 @@
-HN-1054	Planeur © Norbert Habbe
+HN-1054	Planeur  Norbert Habbe
 1.00000	0.00000		
 0.99900	0.00013		
 0.99592	0.00059		
@@ -102,13 +102,13 @@ HN-1054	Planeur © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	8.55	%		
-Dickenrücklage(xd):	29.66	%		
-Profilwölbung(f):	1.65	%		
-Wölbungsrücklage(xf):	45.82	%		
+Dickenrcklage(xd):	29.66	%		
+Profilwlbung(f):	1.65	%		
+Wlbungsrcklage(xf):	45.82	%		
 Momentenbeiwert(cm0):	-0.0576			
-Nullauftrieb(a0):	-2.1731	°		
-Stoßfreier	Eintritt:	0.2661	°	
-Ca	bei	stoßfreiem	Eintritt:	0.2675
+Nullauftrieb(a0):	-2.1731			
+Stofreier	Eintritt:	0.2661		
+Ca	bei	stofreiem	Eintritt:	0.2675
 Auftriebsanstieg:	6.7147			
 Neutralpunktlage:	25.55	%
 Profiltyp:	Profil	

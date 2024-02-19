@@ -1,4 +1,4 @@
-HN-1023	Planeur>3.5m © Norbert Habbe
+HN-1023	Planeur>3.5m  Norbert Habbe
 1.00000	0.00000		
 0.99897	0.00021		
 0.99602	0.00078		
@@ -102,13 +102,13 @@ HN-1023	Planeur>3.5m © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	10.2	%		
-Dickenrücklage(xd):	30.62	%		
-Profilwölbung(f):	2.38	%		
-Wölbungsrücklage(xf):	48.43	%		
+Dickenrcklage(xd):	30.62	%		
+Profilwlbung(f):	2.38	%		
+Wlbungsrcklage(xf):	48.43	%		
 Momentenbeiwert(cm0):	-0.0888			
-Nullauftrieb(a0):	-3.2922	°		
-Stoßfreier	Eintritt:	0.2558	°	
-Ca	bei	stoßfreiem	Eintritt:	0.3891
+Nullauftrieb(a0):	-3.2922			
+Stofreier	Eintritt:	0.2558		
+Ca	bei	stofreiem	Eintritt:	0.3891
 Auftriebsanstieg:	6.7873			
 Neutralpunktlage:	25.76	%
 Profiltyp:	Profil	

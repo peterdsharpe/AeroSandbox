@@ -1,4 +1,4 @@
-HN-1036	Planeur © Norbert Habbe
+HN-1036	Planeur  Norbert Habbe
 1.00000	0.00000		
 0.99901	0.00014		
 0.99606	0.00059		
@@ -102,13 +102,13 @@ HN-1036	Planeur © Norbert Habbe
 1.00000	0.00000			
 Profilbeiwerte				
 Profildicke(d):	8.55	%		
-Dickenrücklage(xd):	29.66	%		
-Profilwölbung(f):	1.83	%		
-Wölbungsrücklage(xf):	43.73	%		
+Dickenrcklage(xd):	29.66	%		
+Profilwlbung(f):	1.83	%		
+Wlbungsrcklage(xf):	43.73	%		
 Momentenbeiwert(cm0):	-0.065			
-Nullauftrieb(a0):	-2.4688	°		
-Stoßfreier	Eintritt:	0.316	°	
-Ca	bei	stoßfreiem	Eintritt:	0.3054
+Nullauftrieb(a0):	-2.4688			
+Stofreier	Eintritt:	0.316		
+Ca	bei	stofreiem	Eintritt:	0.3054
 Auftriebsanstieg:	6.7134			
 Neutralpunktlage:	25.58	%
 Profiltyp:	Profil	

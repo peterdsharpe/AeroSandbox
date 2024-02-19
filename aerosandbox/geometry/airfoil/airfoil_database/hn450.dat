@@ -1,4 +1,4 @@
-HN450	Planeur		© Norbert Habbe
+HN450	Planeur		 Norbert Habbe
 1.000000	0.000000		
 0.999013	0.000119		
 0.996057	0.000501		
@@ -102,13 +102,13 @@ HN450	Planeur		© Norbert Habbe
 1.000000	0.000000
 
 Profildicke(d): 8,33 %
-Dickenrücklage(xd): 30,14 %
-Profilwölbung(f): 1,88 %
-Wölbungsrücklage(xf): 42,18 %
+Dickenrcklage(xd): 30,14 %
+Profilwlbung(f): 1,88 %
+Wlbungsrcklage(xf): 42,18 %
 Momentenbeiwert(cm0): -0,0579
-Nullauftrieb(a 0): -2,2800 °
-Stoßfreier Eintritt: 0,5339 °
-Ca bei stoßfreiem Eintritt: 0,3086
+Nullauftrieb(a 0): -2,2800 
+Stofreier Eintritt: 0,5339 
+Ca bei stofreiem Eintritt: 0,3086
 Auftriebsanstieg: 6,6948
 Neutralpunktlage: 25,64 %
 Profiltyp: Profil
