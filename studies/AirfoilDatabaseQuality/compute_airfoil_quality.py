@@ -52,27 +52,29 @@ def compute_airfoil_quality(af: asb.Airfoil):
     if np.any(ds > 0.18):
         raise QualityError(f"Airfoil has abnormally long edge lengths ({np.max(ds)}).")
 
-    angles = np.arctan2d(dy, dx)
-    d_angles = np.abs(np.diff(angles, period=360))
-    # if np.any(d_angles > 120):
-    #     i = np.argmax(d_angles)
-    #     raise QualityError(f"Airfoil has abnormally large changes in angle at ("
-    #                        f"{af.x()[i]}, "
-    #                        f"{af.y()[i]}"
-    #                        f"), {d_angles[i]:.3g} deg.")
-
-    # is_mid_section = af.x() > 0.05
-    is_mid_section = np.logical_and(
-        af.x() > 0.05,
-        af.x() < 0.99
+    d_angles = np.concatenate([ # Angle changes between adjacent edges at each point
+        [0],
+        np.abs(np.diff(np.arctan2d(dy, dx), period=360)),
+        [0],
+    ], axis=0
     )
 
-    if np.any(d_angles[is_mid_section[1:-1]] > 30):
-        i = np.argmax(d_angles[is_mid_section[1:-1]])
-        raise QualityError(f"Airfoil has abnormally large changes in angle in mid-section at ("
-                           f"{af.x()[is_mid_section][i - 1]}, "
-                           f"{af.y()[is_mid_section][i - 1]}"
-                           f"), {d_angles[is_mid_section[1:-1]][i]:.3g} deg.")
+    allowable_d_angle = np.where(
+        af.x() < 0.05,
+        160,  # At the leading edge
+        np.where(
+            af.x() < 0.98,
+            20,  # In the middle
+            45  # At the trailing edge
+        )
+    )
+
+    if np.any(d_angles > allowable_d_angle):
+        i = np.argmax(d_angles - allowable_d_angle)
+        raise QualityError(f"Airfoil has abnormally large changes in angle at ("
+                           f"{af.x()[i]:.6g}, "
+                           f"{af.y()[i]:.6g}"
+                           f"), {d_angles[i]:.3g} deg.")
 
     # Normalize the airfoil
     af = af.normalize()
