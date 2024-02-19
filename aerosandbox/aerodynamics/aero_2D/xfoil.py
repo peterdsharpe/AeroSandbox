@@ -144,7 +144,11 @@ class XFoil(ExplicitAnalysis):
         self.xfoil_repanel = xfoil_repanel
         self.verbose = verbose
         self.timeout = timeout
-        self.working_directory = Path(working_directory)
+
+        if working_directory is None:
+            self.working_directory = None
+        else:
+            self.working_directory = Path(working_directory)
 
     def __repr__(self):
         return f"XFoil(airfoil={self.airfoil}, Re={self.Re}, mach={self.mach}, n_crit={self.n_crit})"
@@ -375,6 +379,22 @@ class XFoil(ExplicitAnalysis):
                 except ValueError:
                     return np.nan
 
+            output = {
+                column: []
+                for column in [
+                    "alpha",
+                    "CL",
+                    "CD",
+                    "CDp",
+                    "CM",
+                    "Cpmin",
+                    "Xcpmin",
+                    "Chinge",
+                    "Top_Xtr",
+                    "Bot_Xtr",
+                ]
+            }
+
             for pointno, line in enumerate(data_lines):
                 data = [str_to_float(entry) for entry in line.split()]
 
@@ -401,12 +421,6 @@ class XFoil(ExplicitAnalysis):
                         "For debugging, the raw output file from XFoil is printed below:\n"
                         + "\n".join(lines)
                     )
-
-                if pointno == 0:
-                    output = {
-                        column: []
-                        for column in columns
-                    }
 
                 for i in range(len(columns)):
                     output[columns[i]].append(data[i])
