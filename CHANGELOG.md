@@ -34,14 +34,14 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-
 -----
 
 # Latest (master / release), and previous versions
 
 #### 4.2.1
 
-- Added geometry export capabilities to OpenVSP using the *.vspscript interface. Accessible via `asb.Airplane.export_OpenVSP_vspscript(filename="/path/to/my/file.vspscript")`. To import into OpenVSP, use this function to generate a VSPscript file, and then import it via File -> Run Script... in OpenVSP. 
+- Added ability to extract boundary layer data from XFoil via the `asb.XFoil` interface. See `asb.XFoil.alpha(alpha, include_bl_data=True)` for details. This is useful for boundary layer analysis, especially for high-lift devices.
+- Added geometry export capabilities to OpenVSP using the *.vspscript interface. Accessible via `asb.Airplane.export_OpenVSP_vspscript(filename="/path/to/my/file.vspscript")`. To import into OpenVSP, use this function to generate a VSPscript file, and then import it via File -> Run Script... in OpenVSP.
 - Overhaul of the airfoil database at `aerosandbox.geometry.airfoil.airfoil_database`. This includes the addition of around 500 new high-quality airfoils, the removal of around 15 exceptionally-low-quality airfoils from the UIUC database, the correction of some airfoil coordinates for transcription errors, and fixes for file encodings that caused errors on Linux.
 
 #### 4.2.0
@@ -52,7 +52,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 - Improved visualization of Dynamics-class instances with PyVista; now, an altitude drape, ground plane, and wingtip ribbon can be drawn.
 - Fixed a bug in `asb.AeroBuildup` where wave drag could continue to be added via airfoil aerodynamics even if the user specified `include_wave_drag=False`.
 - Added a `period` argument to `asb.numpy.diff()` which allows for `diff`ing periodic variables (e.g., heading angle) without wraparound error.
-- Added `asb.numpy.integrate_discrete` module, which has higher-order integrators for pre-sampled functions (e.g., useful when doing direct collocation trajectory optimization). 
+- Added `asb.numpy.integrate_discrete` module, which has higher-order integrators for pre-sampled functions (e.g., useful when doing direct collocation trajectory optimization).
 - Added `asb.numpy.integrate` module, which copies `scipy.integrate` and provides `quad` (quadrature) and `solve_ivp` (ODE solve) functions.
 - Added `asb.numpy.gradient()` as a new function.
 - Fixed a bug in the `asb.numpy.mod()` function, which previous had slight discrepancies against NumPy's implementation for negative inputs.
@@ -64,7 +64,8 @@ Also, for at least one version before a breaking change, AeroSandbox development
 -----
 
 #### 4.1.7
-- Minimal changes; mostly more documentation and backend upgrades (e.g., new PyPI upload process). 
+
+- Minimal changes; mostly more documentation and backend upgrades (e.g., new PyPI upload process).
 - Minor refactoring of `np.reshape` methods from array methods to functions, for clarity.
 - Exploring reasons why NumPy 1.25.0 seems to have different optimization behavior than versions preceding. Currently ASB is pinned to NumPy<1.25.0a0; hoping to release pin in upcoming version.
 
@@ -77,7 +78,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 #### 4.1.5
 
-- PENDING DEPRECATION added: `asb.Airplane.export_XFLR()` has been renamed to `asb.Airplane.export_XFLR5_xml()`. This clarifies that the output is an XFLR5 XML file (which needs to be imported through the Plane menu in XFLR5), not an XFLR5 .xfl file - a point of user confusion. For now, both will work, but the old name will trigger a warning, and eventually will be removed. 
+- PENDING DEPRECATION added: `asb.Airplane.export_XFLR()` has been renamed to `asb.Airplane.export_XFLR5_xml()`. This clarifies that the output is an XFLR5 XML file (which needs to be imported through the Plane menu in XFLR5), not an XFLR5 .xfl file - a point of user confusion. For now, both will work, but the old name will trigger a warning, and eventually will be removed.
 - Added improvements to `asb.LiftingLine` to ensure mixed-backend compatibility.
 
 #### 4.1.4
