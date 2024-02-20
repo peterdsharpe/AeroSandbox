@@ -7,7 +7,7 @@ from aerosandbox.geometry.fuselage import Fuselage
 from aerosandbox.geometry.propulsor import Propulsor
 from aerosandbox.weights.mass_properties import MassProperties
 import copy
-
+from pathlib import Path
 
 class Airplane(AeroSandboxObject):
     """
@@ -900,7 +900,7 @@ class Airplane(AeroSandboxObject):
         return solid.clean()
 
     def export_cadquery_geometry(self,
-                                 filename: str,
+                                 filename: Union[Path, str],
                                  minimum_airfoil_TE_thickness: float = 0.001
                                  ) -> None:
         """
@@ -961,7 +961,7 @@ class Airplane(AeroSandboxObject):
         return self.export_XFLR5_xml(*args, **kwargs)
 
     def export_XFLR5_xml(self,
-                         filename,
+                         filename: Union[Path, str],
                          mass_props: MassProperties = None,
                          include_fuselages: bool = False,
                          mainwing: Wing = None,
@@ -969,7 +969,8 @@ class Airplane(AeroSandboxObject):
                          fin: Wing = None,
                          ) -> str:
         """
-        Exports the airplane geometry to an XFLR5 `.xml` file.
+        Exports the airplane geometry to an XFLR5 `.xml` file. To import the `.xml` file into XFLR5, go to File ->
+        Import -> Import from XML.
 
         Args:
             filename: The filename to export to. Should include the ".xml" extension.
@@ -1271,8 +1272,19 @@ class Airplane(AeroSandboxObject):
         return xml_string
 
     def export_OpenVSP_vspscript(self,
-                       filename,
-                       ):
+                                 filename: Union[Path, str],
+                                 ) -> str:
+        """
+        Exports the airplane geometry to a `*.vspscript` file compatible with OpenVSP. To import the `.vspscript`
+        file into OpenVSP:
+
+        Open OpenVSP, then File -> Run Script -> Select the `.vspscript` file.
+
+        Args:
+            filename: The filename to export to, given as a string or Path. Should include the ".vspscript" extension.
+
+        Returns: A string of the file contents, and also saves the file to the specified filename
+        """
         from aerosandbox.geometry.openvsp_io.asb_to_openvsp.airplane_vspscript_generator import generate_airplane
 
         vspscript_code = generate_airplane(self)
@@ -1281,6 +1293,7 @@ class Airplane(AeroSandboxObject):
             f.write(vspscript_code)
 
         return vspscript_code
+
 
 if __name__ == '__main__':
     import aerosandbox as asb

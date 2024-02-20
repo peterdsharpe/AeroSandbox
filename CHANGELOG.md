@@ -39,6 +39,11 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.1
+
+- Added geometry export capabilities to OpenVSP using the *.vspscript interface. Accessible via `asb.Airplane.export_OpenVSP_vspscript(filename="/path/to/my/file.vspscript")`. To import into OpenVSP, use this function to generate a VSPscript file, and then import it via File -> Run Script... in OpenVSP. 
+- Overhaul of the airfoil database at `aerosandbox.geometry.airfoil.airfoil_database`. This includes the addition of around 500 new high-quality airfoils, the removal of around 15 exceptionally-low-quality airfoils from the UIUC database, the correction of some airfoil coordinates for transcription errors, and fixes for file encodings that caused errors on Linux.
+
 #### 4.2.0
 
 - Fixed I/O error with XFoil. XFoil outputs may have mislabeled columns if both CP and hinge moments are requested. This is a bug in XFoil, but AeroSandbox now detects and corrects for it.
