@@ -1,4 +1,4 @@
-from pysr import PySRRegressor
+# from pysr import PySRRegressor
 from read_data import a, d, hf, lr, eff
 import aerosandbox as asb
 import aerosandbox.numpy as np
@@ -47,5 +47,5 @@ if __name__ == '__main__':
     p.show_plot(
         "Control Surface Effectiveness",
         "Control Surface Chord Fraction ($c_{cs} / c_{wing}$)",
-        "Effectiveness ($\\frac{d\\delta}{d\\alpha}$ at constant $C_L$)"
+        "Effectiveness\n($\\frac{d\\alpha}{d\\delta}$ at constant $C_L$)"
     )
