@@ -36,6 +36,9 @@ def compute_airfoil_quality(af: asb.Airfoil):
     if np.any(af.y() >= 0.5):
         raise QualityError("Airfoil has abnormally high y-coordinates.")
 
+    if np.any(af.local_thickness(x_over_c = np.linspace(0, 1, 101)) < 0):
+        raise QualityError("Airfoil has negative thickness.")
+
     # Check if the airfoil is self-intersecting
     if not af.as_shapely_polygon().is_valid:
         raise QualityError("Airfoil is self-intersecting.")
