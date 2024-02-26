@@ -172,9 +172,12 @@ class XFoil(ExplicitAnalysis):
 
         if self.xfoil_repanel:
             run_file_contents += [
-                "pane",
-                # "ppar",
-                # "",
+                "ppar",
+                "n 279"  # Highest number of panel points before XFoil IWX array overfills and starts trimming wake
+                "",
+                "",
+                "",
+                # "pane",
             ]
 
         # Enter oper mode
