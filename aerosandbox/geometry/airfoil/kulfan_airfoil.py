@@ -131,6 +131,70 @@ class KulfanAirfoil(Airfoil):
             spacing_function_per_side=spacing_function_per_side
         )
 
+    def normalize(
+            self,
+            return_dict: bool = False,
+    ) -> Union['KulfanAirfoil', Dict[str, Union['KulfanAirfoil', float]]]:
+        """
+        Returns a copy of the Airfoil with a new set of `coordinates`, such that:
+            - The leading edge (LE) is at (0, 0)
+            - The trailing edge (TE) is at (1, 0)
+            - The chord length is equal to 1
+
+        The trailing-edge (TE) point is defined as the midpoint of the line segment connecting the first and last coordinate points (upper and lower surface TE points, respectively). The TE point is not necessarily one of the original points in the airfoil coordinates (`Airfoil.coordinates`); in general, it will not be one of the points if the TE thickness is nonzero.
+
+        The leading-edge (LE) point is defined as the coordinate point with the largest Euclidian distance from the trailing edge. (In other words, if you were to center a circle on the trailing edge and progressively grow it, what's the last coordinate point that it would intersect?) The LE point is always one of the original points in the airfoil coordinates.
+
+        The chord is defined as the Euclidian distance between the LE and TE points.
+
+        Coordinate modifications to achieve the constraints described above (LE @ origin, TE at (1, 0), and chord of 1) are done by means of a translation and rotation.
+
+        Args:
+
+            return_dict: Determines the output type of the function.
+                - If `False` (default), returns a copy of the Airfoil with the new coordinates.
+                - If `True`, returns a dictionary with keys:
+
+                        - "airfoil": a copy of the Airfoil with the new coordinates
+
+                        - "x_translation": the amount by which the airfoil's LE was translated in the x-direction
+
+                        - "y_translation": the amount by which the airfoil's LE was translated in the y-direction
+
+                        - "scale_factor": the amount by which the airfoil was scaled (if >1, the airfoil had to get
+                            bigger)
+
+                        - "rotation_angle": the angle (in degrees) by which the airfoil was rotated about the LE.
+                            Sign convention is that positive angles rotate the airfoil counter-clockwise.
+
+                    All of thes values represent the "required change", e.g.:
+
+                        - "x_translation" is the amount by which the airfoil's LE had to be translated in the
+                            x-direction to get it to the origin.
+
+                        - "rotation_angle" is the angle (in degrees) by which the airfoil had to be rotated (CCW).
+
+        Returns: Depending on the value of `return_dict`, either:
+
+            - A copy of the airfoil with the new coordinates (default), or
+
+            - A dictionary with keys "airfoil", "x_translation", "y_translation", "scale_factor", and "rotation_angle".
+                documentation for `return_tuple` for more information.
+        """
+        ### A KulfanAirfoil is already normalized by definition, so we essentially just return the same airfoil.
+        # (This method serves to overwrite the Airfoil.normalize() method, which is not applicable to KulfanAirfoils.)
+
+        if not return_dict:
+            return self
+        else:
+            return {
+                "airfoil"       : self,
+                "x_translation" : 0,
+                "y_translation" : 0,
+                "scale_factor"  : 1,
+                "rotation_angle": 0
+            }
+
     def draw(self,
              *args,
              draw_markers=False,
