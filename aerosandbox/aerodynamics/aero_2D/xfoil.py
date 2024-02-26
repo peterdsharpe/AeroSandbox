@@ -9,11 +9,6 @@ import warnings
 import os
 
 
-# Define XFoilError
-class XFoilError(Exception):
-    pass
-
-
 class XFoil(ExplicitAnalysis):
     """
 
@@ -37,6 +32,10 @@ class XFoil(ExplicitAnalysis):
     >>> result_at_multiple_alphas = xf.alpha([3, 5, 60]) # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
 
     """
+
+    # Defines an exception to throw if XFoil fails externally
+    class XFoilError(Exception):
+        pass
 
     def __init__(self,
                  airfoil: Airfoil,
@@ -314,18 +313,18 @@ class XFoil(ExplicitAnalysis):
                 )
             except subprocess.CalledProcessError as e:
                 if e.returncode == 11:
-                    raise RuntimeError(
+                    raise self.XFoilError(
                         "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
                         "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
                         "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance.")
                 elif e.returncode == 8 or e.returncode == 136:
-                    raise RuntimeError(
+                    raise self.XFoilError(
                         "XFoil returned a floating point exception. This is probably because you are trying to start\n"
                         "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
                         "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
                         "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point.")
                 elif e.returncode == 1:
-                    raise RuntimeError(
+                    raise self.XFoilError(
                         f"Command '{command}' returned non-zero exit status 1.\n"
                         f"This is likely because AeroSandbox does not see XFoil on PATH with the given command.\n"
                         f"Check the logs (`asb.XFoil(..., verbose=True)`) to verify that this is the case, and if so,\n"
@@ -339,7 +338,7 @@ class XFoil(ExplicitAnalysis):
                 with open(directory / output_filename) as f:
                     lines = f.readlines()
             except FileNotFoundError:
-                raise FileNotFoundError(
+                raise self.XFoilError(
                     "It appears XFoil didn't produce an output file, probably because it crashed.\n"
                     "To troubleshoot, try some combination of the following:\n"
                     "\t - In the XFoil constructor, verify that either XFoil is on PATH or that the `xfoil_command` parameter is set.\n"
@@ -367,7 +366,7 @@ class XFoil(ExplicitAnalysis):
                 data_lines = lines[i + 1:]
 
             except IndexError:
-                raise XFoilError(
+                raise self.XFoilError(
                     "XFoil output file is malformed; it doesn't have the expected number of lines.\n"
                     "For debugging, the raw output file from XFoil is printed below:\n"
                     + "\n".join(lines)
@@ -415,7 +414,7 @@ class XFoil(ExplicitAnalysis):
                     ]
 
                 if not len(data) == len(columns):
-                    raise XFoilError(
+                    raise self.XFoilError(
                         "XFoil output file is malformed; the header and data have different numbers of columns.\n"
                         "In previous testing, this occurs due to a bug in XFoil itself, with certain input combos.\n"
                         "For debugging, the raw output file from XFoil is printed below:\n"
