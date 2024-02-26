@@ -49,6 +49,7 @@ class XFoil(ExplicitAnalysis):
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
                  xfoil_repanel: bool = True,
+                 include_bl_data: bool = False,
                  verbose: bool = False,
                  timeout: Union[float, int, None] = 30,
                  working_directory: Union[Path, str] = None,
@@ -117,6 +118,11 @@ class XFoil(ExplicitAnalysis):
             xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE,
                 with default settings, 160 nodes). Boolean, defaults to True.
 
+            include_bl_data: Controls whether or not to include boundary layer data in the output. If this is True,
+                the functions `alpha()` and `cl()` will return a dictionary with an additional key, "bl_data",
+                which contains the boundary layer data in the form of a pandas DataFrame. Results in slightly higher
+                runtime, mostly due to file I/O bottleneck. Defaults to False.
+
             verbose: Controls whether or not XFoil output is printed to command line. Defaults to False.
 
             timeout: Controls how long any individual XFoil run (i.e. alpha sweep) is allowed to run before the
@@ -141,6 +147,7 @@ class XFoil(ExplicitAnalysis):
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
         self.xfoil_repanel = xfoil_repanel
+        self.include_bl_data = include_bl_data
         self.verbose = verbose
         self.timeout = timeout
 
@@ -434,97 +441,72 @@ class XFoil(ExplicitAnalysis):
 
             # Read the BL data
             if read_bl_data_from is not None:
-                if read_bl_data_from == "alpha":
-                    dump_filenames = directory.glob("dump_a_*.txt")
-                    cpwr_filenames = directory.glob("cpwr_a_*.txt")
+                import pandas as pd
+                bl_datas: List[pd.DataFrame] = []
 
+                if read_bl_data_from == "alpha":
                     alpha_to_dump_mapping = {
                         float(dump_filename.stem.split("_")[-1]): dump_filename
-                        for dump_filename in dump_filenames
+                        for dump_filename in directory.glob("dump_a_*.txt")
                     }
-                    alpha_to_cpwr_mapping = {
-                        float(cpwr_filename.stem.split("_")[-1]): cpwr_filename
-                        for cpwr_filename in cpwr_filenames
-                    }
-
-                    bl_data_for_each_alpha = []
 
                     for alpha in output["alpha"]:
                         dump_filename = alpha_to_dump_mapping[
                             min(alpha_to_dump_mapping.keys(), key=lambda x: abs(x - alpha))
                         ]
-                        cpwr_filename = alpha_to_cpwr_mapping[
-                            min(alpha_to_cpwr_mapping.keys(), key=lambda x: abs(x - alpha))
-                        ]
 
-                        import pandas as pd
-                        dump_data = pd.read_csv(
-                            dump_filename,
-                            sep="\s+",
-                            names=["s", "x", "y", "Ue/Vinf", "Dstar", "Theta", "Cf", "H"],
-                            skiprows=1,
+                        bl_datas.append(
+                            pd.read_csv(
+                                dump_filename,
+                                sep="\s+",
+                                names=["s", "x", "y", "ue/vinf", "dstar", "theta", "cf", "H"],
+                                skiprows=1,
+                            )
                         )
-                        cpwr_data = pd.read_csv(
-                            cpwr_filename,
-                            sep="\s+",
-                            names=["x", "y", "Cp"],
-                            skiprows=3,
-                        )
-
-                        dump_data["Cp"] = cpwr_data["Cp"]
-
-                        bl_data_for_each_alpha.append(dump_data)
-
-                    output["bl_data"] = np.fromiter(bl_data_for_each_alpha, dtype="O")
 
                 elif read_bl_data_from == "cl":
-                    dump_filenames = directory.glob("dump_cl_*.txt")
-                    cpwr_filenames = directory.glob("cpwr_cl_*.txt")
-
                     cl_to_dump_mapping = {
                         float(dump_filename.stem.split("_")[-1]): dump_filename
-                        for dump_filename in dump_filenames
+                        for dump_filename in directory.glob("dump_cl_*.txt")
                     }
-                    cl_to_cpwr_mapping = {
-                        float(cpwr_filename.stem.split("_")[-1]): cpwr_filename
-                        for cpwr_filename in cpwr_filenames
-                    }
-
-                    bl_data_for_each_cl = []
 
                     for cl in output["CL"]:
                         dump_filename = cl_to_dump_mapping[
                             min(cl_to_dump_mapping.keys(), key=lambda x: abs(x - cl))
                         ]
-                        cpwr_filename = cl_to_cpwr_mapping[
-                            min(cl_to_cpwr_mapping.keys(), key=lambda x: abs(x - cl))
-                        ]
 
-                        import pandas as pd
-                        dump_data = pd.read_csv(
-                            dump_filename,
-                            sep="\s+",
-                            names=["s", "x", "y", "Ue/Vinf", "Dstar", "Theta", "Cf", "H"],
-                            skiprows=1,
+                        bl_datas.append(
+                            pd.read_csv(
+                                dump_filename,
+                                sep="\s+",
+                                names=["s", "x", "y", "ue/vinf", "dstar", "theta", "cf", "H"],
+                                skiprows=1,
+                            )
                         )
-                        cpwr_data = pd.read_csv(
-                            cpwr_filename,
-                            sep="\s+",
-                            names=["x", "y", "Cp"],
-                            skiprows=3,
-                        )
-
-                        dump_data["Cp"] = cpwr_data["Cp"]
-
-                        bl_data_for_each_cl.append(dump_data)
-
-                    output["bl_data"] = np.fromiter(bl_data_for_each_cl, dtype="O")
 
                 else:
+                    raise ValueError("The `read_bl_data_from` parameter must be 'alpha', 'cl', or None.")
 
-                    raise ValueError(
-                        "The `read_bl_data_from` parameter must be either 'alpha' or 'cl'."
-                    )
+                # Augment the output data for each BL
+                for bl_data in bl_datas:
+                    # Get Cp via Karman-Tsien compressibility correction, same as XFoil
+                    Cp_0 = (1 - bl_data["ue/vinf"] ** 2)
+                    bl_data["Cp"] = (Cp_0 /
+                                     (
+                                             np.sqrt(1 - self.mach ** 2)
+                                             + (
+                                                     (self.mach ** 2)
+                                                     / (1 + np.sqrt(1 - self.mach ** 2))
+                                                     * (Cp_0 / 2)
+                                             )
+
+                                     )
+                                     )
+
+                    # Get Re_theta
+                    bl_data["Re_theta"] = np.abs(bl_data["ue/vinf"]) * bl_data["theta"] * self.Re
+
+                output["bl_data"] = np.fromiter(bl_datas, dtype="O")
 
             return output
 
@@ -568,7 +550,6 @@ class XFoil(ExplicitAnalysis):
     def alpha(self,
               alpha: Union[float, np.ndarray],
               start_at: Union[float, None] = 0,
-              include_bl_data: bool = False,
               ) -> Dict[str, np.ndarray]:
         """
         Execute XFoil at a given angle of attack, or at a sequence of angles of attack.
@@ -603,9 +584,16 @@ class XFoil(ExplicitAnalysis):
             if self.hinge_point_x is not None:
                 commands.append("fmom")
 
-            if include_bl_data:
-                commands.append(f"dump dump_a_{alpha:.8f}.txt")
-                commands.append(f"cpwr cpwr_a_{alpha:.8f}.txt")
+            if self.include_bl_data:
+                commands.extend([
+                    f"dump dump_a_{alpha:.8f}.txt",
+                    # "vplo",
+                    # "cd", # Dissipation coefficient
+                    # f"dump cdis_a_{alpha:.8f}.txt",
+                    # f"n", # Amplification ratio
+                    # f"dump n_a_{alpha:.8f}.txt",
+                    # "",
+                ])
 
         if (
                 len(alphas) > 1 and
@@ -628,7 +616,7 @@ class XFoil(ExplicitAnalysis):
 
         output = self._run_xfoil(
             "\n".join(commands),
-            read_bl_data_from="alpha" if include_bl_data else None
+            read_bl_data_from="alpha" if self.include_bl_data else None
         )
 
         sort_order = np.argsort(output['alpha'])
@@ -641,7 +629,6 @@ class XFoil(ExplicitAnalysis):
     def cl(self,
            cl: Union[float, np.ndarray],
            start_at: Union[float, None] = 0,
-           include_bl_data: bool = False,
            ) -> Dict[str, np.ndarray]:
         """
         Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
@@ -676,9 +663,16 @@ class XFoil(ExplicitAnalysis):
             if self.hinge_point_x is not None:
                 commands.append("fmom")
 
-            if include_bl_data:
-                commands.append(f"dump dump_cl_{cl:.8f}.txt")
-                commands.append(f"cpwr cpwr_cl_{cl:.8f}.txt")
+            if self.include_bl_data:
+                commands.extend([
+                    f"dump dump_cl_{cl:.8f}.txt",
+                    # "vplo",
+                    # "cd", # Dissipation coefficient
+                    # f"dump cdis_cl_{cl:.8f}.txt",
+                    # f"n", # Amplification ratio
+                    # f"dump n_cl_{cl:.8f}.txt",
+                    # "",
+                ])
 
         if (
                 len(cls) > 1 and
@@ -701,7 +695,7 @@ class XFoil(ExplicitAnalysis):
 
         output = self._run_xfoil(
             "\n".join(commands),
-            read_bl_data_from="cl" if include_bl_data else None
+            read_bl_data_from="cl" if self.include_bl_data else None
         )
 
         sort_order = np.argsort(output['alpha'])
@@ -719,13 +713,13 @@ if __name__ == '__main__':
         airfoil=af,
         Re=1e6,
         hinge_point_x=0.75,
-        # verbose=True,
+        include_bl_data=True,
         working_directory=str(Path.home() / "Downloads" / "test"),
     )
 
-    result_at_single_alpha = xf.alpha(5, include_bl_data=True)
+    result_at_single_alpha = xf.alpha(5)
 
-    result_at_several_CLs = xf.cl([-0.1, 0.5, 0.7, 0.8, 0.9], include_bl_data=True)
+    result_at_several_CLs = xf.cl([-0.1, 0.5, 0.7, 0.8, 0.9])
 
-    result_at_multiple_alphas = xf.alpha([3, 5, 60], include_bl_data=True)
+    result_at_multiple_alphas = xf.alpha([3, 5, 60])
     # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
