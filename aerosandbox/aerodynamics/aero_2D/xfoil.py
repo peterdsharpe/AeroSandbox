@@ -7,6 +7,7 @@ from typing import Union, List, Dict
 import tempfile
 import warnings
 import os
+import re
 
 
 class XFoil(ExplicitAnalysis):
@@ -405,7 +406,9 @@ class XFoil(ExplicitAnalysis):
             }
 
             for pointno, line in enumerate(data_lines):
-                data = [str_to_float(entry) for entry in line.split()]
+                float_pattern = r"-?\d+\.\d+"
+                entries = re.findall(float_pattern, line)
+                data = [str_to_float(entry) for entry in entries]
 
                 if len(data) == 10 and len(columns) == 8:
                     # This is a monkey-patch for a bug in XFoil v6.99, which causes polar output files to be malformed
