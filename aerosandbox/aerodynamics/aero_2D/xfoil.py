@@ -435,8 +435,9 @@ class XFoil(ExplicitAnalysis):
                         "For debugging, the raw output file from XFoil is printed below:\n"
                         + "\n".join(lines)
                         + "\nTitle line: " + title_line
-                        + "\nColumns: " + str(columns)
                         + f"\nIdentified {len(data)} data columns and {len(columns)} header columns."
+                        + "\nColumns: " + str(columns)
+                        + "\nData: " + str(data)
                     )
 
                 for i in range(len(columns)):
