@@ -38,6 +38,15 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.2
+
+- Added Python 3.12 support, after completing investigation of small floating-point math differences between Python 3.11 and 3.12 (caused by backend changes in NumPy 1.24.3 and 1.25.0).
+- Updated version pins in `requirements.txt` to match those used in local pre-commit testing.
+- Breaking change from 4.2.1: in `asb.XFoil`, to access boundary layer data (new feature from 4.2.1), give `include_bl_data=True` in the `asb.XFoil` constructor rather than in `asb.XFoil.alpha()`.
+- In `asb.XFoil`, added more aggressive suppression of pop-up window generation from X11, allowing it to run in the background more reliably.
+- Increased the default `asb.XFoil` paneling resolution to 320 points when `xfoil_repanel=True` is given.
+- Fixed gimbal lock singularity issues in the solar energy library (`aerosandbox.library.power_solar`), which could cause optimization to fail when the sun is directly overhead.
+
 #### 4.2.1
 
 - Added ability to extract boundary layer data from XFoil via the `asb.XFoil` interface. See `asb.XFoil.alpha(alpha, include_bl_data=True)` for details. This is useful for boundary layer analysis, especially for high-lift devices.
