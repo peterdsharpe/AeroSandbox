@@ -68,7 +68,7 @@ setup(
             'shapely >= 2',
         ],
         "test": [
-            'pytest',
+            'pytest<=8.0.2',
             'nbval'
         ],
         "docs": [
