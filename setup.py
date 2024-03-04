@@ -63,7 +63,6 @@ setup(
             'pyvista >= 0.31',
             'trimesh >= 3',
             'sympy >= 1',
-            'cadquery >= 2',
             'shapely >= 2',
         ],
         "test": [

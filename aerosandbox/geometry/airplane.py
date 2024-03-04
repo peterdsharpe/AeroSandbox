@@ -799,7 +799,11 @@ class Airplane(AeroSandboxObject):
         Returns: A CADQuery Workplane object containing the CAD geometry of the airplane.
 
         """
-        import cadquery as cq
+        try:
+            import cadquery as cq
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "The `cadquery` library is required to use this function. Please install it with `pip install cadquery`.")
 
         solids = []
 
