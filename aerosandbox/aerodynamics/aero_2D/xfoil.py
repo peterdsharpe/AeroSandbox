@@ -161,6 +161,7 @@ class XFoil(ExplicitAnalysis):
         return f"XFoil(airfoil={self.airfoil}, Re={self.Re}, mach={self.mach}, n_crit={self.n_crit})"
 
     def _default_keystrokes(self,
+                            airfoil_filename: str,
                             output_filename: str,
                             ) -> List[str]:
         """
@@ -177,6 +178,11 @@ class XFoil(ExplicitAnalysis):
             "g",
             "w 0.05",
             "",
+        ]
+
+        # Load the airfoil
+        run_file_contents += [
+            f"load {airfoil_filename}",
         ]
 
         if self.xfoil_repanel:
@@ -278,7 +284,10 @@ class XFoil(ExplicitAnalysis):
             self.airfoil.write_dat(directory / airfoil_file)
 
             # Handle the keystroke file
-            keystrokes = self._default_keystrokes(output_filename=output_filename)
+            keystrokes = self._default_keystrokes(
+                airfoil_filename=airfoil_file,
+                output_filename=output_filename
+            )
             keystrokes += [run_command]
             keystrokes += [
                 "pacc",  # End polar accumulation
@@ -295,9 +304,8 @@ class XFoil(ExplicitAnalysis):
             ### Execute
             try:
                 # command = f'{self.xfoil_command} {airfoil_file}' # Old syntax; try this if calls are not working
-                command = [self.xfoil_command, airfoil_file]
                 proc = subprocess.Popen(
-                    command,
+                    self.xfoil_command,
                     cwd=directory,
                     stdin=subprocess.PIPE,
                     stdout=None if self.verbose else subprocess.DEVNULL,
@@ -337,7 +345,7 @@ class XFoil(ExplicitAnalysis):
                         "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point.")
                 elif e.returncode == 1:
                     raise self.XFoilError(
-                        f"Command '{command}' returned non-zero exit status 1.\n"
+                        f"Command '{self.xfoil_command}' returned non-zero exit status 1.\n"
                         f"This is likely because AeroSandbox does not see XFoil on PATH with the given command.\n"
                         f"Check the logs (`asb.XFoil(..., verbose=True)`) to verify that this is the case, and if so,\n"
                         f"provide the correct path to the XFoil executable in the asb.XFoil constructor via `xfoil_command=`."
