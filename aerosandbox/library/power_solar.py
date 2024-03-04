@@ -10,6 +10,22 @@ realized solar flux on a given surface as a function of many different parameter
 """
 
 
+def _prepare_for_inverse_trig(x: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    """
+    Ensures that a value is within the open interval (-1, 1), so that if you call an inverse trig function
+    on it (e.g., arcsin, arccos), you won't get an infinity or NaN.
+
+    Args:
+        x: A floating-point number or an array of such. If an array, this function acts elementwise.
+
+    Returns: A clipped version of the number, constrained to be in the open interval (-1, 1).
+    """
+    return (
+            np.nextafter(1, -1) *
+            np.clip(x, -1, 1)
+    )
+
+
 def solar_flux_outside_atmosphere_normal(
         day_of_year: Union[int, float, np.ndarray]
 ) -> Union[float, np.ndarray]:
@@ -73,9 +89,13 @@ def solar_elevation_angle(
     """
     declination = declination_angle(day_of_year)
 
+    sin_solar_elevation_angle = (
+            np.sind(declination) * np.sind(latitude) +
+            np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
+    )
+
     solar_elevation_angle = np.arcsind(
-        np.sind(declination) * np.sind(latitude) +
-        np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
+        _prepare_for_inverse_trig(sin_solar_elevation_angle)
     )  # in degrees
     return solar_elevation_angle
 
@@ -111,9 +131,8 @@ def solar_azimuth_angle(
     cele = np.cosd(elevation)
 
     cos_azimuth = (sdec * clat - cdec * slat * ctime) / cele
-    cos_azimuth = np.clip(cos_azimuth, -1, 1)
 
-    azimuth_raw = np.arccosd(cos_azimuth)
+    azimuth_raw = np.arccosd(_prepare_for_inverse_trig(cos_azimuth))
 
     is_solar_morning = np.mod(time, 86400) > 43200
 
@@ -425,9 +444,8 @@ def length_day(
     dec = declination_angle(day_of_year)
 
     constant = -np.sind(dec) * np.sind(latitude) / (np.cosd(dec) * np.cosd(latitude))
-    constant = np.clip(constant, -1, 1)
 
-    sun_time_nondim = 2 * np.arccos(constant)
+    sun_time_nondim = 2 * np.arccos(_prepare_for_inverse_trig(constant))
     sun_time = sun_time_nondim / (2 * np.pi) * 86400
 
     return sun_time
