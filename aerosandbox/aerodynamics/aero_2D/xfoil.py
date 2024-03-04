@@ -175,6 +175,7 @@ class XFoil(ExplicitAnalysis):
         run_file_contents += [
             "plop",
             "g",
+            "w 0.05",
             "",
         ]
 
