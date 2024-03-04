@@ -61,10 +61,9 @@ setup(
         "full": [
             'plotly >= 5',
             'pyvista >= 0.31',
-            'ipyvtklink >= 0.2',
             'trimesh >= 3',
             'sympy >= 1',
-            'cadquery >= 2; python_version >="3.8"',
+            'cadquery >= 2',
             'shapely >= 2',
         ],
         "test": [
