@@ -168,3 +168,95 @@ def has_balanced_parentheses(string: str, left="(", right=")") -> bool:
             parenthesis_level -= 1
 
     return parenthesis_level == 0
+
+
+def wrap_text_ignoring_mathtext(
+        text: str,
+        width: int = 70,
+) -> str:
+    """
+    Reformat the single paragraph in 'text' to fit in lines of no more
+    than 'width' columns, and return a new string containing the entire
+    wrapped paragraph.  Tabs are expanded and other
+    whitespace characters converted to space.
+
+    Similar to `textwrap.fill`, but keeps any mathtext blocks contiguous and unaltered. Mathtext blocks are segments of `text` that are between $ markers, to indicate LaTeX-like formatting. Dollar-sign literals (\$) do not trigger Mathtext, and that is respected here as well.
+
+    For example:
+        >>> wrap_text_ignoring_mathtext()
+
+    Args:
+
+        text: The text to be wrapped.
+
+        width: The maximum width of wrapped lines (unless break_long_words is false)
+
+    Returns:
+
+        A string containing the entire paragraph with line breaks as newline ("\n") characters.
+
+    """
+    import textwrap, re
+
+    # Pattern to match mathtext blocks
+    mathtext_trigger = r"(?<!\\)(?:\\\\)*\$"
+
+    # Split the text into non-mathtext parts and mathtext parts
+    parts = re.split(mathtext_trigger, text)
+    text_parts = [part for i, part in enumerate(parts) if i % 2 == 0]
+    math_parts = [part for i, part in enumerate(parts) if i % 2 == 1]
+
+    # Reassemble th result
+    output = ""
+    cursor_position = 0
+
+    while len(text_parts) + len(math_parts) > 0:
+        try:
+            text_part = text_parts.pop(0)
+
+            contribution = textwrap.fill(
+                text_part,
+                width=width,
+                initial_indent=" " * cursor_position,
+                drop_whitespace=False,
+            )[cursor_position:]
+
+            output += contribution
+
+            if "\n" in contribution:
+                cursor_position = len(contribution.split("\n")[-1])
+            else:
+                cursor_position += len(contribution)
+
+        except IndexError:
+            pass
+
+        try:
+            math_part = math_parts.pop(0)
+
+            estimated_space: int = int(np.round(len(math_part) * 0.5))
+
+            if cursor_position + estimated_space < width:
+                output += f"${math_part}$"
+                cursor_position += estimated_space
+            else:
+                output += f"\n${math_part}$"
+                cursor_position = estimated_space
+
+        except IndexError:
+            pass
+
+    output = "\n".join([line.strip() for line in output.split("\n")])
+
+    return output
+
+
+if __name__ == '__main__':
+    for input in [
+        r"$ax^2+bx+c$",
+        r"Photon flux $\phi$",
+        r"Photon flux $\phi$ is given by $\phi = \frac{c}{\lambda}$",
+        r"Earnings for 2022 $M\$/year$",
+        r"$ax^2+bx+c$ and also $3x$"
+    ]:
+        print(wrap_text_ignoring_mathtext(input, width=10))

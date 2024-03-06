@@ -6,6 +6,7 @@ import aerosandbox.numpy as np
 from aerosandbox.tools.pretty_plots.threedim import ax_is_3d
 from functools import partial
 from pathlib import Path
+from aerosandbox.tools import string_formatting as sf
 
 
 def show_plot(
@@ -23,6 +24,7 @@ def show_plot(
         pretty_grids: bool = True,
         set_ticks: bool = True,
         rotate_axis_labels: bool = True,
+        rotate_axis_labels_linewidth: int = 14,
         show: bool = True,
 ):
     """
@@ -351,8 +353,17 @@ def show_plot(
         for ax in axes:
             if not ax_is_3d(ax):
                 if not ax.get_label() == '<colorbar>':
+
+                    ylabel = ax.get_ylabel()
+
+                    if (rotate_axis_labels_linewidth is not None) and ("\n" not in ylabel):
+                        ylabel = sf.wrap_text_ignoring_mathtext(
+                            ylabel,
+                            width=rotate_axis_labels_linewidth,
+                        )
+
                     ax.set_ylabel(
-                        ax.get_ylabel(),
+                        ylabel,
                         rotation=0,
                         ha="right",
                         va="center",
