@@ -328,10 +328,12 @@ def show_plot(
     # Make axis labels if needed
     if xlabel is not None:
         for ax in axes:
-            ax.set_xlabel(xlabel)
+            if not ax.get_label() == '<colorbar>':
+                ax.set_xlabel(xlabel)
     if ylabel is not None:
         for ax in axes:
-            ax.set_ylabel(ylabel)
+            if not ax.get_label() == '<colorbar>':
+                ax.set_ylabel(ylabel)
     if zlabel is not None:
         if len(axes_with_3D) == 0:
             import warnings
@@ -341,7 +343,8 @@ def show_plot(
             )
 
         for ax in axes_with_3D:
-            ax.set_zlabel(zlabel)
+            if not ax.get_label() == '<colorbar>':
+                ax.set_zlabel(zlabel)
 
     # Rotate axis labels if needed
     if rotate_axis_labels:
