@@ -350,12 +350,13 @@ def show_plot(
     if rotate_axis_labels:
         for ax in axes:
             if not ax_is_3d(ax):
-                ax.set_ylabel(
-                    ax.get_ylabel(),
-                    rotation=0,
-                    ha="right",
-                    va="center",
-                )
+                if not ax.get_label() == '<colorbar>':
+                    ax.set_ylabel(
+                        ax.get_ylabel(),
+                        rotation=0,
+                        ha="right",
+                        va="center",
+                    )
 
     if title is not None:
         if len(axes) > 1:
