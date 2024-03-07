@@ -143,7 +143,7 @@ if __name__ == '__main__':
         x,
         thermal_efficiency_turboshaft(1000, throttle_setting=x) / thermal_efficiency_turboshaft(1000),
     )
-    ax.xaxis.set_major_formatter(p.ticker.PercentFormatter(1))
+    ax.xaxis.set_major_formatter(p.mpl.ticker.PercentFormatter(1))
     plt.xlim(0, 1)
     plt.ylim(0, 1)
     p.set_ticks(0.1, 0.05, 0.1, 0.05)
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     p.show_plot(
         "Turboshaft: Thermal Efficiency at Partial Power",
         "Throttle Setting [-]",
-        "Thermal Efficiency Knockdown\nrelative to Design Point [-]\n$\eta / \eta_\mathrm{max}$"
+        "Thermal Efficiency Knockdown relative to Design Point [-] $\eta / \eta_\mathrm{max}$"
     )
 
     ##### Do Weight/OPR Efficiency Plot #####
@@ -175,7 +175,7 @@ if __name__ == '__main__':
         cmap="turbo_r",
     )
 
-    cbar.ax.yaxis.set_major_formatter(p.ticker.PercentFormatter(1, decimals=0))
+    cbar.ax.yaxis.set_major_formatter(p.mpl.ticker.PercentFormatter(1, decimals=0))
 
     p.set_ticks(None, None, 5, 1)
 
