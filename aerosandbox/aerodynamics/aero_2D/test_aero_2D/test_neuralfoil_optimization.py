@@ -1,4 +1,3 @@
-import neuralfoil as nf
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
