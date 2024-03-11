@@ -21,7 +21,7 @@ class Airfoil(Polygon):
 
     def __init__(self,
                  name: str = "Untitled",
-                 coordinates: Union[None, str, np.ndarray] = None,
+                 coordinates: Union[None, str, Path, np.ndarray] = None,
                  **deprecated_keyword_arguments
                  ):
         """
