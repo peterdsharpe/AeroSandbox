@@ -10,11 +10,12 @@ class Timer(object):
     with Timer("My timer"):  # You can optionally give it a name
         # Do stuff
 
-    Results are printed to stdout. You can access the runtime (in seconds) directly with:
+    Results are printed to stdout. You can access the runtime (in seconds) directly by instantiating the object:
 
-    >>> with Timer("My timer") as t:
-    >>>     # Do stuff
-    >>> print(t.runtime)  # You can dynamically access the runtime of any completed Timer, if desired
+    >>> t = Timer("My timer")
+    >>> t.tic()
+    >>> # Do stuff
+    >>> print(t.toc())
 
     Nested timers are also supported. For example, this code:
     >>> with Timer("a"):
@@ -22,7 +23,7 @@ class Timer(object):
     >>>         with Timer("c"):
     >>>             f()
 
-    yields the following console output:
+    prints the following console output:
 
         [a] Timing...
         	[b] Timing...
@@ -69,12 +70,15 @@ class Timer(object):
             header += f"[{self.name}] "
         print(header + s)
 
-    def __enter__(self):
+    def tic(self):
         self.__class__.number_running += 1
         self._print("Timing...")
         self.t_start = time.perf_counter_ns()
 
-    def __exit__(self, type, value, traceback):
+    def __enter__(self):
+        self.tic()
+
+    def toc(self) -> float:
         self.t_end = time.perf_counter_ns()
         self.__class__.number_running -= 1
         self.runtime = (self.t_end - self.t_start) / 1e9
@@ -82,6 +86,10 @@ class Timer(object):
             f"Elapsed: {self._format_time(self.runtime)}",
             number_running_mod=1
         )
+        return self.runtime
+
+    def __exit__(self, type, value, traceback):
+        self.toc()
 
 
 def time_function(
@@ -164,3 +172,8 @@ if __name__ == '__main__':
         with Timer("b") as b:
             with Timer("c") as c:
                 f()
+
+    t = Timer()
+    t.tic()
+    time.sleep(0.1)
+    print(t.toc())
