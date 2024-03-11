@@ -267,7 +267,18 @@ class KulfanAirfoil(Airfoil):
         CL = nf_aero["CL"]
         CD = nf_aero["CD"] * effective_CD_multiplier_from_control_surfaces
         CM = nf_aero["CM"]
-        Cpmin_0 = nf_aero["Cpmin"]
+        # Cpmin_0 = nf_aero["Cpmin"]
+        Cpmin_0 = np.softmin(
+            *[
+                1 - nf_aero[f"upper_bl_ue/vinf_{i}"] ** 2
+                for i in range(len(nf.bl_x_points))
+            ],
+            *[
+                1 - nf_aero[f"lower_bl_ue/vinf_{i}"] ** 2
+                for i in range(len(nf.bl_x_points))
+            ],
+            softness=0.05
+        )
         Top_Xtr = nf_aero["Top_Xtr"]
         Bot_Xtr = nf_aero["Bot_Xtr"]
 
