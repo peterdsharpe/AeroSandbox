@@ -38,6 +38,10 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.3
+
+- Synchronized update: ASB 4.2.3 and NeuralFoil 0.2.0.
+
 #### 4.2.2
 
 - Added Python 3.12 support, after completing investigation of small floating-point math differences between Python 3.11 and 3.12 (caused by backend changes in NumPy 1.24.3 and 1.25.0).
