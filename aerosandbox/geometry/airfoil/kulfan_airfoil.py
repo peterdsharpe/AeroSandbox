@@ -609,7 +609,10 @@ class KulfanAirfoil(Airfoil):
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
-        return (upper[:, 1] + lower[:, 1]) / 2
+        if np.isscalar(x_over_c):
+            return (upper[0, 1] + lower[0, 1]) / 2
+        else:
+            return (upper[:, 1] + lower[:, 1]) / 2
 
     def local_thickness(self,
                         x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
@@ -617,7 +620,10 @@ class KulfanAirfoil(Airfoil):
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
-        return (upper[:, 1] - lower[:, 1])
+        if np.isscalar(x_over_c):
+            return (upper[0, 1] - lower[0, 1]) / 2
+        else:
+            return (upper[:, 1] - lower[:, 1]) / 2
 
     def TE_angle(self):
         return np.degrees(
