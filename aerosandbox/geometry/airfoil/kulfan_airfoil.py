@@ -512,6 +512,8 @@ class KulfanAirfoil(Airfoil):
     def upper_coordinates(self,
                           x_over_c: Union[float, np.ndarray] = np.linspace(1, 0, 101),
                           ) -> np.ndarray:
+        x_over_c = np.array(x_over_c)
+
         # Class function
         C = (x_over_c) ** self.N1 * (1 - x_over_c) ** self.N2
 
@@ -557,6 +559,8 @@ class KulfanAirfoil(Airfoil):
     def lower_coordinates(self,
                           x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
                           ) -> np.ndarray:
+        x_over_c = np.array(x_over_c)
+
         # Class function
         C = (x_over_c) ** self.N1 * (1 - x_over_c) ** self.N2
 
