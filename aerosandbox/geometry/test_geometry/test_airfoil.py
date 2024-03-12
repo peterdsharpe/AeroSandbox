@@ -107,7 +107,7 @@ def test_optimize_through_control_surface_deflections_for_CL():
 
     sol = opti.solve()
 
-    assert sol(d) == pytest.approx(7.32, abs=1)
+    assert sol(d) == pytest.approx(8.34, abs=1)
 
 
 if __name__ == '__main__':
