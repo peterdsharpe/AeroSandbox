@@ -210,6 +210,9 @@ class KulfanAirfoil(Airfoil):
                                  alpha: Union[float, np.ndarray],
                                  Re: Union[float, np.ndarray],
                                  mach: Union[float, np.ndarray] = 0.,
+                                 n_crit: Union[float, np.ndarray] = 9.0,
+                                 xtr_upper: Union[float, np.ndarray] = 1.0,
+                                 xtr_lower: Union[float, np.ndarray] = 1.0,
                                  model_size: str = "large",
                                  control_surfaces: List["ControlSurface"] = None,
                                  include_360_deg_effects: bool = True,
@@ -261,6 +264,9 @@ class KulfanAirfoil(Airfoil):
             ),
             alpha=alpha + effective_d_alpha,
             Re=Re,
+            n_crit=n_crit,
+            xtr_upper=xtr_upper,
+            xtr_lower=xtr_lower,
             model_size=model_size
         )
 
@@ -482,7 +488,10 @@ class KulfanAirfoil(Airfoil):
             0,
         )
 
+        N = len(nf.bl_x_points)
+
         return {
+            "analysis_confidence": nf_aero["analysis_confidence"],
             "CL"       : CL,
             "CD"       : CD,
             "CM"       : CM,
@@ -492,6 +501,12 @@ class KulfanAirfoil(Airfoil):
             "mach_crit": mach_crit,
             "mach_dd"  : mach_dd,
             "Cpmin_0"  : Cpmin_0,
+            **{f"upper_bl_theta_{i}": nf_aero[f"upper_bl_theta_{i}"] for i in range(N)},
+            **{f"upper_bl_H_{i}": nf_aero[f"upper_bl_H_{i}"] for i in range(N)},
+            **{f"upper_bl_ue/vinf_{i}": nf_aero[f"upper_bl_ue/vinf_{i}"] for i in range(N)},
+            **{f"lower_bl_theta_{i}": nf_aero[f"lower_bl_theta_{i}"] for i in range(N)},
+            **{f"lower_bl_H_{i}": nf_aero[f"lower_bl_H_{i}"] for i in range(N)},
+            **{f"lower_bl_ue/vinf_{i}": nf_aero[f"lower_bl_ue/vinf_{i}"] for i in range(N)},
         }
 
     def upper_coordinates(self,
