@@ -53,7 +53,7 @@ class AeroBuildup(ExplicitAnalysis):
                  airplane: Airplane,
                  op_point: OperatingPoint,
                  xyz_ref: Union[np.ndarray, List[float]] = None,
-                 model_size: str = "medium",
+                 model_size: str = "small",
                  include_wave_drag: bool = True,
                  ):
         """
