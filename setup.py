@@ -55,7 +55,7 @@ setup(
         'tqdm >= 4',
         'sortedcontainers >= 2',
         'dill >= 0.3',
-        'neuralfoil >= 0.2.0, <0.3.0'
+        'neuralfoil >= 0.2.1, <0.3.0'
     ],
     extras_require={
         "full": [
