@@ -621,9 +621,9 @@ class KulfanAirfoil(Airfoil):
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
         if np.isscalar(x_over_c):
-            return (upper[0, 1] - lower[0, 1]) / 2
+            return (upper[0, 1] - lower[0, 1])
         else:
-            return (upper[:, 1] - lower[:, 1]) / 2
+            return (upper[:, 1] - lower[:, 1])
 
     def TE_angle(self):
         return np.degrees(
