@@ -1161,8 +1161,8 @@ class Opti(cas.Opti):
         from aerosandbox.numpy.integrate_discrete import integrate_discrete_intervals
 
         integrals = integrate_discrete_intervals(
-            f = derivative,
-            x = with_respect_to,
+            f=derivative,
+            x=with_respect_to,
             multiply_by_dx=True,
             method=method
         )
@@ -1172,6 +1172,7 @@ class Opti(cas.Opti):
         )
 
         return duals
+
 
 class OptiSol:
     def __init__(self,
