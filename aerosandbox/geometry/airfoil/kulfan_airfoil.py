@@ -625,6 +625,33 @@ class KulfanAirfoil(Airfoil):
         else:
             return (upper[:, 1] - lower[:, 1])
 
+    def LE_radius(self, relative_softness: float = 0.03):
+        # LE_radius_upper = np.where(
+        #     self.upper_weights[0] > 0,
+        #     self.upper_weights[0] ** 2,
+        #     0
+        # ) / 2
+        # LE_radius_lower = np.where(
+        #     self.lower_weights[0] < 0,
+        #     self.lower_weights[0] ** 2,
+        #     0
+        # ) / 2
+
+        return np.softmin_scalefree(
+            np.where(
+                self.upper_weights[0] > 0,
+                self.upper_weights[0],
+                0
+            ) ** 2,
+            np.where(
+                self.lower_weights[0] < 0,
+                self.lower_weights[0],
+                0
+            ) ** 2,
+            relative_softness=relative_softness
+        ) / 2
+
+
     def TE_angle(self):
         return np.degrees(
             np.arctan(self.upper_weights[-1]) -

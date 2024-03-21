@@ -993,6 +993,29 @@ class Airfoil(Polygon):
         """
         return self.coordinates[:self.LE_index() + 1, :]
 
+    def LE_radius(self, softness: float = 1e-6):
+        LE_index = self.LE_index()
+
+        # The three points closest to the leading edge
+        LE_points = self.coordinates[LE_index - 1:LE_index + 2, :]
+
+        # Make these 3 points into a triangle; these are the vectors representing edges
+        edge_vectors = LE_points - np.roll(LE_points, 1, axis=0)
+        edge_lengths = np.linalg.norm(edge_vectors, axis=1)
+
+        # Now use a variant of Heron's formula for the circumcircle diameter
+        a = edge_lengths[0]
+        b = edge_lengths[1]
+        c = edge_lengths[2]
+
+        s = (a + b + c) / 2
+
+        diameter = (a * b * c) / (
+                2 * np.sqrt(s * (s - a) * (s - b) * (s - c))
+        )
+
+        return diameter / 2
+
     def TE_thickness(self) -> float:
         """
         Returns the thickness of the trailing edge of the airfoil.
