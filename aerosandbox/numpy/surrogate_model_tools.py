@@ -107,6 +107,34 @@ def softmin(
     )
 
 
+def softmax_scalefree(
+        *args: Union[float, _np.ndarray],
+        relative_softness: float = 1e-2,
+        relative_hardness: float = None,
+) -> Union[float, _np.ndarray]:
+    if not (relative_softness is None) ^ (relative_hardness is None):
+        raise ValueError("You must provide exactly one of `relative_softness` or `relative_hardness.")
+    if relative_hardness is not None:
+        relative_softness = 1 / relative_hardness
+
+    return softmax(
+        *args,
+        softness=relative_softness * _np.linalg.norm(_np.array(args))
+    )
+
+
+def softmin_scalefree(
+        *args: Union[float, _np.ndarray],
+        relative_softness: float = 1e-2,
+        relative_hardness: float = None,
+) -> Union[float, _np.ndarray]:
+    return -softmax_scalefree(
+        *[-arg for arg in args],
+        relative_softness=relative_softness,
+        relative_hardness=relative_hardness,
+    )
+
+
 def sigmoid(
         x,
         sigmoid_type: str = "tanh",
