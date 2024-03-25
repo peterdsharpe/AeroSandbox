@@ -6,7 +6,7 @@ def black_box(
         function: Callable[[Any], float],
         n_in: int = None,
         n_out: int = 1,
-        fd_method: str ='forward',
+        fd_method: str ='central',
         fd_step: Optional[float] = None,
         fd_step_iter: Optional[bool] = None,
 ) -> Callable[[Any], float]:
@@ -169,7 +169,7 @@ if __name__ == '__main__':
 
     # Wrap our function such that it can be used in an optimization problem.
     my_func_wrapped = black_box(
-        function=my_func,
+        function=my_func, fd_method="central"
     )
 
     # Pick some variables to optimize over
