@@ -1,10 +1,11 @@
 import aerosandbox.numpy as _np
+import casadi as _cas
 from typing import Tuple, Union
 
 
 def softmax(
         *args: Union[float, _np.ndarray],
-        softness: float = 1.,
+        softness: float = None,
         hardness: float = None,
 ) -> Union[float, _np.ndarray]:
     """
@@ -35,8 +36,12 @@ def softmax(
         Soft maximum of the supplied values.
     """
     ### Set defaults for hardness/softness
-    if not (hardness is None) ^ (softness is None):
+    n_specified_arguments = (hardness is not None) + (softness is not None)
+    if n_specified_arguments == 0:
+        softness = 1
+    elif n_specified_arguments == 2:
         raise ValueError("You must provide exactly one of `hardness` or `softness`.")
+
     if hardness is not None:
         softness = 1 / hardness
 
@@ -70,7 +75,7 @@ def softmax(
 
 def softmin(
         *args: Union[float, _np.ndarray],
-        softness: float = 1.,
+        softness: float = None,
         hardness: float = None,
 ) -> Union[float, _np.ndarray]:
     """
@@ -109,11 +114,15 @@ def softmin(
 
 def softmax_scalefree(
         *args: Union[float, _np.ndarray],
-        relative_softness: float = 1e-2,
+        relative_softness: float = None,
         relative_hardness: float = None,
 ) -> Union[float, _np.ndarray]:
-    if not (relative_softness is None) ^ (relative_hardness is None):
+    n_specified_arguments = (relative_hardness is not None) + (relative_softness is not None)
+    if n_specified_arguments == 0:
+        relative_softness = 0.01
+    elif n_specified_arguments == 2:
         raise ValueError("You must provide exactly one of `relative_softness` or `relative_hardness.")
+
     if relative_hardness is not None:
         relative_softness = 1 / relative_hardness
 
@@ -125,7 +134,7 @@ def softmax_scalefree(
 
 def softmin_scalefree(
         *args: Union[float, _np.ndarray],
-        relative_softness: float = 1e-2,
+        relative_softness: float = None,
         relative_hardness: float = None,
 ) -> Union[float, _np.ndarray]:
     return -softmax_scalefree(
