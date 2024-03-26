@@ -144,6 +144,36 @@ def softmin_scalefree(
     )
 
 
+def softplus(
+        x: Union[float, _np.ndarray],
+        beta=1,
+        threshold=40,
+):
+    """
+    A smooth approximation of the ReLU function, applied elementwise to an array `x`.
+
+    Softplus(x) = 1/beta * log(1 + exp(beta * x))
+
+    Often used as an activation function in neural networks.
+
+    Args:
+        x: The input
+        beta: A parameter that controls the "softness" of the function. Higher values of beta make the function
+            approach ReLU.
+        threshold: Values above this threshold are approximated as linear.
+
+    Returns: The value of the softplus function.
+    """
+    if _np.is_casadi_type(x, recursive=False):
+        return _np.where(
+            beta * x > threshold,
+            x,
+            1 / beta * _cas.log1p(_cas.exp(beta * x))
+        )
+    else:
+        return 1 / beta * _np.logaddexp(0, beta * x)
+
+
 def sigmoid(
         x,
         sigmoid_type: str = "tanh",
@@ -182,8 +212,7 @@ def sigmoid(
     """
     ### Sigmoid equations given here under the (-1, 1) normalization:
     if sigmoid_type == ("tanh" or "logistic"):
-        # Note: tanh(x) is simply a scaled and shifted version of a logistic curve; after
-        #   normalization these functions are identical.
+        # Note: tanh(x) is simply a scaled and shifted version of a logistic curve.
         s = _np.tanh(x)
     elif sigmoid_type == "arctan":
         s = 2 / _np.pi * _np.arctan(_np.pi / 2 * x)
@@ -198,6 +227,27 @@ def sigmoid(
     s_normalized = s * (max - min) / 2 + (max + min) / 2
 
     return s_normalized
+
+
+def swish(
+        x,
+        beta=1
+):
+    """
+    A smooth approximation of the ReLU function, applied elementwise to an array `x`.
+
+    Swish(x) = x / (1 + exp(-beta * x)) = x * logistic(x) = x * (0.5 + 0.5 * tanh(x/2))
+
+    Often used as an activation function in neural networks.
+
+    Args:
+        x: The input
+        beta: A parameter that controls the "softness" of the function. Higher values of beta make the function
+            approach ReLU.
+
+    Returns: The value of the swish function.
+    """
+    return x / (1 + _np.exp(-beta * x))
 
 
 def blend(
