@@ -67,7 +67,8 @@ setup(
         ],
         "test": [
             'pytest<=8.0.2',
-            'nbval'
+            'nbval',
+            'shapely >= 2',  # Required for some airfoil geometry tests
         ],
         "docs": [
             'sphinx',
