@@ -294,32 +294,6 @@ class MassProperties(AeroSandboxObject):
         """
         return self.__mul__(1 / other)
 
-    def __eq__(self, other: "MassProperties") -> bool:
-        """
-        Returns True if all expected attributes of the two MassProperties objects are exactly equal.
-        """
-        if not isinstance(other, MassProperties):
-            raise TypeError("MassProperties objects can only be compared to other MassProperties objects.")
-
-        return all([
-            getattr(self, attribute) == getattr(other, attribute)
-            for attribute in [
-                "mass",
-                "x_cg",
-                "y_cg",
-                "z_cg",
-                "Ixx",
-                "Iyy",
-                "Izz",
-                "Ixy",
-                "Iyz",
-                "Ixz",
-            ]
-        ])
-
-    def __ne__(self, other: "MassProperties") -> bool:
-        return not self.__eq__(other)
-
     def allclose(self,
                  other: "MassProperties",
                  rtol=1e-5,

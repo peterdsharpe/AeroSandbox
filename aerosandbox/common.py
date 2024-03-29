@@ -22,6 +22,31 @@ class AeroSandboxObject(ABC):
         """
         pass
 
+    def __eq__(self, other):
+        """
+        Checks if two AeroSandbox objects are value-equivalent. A more sensible default for classes that represent
+        physical objects than checking for memory equivalence.
+
+        This is done by checking if the two objects are of the same type and have the same __dict__.
+
+        Args:
+            other: Another object.
+
+        Returns:
+            bool: True if the objects are equal, False otherwise.
+        """
+        if type(self) != type(other):
+            return False
+        if set(self.__dict__.keys()) != set(other.__dict__.keys()):
+            return False
+
+        for key in self.__dict__.keys():
+            if np.all(self.__dict__[key] == other.__dict__[key]):
+                continue
+            else:
+                return False
+        return True
+
     def save(self,
              filename: Union[str, Path] = None,
              verbose: bool = True,

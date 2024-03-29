@@ -55,11 +55,6 @@ class PerfectGas:
 
         return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume ** self.ratio_of_specific_heats: .6g})"
 
-    def __eq__(self, other):
-        if self.__class__ != other.__class__:
-            return False
-        return self.__dict__ == other.__dict__
-
     @property
     def density(self):
         return self.pressure / (self.temperature * self.specific_gas_constant)
