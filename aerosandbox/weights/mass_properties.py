@@ -131,18 +131,21 @@ class MassProperties(AeroSandboxObject):
 
         """
         l = len(self)
-        if index >= l or index < -l:
-            raise IndexError("Index is out of range!")
 
         def get_item_of_attribute(a):
-            if np.isscalar(a):  # If NumPy says its a scalar, return it.
+            if hasattr(a, "__len__") and hasattr(a, "__getitem__"):
+                if len(a) == 1:
+                    return a[0]
+                elif len(a) == l:
+                    return a[index]
+                else:
+                    try:
+                        return a[index]
+                    except IndexError as e:
+                        raise IndexError(f"A state variable could not be indexed; it has length {len(a)} while the"
+                                         f"parent has length {l}.")
+            else:
                 return a
-            try:
-                return a[index]
-            except TypeError:  # object is not subscriptable
-                return a
-            except IndexError as e:  # index out of range
-                raise IndexError("A state variable could not be indexed, since the index is out of range!")
 
         inputs = {
             "mass": self.mass,
