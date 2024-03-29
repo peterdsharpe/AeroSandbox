@@ -53,6 +53,74 @@ class Atmosphere(AeroSandboxObject):
 
         return f"Atmosphere ({altitude_string}, method: '{self.method}')"
 
+    def __getitem__(self, index) -> "Atmosphere":
+        """
+        Indexes one item from each attribute of an Atmosphere instance.
+        Returns a new Atmosphere instance.
+
+        Args:
+            index: The index that is being called; e.g.,:
+                >>> first_atmosphere = atmosphere[0]
+
+        Returns: A new Atmosphere instance, where each attribute is subscripted at the given value, if possible.
+
+        """
+        l = len(self)
+
+        def get_item_of_attribute(a):
+            if hasattr(a, "__len__") and hasattr(a, "__getitem__"):
+                if len(a) == 1:
+                    return a[0]
+                elif len(a) == l:
+                    return a[index]
+                else:
+                    try:
+                        return a[index]
+                    except IndexError as e:
+                        raise IndexError(f"A state variable could not be indexed; it has length {len(a)} while the"
+                                         f"parent has length {l}.")
+            else:
+                return a
+
+        inputs = {
+            "altitude"             : self.altitude,
+            "temperature_deviation": self.temperature_deviation,
+        }
+
+        return self.__class__(
+            **{
+                k: get_item_of_attribute(v)
+                for k, v in inputs.items()
+            },
+            method=self.method,
+        )
+
+    def __len__(self):
+        length = 1
+        for v in [
+            self.altitude,
+            self.temperature_deviation,
+        ]:
+            if np.length(v) == 1:
+                try:
+                    v[0]
+                    length = 1
+                except (TypeError, IndexError, KeyError) as e:
+                    pass
+            elif length == 0 or length == 1:
+                length = np.length(v)
+            elif length == np.length(v):
+                pass
+            else:
+                raise ValueError("State variables are appear vectorized, but of different lengths!")
+        return length
+
+    def __array__(self, dtype="O"):
+        """
+        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        """
+        return np.fromiter([self], dtype=dtype).reshape(())
+
     ### The two primary state variables, pressure and temperature, go here!
 
     def pressure(self):
