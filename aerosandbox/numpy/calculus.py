@@ -10,6 +10,12 @@ def diff(a, n=1, axis=-1, period=None):
     Calculate the n-th discrete difference along the given axis.
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diff.html
+
+    Adds one new argument, `period`, which is the period of the data. If provided, the difference is taken assuming
+    the data "wraps around" at the period (i.e., modulo the period). For example:
+    >>> diff([345, 355, 5, 15], period=360)
+    >>> [10, 10, 10, 10]
+
     """
     if period is not None:
         return _centered_mod(
@@ -36,7 +42,37 @@ def gradient(
         axis=None,
         edge_order=1,
         n=1,
+        period=None,
 ):
+    """
+    Return the gradient of an N-dimensional array.
+
+    The gradient is computed using second order accurate central differences in the interior points and either first
+    or second order accurate one-sides (forward or backwards) differences at the boundaries. The returned gradient
+    hence has the same shape as the input array.
+
+    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.gradient.html
+
+    Args:
+        f: The array-like object to take the gradient of.
+        *varargs: The spacing between the points of f. If a scalar, the spacing is assumed to be uniform in all
+            dimensions. If an array, the array must have the same shape as f.
+
+        axis: The axis along which the difference is taken. If None, the gradient is taken for all axes.
+
+        edge_order: The order of the error at the boundaries. 1 means first order, 2 means second order.
+
+        n: This is a new argument (not in NumPy) that specifies the order of the derivative to take. 1 is the first
+            derivative (default), 2 is the second derivative. Doing `np.gradient(f, n=2)` results in less discretization
+            error than doing `np.gradient(np.gradient(f))`.
+
+        period: The period of the data. If provided, the gradient is taken assuming the data "wraps around" at the period
+            (i.e., modulo the period). See `aerosandbox.numpy.diff()` for more information.
+
+
+    Returns: The gradient of f.
+
+    """
     if (
             not is_casadi_type(f)
             and all([not is_casadi_type(vararg) for vararg in varargs])
@@ -71,7 +107,10 @@ def gradient(
                     )
                 else:
                     dxes.append(
-                        diff(vararg)
+                        diff(
+                            vararg,
+                            period=period
+                        )
                     )
 
         # Handle the axis argument, with the edge case the CasADi arrays are always 2D
