@@ -66,24 +66,6 @@ class KulfanAirfoil(Airfoil):
     def __repr__(self) -> str:
         return f"Airfoil {self.name} (Kulfan / CST parameterization)"
 
-    def __eq__(self, other: "KulfanAirfoil") -> bool:
-        if other is self:  # If they're the same object in memory, they're equal
-            return True
-
-        if not type(self) == type(other):  # If the types are different, they're not equal
-            return False
-
-        # At this point, we know that the types are the same, so we can compare the attributes
-        return all([
-            self.name == other.name,
-            np.allclose(self.lower_weights, other.lower_weights),
-            np.allclose(self.upper_weights, other.upper_weights),
-            np.allclose(self.leading_edge_weight, other.leading_edge_weight),
-            np.allclose(self.TE_thickness, other.TE_thickness),
-            np.allclose(self.N1, other.N1),
-            np.allclose(self.N2, other.N2),
-        ])
-
     @property
     def kulfan_parameters(self):
         return {

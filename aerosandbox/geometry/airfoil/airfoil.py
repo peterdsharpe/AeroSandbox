@@ -190,38 +190,6 @@ class Airfoil(Polygon):
     def __repr__(self) -> str:
         return f"Airfoil {self.name} ({self.n_points()} points)"
 
-    def __eq__(self, other: "Airfoil") -> bool:
-        """
-        Checks if two airfoils are equal. Two airfoils are equal if they have the same name, coordinates, and
-        polar functions.
-
-        Args:
-            other: The other airfoil to compare to.
-
-        Returns:
-            True if the two airfoils are equal, False otherwise.
-        """
-        if other is self:  # If they're the same object in memory, they're equal
-            return True
-
-        if not type(self) == type(other):  # If the types are different, they're not equal
-            return False
-
-        # At this point, we know that the types are the same, so we can compare the attributes
-        if self.name != other.name:  # If the names are different, they're not equal
-            return False
-
-        if self.coordinates.shape != other.coordinates.shape:  # If the coordinates are different shapes, they're not equal
-            return False
-
-        try:
-            return np.allclose(
-                self.coordinates,
-                other.coordinates
-            )
-        except Exception:
-            return False
-
     def to_kulfan_airfoil(self,
                           n_weights_per_side: int = 8,
                           N1: float = 0.5,
