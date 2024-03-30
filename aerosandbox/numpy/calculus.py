@@ -78,6 +78,7 @@ def gradient(
             not is_casadi_type(f)
             and all([not is_casadi_type(vararg) for vararg in varargs])
             and n == 1
+            and period is None
     ):
         return _onp.gradient(
             f,
@@ -110,7 +111,6 @@ def gradient(
                     dxes.append(
                         diff(
                             vararg,
-                            period=period
                         )
                     )
 
@@ -171,6 +171,10 @@ def gradient(
                     f[get_slice(slice(1, -1))]
                     - f[get_slice(slice(None, -2))]
             )
+
+            if period is not None:
+                dfp = _centered_mod(dfp, period)
+                dfm = _centered_mod(dfm, period)
 
             if n == 1:
                 grad_f = (
@@ -281,7 +285,15 @@ if __name__ == '__main__':
 
     import casadi as cas
 
-    print(diff(cas.DM([355, 5]), period=360))
+    # print(diff(cas.DM([355, 5]), period=360))
+
+    print(
+        gradient(
+            np.linspace(45, 55, 11) % 50,
+            period=50
+        )
+    )
+
     #
     # # a = np.linspace(-500, 500, 21) % 360 - 180
     # # print(diff(a, period=360))
