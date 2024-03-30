@@ -35,16 +35,22 @@ class AeroSandboxObject(ABC):
         Returns:
             bool: True if the objects are equal, False otherwise.
         """
-        if type(self) != type(other):
-            return False
-        if set(self.__dict__.keys()) != set(other.__dict__.keys()):
+        if self is other:  # If they point to the same object in memory, they're equal
+            return True
+
+        if type(self) != type(other):  # If they are of different types, they cannot be equal
             return False
 
-        for key in self.__dict__.keys():
+        if set(self.__dict__.keys()) != set(
+                other.__dict__.keys()):  # If they have differing dict keys, don't bother checking values
+            return False
+
+        for key in self.__dict__.keys():  # Check equality of all values
             if np.all(self.__dict__[key] == other.__dict__[key]):
                 continue
             else:
                 return False
+
         return True
 
     def save(self,
