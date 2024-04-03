@@ -19,7 +19,7 @@ def contour(
         extendrect: bool = True,
         linelabels_format: Union[str, Callable[[float], str]] = eng_string,
         linelabels_fontsize: float = 8,
-        max_side_length_nondim: float = np.Inf,
+        max_side_length_nondim: float = np.inf,
         colorbar_label: str = None,
         x_log_scale: bool = False,
         y_log_scale: bool = False,

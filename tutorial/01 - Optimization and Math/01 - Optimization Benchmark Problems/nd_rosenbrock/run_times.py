@@ -41,7 +41,7 @@ def solve_scipy_bfgs(N=10):
         method="BFGS",
         tol=1e-8,
         options=dict(
-            maxiter=np.Inf,
+            maxiter=np.inf,
         )
     )
 
@@ -74,8 +74,8 @@ def solve_scipy_nm(N=10):
         x0=get_initial_guess(N),
         method="Nelder-Mead",
         options=dict(
-            maxiter=np.Inf,
-            maxfev=np.Inf,
+            maxiter=np.inf,
+            maxfev=np.inf,
             xatol=1e-8,
             adaptive=True,
         )

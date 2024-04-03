@@ -123,7 +123,7 @@ if __name__ == '__main__':
             repanel=False
         )
         if np.isnan(xfoil["Cd"]).any():
-            return np.Inf
+            return np.inf
 
         objective = np.sqrt(np.mean(xfoil["Cd"] ** 2))  # RMS
 

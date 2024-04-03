@@ -557,7 +557,7 @@ class AeroBuildup(ExplicitAnalysis):
         )
         half_span = sum(sectional_spans)
         if len(wing.xsecs) > 0:
-            span_inboard_to_YZ_plane = np.Inf
+            span_inboard_to_YZ_plane = np.inf
             for i in range(len(wing.xsecs)):
                 span_inboard_to_YZ_plane = np.minimum(
                     span_inboard_to_YZ_plane,

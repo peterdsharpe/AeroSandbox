@@ -276,7 +276,7 @@ class Wing(AeroSandboxObject):
 
         if include_centerline_distance and len(self.xsecs) > 0:
 
-            half_span_to_XZ_plane = np.Inf
+            half_span_to_XZ_plane = np.inf
 
             for i in i_range:
                 half_span_to_XZ_plane = np.minimum(
@@ -403,7 +403,7 @@ class Wing(AeroSandboxObject):
 
         if include_centerline_distance and len(self.xsecs) > 0:
 
-            half_span_to_centerline = np.Inf
+            half_span_to_centerline = np.inf
 
             for i in range(len(self.xsecs)):
                 quarter_chord_location = self._compute_xyz_of_WingXSec(

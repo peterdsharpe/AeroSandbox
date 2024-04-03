@@ -87,7 +87,7 @@ class NaturalUnivariateSpline(interpolate.PPoly):
                     [spline(spline.x[-1], 1)],
                     [spline(spline.x[-1])]
                 ]),
-            x=np.array([np.Inf])
+            x=np.array([np.inf])
         )
 
         ### Add spline knots for natural negative extrapolation
