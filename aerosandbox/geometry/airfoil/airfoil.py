@@ -648,17 +648,23 @@ class Airfoil(Polygon):
                                  include_360_deg_effects: bool = True,
                                  ) -> Dict[str, Union[float, np.ndarray]]:
 
-        airfoil_normalization = self.normalize(return_dict=True)
-
-        kulfan_airfoil = airfoil_normalization["airfoil"].to_kulfan_airfoil(
+        ### Normalize the inputs and evaluate
+        normalization_outputs = self.normalize(return_dict=True)
+        normalized_airfoil = normalization_outputs["airfoil"].to_kulfan_airfoil(
             n_weights_per_side=8,
-            N1=0.5,
-            N2=1.0,
+            normalize_coordinates=False  # No need to redo this
         )
+        delta_alpha = normalization_outputs["rotation_angle"]  # degrees
+        x_translation_LE = normalization_outputs["x_translation"]
+        y_translation_LE = normalization_outputs["y_translation"]
+        scale = normalization_outputs["scale_factor"]
 
-        return kulfan_airfoil.get_aero_from_neuralfoil(
-            alpha=alpha + airfoil_normalization["rotation_angle"],
-            Re=Re / airfoil_normalization["scale_factor"],
+        x_translation_qc = -x_translation_LE + 0.25 * (1/scale * np.cosd(delta_alpha)) - 0.25
+        y_translation_qc = -y_translation_LE + 0.25 * (1/scale * np.sind(-delta_alpha))
+
+        raw_aero = normalized_airfoil.get_aero_from_neuralfoil(
+            alpha=alpha + delta_alpha,
+            Re=Re / scale,
             mach=mach,
             n_crit=n_crit,
             xtr_upper=xtr_upper,
@@ -667,6 +673,12 @@ class Airfoil(Polygon):
             control_surfaces=control_surfaces,
             include_360_deg_effects=include_360_deg_effects
         )
+
+        ### Correct the force vectors and lift-induced moment from translation
+        extra_CM = -raw_aero["CL"] * x_translation_qc + raw_aero["CD"] * y_translation_qc
+        raw_aero["CM"] = raw_aero["CM"] + extra_CM
+
+        return raw_aero
 
     def plot_polars(self,
                     alphas: Union[np.ndarray, List[float]] = np.linspace(-20, 20, 500),
