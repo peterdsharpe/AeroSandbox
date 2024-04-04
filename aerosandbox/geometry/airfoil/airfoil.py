@@ -1420,13 +1420,26 @@ class Airfoil(Polygon):
         x = self.x() * scale_x
         y = self.y() * scale_y
 
+        if scale_x < 0:
+            TE_index = np.argmax(x)
+            x = np.concatenate([
+                x[TE_index::-1],
+                x[-2:TE_index-1:-1]
+            ])
+            y = np.concatenate([
+                y[TE_index::-1],
+                y[-2:TE_index-1:-1]
+            ])
+
         if scale_y < 0:
             x = x[::-1]
             y = y[::-1]
 
+        coordinates = np.stack((x, y), axis=1)
+
         return Airfoil(
             name=self.name,
-            coordinates=np.stack((x, y), axis=1)
+            coordinates=coordinates,
         )
 
     def translate(self,
