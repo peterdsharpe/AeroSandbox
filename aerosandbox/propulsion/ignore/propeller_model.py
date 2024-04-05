@@ -241,7 +241,7 @@ for station in range(n_stations):  # TODO undo this
     sol = opti.solve()
 
     ### Compute sectional quantities
-    # dLift = sol.value(
+    # dLift = sol(
     #     n_blades * 0.5 * air_density * (W ** 2) *
     #     cl * chord_local * blade_section
     # )

@@ -58,9 +58,9 @@ def test_quadcopter_navigation():
     sol = opti.solve()
     dyn = sol(dyn)
 
-    assert sol.value(effort) == pytest.approx(0.714563, rel=0.01)
+    assert sol(effort) == pytest.approx(0.714563, rel=0.01)
 
-    print(sol.value(effort))
+    print(sol(effort))
 
 
 def test_quadcopter_flip():

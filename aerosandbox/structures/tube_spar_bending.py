@@ -68,7 +68,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             >>>
             >>> beam = sol(beam)
             >>>
-            >>> print(f"{sol.value(mass)} kg")
+            >>> print(f"{sol(mass)} kg")
             >>>
             >>> beam.draw()
 

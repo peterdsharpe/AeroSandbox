@@ -54,8 +54,8 @@ def test_block_move_fixed_time():
     assert dyn.u_e[0] == pytest.approx(0)
     assert dyn.u_e[-1] == pytest.approx(0)
     assert np.max(dyn.u_e) == pytest.approx(1.5, abs=0.01)
-    assert sol.value(u)[0] == pytest.approx(6, abs=0.05)
-    assert sol.value(u)[-1] == pytest.approx(-6, abs=0.05)
+    assert sol(u)[0] == pytest.approx(6, abs=0.05)
+    assert sol(u)[-1] == pytest.approx(-6, abs=0.05)
 
 
 def test_block_move_minimum_time():
@@ -106,7 +106,7 @@ def test_block_move_minimum_time():
     assert dyn.u_e[0] == pytest.approx(0)
     assert dyn.u_e[-1] == pytest.approx(0)
     assert np.max(dyn.u_e) == pytest.approx(1, abs=0.01)
-    assert sol.value(u)[0] == pytest.approx(1, abs=0.05)
+    assert sol(u)[0] == pytest.approx(1, abs=0.05)
     assert sol.value(u)[-1] == pytest.approx(-1, abs=0.05)
     assert np.mean(np.abs(sol.value(u))) == pytest.approx(1, abs=0.01)
 

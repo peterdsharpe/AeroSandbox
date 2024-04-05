@@ -299,7 +299,7 @@ if __name__ == "__main__":
         type="one-wire"
     ))
     sol = opti.solve()
-    print(f"Optimal number of ribs: {sol.value(nr_opt)}")
+    print(f"Optimal number of ribs: {sol(nr_opt)}")
 
     print(
         "Daedalus elevator, estimated mass: %f" %
@@ -319,14 +319,14 @@ if __name__ == "__main__":
         span=span,
         chord=0.902,
         vehicle_mass=mass_total,
-        n_ribs=sol.value(nr_opt),
+        n_ribs=sol(nr_opt),
         n_wing_sections=1,
         type="cantilevered"
     ) - mass_hpa_wing(
         span=span,
         chord=0.902,
         vehicle_mass=mass_total,
-        n_ribs=sol.value(nr_opt),
+        n_ribs=sol(nr_opt),
         n_wing_sections=1,
         type="cantilevered",
         include_spar=False

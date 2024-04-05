@@ -58,7 +58,7 @@ def test_solve_actual_function():
 
     sol = opti.solve()
 
-    assert sol.value(x) == pytest.approx(4.85358, abs=1e-3)
+    assert sol(x) == pytest.approx(4.85358, abs=1e-3)
 
 
 def test_solve_interpolated_unbounded(
@@ -72,7 +72,7 @@ def test_solve_interpolated_unbounded(
 
     sol = opti.solve()
 
-    assert sol.value(x) == pytest.approx(4.85358, abs=0.1)
+    assert sol(x) == pytest.approx(4.85358, abs=0.1)
 
 
 # def test_solve_interpolated_infeasible_start_but_bounded(
@@ -86,7 +86,7 @@ def test_solve_interpolated_unbounded(
 #
 #     sol = opti.solve()
 #
-#     assert sol.value(x) == pytest.approx(4.85358, abs=0.1)
+#     assert sol(x) == pytest.approx(4.85358, abs=0.1)
 
 
 if __name__ == '__main__':

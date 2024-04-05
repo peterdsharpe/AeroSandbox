@@ -242,5 +242,5 @@ if __name__ == '__main__':
     y = opti.variable(init_guess=0)
     opti.minimize(interp({"x": x, "y": y}))
     sol = opti.solve()
-    print(sol.value(x))
-    print(sol.value(y))
+    print(sol(x))
+    print(sol(y))

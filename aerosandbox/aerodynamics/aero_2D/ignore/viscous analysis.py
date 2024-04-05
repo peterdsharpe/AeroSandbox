@@ -85,7 +85,7 @@ opti.subject_to([
 
 ### Solve
 sol = opti.solve()
-theta = sol.value(theta)
+theta = sol(theta)
 H = sol.value(H)
 
 ### Plot

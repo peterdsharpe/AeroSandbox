@@ -167,7 +167,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(2, 3, figsize=(10, 6), dpi=200)
 
     plt.subplot(231)
-    plt.plot(sol.value(x), sol.value(u), '.-')
+    plt.plot(sol(x), sol(u), '.-')
     plt.xlabel("x [m]")
     plt.ylabel("u [m]")
     plt.title("Displacement (Bending)")

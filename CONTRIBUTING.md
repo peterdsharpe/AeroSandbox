@@ -154,13 +154,13 @@ This is all pretty standard across all scientific computing in Python:
 
     ``` python
     ### This is discouraged:
-    print(sol.value(x))
-    print(sol.value(y))
-    print(sol.value(z))
+    print(sol(x))
+    print(sol(y))
+    print(sol(z))
     
     ### Instead, do this:
     for var in [x, y, z]:
-        print(sol.value(var))
+        print(sol(var))
     ```
   
 * Use keyword arguments for functions, unless those functions are exceptionally simple, well-known, or self-explanatory. For example:

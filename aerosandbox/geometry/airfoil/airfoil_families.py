@@ -435,10 +435,10 @@ def get_kulfan_parameters(
         )
 
         return {
-            "lower_weights"      : sol.value(lower_weights),
-            "upper_weights"      : sol.value(upper_weights),
-            "TE_thickness"       : sol.value(TE_thickness),
-            "leading_edge_weight": sol.value(leading_edge_weight),
+            "lower_weights"      : sol(lower_weights),
+            "upper_weights"      : sol(upper_weights),
+            "TE_thickness"       : sol(TE_thickness),
+            "leading_edge_weight": sol(leading_edge_weight),
         }
 
     elif method == "least_squares":

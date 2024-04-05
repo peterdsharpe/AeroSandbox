@@ -301,7 +301,7 @@ class FittedModel(SurrogateModel):
         params_solved = {}
         for param_name in params:
             try:
-                params_solved[param_name] = sol.value(params[param_name])
+                params_solved[param_name] = sol(params[param_name])
             except Exception:
                 params_solved[param_name] = np.nan
 

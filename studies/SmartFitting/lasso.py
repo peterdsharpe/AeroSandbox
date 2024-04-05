@@ -40,15 +40,15 @@ if __name__ == '__main__':
     vandermonde_plot = np.ones((len(x_plot), degree + 1))
     for j in range(1, degree + 1):
         vandermonde_plot[:, j] = vandermonde_plot[:, j - 1] * x_plot
-    y_plot = vandermonde_plot @ sol.value(coeffs)
+    y_plot = vandermonde_plot @ sol(coeffs)
 
     plt.plot(x, y_data, ".")
-    plt.plot(x_plot, sol.value(y_plot), "-")
+    plt.plot(x_plot, sol(y_plot), "-")
     plt.show()
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
     plt.bar(
         x=np.arange(degree + 1),
-        height=sol.value(coeffs)
+        height=sol(coeffs)
     )
     plt.show()

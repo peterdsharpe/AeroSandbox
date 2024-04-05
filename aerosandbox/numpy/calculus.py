@@ -319,4 +319,4 @@ if __name__ == '__main__':
     # sol = opti.solve(
     #     behavior_on_failure="return_last"
     # )
-    # print(sol.value(x))
+    # print(sol(x))

@@ -134,8 +134,7 @@ class AeroSandboxObject(ABC):
         import warnings
         warnings.warn(
             "This function is deprecated and will break at some future point.\n"
-            "Use `sol.value(x)` or even simply `sol(x)` instead, which now works\n"
-            "recursively on complex data structures.",
+            "Use `sol(x)`, which now works recursively on complex data structures.",
             DeprecationWarning
         )
 
@@ -145,7 +144,7 @@ class AeroSandboxObject(ABC):
 
         def convert(item):
             """
-            This is essentially a supercharged version of sol.value(), which works for more iterable types.
+            This is essentially a supercharged version of sol(), which works for more iterable types.
 
             Args:
                 item:
@@ -156,7 +155,7 @@ class AeroSandboxObject(ABC):
 
             # If it can be converted, do the conversion.
             if np.is_casadi_type(item, recursive=False):
-                return sol.value(item)
+                return sol(item)
 
             t = type(item)
 
@@ -217,7 +216,7 @@ class AeroSandboxObject(ABC):
 
             # Try converting it blindly. This will catch most NumPy-array-like types.
             try:
-                return sol.value(item)
+                return sol(item)
             except (NotImplementedError, TypeError, ValueError):
                 pass
 
