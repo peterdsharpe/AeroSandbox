@@ -1,25 +1,30 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from get_circle_airfoil import circle_airfoil as initial_guess_airfoil
+from get_circle_airfoil import circle_airfoil as iaf
+
+# iaf = asb.KulfanAirfoil("rae2822")
 
 opti = asb.Opti()
 
-optimized_airfoil = asb.KulfanAirfoil(
+af = asb.KulfanAirfoil(
     name="Optimized",
     lower_weights=opti.variable(
-        init_guess=initial_guess_airfoil.lower_weights,
+        init_guess=iaf.lower_weights,
+        scale=0.1,
         lower_bound=-0.5,
         upper_bound=0.5,
     ),
     upper_weights=opti.variable(
-        init_guess=initial_guess_airfoil.upper_weights,
+        init_guess=iaf.upper_weights,
+        scale=0.1,
         lower_bound=-0.5,
         upper_bound=0.5,
     ),
     leading_edge_weight=opti.variable(
-        init_guess=initial_guess_airfoil.leading_edge_weight,
-        lower_bound=-0.25,
-        upper_bound=0.25,
+        init_guess=iaf.leading_edge_weight,
+        scale=0.1,
+        lower_bound=-0.5,
+        upper_bound=0.5,
     ),
     TE_thickness=0,
 )
@@ -32,23 +37,26 @@ alpha = opti.variable(
 Re = 6.5e6
 mach = 0.734
 
-aero = optimized_airfoil.get_aero_from_neuralfoil(
+aero = af.get_aero_from_neuralfoil(
     alpha=alpha,
     Re=Re,
     mach=mach,
-    model_size="xlarge"
+    model_size="xxlarge",
+    n_crit=1,
 )
 
 opti.subject_to([
     aero["CL"] == 0.824,
     aero["CM"] >= -0.092,
-    optimized_airfoil.lower_weights[0] < -0.1,
-    optimized_airfoil.upper_weights[0] > 0.1,
+    af.LE_radius() > 0.01,
+    # optimized_airfoil.lower_weights[0] < -0.1,
+    # optimized_airfoil.upper_weights[0] > 0.1,
+    # aero["analysis_confidence"] > 0.9,
     # optimized_airfoil.area() <= initial_guess_airfoil.area(),
 ])
 
 opti.subject_to(
-    optimized_airfoil.local_thickness() > 0
+    af.local_thickness(np.linspace(0, 1, 20)[1:-1]) > 0
 )
 
 get_wiggliness = lambda af: sum([
@@ -57,24 +65,33 @@ get_wiggliness = lambda af: sum([
 ])
 
 opti.subject_to(
-    get_wiggliness(optimized_airfoil) < 4
+    get_wiggliness(af) < 1
 )
 
-opti.minimize(aero["CD"])
+opti.minimize(aero["CD"] / aero["analysis_confidence"])
 
 sol = opti.solve(
-    max_iter=300, behavior_on_failure="return_last",
-    verbose=False,
+    max_iter=30000000, behavior_on_failure="return_last",
+    # verbose=False,
     options={
-        # "ipopt.mu_strategy": "monotone"
+        "ipopt.mu_strategy": "monotone",
+        # "ipopt.start_with_resto": "yes",
     }
 )
 
-sol.show_infeasibilities(1e-9)
+# sol.show_infeasibilities(1e-3)
 
-optimized_airfoil = sol(optimized_airfoil)
+af = sol(af)
 aero = sol(aero)
 alpha = sol(alpha)
 
+print("alpha:", alpha)
+for key in ["CL", "CD", "CM", "analysis_confidence", "Top_Xtr", "Bot_Xtr", "mach_crit", "mach_dd"]:
+    print(f"{key}: {aero[key]}")
+
+
+import matplotlib.pyplot as plt
+import aerosandbox.tools.pretty_plots as p
+
 fig, ax = plt.subplots(figsize=(6, 3))
-optimized_airfoil.draw()
+af.draw()
