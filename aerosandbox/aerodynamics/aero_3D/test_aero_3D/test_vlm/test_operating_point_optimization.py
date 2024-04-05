@@ -50,8 +50,8 @@ def test_vlm_optimization_operating_point():
         verbose=True,
         # callback=lambda _: print(f"alpha = {opti.debug.value(alpha)}")
     )
-    print(sol.value(alpha), sol.value(LD))
-    assert sol.value(alpha) == pytest.approx(5.85, abs=0.1)
+    print(sol(alpha), sol(LD))
+    assert sol(alpha) == pytest.approx(5.85, abs=0.1)
 
 
 if __name__ == '__main__':

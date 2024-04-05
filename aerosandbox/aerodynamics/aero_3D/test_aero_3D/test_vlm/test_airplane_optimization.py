@@ -52,7 +52,7 @@ def test_airplane_optimization():
     opti.minimize(-LD)
     sol = opti.solve()
 
-    assert sol.value(alpha) == pytest.approx(5.5, abs=1)
+    assert sol(alpha) == pytest.approx(5.5, abs=1)
 
 
 if __name__ == '__main__':

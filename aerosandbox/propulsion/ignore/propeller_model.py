@@ -245,21 +245,21 @@ for station in range(n_stations):  # TODO undo this
     #     n_blades * 0.5 * air_density * (W ** 2) *
     #     cl * chord_local * blade_section
     # )
-    # dDrag = sol.value(
+    # dDrag = sol(
     #     n_blades * 0.5 * air_density * (W ** 2) *
     #     cd * chord_local * blade_section
     # )
-    dThrust = sol.value(
+    dThrust = sol(
         air_density * n_blades * gamma * (
                 W_t - W_a * cd / cl
         ) * blade_section
     )
-    dTorque = sol.value(
+    dTorque = sol(
         air_density * n_blades * gamma * (
                 W_a + W_t * cd / cl
         ) * radial_loc * blade_section
     )
-    # if sol.value(alpha_deg) <= 0:
+    # if sol(alpha_deg) <= 0:
     #     break
 
     thrust.append(dThrust)

@@ -107,8 +107,8 @@ def test_block_move_minimum_time():
     assert dyn.u_e[-1] == pytest.approx(0)
     assert np.max(dyn.u_e) == pytest.approx(1, abs=0.01)
     assert sol(u)[0] == pytest.approx(1, abs=0.05)
-    assert sol.value(u)[-1] == pytest.approx(-1, abs=0.05)
-    assert np.mean(np.abs(sol.value(u))) == pytest.approx(1, abs=0.01)
+    assert sol(u)[-1] == pytest.approx(-1, abs=0.05)
+    assert np.mean(np.abs(sol(u))) == pytest.approx(1, abs=0.01)
 
 
 if __name__ == '__main__':

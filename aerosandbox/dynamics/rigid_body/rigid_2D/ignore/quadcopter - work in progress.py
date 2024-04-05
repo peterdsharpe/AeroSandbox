@@ -114,7 +114,7 @@ def test_quadcopter_flip():
     sol = opti.solve(verbose=False)
     dyn = sol(dyn)
 
-    assert sol.value(time_final) == pytest.approx(0.824, abs=0.01)
+    assert sol(time_final) == pytest.approx(0.824, abs=0.01)
 
 
 if __name__ == '__main__':

@@ -86,7 +86,7 @@ opti.subject_to([
 ### Solve
 sol = opti.solve()
 theta = sol(theta)
-H = sol.value(H)
+H = sol(H)
 
 ### Plot
 from aerosandbox.tools.pretty_plots import plt, show_plot

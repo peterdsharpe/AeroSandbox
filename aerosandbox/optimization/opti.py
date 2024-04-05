@@ -23,7 +23,7 @@ class Opti(cas.Opti):
     >>> opti.subject_to(x > 3) # Adds a constraint to be enforced
     >>> opti.minimize(f) # Sets the objective function as f
     >>> sol = opti.solve() # Solves the problem using CasADi and IPOPT backend
-    >>> print(sol.value(x)) # Prints the value of x at the optimum.
+    >>> print(sol(x)) # Prints the value of x at the optimum.
     """
 
     def __init__(self,
@@ -1205,7 +1205,7 @@ class OptiSol:
             >>> sol = opti.solve()
             >>>
             >>> # Retrieve the value of the variable x in the solution:
-            >>> x_value = sol.value(x)
+            >>> x_value = sol(x)
             >>>
             >>> # Or, to be more concise:
             >>> x_value = sol(x)
@@ -1232,8 +1232,8 @@ class OptiSol:
         """
         Gets the value of a variable at the solution point. For developer use - see following paragraph.
 
-        This method is basically a less-powerful version of calling either `sol(x)` or `sol.value(x)` - if you're a
-            user and not a developer, you almost-certainly want to use one of those methods instead, as those are less
+        This method is basically a less-powerful version of calling `sol(x)` - if you're a
+            user and not a developer, you almost-certainly want to use that method instead, as those are less
             fragile with respect to various input data types. This method exists only as an abstraction to make it easier
             for other developers to subclass OptiSol, if they wish to intercept the variable substitution process.
 

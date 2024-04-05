@@ -391,11 +391,11 @@ if __name__ == '__main__':
 
     beam = sol(beam)
 
-    print(f"{sol.value(mass)} kg per half-wing")
+    print(f"{sol(mass)} kg per half-wing")
 
     beam.draw()
 
-    computed_spar_mass = 2 * sol.value(mass)
+    computed_spar_mass = 2 * sol(mass)
 
     vehicle_mass = lift / 9.81
     ultimate_load_factor = 2
