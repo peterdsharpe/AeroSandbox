@@ -181,18 +181,14 @@ class MassProperties(AeroSandboxObject):
             self.Iyz,
             self.Ixz,
         ]:
-            if np.length(v) == 1:
-                try:
-                    v[0]
-                    length = 1
-                except (TypeError, IndexError, KeyError) as e:
+            lv = np.length(v)
+            if lv != 1:
+                if length == 1:
+                    length = lv
+                elif length == lv:
                     pass
-            elif length == 0 or length == 1:
-                length = np.length(v)
-            elif length == np.length(v):
-                pass
-            else:
-                raise ValueError("State variables are appear vectorized, but of different lengths!")
+                else:
+                    raise ValueError("State variables are appear vectorized, but of different lengths!")
         return length
 
     def __array__(self, dtype="O"):
