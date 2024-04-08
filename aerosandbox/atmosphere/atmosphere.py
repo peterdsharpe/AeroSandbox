@@ -284,7 +284,7 @@ if __name__ == "__main__":
             label=label,
             alpha=alpha,
         )
-        ax[1].set_xlabel("Temperature [$^\circ$C]")
+        ax[1].set_xlabel("Temperature [$^\\circ$C]")
         ax[1].set_xlim(right=20)
 
         ax[2].semilogx(

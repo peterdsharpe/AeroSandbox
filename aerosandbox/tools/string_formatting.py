@@ -174,7 +174,7 @@ def wrap_text_ignoring_mathtext(
         text: str,
         width: int = 70,
 ) -> str:
-    """
+    r"""
     Reformat the single paragraph in 'text' to fit in lines of no more
     than 'width' columns, and return a new string containing the entire
     wrapped paragraph.  Tabs are expanded and other

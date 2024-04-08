@@ -476,7 +476,7 @@ class XFoil(ExplicitAnalysis):
                         bl_datas.append(
                             pd.read_csv(
                                 dump_filename,
-                                sep="\s+",
+                                sep=r"\s+",
                                 names=["s", "x", "y", "ue/vinf", "dstar", "theta", "cf", "H"],
                                 skiprows=1,
                             )
@@ -496,7 +496,7 @@ class XFoil(ExplicitAnalysis):
                         bl_datas.append(
                             pd.read_csv(
                                 dump_filename,
-                                sep="\s+",
+                                sep=r"\s+",
                                 names=["s", "x", "y", "ue/vinf", "dstar", "theta", "cf", "H"],
                                 skiprows=1,
                             )
