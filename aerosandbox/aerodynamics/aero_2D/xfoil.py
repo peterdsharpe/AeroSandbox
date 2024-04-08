@@ -50,6 +50,7 @@ class XFoil(ExplicitAnalysis):
                  max_iter: int = 100,
                  xfoil_command: str = "xfoil",
                  xfoil_repanel: bool = True,
+                 xfoil_repanel_n_points: int = 279,
                  include_bl_data: bool = False,
                  verbose: bool = False,
                  timeout: Union[float, int, None] = 30,
@@ -119,6 +120,10 @@ class XFoil(ExplicitAnalysis):
             xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE,
                 with default settings, 160 nodes). Boolean, defaults to True.
 
+            xfoil_repanel_n_points: If `xfoil_repanel` is True, this controls the number of points to repanel the
+                airfoil to within XFoil. Defaults to 279, which is the highest number of panel points before XFoil's
+                `IWX` array overfills and starts trimming wake points.
+
             include_bl_data: Controls whether or not to include boundary layer data in the output. If this is True,
                 the functions `alpha()` and `cl()` will return a dictionary with an additional key, "bl_data",
                 which contains the boundary layer data in the form of a pandas DataFrame. Results in slightly higher
@@ -148,6 +153,7 @@ class XFoil(ExplicitAnalysis):
         self.max_iter = max_iter
         self.xfoil_command = xfoil_command
         self.xfoil_repanel = xfoil_repanel
+        self.xfoil_repanel_n_points = xfoil_repanel_n_points
         self.include_bl_data = include_bl_data
         self.verbose = verbose
         self.timeout = timeout
@@ -188,7 +194,7 @@ class XFoil(ExplicitAnalysis):
         if self.xfoil_repanel:
             run_file_contents += [
                 "ppar",
-                "n 279"  # Highest number of panel points before XFoil IWX array overfills and starts trimming wake
+                f"n {self.xfoil_repanel_n_points}",
                 "",
                 "",
                 "",
