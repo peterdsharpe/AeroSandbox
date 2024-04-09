@@ -1,7 +1,7 @@
 import aerosandbox.numpy as np
 from aerosandbox.geometry.airfoil.airfoil import Airfoil
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
-from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
+from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch, cosine_hermite_patch
 from typing import Union, Dict, List
 import warnings
 
@@ -265,7 +265,7 @@ class KulfanAirfoil(Airfoil):
                 1 - nf_aero[f"lower_bl_ue/vinf_{i}"] ** 2
                 for i in range(len(nf.bl_x_points))
             ],
-            softness=0.05
+            softness=0.01
         )
         Top_Xtr = nf_aero["Top_Xtr"]
         Bot_Xtr = nf_aero["Bot_Xtr"]
@@ -359,7 +359,7 @@ class KulfanAirfoil(Airfoil):
                             + 0.6582431351007195 * (-Cpmin_0) ** 0.6724789439840343
                     ) ** -0.5504677038358711
 
-        mach_dd = mach_crit + (0.1 / 80) ** (1 / 3)  # drag divergence Mach number
+        mach_dd = mach_crit + (0.1 / 320) ** (1 / 3)  # drag divergence Mach number
         # Relation taken from W.H. Mason's Korn Equation
 
         ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
@@ -419,34 +419,22 @@ class KulfanAirfoil(Airfoil):
             0,
             np.where(
                 mach < mach_dd,
-                20 * (mach - mach_crit) ** 4,
+                80 * (mach - mach_crit) ** 4,
                 np.where(
-                    mach < 0.97,
-                    cubic_hermite_patch(
+                    mach < 1.1,
+                    cosine_hermite_patch(
                         mach,
                         x_a=mach_dd,
-                        x_b=0.97,
-                        f_a=20 * (0.1 / 80) ** (4 / 3),
+                        x_b=1.1,
+                        f_a=80 * (0.1 / 320) ** (4 / 3),
                         f_b=0.8 * t_over_c,
                         dfdx_a=0.1,
-                        dfdx_b=0.8 * t_over_c * 8
+                        dfdx_b=-0.8 * t_over_c * 8,
                     ),
-                    np.where(
-                        mach < 1.1,
-                        cubic_hermite_patch(
-                            mach,
-                            x_a=0.97,
-                            x_b=1.1,
-                            f_a=0.8 * t_over_c,
-                            f_b=0.8 * t_over_c,
-                            dfdx_a=0.8 * t_over_c * 8,
-                            dfdx_b=-0.8 * t_over_c * 8,
-                        ),
-                        np.blend(
-                            8 * 2 * (mach - 1.1) / (1.2 - 0.8),
-                            0.8 * 0.8 * t_over_c,
-                            1.2 * 0.8 * t_over_c,
-                        )
+                    np.blend(
+                        8 * 2 * (mach - 1.1) / (1.2 - 0.8),
+                        0.8 * 0.8 * t_over_c,
+                        1.2 * 0.8 * t_over_c,
                     )
                 )
             )
