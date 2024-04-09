@@ -70,6 +70,54 @@ def cubic_hermite_patch(
     )
 
 
+def cosine_hermite_patch(
+        x: Union[float, np.ndarray],
+        x_a: float,
+        x_b: float,
+        f_a: float,
+        f_b: float,
+        dfdx_a: float,
+        dfdx_b: float,
+        extrapolation: str = 'continue',
+) -> Union[float, np.ndarray]:
+    """
+    Computes a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine function to blend between
+    linear segments.
+
+    The end result is conceptually similar to a cubic Hermite patch, but computation is faster and the patch is
+    C^\infty-continuous.
+
+    Args:
+        x: Scalar or array of values at which to evaluate the patch.
+        x_a: The x-coordinate of the first endpoint.
+        x_b: The x-coordinate of the second endpoint.
+        f_a: The function value at the first endpoint.
+        f_b: The function value at the second endpoint.
+        dfdx_a: The derivative of the function with respect to x at the first endpoint.
+        dfdx_b: The derivative of the function with respect to x at the second endpoint.
+        extrapolation: A string indicating how to handle extrapolation outside of the domain [x_a, x_b]. Valid values are
+                       "continue", which continues the patch beyond the endpoints, and "linear", which extends the patch
+                       linearly at the endpoints. Default is "continue".
+
+    Returns:
+        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or an array if x is an array.
+    """
+    t = (x - x_a) / (x_b - x_a)  # Nondimensional distance along the patch
+    if extrapolation == 'continue':
+        pass
+    elif extrapolation == 'linear':
+        t = np.clip(t, 0, 1)
+    else:
+        raise ValueError("Bad value of `extrapolation`!")
+
+    l1 = (x - x_a) * dfdx_a + f_a
+    l2 = (x - x_b) * dfdx_b + f_b
+
+    b = 0.5 + 0.5 * np.cos(np.pi * t)
+
+    return b * l1 + (1 - b) * l2
+
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
