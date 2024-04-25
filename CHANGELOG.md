@@ -38,6 +38,17 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.4
+
+- Fixed a bug in `aerosandbox.numpy.gradient` which resulted in inconsistent answers with `numpy.gradient` (dropped an argument). Added fix for the `period` argument.
+- Adds a new tutorial on visualizing flight test data.
+- Adds a new tutorial on aircraft noise impact minimization.
+- Improved accuracy of transonic modeling with `asb.Airfoil.get_aero_from_neuralfoil()` based on correlation to full-potential and RANS solutions.
+- Adds `softmax_scalefree` and `softmin_scalefree` as new surrogate modeling tools. Similar to softmax and softmin, but with a scale dependent on arguments.
+- Adds in ability to do `.leading_edge_radius()` calculations in `asb.Airfoil` and `asb.KulfanAirfoil`, which can be used during optimization to prevent sharp leading edges from forming.
+- Adds `softplus` and `swish` functions to support neural surrogate modeling.
+- Adds preparations for NumPy 2.0 by fixing soon-to-be-deprecated calls.
+
 #### 4.2.3
 
 - Synchronized update: ASB 4.2.3 and NeuralFoil 0.2.0.
