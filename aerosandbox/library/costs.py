@@ -11,7 +11,7 @@ def modified_DAPCA_IV_production_cost_analysis(
         cost_per_engine: float,
         cost_avionics_per_airplane: float,
         n_pax: int,
-        cpi_relative_to_2012_dollars: float = 1.275,  # updated for 2022
+        cpi_relative_to_2012_dollars: float = 1.327,  # updated for 2024
         n_flight_test_aircraft: int = 4,
         is_cargo_airplane: bool = False,
         primary_structure_material: str = "aluminum",
