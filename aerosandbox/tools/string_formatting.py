@@ -206,7 +206,7 @@ def wrap_text_ignoring_mathtext(
     text_parts = [part for i, part in enumerate(parts) if i % 2 == 0]
     math_parts = [part for i, part in enumerate(parts) if i % 2 == 1]
 
-    # Reassemble th result
+    # Reassemble the result
     output = ""
     cursor_position = 0
 
@@ -219,6 +219,8 @@ def wrap_text_ignoring_mathtext(
                 width=width,
                 initial_indent=" " * cursor_position,
                 drop_whitespace=False,
+                break_on_hyphens=True,
+                break_long_words=False,
             )[cursor_position:]
 
             output += contribution
@@ -260,3 +262,10 @@ if __name__ == '__main__':
         r"$ax^2+bx+c$ and also $3x$"
     ]:
         print(wrap_text_ignoring_mathtext(input, width=10))
+
+    print(
+        wrap_text_ignoring_mathtext(
+            r"Angle of Attack $\alpha$ [deg]",
+            14
+        )
+    )
