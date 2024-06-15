@@ -294,7 +294,7 @@ if __name__ == '__main__':
     name_remaps = {
         "GPkit_cvxopt"         : "GPkit\n(cvxopt)",
         "GPkit_mosek"          : "GPkit\n(mosek)",
-        "AeroSandbox_forced_gp": "AeroSandbox\n(forced to use\nGP formulation)",
+        "AeroSandbox_forced_gp": "AeroSandbox\n(using GP\nformulation)",
     }
 
     color_remaps = {
