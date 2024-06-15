@@ -527,5 +527,5 @@ if __name__ == '__main__':
         set_ticks=False,
         legend=False,
         dpi=600,
-        savefig=["benchmark_gp_beam.pdf", "benchmark_gp_beam.png"]
+        savefig=["benchmark_om_beam.pdf", "benchmark_om_beam.png"]
     )
