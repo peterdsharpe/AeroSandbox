@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Optional, Tuple, Type
+from typing import List, Dict, Any, Union, Optional, Tuple
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
@@ -8,6 +8,7 @@ from aerosandbox.geometry.propulsor import Propulsor
 from aerosandbox.weights.mass_properties import MassProperties
 import copy
 from pathlib import Path
+
 
 class Airplane(AeroSandboxObject):
     """
@@ -605,7 +606,7 @@ class Airplane(AeroSandboxObject):
                         axs=None,
                         style: str = "shaded",
                         show: bool = True,
-                        ) -> np.ndarray[Any, np.dtype[Type["matplotlib.axes.Axes"]]]:
+                        ) -> np.ndarray:
         """
         Draws a standard 4-panel three-view diagram of the airplane using Matplotlib backend. Creates a new figure.
 
@@ -619,21 +620,15 @@ class Airplane(AeroSandboxObject):
                 * "shaded"
                 * "wireframe"
 
-            show: A boolean of whether to show the figure after creating it, or to hold it so   that the user can modify the figure further before showing.
+            show: A Boolean of whether to show the figure after creating it, or to hold it so that the user can
+            modify the figure further before showing.
 
-        Returns: A tuple of (fig, axs), where:
-
-            * fig is the Matplotlib figure object.
-
-            * axs is a 2D numpy array of Matplotlib axes objects, with shape (2, 2). The axes are arranged as follows:
+        Returns: A 2D NumPy array of Matplotlib axes objects, with shape (2, 2). The axes are arranged as follows:
 
                 * axs[0, 0]: Top view
                 * axs[0, 1]: Front view
                 * axs[1, 0]: Side view
                 * axs[1, 1]: Isometric view
-
-
-
         """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
@@ -654,9 +649,11 @@ class Airplane(AeroSandboxObject):
             if not len(axs.shape) == 2:
                 raise ValueError(f"`axs` must be a 2D array of axes; instead, it is: {axs}.")
             if not axs.shape[0] >= preset_view_angles.shape[0]:
-                raise ValueError(f"`axs` must have at least as many rows as preset_view_angles ({preset_view_angles.shape[0]}).")
+                raise ValueError(
+                    f"`axs` must have at least as many rows as preset_view_angles ({preset_view_angles.shape[0]}).")
             if not axs.shape[1] >= preset_view_angles.shape[1]:
-                raise ValueError(f"`axs` must have at least as many columns as preset_view_angles ({preset_view_angles.shape[1]}).")
+                raise ValueError(
+                    f"`axs` must have at least as many columns as preset_view_angles ({preset_view_angles.shape[1]}).")
 
         for i in range(axs.shape[0]):
             for j in range(axs.shape[1]):
