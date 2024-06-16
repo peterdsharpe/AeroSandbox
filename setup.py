@@ -69,6 +69,7 @@ setup(
             'pytest<=8.0.2',
             'nbval',
             'shapely >= 2',  # Required for some airfoil geometry tests
+            'openpyxl', # Required for some data imports in tutorials
         ],
         "docs": [
             'sphinx',
