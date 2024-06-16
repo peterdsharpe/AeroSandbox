@@ -27,6 +27,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
+          python -m pip cache purge
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
       - name: Test with pytest (without extras; only package)
