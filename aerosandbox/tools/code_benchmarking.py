@@ -97,6 +97,7 @@ def time_function(
         repeats: int = None,
         desired_runtime: float = None,
         runtime_reduction=np.min,
+        warmup: bool = True,
 ) -> Tuple[float, Any]:
     """
     Runs a given callable and tells you how long it took to run, in seconds. Also returns the result of the function
@@ -114,6 +115,9 @@ def time_function(
         runtime_reduction: A function that takes in a list of runtimes and returns a reduced value. For example,
             np.min will return the minimum runtime, np.mean will return the mean runtime, etc. Default is np.min.
 
+        warmup: If True, runs the function once before starting the timer. This can be useful for functions with JIT-compilation,
+            with internal imports, or caches.
+
     Returns: A Tuple of (time_taken, result).
         - time_taken is a float of the time taken to run the function, in seconds.
         - result is the result of the function, if any.
@@ -121,6 +125,9 @@ def time_function(
     """
     if (repeats is not None) and (desired_runtime is not None):
         raise ValueError("You can't specify both repeats and desired_runtime!")
+
+    if warmup:
+        func()
 
     def time_function_once():
         start_ns = time.perf_counter_ns()
