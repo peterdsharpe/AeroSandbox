@@ -430,6 +430,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
              draw_wingtip_ribbon: bool = True,
              set_sky_background: bool = True,
              vehicle_color=None,
+             vehicle_opacity: float = 0.95,
              show: bool = True,
              ):
         if backend == "pyvista":
@@ -585,7 +586,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                         if vehicle_color is None
                         else vehicle_color
                     ),
-                    opacity=0.95,
+                    opacity=vehicle_opacity,
                     specular=0.5,
                     specular_power=15,
                 )
