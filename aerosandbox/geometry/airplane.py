@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Optional, Tuple
+from typing import List, Dict, Any, Union, Optional, Tuple, Type
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
@@ -381,7 +381,7 @@ class Airplane(AeroSandboxObject):
                        set_equal: bool = True,
                        set_axis_visibility: bool = None,
                        show: bool = True,
-                       ):
+                       ) -> "matplotlib.axes.Axes":
         """
         Draws a wireframe of the airplane on a Matplotlib 3D axis.
 
@@ -599,14 +599,20 @@ class Airplane(AeroSandboxObject):
         if show:
             p.show_plot()
 
+        return ax
+
     def draw_three_view(self,
+                        axs=None,
                         style: str = "shaded",
                         show: bool = True,
-                        ):
+                        ) -> np.ndarray[Any, np.dtype[Type["matplotlib.axes.Axes"]]]:
         """
         Draws a standard 4-panel three-view diagram of the airplane using Matplotlib backend. Creates a new figure.
 
         Args:
+
+            axs: A 2D numpy array of Matplotlib axes objects, with shape at least (2, 2). Each subplot must be 3D. If
+            None, creates a new figure with the required axes.
 
             style: Determines what drawing style to use for the three-view. A string, one of:
 
@@ -615,7 +621,18 @@ class Airplane(AeroSandboxObject):
 
             show: A boolean of whether to show the figure after creating it, or to hold it so   that the user can modify the figure further before showing.
 
-        Returns:
+        Returns: A tuple of (fig, axs), where:
+
+            * fig is the Matplotlib figure object.
+
+            * axs is a 2D numpy array of Matplotlib axes objects, with shape (2, 2). The axes are arranged as follows:
+
+                * axs[0, 0]: Top view
+                * axs[0, 1]: Front view
+                * axs[1, 0]: Side view
+                * axs[1, 1]: Isometric view
+
+
 
         """
         import matplotlib.pyplot as plt
@@ -626,12 +643,20 @@ class Airplane(AeroSandboxObject):
             ["XY", "left_isometric"]
         ], dtype="O")
 
-        fig, axs = p.figure3d(
-            nrows=preset_view_angles.shape[0],
-            ncols=preset_view_angles.shape[1],
-            figsize=(8, 8),
-            computed_zorder=False,
-        )
+        if axs is None:
+            fig, axs = p.figure3d(
+                nrows=preset_view_angles.shape[0],
+                ncols=preset_view_angles.shape[1],
+                figsize=(8, 8),
+                computed_zorder=False,
+            )
+        else:
+            if not len(axs.shape) == 2:
+                raise ValueError(f"`axs` must be a 2D array of axes; instead, it is: {axs}.")
+            if not axs.shape[0] >= preset_view_angles.shape[0]:
+                raise ValueError(f"`axs` must have at least as many rows as preset_view_angles ({preset_view_angles.shape[0]}).")
+            if not axs.shape[1] >= preset_view_angles.shape[1]:
+                raise ValueError(f"`axs` must have at least as many columns as preset_view_angles ({preset_view_angles.shape[1]}).")
 
         for i in range(axs.shape[0]):
             for j in range(axs.shape[1]):
@@ -703,6 +728,8 @@ class Airplane(AeroSandboxObject):
             p.show_plot(
                 tight_layout=False,
             )
+
+        return axs
 
     def is_entirely_symmetric(self):
         """
