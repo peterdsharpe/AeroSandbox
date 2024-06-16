@@ -36,9 +36,11 @@ class Timer(object):
     number_running: int = 0  # The number of Timers currently running
 
     def __init__(self,
-                 name: str = None
+                 name: str = None,
+                 verbose: bool = True,
                  ):
         self.name: str = name
+        self.verbose: bool = verbose
         self.runtime: float = np.nan
 
     def __repr__(self):
@@ -65,10 +67,11 @@ class Timer(object):
             return eng_string(time_seconds / u.year, unit="year")
 
     def _print(self, s: str, number_running_mod: int = 0):
-        header = "\t" * (self.__class__.number_running - 1 + number_running_mod)
-        if self.name:
-            header += f"[{self.name}] "
-        print(header + s)
+        if self.verbose:
+            header = "\t" * (self.__class__.number_running - 1 + number_running_mod)
+            if self.name:
+                header += f"[{self.name}] "
+            print(header + s)
 
     def tic(self):
         self.__class__.number_running += 1
