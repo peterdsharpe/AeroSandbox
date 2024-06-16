@@ -315,23 +315,44 @@ def contour(
 
             cbar.ax.tick_params(which="minor", labelsize=8)
 
-            if Z_ratio >= 10 ** 2.05:
-                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
-                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
-                cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
-                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-            elif Z_ratio >= 10 ** 1.5:
-                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator())
-                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
-                cbar.ax.yaxis.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
-                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.LogFormatterSciNotation(
-                    minor_thresholds=(np.inf, np.inf)
-                ))
+            ### Determine which axis (x or y) of the cbar is the numerical one
+            xticks = cbar.ax.get_xticklabels()
+            yticks = cbar.ax.get_yticklabels()
+            if len(xticks) == 0:
+                cbar_is_horizontal = False
+            elif len(yticks) == 0:
+                cbar_is_horizontal = True
             else:
-                cbar.ax.yaxis.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
-                cbar.ax.yaxis.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10, 100) / 10))
-                cbar.ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
-                cbar.ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+                import warnings
+                warnings.warn("Somehow the colorbar has both x and y ticks, which should not occur. Attempting to reformat y-ticks...")
+                cbar_is_horizontal = False
+
+            if cbar_is_horizontal:
+                cbar_ax = cbar.ax.xaxis
+            else:
+                cbar_ax = cbar.ax.yaxis
+
+            ### Modify the tick locations and labels
+            if cbar_is_horizontal:
+                pass
+            else:
+                if Z_ratio >= 10 ** 2.05:
+                    cbar_ax.set_major_locator(mpl.ticker.LogLocator())
+                    cbar_ax.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
+                    cbar_ax.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
+                    cbar_ax.set_minor_formatter(mpl.ticker.NullFormatter())
+                elif Z_ratio >= 10 ** 1.5:
+                    cbar_ax.set_major_locator(mpl.ticker.LogLocator())
+                    cbar_ax.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
+                    cbar_ax.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
+                    cbar_ax.set_minor_formatter(mpl.ticker.LogFormatterSciNotation(
+                        minor_thresholds=(np.inf, np.inf)
+                    ))
+                else:
+                    cbar_ax.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
+                    cbar_ax.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10, 100) / 10))
+                    cbar_ax.set_major_formatter(mpl.ticker.ScalarFormatter())
+                    cbar_ax.set_minor_formatter(mpl.ticker.NullFormatter())
 
     else:
         cbar = None
