@@ -18,6 +18,7 @@ def show_plot(
         savefig: Union[str, List[str]] = None,
         savefig_transparent: bool = False,
         tight_layout: bool = True,
+        tight_layout_pad: float = 0.25,
         legend: bool = None,
         legend_inline: bool = False,
         legend_frame: bool = True,
@@ -60,6 +61,10 @@ def show_plot(
 
         tight_layout: If True, calls `plt.tight_layout()` to adjust the spacing of individual Axes. If False, skips
             this step.
+
+        tight_layout_pad: If `tight_layout=True`, sets the padding width between the figure edge and the edges of the
+        subplots, as a fraction of the font size. The default here is 0.25, which is well below the default of 1.08 in
+        matplotlib. This causes Matplotlib to waste less whitespace on padding.
 
         legend: This value can be True, False, or None.
 
@@ -376,7 +381,9 @@ def show_plot(
             plt.title(title)
 
     if tight_layout:
-        plt.tight_layout()
+        plt.tight_layout(
+            pad=tight_layout_pad,
+        )
 
     if legend:
         if legend_inline:  # Display an inline (matplotlib-label-lines) legend instead
