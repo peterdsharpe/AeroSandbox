@@ -394,7 +394,7 @@ def show_plot(
             savefig: List[Union[str, Path]] = [savefig]
 
         for savefig_i in savefig:
-            plt.savefig(savefig_i, transparent=savefig_transparent)
+            plt.savefig(savefig_i, dpi=dpi, transparent=savefig_transparent)
 
     if show:
         plt.show()
