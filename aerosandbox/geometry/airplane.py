@@ -687,20 +687,6 @@ class Airplane(AeroSandboxObject):
 
                 p.set_preset_3d_view_angle(preset_view)
 
-                xres = np.diff(ax.get_xticks())[0]
-                yres = np.diff(ax.get_yticks())[0]
-                zres = np.diff(ax.get_zticks())[0]
-
-                p.set_ticks(
-                    xres, xres / 4,
-                    yres, yres / 4,
-                    zres, zres / 4,
-                )
-
-                ax.xaxis.set_tick_params(color='white', which='minor')
-                ax.yaxis.set_tick_params(color='white', which='minor')
-                ax.zaxis.set_tick_params(color='white', which='minor')
-
                 if preset_view == 'XY' or preset_view == '-XY':
                     ax.set_zticks([])
                 if preset_view == 'XZ' or preset_view == '-XZ':
