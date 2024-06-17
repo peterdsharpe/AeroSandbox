@@ -38,6 +38,12 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.5
+
+- Improvements to AeroSandbox plotting tools (`aerosandbox.tools.pretty_plots`)
+- New features in AeroSandbox profiling tools (`aerosandbox.tools.code_benchmarking`)
+- In tutorials, added new validation studies for aerodynamics solvers including wind tunnel data
+
 #### 4.2.4
 
 - Fixed a bug in `aerosandbox.numpy.gradient` which resulted in inconsistent answers with `numpy.gradient` (dropped an argument). Added fix for the `period` argument.
