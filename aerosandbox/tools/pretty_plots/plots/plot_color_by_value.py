@@ -6,15 +6,15 @@ from scipy import interpolate
 
 
 def plot_color_by_value(
-        x: np.ndarray,
-        y: np.ndarray,
-        *args,
-        c: np.ndarray,
-        cmap='turbo',
-        colorbar: bool = False,
-        colorbar_label: str = None,
-        clim: Tuple[float, float] = None,
-        **kwargs
+    x: np.ndarray,
+    y: np.ndarray,
+    *args,
+    c: np.ndarray,
+    cmap="turbo",
+    colorbar: bool = False,
+    colorbar_label: str = None,
+    clim: Tuple[float, float] = None,
+    **kwargs
 ):
     """
     Uses same syntax as matplotlib.pyplot.plot, except that `c` is now an array-like that maps to a specific color
@@ -64,36 +64,33 @@ def plot_color_by_value(
     lines = []
 
     for i, (
-            x1, x2,
-            y1, y2,
-            c1, c2,
-    ) in enumerate(zip(
-        x[:-1], x[1:],
-        y[:-1], y[1:],
-        c[:-1], c[1:],
-    )):
+        x1,
+        x2,
+        y1,
+        y2,
+        c1,
+        c2,
+    ) in enumerate(
+        zip(
+            x[:-1],
+            x[1:],
+            y[:-1],
+            y[1:],
+            c[:-1],
+            c[1:],
+        )
+    ):
         line = plt.plot(
             [x1, x2],
             [y1, y2],
             *args,
-            color=cmap(
-                norm(
-                    (c1 + c2) / 2
-                ) if cmin != cmax else 0.5
-            ),
+            color=cmap(norm((c1 + c2) / 2) if cmin != cmax else 0.5),
             **kwargs
         )
         lines += line
 
     if label is not None:
-        line = plt.plot(
-            [None],
-            [None],
-            *args,
-            color=cmap(0.5),
-            label=label,
-            **kwargs
-        )
+        line = plt.plot([None], [None], *args, color=cmap(0.5), label=label, **kwargs)
         lines += line
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     if colorbar:
@@ -105,7 +102,8 @@ def plot_color_by_value(
         cbar = None
     return lines, sm, cbar
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
@@ -114,10 +112,7 @@ if __name__ == '__main__':
     y = np.sin(10 * x)
     c = np.sin((10 * x) ** 2)
     plot_color_by_value(
-        x, y,
-        c=c,
-        clim=(-1, 1),
-        colorbar=True, colorbar_label="Colorbar Label"
+        x, y, c=c, clim=(-1, 1), colorbar=True, colorbar_label="Colorbar Label"
     )
     p.show_plot(
         "Title",

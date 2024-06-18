@@ -23,10 +23,10 @@ airplane = asb.Airplane(
                     twist=0,
                     airfoil=airfoil,
                 ),
-            ]
+            ],
         )
-    ]
+    ],
 )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     airplane.draw()

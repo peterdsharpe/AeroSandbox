@@ -44,13 +44,11 @@ def test_repanel(naca4412):
 
 
 def test_containts_points(naca4412):
-    assert naca4412.contains_points(
-        x=0.5, y=0
-    ) == True
-    assert np.all(naca4412.contains_points(
-        x=np.array([0.5, 0.5]),
-        y=np.array([0, -0.1])
-    ) == np.array([True, False]))
+    assert naca4412.contains_points(x=0.5, y=0) == True
+    assert np.all(
+        naca4412.contains_points(x=np.array([0.5, 0.5]), y=np.array([0, -0.1]))
+        == np.array([True, False])
+    )
     shape = (1, 2, 3, 4)
     x_points = np.random.randn(*shape)
     y_points = np.random.randn(*shape)
@@ -65,13 +63,9 @@ def test_optimize_through_control_surface_deflections():
 
     d = opti.variable(init_guess=5, lower_bound=-90, upper_bound=90)
 
-    afd = af.add_control_surface(
-        deflection=d, hinge_point_x=0.75
-    )
+    afd = af.add_control_surface(deflection=d, hinge_point_x=0.75)
 
-    opti.minimize(
-        (afd.coordinates[0, 1] - 0.2) ** 2
-    )
+    opti.minimize((afd.coordinates[0, 1] - 0.2) ** 2)
 
     sol = opti.solve()
     # print(sol(d))
@@ -93,23 +87,16 @@ def test_optimize_through_control_surface_deflections_for_CL():
         alpha=0,
         Re=1e6,
         mach=0,
-        control_surfaces=[
-            asb.ControlSurface(
-                deflection=d,
-                hinge_point=0.75
-            )
-        ]
+        control_surfaces=[asb.ControlSurface(deflection=d, hinge_point=0.75)],
     )
 
-    opti.minimize(
-        (aero["CL"] - 0.5) ** 2
-    )
+    opti.minimize((aero["CL"] - 0.5) ** 2)
 
     sol = opti.solve()
 
     assert sol(d) == pytest.approx(8.34, abs=1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_optimize_through_control_surface_deflections()
     # pytest.main()

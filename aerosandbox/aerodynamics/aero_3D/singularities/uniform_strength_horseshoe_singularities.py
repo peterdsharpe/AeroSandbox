@@ -3,18 +3,18 @@ from typing import Union
 
 
 def calculate_induced_velocity_horseshoe(
-        x_field: Union[float, np.ndarray],
-        y_field: Union[float, np.ndarray],
-        z_field: Union[float, np.ndarray],
-        x_left: Union[float, np.ndarray],
-        y_left: Union[float, np.ndarray],
-        z_left: Union[float, np.ndarray],
-        x_right: Union[float, np.ndarray],
-        y_right: Union[float, np.ndarray],
-        z_right: Union[float, np.ndarray],
-        gamma: Union[float, np.ndarray] = 1,
-        trailing_vortex_direction: np.ndarray = None,
-        vortex_core_radius: float = 0,
+    x_field: Union[float, np.ndarray],
+    y_field: Union[float, np.ndarray],
+    z_field: Union[float, np.ndarray],
+    x_left: Union[float, np.ndarray],
+    y_left: Union[float, np.ndarray],
+    z_left: Union[float, np.ndarray],
+    x_right: Union[float, np.ndarray],
+    y_right: Union[float, np.ndarray],
+    z_right: Union[float, np.ndarray],
+    gamma: Union[float, np.ndarray] = 1,
+    trailing_vortex_direction: np.ndarray = None,
+    vortex_core_radius: float = 0,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -61,19 +61,23 @@ def calculate_induced_velocity_horseshoe(
     if trailing_vortex_direction is None:
         trailing_vortex_direction = np.array([1, 0, 0])
 
-    np.assert_equal_shape({
-        "x_field": x_field,
-        "y_field": y_field,
-        "z_field": z_field,
-    })
-    np.assert_equal_shape({
-        "x_left" : x_left,
-        "y_left" : y_left,
-        "z_left" : z_left,
-        "x_right": x_right,
-        "y_right": y_right,
-        "z_right": z_right,
-    })
+    np.assert_equal_shape(
+        {
+            "x_field": x_field,
+            "y_field": y_field,
+            "z_field": z_field,
+        }
+    )
+    np.assert_equal_shape(
+        {
+            "x_left": x_left,
+            "y_left": y_left,
+            "z_left": z_left,
+            "x_right": x_right,
+            "y_right": y_right,
+            "z_right": z_right,
+        }
+    )
 
     a_x = np.add(x_field, -x_left)
     a_y = np.add(y_field, -y_left)
@@ -91,7 +95,7 @@ def calculate_induced_velocity_horseshoe(
     def smoothed_inv(x):
         "Approximates 1/x with a function that sharply goes to 0 in the x -> 0 limit."
         if not np.all(vortex_core_radius == 0):
-            return x / (x ** 2 + vortex_core_radius ** 2)
+            return x / (x**2 + vortex_core_radius**2)
         else:
             return 1 / x
 
@@ -112,8 +116,8 @@ def calculate_induced_velocity_horseshoe(
     b_cross_u_z = b_x * u_y - b_y * u_x
     b_dot_u = b_x * u_x + b_y * u_y + b_z * u_z
 
-    norm_a = (a_x ** 2 + a_y ** 2 + a_z ** 2) ** 0.5
-    norm_b = (b_x ** 2 + b_y ** 2 + b_z ** 2) ** 0.5
+    norm_a = (a_x**2 + a_y**2 + a_z**2) ** 0.5
+    norm_b = (b_x**2 + b_y**2 + b_z**2) ** 0.5
     norm_a_inv = smoothed_inv(norm_a)
     norm_b_inv = smoothed_inv(norm_b)
 
@@ -126,34 +130,19 @@ def calculate_induced_velocity_horseshoe(
     constant = gamma / (4 * np.pi)
 
     u = np.multiply(
-        constant,
-        (
-                a_cross_b_x * term1 +
-                a_cross_u_x * term2 -
-                b_cross_u_x * term3
-        )
+        constant, (a_cross_b_x * term1 + a_cross_u_x * term2 - b_cross_u_x * term3)
     )
     v = np.multiply(
-        constant,
-        (
-                a_cross_b_y * term1 +
-                a_cross_u_y * term2 -
-                b_cross_u_y * term3
-        )
+        constant, (a_cross_b_y * term1 + a_cross_u_y * term2 - b_cross_u_y * term3)
     )
     w = np.multiply(
-        constant,
-        (
-                a_cross_b_z * term1 +
-                a_cross_u_z * term2 -
-                b_cross_u_z * term3
-        )
+        constant, (a_cross_b_z * term1 + a_cross_u_z * term2 - b_cross_u_z * term3)
     )
 
     return u, v, w
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ##### Check single vortex
     u, v, w = calculate_induced_velocity_horseshoe(
         x_field=0,
@@ -201,24 +190,17 @@ if __name__ == '__main__':
 
     dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
 
-    dir = dir / dir_norm * dir_norm ** 0.2
+    dir = dir / dir_norm * dir_norm**0.2
 
     import pyvista as pv
 
-    pv.set_plot_theme('dark')
+    pv.set_plot_theme("dark")
     plotter = pv.Plotter()
-    plotter.add_arrows(
-        cent=pos,
-        direction=dir,
-        mag=0.15
-    )
+    plotter.add_arrows(cent=pos, direction=dir, mag=0.15)
     plotter.add_lines(
-        lines=np.array([
-            [Xf.max(), left[1], left[2]],
-            left,
-            right,
-            [Xf.max(), right[1], right[2]]
-        ])
+        lines=np.array(
+            [[Xf.max(), left[1], left[2]], left, right, [Xf.max(), right[1], right[2]]]
+        )
     )
     plotter.show_grid()
     plotter.show()
@@ -242,14 +224,11 @@ if __name__ == '__main__':
     rights = np.array([center, right])
     strengths = np.array([2, 1])
 
-
     def wide(array):
         return np.reshape(array, (1, -1))
 
-
     def tall(array):
         return np.reshape(array, (-1, 1))
-
 
     Uf_each, Vf_each, Wf_each = calculate_induced_velocity_horseshoe(
         x_field=wide(Xf),
@@ -273,27 +252,25 @@ if __name__ == '__main__':
 
     dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
 
-    dir = dir / dir_norm * dir_norm ** 0.2
+    dir = dir / dir_norm * dir_norm**0.2
 
     import pyvista as pv
 
-    pv.set_plot_theme('dark')
+    pv.set_plot_theme("dark")
     plotter = pv.Plotter()
-    plotter.add_arrows(
-        cent=pos,
-        direction=dir,
-        mag=0.15
-    )
+    plotter.add_arrows(cent=pos, direction=dir, mag=0.15)
     plotter.add_lines(
-        lines=np.array([
-            [Xf.max(), left[1], left[2]],
-            left,
-            center,
-            [Xf.max(), center[1], center[2]],
-            center,
-            right,
-            [Xf.max(), right[1], right[2]]
-        ])
+        lines=np.array(
+            [
+                [Xf.max(), left[1], left[2]],
+                left,
+                center,
+                [Xf.max(), center[1], center[2]],
+                center,
+                right,
+                [Xf.max(), right[1], right[2]],
+            ]
+        )
     )
     plotter.show_grid()
     plotter.show()

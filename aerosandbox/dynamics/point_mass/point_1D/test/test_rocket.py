@@ -16,11 +16,17 @@ def test_rocket():
     mass_initial = 500e3  # Initial mass, 500 metric tons
     z_e_final = -100e3  # Final altitude, 100 km
     g = 9.81  # Gravity, m/s^2
-    alpha = 1 / (300 * g)  # kg/(N*s), Inverse of specific impulse, basically - don't worry about this
+    alpha = 1 / (
+        300 * g
+    )  # kg/(N*s), Inverse of specific impulse, basically - don't worry about this
 
     dyn = asb.DynamicsPointMass1DVertical(
-        mass_props=asb.MassProperties(mass=opti.variable(init_guess=mass_initial, n_vars=N)),
-        z_e=opti.variable(init_guess=np.linspace(0, z_e_final, N)),  # Altitude (negative due to Earth-axes convention)
+        mass_props=asb.MassProperties(
+            mass=opti.variable(init_guess=mass_initial, n_vars=N)
+        ),
+        z_e=opti.variable(
+            init_guess=np.linspace(0, z_e_final, N)
+        ),  # Altitude (negative due to Earth-axes convention)
         w_e=opti.variable(init_guess=-z_e_final / time_final, n_vars=N),  # Velocity
     )
 
@@ -42,21 +48,22 @@ def test_rocket():
     )
 
     ### Boundary conditions
-    opti.subject_to([
-        dyn.z_e[0] == 0,
-        dyn.w_e[0] == 0,
-        dyn.mass_props.mass[0] == mass_initial,
-        dyn.z_e[-1] == z_e_final,
-    ])
+    opti.subject_to(
+        [
+            dyn.z_e[0] == 0,
+            dyn.w_e[0] == 0,
+            dyn.mass_props.mass[0] == mass_initial,
+            dyn.z_e[-1] == z_e_final,
+        ]
+    )
 
     ### Path constraints
-    opti.subject_to([
-        dyn.mass_props.mass >= 0,
-        thrust >= 0
-    ])
+    opti.subject_to([dyn.mass_props.mass >= 0, thrust >= 0])
 
     ### Objective
-    opti.minimize(-dyn.mass_props.mass[-1])  # Maximize the final mass == minimize fuel expenditure
+    opti.minimize(
+        -dyn.mass_props.mass[-1]
+    )  # Maximize the final mass == minimize fuel expenditure
 
     ### Solve
     sol = opti.solve(verbose=False)
@@ -67,6 +74,6 @@ def test_rocket():
     assert np.abs(dyn.w_e).max() == pytest.approx(1448, rel=0.05)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_rocket()
     pytest.main()

@@ -64,5 +64,5 @@ def test_op_indexing():
     # assert all(dslice.u_e == [4, 6, 8])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_op_indexing()

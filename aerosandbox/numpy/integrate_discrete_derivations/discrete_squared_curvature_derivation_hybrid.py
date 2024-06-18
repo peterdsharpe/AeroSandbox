@@ -3,8 +3,10 @@ from sympy import init_printing
 
 init_printing()
 
+
 def simplify(expr, maxdepth=10, _depth=0):
     import copy
+
     original_expr = copy.copy(expr)
     print(f"Depth: {_depth} | Parsimony: {len(str(expr))}")
     expr = expr.simplify()
@@ -18,6 +20,8 @@ def simplify(expr, maxdepth=10, _depth=0):
             return original_expr
     else:
         return expr
+
+
 ##### Now, a new problem:
 ##### Do a cubic reconstruction of an interval using values and first derivatives at the endpoints.
 
@@ -39,10 +43,10 @@ dqdx = 1 / (x2 - x1)
 # Define the Bernstein basis polynomials
 b1 = (1 - q) ** 3
 b2 = 3 * q * (1 - q) ** 2
-b3 = 3 * q ** 2 * (1 - q)
-b4 = q ** 3
+b3 = 3 * q**2 * (1 - q)
+b4 = q**3
 
-c1, c2, c3, c4 = s.symbols('c1 c2 c3 c4', real=True)
+c1, c2, c3, c4 = s.symbols("c1 c2 c3 c4", real=True)
 
 # Can solve for c1 and c4 exactly
 c1 = f1
@@ -69,14 +73,10 @@ f = c1 * b1 + c2_sol * b2 + c3_sol * b3 + c4 * b4
 dfdx = f.diff(q) * dqdx
 df2dx = dfdx.diff(q) * dqdx
 
-res = s.integrate(df2dx ** 2, (q, 0, 1)) * h
+res = s.integrate(df2dx**2, (q, 0, 1)) * h
 res = simplify(res)
 
-cse = s.cse(
-    res,
-    symbols=s.numbered_symbols("s"),
-    list=False
-)
+cse = s.cse(res, symbols=s.numbered_symbols("s"), list=False)
 
 parsimony = len(str(res))
 print("\nSquared Curvature:")

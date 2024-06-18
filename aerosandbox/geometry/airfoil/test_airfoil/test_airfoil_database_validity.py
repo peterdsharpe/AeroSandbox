@@ -29,7 +29,9 @@ def check_validity(af: asb.Airfoil) -> None:
 
     """
     if af.n_points() < 4:
-        raise ValueError(f"Airfoil {af.name} has too few points (n_points = {af.n_points()})!")
+        raise ValueError(
+            f"Airfoil {af.name} has too few points (n_points = {af.n_points()})!"
+        )
 
     if af.area() < 0:
         raise ValueError(f"Airfoil {af.name} has negative area (area = {af.area()})!")
@@ -38,53 +40,78 @@ def check_validity(af: asb.Airfoil) -> None:
         raise ValueError(f"Airfoil {af.name} has zero area!")
 
     if af.area() > 0.6:
-        raise UserWarning(f"Airfoil {af.name} has unusually large area (area = {af.area()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually large area (area = {af.area()})!"
+        )
 
     if af.x().max() > 1.1:
-        raise UserWarning(f"Airfoil {af.name} has unusually high x_max (x_max = {af.x().max()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually high x_max (x_max = {af.x().max()})!"
+        )
 
     if af.x().max() < 0.9:
-        raise UserWarning(f"Airfoil {af.name} has unusually low x_max (x_max = {af.x().max()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually low x_max (x_max = {af.x().max()})!"
+        )
 
     if af.x().min() < -0.1:
-        raise UserWarning(f"Airfoil {af.name} has unusually low x_min (x_min = {af.x().min()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually low x_min (x_min = {af.x().min()})!"
+        )
 
     if af.x().min() > 0.1:
-        raise UserWarning(f"Airfoil {af.name} has unusually high x_min (x_min = {af.x().min()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually high x_min (x_min = {af.x().min()})!"
+        )
 
     if af.y().max() > 0.5:
-        raise UserWarning(f"Airfoil {af.name} has unusually high y_max (y_max = {af.y().max()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually high y_max (y_max = {af.y().max()})!"
+        )
 
     if af.y().min() < -0.5:
-        raise UserWarning(f"Airfoil {af.name} has unusually low y_min (y_min = {af.y().min()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually low y_min (y_min = {af.y().min()})!"
+        )
 
     ## Check for any duplicate points
     ds = np.linalg.norm(np.diff(af.coordinates, axis=0), axis=1)
 
     if np.any(ds <= 0):
-        raise ValueError(f"Airfoil {af.name} has duplicate points (index = {np.argmin(ds)})!")
+        raise ValueError(
+            f"Airfoil {af.name} has duplicate points (index = {np.argmin(ds)})!"
+        )
 
     if ds.max() > 0.8:
-        raise UserWarning(f"Airfoil {af.name} has unusually large ds_max (ds_max = {ds.max()})!")
+        raise UserWarning(
+            f"Airfoil {af.name} has unusually large ds_max (ds_max = {ds.max()})!"
+        )
 
     ## Check for any negative thickness regions
     x_thicknesses = np.linspace(af.x().min(), af.x().max(), 501)
     thicknesses = af.local_thickness(x_over_c=x_thicknesses)
     if np.any(thicknesses < 0):
-        raise ValueError(f"Airfoil {af.name} has negative thickness @ x = {x_thicknesses[np.argmin(thicknesses)]}!")
+        raise ValueError(
+            f"Airfoil {af.name} has negative thickness @ x = {x_thicknesses[np.argmin(thicknesses)]}!"
+        )
 
     ### Make sure the TE thickness is nonnegative
     if af.TE_thickness() < 0:
-        raise ValueError(f"Airfoil {af.name} has negative trailing edge thickness {af.TE_thickness()}!")
+        raise ValueError(
+            f"Airfoil {af.name} has negative trailing edge thickness {af.TE_thickness()}!"
+        )
 
     ### Make sure the TE angle is not exactly zero, or negative, if the TE thickness is zero.
     if af.TE_thickness() <= 0:
         if af.TE_angle() <= 0:
-            raise ValueError(f"Airfoil {af.name} has trailing edge angle {af.TE_angle()}!")
+            raise ValueError(
+                f"Airfoil {af.name} has trailing edge angle {af.TE_angle()}!"
+            )
 
     ### See if Shapely has any complaints
     try:
         import shapely
+
         if not af.as_shapely_polygon().is_valid:
             raise ValueError(f"Airfoil {af.name} is not a valid Shapely polygon!")
 
@@ -108,7 +135,10 @@ def test_airfoil_database_validity():
     if len(failed_airfoils_and_errors) > 0:
         raise ValueError(
             f"The following airfoils failed the validity test:\n"
-            "\n".join(f"{af_name}: {error}" for af_name, error in failed_airfoils_and_errors.items())
+            "\n".join(
+                f"{af_name}: {error}"
+                for af_name, error in failed_airfoils_and_errors.items()
+            )
         )
 
 
@@ -116,14 +146,12 @@ def debug_draw(af: asb.Airfoil):
     if isinstance(af, str):
         af = asb.Airfoil(af)
 
-    af.draw(
-        draw_mcl=False, backend='plotly', show=False
-    ).update_layout(
+    af.draw(draw_mcl=False, backend="plotly", show=False).update_layout(
         yaxis=dict(scaleanchor=None)
     ).show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     afs = get_airfoil_database()
     for af in afs:

@@ -28,13 +28,7 @@ def outer(x, y, manual=False):
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.outer.html
     """
     if manual:
-        return [
-            [
-                xi * yi
-                for yi in y
-            ]
-            for xi in x
-        ]
+        return [[xi * yi for yi in y] for xi in x]
 
     if not is_casadi_type([x, y], recursive=True):
         return _onp.outer(x, y)
@@ -114,11 +108,7 @@ def norm(x, ord=None, axis=None, keepdims=False):
 
         # Figure out which axis, if any, to take a vector norm about.
         if axis is not None:
-            if not (
-                    axis == 0 or
-                    axis == 1 or
-                    axis == -1
-            ):
+            if not (axis == 0 or axis == 1 or axis == -1):
                 raise ValueError("`axis` must be -1, 0, or 1 for CasADi types.")
         elif x.shape[0] == 1:
             axis = 1
@@ -129,34 +119,27 @@ def norm(x, ord=None, axis=None, keepdims=False):
             if axis is not None:
                 ord = 2
             else:
-                ord = 'fro'
+                ord = "fro"
 
         if ord == 1:
             # norm = _cas.norm_1(x)
-            norm = sum(
-                abs(x),
-                axis=axis
-            )
+            norm = sum(abs(x), axis=axis)
         elif ord == 2:
             # norm = _cas.norm_2(x)
-            norm = sum(
-                x ** 2,
-                axis=axis
-            ) ** 0.5
-        elif ord == 'fro' or ord == "frobenius":
+            norm = sum(x**2, axis=axis) ** 0.5
+        elif ord == "fro" or ord == "frobenius":
             norm = _cas.norm_fro(x)
-        elif ord == 'inf' or _onp.isinf(ord):
+        elif ord == "inf" or _onp.isinf(ord):
             norm = _cas.norm_inf()
         else:
             try:
-                norm = sum(
-                    abs(x) ** ord,
-                    axis=axis
-                ) ** (1 / ord)
+                norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
             except Exception as e:
                 print(e)
-                raise ValueError("Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
-                                 "as a last-ditch effort, but that didn't work.")
+                raise ValueError(
+                    "Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
+                    "as a last-ditch effort, but that didn't work."
+                )
 
         if keepdims:
             new_shape = list(x.shape)
@@ -165,13 +148,14 @@ def norm(x, ord=None, axis=None, keepdims=False):
         else:
             return norm
 
+
 def inv_symmetric_3x3(
-        m11,
-        m22,
-        m33,
-        m12,
-        m23,
-        m13,
+    m11,
+    m22,
+    m33,
+    m12,
+    m23,
+    m13,
 ):
     """
     Explicitly computes the inverse of a symmetric 3x3 matrix.
@@ -191,19 +175,19 @@ def inv_symmetric_3x3(
     From https://math.stackexchange.com/questions/233378/inverse-of-a-3-x-3-covariance-matrix-or-any-positive-definite-pd-matrix
     """
     det = (
-            m11 * (m33 * m22 - m23 ** 2) -
-            m12 * (m33 * m12 - m23 * m13) +
-            m13 * (m23 * m12 - m22 * m13)
+        m11 * (m33 * m22 - m23**2)
+        - m12 * (m33 * m12 - m23 * m13)
+        + m13 * (m23 * m12 - m22 * m13)
     )
     inv_det = 1 / det
-    a11 = m33 * m22 - m23 ** 2
+    a11 = m33 * m22 - m23**2
     a12 = m13 * m23 - m33 * m12
     a13 = m12 * m23 - m13 * m22
 
-    a22 = m33 * m11 - m13 ** 2
+    a22 = m33 * m11 - m13**2
     a23 = m12 * m13 - m11 * m23
 
-    a33 = m11 * m22 - m12 ** 2
+    a33 = m11 * m22 - m12**2
 
     a11 = a11 * inv_det
     a12 = a12 * inv_det

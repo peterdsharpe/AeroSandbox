@@ -19,4 +19,4 @@ sns.set_theme(
 
 mpl.rcParams["figure.dpi"] = 200
 mpl.rcParams["axes.formatter.useoffset"] = False
-mpl.rcParams["contour.negative_linestyle"] = 'solid'
+mpl.rcParams["contour.negative_linestyle"] = "solid"

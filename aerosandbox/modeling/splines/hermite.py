@@ -3,11 +3,11 @@ from typing import Union
 
 
 def linear_hermite_patch(
-        x: Union[float, np.ndarray],
-        x_a: float,
-        x_b: float,
-        f_a: float,
-        f_b: float,
+    x: Union[float, np.ndarray],
+    x_a: float,
+    x_b: float,
+    f_a: float,
+    f_b: float,
 ) -> Union[float, np.ndarray]:
     """
     Computes the linear Hermite polynomial patch that passes through the given endpoints f_a and f_b.
@@ -26,14 +26,14 @@ def linear_hermite_patch(
 
 
 def cubic_hermite_patch(
-        x: Union[float, np.ndarray],
-        x_a: float,
-        x_b: float,
-        f_a: float,
-        f_b: float,
-        dfdx_a: float,
-        dfdx_b: float,
-        extrapolation: str = 'continue',
+    x: Union[float, np.ndarray],
+    x_a: float,
+    x_b: float,
+    f_a: float,
+    f_b: float,
+    dfdx_a: float,
+    dfdx_b: float,
+    extrapolation: str = "continue",
 ) -> Union[float, np.ndarray]:
     """
     Computes the cubic Hermite polynomial patch that passes through the given endpoints and endpoint derivatives.
@@ -55,30 +55,30 @@ def cubic_hermite_patch(
     """
     dx = x_b - x_a
     t = (x - x_a) / dx  # Nondimensional distance along the patch
-    if extrapolation == 'continue':
+    if extrapolation == "continue":
         pass
-    elif extrapolation == 'clip':
+    elif extrapolation == "clip":
         t = np.clip(t, 0, 1)
     else:
         raise ValueError("Bad value of `extrapolation`!")
 
     return (
-            (t ** 3) * (1 * f_b) +
-            (t ** 2 * (1 - t)) * (3 * f_b - 1 * dfdx_b * dx) +
-            (t * (1 - t) ** 2) * (3 * f_a + 1 * dfdx_a * dx) +
-            ((1 - t) ** 3) * (1 * f_a)
+        (t**3) * (1 * f_b)
+        + (t**2 * (1 - t)) * (3 * f_b - 1 * dfdx_b * dx)
+        + (t * (1 - t) ** 2) * (3 * f_a + 1 * dfdx_a * dx)
+        + ((1 - t) ** 3) * (1 * f_a)
     )
 
 
 def cosine_hermite_patch(
-        x: Union[float, np.ndarray],
-        x_a: float,
-        x_b: float,
-        f_a: float,
-        f_b: float,
-        dfdx_a: float,
-        dfdx_b: float,
-        extrapolation: str = 'continue',
+    x: Union[float, np.ndarray],
+    x_a: float,
+    x_b: float,
+    f_a: float,
+    f_b: float,
+    dfdx_a: float,
+    dfdx_b: float,
+    extrapolation: str = "continue",
 ) -> Union[float, np.ndarray]:
     """
     Computes a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine function to blend between
@@ -103,9 +103,9 @@ def cosine_hermite_patch(
         The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or an array if x is an array.
     """
     t = (x - x_a) / (x_b - x_a)  # Nondimensional distance along the patch
-    if extrapolation == 'continue':
+    if extrapolation == "continue":
         pass
-    elif extrapolation == 'linear':
+    elif extrapolation == "linear":
         t = np.clip(t, 0, 1)
     else:
         raise ValueError("Bad value of `extrapolation`!")
@@ -118,7 +118,7 @@ def cosine_hermite_patch(
     return b * l1 + (1 - b) * l2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
@@ -126,15 +126,8 @@ if __name__ == '__main__':
     plt.plot(
         x,
         cubic_hermite_patch(
-            x,
-            x_a=0,
-            x_b=1,
-            f_a=0,
-            f_b=1,
-            dfdx_a=-0.5,
-            dfdx_b=-1,
-            extrapolation='clip'
-        )
+            x, x_a=0, x_b=1, f_a=0, f_b=1, dfdx_a=-0.5, dfdx_b=-1, extrapolation="clip"
+        ),
     )
 
     p.equal()

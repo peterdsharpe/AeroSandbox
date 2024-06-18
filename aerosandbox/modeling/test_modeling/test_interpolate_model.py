@@ -4,7 +4,7 @@ import aerosandbox.numpy as np
 
 
 def underlying_function_1D(x):
-    return x ** 2 - 8 * x + 5
+    return x**2 - 8 * x + 5
 
 
 def interpolated_model():
@@ -27,8 +27,8 @@ def test_interpolated_model_at_scalar():
 def test_interpolated_model_at_vector():
     model = interpolated_model()
     assert np.all(
-        model(np.array([1.5, 2.5, 3.5])) ==
-        pytest.approx(underlying_function_1D(np.array([1.5, 2.5, 3.5])))
+        model(np.array([1.5, 2.5, 3.5]))
+        == pytest.approx(underlying_function_1D(np.array([1.5, 2.5, 3.5])))
     )
 
 
@@ -44,6 +44,6 @@ def test_interpolated_model_zeros_patch():
     assert f == pytest.approx(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_interpolated_model_zeros_patch()
     pytest.main()

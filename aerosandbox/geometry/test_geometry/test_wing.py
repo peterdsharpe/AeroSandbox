@@ -15,21 +15,17 @@ def w() -> Wing:
                     ControlSurface(
                         symmetric=True,
                     )
-                ]
+                ],
             ),
             WingXSec(
                 xyz_le=np.array([2, 2, 0]),
                 chord=0.5,
                 twist=5,
                 airfoil=Airfoil("mh60"),
-                control_surfaces=[
-                    ControlSurface(
-                        symmetric=True
-                    )
-                ]
-            )
+                control_surfaces=[ControlSurface(symmetric=True)],
+            ),
         ],
-        symmetric=True
+        symmetric=True,
     ).translate(np.array([1, 2, 3]))
     return wing
 
@@ -74,5 +70,5 @@ def test_aerodynamic_center():
     assert ac[2] == pytest.approx(3, abs=2e-2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

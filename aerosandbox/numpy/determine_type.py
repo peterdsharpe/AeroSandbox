@@ -3,10 +3,7 @@ import casadi as _cas
 from typing import Any
 
 
-def is_casadi_type(
-        object: Any,
-        recursive: bool = True
-) -> bool:
+def is_casadi_type(object: Any, recursive: bool = True) -> bool:
     """
     Returns a boolean of whether an object is a CasADi data type or not. If the recursive flag is True,
     iterates recursively, returning True if any subelement (at any depth) is a CasADi type.
@@ -24,37 +21,36 @@ def is_casadi_type(
     t = type(object)
 
     # NumPy arrays cannot be or contain CasADi types, unless they are object arrays
-    if t == _onp.ndarray and object.dtype != 'O':
+    if t == _onp.ndarray and object.dtype != "O":
         return False
 
     # Skip certain Python types known not to be or contain CasADi types.
     for type_to_skip in (
-            float, int, complex,
-            bool, str,
-            range,
-            type(None),
-            bytes, bytearray, memoryview
+        float,
+        int,
+        complex,
+        bool,
+        str,
+        range,
+        type(None),
+        bytes,
+        bytearray,
+        memoryview,
     ):
         if t == type_to_skip:
             return False
 
     # If it's directly a CasADi type, we're done.
-    if (
-            t == _cas.MX or
-            t == _cas.DM or
-            t == _cas.SX
-    ):
+    if t == _cas.MX or t == _cas.DM or t == _cas.SX:
         return True
 
     # At this point, we know it's not a CasADi type, but we don't know if it *contains* a CasADi type (relevant if recursing)
     if recursive:
         if (
-                issubclass(t, list) or
-                issubclass(t, tuple) or
-                issubclass(t, set) or
-                (
-                        t == _onp.ndarray and object.dtype == 'O'
-                )
+            issubclass(t, list)
+            or issubclass(t, tuple)
+            or issubclass(t, set)
+            or (t == _onp.ndarray and object.dtype == "O")
         ):
             for element in object:
                 if is_casadi_type(element, recursive=True):

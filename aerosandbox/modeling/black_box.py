@@ -3,12 +3,12 @@ from typing import Callable, Any, Union, Optional
 
 
 def black_box(
-        function: Callable[[Any], float],
-        n_in: int = None,
-        n_out: int = 1,
-        fd_method: str ='central',
-        fd_step: Optional[float] = None,
-        fd_step_iter: Optional[bool] = None,
+    function: Callable[[Any], float],
+    n_in: int = None,
+    n_out: int = 1,
+    fd_method: str = "central",
+    fd_step: Optional[float] = None,
+    fd_step_iter: Optional[bool] = None,
 ) -> Callable[[Any], float]:
     """
     Wraps a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization problems.
@@ -44,22 +44,24 @@ def black_box(
 
     ### Add limitations
     if n_out > 1:
-        raise NotImplementedError("Black boxes with multiple outputs are not yet supported.")
+        raise NotImplementedError(
+            "Black boxes with multiple outputs are not yet supported."
+        )
 
     ### Compute finite-differencing options
     fd_options = {}
 
     if fd_step is not None:
-        fd_options['h'] = fd_step
+        fd_options["h"] = fd_step
 
     if fd_step_iter is not None:
-        fd_options['h_iter'] = fd_step_iter
+        fd_options["h_iter"] = fd_step_iter
 
     import casadi as cas
 
     class BlackBox(cas.Callback):
         def __init__(
-                self,
+            self,
         ):
             cas.Callback.__init__(self)
             self.construct(
@@ -68,7 +70,7 @@ def black_box(
                     enable_fd=True,
                     fd_method=fd_method,
                     fd_options=fd_options,
-                )
+                ),
             )
 
         # Number of inputs and outputs
@@ -106,7 +108,9 @@ def black_box(
         inputs = []
 
         # Check number of positional arguments in the signature
-        n_positional_args = len(signature.parameters) - len(signature.parameters.values())
+        n_positional_args = len(signature.parameters) - len(
+            signature.parameters.values()
+        )
         n_args = len(signature.parameters)
         if len(args) < n_positional_args or len(args) > n_args:
             raise TypeError(
@@ -127,9 +131,7 @@ def black_box(
 
             else:
                 if parameter.default is parameter.empty:
-                    raise TypeError(
-                        f"Missing required argument '{name}'"
-                    )
+                    raise TypeError(f"Missing required argument '{name}'")
                 else:
                     input = parameter.default
 
@@ -145,21 +147,19 @@ def black_box(
     return wrapped_function_with_kwargs_support
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     ### Create a function that's effectively black-box (doesn't use `aerosandbox.numpy`)
     def my_func(
-            a1,
-            a2,
-            k1=4,
-            k2=5,
-            k3=6,
+        a1,
+        a2,
+        k1=4,
+        k2=5,
+        k3=6,
     ):
         import math
-        return (
-                math.sin(a1) * math.exp(a2) * math.cos(k1 * k2) + k3
-        )
 
+        return math.sin(a1) * math.exp(a2) * math.cos(k1 * k2) + k3
 
     ### Now, start an optimization problem
     import aerosandbox as asb
@@ -168,18 +168,14 @@ if __name__ == '__main__':
     opti = asb.Opti()
 
     # Wrap our function such that it can be used in an optimization problem.
-    my_func_wrapped = black_box(
-        function=my_func, fd_method="central"
-    )
+    my_func_wrapped = black_box(function=my_func, fd_method="central")
 
     # Pick some variables to optimize over
     m = opti.variable(init_guess=5, lower_bound=3, upper_bound=8)
     n = opti.variable(init_guess=5, lower_bound=3, upper_bound=8)
 
     # Minimize the black-box function
-    opti.minimize(
-        my_func_wrapped(m, a2=3, k2=n)
-    )
+    opti.minimize(my_func_wrapped(m, a2=3, k2=n))
 
     # Solve
     sol = opti.solve()
@@ -194,6 +190,8 @@ if __name__ == '__main__':
     )
     fig, ax = plt.subplots()
     p.contour(
-        M, N, np.vectorize(my_func)(M, a2=3, k2=N),
+        M,
+        N,
+        np.vectorize(my_func)(M, a2=3, k2=N),
     )
     p.show_plot()

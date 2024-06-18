@@ -8,7 +8,7 @@ def test_calculate_induced_velocity_panel_coordinates():
     X, Y = np.meshgrid(
         np.linspace(-1, 2, 50),
         np.linspace(-1, 1, 50),
-        indexing='ij',
+        indexing="ij",
     )
     X = X.flatten()
     Y = Y.flatten()
@@ -33,8 +33,8 @@ def test_vortex_limit():
         gamma=[1 / eps, 1 / eps],
         sigma=[0, 0],
     )
-    assert u == pytest.approx(0, abs=eps ** 0.5)
-    assert v == pytest.approx(-1 / (2 * pi), abs=eps ** 0.5)
+    assert u == pytest.approx(0, abs=eps**0.5)
+    assert v == pytest.approx(-1 / (2 * pi), abs=eps**0.5)
 
 
 def test_source_limit():
@@ -47,8 +47,8 @@ def test_source_limit():
         sigma=[1 / eps, 1 / eps],
         gamma=[0, 0],
     )
-    assert u == pytest.approx(1 / (2 * pi), abs=eps ** 0.5)
-    assert v == pytest.approx(0, abs=eps ** 0.5)
+    assert u == pytest.approx(1 / (2 * pi), abs=eps**0.5)
+    assert v == pytest.approx(0, abs=eps**0.5)
 
 
 def test_zero_length_case():
@@ -65,6 +65,6 @@ def test_zero_length_case():
     assert v == pytest.approx(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_zero_length_case()
     pytest.main()

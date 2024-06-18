@@ -41,7 +41,8 @@ chamber_pressure_max = 2.0e6
 # [units: dimensionless]
 W_OM_VALID_RANGE = (0, 0.22)
 OUT_OF_RANGE_ERROR_STRING = (
-    '{:.3f} is outside the model valid range of {:.3f} <= w_om <= {:.3f}')
+    "{:.3f} is outside the model valid range of {:.3f} <= w_om <= {:.3f}"
+)
 
 
 def burn_rate_coefficient(oxamide_fraction):
@@ -66,7 +67,7 @@ def c_star(oxamide_fraction):
     """
     # oxamide_fraction = cas.fmax(oxamide_fraction, 0)
     coefs = [1380.2, -983.3, -697.1]
-    return coefs[0] + coefs[1] * oxamide_fraction + coefs[2] * oxamide_fraction ** 2
+    return coefs[0] + coefs[1] * oxamide_fraction + coefs[2] * oxamide_fraction**2
 
 
 def dubious_min_combustion_pressure(oxamide_fraction):
@@ -74,8 +75,8 @@ def dubious_min_combustion_pressure(oxamide_fraction):
 
     Note: this model is of DUBIOUS accuracy. Don't trust it.
     """
-    coefs = [7.73179444e+00, 3.60886970e-01, 7.64587936e-03]
-    p_min_MPa = coefs[0] * oxamide_fraction ** 2 + coefs[1] * oxamide_fraction + coefs[2]
+    coefs = [7.73179444e00, 3.60886970e-01, 7.64587936e-03]
+    p_min_MPa = coefs[0] * oxamide_fraction**2 + coefs[1] * oxamide_fraction + coefs[2]
     p_min = 1e6 * p_min_MPa
     return p_min  # Pa
 
@@ -89,10 +90,12 @@ def gamma(oxamide_fraction):
     # oxamide_fraction = cas.fmax(oxamide_fraction, 0)
 
     coefs = [1.238, 0.216, -0.351]
-    return coefs[0] + coefs[1] * oxamide_fraction + coefs[2] * oxamide_fraction ** 2
+    return coefs[0] + coefs[1] * oxamide_fraction + coefs[2] * oxamide_fraction**2
 
 
-def expansion_ratio_from_pressure(chamber_pressure, exit_pressure, gamma, oxamide_fraction):
+def expansion_ratio_from_pressure(
+    chamber_pressure, exit_pressure, gamma, oxamide_fraction
+):
     """Find the nozzle expansion ratio from the chamber and exit pressures.
 
     See :ref:`expansion-ratio-tutorial-label` for a physical description of the
@@ -108,12 +111,20 @@ def expansion_ratio_from_pressure(chamber_pressure, exit_pressure, gamma, oxamid
     Returns:
         scalar: Expansion ratio :math:`\\epsilon = A_e / A_t` [units: dimensionless]
     """
-    chamber_pressure = np.fmax(chamber_pressure, dubious_min_combustion_pressure(oxamide_fraction))
+    chamber_pressure = np.fmax(
+        chamber_pressure, dubious_min_combustion_pressure(oxamide_fraction)
+    )
     chamber_pressure = np.fmax(chamber_pressure, exit_pressure * 1.5)
 
-    AtAe = ((gamma + 1) / 2) ** (1 / (gamma - 1)) \
-           * (exit_pressure / chamber_pressure) ** (1 / gamma) \
-           * np.sqrt((gamma + 1) / (gamma - 1) * (1 - (exit_pressure / chamber_pressure) ** ((gamma - 1) / gamma)))
+    AtAe = (
+        ((gamma + 1) / 2) ** (1 / (gamma - 1))
+        * (exit_pressure / chamber_pressure) ** (1 / gamma)
+        * np.sqrt(
+            (gamma + 1)
+            / (gamma - 1)
+            * (1 - (exit_pressure / chamber_pressure) ** ((gamma - 1) / gamma))
+        )
+    )
     er = 1 / AtAe
     return er
 
@@ -141,10 +152,13 @@ def thrust_coefficient(chamber_pressure, exit_pressure, gamma, p_a=None, er=None
     """
     # if (p_a is None and er is not None) or (er is None and p_a is not None):
     #     raise ValueError('Both p_a and er must be provided.')
-    C_F = (2 * gamma ** 2 / (gamma - 1)
-           * (2 / (gamma + 1)) ** ((gamma + 1) / (gamma - 1))
-           * (1 - (exit_pressure / chamber_pressure) ** ((gamma - 1) / gamma))
-           ) ** 0.5
+    C_F = (
+        2
+        * gamma**2
+        / (gamma - 1)
+        * (2 / (gamma + 1)) ** ((gamma + 1) / (gamma - 1))
+        * (1 - (exit_pressure / chamber_pressure) ** ((gamma - 1) / gamma))
+    ) ** 0.5
     # if p_a is not None and er is not None:
     C_F += er * (exit_pressure - p_a) / chamber_pressure
 
@@ -161,9 +175,17 @@ if __name__ == "__main__":
     c_stars = c_star(oxamides)
     min_combustion_pressures = dubious_min_combustion_pressure(oxamides)
     gammas = gamma(oxamides)
-    px.scatter(x=oxamides, y=burn_rate_coefficients, labels={"x": "Oxamide", "y": "Burn Rate Coeff"}).show()
+    px.scatter(
+        x=oxamides,
+        y=burn_rate_coefficients,
+        labels={"x": "Oxamide", "y": "Burn Rate Coeff"},
+    ).show()
     px.scatter(x=oxamides, y=c_stars, labels={"x": "Oxamide", "y": "c_star"}).show()
-    px.scatter(x=oxamides, y=min_combustion_pressures, labels={"x": "Oxamide", "y": "Min. Combustion Pressure"}).show()
+    px.scatter(
+        x=oxamides,
+        y=min_combustion_pressures,
+        labels={"x": "Oxamide", "y": "Min. Combustion Pressure"},
+    ).show()
     px.scatter(x=oxamides, y=gammas, labels={"x": "Oxamide", "y": "Gamma"}).show()
 
     # # ER_from_P test
@@ -177,11 +199,25 @@ if __name__ == "__main__":
         for exit_pressure in exit_pressure_inputs:
             chamber_pressures.append(chamber_pressure)
             exit_pressures.append(exit_pressure)
-            ers.append(expansion_ratio_from_pressure(chamber_pressure, exit_pressure, gamma(ox_for_test), ox_for_test))
-    data = pd.DataFrame({
-        'chamber_pressure': chamber_pressures,
-        'exit_pressure'   : exit_pressures,
-        'ers'             : ers
-    })
-    px.scatter_3d(data, x='chamber_pressure', y='exit_pressure', z='ers', color='ers', log_x=True, log_y=True,
-                  log_z=True).show()
+            ers.append(
+                expansion_ratio_from_pressure(
+                    chamber_pressure, exit_pressure, gamma(ox_for_test), ox_for_test
+                )
+            )
+    data = pd.DataFrame(
+        {
+            "chamber_pressure": chamber_pressures,
+            "exit_pressure": exit_pressures,
+            "ers": ers,
+        }
+    )
+    px.scatter_3d(
+        data,
+        x="chamber_pressure",
+        y="exit_pressure",
+        z="ers",
+        color="ers",
+        log_x=True,
+        log_y=True,
+        log_z=True,
+    ).show()

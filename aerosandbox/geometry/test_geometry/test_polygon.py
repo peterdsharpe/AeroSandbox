@@ -5,28 +5,14 @@ import pytest
 
 
 def test_polygon_creation():
-    p = Polygon(
-        coordinates=np.array([
-            [0, 0],
-            [1, 0],
-            [1, 1],
-            [0, 1]
-        ])
-    )
+    p = Polygon(coordinates=np.array([[0, 0], [1, 0], [1, 1], [0, 1]]))
     assert p.n_points() == 4
     assert np.all(p.x() == np.array([0, 1, 1, 0]))
     assert np.all(p.y() == np.array([0, 0, 1, 1]))
 
 
 def test_contains_points():
-    p = Polygon(
-        coordinates=np.array([
-            [0, 0],
-            [1, 0],
-            [1, 1],
-            [0, 1]
-        ])
-    )
+    p = Polygon(coordinates=np.array([[0, 0], [1, 0], [1, 1], [0, 1]]))
 
     assert p.contains_points(0.5, 0.5) == True
     assert p.contains_points(-0.1, 0.5) == False
@@ -37,10 +23,12 @@ def test_contains_points():
     assert p.contains_points(0.5, 1.0) == True
     assert p.contains_points(0.5, 1.1) == False
 
-    assert np.all(p.contains_points(
-        x=np.array([0.5, 0.5, -0.1, -0.1]),
-        y=np.array([0.5, -0.1, 0.5, -0.1])
-    ) == np.array([True, False, False, False]))
+    assert np.all(
+        p.contains_points(
+            x=np.array([0.5, 0.5, -0.1, -0.1]), y=np.array([0.5, -0.1, 0.5, -0.1])
+        )
+        == np.array([True, False, False, False])
+    )
 
     shape = (1, 2, 3, 4)
     x_points = np.random.randn(*shape)
@@ -50,14 +38,7 @@ def test_contains_points():
 
 
 def test_equality():
-    p1 = Polygon(
-        coordinates=np.array([
-            [0, 0],
-            [1, 0],
-            [1, 1],
-            [0, 1]
-        ])
-    )
+    p1 = Polygon(coordinates=np.array([[0, 0], [1, 0], [1, 1], [0, 1]]))
 
     p2 = p1.deepcopy()
 
@@ -67,17 +48,9 @@ def test_equality():
 
 
 def test_translate_scale_rotate():
-    p1 = Polygon(
-        coordinates=np.array([
-            [0, 0],
-            [1, 0],
-            [1, 1],
-            [0, 1]
-        ])
-    )
+    p1 = Polygon(coordinates=np.array([[0, 0], [1, 0], [1, 1], [0, 1]]))
     p2 = (
-        p1
-        .translate(1, 1)
+        p1.translate(1, 1)
         .rotate(np.pi / 2, 1, 1)
         .scale(2, 1)
         .rotate(3 * np.pi / 2, 2, 1)
@@ -85,10 +58,7 @@ def test_translate_scale_rotate():
         .translate(-2, -0.5)
     )
 
-    assert np.allclose(
-        p1.coordinates,
-        p2.coordinates
-    )
+    assert np.allclose(p1.coordinates, p2.coordinates)
 
 
 def test_jaccard_similarity():
@@ -98,14 +68,7 @@ def test_jaccard_similarity():
         print("Shapely (optional) not installed; skipping test_jaccard_similarity.")
         return
 
-    p1 = Polygon(
-        coordinates=np.array([
-            [0, 0],
-            [1, 0],
-            [1, 1],
-            [0, 1]
-        ])
-    )
+    p1 = Polygon(coordinates=np.array([[0, 0], [1, 0], [1, 1], [0, 1]]))
     p2 = p1.copy()
 
     assert p1.jaccard_similarity(p2) == pytest.approx(1)
@@ -118,6 +81,6 @@ def test_jaccard_similarity():
     assert p1.jaccard_similarity(p2.rotate(np.pi / 2, 0.5, 0.5)) == pytest.approx(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test_translate_scale_rotate()
     pytest.main()

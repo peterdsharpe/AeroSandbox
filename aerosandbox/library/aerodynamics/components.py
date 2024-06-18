@@ -3,10 +3,10 @@ from typing import Union
 
 
 def CDA_control_linkage(
-        Re_l: Union[float, np.ndarray],
-        linkage_length: Union[float, np.ndarray],
-        is_covered: Union[bool, np.ndarray] = False,
-        is_top: Union[bool, np.ndarray] = False,
+    Re_l: Union[float, np.ndarray],
+    linkage_length: Union[float, np.ndarray],
+    is_covered: Union[bool, np.ndarray] = False,
+    is_top: Union[bool, np.ndarray] = False,
 ) -> Union[float, np.ndarray]:
     """
     Computes the drag area (CDA) of a typical control usage as used on a well-manufactured RC airplane.
@@ -40,18 +40,15 @@ def CDA_control_linkage(
 
     """
     x = dict(
-        Re_l=Re_l,
-        linkage_length=linkage_length,
-        is_covered=is_covered,
-        is_top=is_top
+        Re_l=Re_l, linkage_length=linkage_length, is_covered=is_covered, is_top=is_top
     )
 
     p = {
-        'CD0'               : 7.833083680086374e-05,
-        'CD1'               : 0.0001216877860785463,
-        'c_length'          : 30.572471745477774,
-        'covered_drag_ratio': 0.7520722978405192,
-        'top_drag_ratio'    : 1.1139040832208857
+        "CD0": 7.833083680086374e-05,
+        "CD1": 0.0001216877860785463,
+        "c_length": 30.572471745477774,
+        "covered_drag_ratio": 0.7520722978405192,
+        "top_drag_ratio": 1.1139040832208857,
     }
 
     Re = x["Re_l"]
@@ -59,34 +56,28 @@ def CDA_control_linkage(
     is_covered = x["is_covered"]
     is_top = x["is_top"]
 
-    side_drag_multiplier = np.where(
-        is_top,
-        p["top_drag_ratio"],
-        1
-    )
-    covered_drag_multiplier = np.where(
-        is_covered,
-        p["covered_drag_ratio"],
-        1
-    )
+    side_drag_multiplier = np.where(is_top, p["top_drag_ratio"], 1)
+    covered_drag_multiplier = np.where(is_covered, p["covered_drag_ratio"], 1)
     linkage_length_multiplier = 1 + p["c_length"] * linkage_length
 
-    CDA_raw = (
-            p["CD1"] / (Re / 1e5) +
-            p["CD0"]
-    )
+    CDA_raw = p["CD1"] / (Re / 1e5) + p["CD0"]
 
-    return side_drag_multiplier * covered_drag_multiplier * linkage_length_multiplier * CDA_raw
+    return (
+        side_drag_multiplier
+        * covered_drag_multiplier
+        * linkage_length_multiplier
+        * CDA_raw
+    )
 
 
 def CDA_control_surface_gaps(
-        local_chord: float,
-        control_surface_span: float,
-        local_thickness_over_chord: float = 0.12,
-        control_surface_hinge_x: float = 0.75,
-        n_side_gaps: int = 2,
-        side_gap_width: float = None,
-        hinge_gap_width: float = None,
+    local_chord: float,
+    control_surface_span: float,
+    local_thickness_over_chord: float = 0.12,
+    control_surface_hinge_x: float = 0.75,
+    n_side_gaps: int = 2,
+    side_gap_width: float = None,
+    hinge_gap_width: float = None,
 ) -> float:
     """
     Computes the drag area (CDA) of the gaps associated with a typical wing control surface.
@@ -138,11 +129,7 @@ def CDA_control_surface_gaps(
     """
     if side_gap_width is None:
         side_gap_width = np.maximum(
-            np.maximum(
-                0.002,
-                0.006 * local_chord
-            ),
-            control_surface_span * 0.01
+            np.maximum(0.002, 0.006 * local_chord), control_surface_span * 0.01
         )
     if hinge_gap_width is None:
         hinge_gap_width = 0.03 * local_chord
@@ -153,7 +140,9 @@ def CDA_control_surface_gaps(
     tested on 2412 airfoil at C_L = 0.1 and Re_c = 2 * 10^6"
     """
 
-    CDA_side_gaps = n_side_gaps * (side_gap_width * local_chord * local_thickness_over_chord) * 0.50
+    CDA_side_gaps = (
+        n_side_gaps * (side_gap_width * local_chord * local_thickness_over_chord) * 0.50
+    )
 
     ### Spanwise gaps (at hinge line of control surface)
     """
@@ -166,10 +155,7 @@ def CDA_control_surface_gaps(
     return CDA_side_gaps + CDA_hinge_gap
 
 
-def CDA_protruding_bolt_or_rivet(
-        diameter: float,
-        kind: str = "flush_rivet"
-):
+def CDA_protruding_bolt_or_rivet(diameter: float, kind: str = "flush_rivet"):
     """
     Computes the drag area (CDA) of a protruding bolt or rivet.
 
@@ -197,15 +183,15 @@ def CDA_protruding_bolt_or_rivet(
 
     Returns: The drag area [m^2] of the bolt or rivet.
     """
-    S_ref = np.pi * diameter ** 2 / 4
+    S_ref = np.pi * diameter**2 / 4
 
     CD_factors = {
-        "flush_rivet"     : 0.002,
-        "round_rivet"     : 0.04,
-        "flat_head_bolt"  : 0.02,
-        "round_head_bolt" : 0.32,
+        "flush_rivet": 0.002,
+        "round_rivet": 0.04,
+        "flat_head_bolt": 0.02,
+        "round_head_bolt": 0.32,
         "cylindrical_bolt": 0.42,
-        "hex_bolt"        : 0.80,
+        "hex_bolt": 0.80,
     }
 
     try:
@@ -217,9 +203,9 @@ def CDA_protruding_bolt_or_rivet(
 
 
 def CDA_perpendicular_sheet_metal_joint(
-        joint_width: float,
-        sheet_metal_thickness: float,
-        kind: str = "butt_joint_with_inside_joiner"
+    joint_width: float,
+    sheet_metal_thickness: float,
+    kind: str = "butt_joint_with_inside_joiner",
 ):
     """
     Computes the drag area (CDA) of a sheet metal joint that is perpendicular to the flow.
@@ -270,18 +256,18 @@ def CDA_perpendicular_sheet_metal_joint(
     S_ref = joint_width * sheet_metal_thickness
 
     CD_factors = {
-        "butt_joint_with_inside_joiner"                    : 0.01,
-        "butt_joint_with_inside_weld"                      : 0.01,
-        "butt_joint_with_outside_joiner"                   : 0.70,
-        "butt_joint_with_outside_weld"                     : 0.51,
-        "lap_joint_forward_facing_step"                    : 0.40,
-        "lap_joint_backward_facing_step"                   : 0.22,
-        "lap_joint_forward_facing_step_with_bevel"         : 0.11,
-        "lap_joint_backward_facing_step_with_bevel"        : 0.24,
-        "lap joint_forward_facing_step_with_rounded_bevel" : 0.04,
+        "butt_joint_with_inside_joiner": 0.01,
+        "butt_joint_with_inside_weld": 0.01,
+        "butt_joint_with_outside_joiner": 0.70,
+        "butt_joint_with_outside_weld": 0.51,
+        "lap_joint_forward_facing_step": 0.40,
+        "lap_joint_backward_facing_step": 0.22,
+        "lap_joint_forward_facing_step_with_bevel": 0.11,
+        "lap_joint_backward_facing_step_with_bevel": 0.24,
+        "lap joint_forward_facing_step_with_rounded_bevel": 0.04,
         "lap_joint_backward_facing_step_with_rounded_bevel": 0.16,
-        "flush_lap_joint_forward_facing_step"              : 0.13,
-        "flush_lap_joint_backward_facing_step"             : 0.07,
+        "flush_lap_joint_forward_facing_step": 0.13,
+        "flush_lap_joint_backward_facing_step": 0.07,
     }
 
     try:

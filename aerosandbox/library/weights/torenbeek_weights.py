@@ -7,15 +7,16 @@ from typing import Dict, Union
 # From Torenbeek: "Synthesis of Subsonic Airplane Design", 1976, Delft University Press
 # Chapter 8: "Airplane Weight and Balance"
 
+
 def mass_wing_simple(
-        wing: asb.Wing,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        suspended_mass: float,
-        main_gear_mounted_to_wing: bool = True,
+    wing: asb.Wing,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    suspended_mass: float,
+    main_gear_mounted_to_wing: bool = True,
 ) -> float:
     """
-    Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic 
+    Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic
     Airplane Design".
 
     This is the simple version of the wing weight model, which is found in:
@@ -41,32 +42,28 @@ def mass_wing_simple(
 
     """
 
-    k_w = np.blend(
-        (design_mass_TOGW - 5670) / 2000,
-        6.67e-3,
-        4.90e-3
-    )
+    k_w = np.blend((design_mass_TOGW - 5670) / 2000, 6.67e-3, 4.90e-3)
 
     span = wing.span() / np.cosd(wing.mean_sweep_angle(x_nondim=0.5))
 
     wing_root_thickness = wing.xsecs[0].airfoil.max_thickness() * wing.xsecs[0].chord
 
     return suspended_mass * (
-            k_w *
-            span ** 0.75 *
-            (1 + (1.905 / span) ** 0.5) *
-            ultimate_load_factor ** 0.55 *
-            ((span / wing_root_thickness) / (suspended_mass / wing.area())) ** 0.30 *
-            (1 if main_gear_mounted_to_wing else 0.95)
+        k_w
+        * span**0.75
+        * (1 + (1.905 / span) ** 0.5)
+        * ultimate_load_factor**0.55
+        * ((span / wing_root_thickness) / (suspended_mass / wing.area())) ** 0.30
+        * (1 if main_gear_mounted_to_wing else 0.95)
     )
 
 
 def mass_wing_high_lift_devices(
-        wing: asb.Wing,
-        max_airspeed_for_flaps: float,
-        flap_deflection_angle: float = 30,
-        k_f1: float = 1.0,
-        k_f2: float = 1.0
+    wing: asb.Wing,
+    max_airspeed_for_flaps: float,
+    flap_deflection_angle: float = 30,
+    k_f1: float = 1.0,
+    k_f2: float = 1.0,
 ) -> float:
     """
     The function mass_high_lift() is designed to estimate the weight of the high-lift devices
@@ -114,14 +111,16 @@ def mass_wing_high_lift_devices(
     k_f = k_f1 * k_f2
 
     mass_trailing_edge_flaps = S_flaps * (
-            2.706 * k_f *
-            (S_flaps * span_structural) ** (3 / 16) *
-            (
-                    (max_airspeed_for_flaps / 100) ** 2 *
-                    np.sind(flap_deflection_angle) *
-                    np.cosd(wing.mean_sweep_angle(x_nondim=1)) /
-                    root_t_over_c
-            ) ** (3 / 4)
+        2.706
+        * k_f
+        * (S_flaps * span_structural) ** (3 / 16)
+        * (
+            (max_airspeed_for_flaps / 100) ** 2
+            * np.sind(flap_deflection_angle)
+            * np.cosd(wing.mean_sweep_angle(x_nondim=1))
+            / root_t_over_c
+        )
+        ** (3 / 4)
     )
 
     mass_leading_edge_devices = 0
@@ -132,18 +131,18 @@ def mass_wing_high_lift_devices(
 
 
 def mass_wing_basic_structure(
-        wing: asb.Wing,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        suspended_mass: float,
-        never_exceed_airspeed: float,
-        main_gear_mounted_to_wing: bool = True,
-        strut_y_location: float = None,
-        k_e: float = 0.95,
-        return_dict: bool = False,
+    wing: asb.Wing,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    suspended_mass: float,
+    never_exceed_airspeed: float,
+    main_gear_mounted_to_wing: bool = True,
+    strut_y_location: float = None,
+    k_e: float = 0.95,
+    return_dict: bool = False,
 ) -> Union[float, Dict[str, float]]:
     """
-    Computes the mass of the basic structure of the wing of an aircraft, according to 
+    Computes the mass of the basic structure of the wing of an aircraft, according to
         Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction
         of Wing Structural Weight". This is the basic wing structure without movables like spoilers,
         high-lift devices, etc.
@@ -158,7 +157,7 @@ def mass_wing_basic_structure(
 
         ultimate_load_factor: The ultimate load factor of the aircraft [-]. 1.5x the limit load factor.
 
-        suspended_mass: The mass of the aircraft that is suspended from the wing [kg]. It should exclude 
+        suspended_mass: The mass of the aircraft that is suspended from the wing [kg]. It should exclude
             any wing attachments that are not part of the wing structure.
 
         never_exceed_airspeed: The never-exceed airspeed of the aircraft [m/s]. Used for flutter calculations.
@@ -171,7 +170,7 @@ def mass_wing_basic_structure(
         k_e: represents weight knockdowns due to bending moment relief from engines mounted in front of elastic axis.
             see Torenbeek unlabeled equations, between C-3 and C-4.
                 k_e = 1.0 if engines are not wing mounted,
-                k_e = 0.95 (default) two wing mounted engines in front of the elastic axis and 
+                k_e = 0.95 (default) two wing mounted engines in front of the elastic axis and
                 k_e = 0.90 four wing-mounted engines in front of the elastic axis
 
         return_dict: Whether to return a dictionary of all the intermediate values, or just the final mass. Defaults
@@ -209,14 +208,11 @@ def mass_wing_basic_structure(
     # Torenbeek Eq. C-4
     # `k_st` represents weight excrescence due to structural stiffness against flutter.
     k_st = (
-            1 +
-            9.06e-4 * (
-                    (span * np.cosd(wing.mean_sweep_angle(x_nondim=0))) ** 3 /
-                    design_mass_TOGW
-            ) * (
-                    never_exceed_airspeed / 100 / root_t_over_c
-            ) ** 2 *
-            cos_sweep_half_chord
+        1
+        + 9.06e-4
+        * ((span * np.cosd(wing.mean_sweep_angle(x_nondim=0))) ** 3 / design_mass_TOGW)
+        * (never_exceed_airspeed / 100 / root_t_over_c) ** 2
+        * cos_sweep_half_chord
     )
 
     # Torenbeek Eq. C-5
@@ -228,18 +224,17 @@ def mass_wing_basic_structure(
 
     ### Use all the above to compute the basic wing structural mass
     mass_wing_basic = (
-            4.58e-3 *
-            k_no *
-            k_lambda *
-            k_e *
-            k_uc *
-            k_st *
-            (
-                    k_b * ultimate_load_factor * (0.8 * suspended_mass + 0.2 * design_mass_TOGW)
-            ) ** 0.55 *
-            span ** 1.675 *
-            root_t_over_c ** -0.45 *
-            cos_sweep_half_chord ** -1.325
+        4.58e-3
+        * k_no
+        * k_lambda
+        * k_e
+        * k_uc
+        * k_st
+        * (k_b * ultimate_load_factor * (0.8 * suspended_mass + 0.2 * design_mass_TOGW))
+        ** 0.55
+        * span**1.675
+        * root_t_over_c**-0.45
+        * cos_sweep_half_chord**-1.325
     )
 
     if return_dict:
@@ -248,10 +243,7 @@ def mass_wing_basic_structure(
         return mass_wing_basic
 
 
-def mass_wing_spoilers_and_speedbrakes(
-        wing: asb.Wing,
-        mass_basic_wing: float
-) -> float:
+def mass_wing_spoilers_and_speedbrakes(wing: asb.Wing, mass_basic_wing: float) -> float:
     """
     The function mass_spoilers_and_speedbrakes() estimates the weight of the spoilers and speedbrakes
         according to Torenbeek's "Synthesis of Subsonic Airplane Design", 1976, Appendix C: "Prediction
@@ -282,16 +274,16 @@ def mass_wing_spoilers_and_speedbrakes(
 
 
 def mass_wing(
-        wing: asb.Wing,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        suspended_mass: float,
-        never_exceed_airspeed: float,
-        max_airspeed_for_flaps: float,
-        main_gear_mounted_to_wing: bool = True,
-        flap_deflection_angle: float = 30,
-        strut_y_location: float = None,
-        return_dict: bool = False,
+    wing: asb.Wing,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    suspended_mass: float,
+    never_exceed_airspeed: float,
+    max_airspeed_for_flaps: float,
+    main_gear_mounted_to_wing: bool = True,
+    flap_deflection_angle: float = 30,
+    strut_y_location: float = None,
+    return_dict: bool = False,
 ) -> Union[float, Dict[str, float]]:
     """
     Computes the mass of a wing of an aircraft, according to Torenbeek's "Synthesis of Subsonic Airplane Design",
@@ -347,13 +339,11 @@ def mass_wing(
     )
     # spoilers and speedbrake mass estimation
     mass_spoilers_speedbrakes = mass_wing_spoilers_and_speedbrakes(
-        wing=wing,
-        mass_basic_wing=mass_basic_wing
+        wing=wing, mass_basic_wing=mass_basic_wing
     )
 
-    mass_wing_total = (
-            mass_basic_wing +
-            1.2 * (mass_high_lift_devices + mass_spoilers_speedbrakes)
+    mass_wing_total = mass_basic_wing + 1.2 * (
+        mass_high_lift_devices + mass_spoilers_speedbrakes
     )
 
     if return_dict:
@@ -372,10 +362,11 @@ def mass_wing(
 #
 #     k_wt = 0.64
 
+
 def mass_fuselage_simple(
-        fuselage: asb.Fuselage,
-        never_exceed_airspeed: float,
-        wing_to_tail_distance: float,
+    fuselage: asb.Fuselage,
+    never_exceed_airspeed: float,
+    wing_to_tail_distance: float,
 ):
     """
     Computes the mass of the fuselage, using Torenbeek's simple version of the calculation.
@@ -398,43 +389,28 @@ def mass_fuselage_simple(
     Returns: The mass of the fuselage, in kg.
 
     """
-    widths = [
-        xsec.width
-        for xsec in fuselage.xsecs
-    ]
+    widths = [xsec.width for xsec in fuselage.xsecs]
 
-    max_width = np.softmax(
-        *widths,
-        softness=np.mean(np.array(widths)) * 0.01
-    )
+    max_width = np.softmax(*widths, softness=np.mean(np.array(widths)) * 0.01)
 
-    heights = [
-        xsec.height
-        for xsec in fuselage.xsecs
-    ]
+    heights = [xsec.height for xsec in fuselage.xsecs]
 
-    max_height = np.softmax(
-        *heights,
-        softness=np.mean(np.array(heights)) * 0.01
-    )
+    max_height = np.softmax(*heights, softness=np.mean(np.array(heights)) * 0.01)
 
     return (
-            0.23 *
-            (
-                    never_exceed_airspeed *
-                    wing_to_tail_distance /
-                    (max_width + max_height)
-            ) ** 0.5 *
-            fuselage.area_wetted() ** 1.2
+        0.23
+        * (never_exceed_airspeed * wing_to_tail_distance / (max_width + max_height))
+        ** 0.5
+        * fuselage.area_wetted() ** 1.2
     )
 
 
 def mass_fuselage(
-        fuselage: asb.Fuselage,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        never_exceed_airspeed: float,
-        wing_to_tail_distance: float,
+    fuselage: asb.Fuselage,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    never_exceed_airspeed: float,
+    wing_to_tail_distance: float,
 ):
     # TODO Torenbeek Appendix D (PDF page 477)
 
@@ -444,21 +420,21 @@ def mass_fuselage(
     # Torenbeek Eq. D-3
     fuselage.fineness_ratio()
 
-    fuselage_quasi_slenderness_ratio = fuselage.fineness_ratio(assumed_shape="sears_haack")
-
-    k_lambda = np.softmin(
-        0.56 * fuselage.fineness_ratio(assumed_shape="sears_haack")
+    fuselage_quasi_slenderness_ratio = fuselage.fineness_ratio(
+        assumed_shape="sears_haack"
     )
 
-    W_sk = 0.05428 * k_lambda * S_g ** 1.07 * never_exceed_airspeed ** 0.743
+    k_lambda = np.softmin(0.56 * fuselage.fineness_ratio(assumed_shape="sears_haack"))
+
+    W_sk = 0.05428 * k_lambda * S_g**1.07 * never_exceed_airspeed**0.743
 
     W_g = W_sk + W_str + W_fr
 
 
 def mass_propeller(
-        propeller_diameter: float,
-        propeller_power: float,
-        n_blades: int,
+    propeller_diameter: float,
+    propeller_power: float,
+    n_blades: int,
 ) -> float:
     """
     Computes the mass of a propeller.
@@ -478,10 +454,7 @@ def mass_propeller(
 
     """
     return (
-            0.108 *
-            n_blades *
-            (
-                    (propeller_diameter / u.foot) *
-                    (propeller_power / u.horsepower)
-            ) ** 0.78174
+        0.108
+        * n_blades
+        * ((propeller_diameter / u.foot) * (propeller_power / u.horsepower)) ** 0.78174
     ) * u.lbm

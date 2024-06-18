@@ -37,9 +37,9 @@ class SurrogateModel(AeroSandboxObject):
         pass
 
     @abstractmethod  # If you subclass SurrogateModel, you must overwrite __call__ so that it's a callable.
-    def __call__(self,
-                 x: Union[int, float, np.ndarray, Dict[str, np.ndarray]]
-                 ) -> Union[float, np.ndarray]:
+    def __call__(
+        self, x: Union[int, float, np.ndarray, Dict[str, np.ndarray]]
+    ) -> Union[float, np.ndarray]:
         """
         Evaluates the surrogate model at some given input x.
 
@@ -55,7 +55,8 @@ class SurrogateModel(AeroSandboxObject):
 
             if x_data_is_dict and not input_is_dict:
                 raise TypeError(
-                    f"The input to this model should be a dict with: keys {self.input_names()}, values as float or array.")
+                    f"The input to this model should be a dict with: keys {self.input_names()}, values as float or array."
+                )
 
             if input_is_dict and not x_data_is_dict:
                 raise TypeError("The input to this model should be a float or array.")
@@ -65,14 +66,18 @@ class SurrogateModel(AeroSandboxObject):
     def __repr__(self) -> str:
         input_names = self.input_names()
         if input_names is not None:
-            input_description = f"a dict with: keys {input_names}, values as float or array"
+            input_description = (
+                f"a dict with: keys {input_names}, values as float or array"
+            )
         else:
             input_description = f"a float or array"
-        return "\n".join([
-            f"SurrogateModel(x) [R^{self.input_dimensionality()} -> R^1]",
-            f"\tInput: {input_description}",
-            f"\tOutput: float or array",
-        ])
+        return "\n".join(
+            [
+                f"SurrogateModel(x) [R^{self.input_dimensionality()} -> R^1]",
+                f"\tInput: {input_description}",
+                f"\tOutput: float or array",
+            ]
+        )
 
     def input_dimensionality(self) -> int:
         """

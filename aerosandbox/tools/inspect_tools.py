@@ -6,7 +6,7 @@ import numpy as np
 
 
 def get_caller_source_location(
-        stacklevel: int = 1,
+    stacklevel: int = 1,
 ) -> (Path, int, str):
     """
     Gets the file location where this function itself (`get_caller_source_location()`) is called.
@@ -67,10 +67,10 @@ def get_caller_source_location(
 
 
 def get_source_code_from_location(
-        filename: Union[Path, str],
-        lineno: int,
-        code_context: str = None,
-        strip_lines: bool = False
+    filename: Union[Path, str],
+    lineno: int,
+    code_context: str = None,
+    strip_lines: bool = False,
 ) -> str:
     """
     Gets the source code of the single statement that begins at the file location specified.
@@ -119,7 +119,9 @@ def get_source_code_from_location(
     ### Read the source lines of code surrounding the call
     try:
         with open(filename, "r") as f:  # Read the file containing the call
-            for _ in range(lineno - 1):  # Skip the first N lines of code, until you get to the call
+            for _ in range(
+                lineno - 1
+            ):  # Skip the first N lines of code, until you get to the call
                 f.readline()  # Unfortunately there's no way around this, since you need to find the "\n" encodings in the file
 
             parenthesis_level = 0  # Track the number of "(" and ")" characters, so you know when the function call is complete
@@ -149,10 +151,12 @@ def get_source_code_from_location(
                 add_line()
     except OSError as e:
         raise FileNotFoundError(
-            "\n".join([
-                "Couldn't retrieve source code at this stack level, because the source code file couldn't be opened for some reason.",
-                "One common possible reason is that you're referring to an IPython console with a multi-line statement."
-            ])
+            "\n".join(
+                [
+                    "Couldn't retrieve source code at this stack level, because the source code file couldn't be opened for some reason.",
+                    "One common possible reason is that you're referring to an IPython console with a multi-line statement.",
+                ]
+            )
         )
 
     source = "".join(source_lines)
@@ -160,10 +164,7 @@ def get_source_code_from_location(
     return source
 
 
-def get_caller_source_code(
-        stacklevel: int = 1,
-        strip_lines: bool = False
-) -> str:
+def get_caller_source_code(stacklevel: int = 1, strip_lines: bool = False) -> str:
     """
     Gets the source code of wherever this function is called.
 
@@ -190,7 +191,7 @@ def get_caller_source_code(
         filename=filename,
         lineno=lineno,
         code_context=code_context,
-        strip_lines=strip_lines
+        strip_lines=strip_lines,
     )
 
 
@@ -270,7 +271,9 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
     while parenthesis_level != 0:
         i += 1
         if i >= len(source_code_rhs):
-            raise ValueError("Couldn't match all parentheses, so this doesn't look like valid code!")
+            raise ValueError(
+                "Couldn't match all parentheses, so this doesn't look like valid code!"
+            )
         char = source_code_rhs[i]
 
         if char == "(":
@@ -296,18 +299,16 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
     def clean(s: str) -> str:
         return s.strip()
 
-    arg_names = [
-        clean(arg) for arg in arg_names
-    ]
+    arg_names = [clean(arg) for arg in arg_names]
 
     return arg_names
 
 
 def codegen(
-        x: Any,
-        indent_str: str = "    ",
-        _required_imports: Optional[Set[str]] = None,
-        _recursion_depth: int = 0,
+    x: Any,
+    indent_str: str = "    ",
+    _required_imports: Optional[Set[str]] = None,
+    _recursion_depth: int = 0,
 ) -> Tuple[str, Set[str]]:
     """
     Attempts to generate a string of Python code that, when evaluated, would produce the same value as the input.
@@ -352,8 +353,8 @@ def codegen(
 
         >>> codegen(dict(my_int=4, my_array=np.array([1, 2, 3])))
         ('{
-        	'my_int': 4,
-        	'my_array': np.array([1, 2, 3]),
+                'my_int': 4,
+                'my_array': np.array([1, 2, 3]),
         }', {'import numpy as np'})
 
     """
@@ -362,21 +363,29 @@ def codegen(
         _required_imports = set()
 
     import_aliases = {
-        "aerosandbox"      : "asb",
+        "aerosandbox": "asb",
         "aerosandbox.numpy": "np",
-        "numpy"            : "np",
+        "numpy": "np",
     }
 
     indent = indent_str * _recursion_depth
     next_indent = indent_str * (_recursion_depth + 1)
 
-    if isinstance(x, (
-            bool, str,
-            int, float, complex,
+    if isinstance(
+        x,
+        (
+            bool,
+            str,
+            int,
+            float,
+            complex,
             range,
             type(None),
-            bytes, bytearray, memoryview
-    )):
+            bytes,
+            bytearray,
+            memoryview,
+        ),
+    ):
         code = repr(x)
 
     elif isinstance(x, list):
@@ -386,7 +395,9 @@ def codegen(
             lines = []
             lines.append("[")
             for xi in x:
-                item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
+                item_code, item_required_imports = codegen(
+                    xi, _recursion_depth=_recursion_depth + 1
+                )
 
                 _required_imports.update(item_required_imports)
 
@@ -401,7 +412,9 @@ def codegen(
             lines = []
             lines.append("(")
             for xi in x:
-                item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
+                item_code, item_required_imports = codegen(
+                    xi, _recursion_depth=_recursion_depth + 1
+                )
 
                 _required_imports.update(item_required_imports)
 
@@ -416,7 +429,9 @@ def codegen(
             lines = []
             lines.append("{")
             for xi in x:
-                item_code, item_required_imports = codegen(xi, _recursion_depth=_recursion_depth + 1)
+                item_code, item_required_imports = codegen(
+                    xi, _recursion_depth=_recursion_depth + 1
+                )
 
                 _required_imports.update(item_required_imports)
 
@@ -431,8 +446,12 @@ def codegen(
             lines = []
             lines.append("{")
             for k, v in x.items():
-                k_code, k_required_imports = codegen(k, _recursion_depth=_recursion_depth + 1)
-                v_code, v_required_imports = codegen(v, _recursion_depth=_recursion_depth + 1)
+                k_code, k_required_imports = codegen(
+                    k, _recursion_depth=_recursion_depth + 1
+                )
+                v_code, v_required_imports = codegen(
+                    v, _recursion_depth=_recursion_depth + 1
+                )
 
                 _required_imports.update(k_required_imports)
                 _required_imports.update(v_required_imports)
@@ -455,9 +474,7 @@ def codegen(
         # elif package_name in import_aliases:
         #     pre_string = import_aliases[package_name] + "."
         else:
-            _required_imports.add(
-                f"from {module_name} import {x.__class__.__name__}"
-            )
+            _required_imports.add(f"from {module_name} import {x.__class__.__name__}")
 
         lines = []
         lines.append(x.__class__.__name__ + "(")
@@ -468,7 +485,9 @@ def codegen(
                 if inspect.ismethod(arg_value) or inspect.isfunction(arg_value):
                     continue
 
-                arg_code, arg_required_imports = codegen(arg_value, _recursion_depth=_recursion_depth + 1)
+                arg_code, arg_required_imports = codegen(
+                    arg_value, _recursion_depth=_recursion_depth + 1
+                )
 
                 _required_imports.update(arg_required_imports)
 
@@ -489,11 +508,11 @@ def codegen(
     #     return code, _required_imports
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     def dashes():
         """A quick macro for drawing some dashes, to make the terminal output clearer to distinguish."""
         print("\n" + "-" * 50 + "\n")
-
 
     dashes()
 
@@ -505,14 +524,8 @@ if __name__ == '__main__':
 
     dashes()
 
-
     def my_func():
-        print(
-            get_caller_source_code(
-                stacklevel=2
-            )
-        )
-
+        print(get_caller_source_code(stacklevel=2))
 
     print("Caller source code of a function call:")
 
@@ -522,9 +535,7 @@ if __name__ == '__main__':
 
     print("Arguments of f(a, b):")
 
-    print(
-        get_function_argument_names_from_source_code("f(a, b)")
-    )
+    print(get_function_argument_names_from_source_code("f(a, b)"))
 
     location = get_caller_source_location()
 
@@ -532,12 +543,10 @@ if __name__ == '__main__':
 
     print("Codegen test:")
 
-
     def pc(x):
         code, imports = codegen(x)
         print("\n".join(sorted(imports)))
         print(code + "\n" + "-" * 50)
-
 
     pc(1)
     pc([1, 2, 3])

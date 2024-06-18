@@ -15,19 +15,13 @@ def test_single_dimensional_polynomial_fitting():
     ### Make some data
     x = np.linspace(0, 10, 50)
     noise = 5 * np.random.randn(len(x))
-    y = x ** 2 - 8 * x + 5 + noise
+    y = x**2 - 8 * x + 5 + noise
 
     ### Fit data
     def model(x, p):
-        return (
-                p["a"] * x["x1"] ** 2 +
-                p["b"] * x["x1"] +
-                p["c"]
-        )
+        return p["a"] * x["x1"] ** 2 + p["b"] * x["x1"] + p["c"]
 
-    x_data = {
-        "x1": x
-    }
+    x_data = {"x1": x}
 
     fitted_model = FittedModel(
         model=model,
@@ -72,15 +66,11 @@ def test_multidimensional_power_law_fitting():
     y = np.logspace(0, 3)
     X, Y = np.meshgrid(x, y, indexing="ij")
     noise = np.random.lognormal(mean=0, sigma=0.05)
-    Z = 0.5 * X ** 0.75 * Y ** 1.25 * noise
+    Z = 0.5 * X**0.75 * Y**1.25 * noise
 
     ### Fit data
     def model(x, p):
-        return (
-                p["multiplier"] *
-                x["X"] ** p["X_power"] *
-                x["Y"] ** p["Y_power"]
-        )
+        return p["multiplier"] * x["X"] ** p["X_power"] * x["Y"] ** p["Y_power"]
 
     x_data = {
         "X": X.flatten(),
@@ -93,15 +83,15 @@ def test_multidimensional_power_law_fitting():
         y_data=Z.flatten(),
         parameter_guesses={
             "multiplier": 1,
-            "X_power"   : 1,
-            "Y_power"   : 1,
+            "X_power": 1,
+            "Y_power": 1,
         },
         parameter_bounds={
             "multiplier": (None, None),
-            "X_power"   : (None, None),
-            "Y_power"   : (None, None),
+            "X_power": (None, None),
+            "Y_power": (None, None),
         },
-        put_residuals_in_logspace=True
+        put_residuals_in_logspace=True,
         # Putting residuals in logspace minimizes the norm of log-error instead of absolute error
     )
 
@@ -203,18 +193,14 @@ def test_type_errors():
     fitted_model(5)
 
     with pytest.raises(TypeError):
-        fitted_model({
-            "temperature": 5
-        })
+        fitted_model({"temperature": 5})
 
     def model(x, p):
         return p["m"] * x["hour"] + p["b"]
 
     fitted_model = FittedModel(
         model=model,
-        x_data={
-            "hour": hour
-        },
+        x_data={"hour": hour},
         y_data=y_data,
         parameter_guesses={
             "m": 0,
@@ -223,13 +209,11 @@ def test_type_errors():
         residual_norm_type="Linf",
     )
 
-    fitted_model({
-        "hour": 5
-    })
+    fitted_model({"hour": 5})
 
     with pytest.raises(TypeError):
         fitted_model(5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

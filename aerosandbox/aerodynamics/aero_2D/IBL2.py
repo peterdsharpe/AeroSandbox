@@ -18,12 +18,13 @@ class IBL2(ImplicitAnalysis):
     """
 
     @ImplicitAnalysis.initialize
-    def __init__(self,
-                 streamwise_coordinate: np.ndarray,
-                 edge_velocity: np.ndarray,
-                 viscosity: float,
-                 theta_0: float,
-                 H_0: float = 2.6,
-                 opti: Opti = None,
-                 ):
+    def __init__(
+        self,
+        streamwise_coordinate: np.ndarray,
+        edge_velocity: np.ndarray,
+        viscosity: float,
+        theta_0: float,
+        H_0: float = 2.6,
+        opti: Opti = None,
+    ):
         pass

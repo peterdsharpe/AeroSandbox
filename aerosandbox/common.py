@@ -38,11 +38,14 @@ class AeroSandboxObject(ABC):
         if self is other:  # If they point to the same object in memory, they're equal
             return True
 
-        if type(self) != type(other):  # If they are of different types, they cannot be equal
+        if type(self) != type(
+            other
+        ):  # If they are of different types, they cannot be equal
             return False
 
         if set(self.__dict__.keys()) != set(
-                other.__dict__.keys()):  # If they have differing dict keys, don't bother checking values
+            other.__dict__.keys()
+        ):  # If they have differing dict keys, don't bother checking values
             return False
 
         for key in self.__dict__.keys():  # Check equality of all values
@@ -53,11 +56,12 @@ class AeroSandboxObject(ABC):
 
         return True
 
-    def save(self,
-             filename: Union[str, Path] = None,
-             verbose: bool = True,
-             automatically_add_extension: bool = True,
-             ) -> None:
+    def save(
+        self,
+        filename: Union[str, Path] = None,
+        verbose: bool = True,
+        automatically_add_extension: bool = True,
+    ) -> None:
         """
         Saves the object to a binary file, using the `dill` library.
 
@@ -95,12 +99,14 @@ class AeroSandboxObject(ABC):
         import aerosandbox as asb
 
         self._asb_metadata = {
-            "python_version": ".".join([
-                str(sys.version_info.major),
-                str(sys.version_info.minor),
-                str(sys.version_info.micro),
-            ]),
-            "asb_version"   : asb.__version__
+            "python_version": ".".join(
+                [
+                    str(sys.version_info.major),
+                    str(sys.version_info.minor),
+                    str(sys.version_info.micro),
+                ]
+            ),
+            "asb_version": asb.__version__,
         }
         with open(filename, "wb") as f:
             dill.dump(
@@ -120,10 +126,11 @@ class AeroSandboxObject(ABC):
         """
         return copy.deepcopy(self)
 
-    def substitute_solution(self,
-                            sol: cas.OptiSol,
-                            inplace: bool = None,
-                            ):
+    def substitute_solution(
+        self,
+        sol: cas.OptiSol,
+        inplace: bool = None,
+    ):
         """
         Substitutes a solution from CasADi's solver recursively as an in-place operation.
 
@@ -132,10 +139,11 @@ class AeroSandboxObject(ABC):
         :return:
         """
         import warnings
+
         warnings.warn(
             "This function is deprecated and will break at some future point.\n"
             "Use `sol(x)`, which now works recursively on complex data structures.",
-            DeprecationWarning
+            DeprecationWarning,
         )
 
         # Set defaults
@@ -167,36 +175,32 @@ class AeroSandboxObject(ABC):
             if issubclass(t, set) or issubclass(t, frozenset):
                 return {convert(i) for i in item}
             if issubclass(t, dict):
-                return {
-                    convert(k): convert(v)
-                    for k, v in item.items()
-                }
+                return {convert(k): convert(v) for k, v in item.items()}
 
             # Skip certain Python types
             for type_to_skip in (
-                    bool, str,
-                    int, float, complex,
-                    range,
-                    type(None),
-                    bytes, bytearray, memoryview
+                bool,
+                str,
+                int,
+                float,
+                complex,
+                range,
+                type(None),
+                bytes,
+                bytearray,
+                memoryview,
             ):
                 if issubclass(t, type_to_skip):
                     return item
 
             # Skip certain CasADi types
-            for type_to_skip in (
-                    cas.Opti,
-                    cas.OptiSol
-            ):
+            for type_to_skip in (cas.Opti, cas.OptiSol):
                 if issubclass(t, type_to_skip):
                     return item
 
             # If it's any other type, try converting its attribute dictionary:
             try:
-                newdict = {
-                    k: convert(v)
-                    for k, v in item.__dict__.items()
-                }
+                newdict = {k: convert(v) for k, v in item.__dict__.items()}
 
                 if inplace:
                     for k, v in newdict.items():
@@ -222,8 +226,12 @@ class AeroSandboxObject(ABC):
 
             # At this point, we're not really sure what type the object is. Raise a warning and return the item, then hope for the best.
             import warnings
-            warnings.warn(f"In solution substitution, could not convert an object of type {t}.\n"
-                          f"Returning it and hoping for the best.", UserWarning)
+
+            warnings.warn(
+                f"In solution substitution, could not convert an object of type {t}.\n"
+                f"Returning it and hoping for the best.",
+                UserWarning,
+            )
 
             return item
 
@@ -235,8 +243,8 @@ class AeroSandboxObject(ABC):
 
 
 def load(
-        filename: Union[str, Path],
-        verbose: bool = True,
+    filename: Union[str, Path],
+    verbose: bool = True,
 ) -> AeroSandboxObject:
     """
     Loads an AeroSandboxObject from a file.
@@ -265,26 +273,30 @@ def load(
     except AttributeError:
         warnings.warn(
             "This object was saved without metadata. This may cause compatibility issues.",
-            stacklevel=2
+            stacklevel=2,
         )
         return obj
 
     # Check if the Python version is different
     try:
         saved_python_version = metadata["python_version"]
-        current_python_version = ".".join([
-            str(sys.version_info.major),
-            str(sys.version_info.minor),
-            str(sys.version_info.micro),
-        ])
+        current_python_version = ".".join(
+            [
+                str(sys.version_info.major),
+                str(sys.version_info.minor),
+                str(sys.version_info.micro),
+            ]
+        )
 
         saved_python_version_split = saved_python_version.split(".")
         current_python_version_split = current_python_version.split(".")
 
-        if any([
-            saved_python_version_split[0] != current_python_version_split[0],
-            saved_python_version_split[1] != current_python_version_split[1],
-        ]):
+        if any(
+            [
+                saved_python_version_split[0] != current_python_version_split[0],
+                saved_python_version_split[1] != current_python_version_split[1],
+            ]
+        ):
             warnings.warn(
                 f"This object was saved with Python {saved_python_version}, but you are currently using Python {current_python_version}.\n"
                 f"This may cause compatibility issues.",
@@ -294,7 +306,7 @@ def load(
     except KeyError:
         warnings.warn(
             "This object was saved without Python version info metadata. This may cause compatibility issues.",
-            stacklevel=2
+            stacklevel=2,
         )
 
     # Check if the AeroSandbox version is different
@@ -313,7 +325,7 @@ def load(
     except KeyError:
         warnings.warn(
             "This object was saved without AeroSandbox version info metadata. This may cause compatibility issues.",
-            stacklevel=2
+            stacklevel=2,
         )
 
     if verbose:
@@ -363,9 +375,10 @@ class ExplicitAnalysis(AeroSandboxObject):
     
     """
 
-    def get_options(self,
-                    geometry_object: AeroSandboxObject,
-                    ) -> Dict[str, Any]:
+    def get_options(
+        self,
+        geometry_object: AeroSandboxObject,
+    ) -> Dict[str, Any]:
         """
         Retrieves the analysis-specific options that correspond to both:
 
@@ -407,13 +420,17 @@ class ExplicitAnalysis(AeroSandboxObject):
 
         ### Determine whether this analysis and the geometry object have options that specifically reference each other or not.
         try:
-            analysis_options_for_this_geometry = self.default_analysis_specific_options[geometry_type]
+            analysis_options_for_this_geometry = self.default_analysis_specific_options[
+                geometry_type
+            ]
             assert hasattr(analysis_options_for_this_geometry, "items")
         except (AttributeError, KeyError, AssertionError):
             analysis_options_for_this_geometry = None
 
         try:
-            geometry_options_for_this_analysis = geometry_object.analysis_specific_options[analysis_type]
+            geometry_options_for_this_analysis = (
+                geometry_object.analysis_specific_options[analysis_type]
+            )
             assert hasattr(geometry_options_for_this_analysis, "items")
         except (AttributeError, KeyError, AssertionError):
             geometry_options_for_this_analysis = None
@@ -428,11 +445,15 @@ class ExplicitAnalysis(AeroSandboxObject):
                     else:
 
                         import warnings
-                        allowable_keys = [f'"{k}"' for k in analysis_options_for_this_geometry.keys()]
+
+                        allowable_keys = [
+                            f'"{k}"' for k in analysis_options_for_this_geometry.keys()
+                        ]
                         warnings.warn(
                             f"\nAn object of type '{geometry_type.__name__}' declared the analysis-specific option '{k}' for use with analysis '{analysis_type.__name__}'.\n"
                             f"This was unexpected! Allowable analysis-specific options for '{geometry_type.__name__}' with '{analysis_type.__name__}' are:\n"
-                            "\t" + "\n\t".join(allowable_keys) + "\n" "Did you make a typo?",
+                            "\t" + "\n\t".join(allowable_keys) + "\n"
+                            "Did you make a typo?",
                             stacklevel=2,
                         )
 
@@ -509,13 +530,14 @@ class ImplicitAnalysis(AeroSandboxObject):
         return init_wrapped
 
     class ImplicitAnalysisInitError(Exception):
-        def __init__(self,
-                     message="""
+        def __init__(
+            self,
+            message="""
     Your ImplicitAnalysis object doesn't have an `opti` property!
     This is almost certainly because you didn't decorate your object's __init__ method with 
     `@ImplicitAnalysis.initialize`, which you should go do.
-                     """
-                     ):
+                     """,
+        ):
             self.message = message
             super().__init__(self.message)
 

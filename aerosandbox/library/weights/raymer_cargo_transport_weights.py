@@ -8,11 +8,12 @@ from typing import Union
 # From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
 # Section 15.3.2: Cargo/Transport Weights
 
+
 def mass_wing(
-        wing: asb.Wing,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        use_advanced_composites: bool = False,
+    wing: asb.Wing,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the wing for a cargo/transport aircraft, according to Raymer's Aircraft Design: A Conceptual
@@ -34,34 +35,31 @@ def mass_wing(
     Returns:
         Wing mass [kg].
     """
-    airfoil_thicknesses = [
-        xsec.airfoil.max_thickness()
-        for xsec in wing.xsecs
-    ]
+    airfoil_thicknesses = [xsec.airfoil.max_thickness() for xsec in wing.xsecs]
 
     airfoil_t_over_c = np.min(airfoil_thicknesses)
 
     return (
-            0.0051 *
-            (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.557 *
-            (wing.area('planform') / u.foot ** 2) ** 0.649 *
-            wing.aspect_ratio() ** 0.5 *
-            airfoil_t_over_c ** -0.4 *
-            (1 + wing.taper_ratio()) ** 0.1 *
-            np.cosd(wing.mean_sweep_angle()) ** -1 *
-            (wing.control_surface_area() / u.foot ** 2) ** 0.1 *
-            (advanced_composites["wing"] if use_advanced_composites else 1)
+        0.0051
+        * (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.557
+        * (wing.area("planform") / u.foot**2) ** 0.649
+        * wing.aspect_ratio() ** 0.5
+        * airfoil_t_over_c**-0.4
+        * (1 + wing.taper_ratio()) ** 0.1
+        * np.cosd(wing.mean_sweep_angle()) ** -1
+        * (wing.control_surface_area() / u.foot**2) ** 0.1
+        * (advanced_composites["wing"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
 def mass_hstab(
-        hstab: asb.Wing,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        wing_to_hstab_distance: float,
-        fuselage_width_at_hstab_intersection: float,
-        aircraft_y_radius_of_gyration: float = None,
-        use_advanced_composites: bool = False,
+    hstab: asb.Wing,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    wing_to_hstab_distance: float,
+    fuselage_width_at_hstab_intersection: float,
+    aircraft_y_radius_of_gyration: float = None,
+    use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the horizontal stabilizer for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -97,37 +95,36 @@ def mass_hstab(
     all_moving = True
     for xsec in hstab.xsecs:
         for control_surface in xsec.control_surfaces:
-            if (
-                    (control_surface.trailing_edge and control_surface.hinge_point > 0) or
-                    (not control_surface.trailing_edge and control_surface.hinge_point < 1)
+            if (control_surface.trailing_edge and control_surface.hinge_point > 0) or (
+                not control_surface.trailing_edge and control_surface.hinge_point < 1
             ):
                 all_moving = False
                 break
 
     return (
-            0.0379 *
-            (1.143 if all_moving else 1) *
-            (1 + fuselage_width_at_hstab_intersection / hstab.span()) ** -0.25 *
-            (design_mass_TOGW / u.lbm) ** 0.639 *
-            ultimate_load_factor ** 0.10 *
-            (area / u.foot ** 2) ** 0.75 *
-            (wing_to_hstab_distance / u.foot) ** -1 *
-            (aircraft_y_radius_of_gyration / u.foot) ** 0.704 *
-            np.cosd(hstab.mean_sweep_angle()) ** -1 *
-            hstab.aspect_ratio() ** 0.166 *
-            (1 + hstab.control_surface_area() / area) ** 0.1 *
-            (advanced_composites["tails"] if use_advanced_composites else 1)
+        0.0379
+        * (1.143 if all_moving else 1)
+        * (1 + fuselage_width_at_hstab_intersection / hstab.span()) ** -0.25
+        * (design_mass_TOGW / u.lbm) ** 0.639
+        * ultimate_load_factor**0.10
+        * (area / u.foot**2) ** 0.75
+        * (wing_to_hstab_distance / u.foot) ** -1
+        * (aircraft_y_radius_of_gyration / u.foot) ** 0.704
+        * np.cosd(hstab.mean_sweep_angle()) ** -1
+        * hstab.aspect_ratio() ** 0.166
+        * (1 + hstab.control_surface_area() / area) ** 0.1
+        * (advanced_composites["tails"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
 def mass_vstab(
-        vstab: asb.Wing,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        wing_to_vstab_distance: float,
-        is_t_tail: bool = False,
-        aircraft_z_radius_of_gyration: float = None,
-        use_advanced_composites: bool = False,
+    vstab: asb.Wing,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    wing_to_vstab_distance: float,
+    is_t_tail: bool = False,
+    aircraft_z_radius_of_gyration: float = None,
+    use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the vertical stabilizer for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -155,10 +152,7 @@ def mass_vstab(
         The mass of the vertical stabilizer [kg].
 
     """
-    airfoil_thicknesses = [
-        xsec.airfoil.max_thickness()
-        for xsec in vstab.xsecs
-    ]
+    airfoil_thicknesses = [xsec.airfoil.max_thickness() for xsec in vstab.xsecs]
 
     airfoil_t_over_c = np.min(airfoil_thicknesses)
 
@@ -166,30 +160,30 @@ def mass_vstab(
         aircraft_z_radius_of_gyration = 1 * wing_to_vstab_distance
 
     return (
-            0.0026 *
-            (1 + (1 if is_t_tail else 0)) ** 0.225 *
-            (design_mass_TOGW / u.lbm) ** 0.556 *
-            ultimate_load_factor ** 0.536 *
-            (wing_to_vstab_distance / u.foot) ** -0.5 *
-            (vstab.area('planform') / u.foot ** 2) ** 0.5 *
-            (aircraft_z_radius_of_gyration / u.foot) ** 0.875 *
-            np.cosd(vstab.mean_sweep_angle()) ** -1 *
-            vstab.aspect_ratio() ** 0.35 *
-            airfoil_t_over_c ** -0.5 *
-            (advanced_composites["tails"] if use_advanced_composites else 1)
+        0.0026
+        * (1 + (1 if is_t_tail else 0)) ** 0.225
+        * (design_mass_TOGW / u.lbm) ** 0.556
+        * ultimate_load_factor**0.536
+        * (wing_to_vstab_distance / u.foot) ** -0.5
+        * (vstab.area("planform") / u.foot**2) ** 0.5
+        * (aircraft_z_radius_of_gyration / u.foot) ** 0.875
+        * np.cosd(vstab.mean_sweep_angle()) ** -1
+        * vstab.aspect_ratio() ** 0.35
+        * airfoil_t_over_c**-0.5
+        * (advanced_composites["tails"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
 def mass_fuselage(
-        fuselage: asb.Fuselage,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
-        L_over_D: float,
-        main_wing: asb.Wing,
-        n_cargo_doors: int = 1,
-        has_aft_clamshell_door: bool = False,
-        landing_gear_mounted_on_fuselage: bool = False,
-        use_advanced_composites: bool = False,
+    fuselage: asb.Fuselage,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
+    L_over_D: float,
+    main_wing: asb.Wing,
+    n_cargo_doors: int = 1,
+    has_aft_clamshell_door: bool = False,
+    landing_gear_mounted_on_fuselage: bool = False,
+    use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the fuselage for a cargo/transport aircraft, according to Raymer's Aircraft Design: A
@@ -230,41 +224,39 @@ def mass_fuselage(
 
     if main_wing is not None:
         K_ws = (
-                0.75 *
-                (
-                        (1 + 2 * main_wing.taper_ratio()) /
-                        (1 + main_wing.taper_ratio())
-                ) *
-                (
-                        main_wing.span() / fuselage_structural_length *
-                        np.tand(main_wing.mean_sweep_angle())
-                )
+            0.75
+            * ((1 + 2 * main_wing.taper_ratio()) / (1 + main_wing.taper_ratio()))
+            * (
+                main_wing.span()
+                / fuselage_structural_length
+                * np.tand(main_wing.mean_sweep_angle())
+            )
         )
     else:
         K_ws = 0
 
     return (
-            0.3280 *
-            K_door *
-            K_lg *
-            (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.5 *
-            (fuselage_structural_length / u.foot) ** 0.25 *
-            (fuselage.area_wetted() / u.foot ** 2) ** 0.302 *
-            (1 + K_ws) ** 0.04 *
-            L_over_D ** 0.10 * # L/D
-            (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
+        0.3280
+        * K_door
+        * K_lg
+        * (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.5
+        * (fuselage_structural_length / u.foot) ** 0.25
+        * (fuselage.area_wetted() / u.foot**2) ** 0.302
+        * (1 + K_ws) ** 0.04
+        * L_over_D**0.10  # L/D
+        * (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
 def mass_main_landing_gear(
-        main_gear_length: float,
-        landing_speed: float,
-        design_mass_TOGW: float,
-        is_kneeling: bool = False,
-        n_gear: int = 2,
-        n_wheels: int = 12,
-        n_shock_struts: int = 4,
-        use_advanced_composites: bool = False,
+    main_gear_length: float,
+    landing_speed: float,
+    design_mass_TOGW: float,
+    is_kneeling: bool = False,
+    n_gear: int = 2,
+    n_wheels: int = 12,
+    n_shock_struts: int = 4,
+    use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the main landing gear for a cargo/transport aircraft, according to Raymer's Aircraft Design:
@@ -297,25 +289,25 @@ def mass_main_landing_gear(
     ultimate_landing_load_factor = n_gear * 1.5
 
     return (
-            0.0106 *
-            K_mp *  # non-kneeling LG
-            (design_mass_TOGW / u.lbm) ** 0.888 *
-            ultimate_landing_load_factor ** 0.25 *
-            (main_gear_length / u.inch) ** 0.4 *
-            n_wheels ** 0.321 *
-            n_shock_struts ** -0.5 *
-            (landing_speed / u.knot) ** 0.1 *
-            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
+        0.0106
+        * K_mp  # non-kneeling LG
+        * (design_mass_TOGW / u.lbm) ** 0.888
+        * ultimate_landing_load_factor**0.25
+        * (main_gear_length / u.inch) ** 0.4
+        * n_wheels**0.321
+        * n_shock_struts**-0.5
+        * (landing_speed / u.knot) ** 0.1
+        * (advanced_composites["landing_gear"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
 def mass_nose_landing_gear(
-        nose_gear_length: float,
-        design_mass_TOGW: float,
-        is_kneeling: bool = False,
-        n_gear: int = 1,
-        n_wheels: int = 2,
-        use_advanced_composites: bool = False,
+    nose_gear_length: float,
+    design_mass_TOGW: float,
+    is_kneeling: bool = False,
+    n_gear: int = 1,
+    n_wheels: int = 2,
+    use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the nose landing gear for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -343,27 +335,27 @@ def mass_nose_landing_gear(
     ultimate_landing_load_factor = n_gear * 1.5
 
     return (
-            0.032 *
-            K_np *
-            (design_mass_TOGW / u.lbm) ** 0.646 *
-            ultimate_landing_load_factor ** 0.2 *
-            (nose_gear_length / u.inch) ** 0.5 *
-            n_wheels ** 0.45 *
-            (advanced_composites["landing_gear"] if use_advanced_composites else 1)
+        0.032
+        * K_np
+        * (design_mass_TOGW / u.lbm) ** 0.646
+        * ultimate_landing_load_factor**0.2
+        * (nose_gear_length / u.inch) ** 0.5
+        * n_wheels**0.45
+        * (advanced_composites["landing_gear"] if use_advanced_composites else 1)
     ) * u.lbm
 
 
 def mass_nacelles(
-        nacelle_length: float,
-        nacelle_width: float,
-        nacelle_height: float,
-        ultimate_load_factor: float,
-        mass_per_engine: float,
-        n_engines: int,
-        is_pylon_mounted: bool = False,
-        engines_have_propellers: bool = False,
-        engines_have_thrust_reversers: bool = False,
-        use_advanced_composites: bool = False,
+    nacelle_length: float,
+    nacelle_width: float,
+    nacelle_height: float,
+    ultimate_load_factor: float,
+    mass_per_engine: float,
+    n_engines: int,
+    is_pylon_mounted: bool = False,
+    engines_have_propellers: bool = False,
+    engines_have_thrust_reversers: bool = False,
+    use_advanced_composites: bool = False,
 ) -> float:
     """
     Computes the mass of the nacelles for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -402,30 +394,29 @@ def mass_nacelles(
     mass_per_engine_with_contents = np.softmax(
         (2.331 * (mass_per_engine / u.lbm) ** 0.901) * K_p * K_tr * u.lbm,
         mass_per_engine,
-        hardness=10 / mass_per_engine
+        hardness=10 / mass_per_engine,
     )
 
     nacelle_wetted_area = (
-            nacelle_length * nacelle_height * 2 +
-            nacelle_width * nacelle_height * 2
+        nacelle_length * nacelle_height * 2 + nacelle_width * nacelle_height * 2
     )
 
     return (
-            0.6724 *
-            K_ng *
-            (nacelle_length / u.foot) ** 0.10 *
-            (nacelle_width / u.foot) ** 0.294 *
-            (ultimate_load_factor) ** 0.119 *
-            (mass_per_engine_with_contents / u.lbm) ** 0.611 *
-            (n_engines) ** 0.984 *
-            (nacelle_wetted_area / u.foot ** 2) ** 0.224 *
-            (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
+        0.6724
+        * K_ng
+        * (nacelle_length / u.foot) ** 0.10
+        * (nacelle_width / u.foot) ** 0.294
+        * (ultimate_load_factor) ** 0.119
+        * (mass_per_engine_with_contents / u.lbm) ** 0.611
+        * (n_engines) ** 0.984
+        * (nacelle_wetted_area / u.foot**2) ** 0.224
+        * (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
     )
 
 
 def mass_engine_controls(
-        n_engines: int,
-        cockpit_to_engine_length: float,
+    n_engines: int,
+    cockpit_to_engine_length: float,
 ) -> float:
     """
     Computes the mass of the engine controls for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -440,14 +431,13 @@ def mass_engine_controls(
         The mass of the engine controls [kg].
     """
     return (
-            5 * n_engines +
-            0.80 * (cockpit_to_engine_length / u.foot) * n_engines
+        5 * n_engines + 0.80 * (cockpit_to_engine_length / u.foot) * n_engines
     ) * u.lbm
 
 
 def mass_starter(
-        n_engines: int,
-        mass_per_engine: float,
+    n_engines: int,
+    mass_per_engine: float,
 ) -> float:
     """
     Computes the mass of the engine starter for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -461,18 +451,13 @@ def mass_starter(
     Returns:
         The mass of the engine starter [kg].
     """
-    return (
-            49.19 * (
-            mass_per_engine / u.lbm * n_engines
-            / 1000
-    ) ** 0.541
-    ) * u.lbm
+    return (49.19 * (mass_per_engine / u.lbm * n_engines / 1000) ** 0.541) * u.lbm
 
 
 def mass_fuel_system(
-        fuel_volume: float,
-        n_tanks: int,
-        fraction_in_integral_tanks: float = 0.5,
+    fuel_volume: float,
+    n_tanks: int,
+    fraction_in_integral_tanks: float = 0.5,
 ) -> float:
     """
     Computes the mass of the fuel system (e.g., tanks, pumps, but not the fuel itself) for a cargo/transport
@@ -492,18 +477,18 @@ def mass_fuel_system(
 
     fraction_in_protected_tanks = 1 - fraction_in_integral_tanks
     return (
-            2.405 *
-            (fuel_volume / u.gallon) ** 0.606 *
-            (1 + fraction_in_integral_tanks) ** -1 *
-            (1 + fraction_in_protected_tanks) *
-            n_tanks ** 0.5
+        2.405
+        * (fuel_volume / u.gallon) ** 0.606
+        * (1 + fraction_in_integral_tanks) ** -1
+        * (1 + fraction_in_protected_tanks)
+        * n_tanks**0.5
     ) * u.lbm
 
 
 def mass_flight_controls(
-        airplane: asb.Airplane,
-        aircraft_Iyy: float,
-        fraction_of_mechanical_controls: int = 0,
+    airplane: asb.Airplane,
+    aircraft_Iyy: float,
+    fraction_of_mechanical_controls: int = 0,
 ) -> float:
     """
     Computes the added mass of the flight control surfaces (and any applicable linkages, in the case of mechanical
@@ -532,16 +517,17 @@ def mass_flight_controls(
         control_surface_area += wing.control_surface_area()
 
     return (
-            145.9 *
-            N_functions_performed_by_controls ** 0.554 *  # number of functions performed by controls
-            (1 + fraction_of_mechanical_controls) ** -1 *
-            (control_surface_area / u.foot ** 2) ** 0.20 *
-            (aircraft_Iyy / (u.lbm * u.foot ** 2) * 1e-6) ** 0.07
+        145.9
+        * N_functions_performed_by_controls
+        ** 0.554  # number of functions performed by controls
+        * (1 + fraction_of_mechanical_controls) ** -1
+        * (control_surface_area / u.foot**2) ** 0.20
+        * (aircraft_Iyy / (u.lbm * u.foot**2) * 1e-6) ** 0.07
     ) * u.lbm
 
 
 def mass_APU(
-        mass_APU_uninstalled: float,
+    mass_APU_uninstalled: float,
 ):
     """
     Computes the mass of the auxiliary power unit (APU) for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -557,12 +543,12 @@ def mass_APU(
 
 
 def mass_instruments(
-        fuselage: asb.Fuselage,
-        main_wing: asb.Wing,
-        n_engines: int,
-        n_crew: Union[int, float],
-        engine_is_reciprocating: bool = False,
-        engine_is_turboprop: bool = False,
+    fuselage: asb.Fuselage,
+    main_wing: asb.Wing,
+    n_engines: int,
+    n_crew: Union[int, float],
+    engine_is_reciprocating: bool = False,
+    engine_is_turboprop: bool = False,
 ):
     """
     Computes the mass of the flight instruments for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -589,19 +575,19 @@ def mass_instruments(
     K_tp = 0.793 if engine_is_turboprop else 1
 
     return (
-            4.509 *
-            K_r *
-            K_tp *
-            n_crew ** 0.541 *
-            n_engines *
-            (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.5
+        4.509
+        * K_r
+        * K_tp
+        * n_crew**0.541
+        * n_engines
+        * (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.5
     ) * u.lbm
 
 
 def mass_hydraulics(
-        airplane: asb.Airplane,
-        fuselage: asb.Fuselage,
-        main_wing: asb.Wing,
+    airplane: asb.Airplane,
+    fuselage: asb.Fuselage,
+    main_wing: asb.Wing,
 ):
     """
     Computes the mass of the hydraulic system for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -622,16 +608,16 @@ def mass_hydraulics(
         N_functions_performed_by_controls += len(wing.get_control_surface_names())
 
     return (
-            0.2673 *
-            N_functions_performed_by_controls *
-            (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.937
+        0.2673
+        * N_functions_performed_by_controls
+        * (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.937
     ) * u.lbm
 
 
 def mass_electrical(
-        system_electrical_power_rating: float,
-        electrical_routing_distance: float,
-        n_engines: int,
+    system_electrical_power_rating: float,
+    electrical_routing_distance: float,
+    n_engines: int,
 ):
     """
     Computes the mass of the electrical system for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -655,15 +641,15 @@ def mass_electrical(
     """
 
     return (
-            7.291 *
-            (system_electrical_power_rating / 1e3) ** 0.782 *
-            (electrical_routing_distance / u.foot) ** 0.346 *
-            (n_engines) ** 0.10
+        7.291
+        * (system_electrical_power_rating / 1e3) ** 0.782
+        * (electrical_routing_distance / u.foot) ** 0.346
+        * (n_engines) ** 0.10
     ) * u.lbm
 
 
 def mass_avionics(
-        mass_uninstalled_avionics: float,
+    mass_uninstalled_avionics: float,
 ):
     """
     Computes the mass of the avionics for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -675,16 +661,13 @@ def mass_avionics(
     Returns:
         The mass of the avionics, as installed [kg].
     """
-    return (
-            1.73 *
-            (mass_uninstalled_avionics / u.lbm) ** 0.983
-    ) * u.lbm
+    return (1.73 * (mass_uninstalled_avionics / u.lbm) ** 0.983) * u.lbm
 
 
 def mass_furnishings(
-        n_crew: Union[int, float],
-        mass_cargo: float,
-        fuselage: asb.Fuselage,
+    n_crew: Union[int, float],
+    mass_cargo: float,
+    fuselage: asb.Fuselage,
 ):
     """
     Computes the mass of the furnishings for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -701,18 +684,18 @@ def mass_furnishings(
         The mass of the furnishings [kg].
     """
     return (
-            0.0577 *
-            n_crew ** 0.1 *
-            (mass_cargo / u.lbm) ** 0.393 *
-            (fuselage.area_wetted() / u.foot ** 2) ** 0.75
+        0.0577
+        * n_crew**0.1
+        * (mass_cargo / u.lbm) ** 0.393
+        * (fuselage.area_wetted() / u.foot**2) ** 0.75
     ) * u.lbm
 
 
 def mass_air_conditioning(
-        n_crew: int,
-        n_pax: int,
-        volume_pressurized: float,
-        mass_uninstalled_avionics: float,
+    n_crew: int,
+    n_pax: int,
+    volume_pressurized: float,
+    mass_uninstalled_avionics: float,
 ):
     """
     Computes the mass of the air conditioning system for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -731,15 +714,15 @@ def mass_air_conditioning(
         The mass of the air conditioning system [kg].
     """
     return (
-            62.36 *
-            (n_crew + n_pax) ** 0.25 *
-            (volume_pressurized / u.foot ** 3 / 1e3) ** 0.604 *
-            (mass_uninstalled_avionics / u.lbm) ** 0.10
+        62.36
+        * (n_crew + n_pax) ** 0.25
+        * (volume_pressurized / u.foot**3 / 1e3) ** 0.604
+        * (mass_uninstalled_avionics / u.lbm) ** 0.10
     ) * u.lbm
 
 
 def mass_anti_ice(
-        design_mass_TOGW: float,
+    design_mass_TOGW: float,
 ):
     """
     Computes the mass of the anti-ice system for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -755,7 +738,7 @@ def mass_anti_ice(
 
 
 def mass_handling_gear(
-        design_mass_TOGW: float,
+    design_mass_TOGW: float,
 ):
     """
     Computes the mass of the handling gear for a cargo/transport aircraft, according to Raymer's Aircraft
@@ -771,7 +754,7 @@ def mass_handling_gear(
 
 
 def mass_military_cargo_handling_system(
-        cargo_floor_area: float,
+    cargo_floor_area: float,
 ):
     """
     Computes the mass of the military cargo handling system for a cargo/transport aircraft, according to Raymer's
@@ -783,7 +766,4 @@ def mass_military_cargo_handling_system(
     Returns:
         The mass of the military cargo handling system [kg].
     """
-    return (
-            2.4 *
-            (cargo_floor_area / u.foot ** 2)
-    ) * u.lbm
+    return (2.4 * (cargo_floor_area / u.foot**2)) * u.lbm

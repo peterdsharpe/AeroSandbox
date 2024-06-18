@@ -3,14 +3,14 @@ from typing import Union
 
 
 def calculate_induced_velocity_point_source(
-        x_field: Union[float, np.ndarray],
-        y_field: Union[float, np.ndarray],
-        z_field: Union[float, np.ndarray],
-        x_source: Union[float, np.ndarray],
-        y_source: Union[float, np.ndarray],
-        z_source: Union[float, np.ndarray],
-        sigma: Union[float, np.ndarray] = 1,
-        viscous_radius=0,
+    x_field: Union[float, np.ndarray],
+    y_field: Union[float, np.ndarray],
+    z_field: Union[float, np.ndarray],
+    x_source: Union[float, np.ndarray],
+    y_source: Union[float, np.ndarray],
+    z_source: Union[float, np.ndarray],
+    sigma: Union[float, np.ndarray] = 1,
+    viscous_radius=0,
 ) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
     """
     Calculates the induced velocity at a point:
@@ -58,20 +58,16 @@ def calculate_induced_velocity_point_source(
     dy = np.add(y_field, -y_source)
     dz = np.add(z_field, -z_source)
 
-    r_squared = (
-            dx ** 2 +
-            dy ** 2 +
-            dz ** 2
-    )
+    r_squared = dx**2 + dy**2 + dz**2
 
     def smoothed_x_15_inv(x):
         """
         Approximates x^(-1.5) with a function that sharply goes to 0 in the x -> 0 limit.
         """
         if not np.all(viscous_radius == 0):
-            return x / (x ** 2.5 + viscous_radius ** 2.5)
+            return x / (x**2.5 + viscous_radius**2.5)
         else:
-            return x ** -1.5
+            return x**-1.5
 
     grad_phi_multiplier = np.multiply(sigma, smoothed_x_15_inv(r_squared)) / (4 * np.pi)
 
@@ -82,7 +78,7 @@ def calculate_induced_velocity_point_source(
     return u, v, w
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = (-2, 2, 30)
     x = np.linspace(*args)
     y = np.linspace(*args)
@@ -93,14 +89,11 @@ if __name__ == '__main__':
     Yf = Y.flatten()
     Zf = Z.flatten()
 
-
     def wide(array):
         return np.reshape(array, (1, -1))
 
-
     def tall(array):
         return np.reshape(array, (-1, 1))
-
 
     Uf, Vf, Wf = calculate_induced_velocity_point_source(
         x_field=Xf,
@@ -116,16 +109,12 @@ if __name__ == '__main__':
 
     dir_norm = np.reshape(np.linalg.norm(dir, axis=1), (-1, 1))
 
-    dir = dir / dir_norm * dir_norm ** 0.2
+    dir = dir / dir_norm * dir_norm**0.2
 
     import pyvista as pv
 
-    pv.set_plot_theme('dark')
+    pv.set_plot_theme("dark")
     plotter = pv.Plotter()
-    plotter.add_arrows(
-        cent=pos,
-        direction=dir,
-        mag=0.15
-    )
+    plotter.add_arrows(cent=pos, direction=dir, mag=0.15)
     plotter.show_grid()
     plotter.show()

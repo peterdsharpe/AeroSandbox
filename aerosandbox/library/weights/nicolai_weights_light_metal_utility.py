@@ -11,9 +11,9 @@ Applicable to:
 
 
 def mass_landing_gear(
-        gear_length: float,
-        design_mass_TOGW: float,
-        ultimate_load_factor: float,
+    gear_length: float,
+    design_mass_TOGW: float,
+    ultimate_load_factor: float,
 ):
     """
     Calculates the mass of the landing gear.
@@ -29,7 +29,7 @@ def mass_landing_gear(
     Returns: The mass of the landing gear, in kg.
     """
     return (
-            0.054 *
-            (gear_length / u.inch) ** 0.501 *
-            (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.684
+        0.054
+        * (gear_length / u.inch) ** 0.501
+        * (design_mass_TOGW / u.lbm * ultimate_load_factor) ** 0.684
     ) * u.lbm

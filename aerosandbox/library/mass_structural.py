@@ -1,14 +1,14 @@
 def mass_hpa_wing(
-        span,
-        chord,
-        vehicle_mass,
-        n_ribs,  # You should optimize on this, there's a trade between rib weight and LE sheeting weight!
-        n_wing_sections=1,  # defaults to a single-section wing (be careful: can you disassemble/transport this?)
-        ultimate_load_factor=1.75,  # default taken from Daedalus design
-        type="cantilevered",  # "cantilevered", "one-wire", "multi-wire"
-        t_over_c=0.128,  # default from DAE11
-        include_spar=True,
-        # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
+    span,
+    chord,
+    vehicle_mass,
+    n_ribs,  # You should optimize on this, there's a trade between rib weight and LE sheeting weight!
+    n_wing_sections=1,  # defaults to a single-section wing (be careful: can you disassemble/transport this?)
+    ultimate_load_factor=1.75,  # default taken from Daedalus design
+    type="cantilevered",  # "cantilevered", "one-wire", "multi-wire"
+    t_over_c=0.128,  # default from DAE11
+    include_spar=True,
+    # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
 ):
     """
     Finds the mass of the wing structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
@@ -27,25 +27,23 @@ def mass_hpa_wing(
     ### Primary structure
     if include_spar:
         if type == "cantilevered":
-            mass_primary_spar = (
-                    (span * 1.17e-1 + span ** 2 * 1.10e-2) *
-                    (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+            mass_primary_spar = (span * 1.17e-1 + span**2 * 1.10e-2) * (
+                1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4
             )
         elif type == "one-wire":
-            mass_primary_spar = (
-                    (span * 3.10e-2 + span ** 2 * 7.56e-3) *
-                    (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+            mass_primary_spar = (span * 3.10e-2 + span**2 * 7.56e-3) * (
+                1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4
             )
         elif type == "multi-wire":
-            mass_primary_spar = (
-                    (span * 1.35e-1 + span ** 2 * 1.68e-3) *
-                    (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+            mass_primary_spar = (span * 1.35e-1 + span**2 * 1.68e-3) * (
+                1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4
             )
         else:
             raise ValueError("Bad input for 'type'!")
 
         mass_primary = mass_primary_spar * (
-                11382.3 / 9222.2)  # accounts for rear spar, struts, fittings, kevlar x-bracing, and wing-fuselage mounts
+            11382.3 / 9222.2
+        )  # accounts for rear spar, struts, fittings, kevlar x-bracing, and wing-fuselage mounts
     else:
         mass_primary = 0
 
@@ -55,13 +53,13 @@ def mass_hpa_wing(
     area = span * chord
 
     # Rib mass
-    W_wr = n_ribs * (chord ** 2 * t_over_c * 5.50e-2 + chord * 1.91e-3)
+    W_wr = n_ribs * (chord**2 * t_over_c * 5.50e-2 + chord * 1.91e-3)
 
     # End rib mass
-    W_wer = n_end_ribs * (chord ** 2 * t_over_c * 6.62e-1 + chord * 6.57e-3)
+    W_wer = n_end_ribs * (chord**2 * t_over_c * 6.62e-1 + chord * 6.57e-3)
 
     # LE sheeting mass
-    W_wLE = 0.456 * (span ** 2 * ratio_of_rib_spacing_to_chord ** (4 / 3) / span)
+    W_wLE = 0.456 * (span**2 * ratio_of_rib_spacing_to_chord ** (4 / 3) / span)
 
     # TE mass
     W_wTE = span * 2.77e-2
@@ -75,10 +73,10 @@ def mass_hpa_wing(
 
 
 def mass_wing_spar(
-        span,
-        mass_supported,
-        ultimate_load_factor=1.75,  # default taken from Daedalus design
-        n_booms=1,
+    span,
+    mass_supported,
+    ultimate_load_factor=1.75,  # default taken from Daedalus design
+    n_booms=1,
 ):
     """
     Finds the mass of the spar for a wing on a single- or multi-boom lightweight aircraft. Model originally designed for solar aircraft.
@@ -118,13 +116,13 @@ def mass_wing_spar(
 
 
 def mass_hpa_stabilizer(
-        span,
-        chord,
-        dynamic_pressure_at_manuever_speed,
-        n_ribs,  # You should optimize on this, there's a trade between rib weight and LE sheeting weight!
-        t_over_c=0.128,  # default from DAE11
-        include_spar=True,
-        # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
+    span,
+    chord,
+    dynamic_pressure_at_manuever_speed,
+    n_ribs,  # You should optimize on this, there's a trade between rib weight and LE sheeting weight!
+    t_over_c=0.128,  # default from DAE11
+    include_spar=True,
+    # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
 ):
     """
     Finds the mass of a stabilizer structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
@@ -142,10 +140,7 @@ def mass_hpa_stabilizer(
     area = span * chord
     q = dynamic_pressure_at_manuever_speed
     if include_spar:
-        W_tss = (
-                (span * 4.15e-2 + span ** 2 * 3.91e-3) *
-                (1 + ((q * area) / 78.5 - 1) / 2)
-        )
+        W_tss = (span * 4.15e-2 + span**2 * 3.91e-3) * (1 + ((q * area) / 78.5 - 1) / 2)
 
         mass_primary = W_tss
     else:
@@ -155,10 +150,10 @@ def mass_hpa_stabilizer(
     ratio_of_rib_spacing_to_chord = (span / n_ribs) / chord
 
     # Rib mass
-    W_tsr = n_ribs * (chord ** 2 * t_over_c * 1.16e-1 + chord * 4.01e-3)
+    W_tsr = n_ribs * (chord**2 * t_over_c * 1.16e-1 + chord * 4.01e-3)
 
     # Leading edge sheeting
-    W_tsLE = 0.174 * (area ** 2 * ratio_of_rib_spacing_to_chord ** (4 / 3) / span)
+    W_tsLE = 0.174 * (area**2 * ratio_of_rib_spacing_to_chord ** (4 / 3) / span)
 
     # Covering
     W_tsc = area * 1.93e-2
@@ -166,16 +161,18 @@ def mass_hpa_stabilizer(
     mass_secondary = W_tsr + W_tsLE + W_tsc
 
     ### Totaling
-    correction_factor = ((537.8 / (537.8 - 23.7 - 15.1)) * (623.3 / (623.3 - 63.2 - 8.1))) ** 0.5
+    correction_factor = (
+        (537.8 / (537.8 - 23.7 - 15.1)) * (623.3 / (623.3 - 63.2 - 8.1))
+    ) ** 0.5
     # geometric mean of Daedalus elevator and rudder corrections from misc. weight
 
     return (mass_primary + mass_secondary) * correction_factor
 
 
 def mass_hpa_tail_boom(
-        length_tail_boom,
-        dynamic_pressure_at_manuever_speed,
-        mean_tail_surface_area,
+    length_tail_boom,
+    dynamic_pressure_at_manuever_speed,
+    mean_tail_surface_area,
 ):
     """
     Finds the mass of a tail boom structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
@@ -189,16 +186,12 @@ def mass_hpa_tail_boom(
     l = length_tail_boom
     q = dynamic_pressure_at_manuever_speed
     area = mean_tail_surface_area
-    w_tb = (l * 1.14e-1 + l ** 2 * 1.96e-2) * (1 + ((q * area) / 78.5 - 1) / 2)
+    w_tb = (l * 1.14e-1 + l**2 * 1.96e-2) * (1 + ((q * area) / 78.5 - 1) / 2)
 
     return w_tb
 
 
-def mass_surface_balsa_monokote_cf(
-        chord,
-        span,
-        mean_t_over_c=0.08
-):
+def mass_surface_balsa_monokote_cf(chord, span, mean_t_over_c=0.08):
     """
     Estimates the mass of a lifting surface constructed with balsa-monokote-carbon-fiber construction techniques.
     Warning: Not well validated; spar sizing is a guessed scaling and not based on structural analysis.
@@ -215,23 +208,24 @@ def mass_surface_balsa_monokote_cf(
     rib_spacing = 0.1  # one rib every x meters
     rib_width = 0.003  # width of an individual rib
     ribs_mass = (
-            (mean_t * chord * rib_width) *  # volume of a rib
-            rib_density *  # density of a rib
-            (span / rib_spacing)  # number of ribs
+        (mean_t * chord * rib_width)  # volume of a rib
+        * rib_density  # density of a rib
+        * (span / rib_spacing)  # number of ribs
     )
 
     spar_mass_1_inch = 0.2113 * span * 1.5  # assuming 1.5x 1" CF tube spar
-    spar_mass = spar_mass_1_inch * (
-            mean_t / 0.0254) ** 2  # Rough GUESS for scaling, FIX THIS before using seriously!
+    spar_mass = (
+        spar_mass_1_inch * (mean_t / 0.0254) ** 2
+    )  # Rough GUESS for scaling, FIX THIS before using seriously!
 
     return (monokote_mass + ribs_mass + spar_mass) * 1.2  # for glue
 
 
 def mass_surface_solid(
-        chord,
-        span,
-        density=2700,  # kg/m^3, defaults to that of aluminum
-        mean_t_over_c=0.08
+    chord,
+    span,
+    density=2700,  # kg/m^3, defaults to that of aluminum
+    mean_t_over_c=0.08,
 ):
     """
     Estimates the mass of a lifting surface constructed out of a solid piece of material.
@@ -256,19 +250,17 @@ if __name__ == "__main__":
 
     # Daedalus wing mass validation
     print(
-        "Daedalus wing, estimated mass: %f" %
-        mass_hpa_wing(
+        "Daedalus wing, estimated mass: %f"
+        % mass_hpa_wing(
             span=34,
             chord=0.902,
             vehicle_mass=104.1,
             n_ribs=100,
             n_wing_sections=5,
-            type="one-wire"
+            type="one-wire",
         )
     )
-    print(
-        "Daedalus wing, actual mass: %f" % 18.9854
-    )
+    print("Daedalus wing, actual mass: %f" % 18.9854)
 
     nr = np.linspace(1, 400, 401)
     m = mass_hpa_wing(
@@ -277,7 +269,7 @@ if __name__ == "__main__":
         vehicle_mass=104.1,
         n_ribs=nr,
         n_wing_sections=5,
-        type="one-wire"
+        type="one-wire",
     )
     plt.plot(nr, m)
     plt.ylim([15, 20])
@@ -290,23 +282,25 @@ if __name__ == "__main__":
     # Test rib number optimization
     opti = asb.Opti()
     nr_opt = opti.variable(init_guess=100)
-    opti.minimize(mass_hpa_wing(
-        span=34,
-        chord=0.902,
-        vehicle_mass=104.1,
-        n_ribs=nr_opt,
-        n_wing_sections=5,
-        type="one-wire"
-    ))
+    opti.minimize(
+        mass_hpa_wing(
+            span=34,
+            chord=0.902,
+            vehicle_mass=104.1,
+            n_ribs=nr_opt,
+            n_wing_sections=5,
+            type="one-wire",
+        )
+    )
     sol = opti.solve()
     print(f"Optimal number of ribs: {sol(nr_opt)}")
 
     print(
-        "Daedalus elevator, estimated mass: %f" %
-        mass_hpa_stabilizer(
+        "Daedalus elevator, estimated mass: %f"
+        % mass_hpa_stabilizer(
             span=4.26,
             chord=0.6,
-            dynamic_pressure_at_manuever_speed=1 / 2 * 1.225 * 7 ** 2,
+            dynamic_pressure_at_manuever_speed=1 / 2 * 1.225 * 7**2,
             n_ribs=20,
         )
     )
@@ -321,7 +315,7 @@ if __name__ == "__main__":
         vehicle_mass=mass_total,
         n_ribs=sol(nr_opt),
         n_wing_sections=1,
-        type="cantilevered"
+        type="cantilevered",
     ) - mass_hpa_wing(
         span=span,
         chord=0.902,
@@ -329,10 +323,7 @@ if __name__ == "__main__":
         n_ribs=sol(nr_opt),
         n_wing_sections=1,
         type="cantilevered",
-        include_spar=False
+        include_spar=False,
     )
 
-    mass_wing_primary_physics = mass_wing_spar(
-        span=span,
-        mass_supported=mass_total
-    )
+    mass_wing_primary_physics = mass_wing_spar(span=span, mass_supported=mass_total)

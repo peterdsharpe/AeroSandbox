@@ -33,24 +33,21 @@ class FittedModel(SurrogateModel):
 
     """
 
-    def __init__(self,
-                 model: Callable[
-                     [
-                         Union[np.ndarray, Dict[str, np.ndarray]],
-                         Dict[str, float]
-                     ],
-                     np.ndarray
-                 ],
-                 x_data: Union[np.ndarray, Dict[str, np.ndarray]],
-                 y_data: np.ndarray,
-                 parameter_guesses: Dict[str, float],
-                 parameter_bounds: Dict[str, tuple] = None,
-                 residual_norm_type: str = "L2",
-                 fit_type: str = "best",
-                 weights: np.ndarray = None,
-                 put_residuals_in_logspace: bool = False,
-                 verbose=True,
-                 ):
+    def __init__(
+        self,
+        model: Callable[
+            [Union[np.ndarray, Dict[str, np.ndarray]], Dict[str, float]], np.ndarray
+        ],
+        x_data: Union[np.ndarray, Dict[str, np.ndarray]],
+        y_data: np.ndarray,
+        parameter_guesses: Dict[str, float],
+        parameter_bounds: Dict[str, tuple] = None,
+        residual_norm_type: str = "L2",
+        fit_type: str = "best",
+        weights: np.ndarray = None,
+        put_residuals_in_logspace: bool = False,
+        verbose=True,
+    ):
         """
         Fits an analytical model to n-dimensional unstructured data using an automatic-differentiable optimization approach.
 
@@ -147,12 +144,11 @@ class FittedModel(SurrogateModel):
             return np.array(input).flatten()
 
         try:
-            x_data = {
-                k: flatten(v)
-                for k, v in x_data.items()
-            }
+            x_data = {k: flatten(v) for k, v in x_data.items()}
             x_data_is_dict = True
-        except AttributeError:  # If it's not a dict or dict-like, assume it's a 1D ndarray dataset
+        except (
+            AttributeError
+        ):  # If it's not a dict or dict-like, assume it's a 1D ndarray dataset
             x_data = flatten(x_data)
             x_data_is_dict = False
         y_data = flatten(y_data)
@@ -167,7 +163,9 @@ class FittedModel(SurrogateModel):
         if sum_weights <= 0:
             raise ValueError("The weights must sum to a positive number!")
         if np.any(weights < 0):
-            raise ValueError("No entries of the weights vector are allowed to be negative!")
+            raise ValueError(
+                "No entries of the weights vector are allowed to be negative!"
+            )
         weights = weights / np.sum(weights)  # Normalize weights so that they sum to 1.
 
         ### Check format of parameter_bounds input
@@ -176,20 +174,24 @@ class FittedModel(SurrogateModel):
         for param_name, v in parameter_bounds.items():
             if param_name not in parameter_guesses.keys():
                 raise ValueError(
-                    f"A parameter name (key = \"{param_name}\") in parameter_bounds was not found in parameter_guesses.")
+                    f'A parameter name (key = "{param_name}") in parameter_bounds was not found in parameter_guesses.'
+                )
             if not np.length(v) == 2:
                 raise ValueError(
                     "Every value in parameter_bounds must be a tuple in the format (lower_bound, upper_bound). "
-                    "For one-sided bounds, use None for the unbounded side.")
+                    "For one-sided bounds, use None for the unbounded side."
+                )
 
         ### If putting residuals in logspace, check positivity
         if put_residuals_in_logspace:
             if not np.all(y_data > 0):
-                raise ValueError("You can't fit a model with residuals in logspace if y_data is not entirely positive!")
+                raise ValueError(
+                    "You can't fit a model with residuals in logspace if y_data is not entirely positive!"
+                )
 
         ### Check dimensionality of inputs to fitting algorithm
         relevant_inputs = {
-            "y_data" : y_data,
+            "y_data": y_data,
             "weights": weights,
         }
         try:
@@ -202,7 +204,8 @@ class FittedModel(SurrogateModel):
             series_length = np.length(value)
             if not series_length == n_datapoints:
                 raise ValueError(
-                    f"The supplied data series \"{key}\" has length {series_length}, but y_data has length {n_datapoints}.")
+                    f'The supplied data series "{key}" has length {series_length}, but y_data has length {n_datapoints}.'
+                )
 
         ##### Formulate and solve the fitting optimization problem
 
@@ -225,58 +228,75 @@ class FittedModel(SurrogateModel):
 
         ### Evaluate the model at the data points you're trying to fit
         x_data_original = copy.deepcopy(
-            x_data)  # Make a copy of x_data so that you can determine if the model did in-place operations on x and tattle on the user.
+            x_data
+        )  # Make a copy of x_data so that you can determine if the model did in-place operations on x and tattle on the user.
 
         try:
             y_model = model(x_data, params)  # Evaluate the model
         except Exception:
-            raise Exception("""
+            raise Exception(
+                """
             There was an error when evaluating the model you supplied with the x_data you supplied.
             Likely possible causes:
                 * Your model() does not have the call syntax model(x, p), where x is the x_data and p are parameters.
                 * Your model should take in p as a dict of parameters, but it does not.
                 * Your model assumes x is an array-like but you provided x_data as a dict, or vice versa.
             See the docstring of FittedModel() if you have other usage questions or would like to see examples.
-            """)
+            """
+            )
 
         try:  ### If the model did in-place operations on x_data, throw an error
             x_data_is_unchanged = np.all(x_data == x_data_original)
         except ValueError:
-            x_data_is_unchanged = np.all([
-                x_series == x_series_original
-                for x_series, x_series_original in zip(x_data, x_data_original)
-            ])
+            x_data_is_unchanged = np.all(
+                [
+                    x_series == x_series_original
+                    for x_series, x_series_original in zip(x_data, x_data_original)
+                ]
+            )
         if not x_data_is_unchanged:
-            raise TypeError("model(x_data, parameter_guesses) did in-place operations on x, which is not allowed!")
-        if y_model is None:  # Make sure that y_model actually returned something sensible
-            raise TypeError("model(x_data, parameter_guesses) returned None, when it should've returned a 1D ndarray.")
+            raise TypeError(
+                "model(x_data, parameter_guesses) did in-place operations on x, which is not allowed!"
+            )
+        if (
+            y_model is None
+        ):  # Make sure that y_model actually returned something sensible
+            raise TypeError(
+                "model(x_data, parameter_guesses) returned None, when it should've returned a 1D ndarray."
+            )
 
         ### Compute how far off you are (error)
         if not put_residuals_in_logspace:
             error = y_model - y_data
         else:
-            y_model = np.fmax(y_model, 1e-300)  # Keep y_model very slightly always positive, so that log() doesn't NaN.
+            y_model = np.fmax(
+                y_model, 1e-300
+            )  # Keep y_model very slightly always positive, so that log() doesn't NaN.
             error = np.log(y_model) - np.log(y_data)
 
         ### Set up the optimization problem to minimize some norm(error), which looks different depending on the norm used:
         if residual_norm_type.lower() == "l1":  # Minimize the L1 norm
-            abs_error = opti.variable(init_guess=0,
-                                      n_vars=np.length(y_data))  # Make the abs() of each error entry an opt. var.
-            opti.subject_to([
-                abs_error >= error,
-                abs_error >= -error,
-            ])
+            abs_error = opti.variable(
+                init_guess=0, n_vars=np.length(y_data)
+            )  # Make the abs() of each error entry an opt. var.
+            opti.subject_to(
+                [
+                    abs_error >= error,
+                    abs_error >= -error,
+                ]
+            )
             opti.minimize(np.sum(weights * abs_error))
 
         elif residual_norm_type.lower() == "l2":  # Minimize the L2 norm
-            opti.minimize(np.sum(weights * error ** 2))
+            opti.minimize(np.sum(weights * error**2))
 
         elif residual_norm_type.lower() == "linf":  # Minimize the L-infinity norm
-            linf_value = opti.variable(init_guess=0)  # Make the value of the L-infinity norm an optimization variable
-            opti.subject_to([
-                linf_value >= weights * error,
-                linf_value >= -weights * error
-            ])
+            linf_value = opti.variable(
+                init_guess=0
+            )  # Make the value of the L-infinity norm an optimization variable
+            opti.subject_to(
+                [linf_value >= weights * error, linf_value >= -weights * error]
+            )
             opti.minimize(linf_value)
 
         else:
@@ -321,9 +341,7 @@ class FittedModel(SurrogateModel):
         super().__call__(x)
         return self.model(x, self.parameters)
 
-    def goodness_of_fit(self,
-                        type="R^2"
-                        ):
+    def goodness_of_fit(self, type="R^2"):
         """
         Returns a metric of the goodness of the fit.
 
@@ -349,15 +367,11 @@ class FittedModel(SurrogateModel):
 
             y_mean = np.mean(self.y_data)
 
-            SS_tot = np.sum(
-                (self.y_data - y_mean) ** 2
-            )
+            SS_tot = np.sum((self.y_data - y_mean) ** 2)
 
             y_model = self(self.x_data)
 
-            SS_res = np.sum(
-                (self.y_data - y_model) ** 2
-            )
+            SS_res = np.sum((self.y_data - y_model) ** 2)
 
             R_squared = 1 - SS_res / SS_tot
 
@@ -375,14 +389,21 @@ class FittedModel(SurrogateModel):
         else:
             valid_types = [
                 "R^2",
-                "mean_absolute_error", "mae", "L1",
-                "root_mean_squared_error", "rms", "L2",
-                "max_absolute_error", "Linf"
+                "mean_absolute_error",
+                "mae",
+                "L1",
+                "root_mean_squared_error",
+                "rms",
+                "L2",
+                "max_absolute_error",
+                "Linf",
             ]
 
             valid_types_formatted = [
-                f"    * \"{valid_type}\""
-                for valid_type in valid_types
+                f'    * "{valid_type}"' for valid_type in valid_types
             ]
 
-            raise ValueError("Bad value of `type`! Valid values are:\n" + "\n".join(valid_types_formatted))
+            raise ValueError(
+                "Bad value of `type`! Valid values are:\n"
+                + "\n".join(valid_types_formatted)
+            )

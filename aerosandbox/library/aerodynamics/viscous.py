@@ -2,10 +2,7 @@ import aerosandbox.numpy as np
 
 
 def Cd_cylinder(
-        Re_D: float,
-        mach: float = 0.,
-        include_mach_effects=True,
-        subcritical_only=False
+    Re_D: float, mach: float = 0.0, include_mach_effects=True, subcritical_only=False
 ) -> float:
     """
     Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number and Mach.
@@ -40,31 +37,35 @@ def Cd_cylinder(
     if subcritical_only:
         Cd_mach_0 = 10 ** (csub0 * x + csub1) + csub2 + csub3 * x
     else:
-        log10_Cd = (
-                (np.log10(10 ** (csub0 * x + csub1) + csub2 + csub3 * x))
-                * (1 - 1 / (1 + np.exp(-csigh * (x - csigc))))
-                + (csup0 + csupscl / csuph * np.log(np.exp(csuph * (csupc - x)) + 1))
-                * (1 / (1 + np.exp(-csigh * (x - csigc))))
+        log10_Cd = (np.log10(10 ** (csub0 * x + csub1) + csub2 + csub3 * x)) * (
+            1 - 1 / (1 + np.exp(-csigh * (x - csigc)))
+        ) + (csup0 + csupscl / csuph * np.log(np.exp(csuph * (csupc - x)) + 1)) * (
+            1 / (1 + np.exp(-csigh * (x - csigc)))
         )
-        Cd_mach_0 = 10 ** log10_Cd
+        Cd_mach_0 = 10**log10_Cd
 
     ##### Do the compressible part of the computation
     if include_mach_effects:
         m = mach
-        p = {'a_sub'    : 0.03458900259594298,
-             'a_sup'    : -0.7129528087049688,
-             'cd_sub'   : 1.163206940186374,
-             'cd_sup'   : 1.2899213533122527,
-             's_sub'    : 3.436601777569716,
-             's_sup'    : -1.37123096976983,
-             'trans'    : 1.022819211244295,
-             'trans_str': 19.017600596069848}
+        p = {
+            "a_sub": 0.03458900259594298,
+            "a_sup": -0.7129528087049688,
+            "cd_sub": 1.163206940186374,
+            "cd_sup": 1.2899213533122527,
+            "s_sub": 3.436601777569716,
+            "s_sup": -1.37123096976983,
+            "trans": 1.022819211244295,
+            "trans_str": 19.017600596069848,
+        }
 
-        Cd_over_Cd_mach_0 = np.blend(
-            p["trans_str"] * (m - p["trans"]),
-            p["cd_sup"] + np.exp(p["a_sup"] + p["s_sup"] * (m - p["trans"])),
-            p["cd_sub"] + np.exp(p["a_sub"] + p["s_sub"] * (m - p["trans"]))
-        ) / 1.1940010047391572
+        Cd_over_Cd_mach_0 = (
+            np.blend(
+                p["trans_str"] * (m - p["trans"]),
+                p["cd_sup"] + np.exp(p["a_sup"] + p["s_sup"] * (m - p["trans"])),
+                p["cd_sub"] + np.exp(p["a_sub"] + p["s_sub"] * (m - p["trans"])),
+            )
+            / 1.1940010047391572
+        )
 
         Cd = Cd_mach_0 * Cd_over_Cd_mach_0
 
@@ -74,10 +75,7 @@ def Cd_cylinder(
     return Cd
 
 
-def Cf_flat_plate(
-        Re_L: float,
-        method="hybrid-sharpe-convex"
-) -> float:
+def Cf_flat_plate(Re_L: float, method="hybrid-sharpe-convex") -> float:
     """
     Returns the mean skin friction coefficient over a flat plate.
 
@@ -125,24 +123,24 @@ def Cf_flat_plate(
     Re_L = np.abs(Re_L)
 
     if method == "blasius":
-        return 1.328 / Re_L ** 0.5
+        return 1.328 / Re_L**0.5
     elif method == "turbulent":
         return 0.074 / Re_L ** (1 / 5)
     elif method == "hybrid-cengel":
         return 0.074 / Re_L ** (1 / 5) - 1742 / Re_L
     elif method == "hybrid-schlichting":
-        return 0.02666 * Re_L ** -0.139
+        return 0.02666 * Re_L**-0.139
     elif method == "hybrid-sharpe-convex":
         return np.softmax(
             Cf_flat_plate(Re_L, method="blasius"),
             Cf_flat_plate(Re_L, method="hybrid-schlichting"),
-            hardness=1e3
+            hardness=1e3,
         )
     elif method == "hybrid-sharpe-nonconvex":
         return np.softmax(
             Cf_flat_plate(Re_L, method="blasius"),
             Cf_flat_plate(Re_L, method="hybrid-cengel"),
-            hardness=1e3
+            hardness=1e3,
         )
 
 
@@ -155,6 +153,7 @@ def Cl_flat_plate(alpha, Re_c=None):
     """
     if Re_c is not None:
         from warnings import warn
+
         warn("`Re_c` input will be deprecated in a future version.")
 
     alpha_rad = alpha * np.pi / 180
@@ -188,7 +187,7 @@ def Cl_2412(alpha, Re_c):
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
     )
-    return 0.2568 + 0.1206 * alpha - 0.002018 * alpha ** 2
+    return 0.2568 + 0.1206 * alpha - 0.002018 * alpha**2
 
 
 def Cd_profile_2412(alpha, Re_c):
@@ -211,8 +210,12 @@ def Cd_profile_2412(alpha, Re_c):
     cxy = -0.00588
     cy = 0.04838
 
-    log_CD = CD0 + cx * (alpha - alpha0) ** 2 + cy * (log_Re - Re0) ** 2 + cxy * (alpha - alpha1) * (
-            log_Re - Re1)  # basically, a rotated paraboloid in logspace
+    log_CD = (
+        CD0
+        + cx * (alpha - alpha0) ** 2
+        + cy * (log_Re - Re0) ** 2
+        + cxy * (alpha - alpha1) * (log_Re - Re1)
+    )  # basically, a rotated paraboloid in logspace
     CD = np.exp(log_CD)
 
     return CD
@@ -239,18 +242,20 @@ def Cl_e216(alpha, Re_c):
     atr = 3.6775107602844948e-01
     c0l = -2.5909363461176749e-01
     c0t = 8.3824440586718862e-01
-    ctr = 1.1431810545735890e+02
+    ctr = 1.1431810545735890e02
     ksl = 5.3416670116733611e-01
-    rtr = 3.9713338634462829e+01
-    rtr2 = -3.3634858542657771e+00
+    rtr = 3.9713338634462829e01
+    rtr2 = -3.3634858542657771e00
     xsl = -1.2220899840236835e-01
 
     a = alpha
     r = log10_Re
 
-    Cl = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)) + (
-            c0l + a1l * a + asl / (1 + np.exp(-ksl * (a - xsl)))) * (
-                 1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)))
+    Cl = (c0t + a1t * a + a4t * a**4) * 1 / (
+        1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r**2)
+    ) + (c0l + a1l * a + asl / (1 + np.exp(-ksl * (a - xsl)))) * (
+        1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r**2))
+    )
 
     return Cl
 
@@ -274,24 +279,27 @@ def Cd_profile_e216(alpha, Re_c):
     a2l = 8.7552076545610764e-04
     a4t = 1.1220763679805319e-05
     atr = 4.2456038382581129e-01
-    c0l = -1.4099657419753771e+00
-    c0t = -2.3855286371940609e+00
-    ctr = 9.1474872611212135e+01
-    rtr = 3.0218483612170434e+01
-    rtr2 = -2.4515094313899279e+00
+    c0l = -1.4099657419753771e00
+    c0t = -2.3855286371940609e00
+    ctr = 9.1474872611212135e01
+    rtr = 3.0218483612170434e01
+    rtr2 = -2.4515094313899279e00
 
     a = alpha
     r = log10_Re
 
-    log10_Cd = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)) + (
-            c0l + a1l * a + a2l * a ** 2) * (1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r ** 2)))
+    log10_Cd = (c0t + a1t * a + a4t * a**4) * 1 / (
+        1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r**2)
+    ) + (c0l + a1l * a + a2l * a**2) * (
+        1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - rtr2 * r**2))
+    )
 
-    Cd = 10 ** log10_Cd
+    Cd = 10**log10_Cd
 
     return Cd
 
 
-def Cd_wave_e216(Cl, mach, sweep=0.):
+def Cd_wave_e216(Cl, mach, sweep=0.0):
     r"""
     A curve fit I did to Eppler 216 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
@@ -316,13 +324,15 @@ def Cd_wave_e216(Cl, mach, sweep=0.):
     c3 = 2.1305118052118968e-01
     c4 = 7.8812272501525316e-01
     c5 = 3.3888938102072169e-03
-    l0 = 1.5298928303149546e+00
+    l0 = 1.5298928303149546e00
     l1 = 5.2389999717540392e-01
 
     m = mach_perpendicular
     l = Cl_perpendicular
 
-    Cd_wave = (np.fmax(m - (c0 + c1 * np.sqrt(c3 + (l - c4) ** 2) + c5 * l), 0) * (l0 + l1 * l)) ** 2
+    Cd_wave = (
+        np.fmax(m - (c0 + c1 * np.sqrt(c3 + (l - c4) ** 2) + c5 * l), 0) * (l0 + l1 * l)
+    ) ** 2
 
     return Cd_wave
 
@@ -349,14 +359,17 @@ def Cl_rae2822(alpha, Re_c):
     atr2 = -8.3128119739031697e-02
     c0l = -4.9103908291438701e-02
     c0t = 2.3903424824298553e-01
-    ctr = 1.3082854754897108e+01
-    rtr = 2.6963082864300731e+00
+    ctr = 1.3082854754897108e01
+    rtr = 2.6963082864300731e00
 
     a = alpha
     r = log10_Re
 
-    Cl = (c0t + a1t * a + a4t * a ** 4) * 1 / (1 + np.exp(ctr - rtr * r - atr * a - atr2 * a ** 2)) + (
-            c0l + a1l * a + a4l * a ** 4) * (1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - atr2 * a ** 2)))
+    Cl = (c0t + a1t * a + a4t * a**4) * 1 / (
+        1 + np.exp(ctr - rtr * r - atr * a - atr2 * a**2)
+    ) + (c0l + a1l * a + a4l * a**4) * (
+        1 - 1 / (1 + np.exp(ctr - rtr * r - atr * a - atr2 * a**2))
+    )
 
     return Cl
 
@@ -375,30 +388,32 @@ def Cd_profile_rae2822(alpha, Re_c):
     log10_Re = np.log10(Re_c)
 
     # Coeffs
-    at = 8.1034027621509015e+00
+    at = 8.1034027621509015e00
     c0l = -8.4296746456429639e-01
-    c0t = -1.3700609138855402e+00
+    c0t = -1.3700609138855402e00
     kart = -4.1609994062600880e-01
     kat = 5.9510959342452441e-01
     krt = -7.1938030052506197e-01
     r1l = 1.1548628822014631e-01
     r1t = -4.9133662875044504e-01
-    rt = 5.0070459892411696e+00
+    rt = 5.0070459892411696e00
 
     a = alpha
     r = log10_Re
 
     log10_Cd = (c0t + r1t * (r - 4)) * (
-            1 / (1 + np.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt)))) + (
-                       c0l + r1l * (r - 4)) * (
-                       1 - 1 / (1 + np.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt))))
+        1 / (1 + np.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt)))
+    ) + (c0l + r1l * (r - 4)) * (
+        1
+        - 1 / (1 + np.exp(kat * (a - at) + krt * (r - rt) + kart * (a - at) * (r - rt)))
+    )
 
-    Cd = 10 ** log10_Cd
+    Cd = 10**log10_Cd
 
     return Cd
 
 
-def Cd_wave_rae2822(Cl, mach, sweep=0.):
+def Cd_wave_rae2822(Cl, mach, sweep=0.0):
     r"""
     A curve fit I did to RAE2822 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
@@ -418,10 +433,10 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
 
     # Coeffs
-    c2 = 4.5776476424519119e+00
+    c2 = 4.5776476424519119e00
     mc0 = 9.5623337929607111e-01
     mc1 = 2.0552787101770234e-01
-    mc2 = 1.1259268018737063e+00
+    mc2 = 1.1259268018737063e00
     mc3 = 1.9538856688443659e-01
 
     m = mach_perpendicular
@@ -433,8 +448,8 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.):
 
 
 def fuselage_upsweep_drag_area(
-        upsweep_angle_rad: float,
-        fuselage_xsec_area_max: float,
+    upsweep_angle_rad: float,
+    fuselage_xsec_area_max: float,
 ) -> float:
     """
     Calculates the drag area (in m^2) of the aft end of a fuselage with a given upsweep angle.

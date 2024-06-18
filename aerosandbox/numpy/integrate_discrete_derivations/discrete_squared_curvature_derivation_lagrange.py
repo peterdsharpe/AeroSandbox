@@ -9,14 +9,15 @@ init_printing()
 hm, h, hp = s.symbols("hm h hp", real=True)
 dfm, df, dfp = s.symbols("dfm df dfp", real=True)
 
-x1, x2, x3, x4 = s.symbols('x1 x2 x3 x4', real=True)
-f1, f2, f3, f4 = s.symbols('f1 f2 f3 f4', real=True)
+x1, x2, x3, x4 = s.symbols("x1 x2 x3 x4", real=True)
+f1, f2, f3, f4 = s.symbols("f1 f2 f3 f4", real=True)
 
-x = s.symbols('x', real=True)
+x = s.symbols("x", real=True)
 
 
 def simplify(expr, maxdepth=10, _depth=0):
     import copy
+
     original_expr = copy.copy(expr)
     print(f"Depth: {_depth} | Parsimony: {len(str(expr))}")
     maps = {
@@ -47,10 +48,10 @@ def simplify(expr, maxdepth=10, _depth=0):
 
 
 f = (
-        f1 * (x - x2) * (x - x3) * (x - x4) / ((x1 - x2) * (x1 - x3) * (x1 - x4)) +
-        f2 * (x - x1) * (x - x3) * (x - x4) / ((x2 - x1) * (x2 - x3) * (x2 - x4)) +
-        f3 * (x - x1) * (x - x2) * (x - x4) / ((x3 - x1) * (x3 - x2) * (x3 - x4)) +
-        f4 * (x - x1) * (x - x2) * (x - x3) / ((x4 - x1) * (x4 - x2) * (x4 - x3))
+    f1 * (x - x2) * (x - x3) * (x - x4) / ((x1 - x2) * (x1 - x3) * (x1 - x4))
+    + f2 * (x - x1) * (x - x3) * (x - x4) / ((x2 - x1) * (x2 - x3) * (x2 - x4))
+    + f3 * (x - x1) * (x - x2) * (x - x4) / ((x3 - x1) * (x3 - x2) * (x3 - x4))
+    + f4 * (x - x1) * (x - x2) * (x - x3) / ((x4 - x1) * (x4 - x2) * (x4 - x3))
 )
 f = simplify(f)
 
@@ -60,7 +61,7 @@ dfdx = simplify(dfdx)
 df2dx = f.diff(x, 2)
 df2dx = simplify(df2dx)
 
-res = s.integrate(df2dx ** 2, (x, x2, x3))
+res = s.integrate(df2dx**2, (x, x2, x3))
 res = simplify(res.factor([f1, f2, f3, f4]))
 
 parsimony = len(str(res))

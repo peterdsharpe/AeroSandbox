@@ -5,9 +5,9 @@ from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 
 def generate_fuselage(
-        fuselage: Fuselage,
-        include_main=True,
-        continuity_type: str = "C2",
+    fuselage: Fuselage,
+    include_main=True,
+    continuity_type: str = "C2",
 ) -> str:
     """
     Generates a VSPScript file for a Fuselage object.
@@ -115,7 +115,7 @@ Update();
     return script
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox as asb
     import aerosandbox.numpy as np
 
@@ -126,13 +126,13 @@ if __name__ == '__main__':
         name="Fuse",
         xsecs=[
             FuselageXSec(
-                xyz_c=[xi, 0, 0.05 * xi ** 2],
+                xyz_c=[xi, 0, 0.05 * xi**2],
                 width=2 * af.local_thickness(xi),
                 height=af.local_thickness(xi),
-                shape=4
+                shape=4,
             )
             for xi in x
-        ]
+        ],
     )
     print(generate_fuselage(fuse))
 

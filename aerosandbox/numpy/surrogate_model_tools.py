@@ -4,9 +4,9 @@ from typing import Tuple, Union
 
 
 def softmax(
-        *args: Union[float, _np.ndarray],
-        softness: float = None,
-        hardness: float = None,
+    *args: Union[float, _np.ndarray],
+    softness: float = None,
+    hardness: float = None,
 ) -> Union[float, _np.ndarray]:
     """
     An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
@@ -52,8 +52,10 @@ def softmax(
             raise ValueError("The value of `hardness` must be positive.")
 
     if len(args) <= 1:
-        raise ValueError("You must call softmax with the value of two or more arrays that you'd like to take the "
-                         "element-wise softmax of.")
+        raise ValueError(
+            "You must call softmax with the value of two or more arrays that you'd like to take the "
+            "element-wise softmax of."
+        )
 
     ### Scale the args by softness
     args = [arg / softness for arg in args]
@@ -65,18 +67,17 @@ def softmax(
         min = _np.fmin(min, arg)
         max = _np.fmax(max, arg)
 
-    out = max + _np.log(sum(
-        [_np.exp(_np.maximum(array - max, -500)) for array in args]
-    )
+    out = max + _np.log(
+        sum([_np.exp(_np.maximum(array - max, -500)) for array in args])
     )
     out = out * softness
     return out
 
 
 def softmin(
-        *args: Union[float, _np.ndarray],
-        softness: float = None,
-        hardness: float = None,
+    *args: Union[float, _np.ndarray],
+    softness: float = None,
+    hardness: float = None,
 ) -> Union[float, _np.ndarray]:
     """
     An element-wise softmin between two or more arrays. Related to the logsumexp() function.
@@ -113,29 +114,30 @@ def softmin(
 
 
 def softmax_scalefree(
-        *args: Union[float, _np.ndarray],
-        relative_softness: float = None,
-        relative_hardness: float = None,
+    *args: Union[float, _np.ndarray],
+    relative_softness: float = None,
+    relative_hardness: float = None,
 ) -> Union[float, _np.ndarray]:
-    n_specified_arguments = (relative_hardness is not None) + (relative_softness is not None)
+    n_specified_arguments = (relative_hardness is not None) + (
+        relative_softness is not None
+    )
     if n_specified_arguments == 0:
         relative_softness = 0.01
     elif n_specified_arguments == 2:
-        raise ValueError("You must provide exactly one of `relative_softness` or `relative_hardness.")
+        raise ValueError(
+            "You must provide exactly one of `relative_softness` or `relative_hardness."
+        )
 
     if relative_hardness is not None:
         relative_softness = 1 / relative_hardness
 
-    return softmax(
-        *args,
-        softness=relative_softness * _np.linalg.norm(_np.array(args))
-    )
+    return softmax(*args, softness=relative_softness * _np.linalg.norm(_np.array(args)))
 
 
 def softmin_scalefree(
-        *args: Union[float, _np.ndarray],
-        relative_softness: float = None,
-        relative_hardness: float = None,
+    *args: Union[float, _np.ndarray],
+    relative_softness: float = None,
+    relative_hardness: float = None,
 ) -> Union[float, _np.ndarray]:
     return -softmax_scalefree(
         *[-arg for arg in args],
@@ -145,9 +147,9 @@ def softmin_scalefree(
 
 
 def softplus(
-        x: Union[float, _np.ndarray],
-        beta=1,
-        threshold=40,
+    x: Union[float, _np.ndarray],
+    beta=1,
+    threshold=40,
 ):
     """
     A smooth approximation of the ReLU function, applied elementwise to an array `x`.
@@ -166,18 +168,16 @@ def softplus(
     """
     if _np.is_casadi_type(x, recursive=False):
         return _np.where(
-            beta * x > threshold,
-            x,
-            1 / beta * _cas.log1p(_cas.exp(beta * x))
+            beta * x > threshold, x, 1 / beta * _cas.log1p(_cas.exp(beta * x))
         )
     else:
         return 1 / beta * _np.logaddexp(0, beta * x)
 
 
 def sigmoid(
-        x,
-        sigmoid_type: str = "tanh",
-        normalization_range: Tuple[Union[float, int], Union[float, int]] = (0, 1)
+    x,
+    sigmoid_type: str = "tanh",
+    normalization_range: Tuple[Union[float, int], Union[float, int]] = (0, 1),
 ):
     """
     A sigmoid function. From Wikipedia (https://en.wikipedia.org/wiki/Sigmoid_function):
@@ -217,7 +217,7 @@ def sigmoid(
     elif sigmoid_type == "arctan":
         s = 2 / _np.pi * _np.arctan(_np.pi / 2 * x)
     elif sigmoid_type == "polynomial":
-        s = x / (1 + x ** 2) ** 0.5
+        s = x / (1 + x**2) ** 0.5
     else:
         raise ValueError("Bad value of parameter 'type'!")
 
@@ -229,10 +229,7 @@ def sigmoid(
     return s_normalized
 
 
-def swish(
-        x,
-        beta=1
-):
+def swish(x, beta=1):
     """
     A smooth approximation of the ReLU function, applied elementwise to an array `x`.
 
@@ -251,9 +248,9 @@ def swish(
 
 
 def blend(
-        switch: float,
-        value_switch_high,
-        value_switch_low,
+    switch: float,
+    value_switch_high,
+    value_switch_low,
 ):
     """
     Smoothly blends between two values on the basis of some switch function.
@@ -280,15 +277,11 @@ def blend(
         on the value of the 'switch' parameter.
 
     """
-    blend_function = lambda x: sigmoid(
-        x,
-        normalization_range=(0, 1)
-    )
+    blend_function = lambda x: sigmoid(x, normalization_range=(0, 1))
     weight_to_value_switch_high = blend_function(switch)
 
-    blend_value = (
-            value_switch_high * weight_to_value_switch_high +
-            value_switch_low * (1 - weight_to_value_switch_high)
+    blend_value = value_switch_high * weight_to_value_switch_high + value_switch_low * (
+        1 - weight_to_value_switch_high
     )
 
     return blend_value

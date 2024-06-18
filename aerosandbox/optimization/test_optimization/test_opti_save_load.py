@@ -10,7 +10,7 @@ Minimization over a simple unimodal function is used here:
 
 
 def sumsqr(x):
-    return np.sum(x ** 2)
+    return np.sum(x**2)
 
 
 def test_opti():
@@ -80,7 +80,6 @@ def test_save_and_load_opti(tmp_path):
         cache_filename=temp_filename,
         variable_categories_to_freeze=["Cat 1"],
         load_frozen_variables_from_cache=True,
-
     )
     x = opti.variable(init_guess=0, category="Cat 1")
     y = opti.variable(init_guess=0, category="Cat 2")
@@ -128,7 +127,6 @@ def test_save_and_load_opti_uncategorized(tmp_path):
         cache_filename=temp_filename,
         variable_categories_to_freeze=["Uncategorized"],
         load_frozen_variables_from_cache=True,
-
     )
     x = opti.variable(init_guess=0)
     y = opti.variable(init_guess=0)
@@ -177,7 +175,6 @@ def test_save_and_load_opti_vectorized(tmp_path):
         cache_filename=temp_filename,
         variable_categories_to_freeze=["Cat 1"],
         load_frozen_variables_from_cache=True,
-
     )
     x = opti.variable(init_guess=0, n_vars=3, category="Cat 1")
     y = opti.variable(init_guess=0, n_vars=3, category="Cat 2")
@@ -226,7 +223,6 @@ def test_save_and_load_opti_freeze_override(tmp_path):
         cache_filename=temp_filename,
         variable_categories_to_freeze=["Cat 1"],
         load_frozen_variables_from_cache=True,
-
     )
     x = opti.variable(init_guess=3, category="Cat 1", freeze=True)
     y = opti.variable(init_guess=0, category="Cat 2")
@@ -244,7 +240,7 @@ def test_save_and_load_opti_freeze_override(tmp_path):
     assert sol(f) == pytest.approx(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # from pathlib import Path
     # tmp_path = Path.home() / "Downloads" / "test"
     # test_save_and_load_opti(tmp_path)

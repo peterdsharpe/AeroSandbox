@@ -29,7 +29,9 @@ def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
     # Exclusions:
     if path == Path(os.path.abspath(__file__)):  # Don't run this file
         return
-    if "ignore" in str(path).lower():  # Don't run any file or folder with the word "ignore" in the name.
+    if (
+        "ignore" in str(path).lower()
+    ):  # Don't run any file or folder with the word "ignore" in the name.
         return
 
     if path.is_file():

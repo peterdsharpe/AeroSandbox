@@ -31,5 +31,5 @@ def test_softmax(plot=False):
         plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

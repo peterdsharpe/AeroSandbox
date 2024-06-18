@@ -1,6 +1,8 @@
 import aerosandbox as asb
 import pytest
-from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
+from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import (
+    airplane,
+)
 
 
 def test_aero_buildup():
@@ -11,6 +13,6 @@ def test_aero_buildup():
     return analysis.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     aero = test_aero_buildup()
     # pytest.main()

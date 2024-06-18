@@ -30,18 +30,19 @@ class MassProperties(AeroSandboxObject):
 
     """
 
-    def __init__(self,
-                 mass: Union[float, np.ndarray] = None,
-                 x_cg: Union[float, np.ndarray] = 0.,
-                 y_cg: Union[float, np.ndarray] = 0.,
-                 z_cg: Union[float, np.ndarray] = 0.,
-                 Ixx: Union[float, np.ndarray] = 0.,
-                 Iyy: Union[float, np.ndarray] = 0.,
-                 Izz: Union[float, np.ndarray] = 0.,
-                 Ixy: Union[float, np.ndarray] = 0.,
-                 Iyz: Union[float, np.ndarray] = 0.,
-                 Ixz: Union[float, np.ndarray] = 0.,
-                 ):
+    def __init__(
+        self,
+        mass: Union[float, np.ndarray] = None,
+        x_cg: Union[float, np.ndarray] = 0.0,
+        y_cg: Union[float, np.ndarray] = 0.0,
+        z_cg: Union[float, np.ndarray] = 0.0,
+        Ixx: Union[float, np.ndarray] = 0.0,
+        Iyy: Union[float, np.ndarray] = 0.0,
+        Izz: Union[float, np.ndarray] = 0.0,
+        Ixy: Union[float, np.ndarray] = 0.0,
+        Iyz: Union[float, np.ndarray] = 0.0,
+        Ixz: Union[float, np.ndarray] = 0.0,
+    ):
         """
         Initializes a new MassProperties object.
 
@@ -81,9 +82,10 @@ class MassProperties(AeroSandboxObject):
         """
         if mass is None:
             import warnings
+
             warnings.warn(
                 "Defining a MassProperties object with zero mass. This can cause problems (divide-by-zero) in dynamics calculations, if this is not intended.\nTo silence this warning, please explicitly set `mass=0` in the MassProperties constructor.",
-                stacklevel=2
+                stacklevel=2,
             )
             mass = 0
 
@@ -108,15 +110,17 @@ class MassProperties(AeroSandboxObject):
                     return f"{x:.8g}".rjust(width)
             return trim_string(str(x).rjust(width), length=40)
 
-        return "\n".join([
-            "MassProperties instance:",
-            f"                 Mass : {fmt(self.mass)}",
-            f"    Center of Gravity : ({fmt(self.x_cg)}, {fmt(self.y_cg)}, {fmt(self.z_cg)})",
-            f"       Inertia Tensor : ",
-            f"            (about CG)  [{fmt(self.Ixx)}, {fmt(self.Ixy)}, {fmt(self.Ixz)}]",
-            f"                        [{fmt(self.Ixy)}, {fmt(self.Iyy)}, {fmt(self.Iyz)}]",
-            f"                        [{fmt(self.Ixz)}, {fmt(self.Iyz)}, {fmt(self.Izz)}]",
-        ])
+        return "\n".join(
+            [
+                "MassProperties instance:",
+                f"                 Mass : {fmt(self.mass)}",
+                f"    Center of Gravity : ({fmt(self.x_cg)}, {fmt(self.y_cg)}, {fmt(self.z_cg)})",
+                f"       Inertia Tensor : ",
+                f"            (about CG)  [{fmt(self.Ixx)}, {fmt(self.Ixy)}, {fmt(self.Ixz)}]",
+                f"                        [{fmt(self.Ixy)}, {fmt(self.Iyy)}, {fmt(self.Iyz)}]",
+                f"                        [{fmt(self.Ixz)}, {fmt(self.Iyz)}, {fmt(self.Izz)}]",
+            ]
+        )
 
     def __getitem__(self, index) -> "MassProperties":
         """
@@ -142,8 +146,10 @@ class MassProperties(AeroSandboxObject):
                     try:
                         return a[index]
                     except IndexError as e:
-                        raise IndexError(f"A state variable could not be indexed; it has length {len(a)} while the"
-                                         f"parent has length {l}.")
+                        raise IndexError(
+                            f"A state variable could not be indexed; it has length {len(a)} while the"
+                            f"parent has length {l}."
+                        )
             else:
                 return a
 
@@ -152,19 +158,16 @@ class MassProperties(AeroSandboxObject):
             "x_cg": self.x_cg,
             "y_cg": self.y_cg,
             "z_cg": self.z_cg,
-            "Ixx" : self.Ixx,
-            "Iyy" : self.Iyy,
-            "Izz" : self.Izz,
-            "Ixy" : self.Ixy,
-            "Iyz" : self.Iyz,
-            "Ixz" : self.Ixz,
+            "Ixx": self.Ixx,
+            "Iyy": self.Iyy,
+            "Izz": self.Izz,
+            "Ixy": self.Ixy,
+            "Iyz": self.Iyz,
+            "Ixz": self.Ixz,
         }
 
         return self.__class__(
-            **{
-                k: get_item_of_attribute(v)
-                for k, v in inputs.items()
-            }
+            **{k: get_item_of_attribute(v) for k, v in inputs.items()}
         )
 
     def __len__(self):
@@ -188,7 +191,9 @@ class MassProperties(AeroSandboxObject):
                 elif length == lv:
                     pass
                 else:
-                    raise ValueError("State variables are appear vectorized, but of different lengths!")
+                    raise ValueError(
+                        "State variables are appear vectorized, but of different lengths!"
+                    )
         return length
 
     def __array__(self, dtype="O"):
@@ -205,30 +210,25 @@ class MassProperties(AeroSandboxObject):
         Combines one MassProperties object with another.
         """
         if not isinstance(other, MassProperties):
-            raise TypeError("MassProperties objects can only be added to other MassProperties objects.")
+            raise TypeError(
+                "MassProperties objects can only be added to other MassProperties objects."
+            )
 
         total_mass = self.mass + other.mass
         total_x_cg = (self.mass * self.x_cg + other.mass * other.x_cg) / total_mass
         total_y_cg = (self.mass * self.y_cg + other.mass * other.y_cg) / total_mass
         total_z_cg = (self.mass * self.z_cg + other.mass * other.z_cg) / total_mass
         self_inertia_tensor_elements = self.get_inertia_tensor_about_point(
-            x=total_x_cg,
-            y=total_y_cg,
-            z=total_z_cg,
-            return_tensor=False
+            x=total_x_cg, y=total_y_cg, z=total_z_cg, return_tensor=False
         )
         other_inertia_tensor_elements = other.get_inertia_tensor_about_point(
-            x=total_x_cg,
-            y=total_y_cg,
-            z=total_z_cg,
-            return_tensor=False
+            x=total_x_cg, y=total_y_cg, z=total_z_cg, return_tensor=False
         )
 
         total_inertia_tensor_elements = [
             I__ + J__
             for I__, J__ in zip(
-                self_inertia_tensor_elements,
-                other_inertia_tensor_elements
+                self_inertia_tensor_elements, other_inertia_tensor_elements
             )
         ]
 
@@ -293,33 +293,32 @@ class MassProperties(AeroSandboxObject):
         """
         return self.__mul__(1 / other)
 
-    def allclose(self,
-                 other: "MassProperties",
-                 rtol=1e-5,
-                 atol=1e-8,
-                 equal_nan=False
-                 ) -> bool:
-        return all([
-            np.allclose(
-                getattr(self, attribute),
-                getattr(other, attribute),
-                rtol=rtol,
-                atol=atol,
-                equal_nan=equal_nan
-            )
-            for attribute in [
-                "mass",
-                "x_cg",
-                "y_cg",
-                "z_cg",
-                "Ixx",
-                "Iyy",
-                "Izz",
-                "Ixy",
-                "Iyz",
-                "Ixz",
+    def allclose(
+        self, other: "MassProperties", rtol=1e-5, atol=1e-8, equal_nan=False
+    ) -> bool:
+        return all(
+            [
+                np.allclose(
+                    getattr(self, attribute),
+                    getattr(other, attribute),
+                    rtol=rtol,
+                    atol=atol,
+                    equal_nan=equal_nan,
+                )
+                for attribute in [
+                    "mass",
+                    "x_cg",
+                    "y_cg",
+                    "z_cg",
+                    "Ixx",
+                    "Iyy",
+                    "Izz",
+                    "Ixy",
+                    "Iyz",
+                    "Ixz",
+                ]
             ]
-        ])
+        )
 
     @property
     def xyz_cg(self):
@@ -329,9 +328,11 @@ class MassProperties(AeroSandboxObject):
     def inertia_tensor(self):
         # Returns the inertia tensor about the component's centroid.
         return np.array(
-            [[self.Ixx, self.Ixy, self.Ixz],
-             [self.Ixy, self.Iyy, self.Iyz],
-             [self.Ixz, self.Iyz, self.Izz]]
+            [
+                [self.Ixx, self.Ixy, self.Ixz],
+                [self.Ixy, self.Iyy, self.Iyz],
+                [self.Ixz, self.Iyz, self.Izz],
+            ]
         )
 
     def inv_inertia_tensor(self):
@@ -349,18 +350,15 @@ class MassProperties(AeroSandboxObject):
             m23=self.Iyz,
             m13=self.Ixz,
         )
-        return np.array(
-            [[iIxx, iIxy, iIxz],
-             [iIxy, iIyy, iIyz],
-             [iIxz, iIyz, iIzz]]
-        )
+        return np.array([[iIxx, iIxy, iIxz], [iIxy, iIyy, iIyz], [iIxz, iIyz, iIzz]])
 
-    def get_inertia_tensor_about_point(self,
-                                       x: float = 0.,
-                                       y: float = 0.,
-                                       z: float = 0.,
-                                       return_tensor: bool = True,
-                                       ):
+    def get_inertia_tensor_about_point(
+        self,
+        x: float = 0.0,
+        y: float = 0.0,
+        z: float = 0.0,
+        return_tensor: bool = True,
+    ):
         """
         Returns the inertia tensor about an arbitrary point.
         Using https://en.wikipedia.org/wiki/Parallel_axis_theorem#Tensor_generalization
@@ -396,11 +394,13 @@ class MassProperties(AeroSandboxObject):
         Jxz = self.Ixz - self.mass * R[2] * R[0]
 
         if return_tensor:
-            return np.array([
-                [Jxx, Jxy, Jxz],
-                [Jxy, Jyy, Jyz],
-                [Jxz, Jyz, Jzz],
-            ])
+            return np.array(
+                [
+                    [Jxx, Jxy, Jxz],
+                    [Jxy, Jyy, Jyz],
+                    [Jxz, Jyz, Jzz],
+                ]
+            )
         else:
             return Jxx, Jyy, Jzz, Jxy, Jyz, Jxz
 
@@ -435,19 +435,23 @@ class MassProperties(AeroSandboxObject):
 
         # ## This checks that the inertia tensor is positive definite, which is a necessary but not sufficient
         # condition for an inertia tensor to be physically possible.
-        impossible_conditions.extend([
-            eigs[0] < 0,
-            eigs[1] < 0,
-            eigs[2] < 0,
-        ])
+        impossible_conditions.extend(
+            [
+                eigs[0] < 0,
+                eigs[1] < 0,
+                eigs[2] < 0,
+            ]
+        )
 
         # ## This checks the triangle inequality, which is a necessary but not sufficient condition for an inertia
         # tensor to be physically possible.
-        impossible_conditions.extend([
-            eigs[0] + eigs[1] < eigs[2],
-            eigs[0] + eigs[2] < eigs[1],
-            eigs[1] + eigs[2] < eigs[0],
-        ])
+        impossible_conditions.extend(
+            [
+                eigs[0] + eigs[1] < eigs[2],
+                eigs[0] + eigs[2] < eigs[1],
+                eigs[1] + eigs[2] < eigs[0],
+            ]
+        )
 
         return not any(impossible_conditions)
 
@@ -457,10 +461,11 @@ class MassProperties(AeroSandboxObject):
         """
         return np.allclose(self.inertia_tensor, 0)
 
-    def generate_possible_set_of_point_masses(self,
-                                              method="optimization",
-                                              check_if_already_a_point_mass: bool = True,
-                                              ) -> List["MassProperties"]:
+    def generate_possible_set_of_point_masses(
+        self,
+        method="optimization",
+        check_if_already_a_point_mass: bool = True,
+    ) -> List["MassProperties"]:
         """
         Generates a set of point masses (represented as MassProperties objects with zero inertia tensors), that, when
         combined, would yield this MassProperties object.
@@ -489,12 +494,17 @@ class MassProperties(AeroSandboxObject):
 
             opti = Opti()
 
-            approximate_radius = (self.Ixx + self.Iyy + self.Izz) ** 0.5 / self.mass + 1e-16
+            approximate_radius = (
+                self.Ixx + self.Iyy + self.Izz
+            ) ** 0.5 / self.mass + 1e-16
 
             point_masses = [
                 MassProperties(
                     mass=self.mass / 4,
-                    x_cg=opti.variable(init_guess=self.x_cg - approximate_radius, scale=approximate_radius),
+                    x_cg=opti.variable(
+                        init_guess=self.x_cg - approximate_radius,
+                        scale=approximate_radius,
+                    ),
                     y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
                     z_cg=opti.variable(init_guess=self.z_cg, scale=approximate_radius),
                 ),
@@ -502,18 +512,27 @@ class MassProperties(AeroSandboxObject):
                     mass=self.mass / 4,
                     x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
                     y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
-                    z_cg=opti.variable(init_guess=self.z_cg + approximate_radius, scale=approximate_radius),
+                    z_cg=opti.variable(
+                        init_guess=self.z_cg + approximate_radius,
+                        scale=approximate_radius,
+                    ),
                 ),
                 MassProperties(
                     mass=self.mass / 4,
                     x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
                     y_cg=opti.variable(init_guess=self.y_cg, scale=approximate_radius),
-                    z_cg=opti.variable(init_guess=self.z_cg - approximate_radius, scale=approximate_radius),
+                    z_cg=opti.variable(
+                        init_guess=self.z_cg - approximate_radius,
+                        scale=approximate_radius,
+                    ),
                 ),
                 MassProperties(
                     mass=self.mass / 4,
                     x_cg=opti.variable(init_guess=self.x_cg, scale=approximate_radius),
-                    y_cg=opti.variable(init_guess=self.y_cg + approximate_radius, scale=approximate_radius),
+                    y_cg=opti.variable(
+                        init_guess=self.y_cg + approximate_radius,
+                        scale=approximate_radius,
+                    ),
                     z_cg=opti.variable(init_guess=self.z_cg, scale=approximate_radius),
                 ),
             ]
@@ -539,7 +558,6 @@ class MassProperties(AeroSandboxObject):
 
             return opti.solve(verbose=False)(point_masses)
 
-
         elif method == "barbell":
             raise NotImplementedError("Barbell method not yet implemented!")
             principle_inertias, principle_axes = np.linalg.eig(self.inertia_tensor)
@@ -547,9 +565,10 @@ class MassProperties(AeroSandboxObject):
         else:
             raise ValueError("Bad value of `method` argument!")
 
-    def export_AVL_mass_file(self,
-                             filename,
-                             ) -> None:
+    def export_AVL_mass_file(
+        self,
+        filename,
+    ) -> None:
         """
         Exports this MassProperties object to an AVL mass file.
 
@@ -577,49 +596,52 @@ class MassProperties(AeroSandboxObject):
         def fmt(x: float) -> str:
             return f"{x:.8g}".ljust(14)
 
-        lines.extend([
-            " ".join([
-                s.ljust(14) for s in [
-                    "#  mass",
-                    "x_cg",
-                    "y_cg",
-                    "z_cg",
-                    "Ixx",
-                    "Iyy",
-                    "Izz",
-                    "Ixy",
-                    "Ixz",
-                    "Iyz",
-                ]
-            ]),
-            " ".join([
-                fmt(x) for x in [
-                    self.mass,
-                    self.x_cg,
-                    self.y_cg,
-                    self.z_cg,
-                    self.Ixx,
-                    self.Iyy,
-                    self.Izz,
-                    -self.Ixy,
-                    -self.Ixz,
-                    -self.Iyz,
-                ]
-            ])
-        ])
+        lines.extend(
+            [
+                " ".join(
+                    [
+                        s.ljust(14)
+                        for s in [
+                            "#  mass",
+                            "x_cg",
+                            "y_cg",
+                            "z_cg",
+                            "Ixx",
+                            "Iyy",
+                            "Izz",
+                            "Ixy",
+                            "Ixz",
+                            "Iyz",
+                        ]
+                    ]
+                ),
+                " ".join(
+                    [
+                        fmt(x)
+                        for x in [
+                            self.mass,
+                            self.x_cg,
+                            self.y_cg,
+                            self.z_cg,
+                            self.Ixx,
+                            self.Iyy,
+                            self.Izz,
+                            -self.Ixy,
+                            -self.Ixz,
+                            -self.Iyz,
+                        ]
+                    ]
+                ),
+            ]
+        )
 
         with open(filename, "w+") as f:
             f.write("\n".join(lines))
 
 
-if __name__ == '__main__':
-    mp1 = MassProperties(
-        mass=1
-    )
-    mp2 = MassProperties(
-        mass=1,
-        x_cg=1
-    )
+if __name__ == "__main__":
+    mp1 = MassProperties(mass=1)
+    mp2 = MassProperties(mass=1, x_cg=1)
     mps = mp1 + mp2
     assert mps.x_cg == 0.5
 
@@ -631,8 +653,14 @@ if __name__ == '__main__':
     while not valid:
         mass_props = MassProperties(
             mass=r(),
-            x_cg=r(), y_cg=r(), z_cg=r(),
-            Ixx=r(), Iyy=r(), Izz=r(),
-            Ixy=r(), Iyz=r(), Ixz=r(),
+            x_cg=r(),
+            y_cg=r(),
+            z_cg=r(),
+            Ixx=r(),
+            Iyy=r(),
+            Izz=r(),
+            Ixy=r(),
+            Iyz=r(),
+            Ixz=r(),
         )
         valid = mass_props.is_physically_possible()  # adds a bunch of checks

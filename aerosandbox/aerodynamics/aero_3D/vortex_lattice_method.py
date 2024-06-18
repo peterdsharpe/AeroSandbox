@@ -2,8 +2,9 @@ import aerosandbox.numpy as np
 from aerosandbox import ExplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
-from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
-    calculate_induced_velocity_horseshoe
+from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
+    calculate_induced_velocity_horseshoe,
+)
 from typing import Dict, Any, List, Callable
 import copy
 
@@ -38,19 +39,24 @@ class VortexLatticeMethod(ExplicitAnalysis):
         >>> analysis.draw()
     """
 
-    def __init__(self,
-                 airplane: Airplane,
-                 op_point: OperatingPoint,
-                 xyz_ref: List[float] = None,
-                 run_symmetric_if_possible: bool = False,
-                 verbose: bool = False,
-                 spanwise_resolution: int = 10,
-                 spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
-                 chordwise_resolution: int = 10,
-                 chordwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
-                 vortex_core_radius: float = 1e-8,
-                 align_trailing_vortices_with_wind: bool = False,
-                 ):
+    def __init__(
+        self,
+        airplane: Airplane,
+        op_point: OperatingPoint,
+        xyz_ref: List[float] = None,
+        run_symmetric_if_possible: bool = False,
+        verbose: bool = False,
+        spanwise_resolution: int = 10,
+        spanwise_spacing_function: Callable[
+            [float, float, float], np.ndarray
+        ] = np.cosspace,
+        chordwise_resolution: int = 10,
+        chordwise_spacing_function: Callable[
+            [float, float, float], np.ndarray
+        ] = np.cosspace,
+        vortex_core_radius: float = 1e-8,
+        align_trailing_vortices_with_wind: bool = False,
+    ):
         super().__init__()
 
         ### Set defaults
@@ -72,7 +78,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
         if run_symmetric_if_possible:
-            raise NotImplementedError("VLM with symmetry detection not yet implemented!")
+            raise NotImplementedError(
+                "VLM with symmetry detection not yet implemented!"
+            )
             # try:
             #     self.run_symmetric = (  # Satisfies assumptions
             #             self.op_point.beta == 0 and
@@ -84,11 +92,18 @@ class VortexLatticeMethod(ExplicitAnalysis):
             #     pass
 
     def __repr__(self):
-        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
-            f"airplane={self.airplane}",
-            f"op_point={self.op_point}",
-            f"xyz_ref={self.xyz_ref}",
-        ]) + "\n)"
+        return (
+            self.__class__.__name__
+            + "(\n\t"
+            + "\n\t".join(
+                [
+                    f"airplane={self.airplane}",
+                    f"op_point={self.op_point}",
+                    f"xyz_ref={self.xyz_ref}",
+                ]
+            )
+            + "\n)"
+        )
 
     def run(self) -> Dict[str, Any]:
         """
@@ -132,14 +147,14 @@ class VortexLatticeMethod(ExplicitAnalysis):
             if self.spanwise_resolution > 1:
                 wing = wing.subdivide_sections(
                     ratio=self.spanwise_resolution,
-                    spacing_function=self.spanwise_spacing_function
+                    spacing_function=self.spanwise_spacing_function,
                 )
 
             points, faces = wing.mesh_thin_surface(
                 method="quad",
                 chordwise_resolution=self.chordwise_resolution,
                 chordwise_spacing_function=self.chordwise_spacing_function,
-                add_camber=True
+                add_camber=True,
             )
             front_left_vertices.append(points[faces[:, 0], :])
             back_left_vertices.append(points[faces[:, 1], :])
@@ -168,10 +183,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         right_vortex_vertices = 0.75 * front_right_vertices + 0.25 * back_right_vertices
         vortex_centers = (left_vortex_vertices + right_vortex_vertices) / 2
         vortex_bound_leg = right_vortex_vertices - left_vortex_vertices
-        collocation_points = (
-                0.5 * (0.25 * front_left_vertices + 0.75 * back_left_vertices) +
-                0.5 * (0.25 * front_right_vertices + 0.75 * back_right_vertices)
-        )
+        collocation_points = 0.5 * (
+            0.25 * front_left_vertices + 0.75 * back_left_vertices
+        ) + 0.5 * (0.25 * front_right_vertices + 0.75 * back_right_vertices)
 
         ### Save things to the instance for later access
         self.front_left_vertices = front_left_vertices
@@ -190,15 +204,24 @@ class VortexLatticeMethod(ExplicitAnalysis):
         ##### Setup Operating Point
         if self.verbose:
             print("Calculating the freestream influence...")
-        steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
-        steady_freestream_direction = steady_freestream_velocity / np.linalg.norm(steady_freestream_velocity)
-        rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            collocation_points)
+        steady_freestream_velocity = (
+            self.op_point.compute_freestream_velocity_geometry_axes()
+        )  # Direction the wind is GOING TO, in geometry axes coordinates
+        steady_freestream_direction = steady_freestream_velocity / np.linalg.norm(
+            steady_freestream_velocity
+        )
+        rotation_freestream_velocities = (
+            self.op_point.compute_rotation_velocity_geometry_axes(collocation_points)
+        )
 
-        freestream_velocities = np.add(wide(steady_freestream_velocity), rotation_freestream_velocities)
+        freestream_velocities = np.add(
+            wide(steady_freestream_velocity), rotation_freestream_velocities
+        )
         # Nx3, represents the freestream velocity at each panel collocation point (c)
 
-        freestream_influences = np.sum(freestream_velocities * normal_directions, axis=1)
+        freestream_influences = np.sum(
+            freestream_velocities * normal_directions, axis=1
+        )
 
         ### Save things to the instance for later access
         self.steady_freestream_velocity = steady_freestream_velocity
@@ -210,29 +233,31 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if self.verbose:
             print("Calculating the collocation influence matrix...")
 
-        u_collocations_unit, v_collocations_unit, w_collocations_unit = calculate_induced_velocity_horseshoe(
-            x_field=tall(collocation_points[:, 0]),
-            y_field=tall(collocation_points[:, 1]),
-            z_field=tall(collocation_points[:, 2]),
-            x_left=wide(left_vortex_vertices[:, 0]),
-            y_left=wide(left_vortex_vertices[:, 1]),
-            z_left=wide(left_vortex_vertices[:, 2]),
-            x_right=wide(right_vortex_vertices[:, 0]),
-            y_right=wide(right_vortex_vertices[:, 1]),
-            z_right=wide(right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=(
-                steady_freestream_direction
-                if self.align_trailing_vortices_with_wind else
-                np.array([1, 0, 0])
-            ),
-            gamma=1.,
-            vortex_core_radius=self.vortex_core_radius
+        u_collocations_unit, v_collocations_unit, w_collocations_unit = (
+            calculate_induced_velocity_horseshoe(
+                x_field=tall(collocation_points[:, 0]),
+                y_field=tall(collocation_points[:, 1]),
+                z_field=tall(collocation_points[:, 2]),
+                x_left=wide(left_vortex_vertices[:, 0]),
+                y_left=wide(left_vortex_vertices[:, 1]),
+                z_left=wide(left_vortex_vertices[:, 2]),
+                x_right=wide(right_vortex_vertices[:, 0]),
+                y_right=wide(right_vortex_vertices[:, 1]),
+                z_right=wide(right_vortex_vertices[:, 2]),
+                trailing_vortex_direction=(
+                    steady_freestream_direction
+                    if self.align_trailing_vortices_with_wind
+                    else np.array([1, 0, 0])
+                ),
+                gamma=1.0,
+                vortex_core_radius=self.vortex_core_radius,
+            )
         )
 
         AIC = (
-                u_collocations_unit * tall(normal_directions[:, 0]) +
-                v_collocations_unit * tall(normal_directions[:, 1]) +
-                w_collocations_unit * tall(normal_directions[:, 2])
+            u_collocations_unit * tall(normal_directions[:, 0])
+            + v_collocations_unit * tall(normal_directions[:, 1])
+            + w_collocations_unit * tall(normal_directions[:, 2])
         )
 
         ##### Calculate Vortex Strengths
@@ -256,10 +281,13 @@ class VortexLatticeMethod(ExplicitAnalysis):
         # not WIND AXES or BODY AXES.
         Vi_cross_li = np.cross(V_centers, vortex_bound_leg, axis=1)
 
-        forces_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
+        forces_geometry = (
+            self.op_point.atmosphere.density()
+            * Vi_cross_li
+            * tall(self.vortex_strengths)
+        )
         moments_geometry = np.cross(
-            np.add(vortex_centers, -wide(np.array(self.xyz_ref))),
-            forces_geometry
+            np.add(vortex_centers, -wide(np.array(self.xyz_ref))), forces_geometry
         )
 
         # Calculate total forces and moments
@@ -267,24 +295,32 @@ class VortexLatticeMethod(ExplicitAnalysis):
         moment_geometry = np.sum(moments_geometry, axis=0)
 
         force_body = self.op_point.convert_axes(
-            force_geometry[0], force_geometry[1], force_geometry[2],
+            force_geometry[0],
+            force_geometry[1],
+            force_geometry[2],
             from_axes="geometry",
-            to_axes="body"
+            to_axes="body",
         )
         force_wind = self.op_point.convert_axes(
-            force_body[0], force_body[1], force_body[2],
+            force_body[0],
+            force_body[1],
+            force_body[2],
             from_axes="body",
-            to_axes="wind"
+            to_axes="wind",
         )
         moment_body = self.op_point.convert_axes(
-            moment_geometry[0], moment_geometry[1], moment_geometry[2],
+            moment_geometry[0],
+            moment_geometry[1],
+            moment_geometry[2],
             from_axes="geometry",
-            to_axes="body"
+            to_axes="body",
         )
         moment_wind = self.op_point.convert_axes(
-            moment_body[0], moment_body[1], moment_body[2],
+            moment_body[0],
+            moment_body[1],
+            moment_body[2],
             from_axes="body",
-            to_axes="wind"
+            to_axes="wind",
         )
 
         ### Save things to the instance for later access
@@ -324,109 +360,110 @@ class VortexLatticeMethod(ExplicitAnalysis):
             "M_g": moment_geometry,
             "M_b": moment_body,
             "M_w": moment_wind,
-            "L"  : L,
-            "D"  : D,
-            "Y"  : Y,
+            "L": L,
+            "D": D,
+            "Y": Y,
             "l_b": l_b,
             "m_b": m_b,
             "n_b": n_b,
-            "CL" : CL,
-            "CD" : CD,
-            "CY" : CY,
-            "Cl" : Cl,
-            "Cm" : Cm,
-            "Cn" : Cn,
+            "CL": CL,
+            "CD": CD,
+            "CY": CY,
+            "Cl": Cl,
+            "Cm": Cm,
+            "Cn": Cn,
         }
 
-    def run_with_stability_derivatives(self,
-                                       alpha=True,
-                                       beta=True,
-                                       p=True,
-                                       q=True,
-                                       r=True,
-                                       ):
+    def run_with_stability_derivatives(
+        self,
+        alpha=True,
+        beta=True,
+        p=True,
+        q=True,
+        r=True,
+    ):
         """
-                Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
+        Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
 
-                Arguments essentially determine which stability derivatives are computed. If a stability derivative is not
-                needed, leaving it False will speed up the computation.
+        Arguments essentially determine which stability derivatives are computed. If a stability derivative is not
+        needed, leaving it False will speed up the computation.
 
-                Args:
+        Args:
 
-                    - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
-                    - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
-                    - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
-                    - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
-                    - r (bool): If True, compute the stability derivatives with respect to the body-axis yaw rate (r).
+            - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
+            - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
+            - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
+            - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
+            - r (bool): If True, compute the stability derivatives with respect to the body-axis yaw rate (r).
 
-                Returns: a dictionary with keys:
+        Returns: a dictionary with keys:
 
-                    - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
-                    - 'F_b' : an [x, y, z] list of forces in body axes [N]
-                    - 'F_w' : an [x, y, z] list of forces in wind axes [N]
-                    - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
-                    - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
-                    - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
-                    - 'L' : the lift force [N]. Definitionally, this is in wind axes.
-                    - 'Y' : the side force [N]. This is in wind axes.
-                    - 'D' : the drag force [N]. Definitionally, this is in wind axes.
-                    - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
-                    - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
-                    - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
-                    - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
-                    - 'CY', the sideforce coefficient [-]. This is in wind axes.
-                    - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
-                    - 'Cl', the rolling coefficient [-], in body axes
-                    - 'Cm', the pitching coefficient [-], in body axes
-                    - 'Cn', the yawing coefficient [-], in body axes
+            - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
+            - 'F_b' : an [x, y, z] list of forces in body axes [N]
+            - 'F_w' : an [x, y, z] list of forces in wind axes [N]
+            - 'M_g' : an [x, y, z] list of moments about geometry axes [Nm]
+            - 'M_b' : an [x, y, z] list of moments about body axes [Nm]
+            - 'M_w' : an [x, y, z] list of moments about wind axes [Nm]
+            - 'L' : the lift force [N]. Definitionally, this is in wind axes.
+            - 'Y' : the side force [N]. This is in wind axes.
+            - 'D' : the drag force [N]. Definitionally, this is in wind axes.
+            - 'l_b', the rolling moment, in body axes [Nm]. Positive is roll-right.
+            - 'm_b', the pitching moment, in body axes [Nm]. Positive is pitch-up.
+            - 'n_b', the yawing moment, in body axes [Nm]. Positive is nose-right.
+            - 'CL', the lift coefficient [-]. Definitionally, this is in wind axes.
+            - 'CY', the sideforce coefficient [-]. This is in wind axes.
+            - 'CD', the drag coefficient [-]. Definitionally, this is in wind axes.
+            - 'Cl', the rolling coefficient [-], in body axes
+            - 'Cm', the pitching coefficient [-], in body axes
+            - 'Cn', the yawing coefficient [-], in body axes
 
-                    Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`, and `r` arguments. For
-                    example, if `alpha=True`, then the following additional keys will be present:
+            Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`, and `r` arguments. For
+            example, if `alpha=True`, then the following additional keys will be present:
 
-                        - 'CLa', the lift coefficient derivative with respect to alpha [1/rad]
-                        - 'CDa', the drag coefficient derivative with respect to alpha [1/rad]
-                        - 'CYa', the sideforce coefficient derivative with respect to alpha [1/rad]
-                        - 'Cla', the rolling moment coefficient derivative with respect to alpha [1/rad]
-                        - 'Cma', the pitching moment coefficient derivative with respect to alpha [1/rad]
-                        - 'Cna', the yawing moment coefficient derivative with respect to alpha [1/rad]
-                        - 'x_np', the neutral point location in the x direction [m]
+                - 'CLa', the lift coefficient derivative with respect to alpha [1/rad]
+                - 'CDa', the drag coefficient derivative with respect to alpha [1/rad]
+                - 'CYa', the sideforce coefficient derivative with respect to alpha [1/rad]
+                - 'Cla', the rolling moment coefficient derivative with respect to alpha [1/rad]
+                - 'Cma', the pitching moment coefficient derivative with respect to alpha [1/rad]
+                - 'Cna', the yawing moment coefficient derivative with respect to alpha [1/rad]
+                - 'x_np', the neutral point location in the x direction [m]
 
-                    Nondimensional values are nondimensionalized using reference values in the
-                    VortexLatticeMethod.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            VortexLatticeMethod.airplane object.
 
-                    Data types:
-                        - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
+            Data types:
+                - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
 
-                            - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
-                            are floats, not arrays).
+                    - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
+                    are floats, not arrays).
 
-                            - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
-                            array).
+                    - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
+                    array).
 
-                        - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
-                        floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
+                - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
+                floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
 
-                """
+        """
         abbreviations = {
             "alpha": "a",
-            "beta" : "b",
-            "p"    : "p",
-            "q"    : "q",
-            "r"    : "r",
+            "beta": "b",
+            "p": "p",
+            "q": "q",
+            "r": "r",
         }
         finite_difference_amounts = {
             "alpha": 0.001,
-            "beta" : 0.001,
-            "p"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
-            "q"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
-            "r"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "beta": 0.001,
+            "p": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "q": 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
+            "r": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
         scaling_factors = {
             "alpha": np.degrees(1),
-            "beta" : np.degrees(1),
-            "p"    : (2 * self.op_point.velocity) / self.airplane.b_ref,
-            "q"    : (2 * self.op_point.velocity) / self.airplane.c_ref,
-            "r"    : (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "beta": np.degrees(1),
+            "p": (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "q": (2 * self.op_point.velocity) / self.airplane.c_ref,
+            "r": (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
 
         original_op_point = self.op_point
@@ -442,7 +479,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         # of integration".)
 
         for derivative_denominator in abbreviations.keys():
-            if not locals()[derivative_denominator]:  # Basically, if the parameter from the function input is not True,
+            if not locals()[
+                derivative_denominator
+            ]:  # Basically, if the parameter from the function input is not True,
                 continue  # Skip this run.
                 # This way, you can (optionally) speed up this routine if you only need static derivatives,
                 # or longitudinal derivatives, etc.
@@ -452,8 +491,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
             incremented_op_point = copy.copy(original_op_point)
             incremented_op_point.__setattr__(
                 derivative_denominator,
-                original_op_point.__getattribute__(derivative_denominator) + finite_difference_amounts[
-                    derivative_denominator]
+                original_op_point.__getattribute__(derivative_denominator)
+                + finite_difference_amounts[derivative_denominator],
             )
 
             vlm_incremented = copy.copy(self)
@@ -468,30 +507,34 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 "Cm",
                 "Cn",
             ]:
-                derivative_name = derivative_numerator + abbreviations[derivative_denominator]  # Gives "CLa"
+                derivative_name = (
+                    derivative_numerator + abbreviations[derivative_denominator]
+                )  # Gives "CLa"
                 run_base[derivative_name] = (
-                        (  # Finite-difference out the derivatives
-                                run_incremented[derivative_numerator] - run_base[
-                            derivative_numerator]
-                        ) / finite_difference_amounts[derivative_denominator]
-                        * scaling_factors[derivative_denominator]
+                    (  # Finite-difference out the derivatives
+                        run_incremented[derivative_numerator]
+                        - run_base[derivative_numerator]
+                    )
+                    / finite_difference_amounts[derivative_denominator]
+                    * scaling_factors[derivative_denominator]
                 )
 
             ### Try to compute and append neutral point, if possible
             if derivative_denominator == "alpha":
                 run_base["x_np"] = self.xyz_ref[0] - (
-                        run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
+                    run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
                 )
             if derivative_denominator == "beta":
                 run_base["x_np_lateral"] = self.xyz_ref[0] - (
-                        run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
+                    run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
                 )
 
         return run_base
 
-    def get_induced_velocity_at_points(self,
-                                       points: np.ndarray,
-                                       ) -> np.ndarray:
+    def get_induced_velocity_at_points(
+        self,
+        points: np.ndarray,
+    ) -> np.ndarray:
         """
         Computes the induced velocity at a set of points in the flowfield.
 
@@ -511,24 +554,23 @@ class VortexLatticeMethod(ExplicitAnalysis):
             x_right=wide(self.right_vortex_vertices[:, 0]),
             y_right=wide(self.right_vortex_vertices[:, 1]),
             z_right=wide(self.right_vortex_vertices[:, 2]),
-            trailing_vortex_direction=self.steady_freestream_direction if self.align_trailing_vortices_with_wind else np.array(
-                [1, 0, 0]),
+            trailing_vortex_direction=(
+                self.steady_freestream_direction
+                if self.align_trailing_vortices_with_wind
+                else np.array([1, 0, 0])
+            ),
             gamma=wide(self.vortex_strengths),
-            vortex_core_radius=self.vortex_core_radius
+            vortex_core_radius=self.vortex_core_radius,
         )
         u_induced = np.sum(u_induced, axis=1)
         v_induced = np.sum(v_induced, axis=1)
         w_induced = np.sum(w_induced, axis=1)
 
-        V_induced = np.stack([
-            u_induced, v_induced, w_induced
-        ], axis=1)
+        V_induced = np.stack([u_induced, v_induced, w_induced], axis=1)
 
         return V_induced
 
-    def get_velocity_at_points(self,
-                               points: np.ndarray
-                               ) -> np.ndarray:
+    def get_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
         """
         Computes the velocity at a set of points in the flowfield.
 
@@ -540,20 +582,23 @@ class VortexLatticeMethod(ExplicitAnalysis):
         """
         V_induced = self.get_induced_velocity_at_points(points)
 
-        rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            points
+        rotation_freestream_velocities = (
+            self.op_point.compute_rotation_velocity_geometry_axes(points)
         )
 
-        freestream_velocities = np.add(wide(self.steady_freestream_velocity), rotation_freestream_velocities)
+        freestream_velocities = np.add(
+            wide(self.steady_freestream_velocity), rotation_freestream_velocities
+        )
 
         V = V_induced + freestream_velocities
         return V
 
-    def calculate_streamlines(self,
-                              seed_points: np.ndarray = None,
-                              n_steps: int = 300,
-                              length: float = None,
-                              ) -> np.ndarray:
+    def calculate_streamlines(
+        self,
+        seed_points: np.ndarray = None,
+        n_steps: int = 300,
+        length: float = None,
+    ) -> np.ndarray:
         """
         Computes streamlines, starting at specific seed points.
 
@@ -585,27 +630,36 @@ class VortexLatticeMethod(ExplicitAnalysis):
         if length is None:
             length = self.airplane.c_ref * 5
         if seed_points is None:
-            left_TE_vertices = self.back_left_vertices[self.is_trailing_edge.astype(bool)]
-            right_TE_vertices = self.back_right_vertices[self.is_trailing_edge.astype(bool)]
+            left_TE_vertices = self.back_left_vertices[
+                self.is_trailing_edge.astype(bool)
+            ]
+            right_TE_vertices = self.back_right_vertices[
+                self.is_trailing_edge.astype(bool)
+            ]
             N_streamlines_target = 200
-            seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
+            seed_points_per_panel = np.maximum(
+                1, N_streamlines_target // len(left_TE_vertices)
+            )
 
             nondim_node_locations = np.linspace(0, 1, seed_points_per_panel + 1)
-            nondim_seed_locations = (nondim_node_locations[1:] + nondim_node_locations[:-1]) / 2
+            nondim_seed_locations = (
+                nondim_node_locations[1:] + nondim_node_locations[:-1]
+            ) / 2
 
-            seed_points = np.concatenate([
-                x * left_TE_vertices + (1 - x) * right_TE_vertices
-                for x in nondim_seed_locations
-            ])
+            seed_points = np.concatenate(
+                [
+                    x * left_TE_vertices + (1 - x) * right_TE_vertices
+                    for x in nondim_seed_locations
+                ]
+            )
 
         streamlines = np.empty((len(seed_points), 3, n_steps))
         streamlines[:, :, 0] = seed_points
         for i in range(1, n_steps):
             V = self.get_velocity_at_points(streamlines[:, :, i - 1])
-            streamlines[:, :, i] = (
-                    streamlines[:, :, i - 1] +
-                    length / n_steps * V / tall(np.linalg.norm(V, axis=1))
-            )
+            streamlines[:, :, i] = streamlines[
+                :, :, i - 1
+            ] + length / n_steps * V / tall(np.linalg.norm(V, axis=1))
 
         self.streamlines = streamlines
 
@@ -614,16 +668,17 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         return streamlines
 
-    def draw(self,
-             c: np.ndarray = None,
-             cmap: str = None,
-             colorbar_label: str = None,
-             show: bool = True,
-             show_kwargs: Dict = None,
-             draw_streamlines=True,
-             recalculate_streamlines=False,
-             backend: str = "pyvista"
-             ):
+    def draw(
+        self,
+        c: np.ndarray = None,
+        cmap: str = None,
+        colorbar_label: str = None,
+        show: bool = True,
+        show_kwargs: Dict = None,
+        draw_streamlines=True,
+        recalculate_streamlines=False,
+        backend: str = "pyvista",
+    ):
         """
         Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = sol(ap).
@@ -637,11 +692,12 @@ class VortexLatticeMethod(ExplicitAnalysis):
             colorbar_label = "Vortex Strengths"
 
         if draw_streamlines:
-            if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
+            if (not hasattr(self, "streamlines")) or recalculate_streamlines:
                 self.calculate_streamlines()
 
         if backend == "plotly":
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
+
             fig = Figure3D()
 
             for i in range(len(self.front_left_vertices)):
@@ -668,18 +724,21 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
         elif backend == "pyvista":
             import pyvista as pv
+
             plotter = pv.Plotter()
             plotter.title = "ASB VortexLatticeMethod"
             plotter.add_axes()
-            plotter.show_grid(color='gray')
+            plotter.show_grid(color="gray")
 
             ### Draw the airplane mesh
-            points = np.concatenate([
-                self.front_left_vertices,
-                self.back_left_vertices,
-                self.back_right_vertices,
-                self.front_right_vertices
-            ])
+            points = np.concatenate(
+                [
+                    self.front_left_vertices,
+                    self.back_left_vertices,
+                    self.back_right_vertices,
+                    self.front_right_vertices,
+                ]
+            )
             N = len(self.front_left_vertices)
             range_N = np.arange(N)
             faces = tall(range_N) + wide(np.array([0, 1, 2, 3]) * N)
@@ -702,12 +761,13 @@ class VortexLatticeMethod(ExplicitAnalysis):
             ### Draw the streamlines
             if draw_streamlines:
                 import aerosandbox.tools.pretty_plots as p
+
                 for i in range(self.streamlines.shape[0]):
                     plotter.add_mesh(
                         pv.Spline(self.streamlines[i, :, :].T),
                         color=p.adjust_lightness("#7700FF", 1.5),
                         opacity=0.7,
-                        line_width=1
+                        line_width=1,
                     )
 
             if show:
@@ -718,7 +778,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             raise ValueError("Bad value of `backend`!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ### Import Vanilla Airplane
     import aerosandbox as asb
 

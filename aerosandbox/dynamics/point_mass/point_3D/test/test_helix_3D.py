@@ -6,7 +6,7 @@ from scipy import integrate
 u_e_0 = 8
 v_e_0 = 0
 w_e_0 = -6
-speed_0 = (u_e_0 ** 2 + w_e_0 ** 2) ** 0.5
+speed_0 = (u_e_0**2 + w_e_0**2) ** 0.5
 gamma_0 = np.arctan2(-w_e_0, u_e_0)
 track_0 = 0
 
@@ -14,8 +14,7 @@ time = np.linspace(0, 2 * np.pi, 501)
 
 
 def get_trajectory(
-        parameterization: type = asb.DynamicsPointMass3DCartesian,
-        plot=False
+    parameterization: type = asb.DynamicsPointMass3DCartesian, plot=False
 ):
     if parameterization is asb.DynamicsPointMass3DCartesian:
         dyn = parameterization(
@@ -42,10 +41,7 @@ def get_trajectory(
 
     def derivatives(t, y):
         this_dyn = dyn.get_new_instance_with_state(y)
-        this_dyn.add_force(
-            Fy=8,
-            axes="wind"
-        )
+        this_dyn.add_force(Fy=8, axes="wind")
 
         return this_dyn.unpack_state(this_dyn.state_derivatives())
 
@@ -112,13 +108,7 @@ def test_cross_compare():
     assert dyn1[-1].w_e == pytest.approx(dyn2[-1].w_e, abs=1e-6, rel=1e-6)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # pytest.main()
-    dyn1 = get_trajectory(
-        asb.DynamicsPointMass3DCartesian,
-        plot=True
-    )
-    dyn2 = get_trajectory(
-        asb.DynamicsPointMass3DSpeedGammaTrack,
-        plot=True
-    )
+    dyn1 = get_trajectory(asb.DynamicsPointMass3DCartesian, plot=True)
+    dyn2 = get_trajectory(asb.DynamicsPointMass3DSpeedGammaTrack, plot=True)

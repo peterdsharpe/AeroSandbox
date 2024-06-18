@@ -3,13 +3,13 @@ import pytest
 import aerosandbox.numpy as np
 
 ### Cause all NumPy warnings to raise exceptions, to make this bulletproof
-np.seterr(all='raise')
+np.seterr(all="raise")
 
 
 @pytest.fixture
 def types():
     ### Float data types
-    scalar_float = 1.
+    scalar_float = 1.0
 
     ### NumPy data types
     scalar_np = np.array(1)
@@ -22,11 +22,15 @@ def types():
     vector_cas = opti.variable(n_vars=2, init_guess=1)
 
     ### Dynamically-typed data type creation (i.e. type depends on inputs)
-    vector_dynamic = np.array([scalar_cas, scalar_cas])  # vector as a dynamic-typed array
-    matrix_dynamic = np.array([  # matrix as an dynamic-typed array
-        [scalar_cas, scalar_cas],
+    vector_dynamic = np.array(
         [scalar_cas, scalar_cas]
-    ])
+    )  # vector as a dynamic-typed array
+    matrix_dynamic = np.array(
+        [  # matrix as an dynamic-typed array
+            [scalar_cas, scalar_cas],
+            [scalar_cas, scalar_cas],
+        ]
+    )
 
     ### Create lists of possible variable types for scalars, vectors, and matrices.
     scalar_options = [scalar_float, scalar_cas, scalar_np]
@@ -37,7 +41,7 @@ def types():
         "scalar": scalar_options,
         "vector": vector_options,
         "matrix": matrix_options,
-        "all"   : scalar_options + vector_options + matrix_options
+        "all": scalar_options + vector_options + matrix_options,
     }
 
 
@@ -69,7 +73,7 @@ def test_basic_math(types):
             np.sum(x)  # Sum of all entries of array-like object x
 
             ### Exponentials & Powers
-            x ** y
+            x**y
             np.power(x, y)
             np.exp(x)
             np.log(x)
@@ -102,9 +106,9 @@ def test_logic(types):
             for y in option_set:
                 ### Comparisons
                 """
-                Note: if warnings appear here, they're from `np.array(1) == cas.MX(1)` - 
+                Note: if warnings appear here, they're from `np.array(1) == cas.MX(1)` -
                 sensitive to order, as `cas.MX(1) == np.array(1)` is fine.
-                
+
                 However, checking the outputs, these seem to be yielding correct results despite
                 the warning sooo...
                 """
@@ -116,11 +120,7 @@ def test_logic(types):
                 x <= y
 
                 ### Conditionals
-                np.where(
-                    x > 1,
-                    x ** 2,
-                    0
-                )
+                np.where(x > 1, x**2, 0)
 
                 ### Elementwise min/max
                 np.fmax(x, y)
@@ -167,5 +167,5 @@ def test_rotation_matrices(types):
             np.rotation_matrix_3D(angle, np.array([axis[0], axis[1], axis[0]]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

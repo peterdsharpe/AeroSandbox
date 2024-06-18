@@ -3,8 +3,8 @@ import json
 
 
 def convert_ipynb_to_py(
-        input_file: Path,
-        output_file: Path,
+    input_file: Path,
+    output_file: Path,
 ) -> None:
     """
     Reads an input Jupyter notebook (.ipynb) and converts it to a Python file (.py)
@@ -22,7 +22,7 @@ def convert_ipynb_to_py(
     with open(input_file, "r") as f:
         ipynb_contents = json.load(f)
     with open(output_file, "w+") as f:
-        for cell in ipynb_contents['cells']:
-            if cell['cell_type'] == "code":
-                f.writelines(cell['source'])
+        for cell in ipynb_contents["cells"]:
+            if cell["cell_type"] == "code":
+                f.writelines(cell["source"])
                 f.write("\n")

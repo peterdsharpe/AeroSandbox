@@ -5,12 +5,12 @@ import warnings
 
 
 def qp(
-        *args: Tuple[Union[np.ndarray, List]],
-        backend="plotly",
-        show=True,
-        plotly_renderer: Union[str, None] = "browser",
-        orthographic=True,
-        stacklevel=1
+    *args: Tuple[Union[np.ndarray, List]],
+    backend="plotly",
+    show=True,
+    plotly_renderer: Union[str, None] = "browser",
+    orthographic=True,
+    stacklevel=1,
 ) -> None:
     """
     Quickly plots ("QP") a 1D, 2D, or 3D dataset as a line plot with markers. Useful for exploratory data analysis.
@@ -56,16 +56,19 @@ def qp(
             if n_dimensions >= 3:
                 arg_names += ["z"]
                 if n_dimensions >= 4:
-                    arg_names += [
-                        f"Dim. {i}"
-                        for i in range(4, n_dimensions + 1)
-                    ]
+                    arg_names += [f"Dim. {i}" for i in range(4, n_dimensions + 1)]
     title = "QuickPlot"
     try:
         ### This is some interesting and tricky code here: retrieves the source code of where qp() was called, as a string.
-        caller_source_code = inspect_tools.get_caller_source_code(stacklevel=stacklevel + 1)
+        caller_source_code = inspect_tools.get_caller_source_code(
+            stacklevel=stacklevel + 1
+        )
         try:
-            parsed_arg_names = inspect_tools.get_function_argument_names_from_source_code(caller_source_code)
+            parsed_arg_names = (
+                inspect_tools.get_function_argument_names_from_source_code(
+                    caller_source_code
+                )
+            )
             title = "QuickPlot: " + " vs. ".join(parsed_arg_names)
             if len(parsed_arg_names) == n_dimensions:
                 arg_names = parsed_arg_names
@@ -92,39 +95,23 @@ def qp(
         import plotly.graph_objects as go
 
         mode = "markers+lines"
-        marker_dict = dict(
-            size=5 if n_dimensions != 3 else 2,
-            line=dict(
-                width=0
-            )
-        )
+        marker_dict = dict(size=5 if n_dimensions != 3 else 2, line=dict(width=0))
 
         if n_dimensions == 1:
             fig = go.Figure(
-                data=go.Scatter(
-                    y=arg_values[0],
-                    mode=mode,
-                    marker=marker_dict
-                )
+                data=go.Scatter(y=arg_values[0], mode=mode, marker=marker_dict)
             )
             fig.update_layout(
-                title=title,
-                xaxis_title="Array index #",
-                yaxis_title=arg_names[0]
+                title=title, xaxis_title="Array index #", yaxis_title=arg_names[0]
             )
         elif n_dimensions == 2:
             fig = go.Figure(
                 data=go.Scatter(
-                    x=arg_values[0],
-                    y=arg_values[1],
-                    mode=mode,
-                    marker=marker_dict
+                    x=arg_values[0], y=arg_values[1], mode=mode, marker=marker_dict
                 )
             )
             fig.update_layout(
-                title=title,
-                xaxis_title=arg_names[0],
-                yaxis_title=arg_names[1]
+                title=title, xaxis_title=arg_names[0], yaxis_title=arg_names[1]
             )
         elif n_dimensions == 3:
             fig = go.Figure(
@@ -133,7 +120,7 @@ def qp(
                     y=arg_values[1],
                     z=arg_values[2],
                     mode=mode,
-                    marker=marker_dict
+                    marker=marker_dict,
                 ),
             )
             fig.update_layout(
@@ -142,7 +129,7 @@ def qp(
                     xaxis_title=arg_names[0],
                     yaxis_title=arg_names[1],
                     zaxis_title=arg_names[2],
-                )
+                ),
             )
         else:
             raise ValueError("Too many inputs to plot!")
@@ -150,18 +137,16 @@ def qp(
         if orthographic:
             fig.layout.scene.camera.projection.type = "orthographic"
         if show:
-            fig.show(
-                renderer=plotly_renderer
-            )
+            fig.show(renderer=plotly_renderer)
     else:
         raise ValueError("Bad value of `backend`!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox.numpy as np
 
     x = np.linspace(0, 10, 100)
-    y = x ** 2
+    y = x**2
     z = np.sin(y)
     qp(x)
     qp(x, y)

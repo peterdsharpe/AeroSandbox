@@ -29,12 +29,13 @@ class InterpolatedModel(SurrogateModel):
 
     """
 
-    def __init__(self,
-                 x_data_coordinates: Union[np.ndarray, Dict[str, np.ndarray]],
-                 y_data_structured: np.ndarray,
-                 method: str = "bspline",
-                 fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
-                 ):
+    def __init__(
+        self,
+        x_data_coordinates: Union[np.ndarray, Dict[str, np.ndarray]],
+        y_data_structured: np.ndarray,
+        method: str = "bspline",
+        fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
+    ):
         """
         Create the interpolator. Note that data must be structured (i.e., gridded on a hypercube) for general
         N-dimensional interpolation.
@@ -91,16 +92,22 @@ class InterpolatedModel(SurrogateModel):
         ### Validate inputs
         for coordinates in x_data_coordinates_values:
             if len(coordinates.shape) != 1:
-                raise ValueError("""
+                raise ValueError(
+                    """
                     `x_data_coordinates` must be either: 
                         * In the general N-dimensional case, a dict where values are 1D ndarrays defining the coordinates of each axis.
                         * In the 1D case, can also be a 1D ndarray.
-                    """)
-        implied_y_data_shape = tuple(len(coordinates) for coordinates in x_data_coordinates_values)
+                    """
+                )
+        implied_y_data_shape = tuple(
+            len(coordinates) for coordinates in x_data_coordinates_values
+        )
         if not y_data_structured.shape == implied_y_data_shape:
-            raise ValueError(f"""
+            raise ValueError(
+                f"""
             The shape of `y_data_structured` should be {implied_y_data_shape}
-            """)
+            """
+            )
 
         ### Store data
         self.x_data_coordinates = x_data_coordinates
@@ -122,6 +129,7 @@ class InterpolatedModel(SurrogateModel):
 
     def __call__(self, x):
         if isinstance(self.x_data_coordinates, dict):
+
             def get_shape(value):
                 if np.is_casadi_type(value, recursive=False):
                     if value.shape[1] == 1:
@@ -132,24 +140,25 @@ class InterpolatedModel(SurrogateModel):
                 except AttributeError:
                     return tuple()
 
-            shape = np.broadcast_shapes(
-                *[get_shape(v) for v in x.values()]
-            )
+            shape = np.broadcast_shapes(*[get_shape(v) for v in x.values()])
             shape_for_reshaping = (int(np.prod(shape)),)
 
             def reshape(value):
                 try:
                     return np.reshape(value, shape_for_reshaping)
                 except ValueError:
-                    if isinstance(value, int) or isinstance(value, float) or value.shape == tuple() or np.prod(
-                            value.shape) == 1:
+                    if (
+                        isinstance(value, int)
+                        or isinstance(value, float)
+                        or value.shape == tuple()
+                        or np.prod(value.shape) == 1
+                    ):
                         return value * np.ones(shape_for_reshaping)
                 raise ValueError("Could not reshape value of one of the inputs!")
 
-            x = np.stack(tuple(
-                reshape(x[k])
-                for k, v in self.x_data_coordinates.items()
-            ), axis=1)
+            x = np.stack(
+                tuple(reshape(x[k]) for k, v in self.x_data_coordinates.items()), axis=1
+            )
 
         output = np.interpn(
             points=self.x_data_coordinates_values,
@@ -157,7 +166,7 @@ class InterpolatedModel(SurrogateModel):
             xi=x,
             method=self.method,
             bounds_error=False,  # Can't be set true if general MX-type inputs are to be expected.
-            fill_value=self.fill_value
+            fill_value=self.fill_value,
         )
         try:
             return np.reshape(output, shape)

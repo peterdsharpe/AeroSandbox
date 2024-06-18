@@ -25,25 +25,16 @@ def test_rosenbrock_constrained(plot=False):
     y = opti.variable(init_guess=0)
     r = opti.parameter()
 
-    f = (1 - x) ** 2 + (y - x ** 2) ** 2
+    f = (1 - x) ** 2 + (y - x**2) ** 2
     opti.minimize(f)
-    con = x ** 2 + y ** 2 <= r
+    con = x**2 + y**2 <= r
     dual = opti.subject_to(con)
 
     r_values = np.linspace(1, 3)
 
-    sols = [
-        opti.solve({r: r_value})
-        for r_value in r_values
-    ]
-    fs = [
-        sol(f)
-        for sol in sols
-    ]
-    duals = [
-        sol(dual)  # Ensure the dual can be evaluated
-        for sol in sols
-    ]
+    sols = [opti.solve({r: r_value}) for r_value in r_values]
+    fs = [sol(f) for sol in sols]
+    duals = [sol(dual) for sol in sols]  # Ensure the dual can be evaluated
 
     if plot:
         fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
@@ -58,5 +49,5 @@ def test_rosenbrock_constrained(plot=False):
     assert duals[0] == pytest.approx(0.10898760051521068, abs=1e-6)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

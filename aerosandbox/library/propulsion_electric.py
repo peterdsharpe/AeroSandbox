@@ -5,49 +5,49 @@ from typing import Union, Dict
 
 
 def motor_electric_performance(
-        voltage: Union[float, np.ndarray] = None,
-        current: Union[float, np.ndarray] = None,
-        rpm: Union[float, np.ndarray] = None,
-        torque: Union[float, np.ndarray] = None,
-        kv: float = 1000.,  # rpm/volt
-        resistance: float = 0.1,  # ohms
-        no_load_current: float = 0.4  # amps
+    voltage: Union[float, np.ndarray] = None,
+    current: Union[float, np.ndarray] = None,
+    rpm: Union[float, np.ndarray] = None,
+    torque: Union[float, np.ndarray] = None,
+    kv: float = 1000.0,  # rpm/volt
+    resistance: float = 0.1,  # ohms
+    no_load_current: float = 0.4,  # amps
 ) -> Dict[str, Union[float, np.ndarray]]:
     """
     A function for predicting the performance of an electric motor.
-    
+
     Performance equations based on Mark Drela's First Order Motor Model:
     http://web.mit.edu/drela/Public/web/qprop/motor1_theory.pdf
-    
+
     Instructions: Input EXACTLY TWO of the following parameters: voltage, current, rpm, torque.
-    
+
     Exception: You cannot supply the combination of current and torque - this makes for an ill-posed problem.
-    
+
     Note that this function is fully vectorized, so arrays can be supplied to any of the inputs.
-    
+
     Args:
         voltage: Voltage across motor terminals [Volts]
-        
+
         current: Current through motor [Amps]
-        
+
         rpm: Motor rotation speed [rpm]
-        
+
         torque: Motor torque [N m]
-        
+
         kv: voltage constant, in rpm/volt
-        
+
         resistance: resistance, in ohms
-        
+
         no_load_current: no-load current, in amps
-        
+
     Returns:
-        A dictionary where keys are: 
-            "voltage", 
-            "current", 
-            "rpm", 
+        A dictionary where keys are:
+            "voltage",
+            "current",
+            "rpm",
             "torque",
-            "shaft power", 
-            "electrical power", 
+            "shaft power",
+            "electrical power",
             "efficiency"
             "waste heat"
 
@@ -64,14 +64,13 @@ def motor_electric_performance(
     rpm_known = rpm is not None
     torque_known = torque is not None
 
-    if not (
-            voltage_known + current_known + rpm_known + torque_known == 2
-    ):
+    if not (voltage_known + current_known + rpm_known + torque_known == 2):
         raise ValueError("You must give exactly two input arguments.")
 
     if current_known and torque_known:
         raise ValueError(
-            "You cannot supply the combination of current and torque - this makes for an ill-posed problem.")
+            "You cannot supply the combination of current and torque - this makes for an ill-posed problem."
+        )
 
     kv_rads_per_sec_per_volt = kv * np.pi / 30  # rads/sec/volt
 
@@ -112,32 +111,32 @@ def motor_electric_performance(
     waste_heat = np.fabs(electrical_power - shaft_power)
 
     return {
-        "voltage"         : voltage,
-        "current"         : current,
-        "rpm"             : rpm,
-        "torque"          : torque,
-        "shaft power"     : shaft_power,
+        "voltage": voltage,
+        "current": current,
+        "rpm": rpm,
+        "torque": torque,
+        "shaft power": shaft_power,
         "electrical power": electrical_power,
-        "efficiency"      : efficiency,
-        "waste heat"      : waste_heat,
+        "efficiency": efficiency,
+        "waste heat": waste_heat,
     }
 
 
 def electric_propeller_propulsion_analysis(
-        total_thrust: float,
-        n_engines: int,
-        propeller_diameter: float,
-        op_point: OperatingPoint,
-        motor_kv: float,
-        motor_no_load_current: float,
-        motor_resistance: float,
-        wire_resistance: float,
-        battery_voltage: float,
-        propeller_tip_mach: float = 0.50,
-        gearbox_ratio: float = 1,
-        gearbox_efficiency: float = 1,
-        esc_efficiency: float = 0.98,
-        battery_discharge_efficiency: float = 0.985,
+    total_thrust: float,
+    n_engines: int,
+    propeller_diameter: float,
+    op_point: OperatingPoint,
+    motor_kv: float,
+    motor_no_load_current: float,
+    motor_resistance: float,
+    wire_resistance: float,
+    battery_voltage: float,
+    propeller_tip_mach: float = 0.50,
+    gearbox_ratio: float = 1,
+    gearbox_efficiency: float = 1,
+    esc_efficiency: float = 0.98,
+    battery_discharge_efficiency: float = 0.985,
 ) -> Dict[str, float]:
     """
     Performs a propulsion analysis for an electric propeller-driven aircraft.
@@ -201,15 +200,17 @@ def electric_propeller_propulsion_analysis(
     """
 
     ### Propeller Analysis
-    propulsive_area_per_propeller = (np.pi / 4) * propeller_diameter ** 2
+    propulsive_area_per_propeller = (np.pi / 4) * propeller_diameter**2
     propulsive_area_total = propulsive_area_per_propeller * n_engines
 
-    propeller_wake_dynamic_pressure = op_point.dynamic_pressure() + total_thrust / propulsive_area_total
+    propeller_wake_dynamic_pressure = (
+        op_point.dynamic_pressure() + total_thrust / propulsive_area_total
+    )
     propeller_wake_velocity = (
-                                  # Derived from the above pressure jump relation, with adjustments to avoid singularity at zero velocity
-                                      2 * total_thrust / (propulsive_area_total * op_point.atmosphere.density())
-                                      + op_point.velocity ** 2
-                              ) ** 0.5
+        # Derived from the above pressure jump relation, with adjustments to avoid singularity at zero velocity
+        2 * total_thrust / (propulsive_area_total * op_point.atmosphere.density())
+        + op_point.velocity**2
+    ) ** 0.5
 
     propeller_tip_speed = propeller_tip_mach * op_point.atmosphere.speed_of_sound()
     propeller_rads_per_sec = propeller_tip_speed / (propeller_diameter / 2)
@@ -219,7 +220,9 @@ def electric_propeller_propulsion_analysis(
 
     air_power = total_thrust * op_point.velocity
 
-    from aerosandbox.library.propulsion_propeller import propeller_shaft_power_from_thrust
+    from aerosandbox.library.propulsion_propeller import (
+        propeller_shaft_power_from_thrust,
+    )
 
     shaft_power = propeller_shaft_power_from_thrust(
         thrust_force=total_thrust,
@@ -235,7 +238,9 @@ def electric_propeller_propulsion_analysis(
     motor_rpm = propeller_rpm / gearbox_ratio
     motor_rads_per_sec = motor_rpm * 2 * np.pi / 60
 
-    motor_torque_per_motor = shaft_power / n_engines / motor_rads_per_sec / gearbox_efficiency
+    motor_torque_per_motor = (
+        shaft_power / n_engines / motor_rads_per_sec / gearbox_efficiency
+    )
 
     motor_parameters_per_motor = motor_electric_performance(
         rpm=motor_rpm,
@@ -257,7 +262,9 @@ def electric_propeller_propulsion_analysis(
     wire_efficiency = esc_electrical_power / (esc_electrical_power + wire_power_loss)
 
     ### Battery Analysis
-    battery_power = (esc_electrical_power + wire_power_loss) / battery_discharge_efficiency
+    battery_power = (
+        esc_electrical_power + wire_power_loss
+    ) / battery_discharge_efficiency
     battery_current = battery_power / battery_voltage
 
     ### Overall
@@ -266,9 +273,7 @@ def electric_propeller_propulsion_analysis(
     return locals()
 
 
-def motor_resistance_from_no_load_current(
-        no_load_current
-):
+def motor_resistance_from_no_load_current(no_load_current):
     """
     Estimates the internal resistance of a motor from its no_load_current. Gates quotes R^2=0.93 for this model.
 
@@ -281,11 +286,11 @@ def motor_resistance_from_no_load_current(
     Returns:
         motor internal resistance [ohms]
     """
-    return 0.0467 * no_load_current ** -1.892
+    return 0.0467 * no_load_current**-1.892
 
 
 def mass_ESC(
-        max_power,
+    max_power,
 ):
     """
     Estimates the mass of an ESC.
@@ -302,9 +307,9 @@ def mass_ESC(
 
 
 def mass_battery_pack(
-        battery_capacity_Wh,
-        battery_cell_specific_energy_Wh_kg=240,
-        battery_pack_cell_fraction=0.7,
+    battery_capacity_Wh,
+    battery_cell_specific_energy_Wh_kg=240,
+    battery_pack_cell_fraction=0.7,
 ):
     """
     Estimates the mass of a lithium-polymer battery.
@@ -322,14 +327,18 @@ def mass_battery_pack(
     Returns:
         Estimated battery mass [kg]
     """
-    return battery_capacity_Wh / battery_cell_specific_energy_Wh_kg / battery_pack_cell_fraction
+    return (
+        battery_capacity_Wh
+        / battery_cell_specific_energy_Wh_kg
+        / battery_pack_cell_fraction
+    )
 
 
 def mass_motor_electric(
-        max_power,
-        kv_rpm_volt=1000,  # This is in rpm/volt, not rads/sec/volt!
-        voltage=20,
-        method="hobbyking"
+    max_power,
+    kv_rpm_volt=1000,  # This is in rpm/volt, not rads/sec/volt!
+    voltage=20,
+    method="hobbyking",
 ):
     """
     Estimates the mass of a brushless DC electric motor.
@@ -358,26 +367,30 @@ def mass_motor_electric(
         Estimated motor mass [kg]
     """
     if method == "burton":
-        return max_power / 4128  # Less sophisticated model. 95% CI (3992, 4263), R^2 = 0.866
+        return (
+            max_power / 4128
+        )  # Less sophisticated model. 95% CI (3992, 4263), R^2 = 0.866
     elif method == "hobbyking":
         return 10 ** (0.8205 * np.log10(max_power) - 3.155)  # More sophisticated model
     elif method == "astroflight":
         max_current = max_power / voltage
-        return 2.464 * max_current / kv_rpm_volt + 0.368  # Even more sophisticated model
+        return (
+            2.464 * max_current / kv_rpm_volt + 0.368
+        )  # Even more sophisticated model
 
 
 def mass_wires(
-        wire_length,
-        max_current,
-        allowable_voltage_drop,
-        material="aluminum",
-        insulated=True,
-        max_voltage=600,
-        wire_packing_factor=1,
-        insulator_density=1700,
-        insulator_dielectric_strength=12e6,
-        insulator_min_thickness=0.2e-3,  # silicone wire
-        return_dict: bool = False
+    wire_length,
+    max_current,
+    allowable_voltage_drop,
+    material="aluminum",
+    insulated=True,
+    max_voltage=600,
+    wire_packing_factor=1,
+    insulator_density=1700,
+    insulator_dielectric_strength=12e6,
+    insulator_min_thickness=0.2e-3,  # silicone wire
+    return_dict: bool = False,
 ):
     """
     Estimates the mass of wires used for power transmission.
@@ -438,16 +451,24 @@ def mass_wires(
     Returns: If `return_dict` is False (default), returns the wire mass as a single number. If `return_dict` is True,
     returns a dictionary of all local variables.
     """
-    if material == "sodium":  # highly reactive with water & oxygen, low physical strength
+    if (
+        material == "sodium"
+    ):  # highly reactive with water & oxygen, low physical strength
         density = 970  # kg/m^3
         resistivity = 47.7e-9  # ohm-meters
-    elif material == "lithium":  # highly reactive with water & oxygen, low physical strength
+    elif (
+        material == "lithium"
+    ):  # highly reactive with water & oxygen, low physical strength
         density = 530  # kg/m^3
         resistivity = 92.8e-9  # ohm-meters
-    elif material == "calcium":  # highly reactive with water & oxygen, low physical strength
+    elif (
+        material == "calcium"
+    ):  # highly reactive with water & oxygen, low physical strength
         density = 1550  # kg/m^3
         resistivity = 33.6e-9  # ohm-meters
-    elif material == "potassium":  # highly reactive with water & oxygen, low physical strength
+    elif (
+        material == "potassium"
+    ):  # highly reactive with water & oxygen, low physical strength
         density = 890  # kg/m^3
         resistivity = 72.0e-9  # ohm-meters
     elif material == "beryllium":  # toxic, brittle
@@ -459,13 +480,17 @@ def mass_wires(
     elif material == "magnesium":  # worse specific conductivity than aluminum
         density = 1740  # kg/m^3
         resistivity = 43.90e-9  # ohm-meters
-    elif material == "copper":  # worse specific conductivity than aluminum, moderately expensive
+    elif (
+        material == "copper"
+    ):  # worse specific conductivity than aluminum, moderately expensive
         density = 8960  # kg/m^3
         resistivity = 16.78e-9  # ohm-meters
     elif material == "silver":  # worse specific conductivity than aluminum, expensive
         density = 10490  # kg/m^3
         resistivity = 15.87e-9  # ohm-meters
-    elif material == "gold":  # worse specific conductivity than aluminum, very expensive
+    elif (
+        material == "gold"
+    ):  # worse specific conductivity than aluminum, very expensive
         density = 19300  # kg/m^3
         resistivity = 22.14e-9  # ohm-meters
     elif material == "iron":  # worse specific conductivity than aluminum
@@ -489,7 +514,7 @@ def mass_wires(
         )
         radius_conductor = (area_conductor / wire_packing_factor / np.pi) ** 0.5
         radius_insulator = radius_conductor + insulator_thickness
-        area_insulator = np.pi * radius_insulator ** 2 - area_conductor
+        area_insulator = np.pi * radius_insulator**2 - area_conductor
         volume_insulator = area_insulator * wire_length
         mass_insulator = insulator_density * volume_insulator
     else:
@@ -504,19 +529,11 @@ def mass_wires(
         return mass_total
 
 
-if __name__ == '__main__':
-    print(motor_electric_performance(
-        rpm=100,
-        current=3
-    ))
-    print(motor_electric_performance(
-        rpm=4700,
-        torque=0.02482817
-    ))
+if __name__ == "__main__":
+    print(motor_electric_performance(rpm=100, current=3))
+    print(motor_electric_performance(rpm=4700, torque=0.02482817))
 
-    print(
-        mass_battery_pack(100)
-    )
+    print(mass_battery_pack(100))
 
     pows = np.logspace(2, 5, 300)
     mass_mot_burton = mass_motor_electric(pows, method="burton")
@@ -533,12 +550,14 @@ if __name__ == '__main__':
     p.show_plot(
         "Small Electric Motor Mass Models\n(500 kv, 100 V)",
         "Motor Power [W]",
-        "Motor Mass [kg]"
+        "Motor Mass [kg]",
     )
 
-    print(mass_wires(
-        wire_length=1,
-        max_current=100,
-        allowable_voltage_drop=1,
-        material="aluminum"
-    ))
+    print(
+        mass_wires(
+            wire_length=1,
+            max_current=100,
+            allowable_voltage_drop=1,
+            material="aluminum",
+        )
+    )

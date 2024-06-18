@@ -8,9 +8,7 @@ import aerosandbox.tools.units as u
 mass_passenger = 215 * u.lbm  # includes carry-on
 
 
-def mass_seat(
-        kind="passenger"
-) -> float:
+def mass_seat(kind="passenger") -> float:
     """
     Computes the mass of an individual seat on an airplane.
 
@@ -37,10 +35,7 @@ def mass_seat(
         raise ValueError("Bad value of `kind`!")
 
 
-def mass_lavatories(
-        n_pax,
-        aircraft_type="short-haul"
-) -> float:
+def mass_lavatories(n_pax, aircraft_type="short-haul") -> float:
     """
     Computes the required mass of all lavatories on an airplane.
 
@@ -59,11 +54,10 @@ def mass_lavatories(
 
     """
     if aircraft_type == "long-haul":
-        return (1.11 * n_pax ** 1.33) * u.lbm
+        return (1.11 * n_pax**1.33) * u.lbm
     elif aircraft_type == "short-haul":
-        return (0.31 * n_pax ** 1.33) * u.lbm
+        return (0.31 * n_pax**1.33) * u.lbm
     elif aircraft_type == "business-jet":
-        return (3.90 * n_pax ** 1.33) * u.lbm
+        return (3.90 * n_pax**1.33) * u.lbm
     else:
         raise ValueError("Bad value of `aircraft_type`!")
-

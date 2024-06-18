@@ -3,13 +3,13 @@ import aerosandbox.numpy as np
 
 
 def eng_string(
-        x: float,
-        unit: str = "",
-        format='%.3g',
-        si=True,
-        add_space_after_number: bool = None,
+    x: float,
+    unit: str = "",
+    format="%.3g",
+    si=True,
+    add_space_after_number: bool = None,
 ) -> str:
-    '''
+    """
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
 
     Returns float/int value <x> formatted in a simplified engineering format -
@@ -41,12 +41,12 @@ def eng_string(
     With unit="N" and si=True:
           1230.0 -> "1.23 kN"
       -1230000.0 -> "-1.23 MN"
-    '''
+    """
 
-    sign = ''
+    sign = ""
     if x < 0:
         x = -x
-        sign = '-'
+        sign = "-"
     elif x == 0:
         return format % 0
     elif np.isnan(x):
@@ -54,16 +54,16 @@ def eng_string(
 
     exp = int(np.floor(np.log10(x)))
     exp3 = exp - (exp % 3)
-    x3 = x / (10 ** exp3)
+    x3 = x / (10**exp3)
 
     if si and exp3 >= -24 and exp3 <= 24:
         if exp3 == 0:
             suffix = ""
         else:
-            suffix = 'yzafpnμm kMGTPEZY'[(exp3 + 24) // 3]
+            suffix = "yzafpnμm kMGTPEZY"[(exp3 + 24) // 3]
 
         if add_space_after_number is None:
-            add_space_after_number = (unit != "")
+            add_space_after_number = unit != ""
 
         if add_space_after_number:
             suffix = " " + suffix + unit
@@ -71,10 +71,10 @@ def eng_string(
             suffix = suffix + unit
 
     else:
-        suffix = f'e{exp3}'
+        suffix = f"e{exp3}"
 
         if add_space_after_number:
-            add_space_after_number = (unit != "")
+            add_space_after_number = unit != ""
 
         if add_space_after_number:
             suffix = suffix + " " + unit
@@ -85,8 +85,8 @@ def eng_string(
 
 
 def latex_sci_notation_string(
-        x: float,
-        format='%.2e',
+    x: float,
+    format="%.2e",
 ) -> str:
     """
     Converts a floating-point number to a LaTeX-style formatted string. Does not include the `$$` wrapping to put you in math mode.
@@ -112,10 +112,10 @@ def hash_string(string: str) -> int:
 
     Usual warnings apply: it's MD5, don't use this for anything intended to be cryptographically secure.
     """
-    md5 = hashlib.md5(string.encode('utf-8'))
+    md5 = hashlib.md5(string.encode("utf-8"))
     hash_hex = md5.hexdigest()
     hash_int = int(hash_hex, 16)
-    hash_int64 = hash_int % (2 ** 32)
+    hash_int64 = hash_int % (2**32)
     return hash_int64
 
 
@@ -133,7 +133,7 @@ def trim_string(string: str, length: int = 80) -> str:
 
     """
     if len(string) > length:
-        return string[:length - 1] + "…"
+        return string[: length - 1] + "…"
     else:
         return string
 
@@ -171,8 +171,8 @@ def has_balanced_parentheses(string: str, left="(", right=")") -> bool:
 
 
 def wrap_text_ignoring_mathtext(
-        text: str,
-        width: int = 70,
+    text: str,
+    width: int = 70,
 ) -> str:
     r"""
     Reformat the single paragraph in 'text' to fit in lines of no more
@@ -253,19 +253,14 @@ def wrap_text_ignoring_mathtext(
     return output
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for input in [
         r"$ax^2+bx+c$",
         r"Photon flux $\phi$",
         r"Photon flux $\phi$ is given by $\phi = \frac{c}{\lambda}$",
         r"Earnings for 2022 $M\$/year$",
-        r"$ax^2+bx+c$ and also $3x$"
+        r"$ax^2+bx+c$ and also $3x$",
     ]:
         print(wrap_text_ignoring_mathtext(input, width=10))
 
-    print(
-        wrap_text_ignoring_mathtext(
-            r"Angle of Attack $\alpha$ [deg]",
-            14
-        )
-    )
+    print(wrap_text_ignoring_mathtext(r"Angle of Attack $\alpha$ [deg]", 14))

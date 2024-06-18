@@ -10,12 +10,13 @@ def array(array_like, dtype=None):
 
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.array.html
     """
-    if is_casadi_type(array_like, recursive=False):  # If you were literally given a CasADi array, just return it
+    if is_casadi_type(
+        array_like, recursive=False
+    ):  # If you were literally given a CasADi array, just return it
         # Handles inputs like cas.DM([1, 2, 3])
         return array_like
 
-    elif not is_casadi_type(array_like,
-                            recursive=True) or dtype is not None:
+    elif not is_casadi_type(array_like, recursive=True) or dtype is not None:
         # If you were given a list of iterables that don't have CasADi types:
         # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
@@ -28,12 +29,7 @@ def array(array_like, dtype=None):
             except (TypeError, Exception):
                 return contents
 
-        return _cas.vertcat(
-            *[
-                make_row(row)
-                for row in array_like
-            ]
-        )
+        return _cas.vertcat(*[make_row(row) for row in array_like])
 
 
 def concatenate(arrays: Sequence, axis: int = 0):
@@ -52,7 +48,9 @@ def concatenate(arrays: Sequence, axis: int = 0):
         elif axis == 1:
             return _cas.horzcat(*arrays)
         else:
-            raise ValueError("CasADi-backend arrays can only be 1D or 2D, so `axis` must be 0 or 1.")
+            raise ValueError(
+                "CasADi-backend arrays can only be 1D or 2D, so `axis` must be 0 or 1."
+            )
 
 
 def stack(arrays: Sequence, axis: int = 0):
@@ -72,14 +70,18 @@ def stack(arrays: Sequence, axis: int = 0):
                     raise ValueError("Can only stack Nx1 CasADi arrays!")
             else:
                 if not len(array.shape) == 1:
-                    raise ValueError("Can only stack 1D NumPy ndarrays alongside CasADi arrays!")
+                    raise ValueError(
+                        "Can only stack 1D NumPy ndarrays alongside CasADi arrays!"
+                    )
 
         if axis == 0 or axis == -2:
             return _cas.transpose(_cas.horzcat(*arrays))
         elif axis == 1 or axis == -1:
             return _cas.horzcat(*arrays)
         else:
-            raise ValueError("CasADi-backend arrays can only be 1D or 2D, so `axis` must be 0 or 1.")
+            raise ValueError(
+                "CasADi-backend arrays can only be 1D or 2D, so `axis` must be 0 or 1."
+            )
 
 
 def hstack(arrays):
@@ -87,7 +89,8 @@ def hstack(arrays):
         return _onp.hstack(arrays)
     else:
         raise ValueError(
-            "Use `np.stack()` or `np.concatenate()` instead of `np.hstack()` when dealing with mixed-backend arrays.")
+            "Use `np.stack()` or `np.concatenate()` instead of `np.hstack()` when dealing with mixed-backend arrays."
+        )
 
 
 def vstack(arrays):
@@ -95,7 +98,8 @@ def vstack(arrays):
         return _onp.vstack(arrays)
     else:
         raise ValueError(
-            "Use `np.stack()` or `np.concatenate()` instead of `np.vstack()` when dealing with mixed-backend arrays.")
+            "Use `np.stack()` or `np.concatenate()` instead of `np.vstack()` when dealing with mixed-backend arrays."
+        )
 
 
 def dstack(arrays):
@@ -103,7 +107,8 @@ def dstack(arrays):
         return _onp.dstack(arrays)
     else:
         raise ValueError(
-            "Use `np.stack()` or `np.concatenate()` instead of `np.dstack()` when dealing with mixed-backend arrays.")
+            "Use `np.stack()` or `np.concatenate()` instead of `np.dstack()` when dealing with mixed-backend arrays."
+        )
 
 
 def length(array) -> int:
@@ -161,18 +166,14 @@ def diag(v, k=0):
             n = v.shape[0]
 
             if k >= 0:
-                return array([
-                    v[i, i + k]
-                    for i in range(n - k)
-                ])
+                return array([v[i, i + k] for i in range(n - k)])
             else:
-                return array([
-                    v[i - k, i]
-                    for i in range(n + k)
-                ])
+                return array([v[i - k, i] for i in range(n + k)])
 
         else:
-            raise NotImplementedError("Haven't yet added logic for non-square matrices.")
+            raise NotImplementedError(
+                "Haven't yet added logic for non-square matrices."
+            )
 
 
 def roll(a, shift, axis: int = None):
@@ -257,22 +258,16 @@ def max(a, axis=None):
             if a.shape[1] == 1:
                 return _cas.mmax(a)
             else:
-                return array([
-                    _cas.mmax(a[:, i])
-                    for i in range(a.shape[1])
-                ])
+                return array([_cas.mmax(a[:, i]) for i in range(a.shape[1])])
 
         elif axis == 1:
             if a.shape[0] == 1:
                 return _cas.mmax(a)
             else:
-                return array([
-                    _cas.mmax(a[i, :])
-                    for i in range(a.shape[0])
-                ])
+                return array([_cas.mmax(a[i, :]) for i in range(a.shape[0])])
 
         else:
-            raise ValueError(f'Invalid axis {axis} for CasADi array.')
+            raise ValueError(f"Invalid axis {axis} for CasADi array.")
 
 
 def min(a, axis=None):
@@ -297,25 +292,19 @@ def min(a, axis=None):
             if a.shape[1] == 1:
                 return _cas.mmin(a)
             else:
-                return array([
-                    _cas.mmin(a[:, i])
-                    for i in range(a.shape[1])
-                ])
+                return array([_cas.mmin(a[:, i]) for i in range(a.shape[1])])
 
         elif axis == 1:
             if a.shape[0] == 1:
                 return _cas.mmin(a)
             else:
-                return array([
-                    _cas.mmin(a[i, :])
-                    for i in range(a.shape[0])
-                ])
+                return array([_cas.mmin(a[i, :]) for i in range(a.shape[0])])
 
         else:
-            raise ValueError(f'Invalid axis {axis} for CasADi array.')
+            raise ValueError(f"Invalid axis {axis} for CasADi array.")
 
 
-def reshape(a, newshape, order='C'):
+def reshape(a, newshape, order="C"):
     """
     Gives a new shape to an array without changing its data.
 
@@ -335,7 +324,9 @@ def reshape(a, newshape, order='C'):
             newshape = tuple(newshape)
 
         elif len(newshape) > 2:
-            raise ValueError("CasADi data types are limited to no more than 2 dimensions.")
+            raise ValueError(
+                "CasADi data types are limited to no more than 2 dimensions."
+            )
 
         if order == "C":
             return _cas.reshape(a.T, newshape[::-1]).T
@@ -345,7 +336,7 @@ def reshape(a, newshape, order='C'):
             raise NotImplementedError("Only C and F orders are supported.")
 
 
-def ravel(a, order='C'):
+def ravel(a, order="C"):
     """
     Returns a contiguous flattened array.
 
@@ -371,10 +362,12 @@ def tile(A, reps):
         elif len(reps) == 2:
             return _cas.repmat(A, reps[0], reps[1])
         else:
-            raise ValueError("Cannot have >2D arrays when using CasADi numeric backend!")
+            raise ValueError(
+                "Cannot have >2D arrays when using CasADi numeric backend!"
+            )
 
 
-def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
+def zeros_like(a, dtype=None, order="K", subok=True, shape=None):
     """Return an array of zeros with the same shape and type as a given array."""
     if not is_casadi_type(a, recursive=False):
         return _onp.zeros_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
@@ -382,7 +375,7 @@ def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
         return _onp.zeros(shape=length(a))
 
 
-def ones_like(a, dtype=None, order='K', subok=True, shape=None):
+def ones_like(a, dtype=None, order="K", subok=True, shape=None):
     """Return an array of ones with the same shape and type as a given array."""
     if not is_casadi_type(a, recursive=False):
         return _onp.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
@@ -390,24 +383,28 @@ def ones_like(a, dtype=None, order='K', subok=True, shape=None):
         return _onp.ones(shape=length(a))
 
 
-def empty_like(prototype, dtype=None, order='K', subok=True, shape=None):
+def empty_like(prototype, dtype=None, order="K", subok=True, shape=None):
     """Return a new array with the same shape and type as a given array."""
     if not is_casadi_type(prototype, recursive=False):
-        return _onp.empty_like(prototype, dtype=dtype, order=order, subok=subok, shape=shape)
+        return _onp.empty_like(
+            prototype, dtype=dtype, order=order, subok=subok, shape=shape
+        )
     else:
         return zeros_like(prototype)
 
 
-def full_like(a, fill_value, dtype=None, order='K', subok=True, shape=None):
+def full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
     """Return a full array with the same shape and type as a given array."""
     if not is_casadi_type(a, recursive=False):
-        return _onp.full_like(a, fill_value, dtype=dtype, order=order, subok=subok, shape=shape)
+        return _onp.full_like(
+            a, fill_value, dtype=dtype, order=order, subok=subok, shape=shape
+        )
     else:
         return fill_value * ones_like(a)
 
 
 def assert_equal_shape(
-        arrays: Union[List[_onp.ndarray], Dict[str, _onp.ndarray]],
+    arrays: Union[List[_onp.ndarray], Dict[str, _onp.ndarray]],
 ) -> None:
     """
     Assert that all of the given arrays are the same shape. If this is not true, raise a ValueError.
@@ -443,4 +440,6 @@ def assert_equal_shape(
                 raise ValueError("The given arrays do not have the same shape!")
             else:
                 namelist = ", ".join(names)
-                raise ValueError(f"The given arrays {namelist} do not have the same shape!")
+                raise ValueError(
+                    f"The given arrays {namelist} do not have the same shape!"
+                )

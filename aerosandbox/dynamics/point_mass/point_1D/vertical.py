@@ -1,4 +1,6 @@
-from aerosandbox.dynamics.point_mass.point_3D.cartesian import DynamicsPointMass3DCartesian
+from aerosandbox.dynamics.point_mass.point_3D.cartesian import (
+    DynamicsPointMass3DCartesian,
+)
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
 from typing import Union, Dict, Tuple
@@ -19,11 +21,12 @@ class DynamicsPointMass1DVertical(DynamicsPointMass3DCartesian):
 
     """
 
-    def __init__(self,
-                 mass_props: MassProperties = None,
-                 z_e: Union[float, np.ndarray] = 0,
-                 w_e: Union[float, np.ndarray] = 0,
-                 ):
+    def __init__(
+        self,
+        mass_props: MassProperties = None,
+        z_e: Union[float, np.ndarray] = 0,
+        w_e: Union[float, np.ndarray] = 0,
+    ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
         self.x_e = 0
@@ -58,10 +61,8 @@ class DynamicsPointMass1DVertical(DynamicsPointMass3DCartesian):
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
         derivatives = super().state_derivatives()
-        return {
-            k: derivatives[k] for k in self.state.keys()
-        }
+        return {k: derivatives[k] for k in self.state.keys()}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dyn = DynamicsPointMass1DVertical()

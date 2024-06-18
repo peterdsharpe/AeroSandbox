@@ -2,8 +2,9 @@ import aerosandbox.numpy as np
 from aerosandbox import ExplicitAnalysis, AeroSandboxObject
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
-from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
-    calculate_induced_velocity_horseshoe
+from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
+    calculate_induced_velocity_horseshoe,
+)
 from typing import Dict, Any, List, Callable, Optional, Union, Tuple
 import copy
 from functools import cached_property, lru_cache, partial
@@ -27,19 +28,24 @@ immutable_dataclass = partial(dataclass, frozen=True, repr=False)
 
 class LinearPotentialFlow(ExplicitAnalysis):
 
-    def __init__(self,
-                 airplane: Airplane,
-                 op_point: OperatingPoint,
-                 xyz_ref: List[float] = None,
-                 run_symmetric_if_possible: bool = False,
-                 verbose: bool = False,
-                 wing_model: Union[str, Dict[Wing, str]] = "vortex_lattice_all_horseshoe",
-                 fuselage_model: Union[str, Dict[Fuselage, str]] = "none",
-                 wing_options: Union[Dict[str, Any], Dict[Wing, Dict[str, Any]]] = None,
-                 fuselage_options: Union[Dict[str, Any], Dict[Fuselage, Dict[str, Any]]] = None,
-                 ):
+    def __init__(
+        self,
+        airplane: Airplane,
+        op_point: OperatingPoint,
+        xyz_ref: List[float] = None,
+        run_symmetric_if_possible: bool = False,
+        verbose: bool = False,
+        wing_model: Union[str, Dict[Wing, str]] = "vortex_lattice_all_horseshoe",
+        fuselage_model: Union[str, Dict[Fuselage, str]] = "none",
+        wing_options: Union[Dict[str, Any], Dict[Wing, Dict[str, Any]]] = None,
+        fuselage_options: Union[Dict[str, Any], Dict[Fuselage, Dict[str, Any]]] = None,
+    ):
         import warnings
-        warnings.warn("LinearPotentialFlow is under active development and is not yet ready for use.", UserWarning)
+
+        warnings.warn(
+            "LinearPotentialFlow is under active development and is not yet ready for use.",
+            UserWarning,
+        )
 
         super().__init__()
 
@@ -61,7 +67,9 @@ class LinearPotentialFlow(ExplicitAnalysis):
         if isinstance(wing_model, str):
             wing_model = {wing: wing_model for wing in self.airplane.wings}
         if isinstance(fuselage_model, str):
-            fuselage_model = {fuselage: fuselage_model for fuselage in self.airplane.fuselages}
+            fuselage_model = {
+                fuselage: fuselage_model for fuselage in self.airplane.fuselages
+            }
 
         self.wing_model: Dict[Wing, str] = wing_model
         self.fuselage_model: Dict[Fuselage, str] = fuselage_model
@@ -69,27 +77,31 @@ class LinearPotentialFlow(ExplicitAnalysis):
         ##### Set up the modeling options
         ### Check the format of the wing options
         if not (
-                all([isinstance(k, str) for k in wing_options.keys()]) or
-                all([issubclass(k, Wing) for k in wing_options.keys()])
+            all([isinstance(k, str) for k in wing_options.keys()])
+            or all([issubclass(k, Wing) for k in wing_options.keys()])
         ):
-            raise ValueError("`wing_options` must be either:\n"
-                             "    - A dictionary of the form `{str: value}`, which is applied to all Wings\n"
-                             "    - A nested dictionary of the form `{Wing: {str: value}}`, which is applied to the corresponding Wings\n"
-                             )
+            raise ValueError(
+                "`wing_options` must be either:\n"
+                "    - A dictionary of the form `{str: value}`, which is applied to all Wings\n"
+                "    - A nested dictionary of the form `{Wing: {str: value}}`, which is applied to the corresponding Wings\n"
+            )
         elif all([isinstance(k, str) for k in wing_options.keys()]):
             wing_options = {wing: wing_options for wing in self.airplane.wings}
 
         ### Check the format of the fuselage options
         if not (
-                all([isinstance(k, str) for k in fuselage_options.keys()]) or
-                all([issubclass(k, Fuselage) for k in fuselage_options.keys()])
+            all([isinstance(k, str) for k in fuselage_options.keys()])
+            or all([issubclass(k, Fuselage) for k in fuselage_options.keys()])
         ):
-            raise ValueError("`fuselage_options` must be either:\n"
-                             "    - A dictionary of the form `{str: value}`, which is applied to all Fuselages\n"
-                             "    - A nested dictionary of the form `{Fuselage: {str: value}}`, which is applied to the corresponding Fuselages\n"
-                             )
+            raise ValueError(
+                "`fuselage_options` must be either:\n"
+                "    - A dictionary of the form `{str: value}`, which is applied to all Fuselages\n"
+                "    - A nested dictionary of the form `{Fuselage: {str: value}}`, which is applied to the corresponding Fuselages\n"
+            )
         elif all([isinstance(k, str) for k in fuselage_options.keys()]):
-            fuselage_options = {fuselage: fuselage_options for fuselage in self.airplane.fuselages}
+            fuselage_options = {
+                fuselage: fuselage_options for fuselage in self.airplane.fuselages
+            }
 
         ### Set user-specified values
         self.wing_options: Dict[Wing, Dict[str, Any]] = wing_options
@@ -97,24 +109,24 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
         ### Set default values
         wing_model_default_options = {
-            "none"                        : {},
+            "none": {},
             "vortex_lattice_all_horseshoe": {
-                "spanwise_resolution"              : 10,
-                "spanwise_spacing_function"        : np.cosspace,
-                "chordwise_resolution"             : 10,
-                "chordwise_spacing_function"       : np.cosspace,
-                "vortex_core_radius"               : 1e-8,
+                "spanwise_resolution": 10,
+                "spanwise_spacing_function": np.cosspace,
+                "chordwise_resolution": 10,
+                "chordwise_spacing_function": np.cosspace,
+                "vortex_core_radius": 1e-8,
                 "align_trailing_vortices_with_wind": False,
             },
-            "vortex_lattice_ring"         : {
-                "spanwise_resolution"              : 10,
-                "spanwise_spacing_function"        : np.cosspace,
-                "chordwise_resolution"             : 10,
-                "chordwise_spacing_function"       : np.cosspace,
-                "vortex_core_radius"               : 1e-8,
+            "vortex_lattice_ring": {
+                "spanwise_resolution": 10,
+                "spanwise_spacing_function": np.cosspace,
+                "chordwise_resolution": 10,
+                "chordwise_spacing_function": np.cosspace,
+                "vortex_core_radius": 1e-8,
                 "align_trailing_vortices_with_wind": False,
             },
-            "lifting_line"                : {
+            "lifting_line": {
                 "sectional_data_source": "neuralfoil",
             },
         }
@@ -126,13 +138,15 @@ class LinearPotentialFlow(ExplicitAnalysis):
                     **self.wing_options[wing],
                 }
             else:
-                raise ValueError(f"Invalid wing model specified: \"{self.wing_model[wing]}\"\n"
-                                 f"Must be one of: {list(wing_model_default_options.keys())}")
+                raise ValueError(
+                    f'Invalid wing model specified: "{self.wing_model[wing]}"\n'
+                    f"Must be one of: {list(wing_model_default_options.keys())}"
+                )
 
         fuselage_model_default_options = {
-            "none"                  : {},
+            "none": {},
             "prescribed_source_line": {
-                "lengthwise_resolution"      : 1,
+                "lengthwise_resolution": 1,
                 "lengthwise_spacing_function": np.cosspace,
             },
         }
@@ -144,13 +158,17 @@ class LinearPotentialFlow(ExplicitAnalysis):
                     **self.fuselage_options[fuselage],
                 }
             else:
-                raise ValueError(f"Invalid fuselage model specified: \"{self.fuselage_model[fuselage]}\"\n"
-                                 f"Must be one of: {list(fuselage_model_default_options.keys())}")
+                raise ValueError(
+                    f'Invalid fuselage model specified: "{self.fuselage_model[fuselage]}"\n'
+                    f"Must be one of: {list(fuselage_model_default_options.keys())}"
+                )
 
         ### Determine whether you should run the problem as symmetric
         self.run_symmetric = False
         if run_symmetric_if_possible:
-            raise NotImplementedError("LinearPotentialFlow with symmetry detection not yet implemented!")
+            raise NotImplementedError(
+                "LinearPotentialFlow with symmetry detection not yet implemented!"
+            )
             # try:
             #     self.run_symmetric = (  # Satisfies assumptions
             #             self.op_point.beta == 0 and
@@ -162,11 +180,18 @@ class LinearPotentialFlow(ExplicitAnalysis):
             #     pass
 
     def __repr__(self):
-        return self.__class__.__name__ + "(\n" + "\n".join([
-            f"\tairplane={self.airplane}",
-            f"\top_point={self.op_point}",
-            f"\txyz_ref={self.xyz_ref}",
-        ]) + "\n)"
+        return (
+            self.__class__.__name__
+            + "(\n"
+            + "\n".join(
+                [
+                    f"\tairplane={self.airplane}",
+                    f"\top_point={self.op_point}",
+                    f"\txyz_ref={self.xyz_ref}",
+                ]
+            )
+            + "\n)"
+        )
 
     @immutable_dataclass
     class Elements(ABC):
@@ -175,12 +200,19 @@ class LinearPotentialFlow(ExplicitAnalysis):
         end_index: int
 
         def __repr__(self):
-            return self.__class__.__name__ + "(\n" + "\n".join([
-                f"\tparent_component={self.parent_component}",
-                f"\tstart_index={self.start_index}",
-                f"\tend_index={self.end_index}",
-                f"\tlength={len(self)}",
-            ]) + "\n)"
+            return (
+                self.__class__.__name__
+                + "(\n"
+                + "\n".join(
+                    [
+                        f"\tparent_component={self.parent_component}",
+                        f"\tstart_index={self.start_index}",
+                        f"\tend_index={self.end_index}",
+                        f"\tlength={len(self)}",
+                    ]
+                )
+                + "\n)"
+            )
 
         @abstractmethod
         def __len__(self):
@@ -243,16 +275,18 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
         @cached_property
         def collocation_points(self):
-            return (
-                    0.5 * (0.25 * self.front_left_vertices + 0.75 * self.back_left_vertices) +
-                    0.5 * (0.25 * self.front_right_vertices + 0.75 * self.back_right_vertices)
+            return 0.5 * (
+                0.25 * self.front_left_vertices + 0.75 * self.back_left_vertices
+            ) + 0.5 * (
+                0.25 * self.front_right_vertices + 0.75 * self.back_right_vertices
             )
 
-        def get_induced_velocity_at_points(self,
-                                           points: np.ndarray,
-                                           vortex_strengths: np.ndarray,
-                                           sum_across_elements: bool = True
-                                           ) -> Tuple[np.ndarray]:
+        def get_induced_velocity_at_points(
+            self,
+            points: np.ndarray,
+            vortex_strengths: np.ndarray,
+            sum_across_elements: bool = True,
+        ) -> Tuple[np.ndarray]:
             u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
                 x_field=tall(points[:, 0]),
                 y_field=tall(points[:, 1]),
@@ -265,7 +299,7 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 z_right=wide(self.right_vortex_vertices[:, 2]),
                 trailing_vortex_direction=self.trailing_vortex_direction,
                 gamma=wide(vortex_strengths),
-                vortex_core_radius=self.vortex_core_radius
+                vortex_core_radius=self.vortex_core_radius,
             )
 
             if sum_across_elements:
@@ -331,11 +365,13 @@ class LinearPotentialFlow(ExplicitAnalysis):
                     method="quad",
                     chordwise_resolution=options["chordwise_resolution"],
                     chordwise_spacing_function=options["chordwise_spacing_function"],
-                    add_camber=True
+                    add_camber=True,
                 )
 
                 if options["align_trailing_vortices_with_wind"]:
-                    raise NotImplementedError("align_trailing_vortices_with_wind not yet implemented!")
+                    raise NotImplementedError(
+                        "align_trailing_vortices_with_wind not yet implemented!"
+                    )
                 else:
                     trailing_vortex_direction = np.array([1, 0, 0])
 
@@ -359,7 +395,7 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 raise NotImplementedError("lifting_line not yet implemented!")
 
             else:
-                raise ValueError(f"Invalid wing model specified: \"{element_type}\"")
+                raise ValueError(f'Invalid wing model specified: "{element_type}"')
 
         ### Fuselages
         for fuselage in self.airplane.fuselages:
@@ -373,13 +409,15 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 raise NotImplementedError("prescribed_source_line not yet implemented!")
 
             else:
-                raise ValueError(f"Invalid fuselage model specified: \"{element_type}\"")
+                raise ValueError(f'Invalid fuselage model specified: "{element_type}"')
 
         return discretization
 
     @cached_property
     def N_elements(self):
-        return sum([len(element_collection) for element_collection in self.discretization])
+        return sum(
+            [len(element_collection) for element_collection in self.discretization]
+        )
 
     @cached_property
     def AIC(self):
@@ -388,10 +426,14 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
         for element_collection in self.discretization:
             if isinstance(element_collection, self.WingHorseshoeVortexElements):
-                raise NotImplementedError("AIC not yet implemented for horseshoe vortices.")
+                raise NotImplementedError(
+                    "AIC not yet implemented for horseshoe vortices."
+                )
             elif isinstance(element_collection, self.WingLiftingLineElements):
                 raise NotImplementedError("AIC not yet implemented for lifting lines.")
-            elif isinstance(element_collection, self.FuselagePrescribedSourceLineElements):
+            elif isinstance(
+                element_collection, self.FuselagePrescribedSourceLineElements
+            ):
                 raise NotImplementedError("AIC not yet implemented for fuselages.")
             else:
                 raise ValueError(f"Invalid element type: {type(element_collection)}")
@@ -428,40 +470,38 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
         raise NotImplementedError
 
-    def get_induced_velocity_at_points(self,
-                                       points: np.ndarray
-                                       ) -> np.ndarray:
+    def get_induced_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
-    def get_velocity_at_points(self,
-                               points: np.ndarray
-                               ) -> np.ndarray:
+    def get_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
-    def get_streamlines(self,
-                        seed_points: np.ndarray = None,
-                        n_steps: int = 300,
-                        length: float = None,
-                        ):
+    def get_streamlines(
+        self,
+        seed_points: np.ndarray = None,
+        n_steps: int = 300,
+        length: float = None,
+    ):
         raise NotImplementedError
 
-    def draw(self,
-             c: np.ndarray = None,
-             cmap: str = None,
-             colorbar_label: str = None,
-             show: bool = True,
-             show_kwargs: Dict = None,
-             draw_streamlines=True,
-             recalculate_streamlines=False,
-             backend: str = "pyvista"
-             ):
+    def draw(
+        self,
+        c: np.ndarray = None,
+        cmap: str = None,
+        colorbar_label: str = None,
+        show: bool = True,
+        show_kwargs: Dict = None,
+        draw_streamlines=True,
+        recalculate_streamlines=False,
+        backend: str = "pyvista",
+    ):
         raise NotImplementedError
 
     def draw_three_view(self):
         raise NotImplementedError
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ### Import Vanilla Airplane
     import aerosandbox as asb
 

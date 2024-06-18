@@ -30,7 +30,7 @@ def test_2D_rosenbrock():  # 2-dimensional rosenbrock
     y = opti.variable(init_guess=0)
 
     # Define objective
-    f = (a - x) ** 2 + b * (y - x ** 2) ** 2
+    f = (a - x) ** 2 + b * (y - x**2) ** 2
     opti.minimize(f)
 
     # Optimize
@@ -48,10 +48,10 @@ def test_2D_rosenbrock_circle_constrained():  # 2-dimensional rosenbrock, constr
     y = opti.variable(init_guess=0)
 
     # Define constraints
-    opti.subject_to(x ** 2 + y ** 2 <= 1)
+    opti.subject_to(x**2 + y**2 <= 1)
 
     # Define objective
-    f = (a - x) ** 2 + b * (y - x ** 2) ** 2
+    f = (a - x) ** 2 + b * (y - x**2) ** 2
     opti.minimize(f)
 
     # Optimize
@@ -92,7 +92,7 @@ def test_2D_rosenbrock_frozen():
     y = opti.variable(init_guess=0, freeze=True)
 
     # Define objective
-    f = (a - x) ** 2 + b * (y - x ** 2) ** 2
+    f = (a - x) ** 2 + b * (y - x**2) ** 2
     opti.minimize(f)
 
     # Optimize
@@ -103,5 +103,5 @@ def test_2D_rosenbrock_frozen():
     assert sol(f) == pytest.approx(0.771, abs=1e-3)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

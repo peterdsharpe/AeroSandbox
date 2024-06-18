@@ -5,7 +5,7 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 import aerosandbox.tools.pretty_plots as p
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     ### Design Conditions
     Re_des = 3e5  # Re to design to
@@ -13,7 +13,9 @@ if __name__ == '__main__':
     Cl_end = 1.5  # Upper bound of CLs that you care about (Effectively, CL_max)
     Cm_min = -0.08  # Worst-allowable pitching moment that you'll allow
     TE_thickness = 0.0015  # Sets trailing edge thickness
-    enforce_continuous_LE_radius = True  # Should we force the leading edge to have continous curvature?
+    enforce_continuous_LE_radius = (
+        True  # Should we force the leading edge to have continous curvature?
+    )
 
     ### Guesses for airfoil CST parameters; you usually don't need to change these
     lower_guess = -0.05 * np.ones(30)
@@ -40,7 +42,6 @@ if __name__ == '__main__':
     pack = lambda lower, upper: np.concatenate((lower, upper))
     unpack = lambda pack: (pack[:n_lower], pack[n_lower:])
 
-
     def make_airfoil(x):
         """
         A function that constructs an airfoil from a packed design vector.
@@ -55,10 +56,9 @@ if __name__ == '__main__':
                 upper_weights=upper,
                 enforce_continuous_LE_radius=enforce_continuous_LE_radius,
                 TE_thickness=TE_thickness,
-                n_points_per_side=80
-            )
+                n_points_per_side=80,
+            ),
         )
-
 
     ### Initial guess construction
     x0 = pack(lower_guess, upper_guess)
@@ -67,17 +67,17 @@ if __name__ == '__main__':
     ### Initialize plotting
     fig = plt.figure(figsize=(15, 2.5))
     ax = fig.add_subplot(111)
-    trace_initial, = ax.plot(
+    (trace_initial,) = ax.plot(
         initial_airfoil.coordinates[:, 0],
         initial_airfoil.coordinates[:, 1],
-        ':r',
-        label="Initial Airfoil"
+        ":r",
+        label="Initial Airfoil",
     )
-    trace_current, = ax.plot(
+    (trace_current,) = ax.plot(
         initial_airfoil.coordinates[:, 0],
         initial_airfoil.coordinates[:, 1],
         "-b",
-        label="Current Airfoil"
+        label="Current Airfoil",
     )
     plt.axis("equal")
     plt.xlabel(r"$x/c$")
@@ -85,9 +85,8 @@ if __name__ == '__main__':
     plt.title("Airfoil Optimization")
     plt.legend()
 
-
     def draw(
-            airfoil  # type: Airfoil
+        airfoil,  # type: Airfoil
     ):
         """
         Updates the "current airfoil" line on the plot with the given airfoil.
@@ -99,12 +98,10 @@ if __name__ == '__main__':
         plt.draw()
         plt.pause(0.001)
 
-
     ### Utilities for tracking the design vector and objective throughout the optimization run
     iteration = 0
     xs = []
     fs = []
-
 
     def augmented_objective(x):
         """
@@ -120,7 +117,7 @@ if __name__ == '__main__':
             Re=Re_des,
             verbose=False,
             max_iter=40,
-            repanel=False
+            repanel=False,
         )
         if np.isnan(xfoil["Cd"]).any():
             return np.inf
@@ -128,36 +125,37 @@ if __name__ == '__main__':
         objective = np.sqrt(np.mean(xfoil["Cd"] ** 2))  # RMS
 
         penalty = 0
-        penalty += np.sum(np.minimum(0, (xfoil["Cm"] - Cm_min) / 0.01) ** 2)  # Cm constraint
-        penalty += np.minimum(0, (airfoil.TE_angle() - 5) / 1) ** 2  # TE angle constraint
-        penalty += np.minimum(0, (airfoil.local_thickness(0.90) - 0.015) / 0.005) ** 2  # Spar thickness constraint
-        penalty += np.minimum(0, (airfoil.local_thickness(0.30) - 0.12) / 0.005) ** 2  # Spar thickness constraint
+        penalty += np.sum(
+            np.minimum(0, (xfoil["Cm"] - Cm_min) / 0.01) ** 2
+        )  # Cm constraint
+        penalty += (
+            np.minimum(0, (airfoil.TE_angle() - 5) / 1) ** 2
+        )  # TE angle constraint
+        penalty += (
+            np.minimum(0, (airfoil.local_thickness(0.90) - 0.015) / 0.005) ** 2
+        )  # Spar thickness constraint
+        penalty += (
+            np.minimum(0, (airfoil.local_thickness(0.30) - 0.12) / 0.005) ** 2
+        )  # Spar thickness constraint
 
         xs.append(x)
         fs.append(objective)
 
         return objective * (1 + penalty)
 
-
     def callback(x):
         global iteration
         iteration += 1
-        print(
-            f"Iteration {iteration}: Cd = {fs[-1]:.6f}"
-        )
+        print(f"Iteration {iteration}: Cd = {fs[-1]:.6f}")
         if iteration % 1 == 0:
             airfoil = make_airfoil(x)
             draw(airfoil)
             ax.set_title(f"Airfoil Optimization: Iteration {iteration}")
             airfoil.write_dat("optimized_airfoil.dat")
 
-
     draw(initial_airfoil)
 
-    initial_simplex = (
-            (0.5 + 1 * np.random.random((len(x0) + 1, len(x0))))
-            * x0
-    )
+    initial_simplex = (0.5 + 1 * np.random.random((len(x0) + 1, len(x0)))) * x0
     initial_simplex[0, :] = x0  # Include x0 in the simplex
     print("Initializing simplex (give this a few minutes)...")
     res = optimize.minimize(
@@ -166,12 +164,12 @@ if __name__ == '__main__':
         method="Nelder-Mead",
         callback=callback,
         options={
-            'maxiter'        : 10 ** 6,
-            'initial_simplex': initial_simplex,
-            'xatol'          : 1e-8,
-            'fatol'          : 1e-6,
-            'adaptive'       : False,
-        }
+            "maxiter": 10**6,
+            "initial_simplex": initial_simplex,
+            "xatol": 1e-8,
+            "fatol": 1e-6,
+            "adaptive": False,
+        },
     )
 
     final_airfoil = make_airfoil(res.x)

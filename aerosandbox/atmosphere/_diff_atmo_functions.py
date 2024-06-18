@@ -1,7 +1,11 @@
 import aerosandbox.numpy as np
 from pathlib import Path
 from aerosandbox.modeling.interpolation import InterpolatedModel
-from aerosandbox.atmosphere._isa_atmo_functions import pressure_isa, temperature_isa, isa_base_altitude
+from aerosandbox.atmosphere._isa_atmo_functions import (
+    pressure_isa,
+    temperature_isa,
+    isa_base_altitude,
+)
 
 # Define the altitudes of knot points
 
@@ -13,15 +17,19 @@ altitude_knot_points = np.array(
         13e3,
         18e3,
         22e3,
-        30e3, 34e3,
-        45e3, 49e3,
+        30e3,
+        34e3,
+        45e3,
+        49e3,
         53e3,
-        69e3, 73e3,
+        69e3,
+        73e3,
         77e3,
-        83e3, 87e3,
-    ] +
-    list(87e3 + np.geomspace(5e3, 2000e3, 11)) +
-    list(0 - np.geomspace(5e3, 5000e3, 11))
+        83e3,
+        87e3,
+    ]
+    + list(87e3 + np.geomspace(5e3, 2000e3, 11))
+    + list(0 - np.geomspace(5e3, 5000e3, 11))
 )
 
 altitude_knot_points = np.sort(np.unique(altitude_knot_points))

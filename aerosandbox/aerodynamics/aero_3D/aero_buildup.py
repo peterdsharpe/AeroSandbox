@@ -8,7 +8,9 @@ from aerosandbox.library.aerodynamics import transonic
 import aerosandbox.library.aerodynamics as aerolib
 import copy
 from typing import Union, List, Dict, Any
-from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree import softmax_scalefree
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree import (
+    softmax_scalefree,
+)
 from dataclasses import dataclass
 from functools import cached_property
 
@@ -29,10 +31,10 @@ class AeroBuildup(ExplicitAnalysis):
     >>> aero_with_stability_derivs = ab.run_with_stability_derivatives()  # Same, but also gets stability derivatives.
 
     """
+
     default_analysis_specific_options = {
         Fuselage: dict(
             E_wave_drag=2.5,  # Wave drag efficiency factor
-
             # Defined by Raymer, "Aircraft Design: A Conceptual Approach", 2nd Ed. Chap. 12.5.9 "Supersonic Parasite Drag".
             # Notated there as "E_WD".
             #
@@ -42,20 +44,19 @@ class AeroBuildup(ExplicitAnalysis):
             #   * For a "more typical supersonic...", 1.8 - 2.2
             #   * For a "poor supersonic design", 2.5 - 3.0
             #   * The F-15 has E_WD = 2.9.
-
             nose_fineness_ratio=3,  # Fineness ratio (length / diameter) of the nose section of the fuselage.
-
             # Impacts wave drag calculations, among other things.
         ),
     }
 
-    def __init__(self,
-                 airplane: Airplane,
-                 op_point: OperatingPoint,
-                 xyz_ref: Union[np.ndarray, List[float]] = None,
-                 model_size: str = "small",
-                 include_wave_drag: bool = True,
-                 ):
+    def __init__(
+        self,
+        airplane: Airplane,
+        op_point: OperatingPoint,
+        xyz_ref: Union[np.ndarray, List[float]] = None,
+        model_size: str = "small",
+        include_wave_drag: bool = True,
+    ):
         """
         Initializes a new AeroBuildup analysis as an object.
 
@@ -89,11 +90,18 @@ class AeroBuildup(ExplicitAnalysis):
         self.include_wave_drag = include_wave_drag
 
     def __repr__(self):
-        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
-            f"airplane={self.airplane}",
-            f"op_point={self.op_point}",
-            f"xyz_ref={self.xyz_ref}",
-        ]) + "\n)"
+        return (
+            self.__class__.__name__
+            + "(\n\t"
+            + "\n\t".join(
+                [
+                    f"airplane={self.airplane}",
+                    f"op_point={self.op_point}",
+                    f"xyz_ref={self.xyz_ref}",
+                ]
+            )
+            + "\n)"
+        )
 
     @dataclass
     class AeroComponentResults:
@@ -101,8 +109,12 @@ class AeroBuildup(ExplicitAnalysis):
         c_ref: float  # Reference chord [m]
         b_ref: float  # Reference span [m]
         op_point: OperatingPoint
-        F_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of forces in geometry axes [N]
-        M_g: List[Union[float, np.ndarray]]  # An [x, y, z] list of moments about geometry axes [Nm]
+        F_g: List[
+            Union[float, np.ndarray]
+        ]  # An [x, y, z] list of forces in geometry axes [N]
+        M_g: List[
+            Union[float, np.ndarray]
+        ]  # An [x, y, z] list of moments about geometry axes [Nm]
         span_effective: float
         # The effective span of the component's Trefftz-plane wake, used for induced drag calculations. [m]
         oswalds_efficiency: float  # Oswald's efficiency factor [-]
@@ -110,43 +122,58 @@ class AeroBuildup(ExplicitAnalysis):
         def __repr__(self):
             F_w = self.F_w
             M_b = self.M_b
-            return self.__class__.__name__ + "(\n\t" + "\n\t".join([
-                f"L={-F_w[2]},",
-                f"Y={F_w[1]},",
-                f"D={-F_w[0]},",
-                f"l_b={M_b[0]},",
-                f"m_b={M_b[1]},",
-                f"n_b={M_b[2]},",
-                f"span_effective={self.span_effective}, oswalds_efficiency={self.oswalds_efficiency},",
-            ]) + "\n)"
+            return (
+                self.__class__.__name__
+                + "(\n\t"
+                + "\n\t".join(
+                    [
+                        f"L={-F_w[2]},",
+                        f"Y={F_w[1]},",
+                        f"D={-F_w[0]},",
+                        f"l_b={M_b[0]},",
+                        f"m_b={M_b[1]},",
+                        f"n_b={M_b[2]},",
+                        f"span_effective={self.span_effective}, oswalds_efficiency={self.oswalds_efficiency},",
+                    ]
+                )
+                + "\n)"
+            )
 
         @property
         def F_b(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of forces in body axes [N]
             """
-            return self.op_point.convert_axes(*self.F_g, from_axes="geometry", to_axes="body")
+            return self.op_point.convert_axes(
+                *self.F_g, from_axes="geometry", to_axes="body"
+            )
 
         @property
         def F_w(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of forces in wind axes [N]
             """
-            return self.op_point.convert_axes(*self.F_g, from_axes="geometry", to_axes="wind")
+            return self.op_point.convert_axes(
+                *self.F_g, from_axes="geometry", to_axes="wind"
+            )
 
         @property
         def M_b(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of moments about body axes [Nm]
             """
-            return self.op_point.convert_axes(*self.M_g, from_axes="geometry", to_axes="body")
+            return self.op_point.convert_axes(
+                *self.M_g, from_axes="geometry", to_axes="body"
+            )
 
         @property
         def M_w(self) -> List[Union[float, np.ndarray]]:
             """
             An [x, y, z] list of moments about wind axes [Nm]
             """
-            return self.op_point.convert_axes(*self.M_g, from_axes="geometry", to_axes="wind")
+            return self.op_point.convert_axes(
+                *self.M_g, from_axes="geometry", to_axes="wind"
+            )
 
         @property
         def L(self) -> Union[float, np.ndarray]:
@@ -190,7 +217,9 @@ class AeroBuildup(ExplicitAnalysis):
             """
             return self.M_b[2]
 
-    def run(self) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
+    def run(
+        self,
+    ) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
         """
         Computes the aerodynamic forces and moments on the airplane.
 
@@ -232,55 +261,38 @@ class AeroBuildup(ExplicitAnalysis):
 
         ### Compute the forces on each component
         wing_aero_components = [
-            self.wing_aerodynamics(
-                wing=wing,
-                include_induced_drag=False
-            )
+            self.wing_aerodynamics(wing=wing, include_induced_drag=False)
             for wing in self.airplane.wings
         ]
         fuselage_aero_components = [
-            self.fuselage_aerodynamics(
-                fuselage=fuse,
-                include_induced_drag=False
-            )
+            self.fuselage_aerodynamics(fuselage=fuse, include_induced_drag=False)
             for fuse in self.airplane.fuselages
         ]
 
         aero_components = wing_aero_components + fuselage_aero_components
 
         ### Sum up the forces
-        F_g_total = [
-            sum([comp.F_g[i] for comp in aero_components])
-            for i in range(3)
-        ]
-        M_g_total = [
-            sum([comp.M_g[i] for comp in aero_components])
-            for i in range(3)
-        ]
+        F_g_total = [sum([comp.F_g[i] for comp in aero_components]) for i in range(3)]
+        M_g_total = [sum([comp.M_g[i] for comp in aero_components]) for i in range(3)]
 
         ##### Add in the induced drag
         Q = self.op_point.dynamic_pressure()
 
-        span_effective_squared = softmax_scalefree([
-            comp.span_effective ** 2 * comp.oswalds_efficiency
-            for comp in aero_components
-        ])
+        span_effective_squared = softmax_scalefree(
+            [
+                comp.span_effective**2 * comp.oswalds_efficiency
+                for comp in aero_components
+            ]
+        )
 
         _, sideforce, lift = self.op_point.convert_axes(
-            *F_g_total,
-            from_axes="geometry",
-            to_axes="wind"
+            *F_g_total, from_axes="geometry", to_axes="wind"
         )
 
-        D_induced = (
-                (lift ** 2 + sideforce ** 2) /
-                (Q * np.pi * span_effective_squared)
-        )
+        D_induced = (lift**2 + sideforce**2) / (Q * np.pi * span_effective_squared)
 
         D_induced_g = self.op_point.convert_axes(
-            -D_induced, 0, 0,
-            from_axes="wind",
-            to_axes="geometry"
+            -D_induced, 0, 0, from_axes="wind", to_axes="geometry"
         )
 
         for i in range(3):
@@ -294,24 +306,16 @@ class AeroBuildup(ExplicitAnalysis):
 
         ##### Add in other metrics
         output["F_b"] = self.op_point.convert_axes(
-            *F_g_total,
-            from_axes="geometry",
-            to_axes="body"
+            *F_g_total, from_axes="geometry", to_axes="body"
         )
         output["F_w"] = self.op_point.convert_axes(
-            *F_g_total,
-            from_axes="geometry",
-            to_axes="wind"
+            *F_g_total, from_axes="geometry", to_axes="wind"
         )
         output["M_b"] = self.op_point.convert_axes(
-            *M_g_total,
-            from_axes="geometry",
-            to_axes="body"
+            *M_g_total, from_axes="geometry", to_axes="body"
         )
         output["M_w"] = self.op_point.convert_axes(
-            *M_g_total,
-            from_axes="geometry",
-            to_axes="wind"
+            *M_g_total, from_axes="geometry", to_axes="wind"
         )
 
         output["L"] = -output["F_w"][2]
@@ -339,20 +343,19 @@ class AeroBuildup(ExplicitAnalysis):
         output["fuselage_aero_components"] = fuselage_aero_components
 
         ##### Add the drag breakdown
-        output["D_profile"] = sum([
-            comp.D for comp in aero_components
-        ])
+        output["D_profile"] = sum([comp.D for comp in aero_components])
         output["D_induced"] = D_induced
 
         return output
 
-    def run_with_stability_derivatives(self,
-                                       alpha=True,
-                                       beta=True,
-                                       p=True,
-                                       q=True,
-                                       r=True,
-                                       ) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
+    def run_with_stability_derivatives(
+        self,
+        alpha=True,
+        beta=True,
+        p=True,
+        q=True,
+        r=True,
+    ) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
         """
         Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
 
@@ -416,32 +419,32 @@ class AeroBuildup(ExplicitAnalysis):
         """
         do_analysis: Dict[str, bool] = {
             "alpha": alpha,
-            "beta" : beta,
-            "p"    : p,
-            "q"    : q,
-            "r"    : r,
+            "beta": beta,
+            "p": p,
+            "q": q,
+            "r": r,
         }
 
         abbreviations: Dict[str, str] = {
             "alpha": "a",
-            "beta" : "b",
-            "p"    : "p",
-            "q"    : "q",
-            "r"    : "r",
+            "beta": "b",
+            "p": "p",
+            "q": "q",
+            "r": "r",
         }
         finite_difference_amounts: Dict[str, float] = {
             "alpha": 0.001,
-            "beta" : 0.001,
-            "p"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
-            "q"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
-            "r"    : 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "beta": 0.001,
+            "p": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "q": 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
+            "r": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
         scaling_factors: Dict[str, float] = {
             "alpha": np.degrees(1),
-            "beta" : np.degrees(1),
-            "p"    : (2 * self.op_point.velocity) / self.airplane.b_ref,
-            "q"    : (2 * self.op_point.velocity) / self.airplane.c_ref,
-            "r"    : (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "beta": np.degrees(1),
+            "p": (2 * self.op_point.velocity) / self.airplane.b_ref,
+            "q": (2 * self.op_point.velocity) / self.airplane.c_ref,
+            "r": (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
 
         original_op_point = self.op_point
@@ -457,7 +460,9 @@ class AeroBuildup(ExplicitAnalysis):
         # of integration".)
 
         for d in do_analysis.keys():
-            if not do_analysis[d]:  # Basically, if the parameter from the function input is not True,
+            if not do_analysis[
+                d
+            ]:  # Basically, if the parameter from the function input is not True,
                 continue  # Skip this run.
                 # This way, you can (optionally) speed up this routine if you only need static derivatives,
                 # or longitudinal derivatives, etc.
@@ -492,10 +497,12 @@ class AeroBuildup(ExplicitAnalysis):
             ]:
                 derivative_name = derivative_numerator + abbreviations[d]  # Gives "CLa"
                 run_base[derivative_name] = (
-                        (  # Finite-difference out the derivatives
-                                run_incremented[derivative_numerator] - run_base[derivative_numerator]
-                        ) / finite_difference_amounts[d]
-                        * scaling_factors[d]
+                    (  # Finite-difference out the derivatives
+                        run_incremented[derivative_numerator]
+                        - run_base[derivative_numerator]
+                    )
+                    / finite_difference_amounts[d]
+                    * scaling_factors[d]
                 )
 
             ### Try to compute and append neutral point, if possible
@@ -517,14 +524,17 @@ class AeroBuildup(ExplicitAnalysis):
                     run_base["CYb"],
                 )
 
-                run_base["x_np_lateral"] = self.xyz_ref[0] - (Cnb / CYb * self.airplane.b_ref)
+                run_base["x_np_lateral"] = self.xyz_ref[0] - (
+                    Cnb / CYb * self.airplane.b_ref
+                )
 
         return run_base
 
-    def wing_aerodynamics(self,
-                          wing: Wing,
-                          include_induced_drag: bool = True,
-                          ) -> AeroComponentResults:
+    def wing_aerodynamics(
+        self,
+        wing: Wing,
+        include_induced_drag: bool = True,
+    ) -> AeroComponentResults:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a wing in isolation.
 
@@ -561,10 +571,9 @@ class AeroBuildup(ExplicitAnalysis):
             for i in range(len(wing.xsecs)):
                 span_inboard_to_YZ_plane = np.minimum(
                     span_inboard_to_YZ_plane,
-                    np.abs(wing._compute_xyz_of_WingXSec(
-                        i,
-                        x_nondim=0.25, z_nondim=0
-                    )[1])
+                    np.abs(
+                        wing._compute_xyz_of_WingXSec(i, x_nondim=0.25, z_nondim=0)[1]
+                    ),
                 )
         else:
             span_inboard_to_YZ_plane = 0
@@ -573,17 +582,10 @@ class AeroBuildup(ExplicitAnalysis):
         xsec_chords = [xsec.chord for xsec in wing.xsecs]
         sectional_chords = [
             (inner_chord + outer_chord) / 2
-            for inner_chord, outer_chord in zip(
-                xsec_chords[1:],
-                xsec_chords[:-1]
-            )
+            for inner_chord, outer_chord in zip(xsec_chords[1:], xsec_chords[:-1])
         ]
         sectional_areas = [
-            span * chord
-            for span, chord in zip(
-                sectional_spans,
-                sectional_chords
-            )
+            span * chord for span, chord in zip(sectional_spans, sectional_chords)
         ]
         half_area = sum(sectional_areas)
         area_inboard_to_YZ_plane = span_inboard_to_YZ_plane * wing_MAC
@@ -599,20 +601,18 @@ class AeroBuildup(ExplicitAnalysis):
             dihedral_factor = np.sind(wing_dihedral) ** 2
 
             span_effective = (
-                    span_0_dihedral +
-                    (span_90_dihedral - span_0_dihedral) * dihedral_factor
+                span_0_dihedral + (span_90_dihedral - span_0_dihedral) * dihedral_factor
             )
 
             area_effective = (
-                    area_0_dihedral +
-                    (area_90_dihedral - area_0_dihedral) * dihedral_factor
+                area_0_dihedral + (area_90_dihedral - area_0_dihedral) * dihedral_factor
             )
 
         else:
             span_effective = half_span
             area_effective = half_area
 
-        AR_effective = span_effective ** 2 / area_effective
+        AR_effective = span_effective**2 / area_effective
 
         mach = op_point.mach()
         # mach_normal = mach * np.cosd(sweep)
@@ -620,13 +620,13 @@ class AeroBuildup(ExplicitAnalysis):
             aspect_ratio=AR_effective,
             mach=mach,
             sweep=wing_sweep,
-            Cl_is_compressible=True
+            Cl_is_compressible=True,
         )
         oswalds_efficiency = aerolib.oswalds_efficiency(
             taper_ratio=wing_taper,
             aspect_ratio=AR_effective,
             sweep=wing_sweep,
-            fuselage_diameter_to_span_ratio=0  # an assumption
+            fuselage_diameter_to_span_ratio=0,  # an assumption
         )
         areas = wing.area(_sectional=True)
 
@@ -637,10 +637,21 @@ class AeroBuildup(ExplicitAnalysis):
         a = AR_effective / (AR_effective + 2)
         s = np.radians(wing_sweep)
         t = np.exp(-wing_taper)
-        neutral_point_deviation_due_to_unsweep = -(
-            ((((3.557726 ** (a ** 2.8443985)) * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)) + (
-                    a + -0.89228547)) * -0.16073418)
-        ) * wing_MAC
+        neutral_point_deviation_due_to_unsweep = (
+            -(
+                (
+                    (
+                        (
+                            (3.557726 ** (a**2.8443985))
+                            * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)
+                        )
+                        + (a + -0.89228547)
+                    )
+                    * -0.16073418
+                )
+            )
+            * wing_MAC
+        )
         aerodynamic_centers = [
             ac + np.array([neutral_point_deviation_due_to_unsweep, 0, 0])
             for ac in aerodynamic_centers
@@ -655,10 +666,7 @@ class AeroBuildup(ExplicitAnalysis):
             for i in range(len(wing.xsecs))
         ]
 
-        def compute_section_aerodynamics(
-                sect_id: int,
-                mirror_across_XZ: bool = False
-        ):
+        def compute_section_aerodynamics(sect_id: int, mirror_across_XZ: bool = False):
             """
             Computes the forces and moments about self.xyz_ref on a given wing section.
             Args:
@@ -692,42 +700,46 @@ class AeroBuildup(ExplicitAnalysis):
             if mirror_across_XZ:
                 xg_local[1] *= -1
                 yg_local[1] *= -1
-                zg_local[1] *= -1  # Note: if mirrored, this results in a left-handed coordinate system.
+                zg_local[
+                    1
+                ] *= (
+                    -1
+                )  # Note: if mirrored, this results in a left-handed coordinate system.
 
             ##### Compute the moment arm from the section AC
             sect_AC_raw = aerodynamic_centers[sect_id]
             if mirror_across_XZ:
                 sect_AC_raw[1] *= -1
 
-            sect_AC = [
-                sect_AC_raw[i] - self.xyz_ref[i]
-                for i in range(3)
-            ]
+            sect_AC = [sect_AC_raw[i] - self.xyz_ref[i] for i in range(3)]
 
             ##### Compute the generalized angle of attack, which is the geometric alpha that the wing section "sees".
-            vel_vector_g_from_freestream = op_point.convert_axes(  # Points backwards (with relative wind)
-                x_from=-op_point.velocity, y_from=0, z_from=0,
-                from_axes="wind",
-                to_axes="geometry"
+            vel_vector_g_from_freestream = (
+                op_point.convert_axes(  # Points backwards (with relative wind)
+                    x_from=-op_point.velocity,
+                    y_from=0,
+                    z_from=0,
+                    from_axes="wind",
+                    to_axes="geometry",
+                )
             )
             vel_vector_g_from_rotation = np.cross(
                 sect_AC,
                 op_point.convert_axes(
-                    op_point.p, op_point.q, op_point.r,
+                    op_point.p,
+                    op_point.q,
+                    op_point.r,
                     from_axes="body",
-                    to_axes="geometry"
+                    to_axes="geometry",
                 ),
-                manual=True
+                manual=True,
             )
             vel_vector_g = [
                 vel_vector_g_from_freestream[i] + vel_vector_g_from_rotation[i]
                 for i in range(3)
             ]
-            vel_mag_g = np.sqrt(sum(comp ** 2 for comp in vel_vector_g))
-            vel_dir_g = [
-                vel_vector_g[i] / vel_mag_g
-                for i in range(3)
-            ]
+            vel_mag_g = np.sqrt(sum(comp**2 for comp in vel_vector_g))
+            vel_dir_g = [vel_vector_g[i] / vel_mag_g for i in range(3)]
             vel_dot_x = np.dot(vel_dir_g, xg_local, manual=True)
             vel_dot_z = np.dot(vel_dir_g, zg_local, manual=True)
 
@@ -735,7 +747,7 @@ class AeroBuildup(ExplicitAnalysis):
             alpha_generalized = np.where(
                 vel_dot_x > 0,
                 90 - np.arccosd(np.clip(vel_dot_z, -1, 1)),  # In range (-90 to 90)
-                90 + np.arccosd(np.clip(vel_dot_z, -1, 1))  # In range (90 to 270)
+                90 + np.arccosd(np.clip(vel_dot_z, -1, 1)),  # In range (90 to 270)
             )
 
             ##### Compute the effective generalized angle of attack, which roughly accounts for self-downwash
@@ -743,8 +755,11 @@ class AeroBuildup(ExplicitAnalysis):
             # it is surprisingly accurate! (<20% lift coefficient error against wind tunnel experiment, even at as
             # low as AR = 0.5.)
             alpha_generalized_effective = (
-                    alpha_generalized -
-                    (1 - AR_3D_factor ** 0.8) * np.sind(2 * alpha_generalized) / 2 * (180 / np.pi)
+                alpha_generalized
+                - (1 - AR_3D_factor**0.8)
+                * np.sind(2 * alpha_generalized)
+                / 2
+                * (180 / np.pi)
                 # TODO: "center" this scaling around alpha = alpha_{airfoil, Cl=0}, not around alpha = 0.
                 # TODO Can estimate airfoil's alpha_{Cl=0} by camber + thin airfoil theory + viscous decambering knockdown.
             )  # Models finite-wing increase in alpha_{CL_max}.
@@ -753,16 +768,15 @@ class AeroBuildup(ExplicitAnalysis):
             xsec_a_quarter_chord = xsec_quarter_chords[sect_id]
             xsec_b_quarter_chord = xsec_quarter_chords[sect_id + 1]
             quarter_chord_vector_g = xsec_b_quarter_chord - xsec_a_quarter_chord
-            quarter_chord_dir_g = quarter_chord_vector_g / np.linalg.norm(quarter_chord_vector_g)
+            quarter_chord_dir_g = quarter_chord_vector_g / np.linalg.norm(
+                quarter_chord_vector_g
+            )
             quarter_chord_dir_g = [  # Convert to list
-                quarter_chord_dir_g[i]
-                for i in range(3)
+                quarter_chord_dir_g[i] for i in range(3)
             ]
 
             vel_dir_dot_quarter_chord_dir = np.dot(
-                vel_dir_g,
-                quarter_chord_dir_g,
-                manual=True
+                vel_dir_g, quarter_chord_dir_g, manual=True
             )
 
             sweep_rad = np.arcsin(vel_dir_dot_quarter_chord_dir)
@@ -786,50 +800,37 @@ class AeroBuildup(ExplicitAnalysis):
             ##### Compute sectional lift at cross-sections using lookup functions. Merge them linearly to get section CL.
             kwargs = dict(
                 alpha=alpha_generalized_effective,
-                mach=mach_normal if self.include_wave_drag else 0.,
+                mach=mach_normal if self.include_wave_drag else 0.0,
                 control_surfaces=symmetry_treated_control_surfaces,
                 model_size=self.model_size,
             )
 
             xsec_a_airfoil_aero = xsec_a.airfoil.get_aero_from_neuralfoil(
-                Re=Re_a,
-                **kwargs
+                Re=Re_a, **kwargs
             )
             xsec_b_airfoil_aero = xsec_b.airfoil.get_aero_from_neuralfoil(
-                Re=Re_b,
-                **kwargs
+                Re=Re_b, **kwargs
             )
 
             xsec_a_Cl = xsec_a_airfoil_aero["CL"]
             xsec_b_Cl = xsec_b_airfoil_aero["CL"]
             sect_CL = (
-                              xsec_a_Cl * a_weight +
-                              xsec_b_Cl * b_weight
-                      ) * AR_3D_factor ** 0.2  # Models slight decrease in finite-wing CL_max.
+                xsec_a_Cl * a_weight + xsec_b_Cl * b_weight
+            ) * AR_3D_factor**0.2  # Models slight decrease in finite-wing CL_max.
 
             ##### Compute sectional drag at cross-sections using lookup functions. Merge them linearly to get section CD.
             xsec_a_Cdp = xsec_a_airfoil_aero["CD"]
             xsec_b_Cdp = xsec_b_airfoil_aero["CD"]
-            sect_CDp = (
-                (
-                        xsec_a_Cdp * a_weight +
-                        xsec_b_Cdp * b_weight
-                )
-            )
+            sect_CDp = xsec_a_Cdp * a_weight + xsec_b_Cdp * b_weight
 
             ##### Compute sectional moment at cross-sections using lookup functions. Merge them linearly to get section CM.
             xsec_a_Cm = xsec_a_airfoil_aero["CM"]
             xsec_b_Cm = xsec_b_airfoil_aero["CM"]
-            sect_CM = (
-                    xsec_a_Cm * a_weight +
-                    xsec_b_Cm * b_weight
-            )
+            sect_CM = xsec_a_Cm * a_weight + xsec_b_Cm * b_weight
 
             ##### Compute induced drag from local CL and full-wing properties (AR, e)
             if include_induced_drag:
-                sect_CDi = (
-                        sect_CL ** 2 / (np.pi * AR_effective * oswalds_efficiency)
-                )
+                sect_CDi = sect_CL**2 / (np.pi * AR_effective * oswalds_efficiency)
 
                 sect_CD = sect_CDp + sect_CDi
             else:
@@ -837,15 +838,14 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Go to dimensional quantities using the area.
             area = areas[sect_id]
-            q_local = 0.5 * op_point.atmosphere.density() * vel_mag_g ** 2
+            q_local = 0.5 * op_point.atmosphere.density() * vel_mag_g**2
             sect_L = q_local * area * sect_CL
             sect_D = q_local * area * sect_CD
             sect_M = q_local * area * sect_CM * mean_chord
 
             ##### Compute the direction of the lift by projecting the section's normal vector into the plane orthogonal to the local freestream.
             L_direction_g_unnormalized = [
-                zg_local[i] - vel_dot_z * vel_dir_g[i]
-                for i in range(3)
+                zg_local[i] - vel_dot_z * vel_dir_g[i] for i in range(3)
             ]
             L_direction_g_unnormalized = [  # Handles the 90 degree to 270 degree cases
                 np.where(
@@ -855,10 +855,11 @@ class AeroBuildup(ExplicitAnalysis):
                 )
                 for i in range(3)
             ]
-            L_direction_g_mag = np.sqrt(sum(comp ** 2 for comp in L_direction_g_unnormalized))
+            L_direction_g_mag = np.sqrt(
+                sum(comp**2 for comp in L_direction_g_unnormalized)
+            )
             L_direction_g = [
-                L_direction_g_unnormalized[i] / L_direction_g_mag
-                for i in range(3)
+                L_direction_g_unnormalized[i] / L_direction_g_mag for i in range(3)
             ]
 
             ##### Compute the direction of the drag by aligning the drag vector with the freestream vector.
@@ -866,31 +867,20 @@ class AeroBuildup(ExplicitAnalysis):
 
             ##### Compute the force vector in geometry axes.
             sect_F_g = [
-                sect_L * L_direction_g[i] + sect_D * D_direction_g[i]
-                for i in range(3)
+                sect_L * L_direction_g[i] + sect_D * D_direction_g[i] for i in range(3)
             ]
 
             ##### Compute the moment vector in geometry axes.
-            M_g_lift = np.cross(
-                sect_AC,
-                sect_F_g,
-                manual=True
-            )
+            M_g_lift = np.cross(sect_AC, sect_F_g, manual=True)
             M_direction_g = np.cross(L_direction_g, D_direction_g, manual=True)
-            M_g_pitching_moment = [
-                M_direction_g[i] * sect_M
-                for i in range(3)
-            ]
-            sect_M_g = [
-                M_g_lift[i] + M_g_pitching_moment[i]
-                for i in range(3)
-            ]
+            M_g_pitching_moment = [M_direction_g[i] * sect_M for i in range(3)]
+            sect_M_g = [M_g_lift[i] + M_g_pitching_moment[i] for i in range(3)]
 
             return sect_F_g, sect_M_g
 
         ##### Iterate through all sections and add up all forces/moments.
-        F_g = [0., 0., 0.]
-        M_g = [0., 0., 0.]
+        F_g = [0.0, 0.0, 0.0]
+        M_g = [0.0, 0.0, 0.0]
 
         for sect_id in range(len(wing.xsecs) - 1):
             sect_F_g, sect_M_g = compute_section_aerodynamics(sect_id=sect_id)
@@ -900,7 +890,9 @@ class AeroBuildup(ExplicitAnalysis):
                 M_g[i] += sect_M_g[i]
 
             if wing.symmetric:
-                sect_F_g, sect_M_g = compute_section_aerodynamics(sect_id=sect_id, mirror_across_XZ=True)
+                sect_F_g, sect_M_g = compute_section_aerodynamics(
+                    sect_id=sect_id, mirror_across_XZ=True
+                )
 
                 for i in range(3):
                     F_g[i] += sect_F_g[i]
@@ -914,13 +906,12 @@ class AeroBuildup(ExplicitAnalysis):
             F_g=F_g,
             M_g=M_g,
             span_effective=span_effective,
-            oswalds_efficiency=oswalds_efficiency
+            oswalds_efficiency=oswalds_efficiency,
         )
 
-    def fuselage_aerodynamics(self,
-                              fuselage: Fuselage,
-                              include_induced_drag: bool = True
-                              ) -> AeroComponentResults:
+    def fuselage_aerodynamics(
+        self, fuselage: Fuselage, include_induced_drag: bool = True
+    ) -> AeroComponentResults:
         """
         Estimates the aerodynamic forces, moments, and derivatives on a fuselage in isolation.
 
@@ -952,34 +943,20 @@ class AeroBuildup(ExplicitAnalysis):
         eta = jorgensen_eta(fuselage.fineness_ratio())
 
         span_effective = softmax_scalefree(
-            [
-                xsec.width
-                for xsec in fuselage.xsecs
-            ] + [
-                xsec.height
-                for xsec in fuselage.xsecs
-            ],
+            [xsec.width for xsec in fuselage.xsecs]
+            + [xsec.height for xsec in fuselage.xsecs],
         )
 
         ##### Initialize storage for total forces and moments, in geometry axes.
-        F_g = [0., 0., 0.]
-        M_g = [0., 0., 0.]
+        F_g = [0.0, 0.0, 0.0]
+        M_g = [0.0, 0.0, 0.0]
 
         ##### Compute the inviscid aerodynamics using slender body theory
-        xsec_areas = [
-            xsec.xsec_area()
-            for xsec in fuselage.xsecs
-        ]
+        xsec_areas = [xsec.xsec_area() for xsec in fuselage.xsecs]
 
-        sect_xyz_a = [
-            xsec.xyz_c
-            for xsec in fuselage.xsecs[:-1]
-        ]
+        sect_xyz_a = [xsec.xyz_c for xsec in fuselage.xsecs[:-1]]
 
-        sect_xyz_b = [
-            xsec.xyz_c
-            for xsec in fuselage.xsecs[1:]
-        ]
+        sect_xyz_b = [xsec.xyz_c for xsec in fuselage.xsecs[1:]]
 
         sect_xyz_midpoints = [
             [(xyz_a[i] + xyz_b[i]) / 2 for i in range(3)]
@@ -992,11 +969,12 @@ class AeroBuildup(ExplicitAnalysis):
         ]
 
         sect_directions = [
-            [np.where(
-                sect_lengths[i] != 0,
-                (xyz_b[j] - xyz_a[j]) / (sect_lengths[i] + 1e-100),
-                1 if j == 0 else 0  # Default to [1, 0, 0]
-            )
+            [
+                np.where(
+                    sect_lengths[i] != 0,
+                    (xyz_b[j] - xyz_a[j]) / (sect_lengths[i] + 1e-100),
+                    1 if j == 0 else 0,  # Default to [1, 0, 0]
+                )
                 for j in range(3)
             ]
             for i, (xyz_a, xyz_b) in enumerate(zip(sect_xyz_a, sect_xyz_b))
@@ -1007,7 +985,9 @@ class AeroBuildup(ExplicitAnalysis):
             for area_a, area_b in zip(xsec_areas[:-1], xsec_areas[1:])
         ]
 
-        vel_direction_g = op_point.convert_axes(-1, 0, 0, from_axes="wind", to_axes="geometry")
+        vel_direction_g = op_point.convert_axes(
+            -1, 0, 0, from_axes="wind", to_axes="geometry"
+        )
 
         sin_local_alpha_force_direction = [
             [
@@ -1017,28 +997,23 @@ class AeroBuildup(ExplicitAnalysis):
             for s in sect_directions
         ]
 
-        rho_V_squared = op_point.atmosphere.density() * op_point.velocity ** 2
+        rho_V_squared = op_point.atmosphere.density() * op_point.velocity**2
 
         sin_local_alpha_moment_direction = [
-            np.cross(
-                vel_direction_g,
-                sect_direction,
-                manual=True
-            )
+            np.cross(vel_direction_g, sect_direction, manual=True)
             for sect_direction in sect_directions
         ]
 
         # Drela, Flight Vehicle Aerodynamics Eq. 6.77
         lift_force_at_nose = [
-            rho_V_squared
-            * xsec_areas[-1]
-            * sin_local_alpha_force_direction[-1][i]
+            rho_V_squared * xsec_areas[-1] * sin_local_alpha_force_direction[-1][i]
             for i in range(3)
         ]
 
         # Drela, Flight Vehicle Aerodynamics Eq. 6.78
         moment_at_nose_due_to_open_tail = [
-            -1 * rho_V_squared
+            -1
+            * rho_V_squared
             * sum(sect_lengths)
             * xsec_areas[-1]
             * sin_local_alpha_moment_direction[-1][i]
@@ -1049,28 +1024,27 @@ class AeroBuildup(ExplicitAnalysis):
             * sum(
                 area * moment_direction[i] * length
                 for area, moment_direction, length in zip(
-                    sect_areas,
-                    sin_local_alpha_moment_direction,
-                    sect_lengths
+                    sect_areas, sin_local_alpha_moment_direction, sect_lengths
                 )
             )
             for i in range(3)
         ]
 
         lift_moment_arm = [
-            fuselage.xsecs[0].xyz_c[i] - self.xyz_ref[i]
-            for i in range(3)
+            fuselage.xsecs[0].xyz_c[i] - self.xyz_ref[i] for i in range(3)
         ]
         moment_due_to_lift_force = np.cross(
-            lift_moment_arm,
-            lift_force_at_nose,
-            manual=True
+            lift_moment_arm, lift_force_at_nose, manual=True
         )
 
         ### Total the invsicid forces and moments
         for i in range(3):
             F_g[i] += lift_force_at_nose[i]
-            M_g[i] += moment_at_nose_due_to_open_tail[i] + moment_at_nose_due_to_shape[i] + moment_due_to_lift_force[i]
+            M_g[i] += (
+                moment_at_nose_due_to_open_tail[i]
+                + moment_at_nose_due_to_shape[i]
+                + moment_due_to_lift_force[i]
+            )
 
         ##### Now, need to add in viscous aerodynamics from profile drag sources
         ### Base Drag
@@ -1080,14 +1054,15 @@ class AeroBuildup(ExplicitAnalysis):
         ### Skin friction drag
         form_factor = fuselage_form_factor(
             fineness_ratio=fuselage.fineness_ratio(),
-            ratio_of_corner_radius_to_body_width=0.5
+            ratio_of_corner_radius_to_body_width=0.5,
         )
         C_f_ideal = (
-                        # From the same study as the `fuselage_form_factor` function above. This is done on purpose
-                        # as the form factor in this particular paper is a fit that correlates best using this precise
-                        # definition of C_f_ideal.
-                            3.46 * np.log10(Re) - 5.6
-                    ) ** -2
+            # From the same study as the `fuselage_form_factor` function above. This is done on purpose
+            # as the form factor in this particular paper is a fit that correlates best using this precise
+            # definition of C_f_ideal.
+            3.46 * np.log10(Re)
+            - 5.6
+        ) ** -2
         C_f = C_f_ideal * form_factor
         drag_skin = C_f * fuselage.area_wetted() * q
 
@@ -1096,8 +1071,7 @@ class AeroBuildup(ExplicitAnalysis):
 
         if self.include_wave_drag:
             sears_haack_drag_area = transonic.sears_haack_drag_from_volume(
-                volume=fuselage.volume(),
-                length=length
+                volume=fuselage.volume(), length=length
             )  # Units of area
             sears_haack_C_D_wave = sears_haack_drag_area / S_ref
 
@@ -1106,7 +1080,8 @@ class AeroBuildup(ExplicitAnalysis):
                 mach_crit=critical_mach(
                     fineness_ratio_nose=fuse_options["nose_fineness_ratio"]
                 ),
-                CD_wave_at_fully_supersonic=fuse_options["E_wave_drag"] * sears_haack_C_D_wave,
+                CD_wave_at_fully_supersonic=fuse_options["E_wave_drag"]
+                * sears_haack_C_D_wave,
             )
         else:
             C_D_wave = 0
@@ -1117,20 +1092,17 @@ class AeroBuildup(ExplicitAnalysis):
         drag_profile = drag_base + drag_skin + drag_wave
 
         drag_profile_g = op_point.convert_axes(
-            -drag_profile, 0, 0,
-            from_axes="wind",
-            to_axes="geometry"
+            -drag_profile, 0, 0, from_axes="wind", to_axes="geometry"
         )
 
         drag_moment_arm = [
-            (fuselage.xsecs[0].xyz_c[i] + fuselage.xsecs[-1].xyz_c[i]) / 2 - self.xyz_ref[i]
+            (fuselage.xsecs[0].xyz_c[i] + fuselage.xsecs[-1].xyz_c[i]) / 2
+            - self.xyz_ref[i]
             for i in range(3)
         ]
 
         moment_due_to_drag_profile = np.cross(
-            drag_moment_arm,
-            drag_profile_g,
-            manual=True
+            drag_moment_arm, drag_profile_g, manual=True
         )
 
         for i in range(3):
@@ -1139,31 +1111,21 @@ class AeroBuildup(ExplicitAnalysis):
 
         ##### Now, we need to add in the viscous aerodynamics from crossflow sources
         sin_generalized_alphas = [
-            sum(comp ** 2 for comp in s) ** 0.5
-            for s in sin_local_alpha_force_direction
+            sum(comp**2 for comp in s) ** 0.5 for s in sin_local_alpha_force_direction
         ]
-        mean_aerodynamic_radii = [
-            (area / np.pi + 1e-100) ** 0.5
-            for area in sect_areas
-        ]
+        mean_aerodynamic_radii = [(area / np.pi + 1e-100) ** 0.5 for area in sect_areas]
 
         Re_n_sect = [
-            s * op_point.reynolds(
-                reference_length=2 * radius
-            )
+            s * op_point.reynolds(reference_length=2 * radius)
             for s, radius in zip(sin_generalized_alphas, mean_aerodynamic_radii)
         ]
-        mach_n_sect = [
-            s * mach
-            for s in sin_generalized_alphas
-        ]
+        mach_n_sect = [s * mach for s in sin_generalized_alphas]
 
         C_d_n_sect = [
             np.where(
                 Re_n_sect[i] != 0,
                 aerolib.Cd_cylinder(
-                    Re_D=Re_n_sect[i],
-                    mach=mach_n_sect[i]
+                    Re_D=Re_n_sect[i], mach=mach_n_sect[i]
                 ),  # Replace with 1.20 from Jorgensen Table 1 if this isn't working well
                 0,
             )
@@ -1171,11 +1133,7 @@ class AeroBuildup(ExplicitAnalysis):
         ]
 
         vel_dot_x = [
-            np.dot(
-                vel_direction_g,
-                sect_directions[i],
-                manual=True
-            )
+            np.dot(vel_direction_g, sect_directions[i], manual=True)
             for i in range(len(fuselage.xsecs) - 1)
         ]
         normal_directions_g_unnormalized = [
@@ -1186,10 +1144,12 @@ class AeroBuildup(ExplicitAnalysis):
             for i in range(len(fuselage.xsecs) - 1)
         ]
         for i in range(len(fuselage.xsecs) - 1):
-            normal_directions_g_unnormalized[i][2] += 1e-100  # Hack to avoid divide-by-zero in 0-AoA case
+            normal_directions_g_unnormalized[i][
+                2
+            ] += 1e-100  # Hack to avoid divide-by-zero in 0-AoA case
 
         normal_directions_g_mag = [
-            (sum(comp ** 2 for comp in n) + 1e-100) ** 0.5
+            (sum(comp**2 for comp in n) + 1e-100) ** 0.5
             for n in normal_directions_g_unnormalized
         ]
         normal_directions_g = [
@@ -1206,7 +1166,8 @@ class AeroBuildup(ExplicitAnalysis):
                 * rho_V_squared
                 * eta
                 * C_d_n_sect[i]
-                * normal_directions_g[i][j] * sum(c ** 2 for c in sin_local_alpha_force_direction[i])
+                * normal_directions_g[i][j]
+                * sum(c**2 for c in sin_local_alpha_force_direction[i])
                 * mean_aerodynamic_radii[i]
                 for j in range(3)
             ]
@@ -1217,7 +1178,7 @@ class AeroBuildup(ExplicitAnalysis):
             np.cross(
                 [sect_xyz_midpoints[i][j] - self.xyz_ref[j] for j in range(3)],
                 lift_viscous_crossflow[i],
-                manual=True
+                manual=True,
             )
             for i in range(len(fuselage.xsecs) - 1)
         ]
@@ -1239,18 +1200,17 @@ class AeroBuildup(ExplicitAnalysis):
         ### Compute the induced drag, if relevant
         if include_induced_drag:
             _, sideforce, lift = op_point.convert_axes(
-                *F_g,
-                from_axes="geometry",
-                to_axes="wind"
+                *F_g, from_axes="geometry", to_axes="wind"
             )
 
-            D_induced = (
-                    (lift ** 2 + sideforce ** 2) /
-                    (op_point.dynamic_pressure() * np.pi * span_effective ** 2)
+            D_induced = (lift**2 + sideforce**2) / (
+                op_point.dynamic_pressure() * np.pi * span_effective**2
             )
 
             D_induced_g = op_point.convert_axes(
-                -D_induced, 0, 0,
+                -D_induced,
+                0,
+                0,
                 from_axes="wind",
                 to_axes="geometry",
             )
@@ -1270,8 +1230,10 @@ class AeroBuildup(ExplicitAnalysis):
         )
 
 
-if __name__ == '__main__':
-    from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
+if __name__ == "__main__":
+    from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import (
+        airplane,
+    )
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
@@ -1284,11 +1246,7 @@ if __name__ == '__main__':
     alpha = np.linspace(-20, 20, 1000)
     aero = AeroBuildup(
         airplane=airplane,
-        op_point=OperatingPoint(
-            velocity=10,
-            alpha=alpha,
-            beta=0
-        ),
+        op_point=OperatingPoint(velocity=10, alpha=alpha, beta=0),
     ).run()
 
     plt.sca(ax[0, 0])
@@ -1316,20 +1274,15 @@ if __name__ == '__main__':
     plt.ylabel(r"$C_L/C_D$")
     p.set_ticks(5, 1, 10, 2)
 
-    p.show_plot(
-        "`asb.AeroBuildup` Aircraft Aerodynamics"
-    )
+    p.show_plot("`asb.AeroBuildup` Aircraft Aerodynamics")
 
     Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 200), np.linspace(-90, 90, 200))
     aero = AeroBuildup(
         airplane=airplane,
         op_point=OperatingPoint(
-            velocity=10,
-            alpha=Alpha.flatten(),
-            beta=Beta.flatten()
+            velocity=10, alpha=Alpha.flatten(), beta=Beta.flatten()
         ),
     ).run()
-
 
     def show():
         p.set_ticks(15, 5, 15, 5)
@@ -1337,43 +1290,48 @@ if __name__ == '__main__':
         p.show_plot(
             "`asb.AeroBuildup` Aircraft Aerodynamics",
             r"Sideslip angle $\beta$ [deg]",
-            r"Angle of Attack $\alpha$ [deg]"
+            r"Angle of Attack $\alpha$ [deg]",
         )
-
 
     fig, ax = plt.subplots(figsize=(6, 5))
     p.contour(
-        Beta, Alpha, aero["CL"].reshape(Alpha.shape),
+        Beta,
+        Alpha,
+        aero["CL"].reshape(Alpha.shape),
         colorbar_label="Lift Coefficient $C_L$ [-]",
         linelabels_format=lambda x: f"{x:.2f}",
         linelabels_fontsize=7,
         cmap="RdBu",
-        alpha=0.6
+        alpha=0.6,
     )
     plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"])))
     show()
 
     fig, ax = plt.subplots(figsize=(6, 5))
     p.contour(
-        Beta, Alpha, aero["CD"].reshape(Alpha.shape),
+        Beta,
+        Alpha,
+        aero["CD"].reshape(Alpha.shape),
         colorbar_label="Drag Coefficient $C_D$ [-]",
         linelabels_format=lambda x: f"{x:.2f}",
         linelabels_fontsize=7,
         z_log_scale=True,
         cmap="YlOrRd",
-        alpha=0.6
+        alpha=0.6,
     )
     show()
 
     fig, ax = plt.subplots(figsize=(6, 5))
     p.contour(
-        Beta, Alpha, (aero["CL"] / aero["CD"]).reshape(Alpha.shape),
+        Beta,
+        Alpha,
+        (aero["CL"] / aero["CD"]).reshape(Alpha.shape),
         levels=15,
         colorbar_label="$C_L / C_D$ [-]",
         linelabels_format=lambda x: f"{x:.0f}",
         linelabels_fontsize=7,
         cmap="RdBu",
-        alpha=0.6
+        alpha=0.6,
     )
     plt.clim(*np.array([-1, 1]) * np.max(np.abs(aero["CL"] / aero["CD"])))
     show()

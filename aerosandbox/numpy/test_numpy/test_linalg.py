@@ -16,16 +16,10 @@ def test_norm_2D():
 
     assert np.linalg.norm(cas_a) == np.linalg.norm(a)
 
-    assert np.all(
-        np.linalg.norm(cas_a, axis=0) ==
-        np.linalg.norm(a, axis=0)
-    )
+    assert np.all(np.linalg.norm(cas_a, axis=0) == np.linalg.norm(a, axis=0))
 
-    assert np.all(
-        np.linalg.norm(cas_a, axis=1) ==
-        np.linalg.norm(a, axis=1)
-    )
+    assert np.all(np.linalg.norm(cas_a, axis=1) == np.linalg.norm(a, axis=1))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

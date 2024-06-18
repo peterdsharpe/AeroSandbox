@@ -22,11 +22,7 @@ def critical_mach(fineness_ratio_nose: float) -> float:
     Returns: The critical Mach number
 
     """
-    p = {
-        'a': 11.087202397070559,
-        'b': 13.469755774708842,
-        'c': 4.034476257077558
-    }
+    p = {"a": 11.087202397070559, "b": 13.469755774708842, "c": 4.034476257077558}
 
     mach_dd = 1 - (p["a"] / (2 * fineness_ratio_nose + p["b"])) ** p["c"]
 
@@ -55,10 +51,10 @@ def jorgensen_eta(fineness_ratio: float) -> float:
     """
     x = fineness_ratio
     p = {
-        '1scl': 23.009059965179222,
-        '1cen': -122.76900250914575,
-        '2scl': 13.006453125841258,
-        '2cen': -24.367562906887436
+        "1scl": 23.009059965179222,
+        "1cen": -122.76900250914575,
+        "2scl": 13.006453125841258,
+        "2cen": -24.367562906887436,
     }
     return 1 - p["1scl"] / (x - p["1cen"]) - (p["2scl"] / (x - p["2cen"])) ** 2
 
@@ -81,24 +77,25 @@ def fuselage_base_drag_coefficient(mach: float) -> float:
     """
 
     m = mach
-    p = {'a'         : 0.18024110740341143,
-         'center_sup': -0.21737019935624047,
-         'm_trans'   : 0.9985447737532848,
-         'pc_sub'    : 0.15922582283573747,
-         'pc_sup'    : 0.04698820458826384,
-         'scale_sup' : 0.34978926411193456,
-         'trans_str' : 9.999987483414937}
+    p = {
+        "a": 0.18024110740341143,
+        "center_sup": -0.21737019935624047,
+        "m_trans": 0.9985447737532848,
+        "pc_sub": 0.15922582283573747,
+        "pc_sup": 0.04698820458826384,
+        "scale_sup": 0.34978926411193456,
+        "trans_str": 9.999987483414937,
+    }
 
     return np.blend(
         p["trans_str"] * (m - p["m_trans"]),
-        p["pc_sup"] + p["a"] * np.exp(-(p["scale_sup"] * (m - p["center_sup"])) ** 2),
-        p["pc_sub"]
+        p["pc_sup"] + p["a"] * np.exp(-((p["scale_sup"] * (m - p["center_sup"])) ** 2)),
+        p["pc_sub"],
     )
 
 
 def fuselage_form_factor(
-        fineness_ratio: float,
-        ratio_of_corner_radius_to_body_width: float = 0.5
+    fineness_ratio: float, ratio_of_corner_radius_to_body_width: float = 0.5
 ):
     """
     Computes the form factor of a fuselage as a function of various geometrical parameters.
@@ -139,10 +136,10 @@ def fuselage_form_factor(
     fr = fineness_ratio
     r = 2 * ratio_of_corner_radius_to_body_width
 
-    cs1 = -0.825885 * r ** 0.411795 + 4.0001
-    cs2 = -0.340977 * r ** 7.54327 - 2.27920
-    cs3 = -0.013846 * r ** 1.34253 + 1.11029
+    cs1 = -0.825885 * r**0.411795 + 4.0001
+    cs2 = -0.340977 * r**7.54327 - 2.27920
+    cs3 = -0.013846 * r**1.34253 + 1.11029
 
-    form_factor = cs1 * fr ** cs2 + cs3
+    form_factor = cs1 * fr**cs2 + cs3
 
     return form_factor

@@ -26,19 +26,21 @@ class Timer(object):
     prints the following console output:
 
         [a] Timing...
-        	[b] Timing...
-        		[c] Timing...
-        		[c] Elapsed: 100 msec
-        	[b] Elapsed: 100 msec
+                [b] Timing...
+                        [c] Timing...
+                        [c] Elapsed: 100 msec
+                [b] Elapsed: 100 msec
         [a] Elapsed: 100 msec
 
     """
+
     number_running: int = 0  # The number of Timers currently running
 
-    def __init__(self,
-                 name: str = None,
-                 verbose: bool = True,
-                 ):
+    def __init__(
+        self,
+        name: str = None,
+        verbose: bool = True,
+    ):
         self.name: str = name
         self.verbose: bool = verbose
         self.runtime: float = np.nan
@@ -46,8 +48,8 @@ class Timer(object):
     def __repr__(self):
         return f"{self.__class__.__name__}: " + (
             "Running..."
-            if np.isnan(self.runtime) else
-            f"Finished, elapsed: ({self._format_time(self.runtime)})"
+            if np.isnan(self.runtime)
+            else f"Finished, elapsed: ({self._format_time(self.runtime)})"
         )
 
     @staticmethod
@@ -85,10 +87,7 @@ class Timer(object):
         self.t_end = time.perf_counter_ns()
         self.__class__.number_running -= 1
         self.runtime = (self.t_end - self.t_start) / 1e9
-        self._print(
-            f"Elapsed: {self._format_time(self.runtime)}",
-            number_running_mod=1
-        )
+        self._print(f"Elapsed: {self._format_time(self.runtime)}", number_running_mod=1)
         return self.runtime
 
     def __exit__(self, type, value, traceback):
@@ -96,11 +95,11 @@ class Timer(object):
 
 
 def time_function(
-        func: Callable,
-        repeats: int = None,
-        desired_runtime: float = None,
-        runtime_reduction=np.min,
-        warmup: bool = True,
+    func: Callable,
+    repeats: int = None,
+    desired_runtime: float = None,
+    runtime_reduction=np.min,
+    warmup: bool = True,
 ) -> Tuple[float, Any]:
     """
     Runs a given callable and tells you how long it took to run, in seconds. Also returns the result of the function
@@ -135,10 +134,7 @@ def time_function(
     def time_function_once():
         start_ns = time.perf_counter_ns()
         result = func()
-        return (
-            (time.perf_counter_ns() - start_ns) / 1e9,
-            result
-        )
+        return ((time.perf_counter_ns() - start_ns) / 1e9, result)
 
     runtimes = []
 
@@ -162,19 +158,15 @@ def time_function(
             runtimes.append(t)
 
     if len(runtimes) == 0:
-        runtimes = [0.]
+        runtimes = [0.0]
 
-    return (
-        runtime_reduction(runtimes),
-        result
-    )
+    return (runtime_reduction(runtimes), result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     def f():
         time.sleep(0.1)
-
 
     print(time_function(f, desired_runtime=1))
 

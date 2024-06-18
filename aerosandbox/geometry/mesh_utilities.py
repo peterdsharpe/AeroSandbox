@@ -15,7 +15,7 @@ the vertex locations of that face are found.
 
 
 def stack_meshes(
-        *meshes: Tuple[Tuple[np.ndarray, np.ndarray]]
+    *meshes: Tuple[Tuple[np.ndarray, np.ndarray]]
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Takes in a series of tuples (points, faces) and merges them into a single tuple (points, faces). All (points,
@@ -47,19 +47,12 @@ def stack_meshes(
 
         return points, faces
     else:
-        points, faces = stack_meshes(
-            meshes[0],
-            meshes[1]
-        )
-        return stack_meshes(
-            (points, faces),
-            *meshes[2:]
-        )
+        points, faces = stack_meshes(meshes[0], meshes[1])
+        return stack_meshes((points, faces), *meshes[2:])
 
 
 def convert_mesh_to_polydata_format(
-        points: np.ndarray,
-        faces: np.ndarray
+    points: np.ndarray, faces: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     PyVista uses a slightly different convention for the standard (points, faces) format as described above. They
@@ -79,9 +72,6 @@ def convert_mesh_to_polydata_format(
         (points, faces), except that `faces` is now in a pyvista.PolyData compatible format.
 
     """
-    faces = [
-        [len(face), *face]
-        for face in faces
-    ]
+    faces = [[len(face), *face] for face in faces]
     faces = np.reshape(np.array(faces), -1)
     return points, faces

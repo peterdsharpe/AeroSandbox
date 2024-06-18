@@ -9,7 +9,7 @@ init_printing()
 hm, h, hp = s.symbols("hm h hp", real=True)
 dfm, df, dfp = s.symbols("dfm df dfp", real=True)
 
-x1, x2, x3, x4 = s.symbols('x1 x2 x3 x4', real=True)
+x1, x2, x3, x4 = s.symbols("x1 x2 x3 x4", real=True)
 # f1, f2, f3, f4 = s.symbols('f1 f2 f3 f4', real=True)
 
 f1 = 0
@@ -20,6 +20,7 @@ f4 = f3 + dfp
 
 def simplify(expr, maxdepth=10, _depth=0):
     import copy
+
     original_expr = copy.copy(expr)
     print(f"Depth: {_depth} | Parsimony: {len(str(expr))}")
     maps = {
@@ -51,7 +52,7 @@ def simplify(expr, maxdepth=10, _depth=0):
         return expr
 
 
-q = s.symbols('q')  # Normalized space for a Bernstein basis.
+q = s.symbols("q")  # Normalized space for a Bernstein basis.
 # Mapping from x-space to q-space has x=x2 -> q=0, x=x3 -> q=1.
 
 q2 = 0
@@ -63,9 +64,9 @@ q4 = q3 + hp / h
 # Define the Bernstein basis polynomials
 b1 = (1 - q) ** 2
 b2 = 2 * q * (1 - q)
-b3 = q ** 2
+b3 = q**2
 
-c1, c2, c3, c4 = s.symbols('c1 c2 c3 c4', real=True)
+c1, c2, c3, c4 = s.symbols("c1 c2 c3 c4", real=True)
 
 # Can solve for c2 and c3 exactly
 c1 = f2
@@ -94,16 +95,13 @@ c2_sol = simplify(sol[c2].factor([dfm, df, dfp]))
 dfdx = f.diff(q) / h
 df2dx = dfdx.diff(q) / h
 
-res = s.integrate(df2dx ** 2, (q, q2, q3)) * h
+res = s.integrate(df2dx**2, (q, q2, q3)) * h
 res = simplify(res.factor([dfm, df, dfp]))
 res = simplify(res)
 
 res = simplify(res.subs({c2: c2_sol}).factor([dfm, df, dfp]))
 
-cse = s.cse(
-    res,
-    symbols=s.numbered_symbols("s"),
-    list=False)
+cse = s.cse(res, symbols=s.numbered_symbols("s"), list=False)
 
 parsimony = len(str(res))
 # print(s.pretty(res, num_columns=100))
@@ -113,14 +111,14 @@ for i, (var, expr) in enumerate(cse[0]):
     print(f"{var} = {expr}")
 print(f"res = {cse[1]}")
 
-if __name__ == '__main__':
-    x = s.symbols('x', real=True)
+if __name__ == "__main__":
+    x = s.symbols("x", real=True)
 
     a = 0
     b = 4
 
     def example_f(x):
-        return x ** 2 + 2 * x + 3
+        return x**2 + 2 * x + 3
 
     h_val = b - a
     hm_val = 1
@@ -130,24 +128,17 @@ if __name__ == '__main__':
     dfp_val = example_f(b + hp_val) - example_f(b)
 
     subs = {
-            h: h_val,
-            hm: hm_val,
-            hp: hp_val,
-            df: df_val,
-            dfm: dfm_val,
-            dfp: dfp_val,
-        }
+        h: h_val,
+        hm: hm_val,
+        hp: hp_val,
+        df: df_val,
+        dfm: dfm_val,
+        dfp: dfp_val,
+    }
 
-    exact = s.N(
-        s.integrate(
-            example_f(x).diff(x, 2) ** 2,
-            (x, a, b)
-        )
-    )
+    exact = s.N(s.integrate(example_f(x).diff(x, 2) ** 2, (x, a, b)))
 
-    eqn = s.N(
-        res.subs(subs)
-    )
+    eqn = s.N(res.subs(subs))
 
     print(f"exact: {exact}")
     print(f"eqn: {eqn}")

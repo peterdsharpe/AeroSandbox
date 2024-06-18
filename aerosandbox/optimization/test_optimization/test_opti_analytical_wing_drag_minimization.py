@@ -20,8 +20,8 @@ def test_normal_problem():
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
-    CD_p = 1.328 * Re ** -0.5
-    CD_i = CL ** 2 / (pi * AR)
+    CD_p = 1.328 * Re**-0.5
+    CD_i = CL**2 / (pi * AR)
 
     opti.subject_to(chord * span == 1)
     opti.minimize(CD_p + CD_i)
@@ -43,8 +43,8 @@ def test_log_transformed_problem():
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
-    CD_p = 1.328 * Re ** -0.5
-    CD_i = CL ** 2 / (pi * AR)
+    CD_p = 1.328 * Re**-0.5
+    CD_i = CL**2 / (pi * AR)
 
     opti.subject_to(chord * span == 1)
     opti.minimize(CD_p + CD_i)
@@ -73,8 +73,8 @@ def test_fixed_variable():
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
-    CD_p = 1.328 * Re ** -0.5
-    CD_i = CL ** 2 / (pi * AR)
+    CD_p = 1.328 * Re**-0.5
+    CD_i = CL**2 / (pi * AR)
 
     opti.subject_to(chord * span == 1)
     opti.minimize(CD_p + CD_i)
@@ -96,8 +96,8 @@ def test_fully_fixed_problem():
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
-    CD_p = 1.328 * Re ** -0.5
-    CD_i = CL ** 2 / (pi * AR)
+    CD_p = 1.328 * Re**-0.5
+    CD_i = CL**2 / (pi * AR)
 
     opti.subject_to(chord * span == 1)
     opti.minimize(CD_p + CD_i)
@@ -119,8 +119,8 @@ def test_overconstrained_fully_fixed_problem():
     AR = span / chord
 
     Re = density * velocity * chord / viscosity
-    CD_p = 1.328 * Re ** -0.5
-    CD_i = CL ** 2 / (pi * AR)
+    CD_p = 1.328 * Re**-0.5
+    CD_i = CL**2 / (pi * AR)
 
     with pytest.raises(RuntimeError):
         opti.subject_to(chord * span == 1)
@@ -135,5 +135,5 @@ def test_overconstrained_fully_fixed_problem():
     # assert sol(span) == pytest.approx(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

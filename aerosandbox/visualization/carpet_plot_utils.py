@@ -38,7 +38,9 @@ def time_limit(seconds):
     try:
         signal.signal(signal.SIGALRM, signal_handler)
     except AttributeError:
-        raise OSError("signal.SIGALRM could not be found. This is probably because you're not using Linux.")
+        raise OSError(
+            "signal.SIGALRM could not be found. This is probably because you're not using Linux."
+        )
     signal.alarm(seconds)
     try:
         yield
@@ -123,12 +125,18 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
                     if not np.isnan(array[i, j]):
                         continue
 
-                    neighbors = np.array([
-                        item(i, j - 1), item(i, j + 1),
-                        item(i - 1, j), item(i + 1, j),
-                        item(i - 1, j + 1), item(i + 1, j - 1),
-                        item(i - 1, j - 1), item(i + 1, j + 1),
-                    ])
+                    neighbors = np.array(
+                        [
+                            item(i, j - 1),
+                            item(i, j + 1),
+                            item(i - 1, j),
+                            item(i + 1, j),
+                            item(i - 1, j + 1),
+                            item(i + 1, j - 1),
+                            item(i - 1, j - 1),
+                            item(i + 1, j + 1),
+                        ]
+                    )
 
                     valid_neighbors = neighbors[np.logical_not(np.isnan(neighbors))]
 
@@ -144,18 +152,22 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
     assert last_nanfrac == 0, "Could not patch all NaNs!"
 
     # Diffusing
-    print_title("Diffusing")  # TODO Perhaps use skimage gaussian blur kernel or similar instead of "+" stencil?
+    print_title(
+        "Diffusing"
+    )  # TODO Perhaps use skimage gaussian blur kernel or similar instead of "+" stencil?
     for iter in range(50):
         print(f"{iter + 1:4}")
         for i in range(array.shape[0]):
             for j in range(array.shape[1]):
                 if original_nans[i, j]:
-                    neighbors = np.array([
-                        item(i, j - 1),
-                        item(i, j + 1),
-                        item(i - 1, j),
-                        item(i + 1, j),
-                    ])
+                    neighbors = np.array(
+                        [
+                            item(i, j - 1),
+                            item(i, j + 1),
+                            item(i - 1, j),
+                            item(i + 1, j),
+                        ]
+                    )
 
                     valid_neighbors = neighbors[np.logical_not(np.isnan(neighbors))]
 
@@ -164,11 +176,10 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
     return array
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import time
     import numpy as np
     from numpy import linalg
-
 
     def complicated_function():
         print("Starting...")
@@ -176,7 +187,6 @@ if __name__ == '__main__':
         linalg.solve(np.random.randn(n, n), np.random.randn(n))
         print("Finished")
         return True
-
 
     try:
         with time_limit(1):

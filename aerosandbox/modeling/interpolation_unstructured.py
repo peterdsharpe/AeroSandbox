@@ -25,15 +25,16 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
 
     """
 
-    def __init__(self,
-                 x_data: Union[np.ndarray, Dict[str, np.ndarray]],
-                 y_data: np.ndarray,
-                 x_data_resample: Union[int, Dict[str, Union[int, np.ndarray]]] = 10,
-                 resampling_interpolator: object = interpolate.RBFInterpolator,
-                 resampling_interpolator_kwargs: Dict[str, Any] = None,
-                 fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
-                 interpolated_model_kwargs: Dict[str, Any] = None,
-                 ):
+    def __init__(
+        self,
+        x_data: Union[np.ndarray, Dict[str, np.ndarray]],
+        y_data: np.ndarray,
+        x_data_resample: Union[int, Dict[str, Union[int, np.ndarray]]] = 10,
+        resampling_interpolator: object = interpolate.RBFInterpolator,
+        resampling_interpolator_kwargs: Dict[str, Any] = None,
+        fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
+        interpolated_model_kwargs: Dict[str, Any] = None,
+    ):
         """
         Creates the interpolator. Note that data must be unstructured (i.e., point cloud) for general N-dimensional
         interpolation.
@@ -110,21 +111,18 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
             resampling_interpolator_kwargs = {
                 "kernel": "thin_plate_spline",
                 "degree": 1,
-                **resampling_interpolator_kwargs
+                **resampling_interpolator_kwargs,
             }
 
         interpolator = resampling_interpolator(
             y=np.stack(tuple(x_data.values()), axis=1),
             d=y_data,
-            **resampling_interpolator_kwargs
+            **resampling_interpolator_kwargs,
         )
 
         # If x_data_resample is an int, make it into a dict that matches x_data.
         if isinstance(x_data_resample, int):
-            x_data_resample = {
-                k: x_data_resample
-                for k in x_data.keys()
-            }
+            x_data_resample = {k: x_data_resample for k in x_data.keys()}
 
         # Now, x_data_resample should be dict-like. Validate this.
         try:
@@ -138,9 +136,7 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
         for k, v in x_data_resample.items():
             if isinstance(v, int):
                 x_data_resample[k] = np.linspace(
-                    np.min(x_data[k]),
-                    np.max(x_data[k]),
-                    v
+                    np.min(x_data[k]), np.max(x_data[k]), v
                 )
 
         x_data_coordinates: Dict = x_data_resample
@@ -150,21 +146,19 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
             for xi in np.meshgrid(*x_data_coordinates.values(), indexing="ij")
         ]
         x_data_structured = {
-            k: xi
-            for k, xi in zip(x_data.keys(), x_data_structured_values)
+            k: xi for k, xi in zip(x_data.keys(), x_data_structured_values)
         }
 
         y_data_structured = interpolator(
             np.stack(tuple(x_data_structured_values), axis=1)
         )
-        y_data_structured = y_data_structured.reshape([
-            np.length(xi)
-            for xi in x_data_coordinates.values()
-        ])
+        y_data_structured = y_data_structured.reshape(
+            [np.length(xi) for xi in x_data_coordinates.values()]
+        )
 
         interpolated_model_kwargs = {
             "fill_value": fill_value,
-            **interpolated_model_kwargs
+            **interpolated_model_kwargs,
         }
 
         super().__init__(
@@ -177,21 +171,16 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
         self.y_data_raw = y_data
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     x = np.arange(10)
-    y = x ** 3
-    interp = UnstructuredInterpolatedModel(
-        x_data=x,
-        y_data=y
-    )
-
+    y = x**3
+    interp = UnstructuredInterpolatedModel(x_data=x, y_data=y)
 
     def randspace(start, stop, n=50):
         vals = (stop - start) * np.random.rand(n) + start
         vals = np.concatenate((vals[:-2], np.array([start, stop])))
         # vals = np.sort(vals)
         return vals
-
 
     np.random.seed(4)
     X = randspace(-5, 5, 200)
@@ -203,25 +192,26 @@ if __name__ == '__main__':
             "x": X.flatten(),
             "y": Y.flatten(),
         },
-        y_data=f.flatten()
+        y_data=f.flatten(),
     )
 
     from aerosandbox.tools.pretty_plots import plt, show_plot
 
     fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
+    ax = fig.add_subplot(projection="3d")
     # ax.plot_surface(X, Y, f, color="blue", alpha=0.2)
     ax.scatter(X.flatten(), Y.flatten(), f.flatten())
     X_plot, Y_plot = np.meshgrid(
         np.linspace(X.min(), X.max(), 500),
         np.linspace(Y.min(), Y.max(), 500),
     )
-    F_plot = interp({
-        "x": X_plot.flatten(),
-        "y": Y_plot.flatten()
-    }).reshape(X_plot.shape)
+    F_plot = interp({"x": X_plot.flatten(), "y": Y_plot.flatten()}).reshape(
+        X_plot.shape
+    )
     ax.plot_surface(
-        X_plot, Y_plot, F_plot,
+        X_plot,
+        Y_plot,
+        F_plot,
         color="red",
         edgecolors=(1, 1, 1, 0.5),
         linewidth=0.5,

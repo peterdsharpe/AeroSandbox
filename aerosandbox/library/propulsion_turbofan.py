@@ -2,7 +2,7 @@ import aerosandbox.numpy as np
 
 
 def thrust_turbofan(
-        mass_turbofan: float,
+    mass_turbofan: float,
 ) -> float:
     """
     Estimates the maximum rated dry thrust of a turbofan engine. A regression to historical data.
@@ -23,16 +23,14 @@ def thrust_turbofan(
 
         The maximum (rated takeoff) dry thrust of the turbofan engine. [N]
     """
-    p = {'a': 12050.719283568596, 'w': 0.9353861810025565}
+    p = {"a": 12050.719283568596, "w": 0.9353861810025565}
 
-    return (
-            p["a"] * mass_turbofan ** p["w"]
-    )
+    return p["a"] * mass_turbofan ** p["w"]
 
 
 def thrust_specific_fuel_consumption_turbofan(
-        mass_turbofan: float,
-        bypass_ratio: float,
+    mass_turbofan: float,
+    bypass_ratio: float,
 ) -> float:
     """
     Estimates the thrust-specific fuel consumption (TSFC) of a turbofan engine. A regression to historical data.
@@ -46,22 +44,25 @@ def thrust_specific_fuel_consumption_turbofan(
     See studies in `/AeroSandbox/studies/TurbofanStudies/make_fit_tsfc.py` for model details.
 
     """
-    p = {'a'   : 3.2916082331121034e-05, 'Weight [kg]': -0.07792863839756586, 'BPR': -0.3438158689838915,
-         'BPR2': 0.29880079602955967}
+    p = {
+        "a": 3.2916082331121034e-05,
+        "Weight [kg]": -0.07792863839756586,
+        "BPR": -0.3438158689838915,
+        "BPR2": 0.29880079602955967,
+    }
 
     return (
-            p["a"]
-            * mass_turbofan ** p["Weight [kg]"]
-            * (bypass_ratio + p["BPR2"]) ** p["BPR"]
+        p["a"]
+        * mass_turbofan ** p["Weight [kg]"]
+        * (bypass_ratio + p["BPR2"]) ** p["BPR"]
     )
 
 
 def mass_turbofan(
-        m_dot_core_corrected,
-        overall_pressure_ratio,
-        bypass_ratio,
-        diameter_fan,
-
+    m_dot_core_corrected,
+    overall_pressure_ratio,
+    bypass_ratio,
+    diameter_fan,
 ):
     """
     Computes the combined mass of a bare turbofan, nacelle, and accessory and pylon weights.
@@ -90,7 +91,9 @@ def mass_turbofan(
     m_to_ft = 1 / 0.3048
 
     ##### Compute bare turbofan weight
-    m_dot_core_corrected_lbm_per_sec = m_dot_core_corrected * kg_to_lbm  # Converts from kg/s to lbm/s
+    m_dot_core_corrected_lbm_per_sec = (
+        m_dot_core_corrected * kg_to_lbm
+    )  # Converts from kg/s to lbm/s
 
     ### Parameters determined via least-squares fitting by Drela in TASOPT doc.
     b_m = 1
@@ -100,13 +103,11 @@ def mass_turbofan(
     W_pi_lbm = 17.7
     W_alpha_lbm = 1662.2
 
-    W_bare_lbm = (
-                         m_dot_core_corrected_lbm_per_sec / 100
-                 ) ** b_m * (
-                         W_0_lbm +
-                         W_pi_lbm * (overall_pressure_ratio / 30) ** b_pi +
-                         W_alpha_lbm * (bypass_ratio / 5) ** b_alpha
-                 )
+    W_bare_lbm = (m_dot_core_corrected_lbm_per_sec / 100) ** b_m * (
+        W_0_lbm
+        + W_pi_lbm * (overall_pressure_ratio / 30) ** b_pi
+        + W_alpha_lbm * (bypass_ratio / 5) ** b_alpha
+    )
     W_bare = W_bare_lbm / kg_to_lbm
 
     ##### Compute nacelle weight
@@ -157,8 +158,8 @@ def mass_turbofan(
 
 
 def m_dot_corrected_over_m_dot(
-        temperature_total_2,
-        pressure_total_2,
+    temperature_total_2,
+    pressure_total_2,
 ):
     """
     Computes the ratio `m_dot_corrected / m_dot`, where:
@@ -181,19 +182,19 @@ def m_dot_corrected_over_m_dot(
     """
     temperature_standard = 273.15 + 15
     pressure_standard = 101325
-    return (
-            temperature_total_2 / temperature_standard
-    ) ** 0.5 / (pressure_total_2 / pressure_standard)
+    return (temperature_total_2 / temperature_standard) ** 0.5 / (
+        pressure_total_2 / pressure_standard
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox as asb
 
     atmo = asb.Atmosphere(altitude=10668)
     op_point = asb.OperatingPoint(atmo, velocity=0.80 * atmo.speed_of_sound())
     m_dot_corrected_over_m_dot_ratio = m_dot_corrected_over_m_dot(
         temperature_total_2=op_point.total_temperature(),
-        pressure_total_2=op_point.total_pressure()
+        pressure_total_2=op_point.total_pressure(),
     )
 
     ### CFM56-2 engine test
@@ -201,5 +202,5 @@ if __name__ == '__main__':
         m_dot_core_corrected=364 / (5.95 + 1),
         overall_pressure_ratio=31.2,
         bypass_ratio=5.95,
-        diameter_fan=1.73
+        diameter_fan=1.73,
     )  # real mass: (2139 to 2200 kg bare, ~3400 kg installed)

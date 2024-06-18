@@ -3,11 +3,7 @@ import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
-def clip(
-        x,
-        min,
-        max
-):
+def clip(x, min, max):
     """
     Clip a value to a range.
     Args:

@@ -1,14 +1,21 @@
 from aerosandbox.common import AeroSandboxObject
 import aerosandbox.numpy as np
 from aerosandbox.atmosphere._isa_atmo_functions import pressure_isa, temperature_isa
-from aerosandbox.atmosphere._diff_atmo_functions import pressure_differentiable, temperature_differentiable
+from aerosandbox.atmosphere._diff_atmo_functions import (
+    pressure_differentiable,
+    temperature_differentiable,
+)
 import aerosandbox.tools.units as u
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
 molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
-gas_constant_air = gas_constant_universal / molecular_mass_air  # J/(kg*K); gas constant of air
-effective_collision_diameter = 0.365e-9  # m, effective collision diameter of an air molecule
+gas_constant_air = (
+    gas_constant_universal / molecular_mass_air
+)  # J/(kg*K); gas constant of air
+effective_collision_diameter = (
+    0.365e-9  # m, effective collision diameter of an air molecule
+)
 
 
 ### Define the Atmosphere class
@@ -19,18 +26,19 @@ class Atmosphere(AeroSandboxObject):
 
     """
 
-    def __init__(self,
-                 altitude: float = 0.,  # meters
-                 method: str = "differentiable",
-                 temperature_deviation: float = 0.  # Kelvin
-                 ):
+    def __init__(
+        self,
+        altitude: float = 0.0,  # meters
+        method: str = "differentiable",
+        temperature_deviation: float = 0.0,  # Kelvin
+    ):
         """
         Initialize a new Atmosphere.
-        
+
         Args:
-            
+
             altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
-            
+
             method: Method of atmosphere modeling to use. Either:
                 * "differentiable" - a C1-continuous fit to the International Standard Atmosphere; useful for optimization.
                     Mean absolute error of pressure relative to the ISA is 0.02% over 0-100 km altitude range.
@@ -38,7 +46,7 @@ class Atmosphere(AeroSandboxObject):
 
             temperature_deviation: A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This is useful for modeling
                 the impact of temperature on density altitude, for example.
-                
+
         """
         self.altitude = altitude
         self.method = method
@@ -47,7 +55,9 @@ class Atmosphere(AeroSandboxObject):
 
     def __repr__(self) -> str:
         try:
-            altitude_string = f"altitude: {self.altitude:.0f} m ({self.altitude / u.foot:.0f} ft)"
+            altitude_string = (
+                f"altitude: {self.altitude:.0f} m ({self.altitude / u.foot:.0f} ft)"
+            )
         except (ValueError, TypeError):
             altitude_string = f"altitude: {self.altitude} m"
 
@@ -77,21 +87,20 @@ class Atmosphere(AeroSandboxObject):
                     try:
                         return a[index]
                     except IndexError as e:
-                        raise IndexError(f"A state variable could not be indexed; it has length {len(a)} while the"
-                                         f"parent has length {l}.")
+                        raise IndexError(
+                            f"A state variable could not be indexed; it has length {len(a)} while the"
+                            f"parent has length {l}."
+                        )
             else:
                 return a
 
         inputs = {
-            "altitude"             : self.altitude,
+            "altitude": self.altitude,
             "temperature_deviation": self.temperature_deviation,
         }
 
         return self.__class__(
-            **{
-                k: get_item_of_attribute(v)
-                for k, v in inputs.items()
-            },
+            **{k: get_item_of_attribute(v) for k, v in inputs.items()},
             method=self.method,
         )
 
@@ -112,7 +121,9 @@ class Atmosphere(AeroSandboxObject):
             elif length == np.length(v):
                 pass
             else:
-                raise ValueError("State variables are appear vectorized, but of different lengths!")
+                raise ValueError(
+                    "State variables are appear vectorized, but of different lengths!"
+                )
         return length
 
     def __array__(self, dtype="O"):
@@ -141,7 +152,9 @@ class Atmosphere(AeroSandboxObject):
         if self.method.lower() == "isa":
             return temperature_isa(self.altitude) + self.temperature_deviation
         elif self.method.lower() == "differentiable":
-            return temperature_differentiable(self.altitude) + self.temperature_deviation
+            return (
+                temperature_differentiable(self.altitude) + self.temperature_deviation
+            )
         else:
             raise ValueError("Bad value of 'type'!")
 
@@ -155,10 +168,7 @@ class Atmosphere(AeroSandboxObject):
 
         return rho
 
-    def density_altitude(
-            self,
-            method: str = "approximate"
-    ):
+    def density_altitude(self, method: str = "approximate"):
         """
         Returns the density altitude, in meters.
 
@@ -173,15 +183,15 @@ class Atmosphere(AeroSandboxObject):
 
             lapse_rate = 0.0065  # K/m, ISA temperature lapse rate in troposphere
 
-            return (
-                    (temperature_sea_level / lapse_rate) *
-                    (
-                            1 - (pressure_ratio / temperature_ratio) ** (
-                            (9.80665 / (gas_constant_air * lapse_rate) - 1) ** -1)
-                    )
+            return (temperature_sea_level / lapse_rate) * (
+                1
+                - (pressure_ratio / temperature_ratio)
+                ** ((9.80665 / (gas_constant_air * lapse_rate) - 1) ** -1)
             )
         elif method.lower() == "exact":
-            raise NotImplementedError("Exact density altitude calculation not yet implemented.")
+            raise NotImplementedError(
+                "Exact density altitude calculation not yet implemented."
+            )
         else:
             raise ValueError("Bad value of 'method'!")
 
@@ -211,7 +221,7 @@ class Atmosphere(AeroSandboxObject):
 
         # Sutherland equation
         temperature = self.temperature()
-        mu = C1 * temperature ** 1.5 / (temperature + S)
+        mu = C1 * temperature**1.5 / (temperature + S)
 
         return mu
 
@@ -242,8 +252,15 @@ class Atmosphere(AeroSandboxObject):
         From Vincenti, W. G. and Kruger, C. H. (1965). Introduction to physical gas dynamics. Krieger Publishing Company. p. 414.
 
         """
-        return self.dynamic_viscosity() / self.pressure() * np.sqrt(
-            np.pi * gas_constant_universal * self.temperature() / (2 * molecular_mass_air)
+        return (
+            self.dynamic_viscosity()
+            / self.pressure()
+            * np.sqrt(
+                np.pi
+                * gas_constant_universal
+                * self.temperature()
+                / (2 * molecular_mass_air)
+            )
         )
 
     def knudsen(self, length):
@@ -301,17 +318,11 @@ if __name__ == "__main__":
         a.set_ylim(altitude.min() / u.foot, altitude.max() / u.foot)
     ax[0].set_ylabel("Altitude [ft]")
     plt.legend(title="Method")
-    p.show_plot(
-        f"Atmosphere",
-        rotate_axis_labels=False,
-        legend=False
-    )
+    p.show_plot(f"Atmosphere", rotate_axis_labels=False, legend=False)
 
     fig, ax = plt.subplots(1, 2, sharey=True)
     ax[0].plot(
-        (
-                (atmo_diff.pressure() - atmo_isa.pressure()) / atmo_isa.pressure()
-        ) * 100,
+        ((atmo_diff.pressure() - atmo_isa.pressure()) / atmo_isa.pressure()) * 100,
         altitude / 1e3,
     )
     ax[0].set_xlabel("Pressure, Relative Error [%]")

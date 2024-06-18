@@ -19,7 +19,11 @@ airplane = asb.Airplane(
             symmetric=True,  # Should this wing be mirrored across the XZ plane?
             xsecs=[  # The wing's cross ("X") sections
                 asb.WingXSec(  # Root
-                    xyz_le=[0, 0, 0],  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
+                    xyz_le=[
+                        0,
+                        0,
+                        0,
+                    ],  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
                     twist=0,  # degrees
                     airfoil=wing_airfoil,  # Airfoils are blended between a given XSec and the next one.
@@ -36,7 +40,7 @@ airplane = asb.Airplane(
                     twist=-0,
                     airfoil=wing_airfoil,
                 ),
-            ]
+            ],
         ),
         asb.Wing(
             name="Horizontal Stabilizer",
@@ -49,12 +53,9 @@ airplane = asb.Airplane(
                     airfoil=tail_airfoil,
                 ),
                 asb.WingXSec(  # tip
-                    xyz_le=[0.02, 0.17, 0],
-                    chord=0.08,
-                    twist=-10,
-                    airfoil=tail_airfoil
-                )
-            ]
+                    xyz_le=[0.02, 0.17, 0], chord=0.08, twist=-10, airfoil=tail_airfoil
+                ),
+            ],
         ).translate([0.6, 0, 0.06]),
         asb.Wing(
             name="Vertical Stabilizer",
@@ -67,13 +68,10 @@ airplane = asb.Airplane(
                     airfoil=tail_airfoil,
                 ),
                 asb.WingXSec(
-                    xyz_le=[0.04, 0, 0.15],
-                    chord=0.06,
-                    twist=0,
-                    airfoil=tail_airfoil
-                )
-            ]
-        ).translate([0.6, 0, 0.07])
+                    xyz_le=[0.04, 0, 0.15], chord=0.06, twist=0, airfoil=tail_airfoil
+                ),
+            ],
+        ).translate([0.6, 0, 0.07]),
     ],
     fuselages=[
         # asb.Fuselage(
@@ -86,7 +84,7 @@ airplane = asb.Airplane(
         #         for xi in np.cosspace(0, 1, 30)
         #     ]
         # )
-    ]
+    ],
 )
 
 op_point = asb.OperatingPoint(
@@ -96,21 +94,13 @@ op_point = asb.OperatingPoint(
 )
 
 ab = asb.AeroBuildup(
-    airplane,
-    op_point,
-    xyz_ref=airplane.xyz_ref
+    airplane, op_point, xyz_ref=airplane.xyz_ref
 ).run_with_stability_derivatives()
 
-av = asb.AVL(
-    airplane,
-    op_point,
-    xyz_ref=airplane.xyz_ref
-).run()
+av = asb.AVL(airplane, op_point, xyz_ref=airplane.xyz_ref).run()
 
 vl = asb.VortexLatticeMethod(
-    airplane,
-    op_point,
-    xyz_ref=airplane.xyz_ref
+    airplane, op_point, xyz_ref=airplane.xyz_ref
 ).run_with_stability_derivatives()
 
 keys = set()
@@ -120,20 +110,26 @@ keys = list(keys)
 keys.sort()
 
 titles = [
-    'Output',
-    'AeroBuildup',
-    'AVL      ',
-    'VLM      ',
-    'AB & AVL Significantly Different?'
+    "Output",
+    "AeroBuildup",
+    "AVL      ",
+    "VLM      ",
+    "AB & AVL Significantly Different?",
 ]
 
 
 def println(*data):
     print(
-        " | ".join([
-            d.ljust(len(t)) if isinstance(d, str) else f"{{0:{len(t)}.3g}}".format(d)
-            for d, t in zip(data, titles)
-        ])
+        " | ".join(
+            [
+                (
+                    d.ljust(len(t))
+                    if isinstance(d, str)
+                    else f"{{0:{len(t)}.3g}}".format(d)
+                )
+                for d, t in zip(data, titles)
+            ]
+        )
     )
 
 
@@ -144,21 +140,21 @@ for k in keys:
         rel = 0.20
         abs = 0.01
 
-        if 'l' in k or 'm' in k or 'n' in k:
+        if "l" in k or "m" in k or "n" in k:
             rel = 0.5
             abs = 0.05
 
         differences = ab[k] != pytest.approx(av[k], rel=rel, abs=abs)
-        differences_text = '*' if differences else ''
-        if 'D' in k:
-            differences_text = 'Expected'
+        differences_text = "*" if differences else ""
+        if "D" in k:
+            differences_text = "Expected"
 
         println(
             k,
             float(ab[k]),
             float(av[k]),
-            float(vl[k]) if k in vl.keys() else ' ' * 5 + '-',
-            differences_text
+            float(vl[k]) if k in vl.keys() else " " * 5 + "-",
+            differences_text,
         )
 
     except (KeyError, TypeError):

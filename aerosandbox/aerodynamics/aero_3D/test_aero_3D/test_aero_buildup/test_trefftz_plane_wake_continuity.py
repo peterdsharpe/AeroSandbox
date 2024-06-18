@@ -13,7 +13,7 @@ af = asb.Airfoil(
 solvers = [
     # asb.AVL,
     asb.VortexLatticeMethod,
-    asb.AeroBuildup
+    asb.AeroBuildup,
 ]
 
 
@@ -24,40 +24,32 @@ def test_horizontal():
                 symmetric=True,
                 color="blue",
                 xsecs=[
-                    asb.WingXSec(
-                        xyz_le=[0, 0, 0],
-                        chord=1,
-                        airfoil=af
-                    ),
-                    asb.WingXSec(
-                        xyz_le=[0, 1, 0],
-                        chord=1,
-                        airfoil=af
-                    )
-                ]
+                    asb.WingXSec(xyz_le=[0, 0, 0], chord=1, airfoil=af),
+                    asb.WingXSec(xyz_le=[0, 1, 0], chord=1, airfoil=af),
+                ],
             )
         ]
     )
     # airplane_horizontal.draw_three_view()
 
-    op_point_horiz = asb.OperatingPoint(
-        velocity=100,
-        alpha=5
-    )
+    op_point_horiz = asb.OperatingPoint(velocity=100, alpha=5)
 
-    horiz = pd.DataFrame(
-        {
-            solver.__name__: solver(airplane_horizontal, op_point_horiz).run()
-            for solver in solvers
-        }
-    ).dropna().loc[["L", "CL", "CD"], :]
+    horiz = (
+        pd.DataFrame(
+            {
+                solver.__name__: solver(airplane_horizontal, op_point_horiz).run()
+                for solver in solvers
+            }
+        )
+        .dropna()
+        .loc[["L", "CL", "CD"], :]
+    )
 
     print("\nHorizontal\n" + "-" * 80)
     print(horiz)
 
-    assert horiz["VortexLatticeMethod"]['L'] == pytest.approx(
-        horiz["AeroBuildup"]['L'],
-        rel=0.1
+    assert horiz["VortexLatticeMethod"]["L"] == pytest.approx(
+        horiz["AeroBuildup"]["L"], rel=0.1
     )
 
 
@@ -68,35 +60,27 @@ def test_v_tail():
                 symmetric=True,
                 color="purple",
                 xsecs=[
-                    asb.WingXSec(
-                        xyz_le=[0, 0, 0],
-                        chord=1,
-                        airfoil=af
-                    ),
-                    asb.WingXSec(
-                        xyz_le=[0, 1, 1],
-                        chord=1,
-                        airfoil=af
-                    )
-                ]
+                    asb.WingXSec(xyz_le=[0, 0, 0], chord=1, airfoil=af),
+                    asb.WingXSec(xyz_le=[0, 1, 1], chord=1, airfoil=af),
+                ],
             )
         ]
     )
 
     # airplane_v_tail.draw_three_view()
 
-    op_point_v_tail = asb.OperatingPoint(
-        velocity=100,
-        alpha=5,
-        beta=5
-    )
+    op_point_v_tail = asb.OperatingPoint(velocity=100, alpha=5, beta=5)
 
-    v_tail = pd.DataFrame(
-        {
-            solver.__name__: solver(airplane_v_tail, op_point_v_tail).run()
-            for solver in solvers
-        }
-    ).dropna().loc[["L", "CL", "Y", "CY", "CD"], :]
+    v_tail = (
+        pd.DataFrame(
+            {
+                solver.__name__: solver(airplane_v_tail, op_point_v_tail).run()
+                for solver in solvers
+            }
+        )
+        .dropna()
+        .loc[["L", "CL", "Y", "CY", "CD"], :]
+    )
 
     print("\nV-Tail\n" + "-" * 80)
     print(v_tail)
@@ -111,45 +95,37 @@ def test_vertical():
                 symmetric=True,
                 color="red",
                 xsecs=[
-                    asb.WingXSec(
-                        xyz_le=[0, 1, 0],
-                        chord=1,
-                        airfoil=af
-                    ),
-                    asb.WingXSec(
-                        xyz_le=[0, 1, 1],
-                        chord=1,
-                        airfoil=af
-                    )
-                ]
+                    asb.WingXSec(xyz_le=[0, 1, 0], chord=1, airfoil=af),
+                    asb.WingXSec(xyz_le=[0, 1, 1], chord=1, airfoil=af),
+                ],
             )
         ]
     )
 
     # airplane_vertical.draw_three_view()
 
-    op_point_vert = asb.OperatingPoint(
-        velocity=100,
-        beta=5
-    )
+    op_point_vert = asb.OperatingPoint(velocity=100, beta=5)
 
-    vert = pd.DataFrame(
-        {
-            solver.__name__: solver(airplane_vertical, op_point_vert).run()
-            for solver in solvers
-        }
-    ).dropna().loc[["Y", "CY", "CD"], :]
+    vert = (
+        pd.DataFrame(
+            {
+                solver.__name__: solver(airplane_vertical, op_point_vert).run()
+                for solver in solvers
+            }
+        )
+        .dropna()
+        .loc[["Y", "CY", "CD"], :]
+    )
 
     print("\nVertical\n" + "-" * 80)
     print(vert)
 
-    assert vert["VortexLatticeMethod"]['Y'] == pytest.approx(
-        vert["AeroBuildup"]['Y'],
-        rel=0.1
+    assert vert["VortexLatticeMethod"]["Y"] == pytest.approx(
+        vert["AeroBuildup"]["Y"], rel=0.1
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_horizontal()
     test_v_tail()
     test_vertical()

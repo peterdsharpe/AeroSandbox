@@ -7,7 +7,9 @@ from aerosandbox.library.aerodynamics import transonic
 
 def test_simple_scalar_optimization():
     opti = asb.Opti()
-    mach = opti.variable(init_guess=0.8, )
+    mach = opti.variable(
+        init_guess=0.8,
+    )
     CD_induced = 0.1 / mach
     CD_wave = transonic.approximate_CD_wave(
         mach=mach,
@@ -19,5 +21,5 @@ def test_simple_scalar_optimization():
     sol = opti.solve()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

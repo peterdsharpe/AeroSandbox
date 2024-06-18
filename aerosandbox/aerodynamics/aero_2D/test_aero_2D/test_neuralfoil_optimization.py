@@ -2,6 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
 
+
 def test_single_point_optimization():
 
     opti = asb.Opti()
@@ -16,14 +17,13 @@ def test_single_point_optimization():
         mach=0,
     )
 
-    opti.subject_to(
-        aero["CL"] == 0.5
-    )
+    opti.subject_to(aero["CL"] == 0.5)
 
     sol = opti.solve()
 
     assert sol(alpha) == pytest.approx(4.52, abs=0.5)
     assert sol(aero["CL"]) == pytest.approx(0.5, abs=0.01)
+
 
 def test_multi_point_optimization():
 
@@ -39,17 +39,15 @@ def test_multi_point_optimization():
         mach=0,
     )
 
-    opti.subject_to(
-        aero["CL"] == 0.5
-    )
+    opti.subject_to(aero["CL"] == 0.5)
 
     sol = opti.solve()
-
 
     assert sol(alpha)[0] == pytest.approx(4.52, abs=0.5)
     assert sol(aero["CL"])[0] == pytest.approx(0.5, abs=0.01)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_single_point_optimization()
     test_multi_point_optimization()
     pytest.main()

@@ -6,7 +6,7 @@ warnings.warn(
     "This file is deprecated and will be removed in the subsequent version of ASB.\n"
     "You can use `asb.Airfoil.get_aero_from_neuralfoil()` instead\n"
     "to get airfoil aerodynamics for any airfoil.",
-    DeprecationWarning
+    DeprecationWarning,
 )
 
 
@@ -29,11 +29,9 @@ def default_CD_function(alpha, Re, mach=0, deflection=0):
 
     ### Form factor model from Raymer, "Aircraft Design". Section 12.5, Eq. 12.30
     t_over_c = 0.12
-    FF = 1 + 2 * t_over_c * 100 * t_over_c ** 4
+    FF = 1 + 2 * t_over_c * 100 * t_over_c**4
 
-    Cd_inc = 2 * Cf * FF * (
-            1 + (np.sind(alpha) * 180 / np.pi / 5) ** 2
-    )
+    Cd_inc = 2 * Cf * FF * (1 + (np.sind(alpha) * 180 / np.pi / 5) ** 2)
     beta = (1 - mach) ** 2
 
     Cd = Cd_inc * beta

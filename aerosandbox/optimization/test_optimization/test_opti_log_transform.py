@@ -12,5 +12,5 @@ def test_bounds():
     assert sol(x) == pytest.approx(7)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()
