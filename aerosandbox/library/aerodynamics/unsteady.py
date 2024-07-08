@@ -396,6 +396,6 @@ if __name__ == "__main__":
     plt.plot(reduced_time, added_mass_lift, label="Added Mass Lift", lw=2)
     plt.legend()
     plt.xlabel("Reduced time")
-    plt.ylabel("$C_\ell$")
+    plt.ylabel(r"$C_\ell$")
     plt.title("Guassian Pitch Maneuver Through Top-Hat Gust")
     plt.show()

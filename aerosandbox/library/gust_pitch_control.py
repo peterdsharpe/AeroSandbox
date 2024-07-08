@@ -121,7 +121,7 @@ if __name__ == "__main__":
     ax1.legend(loc="lower left")
     ax2.legend(loc="lower right")
     ax1.set_xlabel("Reduced time")
-    ax1.set_ylabel("$C_\ell$")
+    ax1.set_ylabel(r"$C_\ell$")
     ax2.set_ylabel("Angle of attack, degrees")
     plt.title("Optimal Pitch Maneuver Through Top-Hat Gust")
     plt.show()

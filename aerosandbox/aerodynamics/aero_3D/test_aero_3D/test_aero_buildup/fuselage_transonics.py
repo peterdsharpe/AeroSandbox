@@ -50,7 +50,7 @@ plt.plot(
 p.show_plot(
     "Transonic Fuselage Drag",
     "Mach [-]",
-    "Drag Area $C_D \cdot A$ [m$^2$]"
+    r"Drag Area $C_D \cdot A$ [m$^2$]"
 )
 
 print("%.4g" % aero["CD"][-1])

@@ -80,7 +80,7 @@ def cosine_hermite_patch(
         dfdx_b: float,
         extrapolation: str = 'continue',
 ) -> Union[float, np.ndarray]:
-    """
+    r"""
     Computes a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine function to blend between
     linear segments.
 
