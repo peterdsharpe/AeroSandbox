@@ -85,7 +85,7 @@ def cosine_hermite_patch(
     linear segments.
 
     The end result is conceptually similar to a cubic Hermite patch, but computation is faster and the patch is
-    C^\infty-continuous.
+    $C^\infty$-continuous.
 
     Args:
         x: Scalar or array of values at which to evaluate the patch.
