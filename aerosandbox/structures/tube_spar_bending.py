@@ -6,17 +6,24 @@ from typing import Callable, Union, Dict
 class TubeSparBendingStructure(asb.ImplicitAnalysis):
 
     @asb.ImplicitAnalysis.initialize
-    def __init__(self,
-                 length: float,
-                 diameter_function: Union[float, Callable[[np.ndarray], np.ndarray]] = None,
-                 wall_thickness_function: Union[float, Callable[[np.ndarray], np.ndarray]] = None,
-                 bending_point_forces: Dict[float, float] = None,
-                 bending_distributed_force_function: Union[float, Callable[[np.ndarray], np.ndarray]] = 0.,
-                 points_per_point_load: int = 20,
-                 elastic_modulus_function: Union[float, Callable[[np.ndarray], np.ndarray]] = 175e9,  # Pa
-                 EI_guess: float = None,
-                 assume_thin_tube=True,
-                 ):
+    def __init__(
+        self,
+        length: float,
+        diameter_function: Union[float, Callable[[np.ndarray], np.ndarray]] = None,
+        wall_thickness_function: Union[
+            float, Callable[[np.ndarray], np.ndarray]
+        ] = None,
+        bending_point_forces: Dict[float, float] = None,
+        bending_distributed_force_function: Union[
+            float, Callable[[np.ndarray], np.ndarray]
+        ] = 0.0,
+        points_per_point_load: int = 20,
+        elastic_modulus_function: Union[
+            float, Callable[[np.ndarray], np.ndarray]
+        ] = 175e9,  # Pa
+        EI_guess: float = None,
+        assume_thin_tube=True,
+    ):
         """
         A structural spar model that simulates bending of a cantilever tube spar based on beam theory (static,
         linear elasticity). This tube spar is assumed to have uniform wall thickness in the azimuthal direction,
@@ -188,11 +195,15 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 E_guess = 175e9
 
             if assume_thin_tube:
-                I_guess = np.pi / 8 * diameter_guess ** 3 * wall_thickness_guess
+                I_guess = np.pi / 8 * diameter_guess**3 * wall_thickness_guess
             else:
-                I_guess = np.pi / 64 * (
-                        (diameter_guess + wall_thickness_guess) ** 4 -
-                        (diameter_guess - wall_thickness_guess) ** 4
+                I_guess = (
+                    np.pi
+                    / 64
+                    * (
+                        (diameter_guess + wall_thickness_guess) ** 4
+                        - (diameter_guess - wall_thickness_guess) ** 4
+                    )
                 )
             EI_guess = E_guess * I_guess
 
@@ -203,11 +214,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.assume_thin_tube = assume_thin_tube
 
         ### Discretize
-        y = np.linspace(
-            0,
-            length,
-            points_per_point_load
-        )
+        y = np.linspace(0, length, points_per_point_load)
 
         N = np.length(y)
         dy = np.diff(y)
@@ -216,14 +223,16 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         if isinstance(diameter_function, Callable):
             diameter = diameter_function(y)
         elif diameter_function is None:
-            diameter = self.opti.variable(init_guess=1, n_vars=N, lower_bound=0.)
+            diameter = self.opti.variable(init_guess=1, n_vars=N, lower_bound=0.0)
         else:
             diameter = diameter_function * np.ones_like(y)
 
         if isinstance(wall_thickness_function, Callable):
             wall_thickness = wall_thickness_function(y)
         elif wall_thickness_function is None:
-            wall_thickness = self.opti.variable(init_guess=1e-2, n_vars=N, lower_bound=0, upper_bound=diameter)
+            wall_thickness = self.opti.variable(
+                init_guess=1e-2, n_vars=N, lower_bound=0, upper_bound=diameter
+            )
         else:
             wall_thickness = wall_thickness_function * np.ones_like(y)
 
@@ -239,45 +248,47 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
 
         ### Evaluate the beam properties
         if assume_thin_tube:
-            I = np.pi / 8 * diameter ** 3 * wall_thickness
+            I = np.pi / 8 * diameter**3 * wall_thickness
         else:
-            I = np.pi / 64 * (
-                    (diameter + wall_thickness) ** 4 -
-                    (diameter - wall_thickness) ** 4
+            I = (
+                np.pi
+                / 64
+                * ((diameter + wall_thickness) ** 4 - (diameter - wall_thickness) ** 4)
             )
         EI = elastic_modulus * I
 
         ### Compute the initial guess
         u = self.opti.variable(
             init_guess=np.zeros_like(y),
-            scale=np.sum(np.trapz(distributed_force) * dy) * length ** 4 / EI_guess
+            scale=np.sum(np.trapz(distributed_force) * dy) * length**4 / EI_guess,
         )
         du = self.opti.derivative_of(
-            u, with_respect_to=y,
+            u,
+            with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy) * length ** 3 / EI_guess
+            derivative_scale=np.sum(np.trapz(distributed_force) * dy)
+            * length**3
+            / EI_guess,
         )
         ddu = self.opti.derivative_of(
-            du, with_respect_to=y,
+            du,
+            with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy) * length ** 2 / EI_guess
+            derivative_scale=np.sum(np.trapz(distributed_force) * dy)
+            * length**2
+            / EI_guess,
         )
         dEIddu = self.opti.derivative_of(
-            EI * ddu, with_respect_to=y,
+            EI * ddu,
+            with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy) * length
+            derivative_scale=np.sum(np.trapz(distributed_force) * dy) * length,
         )
         self.opti.constrain_derivative(
-            variable=dEIddu, with_respect_to=y,
-            derivative=distributed_force
+            variable=dEIddu, with_respect_to=y, derivative=distributed_force
         )
 
-        self.opti.subject_to([
-            u[0] == 0,
-            du[0] == 0,
-            ddu[-1] == 0,
-            dEIddu[-1] == 0
-        ])
+        self.opti.subject_to([u[0] == 0, du[0] == 0, ddu[-1] == 0, dEIddu[-1] == 0])
 
         bending_moment = -EI * ddu
         shear_force = -dEIddu
@@ -301,43 +312,40 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
     def volume(self):
         if self.assume_thin_tube:
             return np.sum(
-                np.pi * np.trapz(
-                    self.diameter * self.wall_thickness
-                ) * np.diff(self.y)
+                np.pi * np.trapz(self.diameter * self.wall_thickness) * np.diff(self.y)
             )
         else:
             return np.sum(
-                np.pi / 4 * np.trapz(
-                    (self.diameter + self.wall_thickness) ** 2 -
-                    (self.diameter - self.wall_thickness) ** 2
-                ) * np.diff(self.y)
+                np.pi
+                / 4
+                * np.trapz(
+                    (self.diameter + self.wall_thickness) ** 2
+                    - (self.diameter - self.wall_thickness) ** 2
+                )
+                * np.diff(self.y)
             )
 
     def total_force(self):
         if len(self.bending_point_forces) != 0:
             raise NotImplementedError
 
-        return np.sum(
-            np.trapz(
-                self.distributed_force
-            ) * np.diff(self.y)
-        )
+        return np.sum(np.trapz(self.distributed_force) * np.diff(self.y))
 
     def draw(self, show=True):
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
         plot_quantities = {
-            "Displacement [m]"              : self.u,
+            "Displacement [m]": self.u,
             # "Local Slope [deg]": np.arctan2d(self.du, 1),
-            "Local Load [N/m]"              : self.distributed_force,
-            "Axial Stress [MPa]"            : self.stress_axial / 1e6,
+            "Local Load [N/m]": self.distributed_force,
+            "Axial Stress [MPa]": self.stress_axial / 1e6,
             r"Bending $EI$ [N $\cdot$ m$^2$]": self.elastic_modulus * self.I,
-            "Tube Diameter [m]"             : self.diameter,
-            "Wall Thickness [m]"            : self.wall_thickness,
+            "Tube Diameter [m]": self.diameter,
+            "Wall Thickness [m]": self.wall_thickness,
         }
 
-        fig, ax = plt.subplots(2, 3, figsize=(8, 6), sharex='all')
+        fig, ax = plt.subplots(2, 3, figsize=(8, 6), sharex="all")
 
         for i, (k, v) in enumerate(plot_quantities.items()):
             plt.sca(ax.flatten()[i])
@@ -359,7 +367,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             p.show_plot("Tube Spar Bending Structure")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox.tools.units as u
 
     opti = asb.Opti()
@@ -371,19 +379,21 @@ if __name__ == '__main__':
     beam = TubeSparBendingStructure(
         opti=opti,
         length=half_span,
-        diameter_function=3.5 * u.inch,  # lambda y: (3.5 * u.inch) - (3.5 - 1.25) * u.inch * (y / half_span),
+        diameter_function=3.5
+        * u.inch,  # lambda y: (3.5 * u.inch) - (3.5 - 1.25) * u.inch * (y / half_span),
         points_per_point_load=100,
-        bending_distributed_force_function=lambda y: (lift / span) * (
-                4 / np.pi * (1 - (y / half_span) ** 2) ** 0.5
-        ),  # Elliptical
+        bending_distributed_force_function=lambda y: (lift / span)
+        * (4 / np.pi * (1 - (y / half_span) ** 2) ** 0.5),  # Elliptical
         # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform,
         elastic_modulus_function=228e9,
     )
-    opti.subject_to([
-        beam.stress_axial <= 500e6,  # Stress constraint
-        beam.u[-1] <= 2,  # Tip displacement constraint
-        beam.wall_thickness > 0.1e-3  # Gauge constraint
-    ])
+    opti.subject_to(
+        [
+            beam.stress_axial <= 500e6,  # Stress constraint
+            beam.u[-1] <= 2,  # Tip displacement constraint
+            beam.wall_thickness > 0.1e-3,  # Gauge constraint
+        ]
+    )
     mass = beam.volume() * 1600  # Density of carbon fiber [kg/m^3]
 
     opti.minimize(mass / (lift / 9.81))
@@ -400,7 +410,6 @@ if __name__ == '__main__':
     vehicle_mass = lift / 9.81
     ultimate_load_factor = 2
 
-    cruz_estimated_spar_mass = (
-            (span * 1.17e-1 + span ** 2 * 1.10e-2) *
-            (1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4)
+    cruz_estimated_spar_mass = (span * 1.17e-1 + span**2 * 1.10e-2) * (
+        1 + (ultimate_load_factor * vehicle_mass / 100 - 2) / 4
     )

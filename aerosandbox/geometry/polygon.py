@@ -5,9 +5,7 @@ from typing import Union
 
 
 class Polygon(AeroSandboxObject):
-    def __init__(self,
-                 coordinates: np.ndarray
-                 ):
+    def __init__(self, coordinates: np.ndarray):
         """
         Creates a polygon object.
 
@@ -49,10 +47,11 @@ class Polygon(AeroSandboxObject):
             except AttributeError:
                 return 0
 
-    def scale(self,
-              scale_x: float = 1.,
-              scale_y: float = 1.,
-              ) -> 'Polygon':
+    def scale(
+        self,
+        scale_x: float = 1.0,
+        scale_y: float = 1.0,
+    ) -> "Polygon":
         """
         Scales a Polygon about the origin.
         Args:
@@ -64,14 +63,13 @@ class Polygon(AeroSandboxObject):
         x = self.x() * scale_x
         y = self.y() * scale_y
 
-        return Polygon(
-            coordinates=np.stack((x, y), axis=1)
-        )
+        return Polygon(coordinates=np.stack((x, y), axis=1))
 
-    def translate(self,
-                  translate_x: float = 0.,
-                  translate_y: float = 0.,
-                  ) -> 'Polygon':
+    def translate(
+        self,
+        translate_x: float = 0.0,
+        translate_y: float = 0.0,
+    ) -> "Polygon":
         """
         Translates a Polygon by a given amount.
         Args:
@@ -84,15 +82,11 @@ class Polygon(AeroSandboxObject):
         x = self.x() + translate_x
         y = self.y() + translate_y
 
-        return Polygon(
-            coordinates=np.stack((x, y), axis=1)
-        )
+        return Polygon(coordinates=np.stack((x, y), axis=1))
 
-    def rotate(self,
-               angle: float,
-               x_center: float = 0.,
-               y_center: float = 0.
-               ) -> 'Polygon':
+    def rotate(
+        self, angle: float, x_center: float = 0.0, y_center: float = 0.0
+    ) -> "Polygon":
         """
         Rotates a Polygon clockwise by the specified amount, in radians.
 
@@ -121,9 +115,7 @@ class Polygon(AeroSandboxObject):
         ### Translate
         coordinates = coordinates + translation
 
-        return Polygon(
-            coordinates=coordinates
-        )
+        return Polygon(coordinates=coordinates)
 
     def area(self) -> float:
         """
@@ -134,7 +126,9 @@ class Polygon(AeroSandboxObject):
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+        a = (
+            x * y_n - x_n * y
+        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
         A = 0.5 * np.sum(a)  # area
 
@@ -146,10 +140,7 @@ class Polygon(AeroSandboxObject):
         """
         dx = np.diff(self.x())
         dy = np.diff(self.y())
-        ds = (
-                     dx ** 2 +
-                     dy ** 2
-             ) ** 0.5
+        ds = (dx**2 + dy**2) ** 0.5
 
         return np.sum(ds)
 
@@ -162,7 +153,9 @@ class Polygon(AeroSandboxObject):
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+        a = (
+            x * y_n - x_n * y
+        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
         A = 0.5 * np.sum(a)  # area
 
@@ -181,7 +174,9 @@ class Polygon(AeroSandboxObject):
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+        a = (
+            x * y_n - x_n * y
+        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
         A = 0.5 * np.sum(a)  # area
 
@@ -189,7 +184,7 @@ class Polygon(AeroSandboxObject):
         y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
         centroid = np.array([x_c, y_c])
 
-        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
+        Ixx = 1 / 12 * np.sum(a * (y**2 + y * y_n + y_n**2))
 
         Iuu = Ixx - A * centroid[1] ** 2
 
@@ -204,7 +199,9 @@ class Polygon(AeroSandboxObject):
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+        a = (
+            x * y_n - x_n * y
+        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
         A = 0.5 * np.sum(a)  # area
 
@@ -212,7 +209,7 @@ class Polygon(AeroSandboxObject):
         y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
         centroid = np.array([x_c, y_c])
 
-        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
+        Iyy = 1 / 12 * np.sum(a * (x**2 + x * x_n + x_n**2))
 
         Ivv = Iyy - A * centroid[0] ** 2
 
@@ -227,7 +224,9 @@ class Polygon(AeroSandboxObject):
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+        a = (
+            x * y_n - x_n * y
+        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
         A = 0.5 * np.sum(a)  # area
 
@@ -250,7 +249,9 @@ class Polygon(AeroSandboxObject):
         x_n = np.roll(x, -1)  # x_next, or x_i+1
         y_n = np.roll(y, -1)  # y_next, or y_i+1
 
-        a = x * y_n - x_n * y  # a is the area of the triangle bounded by a given point, the next point, and the origin.
+        a = (
+            x * y_n - x_n * y
+        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
         A = 0.5 * np.sum(a)  # area
 
@@ -258,17 +259,15 @@ class Polygon(AeroSandboxObject):
         y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
         centroid = np.array([x_c, y_c])
 
-        Ixx = 1 / 12 * np.sum(a * (y ** 2 + y * y_n + y_n ** 2))
+        Ixx = 1 / 12 * np.sum(a * (y**2 + y * y_n + y_n**2))
 
-        Iyy = 1 / 12 * np.sum(a * (x ** 2 + x * x_n + x_n ** 2))
+        Iyy = 1 / 12 * np.sum(a * (x**2 + x * x_n + x_n**2))
 
         J = Ixx + Iyy
 
         return J
 
-    def write_sldcrv(self,
-                     filepath: str = None
-                     ):
+    def write_sldcrv(self, filepath: str = None):
         """
         Writes a .sldcrv (SolidWorks curve) file corresponding to this Polygon to a filepath.
 
@@ -280,10 +279,7 @@ class Polygon(AeroSandboxObject):
 
         """
         string = "\n".join(
-            [
-                "%f %f 0" % tuple(coordinate)
-                for coordinate in self.coordinates
-            ]
+            ["%f %f 0" % tuple(coordinate) for coordinate in self.coordinates]
         )
 
         if filepath is not None:
@@ -292,10 +288,11 @@ class Polygon(AeroSandboxObject):
 
         return string
 
-    def contains_points(self,
-                        x: Union[float, np.ndarray],
-                        y: Union[float, np.ndarray],
-                        ) -> Union[float, np.ndarray]:
+    def contains_points(
+        self,
+        x: Union[float, np.ndarray],
+        y: Union[float, np.ndarray],
+    ) -> Union[float, np.ndarray]:
         """
         Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
 
@@ -323,11 +320,7 @@ class Polygon(AeroSandboxObject):
 
         points = np.hstack((x, y))
 
-        contained = path.Path(
-            vertices=self.coordinates
-        ).contains_points(
-            points
-        )
+        contained = path.Path(vertices=self.coordinates).contains_points(points)
         contained = np.array(contained).reshape(input_shape)
 
         return contained
@@ -340,11 +333,10 @@ class Polygon(AeroSandboxObject):
             allows for union/intersection calculation between Polygons), it is not automatic-differentiable.
         """
         import shapely
+
         return shapely.Polygon(self.coordinates)
 
-    def jaccard_similarity(self,
-                           other: "Polygon"
-                           ):
+    def jaccard_similarity(self, other: "Polygon"):
         """
         Calculates the Jaccard similarity between this polygon and another polygon.
 
@@ -366,11 +358,7 @@ class Polygon(AeroSandboxObject):
         similarity = intersection / union if union != 0 else 0
         return similarity
 
-    def draw(self,
-             set_equal=True,
-             color=None,
-             **kwargs
-             ):
+    def draw(self, set_equal=True, color=None, **kwargs):
         """
         Draws the Polygon on the current matplotlib axis.
 
@@ -389,22 +377,20 @@ class Polygon(AeroSandboxObject):
         if color is None:
             color = plt.gca()._get_lines.get_next_color()
 
-        plt.fill(
-            self.x(),
-            self.y(),
-            color=color,
-            alpha=0.5,
-            **kwargs
-        )
+        plt.fill(self.x(), self.y(), color=color, alpha=0.5, **kwargs)
 
         if set_equal:
-            plt.gca().set_aspect("equal", adjustable='box')
+            plt.gca().set_aspect("equal", adjustable="box")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     theta = np.linspace(0, 2 * np.pi, 1000)
-    r = np.sin(theta) * np.sqrt(np.abs(np.cos(theta))) / (np.sin(theta) + 7 / 5) - 2 * np.sin(theta) + 2
+    r = (
+        np.sin(theta) * np.sqrt(np.abs(np.cos(theta))) / (np.sin(theta) + 7 / 5)
+        - 2 * np.sin(theta)
+        + 2
+    )
     heart = Polygon(np.stack((r * np.cos(theta), r * np.sin(theta)), axis=1))
 
     import matplotlib.pyplot as plt

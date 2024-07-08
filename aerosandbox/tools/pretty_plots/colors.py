@@ -28,15 +28,15 @@ palettes = {
         "#73959C",
         "#7692B1",
         "#868CBC",
-    ]
+    ],
 }
 
 
 def get_discrete_colors_from_colormap(
-        cmap: str = "rainbow",
-        N: int = 8,
-        lower_bound: float = 0,
-        upper_bound: float = 1,
+    cmap: str = "rainbow",
+    N: int = 8,
+    lower_bound: float = 0,
+    upper_bound: float = 1,
 ):
     """
     Returns uniformly-spaced discrete color samples from a (continuous) colormap.
@@ -77,4 +77,6 @@ def get_last_line_color():
         line = lines[-1]
         return line._color
     except IndexError:
-        return palettes["categorical"][0] # TODO make this just the first color in the current palette
+        return palettes["categorical"][
+            0
+        ]  # TODO make this just the first color in the current palette

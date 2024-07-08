@@ -18,13 +18,10 @@ def test_opti_poorly_scaled_constraints(constraint_jacobian_condition_number=1e1
     c = np.sqrt(constraint_jacobian_condition_number)
 
     # Define constraints
-    opti.subject_to([
-        x * c <= 0.9 * c,
-        y / c <= 0.9 / c
-    ])
+    opti.subject_to([x * c <= 0.9 * c, y / c <= 0.9 / c])
 
     # Define objective
-    f = (a - x) ** 2 + b * (y - x ** 2) ** 2
+    f = (a - x) ** 2 + b * (y - x**2) ** 2
     opti.minimize(f)
 
     # Optimize
@@ -44,7 +41,7 @@ def test_opti_poorly_scaled_objective(objective_hessian_condition_number=1e10):
     c = np.sqrt(objective_hessian_condition_number)
 
     # Define objective
-    f = x ** 4 * c + y ** 4 / c
+    f = x**4 * c + y**4 / c
     opti.minimize(f)
 
     # Optimize
@@ -56,5 +53,5 @@ def test_opti_poorly_scaled_objective(objective_hessian_condition_number=1e10):
     assert sol(f) == pytest.approx(0, abs=1e-4)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

@@ -5,15 +5,12 @@ from scipy import integrate
 
 
 def quad(
-        func: Union[Callable, _cas.MX],
-        a: float,
-        b: float,
-        full_output: bool = False,
-        variable_of_integration: _cas.MX = None,
-) -> Union[
-    Tuple[float, float],
-    Tuple[float, float, dict]
-]:
+    func: Union[Callable, _cas.MX],
+    a: float,
+    b: float,
+    full_output: bool = False,
+    variable_of_integration: _cas.MX = None,
+) -> Union[Tuple[float, float], Tuple[float, float, dict]]:
     if np.is_casadi_type(func):
 
         all_vars = _cas.symvar(func)  # All variables found in the expression graph
@@ -22,28 +19,28 @@ def quad(
             if not len(all_vars) == 1:
                 raise ValueError(
                     f"`func` must be a function of one variable, or you must specify the `variable_of_integration`.\n"
-                    f"Currently, it is a function of: {all_vars}")
+                    f"Currently, it is a function of: {all_vars}"
+                )
             variable_of_integration = all_vars[0]
 
         parameters = [
-            var for var in all_vars
-            if not _cas.is_equal(var, variable_of_integration)
+            var for var in all_vars if not _cas.is_equal(var, variable_of_integration)
         ]
 
         integrator = _cas.integrator(
-            'integrator',
-            'cvodes',
+            "integrator",
+            "cvodes",
             {
-                'x'  : _cas.MX.sym('dummy_variable'),
-                'p'  : _cas.vertcat(*parameters),
-                't'  : variable_of_integration,
-                'ode': func,
+                "x": _cas.MX.sym("dummy_variable"),
+                "p": _cas.vertcat(*parameters),
+                "t": variable_of_integration,
+                "ode": func,
             },
             a,  # t0
             b,  # tf
             {  # Options
-                'abstol': 1e-8,
-                'reltol': 1e-6,
+                "abstol": 1e-8,
+                "reltol": 1e-6,
             },
         )
         res = integrator(
@@ -53,9 +50,9 @@ def quad(
         tol = 1e-8
 
         if full_output:
-            return res['xf'], tol, res
+            return res["xf"], tol, res
         else:
-            return res['xf'], tol
+            return res["xf"], tol
 
     else:
         return integrate.quad(
@@ -67,18 +64,18 @@ def quad(
 
 
 def solve_ivp(
-        fun: Union[Callable, _cas.MX],
-        t_span: Tuple[float, float],
-        y0: Union[np.ndarray, _cas.MX],
-        method: str = 'RK45',
-        t_eval: Union[np.ndarray, _cas.MX] = None,
-        dense_output: bool = False,
-        events: Union[Callable, List[Callable]] = None,
-        vectorized: bool = False,
-        args: Optional[Tuple] = None,
-        t_variable: _cas.MX = None,
-        y_variables: Union[_cas.MX, Tuple[_cas.MX]] = None,
-        **options
+    fun: Union[Callable, _cas.MX],
+    t_span: Tuple[float, float],
+    y0: Union[np.ndarray, _cas.MX],
+    method: str = "RK45",
+    t_eval: Union[np.ndarray, _cas.MX] = None,
+    dense_output: bool = False,
+    events: Union[Callable, List[Callable]] = None,
+    vectorized: bool = False,
+    args: Optional[Tuple] = None,
+    t_variable: _cas.MX = None,
+    y_variables: Union[_cas.MX, Tuple[_cas.MX]] = None,
+    **options,
 ):
 
     # Determine which backend to use
@@ -93,31 +90,39 @@ def solve_ivp(
                 try:
                     np.asanyarray(f)
                 except ValueError:
-                    raise ValueError("If `fun` is not a Callable, it must be a CasADi expression.")
+                    raise ValueError(
+                        "If `fun` is not a Callable, it must be a CasADi expression."
+                    )
                 backend = "numpy_func"
         except TypeError:
-            raise TypeError("If `fun` is not a Callable, it must be a CasADi expression.")
+            raise TypeError(
+                "If `fun` is not a Callable, it must be a CasADi expression."
+            )
 
     # Do some checks
     if backend == "casadi_func" or backend == "numpy_func":
         if t_variable is not None:
-            raise ValueError("If `fun` is a Callable, `t_variable` must be None (as it's implied).")
+            raise ValueError(
+                "If `fun` is a Callable, `t_variable` must be None (as it's implied)."
+            )
         if y_variables is not None:
-            raise ValueError("If `fun` is a Callable, `y_variables` must be None (as they're implied).")
+            raise ValueError(
+                "If `fun` is a Callable, `y_variables` must be None (as they're implied)."
+            )
 
     if backend == "casadi_expr":
         if t_variable is None:
             raise ValueError(
-                "If `fun` is a CasADi expression, `t_variable` must be specified (and the y_variables are inferred).")
+                "If `fun` is a CasADi expression, `t_variable` must be specified (and the y_variables are inferred)."
+            )
 
         all_vars = _cas.symvar(fun)  # All variables found in the expression graph
 
         # Determine y_variables by selecting all variables that are not t_variable
         if y_variables is None:
-            y_variables = np.array([
-                var for var in all_vars
-                if not _cas.is_equal(var, t_variable)
-            ])
+            y_variables = np.array(
+                [var for var in all_vars if not _cas.is_equal(var, t_variable)]
+            )
 
     if backend == "numpy_func":
         return integrate.solve_ivp(
@@ -130,17 +135,23 @@ def solve_ivp(
             events=events,
             vectorized=vectorized,
             args=args,
-            **options
+            **options,
         )
     elif backend == "casadi_func" or backend == "casadi_expr":
 
         # Exception on non-implemented options
         if dense_output:
-            raise NotImplementedError("dense_output is not yet implemented for CasADi functions.")
+            raise NotImplementedError(
+                "dense_output is not yet implemented for CasADi functions."
+            )
         if events is not None:
-            raise NotImplementedError("Events are not yet implemented for CasADi functions.")
+            raise NotImplementedError(
+                "Events are not yet implemented for CasADi functions."
+            )
         if args:
-            raise NotImplementedError("args are not yet implemented for CasADi functions.")
+            raise NotImplementedError(
+                "args are not yet implemented for CasADi functions."
+            )
 
         if not np.is_casadi_type(y0, recursive=False):
             y0 = _cas.vertcat(*y0)
@@ -174,35 +185,39 @@ def solve_ivp(
 
         def variable_is_t_or_y(var):
             return (
-                    _cas.is_equal(var, t_variable) or
-                    _cas.is_equal(var, y_variables) or
-                    any([_cas.is_equal(var, y_variables[i]) for i in range(np.prod(y_variables.shape))])
+                _cas.is_equal(var, t_variable)
+                or _cas.is_equal(var, y_variables)
+                or any(
+                    [
+                        _cas.is_equal(var, y_variables[i])
+                        for i in range(np.prod(y_variables.shape))
+                    ]
+                )
             )
 
-        parameters = _cas.vertcat(*[
-            var for var in all_vars
-            if not variable_is_t_or_y(var)
-        ])
+        parameters = _cas.vertcat(
+            *[var for var in all_vars if not variable_is_t_or_y(var)]
+        )
 
         simtime_eval = np.linspace(0, 1, 100)
 
         # Define the integrator
         integrator = _cas.integrator(
-            'integrator',
-            'cvodes',
+            "integrator",
+            "cvodes",
             # 'idas',
             {
-                'x'   : y_variables,
-                'p'   : parameters,
-                't'   : t_variable,
-                'ode' : ode,
-                'quad': 1,
+                "x": y_variables,
+                "p": parameters,
+                "t": t_variable,
+                "ode": ode,
+                "quad": 1,
             },
             0,
             simtime_eval,
             {  # Options
-                'abstol': 1e-8,
-                'reltol': 1e-6,
+                "abstol": 1e-8,
+                "reltol": 1e-6,
             },
         )
         res = integrator(
@@ -212,7 +227,7 @@ def solve_ivp(
 
         return integrate._ivp.ivp.OdeResult(
             t=t0 + (tf - t0) * res["qf"],
-            y=res['xf'],
+            y=res["xf"],
             t_events=None,
             y_events=None,
             nfev=0,
@@ -228,7 +243,7 @@ def solve_ivp(
         raise ValueError(f"Invalid backend: {backend}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # t = cas.MX.sym("t")
     # print(
     #     quad(
@@ -244,7 +259,6 @@ if __name__ == '__main__':
         x = z[0]
         y = z[1]
         return [a * x - b * x * y, -c * y + d * x * y]
-
 
     t_eval = np.linspace(0, 15, 3000)
     tf = _cas.MX.sym("tf")
@@ -264,19 +278,21 @@ if __name__ == '__main__':
         _cas.evalf(_cas.substitute(sol.t.T, tf, 15)),
         _cas.evalf(_cas.substitute(sol.y.T, tf, 15)),
     )
-    plt.xlabel('t')
-    plt.legend(['x', 'y'], shadow=True)
-    plt.title('Lotka-Volterra System')
+    plt.xlabel("t")
+    plt.legend(["x", "y"], shadow=True)
+    plt.title("Lotka-Volterra System")
     plt.show()
 
     t = _cas.MX.sym("t")
     m = _cas.MX.sym("m")
     n = _cas.MX.sym("n")
     a, b, c, d = 1.5, 1, 3, 1
-    lotkavolterra_expr = np.array([
-        a * m - b * m * n,
-        -c * n + d * m * n,
-    ])
+    lotkavolterra_expr = np.array(
+        [
+            a * m - b * m * n,
+            -c * n + d * m * n,
+        ]
+    )
 
     sol = solve_ivp(
         lotkavolterra_expr,
@@ -291,7 +307,7 @@ if __name__ == '__main__':
         _cas.evalf(_cas.substitute(sol.t.T, tf, 15)),
         _cas.evalf(_cas.substitute(sol.y.T, tf, 15)),
     )
-    plt.xlabel('t')
-    plt.legend(['x', 'y'], shadow=True)
-    plt.title('Lotka-Volterra System')
+    plt.xlabel("t")
+    plt.legend(["x", "y"], shadow=True)
+    plt.title("Lotka-Volterra System")
     plt.show()

@@ -4,9 +4,9 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 
 
 def where(
-        condition,
-        value_if_true,
-        value_if_false,
+    condition,
+    value_if_true,
+    value_if_false,
 ):
     """
     Return elements chosen from x or y depending on condition.
@@ -14,22 +14,14 @@ def where(
     See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.where.html
     """
     if not is_casadi_type([condition, value_if_true, value_if_false], recursive=True):
-        return _onp.where(
-            condition,
-            value_if_true,
-            value_if_false
-        )
+        return _onp.where(condition, value_if_true, value_if_false)
     else:
-        return _cas.if_else(
-            condition,
-            value_if_true,
-            value_if_false
-        )
+        return _cas.if_else(condition, value_if_true, value_if_false)
 
 
 def maximum(
-        x1,
-        x2,
+    x1,
+    x2,
 ):
     """
     Element-wise maximum of two arrays.
@@ -49,8 +41,8 @@ def maximum(
 
 
 def minimum(
-        x1,
-        x2,
+    x1,
+    x2,
 ):
     """
     Element-wise minimum of two arrays.

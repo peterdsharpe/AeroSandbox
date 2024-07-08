@@ -10,23 +10,23 @@ from aerosandbox.tools import string_formatting as sf
 
 
 def show_plot(
-        title: str = None,
-        xlabel: str = None,
-        ylabel: str = None,
-        zlabel: str = None,
-        dpi: float = None,
-        savefig: Union[str, List[str]] = None,
-        savefig_transparent: bool = False,
-        tight_layout: bool = True,
-        tight_layout_pad: float = 0.25,
-        legend: bool = None,
-        legend_inline: bool = False,
-        legend_frame: bool = True,
-        pretty_grids: bool = True,
-        set_ticks: bool = True,
-        rotate_axis_labels: bool = True,
-        rotate_axis_labels_linewidth: int = 14,
-        show: bool = True,
+    title: str = None,
+    xlabel: str = None,
+    ylabel: str = None,
+    zlabel: str = None,
+    dpi: float = None,
+    savefig: Union[str, List[str]] = None,
+    savefig_transparent: bool = False,
+    tight_layout: bool = True,
+    tight_layout_pad: float = 0.25,
+    legend: bool = None,
+    legend_inline: bool = False,
+    legend_frame: bool = True,
+    pretty_grids: bool = True,
+    set_ticks: bool = True,
+    rotate_axis_labels: bool = True,
+    rotate_axis_labels_linewidth: int = 14,
+    show: bool = True,
 ):
     """
     Makes a matplotlib Figure (and all its constituent Axes) look "nice", then displays it.
@@ -109,19 +109,21 @@ def show_plot(
 
     if pretty_grids:
         for ax in axes:
-            if not ax.get_label() == '<colorbar>':
+            if not ax.get_label() == "<colorbar>":
                 if not ax_is_3d(ax):
                     if any(line.get_visible() for line in ax.get_xgridlines()):
-                        ax.grid(True, 'major', axis='x', linewidth=1.6)
-                        ax.grid(True, 'minor', axis='x', linewidth=0.7)
+                        ax.grid(True, "major", axis="x", linewidth=1.6)
+                        ax.grid(True, "minor", axis="x", linewidth=0.7)
                     if any(line.get_visible() for line in ax.get_ygridlines()):
-                        ax.grid(True, 'major', axis='y', linewidth=1.6)
-                        ax.grid(True, 'minor', axis='y', linewidth=0.7)
+                        ax.grid(True, "major", axis="y", linewidth=1.6)
+                        ax.grid(True, "minor", axis="y", linewidth=0.7)
                 else:
                     for i_ax in [ax.xaxis, ax.yaxis, ax.zaxis]:
-                        i_ax._axinfo["grid"].update(dict(
-                            linewidth=0.7,
-                        ))
+                        i_ax._axinfo["grid"].update(
+                            dict(
+                                linewidth=0.7,
+                            )
+                        )
                         i_ax.set_tick_params(which="minor", color=(0, 0, 0, 0))
 
     if set_ticks:
@@ -145,7 +147,7 @@ def show_plot(
 
                     def linlogfmt(x, pos, ticks=None, default="", base=10):
                         if ticks is None:
-                            ticks = [1.]
+                            ticks = [1.0]
 
                         if x < 0:
                             sign_string = "-"
@@ -154,7 +156,7 @@ def show_plot(
                             sign_string = ""
 
                         exponent = np.floor(np.log(x) / np.log(base))
-                        coeff = x / base ** exponent
+                        coeff = x / base**exponent
 
                         ### Fix any floating-point error during the floor function
                         if coeff < 1:
@@ -166,14 +168,11 @@ def show_plot(
 
                         for tick in ticks:
                             if np.isclose(coeff, tick):
-                                return r"$\mathdefault{%s%g}$" % (
-                                    sign_string,
-                                    x
-                                )
+                                return r"$\mathdefault{%s%g}$" % (sign_string, x)
 
                         return default
 
-                    def logfmt(x, pos, ticks=[1.], default="", base=10):
+                    def logfmt(x, pos, ticks=[1.0], default="", base=10):
                         if x < 0:
                             sign_string = "-"
                             x = -x
@@ -181,7 +180,7 @@ def show_plot(
                             sign_string = ""
 
                         exponent = np.floor(np.log(x) / np.log(base))
-                        coeff = x / base ** exponent
+                        coeff = x / base**exponent
 
                         ### Fix any floating-point error during the floor function
                         if coeff < 1:
@@ -197,7 +196,7 @@ def show_plot(
                                     return r"$\mathdefault{%s%s^{%d}}$" % (
                                         sign_string,
                                         base,
-                                        exponent
+                                        exponent,
                                     )
                             else:
                                 if np.isclose(coeff, tick):
@@ -206,7 +205,7 @@ def show_plot(
                                         sign_string,
                                         coeff,
                                         base,
-                                        exponent
+                                        exponent,
                                     )
                         return default
 
@@ -241,9 +240,13 @@ def show_plot(
 
                                 if self.ndivs is None:
 
-                                    majorstep_no_exponent = 10 ** (np.log10(majorstep) % 1)
+                                    majorstep_no_exponent = 10 ** (
+                                        np.log10(majorstep) % 1
+                                    )
 
-                                    if np.isclose(majorstep_no_exponent, [1.0, 2.5, 5.0, 10.0]).any():
+                                    if np.isclose(
+                                        majorstep_no_exponent, [1.0, 2.5, 5.0, 10.0]
+                                    ).any():
                                         ndivs = 5
                                     else:
                                         ndivs = 4
@@ -266,7 +269,7 @@ def show_plot(
                         min_loc = LogAutoMinorLocator()
                         min_fmt = mt.NullFormatter()
 
-                    elif ratio < 10 ** 1.5:
+                    elif ratio < 10**1.5:
                         maj_loc = mt.LogLocator(subs=np.arange(1, 10))
                         # if i_ax.axis_name == "x":
                         #     default = r"$^{^|}$"
@@ -275,22 +278,22 @@ def show_plot(
                         # else:
                         #     default = ""
 
-                        maj_fmt = mt.FuncFormatter(
-                            partial(linlogfmt, ticks=[1, 2, 5])
+                        maj_fmt = mt.FuncFormatter(partial(linlogfmt, ticks=[1, 2, 5]))
+                        min_loc = mt.LogLocator(
+                            numticks=999, subs=np.arange(10, 100) / 10
                         )
-                        min_loc = mt.LogLocator(numticks=999, subs=np.arange(10, 100) / 10)
                         min_fmt = mt.NullFormatter()
-                    elif ratio < 10 ** 2.5:
+                    elif ratio < 10**2.5:
                         maj_loc = mt.LogLocator()
                         maj_fmt = mt.FuncFormatter(partial(logfmt, ticks=[1]))
                         min_loc = mt.LogLocator(numticks=999, subs=np.arange(1, 10))
                         min_fmt = mt.FuncFormatter(partial(logfmt, ticks=[2, 5]))
-                    elif ratio < 10 ** 8:
+                    elif ratio < 10**8:
                         maj_loc = mt.LogLocator()
                         maj_fmt = mt.FuncFormatter(partial(logfmt, ticks=[1]))
                         min_loc = mt.LogLocator(numticks=999, subs=np.arange(1, 10))
                         min_fmt = mt.FuncFormatter(partial(logfmt, ticks=[1]))
-                    elif ratio < 10 ** 16:
+                    elif ratio < 10**16:
                         maj_loc = mt.LogLocator()
                         maj_fmt = mt.LogFormatterSciNotation()
                         min_loc = mt.LogLocator(numticks=999, subs=np.arange(1, 10))
@@ -300,7 +303,7 @@ def show_plot(
 
                 elif i_ax.get_scale() == "linear":
                     maj_loc = mt.MaxNLocator(
-                        nbins='auto',
+                        nbins="auto",
                         steps=[1, 2, 5, 10],
                         min_n_ticks=3,
                     )
@@ -310,7 +313,9 @@ def show_plot(
                 else:  # For any other scale, just use the default tick locations
                     continue
 
-                if len(i_ax.get_major_ticks()) != 0:  # Unless the user has manually set the ticks to be empty
+                if (
+                    len(i_ax.get_major_ticks()) != 0
+                ):  # Unless the user has manually set the ticks to be empty
                     if maj_loc is not None:
                         i_ax.set_major_locator(maj_loc)
                     if min_loc is not None:
@@ -335,33 +340,36 @@ def show_plot(
     # Make axis labels if needed
     if xlabel is not None:
         for ax in axes:
-            if not ax.get_label() == '<colorbar>':
+            if not ax.get_label() == "<colorbar>":
                 ax.set_xlabel(xlabel)
     if ylabel is not None:
         for ax in axes:
-            if not ax.get_label() == '<colorbar>':
+            if not ax.get_label() == "<colorbar>":
                 ax.set_ylabel(ylabel)
     if zlabel is not None:
         if len(axes_with_3D) == 0:
             import warnings
+
             warnings.warn(
                 "You specified a `zlabel`, but there are no 3D axes in this figure. Ignoring `zlabel`.",
-                stacklevel=2
+                stacklevel=2,
             )
 
         for ax in axes_with_3D:
-            if not ax.get_label() == '<colorbar>':
+            if not ax.get_label() == "<colorbar>":
                 ax.set_zlabel(zlabel)
 
     # Rotate axis labels if needed
     if rotate_axis_labels:
         for ax in axes:
             if not ax_is_3d(ax):
-                if not ax.get_label() == '<colorbar>':
+                if not ax.get_label() == "<colorbar>":
 
                     ylabel = ax.get_ylabel()
 
-                    if (rotate_axis_labels_linewidth is not None) and ("\n" not in ylabel):
+                    if (rotate_axis_labels_linewidth is not None) and (
+                        "\n" not in ylabel
+                    ):
                         ylabel = sf.wrap_text_ignoring_mathtext(
                             ylabel,
                             width=rotate_axis_labels_linewidth,
@@ -408,12 +416,12 @@ def show_plot(
 
 
 def set_ticks(
-        x_major: Union[float, int] = None,
-        x_minor: Union[float, int] = None,
-        y_major: Union[float, int] = None,
-        y_minor: Union[float, int] = None,
-        z_major: Union[float, int] = None,
-        z_minor: Union[float, int] = None,
+    x_major: Union[float, int] = None,
+    x_minor: Union[float, int] = None,
+    y_major: Union[float, int] = None,
+    y_minor: Union[float, int] = None,
+    z_major: Union[float, int] = None,
+    z_minor: Union[float, int] = None,
 ):
     ax = plt.gca()
     if x_major is not None:
@@ -440,7 +448,7 @@ def equal() -> None:
     ax = plt.gca()
 
     if not ax_is_3d(ax):
-        ax.set_aspect("equal", adjustable='box')
+        ax.set_aspect("equal", adjustable="box")
 
     else:
         ax.set_box_aspect((1, 1, 1))

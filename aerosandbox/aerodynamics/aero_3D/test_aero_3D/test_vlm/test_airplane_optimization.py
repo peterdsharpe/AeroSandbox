@@ -17,8 +17,8 @@ def test_airplane_optimization():
                         asb.WingXSec(
                             xyz_le=[-0.25 * taper_ratio, 1, 0],
                             chord=taper_ratio,
-                        )
-                    ]
+                        ),
+                    ],
                 )
             ]
         )
@@ -55,6 +55,6 @@ def test_airplane_optimization():
     assert sol(alpha) == pytest.approx(5.5, abs=1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     pytest.main()

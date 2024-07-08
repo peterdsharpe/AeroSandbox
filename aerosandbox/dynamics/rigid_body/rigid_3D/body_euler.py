@@ -1,4 +1,6 @@
-from aerosandbox.dynamics.rigid_body.common_rigid_body import _DynamicsRigidBodyBaseClass
+from aerosandbox.dynamics.rigid_body.common_rigid_body import (
+    _DynamicsRigidBodyBaseClass,
+)
 import aerosandbox.numpy as np
 from aerosandbox.weights.mass_properties import MassProperties
 from typing import Union
@@ -11,7 +13,7 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
     * in 3D
     * with velocity parameterized in body axes
     * and angle parameterized in Euler angles
-    
+
     State variables:
         x_e: x-position, in Earth axes. [meters]
         y_e: y-position, in Earth axes. [meters]
@@ -39,21 +41,22 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     """
 
-    def __init__(self,
-                 mass_props: MassProperties = None,
-                 x_e: Union[float, np.ndarray] = 0,
-                 y_e: Union[float, np.ndarray] = 0,
-                 z_e: Union[float, np.ndarray] = 0,
-                 u_b: Union[float, np.ndarray] = 0,
-                 v_b: Union[float, np.ndarray] = 0,
-                 w_b: Union[float, np.ndarray] = 0,
-                 phi: Union[float, np.ndarray] = 0,
-                 theta: Union[float, np.ndarray] = 0,
-                 psi: Union[float, np.ndarray] = 0,
-                 p: Union[float, np.ndarray] = 0,
-                 q: Union[float, np.ndarray] = 0,
-                 r: Union[float, np.ndarray] = 0,
-                 ):
+    def __init__(
+        self,
+        mass_props: MassProperties = None,
+        x_e: Union[float, np.ndarray] = 0,
+        y_e: Union[float, np.ndarray] = 0,
+        z_e: Union[float, np.ndarray] = 0,
+        u_b: Union[float, np.ndarray] = 0,
+        v_b: Union[float, np.ndarray] = 0,
+        w_b: Union[float, np.ndarray] = 0,
+        phi: Union[float, np.ndarray] = 0,
+        theta: Union[float, np.ndarray] = 0,
+        psi: Union[float, np.ndarray] = 0,
+        p: Union[float, np.ndarray] = 0,
+        q: Union[float, np.ndarray] = 0,
+        r: Union[float, np.ndarray] = 0,
+    ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
         self.x_e = x_e
@@ -83,18 +86,18 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
     @property
     def state(self):
         return {
-            "x_e"  : self.x_e,
-            "y_e"  : self.y_e,
-            "z_e"  : self.z_e,
-            "u_b"  : self.u_b,
-            "v_b"  : self.v_b,
-            "w_b"  : self.w_b,
-            "phi"  : self.phi,
+            "x_e": self.x_e,
+            "y_e": self.y_e,
+            "z_e": self.z_e,
+            "u_b": self.u_b,
+            "v_b": self.v_b,
+            "w_b": self.w_b,
+            "phi": self.phi,
             "theta": self.theta,
-            "psi"  : self.psi,
-            "p"    : self.p,
-            "q"    : self.q,
-            "r"    : self.r,
+            "psi": self.psi,
+            "p": self.p,
+            "q": self.q,
+            "r": self.r,
         }
 
     @property
@@ -196,113 +199,92 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
         ### Position derivatives
         d_xe = (
-                (cthe * cpsi) * u +
-                (sphi * sthe * cpsi - cphi * spsi) * v +
-                (cphi * sthe * cpsi + sphi * spsi) * w
+            (cthe * cpsi) * u
+            + (sphi * sthe * cpsi - cphi * spsi) * v
+            + (cphi * sthe * cpsi + sphi * spsi) * w
         )
         d_ye = (
-                (cthe * spsi) * u +
-                (sphi * sthe * spsi + cphi * cpsi) * v +
-                (cphi * sthe * spsi - sphi * cpsi) * w
+            (cthe * spsi) * u
+            + (sphi * sthe * spsi + cphi * cpsi) * v
+            + (cphi * sthe * spsi - sphi * cpsi) * w
         )
-        d_ze = (
-                (-sthe) * u +
-                (sphi * cthe) * v +
-                (cphi * cthe) * w
-        )
+        d_ze = (-sthe) * u + (sphi * cthe) * v + (cphi * cthe) * w
         ### Velocity derivatives
-        d_u = (
-                (X / mass) -
-                q * w +
-                r * v
-        )
-        d_v = (
-                (Y / mass) -
-                r * u +
-                p * w
-        )
-        d_w = (
-                (Z / mass) -
-                p * v +
-                q * u
-        )
+        d_u = (X / mass) - q * w + r * v
+        d_v = (Y / mass) - r * u + p * w
+        d_w = (Z / mass) - p * v + q * u
         ### Angle derivatives
         if np.all(cthe == 0):
             d_phi = 0
         else:
-            d_phi = (
-                    p +
-                    q * sphi * sthe / cthe +
-                    r * cphi * sthe / cthe
-            )
+            d_phi = p + q * sphi * sthe / cthe + r * cphi * sthe / cthe
 
-        d_theta = (
-                q * cphi -
-                r * sphi
-        )
+        d_theta = q * cphi - r * sphi
 
         if np.all(cthe == 0):
             d_psi = 0
         else:
-            d_psi = (
-                    q * sphi / cthe +
-                    r * cphi / cthe
-            )
+            d_psi = q * sphi / cthe + r * cphi / cthe
 
         ### Angular velocity derivatives
         RHS_L = (
-                L -
-                (Izz - Iyy) * q * r -
-                Iyz * (q ** 2 - r ** 2) -
-                Ixz * p * q +
-                Ixy * p * r -
-                hz * q +
-                hy * r
+            L
+            - (Izz - Iyy) * q * r
+            - Iyz * (q**2 - r**2)
+            - Ixz * p * q
+            + Ixy * p * r
+            - hz * q
+            + hy * r
         )
         RHS_M = (
-                M -
-                (Ixx - Izz) * r * p -
-                Ixz * (r ** 2 - p ** 2) -
-                Ixy * q * r +
-                Iyz * q * p -
-                hx * r +
-                hz * p
+            M
+            - (Ixx - Izz) * r * p
+            - Ixz * (r**2 - p**2)
+            - Ixy * q * r
+            + Iyz * q * p
+            - hx * r
+            + hz * p
         )
         RHS_N = (
-                N -
-                (Iyy - Ixx) * p * q -
-                Ixy * (p ** 2 - q ** 2) -
-                Iyz * r * p +
-                Ixz * r * q -
-                hy * p +
-                hx * q
+            N
+            - (Iyy - Ixx) * p * q
+            - Ixy * (p**2 - q**2)
+            - Iyz * r * p
+            + Ixz * r * q
+            - hy * p
+            + hx * q
         )
-        i11, i22, i33, i12, i23, i13 = np.linalg.inv_symmetric_3x3(Ixx, Iyy, Izz, Ixy, Iyz, Ixz)
+        i11, i22, i33, i12, i23, i13 = np.linalg.inv_symmetric_3x3(
+            Ixx, Iyy, Izz, Ixy, Iyz, Ixz
+        )
 
         d_p = i11 * RHS_L + i12 * RHS_M + i13 * RHS_N
         d_q = i12 * RHS_L + i22 * RHS_M + i23 * RHS_N
         d_r = i13 * RHS_L + i23 * RHS_M + i33 * RHS_N
 
         return {
-            "x_e"  : d_xe,
-            "y_e"  : d_ye,
-            "z_e"  : d_ze,
-            "u_b"  : d_u,
-            "v_b"  : d_v,
-            "w_b"  : d_w,
-            "phi"  : d_phi,
+            "x_e": d_xe,
+            "y_e": d_ye,
+            "z_e": d_ze,
+            "u_b": d_u,
+            "v_b": d_v,
+            "w_b": d_w,
+            "phi": d_phi,
             "theta": d_theta,
-            "psi"  : d_psi,
-            "p"    : d_p,
-            "q"    : d_q,
-            "r"    : d_r,
+            "psi": d_psi,
+            "p": d_p,
+            "q": d_q,
+            "r": d_r,
         }
 
-    def convert_axes(self,
-                     x_from, y_from, z_from,
-                     from_axes: str,
-                     to_axes: str,
-                     ):
+    def convert_axes(
+        self,
+        x_from,
+        y_from,
+        z_from,
+        from_axes: str,
+        to_axes: str,
+    ):
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.
@@ -364,80 +346,64 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
             spsi, cpsi = sincos(self.psi)
 
         if from_axes == "earth":
-            x_b = (
-                    (cthe * cpsi) * x_from +
-                    (cthe * spsi) * y_from +
-                    (-sthe) * z_from
-            )
+            x_b = (cthe * cpsi) * x_from + (cthe * spsi) * y_from + (-sthe) * z_from
             y_b = (
-                    (sphi * sthe * cpsi - cphi * spsi) * x_from +
-                    (sphi * sthe * spsi + cphi * cpsi) * y_from +
-                    (sphi * cthe) * z_from
+                (sphi * sthe * cpsi - cphi * spsi) * x_from
+                + (sphi * sthe * spsi + cphi * cpsi) * y_from
+                + (sphi * cthe) * z_from
             )
             z_b = (
-                    (cphi * sthe * cpsi + sphi * spsi) * x_from +
-                    (cphi * sthe * spsi - sphi * cpsi) * y_from +
-                    (cphi * cthe) * z_from
+                (cphi * sthe * cpsi + sphi * spsi) * x_from
+                + (cphi * sthe * spsi - sphi * cpsi) * y_from
+                + (cphi * cthe) * z_from
             )
         else:
             x_b, y_b, z_b = self.op_point.convert_axes(
-                x_from, y_from, z_from,
-                from_axes=from_axes, to_axes="body"
+                x_from, y_from, z_from, from_axes=from_axes, to_axes="body"
             )
 
         if to_axes == "earth":
             x_to = (
-                    (cthe * cpsi) * x_b +
-                    (sphi * sthe * cpsi - cphi * spsi) * y_b +
-                    (cphi * sthe * cpsi + sphi * spsi) * z_b
+                (cthe * cpsi) * x_b
+                + (sphi * sthe * cpsi - cphi * spsi) * y_b
+                + (cphi * sthe * cpsi + sphi * spsi) * z_b
             )
             y_to = (
-                    (cthe * spsi) * x_b +
-                    (sphi * sthe * spsi + cphi * cpsi) * y_b +
-                    (cphi * sthe * spsi - sphi * cpsi) * z_b
+                (cthe * spsi) * x_b
+                + (sphi * sthe * spsi + cphi * cpsi) * y_b
+                + (cphi * sthe * spsi - sphi * cpsi) * z_b
             )
-            z_to = (
-                    (-sthe) * x_b +
-                    (sphi * cthe) * y_b +
-                    (cphi * cthe) * z_b
-            )
+            z_to = (-sthe) * x_b + (sphi * cthe) * y_b + (cphi * cthe) * z_b
         else:
             x_to, y_to, z_to = self.op_point.convert_axes(
-                x_b, y_b, z_b,
-                from_axes="body", to_axes=to_axes
+                x_b, y_b, z_b, from_axes="body", to_axes=to_axes
             )
 
         return x_to, y_to, z_to
 
-    def add_force(self,
-                  Fx: Union[float, np.ndarray] = 0,
-                  Fy: Union[float, np.ndarray] = 0,
-                  Fz: Union[float, np.ndarray] = 0,
-                  axes="body",
-                  ):
+    def add_force(
+        self,
+        Fx: Union[float, np.ndarray] = 0,
+        Fy: Union[float, np.ndarray] = 0,
+        Fz: Union[float, np.ndarray] = 0,
+        axes="body",
+    ):
         Fx_b, Fy_b, Fz_b = self.convert_axes(
-            x_from=Fx,
-            y_from=Fy,
-            z_from=Fz,
-            from_axes=axes,
-            to_axes="body"
+            x_from=Fx, y_from=Fy, z_from=Fz, from_axes=axes, to_axes="body"
         )
         self.Fx_b = self.Fx_b + Fx_b
         self.Fy_b = self.Fy_b + Fy_b
         self.Fz_b = self.Fz_b + Fz_b
 
-    def add_moment(self,
-                   Mx: Union[float, np.ndarray] = 0,
-                   My: Union[float, np.ndarray] = 0,
-                   Mz: Union[float, np.ndarray] = 0,
-                   axes="body",
-                   ):
+    def add_moment(
+        self,
+        Mx: Union[float, np.ndarray] = 0,
+        My: Union[float, np.ndarray] = 0,
+        Mz: Union[float, np.ndarray] = 0,
+        axes="body",
+    ):
         Mx_b, My_b, Mz_b = self.convert_axes(
-            x_from=Mx,
-            y_from=My,
-            z_from=Mz,
-            from_axes=axes,
-            to_axes="body"
+            x_from=Mx, y_from=My, z_from=Mz, from_axes=axes, to_axes="body"
         )
         self.Mx_b = self.Mx_b + Mx_b
         self.My_b = self.My_b + My_b
@@ -446,37 +412,20 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
     @property
     def speed(self):
         """The speed of the object, expressed as a scalar."""
-        return (
-                self.u_b ** 2 +
-                self.v_b ** 2 +
-                self.w_b ** 2
-        ) ** 0.5
+        return (self.u_b**2 + self.v_b**2 + self.w_b**2) ** 0.5
 
     @property
     def alpha(self):
         """The angle of attack, in degrees."""
-        return np.arctan2d(
-            self.w_b,
-            self.u_b
-        )
+        return np.arctan2d(self.w_b, self.u_b)
 
     @property
     def beta(self):
         """The sideslip angle, in degrees."""
-        return np.arctan2d(
-            self.v_b,
-            (
-                    self.u_b ** 2 +
-                    self.w_b ** 2
-            ) ** 0.5
-        )
+        return np.arctan2d(self.v_b, (self.u_b**2 + self.w_b**2) ** 0.5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox as asb
 
-    dyn = DynamicsRigidBody3DBodyEuler(
-        mass_props=asb.MassProperties(
-            mass=1
-        )
-    )
+    dyn = DynamicsRigidBody3DBodyEuler(mass_props=asb.MassProperties(mass=1))

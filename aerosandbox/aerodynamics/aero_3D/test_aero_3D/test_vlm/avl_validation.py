@@ -1,12 +1,11 @@
-from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
+from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import (
+    airplane,
+)
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
 
-op_point = asb.OperatingPoint(
-    velocity=25,
-    alpha=3
-)
+op_point = asb.OperatingPoint(velocity=25, alpha=3)
 
 vlm = asb.VortexLatticeMethod(
     airplane,
@@ -17,10 +16,7 @@ vlm = asb.VortexLatticeMethod(
 )
 vlm_aero = vlm.run()
 
-ab = asb.AeroBuildup(
-    airplane,
-    op_point
-)
+ab = asb.AeroBuildup(airplane, op_point)
 ab_aero = ab.run()
 
 avl = asb.AVL(
@@ -29,11 +25,7 @@ avl = asb.AVL(
 )
 avl_aero = avl.run()
 
-for k, v in {
-    "VLM": vlm_aero,
-    "AVL": avl_aero,
-    "AB" : ab_aero
-}.items():
+for k, v in {"VLM": vlm_aero, "AVL": avl_aero, "AB": ab_aero}.items():
     print(f"{k}:")
     for f in ["CL", "CD", "Cm"]:
         print(f"\t{f} : {v[f]}")

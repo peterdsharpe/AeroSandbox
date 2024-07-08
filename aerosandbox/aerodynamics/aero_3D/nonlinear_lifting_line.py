@@ -1,10 +1,12 @@
 from aerosandbox import ImplicitAnalysis
 from aerosandbox.geometry import *
 from aerosandbox.performance import OperatingPoint
-from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import \
-    calculate_induced_velocity_horseshoe
-from aerosandbox.aerodynamics.aero_3D.singularities.point_source import \
-    calculate_induced_velocity_point_source
+from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
+    calculate_induced_velocity_horseshoe,
+)
+from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
+    calculate_induced_velocity_point_source,
+)
 import aerosandbox.numpy as np
 from typing import Dict, Any, Callable, List
 import copy
@@ -43,17 +45,20 @@ class NonlinearLiftingLine(ImplicitAnalysis):
     """
 
     @ImplicitAnalysis.initialize
-    def __init__(self,
-                 airplane: Airplane,
-                 op_point: OperatingPoint,
-                 xyz_ref: List[float] = None,
-                 run_symmetric_if_possible: bool = False,
-                 verbose: bool = False,
-                 spanwise_resolution=8,  # TODO document
-                 spanwise_spacing_function: Callable[[float, float, float], np.ndarray] = np.cosspace,
-                 vortex_core_radius: float = 1e-8,
-                 align_trailing_vortices_with_wind: bool = False,
-                 ):
+    def __init__(
+        self,
+        airplane: Airplane,
+        op_point: OperatingPoint,
+        xyz_ref: List[float] = None,
+        run_symmetric_if_possible: bool = False,
+        verbose: bool = False,
+        spanwise_resolution=8,  # TODO document
+        spanwise_spacing_function: Callable[
+            [float, float, float], np.ndarray
+        ] = np.cosspace,
+        vortex_core_radius: float = 1e-8,
+        align_trailing_vortices_with_wind: bool = False,
+    ):
         """
         Initializes and conducts a NonlinearLiftingLine analysis.
 
@@ -105,11 +110,18 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             #     pass
 
     def __repr__(self):
-        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
-            f"airplane={self.airplane}",
-            f"op_point={self.op_point}",
-            f"xyz_ref={self.xyz_ref}",
-        ]) + "\n)"
+        return (
+            self.__class__.__name__
+            + "(\n\t"
+            + "\n\t".join(
+                [
+                    f"airplane={self.airplane}",
+                    f"op_point={self.op_point}",
+                    f"xyz_ref={self.xyz_ref}",
+                ]
+            )
+            + "\n)"
+        )
 
     def run(self, solve: bool = True) -> Dict[str, Any]:
         """
@@ -159,7 +171,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             if self.spanwise_resolution > 1:
                 wing = wing.subdivide_sections(
                     ratio=self.spanwise_resolution,
-                    spacing_function=self.spanwise_spacing_function
+                    spacing_function=self.spanwise_spacing_function,
                 )
 
             points, faces = wing.mesh_thin_surface(
@@ -176,7 +188,9 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             wing_airfoils = []
             wing_control_surfaces = []
 
-            for xsec_a, xsec_b in zip(wing.xsecs[:-1], wing.xsecs[1:]):  # Do the right side
+            for xsec_a, xsec_b in zip(
+                wing.xsecs[:-1], wing.xsecs[1:]
+            ):  # Do the right side
                 wing_airfoils.append(
                     xsec_a.airfoil.blend_with_another_airfoil(
                         airfoil=xsec_b.airfoil,
@@ -225,10 +239,9 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         vortex_centers = (left_vortex_vertices + right_vortex_vertices) / 2
         vortex_bound_leg = right_vortex_vertices - left_vortex_vertices
         vortex_bound_leg_norm = np.linalg.norm(vortex_bound_leg, axis=1)
-        chord_vectors = (
-                (back_left_vertices + back_right_vertices) / 2 -
-                (front_left_vertices + front_right_vertices) / 2
-        )
+        chord_vectors = (back_left_vertices + back_right_vertices) / 2 - (
+            front_left_vertices + front_right_vertices
+        ) / 2
         chords = np.linalg.norm(chord_vectors, axis=1)
         wing_directions = vortex_bound_leg / tall(vortex_bound_leg_norm)
         local_forward_direction = np.cross(normal_directions, wing_directions)
@@ -253,15 +266,24 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         ##### Setup Operating Point
         if self.verbose:
             print("Calculating the freestream influence...")
-        steady_freestream_velocity = self.op_point.compute_freestream_velocity_geometry_axes()  # Direction the wind is GOING TO, in geometry axes coordinates
-        steady_freestream_direction = steady_freestream_velocity / np.linalg.norm(steady_freestream_velocity)
-        rotation_freestream_velocities = self.op_point.compute_rotation_velocity_geometry_axes(
-            vortex_centers)
+        steady_freestream_velocity = (
+            self.op_point.compute_freestream_velocity_geometry_axes()
+        )  # Direction the wind is GOING TO, in geometry axes coordinates
+        steady_freestream_direction = steady_freestream_velocity / np.linalg.norm(
+            steady_freestream_velocity
+        )
+        rotation_freestream_velocities = (
+            self.op_point.compute_rotation_velocity_geometry_axes(vortex_centers)
+        )
 
-        freestream_velocities = np.add(wide(steady_freestream_velocity), rotation_freestream_velocities)
+        freestream_velocities = np.add(
+            wide(steady_freestream_velocity), rotation_freestream_velocities
+        )
         # Nx3, represents the freestream velocity at each panel collocation point (c)
 
-        freestream_influences = np.sum(freestream_velocities * normal_directions, axis=1)
+        freestream_influences = np.sum(
+            freestream_velocities * normal_directions, axis=1
+        )
 
         ### Save things to the instance for later access
         self.steady_freestream_velocity = steady_freestream_velocity
@@ -281,8 +303,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
         # Find velocities
         velocities = self.get_velocity_at_points(
-            points=self.vortex_centers,
-            vortex_strengths=vortex_strengths
+            points=self.vortex_centers, vortex_strengths=vortex_strengths
         )  # TODO just a reminder, fuse added here
 
         velocity_magnitudes = np.linalg.norm(velocities, axis=1)
@@ -296,12 +317,14 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         cos_sweeps = np.sum(velocity_directions * -local_forward_direction, axis=1)
 
         Res = (
-                      velocity_magnitudes *
-                      self.chords /
-                      self.op_point.atmosphere.kinematic_viscosity()
-              ) * cos_sweeps
+            velocity_magnitudes
+            * self.chords
+            / self.op_point.atmosphere.kinematic_viscosity()
+        ) * cos_sweeps
 
-        machs = velocity_magnitudes / self.op_point.atmosphere.speed_of_sound() * cos_sweeps
+        machs = (
+            velocity_magnitudes / self.op_point.atmosphere.speed_of_sound() * cos_sweeps
+        )
 
         aeros = [
             af.get_aero_from_neuralfoil(
@@ -331,13 +354,16 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         velocity_magnitude_perpendiculars = velocity_magnitudes * cos_sweeps
 
         residuals = (
-                vortex_strengths * Vi_cross_li_magnitudes * 2 / velocity_magnitude_perpendiculars ** 2 / areas - CLs
+            vortex_strengths
+            * Vi_cross_li_magnitudes
+            * 2
+            / velocity_magnitude_perpendiculars**2
+            / areas
+            - CLs
         )
 
         if self.solve:
-            self.opti.subject_to([
-                residuals == 0
-            ])
+            self.opti.subject_to([residuals == 0])
 
             self.sol = self.opti.solve(verbose=False)
             self.vortex_strengths = self.sol(vortex_strengths)
@@ -353,8 +379,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         # Calculate the induced velocity at the center of each bound leg
 
         velocities = self.get_velocity_at_points(
-            points=self.vortex_centers,
-            vortex_strengths=self.vortex_strengths
+            points=self.vortex_centers, vortex_strengths=self.vortex_strengths
         )  # fuse added here
 
         velocity_magnitudes = np.linalg.norm(velocities, axis=1)
@@ -363,10 +388,14 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         # not WIND AXES or BODY AXES.
         Vi_cross_li = np.cross(velocities, vortex_bound_leg, axis=1)
 
-        forces_inviscid_geometry = self.op_point.atmosphere.density() * Vi_cross_li * tall(self.vortex_strengths)
+        forces_inviscid_geometry = (
+            self.op_point.atmosphere.density()
+            * Vi_cross_li
+            * tall(self.vortex_strengths)
+        )
         moments_inviscid_geometry = np.cross(
             np.add(vortex_centers, -wide(np.array(self.xyz_ref))),
-            forces_inviscid_geometry
+            forces_inviscid_geometry,
         )
 
         # Calculate total forces and moments
@@ -381,76 +410,119 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         if self.verbose:
             print("Calculating profile forces and moments...")
         forces_profile_geometry = (
-                0.5 * self.op_point.atmosphere.density() * velocities * tall(velocity_magnitudes)
-                * tall(CDs) * tall(areas)
+            0.5
+            * self.op_point.atmosphere.density()
+            * velocities
+            * tall(velocity_magnitudes)
+            * tall(CDs)
+            * tall(areas)
         )
 
         moments_profile_geometry = np.cross(
             np.add(vortex_centers, -wide(np.array(self.xyz_ref))),
-            forces_profile_geometry
+            forces_profile_geometry,
         )
         force_profile_geometry = np.sum(forces_profile_geometry, axis=0)
         moment_profile_geometry = np.sum(moments_profile_geometry, axis=0)
 
         # # Inviscid force from geometry to body and wind axes
-        force_inviscid_body = np.array(self.op_point.convert_axes(
-            force_inviscid_geometry[0], force_inviscid_geometry[1], force_inviscid_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        ))
-        force_inviscid_wind = np.array(self.op_point.convert_axes(
-            force_inviscid_body[0], force_inviscid_body[1], force_inviscid_body[2],
-            from_axes="body",
-            to_axes="wind"
-        ))
+        force_inviscid_body = np.array(
+            self.op_point.convert_axes(
+                force_inviscid_geometry[0],
+                force_inviscid_geometry[1],
+                force_inviscid_geometry[2],
+                from_axes="geometry",
+                to_axes="body",
+            )
+        )
+        force_inviscid_wind = np.array(
+            self.op_point.convert_axes(
+                force_inviscid_body[0],
+                force_inviscid_body[1],
+                force_inviscid_body[2],
+                from_axes="body",
+                to_axes="wind",
+            )
+        )
 
         # # Profile force from geometry to body and wind axes
-        force_profile_body = np.array(self.op_point.convert_axes(
-            force_profile_geometry[0], force_profile_geometry[1], force_profile_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        ))
-        force_profile_wind = np.array(self.op_point.convert_axes(
-            force_profile_body[0], force_profile_body[1], force_profile_body[2],
-            from_axes="body",
-            to_axes="wind"
-        ))
+        force_profile_body = np.array(
+            self.op_point.convert_axes(
+                force_profile_geometry[0],
+                force_profile_geometry[1],
+                force_profile_geometry[2],
+                from_axes="geometry",
+                to_axes="body",
+            )
+        )
+        force_profile_wind = np.array(
+            self.op_point.convert_axes(
+                force_profile_body[0],
+                force_profile_body[1],
+                force_profile_body[2],
+                from_axes="body",
+                to_axes="wind",
+            )
+        )
 
         # Compute pitching moment
 
         bound_leg_YZ = vortex_bound_leg
         bound_leg_YZ[:, 0] = 0
-        moments_pitching_geometry = (0.5 * self.op_point.atmosphere.density() * tall(velocity_magnitudes ** 2)) \
-                                    * tall(CMs) * tall(chords ** 2) * bound_leg_YZ
+        moments_pitching_geometry = (
+            (0.5 * self.op_point.atmosphere.density() * tall(velocity_magnitudes**2))
+            * tall(CMs)
+            * tall(chords**2)
+            * bound_leg_YZ
+        )
         moment_pitching_geometry = np.sum(moments_pitching_geometry, axis=0)
 
         if self.verbose:
             print("Calculating total forces and moments...")
         force_total_geometry = np.add(force_inviscid_geometry, force_profile_geometry)
 
-        force_total_body = np.array(self.op_point.convert_axes(
-            force_total_geometry[0], force_total_geometry[1], force_total_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        ))
-        force_total_wind = np.array(self.op_point.convert_axes(
-            force_total_body[0], force_total_body[1], force_total_body[2],
-            from_axes="body",
-            to_axes="wind"
-        ))
+        force_total_body = np.array(
+            self.op_point.convert_axes(
+                force_total_geometry[0],
+                force_total_geometry[1],
+                force_total_geometry[2],
+                from_axes="geometry",
+                to_axes="body",
+            )
+        )
+        force_total_wind = np.array(
+            self.op_point.convert_axes(
+                force_total_body[0],
+                force_total_body[1],
+                force_total_body[2],
+                from_axes="body",
+                to_axes="wind",
+            )
+        )
 
-        moment_total_geometry = np.add(moment_inviscid_geometry, moment_profile_geometry) + moment_pitching_geometry
+        moment_total_geometry = (
+            np.add(moment_inviscid_geometry, moment_profile_geometry)
+            + moment_pitching_geometry
+        )
 
-        moment_total_body = np.array(self.op_point.convert_axes(
-            moment_total_geometry[0], moment_total_geometry[1], moment_total_geometry[2],
-            from_axes="geometry",
-            to_axes="body"
-        ))
-        moment_total_wind = np.array(self.op_point.convert_axes(
-            moment_total_body[0], moment_total_body[1], moment_total_body[2],
-            from_axes="body",
-            to_axes="wind"
-        ))
+        moment_total_body = np.array(
+            self.op_point.convert_axes(
+                moment_total_geometry[0],
+                moment_total_geometry[1],
+                moment_total_geometry[2],
+                from_axes="geometry",
+                to_axes="body",
+            )
+        )
+        moment_total_wind = np.array(
+            self.op_point.convert_axes(
+                moment_total_body[0],
+                moment_total_body[1],
+                moment_total_body[2],
+                from_axes="body",
+                to_axes="wind",
+            )
+        )
 
         ### Save things to the instance for later access
         L = -force_total_wind[2]
@@ -479,34 +551,33 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         self.CL_over_CD = np.where(self.CD == 0, 0, np.array(self.CL / self.CD))
 
         return {
-            "residuals" : residuals,
-            "F_g"       : force_total_geometry,
-            "F_b"       : force_total_body,
-            "F_w"       : force_total_wind,
-            "M_g"       : moment_total_geometry,
-            "M_b"       : moment_total_body,
-            "M_w"       : moment_total_wind,
-            "L"         : L,
-            "D"         : D,
-            "Y"         : Y,
-            "l_b"       : l_b,
-            "m_b"       : m_b,
-            "n_b"       : n_b,
-            "CL"        : self.CL,
-            "CD"        : self.CD,
-            "CDi"       : CDi,
-            "CDp"       : CDp,
-            "CY"        : self.CY,
+            "residuals": residuals,
+            "F_g": force_total_geometry,
+            "F_b": force_total_body,
+            "F_w": force_total_wind,
+            "M_g": moment_total_geometry,
+            "M_b": moment_total_body,
+            "M_w": moment_total_wind,
+            "L": L,
+            "D": D,
+            "Y": Y,
+            "l_b": l_b,
+            "m_b": m_b,
+            "n_b": n_b,
+            "CL": self.CL,
+            "CD": self.CD,
+            "CDi": CDi,
+            "CDp": CDp,
+            "CY": self.CY,
             "CL_over_CD": self.CL_over_CD,
-            "Cl"        : self.Cl,
-            "Cm"        : self.Cm,
-            "Cn"        : self.Cn
+            "Cl": self.Cl,
+            "Cm": self.Cm,
+            "Cn": self.Cn,
         }
 
-    def get_induced_velocity_at_points(self,
-                                       points: np.ndarray,
-                                       vortex_strengths: np.ndarray = None
-                                       ) -> np.ndarray:
+    def get_induced_velocity_at_points(
+        self, points: np.ndarray, vortex_strengths: np.ndarray = None
+    ) -> np.ndarray:
         """
         Computes the induced velocity at a set of points in the flowfield.
 
@@ -521,7 +592,8 @@ class NonlinearLiftingLine(ImplicitAnalysis):
                 vortex_strengths = self.vortex_strengths
             except AttributeError:
                 raise ValueError(
-                    "`NonlinearLiftingLine.vortex_strengths` doesn't exist, so you need to pass in the `vortex_strengths` parameter.")
+                    "`NonlinearLiftingLine.vortex_strengths` doesn't exist, so you need to pass in the `vortex_strengths` parameter."
+                )
 
         u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
             x_field=tall(points[:, 0]),
@@ -535,26 +607,25 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             z_right=wide(self.right_vortex_vertices[:, 2]),
             trailing_vortex_direction=(
                 self.steady_freestream_direction
-                if self.align_trailing_vortices_with_wind else
-                np.array([1, 0, 0])
+                if self.align_trailing_vortices_with_wind
+                else np.array([1, 0, 0])
             ),
             gamma=wide(vortex_strengths),
-            vortex_core_radius=self.vortex_core_radius
+            vortex_core_radius=self.vortex_core_radius,
         )
         u_induced = np.sum(u_induced, axis=1)
         v_induced = np.sum(v_induced, axis=1)
         w_induced = np.sum(w_induced, axis=1)
 
-        V_induced = np.stack([
-            u_induced, v_induced, w_induced
-        ], axis=1)
+        V_induced = np.stack([u_induced, v_induced, w_induced], axis=1)
 
         return V_induced
 
-    def get_velocity_at_points(self,
-                               points: np.ndarray,
-                               vortex_strengths: np.ndarray = None,
-                               ) -> np.ndarray:
+    def get_velocity_at_points(
+        self,
+        points: np.ndarray,
+        vortex_strengths: np.ndarray = None,
+    ) -> np.ndarray:
         """
         Computes the velocity at a set of points in the flowfield.
 
@@ -569,11 +640,13 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             vortex_strengths=vortex_strengths,
         )
 
-        rotation_freestream_velocities = np.array(self.op_point.compute_rotation_velocity_geometry_axes(
-            points
-        ))
+        rotation_freestream_velocities = np.array(
+            self.op_point.compute_rotation_velocity_geometry_axes(points)
+        )
 
-        freestream_velocities = np.add(wide(self.steady_freestream_velocity), rotation_freestream_velocities)
+        freestream_velocities = np.add(
+            wide(self.steady_freestream_velocity), rotation_freestream_velocities
+        )
 
         V = V_induced + freestream_velocities
 
@@ -591,33 +664,36 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         this_fuse_radii = []
 
         for fuse in self.airplane.fuselages:  # iterating through the airplane fuselages
-            for xsec_num in range(len(fuse.xsecs)):  # iterating through the current fuselage sections
+            for xsec_num in range(
+                len(fuse.xsecs)
+            ):  # iterating through the current fuselage sections
                 this_fuse_xsec = fuse.xsecs[xsec_num]
                 this_fuse_centerline_points.append(this_fuse_xsec.xyz_c)
                 this_fuse_radii.append(this_fuse_xsec.width / 2)
 
-        this_fuse_centerline_points = np.stack(
-            this_fuse_centerline_points,
-            axis=0
-        )
-        this_fuse_centerline_points = (this_fuse_centerline_points[1:, :] +
-                                       this_fuse_centerline_points[:-1, :]) / 2
+        this_fuse_centerline_points = np.stack(this_fuse_centerline_points, axis=0)
+        this_fuse_centerline_points = (
+            this_fuse_centerline_points[1:, :] + this_fuse_centerline_points[:-1, :]
+        ) / 2
         this_fuse_radii = np.array(this_fuse_radii)
 
-        areas = np.pi * this_fuse_radii ** 2
-        freestream_x_component = self.op_point.compute_freestream_velocity_geometry_axes()[
-            0]  # TODO add in rotation corrections, add in doublets for alpha
+        areas = np.pi * this_fuse_radii**2
+        freestream_x_component = (
+            self.op_point.compute_freestream_velocity_geometry_axes()[0]
+        )  # TODO add in rotation corrections, add in doublets for alpha
         sigmas = freestream_x_component * np.diff(areas)
 
-        u_induced_fuse, v_induced_fuse, w_induced_fuse = calculate_induced_velocity_point_source(
-            x_field=tall(points[:, 0]),
-            y_field=tall(points[:, 1]),
-            z_field=tall(points[:, 2]),
-            x_source=wide(this_fuse_centerline_points[:, 0]),
-            y_source=wide(this_fuse_centerline_points[:, 1]),
-            z_source=wide(this_fuse_centerline_points[:, 2]),
-            sigma=wide(sigmas),
-            viscous_radius=0.0001,
+        u_induced_fuse, v_induced_fuse, w_induced_fuse = (
+            calculate_induced_velocity_point_source(
+                x_field=tall(points[:, 0]),
+                y_field=tall(points[:, 1]),
+                z_field=tall(points[:, 2]),
+                x_source=wide(this_fuse_centerline_points[:, 0]),
+                y_source=wide(this_fuse_centerline_points[:, 1]),
+                z_source=wide(this_fuse_centerline_points[:, 2]),
+                sigma=wide(sigmas),
+                viscous_radius=0.0001,
+            )
         )
 
         # # Compressibility
@@ -633,17 +709,16 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         fuselage_influences_y = np.sum(v_induced_fuse, axis=1)
         fuselage_influences_z = np.sum(w_induced_fuse, axis=1)
 
-        fuselage_influences = np.stack([
-            fuselage_influences_x, fuselage_influences_y, fuselage_influences_z
-        ], axis=1)
+        fuselage_influences = np.stack(
+            [fuselage_influences_x, fuselage_influences_y, fuselage_influences_z],
+            axis=1,
+        )
 
         return fuselage_influences
 
-    def calculate_streamlines(self,
-                              seed_points: np.ndarray = None,
-                              n_steps: int = 300,
-                              length: float = None
-                              ) -> np.ndarray:
+    def calculate_streamlines(
+        self, seed_points: np.ndarray = None, n_steps: int = 300, length: float = None
+    ) -> np.ndarray:
         """
         Computes streamlines, starting at specific seed points.
 
@@ -678,24 +753,29 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             left_TE_vertices = self.back_left_vertices
             right_TE_vertices = self.back_right_vertices
             N_streamlines_target = 200
-            seed_points_per_panel = np.maximum(1, N_streamlines_target // len(left_TE_vertices))
+            seed_points_per_panel = np.maximum(
+                1, N_streamlines_target // len(left_TE_vertices)
+            )
 
             nondim_node_locations = np.linspace(0, 1, seed_points_per_panel + 1)
-            nondim_seed_locations = (nondim_node_locations[1:] + nondim_node_locations[:-1]) / 2
+            nondim_seed_locations = (
+                nondim_node_locations[1:] + nondim_node_locations[:-1]
+            ) / 2
 
-            seed_points = np.concatenate([
-                x * left_TE_vertices + (1 - x) * right_TE_vertices
-                for x in nondim_seed_locations
-            ])
+            seed_points = np.concatenate(
+                [
+                    x * left_TE_vertices + (1 - x) * right_TE_vertices
+                    for x in nondim_seed_locations
+                ]
+            )
 
         streamlines = np.empty((len(seed_points), 3, n_steps))
         streamlines[:, :, 0] = seed_points
         for i in range(1, n_steps):
             V = self.get_velocity_at_points(streamlines[:, :, i - 1])
-            streamlines[:, :, i] = (
-                    streamlines[:, :, i - 1] +
-                    length / n_steps * V / tall(np.linalg.norm(V, axis=1))
-            )
+            streamlines[:, :, i] = streamlines[
+                :, :, i - 1
+            ] + length / n_steps * V / tall(np.linalg.norm(V, axis=1))
 
         self.streamlines = streamlines
 
@@ -704,16 +784,17 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
         return streamlines
 
-    def draw(self,
-             c: np.ndarray = None,
-             cmap: str = None,
-             colorbar_label: str = None,
-             show: bool = True,
-             show_kwargs: Dict = None,
-             draw_streamlines=True,
-             recalculate_streamlines=False,
-             backend: str = "pyvista"
-             ):
+    def draw(
+        self,
+        c: np.ndarray = None,
+        cmap: str = None,
+        colorbar_label: str = None,
+        show: bool = True,
+        show_kwargs: Dict = None,
+        draw_streamlines=True,
+        recalculate_streamlines=False,
+        backend: str = "pyvista",
+    ):
         """
         Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
         To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = sol(ap).
@@ -727,11 +808,12 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             colorbar_label = "Vortex Strengths"
 
         if draw_streamlines:
-            if (not hasattr(self, 'streamlines')) or recalculate_streamlines:
+            if (not hasattr(self, "streamlines")) or recalculate_streamlines:
                 self.calculate_streamlines()
 
         if backend == "plotly":
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
+
             fig = Figure3D()
 
             for i in range(len(self.front_left_vertices)):
@@ -752,24 +834,26 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
             return fig.draw(
                 show=show,
-                colorbar_title=colorbar_label
-                               ** show_kwargs,
+                colorbar_title=colorbar_label**show_kwargs,
             )
 
         elif backend == "pyvista":
             import pyvista as pv
+
             plotter = pv.Plotter()
             plotter.title = "ASB NonlinearLiftingLine"
             plotter.add_axes()
-            plotter.show_grid(color='gray')
+            plotter.show_grid(color="gray")
 
             ### Draw the airplane mesh
-            points = np.concatenate([
-                self.front_left_vertices,
-                self.back_left_vertices,
-                self.back_right_vertices,
-                self.front_right_vertices
-            ])
+            points = np.concatenate(
+                [
+                    self.front_left_vertices,
+                    self.back_left_vertices,
+                    self.back_right_vertices,
+                    self.front_right_vertices,
+                ]
+            )
             N = len(self.front_left_vertices)
             range_N = np.arange(N)
             faces = tall(range_N) + wide(np.array([0, 1, 2, 3]) * N)
@@ -792,12 +876,13 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             ### Draw the streamlines
             if draw_streamlines:
                 import aerosandbox.tools.pretty_plots as p
+
                 for i in range(self.streamlines.shape[0]):
                     plotter.add_mesh(
                         pv.Spline(self.streamlines[i, :, :].T),
                         color=p.adjust_lightness("#7700FF", 1.5),
                         opacity=0.7,
-                        line_width=1
+                        line_width=1,
                     )
 
             if show:
@@ -861,7 +946,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             #         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ### Import Vanilla Airplane
     import aerosandbox as asb
 
@@ -879,9 +964,8 @@ if __name__ == '__main__':
     LL_aeros = NonlinearLiftingLine(
         airplane=vanilla,
         op_point=asb.OperatingPoint(
-            atmosphere=asb.Atmosphere(altitude=0),
-            velocity=10,  # m/s
-            alpha=5),
+            atmosphere=asb.Atmosphere(altitude=0), velocity=10, alpha=5  # m/s
+        ),
         verbose=True,
         spanwise_resolution=5,
     )

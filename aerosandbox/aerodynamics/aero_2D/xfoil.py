@@ -38,24 +38,25 @@ class XFoil(ExplicitAnalysis):
     class XFoilError(Exception):
         pass
 
-    def __init__(self,
-                 airfoil: Airfoil,
-                 Re: float = 0.,
-                 mach: float = 0.,
-                 n_crit: float = 9.,
-                 xtr_upper: float = 1.,
-                 xtr_lower: float = 1.,
-                 hinge_point_x: float = 0.75,
-                 full_potential: bool = False,
-                 max_iter: int = 100,
-                 xfoil_command: str = "xfoil",
-                 xfoil_repanel: bool = True,
-                 xfoil_repanel_n_points: int = 279,
-                 include_bl_data: bool = False,
-                 verbose: bool = False,
-                 timeout: Union[float, int, None] = 30,
-                 working_directory: Union[Path, str] = None,
-                 ):
+    def __init__(
+        self,
+        airfoil: Airfoil,
+        Re: float = 0.0,
+        mach: float = 0.0,
+        n_crit: float = 9.0,
+        xtr_upper: float = 1.0,
+        xtr_lower: float = 1.0,
+        hinge_point_x: float = 0.75,
+        full_potential: bool = False,
+        max_iter: int = 100,
+        xfoil_command: str = "xfoil",
+        xfoil_repanel: bool = True,
+        xfoil_repanel_n_points: int = 279,
+        include_bl_data: bool = False,
+        verbose: bool = False,
+        timeout: Union[float, int, None] = 30,
+        working_directory: Union[Path, str] = None,
+    ):
         """
         Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
         MIT for a copy.)
@@ -140,7 +141,9 @@ class XFoil(ExplicitAnalysis):
 
         """
         if mach >= 1:
-            raise ValueError("XFoil will terminate if a supersonic freestream Mach number is given.")
+            raise ValueError(
+                "XFoil will terminate if a supersonic freestream Mach number is given."
+            )
 
         self.airfoil = airfoil
         self.Re = Re
@@ -166,10 +169,11 @@ class XFoil(ExplicitAnalysis):
     def __repr__(self):
         return f"XFoil(airfoil={self.airfoil}, Re={self.Re}, mach={self.mach}, n_crit={self.n_crit})"
 
-    def _default_keystrokes(self,
-                            airfoil_filename: str,
-                            output_filename: str,
-                            ) -> List[str]:
+    def _default_keystrokes(
+        self,
+        airfoil_filename: str,
+        output_filename: str,
+    ) -> List[str]:
         """
         Returns a list of XFoil keystrokes that are common to all XFoil runs.
 
@@ -254,16 +258,15 @@ class XFoil(ExplicitAnalysis):
         ]
 
         # Include more data in polar
-        run_file_contents += [
-            "cinc"  # include minimum Cp
-        ]
+        run_file_contents += ["cinc"]  # include minimum Cp
 
         return run_file_contents
 
-    def _run_xfoil(self,
-                   run_command: str,
-                   read_bl_data_from: str = None,
-                   ) -> Dict[str, np.ndarray]:
+    def _run_xfoil(
+        self,
+        run_command: str,
+        read_bl_data_from: str = None,
+    ) -> Dict[str, np.ndarray]:
         """
         Private function to run XFoil.
 
@@ -291,15 +294,10 @@ class XFoil(ExplicitAnalysis):
 
             # Handle the keystroke file
             keystrokes = self._default_keystrokes(
-                airfoil_filename=airfoil_file,
-                output_filename=output_filename
+                airfoil_filename=airfoil_file, output_filename=output_filename
             )
             keystrokes += [run_command]
-            keystrokes += [
-                "pacc",  # End polar accumulation
-                "",
-                "quit"
-            ]
+            keystrokes += ["pacc", "", "quit"]  # End polar accumulation
 
             # Remove an old output file, if one exists:
             try:
@@ -322,8 +320,7 @@ class XFoil(ExplicitAnalysis):
                     # check=True
                 )
                 outs, errs = proc.communicate(
-                    input="\n".join(keystrokes),
-                    timeout=self.timeout
+                    input="\n".join(keystrokes), timeout=self.timeout
                 )
                 return_code = proc.poll()
 
@@ -335,20 +332,22 @@ class XFoil(ExplicitAnalysis):
                     "XFoil run timed out!\n"
                     "If this was not expected, try increasing the `timeout` parameter\n"
                     "when you create this AeroSandbox XFoil instance.",
-                    stacklevel=2
+                    stacklevel=2,
                 )
             except subprocess.CalledProcessError as e:
                 if e.returncode == 11:
                     raise self.XFoilError(
                         "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
                         "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
-                        "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance.")
+                        "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance."
+                    )
                 elif e.returncode == 8 or e.returncode == 136:
                     raise self.XFoilError(
                         "XFoil returned a floating point exception. This is probably because you are trying to start\n"
                         "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
                         "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
-                        "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point.")
+                        "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point."
+                    )
                 elif e.returncode == 1:
                     raise self.XFoilError(
                         f"Command '{self.xfoil_command}' returned non-zero exit status 1.\n"
@@ -389,15 +388,17 @@ class XFoil(ExplicitAnalysis):
                 title_line = lines[i - 1]
                 columns = title_line.split()
 
-                data_lines = lines[i + 1:]
+                data_lines = lines[i + 1 :]
 
             except IndexError:
                 raise self.XFoilError(
                     "XFoil output file is malformed; it doesn't have the expected number of lines.\n"
                     "For debugging, the raw output file from XFoil is printed below:\n"
                     + "\n".join(lines)
-                    + "\nTitle line: " + title_line
-                    + "\nColumns: " + str(columns)
+                    + "\nTitle line: "
+                    + title_line
+                    + "\nColumns: "
+                    + str(columns)
                 )
 
             def str_to_float(s: str) -> float:
@@ -449,23 +450,24 @@ class XFoil(ExplicitAnalysis):
                         "In previous testing, this occurs due to a bug in XFoil itself, with certain input combos.\n"
                         "For debugging, the raw output file from XFoil is printed below:\n"
                         + "\n".join(lines)
-                        + "\nTitle line: " + title_line
+                        + "\nTitle line: "
+                        + title_line
                         + f"\nIdentified {len(data)} data columns and {len(columns)} header columns."
-                        + "\nColumns: " + str(columns)
-                        + "\nData: " + str(data)
+                        + "\nColumns: "
+                        + str(columns)
+                        + "\nData: "
+                        + str(data)
                     )
 
                 for i in range(len(columns)):
                     output[columns[i]].append(data[i])
 
-            output = {
-                k: np.array(v, dtype=float)
-                for k, v in output.items()
-            }
+            output = {k: np.array(v, dtype=float) for k, v in output.items()}
 
             # Read the BL data
             if read_bl_data_from is not None:
                 import pandas as pd
+
                 bl_datas: List[pd.DataFrame] = []
 
                 if read_bl_data_from == "alpha":
@@ -476,14 +478,26 @@ class XFoil(ExplicitAnalysis):
 
                     for alpha in output["alpha"]:
                         dump_filename = alpha_to_dump_mapping[
-                            min(alpha_to_dump_mapping.keys(), key=lambda x: abs(x - alpha))
+                            min(
+                                alpha_to_dump_mapping.keys(),
+                                key=lambda x: abs(x - alpha),
+                            )
                         ]
 
                         bl_datas.append(
                             pd.read_csv(
                                 dump_filename,
                                 sep=r"\s+",
-                                names=["s", "x", "y", "ue/vinf", "dstar", "theta", "cf", "H"],
+                                names=[
+                                    "s",
+                                    "x",
+                                    "y",
+                                    "ue/vinf",
+                                    "dstar",
+                                    "theta",
+                                    "cf",
+                                    "H",
+                                ],
                                 skiprows=1,
                             )
                         )
@@ -503,32 +517,42 @@ class XFoil(ExplicitAnalysis):
                             pd.read_csv(
                                 dump_filename,
                                 sep=r"\s+",
-                                names=["s", "x", "y", "ue/vinf", "dstar", "theta", "cf", "H"],
+                                names=[
+                                    "s",
+                                    "x",
+                                    "y",
+                                    "ue/vinf",
+                                    "dstar",
+                                    "theta",
+                                    "cf",
+                                    "H",
+                                ],
                                 skiprows=1,
                             )
                         )
 
                 else:
-                    raise ValueError("The `read_bl_data_from` parameter must be 'alpha', 'cl', or None.")
+                    raise ValueError(
+                        "The `read_bl_data_from` parameter must be 'alpha', 'cl', or None."
+                    )
 
                 # Augment the output data for each BL
                 for bl_data in bl_datas:
                     # Get Cp via Karman-Tsien compressibility correction, same as XFoil
-                    Cp_0 = (1 - bl_data["ue/vinf"] ** 2)
-                    bl_data["Cp"] = (Cp_0 /
-                                     (
-                                             np.sqrt(1 - self.mach ** 2)
-                                             + (
-                                                     (self.mach ** 2)
-                                                     / (1 + np.sqrt(1 - self.mach ** 2))
-                                                     * (Cp_0 / 2)
-                                             )
-
-                                     )
-                                     )
+                    Cp_0 = 1 - bl_data["ue/vinf"] ** 2
+                    bl_data["Cp"] = Cp_0 / (
+                        np.sqrt(1 - self.mach**2)
+                        + (
+                            (self.mach**2)
+                            / (1 + np.sqrt(1 - self.mach**2))
+                            * (Cp_0 / 2)
+                        )
+                    )
 
                     # Get Re_theta
-                    bl_data["Re_theta"] = np.abs(bl_data["ue/vinf"]) * bl_data["theta"] * self.Re
+                    bl_data["Re_theta"] = (
+                        np.abs(bl_data["ue/vinf"]) * bl_data["theta"] * self.Re
+                    )
 
                 output["bl_data"] = np.fromiter(bl_datas, dtype="O")
 
@@ -553,16 +577,17 @@ class XFoil(ExplicitAnalysis):
 
             ### Open up AVL
             import sys, os
+
             if sys.platform == "win32":
                 # Run XFoil
-                print("Running XFoil interactively in a new window, quit it to continue...")
+                print(
+                    "Running XFoil interactively in a new window, quit it to continue..."
+                )
 
                 command = f'cmd /k "{self.xfoil_command} {airfoil_file}"'
 
                 process = subprocess.Popen(
-                    command,
-                    cwd=directory,
-                    creationflags=subprocess.CREATE_NEW_CONSOLE
+                    command, cwd=directory, creationflags=subprocess.CREATE_NEW_CONSOLE
                 )
                 process.wait()
 
@@ -571,10 +596,11 @@ class XFoil(ExplicitAnalysis):
                     "Ability to auto-launch interactive XFoil sessions isn't yet implemented for non-Windows OSes."
                 )
 
-    def alpha(self,
-              alpha: Union[float, np.ndarray],
-              start_at: Union[float, None] = 0,
-              ) -> Dict[str, np.ndarray]:
+    def alpha(
+        self,
+        alpha: Union[float, np.ndarray],
+        start_at: Union[float, None] = 0,
+    ) -> Dict[str, np.ndarray]:
         """
         Execute XFoil at a given angle of attack, or at a sequence of angles of attack.
 
@@ -609,20 +635,22 @@ class XFoil(ExplicitAnalysis):
                 commands.append("fmom")
 
             if self.include_bl_data:
-                commands.extend([
-                    f"dump dump_a_{alpha:.8f}.txt",
-                    # "vplo",
-                    # "cd", # Dissipation coefficient
-                    # f"dump cdis_a_{alpha:.8f}.txt",
-                    # f"n", # Amplification ratio
-                    # f"dump n_a_{alpha:.8f}.txt",
-                    # "",
-                ])
+                commands.extend(
+                    [
+                        f"dump dump_a_{alpha:.8f}.txt",
+                        # "vplo",
+                        # "cd", # Dissipation coefficient
+                        # f"dump cdis_a_{alpha:.8f}.txt",
+                        # f"n", # Amplification ratio
+                        # f"dump n_a_{alpha:.8f}.txt",
+                        # "",
+                    ]
+                )
 
         if (
-                len(alphas) > 1 and
-                (start_at is not None) and
-                (np.min(alphas) < start_at < np.max(alphas))
+            len(alphas) > 1
+            and (start_at is not None)
+            and (np.min(alphas) < start_at < np.max(alphas))
         ):
             alphas_upper = alphas[alphas > start_at]
             alphas_lower = alphas[alpha <= start_at][::-1]
@@ -640,20 +668,18 @@ class XFoil(ExplicitAnalysis):
 
         output = self._run_xfoil(
             "\n".join(commands),
-            read_bl_data_from="alpha" if self.include_bl_data else None
+            read_bl_data_from="alpha" if self.include_bl_data else None,
         )
 
-        sort_order = np.argsort(output['alpha'])
-        output = {
-            k: v[sort_order]
-            for k, v in output.items()
-        }
+        sort_order = np.argsort(output["alpha"])
+        output = {k: v[sort_order] for k, v in output.items()}
         return output
 
-    def cl(self,
-           cl: Union[float, np.ndarray],
-           start_at: Union[float, None] = 0,
-           ) -> Dict[str, np.ndarray]:
+    def cl(
+        self,
+        cl: Union[float, np.ndarray],
+        start_at: Union[float, None] = 0,
+    ) -> Dict[str, np.ndarray]:
         """
         Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
 
@@ -688,20 +714,22 @@ class XFoil(ExplicitAnalysis):
                 commands.append("fmom")
 
             if self.include_bl_data:
-                commands.extend([
-                    f"dump dump_cl_{cl:.8f}.txt",
-                    # "vplo",
-                    # "cd", # Dissipation coefficient
-                    # f"dump cdis_cl_{cl:.8f}.txt",
-                    # f"n", # Amplification ratio
-                    # f"dump n_cl_{cl:.8f}.txt",
-                    # "",
-                ])
+                commands.extend(
+                    [
+                        f"dump dump_cl_{cl:.8f}.txt",
+                        # "vplo",
+                        # "cd", # Dissipation coefficient
+                        # f"dump cdis_cl_{cl:.8f}.txt",
+                        # f"n", # Amplification ratio
+                        # f"dump n_cl_{cl:.8f}.txt",
+                        # "",
+                    ]
+                )
 
         if (
-                len(cls) > 1 and
-                (start_at is not None) and
-                (np.min(cls) < start_at < np.max(cls))
+            len(cls) > 1
+            and (start_at is not None)
+            and (np.min(cls) < start_at < np.max(cls))
         ):
             cls_upper = cls[cls > start_at]
             cls_lower = cls[cls <= start_at][::-1]
@@ -719,18 +747,15 @@ class XFoil(ExplicitAnalysis):
 
         output = self._run_xfoil(
             "\n".join(commands),
-            read_bl_data_from="cl" if self.include_bl_data else None
+            read_bl_data_from="cl" if self.include_bl_data else None,
         )
 
-        sort_order = np.argsort(output['alpha'])
-        output = {
-            k: v[sort_order]
-            for k, v in output.items()
-        }
+        sort_order = np.argsort(output["alpha"])
+        output = {k: v[sort_order] for k, v in output.items()}
         return output
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     af = Airfoil("naca2412").repanel(n_points_per_side=100)
 
     xf = XFoil(

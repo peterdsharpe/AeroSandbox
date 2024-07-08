@@ -16,7 +16,9 @@ def _make_casadi_types_broadcastable(x1, x2):
         elif len(shape) == 2:
             return shape
         else:
-            raise ValueError("CasADi can't handle arrays with >2 dimensions, unfortunately.")
+            raise ValueError(
+                "CasADi can't handle arrays with >2 dimensions, unfortunately."
+            )
 
     x1_shape = shape_2D(x1)
     x2_shape = shape_2D(x2)
@@ -36,9 +38,7 @@ def _make_casadi_types_broadcastable(x1, x2):
     return x1_tiled, x2_tiled
 
 
-def add(
-        x1, x2
-):
+def add(x1, x2):
     if not is_casadi_type(x1) and not is_casadi_type(x2):
         return _onp.add(x1, x2)
     else:
@@ -46,9 +46,7 @@ def add(
         return x1 + x2
 
 
-def multiply(
-        x1, x2
-):
+def multiply(x1, x2):
     if not is_casadi_type(x1) and not is_casadi_type(x2):
         return _onp.multiply(x1, x2)
     else:
@@ -67,11 +65,7 @@ def mod(x1, x2):
 
     else:
         out = _cas.fmod(x1, x2)
-        out = where(
-            x1 < 0,
-            out + x2,
-            out
-        )
+        out = where(x1 < 0, out + x2, out)
         return out
 
 
@@ -83,11 +77,7 @@ def centered_mod(x1, x2):
     """
     if not is_casadi_type(x1) and not is_casadi_type(x2):
         remainder = _onp.mod(x1, x2)
-        return where(
-            remainder > x2 / 2,
-            remainder - x2,
-            remainder
-        )
+        return where(remainder > x2 / 2, remainder - x2, remainder)
 
     else:
         return _cas.remainder(x1, x2)

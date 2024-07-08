@@ -3,6 +3,7 @@ import aerosandbox.numpy as np
 import pytest
 from typing import Type
 
+
 def test_wing_aero_3D_matches_2D_in_high_AR_limit():
     airfoil = asb.Airfoil("naca2412")
 
@@ -17,7 +18,7 @@ def test_wing_aero_3D_matches_2D_in_high_AR_limit():
                 xyz_le=np.array([0, 0.5e12, 0]),
                 chord=1,
                 airfoil=airfoil,
-            )
+            ),
         ]
     )
 
@@ -29,7 +30,7 @@ def test_wing_aero_3D_matches_2D_in_high_AR_limit():
 
     op_point = asb.OperatingPoint(
         velocity=(2 * Q / 1.225) ** 0.5,
-        alpha=5.,
+        alpha=5.0,
     )
 
     xyz_ref = np.array([-1, 0, 0])
@@ -39,23 +40,17 @@ def test_wing_aero_3D_matches_2D_in_high_AR_limit():
         alpha=op_point.alpha,
         Re=op_point.reynolds(reference_length=1),
         mach=op_point.mach(),
-        model_size="large"
+        model_size="large",
     )
     expected_aero = {
         "CL": airfoil_only_aero["CL"],
         "CD": airfoil_only_aero["CD"],
-        "Cm": (
-                airfoil_only_aero["CM"]
-                - (0.25 - xyz_ref[0]) * airfoil_only_aero["CL"]
-        ),
+        "Cm": (airfoil_only_aero["CM"] - (0.25 - xyz_ref[0]) * airfoil_only_aero["CL"]),
     }
 
     ### Do 3D predictions
     aero = asb.AeroBuildup(
-        airplane=airplane,
-        op_point=op_point,
-        xyz_ref=xyz_ref,
-        model_size="large"
+        airplane=airplane, op_point=op_point, xyz_ref=xyz_ref, model_size="large"
     ).run()
 
     ### Compare
@@ -105,16 +100,16 @@ wing = asb.Wing(
     symmetric=True,
     xsecs=[
         asb.WingXSec(
-            xyz_le=np.array([0., 0, 0]),
-            chord=1.,
+            xyz_le=np.array([0.0, 0, 0]),
+            chord=1.0,
             airfoil=asb.Airfoil("naca2412"),
         ),
         asb.WingXSec(
-            xyz_le=np.array([0., 5, 0]),
-            chord=1.,
+            xyz_le=np.array([0.0, 5, 0]),
+            chord=1.0,
             airfoil=asb.Airfoil("naca2412"),
         ),
-    ]
+    ],
 )
 
 airplane = asb.Airplane(
@@ -123,20 +118,16 @@ airplane = asb.Airplane(
 
 
 def test_simple_wing_stability_derivatives(
-        AeroAnalysis: Type = asb.AeroBuildup,
+    AeroAnalysis: Type = asb.AeroBuildup,
 ):
     analysis = AeroAnalysis(
         airplane=airplane,
         op_point=asb.OperatingPoint(
-            velocity=100.,
-            alpha=0.,
-            beta=5.,
+            velocity=100.0,
+            alpha=0.0,
+            beta=5.0,
         ),
-        xyz_ref=np.array([
-            0.,
-            0.,
-            0.
-        ]),
+        xyz_ref=np.array([0.0, 0.0, 0.0]),
     )
 
     try:
@@ -149,6 +140,6 @@ def test_simple_wing_stability_derivatives(
         print(f"{key.rjust(10)}: {float(aero[key]):20.4f}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_wing_aero_3D_matches_2D_in_high_AR_limit()
     test_simple_wing_stability_derivatives()

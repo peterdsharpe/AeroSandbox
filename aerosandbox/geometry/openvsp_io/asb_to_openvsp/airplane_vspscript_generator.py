@@ -2,14 +2,20 @@ import aerosandbox.numpy as np
 from aerosandbox.geometry.airplane import Airplane
 from textwrap import indent, dedent
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
-from aerosandbox.geometry.openvsp_io.asb_to_openvsp.wing_vspscript_generator import generate_wing
-from aerosandbox.geometry.openvsp_io.asb_to_openvsp.fuselage_vspscript_generator import generate_fuselage
-from aerosandbox.geometry.openvsp_io.asb_to_openvsp.propulsor_vspscript_generator import generate_propulsor
+from aerosandbox.geometry.openvsp_io.asb_to_openvsp.wing_vspscript_generator import (
+    generate_wing,
+)
+from aerosandbox.geometry.openvsp_io.asb_to_openvsp.fuselage_vspscript_generator import (
+    generate_fuselage,
+)
+from aerosandbox.geometry.openvsp_io.asb_to_openvsp.propulsor_vspscript_generator import (
+    generate_propulsor,
+)
 
 
 def generate_airplane(
-        airplane: Airplane,
-        include_main=True,
+    airplane: Airplane,
+    include_main=True,
 ) -> str:
     """
     Generates a VSPScript file for an Airplane object.
@@ -49,7 +55,7 @@ def generate_airplane(
     return script
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     from aerosandbox.geometry.wing import Wing, WingXSec
     from aerosandbox.geometry.airfoil.airfoil import Airfoil
@@ -59,30 +65,21 @@ if __name__ == '__main__':
         symmetric=True,
         xsecs=[
             WingXSec(
-                xyz_le=[0.5, 0, 0],
-                chord=1.1,
-                twist=5,
-                airfoil=Airfoil(name="dae11")
+                xyz_le=[0.5, 0, 0], chord=1.1, twist=5, airfoil=Airfoil(name="dae11")
             ),
             WingXSec(
-                xyz_le=[1, 2, 0],
-                chord=0.9,
-                twist=5,
-                airfoil=Airfoil(name="NACA4412")
+                xyz_le=[1, 2, 0], chord=0.9, twist=5, airfoil=Airfoil(name="NACA4412")
             ),
             WingXSec(
-                xyz_le=[2, 5, 0],
-                chord=0.5,
-                twist=0,
-                airfoil=Airfoil(name="NACA3412")
+                xyz_le=[2, 5, 0], chord=0.5, twist=0, airfoil=Airfoil(name="NACA3412")
             ),
             WingXSec(
                 xyz_le=[2.5, 5.5, 1],
                 chord=0.25,
                 twist=0,
-                airfoil=Airfoil(name="NACA2412")
-            )
-        ]
+                airfoil=Airfoil(name="NACA2412"),
+            ),
+        ],
     )
 
     from aerosandbox.geometry.fuselage import Fuselage, FuselageXSec
@@ -94,13 +91,13 @@ if __name__ == '__main__':
         name="Fuse",
         xsecs=[
             FuselageXSec(
-                xyz_c=[xi, 0, 0.05 * xi ** 2],
+                xyz_c=[xi, 0, 0.05 * xi**2],
                 width=2 * af.local_thickness(xi),
                 height=af.local_thickness(xi),
-                shape=4
+                shape=4,
             )
             for xi in x
-        ]
+        ],
     )
 
     from aerosandbox.geometry.propulsor import Propulsor
@@ -113,10 +110,7 @@ if __name__ == '__main__':
     )
 
     airplane = Airplane(
-        name="Aircraft",
-        wings=[wing],
-        fuselages=[fuse],
-        propulsors=[prop]
+        name="Aircraft", wings=[wing], fuselages=[fuse], propulsors=[prop]
     )
 
     print(generate_airplane(airplane))

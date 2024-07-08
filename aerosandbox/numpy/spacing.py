@@ -3,11 +3,7 @@ import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
-def linspace(
-        start: float = 0.,
-        stop: float = 1.,
-        num: int = 50
-):
+def linspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
     """
     Returns evenly spaced numbers over a specified interval.
 
@@ -19,11 +15,7 @@ def linspace(
         return _cas.linspace(start, stop, num)
 
 
-def cosspace(
-        start: float = 0.,
-        stop: float = 1.,
-        num: int = 50
-):
+def cosspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
     """
     Makes a cosine-spaced vector.
 
@@ -39,13 +31,7 @@ def cosspace(
     mean = (stop + start) / 2
     amp = (stop - start) / 2
     ones = 0 * start + 1
-    spaced_array = mean + amp * _onp.cos(
-        linspace(
-            _onp.pi * ones,
-            0 * ones,
-            num
-        )
-    )
+    spaced_array = mean + amp * _onp.cos(linspace(_onp.pi * ones, 0 * ones, num))
 
     # Fix the endpoints, which might not be exactly right due to floating-point error.
     spaced_array[0] = start
@@ -55,10 +41,10 @@ def cosspace(
 
 
 def sinspace(
-        start: float = 0.,
-        stop: float = 1.,
-        num: int = 50,
-        reverse_spacing: bool = False,
+    start: float = 0.0,
+    stop: float = 1.0,
+    num: int = 50,
+    reverse_spacing: bool = False,
 ):
     """
     Makes a sine-spaced vector. By default, bunches points near the start.
@@ -84,13 +70,8 @@ def sinspace(
     if reverse_spacing:
         return sinspace(stop, start, num)[::-1]
     ones = 0 * start + 1
-    spaced_array = (
-            start + (stop - start) * (1 - _onp.cos(linspace(
-        0 * ones,
-        _onp.pi / 2 * ones,
-        num
-    ))
-                                      )
+    spaced_array = start + (stop - start) * (
+        1 - _onp.cos(linspace(0 * ones, _onp.pi / 2 * ones, num))
     )
     # Fix the endpoints, which might not be exactly right due to floating-point error.
     spaced_array[0] = start
@@ -99,11 +80,7 @@ def sinspace(
     return spaced_array
 
 
-def logspace(
-        start: float = 0.,
-        stop: float = 1.,
-        num: int = 50
-):
+def logspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
     """
     Return numbers spaced evenly on a log scale.
 
@@ -115,11 +92,7 @@ def logspace(
         return 10 ** linspace(start, stop, num)
 
 
-def geomspace(
-        start: float = 1.,
-        stop: float = 10.,
-        num: int = 50
-):
+def geomspace(start: float = 1.0, stop: float = 10.0, num: int = 50):
     """
     Return numbers spaced evenly on a log scale (a geometric progression).
 

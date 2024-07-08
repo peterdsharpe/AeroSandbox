@@ -1,7 +1,9 @@
 from aerosandbox.common import *
 from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
-from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
+from aerosandbox.aerodynamics.aero_2D.singularities import (
+    calculate_induced_velocity_line_singularities,
+)
 import aerosandbox.numpy as np
 from typing import Union, List, Optional
 
@@ -17,11 +19,12 @@ class AirfoilInviscid(ImplicitAnalysis):
     """
 
     @ImplicitAnalysis.initialize
-    def __init__(self,
-                 airfoil: Union[Airfoil, List[Airfoil]],
-                 op_point: OperatingPoint,
-                 ground_effect: bool = False,
-                 ):
+    def __init__(
+        self,
+        airfoil: Union[Airfoil, List[Airfoil]],
+        op_point: OperatingPoint,
+        ground_effect: bool = False,
+    ):
         if isinstance(airfoil, Airfoil):
             self.airfoils = [airfoil]
         else:
@@ -36,24 +39,30 @@ class AirfoilInviscid(ImplicitAnalysis):
         self._calculate_forces()
 
     def __repr__(self):
-        return self.__class__.__name__ + "(\n\t" + "\n\t".join([
-            f"airfoils={self.airfoils}",
-            f"op_point={self.op_point}",
-        ]) + "\n)"
+        return (
+            self.__class__.__name__
+            + "(\n\t"
+            + "\n\t".join(
+                [
+                    f"airfoils={self.airfoils}",
+                    f"op_point={self.op_point}",
+                ]
+            )
+            + "\n)"
+        )
 
     def _setup_unknowns(self):
         for airfoil in self.airfoils:
             airfoil.gamma = self.opti.variable(
-                init_guess=0,
-                scale=self.op_point.velocity,
-                n_vars=airfoil.n_points()
+                init_guess=0, scale=self.op_point.velocity, n_vars=airfoil.n_points()
             )
             airfoil.sigma = np.zeros(airfoil.n_points())
 
-    def calculate_velocity(self,
-                           x_field,
-                           y_field,
-                           ) -> [np.ndarray, np.ndarray]:
+    def calculate_velocity(
+        self,
+        x_field,
+        y_field,
+    ) -> [np.ndarray, np.ndarray]:
         ### Analyze the freestream
         u_freestream = self.op_point.velocity * np.cosd(self.op_point.alpha)
         v_freestream = self.op_point.velocity * np.sind(self.op_point.alpha)
@@ -64,13 +73,15 @@ class AirfoilInviscid(ImplicitAnalysis):
         for airfoil in self.airfoils:
 
             ### Add in the influence of the vortices and sources on the airfoil surface
-            u_field_induced, v_field_induced = calculate_induced_velocity_line_singularities(
-                x_field=x_field,
-                y_field=y_field,
-                x_panels=airfoil.x(),
-                y_panels=airfoil.y(),
-                gamma=airfoil.gamma,
-                sigma=airfoil.sigma,
+            u_field_induced, v_field_induced = (
+                calculate_induced_velocity_line_singularities(
+                    x_field=x_field,
+                    y_field=y_field,
+                    x_panels=airfoil.x(),
+                    y_panels=airfoil.y(),
+                    gamma=airfoil.gamma,
+                    sigma=airfoil.sigma,
+                )
             )
 
             u_field = u_field + u_field_induced
@@ -78,13 +89,15 @@ class AirfoilInviscid(ImplicitAnalysis):
 
             ### Add in the influence of a source across the open trailing-edge panel.
             if airfoil.TE_thickness() != 0:
-                u_field_induced_TE, v_field_induced_TE = calculate_induced_velocity_line_singularities(
-                    x_field=x_field,
-                    y_field=y_field,
-                    x_panels=[airfoil.x()[0], airfoil.x()[-1]],
-                    y_panels=[airfoil.y()[0], airfoil.y()[-1]],
-                    gamma=[0, 0],
-                    sigma=[airfoil.gamma[0], airfoil.gamma[0]]
+                u_field_induced_TE, v_field_induced_TE = (
+                    calculate_induced_velocity_line_singularities(
+                        x_field=x_field,
+                        y_field=y_field,
+                        x_panels=[airfoil.x()[0], airfoil.x()[-1]],
+                        y_panels=[airfoil.y()[0], airfoil.y()[-1]],
+                        gamma=[0, 0],
+                        sigma=[airfoil.gamma[0], airfoil.gamma[0]],
+                    )
                 )
 
                 u_field = u_field + u_field_induced_TE
@@ -93,13 +106,15 @@ class AirfoilInviscid(ImplicitAnalysis):
             if self.ground_effect:
 
                 ### Add in the influence of the vortices and sources on the airfoil surface
-                u_field_induced, v_field_induced = calculate_induced_velocity_line_singularities(
-                    x_field=x_field,
-                    y_field=y_field,
-                    x_panels=airfoil.x(),
-                    y_panels=-airfoil.y(),
-                    gamma=-airfoil.gamma,
-                    sigma=airfoil.sigma,
+                u_field_induced, v_field_induced = (
+                    calculate_induced_velocity_line_singularities(
+                        x_field=x_field,
+                        y_field=y_field,
+                        x_panels=airfoil.x(),
+                        y_panels=-airfoil.y(),
+                        gamma=-airfoil.gamma,
+                        sigma=airfoil.sigma,
+                    )
                 )
 
                 u_field = u_field + u_field_induced
@@ -107,13 +122,15 @@ class AirfoilInviscid(ImplicitAnalysis):
 
                 ### Add in the influence of a source across the open trailing-edge panel.
                 if airfoil.TE_thickness() != 0:
-                    u_field_induced_TE, v_field_induced_TE = calculate_induced_velocity_line_singularities(
-                        x_field=x_field,
-                        y_field=y_field,
-                        x_panels=[airfoil.x()[0], airfoil.x()[-1]],
-                        y_panels=-1 * np.array([airfoil.y()[0], airfoil.y()[-1]]),
-                        gamma=[0, 0],
-                        sigma=[airfoil.gamma[0], airfoil.gamma[0]]
+                    u_field_induced_TE, v_field_induced_TE = (
+                        calculate_induced_velocity_line_singularities(
+                            x_field=x_field,
+                            y_field=y_field,
+                            x_panels=[airfoil.x()[0], airfoil.x()[-1]],
+                            y_panels=-1 * np.array([airfoil.y()[0], airfoil.y()[-1]]),
+                            gamma=[0, 0],
+                            sigma=[airfoil.gamma[0], airfoil.gamma[0]],
+                        )
                     )
 
                     u_field = u_field + u_field_induced_TE
@@ -135,7 +152,7 @@ class AirfoilInviscid(ImplicitAnalysis):
 
             panel_dx = np.diff(airfoil.x())
             panel_dy = np.diff(airfoil.y())
-            panel_length = (panel_dx ** 2 + panel_dy ** 2) ** 0.5
+            panel_length = (panel_dx**2 + panel_dy**2) ** 0.5
 
             xp_hat_x = panel_dx / panel_length  # x-coordinate of the xp_hat vector
             xp_hat_y = panel_dy / panel_length  # y-coordinate of the yp_hat vector
@@ -156,15 +173,16 @@ class AirfoilInviscid(ImplicitAnalysis):
         for airfoil in self.airfoils:
             panel_dx = np.diff(airfoil.x())
             panel_dy = np.diff(airfoil.y())
-            panel_length = (panel_dx ** 2 + panel_dy ** 2) ** 0.5
+            panel_length = (panel_dx**2 + panel_dy**2) ** 0.5
 
             ### Sum up the vorticity on this airfoil by integrating
             airfoil.vorticity = np.sum(
-                (airfoil.gamma[1:] + airfoil.gamma[:-1]) / 2 *
-                panel_length
+                (airfoil.gamma[1:] + airfoil.gamma[:-1]) / 2 * panel_length
             )
 
-            airfoil.Cl = 2 * airfoil.vorticity  # TODO normalize by chord and freestream velocity etc.
+            airfoil.Cl = (
+                2 * airfoil.vorticity
+            )  # TODO normalize by chord and freestream velocity etc.
 
         self.total_vorticity = sum([airfoil.vorticity for airfoil in self.airfoils])
         self.Cl = 2 * self.total_vorticity
@@ -200,8 +218,8 @@ class AirfoilInviscid(ImplicitAnalysis):
             U[contains] = np.nan
             V[contains] = np.nan
 
-        speed = (U ** 2 + V ** 2) ** 0.5
-        Cp = 1 - speed ** 2
+        speed = (U**2 + V**2) ** 0.5
+        Cp = 1 - speed**2
 
         ### Draw the airfoils
         for airfoil in self.airfoils:
@@ -215,7 +233,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             color=speed,
             density=2.5,
             arrowsize=0,
-            cmap=p.mpl.colormaps.get_cmap('coolwarm_r'),
+            cmap=p.mpl.colormaps.get_cmap("coolwarm_r"),
         )
         CB = plt.colorbar(
             orientation="horizontal",
@@ -225,7 +243,7 @@ class AirfoilInviscid(ImplicitAnalysis):
         CB.set_label(r"Relative Airspeed ($U/U_\infty$)")
         plt.clim(0.6, 1.4)
 
-        plt.gca().set_aspect('equal', adjustable='box')
+        plt.gca().set_aspect("equal", adjustable="box")
         plt.xlabel(r"$x/c$")
         plt.ylabel(r"$y/c$")
         plt.title(rf"Inviscid Airfoil: Flow Field")
@@ -235,10 +253,11 @@ class AirfoilInviscid(ImplicitAnalysis):
 
     def draw_cp(self, show=True):
         import matplotlib.pyplot as plt
+
         fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
         for airfoil in self.airfoils:
             surface_speeds = airfoil.gamma
-            C_p = 1 - surface_speeds ** 2
+            C_p = 1 - surface_speeds**2
 
             plt.plot(airfoil.x(), C_p)
 
@@ -252,13 +271,12 @@ class AirfoilInviscid(ImplicitAnalysis):
             plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     a = AirfoilInviscid(
         airfoil=[
             # Airfoil("naca4408")
             #     .repanel(50)
-            Airfoil("e423")
-            .repanel(n_points_per_side=50),
+            Airfoil("e423").repanel(n_points_per_side=50),
             Airfoil("naca6408")
             .repanel(n_points_per_side=50)
             .scale(0.4, 0.4)
@@ -268,7 +286,7 @@ if __name__ == '__main__':
         op_point=OperatingPoint(
             velocity=1,
             alpha=5,
-        )
+        ),
     )
     a.draw_streamlines()
     a.draw_cp()
@@ -278,9 +296,6 @@ if __name__ == '__main__':
     opti2 = Opti()
     b = AirfoilInviscid(
         airfoil=Airfoil("naca4408"),
-        op_point=OperatingPoint(
-            velocity=1,
-            alpha=5
-        ),
-        opti=opti2
+        op_point=OperatingPoint(velocity=1, alpha=5),
+        opti=opti2,
     )

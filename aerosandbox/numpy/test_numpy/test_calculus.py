@@ -5,9 +5,7 @@ import pytest
 def test_diff():
     a = np.arange(100)
 
-    assert np.all(
-        np.diff(a) == pytest.approx(1)
-    )
+    assert np.all(np.diff(a) == pytest.approx(1))
 
 
 def test_trapz():
@@ -19,10 +17,8 @@ def test_trapz():
 def test_invertability_of_diff_trapz():
     a = np.sin(np.arange(10))
 
-    assert np.all(
-        np.trapz(np.diff(a)) == pytest.approx(np.diff(np.trapz(a)))
-    )
+    assert np.all(np.trapz(np.diff(a)) == pytest.approx(np.diff(np.trapz(a))))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

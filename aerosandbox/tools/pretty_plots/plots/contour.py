@@ -7,31 +7,31 @@ from aerosandbox.tools.string_formatting import eng_string
 
 
 def contour(
-        *args,
-        levels: Union[int, List, np.ndarray] = 31,
-        colorbar: bool = True,
-        linelabels: bool = True,
-        cmap=None,
-        alpha: float = 0.7,
-        extend: str = "neither",
-        linecolor="k",
-        linewidths: float = 0.5,
-        extendrect: bool = True,
-        linelabels_format: Union[str, Callable[[float], str]] = eng_string,
-        linelabels_fontsize: float = 8,
-        max_side_length_nondim: float = np.inf,
-        colorbar_label: str = None,
-        x_log_scale: bool = False,
-        y_log_scale: bool = False,
-        z_log_scale: bool = False,
-        mask: np.ndarray = None,
-        drop_nans: bool = None,
-        # smooth: Union[bool, int] = False, # TODO implement
-        contour_kwargs: Dict = None,
-        contourf_kwargs: Dict = None,
-        colorbar_kwargs: Dict = None,
-        linelabels_kwargs: Dict = None,
-        **kwargs,
+    *args,
+    levels: Union[int, List, np.ndarray] = 31,
+    colorbar: bool = True,
+    linelabels: bool = True,
+    cmap=None,
+    alpha: float = 0.7,
+    extend: str = "neither",
+    linecolor="k",
+    linewidths: float = 0.5,
+    extendrect: bool = True,
+    linelabels_format: Union[str, Callable[[float], str]] = eng_string,
+    linelabels_fontsize: float = 8,
+    max_side_length_nondim: float = np.inf,
+    colorbar_label: str = None,
+    x_log_scale: bool = False,
+    y_log_scale: bool = False,
+    z_log_scale: bool = False,
+    mask: np.ndarray = None,
+    drop_nans: bool = None,
+    # smooth: Union[bool, int] = False, # TODO implement
+    contour_kwargs: Dict = None,
+    contourf_kwargs: Dict = None,
+    colorbar_kwargs: Dict = None,
+    linelabels_kwargs: Dict = None,
+    **kwargs,
 ):
     """
     An analogue for plt.contour and plt.tricontour and friends that produces a much prettier default graph.
@@ -87,11 +87,12 @@ def contour(
     Returns: A tuple of (contour, contourf, colorbar) objects.
 
     """
-    bad_signature_error = ValueError("Call signature should be one of:\n"
-                                     "  * `contour(Z, **kwargs)`\n"
-                                     "  * `contour(X, Y, Z, **kwargs)`\n"
-                                     "  * `contour(X, Y, Z, levels, **kwargs)`"
-                                     )
+    bad_signature_error = ValueError(
+        "Call signature should be one of:\n"
+        "  * `contour(Z, **kwargs)`\n"
+        "  * `contour(X, Y, Z, **kwargs)`\n"
+        "  * `contour(X, Y, Z, levels, **kwargs)`"
+    )
 
     ### Parse *args
     if len(args) == 1:
@@ -109,26 +110,24 @@ def contour(
     if Y is None:
         Y = np.arange(Z.shape[0])
 
-    is_gridded = not (  # Determine if the data is gridded or not (i.e., contour vs. tricontour)
-            X.ndim == 1 and
-            Y.ndim == 1 and
-            Z.ndim == 1
+    is_gridded = (
+        not (  # Determine if the data is gridded or not (i.e., contour vs. tricontour)
+            X.ndim == 1 and Y.ndim == 1 and Z.ndim == 1
+        )
     )
 
     ### Check inputs for sanity
     for k, v in dict(
-            X=X,
-            Y=Y,
-            Z=Z,
+        X=X,
+        Y=Y,
+        Z=Z,
     ).items():
         if np.all(np.isnan(v)):
-            raise ValueError(
-                f"All values of '{k}' are NaN!"
-            )
+            raise ValueError(f"All values of '{k}' are NaN!")
 
     ### Set defaults
     if cmap is None:
-        cmap = mpl.colormaps.get_cmap('viridis')
+        cmap = mpl.colormaps.get_cmap("viridis")
     if contour_kwargs is None:
         contour_kwargs = {}
     if contourf_kwargs is None:
@@ -169,41 +168,31 @@ def contour(
             )
 
         shared_kwargs = {
-            "norm"   : mpl.colors.LogNorm(),
+            "norm": mpl.colors.LogNorm(),
             "locator": locator,
-            **shared_kwargs
+            **shared_kwargs,
         }
 
-        colorbar_kwargs = {
-            "norm": mpl.colors.LogNorm(),
-            **colorbar_kwargs
-        }
+        colorbar_kwargs = {"norm": mpl.colors.LogNorm(), **colorbar_kwargs}
 
     if colorbar_label is not None:
         colorbar_kwargs["label"] = colorbar_label
 
     contour_kwargs = {
-        "colors"    : linecolor,
+        "colors": linecolor,
         "linewidths": linewidths,
         **shared_kwargs,
-        **contour_kwargs
+        **contour_kwargs,
     }
-    contourf_kwargs = {
-        "cmap": cmap,
-        **shared_kwargs,
-        **contourf_kwargs
-    }
+    contourf_kwargs = {"cmap": cmap, **shared_kwargs, **contourf_kwargs}
 
-    colorbar_kwargs = {
-        "extendrect": extendrect,
-        **colorbar_kwargs
-    }
+    colorbar_kwargs = {"extendrect": extendrect, **colorbar_kwargs}
 
     linelabels_kwargs = {
-        "inline"  : 1,
+        "inline": 1,
         "fontsize": linelabels_fontsize,
-        "fmt"     : linelabels_format,
-        **linelabels_kwargs
+        "fmt": linelabels_format,
+        **linelabels_kwargs,
     }
 
     if drop_nans is None:
@@ -222,9 +211,7 @@ def contour(
 
     if drop_nans:
         nanmask = np.logical_not(
-            np.logical_or.reduce(
-                [np.isnan(X), np.isnan(Y), np.isnan(Z)]
-            )
+            np.logical_or.reduce([np.isnan(X), np.isnan(Y), np.isnan(Z)])
         )
 
         X = X[nanmask]
@@ -258,30 +245,20 @@ def contour(
         ### Filter out extrapolation that's too large
         # See also: https://stackoverflow.com/questions/42426095/matplotlib-contour-contourf-of-concave-non-gridded-data
         if x_log_scale:
-            X_nondim = (
-                               np.log(X[t]) - np.roll(np.log(X[t]), 1, axis=1)
-                       ) / (np.nanmax(np.log(X)) - np.nanmin(np.log(X)))
+            X_nondim = (np.log(X[t]) - np.roll(np.log(X[t]), 1, axis=1)) / (
+                np.nanmax(np.log(X)) - np.nanmin(np.log(X))
+            )
         else:
-            X_nondim = (
-                               X[t] - np.roll(X[t], 1, axis=1)
-                       ) / (np.nanmax(X) - np.nanmin(X))
+            X_nondim = (X[t] - np.roll(X[t], 1, axis=1)) / (np.nanmax(X) - np.nanmin(X))
 
         if y_log_scale:
-            Y_nondim = (
-                               np.log(Y[t]) - np.roll(np.log(Y[t]), 1, axis=1)
-                       ) / (np.nanmax(np.log(Y)) - np.nanmin(np.log(Y)))
+            Y_nondim = (np.log(Y[t]) - np.roll(np.log(Y[t]), 1, axis=1)) / (
+                np.nanmax(np.log(Y)) - np.nanmin(np.log(Y))
+            )
         else:
-            Y_nondim = (
-                               Y[t] - np.roll(Y[t], 1, axis=1)
-                       ) / (np.nanmax(Y) - np.nanmin(Y))
+            Y_nondim = (Y[t] - np.roll(Y[t], 1, axis=1)) / (np.nanmax(Y) - np.nanmin(Y))
 
-        side_length_nondim = np.max(
-            np.sqrt(
-                X_nondim ** 2 +
-                Y_nondim ** 2
-            ),
-            axis=1
-        )
+        side_length_nondim = np.max(np.sqrt(X_nondim**2 + Y_nondim**2), axis=1)
 
         if np.all(side_length_nondim > max_side_length_nondim):
             raise ValueError(
@@ -308,7 +285,7 @@ def contour(
                 norm=contf.norm,
                 cmap=contf.cmap,
             ),
-            **colorbar_kwargs
+            **colorbar_kwargs,
         )
 
         if z_log_scale:
@@ -324,7 +301,10 @@ def contour(
                 cbar_is_horizontal = True
             else:
                 import warnings
-                warnings.warn("Somehow the colorbar has both x and y ticks, which should not occur. Attempting to reformat y-ticks...")
+
+                warnings.warn(
+                    "Somehow the colorbar has both x and y ticks, which should not occur. Attempting to reformat y-ticks..."
+                )
                 cbar_is_horizontal = False
 
             if cbar_is_horizontal:
@@ -336,21 +316,31 @@ def contour(
             if cbar_is_horizontal:
                 pass
             else:
-                if Z_ratio >= 10 ** 2.05:
+                if Z_ratio >= 10**2.05:
                     cbar_ax.set_major_locator(mpl.ticker.LogLocator())
-                    cbar_ax.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
+                    cbar_ax.set_minor_locator(
+                        mpl.ticker.LogLocator(subs=np.arange(1, 10))
+                    )
                     cbar_ax.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
                     cbar_ax.set_minor_formatter(mpl.ticker.NullFormatter())
-                elif Z_ratio >= 10 ** 1.5:
+                elif Z_ratio >= 10**1.5:
                     cbar_ax.set_major_locator(mpl.ticker.LogLocator())
-                    cbar_ax.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
+                    cbar_ax.set_minor_locator(
+                        mpl.ticker.LogLocator(subs=np.arange(1, 10))
+                    )
                     cbar_ax.set_major_formatter(mpl.ticker.LogFormatterSciNotation())
-                    cbar_ax.set_minor_formatter(mpl.ticker.LogFormatterSciNotation(
-                        minor_thresholds=(np.inf, np.inf)
-                    ))
+                    cbar_ax.set_minor_formatter(
+                        mpl.ticker.LogFormatterSciNotation(
+                            minor_thresholds=(np.inf, np.inf)
+                        )
+                    )
                 else:
-                    cbar_ax.set_major_locator(mpl.ticker.LogLocator(subs=np.arange(1, 10)))
-                    cbar_ax.set_minor_locator(mpl.ticker.LogLocator(subs=np.arange(10, 100) / 10))
+                    cbar_ax.set_major_locator(
+                        mpl.ticker.LogLocator(subs=np.arange(1, 10))
+                    )
+                    cbar_ax.set_minor_locator(
+                        mpl.ticker.LogLocator(subs=np.arange(10, 100) / 10)
+                    )
                     cbar_ax.set_major_formatter(mpl.ticker.ScalarFormatter())
                     cbar_ax.set_minor_formatter(mpl.ticker.NullFormatter())
 
@@ -363,7 +353,7 @@ def contour(
     return cont, contf, cbar
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
@@ -373,11 +363,7 @@ if __name__ == '__main__':
 
     Z_ratio = 1
 
-    Z = 10 ** (
-            Z_ratio / 2 * np.cos(
-        2 * np.pi * (X ** 4 + Y ** 4)
-    )
-    )
+    Z = 10 ** (Z_ratio / 2 * np.cos(2 * np.pi * (X**4 + Y**4)))
 
     # Z += 0.1 * np.random.randn(*Z.shape)
 
@@ -394,11 +380,7 @@ if __name__ == '__main__':
         z_log_scale=True,
         cmap=cmap,
         levels=20,
-        colorbar_label="Colorbar label"
+        colorbar_label="Colorbar label",
     )
     # plt.clim(0.1, 10)
-    p.show_plot(
-        "Title",
-        "X label",
-        "Y label"
-    )
+    p.show_plot("Title", "X label", "Y label")

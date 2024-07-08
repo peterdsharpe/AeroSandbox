@@ -14,7 +14,7 @@ altitude = 0  # meters
 # mu = atmo.get_viscosity_from_temperature(atmo.get_temperature_at_altitude(altitude))
 # speed_of_sound = 343
 air_density = 1.225
-mu = 0.178E-04
+mu = 0.178e-04
 speed_of_sound = 340
 
 ## Prop Specs from CAM 6X3 for QPROP Validation
@@ -22,10 +22,14 @@ n_blades = 2  # number of blades
 # give value in inches for some number of radial locations from root to tip
 # tip radial location is propeller radius
 radial_locations_in = np.array([0.75, 1, 1.5, 2, 2.5, 2.875, 3])
-radial_locations_m = np.array([0.01905, 0.0254, 0.0381, 0.0508, 0.0635, 0.073025, 0.0762])
+radial_locations_m = np.array(
+    [0.01905, 0.0254, 0.0381, 0.0508, 0.0635, 0.073025, 0.0762]
+)
 # # give value of blade chord in inches for each station
 blade_chord_in = np.array([0.66, 0.69, 0.63, 0.55, 0.44, 0.30, 0.19])
-blade_chord_m = np.array([0.016764, 0.017526, 0.016002, 0.01397, 0.011176, 0.00762, 0.004826])
+blade_chord_m = np.array(
+    [0.016764, 0.017526, 0.016002, 0.01397, 0.011176, 0.00762, 0.004826]
+)
 # # give value of blade beta in degrees for each station
 blade_beta_deg = np.array([27.5, 22, 15.2, 10.2, 6.5, 4.6, 4.2])
 # # variable pitch angle
@@ -70,6 +74,7 @@ Ideally:
 #     Cl = 2 * pi * alpha_rad
 #     return Cl
 
+
 # Interpolation function
 def interpolate(radial_locations, blade_chords, blade_betas, div):
     radial_locations_new = np.array([])
@@ -99,7 +104,7 @@ def interpolate(radial_locations, blade_chords, blade_betas, div):
 # QPROP CL function
 def airfoil_CL(alpha, Re, Ma):
     alpha_rad = alpha * pi / 180
-    beta = (1 - Ma ** 2) ** 0.5
+    beta = (1 - Ma**2) ** 0.5
     cl_0 = 0.5
     cl_alpha = 5.8
     cl_min = -0.3
@@ -122,6 +127,7 @@ def airfoil_CL(alpha, Re, Ma):
 #     return Cd
 
 ## QPROP CDp model
+
 
 def airfoil_CDp(alpha, Re, Ma, Cl):
     alpha_rad = alpha * pi / 180
@@ -146,8 +152,9 @@ def airfoil_CDp(alpha, Re, Ma, Cl):
     return cd
 
 
-radial_locations_m, blade_chord_m, blade_beta_deg = interpolate(radial_locations_m, blade_chord_m, blade_beta_deg,
-                                                                divisions)
+radial_locations_m, blade_chord_m, blade_beta_deg = interpolate(
+    radial_locations_m, blade_chord_m, blade_beta_deg, divisions
+)
 n_stations = len(radial_locations_m) - 1
 tip_radius = radial_locations_m[n_stations]  # use tip radial location as prop radius
 omega = rpm * 2 * pi / 60  # radians per second
@@ -175,7 +182,7 @@ thrust = []
 for station in range(n_stations):  # TODO undo this
     # for station in [22]:
     radial_loc = (radial_locations_m[station] + radial_locations_m[station + 1]) / 2
-    blade_section = (radial_locations_m[station + 1] - radial_locations_m[station])
+    blade_section = radial_locations_m[station + 1] - radial_locations_m[station]
     chord_local = (blade_chord_m[station] + blade_chord_m[station + 1]) / 2
     twist_local_rad = (blade_twist_rad[station] + blade_twist_rad[station + 1]) / 2
 
@@ -192,15 +199,15 @@ for station in range(n_stations):  # TODO undo this
     ### Define velocity triangle components
     U_a = airspeed  # + u_a # Axial velocity w/o induced eff. assuming u_a = 0
     U_t = omega * radial_loc  # Tangential velocity w/o induced eff.
-    U = (U_a ** 2 + U_t ** 2) ** 0.5  # Velocity magnitude
+    U = (U_a**2 + U_t**2) ** 0.5  # Velocity magnitude
     W_a = 0.5 * U_a + 0.5 * U * np.sin(Psi)  # Axial velocity w/ induced eff.
     W_t = 0.5 * U_t + 0.5 * U * np.cos(Psi)  # Tangential velocity w/ induced eff.
     v_a = W_a - U_a  # Axial induced velocity
     v_t = U_t - W_t  # Tangential induced velocity
-    W = (W_a ** 2 + W_t ** 2) ** 0.5
+    W = (W_a**2 + W_t**2) ** 0.5
     Re = air_density * W * chord_local / mu
     Ma = W / speed_of_sound
-    v = (v_a ** 2 + v_t ** 2) ** 0.5
+    v = (v_a**2 + v_t**2) ** 0.5
     loc_wake_adv_ratio = (radial_loc / tip_radius) * (W_a / W_t)
     f = (n_blades / 2) * (1 - radial_loc / tip_radius) * 1 / loc_wake_adv_ratio
     F = 2 / pi * np.arccos(np.exp(-f))
@@ -217,25 +224,34 @@ for station in range(n_stations):  # TODO undo this
     gamma = 0.5 * W * chord_local * cl
 
     ### Add governing equations
-    opti.subject_to([
-        # 0.5 * v == 0.5 * U * cas.sin(Psi / 4),
-        # v_a == v_t * W_t / W_a,
-        # U ** 2 == v ** 2 + W ** 2,
-        # gamma == -0.0145,
-        # gamma ==  (4 * pi * radial_loc / n_blades) * F * (
-        # 1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
-
-        gamma == v_t * (4 * pi * radial_loc / n_blades) * F * (
-                1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
-        # vt**2*F**2*(1.+(4.*lam_w*R/(pi*B*r))**2) >= (B*G/(4.*pi*r))**2,
-        # f + (radial_loc / tip_radius) * n_blades / (2 * loc_wake_adv_ratio) <= (n_blades / 2) * (1 / loc_wake_adv_ratio),
-        # blade_twist_deg * pi / 180 == alpha_rad + 1 / h_ati,
-        # h_ati ** 1.83442 == 0.966692 * (W_a / W_t) ** -1.84391 + 0.596688 * (W_a / W_t) ** -0.0973781,
-        # v_t ** 2 * F ** 2 * (1 + (4 * loc_wake_adv_ratio * tip_radius/(pi * n_blades * radial_loc)) ** 2) >= (n_blades * gamma /(4 * pi * radial_loc)) ** 2,
-        # alpha_deg >= -45
-        # v_a >= 0,
-        # v_t >= 0
-    ])
+    opti.subject_to(
+        [
+            # 0.5 * v == 0.5 * U * cas.sin(Psi / 4),
+            # v_a == v_t * W_t / W_a,
+            # U ** 2 == v ** 2 + W ** 2,
+            # gamma == -0.0145,
+            # gamma ==  (4 * pi * radial_loc / n_blades) * F * (
+            # 1 + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc)) ** 2) ** 0.5,
+            gamma
+            == v_t
+            * (4 * pi * radial_loc / n_blades)
+            * F
+            * (
+                1
+                + ((4 * loc_wake_adv_ratio * tip_radius) / (pi * n_blades * radial_loc))
+                ** 2
+            )
+            ** 0.5,
+            # vt**2*F**2*(1.+(4.*lam_w*R/(pi*B*r))**2) >= (B*G/(4.*pi*r))**2,
+            # f + (radial_loc / tip_radius) * n_blades / (2 * loc_wake_adv_ratio) <= (n_blades / 2) * (1 / loc_wake_adv_ratio),
+            # blade_twist_deg * pi / 180 == alpha_rad + 1 / h_ati,
+            # h_ati ** 1.83442 == 0.966692 * (W_a / W_t) ** -1.84391 + 0.596688 * (W_a / W_t) ** -0.0973781,
+            # v_t ** 2 * F ** 2 * (1 + (4 * loc_wake_adv_ratio * tip_radius/(pi * n_blades * radial_loc)) ** 2) >= (n_blades * gamma /(4 * pi * radial_loc)) ** 2,
+            # alpha_deg >= -45
+            # v_a >= 0,
+            # v_t >= 0
+        ]
+    )
 
     ### Solve
     sol = opti.solve()
@@ -250,14 +266,15 @@ for station in range(n_stations):  # TODO undo this
     #     cd * chord_local * blade_section
     # )
     dThrust = sol(
-        air_density * n_blades * gamma * (
-                W_t - W_a * cd / cl
-        ) * blade_section
+        air_density * n_blades * gamma * (W_t - W_a * cd / cl) * blade_section
     )
     dTorque = sol(
-        air_density * n_blades * gamma * (
-                W_a + W_t * cd / cl
-        ) * radial_loc * blade_section
+        air_density
+        * n_blades
+        * gamma
+        * (W_a + W_t * cd / cl)
+        * radial_loc
+        * blade_section
     )
     # if sol(alpha_deg) <= 0:
     #     break
@@ -284,14 +301,29 @@ Torque = sum(torque)
 
 # debugging section: outputs printed in qprop
 print(
-    "radius    chord      beta      Cl        Cd        Re     Mach    effi      effp     Wa      Aswirl    adv_wake     alpha    Wt")
+    "radius    chord      beta      Cl        Cd        Re     Mach    effi      effp     Wa      Aswirl    adv_wake     alpha    Wt"
+)
 for i in range(0, len(radius)):
     # print(f'{radius[i]} {chord[i]}  {beta[i]}   {Cl[i]}  {Cd[i]}  {Re[i]}  {Mach[i]}    {effi[i]}    {effp[i]}    {Wa[i]}  {a_swirl[i]}  {adv_wake[i]}')
-    print('%.4f    %.4f     %.3f    %.4f    %.5f   %d  %.3f   %.4f    %.4f   %.2f   %.3f   %.4f     %.4f    %.2f'
-          % (
-              radius[i], chord[i], beta[i], Cl[i], Cd[i], RE[i], Mach[i], effi[i], effp[i], Wa[i], a_swirl[i],
-              adv_wake[i],
-              alpha[i], Wt[i]))
+    print(
+        "%.4f    %.4f     %.3f    %.4f    %.5f   %d  %.3f   %.4f    %.4f   %.2f   %.3f   %.4f     %.4f    %.2f"
+        % (
+            radius[i],
+            chord[i],
+            beta[i],
+            Cl[i],
+            Cd[i],
+            RE[i],
+            Mach[i],
+            effi[i],
+            effp[i],
+            Wa[i],
+            a_swirl[i],
+            adv_wake[i],
+            alpha[i],
+            Wt[i],
+        )
+    )
 print(f"Thrust Total: {Thrust}")
 print(f"Torque Total: {Torque}")
 # return Torque, Thrust

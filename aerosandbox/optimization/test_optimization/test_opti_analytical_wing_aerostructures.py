@@ -51,32 +51,40 @@ def test_gpkit_style_solve():
     V = opti.variable(init_guess=1e2, log_transform=True)  # cruising speed [m/s]
     W = opti.variable(init_guess=8e3, log_transform=True)  # total aircraft weight [N]
     Re = opti.variable(init_guess=5e6, log_transform=True)  # Reynolds number [-]
-    C_D = opti.variable(init_guess=3e-2, log_transform=True)  # Drag coefficient of wing [-]
-    C_L = opti.variable(init_guess=1, log_transform=True)  # Lift coefficient of wing [-]
-    C_f = opti.variable(init_guess=1e-2, log_transform=True)  # Skin friction coefficient [-]
+    C_D = opti.variable(
+        init_guess=3e-2, log_transform=True
+    )  # Drag coefficient of wing [-]
+    C_L = opti.variable(
+        init_guess=1, log_transform=True
+    )  # Lift coefficient of wing [-]
+    C_f = opti.variable(
+        init_guess=1e-2, log_transform=True
+    )  # Skin friction coefficient [-]
     W_w = opti.variable(init_guess=3e3, log_transform=True)  # Wing weight [N]
 
     ### Constraints
     # Drag model
     C_D_fuse = CDA0 / S
     C_D_wpar = k * C_f * S_wetratio
-    C_D_ind = C_L ** 2 / (pi * A * e)
+    C_D_ind = C_L**2 / (pi * A * e)
     opti.subject_to(np.log(C_D) >= np.log(C_D_fuse + C_D_wpar + C_D_ind))
 
     # Wing weight model
-    W_w_strc = W_W_coeff1 * (N_ult * A ** 1.5 * (W_0 * W * S) ** 0.5) / tau
+    W_w_strc = W_W_coeff1 * (N_ult * A**1.5 * (W_0 * W * S) ** 0.5) / tau
     W_w_surf = W_W_coeff2 * S
     opti.subject_to(np.log(W_w) >= np.log(W_w_surf + W_w_strc))
 
     # Other models
-    opti.subject_to([
-        np.log(D) >= np.log(0.5 * rho * S * C_D * V ** 2),
-        np.log(Re) <= np.log((rho / mu) * V * (S / A) ** 0.5),
-        np.log(C_f) >= np.log(0.074 / Re ** 0.2),
-        np.log(W) <= np.log(0.5 * rho * S * C_L * V ** 2),
-        np.log(W) <= np.log(0.5 * rho * S * C_Lmax * V_min ** 2),
-        np.log(W) >= np.log(W_0 + W_w),
-    ])
+    opti.subject_to(
+        [
+            np.log(D) >= np.log(0.5 * rho * S * C_D * V**2),
+            np.log(Re) <= np.log((rho / mu) * V * (S / A) ** 0.5),
+            np.log(C_f) >= np.log(0.074 / Re**0.2),
+            np.log(W) <= np.log(0.5 * rho * S * C_L * V**2),
+            np.log(W) <= np.log(0.5 * rho * S * C_Lmax * V_min**2),
+            np.log(W) >= np.log(W_0 + W_w),
+        ]
+    )
 
     # Objective
     opti.minimize(np.log(D))
@@ -100,32 +108,30 @@ def test_geometric_program_solve():
     S = opti.variable(init_guess=100, log_transform=True)  # total wing area [m^2]
     V = opti.variable(init_guess=100, log_transform=True)  # cruising speed [m/s]
     W = opti.variable(init_guess=8e3, log_transform=True)  # total aircraft weight [N]
-    C_L = opti.variable(init_guess=1, log_transform=True)  # Lift coefficient of wing [-]
+    C_L = opti.variable(
+        init_guess=1, log_transform=True
+    )  # Lift coefficient of wing [-]
 
     ### Constraints
     # Aerodynamics model
     C_D_fuse = CDA0 / S
     Re = (rho / mu) * V * (S / A) ** 0.5
-    C_f = 0.074 / Re ** 0.2
+    C_f = 0.074 / Re**0.2
     C_D_wpar = k * C_f * S_wetratio
-    C_D_ind = C_L ** 2 / (pi * A * e)
+    C_D_ind = C_L**2 / (pi * A * e)
     C_D = C_D_fuse + C_D_wpar + C_D_ind
-    q = 0.5 * rho * V ** 2
+    q = 0.5 * rho * V**2
     D = q * S * C_D
     L_cruise = q * S * C_L
-    L_takeoff = 0.5 * rho * S * C_Lmax * V_min ** 2
+    L_takeoff = 0.5 * rho * S * C_Lmax * V_min**2
 
     # Wing weight model
-    W_w_strc = W_W_coeff1 * (N_ult * A ** 1.5 * (W_0 * W * S) ** 0.5) / tau
+    W_w_strc = W_W_coeff1 * (N_ult * A**1.5 * (W_0 * W * S) ** 0.5) / tau
     W_w_surf = W_W_coeff2 * S
     W_w = W_w_surf + W_w_strc
 
     # Other constraints
-    opti.subject_to([
-        W <= L_cruise,
-        W <= L_takeoff,
-        W >= W_0 + W_w
-    ])
+    opti.subject_to([W <= L_cruise, W <= L_takeoff, W >= W_0 + W_w])
 
     # Objective
     opti.minimize(D)
@@ -160,26 +166,22 @@ def test_non_log_transformed_solve():
     # Aerodynamics model
     C_D_fuse = CDA0 / S
     Re = (rho / mu) * V * (S / A) ** 0.5
-    C_f = 0.074 / Re ** 0.2
+    C_f = 0.074 / Re**0.2
     C_D_wpar = k * C_f * S_wetratio
-    C_D_ind = C_L ** 2 / (pi * A * e)
+    C_D_ind = C_L**2 / (pi * A * e)
     C_D = C_D_fuse + C_D_wpar + C_D_ind
-    q = 0.5 * rho * V ** 2
+    q = 0.5 * rho * V**2
     D = q * S * C_D
     L_cruise = q * S * C_L
-    L_takeoff = 0.5 * rho * S * C_Lmax * V_min ** 2
+    L_takeoff = 0.5 * rho * S * C_Lmax * V_min**2
 
     # Wing weight model
-    W_w_strc = W_W_coeff1 * (N_ult * A ** 1.5 * (W_0 * W * S) ** 0.5) / tau
+    W_w_strc = W_W_coeff1 * (N_ult * A**1.5 * (W_0 * W * S) ** 0.5) / tau
     W_w_surf = W_W_coeff2 * S
     W_w = W_w_surf + W_w_strc
 
     # Other constraints
-    opti.subject_to([
-        W <= L_cruise,
-        W <= L_takeoff,
-        W == W_0 + W_w
-    ])
+    opti.subject_to([W <= L_cruise, W <= L_takeoff, W == W_0 + W_w])
 
     # Objective
     opti.minimize(D)
@@ -189,5 +191,5 @@ def test_non_log_transformed_solve():
     assert sol(D) == pytest.approx(303.1, abs=0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

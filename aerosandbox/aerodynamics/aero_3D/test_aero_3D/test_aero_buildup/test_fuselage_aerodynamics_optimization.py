@@ -13,21 +13,15 @@ def test_fuselage_aerodynamics_optimization():
         xsecs=[
             asb.FuselageXSec(
                 xyz_c=[xi, 0, 0],
-                radius=asb.Airfoil("naca0010").local_thickness(0.8 * xi)
+                radius=asb.Airfoil("naca0010").local_thickness(0.8 * xi),
             )
             for xi in np.cosspace(0, 1, 20)
         ],
     )
 
     aero = asb.AeroBuildup(
-        airplane=asb.Airplane(
-            fuselages=[fuselage]
-        ),
-        op_point=asb.OperatingPoint(
-            velocity=10,
-            alpha=alpha,
-            beta=beta
-        )
+        airplane=asb.Airplane(fuselages=[fuselage]),
+        op_point=asb.OperatingPoint(velocity=10, alpha=alpha, beta=beta),
     ).run()
 
     opti.minimize(-aero["L"] / aero["D"])
@@ -42,6 +36,6 @@ def test_fuselage_aerodynamics_optimization():
     assert sol(beta) == pytest.approx(0, abs=1e-2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_fuselage_aerodynamics_optimization()
     pytest.main()

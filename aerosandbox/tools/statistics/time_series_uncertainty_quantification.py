@@ -4,14 +4,16 @@ from typing import Union, Iterable, List, Tuple
 from tqdm import tqdm
 
 import aerosandbox.numpy as np
-from aerosandbox.tools.pretty_plots.utilities.natural_univariate_spline import NaturalUnivariateSpline as Spline
+from aerosandbox.tools.pretty_plots.utilities.natural_univariate_spline import (
+    NaturalUnivariateSpline as Spline,
+)
 from scipy import signal
 from aerosandbox.tools.code_benchmarking import Timer
 
 
 def estimate_noise_standard_deviation(
-        data: np.ndarray,
-        estimator_order: int = None,
+    data: np.ndarray,
+    estimator_order: int = None,
 ) -> float:
     """
     Estimates the standard deviation of the random noise in a time-series dataset.
@@ -49,42 +51,43 @@ def estimate_noise_standard_deviation(
 
     ##### Noise Variance Reconstruction #####
     from scipy.special import gammaln
+
     ln_factorial = lambda x: gammaln(x + 1)
 
     ### For speed, pre-compute the log-factorial of integers from 1 to estimator_order
     # ln_f = ln_factorial(np.arange(estimator_order + 1))
-    ln_f = np.cumsum(
-        np.log(
-            np.concatenate([
-                [1],
-                np.arange(1, estimator_order + 1)
-            ])
-        )
-    )
+    ln_f = np.cumsum(np.log(np.concatenate([[1], np.arange(1, estimator_order + 1)])))
 
     ### Create a convolutional kernel to vectorize the summation
     log_coeffs = (
-            2 * ln_f[estimator_order] - ln_f - ln_f[::-1] - 0.5 * ln_factorial(2 * estimator_order)
+        2 * ln_f[estimator_order]
+        - ln_f
+        - ln_f[::-1]
+        - 0.5 * ln_factorial(2 * estimator_order)
     )
-    indices = np.nonzero(log_coeffs >= np.log(1e-20) + log_coeffs[estimator_order // 2])[0]
-    coefficients = np.exp(log_coeffs[indices[0]:indices[-1] + 1])
+    indices = np.nonzero(
+        log_coeffs >= np.log(1e-20) + log_coeffs[estimator_order // 2]
+    )[0]
+    coefficients = np.exp(log_coeffs[indices[0] : indices[-1] + 1])
     coefficients[::2] *= -1  # Flip the sign on every other coefficient
-    coefficients -= np.mean(coefficients)  # Remove any bias introduced by floating-point error
+    coefficients -= np.mean(
+        coefficients
+    )  # Remove any bias introduced by floating-point error
 
     # sample_stdev = signal.convolve(data, coefficients[::-1], 'valid')
-    sample_stdev = signal.oaconvolve(data, coefficients[::-1], 'valid')
-    return np.mean(sample_stdev ** 2) ** 0.5
+    sample_stdev = signal.oaconvolve(data, coefficients[::-1], "valid")
+    return np.mean(sample_stdev**2) ** 0.5
 
 
 def bootstrap_fits(
-        x: np.ndarray,
-        y: np.ndarray,
-        x_noise_stdev: Union[None, float] = 0.,
-        y_noise_stdev: Union[None, float] = None,
-        n_bootstraps: int = 2000,
-        fit_points: Union[int, Iterable[float], None] = 300,
-        spline_degree: int = 3,
-        normalize: bool = None,
+    x: np.ndarray,
+    y: np.ndarray,
+    x_noise_stdev: Union[None, float] = 0.0,
+    y_noise_stdev: Union[None, float] = None,
+    n_bootstraps: int = 2000,
+    fit_points: Union[int, Iterable[float], None] = 300,
+    spline_degree: int = 3,
+    normalize: bool = None,
 ) -> Union[Tuple[np.ndarray, np.ndarray], List[Spline]]:
     """
     Bootstraps a time-series dataset and fits splines to each bootstrap resample.
@@ -181,7 +184,9 @@ def bootstrap_fits(
         x_stdev_normalized = x_noise_stdev
         y_stdev_normalized = y_noise_stdev
 
-    with tqdm(total=n_bootstraps, desc="Bootstrapping", unit=" samples") as progress_bar:
+    with tqdm(
+        total=n_bootstraps, desc="Bootstrapping", unit=" samples"
+    ) as progress_bar:
         splines = []
         n_valid_splines = 0
         n_attempted_splines = 0
@@ -227,28 +232,25 @@ def bootstrap_fits(
             if normalize:
                 raise ValueError("If `fit_points` is None, `normalize` must be False.")
         elif isinstance(fit_points, int):
-            x_fit = np.linspace(
-                np.min(x),
-                np.max(x),
-                fit_points
-            )
+            x_fit = np.linspace(np.min(x), np.max(x), fit_points)
         else:
             x_fit = np.array(fit_points)
 
         ### Evaluate the splines at the x-points
-        y_bootstrap_fits = np.array([
-            y_unnormalize(spline(x_normalize(x_fit)))
-            for spline in splines
-        ])
+        y_bootstrap_fits = np.array(
+            [y_unnormalize(spline(x_normalize(x_fit))) for spline in splines]
+        )
 
         ### Throw an error if all of the splines are NaN
         if np.all(np.isnan(y_bootstrap_fits)):
-            raise ValueError("All of the splines are NaN. This is likely due to a poor choice of `spline_degree`.")
+            raise ValueError(
+                "All of the splines are NaN. This is likely due to a poor choice of `spline_degree`."
+            )
 
         return x_fit, y_bootstrap_fits
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     np.random.seed(1)
     N = 1000
     f_sample_over_f_signal = 1000

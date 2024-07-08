@@ -21,7 +21,9 @@ def sum(x, axis: int = None):
         elif axis is None:
             return sum(sum(x, axis=0), axis=0)
         else:
-            raise ValueError("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
+            raise ValueError(
+                "CasADi types can only be up to 2D, so `axis` must be None, 0, or 1."
+            )
 
 
 def mean(x, axis: int = None):
@@ -41,7 +43,9 @@ def mean(x, axis: int = None):
         elif axis is None:
             return mean(mean(x, axis=0), axis=1)
         else:
-            raise ValueError("CasADi types can only be up to 2D, so `axis` must be None, 0, or 1.")
+            raise ValueError(
+                "CasADi types can only be up to 2D, so `axis` must be None, 0, or 1."
+            )
 
 
 def abs(x):
@@ -68,6 +72,7 @@ def abs(x):
 #         raise NotImplementedError
 #         if axis is None:
 #             return _cas.cumsum(_onp.flatten(x))
+
 
 def prod(x, axis: int = None):
     """

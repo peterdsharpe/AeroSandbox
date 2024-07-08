@@ -6,21 +6,25 @@ import numpy as np
 from matplotlib.container import ErrorbarContainer
 from matplotlib.dates import DateConverter, num2date
 
-from aerosandbox.tools.pretty_plots.labellines.utils import ensure_float, maximum_bipartite_matching, always_iterable
+from aerosandbox.tools.pretty_plots.labellines.utils import (
+    ensure_float,
+    maximum_bipartite_matching,
+    always_iterable,
+)
 
 
 # Label line with line2D label data
 def labelLine(
-        line,
-        x,
-        label=None,
-        align=True,
-        drop_label=False,
-        yoffset=0,
-        yoffset_logspace=False,
-        outline_color="auto",
-        outline_width=8,
-        **kwargs,
+    line,
+    x,
+    label=None,
+    align=True,
+    drop_label=False,
+    yoffset=0,
+    yoffset_logspace=False,
+    outline_color="auto",
+    outline_width=8,
+    **kwargs,
 ):
     """Label a single matplotlib line at position x
 
@@ -83,7 +87,7 @@ def labelLine(
 
     if yoffset_logspace:
         y = ya + (yb - ya) * fraction
-        y *= 10 ** yoffset
+        y *= 10**yoffset
     else:
         y = ya + (yb - ya) * fraction + yoffset
 
@@ -107,10 +111,9 @@ def labelLine(
     if align:
         if ax.get_aspect() == "auto":
             # Compute the slope and label rotation
-            screen_dx, screen_dy = (
-                    ax.transData.transform((xfb, yb)) -
-                    ax.transData.transform((xfa, ya))
-            )
+            screen_dx, screen_dy = ax.transData.transform(
+                (xfb, yb)
+            ) - ax.transData.transform((xfa, ya))
         elif isinstance(ax.get_aspect(), (float, int)):
             screen_dx = xfb - xfa
             screen_dy = (yb - ya) * ax.get_aspect()
@@ -152,15 +155,15 @@ def labelLine(
 
 
 def labelLines(
-        lines,
-        align=True,
-        xvals=None,
-        drop_label=False,
-        shrink_factor=0.05,
-        yoffsets=0,
-        outline_color="auto",
-        outline_width=5,
-        **kwargs,
+    lines,
+    align=True,
+    xvals=None,
+    drop_label=False,
+    shrink_factor=0.05,
+    yoffsets=0,
+    outline_color="auto",
+    outline_width=5,
+    **kwargs,
 ):
     """Label all lines with their respective legends.
 
@@ -214,8 +217,8 @@ def labelLines(
         xscale = ax.get_xscale()
         if xscale == "log":
             xvals = np.logspace(np.log10(xmin), np.log10(xmax), len(all_lines) + 2)[
-                    1:-1
-                    ]
+                1:-1
+            ]
         else:
             xvals = np.linspace(xmin, xmax, len(all_lines) + 2)[1:-1]
 
@@ -292,13 +295,13 @@ def labelLines(
     return txts
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots()
     x_plt = np.linspace(0, 2, 1000)
     y_plt = 0.1 * np.sin(2 * np.pi * x_plt)
-    line, = plt.plot(x_plt, y_plt, label="hi")
+    (line,) = plt.plot(x_plt, y_plt, label="hi")
 
     # plt.axis("equal")
     # print(ax.get_aspect())

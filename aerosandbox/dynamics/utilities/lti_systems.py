@@ -2,9 +2,9 @@ import aerosandbox.numpy as np
 
 
 def peak_of_harmonic_oscillation(
-        amplitude: float = 1,
-        frequency_hz: float = 1,
-        derivative_order: int = 0,
+    amplitude: float = 1,
+    frequency_hz: float = 1,
+    derivative_order: int = 0,
 ):
     """
     Computes the peak value of the nth derivative of a simple harmonic oscillation (e.g., sine wave).

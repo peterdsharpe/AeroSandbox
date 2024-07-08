@@ -1,28 +1,32 @@
 import aerosandbox.numpy as np
 from aerosandbox.geometry.airfoil.airfoil import Airfoil
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
-from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch, cosine_hermite_patch
+from aerosandbox.modeling.splines.hermite import (
+    linear_hermite_patch,
+    cubic_hermite_patch,
+    cosine_hermite_patch,
+)
 from typing import Union, Dict, List
 import warnings
 
 
 class KulfanAirfoil(Airfoil):
-    def __init__(self,
-                 name: str = "Untitled",
-                 lower_weights: np.ndarray = None,
-                 upper_weights: np.ndarray = None,
-                 leading_edge_weight: float = 0.,
-                 TE_thickness: float = 0.,
-                 N1: float = 0.5,
-                 N2: float = 1.0,
-                 ):
+    def __init__(
+        self,
+        name: str = "Untitled",
+        lower_weights: np.ndarray = None,
+        upper_weights: np.ndarray = None,
+        leading_edge_weight: float = 0.0,
+        TE_thickness: float = 0.0,
+        N1: float = 0.5,
+        N2: float = 1.0,
+    ):
         ### Handle the airfoil name
         self.name = name
 
         ### Check to see if the airfoil is a "known" airfoil, based on its name.
         if (
-                lower_weights is None and
-                upper_weights is None
+            lower_weights is None and upper_weights is None
         ):  # Try to fall back on parameters from the coordinate airfoil, if it's something from the UIUC database
 
             class IgnoreUserWarnings:  # A context manager to ignore UserWarnings
@@ -36,9 +40,11 @@ class KulfanAirfoil(Airfoil):
                 coordinate_airfoil = Airfoil(name)
 
             if coordinate_airfoil.coordinates is None:
-                raise ValueError("You must either:\n"
-                                 "\t* Specify both `lower_weights` and `upper_weights`, at minimum"
-                                 "\t* Give an airfoil `name` corresponding to an airfoil in the UIUC database, or a NACA airfoil.")
+                raise ValueError(
+                    "You must either:\n"
+                    "\t* Specify both `lower_weights` and `upper_weights`, at minimum"
+                    "\t* Give an airfoil `name` corresponding to an airfoil in the UIUC database, or a NACA airfoil."
+                )
 
             else:
                 parameters = get_kulfan_parameters(
@@ -69,10 +75,10 @@ class KulfanAirfoil(Airfoil):
     @property
     def kulfan_parameters(self):
         return {
-            "lower_weights"      : self.lower_weights,
-            "upper_weights"      : self.upper_weights,
+            "lower_weights": self.lower_weights,
+            "upper_weights": self.upper_weights,
             "leading_edge_weight": self.leading_edge_weight,
-            "TE_thickness"       : self.TE_thickness,
+            "TE_thickness": self.TE_thickness,
         }
 
     @property
@@ -81,15 +87,18 @@ class KulfanAirfoil(Airfoil):
 
     @coordinates.setter
     def coordinates(self, value):
-        raise TypeError("The coordinates of a `KulfanAirfoil` can't be modified directly, "
-                        "as they're a function of the Kulfan parameters.\n"
-                        "Instead, you can either modify the Kulfan parameters directly, or use the "
-                        "more general (coordinate-parameterized) `asb.Airfoil` class.")
+        raise TypeError(
+            "The coordinates of a `KulfanAirfoil` can't be modified directly, "
+            "as they're a function of the Kulfan parameters.\n"
+            "Instead, you can either modify the Kulfan parameters directly, or use the "
+            "more general (coordinate-parameterized) `asb.Airfoil` class."
+        )
 
-    def to_airfoil(self,
-                   n_coordinates_per_side=200,
-                   spacing_function_per_side=np.cosspace,
-                   ) -> Airfoil:
+    def to_airfoil(
+        self,
+        n_coordinates_per_side=200,
+        spacing_function_per_side=np.cosspace,
+    ) -> Airfoil:
         x_upper = spacing_function_per_side(1, 0, n_coordinates_per_side)[:-1]
         upper = self.upper_coordinates(x_over_c=x_upper)
 
@@ -97,26 +106,23 @@ class KulfanAirfoil(Airfoil):
         lower = self.lower_coordinates(x_over_c=x_lower)
 
         return Airfoil(
-            name=self.name,
-            coordinates=np.concatenate([
-                upper,
-                lower
-            ], axis=0)
+            name=self.name, coordinates=np.concatenate([upper, lower], axis=0)
         )
 
-    def repanel(self,
-                n_points_per_side: int = 100,
-                spacing_function_per_side=np.cosspace,
-                ) -> 'Airfoil':
+    def repanel(
+        self,
+        n_points_per_side: int = 100,
+        spacing_function_per_side=np.cosspace,
+    ) -> "Airfoil":
         return self.to_airfoil(
             n_coordinates_per_side=n_points_per_side,
-            spacing_function_per_side=spacing_function_per_side
+            spacing_function_per_side=spacing_function_per_side,
         )
 
     def normalize(
-            self,
-            return_dict: bool = False,
-    ) -> Union['KulfanAirfoil', Dict[str, Union['KulfanAirfoil', float]]]:
+        self,
+        return_dict: bool = False,
+    ) -> Union["KulfanAirfoil", Dict[str, Union["KulfanAirfoil", float]]]:
         """
         Returns a copy of the Airfoil with a new set of `coordinates`, such that:
             - The leading edge (LE) is at (0, 0)
@@ -170,47 +176,38 @@ class KulfanAirfoil(Airfoil):
             return self
         else:
             return {
-                "airfoil"       : self,
-                "x_translation" : 0,
-                "y_translation" : 0,
-                "scale_factor"  : 1,
-                "rotation_angle": 0
+                "airfoil": self,
+                "x_translation": 0,
+                "y_translation": 0,
+                "scale_factor": 1,
+                "rotation_angle": 0,
             }
 
-    def draw(self,
-             *args,
-             draw_markers=False,
-             **kwargs
-             ):
-        return self.to_airfoil().draw(
-            *args,
-            draw_markers=draw_markers,
-            **kwargs
-        )
+    def draw(self, *args, draw_markers=False, **kwargs):
+        return self.to_airfoil().draw(*args, draw_markers=draw_markers, **kwargs)
 
-    def get_aero_from_neuralfoil(self,
-                                 alpha: Union[float, np.ndarray],
-                                 Re: Union[float, np.ndarray],
-                                 mach: Union[float, np.ndarray] = 0.,
-                                 n_crit: Union[float, np.ndarray] = 9.0,
-                                 xtr_upper: Union[float, np.ndarray] = 1.0,
-                                 xtr_lower: Union[float, np.ndarray] = 1.0,
-                                 model_size: str = "large",
-                                 control_surfaces: List["ControlSurface"] = None,
-                                 include_360_deg_effects: bool = True,
-                                 ) -> Dict[str, Union[float, np.ndarray]]:
+    def get_aero_from_neuralfoil(
+        self,
+        alpha: Union[float, np.ndarray],
+        Re: Union[float, np.ndarray],
+        mach: Union[float, np.ndarray] = 0.0,
+        n_crit: Union[float, np.ndarray] = 9.0,
+        xtr_upper: Union[float, np.ndarray] = 1.0,
+        xtr_lower: Union[float, np.ndarray] = 1.0,
+        model_size: str = "large",
+        control_surfaces: List["ControlSurface"] = None,
+        include_360_deg_effects: bool = True,
+    ) -> Dict[str, Union[float, np.ndarray]]:
         ### Validate inputs
-        if (
-                (np.length(self.lower_weights) != 8) or
-                (np.length(self.upper_weights) != 8)
-        ):
-            raise NotImplementedError("NeuralFoil is only trained to handle exactly 8 CST coefficients per side.")
+        if (np.length(self.lower_weights) != 8) or (np.length(self.upper_weights) != 8):
+            raise NotImplementedError(
+                "NeuralFoil is only trained to handle exactly 8 CST coefficients per side."
+            )
 
-        if (
-                self.N1 != 0.5 or
-                self.N2 != 1.0
-        ):
-            raise NotImplementedError("NeuralFoil is only trained to handle airfoils with N1 = 0.5 and N2 = 1.0.")
+        if self.N1 != 0.5 or self.N2 != 1.0:
+            raise NotImplementedError(
+                "NeuralFoil is only trained to handle airfoils with N1 = 0.5 and N2 = 1.0."
+            )
 
         ### Set up inputs
         if control_surfaces is None:
@@ -219,24 +216,29 @@ class KulfanAirfoil(Airfoil):
         alpha = np.mod(alpha + 180, 360) - 180  # Enforce periodicity of alpha
 
         ##### Evaluate the control surfaces of the airfoil
-        effective_d_alpha = 0.
-        effective_CD_multiplier_from_control_surfaces = 1.
+        effective_d_alpha = 0.0
+        effective_CD_multiplier_from_control_surfaces = 1.0
 
         for surf in control_surfaces:
 
-            effectiveness = 1 - np.maximum(0, surf.hinge_point + 1e-16) ** 2.751428551177291
+            effectiveness = (
+                1 - np.maximum(0, surf.hinge_point + 1e-16) ** 2.751428551177291
+            )
             # From XFoil-based study at `/AeroSandbox/studies/ControlSurfaceEffectiveness/`
 
             effective_d_alpha += surf.deflection * effectiveness
 
             effective_CD_multiplier_from_control_surfaces *= (
-                    2 + (surf.deflection / 11.5) ** 2 - (1 + (surf.deflection / 11.5) ** 2) ** 0.5
+                2
+                + (surf.deflection / 11.5) ** 2
+                - (1 + (surf.deflection / 11.5) ** 2) ** 0.5
             )
             # From fit to wind tunnel data from Hoerner, "Fluid Dynamic Drag", 1965. Page 13-13, Figure 32,
             # "Variation of section drag coefficient of a horizontal tail surface at constant C_L"
 
         ##### Use NeuralFoil to evaluate the incompressible aerodynamics of the airfoil
         import neuralfoil as nf
+
         nf_aero = nf.get_aero_from_kulfan_parameters(
             kulfan_parameters=dict(
                 lower_weights=self.lower_weights,
@@ -249,7 +251,7 @@ class KulfanAirfoil(Airfoil):
             n_crit=n_crit,
             xtr_upper=xtr_upper,
             xtr_lower=xtr_lower,
-            model_size=model_size
+            model_size=model_size,
         )
 
         CL = nf_aero["CL"]
@@ -265,18 +267,19 @@ class KulfanAirfoil(Airfoil):
                 1 - nf_aero[f"lower_bl_ue/vinf_{i}"] ** 2
                 for i in range(len(nf.bl_x_points))
             ],
-            softness=0.01
+            softness=0.01,
         )
         Top_Xtr = nf_aero["Top_Xtr"]
         Bot_Xtr = nf_aero["Bot_Xtr"]
 
         ##### Extend aerodynamic data to 360 degrees (post-stall) using wind tunnel behavior here.
         if include_360_deg_effects:
-            from aerosandbox.aerodynamics.aero_2D.airfoil_polar_functions import airfoil_coefficients_post_stall
+            from aerosandbox.aerodynamics.aero_2D.airfoil_polar_functions import (
+                airfoil_coefficients_post_stall,
+            )
 
-            CL_if_separated, CD_if_separated, CM_if_separated = airfoil_coefficients_post_stall(
-                airfoil=self,
-                alpha=alpha
+            CL_if_separated, CD_if_separated, CM_if_separated = (
+                airfoil_coefficients_post_stall(airfoil=self, alpha=alpha)
             )
             import aerosandbox.library.aerodynamics as lib_aero
 
@@ -286,26 +289,23 @@ class KulfanAirfoil(Airfoil):
 
             # This will be an input to a tanh() sigmoid blend via asb.numpy.blend(), so a value of 1 means the flow is
             # ~90% separated, and a value of -1 means the flow is ~90% attached.
-            is_separated = np.softmax(
-                alpha - alpha_stall_positive,
-                alpha_stall_negative - alpha
-            ) / 3
+            is_separated = (
+                np.softmax(alpha - alpha_stall_positive, alpha_stall_negative - alpha)
+                / 3
+            )
 
-            CL = np.blend(
-                is_separated,
-                CL_if_separated,
-                CL
+            CL = np.blend(is_separated, CL_if_separated, CL)
+            CD = np.exp(
+                np.blend(
+                    is_separated,
+                    np.log(
+                        CD_if_separated
+                        + lib_aero.Cf_flat_plate(Re_L=Re, method="turbulent")
+                    ),
+                    np.log(CD),
+                )
             )
-            CD = np.exp(np.blend(
-                is_separated,
-                np.log(CD_if_separated + lib_aero.Cf_flat_plate(Re_L=Re, method="turbulent")),
-                np.log(CD)
-            ))
-            CM = np.blend(
-                is_separated,
-                CM_if_separated,
-                CM
-            )
+            CM = np.blend(is_separated, CM_if_separated, CM)
             """
 
             Separated Cpmin_0 model is a very rough fit to Figure 3 of:
@@ -315,21 +315,13 @@ class KulfanAirfoil(Airfoil):
             https://www.researchgate.net/publication/342316140_Effects_of_aspect_ratio_and_inclination_angle_on_aerodynamic_loads_of_a_flat_plate
 
             """
-            Cpmin_0 = np.blend(
-                is_separated,
-                -1 - 0.5 * np.sind(alpha) ** 2,
-                Cpmin_0
-            )
+            Cpmin_0 = np.blend(is_separated, -1 - 0.5 * np.sind(alpha) ** 2, Cpmin_0)
 
             Top_Xtr = np.blend(
-                is_separated,
-                0.5 - 0.5 * np.tanh(10 * np.sind(alpha)),
-                Top_Xtr
+                is_separated, 0.5 - 0.5 * np.tanh(10 * np.sind(alpha)), Top_Xtr
             )
             Bot_Xtr = np.blend(
-                is_separated,
-                0.5 + 0.5 * np.tanh(10 * np.sind(alpha)),
-                Bot_Xtr
+                is_separated, 0.5 + 0.5 * np.tanh(10 * np.sind(alpha)), Bot_Xtr
             )
 
         ###### Add compressibility effects
@@ -347,29 +339,28 @@ class KulfanAirfoil(Airfoil):
 
         See fits at: /AeroSandbox/studies/MachFitting/CriticalMach/
         """
-        Cpmin_0 = np.softmin(
-            Cpmin_0,
-            0,
-            softness=0.001
-        )
+        Cpmin_0 = np.softmin(Cpmin_0, 0, softness=0.001)
 
         mach_crit = (
-                            1.011571026701678
-                            - Cpmin_0
-                            + 0.6582431351007195 * (-Cpmin_0) ** 0.6724789439840343
-                    ) ** -0.5504677038358711
+            1.011571026701678
+            - Cpmin_0
+            + 0.6582431351007195 * (-Cpmin_0) ** 0.6724789439840343
+        ) ** -0.5504677038358711
 
         mach_dd = mach_crit + (0.1 / 320) ** (1 / 3)  # drag divergence Mach number
         # Relation taken from W.H. Mason's Korn Equation
 
         ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
         gamma = 1.4  # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
-        beta_squared_ideal = 1 - mach ** 2
-        beta = np.softmax(
-            beta_squared_ideal,
-            -beta_squared_ideal,
-            softness=0.5  # Empirically tuned to data
-        ) ** 0.5
+        beta_squared_ideal = 1 - mach**2
+        beta = (
+            np.softmax(
+                beta_squared_ideal,
+                -beta_squared_ideal,
+                softness=0.5,  # Empirically tuned to data
+            )
+            ** 0.5
+        )
 
         CL = CL / beta
         # CD = CD / beta
@@ -394,11 +385,7 @@ class KulfanAirfoil(Airfoil):
         # Accounts approximately for the lift drop due to buffet.
         buffet_factor = np.blend(
             50 * (mach - (mach_dd + 0.04)),  # Tuned to RANS CFD data empirically
-            np.blend(
-                (mach - 1) / 0.1,
-                1,
-                0.5
-            ),
+            np.blend((mach - 1) / 0.1, 1, 0.5),
             1,
         )
 
@@ -435,9 +422,9 @@ class KulfanAirfoil(Airfoil):
                         8 * 2 * (mach - 1.1) / (1.2 - 0.8),
                         0.8 * 0.8 * t_over_c,
                         1.2 * 0.8 * t_over_c,
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         )
 
         CD = CD + CD_wave
@@ -447,9 +434,7 @@ class KulfanAirfoil(Airfoil):
 
         if include_360_deg_effects:
             has_aerodynamic_center_shift = np.softmax(
-                is_separated,
-                has_aerodynamic_center_shift,
-                softness=0.1
+                is_separated, has_aerodynamic_center_shift, softness=0.1
             )
 
         CM = CM + np.blend(
@@ -462,26 +447,33 @@ class KulfanAirfoil(Airfoil):
 
         return {
             "analysis_confidence": nf_aero["analysis_confidence"],
-            "CL"       : CL,
-            "CD"       : CD,
-            "CM"       : CM,
-            "Cpmin"    : Cpmin,
-            "Top_Xtr"  : Top_Xtr,
-            "Bot_Xtr"  : Bot_Xtr,
+            "CL": CL,
+            "CD": CD,
+            "CM": CM,
+            "Cpmin": Cpmin,
+            "Top_Xtr": Top_Xtr,
+            "Bot_Xtr": Bot_Xtr,
             "mach_crit": mach_crit,
-            "mach_dd"  : mach_dd,
-            "Cpmin_0"  : Cpmin_0,
+            "mach_dd": mach_dd,
+            "Cpmin_0": Cpmin_0,
             **{f"upper_bl_theta_{i}": nf_aero[f"upper_bl_theta_{i}"] for i in range(N)},
             **{f"upper_bl_H_{i}": nf_aero[f"upper_bl_H_{i}"] for i in range(N)},
-            **{f"upper_bl_ue/vinf_{i}": nf_aero[f"upper_bl_ue/vinf_{i}"] for i in range(N)},
+            **{
+                f"upper_bl_ue/vinf_{i}": nf_aero[f"upper_bl_ue/vinf_{i}"]
+                for i in range(N)
+            },
             **{f"lower_bl_theta_{i}": nf_aero[f"lower_bl_theta_{i}"] for i in range(N)},
             **{f"lower_bl_H_{i}": nf_aero[f"lower_bl_H_{i}"] for i in range(N)},
-            **{f"lower_bl_ue/vinf_{i}": nf_aero[f"lower_bl_ue/vinf_{i}"] for i in range(N)},
+            **{
+                f"lower_bl_ue/vinf_{i}": nf_aero[f"lower_bl_ue/vinf_{i}"]
+                for i in range(N)
+            },
         }
 
-    def upper_coordinates(self,
-                          x_over_c: Union[float, np.ndarray] = np.linspace(1, 0, 101),
-                          ) -> np.ndarray:
+    def upper_coordinates(
+        self,
+        x_over_c: Union[float, np.ndarray] = np.linspace(1, 0, 101),
+    ) -> np.ndarray:
         x_over_c = np.array(x_over_c)
 
         # Class function
@@ -504,8 +496,9 @@ class KulfanAirfoil(Airfoil):
                 return np.tile(np.reshape(vector, (dims[0], 1)), (1, dims[1]))
 
             S_matrix = (
-                    tall(K) * wide(x_over_c) ** tall(np.arange(N + 1)) *
-                    wide(1 - x_over_c) ** tall(N - np.arange(N + 1))
+                tall(K)
+                * wide(x_over_c) ** tall(np.arange(N + 1))
+                * wide(1 - x_over_c) ** tall(N - np.arange(N + 1))
             )  # Bernstein polynomial coefficients * weight matrix
             S_x = np.sum(tall(w) * S_matrix, axis=0)
 
@@ -519,16 +512,24 @@ class KulfanAirfoil(Airfoil):
         y_upper += x_over_c * self.TE_thickness / 2
 
         # Add Kulfan's leading-edge-modification (LEM)
-        y_upper += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.upper_weights) + 0.5)
+        y_upper += (
+            self.leading_edge_weight
+            * (x_over_c)
+            * (1 - x_over_c) ** (np.length(self.upper_weights) + 0.5)
+        )
 
-        return np.stack((
-            np.reshape(x_over_c, (-1)),
-            y_upper,
-        ), axis=1)
+        return np.stack(
+            (
+                np.reshape(x_over_c, (-1)),
+                y_upper,
+            ),
+            axis=1,
+        )
 
-    def lower_coordinates(self,
-                          x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-                          ) -> np.ndarray:
+    def lower_coordinates(
+        self,
+        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+    ) -> np.ndarray:
         x_over_c = np.array(x_over_c)
 
         # Class function
@@ -551,8 +552,9 @@ class KulfanAirfoil(Airfoil):
                 return np.tile(np.reshape(vector, (dims[0], 1)), (1, dims[1]))
 
             S_matrix = (
-                    tall(K) * wide(x_over_c) ** tall(np.arange(N + 1)) *
-                    wide(1 - x_over_c) ** tall(N - np.arange(N + 1))
+                tall(K)
+                * wide(x_over_c) ** tall(np.arange(N + 1))
+                * wide(1 - x_over_c) ** tall(N - np.arange(N + 1))
             )  # Bernstein polynomial coefficients * weight matrix
             S_x = np.sum(tall(w) * S_matrix, axis=0)
 
@@ -566,16 +568,18 @@ class KulfanAirfoil(Airfoil):
         y_lower -= x_over_c * self.TE_thickness / 2
 
         # Add Kulfan's leading-edge-modification (LEM)
-        y_lower += self.leading_edge_weight * (x_over_c) * (1 - x_over_c) ** (np.length(self.lower_weights) + 0.5)
+        y_lower += (
+            self.leading_edge_weight
+            * (x_over_c)
+            * (1 - x_over_c) ** (np.length(self.lower_weights) + 0.5)
+        )
 
-        return np.stack((
-            np.reshape(x_over_c, (-1)),
-            y_lower
-        ), axis=1)
+        return np.stack((np.reshape(x_over_c, (-1)), y_lower), axis=1)
 
-    def local_camber(self,
-                     x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-                     ) -> Union[float, np.ndarray]:
+    def local_camber(
+        self,
+        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+    ) -> Union[float, np.ndarray]:
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
@@ -584,16 +588,17 @@ class KulfanAirfoil(Airfoil):
         else:
             return (upper[:, 1] + lower[:, 1]) / 2
 
-    def local_thickness(self,
-                        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-                        ) -> Union[float, np.ndarray]:
+    def local_thickness(
+        self,
+        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+    ) -> Union[float, np.ndarray]:
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
         if np.isscalar(x_over_c):
-            return (upper[0, 1] - lower[0, 1])
+            return upper[0, 1] - lower[0, 1]
         else:
-            return (upper[:, 1] - lower[:, 1])
+            return upper[:, 1] - lower[:, 1]
 
     def LE_radius(self, relative_softness: float = 0.03):
         # LE_radius_upper = np.where(
@@ -607,26 +612,20 @@ class KulfanAirfoil(Airfoil):
         #     0
         # ) / 2
 
-        return np.softmin_scalefree(
-            np.where(
-                self.upper_weights[0] > 0,
-                self.upper_weights[0],
-                0
-            ) ** 2,
-            np.where(
-                self.lower_weights[0] < 0,
-                self.lower_weights[0],
-                0
-            ) ** 2,
-            relative_softness=relative_softness
-        ) / 2
-
+        return (
+            np.softmin_scalefree(
+                np.where(self.upper_weights[0] > 0, self.upper_weights[0], 0) ** 2,
+                np.where(self.lower_weights[0] < 0, self.lower_weights[0], 0) ** 2,
+                relative_softness=relative_softness,
+            )
+            / 2
+        )
 
     def TE_angle(self):
         return np.degrees(
-            np.arctan(self.upper_weights[-1]) -
-            np.arctan(self.lower_weights[-1]) +
-            np.arctan(self.TE_thickness)
+            np.arctan(self.upper_weights[-1])
+            - np.arctan(self.lower_weights[-1])
+            + np.arctan(self.TE_thickness)
         )
 
     def area(self):
@@ -636,23 +635,19 @@ class KulfanAirfoil(Airfoil):
 
             N = np.length(weights) - 1
             i = np.arange(N + 1)
-            area_of_each_mode = comb(N, i) * beta(
-                self.N1 + i + 1,
-                self.N2 + N - i + 1
-            )
-            return np.sum(
-                area_of_each_mode * weights
-            )
+            area_of_each_mode = comb(N, i) * beta(self.N1 + i + 1, self.N2 + N - i + 1)
+            return np.sum(area_of_each_mode * weights)
 
         return (
-                get_area_of_side(self.upper_weights) -
-                get_area_of_side(self.lower_weights) +
-                (self.TE_thickness / 2)
+            get_area_of_side(self.upper_weights)
+            - get_area_of_side(self.lower_weights)
+            + (self.TE_thickness / 2)
         )
 
-    def set_TE_thickness(self,
-                         thickness: float = 0.,
-                         ) -> 'KulfanAirfoil':
+    def set_TE_thickness(
+        self,
+        thickness: float = 0.0,
+    ) -> "KulfanAirfoil":
         """
         Creates a modified copy of the KulfanAirfoil that has a specified trailing-edge thickness.
 
@@ -674,10 +669,11 @@ class KulfanAirfoil(Airfoil):
             N2=self.N2,
         )
 
-    def scale(self,
-              scale_x: float = 1.,
-              scale_y: float = 1.,
-              ) -> "KulfanAirfoil":
+    def scale(
+        self,
+        scale_x: float = 1.0,
+        scale_y: float = 1.0,
+    ) -> "KulfanAirfoil":
         """
         Scales a KulfanAirfoil about the origin.
 
@@ -693,13 +689,17 @@ class KulfanAirfoil(Airfoil):
         Returns: A copy of the KulfanAirfoil with appropriate scaling applied.
         """
         if scale_x != 1:
-            raise ValueError("\n".join([
-                "Scaling a KulfanAirfoil in the x-direction is not supported due to inherent limitations of the",
-                "Kulfan parameterization. If you need to scale in the x-direction: "
-                "\t- Convert to an Airfoil first (`KulfanAirfoil.to_airfoil()`)"
-                "\t- Scale it (`Airfoil.scale()`)"
-                "\t- Convert back to a KulfanAirfoil (`Airfoil.to_kulfan_airfoil()`)"
-            ]))
+            raise ValueError(
+                "\n".join(
+                    [
+                        "Scaling a KulfanAirfoil in the x-direction is not supported due to inherent limitations of the",
+                        "Kulfan parameterization. If you need to scale in the x-direction: "
+                        "\t- Convert to an Airfoil first (`KulfanAirfoil.to_airfoil()`)"
+                        "\t- Scale it (`Airfoil.scale()`)"
+                        "\t- Convert back to a KulfanAirfoil (`Airfoil.to_kulfan_airfoil()`)",
+                    ]
+                )
+            )
 
         if scale_y >= 0:
             return KulfanAirfoil(
@@ -722,16 +722,19 @@ class KulfanAirfoil(Airfoil):
                 N2=self.N2,
             )
 
-    def blend_with_another_airfoil(self,
-                                   airfoil: Union["KulfanAirfoil", Airfoil],
-                                   blend_fraction: float = 0.5,
-                                   ) -> "KulfanAirfoil":
+    def blend_with_another_airfoil(
+        self,
+        airfoil: Union["KulfanAirfoil", Airfoil],
+        blend_fraction: float = 0.5,
+    ) -> "KulfanAirfoil":
         if not isinstance(airfoil, KulfanAirfoil):
             try:
                 airfoil = airfoil.to_kulfan_airfoil()
             except AttributeError:
-                raise TypeError("The `airfoil` argument should be either a `KulfanAirfoil` or an `Airfoil`.\n"
-                                f"You gave an object of type \"{type(airfoil)}\".")
+                raise TypeError(
+                    "The `airfoil` argument should be either a `KulfanAirfoil` or an `Airfoil`.\n"
+                    f'You gave an object of type "{type(airfoil)}".'
+                )
 
         foil_a = self
         foil_b = airfoil
@@ -743,10 +746,14 @@ class KulfanAirfoil(Airfoil):
 
         return KulfanAirfoil(
             name=name,
-            lower_weights=a_fraction * foil_a.lower_weights + b_fraction * foil_b.lower_weights,
-            upper_weights=a_fraction * foil_a.upper_weights + b_fraction * foil_b.upper_weights,
-            leading_edge_weight=a_fraction * foil_a.leading_edge_weight + b_fraction * foil_b.leading_edge_weight,
-            TE_thickness=a_fraction * foil_a.TE_thickness + b_fraction * foil_b.TE_thickness,
+            lower_weights=a_fraction * foil_a.lower_weights
+            + b_fraction * foil_b.lower_weights,
+            upper_weights=a_fraction * foil_a.upper_weights
+            + b_fraction * foil_b.upper_weights,
+            leading_edge_weight=a_fraction * foil_a.leading_edge_weight
+            + b_fraction * foil_b.leading_edge_weight,
+            TE_thickness=a_fraction * foil_a.TE_thickness
+            + b_fraction * foil_b.TE_thickness,
             N1=a_fraction * foil_a.N1 + b_fraction * foil_b.N1,
             N2=a_fraction * foil_a.N2 + b_fraction * foil_b.N2,
         )

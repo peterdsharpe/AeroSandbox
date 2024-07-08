@@ -5,8 +5,8 @@ from typing import Union, List
 
 
 def rotation_matrix_2D(
-        angle,
-        as_array: bool = True,
+    angle,
+    as_array: bool = True,
 ):
     """
     Gives the 2D rotation matrix associated with a counterclockwise rotation about an angle.
@@ -19,10 +19,7 @@ def rotation_matrix_2D(
     """
     s = sin(angle)
     c = cos(angle)
-    rot = [
-        [c, -s],
-        [s, c]
-    ]
+    rot = [[c, -s], [s, c]]
     if as_array:
         return array(rot)
     else:
@@ -30,10 +27,10 @@ def rotation_matrix_2D(
 
 
 def rotation_matrix_3D(
-        angle: Union[float, _onp.ndarray],
-        axis: Union[_onp.ndarray, List, str],
-        as_array: bool = True,
-        axis_already_normalized: bool = False
+    angle: Union[float, _onp.ndarray],
+    axis: Union[_onp.ndarray, List, str],
+    as_array: bool = True,
+    axis_already_normalized: bool = False,
 ):
     """
     Yields the rotation matrix that corresponds to a rotation by a specified amount about a given axis.
@@ -64,23 +61,11 @@ def rotation_matrix_3D(
 
     if isinstance(axis, str):
         if axis.lower() == "x":
-            rot = [
-                [1, 0, 0],
-                [0, c, -s],
-                [0, s, c]
-            ]
+            rot = [[1, 0, 0], [0, c, -s], [0, s, c]]
         elif axis.lower() == "y":
-            rot = [
-                [c, 0, s],
-                [0, 1, 0],
-                [-s, 0, c]
-            ]
+            rot = [[c, 0, s], [0, 1, 0], [-s, 0, c]]
         elif axis.lower() == "z":
-            rot = [
-                [c, -s, 0],
-                [s, c, 0],
-                [0, 0, 1]
-            ]
+            rot = [[c, -s, 0], [s, c, 0], [0, 0, 1]]
         else:
             raise ValueError("If `axis` is a string, it must be `x`, `y`, or `z`.")
     else:
@@ -89,15 +74,27 @@ def rotation_matrix_3D(
         uz = axis[2]
 
         if not axis_already_normalized:
-            norm = (ux ** 2 + uy ** 2 + uz ** 2) ** 0.5
+            norm = (ux**2 + uy**2 + uz**2) ** 0.5
             ux = ux / norm
             uy = uy / norm
             uz = uz / norm
 
         rot = [
-            [c + ux ** 2 * (1 - c), ux * uy * (1 - c) - uz * s, ux * uz * (1 - c) + uy * s],
-            [uy * ux * (1 - c) + uz * s, c + uy ** 2 * (1 - c), uy * uz * (1 - c) - ux * s],
-            [uz * ux * (1 - c) - uy * s, uz * uy * (1 - c) + ux * s, c + uz ** 2 * (1 - c)]
+            [
+                c + ux**2 * (1 - c),
+                ux * uy * (1 - c) - uz * s,
+                ux * uz * (1 - c) + uy * s,
+            ],
+            [
+                uy * ux * (1 - c) + uz * s,
+                c + uy**2 * (1 - c),
+                uy * uz * (1 - c) - ux * s,
+            ],
+            [
+                uz * ux * (1 - c) - uy * s,
+                uz * uy * (1 - c) + ux * s,
+                c + uz**2 * (1 - c),
+            ],
         ]
 
     if as_array:
@@ -107,10 +104,10 @@ def rotation_matrix_3D(
 
 
 def rotation_matrix_from_euler_angles(
-        roll_angle: Union[float, _onp.ndarray] = 0,
-        pitch_angle: Union[float, _onp.ndarray] = 0,
-        yaw_angle: Union[float, _onp.ndarray] = 0,
-        as_array: bool = True
+    roll_angle: Union[float, _onp.ndarray] = 0,
+    pitch_angle: Union[float, _onp.ndarray] = 0,
+    yaw_angle: Union[float, _onp.ndarray] = 0,
+    as_array: bool = True,
 ):
     """
     Yields the rotation matrix that corresponds to a given Euler angle rotation.
@@ -148,7 +145,7 @@ def rotation_matrix_from_euler_angles(
     rot = [
         [ca * cb, ca * sb * sc - sa * cc, ca * sb * cc + sa * sc],
         [sa * cb, sa * sb * sc + ca * cc, sa * sb * cc - ca * sc],
-        [-sb, cb * sc, cb * cc]
+        [-sb, cb * sc, cb * cc],
     ]
 
     if as_array:
@@ -157,10 +154,7 @@ def rotation_matrix_from_euler_angles(
         return rot
 
 
-def is_valid_rotation_matrix(
-        a: _onp.ndarray,
-        tol=1e-9
-) -> bool:
+def is_valid_rotation_matrix(a: _onp.ndarray, tol=1e-9) -> bool:
     """
     Returns a boolean of whether the given matrix satisfies the properties of a rotation matrix.
 
@@ -191,7 +185,4 @@ def is_valid_rotation_matrix(
             if not approx_equal(eye_approx[i, j], eye[i, j]):
                 is_orthogonality_preserving = False
 
-    return (
-            is_volume_preserving_and_right_handed and
-            is_orthogonality_preserving
-    )
+    return is_volume_preserving_and_right_handed and is_orthogonality_preserving

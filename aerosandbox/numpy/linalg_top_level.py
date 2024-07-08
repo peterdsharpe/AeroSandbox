@@ -36,11 +36,7 @@ def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None, manual=False):
 
     else:
         if axis is not None:
-            if not (
-                    axis == -1 or
-                    axis == 0 or
-                    axis == 1
-            ):
+            if not (axis == -1 or axis == 0 or axis == 1):
                 raise ValueError("`axis` must be -1, 0, or 1.")
             axisa = axis
             axisb = axis

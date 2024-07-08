@@ -63,31 +63,32 @@ class MSES(ExplicitAnalysis):
 
     """
 
-    def __init__(self,
-                 airfoil: Airfoil,
-                 n_crit: float = 9.,
-                 xtr_upper: float = 1.,
-                 xtr_lower: float = 1.,
-                 max_iter: int = 100,
-                 mset_command: str = "mset",
-                 mses_command: str = "mses",
-                 mplot_command: str = "mplot",
-                 use_xvfb: bool = None,
-                 xvfb_command: str = "xvfb-run -a",
-                 verbosity: int = 1,
-                 timeout_mset: Union[float, int, None] = 10,
-                 timeout_mses: Union[float, int, None] = 60,
-                 timeout_mplot: Union[float, int, None] = 10,
-                 working_directory: str = None,
-                 behavior_after_unconverged_run: str = "reinitialize",
-                 mset_alpha: float = 0,
-                 mset_n: int = 141,
-                 mset_e: float = 0.4,
-                 mset_io: int = 37,
-                 mset_x: float = 0.850,
-                 mses_mcrit: float = 0.99,
-                 mses_mucon: float = -1.0,
-                 ):
+    def __init__(
+        self,
+        airfoil: Airfoil,
+        n_crit: float = 9.0,
+        xtr_upper: float = 1.0,
+        xtr_lower: float = 1.0,
+        max_iter: int = 100,
+        mset_command: str = "mset",
+        mses_command: str = "mses",
+        mplot_command: str = "mplot",
+        use_xvfb: bool = None,
+        xvfb_command: str = "xvfb-run -a",
+        verbosity: int = 1,
+        timeout_mset: Union[float, int, None] = 10,
+        timeout_mses: Union[float, int, None] = 60,
+        timeout_mplot: Union[float, int, None] = 10,
+        working_directory: str = None,
+        behavior_after_unconverged_run: str = "reinitialize",
+        mset_alpha: float = 0,
+        mset_n: int = 141,
+        mset_e: float = 0.4,
+        mset_io: int = 37,
+        mset_x: float = 0.850,
+        mses_mcrit: float = 0.99,
+        mses_mucon: float = -1.0,
+    ):
         """
         Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
         MIT for a copy.)
@@ -152,8 +153,11 @@ class MSES(ExplicitAnalysis):
                 shell=True,
                 text=True,
             )
-            expected_result = 'xvfb-run: usage error:'
-            use_xvfb = expected_result in trial_run.stderr or expected_result in trial_run.stdout
+            expected_result = "xvfb-run: usage error:"
+            use_xvfb = (
+                expected_result in trial_run.stderr
+                or expected_result in trial_run.stdout
+            )
 
         if not use_xvfb:
             xvfb_command = ""
@@ -182,11 +186,12 @@ class MSES(ExplicitAnalysis):
         self.mses_mcrit = mses_mcrit
         self.mses_mucon = mses_mucon
 
-    def run(self,
-            alpha: Union[float, np.ndarray, List] = 0.,
-            Re: Union[float, np.ndarray, List] = 0.,
-            mach: Union[float, np.ndarray, List] = 0.01,
-            ):
+    def run(
+        self,
+        alpha: Union[float, np.ndarray, List] = 0.0,
+        Re: Union[float, np.ndarray, List] = 0.0,
+        mach: Union[float, np.ndarray, List] = 0.01,
+    ):
         ### Make all inputs iterables:
         alphas, Res, machs = np.broadcast_arrays(
             np.ravel(alpha),
@@ -207,7 +212,8 @@ class MSES(ExplicitAnalysis):
             self.airfoil.write_dat(directory / airfoil_file)
 
             def mset(mset_alpha):
-                mset_keystrokes = dedent(f"""\
+                mset_keystrokes = dedent(
+                    f"""\
                 15
                 case
                 7
@@ -224,7 +230,8 @@ class MSES(ExplicitAnalysis):
                 3
                 4
                 0
-                """)
+                """
+                )
 
                 if self.verbosity >= 1:
                     print(f"Generating mesh at alpha = {mset_alpha} with MSES...")
@@ -237,7 +244,7 @@ class MSES(ExplicitAnalysis):
                     text=True,
                     shell=True,
                     check=True,
-                    timeout=self.timeout_mset
+                    timeout=self.timeout_mset,
                 )
 
             try:
@@ -246,19 +253,25 @@ class MSES(ExplicitAnalysis):
                 print(e.stdout)
                 print(e.stderr)
                 if "BadName (named color or font does not exist)" in e.stderr:
-                    raise RuntimeError("MSET via AeroSandbox errored becausee it couldn't launch an X11 window.\n"
-                                       "Try either installing a typical X11 client, or install Xvfb, which is\n"
-                                       "a virtual X11 server. More details in the AeroSandbox MSES docstring.")
+                    raise RuntimeError(
+                        "MSET via AeroSandbox errored becausee it couldn't launch an X11 window.\n"
+                        "Try either installing a typical X11 client, or install Xvfb, which is\n"
+                        "a virtual X11 server. More details in the AeroSandbox MSES docstring."
+                    )
 
             runs_output = {}
 
             for i, (alpha, mach, Re) in enumerate(zip(alphas, machs, Res)):
 
                 if self.verbosity >= 1:
-                    print(f"Solving alpha = {alpha:.3f}, mach = {mach:.4f}, Re = {Re:.3e} with MSES...")
+                    print(
+                        f"Solving alpha = {alpha:.3f}, mach = {mach:.4f}, Re = {Re:.3e} with MSES..."
+                    )
 
                 with open(directory / "mses.case", "w+") as f:
-                    f.write(dedent(f"""\
+                    f.write(
+                        dedent(
+                            f"""\
                     3  4  5  7
                     3  4  5  7
                     {mach}   0.0   {alpha} | MACHin  CLIFin  ALFAin
@@ -269,12 +282,16 @@ class MSES(ExplicitAnalysis):
                     0    0                           | ISMOVE  ISPRES
                     0    0                           | NMODN   NPOSN
                     
-                    """))
+                    """
+                        )
+                    )
 
-                mses_keystrokes = dedent(f"""\
+                mses_keystrokes = dedent(
+                    f"""\
                     {self.max_iter}
                     0
-                    """)
+                    """
+                )
 
                 mses_run = subprocess.run(
                     f'{self.xvfb_command} "{self.mses_command}" case',
@@ -284,7 +301,7 @@ class MSES(ExplicitAnalysis):
                     text=True,
                     shell=True,
                     check=True,
-                    timeout=self.timeout_mses
+                    timeout=self.timeout_mses,
                 )
                 if self.verbosity >= 2:
                     print(mses_run.stdout)
@@ -294,7 +311,9 @@ class MSES(ExplicitAnalysis):
                 if not converged:
                     if self.behavior_after_unconverged_run == "reinitialize":
                         if self.verbosity >= 1:
-                            print("Run did not converge. Reinitializing mesh and continuing...")
+                            print(
+                                "Run did not converge. Reinitializing mesh and continuing..."
+                            )
                         try:
                             next_alpha = alphas[i + 1]
                         except IndexError:
@@ -302,17 +321,21 @@ class MSES(ExplicitAnalysis):
                         mset_run = mset(mset_alpha=next_alpha)
                     elif self.behavior_after_unconverged_run == "terminate":
                         if self.verbosity >= 1:
-                            print("Run did not converge. Skipping all subsequent runs...")
+                            print(
+                                "Run did not converge. Skipping all subsequent runs..."
+                            )
                             break
 
                     continue
 
-                mplot_keystrokes = dedent(f"""\
+                mplot_keystrokes = dedent(
+                    f"""\
                         1
                         12
                         0
                         0
-                    """)
+                    """
+                )
 
                 mplot_run = subprocess.run(
                     f'{self.xvfb_command} "{self.mplot_command}" case',
@@ -322,40 +345,36 @@ class MSES(ExplicitAnalysis):
                     text=True,
                     shell=True,
                     check=True,
-                    timeout=self.timeout_mplot
+                    timeout=self.timeout_mplot,
                 )
                 if self.verbosity >= 2:
                     print(mplot_run.stdout)
                     print(mplot_run.stderr)
 
-                raw_output = mplot_run.stdout. \
-                    replace("top Xtr", "xtr_top"). \
-                    replace("bot Xtr", "xtr_bot"). \
-                    replace("at x,y", "x_ac")
+                raw_output = (
+                    mplot_run.stdout.replace("top Xtr", "xtr_top")
+                    .replace("bot Xtr", "xtr_bot")
+                    .replace("at x,y", "x_ac")
+                )
 
                 run_output = AVL.parse_unformatted_data_output(raw_output)
 
                 # Merge runs_output and run_output
                 for k in run_output.keys():
                     try:
-                        runs_output[k].append(
-                            run_output[k]
-                        )
+                        runs_output[k].append(run_output[k])
                     except KeyError:  # List not created yet
                         runs_output[k] = [run_output[k]]
 
             # Clean up the dictionary
             runs_output = {k: np.array(v) for k, v in runs_output.items()}
             # runs_output["mach"] = runs_output.pop("Ma")
-            runs_output = {
-                "mach": runs_output.pop("Ma"),
-                **runs_output
-            }
+            runs_output = {"mach": runs_output.pop("Ma"), **runs_output}
 
             return runs_output
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from pathlib import Path
     from pprint import pprint
 
@@ -384,5 +403,5 @@ if __name__ == '__main__':
     import aerosandbox.tools.pretty_plots as p
 
     fig, ax = plt.subplots()
-    plt.plot(res['mach'], res['CD'], ".-")
+    plt.plot(res["mach"], res["CD"], ".-")
     p.show_plot()

@@ -1,7 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     af = asb.Airfoil("dae11")
     af.generate_polars()
 
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     contour(Alpha, Re, CL, levels=30, colorbar_label=r"$C_L$")
     plt.scatter(af.xfoil_data["alpha"], af.xfoil_data["Re"], color="k", alpha=0.2)
-    plt.yscale('log')
+    plt.yscale("log")
     show_plot(
         f"Auto-generated Polar for {af.name} Airfoil",
         "Angle of Attack [deg]",
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     contour(Alpha, Re, CD, levels=30, colorbar_label=r"$C_D$", z_log_scale=True)
     plt.scatter(af.xfoil_data["alpha"], af.xfoil_data["Re"], color="k", alpha=0.2)
-    plt.yscale('log')
+    plt.yscale("log")
     show_plot(
         f"Auto-generated Polar for {af.name} Airfoil",
         "Angle of Attack [deg]",
@@ -54,7 +54,6 @@ if __name__ == '__main__':
         Re=Re,
         mach=0,
     )
-
 
     plt.sca(ax[0, 0])
     plt.plot(ma, mCL, label="`Airfoil.generate_polars()`")
@@ -94,7 +93,5 @@ if __name__ == '__main__':
     opti = asb.Opti()
     alpha = opti.variable(init_guess=0, lower_bound=-20, upper_bound=20)
     LD = af.CL_function(alpha, 1e6) / af.CD_function(alpha, 1e6)
-    opti.minimize(
-        -LD
-    )
+    opti.minimize(-LD)
     sol = opti.solve()

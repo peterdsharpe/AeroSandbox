@@ -26,13 +26,14 @@ class Fuselage(AeroSandboxObject):
 
     """
 
-    def __init__(self,
-                 name: Optional[str] = "Untitled",
-                 xsecs: List['FuselageXSec'] = None,
-                 color: Optional[Union[str, Tuple[float]]] = None,
-                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
-                 **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
-                 ):
+    def __init__(
+        self,
+        name: Optional[str] = "Untitled",
+        xsecs: List["FuselageXSec"] = None,
+        color: Optional[Union[str, Tuple[float]]] = None,
+        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+        **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
+    ):
         """
         Defines a new fuselage object.
 
@@ -83,7 +84,7 @@ class Fuselage(AeroSandboxObject):
         """
         ### Set defaults
         if xsecs is None:
-            xsecs: List['FuselageXSec'] = []
+            xsecs: List["FuselageXSec"] = []
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -94,42 +95,37 @@ class Fuselage(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated parameters
-        if 'symmetric' in locals():
+        if "symmetric" in locals():
             raise DeprecationWarning(
-                "The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!")
+                "The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!"
+            )
 
-        if 'xyz_le' in locals():
+        if "xyz_le" in locals():
             import warnings
+
             warnings.warn(
                 "The `xyz_le` input for Fuselage is pending deprecation and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
-                stacklevel=2
+                stacklevel=2,
             )
-            self.xsecs = [
-                xsec.translate(xyz_le)
-                for xsec in self.xsecs
-            ]
+            self.xsecs = [xsec.translate(xyz_le) for xsec in self.xsecs]
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
         return f"Fuselage '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'})"
 
-    def add_loft(self,
-                 kind: str,
-                 to_xsec: 'FuselageXSec',
-                 from_xsec: 'FuselageXSec' = None,
-                 n_points: int = 5,
-                 spacing: Callable[[float, float, int], np.ndarray] = np.cosspace,
-                 ) -> "Fuselage":
-        raise NotImplementedError # Function under construction!
+    def add_loft(
+        self,
+        kind: str,
+        to_xsec: "FuselageXSec",
+        from_xsec: "FuselageXSec" = None,
+        n_points: int = 5,
+        spacing: Callable[[float, float, int], np.ndarray] = np.cosspace,
+    ) -> "Fuselage":
+        raise NotImplementedError  # Function under construction!
         ### Set defaults
         if from_xsec is None:
             if len(self.xsecs) == 0:
-                from_xsec = FuselageXSec(
-                    xyz_c=[0, 0, 0],
-                    width=0,
-                    height=0,
-                    shape=2
-                )
+                from_xsec = FuselageXSec(xyz_c=[0, 0, 0], width=0, height=0, shape=2)
             else:
                 from_xsec = self.xsecs[-1]
 
@@ -161,9 +157,7 @@ class Fuselage(AeroSandboxObject):
 
         self.xsecs.extend(new_xsecs)
 
-    def translate(self,
-                  xyz: Union[np.ndarray, List[float]]
-                  ) -> "Fuselage":
+    def translate(self, xyz: Union[np.ndarray, List[float]]) -> "Fuselage":
         """
         Translates the entire Fuselage by a certain amount.
 
@@ -174,10 +168,7 @@ class Fuselage(AeroSandboxObject):
 
         """
         new_fuse = copy.copy(self)
-        new_fuse.xsecs = [
-            xsec.translate(xyz)
-            for xsec in new_fuse.xsecs
-        ]
+        new_fuse.xsecs = [xsec.translate(xyz) for xsec in new_fuse.xsecs]
         return new_fuse
 
     def area_wetted(self) -> float:
@@ -196,9 +187,10 @@ class Fuselage(AeroSandboxObject):
 
         return area
 
-    def area_projected(self,
-                       type: str = "XY",
-                       ) -> float:
+    def area_projected(
+        self,
+        type: str = "XY",
+    ) -> float:
         """
         Returns the area of the fuselage as projected onto one of the principal planes.
 
@@ -238,8 +230,8 @@ class Fuselage(AeroSandboxObject):
         return self.xsecs[-1].xsec_area()
 
     def fineness_ratio(
-            self,
-            assumed_shape="cylinder",
+        self,
+        assumed_shape="cylinder",
     ) -> float:
         """
         Approximates the fineness ratio using the volume and length. The fineness ratio of a fuselage is defined as:
@@ -258,15 +250,11 @@ class Fuselage(AeroSandboxObject):
 
         """
         if assumed_shape == "cylinder":
-            return np.sqrt(
-                self.length() ** 3 / self.volume() * np.pi / 4
-            )
+            return np.sqrt(self.length() ** 3 / self.volume() * np.pi / 4)
         elif assumed_shape == "sears-haack":
             length = self.length()
 
-            r_max = np.sqrt(
-                self.volume() / length / (3 * np.pi ** 2 / 16)
-            )
+            r_max = np.sqrt(self.volume() / length / (3 * np.pi**2 / 16))
             return length / r_max
 
     def length(self) -> float:
@@ -277,9 +265,7 @@ class Fuselage(AeroSandboxObject):
         """
         return np.fabs(self.xsecs[-1].xyz_c[0] - self.xsecs[0].xyz_c[0])
 
-    def volume(self,
-               _sectional: bool = False
-               ) -> Union[float, List[float]]:
+    def volume(self, _sectional: bool = False) -> Union[float, List[float]]:
         """
         Computes the volume of the Fuselage.
 
@@ -292,25 +278,17 @@ class Fuselage(AeroSandboxObject):
 
             The computed volume.
         """
-        xsec_areas = [
-            xsec.xsec_area()
-            for xsec in self.xsecs
-        ]
+        xsec_areas = [xsec.xsec_area() for xsec in self.xsecs]
 
         separations = [
             xsec_b.xyz_c[0] - xsec_a.xyz_c[0]
-            for xsec_a, xsec_b in zip(
-                self.xsecs[:-1],
-                self.xsecs[1:]
-            )
+            for xsec_a, xsec_b in zip(self.xsecs[:-1], self.xsecs[1:])
         ]
 
         sectional_volumes = [
             separation / 3 * (area_a + area_b + (area_a * area_b + 1e-100) ** 0.5)
             for area_a, area_b, separation in zip(
-                xsec_areas[1:],
-                xsec_areas[:-1],
-                separations
+                xsec_areas[1:], xsec_areas[:-1], separations
             )
         ]
 
@@ -321,9 +299,10 @@ class Fuselage(AeroSandboxObject):
         else:
             return volume
 
-    def x_centroid_projected(self,
-                             type: str = "XY",
-                             ) -> float:
+    def x_centroid_projected(
+        self,
+        type: str = "XY",
+    ) -> float:
         """
         Returns the x_g coordinate of the centroid of the planform area.
 
@@ -364,10 +343,11 @@ class Fuselage(AeroSandboxObject):
         x_centroid = total_x_area_product / total_area
         return x_centroid
 
-    def mesh_body(self,
-                  method="quad",
-                  tangential_resolution: int = 36,
-                  ) -> Tuple[np.ndarray, np.ndarray]:
+    def mesh_body(
+        self,
+        method="quad",
+        tangential_resolution: int = 36,
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Meshes the fuselage as a solid (thickened) body.
 
@@ -396,14 +376,9 @@ class Fuselage(AeroSandboxObject):
 
         t = np.linspace(0, 2 * np.pi, tangential_resolution + 1)[:-1]
 
-        points = np.concatenate([
-            np.stack(
-                xsec.get_3D_coordinates(theta=t),
-                axis=1
-            )
-            for xsec in self.xsecs
-        ],
-            axis=0
+        points = np.concatenate(
+            [np.stack(xsec.get_3D_coordinates(theta=t), axis=1) for xsec in self.xsecs],
+            axis=0,
         )
 
         faces = []
@@ -435,10 +410,11 @@ class Fuselage(AeroSandboxObject):
 
         return points, faces
 
-    def mesh_line(self,
-                  y_nondim: Union[float, List[float]] = 0.,
-                  z_nondim: Union[float, List[float]] = 0.,
-                  ) -> List[np.ndarray]:
+    def mesh_line(
+        self,
+        y_nondim: Union[float, List[float]] = 0.0,
+        z_nondim: Union[float, List[float]] = 0.0,
+    ) -> List[np.ndarray]:
         """
         Returns points along a line that goes through each of the FuselageXSec objects in this Fuselage.
 
@@ -491,8 +467,8 @@ class Fuselage(AeroSandboxObject):
                 xsec_z_nondim = z_nondim
 
             xsec_point = origin + (
-                    xsec_y_nondim * (xsec.width / 2) * yg_local +
-                    xsec_z_nondim * (xsec.height / 2) * zg_local
+                xsec_y_nondim * (xsec.width / 2) * yg_local
+                + xsec_z_nondim * (xsec.height / 2) * zg_local
             )
             points_on_line.append(xsec_point)
 
@@ -510,6 +486,7 @@ class Fuselage(AeroSandboxObject):
 
         """
         from aerosandbox.geometry.airplane import Airplane
+
         return Airplane(fuselages=[self]).draw(*args, **kwargs)
 
     def draw_wireframe(self, *args, **kwargs):
@@ -524,6 +501,7 @@ class Fuselage(AeroSandboxObject):
 
         """
         from aerosandbox.geometry.airplane import Airplane
+
         return Airplane(fuselages=[self]).draw_wireframe(*args, **kwargs)
 
     def draw_three_view(self, *args, **kwargs):
@@ -538,12 +516,14 @@ class Fuselage(AeroSandboxObject):
 
         """
         from aerosandbox.geometry.airplane import Airplane
+
         return Airplane(fuselages=[self]).draw_three_view(*args, **kwargs)
 
-    def subdivide_sections(self,
-                           ratio: int,
-                           spacing_function: Callable[[float, float, float], np.ndarray] = np.linspace
-                           ) -> "Fuselage":
+    def subdivide_sections(
+        self,
+        ratio: int,
+        spacing_function: Callable[[float, float, float], np.ndarray] = np.linspace,
+    ) -> "Fuselage":
         """
         Generates a new Fuselage that subdivides the existing sections of this Fuselage into several smaller ones. Splits
         each section into N=`ratio` smaller subsections by inserting new cross-sections (xsecs) as needed.
@@ -589,10 +569,12 @@ class Fuselage(AeroSandboxObject):
         return Fuselage(
             name=self.name,
             xsecs=new_xsecs,
-            analysis_specific_options=self.analysis_specific_options
+            analysis_specific_options=self.analysis_specific_options,
         )
 
-    def _compute_frame_of_FuselageXSec(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _compute_frame_of_FuselageXSec(
+        self, index: int
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the local frame of a FuselageXSec, given the index of the FuselageXSec in the Fuselage.xsecs list.
 
@@ -605,10 +587,11 @@ class Fuselage(AeroSandboxObject):
             zg_local: The z-axis of the local coordinate frame, in aircraft geometry axes.
         """
         import warnings
+
         warnings.warn(
             "Fuselage._compute_frame_of_FuselageXSec() is deprecated. "
             "Use FuselageXSec.compute_frame() instead.",
-            DeprecationWarning
+            DeprecationWarning,
         )
 
         return self.xsecs[index].compute_frame()
@@ -619,15 +602,16 @@ class FuselageXSec(AeroSandboxObject):
     Definition for a fuselage cross-section ("X-section").
     """
 
-    def __init__(self,
-                 xyz_c: Union[np.ndarray, List[float]] = None,
-                 xyz_normal: Union[np.ndarray, List[float]] = None,
-                 radius: float = None,
-                 width: float = None,
-                 height: float = None,
-                 shape: float = 2.,
-                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
-                 ):
+    def __init__(
+        self,
+        xyz_c: Union[np.ndarray, List[float]] = None,
+        xyz_normal: Union[np.ndarray, List[float]] = None,
+        radius: float = None,
+        width: float = None,
+        height: float = None,
+        shape: float = 2.0,
+        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+    ):
         """
         Defines a new Fuselage cross-section.
 
@@ -712,18 +696,15 @@ class FuselageXSec(AeroSandboxObject):
         """
         ### Set defaults
         if xyz_c is None:
-            xyz_c = np.array([0., 0., 0.])
+            xyz_c = np.array([0.0, 0.0, 0.0])
         if xyz_normal is None:
-            xyz_normal = np.array([1., 0., 0.])  # points backwards
+            xyz_normal = np.array([1.0, 0.0, 0.0])  # points backwards
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
         ### Set width and height
-        radius_specified = (radius is not None)
-        width_height_specified = [
-            (width is not None),
-            (height is not None)
-        ]
+        radius_specified = radius is not None
+        width_height_specified = [(width is not None), (height is not None)]
 
         if radius_specified:
             if any(width_height_specified):
@@ -786,7 +767,7 @@ class FuselageXSec(AeroSandboxObject):
         Returns:
 
         """
-        area = self.width * self.height / (self.shape ** -1.8717618013591173 + 1)
+        area = self.width * self.height / (self.shape**-1.8717618013591173 + 1)
 
         return area
 
@@ -829,28 +810,26 @@ class FuselageXSec(AeroSandboxObject):
                 return 2 * self.height
             elif self.height == 0:
                 return 2 * self.width
-        except RuntimeError:  # Will error if width and height are optimization variables, as truthiness is indeterminate
+        except (
+            RuntimeError
+        ):  # Will error if width and height are optimization variables, as truthiness is indeterminate
             pass
 
         s = self.shape
         h = np.maximum(
             (self.width + 1e-16) / (self.height + 1e-16),
-            (self.height + 1e-16) / (self.width + 1e-16)
+            (self.height + 1e-16) / (self.width + 1e-16),
         )
-        nondim_quadrant_perimeter = (
-                h + (((((s - 0.88487077) * h + 0.2588574 / h) ** np.exp(s / -0.90069205)) + h) + 0.09919785) ** (
-                -1.4812293 / s)
-        )
+        nondim_quadrant_perimeter = h + (
+            ((((s - 0.88487077) * h + 0.2588574 / h) ** np.exp(s / -0.90069205)) + h)
+            + 0.09919785
+        ) ** (-1.4812293 / s)
         perimeter = 2 * nondim_quadrant_perimeter * np.minimum(self.width, self.height)
 
         return np.where(
             self.width == 0,
             2 * self.height,
-            np.where(
-                self.height == 0,
-                2 * self.width,
-                perimeter
-            )
+            np.where(self.height == 0, 2 * self.width, perimeter),
         )
 
     def compute_frame(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -880,9 +859,9 @@ class FuselageXSec(AeroSandboxObject):
 
         return xg_local, yg_local, zg_local
 
-    def get_3D_coordinates(self,
-                           theta: Union[float, np.ndarray] = None
-                           ) -> Tuple[Union[float, np.ndarray]]:
+    def get_3D_coordinates(
+        self, theta: Union[float, np.ndarray] = None
+    ) -> Tuple[Union[float, np.ndarray]]:
         """
         Samples points from the perimeter of this FuselageXSec.
 
@@ -910,11 +889,7 @@ class FuselageXSec(AeroSandboxObject):
         """
         ### Set defaults
         if theta is None:
-            theta = np.linspace(
-                0,
-                2 * np.pi,
-                60 + 1
-            )[:-1]
+            theta = np.linspace(0, 2 * np.pi, 60 + 1)[:-1]
 
         st = np.sin(np.mod(theta, 2 * np.pi))
         ct = np.cos(np.mod(theta, 2 * np.pi))
@@ -930,9 +905,7 @@ class FuselageXSec(AeroSandboxObject):
             self.xyz_c[2] + y * yg_local[2] + z * zg_local[2],
         )
 
-    def equivalent_radius(self,
-                          preserve="area"
-                          ) -> float:
+    def equivalent_radius(self, preserve="area") -> float:
         """
         Computes an equivalent radius for non-circular cross-sections. This may be necessary when doing analysis that
         uses axisymmetric assumptions.
@@ -954,13 +927,11 @@ class FuselageXSec(AeroSandboxObject):
         if preserve == "area":
             return (self.xsec_area() / np.pi + 1e-16) ** 0.5
         elif preserve == "perimeter":
-            return (self.xsec_perimeter() / (2 * np.pi))
+            return self.xsec_perimeter() / (2 * np.pi)
         else:
             raise ValueError("Bad value of `preserve`!")
 
-    def translate(self,
-                  xyz: Union[np.ndarray, List[float]]
-                  ) -> "FuselageXSec":
+    def translate(self, xyz: Union[np.ndarray, List[float]]) -> "FuselageXSec":
         """
         Returns a copy of this FuselageXSec that has been translated by `xyz`.
 
@@ -975,23 +946,18 @@ class FuselageXSec(AeroSandboxObject):
         return new_xsec
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fuse = Fuselage(
         xsecs=[
             FuselageXSec(
                 xyz_c=[0, 0, 1],
                 radius=0,
             ),
-            FuselageXSec(
-                xyz_c=[1, 0, 1],
-                width=0.5,
-                height=0.2,
-                shape=5
-            ),
+            FuselageXSec(xyz_c=[1, 0, 1], width=0.5, height=0.2, shape=5),
             FuselageXSec(
                 xyz_c=[2, 0, 1],
                 radius=0.2,
-            )
+            ),
         ]
     ).translate([0, 0, 2])
     fuse.draw()

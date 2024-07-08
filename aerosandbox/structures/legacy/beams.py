@@ -6,21 +6,22 @@ from aerosandbox.common import AeroSandboxObject
 
 class TubeBeam1(AeroSandboxObject):
 
-    def __init__(self,
-                 opti,  # type: cas.Opti
-                 length,
-                 points_per_point_load=100,
-                 E=228e9,  # Pa
-                 isotropic=True,
-                 poisson_ratio=0.5,
-                 diameter_guess=100,  # Make this larger for more computational stability, lower for a bit faster speed
-                 thickness=0.14e-3 * 5,
-                 max_allowable_stress=570e6 / 1.75,
-                 density=1600,
-                 G=None,
-                 bending=True,  # Should we consider beam bending?
-                 torsion=True,  # Should we consider beam torsion?
-                 ):
+    def __init__(
+        self,
+        opti,  # type: cas.Opti
+        length,
+        points_per_point_load=100,
+        E=228e9,  # Pa
+        isotropic=True,
+        poisson_ratio=0.5,
+        diameter_guess=100,  # Make this larger for more computational stability, lower for a bit faster speed
+        thickness=0.14e-3 * 5,
+        max_allowable_stress=570e6 / 1.75,
+        density=1600,
+        G=None,
+        bending=True,  # Should we consider beam bending?
+        torsion=True,  # Should we consider beam torsion?
+    ):
         """
         A beam model (static, linear elasticity) that simulates both bending and torsion.
 
@@ -83,18 +84,20 @@ class TubeBeam1(AeroSandboxObject):
                 pass  # TODO find poisson?
             else:
                 raise ValueError(
-                    "You can't uniquely specify shear modulus and Poisson's ratio on an isotropic material!")
+                    "You can't uniquely specify shear modulus and Poisson's ratio on an isotropic material!"
+                )
 
         # Create data structures to track loads
         self.point_loads = []
         self.distributed_loads = []
 
-    def add_point_load(self,
-                       location,
-                       force=0,
-                       bending_moment=0,
-                       torsional_moment=0,
-                       ):
+    def add_point_load(
+        self,
+        location,
+        force=0,
+        bending_moment=0,
+        torsional_moment=0,
+    ):
         """
         Adds a point force and/or moment.
         :param location: Location of the point force along the beam [m]
@@ -105,18 +108,19 @@ class TubeBeam1(AeroSandboxObject):
         """
         self.point_loads.append(
             {
-                "location"        : location,
-                "force"           : force,
-                "bending_moment"  : bending_moment,
-                "torsional_moment": torsional_moment
+                "location": location,
+                "force": force,
+                "bending_moment": bending_moment,
+                "torsional_moment": torsional_moment,
             }
         )
 
-    def add_uniform_load(self,
-                         force=0,
-                         bending_moment=0,
-                         torsional_moment=0,
-                         ):
+    def add_uniform_load(
+        self,
+        force=0,
+        bending_moment=0,
+        torsional_moment=0,
+    ):
         """
         Adds a uniformly distributed force and/or moment across the entire length of the beam.
         :param force: Total force applied to beam [N]
@@ -126,18 +130,19 @@ class TubeBeam1(AeroSandboxObject):
         """
         self.distributed_loads.append(
             {
-                "type"            : "uniform",
-                "force"           : force,
-                "bending_moment"  : bending_moment,
-                "torsional_moment": torsional_moment
+                "type": "uniform",
+                "force": force,
+                "bending_moment": bending_moment,
+                "torsional_moment": torsional_moment,
             }
         )
 
-    def add_elliptical_load(self,
-                            force=0,
-                            bending_moment=0,
-                            torsional_moment=0,
-                            ):
+    def add_elliptical_load(
+        self,
+        force=0,
+        bending_moment=0,
+        torsional_moment=0,
+    ):
         """
         Adds an elliptically distributed force and/or moment across the entire length of the beam.
         :param force: Total force applied to beam [N]
@@ -147,16 +152,14 @@ class TubeBeam1(AeroSandboxObject):
         """
         self.distributed_loads.append(
             {
-                "type"            : "elliptical",
-                "force"           : force,
-                "bending_moment"  : bending_moment,
-                "torsional_moment": torsional_moment
+                "type": "elliptical",
+                "force": force,
+                "bending_moment": bending_moment,
+                "torsional_moment": torsional_moment,
             }
         )
 
-    def setup(self,
-              bending_BC_type="cantilevered"
-              ):
+    def setup(self, bending_BC_type="cantilevered"):
         """
         Sets up the problem. Run this last.
         :return: None (in-place)
@@ -167,13 +170,16 @@ class TubeBeam1(AeroSandboxObject):
         point_load_locations = [load["location"] for load in self.point_loads]
         point_load_locations.insert(0, 0)
         point_load_locations.append(self.length)
-        self.x = cas.vertcat(*[
-            cas.linspace(
-                point_load_locations[i],
-                point_load_locations[i + 1],
-                self.points_per_point_load)
-            for i in range(len(point_load_locations) - 1)
-        ])
+        self.x = cas.vertcat(
+            *[
+                cas.linspace(
+                    point_load_locations[i],
+                    point_load_locations[i + 1],
+                    self.points_per_point_load,
+                )
+                for i in range(len(point_load_locations) - 1)
+            ]
+        )
 
         # Post-process the discretization
         self.n = self.x.shape[0]
@@ -192,21 +198,23 @@ class TubeBeam1(AeroSandboxObject):
             if load["type"] == "uniform":
                 self.force_per_unit_length += load["force"] / self.length
             elif load["type"] == "elliptical":
-                load_to_add = load["force"] / self.length * (
-                        4 / cas.pi * cas.sqrt(1 - (self.x / self.length) ** 2)
+                load_to_add = (
+                    load["force"]
+                    / self.length
+                    * (4 / cas.pi * cas.sqrt(1 - (self.x / self.length) ** 2))
                 )
                 self.force_per_unit_length += load_to_add
             else:
-                raise ValueError("Bad value of \"type\" for a load within beam.distributed_loads!")
+                raise ValueError(
+                    'Bad value of "type" for a load within beam.distributed_loads!'
+                )
 
         # Initialize optimization variables
         log_nominal_diameter = self.opti.variable(self.n)
         self.opti.set_initial(log_nominal_diameter, cas.log(self.diameter_guess))
         self.nominal_diameter = cas.exp(log_nominal_diameter)
 
-        self.opti.subject_to([
-            log_nominal_diameter > cas.log(self.thickness)
-        ])
+        self.opti.subject_to([log_nominal_diameter > cas.log(self.thickness)])
 
         def trapz(x):
             out = (x[:-1] + x[1:]) / 2
@@ -216,29 +224,38 @@ class TubeBeam1(AeroSandboxObject):
 
         # Mass
         self.volume = cas.sum1(
-            cas.pi / 4 * trapz(
-                (self.nominal_diameter + self.thickness) ** 2 -
-                (self.nominal_diameter - self.thickness) ** 2
-            ) * dx
+            cas.pi
+            / 4
+            * trapz(
+                (self.nominal_diameter + self.thickness) ** 2
+                - (self.nominal_diameter - self.thickness) ** 2
+            )
+            * dx
         )
         self.mass = self.volume * self.density
 
         # Mass proxy
         self.volume_proxy = cas.sum1(
-            cas.pi * trapz(
-                self.nominal_diameter
-            ) * dx * self.thickness
+            cas.pi * trapz(self.nominal_diameter) * dx * self.thickness
         )
         self.mass_proxy = self.volume_proxy * self.density
 
         # Find moments of inertia
-        self.I = cas.pi / 64 * (  # bending
-                (self.nominal_diameter + self.thickness) ** 4 -
-                (self.nominal_diameter - self.thickness) ** 4
+        self.I = (
+            cas.pi
+            / 64
+            * (  # bending
+                (self.nominal_diameter + self.thickness) ** 4
+                - (self.nominal_diameter - self.thickness) ** 4
+            )
         )
-        self.J = cas.pi / 32 * (  # torsion
-                (self.nominal_diameter + self.thickness) ** 4 -
-                (self.nominal_diameter - self.thickness) ** 4
+        self.J = (
+            cas.pi
+            / 32
+            * (  # torsion
+                (self.nominal_diameter + self.thickness) ** 4
+                - (self.nominal_diameter - self.thickness) ** 4
+            )
         )
 
         if self.bending:
@@ -253,26 +270,33 @@ class TubeBeam1(AeroSandboxObject):
             self.opti.set_initial(self.dEIddu, 0)
 
             # Define derivatives
-            self.opti.subject_to([
-                cas.diff(self.u) == trapz(self.du) * dx,
-                cas.diff(self.du) == trapz(self.ddu) * dx,
-                cas.diff(self.E * self.I * self.ddu) == trapz(self.dEIddu) * dx,
-                cas.diff(self.dEIddu) == trapz(self.force_per_unit_length) * dx + self.point_forces,
-            ])
+            self.opti.subject_to(
+                [
+                    cas.diff(self.u) == trapz(self.du) * dx,
+                    cas.diff(self.du) == trapz(self.ddu) * dx,
+                    cas.diff(self.E * self.I * self.ddu) == trapz(self.dEIddu) * dx,
+                    cas.diff(self.dEIddu)
+                    == trapz(self.force_per_unit_length) * dx + self.point_forces,
+                ]
+            )
 
             # Add BCs
             if bending_BC_type == "cantilevered":
-                self.opti.subject_to([
-                    self.u[0] == 0,
-                    self.du[0] == 0,
-                    self.ddu[-1] == 0,  # No tip moment
-                    self.dEIddu[-1] == 0,  # No tip higher order stuff
-                ])
+                self.opti.subject_to(
+                    [
+                        self.u[0] == 0,
+                        self.du[0] == 0,
+                        self.ddu[-1] == 0,  # No tip moment
+                        self.dEIddu[-1] == 0,  # No tip higher order stuff
+                    ]
+                )
             else:
                 raise ValueError("Bad value of bending_BC_type!")
 
             # Stress
-            self.stress_axial = (self.nominal_diameter + self.thickness) / 2 * self.E * self.ddu
+            self.stress_axial = (
+                (self.nominal_diameter + self.thickness) / 2 * self.E * self.ddu
+            )
 
         if self.torsion:
 
@@ -284,16 +308,19 @@ class TubeBeam1(AeroSandboxObject):
             ddphi = -self.moment_per_unit_length / (self.G * self.J)
 
         self.stress = self.stress_axial
-        self.opti.subject_to([
-            self.stress / self.max_allowable_stress < 1,
-            self.stress / self.max_allowable_stress > -1,
-        ])
+        self.opti.subject_to(
+            [
+                self.stress / self.max_allowable_stress < 1,
+                self.stress / self.max_allowable_stress > -1,
+            ]
+        )
 
-    def draw_bending(self,
-                     show=True,
-                     for_print=False,
-                     equal_scale=True,
-                     ):
+    def draw_bending(
+        self,
+        show=True,
+        for_print=False,
+        equal_scale=True,
+    ):
         """
         Draws a figure that illustrates some bending properties. Must be called on a solved object (i.e. using the substitute_sol method).
         :param show: Whether or not to show the figure [boolean]
@@ -303,20 +330,18 @@ class TubeBeam1(AeroSandboxObject):
         """
         import matplotlib.pyplot as plt
         import seaborn as sns
+
         sns.set(font_scale=1)
 
         fig, ax = plt.subplots(
             2 if not for_print else 3,
             3 if not for_print else 2,
-            figsize=(
-                10 if not for_print else 6,
-                6 if not for_print else 6
-            ),
-            dpi=200
+            figsize=(10 if not for_print else 6, 6 if not for_print else 6),
+            dpi=200,
         )
 
         plt.subplot(231) if not for_print else plt.subplot(321)
-        plt.plot(self.x, self.u, '.-')
+        plt.plot(self.x, self.u, ".-")
         plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"$u$ [m]")
         plt.title("Displacement (Bending)")
@@ -324,31 +349,31 @@ class TubeBeam1(AeroSandboxObject):
             plt.axis("equal")
 
         plt.subplot(232) if not for_print else plt.subplot(322)
-        plt.plot(self.x, np.arctan(self.du) * 180 / np.pi, '.-')
+        plt.plot(self.x, np.arctan(self.du) * 180 / np.pi, ".-")
         plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"Local Slope [deg]")
         plt.title("Slope")
 
         plt.subplot(233) if not for_print else plt.subplot(323)
-        plt.plot(self.x, self.force_per_unit_length, '.-')
+        plt.plot(self.x, self.force_per_unit_length, ".-")
         plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"$q$ [N/m]")
         plt.title("Local Load per Unit Span")
 
         plt.subplot(234) if not for_print else plt.subplot(324)
-        plt.plot(self.x, self.stress_axial / 1e6, '.-')
+        plt.plot(self.x, self.stress_axial / 1e6, ".-")
         plt.xlabel(r"$x$ [m]")
         plt.ylabel("Axial Stress [MPa]")
         plt.title("Axial Stress")
 
         plt.subplot(235) if not for_print else plt.subplot(325)
-        plt.plot(self.x, self.dEIddu, '.-')
+        plt.plot(self.x, self.dEIddu, ".-")
         plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"$F$ [N]")
         plt.title("Shear Force")
 
         plt.subplot(236) if not for_print else plt.subplot(326)
-        plt.plot(self.x, self.nominal_diameter, '.-')
+        plt.plot(self.x, self.nominal_diameter, ".-")
         plt.xlabel(r"$x$ [m]")
         plt.ylabel("Diameter [m]")
         plt.title("Optimal Spar Diameter")
@@ -357,7 +382,7 @@ class TubeBeam1(AeroSandboxObject):
         plt.show() if show else None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     opti = cas.Opti()
     beam = TubeBeam1(
         opti=opti,
@@ -365,31 +390,37 @@ if __name__ == '__main__':
         points_per_point_load=50,
         diameter_guess=100,
         bending=True,
-        torsion=False
+        torsion=False,
     )
     lift_force = 9.81 * 103.873
     load_location = opti.variable()
     opti.set_initial(load_location, 15)
-    opti.subject_to([
-        load_location > 2,
-        load_location < 60 / 2 - 2,
-        load_location == 18,
-    ])
+    opti.subject_to(
+        [
+            load_location > 2,
+            load_location < 60 / 2 - 2,
+            load_location == 18,
+        ]
+    )
     beam.add_point_load(load_location, -lift_force / 3)
     beam.add_uniform_load(force=lift_force / 2)
     beam.setup()
 
     # Tip deflection constraint
-    opti.subject_to([
-        # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        beam.du * 180 / cas.pi < 10,
-        beam.du * 180 / cas.pi > -10
-    ])
-    opti.subject_to([
-        cas.diff(cas.diff(beam.nominal_diameter)) < 0.001,
-        cas.diff(cas.diff(beam.nominal_diameter)) > -0.001,
-    ])
+    opti.subject_to(
+        [
+            # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+            # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+            beam.du * 180 / cas.pi < 10,
+            beam.du * 180 / cas.pi > -10,
+        ]
+    )
+    opti.subject_to(
+        [
+            cas.diff(cas.diff(beam.nominal_diameter)) < 0.001,
+            cas.diff(cas.diff(beam.nominal_diameter)) > -0.001,
+        ]
+    )
 
     # opti.minimize(cas.sqrt(beam.mass))
     opti.minimize(beam.mass)
@@ -414,7 +445,7 @@ if __name__ == '__main__':
     # s_opts["start_with_resto"] = "yes"
     # s_opts["required_infeasibility_reduction"] = 0.001
     # s_opts["evaluate_orig_obj_at_resto_trial"] = "yes"
-    opti.solver('ipopt', p_opts, s_opts)
+    opti.solver("ipopt", p_opts, s_opts)
 
     try:
         sol = opti.solve()

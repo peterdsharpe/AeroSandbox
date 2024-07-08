@@ -16,11 +16,7 @@ def plot_Cf_flat_plates():
         "hybrid-sharpe-convex",
         "hybrid-sharpe-nonconvex",
     ]:
-        plt.loglog(
-            Res,
-            aero.Cf_flat_plate(Res, method=method),
-            label=method
-        )
+        plt.loglog(Res, aero.Cf_flat_plate(Res, method=method), label=method)
     plt.ylim(1e-3, 1e-1)
     show_plot(
         "Models for Mean Skin Friction Coefficient of Flat Plate",
@@ -29,5 +25,5 @@ def plot_Cf_flat_plates():
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     plot_Cf_flat_plates()

@@ -1,6 +1,8 @@
 import aerosandbox as asb
 import pytest
-from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import airplane
+from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import (
+    airplane,
+)
 
 # def test_lifting_line():
 #     analysis = asb.LiftingLine(
@@ -9,6 +11,6 @@ from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional impor
 #     )
 #     return analysis.run()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_lifting_line()
     # pytest.main()

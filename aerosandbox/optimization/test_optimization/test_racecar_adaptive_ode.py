@@ -25,13 +25,14 @@ def test_racecar_adaptive_ode(plot=False):
 
         # Bernstein
         from scipy.special import comb
+
         tn = t / t_final
         for i in range(np.length(u_amp)):
             u += (
-                    u_amp[i]
-                    * comb(np.length(u_amp) - 1, i)
-                    * tn ** i
-                    * (1 - tn) ** (np.length(u_amp) - 1 - i)
+                u_amp[i]
+                * comb(np.length(u_amp) - 1, i)
+                * tn**i
+                * (1 - tn) ** (np.length(u_amp) - 1 - i)
             )
 
         # # # Step
@@ -49,10 +50,12 @@ def test_racecar_adaptive_ode(plot=False):
         return u
 
     def func(t, y):
-        return np.array([
-            y[1],
-            u(t) - y[1],
-        ])
+        return np.array(
+            [
+                y[1],
+                u(t) - y[1],
+            ]
+        )
 
     res = solve_ivp(
         fun=func,
@@ -65,10 +68,12 @@ def test_racecar_adaptive_ode(plot=False):
 
     opti.minimize(t_final)
 
-    opti.subject_to([
-        v <= 1 - np.sin(2 * np.pi * x) / 2,
-        x[-1] >= 1,
-    ])
+    opti.subject_to(
+        [
+            v <= 1 - np.sin(2 * np.pi * x) / 2,
+            x[-1] >= 1,
+        ]
+    )
 
     def callback(i):
         soli = asb.OptiSol(opti, opti.debug)
@@ -78,10 +83,13 @@ def test_racecar_adaptive_ode(plot=False):
         if i % 5 == 0:
             import matplotlib.pyplot as plt
             import aerosandbox.tools.pretty_plots as p
+
             fig, ax = plt.subplots()
             ax.plot(soli(t), soli(v), label="speed")
             ax.plot(soli(t), soli(x), label="position")
-            ax.plot(soli(t), soli(1 - np.sin(2 * np.pi * x) / 2), "r--", label="speed limit")
+            ax.plot(
+                soli(t), soli(1 - np.sin(2 * np.pi * x) / 2), "r--", label="speed limit"
+            )
             t_plot = np.linspace(0, soli(t_final), 1000)
             ax.plot(t_plot, soli(u(t_plot)), "k", label="throttle")
             plt.ylim(-0.1, 1.6)
@@ -107,6 +115,4 @@ def test_racecar_adaptive_ode(plot=False):
         ax.plot(t_plot, sol(u(t_plot)), "k", label="throttle")
         plt.xlabel("Time [s]")
         plt.ylabel("Position [m] / Speed [m/s] / Throttle [-]")
-        p.show_plot(
-            rotate_axis_labels=False
-        )
+        p.show_plot(rotate_axis_labels=False)

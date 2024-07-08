@@ -1,11 +1,11 @@
 import aerosandbox.numpy as np
-from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
+from aerosandbox.modeling.splines.hermite import (
+    linear_hermite_patch,
+    cubic_hermite_patch,
+)
 
 
-def sears_haack_drag(
-        radius_max: float,
-        length: float
-) -> float:
+def sears_haack_drag(radius_max: float, length: float) -> float:
     """
     Yields the idealized drag area (denoted CDA, or equivalently, D/q) of a Sears-Haack body.
 
@@ -22,14 +22,11 @@ def sears_haack_drag(
     Returns: The drag area (CDA, or D/q) of the body. To get the drag force, multiply by the dynamic pressure.
 
     """
-    CDA = 9 * np.pi ** 2 * radius_max ** 2 / (2 * length ** 2)
+    CDA = 9 * np.pi**2 * radius_max**2 / (2 * length**2)
     return CDA
 
 
-def sears_haack_drag_from_volume(
-        volume: float,
-        length: float
-) -> float:
+def sears_haack_drag_from_volume(volume: float, length: float) -> float:
     """
     See documentation for sears_haack_drag() in this same file.
 
@@ -37,16 +34,11 @@ def sears_haack_drag_from_volume(
 
     Also returns a drag area (denoted CDA, or equivalently, D/q).
     """
-    CDA = 128 * volume ** 2 / (np.pi * length ** 4)
+    CDA = 128 * volume**2 / (np.pi * length**4)
     return CDA
 
 
-def mach_crit_Korn(
-        CL,
-        t_over_c,
-        sweep=0,
-        kappa_A=0.95
-):
+def mach_crit_Korn(CL, t_over_c, sweep=0, kappa_A=0.95):
     """
         Wave drag_force coefficient prediction using the low-fidelity Korn Equation method;
     derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
@@ -62,7 +54,11 @@ def mach_crit_Korn(
     """
     smooth_abs_CL = np.softmax(CL, -CL, hardness=10)
 
-    M_dd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - smooth_abs_CL / (10 * np.cosd(sweep) ** 3)
+    M_dd = (
+        kappa_A / np.cosd(sweep)
+        - t_over_c / np.cosd(sweep) ** 2
+        - smooth_abs_CL / (10 * np.cosd(sweep) ** 3)
+    )
     M_crit = M_dd - (0.1 / 80) ** (1 / 3)
     return M_crit
 
@@ -81,21 +77,21 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     smooth_abs_Cl = np.softmax(Cl, -Cl, hardness=10)
 
     mach = np.fmax(mach, 0)
-    Mdd = kappa_A / np.cosd(sweep) - t_over_c / np.cosd(sweep) ** 2 - smooth_abs_Cl / (10 * np.cosd(sweep) ** 3)
-    Mcrit = Mdd - (0.1 / 80) ** (1 / 3)
-    Cd_wave = np.where(
-        mach > Mcrit,
-        20 * (mach - Mcrit) ** 4,
-        0
+    Mdd = (
+        kappa_A / np.cosd(sweep)
+        - t_over_c / np.cosd(sweep) ** 2
+        - smooth_abs_Cl / (10 * np.cosd(sweep) ** 3)
     )
+    Mcrit = Mdd - (0.1 / 80) ** (1 / 3)
+    Cd_wave = np.where(mach > Mcrit, 20 * (mach - Mcrit) ** 4, 0)
 
     return Cd_wave
 
 
 def approximate_CD_wave(
-        mach,
-        mach_crit,
-        CD_wave_at_fully_supersonic,
+    mach,
+    mach_crit,
+    CD_wave_at_fully_supersonic,
 ):
     """
     An approximate relation for computing transonic wave drag, based on an object's Mach number.
@@ -138,11 +134,7 @@ def approximate_CD_wave(
     """
     mach_crit_max = 1 - (0.1 / 80) ** (1 / 3)
 
-    mach_crit = -np.softmax(
-        -mach_crit,
-        -mach_crit_max,
-        hardness=50
-    )
+    mach_crit = -np.softmax(-mach_crit, -mach_crit_max, hardness=50)
 
     ### The following approximate relation is derived in W.H. Mason, "Configuration Aerodynamics", Chapter 7. Transonic Aerodynamics of Airfoils and Wings.
     ### Equation 7-8 on Page 7-19.
@@ -165,32 +157,26 @@ def approximate_CD_wave(
                     f_a=20 * (0.1 / 80) ** (4 / 3),
                     f_b=1,
                     dfdx_a=0.1,
-                    dfdx_b=8
+                    dfdx_b=8,
                 ),
                 np.where(
                     mach < 1.2,
                     cubic_hermite_patch(
-                        mach,
-                        x_a=1.05,
-                        x_b=1.2,
-                        f_a=1,
-                        f_b=1,
-                        dfdx_a=8,
-                        dfdx_b=-4
+                        mach, x_a=1.05, x_b=1.2, f_a=1, f_b=1, dfdx_a=8, dfdx_b=-4
                     ),
                     np.blend(
                         switch=4 * 2 * (mach - 1.2) / (1.2 - 0.8),
                         value_switch_high=0.8,
                         value_switch_low=1.2,
-                    )
+                    ),
                     # 0.8 + 0.2 * np.exp(20 * (1.2 - mach))
-                )
-            )
-        )
+                ),
+            ),
+        ),
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mc = 0.6
     drag = lambda mach: approximate_CD_wave(
         mach,
@@ -203,7 +189,7 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(1, 3, figsize=(10, 5))
 
-    mach = np.linspace(0., 2, 10000)
+    mach = np.linspace(0.0, 2, 10000)
     drag = drag(mach)
     ddragdm = np.gradient(drag, np.diff(mach)[0])
     dddragdm = np.gradient(ddragdm, np.diff(mach)[0])

@@ -4,8 +4,7 @@ import aerosandbox.tools.units as u
 
 
 def tire_size(
-        mass_supported_by_each_tire: float,
-        aircraft_type="general_aviation"
+    mass_supported_by_each_tire: float, aircraft_type="general_aviation"
 ) -> float:
     """
     Computes the required diameter and width of a tire for an airplane, from statistical regression to historical data.
@@ -41,7 +40,7 @@ def tire_size(
     else:
         raise ValueError("Invalid `aircraft_type`.")
 
-    tire_diameter_in = A * mass_supported_by_tire_lbm ** B
+    tire_diameter_in = A * mass_supported_by_tire_lbm**B
 
     if aircraft_type == "general_aviation":
         A = 0.7150
@@ -56,7 +55,7 @@ def tire_size(
         A = 0.0980
         B = 0.467
 
-    tire_width_in = A * mass_supported_by_tire_lbm ** B
+    tire_width_in = A * mass_supported_by_tire_lbm**B
 
     tire_diameter = tire_diameter_in * u.inch
     tire_width = tire_width_in * u.inch

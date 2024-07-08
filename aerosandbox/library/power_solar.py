@@ -20,14 +20,11 @@ def _prepare_for_inverse_trig(x: Union[float, np.ndarray]) -> Union[float, np.nd
 
     Returns: A clipped version of the number, constrained to be in the open interval (-1, 1).
     """
-    return (
-            np.nextafter(1, -1) *
-            np.clip(x, -1, 1)
-    )
+    return np.nextafter(1, -1) * np.clip(x, -1, 1)
 
 
 def solar_flux_outside_atmosphere_normal(
-        day_of_year: Union[int, float, np.ndarray]
+    day_of_year: Union[int, float, np.ndarray]
 ) -> Union[float, np.ndarray]:
     """
     Computes the normal solar flux at the top of the atmosphere ("Airmass 0").
@@ -41,13 +38,11 @@ def solar_flux_outside_atmosphere_normal(
     Returns: The normal solar flux [W/m^2] at the top of the atmosphere.
 
     """
-    return 1367 * (
-            1 + 0.034 * np.cosd(360 * (day_of_year) / 365.25)
-    )
+    return 1367 * (1 + 0.034 * np.cosd(360 * (day_of_year) / 365.25))
 
 
 def declination_angle(
-        day_of_year: Union[int, float, np.ndarray]
+    day_of_year: Union[int, float, np.ndarray]
 ) -> Union[float, np.ndarray]:
     """
     Computes the solar declination angle, in degrees, as a function of day of year.
@@ -66,9 +61,9 @@ def declination_angle(
 
 
 def solar_elevation_angle(
-        latitude: Union[float, np.ndarray],
-        day_of_year: Union[int, float, np.ndarray],
-        time: Union[float, np.ndarray]
+    latitude: Union[float, np.ndarray],
+    day_of_year: Union[int, float, np.ndarray],
+    time: Union[float, np.ndarray],
 ) -> Union[float, np.ndarray]:
     """
     Elevation angle of the sun [degrees] for a local observer.
@@ -89,10 +84,9 @@ def solar_elevation_angle(
     """
     declination = declination_angle(day_of_year)
 
-    sin_solar_elevation_angle = (
-            np.sind(declination) * np.sind(latitude) +
-            np.cosd(declination) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
-    )
+    sin_solar_elevation_angle = np.sind(declination) * np.sind(latitude) + np.cosd(
+        declination
+    ) * np.cosd(latitude) * np.cosd(time / 86400 * 360)
 
     solar_elevation_angle = np.arcsind(
         _prepare_for_inverse_trig(sin_solar_elevation_angle)
@@ -101,9 +95,9 @@ def solar_elevation_angle(
 
 
 def solar_azimuth_angle(
-        latitude: Union[float, np.ndarray],
-        day_of_year: Union[int, float, np.ndarray],
-        time: Union[float, np.ndarray]
+    latitude: Union[float, np.ndarray],
+    day_of_year: Union[int, float, np.ndarray],
+    time: Union[float, np.ndarray],
 ) -> Union[float, np.ndarray]:
     """
     Azimuth angle of the sun [degrees] for a local observer.
@@ -136,19 +130,15 @@ def solar_azimuth_angle(
 
     is_solar_morning = np.mod(time, 86400) > 43200
 
-    solar_azimuth_angle = np.where(
-        is_solar_morning,
-        azimuth_raw,
-        360 - azimuth_raw
-    )
+    solar_azimuth_angle = np.where(is_solar_morning, azimuth_raw, 360 - azimuth_raw)
 
     return solar_azimuth_angle
 
 
 def airmass(
-        solar_elevation_angle: Union[float, np.ndarray],
-        altitude: Union[float, np.ndarray] = 0.,
-        method='Young'
+    solar_elevation_angle: Union[float, np.ndarray],
+    altitude: Union[float, np.ndarray] = 0.0,
+    method="Young",
 ) -> Union[float, np.ndarray]:
     """
     Computes the (relative) airmass as a function of the (true) solar elevation angle and observer altitude.
@@ -206,40 +196,37 @@ def airmass(
     """
     true_zenith_angle = 90 - solar_elevation_angle
 
-    if method == 'Young':
+    if method == "Young":
         cos_zt = np.cosd(true_zenith_angle)
-        cos2_zt = cos_zt ** 2
-        cos3_zt = cos_zt ** 3
+        cos2_zt = cos_zt**2
+        cos3_zt = cos_zt**3
 
         numerator = 1.002432 * cos2_zt + 0.148386 * cos_zt + 0.0096467
         denominator = cos3_zt + 0.149864 * cos2_zt + 0.0102963 * cos_zt + 0.000303978
 
         sea_level_airmass = np.where(
-            denominator > 0,
-            numerator / denominator,
-            1e100  # Essentially, infinity.
+            denominator > 0, numerator / denominator, 1e100  # Essentially, infinity.
         )
     else:
         raise ValueError("Bad value of `method`!")
 
     airmass_at_altitude = sea_level_airmass * (
-            Atmosphere(altitude=altitude).pressure() /
-            101325.
+        Atmosphere(altitude=altitude).pressure() / 101325.0
     )
 
     return airmass_at_altitude
 
 
 def solar_flux(
-        latitude: Union[float, np.ndarray],
-        day_of_year: Union[int, float, np.ndarray],
-        time: Union[float, np.ndarray],
-        altitude: Union[float, np.ndarray] = 0.,
-        panel_azimuth_angle: Union[float, np.ndarray] = 0.,
-        panel_tilt_angle: Union[float, np.ndarray] = 0.,
-        air_quality: str = 'typical',
-        albedo: Union[float, np.ndarray] = 0.2,
-        **deprecated_kwargs
+    latitude: Union[float, np.ndarray],
+    day_of_year: Union[int, float, np.ndarray],
+    time: Union[float, np.ndarray],
+    altitude: Union[float, np.ndarray] = 0.0,
+    panel_azimuth_angle: Union[float, np.ndarray] = 0.0,
+    panel_tilt_angle: Union[float, np.ndarray] = 0.0,
+    air_quality: str = "typical",
+    albedo: Union[float, np.ndarray] = 0.2,
+    **deprecated_kwargs,
 ) -> Union[float, np.ndarray]:
     """
     Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel. Accounts for atmospheric
@@ -292,11 +279,11 @@ def solar_flux(
         air_quality: Indicates the amount of pollution in the air. A string, one of:
 
             * 'clean': Pristine atmosphere conditions.
-            
+
             * 'typical': Corresponds to "rural aerosol loading" following ASTM G-173.
 
             * 'polluted': Urban atmosphere conditions.
-            
+
             Note: in very weird edge cases, a polluted atmosphere can actually result in slightly higher solar flux
             than clean air, due to increased back-scattering. For example, imagine it's near sunset, with the sun in
             the west, and your panel normal vector points east. Increased pollution can, in some edge cases,
@@ -328,7 +315,9 @@ def solar_flux(
         * Note: does not account for any potential reflectivity of the solar panel's coating itself.
 
     """
-    flux_outside_atmosphere = solar_flux_outside_atmosphere_normal(day_of_year=day_of_year)
+    flux_outside_atmosphere = solar_flux_outside_atmosphere_normal(
+        day_of_year=day_of_year
+    )
 
     solar_elevation = solar_elevation_angle(latitude, day_of_year, time)
     solar_azimuth = solar_azimuth_angle(latitude, day_of_year, time)
@@ -339,24 +328,27 @@ def solar_flux(
     )
 
     # Source: "Planning and installing..." Earthscan. Full citation in docstring above.
-    if air_quality == 'typical':
-        atmospheric_transmission_fraction = 0.70 ** (relative_airmass ** 0.678)
-    elif air_quality == 'clean':
-        atmospheric_transmission_fraction = 0.76 ** (relative_airmass ** 0.618)
-    elif air_quality == 'polluted':
-        atmospheric_transmission_fraction = 0.56 ** (relative_airmass ** 0.715)
+    if air_quality == "typical":
+        atmospheric_transmission_fraction = 0.70 ** (relative_airmass**0.678)
+    elif air_quality == "clean":
+        atmospheric_transmission_fraction = 0.76 ** (relative_airmass**0.618)
+    elif air_quality == "polluted":
+        atmospheric_transmission_fraction = 0.56 ** (relative_airmass**0.715)
     else:
         raise ValueError("Bad value of `air_quality`!")
 
     direct_normal_irradiance = np.where(
-        solar_elevation > 0.,
+        solar_elevation > 0.0,
         flux_outside_atmosphere * atmospheric_transmission_fraction,
-        0.
+        0.0,
     )
 
-    absorption_and_scattering_losses = flux_outside_atmosphere - flux_outside_atmosphere * atmospheric_transmission_fraction
+    absorption_and_scattering_losses = (
+        flux_outside_atmosphere
+        - flux_outside_atmosphere * atmospheric_transmission_fraction
+    )
 
-    scattering_losses = absorption_and_scattering_losses * (10. / 28.)
+    scattering_losses = absorption_and_scattering_losses * (10.0 / 28.0)
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/air-mass
     # Indicates that absorption and scattering happen in a 18:10 ratio, at least in AM1.5 conditions. We extrapolate
     # this to all conditions.
@@ -368,39 +360,40 @@ def solar_flux(
         -1 + panel_tilt_angle / 180,
     )
 
-    diffuse_irradiance = scattering_losses * atmospheric_transmission_fraction * (
-            fraction_of_panel_facing_sky + albedo * (1 - fraction_of_panel_facing_sky)
+    diffuse_irradiance = (
+        scattering_losses
+        * atmospheric_transmission_fraction
+        * (fraction_of_panel_facing_sky + albedo * (1 - fraction_of_panel_facing_sky))
     )
     # We assume that the in-scattering (i.e., diffuse irradiance) and the out-scattering (i.e., scattering losses in
     # the direct irradiance calculation) are equal, by argument of approximately parallel incident rays.
     # We further assume that any in-scattering must then once-again go through the absorption / re-scattering process,
     # which is identical to the original atmospheric transmission fraction.
 
-    cosine_of_angle_between_panel_normal_and_sun = (
-            np.cosd(solar_elevation) *
-            np.sind(panel_tilt_angle) *
-            np.cosd(panel_azimuth_angle - solar_azimuth)
-            + np.sind(solar_elevation) * np.cosd(panel_tilt_angle)
+    cosine_of_angle_between_panel_normal_and_sun = np.cosd(solar_elevation) * np.sind(
+        panel_tilt_angle
+    ) * np.cosd(panel_azimuth_angle - solar_azimuth) + np.sind(
+        solar_elevation
+    ) * np.cosd(
+        panel_tilt_angle
     )
     cosine_of_angle_between_panel_normal_and_sun = np.fmax(
-        cosine_of_angle_between_panel_normal_and_sun,
-        0
+        cosine_of_angle_between_panel_normal_and_sun, 0
     )  # Accounts for if you have a downwards-pointing panel while the sun is above you.
 
     # Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/arbitrary-orientation-and-tilt
     # Author of this code (Peter Sharpe) has manually verified correctness of this vector math.
 
     flux_on_panel = (
-            direct_normal_irradiance * cosine_of_angle_between_panel_normal_and_sun
-            + diffuse_irradiance
+        direct_normal_irradiance * cosine_of_angle_between_panel_normal_and_sun
+        + diffuse_irradiance
     )
 
     return flux_on_panel
 
 
 def peak_sun_hours_per_day_on_horizontal(
-        latitude: Union[float, np.ndarray],
-        day_of_year: Union[int, float, np.ndarray]
+    latitude: Union[float, np.ndarray], day_of_year: Union[int, float, np.ndarray]
 ) -> Union[float, np.ndarray]:
     """
     How many hours of equivalent peak sun do you get per day?
@@ -410,15 +403,18 @@ def peak_sun_hours_per_day_on_horizontal(
     :return:
     """
     import warnings
+
     warnings.warn(
         "Use `solar_flux()` function from this module instead and integrate, which allows far greater granularity.",
-        DeprecationWarning
+        DeprecationWarning,
     )
     time = np.linspace(0, 86400, 1000)
     fluxes = solar_flux(latitude, day_of_year, time)
     energy_per_area = np.sum(np.trapz(fluxes) * np.diff(time))
 
-    duration_of_equivalent_peak_sun = energy_per_area / solar_flux(latitude, day_of_year, time=0.)
+    duration_of_equivalent_peak_sun = energy_per_area / solar_flux(
+        latitude, day_of_year, time=0.0
+    )
 
     sun_hours = duration_of_equivalent_peak_sun / 3600
 
@@ -426,8 +422,7 @@ def peak_sun_hours_per_day_on_horizontal(
 
 
 def length_day(
-        latitude: Union[float, np.ndarray],
-        day_of_year: Union[int, float, np.ndarray]
+    latitude: Union[float, np.ndarray], day_of_year: Union[int, float, np.ndarray]
 ) -> Union[float, np.ndarray]:
     """
     Gives the duration where the sun is above the horizon on a given day.
@@ -451,9 +446,7 @@ def length_day(
     return sun_time
 
 
-def mass_MPPT(
-        power: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]:
+def mass_MPPT(power: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     """
     Gives the estimated mass of a Maximum Power Point Tracking (MPPT) unit for solar energy
     collection. Based on regressions at AeroSandbox/studies/SolarMPPTMasses.
@@ -466,7 +459,7 @@ def mass_MPPT(
     """
     constant = 0.066343
     exponent = 0.515140
-    return constant * power ** exponent
+    return constant * power**exponent
 
 
 if __name__ == "__main__":
@@ -475,11 +468,11 @@ if __name__ == "__main__":
 
     # plt.switch_backend('WebAgg')
 
-    base_color = p.palettes['categorical'][0]
+    base_color = p.palettes["categorical"][0]
     quality_colors = {
-        'clean'   : p.adjust_lightness(base_color, amount=1.2),
-        'typical' : p.adjust_lightness(base_color, amount=0.7),
-        'polluted': p.adjust_lightness(base_color, amount=0.2),
+        "clean": p.adjust_lightness(base_color, amount=1.2),
+        "typical": p.adjust_lightness(base_color, amount=0.7),
+        "polluted": p.adjust_lightness(base_color, amount=0.2),
     }
 
     ##### Plot solar_flux() over the course of a day
@@ -494,20 +487,21 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(2, 1, figsize=(7, 6.5))
     plt.sca(ax[0])
-    plt.title(f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)")
+    plt.title(
+        f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)"
+    )
     for q in quality_colors.keys():
         plt.plot(
             hour,
-            solar_flux(
-                **base_kwargs,
-                air_quality=q
-            ),
+            solar_flux(**base_kwargs, air_quality=q),
             color=quality_colors[q],
-            label=f'ASB Model: {q.capitalize()} air'
+            label=f"ASB Model: {q.capitalize()} air",
         )
 
     plt.sca(ax[1])
-    plt.title(f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)")
+    plt.title(
+        f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)"
+    )
     for q in quality_colors.keys():
         plt.plot(
             hour,
@@ -515,10 +509,10 @@ if __name__ == "__main__":
                 **base_kwargs,
                 panel_tilt_angle=90 - solar_elevation_angle(**base_kwargs),
                 panel_azimuth_angle=solar_azimuth_angle(**base_kwargs),
-                air_quality=q
+                air_quality=q,
             ),
             color=quality_colors[q],
-            label=f'ASB Model: {q.capitalize()} air'
+            label=f"ASB Model: {q.capitalize()} air",
         )
 
     for a in ax:
@@ -556,20 +550,17 @@ z [deg],AM [-],Solar Flux Lower Bound [W/m^2],Solar Flux Upper Bound [W/m^2]
     from io import StringIO
 
     delimiter = "\t"
-    df = pd.read_csv(
-        StringIO(raw_data),
-        delimiter=','
-    )
-    df["Solar Flux [W/m^2]"] = (df['Solar Flux Lower Bound [W/m^2]'] + df['Solar Flux Upper Bound [W/m^2]']) / 2
+    df = pd.read_csv(StringIO(raw_data), delimiter=",")
+    df["Solar Flux [W/m^2]"] = (
+        df["Solar Flux Lower Bound [W/m^2]"] + df["Solar Flux Upper Bound [W/m^2]"]
+    ) / 2
 
     fluxes = solar_flux(
         **base_kwargs,
         panel_tilt_angle=90 - solar_elevation_angle(**base_kwargs),
         panel_azimuth_angle=solar_azimuth_angle(**base_kwargs),
     )
-    elevations = solar_elevation_angle(
-        **base_kwargs
-    )
+    elevations = solar_elevation_angle(**base_kwargs)
 
     fig, ax = plt.subplots()
     for q in quality_colors.keys():
@@ -579,32 +570,32 @@ z [deg],AM [-],Solar Flux Lower Bound [W/m^2],Solar Flux Upper Bound [W/m^2]
                 **base_kwargs,
                 panel_tilt_angle=90 - solar_elevation_angle(**base_kwargs),
                 panel_azimuth_angle=solar_azimuth_angle(**base_kwargs),
-                air_quality=q
+                air_quality=q,
             ),
             color=quality_colors[q],
-            label=f'ASB Model: {q.capitalize()} air',
-            zorder=3
+            label=f"ASB Model: {q.capitalize()} air",
+            zorder=3,
         )
 
-    data_color = p.palettes['categorical'][1]
+    data_color = p.palettes["categorical"][1]
 
     plt.fill_between(
-        x=90 - df['z [deg]'].values,
-        y1=df['Solar Flux Lower Bound [W/m^2]'],
-        y2=df['Solar Flux Upper Bound [W/m^2]'],
+        x=90 - df["z [deg]"].values,
+        y1=df["Solar Flux Lower Bound [W/m^2]"],
+        y2=df["Solar Flux Upper Bound [W/m^2]"],
         color=data_color,
         alpha=0.4,
-        label='Experimental Data Range\n(due to Pollution)',
+        label="Experimental Data Range\n(due to Pollution)",
         zorder=2.9,
     )
-    for d in ['Lower', 'Upper']:
+    for d in ["Lower", "Upper"]:
         plt.plot(
-            90 - df['z [deg]'].values,
-            df[f'Solar Flux {d} Bound [W/m^2]'],
+            90 - df["z [deg]"].values,
+            df[f"Solar Flux {d} Bound [W/m^2]"],
             ".",
             color=data_color,
             alpha=0.7,
-            zorder=2.95
+            zorder=2.95,
         )
 
     plt.annotate(
@@ -612,8 +603,8 @@ z [deg],AM [-],Solar Flux Lower Bound [W/m^2],Solar Flux Upper Bound [W/m^2]
         xy=(0.02, 0.98),
         xycoords="axes fraction",
         ha="left",
-        va='top',
-        fontsize=9
+        va="top",
+        fontsize=9,
     )
     plt.xlim(-5, 90)
     p.set_ticks(15, 5, 200, 50)
@@ -621,5 +612,5 @@ z [deg],AM [-],Solar Flux Lower Bound [W/m^2],Solar Flux Upper Bound [W/m^2]
     p.show_plot(
         f"Sun Position vs. Solar Flux on a Sun-Tracking Surface",
         f"Solar Elevation Angle [deg]",
-        "Solar Flux [$W/m^2$]"
+        "Solar Flux [$W/m^2$]",
     )

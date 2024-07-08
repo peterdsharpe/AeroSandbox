@@ -2,11 +2,11 @@ import aerosandbox.numpy as np
 
 
 def propeller_shaft_power_from_thrust(
-        thrust_force,
-        area_propulsive,
-        airspeed,
-        rho,
-        propeller_coefficient_of_performance=0.8,
+    thrust_force,
+    area_propulsive,
+    airspeed,
+    rho,
+    propeller_coefficient_of_performance=0.8,
 ):
     """
     Using dynamic disc actuator theory, gives the shaft power required to generate
@@ -21,18 +21,16 @@ def propeller_shaft_power_from_thrust(
     :param propeller_coefficient_of_performance: propeller coeff. of performance (due to viscous losses) [unitless]
     :return: Shaft power [W]
     """
-    return 0.5 * thrust_force * airspeed * (
-            np.sqrt(
-                thrust_force / (area_propulsive * airspeed ** 2 * rho / 2) + 1
-            ) + 1
-    ) / propeller_coefficient_of_performance
+    return (
+        0.5
+        * thrust_force
+        * airspeed
+        * (np.sqrt(thrust_force / (area_propulsive * airspeed**2 * rho / 2) + 1) + 1)
+        / propeller_coefficient_of_performance
+    )
 
 
-def mass_hpa_propeller(
-        diameter,
-        max_power,
-        include_variable_pitch_mechanism=False
-):
+def mass_hpa_propeller(diameter, max_power, include_variable_pitch_mechanism=False):
     """
     Returns the estimated mass of a propeller assembly for low-disc-loading applications (human powered airplane, paramotor, etc.)
 
@@ -43,9 +41,9 @@ def mass_hpa_propeller(
     """
 
     mass_propeller = (
-            0.495 *
-            (diameter / 1.25) ** 1.6 *
-            np.softmax(0.6, max_power / 14914, hardness=5) ** 2
+        0.495
+        * (diameter / 1.25) ** 1.6
+        * np.softmax(0.6, max_power / 14914, hardness=5) ** 2
     )  # Baselining to a 125cm E-Props Top 80 Propeller for paramotor, with some sketchy scaling assumptions
     # Parameters on diameter exponent and min power were chosen such that Daedalus propeller is roughly on the curve.
 
@@ -58,9 +56,9 @@ def mass_hpa_propeller(
 
 
 def mass_gearbox(
-        power,
-        rpm_in,
-        rpm_out,
+    power,
+    rpm_in,
+    rpm_out,
 ):
     """
     Estimates the mass of a gearbox.
@@ -98,7 +96,7 @@ def mass_gearbox(
     return mass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.style as style
 
     style.use("seaborn")
@@ -108,12 +106,8 @@ if __name__ == '__main__':
         mass_hpa_propeller(
             diameter=3.4442,
             max_power=177.93 * 8.2,  # max thrust at cruise speed
-            include_variable_pitch_mechanism=False
+            include_variable_pitch_mechanism=False,
         )
     )  # Should weight ca. 800 grams
 
-    print(mass_gearbox(
-        power=3000,
-        rpm_in=6000,
-        rpm_out=600
-    ))
+    print(mass_gearbox(power=3000, rpm_in=6000, rpm_out=600))

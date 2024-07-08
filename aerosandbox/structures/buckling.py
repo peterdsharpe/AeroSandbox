@@ -2,11 +2,11 @@ import aerosandbox.numpy as np
 
 
 def column_buckling_critical_load(
-        elastic_modulus: float,
-        moment_of_inertia: float,
-        length: float,
-        boundary_condition_type: str = "pin-pin",
-        use_recommended_design_values: bool = True,
+    elastic_modulus: float,
+    moment_of_inertia: float,
+    length: float,
+    boundary_condition_type: str = "pin-pin",
+    use_recommended_design_values: bool = True,
 ):
     """
     Computes the critical load (in N) for a column or tube in compression to buckle via primary buckling. Uses Euler's classical critical
@@ -40,26 +40,28 @@ def column_buckling_critical_load(
     """
     if boundary_condition_type == "pin-pin":
         K = 1.00 if use_recommended_design_values else 1.00
-    elif boundary_condition_type == "pin-clamp" or boundary_condition_type == "clamp-pin":
+    elif (
+        boundary_condition_type == "pin-clamp" or boundary_condition_type == "clamp-pin"
+    ):
         K = 0.80 if use_recommended_design_values else 0.70
     elif boundary_condition_type == "clamp-clamp":
         K = 0.65 if use_recommended_design_values else 0.50
-    elif boundary_condition_type == "clamp-free" or boundary_condition_type == "free-clamp":
+    elif (
+        boundary_condition_type == "clamp-free"
+        or boundary_condition_type == "free-clamp"
+    ):
         K = 2.10 if use_recommended_design_values else 2.00
     else:
         raise ValueError("Invalid `boundary_condition_type`.")
 
-    return (
-            np.pi ** 2 * elastic_modulus * moment_of_inertia
-            / (K * length) ** 2
-    )
+    return np.pi**2 * elastic_modulus * moment_of_inertia / (K * length) ** 2
 
 
 def thin_walled_tube_crippling_buckling_critical_load(
-        elastic_modulus: float,
-        wall_thickness: float,
-        radius: float,
-        use_recommended_design_values: bool = True,
+    elastic_modulus: float,
+    wall_thickness: float,
+    radius: float,
+    use_recommended_design_values: bool = True,
 ):
     """
     Computes the critical load for a thin-walled tube in compression to fail in the crippling mode. (Note: you should also check for
@@ -122,12 +124,12 @@ def thin_walled_tube_crippling_buckling_critical_load(
 
 
 def plate_buckling_critical_load(
-        length: float,
-        width: float,
-        wall_thickness: float,
-        elastic_modulus: float,
-        poissons_ratio: float = 0.33,
-        side_boundary_condition_type: str = "clamp-clamp",
+    length: float,
+    width: float,
+    wall_thickness: float,
+    elastic_modulus: float,
+    poissons_ratio: float = 0.33,
+    side_boundary_condition_type: str = "clamp-clamp",
 ):
     """
     Computes the critical compressive load (in N) for a plate to buckle via plate buckling.
@@ -175,9 +177,12 @@ def plate_buckling_critical_load(
         raise ValueError("Invalid `side_boundary_condition_type`.")
 
     critical_buckling_load = (
-            K * np.pi ** 2 * elastic_modulus /
-            (12 * (1 - poissons_ratio ** 2)) *
-            wall_thickness ** 3 / width
+        K
+        * np.pi**2
+        * elastic_modulus
+        / (12 * (1 - poissons_ratio**2))
+        * wall_thickness**3
+        / width
     )
 
     return critical_buckling_load

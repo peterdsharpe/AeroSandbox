@@ -6,13 +6,13 @@ from scipy import interpolate
 
 
 def plot_smooth(
-        *args,
-        color=None,
-        label=None,
-        function_of: str = None,
-        resample_resolution: int = 500,
-        drop_nans: bool = False,
-        **kwargs,
+    *args,
+    color=None,
+    label=None,
+    function_of: str = None,
+    resample_resolution: int = 500,
+    drop_nans: bool = False,
+    **kwargs,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Plots a curve that interpolates a 2D dataset. Same as matplotlib.pyplot.plot(), with the following changes:
@@ -79,27 +79,26 @@ def plot_smooth(
         else:
             x = argslist.pop(0)
             y = argslist.pop(0)
-            fmt = '.-'
+            fmt = ".-"
     elif len(args) == 1:
         x = np.arange(np.length(args[0]))
         y = argslist.pop(0)
-        fmt = '.-'
+        fmt = ".-"
     elif len(args) == 0:
-        raise ValueError("Missing plot data. Use syntax `plot_smooth(x, y, fmt, **kwargs)'.")
+        raise ValueError(
+            "Missing plot data. Use syntax `plot_smooth(x, y, fmt, **kwargs)'."
+        )
     else:
-        raise ValueError("Unrecognized syntax. Use syntax `plot_smooth(x, y, fmt, **kwargs)'.")
+        raise ValueError(
+            "Unrecognized syntax. Use syntax `plot_smooth(x, y, fmt, **kwargs)'."
+        )
 
     ### Ensure types are correct (e.g., if a list or Pandas Series is passed in)
     x = np.array(x)
     y = np.array(y)
 
     if drop_nans:
-        nanmask = np.logical_not(
-            np.logical_or(
-                np.isnan(x),
-                np.isnan(y)
-            )
-        )
+        nanmask = np.logical_not(np.logical_or(np.isnan(x), np.isnan(y)))
 
         x = x[nanmask]
         y = y[nanmask]
@@ -124,29 +123,17 @@ def plot_smooth(
         dx_norm = dx / x_rng
         dy_norm = dy / y_rng
 
-        ds_norm = np.sqrt(dx_norm ** 2 + dy_norm ** 2)
+        ds_norm = np.sqrt(dx_norm**2 + dy_norm**2)
 
-        s_norm = np.concatenate([
-            [0],
-            np.nancumsum(ds_norm) / np.nansum(ds_norm)
-        ])
+        s_norm = np.concatenate([[0], np.nancumsum(ds_norm) / np.nansum(ds_norm)])
 
-        bspline = interpolate.make_interp_spline(
-            x=s_norm,
-            y=np.stack(
-                (x, y), axis=1
-            )
-        )
+        bspline = interpolate.make_interp_spline(x=s_norm, y=np.stack((x, y), axis=1))
         result = bspline(np.linspace(0, 1, resample_resolution))
         x_resample = result[:, 0]
         y_resample = result[:, 1]
 
     elif function_of == "x":
-        x_resample = np.linspace(
-            np.nanmin(x),
-            np.nanmax(x),
-            resample_resolution
-        )
+        x_resample = np.linspace(np.nanmin(x), np.nanmax(x), resample_resolution)
 
         mask = ~np.isnan(x) & ~np.isnan(y)
         x = x[mask]
@@ -161,11 +148,7 @@ def plot_smooth(
 
     elif function_of == "y":
 
-        y_resample = np.linspace(
-            np.nanmin(y),
-            np.nanmax(y),
-            resample_resolution
-        )
+        y_resample = np.linspace(np.nanmin(y), np.nanmax(y), resample_resolution)
 
         mask = ~np.isnan(x) & ~np.isnan(y)
         x = x[mask]
@@ -182,40 +165,29 @@ def plot_smooth(
 
     scatter_kwargs = {
         **kwargs,
-        'linewidth': 0,
+        "linewidth": 0,
     }
     if color is not None:
-        scatter_kwargs['color'] = color
+        scatter_kwargs["color"] = color
 
-    line, = plt.plot(
-        x,
-        y,
-        fmt,
-        *argslist,
-        **scatter_kwargs
-    )
+    (line,) = plt.plot(x, y, fmt, *argslist, **scatter_kwargs)
 
     if color is None:
         color = line.get_color()
 
     line_kwargs = {
-        'color'     : color,
-        'label'     : label,
+        "color": color,
+        "label": label,
         **kwargs,
-        'markersize': 0,
+        "markersize": 0,
     }
 
-    plt.plot(
-        x_resample,
-        y_resample,
-        fmt,
-        *argslist,
-        **line_kwargs
-    )
+    plt.plot(x_resample, y_resample, fmt, *argslist, **line_kwargs)
 
     return x_resample, y_resample
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import aerosandbox.numpy as np
 
     # t = np.linspace(0, 1, 12)  # Parametric variable
@@ -231,9 +203,11 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     x = np.linspace(0, 1, 8)
     plot_smooth(
-        x, np.exp(-10 * x**0.5), color='goldenrod',
+        x,
+        np.exp(-10 * x**0.5),
+        color="goldenrod",
         function_of="x",
         # markersize=0,
-        resample_resolution=2000
+        resample_resolution=2000,
     )
     plt.show()

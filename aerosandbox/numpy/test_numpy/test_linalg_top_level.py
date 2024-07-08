@@ -13,15 +13,9 @@ def test_cross_1D_input():
     correct_result = np.cross(a, b)
     cas_correct_result = cas.DM(correct_result)
 
-    assert np.all(
-        np.cross(a, cas_b) == cas_correct_result
-    )
-    assert np.all(
-        np.cross(cas_a, b) == cas_correct_result
-    )
-    assert np.all(
-        np.cross(cas_a, cas_b) == cas_correct_result
-    )
+    assert np.all(np.cross(a, cas_b) == cas_correct_result)
+    assert np.all(np.cross(cas_a, b) == cas_correct_result)
+    assert np.all(np.cross(cas_a, cas_b) == cas_correct_result)
 
 
 def test_cross_2D_input_last_axis():
@@ -34,15 +28,9 @@ def test_cross_2D_input_last_axis():
     correct_result = np.cross(a, b)
     cas_correct_result = cas.DM(correct_result)
 
-    assert np.all(
-        np.cross(a, cas_b) == cas_correct_result
-    )
-    assert np.all(
-        np.cross(cas_a, b) == cas_correct_result
-    )
-    assert np.all(
-        np.cross(cas_a, cas_b) == cas_correct_result
-    )
+    assert np.all(np.cross(a, cas_b) == cas_correct_result)
+    assert np.all(np.cross(cas_a, b) == cas_correct_result)
+    assert np.all(np.cross(cas_a, cas_b) == cas_correct_result)
 
 
 def test_cross_2D_input_first_axis():
@@ -55,16 +43,10 @@ def test_cross_2D_input_first_axis():
     correct_result = np.cross(a, b, axis=0)
     cas_correct_result = cas.DM(correct_result)
 
-    assert np.all(
-        np.cross(a, cas_b, axis=0) == cas_correct_result
-    )
-    assert np.all(
-        np.cross(cas_a, b, axis=0) == cas_correct_result
-    )
-    assert np.all(
-        np.cross(cas_a, cas_b, axis=0) == cas_correct_result
-    )
+    assert np.all(np.cross(a, cas_b, axis=0) == cas_correct_result)
+    assert np.all(np.cross(cas_a, b, axis=0) == cas_correct_result)
+    assert np.all(np.cross(cas_a, cas_b, axis=0) == cas_correct_result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

@@ -26,5 +26,5 @@ def test_plot(get_fitted_model):
     get_fitted_model.plot()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

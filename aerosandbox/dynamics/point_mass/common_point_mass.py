@@ -2,7 +2,14 @@ import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Union, Dict, Tuple, List
-from aerosandbox import MassProperties, Opti, OperatingPoint, Atmosphere, Airplane, _asb_root
+from aerosandbox import (
+    MassProperties,
+    Opti,
+    OperatingPoint,
+    Atmosphere,
+    Airplane,
+    _asb_root,
+)
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 import copy
@@ -10,10 +17,11 @@ import copy
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
-    def __init__(self,
-                 mass_props: MassProperties = None,
-                 **state_variables_and_indirect_control_variables,
-                 ):
+    def __init__(
+        self,
+        mass_props: MassProperties = None,
+        **state_variables_and_indirect_control_variables,
+    ):
         self.mass_props = MassProperties() if mass_props is None else mass_props
         """
         For each state variable, self.state_var = state_var 
@@ -42,12 +50,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         """
         pass
 
-    def get_new_instance_with_state(self,
-                                    new_state: Union[
-                                        Dict[str, Union[float, np.ndarray]],
-                                        List, Tuple, np.ndarray
-                                    ] = None
-                                    ):
+    def get_new_instance_with_state(
+        self,
+        new_state: Union[
+            Dict[str, Union[float, np.ndarray]], List, Tuple, np.ndarray
+        ] = None,
+    ):
         """
         Creates a new instance of this same Dynamics class from the given state.
 
@@ -65,10 +73,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         init_args = list(init_signature.parameters.keys())[1:]  # Ignore 'self'
 
         ### Create a new instance, and give the constructor all the inputs it wants to see (based on values in this instance)
-        new_dyn: __class__ = self.__class__(**{
-            k: getattr(self, k)
-            for k in init_args
-        })
+        new_dyn: __class__ = self.__class__(**{k: getattr(self, k) for k in init_args})
 
         ### Overwrite the state variables in the new instance with those from the input
         new_dyn._set_state(new_state=new_state)
@@ -76,12 +81,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         ### Return the new instance
         return new_dyn
 
-    def _set_state(self,
-                   new_state: Union[
-                       Dict[str, Union[float, np.ndarray]],
-                       List, Tuple, np.ndarray
-                   ] = None
-                   ):
+    def _set_state(
+        self,
+        new_state: Union[
+            Dict[str, Union[float, np.ndarray]], List, Tuple, np.ndarray
+        ] = None,
+    ):
         """
         Force-overwrites all state variables with a new set (either partial or complete) of state variables.
 
@@ -98,16 +103,19 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             new_state = {}
 
         try:  # Assume `value` is a dict-like, with keys
-            for key in new_state.keys():  # Overwrite each of the specified state variables
+            for (
+                key
+            ) in new_state.keys():  # Overwrite each of the specified state variables
                 setattr(self, key, new_state[key])
 
         except AttributeError:  # Assume it's an iterable that has been sorted.
             self._set_state(
-                self.pack_state(new_state))  # Pack the iterable into a dict-like, then do the same thing as above.
+                self.pack_state(new_state)
+            )  # Pack the iterable into a dict-like, then do the same thing as above.
 
-    def unpack_state(self,
-                     dict_like_state: Dict[str, Union[float, np.ndarray]] = None
-                     ) -> Tuple[Union[float, np.ndarray]]:
+    def unpack_state(
+        self, dict_like_state: Dict[str, Union[float, np.ndarray]] = None
+    ) -> Tuple[Union[float, np.ndarray]]:
         """
         'Unpacks' a Dict-like state into an array-like that represents the state of the dynamical system.
 
@@ -121,9 +129,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             dict_like_state = self.state
         return tuple(dict_like_state.values())
 
-    def pack_state(self,
-                   array_like_state: Union[List, Tuple, np.ndarray] = None
-                   ) -> Dict[str, Union[float, np.ndarray]]:
+    def pack_state(
+        self, array_like_state: Union[List, Tuple, np.ndarray] = None
+    ) -> Dict[str, Union[float, np.ndarray]]:
         """
         'Packs' an array into a Dict that represents the state of the dynamical system.
 
@@ -137,14 +145,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             return self.state
         if not len(self.state.keys()) == len(array_like_state):
             raise ValueError(
-                "There are a differing number of elements in the `state` variable and the `array_like` you're trying to pack!")
-        return {
-            k: v
-            for k, v in zip(
-                self.state.keys(),
-                array_like_state
+                "There are a differing number of elements in the `state` variable and the `array_like` you're trying to pack!"
             )
-        }
+        return {k: v for k, v in zip(self.state.keys(), array_like_state)}
 
     @property
     @abstractmethod
@@ -165,25 +168,25 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         state_variables_title = "\tState variables:"
 
-        state_variables = "\n".join([
-            "\t\t" + makeline(k, v)
-            for k, v in self.state.items()
-        ])
+        state_variables = "\n".join(
+            ["\t\t" + makeline(k, v) for k, v in self.state.items()]
+        )
 
         control_variables_title = "\tControl variables:"
 
-        control_variables = "\n".join([
-            "\t\t" + makeline(k, v)
-            for k, v in self.control_variables.items()
-        ])
+        control_variables = "\n".join(
+            ["\t\t" + makeline(k, v) for k, v in self.control_variables.items()]
+        )
 
-        return "\n".join([
-            title,
-            state_variables_title,
-            state_variables,
-            control_variables_title,
-            control_variables
-        ])
+        return "\n".join(
+            [
+                title,
+                state_variables_title,
+                state_variables,
+                control_variables_title,
+                control_variables,
+            ]
+        )
 
     def __getitem__(self, index: Union[int, slice]):
         """
@@ -209,8 +212,10 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     try:
                         return a[index]
                     except IndexError as e:
-                        raise IndexError(f"A state variable could not be indexed; it has length {len(a)} while the"
-                                         f"parent has length {l}.")
+                        raise IndexError(
+                            f"A state variable could not be indexed; it has length {len(a)} while the"
+                            f"parent has length {l}."
+                        )
             else:
                 return a
 
@@ -231,7 +236,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 elif length == lv:
                     pass
                 else:
-                    raise ValueError("State variables are appear vectorized, but of different lengths!")
+                    raise ValueError(
+                        "State variables are appear vectorized, but of different lengths!"
+                    )
         return length
 
     def __array__(self, dtype="O"):
@@ -249,13 +256,14 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         """
         pass
 
-    def constrain_derivatives(self,
-                              opti: Opti,
-                              time: np.ndarray,
-                              method: str = "trapezoidal",
-                              which: Union[str, List[str], Tuple[str]] = "all",
-                              _stacklevel=1,
-                              ):
+    def constrain_derivatives(
+        self,
+        opti: Opti,
+        time: np.ndarray,
+        method: str = "trapezoidal",
+        which: Union[str, List[str], Tuple[str]] = "all",
+        _stacklevel=1,
+    ):
         """
         Applies the relevant state derivative constraints to a given Opti instance.
 
@@ -303,21 +311,26 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     variable=self.state[state_var_name],
                     with_respect_to=time,
                     method=method,
-                    _stacklevel=_stacklevel + 1
+                    _stacklevel=_stacklevel + 1,
                 )
             except KeyError:
-                raise ValueError(f"This dynamics instance does not have a state named '{state_var_name}'!")
+                raise ValueError(
+                    f"This dynamics instance does not have a state named '{state_var_name}'!"
+                )
             except Exception as e:
-                raise ValueError(f"Error while constraining state variable '{state_var_name}': \n{e}")
+                raise ValueError(
+                    f"Error while constraining state variable '{state_var_name}': \n{e}"
+                )
 
     @abstractmethod
-    def convert_axes(self,
-                     x_from: float,
-                     y_from: float,
-                     z_from: float,
-                     from_axes: str,
-                     to_axes: str,
-                     ) -> Tuple[float, float, float]:
+    def convert_axes(
+        self,
+        x_from: float,
+        y_from: float,
+        z_from: float,
+        from_axes: str,
+        to_axes: str,
+    ) -> Tuple[float, float, float]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.
@@ -350,12 +363,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         pass
 
     @abstractmethod
-    def add_force(self,
-                  Fx: Union[float, np.ndarray] = 0,
-                  Fy: Union[float, np.ndarray] = 0,
-                  Fz: Union[float, np.ndarray] = 0,
-                  axes: str = "wind",
-                  ) -> None:
+    def add_force(
+        self,
+        Fx: Union[float, np.ndarray] = 0,
+        Fy: Union[float, np.ndarray] = 0,
+        Fz: Union[float, np.ndarray] = 0,
+        axes: str = "wind",
+    ) -> None:
         """
         Adds a force (in whichever axis system you choose) to this Dynamics instance.
 
@@ -378,9 +392,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         """
         pass
 
-    def add_gravity_force(self,
-                          g=9.81
-                          ) -> None:
+    def add_gravity_force(self, g=9.81) -> None:
         """
         In-place modifies the forces associated with this Dynamics instance: adds a force in the -z direction,
         equal to the weight of the aircraft.
@@ -413,48 +425,56 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             r=0,
         )
 
-    def draw(self,
-             vehicle_model: Union[Airplane, "PolyData"] = None,
-             backend: str = "pyvista",
-             plotter=None,
-             draw_axes: bool = True,
-             draw_global_axes: bool = True,
-             draw_global_grid: bool = True,
-             scale_vehicle_model: Union[float, None] = None,
-             n_vehicles_to_draw: int = 10,
-             cg_axes: str = "geometry",
-             draw_trajectory_line: bool = True,
-             trajectory_line_color=None,
-             draw_altitude_drape: bool = True,
-             draw_ground_plane: bool = True,
-             draw_wingtip_ribbon: bool = True,
-             set_sky_background: bool = True,
-             vehicle_color=None,
-             vehicle_opacity: float = 0.95,
-             show: bool = True,
-             ):
+    def draw(
+        self,
+        vehicle_model: Union[Airplane, "PolyData"] = None,
+        backend: str = "pyvista",
+        plotter=None,
+        draw_axes: bool = True,
+        draw_global_axes: bool = True,
+        draw_global_grid: bool = True,
+        scale_vehicle_model: Union[float, None] = None,
+        n_vehicles_to_draw: int = 10,
+        cg_axes: str = "geometry",
+        draw_trajectory_line: bool = True,
+        trajectory_line_color=None,
+        draw_altitude_drape: bool = True,
+        draw_ground_plane: bool = True,
+        draw_wingtip_ribbon: bool = True,
+        set_sky_background: bool = True,
+        vehicle_color=None,
+        vehicle_opacity: float = 0.95,
+        show: bool = True,
+    ):
         if backend == "pyvista":
             import pyvista as pv
             import aerosandbox.tools.pretty_plots as p
 
             if vehicle_model is None:
-                default_vehicle_stl = _asb_root / "dynamics/visualization/default_assets/talon.stl"
+                default_vehicle_stl = (
+                    _asb_root / "dynamics/visualization/default_assets/talon.stl"
+                )
                 vehicle_model = pv.read(str(default_vehicle_stl))
             elif isinstance(vehicle_model, pv.PolyData):
                 pass
             elif isinstance(vehicle_model, Airplane):
                 vehicle_model: pv.PolyData = vehicle_model.draw(
-                    backend="pyvista",
-                    show=False
+                    backend="pyvista", show=False
                 )
-                vehicle_model.rotate_y(180, inplace=True)  # Rotate from geometry axes to body axes.
-            elif isinstance(vehicle_model, str):  # Interpret the string as a filepath to a .stl or similar
+                vehicle_model.rotate_y(
+                    180, inplace=True
+                )  # Rotate from geometry axes to body axes.
+            elif isinstance(
+                vehicle_model, str
+            ):  # Interpret the string as a filepath to a .stl or similar
                 try:
                     pv.read(filename=vehicle_model)
                 except Exception:
                     raise ValueError("Could not parse `vehicle_model`!")
             else:
-                raise TypeError("`vehicle_model` should be an Airplane or PolyData object.")
+                raise TypeError(
+                    "`vehicle_model` should be an Airplane or PolyData object."
+                )
 
             x_e = np.array(self.x_e)
             y_e = np.array(self.y_e)
@@ -466,11 +486,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             if np.length(z_e) == 1:
                 z_e = z_e * np.ones(len(self))
 
-            trajectory_bounds = np.array([
-                [x_e.min(), x_e.max()],
-                [y_e.min(), y_e.max()],
-                [z_e.min(), z_e.max()],
-            ])
+            trajectory_bounds = np.array(
+                [
+                    [x_e.min(), x_e.max()],
+                    [y_e.min(), y_e.max()],
+                    [z_e.min(), z_e.max()],
+                ]
+            )
 
             vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
 
@@ -482,10 +504,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     scale_vehicle_model = 1
                 else:
                     path_length = np.sum(
-                        (np.diff(x_e) ** 2 + np.diff(y_e) ** 2 + np.diff(z_e) ** 2) ** 0.5
+                        (np.diff(x_e) ** 2 + np.diff(y_e) ** 2 + np.diff(z_e) ** 2)
+                        ** 0.5
                     )
                     vehicle_length = np.diff(vehicle_bounds[0, :])
-                    scale_vehicle_model = float(0.5 * path_length / vehicle_length / n_vehicles_to_draw)
+                    scale_vehicle_model = float(
+                        0.5 * path_length / vehicle_length / n_vehicles_to_draw
+                    )
 
             ### Initialize the plotter
             if plotter is None:
@@ -511,10 +536,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             if draw_global_axes:
                 plotter.add_axes()
             if draw_global_grid:
-                plotter.show_grid(color='gray')
+                plotter.show_grid(color="gray")
 
             ### Set up interpolators for dynamics instances
             from scipy import interpolate
+
             state_interpolators = {
                 k: interpolate.InterpolatedUnivariateSpline(
                     x=np.arange(len(self)),
@@ -536,10 +562,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
             ### Draw the vehicle
             for i in np.linspace(0, len(self) - 1, n_vehicles_to_draw):
-                dyn = self.get_new_instance_with_state({
-                    k: float(v(i))
-                    for k, v in state_interpolators.items()
-                })
+                dyn = self.get_new_instance_with_state(
+                    {k: float(v(i)) for k, v in state_interpolators.items()}
+                )
                 for k, v in control_interpolators.items():
                     setattr(dyn, k, float(v(i)))
 
@@ -561,24 +586,30 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     dyn.mass_props.y_cg,
                     dyn.mass_props.z_cg,
                     from_axes=cg_axes,
-                    to_axes="body"
+                    to_axes="body",
                 )
 
                 this_vehicle = copy.deepcopy(vehicle_model)
-                this_vehicle.translate([
-                    -np.mean(x_cg_b),
-                    -np.mean(y_cg_b),
-                    -np.mean(z_cg_b),
-                ], inplace=True)
+                this_vehicle.translate(
+                    [
+                        -np.mean(x_cg_b),
+                        -np.mean(y_cg_b),
+                        -np.mean(z_cg_b),
+                    ],
+                    inplace=True,
+                )
                 this_vehicle.points *= scale_vehicle_model
                 this_vehicle.rotate_x(np.degrees(phi), inplace=True)
                 this_vehicle.rotate_y(np.degrees(theta), inplace=True)
                 this_vehicle.rotate_z(np.degrees(psi), inplace=True)
-                this_vehicle.translate([
-                    dyn.x_e,
-                    dyn.y_e,
-                    dyn.z_e,
-                ], inplace=True)
+                this_vehicle.translate(
+                    [
+                        dyn.x_e,
+                        dyn.y_e,
+                        dyn.z_e,
+                    ],
+                    inplace=True,
+                )
                 plotter.add_mesh(
                     this_vehicle,
                     color=(
@@ -593,33 +624,34 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 if draw_axes:
                     rot = np.rotation_matrix_from_euler_angles(phi, theta, psi)
                     axes_scale = 0.5 * np.max(
-                        np.diff(
-                            np.array(this_vehicle.bounds).reshape((3, -1)),
-                            axis=1
-                        )
+                        np.diff(np.array(this_vehicle.bounds).reshape((3, -1)), axis=1)
                     )
-                    origin = np.array([
-                        dyn.x_e,
-                        dyn.y_e,
-                        dyn.z_e,
-                    ])
+                    origin = np.array(
+                        [
+                            dyn.x_e,
+                            dyn.y_e,
+                            dyn.z_e,
+                        ]
+                    )
                     for i, c in enumerate(["r", "g", "b"]):
                         plotter.add_mesh(
-                            pv.Spline(np.array([
-                                origin,
-                                origin + rot[:, i] * axes_scale
-                            ])),
+                            pv.Spline(
+                                np.array([origin, origin + rot[:, i] * axes_scale])
+                            ),
                             color=c,
                             line_width=2.5,
                             opacity=0.5,
                         )
 
             ### Draw the trajectory line
-            path = np.stack([
-                x_e,
-                y_e,
-                z_e,
-            ], axis=1)
+            path = np.stack(
+                [
+                    x_e,
+                    y_e,
+                    z_e,
+                ],
+                axis=1,
+            )
 
             if len(self) > 1:
                 if draw_trajectory_line:
@@ -636,30 +668,47 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
                 if draw_wingtip_ribbon:
 
-                    left_wingtip_points = np.array(self.convert_axes(
-                        0, scale_vehicle_model * vehicle_bounds[1, 0], 0,
-                        from_axes="body",
-                        to_axes="earth"
-                    )).T + path
+                    left_wingtip_points = (
+                        np.array(
+                            self.convert_axes(
+                                0,
+                                scale_vehicle_model * vehicle_bounds[1, 0],
+                                0,
+                                from_axes="body",
+                                to_axes="earth",
+                            )
+                        ).T
+                        + path
+                    )
                     plotter.add_mesh(
                         pv.Spline(left_wingtip_points),
                         color="pink",
                     )
-                    right_wingtip_points = np.array(self.convert_axes(
-                        0, scale_vehicle_model * vehicle_bounds[1, 1], 0,
-                        from_axes="body",
-                        to_axes="earth"
-                    )).T + path
+                    right_wingtip_points = (
+                        np.array(
+                            self.convert_axes(
+                                0,
+                                scale_vehicle_model * vehicle_bounds[1, 1],
+                                0,
+                                from_axes="body",
+                                to_axes="earth",
+                            )
+                        ).T
+                        + path
+                    )
                     plotter.add_mesh(
                         pv.Spline(right_wingtip_points),
                         color="pink",
                     )
 
                     grid = pv.StructuredGrid()
-                    grid.points = np.concatenate([
-                        left_wingtip_points,
-                        right_wingtip_points,
-                    ], axis=0)
+                    grid.points = np.concatenate(
+                        [
+                            left_wingtip_points,
+                            right_wingtip_points,
+                        ],
+                        axis=0,
+                    )
                     grid.dimensions = len(left_wingtip_points), 2, 1
 
                     plotter.add_mesh(
@@ -671,10 +720,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 if draw_altitude_drape:
                     ### Drape
                     grid = pv.StructuredGrid()
-                    grid.points = np.concatenate([
-                        path,
-                        path * np.array([[1, 1, 0]])
-                    ], axis=0)
+                    grid.points = np.concatenate(
+                        [path, path * np.array([[1, 1, 0]])], axis=0
+                    )
                     grid.dimensions = len(path), 2, 1
 
                     plotter.add_mesh(
@@ -689,18 +737,16 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     xlim = (x_e.min(), x_e.max())
                     ylim = (y_e.min(), y_e.max())
 
-                    grid.points = np.array([
-                        [xlim[0], ylim[0], 0],
-                        [xlim[1], ylim[0], 0],
-                        [xlim[0], ylim[1], 0],
-                        [xlim[1], ylim[1], 0]
-                    ])
-                    grid.dimensions = 2, 2, 1
-                    plotter.add_mesh(
-                        grid,
-                        color="darkkhaki",
-                        opacity=0.5
+                    grid.points = np.array(
+                        [
+                            [xlim[0], ylim[0], 0],
+                            [xlim[1], ylim[0], 0],
+                            [xlim[0], ylim[1], 0],
+                            [xlim[1], ylim[1], 0],
+                        ]
                     )
+                    grid.dimensions = 2, 2, 1
+                    plotter.add_mesh(grid, color="darkkhaki", opacity=0.5)
 
             ### Finalize the plotter
             plotter.camera.up = (0, 0, -1)
@@ -727,7 +773,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Returns:
             Kinetic energy [J]
         """
-        return 0.5 * self.mass_props.mass * self.speed ** 2
+        return 0.5 * self.mass_props.mass * self.speed**2
 
     @property
     def rotational_kinetic_energy(self) -> float:
@@ -740,9 +786,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             Kinetic energy [J]
         """
         return 0.5 * (
-                self.mass_props.Ixx * self.p ** 2 +
-                self.mass_props.Iyy * self.q ** 2 +
-                self.mass_props.Izz * self.r ** 2
+            self.mass_props.Ixx * self.p**2
+            + self.mass_props.Iyy * self.q**2
+            + self.mass_props.Izz * self.r**2
         )
 
     @property
@@ -758,9 +804,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         return self.translational_kinetic_energy + self.rotational_kinetic_energy
 
     @property
-    def potential_energy(self,
-                         g: float = 9.81
-                         ):
+    def potential_energy(self, g: float = 9.81):
         """
         Computes the potential energy [J] from gravity.
 

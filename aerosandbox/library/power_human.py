@@ -2,8 +2,8 @@ import aerosandbox.numpy as np
 
 
 def power_human(
-        duration,  # type: float
-        dataset="Healthy Men"  # type: str
+    duration,  # type: float
+    dataset="Healthy Men",  # type: str
 ):
     """
     Finds the power output that a human can sustain for a given duration.
@@ -45,13 +45,11 @@ def power_human(
     log_duration_mins = np.log10(duration_mins)
 
     return a * duration_mins ** (
-            b0 +
-            b1 * log_duration_mins +
-            b2 * log_duration_mins ** 2
+        b0 + b1 * log_duration_mins + b2 * log_duration_mins**2
     )  # essentially, a cubic in log-log space
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(
         power_human(
             duration=60,

@@ -5,8 +5,8 @@ import aerosandbox.library.aerodynamics as aerolib
 
 
 def airfoil_coefficients_post_stall(
-        airfoil: Airfoil,
-        alpha: float,
+    airfoil: Airfoil,
+    alpha: float,
 ):
     """
     Estimates post-stall aerodynamics of an airfoil.
@@ -39,11 +39,11 @@ def airfoil_coefficients_post_stall(
     pt2_star = -1.78e-1
     pt3_star = -2.98e-1
 
-    Cd90 = Cd90_0 + pn2_star * cosa + pn3_star * cosa ** 2
+    Cd90 = Cd90_0 + pn2_star * cosa + pn3_star * cosa**2
     CN = Cd90 * sina
 
     ##### Tangential force calculation
-    CT = (pt1_star + pt2_star * cosa + pt3_star * cosa ** 3) * sina ** 2
+    CT = (pt1_star + pt2_star * cosa + pt3_star * cosa**3) * sina**2
 
     ##### Conversion to wind axes
     CL = CN * cosa + CT * sina
@@ -53,12 +53,10 @@ def airfoil_coefficients_post_stall(
     return CL, CD, CM
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     af = Airfoil("naca0012")
     alpha = np.linspace(0, 360, 721)
-    CL, CD, CM = airfoil_coefficients_post_stall(
-        af, alpha
-    )
+    CL, CD, CM = airfoil_coefficients_post_stall(af, alpha)
     from aerosandbox.tools.pretty_plots import plt, show_plot, set_ticks
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 5))

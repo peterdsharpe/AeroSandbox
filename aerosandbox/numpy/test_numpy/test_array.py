@@ -5,10 +5,7 @@ import casadi as cas
 
 
 def test_array_numpy_equivalency_1D():
-    inputs = [
-        1,
-        2
-    ]
+    inputs = [1, 2]
 
     a = array(inputs)
     a_np = np.array(inputs)
@@ -17,10 +14,7 @@ def test_array_numpy_equivalency_1D():
 
 
 def test_array_numpy_equivalency_2D():
-    inputs = [
-        [1, 2],
-        [3, 4]
-    ]
+    inputs = [[1, 2], [3, 4]]
 
     a = array(inputs)
     a_np = np.array(inputs)
@@ -42,7 +36,7 @@ def test_can_convert_DM_to_ndarray():
 
 def test_length():
     assert length(5) == 1
-    assert length(5.) == 1
+    assert length(5.0) == 1
     assert length([1, 2, 3]) == 3
 
     assert length(np.array(5)) == 1
@@ -89,20 +83,12 @@ def test_diag_onp():
     a = np.array([1, 2, 3])
     assert np.all(np.diag(a) == np.diag(a, k=0))
     assert np.all(
-        np.diag(a, k=1) == np.array([
-            [0, 1, 0, 0],
-            [0, 0, 2, 0],
-            [0, 0, 0, 3],
-            [0, 0, 0, 0]
-        ])
+        np.diag(a, k=1)
+        == np.array([[0, 1, 0, 0], [0, 0, 2, 0], [0, 0, 0, 3], [0, 0, 0, 0]])
     )
     assert np.all(
-        np.diag(a, k=-1) == np.array([
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [0, 2, 0, 0],
-            [0, 0, 3, 0]
-        ])
+        np.diag(a, k=-1)
+        == np.array([[0, 0, 0, 0], [1, 0, 0, 0], [0, 2, 0, 0], [0, 0, 3, 0]])
     )
 
     # Test on 2D square array
@@ -123,20 +109,12 @@ def test_diag_casadi():
     a = cas.SX(np.array([1, 2, 3]))
     assert np.all(np.diag(a) == np.diag(a, k=0))
     assert np.all(
-        np.diag(a, k=1) == np.array([
-            [0, 1, 0, 0],
-            [0, 0, 2, 0],
-            [0, 0, 0, 3],
-            [0, 0, 0, 0]
-        ])
+        np.diag(a, k=1)
+        == np.array([[0, 1, 0, 0], [0, 0, 2, 0], [0, 0, 0, 3], [0, 0, 0, 0]])
     )
     assert np.all(
-        np.diag(a, k=-1) == np.array([
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [0, 2, 0, 0],
-            [0, 0, 3, 0]
-        ])
+        np.diag(a, k=-1)
+        == np.array([[0, 0, 0, 0], [1, 0, 0, 0], [0, 2, 0, 0], [0, 0, 3, 0]])
     )
 
     # Test on 2D square array
@@ -150,6 +128,7 @@ def test_diag_casadi():
     # assert np.all(np.diag(c) == np.array([1, 5]))
     # assert np.all(np.diag(c, k=1) == np.array([2, 6]))
     # assert np.all(np.diag(c, k=-1) == np.array([4]))
+
 
 def test_roll_onp():
     # Test on 1D array
@@ -192,7 +171,9 @@ def test_roll_casadi_2d():
     assert np.all(cas.DM(np.roll(a, 2, axis=0)) == np.roll(a_np, 2, axis=0))
 
     # Shift along both axes
-    assert np.all(cas.DM(np.roll(a, (2, 3), axis=(0, 1))) == np.roll(a_np, (2, 3), axis=(0, 1)))
+    assert np.all(
+        cas.DM(np.roll(a, (2, 3), axis=(0, 1))) == np.roll(a_np, (2, 3), axis=(0, 1))
+    )
 
     # Test on non-square 2D array
     a_np = np.reshape(np.arange(1, 201), (10, 20))  # non-square 2D array
@@ -205,7 +186,9 @@ def test_roll_casadi_2d():
     assert np.all(cas.DM(np.roll(a, 2, axis=0)) == np.roll(a_np, 2, axis=0))
 
     # Shift along both axes
-    assert np.all(cas.DM(np.roll(a, (2, 3), axis=(0, 1))) == np.roll(a_np, (2, 3), axis=(0, 1)))
+    assert np.all(
+        cas.DM(np.roll(a, (2, 3), axis=(0, 1))) == np.roll(a_np, (2, 3), axis=(0, 1))
+    )
 
 
 def test_max():
@@ -304,12 +287,14 @@ def test_reshape_2D_vec_wide():
 
 
 def test_reshape_2D():
-    a_np = np.array([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-    ])
+    a_np = np.array(
+        [
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9],
+            [10, 11, 12],
+        ]
+    )
     a_cas = cas.DM(a_np)
 
     test_inputs = [
@@ -346,31 +331,22 @@ def test_assert_equal_shape():
     a = np.array([1, 2, 3])
     b = cas.DM(a)
 
-    np.assert_equal_shape([
-        a,
-        a
-    ])
-    np.assert_equal_shape({
-        "thing1": a,
-        "thing2": a,
-    })
+    np.assert_equal_shape([a, a])
+    np.assert_equal_shape(
+        {
+            "thing1": a,
+            "thing2": a,
+        }
+    )
     with pytest.raises(ValueError):
-        np.assert_equal_shape([
-            np.array([1, 2, 3]),
-            np.array([1, 2, 3, 4])
-        ])
-        np.assert_equal_shape({
-            "thing1": np.array([1, 2, 3]),
-            "thing2": np.array([1, 2, 3, 4])
-        })
-    np.assert_equal_shape([
-        2,
-        3,
-        4
-    ])
+        np.assert_equal_shape([np.array([1, 2, 3]), np.array([1, 2, 3, 4])])
+        np.assert_equal_shape(
+            {"thing1": np.array([1, 2, 3]), "thing2": np.array([1, 2, 3, 4])}
+        )
+    np.assert_equal_shape([2, 3, 4])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # # Test on 1D array
     # a_np = np.arange(1, 101)
     # a = cas.SX(a_np)

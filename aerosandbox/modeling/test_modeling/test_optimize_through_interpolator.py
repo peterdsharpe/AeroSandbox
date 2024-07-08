@@ -14,27 +14,20 @@ def underlying_function(x):  # Softmax of three linear functions
     def f3(x):
         return 2 * x - 12
 
-    return np.softmax(
-        f1(x),
-        f2(x),
-        f3(x),
-        hardness=1
-    )
+    return np.softmax(f1(x), f2(x), f3(x), hardness=1)
 
 
 def get_interpolated_model(res=51):
     x_samples = np.linspace(-10, 10, res)
     f_samples = underlying_function(x_samples)
 
-    return InterpolatedModel(
-        x_data_coordinates=x_samples,
-        y_data_structured=f_samples
-    )
+    return InterpolatedModel(x_data_coordinates=x_samples, y_data_structured=f_samples)
 
 
 def plot_underlying_function():
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     sns.set(palette=sns.color_palette("husl"))
     x = np.linspace(-10, 10, 500)
     f = underlying_function(x)
@@ -61,9 +54,7 @@ def test_solve_actual_function():
     assert sol(x) == pytest.approx(4.85358, abs=1e-3)
 
 
-def test_solve_interpolated_unbounded(
-        interpolated_model=get_interpolated_model()
-):
+def test_solve_interpolated_unbounded(interpolated_model=get_interpolated_model()):
     opti = asb.Opti()
 
     x = opti.variable(init_guess=-5)
@@ -89,7 +80,7 @@ def test_solve_interpolated_unbounded(
 #     assert sol(x) == pytest.approx(4.85358, abs=0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # plot_underlying_function()
     # plot_interpolated_model(interpolated_model())
     pytest.main()

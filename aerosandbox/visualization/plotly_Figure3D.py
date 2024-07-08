@@ -13,10 +13,14 @@ def reflect_over_XZ_plane(input_vector):
         return input_vector * np.array([1, -1, 1])
     elif len(shape) == 2:
         if not shape[1] == 3:
-            raise ValueError("The function expected either a 3-element vector or a Nx3 array!")
+            raise ValueError(
+                "The function expected either a 3-element vector or a Nx3 array!"
+            )
         return input_vector * np.array([1, -1, 1])
     else:
-        raise ValueError("The function expected either a 3-element vector or a Nx3 array!")
+        raise ValueError(
+            "The function expected either a 3-element vector or a Nx3 array!"
+        )
 
 
 class Figure3D:
@@ -44,10 +48,11 @@ class Figure3D:
         self.y_streamline = []
         self.z_streamline = []
 
-    def add_line(self,
-                 points,
-                 mirror=False,
-                 ):
+    def add_line(
+        self,
+        points,
+        mirror=False,
+    ):
         """
         Adds a line (or series of lines) to draw.
         :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
@@ -65,15 +70,13 @@ class Figure3D:
         self.z_line.append(None)
         if mirror:
             reflected_points = [reflect_over_XZ_plane(point) for point in points]
-            self.add_line(
-                points=reflected_points,
-                mirror=False
-            )
+            self.add_line(points=reflected_points, mirror=False)
 
-    def add_streamline(self,
-                       points,
-                       mirror=False,
-                       ):
+    def add_streamline(
+        self,
+        points,
+        mirror=False,
+    ):
         """
         Adds a line (or series of lines) to draw.
         :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
@@ -91,17 +94,15 @@ class Figure3D:
         self.z_streamline.append(None)
         if mirror:
             reflected_points = [reflect_over_XZ_plane(point) for point in points]
-            self.add_streamline(
-                points=reflected_points,
-                mirror=False
-            )
+            self.add_streamline(points=reflected_points, mirror=False)
 
-    def add_tri(self,
-                points,
-                intensity=0,
-                outline=False,
-                mirror=False,
-                ):
+    def add_tri(
+        self,
+        points,
+        intensity=0,
+        outline=False,
+        mirror=False,
+    ):
         """
         Adds a triangular face to draw.
         :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
@@ -131,15 +132,16 @@ class Figure3D:
                 points=reflected_points,
                 intensity=intensity,
                 outline=outline,
-                mirror=False
+                mirror=False,
             )
 
-    def add_quad(self,
-                 points,
-                 intensity=0,
-                 outline=True,
-                 mirror=False,
-                 ):
+    def add_quad(
+        self,
+        points,
+        intensity=0,
+        outline=True,
+        mirror=False,
+    ):
         """
         Adds a quadrilateral face to draw. All points should be (approximately) coplanar if you want it to look right.
         :param points: an iterable with 4 items. Each item is a 3D point, represented as an iterable of length 3. Points should be given in sequential order.
@@ -175,15 +177,16 @@ class Figure3D:
                 points=reflected_points,
                 intensity=intensity,
                 outline=outline,
-                mirror=False
+                mirror=False,
             )
 
-    def draw(self,
-             show=True,
-             title="",
-             colorbar_title="",
-             colorscale="viridis",
-             ):
+    def draw(
+        self,
+        show=True,
+        title="",
+        colorbar_title="",
+        colorscale="viridis",
+    ):
         # Draw faces
         self.fig.add_trace(
             go.Mesh3d(
@@ -197,7 +200,7 @@ class Figure3D:
                 intensity=self.intensity_face,
                 colorbar=dict(title=colorbar_title),
                 colorscale=colorscale,
-                showscale=colorbar_title is not None
+                showscale=colorbar_title is not None,
             ),
         )
 
@@ -207,9 +210,9 @@ class Figure3D:
                 x=self.x_line,
                 y=self.y_line,
                 z=self.z_line,
-                mode='lines',
-                name='',
-                line=dict(color='rgb(0,0,0)', width=3),
+                mode="lines",
+                name="",
+                line=dict(color="rgb(0,0,0)", width=3),
                 showlegend=False,
             )
         )
@@ -220,16 +223,16 @@ class Figure3D:
                 x=self.x_streamline,
                 y=self.y_streamline,
                 z=self.z_streamline,
-                mode='lines',
-                name='',
-                line=dict(color='rgba(119,0,255,200)', width=1),
+                mode="lines",
+                name="",
+                line=dict(color="rgba(119,0,255,200)", width=1),
                 showlegend=False,
             )
         )
 
         self.fig.update_layout(
             title=title,
-            scene=dict(aspectmode='data'),
+            scene=dict(aspectmode="data"),
         )
 
         if show:
@@ -238,5 +241,5 @@ class Figure3D:
         return self.fig
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fig = Figure3D()

@@ -26,10 +26,11 @@ where:
     * ()' is a derivative w.r.t. x.
 
 """
+
 import aerosandbox.numpy as np
 import casadi as cas
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     opti = cas.Opti()  # Initialize a SAND environment
 
@@ -47,28 +48,45 @@ if __name__ == '__main__':
     nominal_diameter = cas.exp(log_nominal_diameter)
 
     thickness = 0.14e-3 * 5
-    opti.subject_to([
-        nominal_diameter > thickness,
-    ])
+    opti.subject_to(
+        [
+            nominal_diameter > thickness,
+        ]
+    )
 
     # Bending loads
 
-    I = cas.pi / 64 * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
+    I = (
+        cas.pi
+        / 64
+        * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
+    )
     EI = E * I
     total_lift_force = 9.81 * 103.873 / 2
     lift_distribution = "elliptical"
     if lift_distribution == "rectangular":
         force_per_unit_length = total_lift_force * cas.GenDM_ones(n) / L
     elif lift_distribution == "elliptical":
-        force_per_unit_length = total_lift_force * cas.sqrt(1 - (x / L) ** 2) * (4 / cas.pi) / L
+        force_per_unit_length = (
+            total_lift_force * cas.sqrt(1 - (x / L) ** 2) * (4 / cas.pi) / L
+        )
 
     # Torsion loads
-    J = cas.pi / 32 * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
+    J = (
+        cas.pi
+        / 32
+        * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
+    )
 
     airfoil_lift_coefficient = 1
     airfoil_moment_coefficient = -0.14
     airfoil_chord = 1  # meter
-    moment_per_unit_length = force_per_unit_length * airfoil_moment_coefficient * airfoil_chord / airfoil_lift_coefficient
+    moment_per_unit_length = (
+        force_per_unit_length
+        * airfoil_moment_coefficient
+        * airfoil_chord
+        / airfoil_lift_coefficient
+    )
     # Derivation of above:
     #   CL = L / q c
     #   CM = M / q c**2
@@ -90,7 +108,6 @@ if __name__ == '__main__':
     ddEIddu = force_per_unit_length
     ddphi = -moment_per_unit_length / (G * J)
 
-
     # Define derivatives
     def trapz(x):
         out = (x[:-1] + x[1:]) / 2
@@ -98,25 +115,28 @@ if __name__ == '__main__':
         out[-1] += x[-1] / 2
         return out
 
-
-    opti.subject_to([
-        cas.diff(u) == trapz(du) * dx,
-        cas.diff(du) == trapz(ddu) * dx,
-        cas.diff(EI * ddu) == trapz(dEIddu) * dx,
-        cas.diff(dEIddu) == trapz(ddEIddu) * dx,
-        cas.diff(phi) == trapz(dphi) * dx,
-        cas.diff(dphi) == trapz(ddphi) * dx,
-    ])
+    opti.subject_to(
+        [
+            cas.diff(u) == trapz(du) * dx,
+            cas.diff(du) == trapz(ddu) * dx,
+            cas.diff(EI * ddu) == trapz(dEIddu) * dx,
+            cas.diff(dEIddu) == trapz(ddEIddu) * dx,
+            cas.diff(phi) == trapz(dphi) * dx,
+            cas.diff(dphi) == trapz(ddphi) * dx,
+        ]
+    )
 
     # Add BCs
-    opti.subject_to([
-        u[0] == 0,
-        du[0] == 0,
-        ddu[-1] == 0,  # No tip moment
-        dEIddu[-1] == 0,  # No tip higher order stuff
-        phi[0] == 0,
-        dphi[-1] == 0,
-    ])
+    opti.subject_to(
+        [
+            u[0] == 0,
+            du[0] == 0,
+            ddu[-1] == 0,  # No tip moment
+            dEIddu[-1] == 0,  # No tip higher order stuff
+            phi[0] == 0,
+            dphi[-1] == 0,
+        ]
+    )
 
     # Failure criterion
     stress_axial = (nominal_diameter + thickness) / 2 * E * ddu
@@ -124,34 +144,36 @@ if __name__ == '__main__':
     # stress_axial = cas.fmax(0, stress_axial)
     # stress_shear = cas.fmax(0, stress_shear)
     stress_von_mises_squared = cas.sqrt(
-        stress_axial ** 2 + 0 * stress_shear ** 2)  # Source: https://en.wikipedia.org/wiki/Von_Mises_yield_criterion
+        stress_axial**2 + 0 * stress_shear**2
+    )  # Source: https://en.wikipedia.org/wiki/Von_Mises_yield_criterion
     stress = stress_axial
-    opti.subject_to([
-        stress / max_allowable_stress < 1
-    ])
+    opti.subject_to([stress / max_allowable_stress < 1])
 
     # Mass
     volume = cas.sum1(
-        cas.pi / 4 * trapz((nominal_diameter + thickness) ** 2 - (nominal_diameter - thickness) ** 2) * dx
+        cas.pi
+        / 4
+        * trapz(
+            (nominal_diameter + thickness) ** 2 - (nominal_diameter - thickness) ** 2
+        )
+        * dx
     )
     mass = volume * 1600
     opti.minimize(mass)
 
     # Tip deflection constraint
-    opti.subject_to([
-        u[-1] < 2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-    ])
+    opti.subject_to(
+        [u[-1] < 2]  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+    )
 
     # Twist
-    opti.subject_to([
-        phi[-1] * 180 / cas.pi > -3
-    ])
+    opti.subject_to([phi[-1] * 180 / cas.pi > -3])
 
     p_opts = {}
     s_opts = {}
     s_opts["max_iter"] = 500  # If you need to interrupt, just use ctrl+c
     # s_opts["mu_strategy"] = "adaptive"
-    opti.solver('ipopt', p_opts, s_opts)
+    opti.solver("ipopt", p_opts, s_opts)
 
     try:
         sol = opti.solve()
@@ -167,7 +189,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(2, 3, figsize=(10, 6), dpi=200)
 
     plt.subplot(231)
-    plt.plot(sol(x), sol(u), '.-')
+    plt.plot(sol(x), sol(u), ".-")
     plt.xlabel("x [m]")
     plt.ylabel("u [m]")
     plt.title("Displacement (Bending)")
@@ -180,31 +202,31 @@ if __name__ == '__main__':
     # plt.title("Slope")
 
     plt.subplot(232)
-    plt.plot(sol.value(x), sol.value(phi) * 180 / np.pi, '.-')
+    plt.plot(sol.value(x), sol.value(phi) * 180 / np.pi, ".-")
     plt.xlabel("x [m]")
     plt.ylabel("Twist angle [deg]")
     plt.title("Twist Angle (Torsion)")
 
     plt.subplot(233)
-    plt.plot(sol.value(x), sol.value(force_per_unit_length), '.-')
+    plt.plot(sol.value(x), sol.value(force_per_unit_length), ".-")
     plt.xlabel("x [m]")
     plt.ylabel(r"$F$ [N/m]")
     plt.title("Local Load per Unit Span")
 
     plt.subplot(234)
-    plt.plot(sol.value(x), sol.value(stress / 1e6), '.-')
+    plt.plot(sol.value(x), sol.value(stress / 1e6), ".-")
     plt.xlabel("x [m]")
     plt.ylabel("Stress [MPa]")
     plt.title("Peak Stress at Section")
 
     plt.subplot(235)
-    plt.plot(sol.value(x), sol.value(dEIddu), '.-')
+    plt.plot(sol.value(x), sol.value(dEIddu), ".-")
     plt.xlabel("x [m]")
     plt.ylabel("F [N]")
     plt.title("Shear Force")
 
     plt.subplot(236)
-    plt.plot(sol.value(x), sol.value(nominal_diameter), '.-')
+    plt.plot(sol.value(x), sol.value(nominal_diameter), ".-")
     plt.xlabel("x [m]")
     plt.ylabel("t [m]")
     plt.title("Optimal Spar Diameter")

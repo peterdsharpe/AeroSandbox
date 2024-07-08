@@ -26,14 +26,15 @@ class Opti(cas.Opti):
     >>> print(sol(x)) # Prints the value of x at the optimum.
     """
 
-    def __init__(self,
-                 variable_categories_to_freeze: Union[List[str], str] = None,
-                 cache_filename: str = None,
-                 load_frozen_variables_from_cache: bool = False,
-                 save_to_cache_on_solve: bool = False,
-                 ignore_violated_parametric_constraints: bool = False,
-                 freeze_style: str = "parameter",
-                 ):  # TODO document
+    def __init__(
+        self,
+        variable_categories_to_freeze: Union[List[str], str] = None,
+        cache_filename: str = None,
+        load_frozen_variables_from_cache: bool = False,
+        save_to_cache_on_solve: bool = False,
+        ignore_violated_parametric_constraints: bool = False,
+        freeze_style: str = "parameter",
+    ):  # TODO document
 
         # Default arguments
         if variable_categories_to_freeze is None:
@@ -45,33 +46,44 @@ class Opti(cas.Opti):
         # Initialize class variables
         self.variable_categories_to_freeze = variable_categories_to_freeze
         self.cache_filename = cache_filename
-        self.load_frozen_variables_from_cache = load_frozen_variables_from_cache  # TODO load and start tracking
+        self.load_frozen_variables_from_cache = (
+            load_frozen_variables_from_cache  # TODO load and start tracking
+        )
         self.save_to_cache_on_solve = save_to_cache_on_solve
-        self.ignore_violated_parametric_constraints = ignore_violated_parametric_constraints
+        self.ignore_violated_parametric_constraints = (
+            ignore_violated_parametric_constraints
+        )
         self.freeze_style = freeze_style
 
         # Start tracking variables and categorize them.
-        self.variables_categorized = {}  # category name [str] : list of variables [list]
+        self.variables_categorized = (
+            {}
+        )  # category name [str] : list of variables [list]
 
         # Track variable declaration locations, useful for debugging
-        self._variable_declarations = SortedDict()  # first index in super().x : (filename, lineno, code_context, n_vars)
-        self._constraint_declarations = SortedDict()  # first index in super().g : (filename, lineno, code_context, n_cons)
+        self._variable_declarations = (
+            SortedDict()
+        )  # first index in super().x : (filename, lineno, code_context, n_vars)
+        self._constraint_declarations = (
+            SortedDict()
+        )  # first index in super().g : (filename, lineno, code_context, n_cons)
         self._variable_index_counter = 0
         self._constraint_index_counter = 0
 
     ### Primary Methods
 
-    def variable(self,
-                 init_guess: Union[float, np.ndarray] = None,
-                 n_vars: int = None,
-                 scale: float = None,
-                 freeze: bool = False,
-                 log_transform: bool = False,
-                 category: str = "Uncategorized",
-                 lower_bound: float = None,
-                 upper_bound: float = None,
-                 _stacklevel: int = 1,
-                 ) -> cas.MX:
+    def variable(
+        self,
+        init_guess: Union[float, np.ndarray] = None,
+        n_vars: int = None,
+        scale: float = None,
+        freeze: bool = False,
+        log_transform: bool = False,
+        category: str = "Uncategorized",
+        lower_bound: float = None,
+        upper_bound: float = None,
+        _stacklevel: int = 1,
+    ) -> cas.MX:
         """
         Initializes a new decision variable (or vector of decision variables). You should pass an initial guess (
         `init_guess`) upon defining a new variable. Dimensionality is inferred from this initial guess, but it can be
@@ -218,22 +230,31 @@ class Opti(cas.Opti):
         ### Set defaults
         if init_guess is None:
             import warnings
+
             if log_transform:
                 init_guess = 1
-                warnings.warn("No initial guess set for Opti.variable(). Defaulting to 1 (log-transformed variable).",
-                              stacklevel=2)
+                warnings.warn(
+                    "No initial guess set for Opti.variable(). Defaulting to 1 (log-transformed variable).",
+                    stacklevel=2,
+                )
             else:
                 init_guess = 0
-                warnings.warn("No initial guess set for Opti.variable(). Defaulting to 0.", stacklevel=2)
+                warnings.warn(
+                    "No initial guess set for Opti.variable(). Defaulting to 0.",
+                    stacklevel=2,
+                )
         if n_vars is None:  # Infer dimensionality from init_guess if it is not provided
             n_vars = np.length(init_guess)
         if scale is None:  # Infer a scale from init_guess if it is not provided
             if log_transform:
                 scale = 1
             else:
-                scale = np.mean(np.fabs(init_guess))  # Initialize the scale to a heuristic based on the init_guess
-                if isinstance(scale,
-                              cas.MX) or scale == 0:  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
+                scale = np.mean(
+                    np.fabs(init_guess)
+                )  # Initialize the scale to a heuristic based on the init_guess
+                if (
+                    isinstance(scale, cas.MX) or scale == 0
+                ):  # If that heuristic leads to a scale of 0, use a scale of 1 instead.
                     scale = 1
 
                 # scale = np.fabs(
@@ -246,15 +267,15 @@ class Opti(cas.Opti):
         length_init_guess = np.length(init_guess)
 
         if length_init_guess != 1 and length_init_guess != n_vars:
-            raise ValueError(f"`init_guess` has length {length_init_guess}, but `n_vars` is {n_vars}!")
+            raise ValueError(
+                f"`init_guess` has length {length_init_guess}, but `n_vars` is {n_vars}!"
+            )
 
         # Try to convert init_guess to a float or np.ndarray if it is an Opti parameter.
         try:
             init_guess = self.value(init_guess)
         except RuntimeError as e:
-            if not (
-                    freeze and self.freeze_style == "float"
-            ):
+            if not (freeze and self.freeze_style == "float"):
                 raise TypeError(
                     "The `init_guess` for a new Opti variable must not be a function of an existing Opti variable."
                 )
@@ -263,16 +284,17 @@ class Opti(cas.Opti):
         if log_transform:
             if np.any(init_guess <= 0):
                 raise ValueError(
-                    "If you are initializing a log-transformed variable, the initial guess(es) must all be positive.")
+                    "If you are initializing a log-transformed variable, the initial guess(es) must all be positive."
+                )
         if np.any(scale <= 0):
             raise ValueError("The 'scale' argument must be a positive number.")
 
         # If the variable is in a category to be frozen, fix the variable at the initial guess.
         is_manually_frozen = freeze
         if (
-                category in self.variable_categories_to_freeze or
-                category == self.variable_categories_to_freeze or
-                self.variable_categories_to_freeze == "all"
+            category in self.variable_categories_to_freeze
+            or category == self.variable_categories_to_freeze
+            or self.variable_categories_to_freeze == "all"
         ):
             freeze = True
 
@@ -298,17 +320,21 @@ class Opti(cas.Opti):
                 self.set_initial(log_var, np.log(init_guess))
 
             # Track where this variable was declared in code.
-            filename, lineno, code_context = inspect_tools.get_caller_source_location(stacklevel=_stacklevel + 1)
+            filename, lineno, code_context = inspect_tools.get_caller_source_location(
+                stacklevel=_stacklevel + 1
+            )
             self._variable_declarations[self._variable_index_counter] = (
                 filename,
                 lineno,
                 code_context,
-                n_vars
+                n_vars,
             )
             self._variable_index_counter += n_vars
 
         # Track the category of the variable
-        if category not in self.variables_categorized:  # Add a category if it does not exist
+        if (
+            category not in self.variables_categorized
+        ):  # Add a category if it does not exist
             self.variables_categorized[category] = []
         self.variables_categorized[category].append(var)
         try:
@@ -321,32 +347,31 @@ class Opti(cas.Opti):
             if (not log_transform) or (freeze):
                 if lower_bound is not None:
                     self.subject_to(
-                        var / scale >= lower_bound / scale,
-                        _stacklevel=_stacklevel + 1
+                        var / scale >= lower_bound / scale, _stacklevel=_stacklevel + 1
                     )
                 if upper_bound is not None:
                     self.subject_to(
-                        var / scale <= upper_bound / scale,
-                        _stacklevel=_stacklevel + 1
+                        var / scale <= upper_bound / scale, _stacklevel=_stacklevel + 1
                     )
             else:
                 if lower_bound is not None:
                     self.subject_to(
                         log_var / log_scale >= np.log(lower_bound) / log_scale,
-                        _stacklevel=_stacklevel + 1
+                        _stacklevel=_stacklevel + 1,
                     )
                 if upper_bound is not None:
                     self.subject_to(
                         log_var / log_scale <= np.log(upper_bound) / log_scale,
-                        _stacklevel=_stacklevel + 1
+                        _stacklevel=_stacklevel + 1,
                     )
 
         return var
 
-    def subject_to(self,
-                   constraint: Union[cas.MX, bool, List],  # TODO add scale
-                   _stacklevel: int = 1,
-                   ) -> Union[cas.MX, None, List[cas.MX]]:
+    def subject_to(
+        self,
+        constraint: Union[cas.MX, bool, List],  # TODO add scale
+        _stacklevel: int = 1,
+    ) -> Union[cas.MX, None, List[cas.MX]]:
         """
         Initialize a new equality or inequality constraint(s).
 
@@ -386,39 +411,50 @@ class Opti(cas.Opti):
         # If the latter, recursively apply them.
         if type(constraint) in (list, tuple):
             return [
-                self.subject_to(each_constraint, _stacklevel=_stacklevel + 2)  # return the dual of each constraint
+                self.subject_to(
+                    each_constraint, _stacklevel=_stacklevel + 2
+                )  # return the dual of each constraint
                 for each_constraint in constraint
             ]
 
         # If it's a proper constraint (MX-type and non-parametric),
         # pass it into the parent class Opti formulation and be done with it.
-        if isinstance(constraint, cas.MX) and not self.advanced.is_parametric(constraint):
+        if isinstance(constraint, cas.MX) and not self.advanced.is_parametric(
+            constraint
+        ):
             # constraint = cas.cse(constraint)
             super().subject_to(constraint)
             dual = self.dual(constraint)
 
             # Track where this constraint was declared in code.
             n_cons = np.length(constraint)
-            filename, lineno, code_context = inspect_tools.get_caller_source_location(stacklevel=_stacklevel + 1)
+            filename, lineno, code_context = inspect_tools.get_caller_source_location(
+                stacklevel=_stacklevel + 1
+            )
             self._constraint_declarations[self._constraint_index_counter] = (
                 filename,
                 lineno,
                 code_context,
-                n_cons
+                n_cons,
             )
             self._constraint_index_counter += np.length(constraint)
 
             return dual
         else:  # Constraint is not valid because it is not MX type or is parametric.
             try:
-                constraint_satisfied = np.all(self.value(constraint))  # Determine if the constraint is true
+                constraint_satisfied = np.all(
+                    self.value(constraint)
+                )  # Determine if the constraint is true
             except Exception:
-                raise TypeError(f"""Opti.subject_to could not determine the truthiness of your constraint, and it
+                raise TypeError(
+                    f"""Opti.subject_to could not determine the truthiness of your constraint, and it
                     doesn't appear to be a symbolic type or a boolean type. You supplied the following constraint:
-                    {constraint}""")
+                    {constraint}"""
+                )
 
-            if isinstance(constraint,
-                          cas.MX) and not constraint_satisfied:  # Determine if the constraint is *almost* true
+            if (
+                isinstance(constraint, cas.MX) and not constraint_satisfied
+            ):  # Determine if the constraint is *almost* true
                 try:
                     LHS = constraint.dep(0)
                     RHS = constraint.dep(1)
@@ -426,10 +462,12 @@ class Opti(cas.Opti):
                     RHS_value = self.value(RHS)
                 except Exception:
                     raise ValueError(
-                        """Could not evaluate the LHS and RHS of the constraint - are you sure you passed in a comparative expression?""")
+                        """Could not evaluate the LHS and RHS of the constraint - are you sure you passed in a comparative expression?"""
+                    )
 
-                constraint_satisfied = np.allclose(LHS_value,
-                                                   RHS_value)  # Call the constraint satisfied if it is *almost* true.
+                constraint_satisfied = np.allclose(
+                    LHS_value, RHS_value
+                )  # Call the constraint satisfied if it is *almost* true.
 
             if constraint_satisfied or self.ignore_violated_parametric_constraints:
                 # If the constraint(s) always evaluates True (e.g. if you enter "5 > 3"), skip it.
@@ -439,25 +477,30 @@ class Opti(cas.Opti):
                 # If any of the constraint(s) are always False (e.g. if you enter "5 < 3"), raise an error.
                 # This indicates that the problem is infeasible as-written, likely because the user has frozen too
                 # many decision variables using the Opti.variable(freeze=True) syntax.
-                raise RuntimeError(f"""The problem is infeasible due to a constraint that always evaluates False. 
-                This can happen if you've frozen too many decision variables, leading to an overconstrained problem.""")
+                raise RuntimeError(
+                    f"""The problem is infeasible due to a constraint that always evaluates False. 
+                This can happen if you've frozen too many decision variables, leading to an overconstrained problem."""
+                )
 
-    def minimize(self,
-                 f: cas.MX,
-                 ) -> None:
+    def minimize(
+        self,
+        f: cas.MX,
+    ) -> None:
         # f = cas.cse(f)
         super().minimize(f)
 
-    def maximize(self,
-                 f: cas.MX,
-                 ) -> None:
+    def maximize(
+        self,
+        f: cas.MX,
+    ) -> None:
         # f = cas.cse(f)
         super().minimize(-1 * f)
 
-    def parameter(self,
-                  value: Union[float, np.ndarray] = 0.,
-                  n_params: int = None,
-                  ) -> cas.MX:
+    def parameter(
+        self,
+        value: Union[float, np.ndarray] = 0.0,
+        n_params: int = None,
+    ) -> cas.MX:
         """
         Initializes a new parameter (or vector of parameters). You must pass a value (`value`) upon defining a new
         parameter. Dimensionality is inferred from this value, but it can be overridden; see below for syntax.
@@ -517,17 +560,18 @@ class Opti(cas.Opti):
 
         return param
 
-    def solve(self,
-              parameter_mapping: Dict[cas.MX, float] = None,
-              max_iter: int = 1000,
-              max_runtime: float = 1e20,
-              callback: Callable[[int], Any] = None,
-              verbose: bool = True,
-              jit: bool = False,  # TODO document, add unit tests for jit
-              detect_simple_bounds: bool = False,  # TODO document
-              options: Dict = None,  # TODO document
-              behavior_on_failure: str = "raise",
-              ) -> "OptiSol":
+    def solve(
+        self,
+        parameter_mapping: Dict[cas.MX, float] = None,
+        max_iter: int = 1000,
+        max_runtime: float = 1e20,
+        callback: Callable[[int], Any] = None,
+        verbose: bool = True,
+        jit: bool = False,  # TODO document, add unit tests for jit
+        detect_simple_bounds: bool = False,  # TODO document
+        options: Dict = None,  # TODO document
+        behavior_on_failure: str = "raise",
+    ) -> "OptiSol":
         """
         Solve the optimization problem using CasADi with IPOPT backend.
 
@@ -595,24 +639,24 @@ class Opti(cas.Opti):
                 category_values = solution_dict[category]
 
                 if len(category_variables) != len(category_values):
-                    raise RuntimeError("""Problem with loading cached solution: it looks like new variables have been
+                    raise RuntimeError(
+                        """Problem with loading cached solution: it looks like new variables have been
                     defined since the cached solution was saved (or variables were defined in a different order). 
                     Because of this, the cache cannot be loaded. 
-                    Re-run the original optimization study to regenerate the cached solution.""")
+                    Re-run the original optimization study to regenerate the cached solution."""
+                    )
 
                 for var, val in zip(category_variables, category_values):
                     if not var.is_manually_frozen:
-                        parameter_mapping = {
-                            **parameter_mapping,
-                            var: val
-                        }
+                        parameter_mapping = {**parameter_mapping, var: val}
 
         ### Map any parameters to needed values
         for k, v in parameter_mapping.items():
             if not np.is_casadi_type(k, recursive=False):
                 raise TypeError(
-                    f"All keys in `parameter_mapping` must be CasADi parameters; you gave an object of type \'{type(k).__name__}\'.\n"
-                    f"In general, make sure all keys are the result of calling `opti.parameter()`.")
+                    f"All keys in `parameter_mapping` must be CasADi parameters; you gave an object of type '{type(k).__name__}'.\n"
+                    f"In general, make sure all keys are the result of calling `opti.parameter()`."
+                )
 
             size_k = np.prod(k.shape)
             try:
@@ -620,10 +664,12 @@ class Opti(cas.Opti):
             except AttributeError:
                 size_v = 1
             if size_k != size_v:
-                raise RuntimeError("""Problem with loading cached solution: it looks like the length of a vectorized 
+                raise RuntimeError(
+                    """Problem with loading cached solution: it looks like the length of a vectorized 
                 variable has changed since the cached solution was saved (or variables were defined in a different order). 
                 Because of this, the cache cannot be loaded. 
-                Re-run the original optimization study to regenerate the cached solution.""")
+                Re-run the original optimization study to regenerate the cached solution."""
+                )
 
             self.set_value(k, v)
 
@@ -632,12 +678,12 @@ class Opti(cas.Opti):
             options = {}
 
         default_options = {
-            "ipopt.sb"                   : 'yes',  # Hide the IPOPT banner.
-            "ipopt.max_iter"             : max_iter,
-            "ipopt.max_cpu_time"         : max_runtime,
-            "ipopt.mu_strategy"          : "adaptive",
+            "ipopt.sb": "yes",  # Hide the IPOPT banner.
+            "ipopt.max_iter": max_iter,
+            "ipopt.max_cpu_time": max_runtime,
+            "ipopt.mu_strategy": "adaptive",
             "ipopt.fast_step_computation": "yes",
-            "detect_simple_bounds"       : detect_simple_bounds,
+            "detect_simple_bounds": detect_simple_bounds,
         }
 
         if jit:
@@ -654,10 +700,13 @@ class Opti(cas.Opti):
             default_options["print_time"] = False  # No time printing
             default_options["ipopt.print_level"] = 0  # No printing from IPOPT
 
-        self.solver('ipopt', {
-            **default_options,
-            **options,
-        })
+        self.solver(
+            "ipopt",
+            {
+                **default_options,
+                **options,
+            },
+        )
 
         # Set the callback
         if callback is not None:
@@ -665,38 +714,31 @@ class Opti(cas.Opti):
 
         # Do the actual solve
         if behavior_on_failure == "raise":
-            sol = OptiSol(
-                opti=self,
-                cas_optisol=super().solve()
-            )
+            sol = OptiSol(opti=self, cas_optisol=super().solve())
         elif behavior_on_failure == "return_last":
             try:
-                sol = OptiSol(
-                    opti=self,
-                    cas_optisol=super().solve()
-                )
+                sol = OptiSol(opti=self, cas_optisol=super().solve())
             except RuntimeError:
                 import warnings
+
                 warnings.warn("Optimization failed. Returning last solution.")
 
-                sol = OptiSol(
-                    opti=self,
-                    cas_optisol=self.debug
-                )
+                sol = OptiSol(opti=self, cas_optisol=self.debug)
 
         if self.save_to_cache_on_solve:
             self.save_solution()
 
         return sol
 
-    def solve_sweep(self,
-                    parameter_mapping: Dict[cas.MX, np.ndarray],
-                    update_initial_guesses_between_solves=False,
-                    verbose=True,
-                    solve_kwargs: Dict = None,
-                    return_callable: bool = False,
-                    garbage_collect_between_runs: bool = False,
-                    ) -> Union[np.ndarray, Callable[[cas.MX], np.ndarray]]:
+    def solve_sweep(
+        self,
+        parameter_mapping: Dict[cas.MX, np.ndarray],
+        update_initial_guesses_between_solves=False,
+        verbose=True,
+        solve_kwargs: Dict = None,
+        return_callable: bool = False,
+        garbage_collect_between_runs: bool = False,
+    ) -> Union[np.ndarray, Callable[[cas.MX], np.ndarray]]:
 
         # Handle defaults
         if solve_kwargs is None:
@@ -706,7 +748,7 @@ class Opti(cas.Opti):
                 verbose=False,
                 max_iter=200,
             ),
-            **solve_kwargs
+            **solve_kwargs,
         }
 
         # Split parameter_mappings up so that it can be passed into run() via np.vectorize
@@ -724,12 +766,12 @@ class Opti(cas.Opti):
             # Collect garbage before each run, to avoid memory issues.
             if garbage_collect_between_runs:
                 import gc
+
                 gc.collect()
 
             # Reconstruct parameter mapping on a run-by-run basis by zipping together keys and this run's values.
             parameter_mappings_for_this_run: [cas.MX, float] = {
-                k: v
-                for k, v in zip(keys, args)
+                k: v for k, v in zip(keys, args)
             }
 
             # Pull in run_number so that we can increment this counter
@@ -739,25 +781,22 @@ class Opti(cas.Opti):
             if verbose:
                 print(
                     "|".join(
-                        [
-                            f"Run {run_number}/{n_runs}".ljust(12)
-                        ] + [
-                            f"{v:10.5g}"
-                            for v in args
-                        ] + [""]
+                        [f"Run {run_number}/{n_runs}".ljust(12)]
+                        + [f"{v:10.5g}" for v in args]
+                        + [""]
                     ),
-                    end=''  # Leave the newline off, since we'll complete the line later with a success or fail print.
+                    end="",  # Leave the newline off, since we'll complete the line later with a success or fail print.
                 )
 
             run_number += 1
 
             import time
+
             start_time = time.time()
 
             try:
                 sol = self.solve(
-                    parameter_mapping=parameter_mappings_for_this_run,
-                    **solve_kwargs
+                    parameter_mapping=parameter_mappings_for_this_run, **solve_kwargs
                 )
 
                 if update_initial_guesses_between_solves:
@@ -765,7 +804,9 @@ class Opti(cas.Opti):
 
                 if verbose:
                     stats = sol.stats()
-                    print(f" Solved in {stats['iter_count']} iterations, {time.time() - start_time:.2f} sec.")
+                    print(
+                        f" Solved in {stats['iter_count']} iterations, {time.time() - start_time:.2f} sec."
+                    )
 
                 return sol
 
@@ -773,14 +814,13 @@ class Opti(cas.Opti):
                 if verbose:
                     sol = OptiSol(opti=self, cas_optisol=self.debug)
                     stats = sol.stats()
-                    print(f" Failed in {stats['iter_count']} iterations, {time.time() - start_time:.2f} sec.")
+                    print(
+                        f" Failed in {stats['iter_count']} iterations, {time.time() - start_time:.2f} sec."
+                    )
 
                 return None
 
-        run_vectorized = np.vectorize(
-            run,
-            otypes='O'  # object output
-        )
+        run_vectorized = np.vectorize(run, otypes="O")  # object output
 
         sols = run_vectorized(*values)
 
@@ -797,11 +837,12 @@ class Opti(cas.Opti):
             return sols
 
     ### Debugging Methods
-    def find_variable_declaration(self,
-                                  index: int,
-                                  use_full_filename: bool = False,
-                                  return_string: bool = False,
-                                  ) -> Union[None, str]:
+    def find_variable_declaration(
+        self,
+        index: int,
+        use_full_filename: bool = False,
+        return_string: bool = False,
+    ) -> Union[None, str]:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -810,9 +851,13 @@ class Opti(cas.Opti):
                 f"The variable index exceeds the number of declared variables ({self._variable_index_counter})!"
             )
 
-        index_of_first_element = self._variable_declarations.iloc[self._variable_declarations.bisect_right(index) - 1]
+        index_of_first_element = self._variable_declarations.iloc[
+            self._variable_declarations.bisect_right(index) - 1
+        ]
 
-        filename, lineno, code_context, n_vars = self._variable_declarations[index_of_first_element]
+        filename, lineno, code_context, n_vars = self._variable_declarations[
+            index_of_first_element
+        ]
         source = inspect_tools.get_source_code_from_location(
             filename=filename,
             lineno=lineno,
@@ -822,25 +867,25 @@ class Opti(cas.Opti):
         title = f"{'Scalar' if is_scalar else 'Vector'} variable"
         if not is_scalar:
             title += f" (index {index - index_of_first_element} of {n_vars})"
-        string = "\n".join([
-            "",
-            f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
-            "",
-            "```",
-            source,
-            "```"
-        ])
+        string = "\n".join(
+            [
+                "",
+                f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
+                "",
+                "```",
+                source,
+                "```",
+            ]
+        )
 
         if return_string:
             return string
         else:
             print(string)
 
-    def find_constraint_declaration(self,
-                                    index: int,
-                                    use_full_filename: bool = False,
-                                    return_string: bool = False
-                                    ) -> Union[None, str]:
+    def find_constraint_declaration(
+        self, index: int, use_full_filename: bool = False, return_string: bool = False
+    ) -> Union[None, str]:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -851,9 +896,11 @@ class Opti(cas.Opti):
 
         index_of_first_element = self._constraint_declarations.iloc[
             self._constraint_declarations.bisect_right(index) - 1
-            ]
+        ]
 
-        filename, lineno, code_context, n_cons = self._constraint_declarations[index_of_first_element]
+        filename, lineno, code_context, n_cons = self._constraint_declarations[
+            index_of_first_element
+        ]
         source = inspect_tools.get_source_code_from_location(
             filename=filename,
             lineno=lineno,
@@ -863,14 +910,16 @@ class Opti(cas.Opti):
         title = f"{'Scalar' if is_scalar else 'Vector'} constraint"
         if not is_scalar:
             title += f" (index {index - index_of_first_element} of {n_cons})"
-        string = "\n".join([
-            "",
-            f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
-            "",
-            "```",
-            source,
-            "```"
-        ])
+        string = "\n".join(
+            [
+                "",
+                f"{title} defined in `{str(filename) if use_full_filename else filename.name}`, line {lineno}:",
+                "",
+                "```",
+                source,
+                "```",
+            ]
+        )
 
         if return_string:
             return string
@@ -879,11 +928,12 @@ class Opti(cas.Opti):
 
     ### Advanced Methods
 
-    def set_initial_from_sol(self,
-                             sol: cas.OptiSol,
-                             initialize_primals=True,
-                             initialize_duals=True,
-                             ) -> None:
+    def set_initial_from_sol(
+        self,
+        sol: cas.OptiSol,
+        initialize_primals=True,
+        initialize_duals=True,
+    ) -> None:
         """
         Sets the initial value of all variables in the Opti object to the solution of another Opti instance. Useful
         for warm-starting an Opti instance based on the result of another instance.
@@ -901,8 +951,10 @@ class Opti(cas.Opti):
 
     def save_solution(self):
         if self.cache_filename is None:
-            raise ValueError("""In order to use the save feature, you need to supply a filepath for the cache upon
-                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
+            raise ValueError(
+                """In order to use the save feature, you need to supply a filepath for the cache upon
+                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")"""
+            )
 
         # Write a function that tries to turn an iterable into a JSON-serializable list
         def try_to_put_in_list(iterable):
@@ -923,18 +975,16 @@ class Opti(cas.Opti):
 
         # Write the dictionary to file
         with open(self.cache_filename, "w+") as f:
-            json.dump(
-                solution_dict,
-                fp=f,
-                indent=4
-            )
+            json.dump(solution_dict, fp=f, indent=4)
 
         return solution_dict
 
     def get_solution_dict_from_cache(self):
         if self.cache_filename is None:
-            raise ValueError("""In order to use the load feature, you need to supply a filepath for the cache upon
-                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")""")
+            raise ValueError(
+                """In order to use the load feature, you need to supply a filepath for the cache upon
+                   initialization of this instance of the Opti stack. For example: Opti(cache_filename = "cache.json")"""
+            )
 
         with open(self.cache_filename, "r") as f:
             solution_dict = json.load(fp=f)
@@ -948,15 +998,16 @@ class Opti(cas.Opti):
 
     ### Methods for Dynamics and Control Problems
 
-    def derivative_of(self,
-                      variable: cas.MX,
-                      with_respect_to: Union[np.ndarray, cas.MX],
-                      derivative_init_guess: Union[float, np.ndarray],  # TODO add default
-                      derivative_scale: Union[float, np.ndarray] = None,
-                      method: str = "trapezoidal",
-                      explicit: bool = False,  # TODO implement explicit
-                      _stacklevel: int = 1,
-                      ) -> cas.MX:
+    def derivative_of(
+        self,
+        variable: cas.MX,
+        with_respect_to: Union[np.ndarray, cas.MX],
+        derivative_init_guess: Union[float, np.ndarray],  # TODO add default
+        derivative_scale: Union[float, np.ndarray] = None,
+        method: str = "trapezoidal",
+        explicit: bool = False,  # TODO implement explicit
+        _stacklevel: int = 1,
+    ) -> cas.MX:
         """
         Returns a quantity that is either defined or constrained to be a derivative of an existing variable.
 
@@ -1047,7 +1098,9 @@ class Opti(cas.Opti):
         ### Check inputs
         N = np.length(variable)
         if not np.length(with_respect_to) == N:
-            raise ValueError("The inputs `variable` and `with_respect_to` must be vectors of the same length!")
+            raise ValueError(
+                "The inputs `variable` and `with_respect_to` must be vectors of the same length!"
+            )
 
         ### Clean inputs
         method = method.lower()
@@ -1073,21 +1126,24 @@ class Opti(cas.Opti):
                 ),
                 with_respect_to=with_respect_to,
                 method=method,
-                _stacklevel=_stacklevel + 1
+                _stacklevel=_stacklevel + 1,
             )
 
         else:
-            raise NotImplementedError("Haven't yet implemented explicit derivatives! Use implicit ones for now...")
+            raise NotImplementedError(
+                "Haven't yet implemented explicit derivatives! Use implicit ones for now..."
+            )
 
         return derivative
 
-    def constrain_derivative(self,
-                             derivative: cas.MX,
-                             variable: cas.MX,
-                             with_respect_to: Union[np.ndarray, cas.MX],
-                             method: str = "trapezoidal",
-                             _stacklevel: int = 1,
-                             ) -> None:
+    def constrain_derivative(
+        self,
+        derivative: cas.MX,
+        variable: cas.MX,
+        with_respect_to: Union[np.ndarray, cas.MX],
+        method: str = "trapezoidal",
+        _stacklevel: int = 1,
+    ) -> None:
         """
         Adds a constraint to the optimization problem such that:
 
@@ -1161,24 +1217,17 @@ class Opti(cas.Opti):
         from aerosandbox.numpy.integrate_discrete import integrate_discrete_intervals
 
         integrals = integrate_discrete_intervals(
-            f=derivative,
-            x=with_respect_to,
-            multiply_by_dx=True,
-            method=method
+            f=derivative, x=with_respect_to, multiply_by_dx=True, method=method
         )
         duals = self.subject_to(
-            np.diff(variable) == integrals,
-            _stacklevel=_stacklevel + 1
+            np.diff(variable) == integrals, _stacklevel=_stacklevel + 1
         )
 
         return duals
 
 
 class OptiSol:
-    def __init__(self,
-                 opti: Opti,
-                 cas_optisol: cas.OptiSol
-                 ):
+    def __init__(self, opti: Opti, cas_optisol: cas.OptiSol):
         """
         An OptiSol object represents a solution to an optimization problem. This class is a wrapper around CasADi's
         `OptiSol` class that provides convenient solution query utilities for various Python data types.
@@ -1213,7 +1262,9 @@ class OptiSol:
         self.opti = opti
         self._sol = cas_optisol
 
-    def __call__(self, x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any]) -> Any:
+    def __call__(
+        self, x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any]
+    ) -> Any:
         """
         A shorthand alias for `sol.value(x)`. See `OptiSol.value()` documentation for details.
 
@@ -1228,7 +1279,9 @@ class OptiSol:
         """
         return self.value(x)
 
-    def _value_scalar(self, x: Union[cas.MX, np.ndarray, float, int]) -> Union[float, np.ndarray]:
+    def _value_scalar(
+        self, x: Union[cas.MX, np.ndarray, float, int]
+    ) -> Union[float, np.ndarray]:
         """
         Gets the value of a variable at the solution point. For developer use - see following paragraph.
 
@@ -1245,11 +1298,12 @@ class OptiSol:
         """
         return self._sol.value(x)
 
-    def value(self,
-              x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any],
-              recursive: bool = True,
-              warn_on_unknown_types: bool = False
-              ) -> Any:
+    def value(
+        self,
+        x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any],
+        recursive: bool = True,
+        warn_on_unknown_types: bool = False,
+    ) -> Any:
         """
         Gets the value of a variable (or a data structure) at the solution point. This solution point is the optimum,
             if the optimization process solved successfully.
@@ -1300,26 +1354,35 @@ class OptiSol:
         if issubclass(t, (set, frozenset)):
             return {self.value(i) for i in x}
         if issubclass(t, dict):
-            return {
-                self.value(k): self.value(v)
-                for k, v in x.items()
-            }
+            return {self.value(k): self.value(v) for k, v in x.items()}
 
         # Skip certain Python types
-        if issubclass(t, (
-                bool, str,
-                int, float, complex,
+        if issubclass(
+            t,
+            (
+                bool,
+                str,
+                int,
+                float,
+                complex,
                 range,
                 type(None),
-                bytes, bytearray, memoryview,
+                bytes,
+                bytearray,
+                memoryview,
                 type,
-        )):
+            ),
+        ):
             return x
 
         # Skip certain CasADi types
-        if issubclass(t, (
-                cas.Opti, cas.OptiSol,
-        )):
+        if issubclass(
+            t,
+            (
+                cas.Opti,
+                cas.OptiSol,
+            ),
+        ):
             return x
 
         # If it's any other type, try converting its attribute dictionary, if it has one:
@@ -1344,8 +1407,12 @@ class OptiSol:
         # item, then hope for the best.
         if warn_on_unknown_types:
             import warnings
-            warnings.warn(f"In solution substitution, could not convert an object of type {t}.\n"
-                          f"Returning it and hoping for the best.", UserWarning)
+
+            warnings.warn(
+                f"In solution substitution, could not convert an object of type {t}.\n"
+                f"Returning it and hoping for the best.",
+                UserWarning,
+            )
 
         return x
 
@@ -1374,10 +1441,7 @@ class OptiSol:
 
         g = self(self.opti.g)
 
-        constraint_violated = np.logical_or(
-            g + tol < lbg,
-            g - tol > ubg
-        )
+        constraint_violated = np.logical_or(g + tol < lbg, g - tol > ubg)
 
         lbg_isfinite = np.isfinite(lbg)
         ubg_isfinite = np.isfinite(ubg)
@@ -1388,21 +1452,26 @@ class OptiSol:
 
                 if lbg_isfinite[i] and ubg_isfinite[i]:
                     if lbg[i] == ubg[i]:
-                        print(f"{lbg[i]} == {g[i]} (violation: {np.abs(g[i] - lbg[i])})")
+                        print(
+                            f"{lbg[i]} == {g[i]} (violation: {np.abs(g[i] - lbg[i])})"
+                        )
                     else:
-                        print(f"{lbg[i]} < {g[i]} < {ubg[i]} (violation: {np.maximum(lbg[i] - g[i], g[i] - ubg[i])})")
+                        print(
+                            f"{lbg[i]} < {g[i]} < {ubg[i]} (violation: {np.maximum(lbg[i] - g[i], g[i] - ubg[i])})"
+                        )
                 elif lbg_isfinite[i] and not ubg_isfinite[i]:
                     print(f"{lbg[i]} < {g[i]} (violation: {lbg[i] - g[i]})")
                 elif not lbg_isfinite[i] and ubg_isfinite[i]:
                     print(f"{g[i]} < {ubg[i]} (violation: {g[i] - ubg[i]})")
                 else:
                     raise ValueError(
-                        "Contact the AeroSandbox developers if you see this message; it should be impossible.")
+                        "Contact the AeroSandbox developers if you see this message; it should be impossible."
+                    )
 
                 self.opti.find_constraint_declaration(index=i)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pytest
 
     # pytest.main()
@@ -1417,12 +1486,10 @@ if __name__ == '__main__':
     y = opti.variable(init_guess=0)
 
     # Define objective
-    f = (a - x) ** 2 + b * (y - x ** 2) ** 2
+    f = (a - x) ** 2 + b * (y - x**2) ** 2
     opti.minimize(f)
 
-    opti.subject_to([
-        x ** 2 + y ** 2 <= 1
-    ])
+    opti.subject_to([x**2 + y**2 <= 1])
 
     # Optimize
     sol = opti.solve()

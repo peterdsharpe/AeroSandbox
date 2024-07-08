@@ -7,8 +7,7 @@ import aerosandbox.tools.pretty_plots as p
 fuselage = asb.Fuselage(
     xsecs=[
         asb.FuselageXSec(
-            xyz_c=[xi, 0, 0],
-            radius=asb.Airfoil("naca0020").local_thickness(xi) / 2
+            xyz_c=[xi, 0, 0], radius=asb.Airfoil("naca0020").local_thickness(xi) / 2
         )
         for xi in np.cosspace(0, 1, 20)
     ],
@@ -21,36 +20,19 @@ op_point = asb.OperatingPoint(
 )
 
 aero = asb.AeroBuildup(
-    airplane=asb.Airplane(
-        fuselages=[fuselage]
-    ),
+    airplane=asb.Airplane(fuselages=[fuselage]),
     op_point=op_point,
 ).run()
 
-plt.plot(
-    op_point.mach(),
-    aero["CD"],
-    label="Full Model"
-)
+plt.plot(op_point.mach(), aero["CD"], label="Full Model")
 
 aero = asb.AeroBuildup(
-    airplane=asb.Airplane(
-        fuselages=[fuselage]
-    ),
+    airplane=asb.Airplane(fuselages=[fuselage]),
     op_point=op_point,
-    include_wave_drag=False
+    include_wave_drag=False,
 ).run()
 
-plt.plot(
-    op_point.mach(),
-    aero["CD"],
-    zorder=1.9,
-    label="Model without Wave Drag"
-)
-p.show_plot(
-    "Transonic Fuselage Drag",
-    "Mach [-]",
-    r"Drag Area $C_D \cdot A$ [m$^2$]"
-)
+plt.plot(op_point.mach(), aero["CD"], zorder=1.9, label="Model without Wave Drag")
+p.show_plot("Transonic Fuselage Drag", "Mach [-]", r"Drag Area $C_D \cdot A$ [m$^2$]")
 
 print("%.4g" % aero["CD"][-1])

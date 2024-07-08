@@ -7,9 +7,9 @@ n_samples = 10000
 
 x = s.symbols("x", real=True)
 k = s.symbols("k", positive=True, real=True)
-f = s.cos(k * x * 2 * s.pi) / k ** 2
+f = s.cos(k * x * 2 * s.pi) / k**2
 d2fdx2 = f.diff(x, 2)
-exact = s.simplify(s.integrate(d2fdx2 ** 2, (x, 0, 1)))
+exact = s.simplify(s.integrate(d2fdx2**2, (x, 0, 1)))
 
 
 @np.vectorize
@@ -20,11 +20,13 @@ def get_approx(period=10, method="cubic"):
         f.subs(k, (n_samples - 1) / period),
     )(x_vals)
 
-    approx = np.sum(integrate_discrete_squared_curvature(
-        f=f_vals,
-        x=x_vals,
-        method=method,
-    ))
+    approx = np.sum(
+        integrate_discrete_squared_curvature(
+            f=f_vals,
+            x=x_vals,
+            method=method,
+        )
+    )
 
     return approx
 
@@ -48,11 +50,6 @@ ax[1].set_ylabel("Approximation / Exact")
 plt.sca(ax[1])
 ax[1].set_ylim(bottom=0)
 ax[1].plot(
-    periods,
-    np.ones_like(periods),
-    label="Exact",
-    color="k",
-    linestyle="--",
-    alpha=0.5
+    periods, np.ones_like(periods), label="Exact", color="k", linestyle="--", alpha=0.5
 )
 p.show_plot()

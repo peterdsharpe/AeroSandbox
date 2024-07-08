@@ -19,17 +19,16 @@ def diff(a, n=1, axis=-1, period=None):
 
     """
     if period is not None:
-        return _centered_mod(
-            diff(a, n=n, axis=axis),
-            period
-        )
+        return _centered_mod(diff(a, n=n, axis=axis), period)
 
     if not is_casadi_type(a):
         return _onp.diff(a, n=n, axis=axis)
 
     else:
         if axis != -1:
-            raise NotImplementedError("This could be implemented, but haven't had the need yet.")
+            raise NotImplementedError(
+                "This could be implemented, but haven't had the need yet."
+            )
 
         result = a
         for i in range(n):
@@ -38,12 +37,12 @@ def diff(a, n=1, axis=-1, period=None):
 
 
 def gradient(
-        f,
-        *varargs,
-        axis=None,
-        edge_order=1,
-        n=1,
-        period=None,
+    f,
+    *varargs,
+    axis=None,
+    edge_order=1,
+    n=1,
+    period=None,
 ):
     """
     Return the gradient of an N-dimensional array.
@@ -75,38 +74,35 @@ def gradient(
 
     """
     if (
-            not is_casadi_type(f)
-            and all([not is_casadi_type(vararg) for vararg in varargs])
-            and n == 1
-            and period is None
+        not is_casadi_type(f)
+        and all([not is_casadi_type(vararg) for vararg in varargs])
+        and n == 1
+        and period is None
     ):
-        return _onp.gradient(
-            f,
-            *varargs,
-            axis=axis,
-            edge_order=edge_order
-        )
+        return _onp.gradient(f, *varargs, axis=axis, edge_order=edge_order)
     else:
         f = array(f)
         shape = f.shape
 
         # Handle the varargs argument
         if len(varargs) == 0:
-            varargs = (1.,)
+            varargs = (1.0,)
 
         if len(varargs) == 1:
             varargs = [varargs[0] for i in range(len(shape))]
 
         if len(varargs) != len(shape):
-            raise ValueError("You must specify either 0, 1, or N varargs, where N is the number of dimensions of f.")
+            raise ValueError(
+                "You must specify either 0, 1, or N varargs, where N is the number of dimensions of f."
+            )
         else:
             dxes = []
 
             for i, vararg in enumerate(varargs):
-                if _onp.prod(array(vararg).shape) == 1:  # If it's a scalar, you have dx values
-                    dxes.append(
-                        vararg * _onp.ones(shape[i] - 1)
-                    )
+                if (
+                    _onp.prod(array(vararg).shape) == 1
+                ):  # If it's a scalar, you have dx values
+                    dxes.append(vararg * _onp.ones(shape[i] - 1))
                 else:
                     dxes.append(
                         diff(
@@ -163,25 +159,15 @@ def gradient(
             hm = dx[get_slice(slice(None, -1))]
             hp = dx[get_slice(slice(1, None))]
 
-            dfp = (
-                    f[get_slice(slice(2, None))]
-                    - f[get_slice(slice(1, -1))]
-            )
-            dfm = (
-                    f[get_slice(slice(1, -1))]
-                    - f[get_slice(slice(None, -2))]
-            )
+            dfp = f[get_slice(slice(2, None))] - f[get_slice(slice(1, -1))]
+            dfm = f[get_slice(slice(1, -1))] - f[get_slice(slice(None, -2))]
 
             if period is not None:
                 dfp = _centered_mod(dfp, period)
                 dfm = _centered_mod(dfm, period)
 
             if n == 1:
-                grad_f = (
-                                 hm ** 2 * dfp + hp ** 2 * dfm
-                         ) / (
-                                 hm * hp * (hm + hp)
-                         )
+                grad_f = (hm**2 * dfp + hp**2 * dfm) / (hm * hp * (hm + hp))
 
                 if edge_order == 1:
                     # First point
@@ -201,10 +187,8 @@ def gradient(
                     hm_f = hm[get_slice(slice(0, 1))]
                     hp_f = hp[get_slice(slice(0, 1))]
                     grad_f_first = (
-                                           2 * dfm_f * hm_f * hp_f + dfm_f * hp_f ** 2 - dfp_f * hm_f ** 2
-                                   ) / (
-                                           hm_f * hp_f * (hm_f + hp_f)
-                                   )
+                        2 * dfm_f * hm_f * hp_f + dfm_f * hp_f**2 - dfp_f * hm_f**2
+                    ) / (hm_f * hp_f * (hm_f + hp_f))
 
                     # Last point
                     dfm_l = dfm[get_slice(slice(-1, None))]
@@ -212,43 +196,32 @@ def gradient(
                     hm_l = hm[get_slice(slice(-1, None))]
                     hp_l = hp[get_slice(slice(-1, None))]
                     grad_f_last = (
-                                          -dfm_l * hp_l ** 2 + dfp_l * hm_l ** 2 + 2 * dfp_l * hm_l * hp_l
-                                  ) / (
-                                          hm_l * hp_l * (hm_l + hp_l)
-                                  )
+                        -dfm_l * hp_l**2 + dfp_l * hm_l**2 + 2 * dfp_l * hm_l * hp_l
+                    ) / (hm_l * hp_l * (hm_l + hp_l))
 
                 else:
                     raise ValueError("Invalid edge_order.")
 
-                grad_f = concatenate((
-                    grad_f_first,
-                    grad_f,
-                    grad_f_last
-                ), axis=axis)
+                grad_f = concatenate((grad_f_first, grad_f, grad_f_last), axis=axis)
 
                 return grad_f
 
             elif n == 2:
-                grad_grad_f = (
-                        2 / (hm + hp) * (
-                        dfp / hp - dfm / hm
-                )
-                )
+                grad_grad_f = 2 / (hm + hp) * (dfp / hp - dfm / hm)
 
                 grad_grad_f_first = grad_grad_f[get_slice(slice(0, 1))]
                 grad_grad_f_last = grad_grad_f[get_slice(slice(-1, None))]
 
-                grad_grad_f = concatenate((
-                    grad_grad_f_first,
-                    grad_grad_f,
-                    grad_grad_f_last
-                ), axis=axis)
+                grad_grad_f = concatenate(
+                    (grad_grad_f_first, grad_grad_f, grad_grad_f_last), axis=axis
+                )
 
                 return grad_grad_f
 
             else:
                 raise ValueError(
-                    "A second-order reconstructor only supports first derivatives (n=1) and second derivatives (n=2).")
+                    "A second-order reconstructor only supports first derivatives (n=1) and second derivatives (n=2)."
+                )
 
 
 def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is different
@@ -264,14 +237,14 @@ def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is di
 
     """
     import warnings
+
     warnings.warn(
         "trapz() will eventually be deprecated, since NumPy plans to remove it in the upcoming NumPy 2.0 release (2024). \n"
-        "For discrete intervals, use asb.numpy.integrate_discrete_intervals(f, method=\"trapz\") instead.",
-        PendingDeprecationWarning)
+        'For discrete intervals, use asb.numpy.integrate_discrete_intervals(f, method="trapz") instead.',
+        PendingDeprecationWarning,
+    )
 
-    integral = (
-                       x[1:] + x[:-1]
-               ) / 2
+    integral = (x[1:] + x[:-1]) / 2
     if modify_endpoints:
         integral[0] = integral[0] + x[0] * 0.5
         integral[-1] = integral[-1] + x[-1] * 0.5
@@ -279,7 +252,7 @@ def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is di
     return integral
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox as asb
     import aerosandbox.numpy as np
 
@@ -287,12 +260,7 @@ if __name__ == '__main__':
 
     # print(diff(cas.DM([355, 5]), period=360))
 
-    print(
-        gradient(
-            np.linspace(45, 55, 11) % 50,
-            period=50
-        )
-    )
+    print(gradient(np.linspace(45, 55, 11) % 50, period=50))
 
     #
     # # a = np.linspace(-500, 500, 21) % 360 - 180

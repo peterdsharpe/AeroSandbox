@@ -2,13 +2,12 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
 
+
 def test_dyn_indexing():
 
     # Test indexing of a simple Dynamics object
     dyn = asb.DynamicsPointMass1DHorizontal(
-        mass_props=asb.MassProperties(
-            mass=1
-        ),
+        mass_props=asb.MassProperties(mass=1),
         x_e=np.arange(10) ** 2,
         u_e=2 * np.arange(10),
     )
@@ -30,5 +29,6 @@ def test_dyn_indexing():
     assert all(dslice.x_e == [4, 9, 16])
     assert all(dslice.u_e == [4, 6, 8])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_dyn_indexing()

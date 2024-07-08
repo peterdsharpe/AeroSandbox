@@ -45,7 +45,7 @@ rpm = rps / 60
 
 # Volume (equivalents in m^3)
 liter = 0.001
-gallon_us = 231 * inch ** 3
+gallon_us = 231 * inch**3
 gallon_imperial = 4.54609 * liter
 gallon = gallon_us
 quart = gallon_us / 4
@@ -54,8 +54,8 @@ quart = gallon_us / 4
 pascal = 1
 atm = 101325
 torr = atm / 760
-psi = lbf / inch ** 2
-psf = lbf / foot ** 2
+psi = lbf / inch**2
+psf = lbf / foot**2
 
 # Power (equivalents in Watts)
 watt = 1

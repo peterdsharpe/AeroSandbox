@@ -9,9 +9,9 @@ def simp(x):
 
 
 def show(
-        rhs: s.Symbol,
-        lhs: str = None,
-        simplify=True,
+    rhs: s.Symbol,
+    lhs: str = None,
+    simplify=True,
 ):  # Display an equation
     if simplify:
         rhs = simp(rhs)
@@ -19,14 +19,6 @@ def show(
     if lhs is not None:
         if simplify:
             lhs = simp(lhs)
-        display(
-            s.Eq(
-                s.symbols(lhs),
-                rhs,
-                evaluate=False
-            )
-        )
+        display(s.Eq(s.symbols(lhs), rhs, evaluate=False))
     else:
-        display(
-            rhs
-        )
+        display(rhs)

@@ -5,11 +5,11 @@ import aerosandbox.numpy as np
 
 
 def get_modes(
-        airplane: Airplane,
-        op_point: OperatingPoint,
-        mass_props: MassProperties,
-        aero,
-        g=9.81,
+    airplane: Airplane,
+    op_point: OperatingPoint,
+    mass_props: MassProperties,
+    aero,
+    g=9.81,
 ):
     Q = op_point.dynamic_pressure()
     S = airplane.s_ref
@@ -41,12 +41,13 @@ def get_modes(
     modes = {}
 
     def get_mode_info(
-            sigma,
-            omega_squared,
+        sigma,
+        omega_squared,
     ):
         is_oscillatory = omega_squared > 0
         return {
-            "eigenvalue_real": sigma + np.where(
+            "eigenvalue_real": sigma
+            + np.where(
                 is_oscillatory,
                 0,
                 np.abs(omega_squared + 1e-100) ** 0.5,
@@ -61,72 +62,70 @@ def get_modes(
     ##### Longitudinal modes
 
     ### Phugoid
-    modes['phugoid'] = {  # FVA, Eq. 9.55-9.57
-        **get_mode_info(
-            sigma=X_u / 2,
-            omega_squared=-(X_u ** 2) / 4 - g * Z_u / u0
-        ),
-        "eigenvalue_imag_approx": 2 ** 0.5 * g / u0,
-        "damping_ratio_approx"  : 2 ** -0.5 * aero["CD"] / aero["CL"],
+    modes["phugoid"] = {  # FVA, Eq. 9.55-9.57
+        **get_mode_info(sigma=X_u / 2, omega_squared=-(X_u**2) / 4 - g * Z_u / u0),
+        "eigenvalue_imag_approx": 2**0.5 * g / u0,
+        "damping_ratio_approx": 2**-0.5 * aero["CD"] / aero["CL"],
     }
     #
     # ### Short-period
-    modes['short_period'] = get_mode_info(
-        sigma=0.5 * M_q,
-        omega_squared=-(M_q ** 2) / 4 - u0 * M_w
+    modes["short_period"] = get_mode_info(
+        sigma=0.5 * M_q, omega_squared=-(M_q**2) / 4 - u0 * M_w
     )
 
     ##### Lateral modes
 
     ### Roll subsidence
-    modes['roll_subsidence'] = {  # FVA, Eq. 9.63
-        "eigenvalue_real": (
-                QS * b ** 2 / (2 * Ixx * u0) * aero["Clp"]
-        ),
+    modes["roll_subsidence"] = {  # FVA, Eq. 9.63
+        "eigenvalue_real": (QS * b**2 / (2 * Ixx * u0) * aero["Clp"]),
         "eigenvalue_imag": 0,
-        "damping_ratio"  : 1,
+        "damping_ratio": 1,
     }
 
     ### Dutch roll
 
-    modes['dutch_roll'] = get_mode_info(  # FVA, Eq. 9.68
+    modes["dutch_roll"] = get_mode_info(  # FVA, Eq. 9.68
         sigma=(
-                QS * b ** 2 /
-                (2 * Izz * u0) *
-                (aero["Cnr"] + Izz / (m * b ** 2) * aero["CYb"])
+            QS * b**2 / (2 * Izz * u0) * (aero["Cnr"] + Izz / (m * b**2) * aero["CYb"])
         ),
         omega_squared=(
-                QS * b / Izz *
-                (
-                        aero["Cnb"] + (
-                        op_point.atmosphere.density() * S * b / (4 * m) *
-                        (aero["CYb"] * aero["Cnr"] - aero["Cnb"] * aero["CYr"])
+            QS
+            * b
+            / Izz
+            * (
+                aero["Cnb"]
+                + (
+                    op_point.atmosphere.density()
+                    * S
+                    * b
+                    / (4 * m)
+                    * (aero["CYb"] * aero["Cnr"] - aero["Cnb"] * aero["CYr"])
                 )
-                )
-        )
+            )
+        ),
     )
 
     ### Spiral
-    spiral_parameter = (aero["Cnr"] - aero["Cnb"] * aero["Clr"] / aero["Clb"])  # FVA, Eq. 9.66
-    modes['spiral'] = {  # FVA, Eq. 9.66
-        "eigenvalue_real": (
-                QS * b ** 2 / (2 * Izz * u0) *
-                spiral_parameter
-        ),
+    spiral_parameter = (
+        aero["Cnr"] - aero["Cnb"] * aero["Clr"] / aero["Clb"]
+    )  # FVA, Eq. 9.66
+    modes["spiral"] = {  # FVA, Eq. 9.66
+        "eigenvalue_real": (QS * b**2 / (2 * Izz * u0) * spiral_parameter),
         "eigenvalue_imag": 0,
     }
 
     ### Compute damping ratios of all modes
     for mode_name, mode_data in modes.items():
-        modes[mode_name]['damping_ratio'] = (
-                -mode_data['eigenvalue_real'] /
-                (mode_data['eigenvalue_real'] ** 2 + mode_data['eigenvalue_imag'] ** 2) ** 0.5
+        modes[mode_name]["damping_ratio"] = (
+            -mode_data["eigenvalue_real"]
+            / (mode_data["eigenvalue_real"] ** 2 + mode_data["eigenvalue_imag"] ** 2)
+            ** 0.5
         )
 
     return modes
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox as asb
     import aerosandbox.numpy as np
     from aerosandbox.tools import units as u
@@ -137,8 +136,8 @@ if __name__ == '__main__':
     # Caughey, David A., "Introduction to Aircraft Stability and Control, Course Notes for M&AE 5070", 2011
     # https://courses.cit.cornell.edu/mae5070/Caughey_2011_04.pdf
     airplane = asb.Airplane(
-        name='Boeing 737-800',
-        s_ref=1260 * u.foot ** 2,
+        name="Boeing 737-800",
+        s_ref=1260 * u.foot**2,
         c_ref=11 * u.foot,
         b_ref=113 * u.foot,
     )
@@ -159,7 +158,7 @@ if __name__ == '__main__':
         Cmq=-74.997742,
         CYr=0.796001,
         Clr=0.364638,
-        Cnr=-0.434410
+        Cnr=-0.434410,
     )
 
     mass_props_TOGW = asb.MassProperties(
@@ -178,7 +177,7 @@ if __name__ == '__main__':
     op_point = asb.OperatingPoint(
         atmosphere=asb.Atmosphere(
             altitude=2438.399975619396,
-            method='differentiable',
+            method="differentiable",
         ),
         velocity=85.64176936131635,
     )
@@ -186,22 +185,19 @@ if __name__ == '__main__':
     assert np.allclose(
         aero["CL"],
         mass_props_TOGW.mass * 9.81 / op_point.dynamic_pressure() / airplane.s_ref,
-        rtol=0.001
+        rtol=0.001,
     )
 
     eigenvalues_from_AVL = {
-        'phugoid'        : -0.0171382 + 0.145072j, # Real is wrong (2x)
-        'short_period'   : -0.439841 + 0.842195j, # Pretty close
-        'roll_subsidence': -1.35132, # get_modes says -1.81
-        'dutch_roll'     : -0.385418 + 1.52695j, # Imag is wrong (1.5x)
-        'spiral'         : -0.0573017, # Too small, get_modes says -0.17
+        "phugoid": -0.0171382 + 0.145072j,  # Real is wrong (2x)
+        "short_period": -0.439841 + 0.842195j,  # Pretty close
+        "roll_subsidence": -1.35132,  # get_modes says -1.81
+        "dutch_roll": -0.385418 + 1.52695j,  # Imag is wrong (1.5x)
+        "spiral": -0.0573017,  # Too small, get_modes says -0.17
     }
 
     pprint(
         get_modes(
-            airplane=airplane,
-            op_point=op_point,
-            mass_props=mass_props_TOGW,
-            aero=aero
+            airplane=airplane, op_point=op_point, mass_props=mass_props_TOGW, aero=aero
         )
     )

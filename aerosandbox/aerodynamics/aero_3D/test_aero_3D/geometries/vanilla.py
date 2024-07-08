@@ -25,40 +25,32 @@ airplane = asb.Airplane(
                     chord=0.6,
                     twist=2,
                     airfoil=sd7037,
-                )
-            ]
+                ),
+            ],
         ),
         asb.Wing(
             name="H-stab",
             symmetric=True,
             xsecs=[
                 asb.WingXSec(
-                    xyz_le=[0, 0, 0],
-                    chord=0.7,
-                    airfoil=asb.Airfoil("naca0012")
+                    xyz_le=[0, 0, 0], chord=0.7, airfoil=asb.Airfoil("naca0012")
                 ),
                 asb.WingXSec(
-                    xyz_le=[0.14, 1.25, 0],
-                    chord=0.42,
-                    airfoil=asb.Airfoil("naca0012")
+                    xyz_le=[0.14, 1.25, 0], chord=0.42, airfoil=asb.Airfoil("naca0012")
                 ),
-            ]
+            ],
         ).translate([4, 0, 0]),
         asb.Wing(
             name="V-stab",
             xsecs=[
                 asb.WingXSec(
-                    xyz_le=[0, 0, 0],
-                    chord=0.7,
-                    airfoil=asb.Airfoil("naca0012")
+                    xyz_le=[0, 0, 0], chord=0.7, airfoil=asb.Airfoil("naca0012")
                 ),
                 asb.WingXSec(
-                    xyz_le=[0.14, 0, 1],
-                    chord=0.42,
-                    airfoil=asb.Airfoil("naca0012")
-                )
-            ]
-        ).translate([4, 0, 0])
+                    xyz_le=[0.14, 0, 1], chord=0.42, airfoil=asb.Airfoil("naca0012")
+                ),
+            ],
+        ).translate([4, 0, 0]),
     ],
     fuselages=[
         asb.Fuselage(
@@ -66,13 +58,13 @@ airplane = asb.Airplane(
             xsecs=[
                 asb.FuselageXSec(
                     xyz_c=[xi * 5 - 0.5, 0, 0],
-                    radius=asb.Airfoil("naca0024").local_thickness(x_over_c=xi)
+                    radius=asb.Airfoil("naca0024").local_thickness(x_over_c=xi),
                 )
                 for xi in np.cosspace(0, 1, 30)
-            ]
+            ],
         )
-    ]
+    ],
 )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     airplane.draw()

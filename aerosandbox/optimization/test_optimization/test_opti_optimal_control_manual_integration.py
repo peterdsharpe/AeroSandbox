@@ -37,6 +37,7 @@ subject to the preceding constraints.
 
 # TODO make it second order
 
+
 def test_rocket_control_problem(plot=False):
     ### Constants
     T = 100
@@ -54,27 +55,31 @@ def test_rocket_control_problem(plot=False):
     gamma = opti.variable(init_guess=0, n_vars=T)  # instantaneous fuel consumption
     a_max = opti.variable(init_guess=0)  # maximum acceleration
 
-    opti.subject_to([
-        np.diff(x) == v[:-1],  # physics
-        np.diff(v) == a[:-1],  # physics
-        x[0] == 0,  # boundary condition
-        v[0] == 0,  # boundary condition
-        x[-1] == d,  # boundary condition
-        v[-1] == 0,  # boundary condition
-        gamma >= c * a,  # lower bound on instantaneous fuel consumption
-        gamma >= -c * a,  # lower bound on instantaneous fuel consumption
-        np.sum(gamma) <= f,  # fuel consumption limit
-        np.diff(a) <= delta,  # jerk limits
-        np.diff(a) >= -delta,  # jerk limits
-        a_max >= a,  # lower bound on maximum acceleration
-        a_max >= -a,  # lower bound on maximum acceleration
-    ])
+    opti.subject_to(
+        [
+            np.diff(x) == v[:-1],  # physics
+            np.diff(v) == a[:-1],  # physics
+            x[0] == 0,  # boundary condition
+            v[0] == 0,  # boundary condition
+            x[-1] == d,  # boundary condition
+            v[-1] == 0,  # boundary condition
+            gamma >= c * a,  # lower bound on instantaneous fuel consumption
+            gamma >= -c * a,  # lower bound on instantaneous fuel consumption
+            np.sum(gamma) <= f,  # fuel consumption limit
+            np.diff(a) <= delta,  # jerk limits
+            np.diff(a) >= -delta,  # jerk limits
+            a_max >= a,  # lower bound on maximum acceleration
+            a_max >= -a,  # lower bound on maximum acceleration
+        ]
+    )
 
     opti.minimize(a_max)  # minimize the peak acceleration
 
     sol = opti.solve()  # solve
 
-    assert sol(a_max) == pytest.approx(0.02181991952, rel=1e-3)  # solved externally with Julia JuMP
+    assert sol(a_max) == pytest.approx(
+        0.02181991952, rel=1e-3
+    )  # solved externally with Julia JuMP
 
     if plot:
         import matplotlib.pyplot as plt
@@ -93,5 +98,5 @@ def test_rocket_control_problem(plot=False):
         plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

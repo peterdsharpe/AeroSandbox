@@ -5,10 +5,7 @@ from textwrap import indent, dedent
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 
-def generate_wing(
-        wing: Wing,
-        include_main=True
-) -> str:
+def generate_wing(wing: Wing, include_main=True) -> str:
     """
     Generates a VSPScript file for a Wing object.
 
@@ -60,7 +57,7 @@ Update();
     dx_le = dxyz_le[:, 0]
     dy_le = dxyz_le[:, 1]
     dz_le = dxyz_le[:, 2]
-    dyz_le = np.sqrt(dy_le ** 2 + dz_le ** 2)
+    dyz_le = np.sqrt(dy_le**2 + dz_le**2)
     dihedrals = np.arctan2d(dz_le, dy_le)
     sweep_le = np.arctan2d(dx_le, dyz_le)
 
@@ -90,12 +87,8 @@ Update();
         upper = xsec.airfoil.upper_coordinates()[::-1]  # VSP wants front to back order
         lower = xsec.airfoil.lower_coordinates()  # Front to back order
 
-        up_pnt_vecs = ", ".join([
-            f"vec3d({p[0]:.8g}, {p[1]:.8g}, 0.0)" for p in upper
-        ])
-        lo_pnt_vecs = ", ".join([
-            f"vec3d({p[0]:.8g}, {p[1]:.8g}, 0.0)" for p in lower
-        ])
+        up_pnt_vecs = ", ".join([f"vec3d({p[0]:.8g}, {p[1]:.8g}, 0.0)" for p in upper])
+        lo_pnt_vecs = ", ".join([f"vec3d({p[0]:.8g}, {p[1]:.8g}, 0.0)" for p in lower])
 
         script += f"""\
 {{
@@ -126,35 +119,23 @@ Update();
     return script
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     wing = Wing(
         name="Main Wing",
         xsecs=[
             WingXSec(
-                xyz_le=[1, 0, 0],
-                chord=1.1,
-                twist=-20,
-                airfoil=Airfoil(name="dae11")
+                xyz_le=[1, 0, 0], chord=1.1, twist=-20, airfoil=Airfoil(name="dae11")
             ),
             WingXSec(
-                xyz_le=[1, 2, 0],
-                chord=0.9,
-                twist=40,
-                airfoil=Airfoil(name="NACA4412")
+                xyz_le=[1, 2, 0], chord=0.9, twist=40, airfoil=Airfoil(name="NACA4412")
             ),
             WingXSec(
-                xyz_le=[2, 5, 0],
-                chord=0.5,
-                twist=0,
-                airfoil=Airfoil(name="NACA3412")
+                xyz_le=[2, 5, 0], chord=0.5, twist=0, airfoil=Airfoil(name="NACA3412")
             ),
             WingXSec(
-                xyz_le=[2, 10, 5],
-                chord=0.25,
-                twist=0,
-                airfoil=Airfoil(name="NACA2412")
-            )
-        ]
+                xyz_le=[2, 10, 5], chord=0.25, twist=0, airfoil=Airfoil(name="NACA2412")
+            ),
+        ],
     )
     print(generate_wing(wing))
 

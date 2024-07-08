@@ -1,9 +1,7 @@
 import aerosandbox.numpy as np
 
 
-def overall_pressure_ratio_turboshaft_technology_limit(
-        mass_turboshaft: float
-) -> float:
+def overall_pressure_ratio_turboshaft_technology_limit(mass_turboshaft: float) -> float:
     """
     Estimates the maximum-practically-achievable overall pressure ratio (OPR) of a turboshaft engine, as a function
     of its mass. A regression to historical data.
@@ -21,7 +19,11 @@ def overall_pressure_ratio_turboshaft_technology_limit(
 
         The maximum-practically-achievable overall pressure ratio (OPR) of the turboshaft engine. [-]
     """
-    p = {'scl': 1.0222956615376533, 'cen': 1.6535195257959798, 'high': 23.957335474997656}
+    p = {
+        "scl": 1.0222956615376533,
+        "cen": 1.6535195257959798,
+        "high": 23.957335474997656,
+    }
     return np.blend(
         np.log10(mass_turboshaft) / p["scl"] - p["cen"],
         value_switch_high=p["high"],
@@ -30,8 +32,8 @@ def overall_pressure_ratio_turboshaft_technology_limit(
 
 
 def power_turboshaft(
-        mass_turboshaft: float,
-        overall_pressure_ratio: float = None,
+    mass_turboshaft: float,
+    overall_pressure_ratio: float = None,
 ) -> float:
     """
     Estimates the maximum rated power of a turboshaft engine, given its mass. A regression to historical data.
@@ -54,22 +56,26 @@ def power_turboshaft(
 
     """
     if overall_pressure_ratio is None:
-        overall_pressure_ratio = overall_pressure_ratio_turboshaft_technology_limit(
-            mass_turboshaft
-        ) * 0.7
+        overall_pressure_ratio = (
+            overall_pressure_ratio_turboshaft_technology_limit(mass_turboshaft) * 0.7
+        )
 
-    p = {'a': 1674.9411795202134, 'OPR': 0.5090953411025091, 'Weight [kg]': 0.9418482117552568}
+    p = {
+        "a": 1674.9411795202134,
+        "OPR": 0.5090953411025091,
+        "Weight [kg]": 0.9418482117552568,
+    }
     return (
-            p["a"]
-            * mass_turboshaft ** p["Weight [kg]"]
-            * overall_pressure_ratio ** p["OPR"]
+        p["a"]
+        * mass_turboshaft ** p["Weight [kg]"]
+        * overall_pressure_ratio ** p["OPR"]
     )
 
 
 def thermal_efficiency_turboshaft(
-        mass_turboshaft: float,
-        overall_pressure_ratio: float = None,
-        throttle_setting: float = 1,
+    mass_turboshaft: float,
+    overall_pressure_ratio: float = None,
+    throttle_setting: float = 1,
 ) -> float:
     """
     Estimates the thermal efficiency of a turboshaft engine. A regression to historical data.
@@ -98,11 +104,11 @@ def thermal_efficiency_turboshaft(
 
     """
     if overall_pressure_ratio is None:
-        overall_pressure_ratio = overall_pressure_ratio_turboshaft_technology_limit(
-            mass_turboshaft
-        ) * 0.7
+        overall_pressure_ratio = (
+            overall_pressure_ratio_turboshaft_technology_limit(mass_turboshaft) * 0.7
+        )
 
-    p = {'a': 0.12721246565294902, 'wcen': 2.679474077211383, 'wscl': 4.10824884208311}
+    p = {"a": 0.12721246565294902, "wcen": 2.679474077211383, "wscl": 4.10824884208311}
 
     ideal_efficiency = 1 - (1 / overall_pressure_ratio) ** ((1.4 - 1) / 1.4)
 
@@ -113,26 +119,26 @@ def thermal_efficiency_turboshaft(
     )
 
     p = {
-        'B0': 0.0592,  # Modified from Geiß thesis such that B values sum to 1 by construction. Orig: 0.05658
-        'B1': 2.567,
-        'B2': -2.612,
-        'B3': 0.9858
+        "B0": 0.0592,  # Modified from Geiß thesis such that B values sum to 1 by construction. Orig: 0.05658
+        "B1": 2.567,
+        "B2": -2.612,
+        "B3": 0.9858,
     }
 
     thermal_efficiency_knockdown_from_partial_power = (
-            p["B0"]
-            + p["B1"] * throttle_setting
-            + p["B2"] * throttle_setting ** 2
-            + p["B3"] * throttle_setting ** 3
+        p["B0"]
+        + p["B1"] * throttle_setting
+        + p["B2"] * throttle_setting**2
+        + p["B3"] * throttle_setting**3
     )
 
     return (
-            thermal_efficiency_at_full_power
-            * thermal_efficiency_knockdown_from_partial_power
+        thermal_efficiency_at_full_power
+        * thermal_efficiency_knockdown_from_partial_power
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
@@ -141,7 +147,8 @@ if __name__ == '__main__':
     x = np.linspace(0, 1)
     plt.plot(
         x,
-        thermal_efficiency_turboshaft(1000, throttle_setting=x) / thermal_efficiency_turboshaft(1000),
+        thermal_efficiency_turboshaft(1000, throttle_setting=x)
+        / thermal_efficiency_turboshaft(1000),
     )
     ax.xaxis.set_major_formatter(p.mpl.ticker.PercentFormatter(1))
     plt.xlim(0, 1)
@@ -151,7 +158,7 @@ if __name__ == '__main__':
     p.show_plot(
         "Turboshaft: Thermal Efficiency at Partial Power",
         "Throttle Setting [-]",
-        r"Thermal Efficiency Knockdown relative to Design Point [-] $\eta / \eta_\mathrm{max}$"
+        r"Thermal Efficiency Knockdown relative to Design Point [-] $\eta / \eta_\mathrm{max}$",
     )
 
     ##### Do Weight/OPR Efficiency Plot #####
@@ -183,5 +190,5 @@ if __name__ == '__main__':
         "Turboshaft Model: Thermal Efficiency vs. Weight and OPR",
         "Engine Weight [kg]",
         "Overall Pressure Ratio [-]",
-        dpi=300
+        dpi=300,
     )

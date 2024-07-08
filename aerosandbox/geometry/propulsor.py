@@ -11,15 +11,16 @@ class Propulsor(AeroSandboxObject):
     Assumes a disk- or cylinder-shaped propulsor.
     """
 
-    def __init__(self,
-                 name: Optional[str] = "Untitled",
-                 xyz_c: Union[np.ndarray, List[float]] = None,
-                 xyz_normal: Union[np.ndarray, List[float]] = None,
-                 radius: float = 1.,
-                 length: float = 0.,
-                 color: Optional[Union[str, Tuple[float]]] = None,
-                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
-                 ):
+    def __init__(
+        self,
+        name: Optional[str] = "Untitled",
+        xyz_c: Union[np.ndarray, List[float]] = None,
+        xyz_normal: Union[np.ndarray, List[float]] = None,
+        radius: float = 1.0,
+        length: float = 0.0,
+        color: Optional[Union[str, Tuple[float]]] = None,
+        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+    ):
         """
         Defines a new propulsor object.
 
@@ -27,9 +28,9 @@ class Propulsor(AeroSandboxObject):
         """
         ### Set defaults
         if xyz_c is None:
-            xyz_c = np.array([0., 0., 0.])
+            xyz_c = np.array([0.0, 0.0, 0.0])
         if xyz_normal is None:
-            xyz_normal = np.array([-1., 0., 0.])
+            xyz_normal = np.array([-1.0, 0.0, 0.0])
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -48,7 +49,7 @@ class Propulsor(AeroSandboxObject):
         """
         Returns the cross-sectional area of the propulsor, in m^2.
         """
-        return np.pi * self.radius ** 2
+        return np.pi * self.radius**2
 
     def xsec_perimeter(self) -> float:
         """
@@ -89,26 +90,19 @@ class Propulsor(AeroSandboxObject):
 
         return xg_local, yg_local, zg_local
 
-    def get_disk_3D_coordinates(self,
-                                theta: Union[float, np.ndarray] = None,
-                                l_over_length: Union[float, np.ndarray] = None,
-                                ) -> Tuple[Union[float, np.ndarray]]:
+    def get_disk_3D_coordinates(
+        self,
+        theta: Union[float, np.ndarray] = None,
+        l_over_length: Union[float, np.ndarray] = None,
+    ) -> Tuple[Union[float, np.ndarray]]:
         ### Set defaults
         if theta is None:
-            theta = np.linspace(
-                0,
-                2 * np.pi,
-                60 + 1
-            )[:-1]
+            theta = np.linspace(0, 2 * np.pi, 60 + 1)[:-1]
         if l_over_length is None:
             if self.length == 0:
                 l_over_length = 0
             else:
-                l_over_length = np.linspace(
-                    0,
-                    1,
-                    4
-                ).reshape((1, -1))
+                l_over_length = np.linspace(0, 1, 4).reshape((1, -1))
 
                 theta = np.array(theta).reshape((-1, 1))
 
@@ -127,9 +121,10 @@ class Propulsor(AeroSandboxObject):
             self.xyz_c[2] + x * xg_local[2] + y * yg_local[2] + z * zg_local[2],
         )
 
-    def translate(self,
-                  xyz: Union[np.ndarray, List[float]],
-                  ) -> 'Propulsor':
+    def translate(
+        self,
+        xyz: Union[np.ndarray, List[float]],
+    ) -> "Propulsor":
         """
         Returns a copy of this propulsor that has been translated by `xyz`.
 
@@ -143,6 +138,6 @@ class Propulsor(AeroSandboxObject):
         return new_propulsor
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     p_disk = Propulsor(radius=3)
     p_can = Propulsor(length=1)

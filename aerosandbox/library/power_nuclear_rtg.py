@@ -36,12 +36,13 @@ c = 299792458  # m/s, speed of light
 
 
 def po210_specific_power(
-        days_after_formation=0,
+    days_after_formation=0,
 ):
     half_life = 138.376  # days
     # Source: https://en.wikipedia.org/wiki/Polonium-210
     pure_specific_energy = (
-            (po_210_mass_amu - alpha_particle_mass_amu - pb_206_mass_amu) * c ** 2
-            / po_210_mass_amu
+        (po_210_mass_amu - alpha_particle_mass_amu - pb_206_mass_amu)
+        * c**2
+        / po_210_mass_amu
     )  # J/kg
     # TODO finish

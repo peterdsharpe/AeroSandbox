@@ -24,7 +24,7 @@ def test_fit_model_norm_type(plot=False):
                 "1": 0,
                 "0": 0,
             },
-            residual_norm_type=residual_norm_type
+            residual_norm_type=residual_norm_type,
         )
 
     L1_model = fit_model_with_norm("L1")
@@ -43,11 +43,13 @@ def test_fit_model_norm_type(plot=False):
         plt.plot(x, LInf_model(x), label=r"$L_\infty$ Fit: $\min (\max |e|)$")
         plt.xlabel(r"Time")
         plt.ylabel(r"Temperature")
-        plt.title(r"Illustration of Various Norm Types for Robust Regression (Quadratic Model)")
+        plt.title(
+            r"Illustration of Various Norm Types for Robust Regression (Quadratic Model)"
+        )
         plt.tight_layout()
         plt.legend()
         plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_fit_model_norm_type(plot=True)

@@ -18,29 +18,25 @@ def test_block_move_fixed_time():
 
     u = opti.variable(init_guess=np.linspace(1, -1, n_timesteps))
 
-    dyn.add_force(
-        Fx=u
-    )
+    dyn.add_force(Fx=u)
 
-    dyn.constrain_derivatives(
-        opti=opti,
-        time=time
-    )
+    dyn.constrain_derivatives(opti=opti, time=time)
 
-    opti.subject_to([
-        dyn.x_e[0] == 0,
-        dyn.x_e[-1] == 1,
-        dyn.u_e[0] == 0,
-        dyn.u_e[-1] == 0,
-    ])
+    opti.subject_to(
+        [
+            dyn.x_e[0] == 0,
+            dyn.x_e[-1] == 1,
+            dyn.u_e[0] == 0,
+            dyn.u_e[-1] == 0,
+        ]
+    )
 
     # effort = np.sum(
     #     np.trapz(dyn.X ** 2) * np.diff(time)
     # )
 
     effort = np.sum(  # More sophisticated integral-of-squares integration (closed form correct)
-        np.diff(time) / 3 *
-        (u[:-1] ** 2 + u[:-1] * u[1:] + u[1:] ** 2)
+        np.diff(time) / 3 * (u[:-1] ** 2 + u[:-1] * u[1:] + u[1:] ** 2)
     )
 
     opti.minimize(effort)
@@ -75,27 +71,24 @@ def test_block_move_minimum_time():
         u_e=opti.variable(init_guess=1, n_vars=n_timesteps),
     )
 
-    u = opti.variable(init_guess=np.linspace(1, -1, n_timesteps), lower_bound=-1, upper_bound=1)
-
-    dyn.add_force(
-        Fx=u
+    u = opti.variable(
+        init_guess=np.linspace(1, -1, n_timesteps), lower_bound=-1, upper_bound=1
     )
 
-    dyn.constrain_derivatives(
-        opti=opti,
-        time=time
+    dyn.add_force(Fx=u)
+
+    dyn.constrain_derivatives(opti=opti, time=time)
+
+    opti.subject_to(
+        [
+            dyn.x_e[0] == 0,
+            dyn.x_e[-1] == 1,
+            dyn.u_e[0] == 0,
+            dyn.u_e[-1] == 0,
+        ]
     )
 
-    opti.subject_to([
-        dyn.x_e[0] == 0,
-        dyn.x_e[-1] == 1,
-        dyn.u_e[0] == 0,
-        dyn.u_e[-1] == 0,
-    ])
-
-    opti.minimize(
-        time[-1]
-    )
+    opti.minimize(time[-1])
 
     sol = opti.solve()
 
@@ -111,5 +104,5 @@ def test_block_move_minimum_time():
     assert np.mean(np.abs(sol(u))) == pytest.approx(1, abs=0.01)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

@@ -21,20 +21,14 @@ dyn = asb.DynamicsRigidBody3DBodyEuler(
 )
 
 
-def chain_conversion(
-        axes: List[str] = None
-):
+def chain_conversion(axes: List[str] = None):
     if axes is None:
         axes = ["geometry", "body", "geometry"]
 
     x, y, z = copy.deepcopy(vector)
     for from_axes, to_axes in zip(axes, axes[1:]):
         x, y, z = dyn.convert_axes(
-            x_from=x,
-            y_from=y,
-            z_from=z,
-            from_axes=from_axes,
-            to_axes=to_axes
+            x_from=x, y_from=y, z_from=z, from_axes=from_axes, to_axes=to_axes
         )
     return np.array(vector) == pytest.approx(np.array([x, y, z]))
 
@@ -60,24 +54,26 @@ def test_earth():
 
 
 def test_cycle():
-    assert chain_conversion([
-        "body",
-        "geometry",
-        "stability",
-        "wind",
-        "body",
-        "wind",
-        "stability",
-        "geometry",
-        "body",
-        "geometry",
-        "wind",
-        "geometry",
-        "stability",
-        "body",
-    ])
+    assert chain_conversion(
+        [
+            "body",
+            "geometry",
+            "stability",
+            "wind",
+            "body",
+            "wind",
+            "stability",
+            "geometry",
+            "body",
+            "geometry",
+            "wind",
+            "geometry",
+            "stability",
+            "body",
+        ]
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()
     chain_conversion()

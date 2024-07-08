@@ -13,7 +13,7 @@ from dataset_temperature import time, measured_temperature
 def test_fit_model_fit_type(plot=False):
     ### Fit a model
     def model(x, p):
-        return p["2"] * x ** 2 + p["1"] * x + p["0"]  # Quadratic regression
+        return p["2"] * x**2 + p["1"] * x + p["0"]  # Quadratic regression
 
     def fit_model_with_fit_type(fit_type):
         return FittedModel(
@@ -26,7 +26,7 @@ def test_fit_model_fit_type(plot=False):
                 "0": 0,
             },
             fit_type=fit_type,
-            residual_norm_type="L1"
+            residual_norm_type="L1",
         )
 
     best_fit_model = fit_model_with_fit_type("best")
@@ -45,11 +45,13 @@ def test_fit_model_fit_type(plot=False):
         plt.plot(x, lower_bound_model(x), label=r"Lower-Bound Fit")
         plt.xlabel(r"Time")
         plt.ylabel(r"Temperature")
-        plt.title(r"Illustration of Fit Types for Robust Surrogate Modeling (Linear Model)")
+        plt.title(
+            r"Illustration of Fit Types for Robust Surrogate Modeling (Linear Model)"
+        )
         plt.tight_layout()
         plt.legend()
         plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_fit_model_fit_type(True)

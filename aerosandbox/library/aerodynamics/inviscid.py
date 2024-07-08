@@ -2,10 +2,10 @@ import aerosandbox.numpy as np
 
 
 def induced_drag(
-        lift,
-        span,
-        dynamic_pressure,
-        oswalds_efficiency=1,
+    lift,
+    span,
+    dynamic_pressure,
+    oswalds_efficiency=1,
 ):
     """
     Computes the induced drag associated with a lifting planar wing.
@@ -19,17 +19,15 @@ def induced_drag(
     Returns: Induced drag force [Newtons]
 
     """
-    return lift ** 2 / (
-            dynamic_pressure * np.pi * span ** 2 * oswalds_efficiency
-    )
+    return lift**2 / (dynamic_pressure * np.pi * span**2 * oswalds_efficiency)
 
 
 def oswalds_efficiency(
-        taper_ratio: float,
-        aspect_ratio: float,
-        sweep: float = 0.,
-        fuselage_diameter_to_span_ratio: float = 0.,
-        method="nita_scholz",
+    taper_ratio: float,
+    aspect_ratio: float,
+    sweep: float = 0.0,
+    fuselage_diameter_to_span_ratio: float = 0.0,
+    method="nita_scholz",
 ) -> float:
     """
     Computes the Oswald's efficiency factor for a planar, tapered, swept wing.
@@ -52,32 +50,28 @@ def oswalds_efficiency(
     """
     sweep = np.clip(sweep, 0, 90)  # TODO input proper analytic continuation
 
-    def f(l):  # f(lambda), given as Eq. 36 in the Nita and Scholz paper (see parent docstring).
-        return (
-                0.0524 * l ** 4
-                - 0.15 * l ** 3
-                + 0.1659 * l ** 2
-                - 0.0706 * l
-                + 0.0119
-        )
+    def f(
+        l,
+    ):  # f(lambda), given as Eq. 36 in the Nita and Scholz paper (see parent docstring).
+        return 0.0524 * l**4 - 0.15 * l**3 + 0.1659 * l**2 - 0.0706 * l + 0.0119
 
     delta_lambda = -0.357 + 0.45 * np.exp(-0.0375 * sweep)
     # Eq. 37 in Nita & Scholz.
     # Note: there is a typo in the cited paper; the negative in the exponent was omitted.
     # A bit of thinking about this reveals that this omission must be erroneous.
 
-    e_theo = 1 / (
-            1 + f(taper_ratio - delta_lambda) * aspect_ratio
-    )
+    e_theo = 1 / (1 + f(taper_ratio - delta_lambda) * aspect_ratio)
 
     ### Correction factors, with nomenclature from Nita & Scholz
     k_e_F = 1 - 2 * (fuselage_diameter_to_span_ratio) ** 2
-    k_e_D0 = np.mean([
-        0.873,  # jet transport
-        0.864,  # business jet
-        0.804,  # turboprop
-        0.804,  # general aviation
-    ])
+    k_e_D0 = np.mean(
+        [
+            0.873,  # jet transport
+            0.864,  # business jet
+            0.804,  # turboprop
+            0.804,  # general aviation
+        ]
+    )
     k_e_M = 1
     # Compressibility correction not added because it only becomes significant well after M_crit, after which wave
     # drag dominates. Nita & Scholz also do not provide a model that extrapolates sensibly beyond M=0.9 or so,
@@ -89,17 +83,16 @@ def oswalds_efficiency(
         mach_correction_factor = 1
         Q = 1 / (e_theo * k_e_F)
         from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
+
         P = 0.38 * Cf_flat_plate(Re_L=1e6)
 
-        e = mach_correction_factor / (
-                Q + P * np.pi * aspect_ratio
-        )
+        e = mach_correction_factor / (Q + P * np.pi * aspect_ratio)
 
     return e
 
 
 def optimal_taper_ratio(
-        sweep=0.,
+    sweep=0.0,
 ) -> float:
     """
     Computes the optimal (minimum-induced-drag) taper ratio for a given quarter-chord sweep angle.
@@ -120,10 +113,10 @@ def optimal_taper_ratio(
 
 
 def CL_over_Cl(
-        aspect_ratio: float,
-        mach: float = 0.,
-        sweep: float = 0.,
-        Cl_is_compressible: bool = True
+    aspect_ratio: float,
+    mach: float = 0.0,
+    sweep: float = 0.0,
+    Cl_is_compressible: bool = True,
 ) -> float:
     """
     Returns the ratio of 3D lift coefficient (with compressibility) to the 2D lift coefficient.
@@ -153,13 +146,13 @@ def CL_over_Cl(
             For most accurate results, set this flag to True, and then model profile characteristics separately.
 
     """
-    prandtl_glauert_beta_squared_ideal = 1 - mach ** 2
+    prandtl_glauert_beta_squared_ideal = 1 - mach**2
 
     # beta_squared = 1 - mach ** 2
     beta_squared = np.softmax(
         prandtl_glauert_beta_squared_ideal,
         -prandtl_glauert_beta_squared_ideal,
-        hardness=3.0
+        hardness=3.0,
     )
 
     ### Alternate formulations
@@ -171,19 +164,23 @@ def CL_over_Cl(
     # Symbolically simplified to remove the PG singularity.
     eta = 1.0
     CL_ratio = aspect_ratio / (
-            2 + (
-            4 + (aspect_ratio ** 2 * beta_squared / eta ** 2) + (np.tand(sweep) * aspect_ratio / eta) ** 2
-    ) ** 0.5
+        2
+        + (
+            4
+            + (aspect_ratio**2 * beta_squared / eta**2)
+            + (np.tand(sweep) * aspect_ratio / eta) ** 2
+        )
+        ** 0.5
     )
 
     if Cl_is_compressible:
-        CL_ratio = CL_ratio * beta_squared ** 0.5
+        CL_ratio = CL_ratio * beta_squared**0.5
 
     return CL_ratio
 
 
 def induced_drag_ratio_from_ground_effect(
-        h_over_b  # type: float
+    h_over_b,  # type: float
 ):
     """
     Gives the ratio of actual induced drag to free-flight induced drag experienced by a wing in ground effect.
@@ -194,17 +191,11 @@ def induced_drag_ratio_from_ground_effect(
     :param h_over_b: (Height above ground) divided by (wingspan).
     :return: Ratio of induced drag in ground effect to induced drag out of ground effect [unitless]
     """
-    h_over_b = np.softmax(
-        h_over_b,
-        0,
-        hardness=1 / 0.03
-    )
-    return 1 - np.exp(
-        -4.01 * (2 * h_over_b) ** 0.717
-    )
+    h_over_b = np.softmax(h_over_b, 0, hardness=1 / 0.03)
+    return 1 - np.exp(-4.01 * (2 * h_over_b) ** 0.717)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 

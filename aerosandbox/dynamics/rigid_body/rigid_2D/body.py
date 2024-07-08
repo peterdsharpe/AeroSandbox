@@ -1,4 +1,6 @@
-from aerosandbox.dynamics.rigid_body.rigid_3D.body_euler import DynamicsRigidBody3DBodyEuler
+from aerosandbox.dynamics.rigid_body.rigid_3D.body_euler import (
+    DynamicsRigidBody3DBodyEuler,
+)
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
 from typing import Union, Dict, Tuple
@@ -26,15 +28,16 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
 
     """
 
-    def __init__(self,
-                 mass_props: MassProperties = None,
-                 x_e: Union[float, np.ndarray] = 0,
-                 z_e: Union[float, np.ndarray] = 0,
-                 u_b: Union[float, np.ndarray] = 0,
-                 w_b: Union[float, np.ndarray] = 0,
-                 theta: Union[float, np.ndarray] = 0,
-                 q: Union[float, np.ndarray] = 0,
-                 ):
+    def __init__(
+        self,
+        mass_props: MassProperties = None,
+        x_e: Union[float, np.ndarray] = 0,
+        z_e: Union[float, np.ndarray] = 0,
+        u_b: Union[float, np.ndarray] = 0,
+        w_b: Union[float, np.ndarray] = 0,
+        theta: Union[float, np.ndarray] = 0,
+        q: Union[float, np.ndarray] = 0,
+    ):
         # Initialize state variables
         self.mass_props = MassProperties() if mass_props is None else mass_props
         self.x_e = x_e
@@ -64,12 +67,12 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
     @property
     def state(self):
         return {
-            "x_e"  : self.x_e,
-            "z_e"  : self.z_e,
-            "u_b"  : self.u_b,
-            "w_b"  : self.w_b,
+            "x_e": self.x_e,
+            "z_e": self.z_e,
+            "u_b": self.u_b,
+            "w_b": self.w_b,
             "theta": self.theta,
-            "q"    : self.q,
+            "q": self.q,
         }
 
     @property
@@ -82,10 +85,8 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
 
     def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
         derivatives = super().state_derivatives()
-        return {
-            k: derivatives[k] for k in self.state.keys()
-        }
+        return {k: derivatives[k] for k in self.state.keys()}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dyn = DynamicsRigidBody2DBody()

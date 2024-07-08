@@ -8,53 +8,56 @@ import seaborn as sns
 
 
 def pie(
-        values: Union[np.ndarray, List[float]],
-        names: List[str],
-        colors: Union[np.ndarray, List[str]] = None,
-        label_format: Callable[[str, float, float], str] = lambda name, value, percentage: name,
-        sort_by: Union[np.ndarray, List[float], str, None] = None,
-        startangle: float = 0.,
-        center_text: str = None,
-        x_labels: float = 1.25,
-        y_max_labels: float = 1.3,
-        arm_length=20,
-        arm_radius=5,
+    values: Union[np.ndarray, List[float]],
+    names: List[str],
+    colors: Union[np.ndarray, List[str]] = None,
+    label_format: Callable[
+        [str, float, float], str
+    ] = lambda name, value, percentage: name,
+    sort_by: Union[np.ndarray, List[float], str, None] = None,
+    startangle: float = 0.0,
+    center_text: str = None,
+    x_labels: float = 1.25,
+    y_max_labels: float = 1.3,
+    arm_length=20,
+    arm_radius=5,
 ):
     # TODO docs
     ax = plt.gca()
     n_wedges = len(values)
-
 
     ### Check inputs
     if not len(names) == n_wedges:
         raise ValueError()  # TODO
 
     ### Sort by
-    sort_by_error= ValueError('''Argument `sort_by` must be one of:\n
+    sort_by_error = ValueError(
+        """Argument `sort_by` must be one of:\n
     * a string of "values", "names", or "colors"
     * an array of numbers corresponding to each pie slice, which will then be used for sorting
-    ''')
+    """
+    )
 
     if sort_by is None:
         sort_by = np.arange(n_wedges)
     elif sort_by == "values":
-        sort_by=values
-    elif sort_by=="names":
-        sort_by=names
-    elif sort_by=="colors":
-        sort_by=colors # this might not make sense, depending on
+        sort_by = values
+    elif sort_by == "names":
+        sort_by = names
+    elif sort_by == "colors":
+        sort_by = colors  # this might not make sense, depending on
     elif isinstance(sort_by, str):
         raise sort_by_error
 
     order = np.argsort(sort_by)
     names = np.array(names)[order]
-    values=np.array(values)[order]
+    values = np.array(values)[order]
 
     if colors is None:
         # Set default colors
         colors = sns.color_palette("husl", n_colors=n_wedges)
     else:
-        colors=np.array(colors)[order]
+        colors = np.array(colors)[order]
 
     ### Compute percentages
     values = np.array(values).astype(float)
@@ -62,12 +65,7 @@ def pie(
     percentages = 100 * values / total
 
     wedges, texts = ax.pie(
-        x=values,
-        colors=colors,
-        startangle=startangle,
-        wedgeprops=dict(
-            width=0.3
-        )
+        x=values, colors=colors, startangle=startangle, wedgeprops=dict(width=0.3)
     )
 
     for w in wedges:
@@ -106,10 +104,7 @@ def pie(
                 arrowstyle="-",
                 color="k",
                 connectionstyle=f"arc,angleA={180 if w.is_right else 0},angleB={w.theta_mid},armA={arm_length},armB={arm_length},rad={arm_radius}",
-                relpos=(
-                    0 if w.is_right else 1,
-                    0.5
-                )
+                relpos=(0 if w.is_right else 1, 0.5),
             ),
             va="center",
         )
@@ -125,23 +120,23 @@ def pie(
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
     data = {
-        "USA"               : 336997624,
-        "Mexico"            : 126705138,
-        "Canada"            : 38115012,
-        "Guatemala"         : 17608483,
-        "Haiti"             : 11447569,
-        "Cuba"              : 11256372,
+        "USA": 336997624,
+        "Mexico": 126705138,
+        "Canada": 38115012,
+        "Guatemala": 17608483,
+        "Haiti": 11447569,
+        "Cuba": 11256372,
         "Dominican Republic": 11117873,
-        "Honduras"          : 10278345,
-        "Nicaragua"         : 6850540,
-        "El Salvador"       : 6314167,
-        "Costa Rica"        : 5153957,
-        "Panama"            : 4351267,
+        "Honduras": 10278345,
+        "Nicaragua": 6850540,
+        "El Salvador": 6314167,
+        "Costa Rica": 5153957,
+        "Panama": 4351267,
     }
     data["Other"] = 597678511 - np.sum(np.array(list(data.values())))
 
@@ -149,13 +144,10 @@ if __name__ == '__main__':
     pie(
         values=list(data.values()),
         names=list(data.keys()),
-        colors=[
-            "navy" if s in ["USA"] else "lightgray"
-            for s in data.keys()
-        ],
+        colors=["navy" if s in ["USA"] else "lightgray" for s in data.keys()],
         label_format=lambda name, value, percentage: f"{name}, {eng_string(value)} ({percentage:.0f}%)",
         startangle=40,
-        center_text="Majority of North\nAmerica's Population\nlives in USA"
+        center_text="Majority of North\nAmerica's Population\nlives in USA",
     )
     p.show_plot()
 

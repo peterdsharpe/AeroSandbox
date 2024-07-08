@@ -22,17 +22,18 @@ class Airplane(AeroSandboxObject):
 
     """
 
-    def __init__(self,
-                 name: Optional[str] = None,
-                 xyz_ref: Union[np.ndarray, List] = None,
-                 wings: Optional[List[Wing]] = None,
-                 fuselages: Optional[List[Fuselage]] = None,
-                 propulsors: Optional[List[Propulsor]] = None,
-                 s_ref: Optional[float] = None,
-                 c_ref: Optional[float] = None,
-                 b_ref: Optional[float] = None,
-                 analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None
-                 ):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        xyz_ref: Union[np.ndarray, List] = None,
+        wings: Optional[List[Wing]] = None,
+        fuselages: Optional[List[Fuselage]] = None,
+        propulsors: Optional[List[Propulsor]] = None,
+        s_ref: Optional[float] = None,
+        c_ref: Optional[float] = None,
+        b_ref: Optional[float] = None,
+        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+    ):
         """
         Defines a new airplane.
 
@@ -86,7 +87,7 @@ class Airplane(AeroSandboxObject):
         if name is None:
             name = "Untitled"
         if xyz_ref is None:
-            xyz_ref = np.array([0., 0., 0.])
+            xyz_ref = np.array([0.0, 0.0, 0.0])
         if wings is None:
             wings: List[Wing] = []
         if fuselages is None:
@@ -126,7 +127,8 @@ class Airplane(AeroSandboxObject):
                 else:
                     raise ValueError(
                         "`s_ref` was not provided, and a value cannot be inferred automatically from wings or fuselages.\n"
-                        "You must set this manually when instantiating your asb.Airplane object.")
+                        "You must set this manually when instantiating your asb.Airplane object."
+                    )
 
         if c_ref is not None:
             self.c_ref = c_ref
@@ -159,17 +161,20 @@ class Airplane(AeroSandboxObject):
     def __repr__(self):
         n_wings = len(self.wings)
         n_fuselages = len(self.fuselages)
-        return f"Airplane '{self.name}' " \
-               f"({n_wings} {'wing' if n_wings == 1 else 'wings'}, " \
-               f"{n_fuselages} {'fuselage' if n_fuselages == 1 else 'fuselages'})"
+        return (
+            f"Airplane '{self.name}' "
+            f"({n_wings} {'wing' if n_wings == 1 else 'wings'}, "
+            f"{n_fuselages} {'fuselage' if n_fuselages == 1 else 'fuselages'})"
+        )
 
     # TODO def add_wing(wing: 'Wing') -> None
 
-    def mesh_body(self,
-                  method="quad",
-                  thin_wings=False,
-                  stack_meshes=True,
-                  ):
+    def mesh_body(
+        self,
+        method="quad",
+        thin_wings=False,
+        stack_meshes=True,
+    ):
         """
         Returns a surface mesh of the Airplane, in (points, faces) format. For reference on this format,
         see the documentation in `aerosandbox.geometry.mesh_utilities`.
@@ -204,12 +209,7 @@ class Airplane(AeroSandboxObject):
                 for wing in self.wings
             ]
 
-        fuse_meshes = [
-            fuse.mesh_body(
-                method=method
-            )
-            for fuse in self.fuselages
-        ]
+        fuse_meshes = [fuse.mesh_body(method=method) for fuse in self.fuselages]
 
         meshes = wing_meshes + fuse_meshes
 
@@ -219,19 +219,20 @@ class Airplane(AeroSandboxObject):
         else:
             return meshes
 
-    def draw(self,
-             backend: str = "pyvista",
-             thin_wings: bool = False,
-             ax=None,
-             use_preset_view_angle: str = None,
-             set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
-             set_background_pane_alpha: float = None,
-             set_lims: bool = True,
-             set_equal: bool = True,
-             set_axis_visibility: bool = None,
-             show: bool = True,
-             show_kwargs: Dict = None,
-             ):
+    def draw(
+        self,
+        backend: str = "pyvista",
+        thin_wings: bool = False,
+        ax=None,
+        use_preset_view_angle: str = None,
+        set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+        set_background_pane_alpha: float = None,
+        set_lims: bool = True,
+        set_equal: bool = True,
+        set_axis_visibility: bool = None,
+        show: bool = True,
+        show_kwargs: Dict = None,
+    ):
         """
         Produces an interactive 3D visualization of the airplane.
 
@@ -290,8 +291,12 @@ class Airplane(AeroSandboxObject):
 
             ax.add_collection(
                 Poly3DCollection(
-                    points[faces], facecolors='lightgray', edgecolors=(0, 0, 0, 0.1),
-                    linewidths=0.5, alpha=0.8, shade=True,
+                    points[faces],
+                    facecolors="lightgray",
+                    edgecolors=(0, 0, 0, 0.1),
+                    linewidths=0.5,
+                    alpha=0.8,
+                    shade=True,
                 ),
             )
 
@@ -301,12 +306,16 @@ class Airplane(AeroSandboxObject):
                 if prop.length == 0:
                     ax.add_collection(
                         Poly3DCollection(
-                            np.stack([np.stack(
-                                prop.get_disk_3D_coordinates(),
-                                axis=1
-                            )], axis=0),
-                            facecolors='darkgray', edgecolors=(0, 0, 0, 0.2),
-                            linewidths=0.5, alpha=0.35, shade=True, zorder=4,
+                            np.stack(
+                                [np.stack(prop.get_disk_3D_coordinates(), axis=1)],
+                                axis=0,
+                            ),
+                            facecolors="darkgray",
+                            edgecolors=(0, 0, 0, 0.2),
+                            linewidths=0.5,
+                            alpha=0.35,
+                            shade=True,
+                            zorder=4,
                         )
                     )
 
@@ -330,29 +339,31 @@ class Airplane(AeroSandboxObject):
         elif backend == "plotly":
 
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
+
             fig = Figure3D()
             for f in faces:
-                fig.add_quad((
-                    points[f[0]],
-                    points[f[1]],
-                    points[f[2]],
-                    points[f[3]],
-                ), outline=True)
-                show_kwargs = {
-                    "show": show,
-                    **show_kwargs
-                }
+                fig.add_quad(
+                    (
+                        points[f[0]],
+                        points[f[1]],
+                        points[f[2]],
+                        points[f[3]],
+                    ),
+                    outline=True,
+                )
+                show_kwargs = {"show": show, **show_kwargs}
             return fig.draw(**show_kwargs)
 
         elif backend == "pyvista":
 
             import pyvista as pv
+
             fig = pv.PolyData(
                 *mesh_utils.convert_mesh_to_polydata_format(points, faces)
             )
             show_kwargs = {
                 "show_edges": True,
-                "show_grid" : True,
+                "show_grid": True,
                 **show_kwargs,
             }
             if show:
@@ -362,6 +373,7 @@ class Airplane(AeroSandboxObject):
         elif backend == "trimesh":
 
             import trimesh as tri
+
             fig = tri.Trimesh(points, faces)
             if show:
                 fig.show(**show_kwargs)
@@ -369,20 +381,21 @@ class Airplane(AeroSandboxObject):
         else:
             raise ValueError("Bad value of `backend`!")
 
-    def draw_wireframe(self,
-                       ax=None,
-                       color="k",
-                       thin_linewidth=0.2,
-                       thick_linewidth=0.5,
-                       fuselage_longeron_theta=None,
-                       use_preset_view_angle: str = None,
-                       set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
-                       set_background_pane_alpha: float = None,
-                       set_lims: bool = True,
-                       set_equal: bool = True,
-                       set_axis_visibility: bool = None,
-                       show: bool = True,
-                       ) -> "matplotlib.axes.Axes":
+    def draw_wireframe(
+        self,
+        ax=None,
+        color="k",
+        thin_linewidth=0.2,
+        thick_linewidth=0.5,
+        fuselage_longeron_theta=None,
+        use_preset_view_angle: str = None,
+        set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+        set_background_pane_alpha: float = None,
+        set_lims: bool = True,
+        set_equal: bool = True,
+        set_axis_visibility: bool = None,
+        show: bool = True,
+    ) -> "matplotlib.axes.Axes":
         """
         Draws a wireframe of the airplane on a Matplotlib 3D axis.
 
@@ -427,18 +440,17 @@ class Airplane(AeroSandboxObject):
             ax.zaxis.pane.set_alpha(set_background_pane_alpha)
 
         def plot_line(
-                xyz: np.ndarray,
-                symmetric: bool = False,
-                color=color,
-                linewidth=0.4,
-                **kwargs
+            xyz: np.ndarray,
+            symmetric: bool = False,
+            color=color,
+            linewidth=0.4,
+            **kwargs,
         ):
             if symmetric:
-                xyz = np.concatenate([
-                    xyz,
-                    np.array([[np.nan] * 3]),
-                    xyz * np.array([[1, -1, 1]])
-                ], axis=0)
+                xyz = np.concatenate(
+                    [xyz, np.array([[np.nan] * 3]), xyz * np.array([[1, -1, 1]])],
+                    axis=0,
+                )
 
             ax.plot(
                 xyz[:, 0],
@@ -446,7 +458,7 @@ class Airplane(AeroSandboxObject):
                 xyz[:, 2],
                 color=color,
                 linewidth=linewidth,
-                **kwargs
+                **kwargs,
             )
 
         def reshape(x):
@@ -472,7 +484,7 @@ class Airplane(AeroSandboxObject):
                     np.stack(wing.mesh_line(x_nondim=xy[0], z_nondim=xy[1]), axis=0),
                     symmetric=wing.symmetric,
                     linewidth=thick_linewidth,
-                    color=color_to_use
+                    color=color_to_use,
                 )
 
             ### Top and Bottom lines
@@ -481,16 +493,26 @@ class Airplane(AeroSandboxObject):
             thicknesses = np.array([af.local_thickness(x_over_c=x) for af in afs])
 
             plot_line(
-                np.stack(wing.mesh_line(x_nondim=x, z_nondim=thicknesses / 2, add_camber=True), axis=0),
+                np.stack(
+                    wing.mesh_line(
+                        x_nondim=x, z_nondim=thicknesses / 2, add_camber=True
+                    ),
+                    axis=0,
+                ),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
-                color=color_to_use
+                color=color_to_use,
             )
             plot_line(
-                np.stack(wing.mesh_line(x_nondim=x, z_nondim=-thicknesses / 2, add_camber=True), axis=0),
+                np.stack(
+                    wing.mesh_line(
+                        x_nondim=x, z_nondim=-thicknesses / 2, add_camber=True
+                    ),
+                    axis=0,
+                ),
                 symmetric=wing.symmetric,
                 linewidth=thin_linewidth,
-                color=color_to_use
+                color=color_to_use,
             )
 
             ### Airfoils
@@ -502,21 +524,43 @@ class Airplane(AeroSandboxObject):
                 origin = reshape(xsec.xyz_le)
                 scale = xsec.chord
 
-                line_upper = origin + (
-                        xsec.airfoil.upper_coordinates()[:, 0].reshape((-1, 1)) * scale * xg_local +
-                        xsec.airfoil.upper_coordinates()[:, 1].reshape((-1, 1)) * scale * zg_local
+                line_upper = (
+                    origin
+                    + (
+                        xsec.airfoil.upper_coordinates()[:, 0].reshape((-1, 1))
+                        * scale
+                        * xg_local
+                    )
+                    + (
+                        xsec.airfoil.upper_coordinates()[:, 1].reshape((-1, 1))
+                        * scale
+                        * zg_local
+                    )
                 )
-                line_lower = origin + (
-                        xsec.airfoil.lower_coordinates()[:, 0].reshape((-1, 1)) * scale * xg_local +
-                        xsec.airfoil.lower_coordinates()[:, 1].reshape((-1, 1)) * scale * zg_local
+                line_lower = (
+                    origin
+                    + (
+                        xsec.airfoil.lower_coordinates()[:, 0].reshape((-1, 1))
+                        * scale
+                        * xg_local
+                    )
+                    + (
+                        xsec.airfoil.lower_coordinates()[:, 1].reshape((-1, 1))
+                        * scale
+                        * zg_local
+                    )
                 )
 
                 for line in [line_upper, line_lower]:
                     plot_line(
                         line,
                         symmetric=wing.symmetric,
-                        linewidth=thick_linewidth if i == 0 or i == len(wing.xsecs) - 1 else thin_linewidth,
-                        color=color_to_use
+                        linewidth=(
+                            thick_linewidth
+                            if i == 0 or i == len(wing.xsecs) - 1
+                            else thin_linewidth
+                        ),
+                        color=color_to_use,
                     )
 
         ##### Fuselages
@@ -537,8 +581,12 @@ class Airplane(AeroSandboxObject):
             for i, perim in enumerate(perimeters_xyz):
                 plot_line(
                     np.stack(perim, axis=1),
-                    linewidth=thick_linewidth if i == 0 or i == len(fuse.xsecs) - 1 else thin_linewidth,
-                    color=color_to_use
+                    linewidth=(
+                        thick_linewidth
+                        if i == 0 or i == len(fuse.xsecs) - 1
+                        else thin_linewidth
+                    ),
+                    color=color_to_use,
                 )
 
             ### Centerline
@@ -548,18 +596,21 @@ class Airplane(AeroSandboxObject):
                     axis=0,
                 ),
                 linewidth=thin_linewidth,
-                color=color_to_use
+                color=color_to_use,
             )
 
             ### Longerons
             for theta in fuselage_longeron_theta:
                 plot_line(
-                    np.stack([
-                        np.array(xsec.get_3D_coordinates(theta=theta))
-                        for xsec in fuse.xsecs
-                    ], axis=0),
+                    np.stack(
+                        [
+                            np.array(xsec.get_3D_coordinates(theta=theta))
+                            for xsec in fuse.xsecs
+                        ],
+                        axis=0,
+                    ),
                     linewidth=thick_linewidth,
-                    color=color_to_use
+                    color=color_to_use,
                 )
 
         ##### Propulsors
@@ -575,11 +626,7 @@ class Airplane(AeroSandboxObject):
             ### Disk
             if prop.length == 0:
                 plot_line(
-                    np.stack(
-                        prop.get_disk_3D_coordinates(),
-                        axis=1
-                    ),
-                    color=color_to_use
+                    np.stack(prop.get_disk_3D_coordinates(), axis=1), color=color_to_use
                 )
 
         if set_lims:
@@ -602,11 +649,12 @@ class Airplane(AeroSandboxObject):
 
         return ax
 
-    def draw_three_view(self,
-                        axs=None,
-                        style: str = "shaded",
-                        show: bool = True,
-                        ) -> np.ndarray:
+    def draw_three_view(
+        self,
+        axs=None,
+        style: str = "shaded",
+        show: bool = True,
+    ) -> np.ndarray:
         """
         Draws a standard 4-panel three-view diagram of the airplane using Matplotlib backend. Creates a new figure.
 
@@ -633,10 +681,9 @@ class Airplane(AeroSandboxObject):
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
-        preset_view_angles = np.array([
-            ["XZ", "-YZ"],
-            ["XY", "left_isometric"]
-        ], dtype="O")
+        preset_view_angles = np.array(
+            [["XZ", "-YZ"], ["XY", "left_isometric"]], dtype="O"
+        )
 
         if axs is None:
             fig, axs = p.figure3d(
@@ -647,13 +694,17 @@ class Airplane(AeroSandboxObject):
             )
         else:
             if not len(axs.shape) == 2:
-                raise ValueError(f"`axs` must be a 2D array of axes; instead, it is: {axs}.")
+                raise ValueError(
+                    f"`axs` must be a 2D array of axes; instead, it is: {axs}."
+                )
             if not axs.shape[0] >= preset_view_angles.shape[0]:
                 raise ValueError(
-                    f"`axs` must have at least as many rows as preset_view_angles ({preset_view_angles.shape[0]}).")
+                    f"`axs` must have at least as many rows as preset_view_angles ({preset_view_angles.shape[0]})."
+                )
             if not axs.shape[1] >= preset_view_angles.shape[1]:
                 raise ValueError(
-                    f"`axs` must have at least as many columns as preset_view_angles ({preset_view_angles.shape[1]}).")
+                    f"`axs` must have at least as many columns as preset_view_angles ({preset_view_angles.shape[1]})."
+                )
 
         for i in range(axs.shape[0]):
             for j in range(axs.shape[1]):
@@ -664,8 +715,10 @@ class Airplane(AeroSandboxObject):
                     self.draw(
                         backend="matplotlib",
                         ax=ax,
-                        set_axis_visibility=False if 'isometric' in preset_view else None,
-                        show=False
+                        set_axis_visibility=(
+                            False if "isometric" in preset_view else None
+                        ),
+                        show=False,
                     )
                 elif style == "wireframe":
                     if preset_view == "XZ":
@@ -677,18 +730,20 @@ class Airplane(AeroSandboxObject):
 
                     self.draw_wireframe(
                         ax=ax,
-                        set_axis_visibility=False if 'isometric' in preset_view else None,
+                        set_axis_visibility=(
+                            False if "isometric" in preset_view else None
+                        ),
                         fuselage_longeron_theta=fuselage_longeron_theta,
-                        show=False
+                        show=False,
                     )
 
                 p.set_preset_3d_view_angle(preset_view)
 
-                if preset_view == 'XY' or preset_view == '-XY':
+                if preset_view == "XY" or preset_view == "-XY":
                     ax.set_zticks([])
-                if preset_view == 'XZ' or preset_view == '-XZ':
+                if preset_view == "XZ" or preset_view == "-XZ":
                     ax.set_yticks([])
-                if preset_view == 'YZ' or preset_view == '-YZ':
+                if preset_view == "YZ" or preset_view == "-YZ":
                     ax.set_xticks([])
 
         axs[1, 0].set_xlabel("$x_g$ [m]")
@@ -746,21 +801,15 @@ class Airplane(AeroSandboxObject):
         wing_areas = [wing.area(type="projected") for wing in self.wings]
         ACs = [wing.aerodynamic_center() for wing in self.wings]
 
-        wing_AC_area_products = [
-            AC * area
-            for AC, area in zip(
-                ACs,
-                wing_areas
-            )
-        ]
+        wing_AC_area_products = [AC * area for AC, area in zip(ACs, wing_areas)]
 
         aerodynamic_center = sum(wing_AC_area_products) / sum(wing_areas)
 
         return aerodynamic_center
 
-    def with_control_deflections(self,
-                                 control_surface_deflection_mappings: Dict[str, float]
-                                 ) -> "Airplane":
+    def with_control_deflections(
+        self, control_surface_deflection_mappings: Dict[str, float]
+    ) -> "Airplane":
         """
         Returns a copy of the airplane with the specified control surface deflections applied.
 
@@ -790,10 +839,11 @@ class Airplane(AeroSandboxObject):
 
         return deflected_airplane
 
-    def generate_cadquery_geometry(self,
-                                   minimum_airfoil_TE_thickness: float = 0.001,
-                                   fuselage_tol: float = 1e-4,
-                                   ) -> "Workplane":
+    def generate_cadquery_geometry(
+        self,
+        minimum_airfoil_TE_thickness: float = 0.001,
+        fuselage_tol: float = 1e-4,
+    ) -> "Workplane":
         """
         Uses the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
 
@@ -813,7 +863,8 @@ class Airplane(AeroSandboxObject):
             import cadquery as cq
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                "The `cadquery` library is required to use this function. Please install it with `pip install cadquery`.")
+                "The `cadquery` library is required to use this function. Please install it with `pip install cadquery`."
+            )
 
         solids = []
 
@@ -826,9 +877,7 @@ class Airplane(AeroSandboxObject):
 
                 af = xsec.airfoil
                 if af.TE_thickness() < minimum_airfoil_TE_thickness:
-                    af = af.set_TE_thickness(
-                        thickness=minimum_airfoil_TE_thickness
-                    )
+                    af = af.set_TE_thickness(thickness=minimum_airfoil_TE_thickness)
 
                 LE_index = af.LE_index()
 
@@ -837,19 +886,22 @@ class Airplane(AeroSandboxObject):
                         inPlane=cq.Plane(
                             origin=tuple(xsec.xyz_le),
                             xDir=tuple(csys[0]),
-                            normal=tuple(-csys[1])
+                            normal=tuple(-csys[1]),
                         )
-                    ).spline(
+                    )
+                    .spline(
                         listOfXYTuple=[
                             tuple(xy * xsec.chord)
                             for xy in af.coordinates[:LE_index, :]
                         ]
-                    ).spline(
+                    )
+                    .spline(
                         listOfXYTuple=[
                             tuple(xy * xsec.chord)
                             for xy in af.coordinates[LE_index:, :]
                         ]
-                    ).close()
+                    )
+                    .close()
                 )
 
             wire_collection = xsec_wires[0]
@@ -861,10 +913,7 @@ class Airplane(AeroSandboxObject):
             solids.append(loft)
 
             if wing.symmetric:
-                loft = loft.mirror(
-                    mirrorPlane='XZ',
-                    union=False
-                )
+                loft = loft.mirror(mirrorPlane="XZ", union=False)
 
                 solids.append(loft)
 
@@ -874,29 +923,34 @@ class Airplane(AeroSandboxObject):
 
             for i, xsec in enumerate(fuse.xsecs):
 
-                if xsec.height < fuselage_tol or xsec.width < fuselage_tol:  # If the xsec is so small as to effectively be a point
-                    xsec = copy.deepcopy(xsec)  # Modify the xsec to be big enough to not error out.
+                if (
+                    xsec.height < fuselage_tol or xsec.width < fuselage_tol
+                ):  # If the xsec is so small as to effectively be a point
+                    xsec = copy.deepcopy(
+                        xsec
+                    )  # Modify the xsec to be big enough to not error out.
                     xsec.height = np.maximum(xsec.height, fuselage_tol)
                     xsec.width = np.maximum(xsec.width, fuselage_tol)
 
                 xsec_wires.append(
                     cq.Workplane(
                         inPlane=cq.Plane(
-                            origin=tuple(xsec.xyz_c),
-                            xDir=(0, 1, 0),
-                            normal=(-1, 0, 0)
+                            origin=tuple(xsec.xyz_c), xDir=(0, 1, 0), normal=(-1, 0, 0)
                         )
-                    ).spline(
+                    )
+                    .spline(
                         listOfXYTuple=[
                             (y - xsec.xyz_c[1], z - xsec.xyz_c[2])
-                            for x, y, z in zip(*xsec.get_3D_coordinates(
-                                theta=np.linspace(
-                                    np.pi / 2, np.pi / 2 + 2 * np.pi,
-                                    181
+                            for x, y, z in zip(
+                                *xsec.get_3D_coordinates(
+                                    theta=np.linspace(
+                                        np.pi / 2, np.pi / 2 + 2 * np.pi, 181
+                                    )
                                 )
-                            ))
+                            )
                         ]
-                    ).close()
+                    )
+                    .close()
                 )
 
             wire_collection = xsec_wires[0]
@@ -913,10 +967,9 @@ class Airplane(AeroSandboxObject):
 
         return solid.clean()
 
-    def export_cadquery_geometry(self,
-                                 filename: Union[Path, str],
-                                 minimum_airfoil_TE_thickness: float = 0.001
-                                 ) -> None:
+    def export_cadquery_geometry(
+        self, filename: Union[Path, str], minimum_airfoil_TE_thickness: float = 0.001
+    ) -> None:
         """
         Exports the airplane geometry to a STEP file.
 
@@ -935,29 +988,20 @@ class Airplane(AeroSandboxObject):
         )
 
         solid.objects = [
-            o.scale(1000)
-            for o in solid.objects
-        ]
+            o.scale(1000) for o in solid.objects
+        ]  # Default STEP units are mm
 
         from cadquery import exporters
-        exporters.export(
-            solid,
-            fname=filename
-        )
 
-    def export_AVL(self,
-                   filename,
-                   include_fuselages: bool = True
-                   ):
+        exporters.export(solid, fname=filename)
+
+    def export_AVL(self, filename, include_fuselages: bool = True):
         # TODO include option for mass file export as well
         # Use MassProperties.export_AVL_mass...
 
         from aerosandbox.aerodynamics.aero_3D.avl import AVL
-        avl = AVL(
-            airplane=self,
-            op_point=None,
-            xyz_ref=self.xyz_ref
-        )
+
+        avl = AVL(airplane=self, op_point=None, xyz_ref=self.xyz_ref)
         avl.write_avl(filepath=filename)
 
     def export_XFLR(self, *args, **kwargs) -> str:
@@ -970,18 +1014,19 @@ class Airplane(AeroSandboxObject):
             "Please update your code to use `Airplane.export_XFLR5_xml()` instead.\n"
             "\n"
             "This function will be removed in a future version of AeroSandbox.",
-            PendingDeprecationWarning
+            PendingDeprecationWarning,
         )
         return self.export_XFLR5_xml(*args, **kwargs)
 
-    def export_XFLR5_xml(self,
-                         filename: Union[Path, str],
-                         mass_props: MassProperties = None,
-                         include_fuselages: bool = False,
-                         mainwing: Wing = None,
-                         elevator: Wing = None,
-                         fin: Wing = None,
-                         ) -> str:
+    def export_XFLR5_xml(
+        self,
+        filename: Union[Path, str],
+        mass_props: MassProperties = None,
+        include_fuselages: bool = False,
+        mainwing: Wing = None,
+        elevator: Wing = None,
+        fin: Wing = None,
+    ) -> str:
         """
         Exports the airplane geometry to an XFLR5 `.xml` file. To import the `.xml` file into XFLR5, go to File ->
         Import -> Import from XML.
@@ -1026,7 +1071,8 @@ class Airplane(AeroSandboxObject):
             pass
         elif any(wings_specified):
             raise ValueError(
-                "If any wings are specified (`mainwing`, `elevator`, `fin`), then all wings must be specified.")
+                "If any wings are specified (`mainwing`, `elevator`, `fin`), then all wings must be specified."
+            )
         else:
             n_wings = len(self.wings)
 
@@ -1034,6 +1080,7 @@ class Airplane(AeroSandboxObject):
                 pass
             else:
                 import warnings
+
                 warnings.warn(
                     "No wings were specified (`mainwing`, `elevator`, `fin`). Automatically assigning the first wing "
                     "to `mainwing`, the second wing to `elevator`, and the third wing to `fin`. If this is not "
@@ -1095,8 +1142,8 @@ class Airplane(AeroSandboxObject):
             point_mass_xml = ET.SubElement(inertia, "Point_Mass")
 
             for k, v in {
-                "Tag"        : f"pm{i}",
-                "Mass"       : point_mass.mass,
+                "Tag": f"pm{i}",
+                "Mass": point_mass.mass,
                 "coordinates": ",".join([str(x) for x in point_mass.xyz_cg]),
             }.items():
                 subelement = ET.SubElement(point_mass_xml, k)
@@ -1110,13 +1157,13 @@ class Airplane(AeroSandboxObject):
             xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
-                "Name"      : wing.name,
-                "Type"      : "MAINWING",
-                "Position"  : ",".join([str(x) for x in xyz_le_root]),
-                "Tilt_angle": 0.,
-                "Symetric"  : wing.symmetric,  # This tag is a typo in XFLR...
-                "isFin"     : "false",
-                "isSymFin"  : "false",
+                "Name": wing.name,
+                "Type": "MAINWING",
+                "Position": ",".join([str(x) for x in xyz_le_root]),
+                "Tilt_angle": 0.0,
+                "Symetric": wing.symmetric,  # This tag is a typo in XFLR...
+                "isFin": "false",
+                "isSymFin": "false",
             }.items():
                 subelement = ET.SubElement(wingxml, k)
                 subelement.text = str(v)
@@ -1124,7 +1171,8 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0)
+                - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
@@ -1141,15 +1189,15 @@ class Airplane(AeroSandboxObject):
                     )
 
                 for k, v in {
-                    "y_position"         : xyz_le_sects_rel[i][1],
-                    "Chord"              : xsec.chord,
-                    "xOffset"            : xyz_le_sects_rel[i][0],
-                    "Dihedral"           : dihedral,
-                    "Twist"              : xsec.twist,
-                    "Left_Side_FoilName" : xsec.airfoil.name,
+                    "y_position": xyz_le_sects_rel[i][1],
+                    "Chord": xsec.chord,
+                    "xOffset": xyz_le_sects_rel[i][0],
+                    "Dihedral": dihedral,
+                    "Twist": xsec.twist,
+                    "Left_Side_FoilName": xsec.airfoil.name,
                     "Right_Side_FoilName": xsec.airfoil.name,
-                    "x_number_of_panels" : 8,
-                    "y_number_of_panels" : 8,
+                    "x_number_of_panels": 8,
+                    "y_number_of_panels": 8,
                 }.items():
                     subelement = ET.SubElement(sect, k)
                     subelement.text = str(v)
@@ -1161,13 +1209,13 @@ class Airplane(AeroSandboxObject):
             xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
-                "Name"      : wing.name,
-                "Type"      : "ELEVATOR",
-                "Position"  : ",".join([str(x) for x in xyz_le_root]),
-                "Tilt_angle": 0.,
-                "Symetric"  : wing.symmetric,  # This tag is a typo in XFLR...
-                "isFin"     : "false",
-                "isSymFin"  : "false",
+                "Name": wing.name,
+                "Type": "ELEVATOR",
+                "Position": ",".join([str(x) for x in xyz_le_root]),
+                "Tilt_angle": 0.0,
+                "Symetric": wing.symmetric,  # This tag is a typo in XFLR...
+                "isFin": "false",
+                "isSymFin": "false",
             }.items():
                 subelement = ET.SubElement(wingxml, k)
                 subelement.text = str(v)
@@ -1175,7 +1223,8 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0)
+                - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
@@ -1192,15 +1241,15 @@ class Airplane(AeroSandboxObject):
                     )
 
                 for k, v in {
-                    "y_position"         : xyz_le_sects_rel[i][1],
-                    "Chord"              : xsec.chord,
-                    "xOffset"            : xyz_le_sects_rel[i][0],
-                    "Dihedral"           : dihedral,
-                    "Twist"              : xsec.twist,
-                    "Left_Side_FoilName" : xsec.airfoil.name,
+                    "y_position": xyz_le_sects_rel[i][1],
+                    "Chord": xsec.chord,
+                    "xOffset": xyz_le_sects_rel[i][0],
+                    "Dihedral": dihedral,
+                    "Twist": xsec.twist,
+                    "Left_Side_FoilName": xsec.airfoil.name,
                     "Right_Side_FoilName": xsec.airfoil.name,
-                    "x_number_of_panels" : 8,
-                    "y_number_of_panels" : 8,
+                    "x_number_of_panels": 8,
+                    "y_number_of_panels": 8,
                 }.items():
                     subelement = ET.SubElement(sect, k)
                     subelement.text = str(v)
@@ -1212,13 +1261,13 @@ class Airplane(AeroSandboxObject):
             xyz_le_root = wing._compute_xyz_of_WingXSec(index=0, x_nondim=0, z_nondim=0)
 
             for k, v in {
-                "Name"      : wing.name,
-                "Type"      : "FIN",
-                "Position"  : ",".join([str(x) for x in xyz_le_root]),
-                "Tilt_angle": 0.,
-                "Symetric"  : "true",  # This tag is a typo in XFLR...
-                "isFin"     : "true",
-                "isSymFin"  : wing.symmetric,
+                "Name": wing.name,
+                "Type": "FIN",
+                "Position": ",".join([str(x) for x in xyz_le_root]),
+                "Tilt_angle": 0.0,
+                "Symetric": "true",  # This tag is a typo in XFLR...
+                "isFin": "true",
+                "isSymFin": wing.symmetric,
             }.items():
                 subelement = ET.SubElement(wingxml, k)
                 subelement.text = str(v)
@@ -1226,7 +1275,8 @@ class Airplane(AeroSandboxObject):
             sections = ET.SubElement(wingxml, "Sections")
 
             xyz_le_sects_rel = [
-                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0) - xyz_le_root
+                wing._compute_xyz_of_WingXSec(index=i, x_nondim=0, z_nondim=0)
+                - xyz_le_root
                 for i in range(len(wing.xsecs))
             ]
 
@@ -1243,15 +1293,15 @@ class Airplane(AeroSandboxObject):
                     )
 
                 for k, v in {
-                    "y_position"         : xyz_le_sects_rel[i][2],
-                    "Chord"              : xsec.chord,
-                    "xOffset"            : xyz_le_sects_rel[i][0],
-                    "Dihedral"           : dihedral,
-                    "Twist"              : xsec.twist,
-                    "Left_Side_FoilName" : xsec.airfoil.name,
+                    "y_position": xyz_le_sects_rel[i][2],
+                    "Chord": xsec.chord,
+                    "xOffset": xyz_le_sects_rel[i][0],
+                    "Dihedral": dihedral,
+                    "Twist": xsec.twist,
+                    "Left_Side_FoilName": xsec.airfoil.name,
                     "Right_Side_FoilName": xsec.airfoil.name,
-                    "x_number_of_panels" : 8,
-                    "y_number_of_panels" : 8,
+                    "x_number_of_panels": 8,
+                    "y_number_of_panels": 8,
                 }.items():
                     subelement = ET.SubElement(sect, k)
                     subelement.text = str(v)
@@ -1274,20 +1324,17 @@ class Airplane(AeroSandboxObject):
 
         indent(root)
 
-        xml_string = ET.tostring(
-            root,
-            encoding="UTF-8",
-            xml_declaration=True
-        ).decode()
+        xml_string = ET.tostring(root, encoding="UTF-8", xml_declaration=True).decode()
 
         with open(filename, "w+") as f:
             f.write(xml_string)
 
         return xml_string
 
-    def export_OpenVSP_vspscript(self,
-                                 filename: Union[Path, str],
-                                 ) -> str:
+    def export_OpenVSP_vspscript(
+        self,
+        filename: Union[Path, str],
+    ) -> str:
         """
         Exports the airplane geometry to a `*.vspscript` file compatible with OpenVSP. To import the `.vspscript`
         file into OpenVSP:
@@ -1299,7 +1346,9 @@ class Airplane(AeroSandboxObject):
 
         Returns: A string of the file contents, and also saves the file to the specified filename
         """
-        from aerosandbox.geometry.openvsp_io.asb_to_openvsp.airplane_vspscript_generator import generate_airplane
+        from aerosandbox.geometry.openvsp_io.asb_to_openvsp.airplane_vspscript_generator import (
+            generate_airplane,
+        )
 
         vspscript_code = generate_airplane(self)
 
@@ -1309,15 +1358,14 @@ class Airplane(AeroSandboxObject):
         return vspscript_code
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import aerosandbox as asb
+
     # import aerosandbox.numpy as np
     import aerosandbox.tools.units as u
 
-
     def ft(feet, inches=0):  # Converts feet (and inches) to meters
         return feet * u.foot + inches * u.inch
-
 
     naca2412 = asb.Airfoil("naca2412")
     naca0012 = asb.Airfoil("naca0012")
@@ -1328,11 +1376,7 @@ if __name__ == '__main__':
             asb.Wing(
                 name="Wing",
                 xsecs=[
-                    asb.WingXSec(
-                        xyz_le=[0, 0, 0],
-                        chord=ft(5, 4),
-                        airfoil=naca2412
-                    ),
+                    asb.WingXSec(xyz_le=[0, 0, 0], chord=ft(5, 4), airfoil=naca2412),
                     asb.WingXSec(
                         xyz_le=[0, ft(7), ft(7) * np.sind(1)],
                         chord=ft(5, 4),
@@ -1342,21 +1386,21 @@ if __name__ == '__main__':
                                 name="aileron",
                                 symmetric=False,
                                 hinge_point=0.8,
-                                deflection=0
+                                deflection=0,
                             )
-                        ]
+                        ],
                     ),
                     asb.WingXSec(
                         xyz_le=[
                             ft(4, 3 / 4) - ft(3, 8 + 1 / 2),
                             ft(33, 4) / 2,
-                            ft(33, 4) / 2 * np.sind(1)
+                            ft(33, 4) / 2 * np.sind(1),
                         ],
                         chord=ft(3, 8 + 1 / 2),
-                        airfoil=naca0012
-                    )
+                        airfoil=naca0012,
+                    ),
                 ],
-                symmetric=True
+                symmetric=True,
             ),
             asb.Wing(
                 name="Horizontal Stabilizer",
@@ -1371,18 +1415,18 @@ if __name__ == '__main__':
                                 name="elevator",
                                 symmetric=True,
                                 hinge_point=0.75,
-                                deflection=0
+                                deflection=0,
                             )
-                        ]
+                        ],
                     ),
                     asb.WingXSec(
                         xyz_le=[ft(1), ft(10) / 2, 0],
                         chord=ft(2, 4 + 3 / 8),
                         airfoil=naca0012,
-                        twist=-2
-                    )
+                        twist=-2,
+                    ),
                 ],
-                symmetric=True
+                symmetric=True,
             ).translate([ft(13, 3), 0, ft(-2)]),
             asb.Wing(
                 name="Vertical Stabilizer",
@@ -1398,19 +1442,17 @@ if __name__ == '__main__':
                         airfoil=naca0012,
                         control_surfaces=[
                             asb.ControlSurface(
-                                name="rudder",
-                                hinge_point=0.75,
-                                deflection=0
+                                name="rudder", hinge_point=0.75, deflection=0
                             )
-                        ]
+                        ],
                     ),
                     asb.WingXSec(
                         xyz_le=[ft(0, 8), 0, ft(5)],
                         chord=ft(2, 8),
                         airfoil=naca0012,
                     ),
-                ]
-            ).translate([ft(16, 11) - ft(3, 8), 0, ft(-2)])
+                ],
+            ).translate([ft(16, 11) - ft(3, 8), 0, ft(-2)]),
         ],
         fuselages=[
             asb.Fuselage(
@@ -1446,7 +1488,7 @@ if __name__ == '__main__':
                     ),
                 ]
             ).translate([ft(-5), 0, ft(-3)])
-        ]
+        ],
     )
 
     airplane.draw_three_view()

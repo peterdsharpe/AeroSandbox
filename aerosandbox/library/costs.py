@@ -4,22 +4,22 @@ from typing import Dict
 
 
 def modified_DAPCA_IV_production_cost_analysis(
-        design_empty_weight: float,
-        design_maximum_airspeed: float,
-        n_airplanes_produced: int,
-        n_engines_per_aircraft: int,
-        cost_per_engine: float,
-        cost_avionics_per_airplane: float,
-        n_pax: int,
-        cpi_relative_to_2012_dollars: float = 1.327,  # updated for 2024
-        n_flight_test_aircraft: int = 4,
-        is_cargo_airplane: bool = False,
-        primary_structure_material: str = "aluminum",
-        per_passenger_cost_model: str = "general_aviation",
-        engineering_wrap_rate_2012_dollars: float = 115.,
-        tooling_wrap_rate_2012_dollars: float = 118.,
-        quality_control_wrap_rate_2012_dollars: float = 108.,
-        manufacturing_wrap_rate_2012_dollars: float = 98.,
+    design_empty_weight: float,
+    design_maximum_airspeed: float,
+    n_airplanes_produced: int,
+    n_engines_per_aircraft: int,
+    cost_per_engine: float,
+    cost_avionics_per_airplane: float,
+    n_pax: int,
+    cpi_relative_to_2012_dollars: float = 1.327,  # updated for 2024
+    n_flight_test_aircraft: int = 4,
+    is_cargo_airplane: bool = False,
+    primary_structure_material: str = "aluminum",
+    per_passenger_cost_model: str = "general_aviation",
+    engineering_wrap_rate_2012_dollars: float = 115.0,
+    tooling_wrap_rate_2012_dollars: float = 118.0,
+    quality_control_wrap_rate_2012_dollars: float = 108.0,
+    manufacturing_wrap_rate_2012_dollars: float = 98.0,
 ) -> Dict[str, float]:
     """
     Computes the cost of an aircraft in present-day dollars, using the Modified DAPCA IV cost model.
@@ -125,10 +125,12 @@ def modified_DAPCA_IV_production_cost_analysis(
     ### Estimate labor hours
     hours = dict()
 
-    hours["engineering"] = 5.18 * W ** 0.777 * V ** 0.894 * Q ** 0.163
-    hours["tooling"] = 7.22 * W ** 0.777 * V ** 0.696 * Q ** 0.263
-    hours["manufacturing"] = 10.5 * W ** 0.82 * V ** 0.484 * Q ** 0.641
-    hours["quality_control"] = hours["manufacturing"] * (0.076 if is_cargo_airplane else 0.133)
+    hours["engineering"] = 5.18 * W**0.777 * V**0.894 * Q**0.163
+    hours["tooling"] = 7.22 * W**0.777 * V**0.696 * Q**0.263
+    hours["manufacturing"] = 10.5 * W**0.82 * V**0.484 * Q**0.641
+    hours["quality_control"] = hours["manufacturing"] * (
+        0.076 if is_cargo_airplane else 0.133
+    )
 
     ### Account for materials difficulties
     if primary_structure_material == "aluminum":
@@ -144,22 +146,31 @@ def modified_DAPCA_IV_production_cost_analysis(
     else:
         raise ValueError("Invalid value of `primary_structure_material`.")
 
-    hours = {
-        k: v * materials_hourly_multiplier
-        for k, v in hours.items()
-    }
+    hours = {k: v * materials_hourly_multiplier for k, v in hours.items()}
 
     ### Convert labor hours to labor costs in 2012 dollars
     costs_2012_dollars = dict()
 
-    costs_2012_dollars["engineering_labor"] = hours["engineering"] * engineering_wrap_rate_2012_dollars
-    costs_2012_dollars["tooling_labor"] = hours["tooling"] * tooling_wrap_rate_2012_dollars
-    costs_2012_dollars["manufacturing_labor"] = hours["manufacturing"] * manufacturing_wrap_rate_2012_dollars
-    costs_2012_dollars["quality_control_labor"] = hours["quality_control"] * quality_control_wrap_rate_2012_dollars
+    costs_2012_dollars["engineering_labor"] = (
+        hours["engineering"] * engineering_wrap_rate_2012_dollars
+    )
+    costs_2012_dollars["tooling_labor"] = (
+        hours["tooling"] * tooling_wrap_rate_2012_dollars
+    )
+    costs_2012_dollars["manufacturing_labor"] = (
+        hours["manufacturing"] * manufacturing_wrap_rate_2012_dollars
+    )
+    costs_2012_dollars["quality_control_labor"] = (
+        hours["quality_control"] * quality_control_wrap_rate_2012_dollars
+    )
 
-    costs_2012_dollars["development_support"] = 67.4 * W ** 0.630 * V ** 1.3
-    costs_2012_dollars["flight_test"] = 1947 * W ** 0.325 * V ** 0.822 * n_flight_test_aircraft ** 1.21
-    costs_2012_dollars["manufacturing_materials"] = 31.2 * W ** 0.921 * V ** 0.621 * Q ** 0.799
+    costs_2012_dollars["development_support"] = 67.4 * W**0.630 * V**1.3
+    costs_2012_dollars["flight_test"] = (
+        1947 * W**0.325 * V**0.822 * n_flight_test_aircraft**1.21
+    )
+    costs_2012_dollars["manufacturing_materials"] = (
+        31.2 * W**0.921 * V**0.621 * Q**0.799
+    )
 
     ### Add in the per-passenger cost for aircraft interiors:
     # Seats, luggage bins, closets, lavatories, insulation, ceilings, floors, walls, etc.
@@ -174,10 +185,7 @@ def modified_DAPCA_IV_production_cost_analysis(
         raise ValueError(f"Invalid value of `per_passenger_cost_model`!")
 
     ### Convert all costs to present-day dollars
-    costs = {
-        k: v * cpi_relative_to_2012_dollars
-        for k, v in costs_2012_dollars.items()
-    }
+    costs = {k: v * cpi_relative_to_2012_dollars for k, v in costs_2012_dollars.items()}
 
     ### Add the engine(s) and avionics costs
     costs["engines"] = cost_per_engine * n_engines_per_aircraft * n_airplanes_produced
@@ -190,24 +198,24 @@ def modified_DAPCA_IV_production_cost_analysis(
 
 
 def electric_aircraft_direct_operating_cost_analysis(
-        production_cost_per_airframe: float,
-        nominal_cruise_airspeed: float,
-        nominal_mission_range: float,
-        battery_capacity: float,
-        num_passengers_nominal: int,
-        num_crew: int = 1,
-        battery_fraction_used_on_nominal_mission: float = 0.8,
-        typical_passenger_utilization: float = 0.8,
-        flight_hours_per_year: float = 1200,
-        airframe_lifetime_years: float = 20,
-        airframe_eol_resale_value_fraction: float = 0.4,
-        battery_cost_per_kWh_capacity: float = 500.0,
-        battery_cycle_life: float = 1500,
-        real_interest_rate: float = 0.04,
-        electricity_cost_per_kWh: float = 0.145,
-        annual_expenses_per_crew: float = 100000 * 1.5,
-        ascent_time: float = 0.2 * u.hour,
-        descent_time: float = 0.2 * u.hour,
+    production_cost_per_airframe: float,
+    nominal_cruise_airspeed: float,
+    nominal_mission_range: float,
+    battery_capacity: float,
+    num_passengers_nominal: int,
+    num_crew: int = 1,
+    battery_fraction_used_on_nominal_mission: float = 0.8,
+    typical_passenger_utilization: float = 0.8,
+    flight_hours_per_year: float = 1200,
+    airframe_lifetime_years: float = 20,
+    airframe_eol_resale_value_fraction: float = 0.4,
+    battery_cost_per_kWh_capacity: float = 500.0,
+    battery_cycle_life: float = 1500,
+    real_interest_rate: float = 0.04,
+    electricity_cost_per_kWh: float = 0.145,
+    annual_expenses_per_crew: float = 100000 * 1.5,
+    ascent_time: float = 0.2 * u.hour,
+    descent_time: float = 0.2 * u.hour,
 ) -> Dict[str, float]:
     """
     Estimates the overall operating cost of an electric aircraft. Includes both direct and indirect operating costs.
@@ -323,26 +331,30 @@ def electric_aircraft_direct_operating_cost_analysis(
     ### Airframe depreciation costs
     num_airframe_flights_lifetime = flights_per_year * airframe_lifetime_years
     net_value_per_airframe_over_lifetime = (
-            production_cost_per_airframe  # Production cost
-            - (production_cost_per_airframe * airframe_eol_resale_value_fraction)  # End-of-life resale value
+        production_cost_per_airframe  # Production cost
+        - (
+            production_cost_per_airframe * airframe_eol_resale_value_fraction
+        )  # End-of-life resale value
     )
     costs_per_flight["airframe_depreciation"] = (
-            net_value_per_airframe_over_lifetime / num_airframe_flights_lifetime
+        net_value_per_airframe_over_lifetime / num_airframe_flights_lifetime
     )
 
     ### Airframe financing cost
     airframe_financing_lifetime_cost = production_cost_per_airframe * (
-            np.exp(real_interest_rate * airframe_lifetime_years) - 1
+        np.exp(real_interest_rate * airframe_lifetime_years) - 1
     )
     costs_per_flight["airframe_financing"] = (
-            airframe_financing_lifetime_cost / num_airframe_flights_lifetime
+        airframe_financing_lifetime_cost / num_airframe_flights_lifetime
     )
 
     ### Insurance cost
     insurance_cost_per_year = production_cost_per_airframe * (
-            0.025  # Base rate of 2% on average, adjusted higher for perceived higher risk of new electric technology
-            * ((num_passengers_nominal + num_crew + 1) / 11) ** 0.5  # Adj. for number of souls on board; but sublinear
-            * (flight_hours_per_year / 1200) ** 0.5  # Normalizing to industry average; but again, sublinear
+        0.025  # Base rate of 2% on average, adjusted higher for perceived higher risk of new electric technology
+        * ((num_passengers_nominal + num_crew + 1) / 11)
+        ** 0.5  # Adj. for number of souls on board; but sublinear
+        * (flight_hours_per_year / 1200)
+        ** 0.5  # Normalizing to industry average; but again, sublinear
     )
     costs_per_flight["insurance"] = insurance_cost_per_year / flights_per_year
 
@@ -350,14 +362,14 @@ def electric_aircraft_direct_operating_cost_analysis(
     # maintenance_cost_per_year = production_cost_per_airframe * 0.04
     # costs_per_flight["maintenance"] = maintenance_cost_per_year / flights_per_year
     costs_per_flight["airframe_maintenance"] = (production_cost_per_airframe / 3e6) * (
-            65 * (mission_time / u.hour) +
-            (65)  # per cycle
+        65 * (mission_time / u.hour) + (65)  # per cycle
     )
 
     ### Propulsion maintenance cost
-    costs_per_flight["propulsion_maintenance"] = (production_cost_per_airframe / 3e6) * (
-            (58 * (mission_time / u.hour)) +
-            (50)  # per cycle
+    costs_per_flight["propulsion_maintenance"] = (
+        production_cost_per_airframe / 3e6
+    ) * (
+        (58 * (mission_time / u.hour)) + (50)  # per cycle
     )
 
     ### Battery replacement cost
@@ -366,39 +378,36 @@ def electric_aircraft_direct_operating_cost_analysis(
     costs_per_flight["battery_replacement"] = battery_cost / battery_cycle_life
 
     ### Energy Cost
-    electric_energy_per_flight = battery_capacity * battery_fraction_used_on_nominal_mission
+    electric_energy_per_flight = (
+        battery_capacity * battery_fraction_used_on_nominal_mission
+    )
     electric_energy_per_flight_kWh = electric_energy_per_flight / (u.kilo * u.watt_hour)
-    costs_per_flight["energy"] = electric_energy_per_flight_kWh * electricity_cost_per_kWh
+    costs_per_flight["energy"] = (
+        electric_energy_per_flight_kWh * electricity_cost_per_kWh
+    )
 
     ### Crew cost
-    costs_per_flight["crew"] = (
-            num_crew *
-            annual_expenses_per_crew /
-            flights_per_year
-    )
+    costs_per_flight["crew"] = num_crew * annual_expenses_per_crew / flights_per_year
 
     ### Airport landing fees
     estimated_max_gross_landing_weight = (  # Model is very approximate, because landing fees are small
-            production_cost_per_airframe / 266  # typical cost per kg empty weight
-            * 1.2  # Rough ratio of landing weight to empty weight
+        production_cost_per_airframe
+        / 266  # typical cost per kg empty weight
+        * 1.2  # Rough ratio of landing weight to empty weight
     )
     costs_per_flight["airport_landing_fees"] = (
-            1.20 * estimated_max_gross_landing_weight / 1000
+        1.20 * estimated_max_gross_landing_weight / 1000
     )
 
     ### Airport terminal use fees
-    costs_per_flight["airport_terminal_fees"] = (
-        50  # Cost per turn-around
-    )
+    costs_per_flight["airport_terminal_fees"] = 50  # Cost per turn-around
 
     ### Airport aircraft parking fees
-    costs_per_flight["airport_parking_fees"] = (
-        35  # Cost per turn-around
-    )
+    costs_per_flight["airport_parking_fees"] = 35  # Cost per turn-around
 
     ### Airport passenger facility charge
     costs_per_flight["airport_passenger_facility_charge"] = (
-            4.50 * num_passengers_nominal
+        4.50 * num_passengers_nominal
     )
 
     ### Indirect Costs
@@ -411,13 +420,13 @@ def electric_aircraft_direct_operating_cost_analysis(
 
     # Return same dictionary as before
     costs_per_paxmi = {
-        k: v / passenger_miles_per_flight
-        for k, v in costs_per_flight.items()
+        k: v / passenger_miles_per_flight for k, v in costs_per_flight.items()
     }
 
     return costs_per_paxmi
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     res = electric_aircraft_direct_operating_cost_analysis(
         production_cost_per_airframe=3.0e6,
         nominal_cruise_airspeed=250 * u.knot,

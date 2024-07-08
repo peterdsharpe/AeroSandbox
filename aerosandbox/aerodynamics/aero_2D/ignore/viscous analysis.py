@@ -23,27 +23,29 @@ H = opti.variable(
 Re_theta = ue * theta / nu
 
 H_star = np.where(
-    H < 4,
-    1.515 + 0.076 * (H - 4) ** 2 / H,
-    1.515 + 0.040 * (H - 4) ** 2 / H
+    H < 4, 1.515 + 0.076 * (H - 4) ** 2 / H, 1.515 + 0.040 * (H - 4) ** 2 / H
 )  # From AVF Eq. 4.53
-c_f = 2 / Re_theta * np.where(
-    H < 6.2,
-    -0.066 + 0.066 * np.abs(6.2 - H) ** 1.5 / (H - 1),
-    -0.066 + 0.066 * (H - 6.2) ** 2 / (H - 4) ** 2
+c_f = (
+    2
+    / Re_theta
+    * np.where(
+        H < 6.2,
+        -0.066 + 0.066 * np.abs(6.2 - H) ** 1.5 / (H - 1),
+        -0.066 + 0.066 * (H - 6.2) ** 2 / (H - 4) ** 2,
+    )
 )  # From AVF Eq. 4.54
-c_D = H_star / 2 / Re_theta * np.where(
-    H < 4,
-    0.207 + 0.00205 * np.abs(4 - H) ** 5.5,
-    0.207 - 0.100 * (H - 4) ** 2 / H ** 2
+c_D = (
+    H_star
+    / 2
+    / Re_theta
+    * np.where(
+        H < 4,
+        0.207 + 0.00205 * np.abs(4 - H) ** 5.5,
+        0.207 - 0.100 * (H - 4) ** 2 / H**2,
+    )
 )  # From AVF Eq. 4.55
 Re_theta_o = 10 ** (
-        2.492 / (H - 1) ** 0.43 +
-        0.7 * (
-                np.tanh(
-                    14 / (H - 1) - 9.24
-                ) + 1
-        )
+    2.492 / (H - 1) ** 0.43 + 0.7 * (np.tanh(14 / (H - 1) - 9.24) + 1)
 )  # From AVF Eq. 6.38
 
 d_theta_dx = np.diff(theta) / np.diff(x)
@@ -58,30 +60,21 @@ def int(x):
 def logint(x):
     # return int(x)
     logx = np.log(x)
-    return np.exp(
-        (logx[1:] + logx[:-1]) / 2
-    )
+    return np.exp((logx[1:] + logx[:-1]) / 2)
 
 
 ### Add governing equations
 opti.subject_to(
-    d_theta_dx == int(c_f) / 2 - int(
-        (H + 2) * theta / ue
-    ) * d_ue_dx,  # From AVF Eq. 4.51
+    d_theta_dx
+    == int(c_f) / 2 - int((H + 2) * theta / ue) * d_ue_dx,  # From AVF Eq. 4.51
 )
 opti.subject_to(
-    logint(theta / H_star) * d_H_star_dx ==
-    int(2 * c_D / H_star - c_f / 2) +
-    logint(
-        (H - 1) * theta / ue
-    ) * d_ue_dx
+    logint(theta / H_star) * d_H_star_dx
+    == int(2 * c_D / H_star - c_f / 2) + logint((H - 1) * theta / ue) * d_ue_dx
 )
 
 ### Add initial conditions
-opti.subject_to([
-    theta[0] == theta_0,
-    H[0] == H_0  # Equilibrium value
-])
+opti.subject_to([theta[0] == theta_0, H[0] == H_0])  # Equilibrium value
 
 ### Solve
 sol = opti.solve()

@@ -14,16 +14,17 @@ class NaturalUnivariateSpline(interpolate.PPoly):
 
     """
 
-    def __init__(self,
-                 x: np.ndarray,
-                 y: np.ndarray,
-                 w: np.ndarray = None,
-                 k: int = 3,
-                 s: float = None,
-                 ext=None,
-                 bbox=None,
-                 check_finite=None
-                 ):
+    def __init__(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        w: np.ndarray = None,
+        k: int = 3,
+        s: float = None,
+        ext=None,
+        bbox=None,
+        check_finite=None,
+    ):
         """
 
 
@@ -46,24 +47,26 @@ class NaturalUnivariateSpline(interpolate.PPoly):
         """
         if s is None:
             m = len(x)
-            s = m - (2 * m) ** 0.5  # Identical default to UnivariateSpline's `s` argument.
+            s = (
+                m - (2 * m) ** 0.5
+            )  # Identical default to UnivariateSpline's `s` argument.
 
         ### Deprecate and warn
         import warnings
+
         if ext is not None:
             warnings.warn(
                 "The `ext` argument is deprecated, as a NaturalUnivariateSpline implies extrapolation.",
-                DeprecationWarning
+                DeprecationWarning,
             )
         if bbox is not None:
             warnings.warn(
                 "The `bbox` argument is deprecated, as a NaturalUnivariateSpline implies extrapolation.",
-                DeprecationWarning
+                DeprecationWarning,
             )
         if check_finite is not None:
             warnings.warn(
-                "The `check_finite` argument is deprecated.",
-                DeprecationWarning
+                "The `check_finite` argument is deprecated.", DeprecationWarning
             )
 
         ### Compute the t, c, and k parameters for a UnivariateSpline
@@ -76,28 +79,22 @@ class NaturalUnivariateSpline(interpolate.PPoly):
         )
 
         ### Construct the spline, without natural extrapolation
-        spline = interpolate.PPoly.from_spline(
-            tck=tck
-        )
+        spline = interpolate.PPoly.from_spline(tck=tck)
 
         ### Add spline knots for natural positive extrapolation
         spline.extend(
             c=np.array(
-                [[0]] * (k - 2) + [
-                    [spline(spline.x[-1], 1)],
-                    [spline(spline.x[-1])]
-                ]),
-            x=np.array([np.inf])
+                [[0]] * (k - 2) + [[spline(spline.x[-1], 1)], [spline(spline.x[-1])]]
+            ),
+            x=np.array([np.inf]),
         )
 
         ### Add spline knots for natural negative extrapolation
         spline.extend(
             c=np.array(
-                [[0]] * (k - 1) + [
-                    [spline(spline.x[0], 1)],
-                    [spline(spline.x[0])]
-                ]),
-            x=np.array([spline.x[0]])
+                [[0]] * (k - 1) + [[spline(spline.x[0], 1)], [spline(spline.x[0])]]
+            ),
+            x=np.array([spline.x[0]]),
         )
 
         ### Construct the Natural Univariate Spline
@@ -108,7 +105,7 @@ class NaturalUnivariateSpline(interpolate.PPoly):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 

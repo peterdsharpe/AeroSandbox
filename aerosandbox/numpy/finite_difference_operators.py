@@ -3,9 +3,9 @@ import numpy as _onp
 
 
 def finite_difference_coefficients(
-        x: _onp.ndarray,
-        x0: float = 0,
-        derivative_degree: int = 1,
+    x: _onp.ndarray,
+    x0: float = 0,
+    derivative_degree: int = 1,
 ) -> _onp.ndarray:
     """
     Computes the weights (coefficients) in compact finite differece formulas for any order of derivative
@@ -56,24 +56,20 @@ def finite_difference_coefficients(
         return ValueError("The parameter derivative_degree must be an integer >= 1.")
     expected_order_of_accuracy = length(x) - derivative_degree
     if expected_order_of_accuracy < 1:
-        return ValueError("You need to provide at least (derivative_degree+1) grid points in the x vector.")
+        return ValueError(
+            "You need to provide at least (derivative_degree+1) grid points in the x vector."
+        )
 
     ### Implement algorithm; notation from paper in docstring.
     N = length(x) - 1
 
-    delta = _onp.zeros(
-        shape=(
-            derivative_degree + 1,
-            N + 1,
-            N + 1
-        ),
-        dtype="O"
-    )
+    delta = _onp.zeros(shape=(derivative_degree + 1, N + 1, N + 1), dtype="O")
 
     delta[0, 0, 0] = 1
     c1 = 1
-    for n in range(1,
-                   N + 1):  # TODO make this algorithm more efficient; we only need to store a fraction of this data.
+    for n in range(
+        1, N + 1
+    ):  # TODO make this algorithm more efficient; we only need to store a fraction of this data.
         c2 = 1
         for v in range(n):
             c3 = x[n] - x[v]
@@ -82,18 +78,23 @@ def finite_difference_coefficients(
             #     d[n, n - 1, v] = 0
             for m in range(min(n, derivative_degree) + 1):
                 delta[m, n, v] = (
-                                         (x[n] - x0) * delta[m, n - 1, v] - m * delta[m - 1, n - 1, v]
-                                 ) / c3
+                    (x[n] - x0) * delta[m, n - 1, v] - m * delta[m - 1, n - 1, v]
+                ) / c3
         for m in range(min(n, derivative_degree) + 1):
             delta[m, n, n] = (
-                    c1 / c2 * (
-                    m * delta[m - 1, n - 1, n - 1] - (x[n - 1] - x0) * delta[m, n - 1, n - 1]
-            )
+                c1
+                / c2
+                * (
+                    m * delta[m - 1, n - 1, n - 1]
+                    - (x[n - 1] - x0) * delta[m, n - 1, n - 1]
+                )
             )
         c1 = c2
 
     coefficients_object_array = delta[derivative_degree, -1, :]
 
-    coefficients = array([*coefficients_object_array])  # Reconstructs using aerosandbox.numpy to intelligently type
+    coefficients = array(
+        [*coefficients_object_array]
+    )  # Reconstructs using aerosandbox.numpy to intelligently type
 
     return coefficients

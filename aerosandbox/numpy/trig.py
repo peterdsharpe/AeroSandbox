@@ -1,8 +1,8 @@
 import numpy as _onp
 from numpy import pi as _pi
 
-_deg2rad = 180. / _pi
-_rad2deg = _pi / 180.
+_deg2rad = 180.0 / _pi
+_rad2deg = _pi / 180.0
 
 
 def degrees(x):
