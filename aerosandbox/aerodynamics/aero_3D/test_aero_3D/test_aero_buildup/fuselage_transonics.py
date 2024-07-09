@@ -33,6 +33,6 @@ aero = asb.AeroBuildup(
 ).run()
 
 plt.plot(op_point.mach(), aero["CD"], zorder=1.9, label="Model without Wave Drag")
-p.show_plot("Transonic Fuselage Drag", "Mach [-]", "Drag Area $C_D \cdot A$ [m$^2$]")
+p.show_plot("Transonic Fuselage Drag", "Mach [-]", r"Drag Area $C_D \cdot A$ [m$^2$]")
 
 print("%.4g" % aero["CD"][-1])

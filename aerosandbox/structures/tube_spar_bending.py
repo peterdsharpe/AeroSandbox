@@ -340,7 +340,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             # "Local Slope [deg]": np.arctan2d(self.du, 1),
             "Local Load [N/m]": self.distributed_force,
             "Axial Stress [MPa]": self.stress_axial / 1e6,
-            "Bending $EI$ [N $\cdot$ m$^2$]": self.elastic_modulus * self.I,
+            r"Bending $EI$ [N $\cdot$ m$^2$]": self.elastic_modulus * self.I,
             "Tube Diameter [m]": self.diameter,
             "Wall Thickness [m]": self.wall_thickness,
         }

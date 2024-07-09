@@ -80,12 +80,12 @@ def cosine_hermite_patch(
     dfdx_b: float,
     extrapolation: str = "continue",
 ) -> Union[float, np.ndarray]:
-    """
+    r"""
     Computes a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine function to blend between
     linear segments.
 
     The end result is conceptually similar to a cubic Hermite patch, but computation is faster and the patch is
-    C^\infty-continuous.
+    $C^\infty$-continuous.
 
     Args:
         x: Scalar or array of values at which to evaluate the patch.
