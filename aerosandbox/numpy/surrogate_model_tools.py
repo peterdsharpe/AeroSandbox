@@ -229,7 +229,10 @@ def sigmoid(
     return s_normalized
 
 
-def swish(x, beta=1):
+def swish(
+    x: Union[float, _np.ndarray],
+    beta: float = 1.0,
+):
     """
     A smooth approximation of the ReLU function, applied elementwise to an array `x`.
 
