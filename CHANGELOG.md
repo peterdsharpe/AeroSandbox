@@ -38,6 +38,12 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.6
+
+- Verified compatibility with NumPy 2.0.0+; version pin removed.
+- Converted formatting to Black, for improved readability.
+- Fixed a bunch of minor things using Ruff; removed dead code branches.
+
 #### 4.2.5
 
 - Improvements to AeroSandbox plotting tools (`aerosandbox.tools.pretty_plots`)
