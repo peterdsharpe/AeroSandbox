@@ -46,7 +46,7 @@ setup(
     packages=find_packages(exclude=['docs', 'media', 'studies', 'tutorial']),
     python_requires='>=3.8',
     install_requires=[
-        'numpy >= 1.20.0, <2.0a0',
+        'numpy >= 1.20.0',
         'scipy >= 1.7.0',
         'casadi >= 3.6.4',
         'pandas >= 2',
