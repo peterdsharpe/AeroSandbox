@@ -569,6 +569,7 @@ class Opti(cas.Opti):
         verbose: bool = True,
         jit: bool = False,  # TODO document, add unit tests for jit
         detect_simple_bounds: bool = False,  # TODO document
+        expand: bool = False, # TODO document
         options: Dict = None,  # TODO document
         behavior_on_failure: str = "raise",
     ) -> "OptiSol":
@@ -684,6 +685,7 @@ class Opti(cas.Opti):
             "ipopt.mu_strategy": "adaptive",
             "ipopt.fast_step_computation": "yes",
             "detect_simple_bounds": detect_simple_bounds,
+            "expand": expand,
         }
 
         if jit:
