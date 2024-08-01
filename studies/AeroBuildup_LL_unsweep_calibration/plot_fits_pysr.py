@@ -1,4 +1,3 @@
-import aerosandbox as asb
 import aerosandbox.numpy as np
 import pandas as pd
 from scipy import interpolate

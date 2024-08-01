@@ -1,6 +1,6 @@
 "Minimizes airplane drag for a simple drag and structure model."
 import numpy as np
-from gpkit import Variable, Model, SolutionArray
+from gpkit import Variable, Model
 import time
 
 

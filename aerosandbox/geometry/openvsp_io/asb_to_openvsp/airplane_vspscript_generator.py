@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.geometry.airplane import Airplane
-from textwrap import indent, dedent
+from textwrap import indent
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp.wing_vspscript_generator import (
     generate_wing,

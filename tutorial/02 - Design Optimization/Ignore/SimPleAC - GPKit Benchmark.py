@@ -1,5 +1,5 @@
 from __future__ import print_function
-from gpkit import Model, Variable, SignomialsEnabled, VarKey, units
+from gpkit import Model, Variable, SignomialsEnabled, units
 import numpy as np
 import time
 

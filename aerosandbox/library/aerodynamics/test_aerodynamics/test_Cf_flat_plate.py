@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
 import aerosandbox.numpy as np
 import aerosandbox.library.aerodynamics as aero
 

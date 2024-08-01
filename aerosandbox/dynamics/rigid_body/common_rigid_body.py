@@ -2,8 +2,8 @@ import aerosandbox.numpy as np
 from aerosandbox.dynamics.point_mass.common_point_mass import (
     _DynamicsPointMassBaseClass,
 )
-from abc import ABC, abstractmethod, abstractproperty
-from typing import Union, Tuple
+from abc import ABC, abstractmethod
+from typing import Union
 from aerosandbox import OperatingPoint, Atmosphere
 
 

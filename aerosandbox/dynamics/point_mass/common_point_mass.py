@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import Union, Dict, Tuple, List
 from aerosandbox import (
     MassProperties,
@@ -211,7 +211,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 else:
                     try:
                         return a[index]
-                    except IndexError as e:
+                    except IndexError:
                         raise IndexError(
                             f"A state variable could not be indexed; it has length {len(a)} while the"
                             f"parent has length {l}."

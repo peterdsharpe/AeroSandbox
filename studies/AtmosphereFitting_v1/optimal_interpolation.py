@@ -5,7 +5,6 @@ You want to pick n points to linearly interpolate this such that the L2-error is
 """
 import aerosandbox as asb
 import aerosandbox.numpy as np
-import matplotlib.pyplot as plt
 
 opti = asb.Opti()
 

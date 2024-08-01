@@ -29,7 +29,6 @@ aero = optimized_airfoil.get_aero_from_neuralfoil(
     model_size="xxxlarge",
 )
 
-from casadi.tools import dotdraw, dotsave, dotgraph
 
 # dotdraw(cas.cse(aero["CL"]))
 

@@ -1,7 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
 from aerosandbox.geometry.airfoil import airfoil_families
 from tqdm import tqdm
 

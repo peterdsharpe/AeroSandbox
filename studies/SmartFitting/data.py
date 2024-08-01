@@ -1,4 +1,3 @@
-import aerosandbox as asb
 import aerosandbox.numpy as np
 
 np.random.seed(0)

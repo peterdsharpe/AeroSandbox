@@ -1,6 +1,5 @@
 import aerosandbox.numpy as np
 from aerosandbox.modeling.splines.hermite import (
-    linear_hermite_patch,
     cubic_hermite_patch,
 )
 

@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import pytest
 
 
 def is_tool(name):

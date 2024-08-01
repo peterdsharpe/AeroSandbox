@@ -1,9 +1,8 @@
 import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
-from typing import Union, Dict, Callable, List
+from typing import Union, Dict, Callable
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 import copy
-import warnings
 
 
 class FittedModel(SurrogateModel):

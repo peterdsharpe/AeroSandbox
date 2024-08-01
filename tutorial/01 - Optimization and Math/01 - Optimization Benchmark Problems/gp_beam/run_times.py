@@ -98,8 +98,7 @@ def solve_aerosandbox_forced_GP(N=10):
 
 def solve_gpkit_cvxopt(N=10):
     import numpy as np
-    from gpkit import parse_variables, Model, ureg
-    from gpkit.small_scripts import mag
+    from gpkit import parse_variables, Model
 
     class Beam(Model):
         """Discretization of the Euler beam equations for a distributed load.
@@ -167,8 +166,7 @@ def solve_gpkit_cvxopt(N=10):
 
 def solve_gpkit_mosek(N=10):
     import numpy as np
-    from gpkit import parse_variables, Model, ureg
-    from gpkit.small_scripts import mag
+    from gpkit import parse_variables, Model
 
     class Beam(Model):
         """Discretization of the Euler beam equations for a distributed load.

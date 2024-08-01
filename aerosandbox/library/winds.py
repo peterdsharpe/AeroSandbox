@@ -1,5 +1,4 @@
 import aerosandbox.numpy as np
-import datetime
 from aerosandbox.modeling.interpolation import InterpolatedModel
 from pathlib import Path
 import os
@@ -205,7 +204,7 @@ def tropopause_altitude(latitude, day_of_year):
 
 if __name__ == "__main__":
 
-    from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot
+    from aerosandbox.tools.pretty_plots import plt, show_plot
 
     def plot_winds_at_altitude(altitude=18000):
         fig, ax = plt.subplots()
@@ -352,7 +351,7 @@ if __name__ == "__main__":
         plt.yticks(lat_label_vals, lat_labels)
 
         show_plot(
-            f"Tropopause Altitude by Season and Latitude",
+            "Tropopause Altitude by Season and Latitude",
             xlabel="Day of Year",
             ylabel="Latitude",
         )
@@ -409,7 +408,7 @@ if __name__ == "__main__":
         plt.yticks(lat_label_vals, lat_labels)
 
         show_plot(
-            f"95th-Percentile Wind Speeds at Tropopause Altitude",
+            "95th-Percentile Wind Speeds at Tropopause Altitude",
             xlabel="Day of Year",
             ylabel="Latitude",
         )

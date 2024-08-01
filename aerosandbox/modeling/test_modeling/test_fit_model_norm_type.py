@@ -3,7 +3,6 @@ An illustration of the various types of norms that can be used during function r
 """
 
 from aerosandbox.modeling.fitting import FittedModel
-import pytest
 import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns

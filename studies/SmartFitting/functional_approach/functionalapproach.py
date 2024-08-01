@@ -7,7 +7,7 @@ Created on Tue Apr 20 15:02:28 2021
 """
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List
 from functions import *
 
 """

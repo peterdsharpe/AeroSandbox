@@ -1,8 +1,7 @@
 from typing import Union
 import casadi as _cas
 import numpy as _onp
-from aerosandbox.numpy.array import length, roll, concatenate
-from aerosandbox.numpy.calculus import diff
+from aerosandbox.numpy.array import length, concatenate
 
 
 def integrate_discrete_intervals(
@@ -700,7 +699,6 @@ def integrate_discrete_squared_curvature(
 
 
 if __name__ == "__main__":
-    import aerosandbox as asb
     import aerosandbox.numpy as np
     from scipy import integrate, interpolate
     import sympy as s
@@ -812,7 +810,5 @@ if __name__ == "__main__":
     print(f"error: {integral - exact}")
 
     x_plot = np.linspace(x[0], x[-1], 10000)
-    import matplotlib.pyplot as plt
-    import aerosandbox.tools.pretty_plots as p
 
     # p.qp(x_plot, f_interp.derivative(2)(x_plot) ** 2)

@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-import pytest
 from typing import List
 
 
@@ -134,7 +133,7 @@ def test_airfoil_database_validity():
 
     if len(failed_airfoils_and_errors) > 0:
         raise ValueError(
-            f"The following airfoils failed the validity test:\n"
+            "The following airfoils failed the validity test:\n"
             "\n".join(
                 f"{af_name}: {error}"
                 for af_name, error in failed_airfoils_and_errors.items()

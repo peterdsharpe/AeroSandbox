@@ -1,11 +1,4 @@
-import aerosandbox.numpy as np
-from aerosandbox.geometry.airplane import Airplane
-from aerosandbox.geometry.wing import Wing, WingXSec
-from aerosandbox.geometry.fuselage import Fuselage, FuselageXSec
-from aerosandbox.geometry.propulsor import Propulsor
-from aerosandbox.geometry.airfoil.airfoil import Airfoil
-from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
-from textwrap import indent, dedent
+from textwrap import indent
 
 # noindent
 

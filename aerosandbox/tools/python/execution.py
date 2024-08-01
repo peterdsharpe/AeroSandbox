@@ -1,5 +1,6 @@
 from pathlib import Path
-import sys, os
+import sys
+import os
 from aerosandbox.tools.python.io import convert_ipynb_to_py
 
 

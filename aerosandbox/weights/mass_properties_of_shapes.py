@@ -1,4 +1,3 @@
-import aerosandbox.numpy as np
 from aerosandbox.weights.mass_properties import MassProperties
 
 """

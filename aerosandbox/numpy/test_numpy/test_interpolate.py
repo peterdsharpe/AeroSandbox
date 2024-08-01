@@ -1,7 +1,6 @@
 import aerosandbox.numpy as np
 import pytest
 import casadi as cas
-import numpy as onp
 
 
 def test_interp():

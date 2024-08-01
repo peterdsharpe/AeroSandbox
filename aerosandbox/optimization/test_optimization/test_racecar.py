@@ -17,7 +17,6 @@ def test_racecar(N=100, plot=False):
     opti.constrain_derivative(u - v, variable=v, with_respect_to=t, method="cubic")
 
     from aerosandbox.numpy.integrate_discrete import (
-        integrate_discrete_intervals,
         integrate_discrete_squared_curvature,
     )
 
@@ -70,7 +69,6 @@ if __name__ == "__main__":
     opti.constrain_derivative(u - v, variable=v, with_respect_to=t, method="cubic")
 
     from aerosandbox.numpy.integrate_discrete import (
-        integrate_discrete_intervals,
         integrate_discrete_squared_curvature,
     )
 

@@ -1,6 +1,6 @@
 import numpy as _onp
 import casadi as _cas
-from typing import List, Tuple, Dict, Union, Sequence
+from typing import List, Dict, Union, Sequence
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 

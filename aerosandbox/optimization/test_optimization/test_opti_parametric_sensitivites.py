@@ -2,7 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
 
-from aerosandbox.tools.pretty_plots import plt, show_plot
+from aerosandbox.tools.pretty_plots import plt
 
 """
 This test solves the 2-dimensional Rosenbrock problem constrained to a circle centered on the origin:

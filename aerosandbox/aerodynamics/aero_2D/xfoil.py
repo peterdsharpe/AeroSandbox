@@ -576,7 +576,7 @@ class XFoil(ExplicitAnalysis):
             self.airfoil.write_dat(directory / airfoil_file)
 
             ### Open up AVL
-            import sys, os
+            import sys
 
             if sys.platform == "win32":
                 # Run XFoil

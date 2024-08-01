@@ -8,7 +8,6 @@ from aerosandbox.tools.pretty_plots.utilities.natural_univariate_spline import (
     NaturalUnivariateSpline as Spline,
 )
 from scipy import signal
-from aerosandbox.tools.code_benchmarking import Timer
 
 
 def estimate_noise_standard_deviation(

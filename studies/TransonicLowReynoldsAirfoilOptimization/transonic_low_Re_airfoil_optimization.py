@@ -2,7 +2,7 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import neuralfoil as nf
 from typing import Union, List, Dict
-from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch
+from aerosandbox.modeling.splines.hermite import cubic_hermite_patch
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_coordinates, get_kulfan_parameters
 from pprint import pprint
 

@@ -1,4 +1,3 @@
-import aerosandbox as asb
 import aerosandbox.numpy as np
 from potentialflowvisualizer.objects import Singularity
 from typing import List
@@ -33,7 +32,6 @@ class Flowfield:
              set_equal: bool = True,
              show: bool = True,
              ):
-        import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
         X, Y = np.meshgrid(x_points, y_points)
@@ -141,7 +139,7 @@ class Flowfield:
             p.equal()
 
         p.show_plot(
-            f"Potential Flow: Streamlines",
+            "Potential Flow: Streamlines",
             "$x$",
             "$y$",
             show=show

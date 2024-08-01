@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 import casadi as _cas
-from typing import Union, Callable, Tuple, Optional, Dict, Any, List
+from typing import Union, Callable, Tuple, Optional, List
 from scipy import integrate
 
 

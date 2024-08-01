@@ -1,9 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.library import aerodynamics as lib_aero
 from aerosandbox.tools import units as u
-import copy
-from typing import Union, Callable, Optional
+from typing import Union
 
 ##### Section: Initialize Optimization
 

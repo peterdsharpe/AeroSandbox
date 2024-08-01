@@ -70,12 +70,12 @@ class SurrogateModel(AeroSandboxObject):
                 f"a dict with: keys {input_names}, values as float or array"
             )
         else:
-            input_description = f"a float or array"
+            input_description = "a float or array"
         return "\n".join(
             [
                 f"SurrogateModel(x) [R^{self.input_dimensionality()} -> R^1]",
                 f"\tInput: {input_description}",
-                f"\tOutput: float or array",
+                "\tOutput: float or array",
             ]
         )
 

@@ -1,4 +1,4 @@
-from get_data import turboprops, turbojets
+from get_data import turbojets
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pandas as pd
@@ -48,7 +48,7 @@ fit = asb.FittedModel(
     verbose=False
 )
 
-print(f"Fit for TSFC:")
+print("Fit for TSFC:")
 print(fit.parameters)
 print(fit.goodness_of_fit())
 

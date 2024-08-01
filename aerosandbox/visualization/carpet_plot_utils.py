@@ -6,7 +6,6 @@ import aerosandbox.numpy as np
 
 import signal
 from contextlib import contextmanager
-import sys
 
 
 @contextmanager
@@ -177,7 +176,6 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
 
 
 if __name__ == "__main__":
-    import time
     import numpy as np
     from numpy import linalg
 

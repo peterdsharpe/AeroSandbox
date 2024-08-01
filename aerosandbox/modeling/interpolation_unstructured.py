@@ -195,7 +195,7 @@ if __name__ == "__main__":
         y_data=f.flatten(),
     )
 
-    from aerosandbox.tools.pretty_plots import plt, show_plot
+    from aerosandbox.tools.pretty_plots import plt
 
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")

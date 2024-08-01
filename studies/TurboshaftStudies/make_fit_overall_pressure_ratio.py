@@ -1,4 +1,4 @@
-from get_data import turboprops, turbojets
+from get_data import turboprops
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pandas as pd

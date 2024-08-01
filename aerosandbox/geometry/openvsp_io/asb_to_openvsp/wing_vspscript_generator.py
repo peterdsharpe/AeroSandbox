@@ -1,7 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.geometry.wing import Wing, WingXSec
 from aerosandbox.geometry.airfoil.airfoil import Airfoil
-from textwrap import indent, dedent
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 

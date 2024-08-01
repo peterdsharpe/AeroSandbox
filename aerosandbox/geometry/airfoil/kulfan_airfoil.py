@@ -2,8 +2,6 @@ import aerosandbox.numpy as np
 from aerosandbox.geometry.airfoil.airfoil import Airfoil
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
 from aerosandbox.modeling.splines.hermite import (
-    linear_hermite_patch,
-    cubic_hermite_patch,
     cosine_hermite_patch,
 )
 from typing import Union, Dict, List

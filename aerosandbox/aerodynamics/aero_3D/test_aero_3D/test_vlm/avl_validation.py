@@ -2,7 +2,6 @@ from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional impor
     airplane,
 )
 import aerosandbox as asb
-import aerosandbox.numpy as np
 
 
 op_point = asb.OperatingPoint(velocity=25, alpha=3)

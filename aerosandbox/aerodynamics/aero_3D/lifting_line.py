@@ -7,7 +7,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
 from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
     calculate_induced_velocity_point_source,
 )
-from typing import Dict, Any, List, Callable, Union
+from typing import Dict, List, Callable, Union
 from aerosandbox.aerodynamics.aero_3D.aero_buildup import AeroBuildup
 from dataclasses import dataclass
 
@@ -1323,8 +1323,6 @@ if __name__ == "__main__":
     resolutions = 1 + np.arange(20)
     aeros = get_aero(resolutions)
 
-    import matplotlib.pyplot as plt
-    import aerosandbox.tools.pretty_plots as p
 
     fig, ax = plt.subplots(3, 1)
     ax[0].semilogx(resolutions, [aero["CL"] for aero in aeros])

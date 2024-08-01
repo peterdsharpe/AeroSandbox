@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import pytest
 from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import (
     airplane,
 )

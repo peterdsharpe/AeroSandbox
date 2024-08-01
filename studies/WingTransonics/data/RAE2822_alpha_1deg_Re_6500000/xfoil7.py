@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import aerosandbox.numpy as np
 
 af = asb.Airfoil("rae2822")
 

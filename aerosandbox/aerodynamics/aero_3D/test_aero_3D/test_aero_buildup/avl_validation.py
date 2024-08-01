@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import aerosandbox.numpy as np
 import pytest
 
 wing_airfoil = asb.Airfoil("naca0010")  # asb.Airfoil("sd7037")

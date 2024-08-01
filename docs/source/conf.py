@@ -7,7 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import aerosandbox as asb
-import sys, os
+import sys
+import os
 from pathlib import Path
 
 # sys.path.insert(0,str(asb._asb_root.absolute()))

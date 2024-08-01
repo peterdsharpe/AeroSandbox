@@ -488,7 +488,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(2, 1, figsize=(7, 6.5))
     plt.sca(ax[0])
     plt.title(
-        f"Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)"
+        "Solar Flux on a Horizontal Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)"
     )
     for q in quality_colors.keys():
         plt.plot(
@@ -500,7 +500,7 @@ if __name__ == "__main__":
 
     plt.sca(ax[1])
     plt.title(
-        f"Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)"
+        "Solar Flux on a Sun-Tracking Surface Over A Day\n(Tropic of Cancer, Summer Solstice, Sea Level)"
     )
     for q in quality_colors.keys():
         plt.plot(
@@ -610,7 +610,7 @@ z [deg],AM [-],Solar Flux Lower Bound [W/m^2],Solar Flux Upper Bound [W/m^2]
     p.set_ticks(15, 5, 200, 50)
 
     p.show_plot(
-        f"Sun Position vs. Solar Flux on a Sun-Tracking Surface",
-        f"Solar Elevation Angle [deg]",
+        "Sun Position vs. Solar Flux on a Sun-Tracking Surface",
+        "Solar Elevation Angle [deg]",
         "Solar Flux [$W/m^2$]",
     )

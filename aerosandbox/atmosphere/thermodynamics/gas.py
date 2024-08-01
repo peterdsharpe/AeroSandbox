@@ -1,6 +1,5 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
-import copy
 from typing import Union
 
 universal_gas_constant = 8.31432  # J/(mol*K); universal gas constant

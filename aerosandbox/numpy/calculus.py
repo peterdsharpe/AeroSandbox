@@ -253,10 +253,8 @@ def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is di
 
 
 if __name__ == "__main__":
-    import aerosandbox as asb
     import aerosandbox.numpy as np
 
-    import casadi as cas
 
     # print(diff(cas.DM([355, 5]), period=360))
 

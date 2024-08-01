@@ -1,7 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import List
-import copy
 import pytest
 
 

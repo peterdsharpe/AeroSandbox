@@ -57,7 +57,7 @@ def get_NACA_coordinates(
 
         name = name.lower().strip()
 
-        if not "naca" in name:
+        if "naca" not in name:
             raise ValueError("Not a NACA airfoil - name must start with 'naca'!")
 
         nacanumber = name.split("naca")[1]
@@ -612,7 +612,7 @@ def get_file_coordinates(filepath: Union[str, os.PathLike]):
     try:
         with open(filepath, "r") as f:
             raw_text = f.readlines()
-    except possible_errors as e:
+    except possible_errors:
         try:
             with open(f"{filepath}.dat", "r") as f:
                 raw_text = f.readlines()
@@ -642,7 +642,7 @@ def get_UIUC_coordinates(name: str = "dae11") -> np.ndarray:
     try:
         with open(airfoil_database_root / name) as f:
             raw_text = f.readlines()
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         try:
             with open(airfoil_database_root / f"{name}.dat") as f:
                 raw_text = f.readlines()

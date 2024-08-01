@@ -1,8 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import cadquery as cq
-import copy
-from typing import List, Union, Dict
+from typing import List, Union
 from sortedcontainers import SortedDict
 
 

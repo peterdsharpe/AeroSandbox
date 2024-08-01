@@ -1,10 +1,6 @@
 ### This file contains an assortment of random airfoils to use
 from aerosandbox.geometry.airfoil import Airfoil
 from aerosandbox.library.aerodynamics.viscous import *
-from aerosandbox.geometry.airfoil.airfoil_families import (
-    get_NACA_coordinates,
-    get_UIUC_coordinates,
-)
 
 
 def diamond_airfoil(

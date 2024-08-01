@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-import pytest
 
 
 def test_dyn_indexing():

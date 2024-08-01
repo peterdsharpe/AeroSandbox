@@ -3,7 +3,6 @@ from aerosandbox.geometry import Airfoil
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_coordinates
 from scipy import optimize
 import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
 
 if __name__ == "__main__":
 

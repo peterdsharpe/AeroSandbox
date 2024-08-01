@@ -5,7 +5,6 @@ This script generates data used to estimate spar mass as a function of lift forc
 ### Imports
 from aerosandbox.structures.legacy.beams import *
 import scipy.io as sio
-import copy
 
 ### Set up sweep variables
 masses = np.linspace(50, 800, 50)

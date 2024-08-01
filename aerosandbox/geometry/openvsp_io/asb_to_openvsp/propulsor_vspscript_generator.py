@@ -1,6 +1,5 @@
 import aerosandbox.numpy as np
 from aerosandbox.geometry.propulsor import Propulsor
-from textwrap import indent, dedent
 from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 

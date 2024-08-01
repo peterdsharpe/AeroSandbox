@@ -27,8 +27,6 @@ def get_aero(xyz_ref):
 x_cgs = np.linspace(0, 1, 11)
 aeros = np.array([get_aero(xyz_ref=[x, 0, 0]) for x in x_cgs], dtype="O")
 
-import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
 
 fig, ax = plt.subplots(figsize=(4, 4))
 

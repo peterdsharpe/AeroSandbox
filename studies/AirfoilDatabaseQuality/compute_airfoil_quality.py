@@ -1,8 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from pathlib import Path
-import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
 
 airfoil_database_path = asb._asb_root / "geometry" / "airfoil" / "airfoil_database"
 current_airfoil_database_names = airfoil_database_path.glob("*.dat")

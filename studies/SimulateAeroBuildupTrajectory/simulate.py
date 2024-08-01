@@ -151,7 +151,6 @@ aero = asb.AeroBuildup(
 
 import matplotlib.pyplot as plt
 import aerosandbox.tools.pretty_plots as p
-import matplotlib
 
 vars_to_plot = {
     **dyn.state,

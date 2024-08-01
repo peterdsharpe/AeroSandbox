@@ -1,7 +1,4 @@
 import aerosandbox.numpy as np
-from scipy import interpolate, integrate
-import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
 import sympy as s
 
 

@@ -1,7 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
-import os
 
 """
 Minimization over a simple unimodal function is used here:

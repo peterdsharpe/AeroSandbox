@@ -1,4 +1,3 @@
-import aerosandbox as asb
 import aerosandbox.numpy as np
 import sympy as s
 from aerosandbox.numpy.integrate_discrete import integrate_discrete_squared_curvature

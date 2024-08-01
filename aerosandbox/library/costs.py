@@ -182,7 +182,7 @@ def modified_DAPCA_IV_production_cost_analysis(
     elif per_passenger_cost_model == "regional_transport":
         costs_2012_dollars["aircraft_interiors"] = n_airplanes_produced * n_pax * 1700
     else:
-        raise ValueError(f"Invalid value of `per_passenger_cost_model`!")
+        raise ValueError("Invalid value of `per_passenger_cost_model`!")
 
     ### Convert all costs to present-day dollars
     costs = {k: v * cpi_relative_to_2012_dollars for k, v in costs_2012_dollars.items()}

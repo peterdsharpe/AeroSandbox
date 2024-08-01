@@ -211,7 +211,7 @@ class OperatingPoint(AeroSandboxObject):
                 else:
                     try:
                         return a[index]
-                    except IndexError as e:
+                    except IndexError:
                         raise IndexError(
                             f"A state variable could not be indexed; it has length {len(a)} while the"
                             f"parent has length {l}."

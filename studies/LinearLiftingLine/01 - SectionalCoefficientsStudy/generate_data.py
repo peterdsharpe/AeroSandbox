@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import aerosandbox.numpy as np
 from pathlib import Path
 
 airfoil_database_path = Path(

@@ -9,7 +9,6 @@ from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
 )
 import aerosandbox.numpy as np
 from typing import Dict, Any, Callable, List
-import copy
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.

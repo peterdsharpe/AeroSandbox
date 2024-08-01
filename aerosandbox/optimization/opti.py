@@ -274,7 +274,7 @@ class Opti(cas.Opti):
         # Try to convert init_guess to a float or np.ndarray if it is an Opti parameter.
         try:
             init_guess = self.value(init_guess)
-        except RuntimeError as e:
+        except RuntimeError:
             if not (freeze and self.freeze_style == "float"):
                 raise TypeError(
                     "The `init_guess` for a new Opti variable must not be a function of an existing Opti variable."
@@ -478,7 +478,7 @@ class Opti(cas.Opti):
                 # This indicates that the problem is infeasible as-written, likely because the user has frozen too
                 # many decision variables using the Opti.variable(freeze=True) syntax.
                 raise RuntimeError(
-                    f"""The problem is infeasible due to a constraint that always evaluates False. 
+                    """The problem is infeasible due to a constraint that always evaluates False. 
                 This can happen if you've frozen too many decision variables, leading to an overconstrained problem."""
                 )
 

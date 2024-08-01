@@ -2,7 +2,7 @@ import matplotlib
 import mpl_toolkits
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple
 
 preset_view_angles = {
     # Given in the form:

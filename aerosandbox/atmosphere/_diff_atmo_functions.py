@@ -1,10 +1,8 @@
 import aerosandbox.numpy as np
-from pathlib import Path
 from aerosandbox.modeling.interpolation import InterpolatedModel
 from aerosandbox.atmosphere._isa_atmo_functions import (
     pressure_isa,
     temperature_isa,
-    isa_base_altitude,
 )
 
 # Define the altitudes of knot points

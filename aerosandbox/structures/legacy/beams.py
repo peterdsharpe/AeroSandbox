@@ -453,7 +453,6 @@ if __name__ == "__main__":
         print("Failed!")
         sol = opti.debug
 
-    import copy
 
     beam_sol = sol(beam)
 

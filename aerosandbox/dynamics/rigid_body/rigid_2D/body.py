@@ -3,7 +3,7 @@ from aerosandbox.dynamics.rigid_body.rigid_3D.body_euler import (
 )
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
-from typing import Union, Dict, Tuple
+from typing import Union, Dict
 
 
 class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):

@@ -5,10 +5,8 @@ from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
     calculate_induced_velocity_horseshoe,
 )
-from typing import Dict, Any, List, Callable, Optional, Union, Tuple
-import copy
-from functools import cached_property, lru_cache, partial
-from collections import namedtuple
+from typing import Dict, Any, List, Union, Tuple
+from functools import cached_property, partial
 from dataclasses import dataclass
 from abc import abstractmethod, ABC
 

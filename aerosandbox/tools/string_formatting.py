@@ -196,7 +196,8 @@ def wrap_text_ignoring_mathtext(
         A string containing the entire paragraph with line breaks as newline ("\n") characters.
 
     """
-    import textwrap, re
+    import textwrap
+    import re
 
     # Pattern to match mathtext blocks
     mathtext_trigger = r"(?<!\\)(?:\\\\)*\$"

@@ -1,5 +1,5 @@
 # from pysr import PySRRegressor
-from read_data import a, d, hf, lr, eff
+from read_data import a, d, hf, eff
 import aerosandbox as asb
 import aerosandbox.numpy as np
 

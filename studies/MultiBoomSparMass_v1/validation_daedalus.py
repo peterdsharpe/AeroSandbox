@@ -42,7 +42,6 @@ except Exception:
     print("Warning: Failed!")
     sol = opti.debug
 
-import copy
 
 beam_sol = sol(beam)
 

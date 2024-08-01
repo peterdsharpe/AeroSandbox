@@ -3,7 +3,7 @@ from aerosandbox.dynamics.point_mass.point_3D.speed_gamma_track import (
 )
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
-from typing import Union, Dict, Tuple
+from typing import Union, Dict
 
 
 class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):

@@ -1,4 +1,3 @@
-import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
 from typing import Tuple

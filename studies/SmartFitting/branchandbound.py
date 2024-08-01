@@ -5,7 +5,7 @@ Created on Mon Apr  5 18:07:01 2021
 
 @author: Sylvershadowz
 """
-from data import x, y_data, f
+from data import x, y_data
 import aerosandbox as asb
 import aerosandbox.numpy as np
 

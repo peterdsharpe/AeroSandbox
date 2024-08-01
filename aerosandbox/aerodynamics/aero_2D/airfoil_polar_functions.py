@@ -1,7 +1,5 @@
 from aerosandbox.geometry import Airfoil
-from aerosandbox.performance import OperatingPoint
 import aerosandbox.numpy as np
-import aerosandbox.library.aerodynamics as aerolib
 
 
 def airfoil_coefficients_post_stall(

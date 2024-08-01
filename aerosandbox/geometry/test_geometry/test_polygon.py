@@ -1,4 +1,3 @@
-import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.geometry.polygon import Polygon
 import pytest

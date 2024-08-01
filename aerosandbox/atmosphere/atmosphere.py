@@ -86,7 +86,7 @@ class Atmosphere(AeroSandboxObject):
                 else:
                     try:
                         return a[index]
-                    except IndexError as e:
+                    except IndexError:
                         raise IndexError(
                             f"A state variable could not be indexed; it has length {len(a)} while the"
                             f"parent has length {l}."
@@ -114,7 +114,7 @@ class Atmosphere(AeroSandboxObject):
                 try:
                     v[0]
                     length = 1
-                except (TypeError, IndexError, KeyError) as e:
+                except (TypeError, IndexError, KeyError):
                     pass
             elif length == 0 or length == 1:
                 length = np.length(v)
@@ -318,7 +318,7 @@ if __name__ == "__main__":
         a.set_ylim(altitude.min() / u.foot, altitude.max() / u.foot)
     ax[0].set_ylabel("Altitude [ft]")
     plt.legend(title="Method")
-    p.show_plot(f"Atmosphere", rotate_axis_labels=False, legend=False)
+    p.show_plot("Atmosphere", rotate_axis_labels=False, legend=False)
 
     fig, ax = plt.subplots(1, 2, sharey=True)
     ax[0].plot(

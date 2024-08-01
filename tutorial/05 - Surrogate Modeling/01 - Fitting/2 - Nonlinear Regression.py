@@ -139,7 +139,7 @@ fit = asb.FittedModel(
 
 # %%
 
-from aerosandbox.tools.pretty_plots import plt, sns, mpl, show_plot
+from aerosandbox.tools.pretty_plots import plt, show_plot
 
 fig = plt.figure(figsize=(6, 5))
 ax = fig.add_subplot(projection="3d")

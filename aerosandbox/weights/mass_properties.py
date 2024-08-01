@@ -115,7 +115,7 @@ class MassProperties(AeroSandboxObject):
                 "MassProperties instance:",
                 f"                 Mass : {fmt(self.mass)}",
                 f"    Center of Gravity : ({fmt(self.x_cg)}, {fmt(self.y_cg)}, {fmt(self.z_cg)})",
-                f"       Inertia Tensor : ",
+                "       Inertia Tensor : ",
                 f"            (about CG)  [{fmt(self.Ixx)}, {fmt(self.Ixy)}, {fmt(self.Ixz)}]",
                 f"                        [{fmt(self.Ixy)}, {fmt(self.Iyy)}, {fmt(self.Iyz)}]",
                 f"                        [{fmt(self.Ixz)}, {fmt(self.Iyz)}, {fmt(self.Izz)}]",
@@ -145,7 +145,7 @@ class MassProperties(AeroSandboxObject):
                 else:
                     try:
                         return a[index]
-                    except IndexError as e:
+                    except IndexError:
                         raise IndexError(
                             f"A state variable could not be indexed; it has length {len(a)} while the"
                             f"parent has length {l}."

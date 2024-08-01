@@ -2,7 +2,6 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
 from typing import Union
-import pytest
 
 
 def a() -> asb.Airplane:
@@ -396,8 +395,6 @@ def a() -> asb.Airplane:
 if __name__ == "__main__":
     # import matplotlib
     # matplotlib.use("TkAgg")
-    import matplotlib.pyplot as plt
-    import aerosandbox.tools.pretty_plots as p
 
     airplane = a()
 

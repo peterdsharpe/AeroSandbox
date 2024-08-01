@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import pytest
 
 
 def test_conventional():

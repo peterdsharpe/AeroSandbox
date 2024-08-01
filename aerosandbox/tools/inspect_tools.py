@@ -149,7 +149,7 @@ def get_source_code_from_location(
             ### Do subsequent lines
             while parenthesis_level > 0:
                 add_line()
-    except OSError as e:
+    except OSError:
         raise FileNotFoundError(
             "\n".join(
                 [

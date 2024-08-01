@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import aerosandbox.numpy as np
 
 airfoil = asb.Airfoil("naca0008")
 

@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import aerosandbox.numpy as np
 
 af = asb.Airfoil("naca0012")
 cache = asb._asb_root / "geometry/airfoil/test_airfoil/naca0012.json"

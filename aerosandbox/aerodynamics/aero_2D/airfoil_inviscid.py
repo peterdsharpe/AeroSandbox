@@ -5,7 +5,7 @@ from aerosandbox.aerodynamics.aero_2D.singularities import (
     calculate_induced_velocity_line_singularities,
 )
 import aerosandbox.numpy as np
-from typing import Union, List, Optional
+from typing import Union, List
 
 
 class AirfoilInviscid(ImplicitAnalysis):
@@ -246,7 +246,7 @@ class AirfoilInviscid(ImplicitAnalysis):
         plt.gca().set_aspect("equal", adjustable="box")
         plt.xlabel(r"$x/c$")
         plt.ylabel(r"$y/c$")
-        plt.title(rf"Inviscid Airfoil: Flow Field")
+        plt.title(r"Inviscid Airfoil: Flow Field")
         plt.tight_layout()
         if show:
             plt.show()

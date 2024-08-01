@@ -198,7 +198,7 @@ def interpn(
 
         ### Transpose xi so that xi.shape is [n_points, n_dimensions].
         n_dimensions = len(points)
-        if not len(points) in xi.shape:
+        if len(points) not in xi.shape:
             raise ValueError("`xi` must have the shape (n_points, n_dimensions)!")
 
         if not xi.shape[1] == n_dimensions:

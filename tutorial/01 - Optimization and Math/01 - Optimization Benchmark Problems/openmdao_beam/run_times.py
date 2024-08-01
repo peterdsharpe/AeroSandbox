@@ -3,7 +3,6 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import itertools
 import matplotlib.patheffects as path_effects
-import pytest
 
 E = 1e3
 

@@ -24,7 +24,6 @@ aero = asb.AeroBuildup(
     ),
 ).run()
 
-from aerosandbox.tools.string_formatting import eng_string
 
 p.contour(
     Beta,

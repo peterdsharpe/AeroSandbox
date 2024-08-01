@@ -4,12 +4,9 @@ import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
 from aerosandbox.aerodynamics.aero_3D.avl import AVL
-from typing import Union, List, Dict
+from typing import Union, List
 import tempfile
-import warnings
-import os
 from textwrap import dedent
-import shutil
 
 
 class MSES(ExplicitAnalysis):
@@ -329,7 +326,7 @@ class MSES(ExplicitAnalysis):
                     continue
 
                 mplot_keystrokes = dedent(
-                    f"""\
+                    """\
                         1
                         12
                         0

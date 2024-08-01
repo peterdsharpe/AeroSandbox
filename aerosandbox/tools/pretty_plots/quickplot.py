@@ -77,21 +77,20 @@ def qp(
                     f"Couldn't parse QuickPlot call signature (dimension mismatch):\n\n{caller_source_code}",
                     stacklevel=2,
                 )
-        except ValueError as e:
+        except ValueError:
             warnings.warn(
                 f"Couldn't parse QuickPlot call signature (invalid source code):\n\n{caller_source_code}",
                 stacklevel=2,
             )
     except FileNotFoundError:
         warnings.warn(
-            f"Couldn't parse QuickPlot call signature (missing filepath).",
+            "Couldn't parse QuickPlot call signature (missing filepath).",
             stacklevel=2,
         )
 
     ##### Do the plotting:
 
     if backend == "plotly":
-        import plotly.express as px
         import plotly.graph_objects as go
 
         mode = "markers+lines"

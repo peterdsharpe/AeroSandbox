@@ -1,6 +1,5 @@
 from aerosandbox.modeling.fitting import FittedModel
 import pytest
-import aerosandbox.numpy as np
 from dataset_temperature import time, measured_temperature
 
 

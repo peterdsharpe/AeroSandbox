@@ -1,4 +1,3 @@
-import aerosandbox.numpy as np
 from aerosandbox.atmosphere.thermodynamics.gas import universal_gas_constant
 
 

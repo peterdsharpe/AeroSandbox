@@ -7,11 +7,10 @@ from aerosandbox.geometry.airfoil.airfoil_families import (
 )
 from aerosandbox.library.aerodynamics import transonic
 from aerosandbox.modeling.splines.hermite import (
-    linear_hermite_patch,
     cubic_hermite_patch,
 )
 from scipy import interpolate
-from typing import Callable, Union, Any, Dict, List
+from typing import Union, Any, Dict, List
 import json
 from pathlib import Path
 import os

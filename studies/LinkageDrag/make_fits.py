@@ -1,4 +1,3 @@
-import pandas as pd
 from read_data import df
 import aerosandbox as asb
 import aerosandbox.numpy as np

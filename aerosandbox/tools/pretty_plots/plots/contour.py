@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from typing import Tuple, Dict, Union, Callable, List
-from scipy import interpolate
+from typing import Dict, Union, Callable, List
 from aerosandbox.tools.string_formatting import eng_string
 
 

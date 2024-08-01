@@ -91,7 +91,6 @@ for key in ["CL", "CD", "CM", "analysis_confidence", "Top_Xtr", "Bot_Xtr", "mach
 
 
 import matplotlib.pyplot as plt
-import aerosandbox.tools.pretty_plots as p
 
 fig, ax = plt.subplots(figsize=(6, 3))
 af.draw()

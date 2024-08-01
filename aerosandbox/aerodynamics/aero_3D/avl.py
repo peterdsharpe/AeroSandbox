@@ -4,8 +4,7 @@ import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airplane, Wing, WingXSec, Fuselage, ControlSurface
 from aerosandbox.performance import OperatingPoint
-from typing import Union, List, Dict, Any
-import copy
+from typing import Union, List, Dict
 import tempfile
 import warnings
 
@@ -179,7 +178,7 @@ class AVL(ExplicitAnalysis):
             self.write_avl(directory / airplane_file)
 
             ### Open up AVL
-            import sys, os
+            import sys
 
             if sys.platform == "win32":
                 # Run AVL
@@ -388,7 +387,7 @@ class AVL(ExplicitAnalysis):
         ]
 
         # Set control surface deflections
-        run_file_contents += [f"d1 d1 1"]
+        run_file_contents += ["d1 d1 1"]
 
         return run_file_contents
 
@@ -471,7 +470,7 @@ class AVL(ExplicitAnalysis):
 
             if wing.symmetric:
                 avl_file += clean(
-                    f"""\
+                    """\
                 YDUPLICATE
                 0
                     
@@ -480,7 +479,7 @@ class AVL(ExplicitAnalysis):
 
             if wing_options["no_wake"]:
                 avl_file += clean(
-                    f"""\
+                    """\
                 NOWAKE
                 
                 """
@@ -488,7 +487,7 @@ class AVL(ExplicitAnalysis):
 
             if wing_options["no_alpha_beta"]:
                 avl_file += clean(
-                    f"""\
+                    """\
                 NOALBE
                 
                 """
@@ -496,7 +495,7 @@ class AVL(ExplicitAnalysis):
 
             if wing_options["no_load"]:
                 avl_file += clean(
-                    f"""\
+                    """\
                 NOLOAD
                 
                 """

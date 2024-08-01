@@ -1,8 +1,5 @@
-from typing import List
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.atmosphere import Atmosphere as atmo
-import sympy as sym
 from aerosandbox import cas
 from numpy import pi
 

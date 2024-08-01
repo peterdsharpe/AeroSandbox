@@ -3,7 +3,6 @@ import aerosandbox.numpy as np
 
 # import matplotlib.pyplot as plt
 # import aerosandbox.tools.pretty_plots as p
-from tqdm import tqdm
 
 # p.mpl.use('WebAgg')
 
