@@ -137,7 +137,7 @@ class SurrogateModel(AeroSandboxObject):
                 y_fit = self(x_fit)
 
             ### Plot the 2D figure
-            fig = plt.figure(dpi=200)
+            plt.figure(dpi=200)
             plt.plot(
                 x_data,
                 self.y_data,

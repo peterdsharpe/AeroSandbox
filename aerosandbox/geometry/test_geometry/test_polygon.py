@@ -13,14 +13,14 @@ def test_polygon_creation():
 def test_contains_points():
     p = Polygon(coordinates=np.array([[0, 0], [1, 0], [1, 1], [0, 1]]))
 
-    assert p.contains_points(0.5, 0.5) == True
-    assert p.contains_points(-0.1, 0.5) == False
-    assert p.contains_points(0.5, -0.1) == False
-    assert p.contains_points(-0.1, -0.1) == False
-    assert p.contains_points(1.1, 1.1) == False
-    assert p.contains_points(1.0, 1.0) == True
-    assert p.contains_points(0.5, 1.0) == True
-    assert p.contains_points(0.5, 1.1) == False
+    assert p.contains_points(0.5, 0.5)
+    assert not p.contains_points(-0.1, 0.5)
+    assert not p.contains_points(0.5, -0.1)
+    assert not p.contains_points(-0.1, -0.1)
+    assert not p.contains_points(1.1, 1.1)
+    assert p.contains_points(1.0, 1.0)
+    assert p.contains_points(0.5, 1.0)
+    assert not p.contains_points(0.5, 1.1)
 
     assert np.all(
         p.contains_points(

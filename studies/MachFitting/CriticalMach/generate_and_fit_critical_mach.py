@@ -3,29 +3,20 @@ import aerosandbox.numpy as np
 
 gamma = 1.4
 
-Cp_crit = lambda M: 2 / (gamma * M ** 2) * (
-        (
-                (1 + (gamma - 1) / 2 * M ** 2)
-                /
-                (1 + (gamma - 1) / 2)
-        ) ** (gamma / (gamma - 1))
-        - 1
-)
+def Cp_crit(M):
+    return 2 / (gamma * M ** 2) * (((1 + (gamma - 1) / 2 * M ** 2) / (1 + (gamma - 1) / 2)) ** (gamma / (gamma - 1)) - 1)
 
 # Prandtl-Glauert correction
-Cp_PG = lambda Cp0, M: Cp0 / (1 - M ** 2) ** 0.5
+def Cp_PG(Cp0, M):
+    return Cp0 / (1 - M ** 2) ** 0.5
 
 # Karman-Tsien correction
-Cp_KT = lambda Cp0, M: Cp0 / (
-        (1 - M ** 2) ** 0.5
-        + M ** 2 / (1 + (1 - M ** 2) ** 0.5) * (Cp0 / 2)
-)
+def Cp_KT(Cp0, M):
+    return Cp0 / ((1 - M ** 2) ** 0.5 + M ** 2 / (1 + (1 - M ** 2) ** 0.5) * (Cp0 / 2))
 
 ### Laitone's rule
-Cp_L = lambda Cp0, M: Cp0 / (
-        (1 - M ** 2) ** 0.5
-        + (M ** 2) * (1 + (gamma - 1) / 2 * M ** 2) / (1 + (1 - M ** 2) ** 0.5) * (Cp0 / 2)
-)
+def Cp_L(Cp0, M):
+    return Cp0 / ((1 - M ** 2) ** 0.5 + M ** 2 * (1 + (gamma - 1) / 2 * M ** 2) / (1 + (1 - M ** 2) ** 0.5) * (Cp0 / 2))
 
 M = np.linspace(0.001, 0.999, 500)
 

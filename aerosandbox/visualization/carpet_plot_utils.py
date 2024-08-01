@@ -67,7 +67,8 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
     """
     original_nans = np.isnan(array)
 
-    nanfrac = lambda array: np.sum(np.isnan(array)) / len(array.flatten())
+    def nanfrac(array):
+        return np.sum(np.isnan(array)) / len(array.flatten())
 
     def item(i, j):
         if i < 0 or j < 0:  # don't allow wrapping other than what's controlled here
@@ -77,8 +78,10 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
         except IndexError:
             return np.nan
 
-    print_title = lambda name: print(f"{name}\nIter | NaN Fraction")
-    print_progress = lambda iter: print(f"{iter:4} | {nanfrac(array):.6f}")
+    def print_title(name):
+        return print(f"{name}\nIter | NaN Fraction")
+    def print_progress(iter):
+        return print(f"{iter:4} | {nanfrac(array):.6f}")
 
     # Bridging
     print_title("Bridging")

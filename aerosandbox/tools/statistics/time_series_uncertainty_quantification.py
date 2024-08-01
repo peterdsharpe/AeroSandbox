@@ -51,7 +51,8 @@ def estimate_noise_standard_deviation(
     ##### Noise Variance Reconstruction #####
     from scipy.special import gammaln
 
-    ln_factorial = lambda x: gammaln(x + 1)
+    def ln_factorial(x):
+        return gammaln(x + 1)
 
     ### For speed, pre-compute the log-factorial of integers from 1 to estimator_order
     # ln_f = ln_factorial(np.arange(estimator_order + 1))
@@ -166,21 +167,26 @@ def bootstrap_fits(
     y_rng = y_max - y_min
 
     if normalize:
-        x_normalize = lambda x: (x - x_min) / x_rng
-        y_normalize = lambda y: (y - y_min) / y_rng
+        def x_normalize(x):
+            return (x - x_min) / x_rng
+        def y_normalize(y):
+            return (y - y_min) / y_rng
         # x_unnormalize = lambda x_n: x_n * x_rng + x_min
-        y_unnormalize = lambda y_n: y_n * y_rng + y_min
+        def y_unnormalize(y_n):
+            return y_n * y_rng + y_min
 
-        x_stdev_normalized = x_noise_stdev / x_rng
+        x_noise_stdev / x_rng
         y_stdev_normalized = y_noise_stdev / y_rng
 
     else:
-        x_normalize = lambda x: x
-        y_normalize = lambda y: y
+        def x_normalize(x):
+            return x
+        def y_normalize(y):
+            return y
         # x_unnormalize = lambda x_n: x_n
-        y_unnormalize = lambda y_n: y_n
+        def y_unnormalize(y_n):
+            return y_n
 
-        x_stdev_normalized = x_noise_stdev
         y_stdev_normalized = y_noise_stdev
 
     with tqdm(

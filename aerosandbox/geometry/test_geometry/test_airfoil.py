@@ -44,7 +44,7 @@ def test_repanel(naca4412):
 
 
 def test_containts_points(naca4412):
-    assert naca4412.contains_points(x=0.5, y=0) == True
+    assert naca4412.contains_points(x=0.5, y=0)
     assert np.all(
         naca4412.contains_points(x=np.array([0.5, 0.5]), y=np.array([0, -0.1]))
         == np.array([True, False])

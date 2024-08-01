@@ -420,7 +420,7 @@ def mass_fuselage(
     # Torenbeek Eq. D-3
     fuselage.fineness_ratio()
 
-    fuselage_quasi_slenderness_ratio = fuselage.fineness_ratio(
+    fuselage.fineness_ratio(
         assumed_shape="sears_haack"
     )
 
@@ -428,7 +428,9 @@ def mass_fuselage(
 
     W_sk = 0.05428 * k_lambda * S_g**1.07 * never_exceed_airspeed**0.743
 
-    W_g = W_sk + W_str + W_fr
+    W_sk + W_str + W_fr
+
+    raise NotImplementedError()
 
 
 def mass_propeller(

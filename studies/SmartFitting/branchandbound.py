@@ -52,7 +52,7 @@ def branch_and_bound(obj, lower_bound, branch, init, term, eta, guess=None):
     guess- guess of an upper bound, can be produced by heuristic
     '''
     # sets the initial upper bound
-    if guess != None:
+    if guess is not None:
         best_value = guess(eta)
     else:
         best_value = float('inf')
@@ -99,22 +99,22 @@ def lower_bound(n):
 
     opti = asb.Opti()
     coeffs = opti.variable(init_guess=np.zeros(degree + 1))
-    n_new = np.where(n == None, 1, n)
+    n_new = np.where(n is None, 1, n)
     n_new = np.array(n_new)
     y_model = model(coeffs * n_new)
     error = loss(y_model, y_data)
     opti.minimize(
-        error + eta * np.sum(np.where(n == None, 0, n))
+        error + eta * np.sum(np.where(n is None, 0, n))
     )
     sol = opti.solve(verbose=False)
-    return sol.value(error) + eta * np.sum(np.where(n == None, 0, n))
+    return sol.value(error) + eta * np.sum(np.where(n is None, 0, n))
 
 
 def branch(n):
     n1 = np.copy(n)
     n2 = np.copy(n)
     for i in range(len(n)):
-        if n[i] == None:
+        if n[i] is None:
             n1[i] = 0
             n2[i] = 1
             return n1, n2

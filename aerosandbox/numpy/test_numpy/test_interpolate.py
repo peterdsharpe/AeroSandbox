@@ -105,12 +105,12 @@ def test_interpn_bounds_error_one_sample():
 
     point = np.array([5.21, 3.12, 1.15])
     with pytest.raises(ValueError):
-        value = np.interpn(points, values, point)
+        np.interpn(points, values, point)
 
     ### CasADi test
     point = cas.DM(point)
     with pytest.raises(ValueError):
-        value = np.interpn(points, values, point)
+        np.interpn(points, values, point)
 
 
 def test_interpn_bounds_error_multiple_samples():
@@ -125,12 +125,12 @@ def test_interpn_bounds_error_multiple_samples():
 
     point = np.array([[2.21, 3.12, 1.15], [3.42, 5.81, 2.43]])
     with pytest.raises(ValueError):
-        value = np.interpn(points, values, point)
+        np.interpn(points, values, point)
 
     ### CasADi test
     point = cas.DM(point)
     with pytest.raises(ValueError):
-        value = np.interpn(points, values, point)
+        np.interpn(points, values, point)
 
 
 def test_interpn_fill_value():

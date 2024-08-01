@@ -647,7 +647,8 @@ if __name__ == "__main__":
 
     assert mp1 + mp2 - mp2 == mp1
 
-    r = lambda: np.random.randn()
+    def r():
+        return np.random.randn()
 
     valid = False
     while not valid:

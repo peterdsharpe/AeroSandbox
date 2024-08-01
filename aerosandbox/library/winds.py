@@ -223,10 +223,10 @@ if __name__ == "__main__":
 
         levels = np.arange(0, 80.1, 5)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        CF = plt.contourf(
+        plt.contourf(
             *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max"
         )
-        cbar = plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
+        plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 
         plt.xticks(
@@ -280,10 +280,10 @@ if __name__ == "__main__":
 
         levels = np.arange(0, 80.1, 5)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        CF = plt.contourf(
+        plt.contourf(
             *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max"
         )
-        cbar = plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
+        plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 
         lat_label_vals = np.arange(-80, 80.1, 20)
@@ -316,10 +316,10 @@ if __name__ == "__main__":
 
         levels = np.arange(10, 20.1, 1)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        CF = plt.contourf(
+        plt.contourf(
             *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="both"
         )
-        cbar = plt.colorbar(label="Tropopause Altitude [km]", extendrect=True)
+        plt.colorbar(label="Tropopause Altitude [km]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f km")
 
         plt.xticks(
@@ -373,10 +373,10 @@ if __name__ == "__main__":
 
         levels = np.arange(0, 80.1, 5)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        CF = plt.contourf(
+        plt.contourf(
             *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max"
         )
-        cbar = plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
+        plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 
         plt.xticks(

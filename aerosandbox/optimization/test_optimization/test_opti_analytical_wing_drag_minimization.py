@@ -62,7 +62,7 @@ def test_log_transformed_negativity_error():
     opti = asb.Opti()
 
     with pytest.raises(ValueError):
-        myvar = opti.variable(log_transform=True, init_guess=-1)
+        opti.variable(log_transform=True, init_guess=-1)
 
 
 def test_fixed_variable():

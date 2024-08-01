@@ -59,10 +59,8 @@ opti.subject_to(
     af.local_thickness(np.linspace(0, 1, 20)[1:-1]) > 0
 )
 
-get_wiggliness = lambda af: sum([
-    np.sum(np.diff(np.diff(array)) ** 2)
-    for array in [af.lower_weights, af.upper_weights]
-])
+def get_wiggliness(af):
+    return sum([np.sum(np.diff(np.diff(array)) ** 2) for array in [af.lower_weights, af.upper_weights]])
 
 opti.subject_to(
     get_wiggliness(af) < 1

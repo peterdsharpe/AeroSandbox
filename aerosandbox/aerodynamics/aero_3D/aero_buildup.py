@@ -445,7 +445,6 @@ class AeroBuildup(ExplicitAnalysis):
             "r": (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
 
-        original_op_point = self.op_point
 
         # Compute the point analysis, which returns a dictionary that we will later add key:value pairs to.
         run_base = self.run()

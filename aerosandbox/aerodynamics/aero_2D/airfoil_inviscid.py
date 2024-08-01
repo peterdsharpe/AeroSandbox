@@ -219,7 +219,7 @@ class AirfoilInviscid(ImplicitAnalysis):
             V[contains] = np.nan
 
         speed = (U**2 + V**2) ** 0.5
-        Cp = 1 - speed**2
+        # Cp = 1 - speed**2
 
         ### Draw the airfoils
         for airfoil in self.airfoils:

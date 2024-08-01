@@ -3,7 +3,7 @@ import pytest
 
 
 def test_init():  # TODO actually test this
-    xsec = WingXSec(
+    WingXSec(
         xyz_le=np.array([0, 0, 0]),
         chord=1.0,
         twist=0,

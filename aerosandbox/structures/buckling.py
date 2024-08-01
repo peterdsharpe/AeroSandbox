@@ -114,7 +114,7 @@ def thin_walled_tube_crippling_buckling_critical_load(
         # Following the Air Force Stress Manual, Section 2.3.2.1, Eq. 2-20.
         # The above value assumes mu = 0.3, which is a good assumption for most metals.
 
-    crippling_stress = 0.3 * (elastic_modulus * wall_thickness / radius)
+    crippling_stress = crippling_stress_constant * (elastic_modulus * wall_thickness / radius)
 
     tube_xsec_area = 2 * np.pi * radius * wall_thickness
 

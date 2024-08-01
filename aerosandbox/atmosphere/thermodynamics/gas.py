@@ -51,7 +51,8 @@ class PerfectGas:
         self.effective_collision_diameter = effective_collision_diameter
 
     def __repr__(self) -> str:
-        f = lambda s, u: eng_string(s, unit=u, format="%.6g")
+        def f(val, unit):
+            return eng_string(val, unit=unit, format="%.6g")
 
         return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume ** self.ratio_of_specific_heats: .6g})"
 

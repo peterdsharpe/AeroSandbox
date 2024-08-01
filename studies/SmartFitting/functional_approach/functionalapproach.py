@@ -86,7 +86,7 @@ class Node():
         returns string representation of tree
         
         '''
-        if pnum == None:
+        if pnum is None:
             pnum = [0]
         s = self.oper.__name__ + '('
         for i in self.inputs:
@@ -118,7 +118,6 @@ class Node():
         opti = asb.Opti()
         string_sol = self.get_sol()
         L = []
-        x = x_data
         for j in range(self.pnum):
             exec('p' + str(j + 1) + '=' + 'opti.variable(init_guess=1)')
             exec('L.append(p' + str(j + 1) + ')')
