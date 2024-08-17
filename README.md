@@ -268,7 +268,20 @@ For more details, see the [changelog](./CHANGELOG.md).
 
 ### Citation & Commercial Use
 
-If you find AeroSandbox useful in a research publication, please cite it using the following BibTeX snippet:
+If you find AeroSandbox useful in a research publication, please cite one of the following publications:
+
+[The author's PhD thesis](./tutorial/sharpe-pds-phd-AeroAstro-2024-thesis.pdf):
+
+```bibtex
+@phdthesis{aerosandbox_phd_thesis,
+   title = {Accelerating Practical Engineering Design Optimization with Computational Graph Transformations},
+   author = {Sharpe, Peter D.},
+   school = {Massachusetts Institute of Technology}, 
+   year = {2024},
+}
+```
+
+[The author's Master's thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf):
 
 ```bibtex
 @mastersthesis{aerosandbox,
