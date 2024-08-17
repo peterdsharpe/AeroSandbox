@@ -212,9 +212,9 @@ For more installation details (e.g., if you're new to Python), [see here](./INST
 
 To get started, [check out the tutorials folder here](./tutorial/)! All tutorials are viewable in-browser, or you can open them as Jupyter notebooks by cloning this repository.
 
-For a more detailed and theory-heavy introduction to AeroSandbox, [please see this thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf).
+For a more detailed and theory-heavy introduction to AeroSandbox, please see the [author's PhD thesis](./tutorial/sharpe-pds-phd-AeroAstro-2024-thesis.pdf) and [master's thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf).
 
-For a yet-more-detailed developer-level description of AeroSandbox modules, [please see the developer README](aerosandbox/README.md).
+For a developer-oriented description of AeroSandbox internal modules, [please see the developer README](aerosandbox/README.md).
 
 For fully-detailed API documentation, see [the documentation website](https://aerosandbox.readthedocs.io/en/master/).
 
