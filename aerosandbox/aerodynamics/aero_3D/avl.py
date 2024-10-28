@@ -244,7 +244,7 @@ class AVL(ExplicitAnalysis):
 
             keystrokes = "\n".join(keystroke_file_contents)
 
-            command = f"{self.avl_command} {airplane_file}"
+            command = [self.avl_command, airplane_file]
 
             ### Execute
             try:
