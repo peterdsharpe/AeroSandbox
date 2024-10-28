@@ -448,7 +448,6 @@ class LiftingLine(ExplicitAnalysis):
             "r": (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
 
-
         # Compute the point analysis, which returns a dictionary that we will later add key:value pairs to.
         run_base = self.run()
 
@@ -1153,7 +1152,8 @@ class LiftingLine(ExplicitAnalysis):
 
             return fig.draw(
                 show=show,
-                colorbar_title=colorbar_label**show_kwargs,
+                colorbar_title=colorbar_label,
+                **show_kwargs,
             )
 
         elif backend == "pyvista":
@@ -1321,7 +1321,6 @@ if __name__ == "__main__":
 
     resolutions = 1 + np.arange(20)
     aeros = get_aero(resolutions)
-
 
     fig, ax = plt.subplots(3, 1)
     ax[0].semilogx(resolutions, [aero["CL"] for aero in aeros])

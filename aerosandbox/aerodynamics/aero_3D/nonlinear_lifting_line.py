@@ -833,7 +833,8 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
             return fig.draw(
                 show=show,
-                colorbar_title=colorbar_label**show_kwargs,
+                colorbar_title=colorbar_label,
+                **show_kwargs,
             )
 
         elif backend == "pyvista":
