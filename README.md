@@ -268,7 +268,7 @@ For more details, see the [changelog](./CHANGELOG.md).
 
 ### Citation & Commercial Use
 
-If you find AeroSandbox useful in a research publication, please cite one of the following publications:
+If you find AeroSandbox useful in a research publication, please cite the following publications:
 
 [The author's PhD thesis](./tutorial/sharpe-pds-phd-AeroAstro-2024-thesis.pdf):
 
