@@ -1,12 +1,13 @@
-from aerosandbox.common import ExplicitAnalysis
-import aerosandbox.numpy as np
 import subprocess
-from pathlib import Path
-from aerosandbox.geometry import Airplane, Wing, WingXSec, Fuselage, ControlSurface
-from aerosandbox.performance import OperatingPoint
-from typing import Union, List, Dict
 import tempfile
 import warnings
+from pathlib import Path
+from typing import Dict, List, Union
+
+import aerosandbox.numpy as np
+from aerosandbox.common import ExplicitAnalysis
+from aerosandbox.geometry import Airplane, ControlSurface, Fuselage, Wing, WingXSec
+from aerosandbox.performance import OperatingPoint
 
 
 class AVL(ExplicitAnalysis):
@@ -244,7 +245,7 @@ class AVL(ExplicitAnalysis):
 
             keystrokes = "\n".join(keystroke_file_contents)
 
-            command = f"{self.avl_command} {airplane_file}"
+            command = [self.avl_command, airplane_file]
 
             ### Execute
             try:
@@ -341,7 +342,6 @@ class AVL(ExplicitAnalysis):
             return res
 
     def _default_keystroke_file_contents(self) -> List[str]:
-
         run_file_contents = []
 
         # Disable graphics
@@ -441,7 +441,6 @@ class AVL(ExplicitAnalysis):
         airfoil_counter = 0
 
         for wing in airplane.wings:
-
             wing_options = self.get_options(wing)
 
             spacing_line = f"{wing_options['chordwise_resolution']}   {self.AVL_spacing_parameters[wing_options['chordwise_spacing']]}"
@@ -533,7 +532,6 @@ class AVL(ExplicitAnalysis):
 
             ### Write the commands for each wing section
             for i, xsec in enumerate(wing.xsecs):
-
                 xsec_options = self.get_options(xsec)
 
                 xsec_def_line = f"{xsec.xyz_le[0]:.8g} {xsec.xyz_le[1]:.8g} {xsec.xyz_le[2]:.8g} {xsec.chord:.8g} {xsec.twist:.8g}"
@@ -743,7 +741,6 @@ class AVL(ExplicitAnalysis):
         index = s.find(data_identifier)
 
         while index != -1:  # While there are still data identifiers:
-
             key = ""  # start with a blank key, which we will build up as we read
 
             i = index - 1  # Starting from the left of the identifier
@@ -804,10 +801,8 @@ class AVL(ExplicitAnalysis):
 
 
 if __name__ == "__main__":
-
     ### Import Vanilla Airplane
     import aerosandbox as asb
-
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.vanilla import (
         airplane as vanilla,
     )
