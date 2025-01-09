@@ -284,7 +284,7 @@ If you find AeroSandbox useful in a research publication, please cite one of the
 [The author's Master's thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf):
 
 ```bibtex
-@mastersthesis{aerosandbox,
+@mastersthesis{aerosandbox_masters_thesis,
     title = {AeroSandbox: A Differentiable Framework for Aircraft Design Optimization},
     author = {Sharpe, Peter D.},
     school = {Massachusetts Institute of Technology},
