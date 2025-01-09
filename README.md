@@ -268,7 +268,7 @@ For more details, see the [changelog](./CHANGELOG.md).
 
 ### Citation & Commercial Use
 
-If you find AeroSandbox useful in a research publication, please cite one of the following publications:
+If you find AeroSandbox useful in your research, please cite the following publications:
 
 [The author's PhD thesis](./tutorial/sharpe-pds-phd-AeroAstro-2024-thesis.pdf):
 
@@ -298,7 +298,7 @@ Commercial users: I'm more than happy to discuss consulting work for active Aero
 
 [MIT License applies, full terms here](LICENSE.txt). In short: use AeroSandbox for anything you want (commercial or non-commercial). AeroSandbox is released in hope that it will be useful but without any warranty of merchantability (either express or implied). 
 
-If you use AeroSandbox, attribution is appreciated.
+If you use AeroSandbox, public attribution is appreciated. In particular, it's especially helpful when industry users share when and how they're using AeroSandbox, since it helps the team prioritize feature development.
 
 ## Stargazers over time
 
