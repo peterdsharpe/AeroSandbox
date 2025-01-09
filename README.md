@@ -274,10 +274,11 @@ If you find AeroSandbox useful in your research, please cite the following publi
 
 ```bibtex
 @phdthesis{aerosandbox_phd_thesis,
-   title = {Accelerating Practical Engineering Design Optimization with Computational Graph Transformations},
-   author = {Sharpe, Peter D.},
-   school = {Massachusetts Institute of Technology}, 
-   year = {2024},
+    title = {Accelerating Practical Engineering Design Optimization with Computational Graph Transformations},
+    author = {Sharpe, Peter D.},
+    school = {Massachusetts Institute of Technology}, 
+    year = {2024},
+    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/157809}},
 }
 ```
 
@@ -288,7 +289,8 @@ If you find AeroSandbox useful in your research, please cite the following publi
     title = {AeroSandbox: A Differentiable Framework for Aircraft Design Optimization},
     author = {Sharpe, Peter D.},
     school = {Massachusetts Institute of Technology},
-    year = {2021}
+    year = {2021},
+    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/140023}},
 }
 ```
 
