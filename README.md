@@ -278,7 +278,7 @@ If you find AeroSandbox useful in your research, please cite the following publi
     author = {Sharpe, Peter D.},
     school = {Massachusetts Institute of Technology}, 
     year = {2024},
-    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/157809}},
+    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/157809}}
 }
 ```
 
@@ -290,7 +290,7 @@ If you find AeroSandbox useful in your research, please cite the following publi
     author = {Sharpe, Peter D.},
     school = {Massachusetts Institute of Technology},
     year = {2021},
-    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/140023}},
+    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/140023}}
 }
 ```
 
