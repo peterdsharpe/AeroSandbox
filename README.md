@@ -268,7 +268,7 @@ For more details, see the [changelog](./CHANGELOG.md).
 
 ### Citation & Commercial Use
 
-If you find AeroSandbox useful in a research publication, please cite one of the following publications:
+If you find AeroSandbox useful in a research publication, please cite the following publications:
 
 [The author's PhD thesis](./tutorial/sharpe-pds-phd-AeroAstro-2024-thesis.pdf):
 
@@ -303,3 +303,7 @@ If you use AeroSandbox, attribution is appreciated.
 ## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/peterdsharpe/AeroSandbox.svg)](https://starchart.cc/peterdsharpe/AeroSandbox) 
+
+## Supported by
+
+<a href="https://jb.gg/OpenSourceSupport"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" alt="JetBrains logo."></a>
