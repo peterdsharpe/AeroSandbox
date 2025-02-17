@@ -38,8 +38,9 @@ def get_caller_source_location(
         you higher (i.e., more end-user-facing) in the stack. Same behaviour as the `stacklevel` argument in
         warnings.warn().
 
-        truncate_stacklevel: If True, will truncate the stacklevel to the maximum possible value. This is useful if you
-
+        truncate_stacklevel: If True, will truncate the stacklevel to the maximum possible value. This
+        allows handling of an error case where the supplied `stacklevel` argument exceeds the depth of the
+        actual call stack.
 
     Returns: A tuple of:
         (filename, lineno, code_context)
@@ -177,7 +178,11 @@ def get_source_code_from_location(
     return source
 
 
-def get_caller_source_code(stacklevel: int = 1, strip_lines: bool = False) -> str:
+def get_caller_source_code(
+        stacklevel: int = 1,
+        truncate_stacklevel: bool=False,
+        strip_lines: bool = False
+) -> str:
     """
     Gets the source code of wherever this function is called.
 
@@ -189,6 +194,10 @@ def get_caller_source_code(stacklevel: int = 1, strip_lines: bool = False) -> st
         you higher (i.e., more end-user-facing) in the stack. Same behaviour as the `stacklevel` argument in
         warnings.warn().
 
+        truncate_stacklevel: If True, will truncate the stacklevel to the maximum possible value. This
+        allows handling of an error case where the supplied `stacklevel` argument exceeds the depth of the
+        actual call stack.
+
         strip_lines: A boolean flag about whether or not to strip leading and trailing whitespace off each line of a
         multi-line function call. See the built-in string method `str.strip()` for behaviour.
 
@@ -197,7 +206,8 @@ def get_caller_source_code(stacklevel: int = 1, strip_lines: bool = False) -> st
     """
 
     filename, lineno, code_context = get_caller_source_location(
-        stacklevel=stacklevel + 1
+        stacklevel=stacklevel + 1,
+        truncate_stacklevel=truncate_stacklevel,
     )
 
     return get_source_code_from_location(
