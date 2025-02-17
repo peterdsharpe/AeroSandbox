@@ -38,6 +38,16 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.8
+
+- Fixes minor bug that could occur with various functions in `aerosandbox.tools.inspect_tools`, where having `stacklevel` too high could cause the frame to pop off the top of the stack.
+
+#### 4.2.7
+
+- Fixes an AVL bug found by @JohannesKimphove.
+- Adds version compatibility with NeuralFoil 0.3.0, which offers large speed improvements using caching of neural network parameters.
+- Drops support for Python 3.8, to allow better typing and f-strings.
+
 #### 4.2.6
 
 - Verified compatibility with NumPy 2.0.0+; version pin removed.
