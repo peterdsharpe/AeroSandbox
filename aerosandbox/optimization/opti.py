@@ -321,7 +321,8 @@ class Opti(cas.Opti):
 
             # Track where this variable was declared in code.
             filename, lineno, code_context = inspect_tools.get_caller_source_location(
-                stacklevel=_stacklevel + 1
+                stacklevel=_stacklevel + 1,
+                truncate_stacklevel=True,
             )
             self._variable_declarations[self._variable_index_counter] = (
                 filename,
@@ -429,7 +430,8 @@ class Opti(cas.Opti):
             # Track where this constraint was declared in code.
             n_cons = np.length(constraint)
             filename, lineno, code_context = inspect_tools.get_caller_source_location(
-                stacklevel=_stacklevel + 1
+                stacklevel=_stacklevel + 1,
+                truncate_stacklevel=True,
             )
             self._constraint_declarations[self._constraint_index_counter] = (
                 filename,

@@ -7,6 +7,7 @@ import numpy as np
 
 def get_caller_source_location(
     stacklevel: int = 1,
+    truncate_stacklevel: bool=False,
 ) -> (Path, int, str):
     """
     Gets the file location where this function itself (`get_caller_source_location()`) is called.
@@ -37,6 +38,9 @@ def get_caller_source_location(
         you higher (i.e., more end-user-facing) in the stack. Same behaviour as the `stacklevel` argument in
         warnings.warn().
 
+        truncate_stacklevel: If True, will truncate the stacklevel to the maximum possible value. This is useful if you
+
+
     Returns: A tuple of:
         (filename, lineno, code_context)
 
@@ -51,7 +55,16 @@ def get_caller_source_location(
     ### Go up `stacklevel` frames from the current one to get to the caller frame.
     frame = inspect.currentframe()
     for _ in range(stacklevel):
-        frame = frame.f_back
+        if frame.f_back is None:
+            if truncate_stacklevel:
+                break
+            else:
+                raise ValueError(
+                    f"Argument `{stacklevel=}` results in popping off the top of the traceback.\n"
+                    f"Use a lower value, or set `truncate_stacklevel=True` to suppress this error."
+                )
+        else:
+            frame = frame.f_back
 
     ### Extract the frame info (an `inspect.Traceback` type) from the caller frame
     frame_info: inspect.Traceback = inspect.getframeinfo(frame)
