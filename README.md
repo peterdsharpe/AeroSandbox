@@ -268,27 +268,29 @@ For more details, see the [changelog](./CHANGELOG.md).
 
 ### Citation & Commercial Use
 
-If you find AeroSandbox useful in a research publication, please cite the following publications:
+If you find AeroSandbox useful in your research, please cite the following publications:
 
 [The author's PhD thesis](./tutorial/sharpe-pds-phd-AeroAstro-2024-thesis.pdf):
 
 ```bibtex
 @phdthesis{aerosandbox_phd_thesis,
-   title = {Accelerating Practical Engineering Design Optimization with Computational Graph Transformations},
-   author = {Sharpe, Peter D.},
-   school = {Massachusetts Institute of Technology}, 
-   year = {2024},
+    title = {Accelerating Practical Engineering Design Optimization with Computational Graph Transformations},
+    author = {Sharpe, Peter D.},
+    school = {Massachusetts Institute of Technology}, 
+    year = {2024},
+    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/157809}}
 }
 ```
 
 [The author's Master's thesis](./tutorial/sharpe-pds-sm-AeroAstro-2021-thesis.pdf):
 
 ```bibtex
-@mastersthesis{aerosandbox,
+@mastersthesis{aerosandbox_masters_thesis,
     title = {AeroSandbox: A Differentiable Framework for Aircraft Design Optimization},
     author = {Sharpe, Peter D.},
     school = {Massachusetts Institute of Technology},
-    year = {2021}
+    year = {2021},
+    note = {Available at \url{https://dspace.mit.edu/handle/1721.1/140023}}
 }
 ```
 
@@ -298,7 +300,7 @@ Commercial users: I'm more than happy to discuss consulting work for active Aero
 
 [MIT License applies, full terms here](LICENSE.txt). In short: use AeroSandbox for anything you want (commercial or non-commercial). AeroSandbox is released in hope that it will be useful but without any warranty of merchantability (either express or implied). 
 
-If you use AeroSandbox, attribution is appreciated.
+If you use AeroSandbox, public attribution is appreciated. In particular, it's especially helpful when industry users share when and how they're using AeroSandbox, since it helps the team prioritize feature development.
 
 ## Stargazers over time
 
