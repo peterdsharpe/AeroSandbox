@@ -200,6 +200,10 @@ This is all pretty standard across all scientific computing in Python:
 			another_param = {}
 	```
 
+## Intellectual Property Ownership
+
+As a condition of contribution to this repository, contributors agree to transfer all right, title, and interest in their contributions to the Core Developers of this repository. The Core Developers are defined as the set of individuals who, at any time, simultaneously fulfill all three criteria: a) They are authorized as a collaborator on this GitHub repository, b) their name is listed in the `README.md` as an author, and c) their total number of Git commits to this repository is at least 20% that of the individual with the highest number of commits to this repository. This is not intended to impede the ability of contributors to use their own contributions, but rather to allow Core Developers to make timely decisions for the project without tracking down all contributors who have made minor commits many years ago. Notably, the Core Developers grant both the contributor and other entities the broad rights described in `LICENSE.txt`.
+
 # Code of Conduct
 
 There is just one rule when interacting with this project:
