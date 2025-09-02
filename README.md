@@ -227,7 +227,7 @@ You can print documentation and examples for any AeroSandbox object by using the
 One final point to note: **all inputs and outputs to AeroSandbox are expressed in base SI units, or derived units thereof** (e.g., m, kg, sec, N, m/s, J, Pa). Since this unit system is [coherent](https://en.wikipedia.org/wiki/Coherence_(units_of_measurement)), an [enormous number of quantities](https://en.wikipedia.org/wiki/SI_derived_unit) can be converted without any scaling factors. This improves readability and reduces the likelihood of errors.
 
 There are only two exceptions to this SI-everywhere rule:
-1. If alternate units are noted in a variable name's suffix. For example:
+1. If alternate units are used, this is noted in the variable name's suffix. For example:
 
    * `battery_capacity` → Joules
    * `battery_capacity_watt_hours` → Watt-hours
@@ -309,3 +309,4 @@ If you use AeroSandbox, public attribution is appreciated. In particular, it's e
 ## Supported by
 
 <a href="https://jb.gg/OpenSourceSupport"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" alt="JetBrains logo."></a>
+
