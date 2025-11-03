@@ -844,6 +844,7 @@ class Airplane(AeroSandboxObject):
         self,
         minimum_airfoil_TE_thickness: float = 0.001,
         fuselage_tol: float = 1e-4,
+        split_leading_edge: bool = True,
     ) -> "Workplane":
         """
         Uses the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
@@ -892,28 +893,39 @@ class Airplane(AeroSandboxObject):
 
                 LE_index = af.LE_index()
 
-                xsec_wires.append(
-                    cq.Workplane(
+                workplane = cq.Workplane(
                         inPlane=cq.Plane(
                             origin=tuple(xsec.xyz_le),
                             xDir=tuple(csys[0]),
                             normal=tuple(-csys[1]),
                         )
                     )
-                    .spline(
-                        listOfXYTuple=[
-                            tuple(xy * xsec.chord)
-                            for xy in af.coordinates[:LE_index, :]
-                        ]
+                if split_leading_edge:
+                    xsec_wires.append(
+                        workplane.spline(
+                            listOfXYTuple=[
+                                tuple(xy * xsec.chord)
+                                for xy in af.coordinates[:LE_index, :]
+                            ]
+                        )
+                        .spline(
+                            listOfXYTuple=[
+                                tuple(xy * xsec.chord)
+                                for xy in af.coordinates[LE_index:, :]
+                            ]
+                        )
+                        .close()
                     )
-                    .spline(
-                        listOfXYTuple=[
-                            tuple(xy * xsec.chord)
-                            for xy in af.coordinates[LE_index:, :]
-                        ]
+                else:
+                    xsec_wires.append(
+                        workplane.spline(
+                            listOfXYTuple=[
+                                tuple(xy * xsec.chord)
+                                for xy in af.coordinates
+                            ]
+                        )
+                        .close()
                     )
-                    .close()
-                )
 
             wire_collection = xsec_wires[0]
             for s in xsec_wires[1:]:
@@ -976,7 +988,8 @@ class Airplane(AeroSandboxObject):
         return assembly
 
     def export_cadquery_geometry(
-        self, filename: Union[Path, str], minimum_airfoil_TE_thickness: float = 0.001
+        self, filename: Union[Path, str], minimum_airfoil_TE_thickness: float = 0.001,
+        split_leading_edge: bool = True,
     ) -> None:
         """
         Exports the airplane geometry to a STEP file.
@@ -993,6 +1006,7 @@ class Airplane(AeroSandboxObject):
         """
         assembly = self.generate_cadquery_geometry(
             minimum_airfoil_TE_thickness=minimum_airfoil_TE_thickness,
+            split_leading_edge=split_leading_edge
         )
         assembly.export(filename)
 

@@ -38,7 +38,7 @@ def test_cadquery_export():
         airplane = Airplane(
                 wings = [w("FrontWing", 1, 0), w("BackWing", 3, 5)],
                 fuselages = [f("Fuselage", 0)])
-        airplane.export_cadquery_geometry(fname)
+        airplane.export_cadquery_geometry(fname, split_leading_edge=False)
         step_file = open(fname).read()
         assert "'FrontWing'" in step_file
         assert "'BackWing'" in step_file
