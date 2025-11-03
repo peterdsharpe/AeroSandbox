@@ -1,3 +1,4 @@
+import itertools
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union, Optional, Tuple
@@ -856,7 +857,7 @@ class Airplane(AeroSandboxObject):
 
             tol: The geometric tolerance (meters) to use when generating the CAD geometry. This is passed directly to the CADQuery
 
-        Returns: A CADQuery Workplane object containing the CAD geometry of the airplane.
+        Returns: A CADQuery Assembly object containing the CAD parts of the airplane as named parts.
 
         """
         try:
@@ -866,7 +867,17 @@ class Airplane(AeroSandboxObject):
                 "The `cadquery` library is required to use this function. Please install it with `pip install cadquery`."
             )
 
-        solids = []
+        assembly = cq.Assembly()
+
+        def add_to_assembly(assembly, part, name):
+            part = part.clean().val().scale(1000) # Default STEP units are mm
+            if name not in assembly:
+                assembly.add(part, name=name)
+                return
+            for i in itertools.count(start=1):
+                if f'{name}_{i}' not in assembly:
+                    assembly.add(part, name=f'{name}_{i}')
+                    return
 
         for wing in self.wings:
 
@@ -910,12 +921,13 @@ class Airplane(AeroSandboxObject):
 
             loft = wire_collection.loft(ruled=True, clean=False)
 
-            solids.append(loft)
+            # DRY cleanup: set Wing.DEFAULT_NAME to "Untitled"
+            add_to_assembly(assembly, loft, "wing" if wing.name == "Untitled" else wing.name)
 
             if wing.symmetric:
                 loft = loft.mirror(mirrorPlane="XZ", union=False)
 
-                solids.append(loft)
+                add_to_assembly(assembly, loft, "wing" if wing.name == "Untitled" else wing.name)
 
         for fuse in self.fuselages:
 
@@ -959,13 +971,9 @@ class Airplane(AeroSandboxObject):
 
             loft = wire_collection.loft(ruled=True, clean=False)
 
-            solids.append(loft)
+            add_to_assembly(assembly, loft, "fuselage" if fuse.name == "Untitled" else fuse.name)
 
-        solid = solids[0]
-        for s in solids[1:]:
-            solid.add(s)
-
-        return solid.clean()
+        return assembly
 
     def export_cadquery_geometry(
         self, filename: Union[Path, str], minimum_airfoil_TE_thickness: float = 0.001
@@ -983,17 +991,10 @@ class Airplane(AeroSandboxObject):
 
         Returns: None, but exports the airplane geometry to a STEP file.
         """
-        solid = self.generate_cadquery_geometry(
+        assembly = self.generate_cadquery_geometry(
             minimum_airfoil_TE_thickness=minimum_airfoil_TE_thickness,
         )
-
-        solid.objects = [
-            o.scale(1000) for o in solid.objects
-        ]  # Default STEP units are mm
-
-        from cadquery import exporters
-
-        exporters.export(solid, fname=filename)
+        assembly.export(filename)
 
     def export_AVL(self, filename, include_fuselages: bool = True):
         # TODO include option for mass file export as well
