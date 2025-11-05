@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 import casadi as _cas
-from typing import Union, Callable, Tuple, Optional, List
+from typing import Union, Callable, Tuple, Optional, List, Literal, Sequence
 from scipy import integrate
 
 
@@ -9,8 +9,8 @@ def quad(
     a: float,
     b: float,
     full_output: bool = False,
-    variable_of_integration: _cas.MX = None,
-) -> Union[Tuple[float, float], Tuple[float, float, dict]]:
+    variable_of_integration: _cas.MX | None = None,
+) -> tuple[float, float] | tuple[float, float, dict]:
     if np.is_casadi_type(func):
         all_vars = _cas.symvar(func)  # All variables found in the expression graph
 
@@ -66,16 +66,103 @@ def solve_ivp(
     fun: Union[Callable, _cas.MX],
     t_span: Tuple[float, float],
     y0: Union[np.ndarray, _cas.MX],
-    method: str = "RK45",
-    t_eval: Union[np.ndarray, _cas.MX] = None,
+    method: Literal["RK45", "RK23", "DOP853", "Radau", "BDF", "LSODA"] = "RK45",
+    t_eval: np.ndarray | _cas.MX | None = None,
     dense_output: bool = False,
-    events: Union[Callable, List[Callable]] = None,
+    events: Callable | Sequence[Callable] | None = None,
     vectorized: bool = False,
     args: Optional[Tuple] = None,
-    t_variable: _cas.MX = None,
-    y_variables: Union[_cas.MX, Tuple[_cas.MX]] = None,
+    t_variable: _cas.MX | None = None,
+    y_variables: Union[_cas.MX, Tuple[_cas.MX]] | None = None,
     **options,
 ):
+    """
+    Solve an initial value problem for a system of ODEs.
+    
+    This function wraps scipy.integrate.solve_ivp for NumPy functions and provides
+    a CasADi-compatible implementation for symbolic differentiation through ODEs.
+    
+    Analogous to scipy.integrate.solve_ivp with additional support for CasADi types.
+    
+    Args:
+        fun: Right-hand side of the system. The calling signature depends on the backend:
+        
+            - For NumPy functions: `fun(t, y, *args)` where t is a scalar and y is an ndarray
+              with shape (n,). Must return an array_like with shape (n,).
+              
+            - For CasADi symbolic: Either a Callable that returns CasADi expressions, or
+              a CasADi expression directly. If providing an expression, must also provide
+              `t_variable`.
+        
+        t_span: Interval of integration (t0, tf). The solver starts at t0 and integrates
+            until it reaches tf.
+        
+        y0: Initial state. Array of shape (n,) or CasADi MX.
+        
+        method: Integration method to use. Only applies to NumPy backend. Options are:
+        
+            - 'RK45' (default): Explicit Runge-Kutta method of order 5(4). Good general-purpose solver.
+            - 'RK23': Explicit Runge-Kutta method of order 3(2). Faster but less accurate than RK45.
+            - 'DOP853': Explicit Runge-Kutta method of order 8. High accuracy for smooth problems.
+            - 'Radau': Implicit Runge-Kutta method of order 5. Good for stiff problems.
+            - 'BDF': Implicit multi-step variable-order (1 to 5) method. Good for stiff problems.
+            - 'LSODA': Adams/BDF method with automatic stiffness detection.
+            
+            Note: For CasADi backend (symbolic differentiation), this parameter is ignored
+            and the solver uses CVODES internally.
+        
+        t_eval: Times at which to store the computed solution. If None (default), uses
+            solver-internal time points. For CasADi backend, if None, returns solution at
+            100 evenly-spaced points.
+        
+        dense_output: Whether to compute a continuous solution. Only supported for NumPy backend.
+        
+        events: Event functions to track. Only supported for NumPy backend.
+        
+        vectorized: Whether `fun` may be called in a vectorized fashion. Only applies to
+            NumPy backend.
+        
+        args: Additional arguments to pass to `fun`. Only supported for NumPy backend.
+        
+        t_variable: [CasADi backend only] If `fun` is a CasADi expression (not a Callable),
+            you must specify which variable represents time.
+        
+        y_variables: [CasADi backend only] The state variables. If None, inferred automatically
+            as all variables in `fun` except `t_variable`.
+        
+        **options: Additional options to pass to the solver.
+    
+    Returns:
+        OdeResult object with the following fields:
+        
+            - t: array of time points
+            - y: array of solution values at each time point
+            - sol: (NumPy backend only) Interpolating function for the solution
+            - t_events, y_events: (NumPy backend only) Event information
+            - nfev, njev, nlu: (NumPy backend only) Solver statistics
+            - status: 0 for success
+            - message: Human-readable status description
+            - success: Boolean indicating whether solver succeeded
+    
+    Examples:
+        Exponential decay:
+        
+        >>> def exponential_decay(t, y):
+        ...     return -0.5 * y
+        >>> sol = solve_ivp(exponential_decay, t_span=(0, 10), y0=[2.5])
+        
+        Lorenz system:
+        
+        >>> def lorenz(t, y):
+        ...     sigma, rho, beta = 10, 28, 8/3
+        ...     return [sigma * (y[1] - y[0]),
+        ...             y[0] * (rho - y[2]) - y[1],
+        ...             y[0] * y[1] - beta * y[2]]
+        >>> sol = solve_ivp(lorenz, t_span=(0, 40), y0=[0, 1, 1.05])
+    
+    See Also:
+        scipy.integrate.solve_ivp: The underlying NumPy implementation
+    """
     # Determine which backend to use
     if np.is_casadi_type(fun, recursive=False):
         backend = "casadi_expr"
