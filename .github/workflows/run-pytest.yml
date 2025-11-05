@@ -25,13 +25,9 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv venv --python ${{ matrix.python-version }}
       - name: Test with pytest (without extras; only package)
         run: |
-          uv sync --extra test
-          uv run pytest aerosandbox
+          uv run --python ${{ matrix.python-version }} --extra test pytest aerosandbox
       - name: Test with pytest (with extras; only tutorials)
         run: |
-          uv sync --extra full --extra test
-          uv run pytest tutorial --nbval-lax --nbval-cell-timeout 120
+          uv run --python ${{ matrix.python-version }} --extra test --extra full pytest tutorial --nbval-lax --nbval-cell-timeout 120
