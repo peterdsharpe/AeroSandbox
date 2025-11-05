@@ -7,9 +7,10 @@ airfoil_database_path = Path(
 
 afs = [
     asb.Airfoil(name=filename.stem)
-    for filename in airfoil_database_path.iterdir() if filename.suffix == ".dat"
+    for filename in airfoil_database_path.iterdir()
+    if filename.suffix == ".dat"
 ]
 
 # if __name__ == '__main__':
 
-    # af = asb.Airfoil("goe187")
+# af = asb.Airfoil("goe187")

@@ -8,7 +8,7 @@ def CL_function(alpha, Re, mach):
 
 
 def CD_function(alpha, Re, mach):
-    return 0 * Re ** 0
+    return 0 * Re**0
 
 
 def CM_function(alpha, Re, mach):
@@ -17,37 +17,25 @@ def CM_function(alpha, Re, mach):
 
 ideal_airfoil = asb.Airfoil(
     name="Ideal Airfoil",
-    coordinates=get_NACA_coordinates('naca0012'),
+    coordinates=get_NACA_coordinates("naca0012"),
     CL_function=CL_function,
     CD_function=CD_function,
-    CM_function=CM_function
+    CM_function=CM_function,
 )
 
 wing = asb.Wing(
     xsecs=[
-        asb.WingXSec(
-            xyz_le=[0, y_i, 0],
-            chord=1,
-            airfoil=ideal_airfoil
-        )
+        asb.WingXSec(xyz_le=[0, y_i, 0], chord=1, airfoil=ideal_airfoil)
         for y_i in [0, 10]
     ],
-    symmetric=True
+    symmetric=True,
 )
 
-airplane = asb.Airplane(
-    wings=[wing]
-)
+airplane = asb.Airplane(wings=[wing])
 
-op_point = asb.OperatingPoint(
-    velocity=340,
-    alpha=0
-)
+op_point = asb.OperatingPoint(velocity=340, alpha=0)
 
-aero = asb.AeroBuildup(
-    airplane=airplane,
-    op_point=op_point
-).run()
+aero = asb.AeroBuildup(airplane=airplane, op_point=op_point).run()
 
 from pprint import pprint
 

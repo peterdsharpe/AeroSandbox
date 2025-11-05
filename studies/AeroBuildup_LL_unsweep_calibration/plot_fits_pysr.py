@@ -10,7 +10,7 @@ pysr_model = """
 
 import sympy as sym
 
-a, s, t = sym.symbols('a s t')
+a, s, t = sym.symbols("a s t")
 pysr_model_sympy = eval(pysr_model.replace("^", "**").replace("\n", "")).simplify()
 pysr_model_lambda = sym.lambdify([a, s, t], pysr_model_sympy)
 
@@ -19,7 +19,7 @@ print(f"Simplifed Model\n{pysr_model_sympy}")
 ### Get data
 df = pd.read_csv("data.csv")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         df["sweep"],
         ((df["ab_xnp"] - df["vlm_xnp"]) / (df["MAC"])).values,
         ".k",
-        alpha=0.2
+        alpha=0.2,
     )
     sweep_plot = np.linspace(-90, 90, 500)
 
@@ -45,25 +45,24 @@ if __name__ == '__main__':
     interpolator = interpolate.LinearNDInterpolator(
         np.stack([df["AR"], df["sweep"], df["taper"]], axis=1),
         ((df["ab_xnp"] - df["vlm_xnp"]) / (df["MAC"])).values,
-        rescale=True
+        rescale=True,
     )
 
     plt.plot(
         sweep_plot,
         interpolator(
-            np.stack([
-                AR * np.ones_like(sweep_plot),
-                sweep_plot,
-                taper * np.ones_like(sweep_plot)
-            ], axis=1)
+            np.stack(
+                [
+                    AR * np.ones_like(sweep_plot),
+                    sweep_plot,
+                    taper * np.ones_like(sweep_plot),
+                ],
+                axis=1,
+            )
         ),
-        label="Data"
+        label="Data",
     )
 
-    plt.plot(
-        sweep_plot,
-        dev,
-        label="Model"
-    )
+    plt.plot(sweep_plot, dev, label="Model")
     plt.ylim(-0.5, 0.3)
     p.show_plot()

@@ -15,7 +15,7 @@ beam = TubeBeam1(
     points_per_point_load=200,
     diameter_guess=10,
     bending=True,
-    torsion=False
+    torsion=False,
 )
 lift_force = 9.81 * mass
 
@@ -28,28 +28,28 @@ lift_force = 9.81 * mass
 beam.add_point_load(
     # location=location,
     location=span / 2 * (2 / 3) + 1,
-    force=-lift_force / 3
+    force=-lift_force / 3,
 )
 
 beam.add_uniform_load(force=lift_force / 2)
 beam.setup()
 
 # Tip deflection constraint
-opti.subject_to([
-    # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-    # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-    beam.du * 180 / cas.pi < 10,
-    beam.du * 180 / cas.pi > -10
-])
+opti.subject_to(
+    [
+        # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        beam.du * 180 / cas.pi < 10,
+        beam.du * 180 / cas.pi > -10,
+    ]
+)
 # opti.subject_to([
 #     cas.diff(cas.diff(beam.nominal_diameter)) < 0.002,
 #     cas.diff(cas.diff(beam.nominal_diameter)) > -0.002,
 # ])
 
 # Manufacturability
-opti.subject_to([
-    cas.diff(beam.nominal_diameter) < 0
-])
+opti.subject_to([cas.diff(beam.nominal_diameter) < 0])
 
 opti.minimize(beam.mass)
 
@@ -61,7 +61,7 @@ s_opts["max_iter"] = 1000  # If you need to interrupt, just use ctrl+c
 # s_opts["expect_infeasible_problem"]="yes"
 # s_opts["start_with_resto"] = "yes"
 # s_opts["required_infeasibility_reduction"] = 0.001
-opti.solver('ipopt', p_opts, s_opts)
+opti.solver("ipopt", p_opts, s_opts)
 
 ### Do the sweep
 opti.set_value(mass, 350)

@@ -32,7 +32,7 @@ beam = TubeBeam1(
     diameter_guess=10,
     thickness=0.60e-3,
     bending=True,
-    torsion=False
+    torsion=False,
 )
 lift_force = 9.81 * mass
 # load_location = opti.variable()
@@ -49,13 +49,15 @@ beam.add_elliptical_load(force=lift_force / 2)
 beam.setup()
 
 # Constraints (in addition to stress)
-opti.subject_to([
-    # beam.u[-1] < 2,  # tip deflection. Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-    # beam.u[-1] > -2  # tip deflection. Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-    beam.du * 180 / cas.pi < 10,  # local dihedral constraint
-    beam.du * 180 / cas.pi > -10,  # local anhedral constraint
-    cas.diff(beam.nominal_diameter) < 0,  # manufacturability
-])
+opti.subject_to(
+    [
+        # beam.u[-1] < 2,  # tip deflection. Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        # beam.u[-1] > -2  # tip deflection. Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
+        beam.du * 180 / cas.pi < 10,  # local dihedral constraint
+        beam.du * 180 / cas.pi > -10,  # local anhedral constraint
+        cas.diff(beam.nominal_diameter) < 0,  # manufacturability
+    ]
+)
 
 # # Zero-curvature constraint (restrict to conical tube spars only)
 # opti.subject_to([
@@ -68,7 +70,7 @@ p_opts = {}
 s_opts = {}
 s_opts["max_iter"] = 1e6  # If you need to interrupt, just use ctrl+c
 # s_opts["mu_strategy"] = "adaptive"
-opti.solver('ipopt', p_opts, s_opts)
+opti.solver("ipopt", p_opts, s_opts)
 
 ### Do the sweep
 for i in range(len(masses)):

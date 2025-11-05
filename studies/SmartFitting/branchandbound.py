@@ -5,6 +5,7 @@ Created on Mon Apr  5 18:07:01 2021
 
 @author: Sylvershadowz
 """
+
 from data import x, y_data
 import aerosandbox as asb
 import aerosandbox.numpy as np
@@ -17,6 +18,7 @@ eta = 1
 # vandermonde = np.ones((len(x), degree + 1))
 # for j in range(1, degree + 1):
 #    vandermonde[:, j] = vandermonde[:, j - 1] * x
+
 
 def make_matrix(x):
     matrix = np.ones((len(x), degree + 1))
@@ -41,7 +43,7 @@ def loss(y_model, y_data):
 
 # general branch and bound algorithm
 def branch_and_bound(obj, lower_bound, branch, init, term, eta, guess=None):
-    '''
+    """
     Uses branch and bound to minimize the objective
     obj- function to be minimized
     lower_bound- function that outputs a lower bound of an instance
@@ -50,12 +52,12 @@ def branch_and_bound(obj, lower_bound, branch, init, term, eta, guess=None):
     term- function that returns true if instance is a terminating condition
     eta- regularization factor
     guess- guess of an upper bound, can be produced by heuristic
-    '''
+    """
     # sets the initial upper bound
     if guess is not None:
         best_value = guess(eta)
     else:
-        best_value = float('inf')
+        best_value = float("inf")
     # creates a queue of instances to be checked
     q = [init]
     while q:
@@ -76,26 +78,24 @@ def branch_and_bound(obj, lower_bound, branch, init, term, eta, guess=None):
 
 
 def obj(n):
-    '''
+    """
     minimizes objective (loss+regulaization) given n and eta
     n contains values (0 or 1) for each variable
-    '''
+    """
     opti = asb.Opti()
     coeffs = opti.variable(init_guess=np.zeros(degree + 1))
     y_model = model(coeffs * n)
     error = loss(y_model, y_data)
-    opti.minimize(
-        error + eta * np.sum(n)
-    )
+    opti.minimize(error + eta * np.sum(n))
     sol = opti.solve(verbose=False)
 
     return sol.value(error) + eta * np.sum(n), sol.value(coeffs)
 
 
 def lower_bound(n):
-    '''
+    """
     finds a lower bound for instance n
-    '''
+    """
 
     opti = asb.Opti()
     coeffs = opti.variable(init_guess=np.zeros(degree + 1))
@@ -103,9 +103,7 @@ def lower_bound(n):
     n_new = np.array(n_new)
     y_model = model(coeffs * n_new)
     error = loss(y_model, y_data)
-    opti.minimize(
-        error + eta * np.sum(np.where(n is None, 0, n))
-    )
+    opti.minimize(error + eta * np.sum(np.where(n is None, 0, n)))
     sol = opti.solve(verbose=False)
     return sol.value(error) + eta * np.sum(np.where(n is None, 0, n))
 
@@ -132,15 +130,13 @@ def guess(eta):
     coeffs = opti.variable(init_guess=np.zeros(degree + 1))
     y_model = model(coeffs)
     error = loss(y_model, y_data)
-    opti.minimize(
-        error + eta * (degree + 1)
-    )
+    opti.minimize(error + eta * (degree + 1))
     sol = opti.solve(verbose=False)
 
     return sol.value(error) + eta * (degree + 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     n, coeffs = branch_and_bound(obj, lower_bound, branch, init, term, eta, guess)
     print(n, coeffs)
     import matplotlib.pyplot as plt
@@ -166,8 +162,5 @@ if __name__ == '__main__':
     plt.show()
 
     fig, ax = plt.subplots(1, 1, figsize=(3, 2), dpi=200)
-    plt.bar(
-        x=np.arange(degree + 1),
-        height=coeffs
-    )
+    plt.bar(x=np.arange(degree + 1), height=coeffs)
     plt.show()

@@ -17,18 +17,13 @@ y_model = vandermonde @ coeffs
 error = np.sum((y_model - y_data) ** 2)
 
 abs_coeffs = opti.variable(init_guess=np.zeros(degree + 1))
-opti.subject_to([
-    abs_coeffs > coeffs,
-    abs_coeffs > -coeffs
-])
+opti.subject_to([abs_coeffs > coeffs, abs_coeffs > -coeffs])
 
-opti.minimize(
-    error + 1e-4 * np.sum(abs_coeffs)
-)
+opti.minimize(error + 1e-4 * np.sum(abs_coeffs))
 
 sol = opti.solve(verbose=False)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -47,8 +42,5 @@ if __name__ == '__main__':
     plt.show()
 
     fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
-    plt.bar(
-        x=np.arange(degree + 1),
-        height=sol(coeffs)
-    )
+    plt.bar(x=np.arange(degree + 1), height=sol(coeffs))
     plt.show()

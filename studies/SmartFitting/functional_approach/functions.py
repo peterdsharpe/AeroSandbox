@@ -10,7 +10,7 @@ def multiply(x, y):
 
 
 def square(x):
-    return x ** 2
+    return x**2
 
 
 def ln(x):

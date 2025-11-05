@@ -11,17 +11,20 @@ data["Military Turboprops"]["is_military"] = True
 data["Civilian Turbojets"]["is_military"] = False
 data["Military Turbojets"]["is_military"] = True
 
-turboprops = pd.concat([
-    data["Civilian Turboprops"],
-    data["Military Turboprops"],
-])
-turbojets = pd.concat([
-    data["Civilian Turbojets"],
-    data["Military Turbojets"],
-])
+turboprops = pd.concat(
+    [
+        data["Civilian Turboprops"],
+        data["Military Turboprops"],
+    ]
+)
+turbojets = pd.concat(
+    [
+        data["Civilian Turbojets"],
+        data["Military Turbojets"],
+    ]
+)
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
@@ -31,10 +34,10 @@ if __name__ == '__main__':
         turboprops["Weight (dry) [lb]"] * u.lbm,
         ".",
         label="Turboprops",
-        alpha=0.3
+        alpha=0.3,
     )
-    plt.xscale('log')
-    plt.yscale('log')
+    plt.xscale("log")
+    plt.yscale("log")
     p.show_plot(
         "",
         "Power [W]",
@@ -47,9 +50,9 @@ if __name__ == '__main__':
         1 / (43.02e6 * turboprops["SFC (TO) [lb/shp hr]"] * (u.lbm / u.hp / u.hour)),
         ".",
         label="Turboprops",
-        alpha=0.3
+        alpha=0.3,
     )
-    plt.xscale('log')
+    plt.xscale("log")
     ax.yaxis.set_major_formatter(p.ticker.PercentFormatter(xmax=1))
     p.show_plot(
         "",

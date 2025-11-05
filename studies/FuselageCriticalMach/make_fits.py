@@ -13,7 +13,7 @@ fig, ax = plt.subplots()
 plt.plot(sub[:, 0], sub[:, 1], ".", label="Subsonic Designs")
 plt.plot(sup[:, 0], sup[:, 1], ".", label="Supersonic Designs")
 
-fr = np.linspace(0., 15, 500)
+fr = np.linspace(0.0, 15, 500)
 
 
 def model(fr, p):
@@ -33,21 +33,19 @@ fit = asb.FittedModel(
     model=model,
     x_data=np.concatenate([sub[:, 0], sup[:, 0]]),
     y_data=np.concatenate([sub[:, 1], sup[:, 1]]),
-    weights=np.concatenate([
-        np.ones(len(sub)) / len(sub),
-        np.ones(len(sup)) / len(sup),
-    ]),
+    weights=np.concatenate(
+        [
+            np.ones(len(sub)) / len(sub),
+            np.ones(len(sup)) / len(sup),
+        ]
+    ),
     parameter_guesses={
         "a": 0.5,
         "b": 3,
         "c": 1,
     },
-    parameter_bounds={
-        "a": (0, None),
-        "b": (0, None),
-        "c": (0, None)
-    },
-    residual_norm_type="L2"
+    parameter_bounds={"a": (0, None), "b": (0, None), "c": (0, None)},
+    residual_norm_type="L2",
 )
 
 plt.plot(fr, fit(fr), "-k", label="Fit")
@@ -55,6 +53,6 @@ plt.plot(fr, fit(fr), "-k", label="Fit")
 p.show_plot(
     "Drag-Divergent Mach Number for Generic\nFuselage of Varying Fineness Ratio",
     "$2L_n / d$",
-    r"$\mathrm{Mach}_{DD}$ [-]"
+    r"$\mathrm{Mach}_{DD}$ [-]",
 )
 print(fit.parameters)

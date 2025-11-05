@@ -5,7 +5,7 @@ import aerosandbox.tools.pretty_plots as p
 
 
 def beta(mach):
-    return np.sqrt(1 - mach ** 2)
+    return np.sqrt(1 - mach**2)
 
 
 machs_to_fit = np.linspace(0.001, 0.999, 500)
@@ -27,9 +27,9 @@ weights[machs_to_fit > 0.95] = 0.25
 
 def model(x, p):
     return sigmoid(
-        p["p5"] * (x - p["o5"]) ** 5 +
-        p["p3"] * (x - p["o3"]) ** 4 +
-        p["p1"] * (x - p["o1"])
+        p["p5"] * (x - p["o5"]) ** 5
+        + p["p3"] * (x - p["o3"]) ** 4
+        + p["p1"] * (x - p["o1"])
     )
 
 

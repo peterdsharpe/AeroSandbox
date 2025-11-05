@@ -11,8 +11,7 @@ def f(x):
 
 y_data = f(x) + 0.1 * np.random.randn(len(x))
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
 

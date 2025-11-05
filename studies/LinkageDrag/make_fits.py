@@ -15,41 +15,28 @@ def model(x, p):
     is_covered = x["is_covered"]
     is_top = x["is_top"]
 
-    side_drag_multiplier = np.where(
-        is_top,
-        p["top_drag_ratio"],
-        1
-    )
-    covered_drag_multiplier = np.where(
-        is_covered,
-        p["covered_drag_ratio"],
-        1
-    )
+    side_drag_multiplier = np.where(is_top, p["top_drag_ratio"], 1)
+    covered_drag_multiplier = np.where(is_covered, p["covered_drag_ratio"], 1)
     linkage_length_multiplier = 1 + p["c_length"] * linkage_length
 
-    CDA_raw = (
-            p["CD1"] / (Re / 1e5) +
-            p["CD0"]
+    CDA_raw = p["CD1"] / (Re / 1e5) + p["CD0"]
+
+    return (
+        side_drag_multiplier
+        * covered_drag_multiplier
+        * linkage_length_multiplier
+        * CDA_raw
     )
 
-    return side_drag_multiplier * covered_drag_multiplier * linkage_length_multiplier * CDA_raw
 
-
-x_data = {
-    col: df[col].values
-    for col in df.columns if col != "CDA"
-}
+x_data = {col: df[col].values for col in df.columns if col != "CDA"}
 
 fit = asb.FittedModel(
     model=model,
     x_data=x_data,
     y_data=df["CDA"].values,
     parameter_guesses=dict(
-        CD1=1e-3,
-        CD0=1e-3,
-        c_length=0,
-        top_drag_ratio=1,
-        covered_drag_ratio=1
+        CD1=1e-3, CD0=1e-3, c_length=0, top_drag_ratio=1, covered_drag_ratio=1
     ),
     parameter_bounds=dict(
         CD0=(0, None),
@@ -78,7 +65,7 @@ x_data_test_ranges = dict(
     Re_l=(1e3, 1e7),
     linkage_length=(0.055, 0.085),
     is_covered=[True, False],
-    is_top=[True, False]
+    is_top=[True, False],
 )
 x_data_test = {}
 for k, v in x_data_test_ranges.items():
@@ -86,11 +73,7 @@ for k, v in x_data_test_ranges.items():
         x_data_test[k] = np.random.rand(n_test_data) > 0.5
     elif v[0] > 0 and v[1] > 0:
         x_data_test[k] = np.exp(
-            np.random.uniform(
-                np.log(v[0]),
-                np.log(v[1]),
-                n_test_data
-            )
+            np.random.uniform(np.log(v[0]), np.log(v[1]), n_test_data)
         )
     else:
         x_data_test[k] = np.random.uniform(*v, n_test_data)
@@ -103,11 +86,7 @@ plt.plot(
     alpha=0.1,
     markersize=1,
 )
-p.show_plot(
-    "Linkage Drag",
-    "Reynolds Number [-]",
-    "Drag Area [m$^2$]"
-)
+p.show_plot("Linkage Drag", "Reynolds Number [-]", "Drag Area [m$^2$]")
 
 #############################
 
@@ -124,7 +103,7 @@ x_data_test_ranges = dict(
     Re_l=(1e3, 1e7),
     linkage_length=(0.055, 0.085),
     is_covered=[True, False],
-    is_top=[True, False]
+    is_top=[True, False],
 )
 x_data_test = {}
 for k, v in x_data_test_ranges.items():
@@ -132,11 +111,7 @@ for k, v in x_data_test_ranges.items():
         x_data_test[k] = np.random.rand(n_test_data) > 0.5
     elif v[0] > 0 and v[1] > 0:
         x_data_test[k] = np.exp(
-            np.random.uniform(
-                np.log(v[0]),
-                np.log(v[1]),
-                n_test_data
-            )
+            np.random.uniform(np.log(v[0]), np.log(v[1]), n_test_data)
         )
     else:
         x_data_test[k] = np.random.uniform(*v, n_test_data)
@@ -149,11 +124,7 @@ plt.plot(
     alpha=0.1,
     markersize=1,
 )
-plt.yscale('linear')
+plt.yscale("linear")
 plt.ylim(bottom=0)
 p.set_ticks(None, None, 0.05, 0.01)
-p.show_plot(
-    "Linkage Drag",
-    "Reynolds Number [-]",
-    "Drag Diameter [m]"
-)
+p.show_plot("Linkage Drag", "Reynolds Number [-]", "Drag Diameter [m]")

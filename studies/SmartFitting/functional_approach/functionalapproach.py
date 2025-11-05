@@ -5,6 +5,7 @@ Created on Tue Apr 20 15:02:28 2021
 
 @author: Sylvershadowz
 """
+
 import aerosandbox as asb
 import aerosandbox.numpy as np
 from typing import Callable, List
@@ -52,15 +53,12 @@ my_node.evaluate() = 5
 """
 
 
-class Node():
-    def __init__(self,
-                 oper: Callable,
-                 inputs: List
-                 ):
-        '''
+class Node:
+    def __init__(self, oper: Callable, inputs: List):
+        """
         Takes in an operation and a list
         List contains Nodes, IndependentVariable, constants, and opti variables
-        '''
+        """
 
         self.oper: Callable = oper
         self.inputs = inputs
@@ -75,57 +73,55 @@ class Node():
     #        return self.oper(*L)
 
     def __str__(self):
-        s = 'Operation: ' + str(self.oper) + '. Inputs: ('
+        s = "Operation: " + str(self.oper) + ". Inputs: ("
         for i in self.inputs:
-            s += str(i) + ', '
-        s += ')'
+            s += str(i) + ", "
+        s += ")"
         return s
 
     def get_sol(self, pnum=None):
-        '''
+        """
         returns string representation of tree
-        
-        '''
+
+        """
         if pnum is None:
             pnum = [0]
-        s = self.oper.__name__ + '('
+        s = self.oper.__name__ + "("
         for i in self.inputs:
             if isinstance(i, Node):
-                s += i.get_sol(pnum) + ', '
+                s += i.get_sol(pnum) + ", "
             elif isinstance(i, IndependentVariable):
-                s += str(i) + ', '
+                s += str(i) + ", "
             else:
                 pnum[0] += 1
-                s += i + str(pnum[0]) + ', '
+                s += i + str(pnum[0]) + ", "
         self.pnum = pnum[0]
-        return s[:-2] + ')'
+        return s[:-2] + ")"
 
     def __call__(self, x, params):
-        '''
+        """
         Substitutes params as optimization parameters and evaluates tree with
         independent variable x
-        '''
+        """
         s = self.get_sol()
         for i in range(len(params)):
-            exec('p' + str(i + 1) + '=params[' + str(i) + ']')
+            exec("p" + str(i + 1) + "=params[" + str(i) + "]")
         return eval(s)
 
     def optimize(self, x_data, y_data, loss):
-        '''
+        """
         Finds optimal parameters given data and loss
-        '''
+        """
 
         opti = asb.Opti()
         string_sol = self.get_sol()
         L = []
         for j in range(self.pnum):
-            exec('p' + str(j + 1) + '=' + 'opti.variable(init_guess=1)')
-            exec('L.append(p' + str(j + 1) + ')')
+            exec("p" + str(j + 1) + "=" + "opti.variable(init_guess=1)")
+            exec("L.append(p" + str(j + 1) + ")")
         predicted = eval(string_sol)
         error = loss(predicted, y_data)
-        opti.minimize(
-            error
-        )
+        opti.minimize(error)
         try:
             sol = opti.solve(max_iter=500, verbose=False)
         except RuntimeError:
@@ -133,7 +129,7 @@ class Node():
         return sol.value(error), sol, L
 
 
-class IndependentVariable():
+class IndependentVariable:
     def __init__(self):
         pass
 
@@ -141,16 +137,16 @@ class IndependentVariable():
         return x
 
     def __str__(self):
-        return 'x'
+        return "x"
 
 
 def generate_trees(
-        opers: List[Callable],
-        size: int,
+    opers: List[Callable],
+    size: int,
 ):
     if size <= 0:
         yield IndependentVariable()
-        yield 'p'
+        yield "p"
         return
     for i in opers:
         if input_size[i] == 1:
@@ -164,10 +160,10 @@ def generate_trees(
 
 
 def best_tree_of_size(x_data, y_data, loss, opers, size):
-    '''
+    """
     Generates the best tree given a size by looping through all possibilities
-    '''
-    bestvalue = float('inf')
+    """
+    bestvalue = float("inf")
     g = generate_trees(opers, size)
     for i in g:
         errorvalue, sol, L = i.optimize(x_data, y_data, loss)
@@ -186,8 +182,10 @@ def best_tree_of_size(x_data, y_data, loss, opers, size):
 def best_tree_dynamic(x_data, y_data, loss, opers, size):
     if size <= 1:
         return best_tree_of_size(x_data, y_data, loss, opers, size)
-    prevtree, prevvalues, preverror = best_tree_dynamic(x_data, y_data, loss, opers, size - 1)
-    bestvalue = float('inf')
+    prevtree, prevvalues, preverror = best_tree_dynamic(
+        x_data, y_data, loss, opers, size - 1
+    )
+    bestvalue = float("inf")
     for i in extended_trees(prevtree, opers):
         errorvalue, sol, L = i.optimize(x_data, y_data, loss)
         if errorvalue < bestvalue:
@@ -202,9 +200,9 @@ def best_tree_dynamic(x_data, y_data, loss, opers, size):
 
 
 def extended_trees(tree, opers):
-    '''
+    """
     Generates all possible trees made by extending the current tree by 1 node
-    '''
+    """
     # base case
     if isinstance(tree, str) or isinstance(tree, IndependentVariable):
         for j in generate_trees(opers, 1):
@@ -215,17 +213,17 @@ def extended_trees(tree, opers):
         if input_size[i] == 1:
             yield Node(i, (tree,))
         else:
-            yield Node(i, (tree, 'p'))
+            yield Node(i, (tree, "p"))
             yield Node(i, (tree, IndependentVariable()))
-            yield Node(i, ('p', tree))
+            yield Node(i, ("p", tree))
             yield Node(i, (IndependentVariable(), tree))
     # recursive case
     for i in range(len(tree.inputs)):
         for j in extended_trees(tree.inputs[i], opers):
-            yield Node(tree.oper, tree.inputs[:i] + (j,) + tree.inputs[i + 1:])
+            yield Node(tree.oper, tree.inputs[:i] + (j,) + tree.inputs[i + 1 :])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     input_size = {}
     input_size[add] = 2
     input_size[square] = 1
@@ -244,14 +242,11 @@ if __name__ == '__main__':
 
     x = np.linspace(1, 10, 20)
 
-
     def f(x):
-        return 10 + x ** 2 + 10 * np.sin(x)
-
+        return 10 + x**2 + 10 * np.sin(x)
 
     def loss(y_model, y_data):
         return np.sum((y_model - y_data) ** 2)
-
 
     y_data = f(x) + 0.1 * np.random.randn(len(x))
 
@@ -283,11 +278,13 @@ if __name__ == '__main__':
     #    print(paramvalues)
     #    print(errorvalue)
 
-    besttree, paramvalues, errorvalue = best_tree_dynamic(x, y_data, loss, [add, square, multiply, sin], 10)
+    besttree, paramvalues, errorvalue = best_tree_dynamic(
+        x, y_data, loss, [add, square, multiply, sin], 10
+    )
     print(besttree.get_sol())
     print(paramvalues)
 
-    for t in extended_trees(Node(add, ('p', 'p')), [add, square]):
+    for t in extended_trees(Node(add, ("p", "p")), [add, square]):
         print(t.get_sol())
 
     ### Expression object

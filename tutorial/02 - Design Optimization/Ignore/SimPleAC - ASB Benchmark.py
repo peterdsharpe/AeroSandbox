@@ -35,53 +35,61 @@ def solve():
     W = opti.variable(init_guess=10000, log_transform=True)  # total aircraft weight, N
     C_L = opti.variable(init_guess=1, log_transform=True)  # lift coefficient
     W_f = opti.variable(init_guess=3000, log_transform=True)  # fuel weight, N
-    V_f_fuse = opti.variable(init_guess=1, log_transform=True)  # fuel volume in the fuselage, m^3
+    V_f_fuse = opti.variable(
+        init_guess=1, log_transform=True
+    )  # fuel volume in the fuselage, m^3
 
     ### Wing weight
     W_w_surf = W_W_coeff2 * S
-    W_w_strc = W_W_coeff1 / tau * N_ult * AR ** 1.5 * np.sqrt(
-        (W_0 + V_f_fuse * g * rho_f) * W * S
+    W_w_strc = (
+        W_W_coeff1
+        / tau
+        * N_ult
+        * AR**1.5
+        * np.sqrt((W_0 + V_f_fuse * g * rho_f) * W * S)
     )
     W_w = W_w_surf + W_w_strc
 
     ### Entire weight
-    opti.subject_to(
-        W >= W_0 + W_w + W_f
-    )
+    opti.subject_to(W >= W_0 + W_w + W_f)
 
     ### Lift equals weight constraint
-    opti.subject_to([
-        W_0 + W_w + 0.5 * W_f <= 0.5 * rho * S * C_L * V ** 2,
-        W <= 0.5 * rho * S * C_Lmax * V_min ** 2,
-    ])
+    opti.subject_to(
+        [
+            W_0 + W_w + 0.5 * W_f <= 0.5 * rho * S * C_L * V**2,
+            W <= 0.5 * rho * S * C_Lmax * V_min**2,
+        ]
+    )
 
     ### Flight duration
     T_flight = Range / V
 
     ### Drag
     Re = (rho / mu) * V * (S / AR) ** 0.5
-    C_f = 0.074 / Re ** 0.2
+    C_f = 0.074 / Re**0.2
 
     CDA0 = V_f_fuse / 10
 
     C_D_fuse = CDA0 / S
     C_D_wpar = k * C_f * S_wetratio
-    C_D_ind = C_L ** 2 / (np.pi * AR * e)
+    C_D_ind = C_L**2 / (np.pi * AR * e)
     C_D = C_D_fuse + C_D_wpar + C_D_ind
-    D = 0.5 * rho * S * C_D * V ** 2
+    D = 0.5 * rho * S * C_D * V**2
 
-    opti.subject_to([
-        W_f >= TSFC * T_flight * D,
-    ])
+    opti.subject_to(
+        [
+            W_f >= TSFC * T_flight * D,
+        ]
+    )
 
     V_f = W_f / g / rho_f
-    V_f_wing = 0.03 * S ** 1.5 / AR ** 0.5 * tau  # linear with b and tau, quadratic with chord
+    V_f_wing = (
+        0.03 * S**1.5 / AR**0.5 * tau
+    )  # linear with b and tau, quadratic with chord
 
     V_f_avail = V_f_wing + V_f_fuse
 
-    opti.subject_to(
-        V_f_avail >= V_f
-    )
+    opti.subject_to(V_f_avail >= V_f)
 
     opti.minimize(W_f)
 
@@ -95,8 +103,6 @@ def timeit():
     return end - start
 
 
-if __name__ == '__main__':
-    times = np.array([
-        timeit() for i in range(10)
-    ])
+if __name__ == "__main__":
+    times = np.array([timeit() for i in range(10)])
     print(np.mean(times))

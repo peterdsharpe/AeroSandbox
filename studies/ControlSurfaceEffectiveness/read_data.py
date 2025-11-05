@@ -11,10 +11,7 @@ r = df.Re.values
 da = df.dalpha.values
 
 
-mask = (
-        (d != 0) &
-        (d + a < 20)
-)
+mask = (d != 0) & (d + a < 20)
 
 a = a[mask]
 d = d[mask]

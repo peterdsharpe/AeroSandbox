@@ -13,37 +13,30 @@ datasets = [
 
 for dataset in datasets:
     # Ingest data
-    data = np.genfromtxt(
-        "data/" + dataset + ".csv",
-        delimiter=","
-    )
+    data = np.genfromtxt("data/" + dataset + ".csv", delimiter=",")
     data = data[data[:, 0].argsort()]
     durations = data[:, 0]  # in minutes
     powers = data[:, 1]  # in Watts
-
 
     def human_power_model(x, p):
         d = x["d"]
         logd = np.log10(d)
 
-        return (
-                p["a"] * d ** (
-                p["b0"] + p["b1"] * logd + p["b2"] * logd ** 2
-        )
+        return p["a"] * d ** (
+            p["b0"] + p["b1"] * logd + p["b2"] * logd**2
         )  # essentially, a cubic in log-log space
-
 
     params = asb.FittedModel(
         model=human_power_model,
         x_data={"d": durations},
         y_data=powers,
         parameter_guesses={
-            "a" : 408,
+            "a": 408,
             "b0": -0.17,
             "b1": 0.08,
             "b2": -0.04,
         },
-        put_residuals_in_logspace=True
+        put_residuals_in_logspace=True,
     ).parameters
 
     # Plot fit
@@ -53,6 +46,8 @@ for dataset in datasets:
     plt.loglog(durations, human_power_model({"d": durations}, params))
     plt.xlabel(r"Duration [mins]")
     plt.ylabel(r"Maximum Sustainable Power [W]")
-    plt.title(f"Human Power Output ({dataset})\n(Fig. 2.4, Bicycling Science by D. Wilson)")
+    plt.title(
+        f"Human Power Output ({dataset})\n(Fig. 2.4, Bicycling Science by D. Wilson)"
+    )
     plt.tight_layout()
     plt.show()

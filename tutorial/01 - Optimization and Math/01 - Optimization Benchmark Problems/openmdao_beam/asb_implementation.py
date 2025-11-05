@@ -12,29 +12,33 @@ x = np.linspace(0, L, N)  # Node locations [m]
 
 opti = asb.Opti()
 h = opti.variable(init_guess=np.ones(N), lower_bound=1e-6)
-I = (1 / 12) * b * h ** 3  # Bending moment of inertia [m^4]
+I = (1 / 12) * b * h**3  # Bending moment of inertia [m^4]
 
 V = np.ones(N) * (-tip_load)  # Shear force [N]
 M = opti.variable(init_guess=np.zeros(N))  # Moment [N*m]
 th = opti.variable(init_guess=np.zeros(N))  # Slope [rad]
 w = opti.variable(init_guess=np.zeros(N))  # Displacement [m]
 
-opti.subject_to([  # Governing equations
-    np.diff(M) == np.trapz(V) * np.diff(x),
-    np.diff(th) == np.trapz(M / (E * I), modify_endpoints=True) * np.diff(x),
-    np.diff(w) == np.trapz(th) * np.diff(x),
-])
-opti.subject_to([  # Boundary conditions
-    M[-1] == 0,
-    th[0] == 0,
-    w[0] == 0,
-])
+opti.subject_to(
+    [  # Governing equations
+        np.diff(M) == np.trapz(V) * np.diff(x),
+        np.diff(th) == np.trapz(M / (E * I), modify_endpoints=True) * np.diff(x),
+        np.diff(w) == np.trapz(th) * np.diff(x),
+    ]
+)
+opti.subject_to(
+    [  # Boundary conditions
+        M[-1] == 0,
+        th[0] == 0,
+        w[0] == 0,
+    ]
+)
 opti.subject_to(np.mean(h * b) <= volume / L)  # Volume constraint
 opti.minimize(w[-1])  # Objective: minimize tip deflection
 sol = opti.solve()
 print(sol(h))  # Gives the optimized beam thickness
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 

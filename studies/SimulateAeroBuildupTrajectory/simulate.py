@@ -1,5 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+
 # from conventional import airplane
 from lh2_airplane import airplane, mass_props_TOGW
 from scipy import integrate
@@ -29,20 +30,19 @@ dyn_init = asb.DynamicsRigidBody3DBodyEuler(
     psi=0,
     p=0,
     q=0,
-    r=0
+    r=0,
 )
 
 time = np.arange(0, 120, 0.5)
 
 if integrator == "scipy":
+
     def dynamics(t, y):
         dyn = dyn_init.get_new_instance_with_state(dyn_init.pack_state(y))
 
         try:
             aero = asb.AeroBuildup(
-                airplane=airplane,
-                op_point=dyn.op_point,
-                xyz_ref=dyn.mass_props.xyz_cg
+                airplane=airplane, op_point=dyn.op_point, xyz_ref=dyn.mass_props.xyz_cg
             ).run()
         except FileNotFoundError:
             return np.nan * np.array(dyn.unpack_state(dyn.state))
@@ -58,7 +58,6 @@ if integrator == "scipy":
 
         return derivatives
 
-
     sol = integrate.solve_ivp(
         fun=dynamics,
         t_span=(time.min(), time.max()),
@@ -66,20 +65,22 @@ if integrator == "scipy":
         y0=dyn_init.unpack_state(dyn_init.state),
         method="LSODA",
         rtol=1e100,
-        atol=dyn_init.unpack_state(dict(
-            x_e=1e-1,
-            y_e=1e-1,
-            z_e=1e-1,
-            u_b=1e-2,
-            v_b=1e-2,
-            w_b=1e-2,
-            phi=1e-2,
-            theta=1e-2,
-            psi=1e-2,
-            p=1e-2,
-            q=1e-2,
-            r=1e-2,
-        )),
+        atol=dyn_init.unpack_state(
+            dict(
+                x_e=1e-1,
+                y_e=1e-1,
+                z_e=1e-1,
+                u_b=1e-2,
+                v_b=1e-2,
+                w_b=1e-2,
+                phi=1e-2,
+                theta=1e-2,
+                psi=1e-2,
+                p=1e-2,
+                q=1e-2,
+                r=1e-2,
+            )
+        ),
         first_step=np.diff(time)[0],
         max_step=np.diff(time)[0],
         min_step=1e-2,
@@ -88,12 +89,9 @@ if integrator == "scipy":
     dyn = dyn_init.get_new_instance_with_state(dyn_init.pack_state(sol.y))
 
 elif integrator == "aerosandbox":
-
     opti = asb.Opti()
     u_e, v_e, w_e = dyn_init.convert_axes(
-        dyn_init.u_b, dyn_init.v_b, dyn_init.w_b,
-        from_axes="body",
-        to_axes="earth"
+        dyn_init.u_b, dyn_init.v_b, dyn_init.w_b, from_axes="body", to_axes="earth"
     )
     dyn = dyn_init.get_new_instance_with_state(
         dict(
@@ -104,7 +102,9 @@ elif integrator == "aerosandbox":
             v_b=opti.variable(init_guess=dyn_init.v_b * np.ones_like(time), scale=1e2),
             w_b=opti.variable(init_guess=dyn_init.w_b * np.ones_like(time), scale=1e2),
             phi=opti.variable(init_guess=dyn_init.phi * np.ones_like(time), scale=1e-1),
-            theta=opti.variable(init_guess=dyn_init.theta * np.ones_like(time), scale=1e-1),
+            theta=opti.variable(
+                init_guess=dyn_init.theta * np.ones_like(time), scale=1e-1
+            ),
             psi=opti.variable(init_guess=dyn_init.psi * np.ones_like(time), scale=1e-1),
             p=opti.variable(init_guess=np.zeros_like(time), scale=1e-2),
             q=opti.variable(init_guess=np.zeros_like(time), scale=1e-2),
@@ -117,9 +117,7 @@ elif integrator == "aerosandbox":
     # ))
 
     aero = asb.AeroBuildup(
-        airplane=airplane,
-        op_point=dyn.op_point,
-        xyz_ref=dyn.mass_props.xyz_cg
+        airplane=airplane, op_point=dyn.op_point, xyz_ref=dyn.mass_props.xyz_cg
     ).run_with_stability_derivatives()
 
     dyn.add_gravity_force()
@@ -131,10 +129,12 @@ elif integrator == "aerosandbox":
         time=time,
     )
 
-    opti.subject_to([
-        v[0] == v_init
-        for v, v_init in zip(dyn.state.values(), dyn_init.state.values())
-    ])
+    opti.subject_to(
+        [
+            v[0] == v_init
+            for v, v_init in zip(dyn.state.values(), dyn_init.state.values())
+        ]
+    )
 
     sol = opti.solve()
 
@@ -144,9 +144,7 @@ else:
     raise ValueError
 
 aero = asb.AeroBuildup(
-    airplane=airplane,
-    op_point=dyn.op_point,
-    xyz_ref=dyn.mass_props.xyz_cg
+    airplane=airplane, op_point=dyn.op_point, xyz_ref=dyn.mass_props.xyz_cg
 ).run_with_stability_derivatives()
 
 import matplotlib.pyplot as plt
@@ -154,13 +152,13 @@ import aerosandbox.tools.pretty_plots as p
 
 vars_to_plot = {
     **dyn.state,
-    "alpha"   : dyn.alpha,
-    "beta"    : dyn.beta,
-    "speed"   : dyn.speed,
+    "alpha": dyn.alpha,
+    "beta": dyn.beta,
+    "speed": dyn.speed,
     "altitude": dyn.altitude,
-    "CL"      : aero["CL"],
-    "CD"      : aero["CD"],
-    "Cm"      : aero["Cm"],
+    "CL": aero["CL"],
+    "CD": aero["CD"],
+    "Cm": aero["Cm"],
 }
 fig, axes = plt.subplots(6, 4, figsize=(15, 9), sharex=True)
 for (k, v), ax in zip(vars_to_plot.items(), axes.flatten(order="F")):

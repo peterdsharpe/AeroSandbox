@@ -34,7 +34,7 @@ model = PySRRegressor(
     # complexity_of_constants=0.5,
     complexity_of_variables=2,
     constraints={
-        'pow': (-1, 5),
+        "pow": (-1, 5),
         # 'sin': 5,
         # 'cos': 5,
         # 'tan': 5,
@@ -58,12 +58,15 @@ weights[hf == 0] = 100
 weights[hf == 1] = 100
 
 model.fit(
-    np.stack([
-        a,
-        # d,
-        hf,
-        # lr
-    ], axis=1),
+    np.stack(
+        [
+            a,
+            # d,
+            hf,
+            # lr
+        ],
+        axis=1,
+    ),
     eff,
     weights=weights,
     variable_names=[

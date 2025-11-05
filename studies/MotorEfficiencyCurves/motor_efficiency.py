@@ -25,13 +25,12 @@ def get_perf(kv):
         resistance=0.025,
     )
 
-    opti.subject_to([
-        perf['torque'] / rpm ** 2 == prop_torque / prop_rpm ** 2
-    ])
+    opti.subject_to([perf["torque"] / rpm**2 == prop_torque / prop_rpm**2])
 
     sol = opti.solve()
 
     return sol(perf)
+
 
 kvs = np.geomspace(400, 2000, 7)
 
@@ -41,18 +40,14 @@ fig, ax = plt.subplots()
 for i, kv in enumerate(kvs):
     perf = get_perf(kv)
     plt.plot(
-        perf['rpm'],
-        perf['efficiency'],
+        perf["rpm"],
+        perf["efficiency"],
         label=f"{kv:.0f} kv",
-        color=p.adjust_lightness(colors[i],0.7),
-        alpha=0.7
+        color=p.adjust_lightness(colors[i], 0.7),
+        alpha=0.7,
     )
 
 plt.xlim(0, 10000)
 plt.ylim(0, 1)
 p.set_ticks(2000, 500, 0.2, 0.05)
-p.show_plot(
-    "Motor kv vs. Motor Efficiency Curve",
-    "RPM",
-    "Efficiency [-]"
-)
+p.show_plot("Motor kv vs. Motor Efficiency Curve", "RPM", "Efficiency [-]")

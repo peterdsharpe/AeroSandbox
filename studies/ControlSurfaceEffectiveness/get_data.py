@@ -6,12 +6,12 @@ from tqdm import tqdm
 
 @np.vectorize
 def get_dalpha(
-        alpha=0.,
-        deflection=0.,
-        hinge_x=0.75,
-        Re=1e6,
-        camber=0.,
-        thickness=0.12,
+    alpha=0.0,
+    deflection=0.0,
+    hinge_x=0.75,
+    Re=1e6,
+    camber=0.0,
+    thickness=0.12,
 ):
     global pbar
     pbar.update(1)
@@ -23,13 +23,12 @@ def get_dalpha(
                 n_points_per_side=80,
                 max_camber=camber,
                 camber_loc=0.40,
-                thickness=thickness
-            )
+                thickness=thickness,
+            ),
         )
         res_deflected = asb.XFoil(
             airfoil=af.add_control_surface(
-                deflection=deflection,
-                hinge_point_x=hinge_x
+                deflection=deflection, hinge_point_x=hinge_x
             ),
             Re=Re,
             max_iter=20,
@@ -44,9 +43,9 @@ def get_dalpha(
             Re=Re,
             max_iter=20,
             timeout=0.5,
-        ).cl(cl=res_deflected['CL'])
+        ).cl(cl=res_deflected["CL"])
 
-        delta_alpha = float(res_undeflected['alpha'] - res_deflected['alpha'])
+        delta_alpha = float(res_undeflected["alpha"] - res_deflected["alpha"])
 
         return delta_alpha
 
@@ -60,41 +59,29 @@ Alpha, Deflection, Hinge_x, Re, Camber, Thickness = np.meshgrid(
     np.linspace(0, 1, 11),
     np.array([1e5, 2e5, 3e5, 4e5, 5e5, 1e6, 5e6]),
     0,
-    0.10
+    0.10,
 )
 
 global pbar
 with tqdm(total=Alpha.size) as pbar:
-    Dalpha = get_dalpha(
-        Alpha,
-        Deflection,
-        Hinge_x,
-        Re,
-        Camber,
-        Thickness
-    )
+    Dalpha = get_dalpha(Alpha, Deflection, Hinge_x, Re, Camber, Thickness)
 
 data = {
-        "alpha": Alpha.flatten(),
-        "deflection": Deflection.flatten(),
-        "hinge_x": Hinge_x.flatten(),
-        "Re": Re.flatten(),
-        "camber": Camber.flatten(),
-        "thickness": Thickness.flatten(),
-        "dalpha": Dalpha.flatten()
-    }
+    "alpha": Alpha.flatten(),
+    "deflection": Deflection.flatten(),
+    "hinge_x": Hinge_x.flatten(),
+    "Re": Re.flatten(),
+    "camber": Camber.flatten(),
+    "thickness": Thickness.flatten(),
+    "dalpha": Dalpha.flatten(),
+}
 mask = np.logical_not(np.isnan(Dalpha))
 
 
 import pandas as pd
-df = pd.DataFrame(
-    data={
-        k: v.flatten()[mask.flatten()]
-        for k, v in data.items()
-    }
-)
-df.to_csv("data.csv")
 
+df = pd.DataFrame(data={k: v.flatten()[mask.flatten()] for k, v in data.items()})
+df.to_csv("data.csv")
 
 
 #

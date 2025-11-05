@@ -3,8 +3,8 @@ import aerosandbox.numpy as np
 import pandas as pd
 
 data = pd.read_csv("fineness-vs-eta.csv", names=["fineness", "eta"])
-fineness = data['fineness'].values
-eta = data['eta'].values
+fineness = data["fineness"].values
+eta = data["eta"].values
 
 
 def model(x, p):
@@ -28,7 +28,7 @@ fit = asb.FittedModel(
         "2cen": (None, 0),
     },
     residual_norm_type="L2",
-    verbose=False
+    verbose=False,
 )
 print(fit.parameters)
 

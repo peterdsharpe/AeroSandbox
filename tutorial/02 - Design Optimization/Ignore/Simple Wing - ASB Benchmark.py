@@ -32,29 +32,36 @@ def solve():
     # Aerodynamics model
     CD_fuselage = drag_area_fuselage / wing_area
     Re = (density / viscosity) * airspeed * (wing_area / aspect_ratio) ** 0.5
-    Cf = 0.074 / Re ** 0.2
+    Cf = 0.074 / Re**0.2
     CD_profile = form_factor * Cf * wetted_area_ratio
-    CD_induced = CL ** 2 / (np.pi * aspect_ratio * oswalds_efficiency)
+    CD_induced = CL**2 / (np.pi * aspect_ratio * oswalds_efficiency)
     CD = CD_fuselage + CD_profile + CD_induced
-    dynamic_pressure = 0.5 * density * airspeed ** 2
+    dynamic_pressure = 0.5 * density * airspeed**2
     drag = dynamic_pressure * wing_area * CD
     lift_cruise = dynamic_pressure * wing_area * CL
-    lift_takeoff = 0.5 * density * wing_area * CL_max * airspeed_takeoff ** 2
+    lift_takeoff = 0.5 * density * wing_area * CL_max * airspeed_takeoff**2
 
     # Wing weight model
-    weight_wing_structural = W_W_coeff1 * (
-            ultimate_load_factor * aspect_ratio ** 1.5 *
-            (weight_fuselage * weight * wing_area) ** 0.5
-    ) / airfoil_thickness_fraction
+    weight_wing_structural = (
+        W_W_coeff1
+        * (
+            ultimate_load_factor
+            * aspect_ratio**1.5
+            * (weight_fuselage * weight * wing_area) ** 0.5
+        )
+        / airfoil_thickness_fraction
+    )
     weight_wing_surface = W_W_coeff2 * wing_area
     weight_wing = weight_wing_surface + weight_wing_structural
 
     ### Constraints
-    opti.subject_to([
-        weight <= lift_cruise,
-        weight <= lift_takeoff,
-        weight == weight_fuselage + weight_wing
-    ])
+    opti.subject_to(
+        [
+            weight <= lift_cruise,
+            weight <= lift_takeoff,
+            weight == weight_fuselage + weight_wing,
+        ]
+    )
 
     # Objective
     opti.minimize(drag)
@@ -69,8 +76,6 @@ def timeit():
     return end - start
 
 
-if __name__ == '__main__':
-    times = np.array([
-        timeit() for i in range(10)
-    ])
+if __name__ == "__main__":
+    times = np.array([timeit() for i in range(10)])
     print(np.mean(times))

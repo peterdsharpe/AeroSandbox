@@ -8,14 +8,15 @@ import matplotlib.patheffects as path_effects
 
 # Problem is unimodal for N=2, N=3, and N>=8. Bimodal for 4<=N<=7. Global min is always a vector of ones.
 
+
 def get_initial_guess(N):
     rng = np.random.default_rng(0)
     return rng.uniform(-10, 10, N)
 
+
 def objective(x):
-    return np.mean(
-        100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2
-    )
+    return np.mean(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2)
+
 
 def solve_aerosandbox(N=10):
     opti = asb.Opti()  # set up an optimization environment
@@ -31,7 +32,7 @@ def solve_aerosandbox(N=10):
     if not np.allclose(sol(x), 1, atol=1e-4):
         raise ValueError(f"N={N} failed!")
 
-    return sol.stats()['n_call_nlp_f']
+    return sol.stats()["n_call_nlp_f"]
 
 
 def solve_scipy_bfgs(N=10):
@@ -42,7 +43,7 @@ def solve_scipy_bfgs(N=10):
         tol=1e-8,
         options=dict(
             maxiter=np.inf,
-        )
+        ),
     )
 
     if not np.allclose(res.x, 1, atol=1e-4):
@@ -59,7 +60,7 @@ def solve_scipy_slsqp(N=10):
         tol=1e-8,
         options=dict(
             maxiter=1000000000,
-        )
+        ),
     )
 
     if not np.allclose(res.x, 1, atol=1e-4):
@@ -78,7 +79,7 @@ def solve_scipy_nm(N=10):
             maxfev=np.inf,
             xatol=1e-8,
             adaptive=True,
-        )
+        ),
     )
 
     if not np.allclose(res.x, 1, atol=1e-4):
@@ -101,14 +102,13 @@ def solve_scipy_genetic(N=10):
     return res.nfev
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     solvers = {
         "AeroSandbox": solve_aerosandbox,
-        "BFGS" : solve_scipy_bfgs,
+        "BFGS": solve_scipy_bfgs,
         "SLSQP": solve_scipy_slsqp,
         "Nelder-Mead": solve_scipy_nm,
-        "Genetic"    : solve_scipy_genetic,
+        "Genetic": solve_scipy_genetic,
     }
 
     if False:  # If True, runs the benchmark and appends data to respective *.csv files
@@ -154,10 +154,14 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(figsize=(5.2, 4))
 
-    fallback_colors = itertools.cycle(p.sns.husl_palette(
-        n_colors=len(solvers) - 1,
-        h=0, s=0.25, l=0.6,
-    ))
+    fallback_colors = itertools.cycle(
+        p.sns.husl_palette(
+            n_colors=len(solvers) - 1,
+            h=0,
+            s=0.25,
+            l=0.6,
+        )
+    )
 
     name_remaps = {
         "Nelder-Mead": "Nelder\nMead",
@@ -170,12 +174,13 @@ if __name__ == '__main__':
     notables = ["AeroSandbox"]
 
     for i, solver_name in enumerate(solvers.keys()):  # For each solver...
-
         # Reads the data from file
-        df = pd.read_csv(f"{solver_name.lower()}_times.csv", header=None, names=["N", "t", "nfev"])
-        aggregate_cols = [col for col in df.columns if col != 'N']
-        df = df.groupby('N', as_index=False)[aggregate_cols].mean()
-        df = df.sort_values('N')
+        df = pd.read_csv(
+            f"{solver_name.lower()}_times.csv", header=None, names=["N", "t", "nfev"]
+        )
+        aggregate_cols = [col for col in df.columns if col != "N"]
+        df = df.groupby("N", as_index=False)[aggregate_cols].mean()
+        df = df.sort_values("N")
 
         # Determines which columns to plot
         x = df["N"].values
@@ -188,12 +193,7 @@ if __name__ == '__main__':
             color = next(fallback_colors)
 
         # Plots the raw data
-        line, = plt.plot(
-            x, y, ".",
-            alpha=0.2,
-            color=color
-        )
-
+        (line,) = plt.plot(x, y, ".", alpha=0.2, color=color)
 
         # Makes a curve fit and plots that
         def model(x, p):
@@ -204,7 +204,6 @@ if __name__ == '__main__':
             )
 
             # return p["a"] * x ** p["b"] + p["c"]
-
 
         fit = asb.FittedModel(
             model=model,
@@ -226,15 +225,17 @@ if __name__ == '__main__':
             },
             residual_norm_type="L1",
             put_residuals_in_logspace=True,
-            verbose=False
+            verbose=False,
         )
         x_plot = np.geomspace(x.min(), x.max(), 500)
         p.plot_smooth(
-            x_plot, fit(x_plot), "-",
+            x_plot,
+            fit(x_plot),
+            "-",
             function_of="x",
             color=color,
             alpha=0.8,
-            resample_resolution=10000
+            resample_resolution=10000,
         )
 
         # Writes the label for each plot
@@ -253,12 +254,14 @@ if __name__ == '__main__':
                 zorder=5,
                 alpha=0.9,
                 color=color,
-                horizontalalignment='right',
-                verticalalignment='top',
+                horizontalalignment="right",
+                verticalalignment="top",
                 path_effects=[
-                    path_effects.withStroke(linewidth=2, foreground=ax.get_facecolor(),
-                                            alpha=0.8,
-                                            ),
+                    path_effects.withStroke(
+                        linewidth=2,
+                        foreground=ax.get_facecolor(),
+                        alpha=0.8,
+                    ),
                 ],
             )
         else:
@@ -271,13 +274,15 @@ if __name__ == '__main__':
                 zorder=4,
                 alpha=0.7,
                 color=color,
-                horizontalalignment='left',
-                verticalalignment='center',
+                horizontalalignment="left",
+                verticalalignment="center",
                 path_effects=[
-                    path_effects.withStroke(linewidth=2, foreground=ax.get_facecolor(),
-                                            alpha=0.3,
-                                            ),
-                ]
+                    path_effects.withStroke(
+                        linewidth=2,
+                        foreground=ax.get_facecolor(),
+                        alpha=0.3,
+                    ),
+                ],
             )
 
     plt.xscale("log")
@@ -298,5 +303,5 @@ if __name__ == '__main__':
         set_ticks=False,
         legend=False,
         dpi=600,
-        savefig=["benchmark_nd_rosenbrock.pdf", "benchmark_nd_rosenbrock.png"]
+        savefig=["benchmark_nd_rosenbrock.pdf", "benchmark_nd_rosenbrock.png"],
     )

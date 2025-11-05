@@ -12,17 +12,14 @@ datasets = [
 
 fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)
 for dataset in datasets:
-    data = np.genfromtxt(
-        "data/" + dataset + ".csv",
-        delimiter=","
-    )
+    data = np.genfromtxt("data/" + dataset + ".csv", delimiter=",")
     data = data[data[:, 0].argsort()]
     plt.semilogx(
         # plt.loglog(
         data[:, 0],
         data[:, 1],
         ".",
-        label=dataset
+        label=dataset,
     )
 
 plt.xlabel(r"Duration [mins]")

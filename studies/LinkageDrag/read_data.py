@@ -2,22 +2,18 @@ from aerosandbox.tools.webplotdigitizer_reader import read_webplotdigitizer_csv
 
 raw_data = read_webplotdigitizer_csv("./wpd_datasets.csv")
 linkage_types = [
-    '55mm, covered, bottom',
-    '55mm, bottom',
-    '85mm, bottom',
-    '55mm, covered, top',
-    '55mm, top',
-    '85mm, top'
+    "55mm, covered, bottom",
+    "55mm, bottom",
+    "85mm, bottom",
+    "55mm, covered, top",
+    "55mm, top",
+    "85mm, top",
 ]
 
 import pandas as pd
 
 raw_df = pd.DataFrame(
-    data={
-        f"CD @ {k}": v[:, 1] * 0.01
-        for k, v in raw_data.items()
-    },
-    index=linkage_types
+    data={f"CD @ {k}": v[:, 1] * 0.01 for k, v in raw_data.items()}, index=linkage_types
 )
 
 raw_df = raw_df.transpose().sort_index().transpose()
@@ -44,18 +40,18 @@ for col in raw_df.columns:
         # experiment).
 
         for k, v in dict(
-                CDA=CDA,
-                Re_l=Re_l,
-                linkage_length=linkage_length,
-                is_covered="covered" in name,
-                is_top="top" in name
+            CDA=CDA,
+            Re_l=Re_l,
+            linkage_length=linkage_length,
+            is_covered="covered" in name,
+            is_top="top" in name,
         ).items():
             data[k].append(v)
 
 df = pd.DataFrame(data)
 
 ##### Dataframe description:
-'''
+"""
 Example:
 
 df =
@@ -94,4 +90,4 @@ Wing lift coefficient:
 
 (Constant wing loading)
 
-'''
+"""

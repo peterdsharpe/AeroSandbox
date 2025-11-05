@@ -8,7 +8,7 @@ xf = asb.XFoil(
     mach=0.3,
     xfoil_command="/mnt/c/AeroTools/xfoil7.02/bin/xfoil7",
     verbose=True,
-    full_potential=True
+    full_potential=True,
 )
 
 print(xf.alpha(3))

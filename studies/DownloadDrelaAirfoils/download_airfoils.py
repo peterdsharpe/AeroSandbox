@@ -4,12 +4,12 @@ import os
 from pathlib import Path
 
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0",
 }
 
 
 url = "http://www.charlesriverrc.org/articles/drela-airfoilshop/markdrela-ag-ht-airfoils.htm"
-url_base= "http://www.charlesriverrc.org/articles/drela-airfoilshop/"
+url_base = "http://www.charlesriverrc.org/articles/drela-airfoilshop/"
 folder = Path(__file__).parent / "airfoils"
 
 response = requests.get(url, headers=headers)

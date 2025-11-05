@@ -7,10 +7,13 @@ path: svg.path.Path = paths[0]
 points = [path[0].start] + [s.end for s in path]
 points = np.array(points)
 
-coordinates = np.stack((
-    np.real(points),
-    np.imag(points),
-), axis=1)
+coordinates = np.stack(
+    (
+        np.real(points),
+        np.imag(points),
+    ),
+    axis=1,
+)
 
 af = asb.Airfoil(
     name="Drela Opt6 90DoF",

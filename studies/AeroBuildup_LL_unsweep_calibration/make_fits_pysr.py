@@ -14,10 +14,7 @@ x_data = {
 y_data = ((df["ab_xnp"] - df["vlm_xnp"]) / (df["MAC"])).values
 
 bad_data = np.abs(y_data) > 1
-x_data = {
-    k: v[~bad_data]
-    for k, v in x_data.items()
-}
+x_data = {k: v[~bad_data] for k, v in x_data.items()}
 y_data = y_data[~bad_data]
 
 # x_data["cos_sweep"] = np.cosd(x_data["sweep"])
@@ -30,11 +27,7 @@ model = PySRRegressor(
     niterations=1000000,  # < Increase me for better results
     population_size=50,
     ncyclesperiteration=700,
-    binary_operators=[
-        "*",
-        "+",
-        "pow"
-    ],
+    binary_operators=["*", "+", "pow"],
     unary_operators=[
         # "cos",
         # "exp",
@@ -44,8 +37,8 @@ model = PySRRegressor(
         # ^ Custom operator (julia syntax)
     ],
     complexity_of_operators={
-        "*"  : 1,
-        "+"  : 1,
+        "*": 1,
+        "+": 1,
         "pow": 1,
         # "exp": 2,
         # "cos": 3,
@@ -55,7 +48,7 @@ model = PySRRegressor(
     # complexity_of_constants=0.5,
     complexity_of_variables=2,
     constraints={
-        'pow': (-1, 5),
+        "pow": (-1, 5),
         # 'sin': 5,
         # 'cos': 5,
         # 'tan': 5,
@@ -81,23 +74,14 @@ weights[np.abs(df["sweep"].values) < 31] *= 2
 weights = weights[~bad_data]
 weights /= np.mean(weights)  # Renormalize
 
-model.fit(
-    X, y,
-    weights=weights,
-    variable_names=list(x_data.keys())
-)
+model.fit(X, y, weights=weights, variable_names=list(x_data.keys()))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
     fig, ax = plt.subplots()
-    plt.plot(
-        np.degrees(x_data["sweep_rad"]),
-        y_data,
-        ".k",
-        alpha=0.2
-    )
+    plt.plot(np.degrees(x_data["sweep_rad"]), y_data, ".k", alpha=0.2)
     sweep_plot = np.linspace(-90, 90, 500)
 
     sweep_rad = np.radians(sweep_plot)
@@ -106,12 +90,11 @@ if __name__ == '__main__':
     taper = 1
 
     # dev = ((((sweep_rad - taper) * -0.30672163) * sweep_rad) * np.tan(ARf))
-    dev = (((((sweep_rad * ARf) - (taper - 0.29707846)) * sweep_rad) * (np.tan(ARf) * -0.35278562)) + (
-            0.017927283 / ARf))
+    dev = (
+        (((sweep_rad * ARf) - (taper - 0.29707846)) * sweep_rad)
+        * (np.tan(ARf) * -0.35278562)
+    ) + (0.017927283 / ARf)
 
-    plt.plot(
-        sweep_plot,
-        dev
-    )
+    plt.plot(sweep_plot, dev)
     plt.ylim(-1, 0.5)
     p.show_plot()

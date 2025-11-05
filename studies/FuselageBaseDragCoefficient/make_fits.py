@@ -16,15 +16,15 @@ plt.annotate(
     xycoords="axes fraction",
     ha="left",
     fontsize=9,
-    color="gray"
+    color="gray",
 )
 
 
 def model(m, p):
     return np.blend(
         p["trans_str"] * (m - p["m_trans"]),
-        p["pc_sup"] + p["a"] * np.exp(-(p["scale_sup"] * (m - p["center_sup"])) ** 2),
-        p["pc_sub"]
+        p["pc_sup"] + p["a"] * np.exp(-((p["scale_sup"] * (m - p["center_sup"])) ** 2)),
+        p["pc_sub"],
     )
 
 
@@ -33,18 +33,18 @@ fit = asb.FittedModel(
     x_data=data[:, 0],
     y_data=data[:, 1],
     parameter_guesses={
-        "a"         : 0.2,
-        "scale_sup" : 1,
+        "a": 0.2,
+        "scale_sup": 1,
         "center_sup": 1,
-        "m_trans"   : 1.,
-        "trans_str" : 5,
-        "pc_sub"    : 0.16,
-        "pc_sup"    : 0.05,
+        "m_trans": 1.0,
+        "trans_str": 5,
+        "pc_sub": 0.16,
+        "pc_sup": 0.05,
     },
     parameter_bounds={
         "trans_str": (0, 10),
     },
-    verbose=False
+    verbose=False,
 )
 
 # def model(m, p):
@@ -89,7 +89,5 @@ plt.ylim(0, 0.2)
 p.set_ticks(0.5, 0.1, 0.05, 0.01)
 
 p.show_plot(
-    "Fuselage Base Drag Coefficient",
-    "Mach [-]",
-    "Fuselage Base Drag Coefficient [-]"
+    "Fuselage Base Drag Coefficient", "Mach [-]", "Fuselage Base Drag Coefficient [-]"
 )

@@ -15,37 +15,33 @@ from pathlib import Path
 for x in os.walk(str(asb._asb_root.absolute())):
     sys.path.insert(0, x[0])
 
-sys.path.insert(0, str(
-    Path(__file__).parent.parent.absolute()
-))
+sys.path.insert(0, str(Path(__file__).parent.parent.absolute()))
 
-project = 'AeroSandbox'
-copyright = '2023, Peter Sharpe'
-author = 'Peter Sharpe'
+project = "AeroSandbox"
+copyright = "2023, Peter Sharpe"
+author = "Peter Sharpe"
 release = asb.__version__
 
-master_doc = 'index'
+master_doc = "index"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.duration',
-    'autoapi.extension',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.duration",
+    "autoapi.extension",
 ]
 # autosummary_generate = True
-autoapi_type = 'python'
-autoapi_dirs = [str(
-    (asb._asb_root).absolute()
-)]
+autoapi_type = "python"
+autoapi_dirs = [str((asb._asb_root).absolute())]
 autoapi_generate_api_docs = True
-autodoc_typehints = 'description'
+autodoc_typehints = "description"
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
 
 autoapi_ignore = ["*/test_*.py", "*/ignore/*"]
@@ -53,15 +49,15 @@ autoapi_ignore = ["*/test_*.py", "*/ignore/*"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
-html_static_path = ['_static']
+html_theme = "furo"
+html_static_path = ["_static"]
 
 # -- Options for LaTeX output ------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-latex-output
 
 latex_elements = {
-    'papersize'   : 'letterpaper',
-    'pointsize'   : '11pt',
-    'preamble'    : r'\usepackage{enumitem}\setlistdepth{99}',
-    'figure_align': 'htbp',
+    "papersize": "letterpaper",
+    "pointsize": "11pt",
+    "preamble": r"\usepackage{enumitem}\setlistdepth{99}",
+    "figure_align": "htbp",
 }
