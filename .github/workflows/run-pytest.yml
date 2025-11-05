@@ -1,5 +1,5 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# For more information see: https://docs.astral.sh/uv/guides/integration/github/
 
 name: Tests
 
@@ -21,20 +21,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip cache purge
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade setuptools
+          enable-cache: true
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv venv --python ${{ matrix.python-version }}
       - name: Test with pytest (without extras; only package)
         run: |
-          python -m pip install .[test]
-          pytest aerosandbox
+          uv sync --extra test
+          uv run pytest aerosandbox
       - name: Test with pytest (with extras; only tutorials)
         run: |
-          python -m pip install .[full,test]
-          py.test tutorial --nbval-lax --nbval-cell-timeout 120
+          uv sync --extra full --extra test
+          uv run pytest tutorial --nbval-lax --nbval-cell-timeout 120
