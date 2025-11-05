@@ -9,11 +9,15 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self,
         length: float,
         diameter_function: float | Callable[[np.ndarray], np.ndarray] | None = None,
-        wall_thickness_function: float | Callable[[np.ndarray], np.ndarray] | None = None,
+        wall_thickness_function: float
+        | Callable[[np.ndarray], np.ndarray]
+        | None = None,
         bending_point_forces: dict[float, float] | None = None,
-        bending_distributed_force_function: float | Callable[[np.ndarray], np.ndarray] = 0.0,
+        bending_distributed_force_function: float
+        | Callable[[np.ndarray], np.ndarray] = 0.0,
         points_per_point_load: int = 20,
-        elastic_modulus_function: float | Callable[[np.ndarray], np.ndarray] = 175e9,  # Pa
+        elastic_modulus_function: float
+        | Callable[[np.ndarray], np.ndarray] = 175e9,  # Pa
         EI_guess: float = None,
         assume_thin_tube=True,
     ):

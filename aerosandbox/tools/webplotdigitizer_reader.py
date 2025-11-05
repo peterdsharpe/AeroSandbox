@@ -10,8 +10,6 @@ import numpy as np
 from pathlib import Path
 
 
-
-
 def string_to_float(s: str) -> float:
     """Converts a string input to a float. If not possible, returns NaN."""
     try:

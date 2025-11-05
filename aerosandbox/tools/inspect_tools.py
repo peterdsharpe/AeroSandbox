@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Sequence
+from typing import Any
 from pathlib import Path
 from aerosandbox.tools.string_formatting import has_balanced_parentheses
 import numpy as np

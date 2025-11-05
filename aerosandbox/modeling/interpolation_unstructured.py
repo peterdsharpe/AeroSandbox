@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import Any
 import aerosandbox.numpy as np
 from aerosandbox.modeling.interpolation import InterpolatedModel
 from scipy import interpolate

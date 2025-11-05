@@ -1279,9 +1279,7 @@ class OptiSol:
         """
         return self.value(x)
 
-    def _value_scalar(
-        self, x: cas.MX | np.ndarray | float | int
-    ) -> float | np.ndarray:
+    def _value_scalar(self, x: cas.MX | np.ndarray | float | int) -> float | np.ndarray:
         """
         Gets the value of a variable at the solution point. For developer use - see following paragraph.
 
