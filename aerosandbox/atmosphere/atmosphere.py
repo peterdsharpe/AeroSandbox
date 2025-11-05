@@ -6,6 +6,7 @@ from aerosandbox.atmosphere._diff_atmo_functions import (
     temperature_differentiable,
 )
 import aerosandbox.tools.units as u
+from typing import Literal
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
@@ -29,7 +30,7 @@ class Atmosphere(AeroSandboxObject):
     def __init__(
         self,
         altitude: float = 0.0,  # meters
-        method: str = "differentiable",
+        method: Literal["differentiable", "isa"] = "differentiable",
         temperature_deviation: float = 0.0,  # Kelvin
     ):
         """

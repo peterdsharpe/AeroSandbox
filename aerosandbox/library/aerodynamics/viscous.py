@@ -1,9 +1,10 @@
 import aerosandbox.numpy as np
+from typing import Literal
 
 
 def Cd_cylinder(
-    Re_D: float, mach: float = 0.0, include_mach_effects=True, subcritical_only=False
-) -> float:
+    Re_D: float | np.ndarray, mach: float | np.ndarray = 0.0, include_mach_effects: bool = True, subcritical_only: bool = False
+) -> float | np.ndarray:
     """
     Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number and Mach.
 
@@ -75,7 +76,17 @@ def Cd_cylinder(
     return Cd
 
 
-def Cf_flat_plate(Re_L: float, method="hybrid-sharpe-convex") -> float:
+def Cf_flat_plate(
+    Re_L: float | np.ndarray,
+    method: Literal[
+        "blasius",
+        "turbulent",
+        "hybrid-cengel",
+        "hybrid-schlichting",
+        "hybrid-sharpe-convex",
+        "hybrid-sharpe-nonconvex",
+    ] = "hybrid-sharpe-convex",
+) -> float | np.ndarray:
     """
     Returns the mean skin friction coefficient over a flat plate.
 
@@ -141,6 +152,12 @@ def Cf_flat_plate(Re_L: float, method="hybrid-sharpe-convex") -> float:
             Cf_flat_plate(Re_L, method="blasius"),
             Cf_flat_plate(Re_L, method="hybrid-cengel"),
             hardness=1e3,
+        )
+    else:
+        raise ValueError(
+            f"{method=!r} is not a valid method for Cf_flat_plate(). "
+            f"Valid options are: 'blasius', 'turbulent', 'hybrid-cengel', "
+            f"'hybrid-schlichting', 'hybrid-sharpe-convex', 'hybrid-sharpe-nonconvex'."
         )
 
 

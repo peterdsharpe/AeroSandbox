@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
-from typing import Tuple
+from typing import Tuple, Literal
 
 
 ### See also:
@@ -9,7 +9,7 @@ from typing import Tuple
 
 def limit_load_factors(
     design_mass_TOGW: float,
-    category: str = "normal",
+    category: Literal["normal", "utility", "acrobatic", "commuter"] = "normal",
 ) -> Tuple[float, float]:
     """
     Computes the required limit load factors for FAR Part 23 certification.
@@ -46,7 +46,8 @@ def limit_load_factors(
 
     else:
         raise ValueError(
-            "Bad value of `category`. Valid values are 'normal', 'utility', 'acrobatic', and 'commuter'."
+            f"{category=!r} is not a valid option. "
+            f"Valid options are: 'normal', 'utility', 'acrobatic', 'commuter'."
         )
 
     ### Compute negative load factor
@@ -55,6 +56,9 @@ def limit_load_factors(
     elif category == "acrobatic":
         negative_load_factor = -0.5 * positive_load_factor
     else:
-        raise ValueError()
+        raise ValueError(
+            f"{category=!r} is not a valid option. "
+            f"Valid options are: 'normal', 'utility', 'acrobatic', 'commuter'."
+        )
 
     return positive_load_factor, negative_load_factor

@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, Literal
 import aerosandbox.numpy as np
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 
@@ -33,7 +33,7 @@ class InterpolatedModel(SurrogateModel):
         self,
         x_data_coordinates: Union[np.ndarray, Dict[str, np.ndarray]],
         y_data_structured: np.ndarray,
-        method: str = "bspline",
+        method: Literal["bspline", "linear", "nearest"] = "bspline",
         fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
     ):
         """

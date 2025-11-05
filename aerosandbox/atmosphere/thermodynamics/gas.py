@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
-from typing import Union
+from typing import Union, Literal
 
 universal_gas_constant = 8.31432  # J/(mol*K); universal gas constant
 
@@ -140,7 +140,7 @@ class PerfectGas:
 
     def process(
         self,
-        process: str = "isentropic",
+        process: Literal["isobaric", "isochoric", "isothermal", "isentropic", "polytropic", "isenthalpic"] = "isentropic",
         new_pressure: float = None,
         new_temperature: float = None,
         new_density: float = None,
@@ -309,10 +309,12 @@ class PerfectGas:
                 new_pressure = self.pressure * T_ratio ** (n / (n - 1))
 
         elif process == "isenthalpic":
-            raise NotImplementedError()
-
+            raise NotImplementedError("Isenthalpic process is not yet implemented.")
         else:
-            raise ValueError("Bad value of `process`!")
+            raise ValueError(
+                f"{process=!r} is not a valid option. "
+                f"Valid options are: 'isobaric', 'isochoric', 'isothermal', 'isentropic', 'polytropic', 'isenthalpic'."
+            )
 
         if inplace:
             self.pressure = new_pressure

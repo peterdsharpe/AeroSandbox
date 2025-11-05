@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from typing import Literal
 from typing import Union
 
 
@@ -205,7 +206,14 @@ def CDA_protruding_bolt_or_rivet(diameter: float, kind: str = "flush_rivet"):
 def CDA_perpendicular_sheet_metal_joint(
     joint_width: float,
     sheet_metal_thickness: float,
-    kind: str = "butt_joint_with_inside_joiner",
+    kind: Literal[
+        "butt_joint_with_inside_joiner",
+        "butt_joint_with_inside_weld",
+        "butt_joint_with_outside_joiner",
+        "butt_joint_with_outside_weld",
+        "lap_joint_forward_facing_step",
+        "lap_joint_backward_facing_step",
+    ] = "butt_joint_with_inside_joiner",
 ):
     """
     Computes the drag area (CDA) of a sheet metal joint that is perpendicular to the flow.

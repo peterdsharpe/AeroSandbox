@@ -1,5 +1,5 @@
 import aerosandbox.numpy as np
-from typing import Union
+from typing import Union, Literal
 
 
 def linear_hermite_patch(
@@ -60,7 +60,10 @@ def cubic_hermite_patch(
     elif extrapolation == "clip":
         t = np.clip(t, 0, 1)
     else:
-        raise ValueError("Bad value of `extrapolation`!")
+        raise ValueError(
+            f"{extrapolation=!r} is not a valid option. "
+            f"Valid options are: 'continue', 'clip'."
+        )
 
     return (
         (t**3) * (1 * f_b)
@@ -78,7 +81,7 @@ def cosine_hermite_patch(
     f_b: float,
     dfdx_a: float,
     dfdx_b: float,
-    extrapolation: str = "continue",
+    extrapolation: Literal["continue", "linear"] = "continue",
 ) -> Union[float, np.ndarray]:
     r"""
     Computes a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine function to blend between
@@ -108,7 +111,10 @@ def cosine_hermite_patch(
     elif extrapolation == "linear":
         t = np.clip(t, 0, 1)
     else:
-        raise ValueError("Bad value of `extrapolation`!")
+        raise ValueError(
+            f"{extrapolation=!r} is not a valid option. "
+            f"Valid options are: 'continue', 'linear'."
+        )
 
     l1 = (x - x_a) * dfdx_a + f_a
     l2 = (x - x_b) * dfdx_b + f_b

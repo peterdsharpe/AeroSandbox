@@ -1,12 +1,12 @@
 import inspect
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Optional, Literal
 
 
 def black_box(
     function: Callable[[Any], float],
-    n_in: int = None,
+    n_in: int | None = None,
     n_out: int = 1,
-    fd_method: str = "central",
+    fd_method: Literal["forward", "backward", "central", "smoothed"] = "central",
     fd_step: Optional[float] = None,
     fd_step_iter: Optional[bool] = None,
 ) -> Callable[[Any], float]:

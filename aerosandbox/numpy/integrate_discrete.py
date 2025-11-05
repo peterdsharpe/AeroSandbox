@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Literal
 import casadi as _cas
 import numpy as _onp
 from aerosandbox.numpy.array import length, concatenate
@@ -8,8 +8,15 @@ def integrate_discrete_intervals(
     f: Union[_onp.ndarray, _cas.MX],
     x: Union[_onp.ndarray, _cas.MX] = None,
     multiply_by_dx: bool = True,
-    method: str = "trapezoidal",
-    method_endpoints: str = "lower_order",
+    method: Literal[
+        "forward_euler",
+        "backward_euler",
+        "trapezoidal",
+        "forward_simpson",
+        "backward_simpson",
+        "cubic",
+    ] = "trapezoidal",
+    method_endpoints: Literal["lower_order", "ignore", "periodic"] = "lower_order",
 ):
     """
     Given a set of sampled points (x_i, f_i) from a function, computes the integral of that function over each set of
@@ -253,7 +260,7 @@ def integrate_discrete_intervals(
 def integrate_discrete_squared_curvature(
     f: Union[_onp.ndarray, _cas.MX],
     x: Union[_onp.ndarray, _cas.MX] = None,
-    method: str = "hybrid_simpson_cubic",
+    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"] = "hybrid_simpson_cubic",
 ):
     """
     Given a set of sampled points (x_i, f_i) from a function f(x), computes the following quantity:
