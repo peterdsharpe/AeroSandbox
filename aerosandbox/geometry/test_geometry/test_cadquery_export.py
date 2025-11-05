@@ -1,5 +1,4 @@
 import tempfile
-import pytest
 from aerosandbox import *
 
 
