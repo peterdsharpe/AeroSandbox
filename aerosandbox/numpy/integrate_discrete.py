@@ -246,7 +246,10 @@ def integrate_discrete_intervals(
         raise NotImplementedError("Periodic integration is not yet implemented.")
 
     else:
-        raise ValueError(f"Invalid method_endpoints '{method_endpoints}'.")
+        raise ValueError(
+            f"{method_endpoints=!r} is not a valid option. "
+            f"Valid options are: 'lower_order', 'ignore', 'periodic'."
+        )
 
     if multiply_by_dx:
         if x_is_specified:
@@ -623,7 +626,7 @@ def integrate_discrete_squared_curvature(
 
         return res
 
-    elif method in ["simpson"]:
+    elif method == "simpson":
         ### Forward Simpson for intervals 0 to N-2
         x2 = x[:-2]
         x3 = x[1:-1]
@@ -683,7 +686,7 @@ def integrate_discrete_squared_curvature(
 
         return res
 
-    elif method in ["hybrid_simpson_cubic"]:
+    elif method == "hybrid_simpson_cubic":
         from aerosandbox.numpy.calculus import gradient
 
         dfdx = gradient(f, x, edge_order=2)
