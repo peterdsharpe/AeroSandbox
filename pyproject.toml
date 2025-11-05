@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "AeroSandbox"
-version = "4.2.8"
+version = "4.2.9"
 description = "AeroSandbox is a Python package that helps you design and optimize aircraft and other engineered systems."
 readme = "README.md"
 requires-python = ">=3.10"

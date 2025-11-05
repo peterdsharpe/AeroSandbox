@@ -38,6 +38,12 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.9
+- Modernized type hints throughout the codebase
+- Better error handling and messages throughout
+- Minor change in CadQuery exports to export via assemblies rathr than individual parts
+- Switched over to `pyproject.toml` for package managment from `setup.py`. Totally `uv`-compatible now! :)
+
 #### 4.2.8
 
 - Fixes minor bug that could occur with various functions in `aerosandbox.tools.inspect_tools`, where having `stacklevel` too high could cause the frame to pop off the top of the stack.
