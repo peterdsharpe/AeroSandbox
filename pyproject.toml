@@ -1,0 +1,77 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "AeroSandbox"
+version = "4.2.8"
+description = "AeroSandbox is a Python package that helps you design and optimize aircraft and other engineered systems."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Peter Sharpe", email = "pds@mit.edu" }
+]
+keywords = [
+    "aerodynamics",
+    "airplane",
+    "cfd",
+    "mdo",
+    "mdao",
+    "aircraft",
+    "design",
+    "aerospace",
+    "optimization",
+    "automatic differentiation",
+    "structures",
+    "propulsion",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+    "numpy >= 1.20.0",
+    "scipy >= 1.7.0",
+    "casadi >= 3.6.4",
+    "pandas >= 2",
+    "matplotlib >= 3.7.0",
+    "seaborn >= 0.11",
+    "tqdm >= 4",
+    "sortedcontainers >= 2",
+    "dill >= 0.3",
+    "neuralfoil >= 0.3.0, <0.4.0",
+]
+
+[project.optional-dependencies]
+full = [
+    "plotly >= 5",
+    "pyvista >= 0.31",
+    "trimesh >= 3",
+    "sympy >= 1",
+    "shapely >= 2",
+]
+test = [
+    "pytest<=8.0.2",
+    "nbval",
+    "shapely >= 2",  # Required for some airfoil geometry tests
+    "openpyxl",  # Required for some data imports in tutorials
+]
+docs = [
+    "sphinx",
+    "furo",
+    "sphinx-autoapi",
+]
+
+[project.urls]
+Homepage = "https://peterdsharpe.github.io/AeroSandbox/"
+Source = "https://github.com/peterdsharpe/AeroSandbox"
+"Bug Reports" = "https://github.com/peterdsharpe/AeroSandbox/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aerosandbox"]
+

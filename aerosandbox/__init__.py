@@ -14,7 +14,11 @@ from aerosandbox.aerodynamics import *
 from aerosandbox.propulsion import *
 from aerosandbox.structures import *
 
-__version__ = "4.2.8"
+try:
+    from importlib.metadata import version
+    __version__ = version("AeroSandbox")
+except Exception:
+    __version__ = "unknown"
 
 
 def docs():
