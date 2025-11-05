@@ -68,7 +68,7 @@ dev = [
     { name = "ipython", version = "9.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "openpyxl" },
     { name = "plotly" },
-    { name = "pytest" },
+    { name = "ptest" },
     { name = "pyvista" },
     { name = "shapely" },
     { name = "sympy" },
@@ -77,42 +77,42 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cadquery", marker = "extra == 'full'", specifier = ">=2.5.2" },
-    { name = "casadi", specifier = ">=3.6.4" },
-    { name = "dill", specifier = ">=0.3" },
-    { name = "furo", marker = "extra == 'docs'" },
-    { name = "matplotlib", specifier = ">=3.7.0" },
-    { name = "nbval", marker = "extra == 'test'" },
+    { name = "cadquery", marker = "extra == 'full'", specifier = ">=2.6.1" },
+    { name = "casadi", specifier = ">=3.7.2" },
+    { name = "dill", specifier = ">=0.4.0" },
+    { name = "furo", marker = "extra == 'docs'", specifier = ">=2025.9.25" },
+    { name = "matplotlib", specifier = ">=3.10.7" },
+    { name = "nbval", marker = "extra == 'test'", specifier = ">=0.11.0" },
     { name = "neuralfoil", specifier = ">=0.3.0,<0.4.0" },
-    { name = "numpy", specifier = ">=1.20.0" },
-    { name = "openpyxl", marker = "extra == 'test'" },
-    { name = "pandas", specifier = ">=2" },
-    { name = "plotly", marker = "extra == 'full'", specifier = ">=5" },
-    { name = "pytest", marker = "extra == 'test'", specifier = "<=8.0.2" },
-    { name = "pyvista", marker = "extra == 'full'", specifier = ">=0.31" },
-    { name = "scipy", specifier = ">=1.7.0" },
-    { name = "seaborn", specifier = ">=0.11" },
-    { name = "shapely", marker = "extra == 'full'", specifier = ">=2" },
-    { name = "shapely", marker = "extra == 'test'", specifier = ">=2" },
-    { name = "sortedcontainers", specifier = ">=2" },
-    { name = "sphinx", marker = "extra == 'docs'" },
-    { name = "sphinx-autoapi", marker = "extra == 'docs'" },
-    { name = "sympy", marker = "extra == 'full'", specifier = ">=1" },
-    { name = "tqdm", specifier = ">=4" },
-    { name = "trimesh", marker = "extra == 'full'", specifier = ">=3" },
+    { name = "numpy", specifier = ">=2.2.6" },
+    { name = "openpyxl", marker = "extra == 'test'", specifier = ">=3.1.5" },
+    { name = "pandas", specifier = ">=2.3.3" },
+    { name = "plotly", marker = "extra == 'full'", specifier = ">=6.4.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.4.2" },
+    { name = "pyvista", marker = "extra == 'full'", specifier = ">=0.46.4" },
+    { name = "scipy", specifier = ">=1.15.3" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "shapely", marker = "extra == 'full'", specifier = ">=2.1.2" },
+    { name = "shapely", marker = "extra == 'test'", specifier = ">=2.1.2" },
+    { name = "sortedcontainers", specifier = ">=2.4.0" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.1.3" },
+    { name = "sphinx-autoapi", marker = "extra == 'docs'", specifier = ">=3.6.1" },
+    { name = "sympy", marker = "extra == 'full'", specifier = ">=1.14.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "trimesh", marker = "extra == 'full'", specifier = ">=4.9.0" },
 ]
 provides-extras = ["full", "test", "docs"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "cadquery", specifier = ">=2.5.2" },
-    { name = "ipykernel", specifier = ">=6.31.0" },
-    { name = "ipython", specifier = ">=8.18.1" },
+    { name = "cadquery", specifier = ">=2.6.1" },
+    { name = "ipykernel", specifier = ">=7.1.0" },
+    { name = "ipython", specifier = ">=8.37.0" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "plotly", specifier = ">=6.4.0" },
-    { name = "pytest", specifier = ">=8.0.2" },
+    { name = "ptest", specifier = ">=2.0.3" },
     { name = "pyvista", specifier = ">=0.46.4" },
-    { name = "shapely", specifier = ">=2.0.7" },
+    { name = "shapely", specifier = ">=2.1.2" },
     { name = "sympy", specifier = ">=1.14.0" },
     { name = "trimesh", specifier = ">=4.9.0" },
 ]
@@ -2591,6 +2591,12 @@ wheels = [
 ]
 
 [[package]]
+name = "ptest"
+version = "2.0.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/68/f5/ac79fb982d3652de50e230807e1bfa97c27862db1e02dc1aa4030156764d/ptest-2.0.3.tar.gz", hash = "sha256:90665cc382dfe57ca3d7841f1d2dc960a4d8c5db0e6efa3d2220602b6c9ea7bd", size = 107554, upload-time = "2020-11-13T06:54:23.885Z" }
+
+[[package]]
 name = "ptyprocess"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2637,7 +2643,7 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "8.0.2"
+version = "8.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -2645,11 +2651,12 @@ dependencies = [
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
+    { name = "pygments" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3f/c0/238f25cb27495fdbaa5c48cef9886162e9df1f3d0e957fc8326d9c24fa2f/pytest-8.0.2.tar.gz", hash = "sha256:d4051d623a2e0b7e51960ba963193b09ce6daeb9759a451844a21e4ddedfc1bd", size = 1396924, upload-time = "2024-02-24T22:21:30.762Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/5c/00a0e072241553e1a7496d638deababa67c5058571567b92a7eaa258397c/pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01", size = 1519618, upload-time = "2025-09-04T14:34:22.711Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/ea/d0ab9595a0d4b2320483e634123171deaf50885e29d442180efcbf2ed0b2/pytest-8.0.2-py3-none-any.whl", hash = "sha256:edfaaef32ce5172d5466b5127b42e0d6d35ebbe4453f0e3505d96afd93f6b096", size = 333984, upload-time = "2024-02-24T22:21:27.561Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79", size = 365750, upload-time = "2025-09-04T14:34:20.226Z" },
 ]
 
 [[package]]
