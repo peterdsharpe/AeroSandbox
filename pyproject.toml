@@ -54,6 +54,7 @@ full = [
     "trimesh >= 3",
     "sympy >= 1",
     "shapely >= 2",
+    "cadquery >= 2.5.2",
 ]
 test = [
     "pytest<=8.0.2",
@@ -75,3 +76,16 @@ Source = "https://github.com/peterdsharpe/AeroSandbox"
 [tool.hatch.build.targets.wheel]
 packages = ["aerosandbox"]
 
+[dependency-groups]
+dev = [
+    "cadquery>=2.5.2",
+    "ipykernel>=6.31.0",
+    "ipython>=8.18.1",
+    "openpyxl>=3.1.5",
+    "plotly>=6.4.0",
+    "pytest>=8.0.2",
+    "pyvista>=0.46.4",
+    "shapely>=2.0.7",
+    "sympy>=1.14.0",
+    "trimesh>=4.9.0",
+]
