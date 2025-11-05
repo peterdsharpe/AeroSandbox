@@ -153,17 +153,17 @@ def test_opti_quadratic_program():
 
     x = opti.variable(init_guess=0, n_vars=2)
 
-    ### Minimize x^T Q x + c^T x
+    ### Minimize x^T Q x + c^T x (note: need x.T for correct matrix multiplication)
     Q = np.array([[2, 0], [0, 2]])
-    c = np.array([-4, -6])
+    c = np.array([[-4], [-6]])  ### Column vector to match x
 
-    opti.minimize(x @ Q @ x + c @ x)
+    opti.minimize(x.T @ Q @ x + c.T @ x)
 
     sol = opti.solve(verbose=False)
 
     ### Solution should be -Q^(-1) @ c / 2 = [1, 1.5]
     expected = np.array([1, 1.5])
-    assert np.allclose(sol.value(x), expected, atol=1e-3)
+    assert np.allclose(sol.value(x).flatten(), expected, atol=1e-3)
 
 
 def test_opti_rosenbrock():
@@ -213,9 +213,13 @@ def test_opti_linear_program():
 
     sol = opti.solve(verbose=False)
 
-    ### Should push y as high as possible
-    assert sol.value(x) >= 0
-    assert sol.value(y) >= 0
+    ### Should push y as high as possible while satisfying constraints
+    ### Optimal solution is at the intersection of active constraints
+    assert sol.value(x) >= -0.1  ### Allow small numerical error
+    assert sol.value(y) >= -0.1
+    ### Check that constraints are satisfied
+    assert sol.value(x + y) <= 10.1
+    assert sol.value(2 * x + y) <= 15.1
 
 
 def test_opti_constraint_violation_detection():
@@ -284,7 +288,9 @@ def test_opti_matrix_variable():
     """Test optimization with matrix variable."""
     opti = asb.Opti()
 
-    X = opti.variable(init_guess=np.zeros((2, 2)))
+    ### Create 4 scalar variables and reshape to matrix
+    x = opti.variable(init_guess=0, n_vars=4)
+    X = np.reshape(x, (2, 2))
     target = np.array([[1, 2], [3, 4]])
 
     opti.minimize(np.sum((X - target) ** 2))

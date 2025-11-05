@@ -13,13 +13,13 @@ def test_interpolation_1d_linear():
         y_data_structured=y_data,
     )
 
-    ### Test at data points
-    for x, y_expected in zip(x_data, y_data):
-        y_pred = model(x)
+    ### Test at data points (must use dict when x_data_coordinates is a dict)
+    for x_val, y_expected in zip(x_data, y_data):
+        y_pred = model({"x": x_val})
         assert np.abs(y_pred - y_expected) < 0.1
 
     ### Test interpolation
-    y_pred = model(1.5)
+    y_pred = model({"x": 1.5})
     expected = 2 * 1.5 + 1
     assert np.abs(y_pred - expected) < 0.1
 
@@ -36,7 +36,7 @@ def test_interpolation_1d_quadratic():
 
     ### Test at intermediate point
     x_test = 5.5
-    y_pred = model(x_test)
+    y_pred = model({"x": x_test})
     y_expected = x_test**2 + 3 * x_test + 2
 
     ### Linear interpolation won't be exact for quadratic, but should be close
@@ -57,13 +57,13 @@ def test_interpolation_2d():
     )
 
     ### Test at a grid point
-    z_pred = model(2.0, 2.0)
+    z_pred = model({"x": 2.0, "y": 2.0})
     expected = 2.0**2 + 2.0**2
     assert np.abs(z_pred - expected) < 0.5
 
 
 def test_interpolation_extrapolation():
-    """Test that extrapolation is handled."""
+    """Test that extrapolation returns NaN by default."""
     x_data = np.array([1, 2, 3, 4])
     y_data = np.array([2, 4, 6, 8])
 
@@ -72,26 +72,25 @@ def test_interpolation_extrapolation():
         y_data_structured=y_data,
     )
 
-    ### Extrapolate beyond data range
-    y_pred = model(5.0)
+    ### Extrapolate beyond data range (default fill_value=np.nan)
+    y_pred = model({"x": 5.0})
 
-    ### Should extrapolate (value may vary based on method)
-    assert np.isfinite(y_pred)
+    ### Should return NaN for out-of-bounds by default
+    assert np.isnan(y_pred)
 
 
 def test_interpolation_single_point():
-    """Test interpolation with single data point."""
+    """Test that interpolation with single data point raises error (not supported)."""
     x_data = np.array([1.0])
     y_data = np.array([5.0])
 
-    model = InterpolatedModel(
-        x_data_coordinates={"x": x_data},
-        y_data_structured=y_data,
-    )
-
-    ### Should return constant value
-    y_pred = model(1.0)
-    assert np.isclose(y_pred, 5.0)
+    ### CasADi requires at least 2 grid points - this should raise an error
+    with pytest.raises((RuntimeError, ValueError)):
+        model = InterpolatedModel(
+            x_data_coordinates={"x": x_data},
+            y_data_structured=y_data,
+        )
+        model({"x": 1.0})
 
 
 def test_interpolation_monotonic_data():
@@ -106,7 +105,7 @@ def test_interpolation_monotonic_data():
 
     ### Test at several points
     x_test = np.linspace(1, 9, 10)
-    y_pred = [model(x) for x in x_test]
+    y_pred = [model({"x": x}) for x in x_test]
 
     ### Predictions should be monotonically increasing
     assert all(y_pred[i] < y_pred[i + 1] for i in range(len(y_pred) - 1))
@@ -124,7 +123,7 @@ def test_interpolation_constant_function():
 
     ### Test at various points
     for x in [0, 2.5, 5.0, 7.5, 10.0]:
-        y_pred = model(x)
+        y_pred = model({"x": x})
         assert np.isclose(y_pred, 5.0, atol=1e-6)
 
 
@@ -138,7 +137,7 @@ def test_interpolation_negative_values():
         y_data_structured=y_data,
     )
 
-    y_pred = model(-2.5)
+    y_pred = model({"x": -2.5})
     expected = (-2.5) ** 3
 
     ### Should handle negative values
@@ -156,7 +155,7 @@ def test_interpolation_oscillatory_function():
     )
 
     ### Test at pi/2 (should be close to 1)
-    y_pred = model(np.pi / 2)
+    y_pred = model({"x": np.pi / 2})
     assert np.abs(y_pred - 1.0) < 0.1
 
 
@@ -170,7 +169,7 @@ def test_interpolation_steep_gradient():
         y_data_structured=y_data,
     )
 
-    y_pred = model(2.5)
+    y_pred = model({"x": 2.5})
     expected = np.exp(2 * 2.5)
 
     ### May not be super accurate due to steepness, but should be in ballpark
@@ -190,7 +189,7 @@ def test_interpolation_2d_separable():
         y_data_structured=Z_data,
     )
 
-    z_pred = model(2.5, 1.5)
+    z_pred = model({"x": 2.5, "y": 1.5})
     expected = 2.5 * 1.5
 
     assert np.abs(z_pred - expected) < 0.5
@@ -207,8 +206,8 @@ def test_interpolation_boundary_points():
     )
 
     ### Test at boundaries
-    y_pred_min = model(x_data[0])
-    y_pred_max = model(x_data[-1])
+    y_pred_min = model({"x": x_data[0]})
+    y_pred_max = model({"x": x_data[-1]})
 
     assert np.isclose(y_pred_min, y_data[0], atol=1e-6)
     assert np.isclose(y_pred_max, y_data[-1], atol=1e-6)
@@ -225,26 +224,23 @@ def test_interpolation_irregular_spacing():
     )
 
     ### Test interpolation between irregular points
-    y_pred = model(2.0)
+    y_pred = model({"x": 2.0})
 
     ### Should be somewhere reasonable
     assert 1.5**2 < y_pred < 3.0**2
 
 
 def test_interpolation_vector_output():
-    """Test interpolation with multiple output dimensions."""
+    """Test that vector output raises an error (not supported by InterpolatedModel)."""
     x_data = np.linspace(0, 5, 20)
     y_data = np.stack([x_data, x_data**2, x_data**3], axis=-1)  ### Shape: (20, 3)
 
-    model = InterpolatedModel(
-        x_data_coordinates={"x": x_data},
-        y_data_structured=y_data,
-    )
-
-    y_pred = model(2.5)
-
-    ### Should return vector output
-    assert y_pred.shape == (3,)
+    ### InterpolatedModel only supports scalar outputs
+    with pytest.raises(ValueError):
+        model = InterpolatedModel(
+            x_data_coordinates={"x": x_data},
+            y_data_structured=y_data,
+        )
 
 
 def test_interpolation_3d():
@@ -261,7 +257,7 @@ def test_interpolation_3d():
         y_data_structured=W_data,
     )
 
-    w_pred = model(1.0, 1.0, 1.0)
+    w_pred = model({"x": 1.0, "y": 1.0, "z": 1.0})
     expected = 3.0
 
     assert np.abs(w_pred - expected) < 0.5
@@ -277,7 +273,7 @@ def test_interpolation_zero_values():
         y_data_structured=y_data,
     )
 
-    y_pred = model(0)
+    y_pred = model({"x": 0})
     assert np.abs(y_pred) < 0.5
 
 
@@ -291,7 +287,7 @@ def test_interpolation_large_dataset():
         y_data_structured=y_data,
     )
 
-    y_pred = model(50)
+    y_pred = model({"x": 50})
     expected = np.sin(50 / 10)
 
     assert np.abs(y_pred - expected) < 0.1
@@ -307,7 +303,7 @@ def test_interpolation_small_range():
         y_data_structured=y_data,
     )
 
-    y_pred = model(0.0015)
+    y_pred = model({"x": 0.0015})
     expected = 1.5
 
     assert np.abs(y_pred - expected) < 0.1

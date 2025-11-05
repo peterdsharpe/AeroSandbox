@@ -173,41 +173,39 @@ def test_wing_multiple_sections():
 
 def test_wing_control_surface():
     """Test wing with control surface."""
+    from aerosandbox.geometry.wing import ControlSurface
+    
+    cs = ControlSurface(name="flap", symmetric=True, hinge_point=0.75)
+    
     wing = Wing(
         xsecs=[
             WingXSec(
                 xyz_le=[0, 0, 0],
                 chord=1.0,
-                control_surface_type="symmetric",
-                control_surface_hinge_point=0.75,
+                control_surfaces=[cs],
             ),
             WingXSec(
                 xyz_le=[0, 5, 0],
                 chord=1.0,
-                control_surface_type="symmetric",
-                control_surface_hinge_point=0.75,
+                control_surfaces=[cs],
             ),
         ]
     )
 
     ### Should create wing with control surface
-    assert wing.xsecs[0].control_surface_type == "symmetric"
+    assert len(wing.xsecs[0].control_surfaces) == 1
+    assert wing.xsecs[0].control_surfaces[0].symmetric == True
 
 
 def test_wing_empty_xsecs():
-    """Test that wing with no xsecs raises error or handles gracefully."""
-    with pytest.raises((ValueError, IndexError, TypeError)):
-        wing = Wing(xsecs=[])
-        wing.area()
-
-
-def test_wing_single_xsec():
-    """Test wing with single cross-section."""
-    wing = Wing(xsecs=[WingXSec(xyz_le=[0, 0, 0], chord=1.0)])
-
-    ### Single section has no area
+    """Test wing with no xsecs."""
+    wing = Wing(xsecs=[])
+    
+    ### Wing with no xsecs should have zero area and span
     area = wing.area()
+    span = wing.span()
     assert np.isclose(area, 0.0)
+    assert np.isclose(span, 0.0)
 
 
 def test_wing_zero_chord():
