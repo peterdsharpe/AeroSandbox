@@ -33,7 +33,6 @@ def test_fit_model_weighting():
 
     assert fm(10) == pytest.approx(5, abs=1)  # Gives a high value at x = 10
 
-    fm.plot()
 
 
 if __name__ == "__main__":

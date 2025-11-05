@@ -238,7 +238,7 @@ def test_fuselage_with_base_drag(
             for xi in np.sinspace(0, 1, 100)
         ]
     )
-    fuselage.draw_three_view()
+    # fuselage.draw_three_view()
 
     airplane = asb.Airplane(
         fuselages=[fuselage],
