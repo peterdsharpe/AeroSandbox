@@ -137,7 +137,9 @@ def test_simple_wing_stability_derivatives(
 
     print(f"Aerodynamic coefficients with {AeroAnalysis.__name__}:")
     for key in ["CL", "CD", "CY", "Cl", "Cm", "Cn", "Cma"]:
-        print(f"{key.rjust(10)}: {float(aero[key]):20.4f}")
+        ### Extract scalar from array before converting to float
+        value = np.atleast_1d(aero[key]).item() if np.ndim(aero[key]) > 0 else aero[key]
+        print(f"{key.rjust(10)}: {value:20.4f}")
 
 
 if __name__ == "__main__":

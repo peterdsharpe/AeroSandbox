@@ -5,6 +5,7 @@ import pytest
 
 def test_alpha_wind():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
+        mass_props=asb.MassProperties(mass=0),
         u_b=0,
         w_b=1,
     )
@@ -16,6 +17,7 @@ def test_alpha_wind():
 
 def test_beta_wind():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
+        mass_props=asb.MassProperties(mass=0),
         u_b=0,
         v_b=1,
         # alpha=0,
@@ -29,6 +31,7 @@ def test_beta_wind():
 
 def test_beta_wind_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
+        mass_props=asb.MassProperties(mass=0),
         u_b=0,
         v_b=1,
         # alpha=0,
@@ -42,6 +45,7 @@ def test_beta_wind_body():
 
 def test_alpha_stability_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
+        mass_props=asb.MassProperties(mass=0),
         u_b=0,
         w_b=1,
         # alpha=90,
@@ -55,6 +59,7 @@ def test_alpha_stability_body():
 
 def test_beta_stability_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
+        mass_props=asb.MassProperties(mass=0),
         u_b=0,
         v_b=1,
         # alpha=0,
@@ -68,6 +73,7 @@ def test_beta_stability_body():
 
 def test_order_wind_body():
     dyn = asb.DynamicsRigidBody3DBodyEuler(
+        mass_props=asb.MassProperties(mass=0),
         u_b=0,
         v_b=1,
         phi=np.pi / 2,

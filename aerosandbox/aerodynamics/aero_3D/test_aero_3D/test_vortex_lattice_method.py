@@ -10,7 +10,8 @@ def test_conventional():
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
     )
-    return analysis.run()
+    aero = analysis.run()
+    assert aero is not None  ### Verify analysis produces results
 
 
 def test_vanilla():
@@ -22,7 +23,8 @@ def test_vanilla():
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
     )
-    return analysis.run()
+    aero = analysis.run()
+    assert aero is not None  ### Verify analysis produces results
 
 
 def test_flat_plate():
@@ -34,7 +36,8 @@ def test_flat_plate():
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
     )
-    return analysis.run()
+    aero = analysis.run()
+    assert aero is not None  ### Verify analysis produces results
 
 
 def test_flat_plate_mirrored():
@@ -48,7 +51,8 @@ def test_flat_plate_mirrored():
         spanwise_resolution=1,
         chordwise_resolution=3,
     )
-    return analysis.run()
+    aero = analysis.run()
+    assert aero is not None  ### Verify analysis produces results
 
 
 if __name__ == "__main__":

@@ -9,9 +9,10 @@ def test_aero_buildup():
         airplane=airplane,
         op_point=asb.OperatingPoint(),
     )
-    return analysis.run()
+    aero = analysis.run()
+    assert aero is not None  ### Verify analysis produces results
 
 
 if __name__ == "__main__":
-    aero = test_aero_buildup()
+    test_aero_buildup()
     # pytest.main()

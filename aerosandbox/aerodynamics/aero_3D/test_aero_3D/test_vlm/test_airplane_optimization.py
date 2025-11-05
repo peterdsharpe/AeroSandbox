@@ -4,6 +4,7 @@ import pytest
 
 def test_airplane_optimization():
     def get_aero(alpha, taper_ratio):
+        airfoil = asb.Airfoil("naca0012")
         airplane = asb.Airplane(
             wings=[
                 asb.Wing(
@@ -12,10 +13,12 @@ def test_airplane_optimization():
                         asb.WingXSec(
                             xyz_le=[-0.25, 0, 0],
                             chord=1,
+                            airfoil=airfoil,
                         ),
                         asb.WingXSec(
                             xyz_le=[-0.25 * taper_ratio, 1, 0],
                             chord=taper_ratio,
+                            airfoil=airfoil,
                         ),
                     ],
                 )
