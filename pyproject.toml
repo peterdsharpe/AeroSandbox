@@ -89,3 +89,6 @@ dev = [
     "sympy>=1.14.0",
     "trimesh>=4.9.0",
 ]
+
+[tool.ruff]
+per-file-ignores = { "*.ipynb" = ["E402"] }
