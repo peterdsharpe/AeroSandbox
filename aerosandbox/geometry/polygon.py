@@ -1,7 +1,6 @@
 import aerosandbox.numpy as np
 from matplotlib import path
 from aerosandbox.common import AeroSandboxObject
-from typing import Union
 
 
 class Polygon(AeroSandboxObject):
@@ -290,9 +289,9 @@ class Polygon(AeroSandboxObject):
 
     def contains_points(
         self,
-        x: Union[float, np.ndarray],
-        y: Union[float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        x: float | np.ndarray,
+        y: float | np.ndarray,
+    ) -> float | np.ndarray:
         """
         Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
 

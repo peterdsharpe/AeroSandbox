@@ -1,7 +1,7 @@
 from aerosandbox.common import AeroSandboxObject
 from aerosandbox import Atmosphere
 import aerosandbox.numpy as np
-from typing import Tuple, Union, Dict, List
+from typing import Sequence
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 
@@ -46,7 +46,7 @@ class OperatingPoint(AeroSandboxObject):
         self.r = r
 
     @property
-    def state(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state(self) -> dict[str, float | np.ndarray]:
         """
         Returns the state variables of this OperatingPoint instance as a Dict.
 
@@ -66,9 +66,7 @@ class OperatingPoint(AeroSandboxObject):
 
     def get_new_instance_with_state(
         self,
-        new_state: Union[
-            Dict[str, Union[float, np.ndarray]], List, Tuple, np.ndarray
-        ] = None,
+        new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
         Creates a new instance of the OperatingPoint class from the given state.
@@ -97,9 +95,7 @@ class OperatingPoint(AeroSandboxObject):
 
     def _set_state(
         self,
-        new_state: Union[
-            Dict[str, Union[float, np.ndarray]], List, Tuple, np.ndarray
-        ] = None,
+        new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
         Force-overwrites all state variables with a new set (either partial or complete) of state variables.
@@ -127,8 +123,8 @@ class OperatingPoint(AeroSandboxObject):
             )  # Pack the iterable into a dict-like, then do the same thing as above.
 
     def unpack_state(
-        self, dict_like_state: Dict[str, Union[float, np.ndarray]] = None
-    ) -> Tuple[Union[float, np.ndarray]]:
+        self, dict_like_state: dict[str, float | np.ndarray] | None = None
+    ) -> tuple[float | np.ndarray]:
         """
         'Unpacks' a Dict-like state into an array-like that represents the state of the OperatingPoint.
 
@@ -143,8 +139,8 @@ class OperatingPoint(AeroSandboxObject):
         return tuple(dict_like_state.values())
 
     def pack_state(
-        self, array_like_state: Union[List, Tuple, np.ndarray] = None
-    ) -> Dict[str, Union[float, np.ndarray]]:
+        self, array_like_state: Sequence | np.ndarray | None = None
+    ) -> dict[str, float | np.ndarray]:
         """
         'Packs' an array into a Dict that represents the state of the OperatingPoint.
 
@@ -187,7 +183,7 @@ class OperatingPoint(AeroSandboxObject):
             ]
         )
 
-    def __getitem__(self, index: Union[int, slice]):
+    def __getitem__(self, index: int | slice):
         """
         Indexes one item from each attribute of an OperatingPoint instance.
         Returns a new OperatingPoint instance.
@@ -334,12 +330,12 @@ class OperatingPoint(AeroSandboxObject):
 
     def convert_axes(
         self,
-        x_from: Union[float, np.ndarray],
-        y_from: Union[float, np.ndarray],
-        z_from: Union[float, np.ndarray],
+        x_from: float | np.ndarray,
+        y_from: float | np.ndarray,
+        z_from: float | np.ndarray,
         from_axes: str,
         to_axes: str,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.

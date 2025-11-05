@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Union, Tuple, Optional, Set, Any
+from typing import Any, Sequence
 from pathlib import Path
 from aerosandbox.tools.string_formatting import has_balanced_parentheses
 import numpy as np
@@ -8,7 +8,7 @@ import numpy as np
 def get_caller_source_location(
     stacklevel: int = 1,
     truncate_stacklevel: bool = False,
-) -> (Path, int, str):
+) -> tuple[Path, int, str]:
     """
     Gets the file location where this function itself (`get_caller_source_location()`) is called.
 
@@ -81,7 +81,7 @@ def get_caller_source_location(
 
 
 def get_source_code_from_location(
-    filename: Union[Path, str],
+    filename: Path | str,
     lineno: int,
     code_context: str = None,
     strip_lines: bool = False,
@@ -128,7 +128,7 @@ def get_source_code_from_location(
             return code_context
 
     ### Initialize the caller source lines, which is a list of strings that contain the source for the call.
-    source_lines: List[str] = []
+    source_lines: list[str] = []
 
     ### Read the source lines of code surrounding the call
     try:
@@ -216,7 +216,7 @@ def get_caller_source_code(
     )
 
 
-def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
+def get_function_argument_names_from_source_code(source_code: str) -> list[str]:
     """
     Gets the names of the function arguments found in a particular line of source code.
 
@@ -285,7 +285,7 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
     if parenthesis_level == 0:
         raise ValueError("No function call was found in the source code provided!")
 
-    arg_names: List[str] = []
+    arg_names: list[str] = []
     current_arg = ""
     in_type_hinting_block = False
 
@@ -328,9 +328,9 @@ def get_function_argument_names_from_source_code(source_code: str) -> List[str]:
 def codegen(
     x: Any,
     indent_str: str = "    ",
-    _required_imports: Optional[Set[str]] = None,
+    _required_imports: set[str] | None = None,
     _recursion_depth: int = 0,
-) -> Tuple[str, Set[str]]:
+) -> tuple[str, set[str]]:
     """
     Attempts to generate a string of Python code that, when evaluated, would produce the same value as the input.
     Also generates the required imports for the code to run.

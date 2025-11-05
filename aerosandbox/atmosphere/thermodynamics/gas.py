@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools.string_formatting import eng_string
-from typing import Union, Literal
+from typing import Literal
 
 universal_gas_constant = 8.31432  # J/(mol*K); universal gas constant
 
@@ -19,8 +19,8 @@ class PerfectGas:
 
     def __init__(
         self,
-        pressure: Union[float, np.ndarray] = 101325,
-        temperature: Union[float, np.ndarray] = 273.15 + 15,
+        pressure: float | np.ndarray = 101325,
+        temperature: float | np.ndarray = 273.15 + 15,
         specific_heat_constant_pressure: float = 1006,
         specific_heat_constant_volume: float = 717,
         molecular_mass: float = 28.9644e-3,

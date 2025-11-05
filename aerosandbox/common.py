@@ -2,7 +2,7 @@ import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
 from abc import abstractmethod, ABC
 import copy
-from typing import Dict, Any, Union
+from typing import Any
 import casadi as cas
 import dill
 from pathlib import Path
@@ -11,7 +11,7 @@ import warnings
 
 
 class AeroSandboxObject(ABC):
-    _asb_metadata: Dict[str, str] = None
+    _asb_metadata: dict[str, str] = None
 
     @abstractmethod
     def __init__(self):
@@ -57,7 +57,7 @@ class AeroSandboxObject(ABC):
 
     def save(
         self,
-        filename: Union[str, Path] = None,
+        filename: str | Path | None = None,
         verbose: bool = True,
         automatically_add_extension: bool = True,
     ) -> None:
@@ -242,7 +242,7 @@ class AeroSandboxObject(ABC):
 
 
 def load(
-    filename: Union[str, Path],
+    filename: str | Path,
     verbose: bool = True,
 ) -> AeroSandboxObject:
     """
@@ -334,7 +334,7 @@ def load(
 
 
 class ExplicitAnalysis(AeroSandboxObject):
-    default_analysis_specific_options: Dict[type, Dict[str, Any]] = {}
+    default_analysis_specific_options: dict[type, dict[str, Any]] = {}
     """This is part of AeroSandbox's "analysis-specific options" feature, which lets you "tag" geometry objects with 
     flags that change how different analyses act on them. 
     
@@ -377,7 +377,7 @@ class ExplicitAnalysis(AeroSandboxObject):
     def get_options(
         self,
         geometry_object: AeroSandboxObject,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Retrieves the analysis-specific options that correspond to both:
 

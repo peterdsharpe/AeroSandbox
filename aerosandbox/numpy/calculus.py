@@ -3,7 +3,7 @@ import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.arithmetic_dyadic import centered_mod as _centered_mod
 from aerosandbox.numpy.array import array, concatenate, reshape
-from typing import Tuple
+from typing import Literal
 
 
 def diff(a, n=1, axis=-1, period=None):
@@ -151,7 +151,7 @@ def gradient(
             dx_shape[axis] = shape[axis] - 1
             dx = reshape(dx, dx_shape)
 
-            def get_slice(slice_obj: slice) -> Tuple[slice]:
+            def get_slice(slice_obj: slice) -> tuple[slice]:
                 slices = [slice(None)] * len(shape)
                 slices[axis] = slice_obj
                 return tuple(slices)

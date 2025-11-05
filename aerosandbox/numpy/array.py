@@ -1,6 +1,6 @@
 import numpy as _onp
 import casadi as _cas
-from typing import List, Dict, Union, Sequence
+from typing import Any, Sequence
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
@@ -23,7 +23,7 @@ def array(array_like, dtype=None):
 
     else:
         # Handles inputs like [[opti_var_1, opti_var_2], [opti_var_3, opti_var_4]]
-        def make_row(contents: List):
+        def make_row(contents: Sequence[Any]):
             try:
                 return _cas.horzcat(*contents)
             except (TypeError, Exception):
@@ -32,7 +32,7 @@ def array(array_like, dtype=None):
         return _cas.vertcat(*[make_row(row) for row in array_like])
 
 
-def concatenate(arrays: Sequence, axis: int = 0):
+def concatenate(arrays: Sequence[_onp.ndarray | _cas.MX], axis: int = 0):
     """
     Join a sequence of arrays along an existing axis. Returns a NumPy array if possible; if not, returns a CasADi array.
 
@@ -400,7 +400,7 @@ def full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
 
 
 def assert_equal_shape(
-    arrays: Union[List[_onp.ndarray], Dict[str, _onp.ndarray]],
+    arrays: list[_onp.ndarray] | dict[str, _onp.ndarray],
 ) -> None:
     """
     Assert that all of the given arrays are the same shape. If this is not true, raise a ValueError.

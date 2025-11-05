@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
-from typing import Tuple, Literal
+from typing import Literal
 
 
 ### See also:
@@ -10,7 +10,7 @@ from typing import Tuple, Literal
 def limit_load_factors(
     design_mass_TOGW: float,
     category: Literal["normal", "utility", "acrobatic", "commuter"] = "normal",
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
     Computes the required limit load factors for FAR Part 23 certification.
 

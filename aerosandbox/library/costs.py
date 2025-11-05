@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
-from typing import Dict, Literal
+from typing import Literal
 
 
 def modified_DAPCA_IV_production_cost_analysis(
@@ -24,7 +24,7 @@ def modified_DAPCA_IV_production_cost_analysis(
     tooling_wrap_rate_2012_dollars: float = 118.0,
     quality_control_wrap_rate_2012_dollars: float = 108.0,
     manufacturing_wrap_rate_2012_dollars: float = 98.0,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Computes the cost of an aircraft in present-day dollars, using the Modified DAPCA IV cost model.
 
@@ -226,7 +226,7 @@ def electric_aircraft_direct_operating_cost_analysis(
     annual_expenses_per_crew: float = 100000 * 1.5,
     ascent_time: float = 0.2 * u.hour,
     descent_time: float = 0.2 * u.hour,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Estimates the overall operating cost of an electric aircraft. Includes both direct and indirect operating costs.
 

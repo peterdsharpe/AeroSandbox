@@ -1,6 +1,6 @@
 from aerosandbox.common import AeroSandboxObject
 from abc import abstractmethod
-from typing import Union, Dict, List, Tuple
+from typing import Any
 import aerosandbox.numpy as np
 
 
@@ -38,8 +38,8 @@ class SurrogateModel(AeroSandboxObject):
 
     @abstractmethod  # If you subclass SurrogateModel, you must overwrite __call__ so that it's a callable.
     def __call__(
-        self, x: Union[int, float, np.ndarray, Dict[str, np.ndarray]]
-    ) -> Union[float, np.ndarray]:
+        self, x: int | float | np.ndarray | dict[str, np.ndarray]
+    ) -> float | np.ndarray:
         """
         Evaluates the surrogate model at some given input x.
 
@@ -89,7 +89,7 @@ class SurrogateModel(AeroSandboxObject):
         else:
             return 1
 
-    def input_names(self) -> Union[List, None]:
+    def input_names(self) -> list | None:
         """
         If x (the input to this model) is supposed to be a dict, this method returns the keys that should be part of x.
 
@@ -103,7 +103,7 @@ class SurrogateModel(AeroSandboxObject):
     def plot(self, resolution=250):
         import matplotlib.pyplot as plt
 
-        def axis_range(x_data_axis: np.ndarray) -> Tuple[float, float]:
+        def axis_range(x_data_axis: np.ndarray) -> tuple[float, float]:
             """
             Given the entries of one axis of the dependent variable, determine a min/max range over which to plot the fit.
             Args:

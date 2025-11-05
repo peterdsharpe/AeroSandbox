@@ -1,7 +1,7 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod
-from typing import Union, Dict, Tuple, List
+from typing import Sequence
 from aerosandbox import (
     MassProperties,
     Opti,
@@ -33,7 +33,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @property
     @abstractmethod
-    def state(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state(self) -> dict[str, float | np.ndarray]:
         """
         Returns the state variables of this Dynamics instance as a Dict.
 
@@ -52,9 +52,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     def get_new_instance_with_state(
         self,
-        new_state: Union[
-            Dict[str, Union[float, np.ndarray]], List, Tuple, np.ndarray
-        ] = None,
+        new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
         Creates a new instance of this same Dynamics class from the given state.
@@ -83,9 +81,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     def _set_state(
         self,
-        new_state: Union[
-            Dict[str, Union[float, np.ndarray]], List, Tuple, np.ndarray
-        ] = None,
+        new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
         Force-overwrites all state variables with a new set (either partial or complete) of state variables.
@@ -114,8 +110,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             )  # Pack the iterable into a dict-like, then do the same thing as above.
 
     def unpack_state(
-        self, dict_like_state: Dict[str, Union[float, np.ndarray]] = None
-    ) -> Tuple[Union[float, np.ndarray]]:
+        self, dict_like_state: dict[str, float | np.ndarray] | None = None
+    ) -> tuple[float | np.ndarray]:
         """
         'Unpacks' a Dict-like state into an array-like that represents the state of the dynamical system.
 
@@ -130,8 +126,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         return tuple(dict_like_state.values())
 
     def pack_state(
-        self, array_like_state: Union[List, Tuple, np.ndarray] = None
-    ) -> Dict[str, Union[float, np.ndarray]]:
+        self, array_like_state: Sequence | np.ndarray | None = None
+    ) -> dict[str, float | np.ndarray]:
         """
         'Packs' an array into a Dict that represents the state of the dynamical system.
 
@@ -151,7 +147,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @property
     @abstractmethod
-    def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
+    def control_variables(self) -> dict[str, float | np.ndarray]:
         pass
 
     def __repr__(self) -> str:
@@ -187,7 +183,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             ]
         )
 
-    def __getitem__(self, index: Union[int, slice]):
+    def __getitem__(self, index: int | slice):
         """
         Indexes one item from each attribute of a Dynamics instance.
         Returns a new Dynamics instance of the same type.
@@ -247,7 +243,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         return np.fromiter([self], dtype=dtype).reshape(())
 
     @abstractmethod
-    def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state_derivatives(self) -> dict[str, float | np.ndarray]:
         """
         A function that returns the derivatives with respect to time of the state specified in the `state` property.
 
@@ -260,7 +256,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         opti: Opti,
         time: np.ndarray,
         method: str = "trapezoidal",
-        which: Union[str, List[str], Tuple[str]] = "all",
+        which: str | Sequence[str] = "all",
         _stacklevel=1,
     ):
         """
@@ -328,7 +324,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         z_from: float,
         from_axes: str,
         to_axes: str,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.
@@ -363,9 +359,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
     def add_force(
         self,
-        Fx: Union[float, np.ndarray] = 0,
-        Fy: Union[float, np.ndarray] = 0,
-        Fz: Union[float, np.ndarray] = 0,
+        Fx: float | np.ndarray = 0,
+        Fy: float | np.ndarray = 0,
+        Fz: float | np.ndarray = 0,
         axes: str = "wind",
     ) -> None:
         """
@@ -425,13 +421,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     def draw(
         self,
-        vehicle_model: Union[Airplane, "PolyData"] = None,
+        vehicle_model: "Airplane | PolyData | None" = None,
         backend: str = "pyvista",
         plotter=None,
         draw_axes: bool = True,
         draw_global_axes: bool = True,
         draw_global_grid: bool = True,
-        scale_vehicle_model: Union[float, None] = None,
+        scale_vehicle_model: float | None = None,
         n_vehicles_to_draw: int = 10,
         cg_axes: str = "geometry",
         draw_trajectory_line: bool = True,

@@ -1,18 +1,17 @@
 import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
 from aerosandbox.performance.operating_point import OperatingPoint
-from typing import Union, Dict
 
 
 def motor_electric_performance(
-    voltage: Union[float, np.ndarray] = None,
-    current: Union[float, np.ndarray] = None,
-    rpm: Union[float, np.ndarray] = None,
-    torque: Union[float, np.ndarray] = None,
+    voltage: float | np.ndarray | None = None,
+    current: float | np.ndarray | None = None,
+    rpm: float | np.ndarray | None = None,
+    torque: float | np.ndarray | None = None,
     kv: float = 1000.0,  # rpm/volt
     resistance: float = 0.1,  # ohms
     no_load_current: float = 0.4,  # amps
-) -> Dict[str, Union[float, np.ndarray]]:
+) -> dict[str, float | np.ndarray]:
     """
     A function for predicting the performance of an electric motor.
 
@@ -137,7 +136,7 @@ def electric_propeller_propulsion_analysis(
     gearbox_efficiency: float = 1,
     esc_efficiency: float = 0.98,
     battery_discharge_efficiency: float = 0.985,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Performs a propulsion analysis for an electric propeller-driven aircraft.
 

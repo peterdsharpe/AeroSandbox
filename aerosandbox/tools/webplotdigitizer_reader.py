@@ -7,9 +7,9 @@ https://github.com/ankitrohatgi/WebPlotDigitizer
 """
 
 import numpy as np
-from typing import Dict
 from pathlib import Path
-from typing import Union
+
+
 
 
 def string_to_float(s: str) -> float:
@@ -27,8 +27,8 @@ def remove_nan_rows(a: np.ndarray) -> np.ndarray:
 
 
 def read_webplotdigitizer_csv(
-    filename: Union[Path, str],
-) -> Dict[str, np.ndarray]:
+    filename: Path | str,
+) -> dict[str, np.ndarray]:
     """
     Reads a CSV file produced by WebPlotDigitizer (https://automeris.io/WebPlotDigitizer/).
 

@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Any, Optional, Literal
+from typing import Callable, Any, Literal
 
 
 def black_box(
@@ -7,8 +7,8 @@ def black_box(
     n_in: int | None = None,
     n_out: int = 1,
     fd_method: Literal["forward", "backward", "central", "smoothed"] = "central",
-    fd_step: Optional[float] = None,
-    fd_step_iter: Optional[bool] = None,
+    fd_step: float | None = None,
+    fd_step_iter: bool | None = None,
 ) -> Callable[[Any], float]:
     """
     Wraps a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization problems.

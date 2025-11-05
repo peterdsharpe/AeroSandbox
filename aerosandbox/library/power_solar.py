@@ -1,7 +1,5 @@
 import aerosandbox.numpy as np
 from typing import Literal
-from aerosandbox.atmosphere.atmosphere import Atmosphere
-from typing import Union
 
 """
 Welcome to the AeroSandbox solar energy library!
@@ -11,7 +9,7 @@ realized solar flux on a given surface as a function of many different parameter
 """
 
 
-def _prepare_for_inverse_trig(x: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+def _prepare_for_inverse_trig(x: float | np.ndarray) -> float | np.ndarray:
     """
     Ensures that a value is within the open interval (-1, 1), so that if you call an inverse trig function
     on it (e.g., arcsin, arccos), you won't get an infinity or NaN.
@@ -25,8 +23,8 @@ def _prepare_for_inverse_trig(x: Union[float, np.ndarray]) -> Union[float, np.nd
 
 
 def solar_flux_outside_atmosphere_normal(
-    day_of_year: Union[int, float, np.ndarray],
-) -> Union[float, np.ndarray]:
+    day_of_year: int | float | np.ndarray,
+) -> float | np.ndarray:
     """
     Computes the normal solar flux at the top of the atmosphere ("Airmass 0").
     This varies due to Earth's orbital eccentricity (elliptical orbit).
@@ -43,8 +41,8 @@ def solar_flux_outside_atmosphere_normal(
 
 
 def declination_angle(
-    day_of_year: Union[int, float, np.ndarray],
-) -> Union[float, np.ndarray]:
+    day_of_year: int | float | np.ndarray,
+) -> float | np.ndarray:
     """
     Computes the solar declination angle, in degrees, as a function of day of year.
 
@@ -62,10 +60,10 @@ def declination_angle(
 
 
 def solar_elevation_angle(
-    latitude: Union[float, np.ndarray],
-    day_of_year: Union[int, float, np.ndarray],
-    time: Union[float, np.ndarray],
-) -> Union[float, np.ndarray]:
+    latitude: float | np.ndarray,
+    day_of_year: int | float | np.ndarray,
+    time: float | np.ndarray,
+) -> float | np.ndarray:
     """
     Elevation angle of the sun [degrees] for a local observer.
 
@@ -96,10 +94,10 @@ def solar_elevation_angle(
 
 
 def solar_azimuth_angle(
-    latitude: Union[float, np.ndarray],
-    day_of_year: Union[int, float, np.ndarray],
-    time: Union[float, np.ndarray],
-) -> Union[float, np.ndarray]:
+    latitude: float | np.ndarray,
+    day_of_year: int | float | np.ndarray,
+    time: float | np.ndarray,
+) -> float | np.ndarray:
     """
     Azimuth angle of the sun [degrees] for a local observer.
 
@@ -137,10 +135,10 @@ def solar_azimuth_angle(
 
 
 def airmass(
-    solar_elevation_angle: Union[float, np.ndarray],
-    altitude: Union[float, np.ndarray] = 0.0,
+    solar_elevation_angle: float | np.ndarray,
+    altitude: float | np.ndarray = 0.0,
     method="Young",
-) -> Union[float, np.ndarray]:
+) -> float | np.ndarray:
     """
     Computes the (relative) airmass as a function of the (true) solar elevation angle and observer altitude.
     Includes refractive (e.g. curving) effects due to atmospheric density gradient.
@@ -221,16 +219,16 @@ def airmass(
 
 
 def solar_flux(
-    latitude: Union[float, np.ndarray],
-    day_of_year: Union[int, float, np.ndarray],
-    time: Union[float, np.ndarray],
-    altitude: Union[float, np.ndarray] = 0.0,
-    panel_azimuth_angle: Union[float, np.ndarray] = 0.0,
-    panel_tilt_angle: Union[float, np.ndarray] = 0.0,
+    latitude: float | np.ndarray,
+    day_of_year: int | float | np.ndarray,
+    time: float | np.ndarray,
+    altitude: float | np.ndarray = 0.0,
+    panel_azimuth_angle: float | np.ndarray = 0.0,
+    panel_tilt_angle: float | np.ndarray = 0.0,
     air_quality: Literal["typical", "clean", "polluted"] = "typical",
-    albedo: Union[float, np.ndarray] = 0.2,
+    albedo: float | np.ndarray = 0.2,
     **deprecated_kwargs,
-) -> Union[float, np.ndarray]:
+) -> float | np.ndarray:
     """
     Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel. Accounts for atmospheric
     absorption, scattering, and re-scattering (e.g. diffuse illumination), all as a function of panel altitude.
@@ -397,8 +395,8 @@ def solar_flux(
 
 
 def peak_sun_hours_per_day_on_horizontal(
-    latitude: Union[float, np.ndarray], day_of_year: Union[int, float, np.ndarray]
-) -> Union[float, np.ndarray]:
+    latitude: float | np.ndarray, day_of_year: int | float | np.ndarray
+) -> float | np.ndarray:
     """
     How many hours of equivalent peak sun do you get per day?
     :param latitude: Latitude [degrees]
@@ -426,8 +424,8 @@ def peak_sun_hours_per_day_on_horizontal(
 
 
 def length_day(
-    latitude: Union[float, np.ndarray], day_of_year: Union[int, float, np.ndarray]
-) -> Union[float, np.ndarray]:
+    latitude: float | np.ndarray, day_of_year: int | float | np.ndarray
+) -> float | np.ndarray:
     """
     Gives the duration where the sun is above the horizon on a given day.
 
@@ -450,7 +448,7 @@ def length_day(
     return sun_time
 
 
-def mass_MPPT(power: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+def mass_MPPT(power: float | np.ndarray) -> float | np.ndarray:
     """
     Gives the estimated mass of a Maximum Power Point Tracking (MPPT) unit for solar energy
     collection. Based on regressions at AeroSandbox/studies/SolarMPPTMasses.

@@ -1,11 +1,11 @@
 import aerosandbox.numpy as np
 import casadi as _cas
-from typing import Union, Callable, Tuple, Optional, Literal, Sequence
+from typing import Callable, Literal, Sequence
 from scipy import integrate
 
 
 def quad(
-    func: Union[Callable, _cas.MX],
+    func: Callable | _cas.MX,
     a: float,
     b: float,
     full_output: bool = False,
@@ -63,17 +63,17 @@ def quad(
 
 
 def solve_ivp(
-    fun: Union[Callable, _cas.MX],
-    t_span: Tuple[float, float],
-    y0: Union[np.ndarray, _cas.MX],
+    fun: Callable | _cas.MX,
+    t_span: tuple[float, float],
+    y0: np.ndarray | _cas.MX,
     method: Literal["RK45", "RK23", "DOP853", "Radau", "BDF", "LSODA"] = "RK45",
     t_eval: np.ndarray | _cas.MX | None = None,
     dense_output: bool = False,
     events: Callable | Sequence[Callable] | None = None,
     vectorized: bool = False,
-    args: Optional[Tuple] = None,
+    args: tuple | None = None,
     t_variable: _cas.MX | None = None,
-    y_variables: Union[_cas.MX, Tuple[_cas.MX]] | None = None,
+    y_variables: _cas.MX | tuple[_cas.MX] | None = None,
     **options,
 ):
     """

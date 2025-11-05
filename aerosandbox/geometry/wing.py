@@ -1,6 +1,6 @@
 from aerosandbox.common import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Tuple, Union, Optional, Callable
+from typing import Any, Callable, Sequence
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
@@ -34,11 +34,11 @@ class Wing(AeroSandboxObject):
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        xsecs: List["WingXSec"] = None,
+        name: str | None = None,
+        xsecs: list["WingXSec"] | None = None,
         symmetric: bool = False,
-        color: Optional[Union[str, Tuple[float]]] = None,
-        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+        color: (str | tuple[float]) | None = None,
+        analysis_specific_options: dict[type, dict[str, Any]] | None = None,
         **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
     ):
         """
@@ -95,7 +95,7 @@ class Wing(AeroSandboxObject):
         if name is None:
             name = "Untitled"
         if xsecs is None:
-            xsecs: List["WingXSec"] = []
+            xsecs: list["WingXSec"] = []
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -121,7 +121,7 @@ class Wing(AeroSandboxObject):
         symmetry_description = "symmetric" if self.symmetric else "asymmetric"
         return f"Wing '{self.name}' ({len(self.xsecs)} {'xsec' if n_xsecs == 1 else 'xsecs'}, {symmetry_description})"
 
-    def translate(self, xyz: Union[np.ndarray, List[float]]) -> "Wing":
+    def translate(self, xyz: np.ndarray | Sequence[float]) -> "Wing":
         """
         Translates the entire Wing by a certain amount.
 
@@ -140,7 +140,7 @@ class Wing(AeroSandboxObject):
         type: str = "yz",
         include_centerline_distance=False,
         _sectional: bool = False,
-    ) -> Union[float, List[float]]:
+    ) -> float | list[float]:
         """
         Computes the span, with options for various ways of measuring this (see `type` argument).
 
@@ -289,7 +289,7 @@ class Wing(AeroSandboxObject):
         type: str = "planform",
         include_centerline_distance=False,
         _sectional: bool = False,
-    ) -> Union[float, List[float]]:
+    ) -> float | list[float]:
         """
         Computes the wing area, with options for various ways of measuring this (see `type` argument):
 
@@ -669,7 +669,7 @@ class Wing(AeroSandboxObject):
         """
         return self.xsecs[-1].chord / self.xsecs[0].chord
 
-    def volume(self, _sectional: bool = False) -> Union[float, List[float]]:
+    def volume(self, _sectional: bool = False) -> float | list[float]:
         """
         Computes the volume of the Wing.
 
@@ -702,7 +702,7 @@ class Wing(AeroSandboxObject):
         else:
             return volume
 
-    def get_control_surface_names(self) -> List[str]:
+    def get_control_surface_names(self) -> list[str]:
         """
         Gets the names of all control surfaces on this wing.
 
@@ -720,7 +720,7 @@ class Wing(AeroSandboxObject):
 
     def set_control_surface_deflections(
         self,
-        control_surface_mappings: Dict[str, float],
+        control_surface_mappings: dict[str, float],
     ) -> None:
         """
         Sets the deflection of all control surfaces on this wing, based on the provided mapping.
@@ -743,8 +743,8 @@ class Wing(AeroSandboxObject):
 
     def control_surface_area(
         self,
-        by_name: Optional[str] = None,
-        type: Optional[str] = "planform",
+        by_name: str | None = None,
+        type: str | None = "planform",
     ) -> float:
         """
         Computes the total area of all control surfaces on this wing, optionally filtered by their name.
@@ -818,7 +818,7 @@ class Wing(AeroSandboxObject):
         mesh_tips: bool = True,
         mesh_trailing_edge: bool = True,
         mesh_symmetric: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Meshes the outer mold line surface of the wing.
 
@@ -981,7 +981,7 @@ class Wing(AeroSandboxObject):
             [float, float, float], np.ndarray
         ] = np.cosspace,
         add_camber: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Meshes the mean camber line of the wing as a thin-sheet body.
 
@@ -1103,10 +1103,10 @@ class Wing(AeroSandboxObject):
 
     def mesh_line(
         self,
-        x_nondim: Union[float, List[float]] = 0.25,
-        z_nondim: Union[float, List[float]] = 0,
+        x_nondim: float | Sequence[float] = 0.25,
+        z_nondim: float | Sequence[float] = 0,
         add_camber: bool = True,
-    ) -> List[np.ndarray]:
+    ) -> list[np.ndarray]:
         """
         Meshes a line that goes through each of the WingXSec objects in this wing.
 
@@ -1128,7 +1128,7 @@ class Wing(AeroSandboxObject):
         to the tip. Ignores any wing symmetry (e.g., only gives one side).
 
         """
-        points_on_line: List[np.ndarray] = []
+        points_on_line: list[np.ndarray] = []
 
         try:
             if len(x_nondim) != len(self.xsecs):
@@ -1308,7 +1308,7 @@ class Wing(AeroSandboxObject):
 
     def _compute_frame_of_WingXSec(
         self, index: int
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the local reference frame associated with a particular cross-section (XSec) of this wing.
 
@@ -1362,7 +1362,7 @@ class Wing(AeroSandboxObject):
 
     def _compute_frame_of_section(
         self, index: int
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the local reference frame associated with a particular section. (Note that sections and cross
         sections are different! cross-sections, or xsecs, are the vertices, and sections are the parts in between. In
@@ -1409,12 +1409,12 @@ class WingXSec(AeroSandboxObject):
 
     def __init__(
         self,
-        xyz_le: Union[np.ndarray, List] = None,
+        xyz_le: np.ndarray | Sequence[float] | None = None,
         chord: float = 1.0,
         twist: float = 0.0,
         airfoil: Airfoil = None,
-        control_surfaces: Optional[List["ControlSurface"]] = None,
-        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+        control_surfaces: list["ControlSurface"] | None = None,
+        analysis_specific_options: dict[type, dict[str, Any]] | None = None,
         **deprecated_kwargs,
     ):
         """
@@ -1566,7 +1566,7 @@ class WingXSec(AeroSandboxObject):
     def __repr__(self) -> str:
         return f"WingXSec (Airfoil: {self.airfoil.name}, chord: {self.chord}, twist: {self.twist})"
 
-    def translate(self, xyz: Union[np.ndarray, List]) -> "WingXSec":
+    def translate(self, xyz: np.ndarray | Sequence[float]) -> "WingXSec":
         """
         Returns a copy of this WingXSec that has been translated by `xyz`.
 
@@ -1601,7 +1601,7 @@ class ControlSurface(AeroSandboxObject):
         deflection: float = 0.0,
         hinge_point: float = 0.75,
         trailing_edge: bool = True,
-        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+        analysis_specific_options: dict[type, dict[str, Any]] | None = None,
     ):
         """
         Define a new control surface.

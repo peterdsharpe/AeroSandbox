@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
-from typing import Union, Any, List
+from typing import Any
 from aerosandbox.tools.string_formatting import trim_string
 
 
@@ -32,16 +32,16 @@ class MassProperties(AeroSandboxObject):
 
     def __init__(
         self,
-        mass: Union[float, np.ndarray] = None,
-        x_cg: Union[float, np.ndarray] = 0.0,
-        y_cg: Union[float, np.ndarray] = 0.0,
-        z_cg: Union[float, np.ndarray] = 0.0,
-        Ixx: Union[float, np.ndarray] = 0.0,
-        Iyy: Union[float, np.ndarray] = 0.0,
-        Izz: Union[float, np.ndarray] = 0.0,
-        Ixy: Union[float, np.ndarray] = 0.0,
-        Iyz: Union[float, np.ndarray] = 0.0,
-        Ixz: Union[float, np.ndarray] = 0.0,
+        mass: float | np.ndarray | None = None,
+        x_cg: float | np.ndarray = 0.0,
+        y_cg: float | np.ndarray = 0.0,
+        z_cg: float | np.ndarray = 0.0,
+        Ixx: float | np.ndarray = 0.0,
+        Iyy: float | np.ndarray = 0.0,
+        Izz: float | np.ndarray = 0.0,
+        Ixy: float | np.ndarray = 0.0,
+        Iyz: float | np.ndarray = 0.0,
+        Ixz: float | np.ndarray = 0.0,
     ):
         """
         Initializes a new MassProperties object.
@@ -101,7 +101,7 @@ class MassProperties(AeroSandboxObject):
         self.Ixz = Ixz
 
     def __repr__(self) -> str:
-        def fmt(x: Union[float, Any], width=14) -> str:
+        def fmt(x: float | Any, width=14) -> str:
             if isinstance(x, (float, int)):
                 if x == 0:
                     x = "0"
@@ -464,7 +464,7 @@ class MassProperties(AeroSandboxObject):
         self,
         method="optimization",
         check_if_already_a_point_mass: bool = True,
-    ) -> List["MassProperties"]:
+    ) -> list["MassProperties"]:
         """
         Generates a set of point masses (represented as MassProperties objects with zero inertia tensors), that, when
         combined, would yield this MassProperties object.

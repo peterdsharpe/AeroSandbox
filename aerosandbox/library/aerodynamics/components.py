@@ -1,14 +1,13 @@
 import aerosandbox.numpy as np
 from typing import Literal
-from typing import Union
 
 
 def CDA_control_linkage(
-    Re_l: Union[float, np.ndarray],
-    linkage_length: Union[float, np.ndarray],
-    is_covered: Union[bool, np.ndarray] = False,
-    is_top: Union[bool, np.ndarray] = False,
-) -> Union[float, np.ndarray]:
+    Re_l: float | np.ndarray,
+    linkage_length: float | np.ndarray,
+    is_covered: bool | np.ndarray = False,
+    is_top: bool | np.ndarray = False,
+) -> float | np.ndarray:
     """
     Computes the drag area (CDA) of a typical control usage as used on a well-manufactured RC airplane.
 

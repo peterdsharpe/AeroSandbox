@@ -1,4 +1,4 @@
-from typing import Union, List, Dict, Callable, Any, Tuple, Set, Optional, Literal
+from typing import Callable, Any, Literal, Sequence
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -28,7 +28,7 @@ class Opti(cas.Opti):
 
     def __init__(
         self,
-        variable_categories_to_freeze: Union[List[str], str] = None,
+        variable_categories_to_freeze: Sequence[str] | str | None = None,
         cache_filename: str = None,
         load_frozen_variables_from_cache: bool = False,
         save_to_cache_on_solve: bool = False,
@@ -71,7 +71,7 @@ class Opti(cas.Opti):
 
     def variable(
         self,
-        init_guess: Union[float, np.ndarray] = None,
+        init_guess: float | np.ndarray | None = None,
         n_vars: int = None,
         scale: float = None,
         freeze: bool = False,
@@ -367,9 +367,9 @@ class Opti(cas.Opti):
 
     def subject_to(
         self,
-        constraint: Union[cas.MX, bool, List],  # TODO add scale
+        constraint: cas.MX | bool | list,  # TODO add scale
         _stacklevel: int = 1,
-    ) -> Union[cas.MX, None, List[cas.MX]]:
+    ) -> cas.MX | None | list[cas.MX]:
         """
         Initialize a new equality or inequality constraint(s).
 
@@ -497,7 +497,7 @@ class Opti(cas.Opti):
 
     def parameter(
         self,
-        value: Union[float, np.ndarray] = 0.0,
+        value: float | np.ndarray = 0.0,
         n_params: int = None,
     ) -> cas.MX:
         """
@@ -561,7 +561,7 @@ class Opti(cas.Opti):
 
     def solve(
         self,
-        parameter_mapping: Dict[cas.MX, float] = None,
+        parameter_mapping: dict[cas.MX, float] | None = None,
         max_iter: int = 1000,
         max_runtime: float = 1e20,
         callback: Callable[[int], Any] = None,
@@ -569,7 +569,7 @@ class Opti(cas.Opti):
         jit: bool = False,  # TODO document, add unit tests for jit
         detect_simple_bounds: bool = False,  # TODO document
         expand: bool = False,  # TODO document
-        options: Dict = None,  # TODO document
+        options: dict | None = None,  # TODO document
         behavior_on_failure: Literal["raise", "return_last"] = "raise",
     ) -> "OptiSol":
         """
@@ -733,13 +733,13 @@ class Opti(cas.Opti):
 
     def solve_sweep(
         self,
-        parameter_mapping: Dict[cas.MX, np.ndarray],
+        parameter_mapping: dict[cas.MX, np.ndarray],
         update_initial_guesses_between_solves=False,
         verbose=True,
-        solve_kwargs: Dict = None,
+        solve_kwargs: dict | None = None,
         return_callable: bool = False,
         garbage_collect_between_runs: bool = False,
-    ) -> Union[np.ndarray, Callable[[cas.MX], np.ndarray]]:
+    ) -> np.ndarray | Callable[[cas.MX], np.ndarray]:
         # Handle defaults
         if solve_kwargs is None:
             solve_kwargs = {}
@@ -752,8 +752,8 @@ class Opti(cas.Opti):
         }
 
         # Split parameter_mappings up so that it can be passed into run() via np.vectorize
-        keys: Tuple[cas.MX] = tuple(parameter_mapping.keys())
-        values: Tuple[np.ndarray[float]] = tuple(parameter_mapping.values())
+        keys: tuple[cas.MX] = tuple(parameter_mapping.keys())
+        values: tuple[np.ndarray] = tuple(parameter_mapping.values())
 
         # Display an output
         if verbose:
@@ -762,7 +762,7 @@ class Opti(cas.Opti):
         n_runs = np.broadcast(*values).size
         run_number = 1
 
-        def run(*args: Tuple[float]) -> Optional["OptiSol"]:
+        def run(*args: tuple[float]) -> "OptiSol" | None:
             # Collect garbage before each run, to avoid memory issues.
             if garbage_collect_between_runs:
                 import gc
@@ -770,7 +770,7 @@ class Opti(cas.Opti):
                 gc.collect()
 
             # Reconstruct parameter mapping on a run-by-run basis by zipping together keys and this run's values.
-            parameter_mappings_for_this_run: [cas.MX, float] = {
+            parameter_mappings_for_this_run: dict[cas.MX, float] = {
                 k: v for k, v in zip(keys, args)
             }
 
@@ -842,7 +842,7 @@ class Opti(cas.Opti):
         index: int,
         use_full_filename: bool = False,
         return_string: bool = False,
-    ) -> Union[None, str]:
+    ) -> str | None:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -885,7 +885,7 @@ class Opti(cas.Opti):
 
     def find_constraint_declaration(
         self, index: int, use_full_filename: bool = False, return_string: bool = False
-    ) -> Union[None, str]:
+    ) -> str | None:
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -1001,9 +1001,9 @@ class Opti(cas.Opti):
     def derivative_of(
         self,
         variable: cas.MX,
-        with_respect_to: Union[np.ndarray, cas.MX],
-        derivative_init_guess: Union[float, np.ndarray],  # TODO add default
-        derivative_scale: Union[float, np.ndarray] = None,
+        with_respect_to: np.ndarray | cas.MX,
+        derivative_init_guess: float | np.ndarray,  # TODO add default
+        derivative_scale: float | np.ndarray | None = None,
         method: str = "trapezoidal",
         explicit: bool = False,  # TODO implement explicit
         _stacklevel: int = 1,
@@ -1140,7 +1140,7 @@ class Opti(cas.Opti):
         self,
         derivative: cas.MX,
         variable: cas.MX,
-        with_respect_to: Union[np.ndarray, cas.MX],
+        with_respect_to: np.ndarray | cas.MX,
         method: str = "trapezoidal",
         _stacklevel: int = 1,
     ) -> None:
@@ -1263,7 +1263,7 @@ class OptiSol:
         self._sol = cas_optisol
 
     def __call__(
-        self, x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any]
+        self, x: cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any
     ) -> Any:
         """
         A shorthand alias for `sol.value(x)`. See `OptiSol.value()` documentation for details.
@@ -1280,8 +1280,8 @@ class OptiSol:
         return self.value(x)
 
     def _value_scalar(
-        self, x: Union[cas.MX, np.ndarray, float, int]
-    ) -> Union[float, np.ndarray]:
+        self, x: cas.MX | np.ndarray | float | int
+    ) -> float | np.ndarray:
         """
         Gets the value of a variable at the solution point. For developer use - see following paragraph.
 
@@ -1300,7 +1300,7 @@ class OptiSol:
 
     def value(
         self,
-        x: Union[cas.MX, np.ndarray, float, int, List, Tuple, Set, Dict, Any],
+        x: cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any,
         recursive: bool = True,
         warn_on_unknown_types: bool = False,
     ) -> Any:
@@ -1416,7 +1416,7 @@ class OptiSol:
 
         return x
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return self._sol.stats()
 
     def value_variables(self):

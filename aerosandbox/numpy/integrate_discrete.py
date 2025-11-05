@@ -1,12 +1,12 @@
-from typing import Union, Literal
+from typing import Literal
 import casadi as _cas
 import numpy as _onp
 from aerosandbox.numpy.array import length, concatenate
 
 
 def integrate_discrete_intervals(
-    f: Union[_onp.ndarray, _cas.MX],
-    x: Union[_onp.ndarray, _cas.MX] = None,
+    f: _onp.ndarray | _cas.MX,
+    x: _onp.ndarray | _cas.MX | None = None,
     multiply_by_dx: bool = True,
     method: Literal[
         "forward_euler",
@@ -266,8 +266,8 @@ def integrate_discrete_intervals(
 
 
 def integrate_discrete_squared_curvature(
-    f: Union[_onp.ndarray, _cas.MX],
-    x: Union[_onp.ndarray, _cas.MX] = None,
+    f: _onp.ndarray | _cas.MX,
+    x: _onp.ndarray | _cas.MX | None = None,
     method: Literal[
         "cubic", "simpson", "hybrid_simpson_cubic"
     ] = "hybrid_simpson_cubic",

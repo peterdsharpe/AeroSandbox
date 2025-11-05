@@ -1,7 +1,7 @@
 from aerosandbox.numpy import sin, cos, linalg
 from aerosandbox.numpy.array import array
+from typing import Sequence
 import numpy as _onp
-from typing import Union, List
 
 
 def rotation_matrix_2D(
@@ -27,8 +27,8 @@ def rotation_matrix_2D(
 
 
 def rotation_matrix_3D(
-    angle: Union[float, _onp.ndarray],
-    axis: Union[_onp.ndarray, List, str],
+    angle: float | _onp.ndarray,
+    axis: _onp.ndarray | Sequence[float] | str,
     as_array: bool = True,
     axis_already_normalized: bool = False,
 ):
@@ -104,9 +104,9 @@ def rotation_matrix_3D(
 
 
 def rotation_matrix_from_euler_angles(
-    roll_angle: Union[float, _onp.ndarray] = 0,
-    pitch_angle: Union[float, _onp.ndarray] = 0,
-    yaw_angle: Union[float, _onp.ndarray] = 0,
+    roll_angle: float | _onp.ndarray = 0,
+    pitch_angle: float | _onp.ndarray = 0,
+    yaw_angle: float | _onp.ndarray = 0,
     as_array: bool = True,
 ):
     """

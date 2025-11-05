@@ -1,5 +1,5 @@
 import time
-from typing import Tuple, Any, Callable
+from typing import Any, Callable
 import aerosandbox.numpy as np
 
 
@@ -100,7 +100,7 @@ def time_function(
     desired_runtime: float = None,
     runtime_reduction=np.min,
     warmup: bool = True,
-) -> Tuple[float, Any]:
+) -> tuple[float, Any]:
     """
     Runs a given callable and tells you how long it took to run, in seconds. Also returns the result of the function
         (if any), for good measure.

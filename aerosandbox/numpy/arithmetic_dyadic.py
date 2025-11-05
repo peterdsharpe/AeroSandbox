@@ -1,13 +1,13 @@
 import numpy as _onp
 import casadi as _cas
-from typing import Tuple, Iterable, Union
+from typing import Iterable
 from aerosandbox.numpy.conditionals import where
 
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
 def _make_casadi_types_broadcastable(x1, x2):
-    def shape_2D(object: Union[float, int, Iterable, _onp.ndarray]) -> Tuple:
+    def shape_2D(object: float | int | Iterable | _onp.ndarray) -> tuple:
         shape = _onp.shape(object)
         if len(shape) == 0:
             return (1, 1)

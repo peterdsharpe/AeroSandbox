@@ -1,13 +1,13 @@
 import aerosandbox.numpy as _np
 import casadi as _cas
-from typing import Tuple, Union, Literal
+from typing import Literal
 
 
 def softmax(
-    *args: Union[float, _np.ndarray],
+    *args: float | _np.ndarray,
     softness: float = None,
     hardness: float = None,
-) -> Union[float, _np.ndarray]:
+) -> float | _np.ndarray:
     """
     An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
 
@@ -75,10 +75,10 @@ def softmax(
 
 
 def softmin(
-    *args: Union[float, _np.ndarray],
+    *args: float | _np.ndarray,
     softness: float = None,
     hardness: float = None,
-) -> Union[float, _np.ndarray]:
+) -> float | _np.ndarray:
     """
     An element-wise softmin between two or more arrays. Related to the logsumexp() function.
 
@@ -114,10 +114,10 @@ def softmin(
 
 
 def softmax_scalefree(
-    *args: Union[float, _np.ndarray],
+    *args: float | _np.ndarray,
     relative_softness: float = None,
     relative_hardness: float = None,
-) -> Union[float, _np.ndarray]:
+) -> float | _np.ndarray:
     n_specified_arguments = (relative_hardness is not None) + (
         relative_softness is not None
     )
@@ -135,10 +135,10 @@ def softmax_scalefree(
 
 
 def softmin_scalefree(
-    *args: Union[float, _np.ndarray],
+    *args: float | _np.ndarray,
     relative_softness: float = None,
     relative_hardness: float = None,
-) -> Union[float, _np.ndarray]:
+) -> float | _np.ndarray:
     return -softmax_scalefree(
         *[-arg for arg in args],
         relative_softness=relative_softness,
@@ -147,7 +147,7 @@ def softmin_scalefree(
 
 
 def softplus(
-    x: Union[float, _np.ndarray],
+    x: float | _np.ndarray,
     beta=1,
     threshold=40,
 ):
@@ -177,7 +177,7 @@ def softplus(
 def sigmoid(
     x,
     sigmoid_type: Literal["tanh", "logistic", "arctan", "polynomial"] = "tanh",
-    normalization_range: Tuple[Union[float, int], Union[float, int]] = (0, 1),
+    normalization_range: tuple[float | int, float | int] = (0, 1),
 ):
     """
     A sigmoid function. From Wikipedia (https://en.wikipedia.org/wiki/Sigmoid_function):
@@ -233,7 +233,7 @@ def sigmoid(
 
 
 def swish(
-    x: Union[float, _np.ndarray],
+    x: float | _np.ndarray,
     beta: float = 1.0,
 ):
     """

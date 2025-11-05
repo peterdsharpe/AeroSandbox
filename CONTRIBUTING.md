@@ -119,16 +119,27 @@ This is all pretty standard across all scientific computing in Python:
     * Document the purpose, function, and expected input type(s) of every input parameter within this docstring.
     * [Type hint](https://realpython.com/lessons/type-hinting/) all functions that you write.
 
+  **Type Hinting Guidelines:**
+  
+  * Use built-in types (`list`, `dict`, `tuple`) directly instead of `List`, `Dict`, `Tuple` from `typing`
+  * Use the `|` operator for unions: `float | np.ndarray` instead of `Union[float, np.ndarray]`
+  * Use `X | None` instead of `Optional[X]`
+  * Use `Sequence[T]` or `Iterable[T]` from `typing` for input parameters that are only iterated or indexed (not mutated)
+  * Use specific types (`list[T]`, `dict[K, V]`) for return types when the function explicitly returns those types
+  * As a general principle: input type hints should be as broad as possible while still being useful; output type hints should be as narrow as possible while still being useful
+
   We illustrate both of these requirements with the following example:
     ```python
-    from typing import List, Tuple, Union  
-  # Note: List, Tuple, Dict, Union, etc. (note capitalization) need to be imported from the built-in "typing"
+    from typing import Sequence
+    # Note: For type hints, use built-in types (list, dict, tuple) directly, or Sequence/Iterable from typing
+    # Use the | operator for unions instead of Union from typing
+    # Use X | None instead of Optional[X]
     
    
     def is_my_dog_happy(
         temperature: float,  # <-- this is a type hint for a parameter!
         n_boats: int,  # note that Python doesn't enforce the type you specify, they're just "hints" for the user
-        coffee_brands: Union[List[str], Tuple[str]]  # You can denote multiple acceptable inputs with "Union", imported from "typing"
+        coffee_brands: Sequence[str]  # Use Sequence for input parameters that are only iterated/indexed
     ) -> bool:  # <-- this is a type hint for a return!
         """
         This function tells me if my dog is happy today.
@@ -140,7 +151,7 @@ This is all pretty standard across all scientific computing in Python:
         Args:
             temperature: The temperature outside, in Kelvin [float]
             n_boats: The number of boats I see on the Charles River [int]
-            coffee_brands: An iterable of the names of various brands of coffee [List[str]]
+            coffee_brands: An iterable of the names of various brands of coffee [Sequence[str]]
   
         Returns:
             Whether or not my dog is happy [bool]
@@ -149,6 +160,29 @@ This is all pretty standard across all scientific computing in Python:
     ```
     * Also notice that in this example above, we put each parameter on its own line. Generally, do this.
     * Include usage examples in runnable Python in for each function in its docstring (demarcated by `>>>`)
+    
+    Here's another example showing unions and optional types:
+    ```python
+    import aerosandbox.numpy as np
+    
+    def compute_dynamic_pressure(
+        velocity: float | np.ndarray,  # Can accept either a float or an array
+        density: float | None = None,   # Optional parameter using | None instead of Optional
+    ) -> float | np.ndarray:  # Returns the same type as the input
+        """
+        Computes dynamic pressure.
+        
+        Args:
+            velocity: Velocity value(s) [float or np.ndarray]
+            density: Air density. If None, uses standard atmosphere [float or None]
+            
+        Returns:
+            Dynamic pressure value(s) [float or np.ndarray]
+        """
+        if density is None:
+            density = 1.225  # Standard sea level density
+        return 0.5 * density * velocity ** 2
+    ```
 
 * With rare exceptions, do not type the same sequence of characters more than twice. For example:
 
@@ -190,8 +224,8 @@ This is all pretty standard across all scientific computing in Python:
 	
 	### Instead, do this:
 	def good_function(
-			my_parameter: List=None,
-			another_param: Dict=None,
+			my_parameter: list | None = None,
+			another_param: dict | None = None,
 	):
 		### Set defaults
 		if my_parameter is None:

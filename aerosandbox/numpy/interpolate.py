@@ -4,7 +4,7 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
-from typing import Tuple, Literal  # noqa: F401
+from typing import Literal
 from scipy import interpolate as _interpolate
 
 
@@ -68,7 +68,7 @@ def interp(x, xp, fp, left=None, right=None, period=None):
 
 
 def is_data_structured(
-    x_data_coordinates: Tuple[_onp.ndarray], y_data_structured: _onp.ndarray
+    x_data_coordinates: tuple[_onp.ndarray], y_data_structured: _onp.ndarray
 ) -> bool:
     """
     Determines if the shapes of a given dataset are consistent with "structured" (i.e. gridded) data.
@@ -102,7 +102,7 @@ def is_data_structured(
 
 
 def interpn(
-    points: Tuple[_onp.ndarray],
+    points: tuple[_onp.ndarray],
     values: _onp.ndarray,
     xi: _onp.ndarray,
     method: Literal["linear", "bspline", "nearest"] = "linear",

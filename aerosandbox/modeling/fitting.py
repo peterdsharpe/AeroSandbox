@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
-from typing import Union, Dict, Callable, Literal
+from typing import Callable, Literal
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 import copy
 
@@ -35,12 +35,12 @@ class FittedModel(SurrogateModel):
     def __init__(
         self,
         model: Callable[
-            [Union[np.ndarray, Dict[str, np.ndarray]], Dict[str, float]], np.ndarray
+            [np.ndarray | dict[str, np.ndarray], dict[str, float]], np.ndarray
         ],
-        x_data: Union[np.ndarray, Dict[str, np.ndarray]],
+        x_data: np.ndarray | dict[str, np.ndarray],
         y_data: np.ndarray,
-        parameter_guesses: Dict[str, float],
-        parameter_bounds: Dict[str, tuple] = None,
+        parameter_guesses: dict[str, float],
+        parameter_bounds: dict[str, tuple] | None = None,
         residual_norm_type: Literal["L1", "L2", "Linf"] = "L2",
         fit_type: Literal["best", "upper bound", "lower bound"] = "best",
         weights: np.ndarray = None,

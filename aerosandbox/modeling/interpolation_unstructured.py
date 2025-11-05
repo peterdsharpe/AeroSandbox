@@ -1,4 +1,4 @@
-from typing import Union, Dict, Any
+from typing import Any, Sequence
 import aerosandbox.numpy as np
 from aerosandbox.modeling.interpolation import InterpolatedModel
 from scipy import interpolate
@@ -27,13 +27,13 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
 
     def __init__(
         self,
-        x_data: Union[np.ndarray, Dict[str, np.ndarray]],
+        x_data: np.ndarray | dict[str, np.ndarray],
         y_data: np.ndarray,
-        x_data_resample: Union[int, Dict[str, Union[int, np.ndarray]]] = 10,
+        x_data_resample: int | dict[str, int | np.ndarray] = 10,
         resampling_interpolator: object = interpolate.RBFInterpolator,
-        resampling_interpolator_kwargs: Dict[str, Any] = None,
+        resampling_interpolator_kwargs: dict[str, Any] | None = None,
         fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
-        interpolated_model_kwargs: Dict[str, Any] = None,
+        interpolated_model_kwargs: dict[str, Any] | None = None,
     ):
         """
         Creates the interpolator. Note that data must be unstructured (i.e., point cloud) for general N-dimensional

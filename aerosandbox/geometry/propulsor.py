@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Tuple, Optional
+from typing import Any, Sequence
 import copy
 
 
@@ -13,13 +13,13 @@ class Propulsor(AeroSandboxObject):
 
     def __init__(
         self,
-        name: Optional[str] = "Untitled",
-        xyz_c: Union[np.ndarray, List[float]] = None,
-        xyz_normal: Union[np.ndarray, List[float]] = None,
+        name: str | None = "Untitled",
+        xyz_c: np.ndarray | Sequence[float] | None = None,
+        xyz_normal: np.ndarray | Sequence[float] | None = None,
         radius: float = 1.0,
         length: float = 0.0,
-        color: Optional[Union[str, Tuple[float]]] = None,
-        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+        color: (str | tuple[float]) | None = None,
+        analysis_specific_options: dict[type, dict[str, Any]] | None = None,
     ):
         """
         Defines a new propulsor object.
@@ -63,7 +63,7 @@ class Propulsor(AeroSandboxObject):
         """
         return self.xsec_area() * self.length
 
-    def compute_frame(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute_frame(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the local coordinate frame of the propulsor, in aircraft geometry axes.
 
@@ -92,9 +92,9 @@ class Propulsor(AeroSandboxObject):
 
     def get_disk_3D_coordinates(
         self,
-        theta: Union[float, np.ndarray] = None,
-        l_over_length: Union[float, np.ndarray] = None,
-    ) -> Tuple[Union[float, np.ndarray]]:
+        theta: float | np.ndarray | None = None,
+        l_over_length: float | np.ndarray | None = None,
+    ) -> tuple[float | np.ndarray]:
         ### Set defaults
         if theta is None:
             theta = np.linspace(0, 2 * np.pi, 60 + 1)[:-1]
@@ -123,7 +123,7 @@ class Propulsor(AeroSandboxObject):
 
     def translate(
         self,
-        xyz: Union[np.ndarray, List[float]],
+        xyz: np.ndarray | Sequence[float],
     ) -> "Propulsor":
         """
         Returns a copy of this propulsor that has been translated by `xyz`.

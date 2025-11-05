@@ -1,7 +1,8 @@
 import itertools
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import List, Dict, Any, Union, Optional, Tuple
+from typing import Any
+from typing import Sequence
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
@@ -25,15 +26,15 @@ class Airplane(AeroSandboxObject):
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        xyz_ref: Union[np.ndarray, List] = None,
-        wings: Optional[List[Wing]] = None,
-        fuselages: Optional[List[Fuselage]] = None,
-        propulsors: Optional[List[Propulsor]] = None,
-        s_ref: Optional[float] = None,
-        c_ref: Optional[float] = None,
-        b_ref: Optional[float] = None,
-        analysis_specific_options: Optional[Dict[type, Dict[str, Any]]] = None,
+        name: str | None = None,
+        xyz_ref: np.ndarray | Sequence[float] | None = None,
+        wings: Sequence[Wing] | None = None,
+        fuselages: Sequence[Fuselage] | None = None,
+        propulsors: Sequence[Propulsor] | None = None,
+        s_ref: float | None = None,
+        c_ref: float | None = None,
+        b_ref: float | None = None,
+        analysis_specific_options: dict[type, dict[str, Any]] | None = None,
     ):
         """
         Defines a new airplane.
@@ -90,11 +91,11 @@ class Airplane(AeroSandboxObject):
         if xyz_ref is None:
             xyz_ref = np.array([0.0, 0.0, 0.0])
         if wings is None:
-            wings: List[Wing] = []
+            wings: list[Wing] = []
         if fuselages is None:
-            fuselages: List[Fuselage] = []
+            fuselages: list[Fuselage] = []
         if propulsors is None:
-            propulsors: List[Propulsor] = []
+            propulsors: list[Propulsor] = []
         if analysis_specific_options is None:
             analysis_specific_options = {}
 
@@ -226,13 +227,13 @@ class Airplane(AeroSandboxObject):
         thin_wings: bool = False,
         ax=None,
         use_preset_view_angle: str = None,
-        set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+        set_background_pane_color: (str | tuple[float, float, float]) | None = None,
         set_background_pane_alpha: float = None,
         set_lims: bool = True,
         set_equal: bool = True,
         set_axis_visibility: bool = None,
         show: bool = True,
-        show_kwargs: Dict = None,
+        show_kwargs: dict | None = None,
     ):
         """
         Produces an interactive 3D visualization of the airplane.
@@ -386,7 +387,7 @@ class Airplane(AeroSandboxObject):
         thick_linewidth=0.5,
         fuselage_longeron_theta=None,
         use_preset_view_angle: str = None,
-        set_background_pane_color: Union[str, Tuple[float, float, float]] = None,
+        set_background_pane_color: (str | tuple[float, float, float]) | None = None,
         set_background_pane_alpha: float = None,
         set_lims: bool = True,
         set_equal: bool = True,
@@ -804,7 +805,7 @@ class Airplane(AeroSandboxObject):
         return aerodynamic_center
 
     def with_control_deflections(
-        self, control_surface_deflection_mappings: Dict[str, float]
+        self, control_surface_deflection_mappings: dict[str, float]
     ) -> "Airplane":
         """
         Returns a copy of the airplane with the specified control surface deflections applied.
@@ -980,7 +981,7 @@ class Airplane(AeroSandboxObject):
 
     def export_cadquery_geometry(
         self,
-        filename: Union[Path, str],
+        filename: Path | str,
         minimum_airfoil_TE_thickness: float = 0.001,
         split_leading_edge: bool = True,
     ) -> None:
@@ -1028,7 +1029,7 @@ class Airplane(AeroSandboxObject):
 
     def export_XFLR5_xml(
         self,
-        filename: Union[Path, str],
+        filename: Path | str,
         mass_props: MassProperties = None,
         include_fuselages: bool = False,
         mainwing: Wing = None,
@@ -1338,7 +1339,7 @@ class Airplane(AeroSandboxObject):
 
     def export_OpenVSP_vspscript(
         self,
-        filename: Union[Path, str],
+        filename: Path | str,
     ) -> str:
         """
         Exports the airplane geometry to a `*.vspscript` file compatible with OpenVSP. To import the `.vspscript`

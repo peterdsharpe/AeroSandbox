@@ -1,6 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import Callable, Union, Dict
+from typing import Callable
 
 
 class TubeSparBendingStructure(asb.ImplicitAnalysis):
@@ -8,18 +8,12 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
     def __init__(
         self,
         length: float,
-        diameter_function: Union[float, Callable[[np.ndarray], np.ndarray]] = None,
-        wall_thickness_function: Union[
-            float, Callable[[np.ndarray], np.ndarray]
-        ] = None,
-        bending_point_forces: Dict[float, float] = None,
-        bending_distributed_force_function: Union[
-            float, Callable[[np.ndarray], np.ndarray]
-        ] = 0.0,
+        diameter_function: float | Callable[[np.ndarray], np.ndarray] | None = None,
+        wall_thickness_function: float | Callable[[np.ndarray], np.ndarray] | None = None,
+        bending_point_forces: dict[float, float] | None = None,
+        bending_distributed_force_function: float | Callable[[np.ndarray], np.ndarray] = 0.0,
         points_per_point_load: int = 20,
-        elastic_modulus_function: Union[
-            float, Callable[[np.ndarray], np.ndarray]
-        ] = 175e9,  # Pa
+        elastic_modulus_function: float | Callable[[np.ndarray], np.ndarray] = 175e9,  # Pa
         EI_guess: float = None,
         assume_thin_tube=True,
     ):
