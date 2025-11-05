@@ -240,7 +240,12 @@ def integrate_discrete_intervals(
             raise ValueError(f"Invalid method_endpoints '{method_endpoints}'.")
 
     elif method_endpoints == "ignore":
-        pass
+        ### When ignoring endpoints, dx must be sliced to match the intervals computed
+        ### Forward methods miss the last interval(s), backward methods miss the first interval(s)
+        if remaining_endpoint_intervals[0] > 0:
+            dx = dx[remaining_endpoint_intervals[0]:]
+        if remaining_endpoint_intervals[1] > 0:
+            dx = dx[:-remaining_endpoint_intervals[1]]
 
     elif method_endpoints == "periodic":
         raise NotImplementedError("Periodic integration is not yet implemented.")
