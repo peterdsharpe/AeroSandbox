@@ -39,7 +39,7 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
         q: Union[float, np.ndarray] = 0,
     ):
         # Initialize state variables
-        self.mass_props = MassProperties() if mass_props is None else mass_props
+        self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
         self.x_e = x_e
         self.y_e = 0
         self.z_e = z_e
