@@ -192,11 +192,9 @@ def test_Cf_flat_plate_method_comparison():
     assert Cf_blasius > 0
     assert Cf_schlichting > 0
     assert Cf_hybrid_convex > 0
-    
+
     ### Hybrid should be smooth blend, somewhere between methods
     assert Cf_hybrid_convex > 0
-
-
 
 
 def test_Cd_cylinder_array_input():
@@ -254,8 +252,5 @@ def test_Cd_cylinder_critical_reynolds_region():
     assert all(Cd > 0 for Cd in [Cd_before, Cd_during, Cd_after])
 
 
-
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

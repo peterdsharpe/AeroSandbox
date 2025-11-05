@@ -133,7 +133,9 @@ def test_no_x_specified():
     f = np.array([1, 4, 9, 16, 25])
 
     result = integrate_discrete_intervals(f, method="trapezoidal")
-    expected = integrate_discrete_intervals(f, x=np.arange(len(f)), method="trapezoidal")
+    expected = integrate_discrete_intervals(
+        f, x=np.arange(len(f)), method="trapezoidal"
+    )
 
     assert np.allclose(result, expected)
 
@@ -143,7 +145,9 @@ def test_method_endpoints_lower_order():
     x = np.linspace(0, 10, 50)
     f = np.sin(x)
 
-    result = integrate_discrete_intervals(f, x, method="cubic", method_endpoints="lower_order")
+    result = integrate_discrete_intervals(
+        f, x, method="cubic", method_endpoints="lower_order"
+    )
     integral = np.sum(result)
 
     assert len(result) == len(x) - 1
@@ -159,12 +163,12 @@ def test_method_endpoints_ignore():
     result_ignore_no_dx = integrate_discrete_intervals(
         f, x, method="forward_simpson", method_endpoints="ignore", multiply_by_dx=False
     )
-    
+
     ### Test with multiply_by_dx=True (this was the bug - broadcasting error)
     result_ignore_with_dx = integrate_discrete_intervals(
         f, x, method="forward_simpson", method_endpoints="ignore", multiply_by_dx=True
     )
-    
+
     result_lower = integrate_discrete_intervals(
         f, x, method="forward_simpson", method_endpoints="lower_order"
     )
@@ -174,7 +178,7 @@ def test_method_endpoints_ignore():
     assert len(result_ignore_no_dx) == len(x) - 2
     assert len(result_ignore_with_dx) == len(x) - 2
     assert len(result_lower) == len(x) - 1
-    
+
     ### Verify the bug fix: result_ignore_with_dx should be result_ignore_no_dx * dx
     dx = np.diff(x)
     assert np.allclose(result_ignore_with_dx, result_ignore_no_dx * dx[:-1])
@@ -220,9 +224,9 @@ def test_squared_curvature_sine_wave():
     for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
-        assert np.isclose(
-            integral, expected, rtol=0.1
-        ), f"Method {method} failed: {integral} vs {expected}"
+        assert np.isclose(integral, expected, rtol=0.1), (
+            f"Method {method} failed: {integral} vs {expected}"
+        )
 
 
 def test_squared_curvature_parabola():
@@ -237,9 +241,9 @@ def test_squared_curvature_parabola():
     for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
-        assert np.isclose(
-            integral, expected, rtol=0.05
-        ), f"Method {method} failed: {integral} vs {expected}"
+        assert np.isclose(integral, expected, rtol=0.05), (
+            f"Method {method} failed: {integral} vs {expected}"
+        )
 
 
 def test_squared_curvature_cubic():
@@ -254,9 +258,9 @@ def test_squared_curvature_cubic():
     for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
-        assert np.isclose(
-            integral, expected, rtol=0.05
-        ), f"Method {method} failed: {integral} vs {expected}"
+        assert np.isclose(integral, expected, rtol=0.05), (
+            f"Method {method} failed: {integral} vs {expected}"
+        )
 
 
 def test_invalid_method_raises_error():
@@ -348,4 +352,3 @@ def test_zero_function():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

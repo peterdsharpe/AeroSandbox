@@ -3,7 +3,10 @@ from typing import Literal
 
 
 def Cd_cylinder(
-    Re_D: float | np.ndarray, mach: float | np.ndarray = 0.0, include_mach_effects: bool = True, subcritical_only: bool = False
+    Re_D: float | np.ndarray,
+    mach: float | np.ndarray = 0.0,
+    include_mach_effects: bool = True,
+    subcritical_only: bool = False,
 ) -> float | np.ndarray:
     """
     Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number and Mach.

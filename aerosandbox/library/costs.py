@@ -14,8 +14,12 @@ def modified_DAPCA_IV_production_cost_analysis(
     cpi_relative_to_2012_dollars: float = 1.327,  # updated for 2024
     n_flight_test_aircraft: int = 4,
     is_cargo_airplane: bool = False,
-    primary_structure_material: Literal["aluminum", "carbon_fiber", "fiberglass", "steel", "titanium"] = "aluminum",
-    per_passenger_cost_model: Literal["general_aviation", "jet_transport", "regional_transport"] = "general_aviation",
+    primary_structure_material: Literal[
+        "aluminum", "carbon_fiber", "fiberglass", "steel", "titanium"
+    ] = "aluminum",
+    per_passenger_cost_model: Literal[
+        "general_aviation", "jet_transport", "regional_transport"
+    ] = "general_aviation",
     engineering_wrap_rate_2012_dollars: float = 115.0,
     tooling_wrap_rate_2012_dollars: float = 118.0,
     quality_control_wrap_rate_2012_dollars: float = 108.0,

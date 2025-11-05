@@ -1,6 +1,13 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from aerosandbox.geometry import Airplane, Wing, WingXSec, Fuselage, FuselageXSec, Propulsor
+from aerosandbox.geometry import (
+    Airplane,
+    Wing,
+    WingXSec,
+    Fuselage,
+    FuselageXSec,
+    Propulsor,
+)
 import pytest
 
 
@@ -144,7 +151,10 @@ def test_airplane_analysis_specific_options():
     airplane = Airplane(wings=[wing], analysis_specific_options=options)
 
     assert asb.AeroBuildup in airplane.analysis_specific_options
-    assert airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"] == False
+    assert (
+        airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"]
+        == False
+    )
 
 
 def test_airplane_no_wings_no_fuselages_raises_error():
@@ -191,7 +201,7 @@ def test_airplane_wing_span_computation():
         xsecs=[
             WingXSec(xyz_le=[0, 0, 0], chord=1.0),
             WingXSec(xyz_le=[0, 4, 0], chord=1.0),
-        ]
+        ],
     )
 
     airplane = Airplane(wings=[wing])
@@ -262,7 +272,9 @@ def test_airplane_multiple_analysis_options():
     airplane = Airplane(wings=[wing], analysis_specific_options=options)
 
     assert len(airplane.analysis_specific_options) == 2
-    assert airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"] == True
+    assert (
+        airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"] == True
+    )
 
 
 def test_airplane_realistic_configuration():
@@ -329,4 +341,3 @@ def test_airplane_symmetric_wing():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

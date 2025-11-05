@@ -126,7 +126,9 @@ def test_black_box_fd_method_forward():
     wrapped = black_box(my_func, n_in=1, n_out=1, fd_method="forward")
 
     opti = asb.Opti()
-    x = opti.variable(init_guess=-2, lower_bound=-5, upper_bound=5)  ### Better init guess near minimum
+    x = opti.variable(
+        init_guess=-2, lower_bound=-5, upper_bound=5
+    )  ### Better init guess near minimum
     opti.minimize(wrapped(x))
 
     try:
@@ -147,7 +149,9 @@ def test_black_box_fd_method_backward():
     wrapped = black_box(my_func, n_in=1, n_out=1, fd_method="backward")
 
     opti = asb.Opti()
-    x = opti.variable(init_guess=1, lower_bound=-5, upper_bound=5)  ### Better init guess
+    x = opti.variable(
+        init_guess=1, lower_bound=-5, upper_bound=5
+    )  ### Better init guess
     opti.minimize(wrapped(x))
 
     try:
@@ -334,4 +338,3 @@ def test_black_box_complex_objective():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

@@ -140,7 +140,14 @@ class PerfectGas:
 
     def process(
         self,
-        process: Literal["isobaric", "isochoric", "isothermal", "isentropic", "polytropic", "isenthalpic"] = "isentropic",
+        process: Literal[
+            "isobaric",
+            "isochoric",
+            "isothermal",
+            "isentropic",
+            "polytropic",
+            "isenthalpic",
+        ] = "isentropic",
         new_pressure: float = None,
         new_temperature: float = None,
         new_density: float = None,

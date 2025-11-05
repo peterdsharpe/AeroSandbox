@@ -6,7 +6,9 @@ def column_buckling_critical_load(
     elastic_modulus: float,
     moment_of_inertia: float,
     length: float,
-    boundary_condition_type: Literal["pin-pin", "pin-clamp", "clamp-pin", "clamp-clamp", "clamp-free", "free-clamp"] = "pin-pin",
+    boundary_condition_type: Literal[
+        "pin-pin", "pin-clamp", "clamp-pin", "clamp-clamp", "clamp-free", "free-clamp"
+    ] = "pin-pin",
     use_recommended_design_values: bool = True,
 ):
     """
@@ -135,7 +137,9 @@ def plate_buckling_critical_load(
     wall_thickness: float,
     elastic_modulus: float,
     poissons_ratio: float = 0.33,
-    side_boundary_condition_type: Literal["clamp-clamp", "pin-pin", "free-free"] = "clamp-clamp",
+    side_boundary_condition_type: Literal[
+        "clamp-clamp", "pin-pin", "free-free"
+    ] = "clamp-clamp",
 ):
     """
     Computes the critical compressive load (in N) for a plate to buckle via plate buckling.

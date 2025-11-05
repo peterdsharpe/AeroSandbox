@@ -174,9 +174,9 @@ def test_wing_multiple_sections():
 def test_wing_control_surface():
     """Test wing with control surface."""
     from aerosandbox.geometry.wing import ControlSurface
-    
+
     cs = ControlSurface(name="flap", symmetric=True, hinge_point=0.75)
-    
+
     wing = Wing(
         xsecs=[
             WingXSec(
@@ -200,7 +200,7 @@ def test_wing_control_surface():
 def test_wing_empty_xsecs():
     """Test wing with no xsecs."""
     wing = Wing(xsecs=[])
-    
+
     ### Wing with no xsecs should have zero area and span
     area = wing.area()
     span = wing.span()
@@ -327,4 +327,3 @@ def test_wing_taper_ratio():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

@@ -243,9 +243,9 @@ def integrate_discrete_intervals(
         ### When ignoring endpoints, dx must be sliced to match the intervals computed
         ### Forward methods miss the last interval(s), backward methods miss the first interval(s)
         if remaining_endpoint_intervals[0] > 0:
-            dx = dx[remaining_endpoint_intervals[0]:]
+            dx = dx[remaining_endpoint_intervals[0] :]
         if remaining_endpoint_intervals[1] > 0:
-            dx = dx[:-remaining_endpoint_intervals[1]]
+            dx = dx[: -remaining_endpoint_intervals[1]]
 
     elif method_endpoints == "periodic":
         raise NotImplementedError("Periodic integration is not yet implemented.")
@@ -268,7 +268,9 @@ def integrate_discrete_intervals(
 def integrate_discrete_squared_curvature(
     f: Union[_onp.ndarray, _cas.MX],
     x: Union[_onp.ndarray, _cas.MX] = None,
-    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"] = "hybrid_simpson_cubic",
+    method: Literal[
+        "cubic", "simpson", "hybrid_simpson_cubic"
+    ] = "hybrid_simpson_cubic",
 ):
     """
     Given a set of sampled points (x_i, f_i) from a function f(x), computes the following quantity:

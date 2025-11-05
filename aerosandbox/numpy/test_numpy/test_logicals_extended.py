@@ -1,5 +1,12 @@
 import aerosandbox.numpy as np
-from aerosandbox.numpy.logicals import clip, logical_and, logical_or, logical_not, all, any
+from aerosandbox.numpy.logicals import (
+    clip,
+    logical_and,
+    logical_or,
+    logical_not,
+    all,
+    any,
+)
 import pytest
 import casadi as cas
 
@@ -280,4 +287,3 @@ def test_logical_or_broadcasting():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-
