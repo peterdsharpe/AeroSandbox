@@ -1,3 +1,4 @@
+import itertools
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
 from typing import List, Dict, Any, Union, Optional, Tuple
@@ -843,6 +844,7 @@ class Airplane(AeroSandboxObject):
         self,
         minimum_airfoil_TE_thickness: float = 0.001,
         fuselage_tol: float = 1e-4,
+        split_leading_edge: bool = True,
     ) -> "Workplane":
         """
         Uses the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
@@ -856,7 +858,7 @@ class Airplane(AeroSandboxObject):
 
             tol: The geometric tolerance (meters) to use when generating the CAD geometry. This is passed directly to the CADQuery
 
-        Returns: A CADQuery Workplane object containing the CAD geometry of the airplane.
+        Returns: A CADQuery Assembly object containing the CAD parts of the airplane as named parts.
 
         """
         try:
@@ -866,7 +868,17 @@ class Airplane(AeroSandboxObject):
                 "The `cadquery` library is required to use this function. Please install it with `pip install cadquery`."
             )
 
-        solids = []
+        assembly = cq.Assembly()
+
+        def add_to_assembly(assembly, part, name):
+            part = part.clean().val().scale(1000) # Default STEP units are mm
+            if name not in assembly:
+                assembly.add(part, name=name)
+                return
+            for i in itertools.count(start=1):
+                if f'{name}_{i}' not in assembly:
+                    assembly.add(part, name=f'{name}_{i}')
+                    return
 
         for wing in self.wings:
 
@@ -881,28 +893,39 @@ class Airplane(AeroSandboxObject):
 
                 LE_index = af.LE_index()
 
-                xsec_wires.append(
-                    cq.Workplane(
+                workplane = cq.Workplane(
                         inPlane=cq.Plane(
                             origin=tuple(xsec.xyz_le),
                             xDir=tuple(csys[0]),
                             normal=tuple(-csys[1]),
                         )
                     )
-                    .spline(
-                        listOfXYTuple=[
-                            tuple(xy * xsec.chord)
-                            for xy in af.coordinates[:LE_index, :]
-                        ]
+                if split_leading_edge:
+                    xsec_wires.append(
+                        workplane.spline(
+                            listOfXYTuple=[
+                                tuple(xy * xsec.chord)
+                                for xy in af.coordinates[:LE_index, :]
+                            ]
+                        )
+                        .spline(
+                            listOfXYTuple=[
+                                tuple(xy * xsec.chord)
+                                for xy in af.coordinates[LE_index:, :]
+                            ]
+                        )
+                        .close()
                     )
-                    .spline(
-                        listOfXYTuple=[
-                            tuple(xy * xsec.chord)
-                            for xy in af.coordinates[LE_index:, :]
-                        ]
+                else:
+                    xsec_wires.append(
+                        workplane.spline(
+                            listOfXYTuple=[
+                                tuple(xy * xsec.chord)
+                                for xy in af.coordinates
+                            ]
+                        )
+                        .close()
                     )
-                    .close()
-                )
 
             wire_collection = xsec_wires[0]
             for s in xsec_wires[1:]:
@@ -910,12 +933,13 @@ class Airplane(AeroSandboxObject):
 
             loft = wire_collection.loft(ruled=True, clean=False)
 
-            solids.append(loft)
+            # DRY cleanup: set Wing.DEFAULT_NAME to "Untitled"
+            add_to_assembly(assembly, loft, "wing" if wing.name == "Untitled" else wing.name)
 
             if wing.symmetric:
                 loft = loft.mirror(mirrorPlane="XZ", union=False)
 
-                solids.append(loft)
+                add_to_assembly(assembly, loft, "wing" if wing.name == "Untitled" else wing.name)
 
         for fuse in self.fuselages:
 
@@ -959,16 +983,13 @@ class Airplane(AeroSandboxObject):
 
             loft = wire_collection.loft(ruled=True, clean=False)
 
-            solids.append(loft)
+            add_to_assembly(assembly, loft, "fuselage" if fuse.name == "Untitled" else fuse.name)
 
-        solid = solids[0]
-        for s in solids[1:]:
-            solid.add(s)
-
-        return solid.clean()
+        return assembly
 
     def export_cadquery_geometry(
-        self, filename: Union[Path, str], minimum_airfoil_TE_thickness: float = 0.001
+        self, filename: Union[Path, str], minimum_airfoil_TE_thickness: float = 0.001,
+        split_leading_edge: bool = True,
     ) -> None:
         """
         Exports the airplane geometry to a STEP file.
@@ -983,17 +1004,11 @@ class Airplane(AeroSandboxObject):
 
         Returns: None, but exports the airplane geometry to a STEP file.
         """
-        solid = self.generate_cadquery_geometry(
+        assembly = self.generate_cadquery_geometry(
             minimum_airfoil_TE_thickness=minimum_airfoil_TE_thickness,
+            split_leading_edge=split_leading_edge
         )
-
-        solid.objects = [
-            o.scale(1000) for o in solid.objects
-        ]  # Default STEP units are mm
-
-        from cadquery import exporters
-
-        exporters.export(solid, fname=filename)
+        assembly.export(filename)
 
     def export_AVL(self, filename, include_fuselages: bool = True):
         # TODO include option for mass file export as well
