@@ -176,7 +176,6 @@ def integrate_discrete_intervals(
             method_endpoints = "trapezoidal"
 
         if method_endpoints == "simpson":
-
             if remaining_endpoint_intervals[0] != 0:
                 avg_f_left_intervals = integrate_discrete_intervals(
                     f=f[: 2 + remaining_endpoint_intervals[0]],
@@ -203,7 +202,6 @@ def integrate_discrete_intervals(
                 )
 
         elif method_endpoints == "trapezoidal":
-
             if remaining_endpoint_intervals[0] != 0:
                 avg_f_left_intervals = integrate_discrete_intervals(
                     f=f[: 1 + remaining_endpoint_intervals[0]],

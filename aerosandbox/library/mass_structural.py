@@ -41,8 +41,8 @@ def mass_hpa_wing(
         else:
             raise ValueError("Bad input for 'type'!")
 
-        mass_primary = mass_primary_spar * (
-            11382.3 / 9222.2
+        mass_primary = (
+            mass_primary_spar * (11382.3 / 9222.2)
         )  # accounts for rear spar, struts, fittings, kevlar x-bracing, and wing-fuselage mounts
     else:
         mass_primary = 0

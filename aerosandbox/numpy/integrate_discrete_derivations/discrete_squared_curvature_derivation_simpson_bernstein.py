@@ -142,4 +142,4 @@ if __name__ == "__main__":
 
     print(f"exact: {exact}")
     print(f"eqn: {eqn}")
-    print(f"ratio: {exact/eqn}")
+    print(f"ratio: {exact / eqn}")

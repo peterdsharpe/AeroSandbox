@@ -7,7 +7,7 @@ import numpy as np
 
 def get_caller_source_location(
     stacklevel: int = 1,
-    truncate_stacklevel: bool=False,
+    truncate_stacklevel: bool = False,
 ) -> (Path, int, str):
     """
     Gets the file location where this function itself (`get_caller_source_location()`) is called.
@@ -179,9 +179,7 @@ def get_source_code_from_location(
 
 
 def get_caller_source_code(
-        stacklevel: int = 1,
-        truncate_stacklevel: bool=False,
-        strip_lines: bool = False
+    stacklevel: int = 1, truncate_stacklevel: bool = False, strip_lines: bool = False
 ) -> str:
     """
     Gets the source code of wherever this function is called.
@@ -488,7 +486,6 @@ def codegen(
         code = f"np.{repr(x)}"
 
     else:  # At this point, we assume it's a class instance, and could be from any package.
-
         module_name = x.__class__.__module__
         package_name = module_name.split(".")[0]
 

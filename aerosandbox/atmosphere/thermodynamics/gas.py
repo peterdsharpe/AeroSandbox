@@ -54,7 +54,7 @@ class PerfectGas:
         def f(val, unit):
             return eng_string(val, unit=unit, format="%.6g")
 
-        return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume ** self.ratio_of_specific_heats: .6g})"
+        return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume**self.ratio_of_specific_heats: .6g})"
 
     @property
     def density(self):
@@ -238,7 +238,6 @@ class PerfectGas:
             V_ratio = 1 / (new_density / self.density)
 
         if process == "isobaric":
-
             new_pressure = self.pressure
 
             if pressure_specified:
@@ -253,7 +252,6 @@ class PerfectGas:
                 pass
 
         elif process == "isochoric":
-
             if pressure_specified:
                 new_temperature = self.temperature * P_ratio
 
@@ -266,7 +264,6 @@ class PerfectGas:
                 new_pressure = self.pressure * T_ratio
 
         elif process == "isothermal":
-
             new_temperature = self.temperature
 
             if pressure_specified:
@@ -281,7 +278,6 @@ class PerfectGas:
                 )
 
         elif process == "isentropic":
-
             gam = self.ratio_of_specific_heats
 
             if pressure_specified:
@@ -295,7 +291,6 @@ class PerfectGas:
                 new_pressure = self.pressure * T_ratio ** (gam / (gam - 1))
 
         elif process == "polytropic":
-
             if polytropic_n is None:
                 raise ValueError(
                     "If the process is polytropic, then the polytropic index `n` must be specified."
@@ -335,7 +330,6 @@ class PerfectGas:
 
 
 if __name__ == "__main__":
-
     ### Carnot
     g = []
 

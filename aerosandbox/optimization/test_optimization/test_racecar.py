@@ -53,7 +53,6 @@ def test_racecar(N=100, plot=False):
 
 
 if __name__ == "__main__":
-
     N = 100  # number of control intervals
 
     opti = asb.Opti()  # Optimization problem

@@ -5,7 +5,6 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-
     ### Design Conditions
     Re_des = 3e5  # Re to design to
     Cl_start = 1.0  # Lower bound of CLs that you care about

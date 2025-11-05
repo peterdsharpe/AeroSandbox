@@ -69,7 +69,7 @@ def pressure_ratio_across_normal_shock(mach_upstream, gamma=1.4):
 
     """
     m2 = mach_upstream**2
-    return (2 * gamma * m2 - (gamma - 1)) / ((gamma + 1))
+    return (2 * gamma * m2 - (gamma - 1)) / (gamma + 1)
 
 
 def total_pressure_ratio_across_normal_shock(mach_upstream, gamma=1.4):
@@ -89,9 +89,7 @@ def total_pressure_ratio_across_normal_shock(mach_upstream, gamma=1.4):
         mach_upstream=mach_upstream, gamma=gamma
     ) ** (gamma / (gamma - 1)) * (
         (gamma + 1) / (2 * gamma * mach_upstream**2 - (gamma - 1))
-    ) ** (
-        1 / (gamma - 1)
-    )
+    ) ** (1 / (gamma - 1))
 
 
 if __name__ == "__main__":

@@ -8,7 +8,6 @@ from aerosandbox import OperatingPoint, Atmosphere
 
 
 class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
-
     # TODO: add method for force at offset (i.e., add moment and force)
 
     @abstractmethod

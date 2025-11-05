@@ -11,7 +11,6 @@ import warnings
 
 
 class AeroSandboxObject(ABC):
-
     _asb_metadata: Dict[str, str] = None
 
     @abstractmethod
@@ -443,7 +442,6 @@ class ExplicitAnalysis(AeroSandboxObject):
                     if k in analysis_options_for_this_geometry.keys():
                         options[k] = v
                     else:
-
                         import warnings
 
                         allowable_keys = [
@@ -467,7 +465,6 @@ class ExplicitAnalysis(AeroSandboxObject):
 
 
 class ImplicitAnalysis(AeroSandboxObject):
-
     @staticmethod
     def initialize(init_method):
         """

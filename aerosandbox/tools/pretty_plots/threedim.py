@@ -66,7 +66,6 @@ def figure3d(
             axs = [ax]
 
         for a in axs:
-
             pane_color = a.get_facecolor()
             a.set_facecolor((0, 0, 0, 0))  # Set transparent
 

@@ -530,7 +530,6 @@ class LiftingLine(ExplicitAnalysis):
         return run_base
 
     def wing_aerodynamics(self) -> AeroComponentResults:
-
         if self.verbose:
             print("Meshing...")
 
@@ -977,7 +976,6 @@ class LiftingLine(ExplicitAnalysis):
         return V
 
     def calculate_fuselage_influences(self, points: np.ndarray) -> np.ndarray:
-
         this_fuse_centerline_points = []  # fuselage sections centres
         this_fuse_radii = []
 

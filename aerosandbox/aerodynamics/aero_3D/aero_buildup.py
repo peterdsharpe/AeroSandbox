@@ -445,7 +445,6 @@ class AeroBuildup(ExplicitAnalysis):
             "r": (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
 
-
         # Compute the point analysis, which returns a dictionary that we will later add key:value pairs to.
         run_base = self.run()
 
@@ -588,7 +587,6 @@ class AeroBuildup(ExplicitAnalysis):
         area_inboard_to_YZ_plane = span_inboard_to_YZ_plane * wing_MAC
 
         if wing.symmetric:
-
             span_0_dihedral = 2 * (half_span + span_inboard_to_YZ_plane * 0.5)
             span_90_dihedral = half_span
 
@@ -638,14 +636,12 @@ class AeroBuildup(ExplicitAnalysis):
             -(
                 (
                     (
-                        (
-                            (3.557726 ** (a**2.8443985))
-                            * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)
-                        )
-                        + (a + -0.89228547)
+                        (3.557726 ** (a**2.8443985))
+                        * ((((s * a) + (t * 1.9149417)) + -1.4449639) * s)
                     )
-                    * -0.16073418
+                    + (a + -0.89228547)
                 )
+                * -0.16073418
             )
             * wing_MAC
         )
@@ -1057,8 +1053,7 @@ class AeroBuildup(ExplicitAnalysis):
             # From the same study as the `fuselage_form_factor` function above. This is done on purpose
             # as the form factor in this particular paper is a fit that correlates best using this precise
             # definition of C_f_ideal.
-            3.46 * np.log10(Re)
-            - 5.6
+            3.46 * np.log10(Re) - 5.6
         ) ** -2
         C_f = C_f_ideal * form_factor
         drag_skin = C_f * fuselage.area_wetted() * q
@@ -1141,9 +1136,9 @@ class AeroBuildup(ExplicitAnalysis):
             for i in range(len(fuselage.xsecs) - 1)
         ]
         for i in range(len(fuselage.xsecs) - 1):
-            normal_directions_g_unnormalized[i][
-                2
-            ] += 1e-100  # Hack to avoid divide-by-zero in 0-AoA case
+            normal_directions_g_unnormalized[i][2] += (
+                1e-100  # Hack to avoid divide-by-zero in 0-AoA case
+            )
 
         normal_directions_g_mag = [
             (sum(comp**2 for comp in n) + 1e-100) ** 0.5

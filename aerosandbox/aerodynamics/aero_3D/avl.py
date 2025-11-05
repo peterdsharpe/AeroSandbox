@@ -462,7 +462,7 @@ class AVL(ExplicitAnalysis):
                 avl_file += clean(
                     f"""\
                 COMPONENT
-                {wing_options['component']}
+                {wing_options["component"]}
                     
                 """
                 )
@@ -589,7 +589,7 @@ class AVL(ExplicitAnalysis):
             #{"=" * 50}
             BODY
             {fuse.name}
-            {fuse_options['panel_resolution']} {self.AVL_spacing_parameters[fuse_options['panel_spacing']]}
+            {fuse_options["panel_resolution"]} {self.AVL_spacing_parameters[fuse_options["panel_spacing"]]}
             
             BFIL
             {fuse_filepath}

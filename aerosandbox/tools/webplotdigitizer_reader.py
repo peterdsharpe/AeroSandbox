@@ -70,7 +70,6 @@ def read_webplotdigitizer_csv(
     output = {}
 
     for i, title in enumerate(titles):
-
         series = all_data[:, 2 * i : 2 * i + 2]
         all_nan_rows = np.all(np.isnan(series), axis=1)
         series = series[~all_nan_rows, :]

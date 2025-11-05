@@ -9,9 +9,9 @@ def pie(
     values: Union[np.ndarray, List[float]],
     names: List[str],
     colors: Union[np.ndarray, List[str]] = None,
-    label_format: Callable[
-        [str, float, float], str
-    ] = lambda name, value, percentage: name,
+    label_format: Callable[[str, float, float], str] = lambda name,
+    value,
+    percentage: name,
     sort_by: Union[np.ndarray, List[float], str, None] = None,
     startangle: float = 0.0,
     center_text: str = None,
@@ -143,7 +143,9 @@ if __name__ == "__main__":
         values=list(data.values()),
         names=list(data.keys()),
         colors=["navy" if s in ["USA"] else "lightgray" for s in data.keys()],
-        label_format=lambda name, value, percentage: f"{name}, {eng_string(value)} ({percentage:.0f}%)",
+        label_format=lambda name,
+        value,
+        percentage: f"{name}, {eng_string(value)} ({percentage:.0f}%)",
         startangle=40,
         center_text="Majority of North\nAmerica's Population\nlives in USA",
     )

@@ -5,7 +5,6 @@ from aerosandbox.common import AeroSandboxObject
 
 
 class TubeBeam1(AeroSandboxObject):
-
     def __init__(
         self,
         opti,  # type: cas.Opti
@@ -299,7 +298,6 @@ class TubeBeam1(AeroSandboxObject):
             )
 
         if self.torsion:
-
             # Set up derivatives
             phi = 0.1 * self.opti.variable(self.n)
             dphi = 0.01 * self.opti.variable(self.n)
@@ -452,7 +450,6 @@ if __name__ == "__main__":
     except Exception:
         print("Failed!")
         sol = opti.debug
-
 
     beam_sol = sol(beam)
 

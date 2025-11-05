@@ -128,7 +128,6 @@ def show_plot(
 
     if set_ticks:
         for ax in axes:
-
             individual_axes_and_limits = {
                 ax.xaxis: ax.get_xlim(),
                 ax.yaxis: ax.get_ylim(),
@@ -137,7 +136,6 @@ def show_plot(
                 individual_axes_and_limits[ax.zaxis] = ax.get_zlim()
 
             for i_ax, lims in individual_axes_and_limits.items():
-
                 maj_loc = None
                 maj_fmt = None
                 min_loc = None
@@ -239,7 +237,6 @@ def show_plot(
                                     return []
 
                                 if self.ndivs is None:
-
                                     majorstep_no_exponent = 10 ** (
                                         np.log10(majorstep) % 1
                                     )
@@ -364,7 +361,6 @@ def show_plot(
         for ax in axes:
             if not ax_is_3d(ax):
                 if not ax.get_label() == "<colorbar>":
-
                     ylabel = ax.get_ylabel()
 
                     if (rotate_axis_labels_linewidth is not None) and (
@@ -404,7 +400,6 @@ def show_plot(
     if dpi is not None:
         fig.set_dpi(dpi)
     if savefig is not None:
-
         if not isinstance(savefig, (list, tuple, set)):
             savefig: List[Union[str, Path]] = [savefig]
 

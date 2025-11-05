@@ -31,7 +31,6 @@ def test_function_argument_names_from_source_code():
     }
 
     for input, expected_output in tests.items():
-
         ### If you're expecting an error, make sure it gets raised
         if inspect.isclass(expected_output) and issubclass(expected_output, Exception):
             with pytest.raises(expected_output):
@@ -58,7 +57,6 @@ def test_codegen_builtins():
         dict(cat=1, dog=2),
         [1, 2, [3, 4, [5, 6]]],
     ]:
-
         code, imports = codegen(x)
         for import_str in imports:
             exec(import_str)
@@ -73,7 +71,6 @@ def test_codegen_numpy():
         _np.arange(10),
         _np.arange(12).reshape(3, 4),
     ]:
-
         code, imports = codegen(x)
         for import_str in imports:
             exec(import_str)

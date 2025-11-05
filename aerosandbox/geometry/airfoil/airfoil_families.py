@@ -372,7 +372,6 @@ def get_kulfan_parameters(
     from aerosandbox.geometry.airfoil import Airfoil
 
     if method == "opti":
-
         target_airfoil = Airfoil(
             name="Target Airfoil", coordinates=coordinates
         ).repanel(n_points_per_side=n_points_per_side)
@@ -454,7 +453,6 @@ def get_kulfan_parameters(
         }
 
     elif method == "least_squares":
-
         """
 
         The goal here is to set up this fitting problem as a least-squares problem (likely an overconstrained one,
@@ -539,7 +537,6 @@ def get_kulfan_parameters(
 
         # If you got a negative trailing-edge thickness, then resolve the problem with a TE_thickness = 0 constraint.
         if trailing_edge_thickness < 0:
-
             x, _, _, _ = np.linalg.lstsq(A[:, :-1], b, rcond=None)
 
             lower_weights = x[:n_weights_per_side]

@@ -3,7 +3,6 @@ import aerosandbox.numpy as np
 
 
 def test_dyn_indexing():
-
     # Test indexing of a simple Dynamics object
     dyn = asb.DynamicsPointMass1DHorizontal(
         mass_props=asb.MassProperties(mass=1),

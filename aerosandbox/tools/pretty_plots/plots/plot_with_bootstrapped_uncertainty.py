@@ -92,7 +92,6 @@ def plot_with_bootstrapped_uncertainty(
 
     ### Plot the confidence intervals
     if len(ci) != 0:
-
         ### Using the method of equal-tails confidence intervals
         lower_quantiles = np.concatenate([[0.5], (1 - ci) / 2])
         upper_quantiles = np.concatenate([[0.5], 1 - (1 - ci) / 2])
@@ -129,7 +128,6 @@ def plot_with_bootstrapped_uncertainty(
 
 
 if __name__ == "__main__":
-
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 

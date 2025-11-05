@@ -31,7 +31,6 @@ def make_fuselage(alpha_geometric=0.0, beta_geometric=0.0) -> asb.Fuselage:
 def test_derivatives_at_zero_geometric_angles(
     AeroAnalysis: Type = asb.AeroBuildup,
 ):
-
     fuselage = make_fuselage(alpha_geometric=0.0, beta_geometric=0.0)
 
     airplane = asb.Airplane(
@@ -74,7 +73,6 @@ def test_derivatives_at_zero_geometric_angles(
 def test_derivatives_at_constant_offset(
     AeroAnalysis: Type = asb.AeroBuildup,
 ):
-
     fuselage = make_fuselage(alpha_geometric=5.0, beta_geometric=10.0)
 
     airplane = asb.Airplane(
@@ -117,7 +115,6 @@ def test_derivatives_at_constant_offset(
 def test_derivatives_at_incidence(
     AeroAnalysis: Type = asb.AeroBuildup,
 ):
-
     fuselage = make_fuselage(alpha_geometric=0.0, beta_geometric=0.0)
 
     airplane = asb.Airplane(

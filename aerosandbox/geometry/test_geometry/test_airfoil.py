@@ -75,7 +75,6 @@ def test_optimize_through_control_surface_deflections():
 
 
 def test_optimize_through_control_surface_deflections_for_CL():
-
     af = Airfoil("naca0012")
     af.coordinates = af.coordinates[::5, :]
 

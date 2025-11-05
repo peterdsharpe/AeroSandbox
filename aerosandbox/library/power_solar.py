@@ -24,7 +24,7 @@ def _prepare_for_inverse_trig(x: Union[float, np.ndarray]) -> Union[float, np.nd
 
 
 def solar_flux_outside_atmosphere_normal(
-    day_of_year: Union[int, float, np.ndarray]
+    day_of_year: Union[int, float, np.ndarray],
 ) -> Union[float, np.ndarray]:
     """
     Computes the normal solar flux at the top of the atmosphere ("Airmass 0").
@@ -42,7 +42,7 @@ def solar_flux_outside_atmosphere_normal(
 
 
 def declination_angle(
-    day_of_year: Union[int, float, np.ndarray]
+    day_of_year: Union[int, float, np.ndarray],
 ) -> Union[float, np.ndarray]:
     """
     Computes the solar declination angle, in degrees, as a function of day of year.
@@ -205,7 +205,9 @@ def airmass(
         denominator = cos3_zt + 0.149864 * cos2_zt + 0.0102963 * cos_zt + 0.000303978
 
         sea_level_airmass = np.where(
-            denominator > 0, numerator / denominator, 1e100  # Essentially, infinity.
+            denominator > 0,
+            numerator / denominator,
+            1e100,  # Essentially, infinity.
         )
     else:
         raise ValueError("Bad value of `method`!")
@@ -374,9 +376,7 @@ def solar_flux(
         panel_tilt_angle
     ) * np.cosd(panel_azimuth_angle - solar_azimuth) + np.sind(
         solar_elevation
-    ) * np.cosd(
-        panel_tilt_angle
-    )
+    ) * np.cosd(panel_tilt_angle)
     cosine_of_angle_between_panel_normal_and_sun = np.fmax(
         cosine_of_angle_between_panel_normal_and_sun, 0
     )  # Accounts for if you have a downwards-pointing panel while the sun is above you.

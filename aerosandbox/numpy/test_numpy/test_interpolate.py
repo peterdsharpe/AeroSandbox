@@ -8,7 +8,6 @@ def test_interp():
     y_np = x_np + 10
 
     for x, y in zip([x_np, cas.DM(x_np)], [y_np, cas.DM(y_np)]):
-
         assert np.interp(0, x, y) == pytest.approx(10)
         assert np.interp(4, x, y) == pytest.approx(14)
         assert np.interp(0.5, x, y) == pytest.approx(10.5)

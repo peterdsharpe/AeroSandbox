@@ -212,7 +212,6 @@ def interpn(
         ### If fill_value is None, project the xi back onto the nearest point in the domain.
         if fill_value is None:
             for axis in range(n_dimensions):
-
                 xi[:, axis] = where(
                     xi[:, axis] > axis_values_max[axis],
                     axis_values_max[axis],
@@ -232,7 +231,6 @@ def interpn(
                 )
 
             for axis in range(n_dimensions):
-
                 if any(
                     logical_or(
                         xi[:, axis] > axis_values_max[axis],
@@ -254,7 +252,6 @@ def interpn(
         ### If fill_value is a scalar, replace all out-of-bounds xi with that value.
         if fill_value is not None:
             for axis in range(n_dimensions):
-
                 fi = where(xi[:, axis] > axis_values_max[axis], fill_value, fi)
                 fi = where(xi[:, axis] < axis_values_min[axis], fill_value, fi)
 

@@ -33,7 +33,6 @@ op_point = asb.OperatingPoint(
 aero = asb.AeroBuildup(airplane=airplane, op_point=op_point).run()
 
 if __name__ == "__main__":
-
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 

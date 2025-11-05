@@ -12,7 +12,6 @@ def quad(
     variable_of_integration: _cas.MX = None,
 ) -> Union[Tuple[float, float], Tuple[float, float, dict]]:
     if np.is_casadi_type(func):
-
         all_vars = _cas.symvar(func)  # All variables found in the expression graph
 
         if variable_of_integration is None:
@@ -77,7 +76,6 @@ def solve_ivp(
     y_variables: Union[_cas.MX, Tuple[_cas.MX]] = None,
     **options,
 ):
-
     # Determine which backend to use
     if np.is_casadi_type(fun, recursive=False):
         backend = "casadi_expr"
@@ -138,7 +136,6 @@ def solve_ivp(
             **options,
         )
     elif backend == "casadi_func" or backend == "casadi_expr":
-
         # Exception on non-implemented options
         if dense_output:
             raise NotImplementedError(
@@ -157,7 +154,6 @@ def solve_ivp(
             y0 = _cas.vertcat(*y0)
 
         if backend == "casadi_func":
-
             t_variable = _cas.MX.sym("t")
             y_variables = _cas.MX.sym("y", y0.shape[0], y0.shape[1])
             fun = np.array(fun(t_variable, y_variables))

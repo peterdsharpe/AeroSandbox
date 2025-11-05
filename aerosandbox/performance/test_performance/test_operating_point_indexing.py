@@ -3,7 +3,6 @@ import aerosandbox.numpy as np
 
 
 def test_op_indexing():
-
     op = asb.OperatingPoint(
         atmosphere=asb.Atmosphere(altitude=np.linspace(0, 100)),
         velocity=np.linspace(30, 70),

@@ -71,7 +71,6 @@ class AirfoilInviscid(ImplicitAnalysis):
         v_field = v_freestream
 
         for airfoil in self.airfoils:
-
             ### Add in the influence of the vortices and sources on the airfoil surface
             u_field_induced, v_field_induced = (
                 calculate_induced_velocity_line_singularities(
@@ -104,7 +103,6 @@ class AirfoilInviscid(ImplicitAnalysis):
                 v_field = v_field + v_field_induced_TE
 
             if self.ground_effect:
-
                 ### Add in the influence of the vortices and sources on the airfoil surface
                 u_field_induced, v_field_induced = (
                     calculate_induced_velocity_line_singularities(
@@ -139,7 +137,6 @@ class AirfoilInviscid(ImplicitAnalysis):
         return u_field, v_field
 
     def _enforce_governing_equations(self):
-
         for airfoil in self.airfoils:
             ### Compute normal velocities at the middle of each panel
             x_midpoints = np.trapz(airfoil.x())
@@ -169,7 +166,6 @@ class AirfoilInviscid(ImplicitAnalysis):
             self.opti.subject_to(airfoil.gamma[0] + airfoil.gamma[-1] == 0)
 
     def _calculate_forces(self):
-
         for airfoil in self.airfoils:
             panel_dx = np.diff(airfoil.x())
             panel_dy = np.diff(airfoil.y())

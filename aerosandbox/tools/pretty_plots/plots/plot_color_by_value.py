@@ -13,7 +13,7 @@ def plot_color_by_value(
     colorbar: bool = False,
     colorbar_label: str = None,
     clim: Tuple[float, float] = None,
-    **kwargs
+    **kwargs,
 ):
     """
     Uses same syntax as matplotlib.pyplot.plot, except that `c` is now an array-like that maps to a specific color
@@ -84,7 +84,7 @@ def plot_color_by_value(
             [y1, y2],
             *args,
             color=cmap(norm((c1 + c2) / 2) if cmin != cmax else 0.5),
-            **kwargs
+            **kwargs,
         )
         lines += line
 

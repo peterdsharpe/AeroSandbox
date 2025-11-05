@@ -146,7 +146,6 @@ def plot_smooth(
         )(x_resample)
 
     elif function_of == "y":
-
         y_resample = np.linspace(np.nanmin(y), np.nanmax(y), resample_resolution)
 
         mask = ~np.isnan(x) & ~np.isnan(y)

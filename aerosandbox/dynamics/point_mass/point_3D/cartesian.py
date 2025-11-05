@@ -130,7 +130,8 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
 
         """
         return np.arctan2(
-            self.v_e, self.u_e + 1e-200  # To avoid gradient singularities,
+            self.v_e,
+            self.u_e + 1e-200,  # To avoid gradient singularities,
         )
 
     def convert_axes(

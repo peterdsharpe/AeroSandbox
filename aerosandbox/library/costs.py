@@ -349,12 +349,15 @@ def electric_aircraft_direct_operating_cost_analysis(
     )
 
     ### Insurance cost
-    insurance_cost_per_year = production_cost_per_airframe * (
-        0.025  # Base rate of 2% on average, adjusted higher for perceived higher risk of new electric technology
-        * ((num_passengers_nominal + num_crew + 1) / 11)
-        ** 0.5  # Adj. for number of souls on board; but sublinear
-        * (flight_hours_per_year / 1200)
-        ** 0.5  # Normalizing to industry average; but again, sublinear
+    insurance_cost_per_year = (
+        production_cost_per_airframe
+        * (
+            0.025  # Base rate of 2% on average, adjusted higher for perceived higher risk of new electric technology
+            * ((num_passengers_nominal + num_crew + 1) / 11)
+            ** 0.5  # Adj. for number of souls on board; but sublinear
+            * (flight_hours_per_year / 1200)
+            ** 0.5  # Normalizing to industry average; but again, sublinear
+        )
     )
     costs_per_flight["insurance"] = insurance_cost_per_year / flights_per_year
 

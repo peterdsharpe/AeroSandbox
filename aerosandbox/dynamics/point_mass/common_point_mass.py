@@ -155,7 +155,6 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         pass
 
     def __repr__(self) -> str:
-
         title = f"{self.__class__.__name__} instance:"
 
         def makeline(k, v):
@@ -299,7 +298,6 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         state_derivatives = self.state_derivatives()
 
         for state_var_name in which:
-
             # If a state derivative has a None value, skip it.
             if state_derivatives[state_var_name] is None:
                 continue
@@ -667,7 +665,6 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     )
 
                 if draw_wingtip_ribbon:
-
                     left_wingtip_points = (
                         np.array(
                             self.convert_axes(

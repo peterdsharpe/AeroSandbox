@@ -109,10 +109,8 @@ def contour(
     if Y is None:
         Y = np.arange(Z.shape[0])
 
-    is_gridded = (
-        not (  # Determine if the data is gridded or not (i.e., contour vs. tricontour)
-            X.ndim == 1 and Y.ndim == 1 and Z.ndim == 1
-        )
+    is_gridded = not (  # Determine if the data is gridded or not (i.e., contour vs. tricontour)
+        X.ndim == 1 and Y.ndim == 1 and Z.ndim == 1
     )
 
     ### Check inputs for sanity
@@ -231,12 +229,10 @@ def contour(
     ### Do the actual plotting
 
     if is_gridded:
-
         cont = plt.contour(X, Y, Z, **contour_kwargs)
         contf = plt.contourf(X, Y, Z, **contourf_kwargs)
 
     else:  ### If this fails, then the data is unstructured (i.e. X and Y are 1D arrays)
-
         ### Create the triangulation
         tri = mpl.tri.Triangulation(X, Y)
         t = tri.triangles
@@ -288,7 +284,6 @@ def contour(
         )
 
         if z_log_scale:
-
             cbar.ax.tick_params(which="minor", labelsize=8)
 
             ### Determine which axis (x or y) of the cbar is the numerical one

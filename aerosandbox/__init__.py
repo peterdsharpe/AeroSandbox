@@ -16,6 +16,7 @@ from aerosandbox.structures import *
 
 try:
     from importlib.metadata import version
+
     __version__ = version("AeroSandbox")
 except Exception:
     __version__ = "unknown"
@@ -46,5 +47,4 @@ def run_tests():
     import matplotlib.pyplot as plt
 
     with plt.ion():  # Disable blocking plotting
-
         pytest.main([str(_asb_root)])

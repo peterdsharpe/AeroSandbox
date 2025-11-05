@@ -55,5 +55,4 @@ def test_airplane_optimization():
 
 
 if __name__ == "__main__":
-
     pytest.main()

@@ -420,9 +420,7 @@ def mass_fuselage(
     # Torenbeek Eq. D-3
     fuselage.fineness_ratio()
 
-    fuselage.fineness_ratio(
-        assumed_shape="sears_haack"
-    )
+    fuselage.fineness_ratio(assumed_shape="sears_haack")
 
     k_lambda = np.softmin(0.56 * fuselage.fineness_ratio(assumed_shape="sears_haack"))
 

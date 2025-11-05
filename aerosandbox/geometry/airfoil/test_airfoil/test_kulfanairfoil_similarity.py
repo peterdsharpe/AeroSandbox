@@ -3,7 +3,6 @@ import pytest
 
 
 def test_roundtrip_conversion_similarity():
-
     for name in [
         "dae11",
         "rae2822",

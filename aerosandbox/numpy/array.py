@@ -143,7 +143,6 @@ def diag(v, k=0):
         return _onp.diag(v, k=k)
 
     else:
-
         if 1 in v.shape:  # If v is a 1D array, construct a diagonal matrix
             if v.shape[0] == 1:
                 v = v.T
@@ -162,7 +161,6 @@ def diag(v, k=0):
                 return res
 
         elif v.shape[0] == v.shape[1]:  # If v is a square matrix, extract the diagonal
-
             n = v.shape[0]
 
             if k >= 0:
@@ -250,7 +248,6 @@ def max(a, axis=None):
         )
 
     else:
-
         if axis is None:
             return _cas.mmax(a)
 
@@ -284,7 +281,6 @@ def min(a, axis=None):
         )
 
     else:
-
         if axis is None:
             return _cas.mmin(a)
 

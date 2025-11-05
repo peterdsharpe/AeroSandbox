@@ -31,7 +31,6 @@ import aerosandbox.numpy as np
 import casadi as cas
 
 if __name__ == "__main__":
-
     opti = cas.Opti()  # Initialize a SAND environment
 
     # Define Assumptions

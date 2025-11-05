@@ -56,7 +56,6 @@ def generate_airplane(
 
 
 if __name__ == "__main__":
-
     from aerosandbox.geometry.wing import Wing, WingXSec
     from aerosandbox.geometry.airfoil.airfoil import Airfoil
 

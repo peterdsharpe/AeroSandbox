@@ -29,7 +29,6 @@ def ensure_float(value):
 # From https://www.geeksforgeeks.org/maximum-bipartite-matching/
 class GFG:
     def __init__(self, graph):
-
         # residual graph
         self.graph = graph
         self.ppl = len(graph)
@@ -38,14 +37,11 @@ class GFG:
     # A DFS based recursive function that returns true if a matching for vertex
     # u is possible
     def bpm(self, u, matchR, seen):
-
         # Try every job one by one
         for v in range(self.jobs):
-
             # If applicant u is interested
             # in job v and v is not seen
             if self.graph[u][v] and not seen[v]:
-
                 # Mark v as visited
                 seen[v] = True
 
@@ -70,7 +66,6 @@ class GFG:
         # Count of jobs assigned to applicants
         result = 0
         for i in range(self.ppl):
-
             # Mark all jobs as not seen for next applicant.
             seen = [False] * self.jobs
 

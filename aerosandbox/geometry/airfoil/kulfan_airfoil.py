@@ -218,7 +218,6 @@ class KulfanAirfoil(Airfoil):
         effective_CD_multiplier_from_control_surfaces = 1.0
 
         for surf in control_surfaces:
-
             effectiveness = (
                 1 - np.maximum(0, surf.hinge_point + 1e-16) ** 2.751428551177291
             )
@@ -627,7 +626,6 @@ class KulfanAirfoil(Airfoil):
         )
 
     def area(self):
-
         def get_area_of_side(weights):
             from scipy.special import beta, comb
 

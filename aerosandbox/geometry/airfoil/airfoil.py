@@ -87,7 +87,6 @@ class Airfoil(Polygon):
                         f"coordinates yourself.",
                     )
         else:
-
             try:  # If coordinates is a string, assume it's a filepath to a .dat file
                 self.coordinates = get_file_coordinates(filepath=coordinates)
             except (OSError, FileNotFoundError, TypeError, UnicodeDecodeError):
@@ -131,7 +130,6 @@ class Airfoil(Polygon):
             if generate_polars:
                 self.generate_polars()
             else:
-
                 from aerosandbox.library.aerodynamics.viscous import Cf_flat_plate
 
                 def print_default_warning():
@@ -207,7 +205,6 @@ class Airfoil(Polygon):
         normalize_coordinates: bool = True,
         use_leading_edge_modification: bool = True,
     ) -> "KulfanAirfoil":
-
         from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
         from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
 
@@ -354,9 +351,7 @@ class Airfoil(Polygon):
                 for k in run_datas[0].keys()
             }
 
-            if (
-                make_symmetric_polars
-            ):  # If the airfoil is known to be symmetric, duplicate all data across alpha.
+            if make_symmetric_polars:  # If the airfoil is known to be symmetric, duplicate all data across alpha.
                 keys_symmetric_across_alpha = [
                     "CD",
                     "CDp",
@@ -462,7 +457,6 @@ class Airfoil(Polygon):
         )
 
         def CL_function(alpha, Re, mach=0):
-
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CL_attached = CL_attached_interpolator(
                 {
@@ -519,7 +513,6 @@ class Airfoil(Polygon):
                 return CL_mach_0
 
         def CD_function(alpha, Re, mach=0):
-
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             log10_CD_attached = log10_CD_attached_interpolator(
                 {
@@ -536,7 +529,6 @@ class Airfoil(Polygon):
             )
 
             if include_compressibility_effects:
-
                 CL_attached = CL_attached_interpolator(
                     {
                         "alpha": alpha,
@@ -617,7 +609,6 @@ class Airfoil(Polygon):
                 return 10**log10_CD_mach_0
 
         def CM_function(alpha, Re, mach=0):
-
             alpha = np.mod(alpha + 180, 360) - 180  # Keep alpha in the valid range.
             CM_attached = CM_attached_interpolator(
                 {
@@ -664,11 +655,11 @@ class Airfoil(Polygon):
         control_surfaces: List["ControlSurface"] = None,
         include_360_deg_effects: bool = True,
     ) -> Dict[str, Union[float, np.ndarray]]:
-
         ### Normalize the inputs and evaluate
         normalization_outputs = self.normalize(return_dict=True)
         normalized_airfoil = normalization_outputs["airfoil"].to_kulfan_airfoil(
-            n_weights_per_side=8, normalize_coordinates=False  # No need to redo this
+            n_weights_per_side=8,
+            normalize_coordinates=False,  # No need to redo this
         )
         delta_alpha = normalization_outputs["rotation_angle"]  # degrees
         x_translation_LE = normalization_outputs["x_translation"]

@@ -30,9 +30,9 @@ def test_repaneling_validity():
         except shapely.errors.GEOSException:
             continue  # Jaccard similarity is not defined for self-intersecting polygons
             # similarity = np.nan
-        assert (
-            similarity > 1 - 3 / af.n_points()
-        ), f"Airfoil {af.name} failed repaneling validity check with similarity {similarity}!"
+        assert similarity > 1 - 3 / af.n_points(), (
+            f"Airfoil {af.name} failed repaneling validity check with similarity {similarity}!"
+        )
 
 
 def debug_draw(af: asb.Airfoil):

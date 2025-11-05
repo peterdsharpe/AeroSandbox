@@ -628,7 +628,6 @@ class XFoil(ExplicitAnalysis):
         commands = []
 
         def schedule_run(alpha: float):
-
             commands.append(f"a {alpha}")
 
             if self.hinge_point_x is not None:
@@ -707,7 +706,6 @@ class XFoil(ExplicitAnalysis):
         commands = []
 
         def schedule_run(cl: float):
-
             commands.append(f"cl {cl}")
 
             if self.hinge_point_x is not None:

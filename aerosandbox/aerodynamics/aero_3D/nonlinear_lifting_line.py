@@ -658,7 +658,6 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         return V
 
     def calculate_fuselage_influences(self, points: np.ndarray) -> np.ndarray:
-
         this_fuse_centerline_points = []  # fuselage sections centres
         this_fuse_radii = []
 
@@ -964,7 +963,9 @@ if __name__ == "__main__":
     LL_aeros = NonlinearLiftingLine(
         airplane=vanilla,
         op_point=asb.OperatingPoint(
-            atmosphere=asb.Atmosphere(altitude=0), velocity=10, alpha=5  # m/s
+            atmosphere=asb.Atmosphere(altitude=0),
+            velocity=10,
+            alpha=5,  # m/s
         ),
         verbose=True,
         spanwise_resolution=5,

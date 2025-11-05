@@ -452,7 +452,6 @@ class Fuselage(AeroSandboxObject):
             pass
 
         for i, xsec in enumerate(self.xsecs):
-
             origin = xsec.xyz_c
             xg_local, yg_local, zg_local = xsec.compute_frame()
 
@@ -810,9 +809,7 @@ class FuselageXSec(AeroSandboxObject):
                 return 2 * self.height
             elif self.height == 0:
                 return 2 * self.width
-        except (
-            RuntimeError
-        ):  # Will error if width and height are optimization variables, as truthiness is indeterminate
+        except RuntimeError:  # Will error if width and height are optimization variables, as truthiness is indeterminate
             pass
 
         s = self.shape

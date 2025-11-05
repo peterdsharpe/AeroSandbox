@@ -80,6 +80,7 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
 
     def print_title(name):
         return print(f"{name}\nIter | NaN Fraction")
+
     def print_progress(iter):
         return print(f"{iter:4} | {nanfrac(array):.6f}")
 

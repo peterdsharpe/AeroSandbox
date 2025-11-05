@@ -5,7 +5,6 @@ from typing import Union
 
 
 def a() -> asb.Airplane:
-
     fuselage_cabin_diameter = 20.4 * u.foot
     fuselage_cabin_radius = fuselage_cabin_diameter / 2
     fuselage_cabin_xsec_area = np.pi * fuselage_cabin_radius**2

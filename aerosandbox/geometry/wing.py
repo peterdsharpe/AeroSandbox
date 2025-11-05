@@ -268,7 +268,6 @@ class Wing(AeroSandboxObject):
         half_span = sum(sectional_spans)
 
         if include_centerline_distance and len(self.xsecs) > 0:
-
             half_span_to_XZ_plane = np.inf
 
             for i in i_range:
@@ -387,7 +386,6 @@ class Wing(AeroSandboxObject):
         half_area = sum(sectional_areas)
 
         if include_centerline_distance and len(self.xsecs) > 0:
-
             half_span_to_centerline = np.inf
 
             for i in range(len(self.xsecs)):
@@ -405,9 +403,7 @@ class Wing(AeroSandboxObject):
                 half_span_to_centerline * self.mean_geometric_chord()
             )
 
-        if (
-            self.symmetric
-        ):  # Returns the total area of both the left and right wing halves on mirrored wings.
+        if self.symmetric:  # Returns the total area of both the left and right wing halves on mirrored wings.
             area = 2 * half_area
         else:
             area = half_area
@@ -449,9 +445,7 @@ class Wing(AeroSandboxObject):
                 if not (surf.symmetric or surf.deflection == 0):
                     return False
 
-        if (
-            not self.symmetric
-        ):  # If the wing itself isn't mirrored (e.g., vertical stabilizer), check that it's symmetric
+        if not self.symmetric:  # If the wing itself isn't mirrored (e.g., vertical stabilizer), check that it's symmetric
             for xsec in self.xsecs:
                 if not xsec.xyz_le[1] == 0:  # Surface has to be right on the centerline
                     return False
@@ -483,7 +477,6 @@ class Wing(AeroSandboxObject):
         sectional_MAC_lengths = []
 
         for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
-
             section_taper_ratio = outer_xsec.chord / inner_xsec.chord
             section_MAC_length = (
                 (2 / 3)
@@ -626,7 +619,6 @@ class Wing(AeroSandboxObject):
         sectional_ACs = []
 
         for inner_xsec, outer_xsec in zip(self.xsecs[:-1], self.xsecs[1:]):
-
             section_taper_ratio = outer_xsec.chord / inner_xsec.chord
             section_MAC_length = (
                 (2 / 3)
@@ -799,7 +791,6 @@ class Wing(AeroSandboxObject):
         for xsec, sect_area in zip(self.xsecs[:-1], sectional_areas):
             for control_surface in xsec.control_surfaces:
                 if (by_name is None) or (control_surface.name == by_name):
-
                     if control_surface.trailing_edge:
                         control_surface_chord_fraction = np.maximum(
                             1 - control_surface.hinge_point, 0
@@ -1156,7 +1147,6 @@ class Wing(AeroSandboxObject):
             pass
 
         for i, xsec in enumerate(self.xsecs):
-
             try:
                 xsec_x_nondim = x_nondim[i]
             except (TypeError, IndexError):

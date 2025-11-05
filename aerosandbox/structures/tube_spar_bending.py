@@ -4,7 +4,6 @@ from typing import Callable, Union, Dict
 
 
 class TubeSparBendingStructure(asb.ImplicitAnalysis):
-
     @asb.ImplicitAnalysis.initialize
     def __init__(
         self,

@@ -118,7 +118,6 @@ def black_box(
             )
 
         for i, (name, parameter) in enumerate(signature.parameters.items()):
-
             if i < len(args):
                 input = args[i]
                 if name in kwargs:
@@ -148,7 +147,6 @@ def black_box(
 
 
 if __name__ == "__main__":
-
     ### Create a function that's effectively black-box (doesn't use `aerosandbox.numpy`)
     def my_func(
         a1,

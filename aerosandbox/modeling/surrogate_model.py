@@ -117,7 +117,6 @@ class SurrogateModel(AeroSandboxObject):
             return (minval, maxval)
 
         if self.input_dimensionality() == 1:
-
             ### Parse the x_data
             if self.input_names() is not None:
                 x_name = self.x_data.keys()[0]

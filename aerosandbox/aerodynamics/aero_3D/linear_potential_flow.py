@@ -25,7 +25,6 @@ immutable_dataclass = partial(dataclass, frozen=True, repr=False)
 
 
 class LinearPotentialFlow(ExplicitAnalysis):
-
     def __init__(
         self,
         airplane: Airplane,
@@ -419,7 +418,6 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
     @cached_property
     def AIC(self):
-
         A = np.empty((self.N_elements, self.N_elements)) * np.nan
 
         for element_collection in self.discretization:

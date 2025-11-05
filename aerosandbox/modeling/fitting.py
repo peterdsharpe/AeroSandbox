@@ -361,7 +361,6 @@ class FittedModel(SurrogateModel):
 
         """
         if type == "R^2":
-
             y_mean = np.mean(self.y_data)
 
             SS_tot = np.sum((self.y_data - y_mean) ** 2)

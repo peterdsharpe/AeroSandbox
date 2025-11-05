@@ -167,10 +167,13 @@ def bootstrap_fits(
     y_rng = y_max - y_min
 
     if normalize:
+
         def x_normalize(x):
             return (x - x_min) / x_rng
+
         def y_normalize(y):
             return (y - y_min) / y_rng
+
         # x_unnormalize = lambda x_n: x_n * x_rng + x_min
         def y_unnormalize(y_n):
             return y_n * y_rng + y_min
@@ -179,10 +182,13 @@ def bootstrap_fits(
         y_stdev_normalized = y_noise_stdev / y_rng
 
     else:
+
         def x_normalize(x):
             return x
+
         def y_normalize(y):
             return y
+
         # x_unnormalize = lambda x_n: x_n
         def y_unnormalize(y_n):
             return y_n
@@ -197,7 +203,6 @@ def bootstrap_fits(
         n_attempted_splines = 0
 
         while n_valid_splines < n_bootstraps:
-
             n_attempted_splines += 1
 
             ### Obtain a bootstrap resample

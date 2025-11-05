@@ -302,7 +302,6 @@ class Airplane(AeroSandboxObject):
             )
 
             for prop in self.propulsors:
-
                 ### Disk
                 if prop.length == 0:
                     ax.add_collection(
@@ -338,7 +337,6 @@ class Airplane(AeroSandboxObject):
                 p.show_plot()
 
         elif backend == "plotly":
-
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
 
             fig = Figure3D()
@@ -356,7 +354,6 @@ class Airplane(AeroSandboxObject):
             return fig.draw(**show_kwargs)
 
         elif backend == "pyvista":
-
             import pyvista as pv
 
             fig = pv.PolyData(
@@ -372,7 +369,6 @@ class Airplane(AeroSandboxObject):
             return fig
 
         elif backend == "trimesh":
-
             import trimesh as tri
 
             fig = tri.Trimesh(points, faces)
@@ -480,7 +476,6 @@ class Airplane(AeroSandboxObject):
                 (0, 0),  # Leading Edge
                 (1, 0),  # Trailing Edge
             ]:
-
                 plot_line(
                     np.stack(wing.mesh_line(x_nondim=xy[0], z_nondim=xy[1]), axis=0),
                     symmetric=wing.symmetric,
@@ -827,15 +822,10 @@ class Airplane(AeroSandboxObject):
         deflected_airplane = copy.deepcopy(self)
 
         for name, deflection in control_surface_deflection_mappings.items():
-
             for wi, wing in enumerate(deflected_airplane.wings):
-
                 for xi, xsec in enumerate(wing.xsecs):
-
                     for csi, surf in enumerate(xsec.control_surfaces):
-
                         if surf.name == name:
-
                             surf.deflection = deflection
 
         return deflected_airplane
@@ -871,17 +861,16 @@ class Airplane(AeroSandboxObject):
         assembly = cq.Assembly()
 
         def add_to_assembly(assembly, part, name):
-            part = part.clean().val().scale(1000) # Default STEP units are mm
+            part = part.clean().val().scale(1000)  # Default STEP units are mm
             if name not in assembly:
                 assembly.add(part, name=name)
                 return
             for i in itertools.count(start=1):
-                if f'{name}_{i}' not in assembly:
-                    assembly.add(part, name=f'{name}_{i}')
+                if f"{name}_{i}" not in assembly:
+                    assembly.add(part, name=f"{name}_{i}")
                     return
 
         for wing in self.wings:
-
             xsec_wires = []
 
             for i, xsec in enumerate(wing.xsecs):
@@ -894,12 +883,12 @@ class Airplane(AeroSandboxObject):
                 LE_index = af.LE_index()
 
                 workplane = cq.Workplane(
-                        inPlane=cq.Plane(
-                            origin=tuple(xsec.xyz_le),
-                            xDir=tuple(csys[0]),
-                            normal=tuple(-csys[1]),
-                        )
+                    inPlane=cq.Plane(
+                        origin=tuple(xsec.xyz_le),
+                        xDir=tuple(csys[0]),
+                        normal=tuple(-csys[1]),
                     )
+                )
                 if split_leading_edge:
                     xsec_wires.append(
                         workplane.spline(
@@ -920,11 +909,9 @@ class Airplane(AeroSandboxObject):
                     xsec_wires.append(
                         workplane.spline(
                             listOfXYTuple=[
-                                tuple(xy * xsec.chord)
-                                for xy in af.coordinates
+                                tuple(xy * xsec.chord) for xy in af.coordinates
                             ]
-                        )
-                        .close()
+                        ).close()
                     )
 
             wire_collection = xsec_wires[0]
@@ -934,19 +921,21 @@ class Airplane(AeroSandboxObject):
             loft = wire_collection.loft(ruled=True, clean=False)
 
             # DRY cleanup: set Wing.DEFAULT_NAME to "Untitled"
-            add_to_assembly(assembly, loft, "wing" if wing.name == "Untitled" else wing.name)
+            add_to_assembly(
+                assembly, loft, "wing" if wing.name == "Untitled" else wing.name
+            )
 
             if wing.symmetric:
                 loft = loft.mirror(mirrorPlane="XZ", union=False)
 
-                add_to_assembly(assembly, loft, "wing" if wing.name == "Untitled" else wing.name)
+                add_to_assembly(
+                    assembly, loft, "wing" if wing.name == "Untitled" else wing.name
+                )
 
         for fuse in self.fuselages:
-
             xsec_wires = []
 
             for i, xsec in enumerate(fuse.xsecs):
-
                 if (
                     xsec.height < fuselage_tol or xsec.width < fuselage_tol
                 ):  # If the xsec is so small as to effectively be a point
@@ -983,12 +972,16 @@ class Airplane(AeroSandboxObject):
 
             loft = wire_collection.loft(ruled=True, clean=False)
 
-            add_to_assembly(assembly, loft, "fuselage" if fuse.name == "Untitled" else fuse.name)
+            add_to_assembly(
+                assembly, loft, "fuselage" if fuse.name == "Untitled" else fuse.name
+            )
 
         return assembly
 
     def export_cadquery_geometry(
-        self, filename: Union[Path, str], minimum_airfoil_TE_thickness: float = 0.001,
+        self,
+        filename: Union[Path, str],
+        minimum_airfoil_TE_thickness: float = 0.001,
         split_leading_edge: bool = True,
     ) -> None:
         """
@@ -1006,7 +999,7 @@ class Airplane(AeroSandboxObject):
         """
         assembly = self.generate_cadquery_geometry(
             minimum_airfoil_TE_thickness=minimum_airfoil_TE_thickness,
-            split_leading_edge=split_leading_edge
+            split_leading_edge=split_leading_edge,
         )
         assembly.export(filename)
 
@@ -1192,7 +1185,6 @@ class Airplane(AeroSandboxObject):
             ]
 
             for i, xsec in enumerate(wing.xsecs):
-
                 sect = ET.SubElement(sections, "Section")
 
                 if i == len(wing.xsecs) - 1:
@@ -1244,7 +1236,6 @@ class Airplane(AeroSandboxObject):
             ]
 
             for i, xsec in enumerate(wing.xsecs):
-
                 sect = ET.SubElement(sections, "Section")
 
                 if i == len(wing.xsecs) - 1:
@@ -1296,7 +1287,6 @@ class Airplane(AeroSandboxObject):
             ]
 
             for i, xsec in enumerate(wing.xsecs):
-
                 sect = ET.SubElement(sections, "Section")
 
                 if i == len(wing.xsecs) - 1:

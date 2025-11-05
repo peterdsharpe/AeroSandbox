@@ -163,7 +163,6 @@ class OperatingPoint(AeroSandboxObject):
         return {k: v for k, v in zip(self.state.keys(), array_like_state)}
 
     def __repr__(self) -> str:
-
         title = f"{self.__class__.__name__} instance:"
 
         def makeline(k, v):
@@ -479,9 +478,7 @@ class OperatingPoint(AeroSandboxObject):
             axis=1,
         )
 
-        rotation_velocity_geometry_axes = (
-            -rotation_velocity_geometry_axes
-        )  # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
+        rotation_velocity_geometry_axes = -rotation_velocity_geometry_axes  # negative sign, since we care about the velocity the WING SEES, not the velocity of the wing.
 
         return rotation_velocity_geometry_axes
 

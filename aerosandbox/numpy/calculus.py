@@ -255,7 +255,6 @@ def trapz(x, modify_endpoints=False):  # TODO unify with NumPy trapz, this is di
 if __name__ == "__main__":
     import aerosandbox.numpy as np
 
-
     # print(diff(cas.DM([355, 5]), period=360))
 
     print(gradient(np.linspace(45, 55, 11) % 50, period=50))

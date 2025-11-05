@@ -72,7 +72,6 @@ Update();
 
 
 if __name__ == "__main__":
-
     prop = Propulsor(
         name="Prop",
         xyz_c=np.array([0, 0, 0]),

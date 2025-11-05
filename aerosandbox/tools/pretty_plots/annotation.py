@@ -11,7 +11,7 @@ def hline(
     text_ha="center",
     text_va="bottom",
     text_kwargs=None,
-    **kwargs
+    **kwargs,
 ):  # TODO docs
     if text_kwargs is None:
         text_kwargs = {}
@@ -28,7 +28,7 @@ def hline(
             ha=text_ha,
             va=text_va,
             color=color,
-            **text_kwargs
+            **text_kwargs,
         )
 
 
@@ -41,7 +41,7 @@ def vline(
     text_ha="right",
     text_va="center",
     text_kwargs=None,
-    **kwargs
+    **kwargs,
 ):  # TODO docs
     if text_kwargs is None:
         text_kwargs = {}
@@ -59,5 +59,5 @@ def vline(
             va=text_va,
             color=color,
             rotation=90,
-            **text_kwargs
+            **text_kwargs,
         )

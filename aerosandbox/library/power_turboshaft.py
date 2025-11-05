@@ -139,7 +139,6 @@ def thermal_efficiency_turboshaft(
 
 
 if __name__ == "__main__":
-
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 

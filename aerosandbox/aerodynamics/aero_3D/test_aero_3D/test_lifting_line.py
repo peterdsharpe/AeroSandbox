@@ -1,4 +1,3 @@
-
 # def test_lifting_line():
 #     analysis = asb.LiftingLine(
 #         airplane=airplane,

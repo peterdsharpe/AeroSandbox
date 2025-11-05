@@ -280,7 +280,6 @@ def calculate_induced_velocity_line_singularities(
 
 
 if __name__ == "__main__":
-
     X, Y = np.meshgrid(
         np.linspace(-2, 2, 50),
         np.linspace(-2, 2, 50),

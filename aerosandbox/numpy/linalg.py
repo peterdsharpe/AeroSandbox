@@ -105,7 +105,6 @@ def norm(x, ord=None, axis=None, keepdims=False):
         return _onp.linalg.norm(x, ord=ord, axis=axis, keepdims=keepdims)
 
     else:
-
         # Figure out which axis, if any, to take a vector norm about.
         if axis is not None:
             if not (axis == 0 or axis == 1 or axis == -1):

@@ -101,7 +101,6 @@ class MassProperties(AeroSandboxObject):
         self.Ixz = Ixz
 
     def __repr__(self) -> str:
-
         def fmt(x: Union[float, Any], width=14) -> str:
             if isinstance(x, (float, int)):
                 if x == 0:

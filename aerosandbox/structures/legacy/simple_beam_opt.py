@@ -31,7 +31,6 @@ import aerosandbox.numpy as np
 import casadi as cas
 
 if __name__ == "__main__":
-
     opti = cas.Opti()  # Initialize a SAND environment
 
     # Define Assumptions
@@ -166,8 +165,7 @@ if __name__ == "__main__":
     opti.subject_to(
         [
             # u[-1] < 2 # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-            du[-1] * 180 / cas.pi
-            < 10
+            du[-1] * 180 / cas.pi < 10
         ]
     )
 

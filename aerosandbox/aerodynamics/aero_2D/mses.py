@@ -259,7 +259,6 @@ class MSES(ExplicitAnalysis):
             runs_output = {}
 
             for i, (alpha, mach, Re) in enumerate(zip(alphas, machs, Res)):
-
                 if self.verbosity >= 1:
                     print(
                         f"Solving alpha = {alpha:.3f}, mach = {mach:.4f}, Re = {Re:.3e} with MSES..."

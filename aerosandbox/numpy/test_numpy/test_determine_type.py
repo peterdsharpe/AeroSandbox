@@ -33,9 +33,7 @@ def test_casadi_list():
     assert not (
         is_casadi_type([cas.MX(np.ones(5)), cas.MX(np.ones(5))], recursive=False)
     )
-    assert (
-        is_casadi_type([cas.MX(np.ones(5)), cas.MX(np.ones(5))], recursive=True)
-    )
+    assert is_casadi_type([cas.MX(np.ones(5)), cas.MX(np.ones(5))], recursive=True)
 
 
 def test_mixed_list():

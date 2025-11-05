@@ -203,7 +203,6 @@ def tropopause_altitude(latitude, day_of_year):
 
 
 if __name__ == "__main__":
-
     from aerosandbox.tools.pretty_plots import plt, show_plot
 
     def plot_winds_at_altitude(altitude=18000):
@@ -223,9 +222,7 @@ if __name__ == "__main__":
 
         levels = np.arange(0, 80.1, 5)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        plt.contourf(
-            *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max"
-        )
+        plt.contourf(*args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max")
         plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 
@@ -280,9 +277,7 @@ if __name__ == "__main__":
 
         levels = np.arange(0, 80.1, 5)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        plt.contourf(
-            *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max"
-        )
+        plt.contourf(*args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max")
         plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 
@@ -316,9 +311,7 @@ if __name__ == "__main__":
 
         levels = np.arange(10, 20.1, 1)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        plt.contourf(
-            *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="both"
-        )
+        plt.contourf(*args, levels=levels, cmap="viridis_r", alpha=0.7, extend="both")
         plt.colorbar(label="Tropopause Altitude [km]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f km")
 
@@ -373,9 +366,7 @@ if __name__ == "__main__":
 
         levels = np.arange(0, 80.1, 5)
         CS = plt.contour(*args, levels=levels, linewidths=0.5, colors="k", alpha=0.7)
-        plt.contourf(
-            *args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max"
-        )
+        plt.contourf(*args, levels=levels, cmap="viridis_r", alpha=0.7, extend="max")
         plt.colorbar(label="Wind Speed [m/s]", extendrect=True)
         ax.clabel(CS, inline=1, fontsize=9, fmt="%.0f m/s")
 

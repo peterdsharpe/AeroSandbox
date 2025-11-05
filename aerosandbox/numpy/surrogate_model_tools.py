@@ -280,8 +280,10 @@ def blend(
         on the value of the 'switch' parameter.
 
     """
+
     def blend_function(x):
         return sigmoid(x, normalization_range=(0, 1))
+
     weight_to_value_switch_high = blend_function(switch)
 
     blend_value = value_switch_high * weight_to_value_switch_high + value_switch_low * (

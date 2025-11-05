@@ -177,6 +177,7 @@ def approximate_CD_wave(
 
 if __name__ == "__main__":
     mc = 0.6
+
     def drag(mach):
         return approximate_CD_wave(mach, mach_crit=mc, CD_wave_at_fully_supersonic=1)
 

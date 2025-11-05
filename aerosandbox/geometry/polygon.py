@@ -384,7 +384,6 @@ class Polygon(AeroSandboxObject):
 
 
 if __name__ == "__main__":
-
     theta = np.linspace(0, 2 * np.pi, 1000)
     r = (
         np.sin(theta) * np.sqrt(np.abs(np.cos(theta))) / (np.sin(theta) + 7 / 5)

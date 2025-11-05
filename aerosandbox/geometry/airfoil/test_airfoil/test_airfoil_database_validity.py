@@ -133,8 +133,7 @@ def test_airfoil_database_validity():
 
     if len(failed_airfoils_and_errors) > 0:
         raise ValueError(
-            "The following airfoils failed the validity test:\n"
-            "\n".join(
+            "The following airfoils failed the validity test:\n\n".join(
                 f"{af_name}: {error}"
                 for af_name, error in failed_airfoils_and_errors.items()
             )
@@ -151,7 +150,6 @@ def debug_draw(af: asb.Airfoil):
 
 
 if __name__ == "__main__":
-
     afs = get_airfoil_database()
     for af in afs:
         try:

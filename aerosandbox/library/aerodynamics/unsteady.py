@@ -47,9 +47,9 @@ def calculate_reduced_time(
     if type(velocity) == float or type(velocity) == int:
         return 2 * velocity * time / chord
     else:
-        assert np.size(velocity) == np.size(
-            time
-        ), "The velocity history and time must have the same length"
+        assert np.size(velocity) == np.size(time), (
+            "The velocity history and time must have the same length"
+        )
         reduced_time = np.zeros_like(time)
         for i in range(len(time) - 1):
             reduced_time[i + 1] = reduced_time[i] + (
@@ -86,7 +86,8 @@ def kussners_function(reduced_time: Union[float, np.ndarray]):
 
 
 def indicial_pitch_response(
-    reduced_time: Union[float, np.ndarray], angle_of_attack: float  # In degrees
+    reduced_time: Union[float, np.ndarray],
+    angle_of_attack: float,  # In degrees
 ):
     """
     Computes the evolution of the lift coefficient in Wagner's problem which can be interpreted as follows
@@ -157,9 +158,9 @@ def calculate_lift_due_to_transverse_gust(
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
     """
-    assert (
-        type(angle_of_attack) != np.ndarray
-    ), "Please provide either a Callable or a float for the angle of attack"
+    assert type(angle_of_attack) != np.ndarray, (
+        "Please provide either a Callable or a float for the angle of attack"
+    )
 
     if isinstance(angle_of_attack, float) or isinstance(angle_of_attack, int):
 
@@ -207,9 +208,9 @@ def calculate_lift_due_to_pitching_profile(
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
     """
 
-    assert (
-        reduced_time >= 0
-    ).all(), "Please use positive time. Negative time not supported"
+    assert (reduced_time >= 0).all(), (
+        "Please use positive time. Negative time not supported"
+    )
 
     if isinstance(angle_of_attack, float) or isinstance(angle_of_attack, int):
 
@@ -234,7 +235,6 @@ def calculate_lift_due_to_pitching_profile(
     lift_coefficient = np.zeros_like(reduced_time)
 
     for i, s in enumerate(reduced_time):
-
         I = quad(integrand, 0, s, args=s)[0]
         # print(I)
         lift_coefficient[i] = 2 * np.pi * (AoA_function(s) * wagners_function(0) + I)
@@ -243,7 +243,8 @@ def calculate_lift_due_to_pitching_profile(
 
 
 def added_mass_due_to_pitching(
-    reduced_time: np.ndarray, angle_of_attack: Callable[[float], float]  # In degrees
+    reduced_time: np.ndarray,
+    angle_of_attack: Callable[[float], float],  # In degrees
 ):
     """
     This function calculate the lift coefficient due to the added mass of a flat plate
@@ -377,7 +378,6 @@ def linear_ramp_pitch(reduced_time: float) -> float:
 
 
 if __name__ == "__main__":
-
     import matplotlib.pyplot as plt
 
     time = np.linspace(0, 10, 100)  # Time in seconds

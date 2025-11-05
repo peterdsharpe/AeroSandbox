@@ -36,7 +36,6 @@ def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
         return
 
     if path.is_file():
-
         ### Run the file if it's a Python file
         if path.suffix == ".py":
             if verbose:

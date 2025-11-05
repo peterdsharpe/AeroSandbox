@@ -3,7 +3,6 @@ import pytest
 
 
 def test_single_point_optimization():
-
     opti = asb.Opti()
 
     af = asb.Airfoil("naca0012")
@@ -25,7 +24,6 @@ def test_single_point_optimization():
 
 
 def test_multi_point_optimization():
-
     opti = asb.Opti()
 
     af = asb.Airfoil("naca0012")

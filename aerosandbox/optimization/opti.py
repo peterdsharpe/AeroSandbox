@@ -35,7 +35,6 @@ class Opti(cas.Opti):
         ignore_violated_parametric_constraints: bool = False,
         freeze_style: str = "parameter",
     ):  # TODO document
-
         # Default arguments
         if variable_categories_to_freeze is None:
             variable_categories_to_freeze = []
@@ -56,9 +55,7 @@ class Opti(cas.Opti):
         self.freeze_style = freeze_style
 
         # Start tracking variables and categorize them.
-        self.variables_categorized = (
-            {}
-        )  # category name [str] : list of variables [list]
+        self.variables_categorized = {}  # category name [str] : list of variables [list]
 
         # Track variable declaration locations, useful for debugging
         self._variable_declarations = (
@@ -571,7 +568,7 @@ class Opti(cas.Opti):
         verbose: bool = True,
         jit: bool = False,  # TODO document, add unit tests for jit
         detect_simple_bounds: bool = False,  # TODO document
-        expand: bool = False, # TODO document
+        expand: bool = False,  # TODO document
         options: Dict = None,  # TODO document
         behavior_on_failure: str = "raise",
     ) -> "OptiSol":
@@ -743,7 +740,6 @@ class Opti(cas.Opti):
         return_callable: bool = False,
         garbage_collect_between_runs: bool = False,
     ) -> Union[np.ndarray, Callable[[cas.MX], np.ndarray]]:
-
         # Handle defaults
         if solve_kwargs is None:
             solve_kwargs = {}
