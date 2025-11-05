@@ -77,6 +77,14 @@ Source = "https://github.com/peterdsharpe/AeroSandbox"
 [tool.hatch.build.targets.wheel]
 packages = ["aerosandbox"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/aerosandbox",
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE.txt",
+]
+
 [dependency-groups]
 dev = [
     "cadquery>=2.6.1",
