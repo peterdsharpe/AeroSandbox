@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
-from typing import Dict
+from typing import Dict, Literal
 
 
 def modified_DAPCA_IV_production_cost_analysis(
@@ -14,8 +14,8 @@ def modified_DAPCA_IV_production_cost_analysis(
     cpi_relative_to_2012_dollars: float = 1.327,  # updated for 2024
     n_flight_test_aircraft: int = 4,
     is_cargo_airplane: bool = False,
-    primary_structure_material: str = "aluminum",
-    per_passenger_cost_model: str = "general_aviation",
+    primary_structure_material: Literal["aluminum", "carbon_fiber", "fiberglass", "steel", "titanium"] = "aluminum",
+    per_passenger_cost_model: Literal["general_aviation", "jet_transport", "regional_transport"] = "general_aviation",
     engineering_wrap_rate_2012_dollars: float = 115.0,
     tooling_wrap_rate_2012_dollars: float = 118.0,
     quality_control_wrap_rate_2012_dollars: float = 108.0,
@@ -144,7 +144,10 @@ def modified_DAPCA_IV_production_cost_analysis(
     elif primary_structure_material == "titanium":
         materials_hourly_multiplier = (1.1 + 1.8) / 2
     else:
-        raise ValueError("Invalid value of `primary_structure_material`.")
+        raise ValueError(
+            f"{primary_structure_material=!r} is not a valid option. "
+            f"Valid options are: 'aluminum', 'carbon_fiber', 'fiberglass', 'steel', 'titanium'."
+        )
 
     hours = {k: v * materials_hourly_multiplier for k, v in hours.items()}
 
@@ -182,7 +185,10 @@ def modified_DAPCA_IV_production_cost_analysis(
     elif per_passenger_cost_model == "regional_transport":
         costs_2012_dollars["aircraft_interiors"] = n_airplanes_produced * n_pax * 1700
     else:
-        raise ValueError("Invalid value of `per_passenger_cost_model`!")
+        raise ValueError(
+            f"{per_passenger_cost_model=!r} is not a valid option. "
+            f"Valid options are: 'general_aviation', 'jet_transport', 'regional_transport'."
+        )
 
     ### Convert all costs to present-day dollars
     costs = {k: v * cpi_relative_to_2012_dollars for k, v in costs_2012_dollars.items()}

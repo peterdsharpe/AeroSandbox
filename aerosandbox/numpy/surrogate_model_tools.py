@@ -1,6 +1,6 @@
 import aerosandbox.numpy as _np
 import casadi as _cas
-from typing import Tuple, Union
+from typing import Tuple, Union, Literal
 
 
 def softmax(
@@ -176,7 +176,7 @@ def softplus(
 
 def sigmoid(
     x,
-    sigmoid_type: str = "tanh",
+    sigmoid_type: Literal["tanh", "logistic", "arctan", "polynomial"] = "tanh",
     normalization_range: Tuple[Union[float, int], Union[float, int]] = (0, 1),
 ):
     """
@@ -219,7 +219,10 @@ def sigmoid(
     elif sigmoid_type == "polynomial":
         s = x / (1 + x**2) ** 0.5
     else:
-        raise ValueError("Bad value of parameter 'type'!")
+        raise ValueError(
+            f"{sigmoid_type=!r} is not a valid option. "
+            f"Valid options are: 'tanh', 'logistic', 'arctan', 'polynomial'."
+        )
 
     ### Normalize
     min = normalization_range[0]

@@ -1,4 +1,4 @@
-from typing import Union, List, Dict, Callable, Any, Tuple, Set, Optional
+from typing import Union, List, Dict, Callable, Any, Tuple, Set, Optional, Literal
 import json
 import casadi as cas
 import aerosandbox.numpy as np
@@ -33,7 +33,7 @@ class Opti(cas.Opti):
         load_frozen_variables_from_cache: bool = False,
         save_to_cache_on_solve: bool = False,
         ignore_violated_parametric_constraints: bool = False,
-        freeze_style: str = "parameter",
+        freeze_style: Literal["parameter", "frozen"] = "parameter",
     ):  # TODO document
         # Default arguments
         if variable_categories_to_freeze is None:
@@ -570,7 +570,7 @@ class Opti(cas.Opti):
         detect_simple_bounds: bool = False,  # TODO document
         expand: bool = False,  # TODO document
         options: Dict = None,  # TODO document
-        behavior_on_failure: str = "raise",
+        behavior_on_failure: Literal["raise", "return_last"] = "raise",
     ) -> "OptiSol":
         """
         Solve the optimization problem using CasADi with IPOPT backend.

@@ -4,7 +4,7 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
-from typing import Tuple
+from typing import Tuple, Literal  # noqa: F401
 from scipy import interpolate as _interpolate
 
 
@@ -105,7 +105,7 @@ def interpn(
     points: Tuple[_onp.ndarray],
     values: _onp.ndarray,
     xi: _onp.ndarray,
-    method: str = "linear",
+    method: Literal["linear", "bspline", "nearest"] = "linear",
     bounds_error=True,
     fill_value=_onp.nan,
 ) -> _onp.ndarray:
@@ -265,4 +265,7 @@ def interpn(
         return fi
 
     else:
-        raise ValueError("Bad value of `method`!")
+        raise ValueError(
+            f"{method=!r} is not a valid option. "
+            f"Valid options are: 'linear', 'bspline', 'nearest'."
+        )

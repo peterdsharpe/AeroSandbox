@@ -1,11 +1,12 @@
 import aerosandbox.numpy as np
+from typing import Literal
 
 
 def column_buckling_critical_load(
     elastic_modulus: float,
     moment_of_inertia: float,
     length: float,
-    boundary_condition_type: str = "pin-pin",
+    boundary_condition_type: Literal["pin-pin", "pin-clamp", "clamp-pin", "clamp-clamp", "clamp-free", "free-clamp"] = "pin-pin",
     use_recommended_design_values: bool = True,
 ):
     """
@@ -52,7 +53,10 @@ def column_buckling_critical_load(
     ):
         K = 2.10 if use_recommended_design_values else 2.00
     else:
-        raise ValueError("Invalid `boundary_condition_type`.")
+        raise ValueError(
+            f"{boundary_condition_type=!r} is not a valid option. "
+            f"Valid options are: 'pin-pin', 'pin-clamp', 'clamp-pin', 'clamp-clamp', 'clamp-free', 'free-clamp'."
+        )
 
     return np.pi**2 * elastic_modulus * moment_of_inertia / (K * length) ** 2
 
@@ -131,7 +135,7 @@ def plate_buckling_critical_load(
     wall_thickness: float,
     elastic_modulus: float,
     poissons_ratio: float = 0.33,
-    side_boundary_condition_type: str = "clamp-clamp",
+    side_boundary_condition_type: Literal["clamp-clamp", "pin-pin", "free-free"] = "clamp-clamp",
 ):
     """
     Computes the critical compressive load (in N) for a plate to buckle via plate buckling.
@@ -176,7 +180,10 @@ def plate_buckling_critical_load(
     elif side_boundary_condition_type == "free-free":
         K = 0.385  # From NACA TN3781
     else:
-        raise ValueError("Invalid `side_boundary_condition_type`.")
+        raise ValueError(
+            f"{side_boundary_condition_type=!r} is not a valid option. "
+            f"Valid options are: 'clamp-clamp', 'pin-pin', 'free-free'."
+        )
 
     critical_buckling_load = (
         K

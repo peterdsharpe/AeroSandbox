@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from typing import Literal
 from aerosandbox.atmosphere.atmosphere import Atmosphere
 from typing import Union
 
@@ -226,7 +227,7 @@ def solar_flux(
     altitude: Union[float, np.ndarray] = 0.0,
     panel_azimuth_angle: Union[float, np.ndarray] = 0.0,
     panel_tilt_angle: Union[float, np.ndarray] = 0.0,
-    air_quality: str = "typical",
+    air_quality: Literal["typical", "clean", "polluted"] = "typical",
     albedo: Union[float, np.ndarray] = 0.2,
     **deprecated_kwargs,
 ) -> Union[float, np.ndarray]:
@@ -337,7 +338,10 @@ def solar_flux(
     elif air_quality == "polluted":
         atmospheric_transmission_fraction = 0.56 ** (relative_airmass**0.715)
     else:
-        raise ValueError("Bad value of `air_quality`!")
+        raise ValueError(
+            f"{air_quality=!r} is not a valid option. "
+            f"Valid options are: 'typical', 'clean', 'polluted'."
+        )
 
     direct_normal_irradiance = np.where(
         solar_elevation > 0.0,
