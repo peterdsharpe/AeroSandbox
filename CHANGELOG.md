@@ -38,6 +38,10 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # Latest (master / release), and previous versions
 
+#### 4.2.10
+- Fixes to `aerosandbox.tools.pretty_plots.formatting.show_plot()`, to allow for more flexible labeling of axes.
+- Dependency pin updates
+
 #### 4.2.9
 - Modernized type hints throughout the codebase
 - Better error handling and messages throughout
