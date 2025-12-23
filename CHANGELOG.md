@@ -34,13 +34,15 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+- **Bugfix:** Fixed `aerosandbox.numpy.prod()` which incorrectly returned `nan` for arrays containing negative numbers. The previous implementation used `exp(sum(log(x)))`, which fails for non-positive values. Now uses a sign-magnitude decomposition (`exp(sum(log(|x|))) * cos(π * num_negatives)`) that correctly handles negative numbers while maintaining O(1) graph complexity for CasADi.
+- Fixes to `aerosandbox.tools.pretty_plots.formatting.show_plot()`, to allow for more flexible labeling of axes.
+- Dependency pin updates
+<!-- - **Bugfix:** Fixed `Wing.aerodynamic_center()` to properly account for twist angle when computing the AC location. Previously, the AC offset vector was not rotated by the local twist, causing incorrect AC positions for twisted wings. -->
+
 -----
 
 # Latest (master / release), and previous versions
 
-#### 4.2.10
-- Fixes to `aerosandbox.tools.pretty_plots.formatting.show_plot()`, to allow for more flexible labeling of axes.
-- Dependency pin updates
 
 #### 4.2.9
 - Modernized type hints throughout the codebase
