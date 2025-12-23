@@ -129,7 +129,7 @@ def norm(x, ord=None, axis=None, keepdims=False):
         elif ord == "fro" or ord == "frobenius":
             norm = _cas.norm_fro(x)
         elif ord == "inf" or _onp.isinf(ord):
-            norm = _cas.norm_inf()
+            norm = _cas.norm_inf(x)
         else:
             try:
                 norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
