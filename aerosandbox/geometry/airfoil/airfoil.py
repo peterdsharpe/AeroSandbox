@@ -1,3 +1,5 @@
+import plotly
+import matplotlib
 import aerosandbox.numpy as np
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.geometry.airfoil.airfoil_families import (
@@ -855,7 +857,7 @@ class Airfoil(Polygon):
 
     def draw(
         self, draw_mcl=False, draw_markers=True, backend="matplotlib", show=True
-    ) -> None:
+    ) -> matplotlib.figure.Figure | plotly.graph_objects.Figure | None:
         """
         Draw the airfoil object.
 
