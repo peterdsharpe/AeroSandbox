@@ -1,4 +1,4 @@
-from aerosandbox.modeling.fitting import *
+import aerosandbox.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
