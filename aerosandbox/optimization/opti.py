@@ -29,7 +29,7 @@ class Opti(cas.Opti):
     def __init__(
         self,
         variable_categories_to_freeze: Sequence[str] | str | None = None,
-        cache_filename: str = None,
+        cache_filename: Path | str | None = None,
         load_frozen_variables_from_cache: bool = False,
         save_to_cache_on_solve: bool = False,
         ignore_violated_parametric_constraints: bool = False,
@@ -80,7 +80,7 @@ class Opti(cas.Opti):
         lower_bound: float = None,
         upper_bound: float = None,
         _stacklevel: int = 1,
-    ) -> cas.MX:
+    ) -> cas.MX | float | np.ndarray:
         """
         Initializes a new decision variable (or vector of decision variables). You should pass an initial guess (
         `init_guess`) upon defining a new variable. Dimensionality is inferred from this initial guess, but it can be
@@ -497,8 +497,8 @@ class Opti(cas.Opti):
 
     def parameter(
         self,
-        value: float | np.ndarray = 0.0,
-        n_params: int = None,
+        value: float | int | np.ndarray = 0.0,
+        n_params: int | None = None,
     ) -> cas.MX:
         """
         Initializes a new parameter (or vector of parameters). You must pass a value (`value`) upon defining a new

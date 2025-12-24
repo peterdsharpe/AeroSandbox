@@ -4,11 +4,19 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
-from typing import Literal
+from aerosandbox.numpy.typing import Vectorizable
+from typing import Literal, Sequence
 from scipy import interpolate as _interpolate
 
 
-def interp(x, xp, fp, left=None, right=None, period=None):
+def interp(
+    x: Vectorizable,
+    xp: Vectorizable,
+    fp: Vectorizable,
+    left: float | None = None,
+    right: float | None = None,
+    period: float | None = None,
+) -> Vectorizable:
     """
     One-dimensional linear interpolation, analogous to numpy.interp().
 
@@ -68,7 +76,7 @@ def interp(x, xp, fp, left=None, right=None, period=None):
 
 
 def is_data_structured(
-    x_data_coordinates: tuple[_onp.ndarray], y_data_structured: _onp.ndarray
+    x_data_coordinates: Sequence[_onp.ndarray], y_data_structured: _onp.ndarray
 ) -> bool:
     """
     Determines if the shapes of a given dataset are consistent with "structured" (i.e. gridded) data.
@@ -102,13 +110,13 @@ def is_data_structured(
 
 
 def interpn(
-    points: tuple[_onp.ndarray],
+    points: Sequence[_onp.ndarray],
     values: _onp.ndarray,
-    xi: _onp.ndarray,
+    xi: int | float | _onp.ndarray | _cas.MX,
     method: Literal["linear", "bspline", "nearest"] = "linear",
-    bounds_error=True,
-    fill_value=_onp.nan,
-) -> _onp.ndarray:
+    bounds_error: bool = True,
+    fill_value: float | None = _onp.nan,
+) -> float | _onp.ndarray | _cas.MX:
     """
     Performs multidimensional interpolation on regular grids. Analogue to scipy.interpolate.interpn().
 
