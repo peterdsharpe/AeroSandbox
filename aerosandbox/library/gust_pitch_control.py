@@ -4,8 +4,6 @@ from aerosandbox.common import ImplicitAnalysis
 from aerosandbox.library.aerodynamics.unsteady import (
     wagners_function,
     kussners_function,
-    calculate_lift_due_to_pitching_profile,
-    calculate_lift_due_to_transverse_gust,
 )
 
 
