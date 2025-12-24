@@ -2,8 +2,7 @@ import numpy as np
 
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import Any, Callable
-from typing import Sequence
+from typing import Any, Callable, Literal, Sequence
 import copy
 from aerosandbox.numpy.typing import Scalar  # Type alias including CasADi types
 
@@ -117,7 +116,7 @@ class Fuselage(AeroSandboxObject):
 
     def add_loft(
         self,
-        kind: str,
+        kind: Literal["linear", "ellipsoid-nose"],
         to_xsec: "FuselageXSec",
         from_xsec: "FuselageXSec | None" = None,
         n_points: int = 5,
@@ -191,7 +190,7 @@ class Fuselage(AeroSandboxObject):
 
     def area_projected(
         self,
-        type: str = "XY",
+        type: Literal["XY", "XZ"] = "XY",
     ) -> float:
         """
         Returns the area of the fuselage as projected onto one of the principal planes.
@@ -233,7 +232,7 @@ class Fuselage(AeroSandboxObject):
 
     def fineness_ratio(
         self,
-        assumed_shape="cylinder",
+        assumed_shape: Literal["cylinder", "sears-haack"] = "cylinder",
     ) -> float:
         """
         Approximates the fineness ratio using the volume and length. The fineness ratio of a fuselage is defined as:
@@ -305,7 +304,7 @@ class Fuselage(AeroSandboxObject):
 
     def x_centroid_projected(
         self,
-        type: str = "XY",
+        type: Literal["XY", "XZ"] = "XY",
     ) -> float:
         """
         Returns the x_g coordinate of the centroid of the planform area.
@@ -349,7 +348,7 @@ class Fuselage(AeroSandboxObject):
 
     def mesh_body(
         self,
-        method="quad",
+        method: Literal["quad", "tri"] = "quad",
         tangential_resolution: int = 36,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -906,7 +905,7 @@ class FuselageXSec(AeroSandboxObject):
             self.xyz_c[2] + y * yg_local[2] + z * zg_local[2],
         )
 
-    def equivalent_radius(self, preserve="area") -> float:
+    def equivalent_radius(self, preserve: Literal["area", "perimeter"] = "area") -> float:
         """
         Computes an equivalent radius for non-circular cross-sections. This may be necessary when doing analysis that
         uses axisymmetric assumptions.

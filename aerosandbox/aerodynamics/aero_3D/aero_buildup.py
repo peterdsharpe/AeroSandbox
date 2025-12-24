@@ -11,6 +11,7 @@ from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree i
     softmax_scalefree,
 )
 from dataclasses import dataclass
+from typing import Literal
 
 
 class AeroBuildup(ExplicitAnalysis):
@@ -52,7 +53,7 @@ class AeroBuildup(ExplicitAnalysis):
         airplane: Airplane,
         op_point: OperatingPoint,
         xyz_ref: np.ndarray | list[float] | None = None,
-        model_size: str = "small",
+        model_size: Literal["small", "large"] = "small",
         include_wave_drag: bool = True,
     ):
         """

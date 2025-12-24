@@ -1,6 +1,6 @@
 from aerosandbox.common import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Literal, Sequence
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi
 import aerosandbox.numpy as np
@@ -138,7 +138,7 @@ class Wing(AeroSandboxObject):
 
     def span(
         self,
-        type: str = "yz",
+        type: Literal["xyz", "xy", "top", "yz", "front", "xz", "side", "x", "y", "z"] = "yz",
         include_centerline_distance=False,
         _sectional: bool = False,
     ) -> float | list[float]:
@@ -287,7 +287,7 @@ class Wing(AeroSandboxObject):
 
     def area(
         self,
-        type: str = "planform",
+        type: Literal["planform", "wetted", "xy", "projected", "top", "xz", "side", "yz"] = "planform",
         include_centerline_distance=False,
         _sectional: bool = False,
     ) -> float | list[float]:
@@ -413,7 +413,7 @@ class Wing(AeroSandboxObject):
 
     def aspect_ratio(
         self,
-        type: str = "geometric",
+        type: Literal["geometric", "effective"] = "geometric",
     ) -> float:
         """
         Computes the aspect ratio of the wing, with options for various ways of measuring this.
@@ -765,7 +765,7 @@ class Wing(AeroSandboxObject):
     def control_surface_area(
         self,
         by_name: str | None = None,
-        type: str | None = "planform",
+        type: Literal["planform", "wetted", "xy", "projected", "top", "xz", "side"] | None = "planform",
     ) -> float:
         """
         Computes the total area of all control surfaces on this wing, optionally filtered by their name.
@@ -830,7 +830,7 @@ class Wing(AeroSandboxObject):
 
     def mesh_body(
         self,
-        method="quad",
+        method: Literal["tri", "quad"] = "quad",
         chordwise_resolution: int = 36,
         chordwise_spacing_function_per_side: Callable[[float, float, int], np.ndarray] = np.cosspace,
         mesh_surface: bool = True,
@@ -994,7 +994,7 @@ class Wing(AeroSandboxObject):
 
     def mesh_thin_surface(
         self,
-        method="tri",
+        method: Literal["tri", "quad"] = "tri",
         chordwise_resolution: int = 36,
         chordwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
         add_camber: bool = True,

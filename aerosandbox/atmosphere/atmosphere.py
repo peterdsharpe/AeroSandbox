@@ -170,7 +170,7 @@ class Atmosphere(AeroSandboxObject):
 
         return rho
 
-    def density_altitude(self, method: str = "approximate"):
+    def density_altitude(self, method: Literal["approximate", "exact"] = "approximate"):
         """
         Returns the density altitude, in meters.
 
