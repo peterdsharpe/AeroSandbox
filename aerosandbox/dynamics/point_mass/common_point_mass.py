@@ -13,7 +13,7 @@ from aerosandbox import (
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 import copy
-from aerosandbox.numpy.typing import Vectorizable, Scalar, Vector
+from aerosandbox.numpy.typing import Vectorizable, Vector
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):

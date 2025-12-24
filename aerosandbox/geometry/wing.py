@@ -6,7 +6,7 @@ from numpy import pi
 import aerosandbox.numpy as np
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 import copy
-from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Scalar
+from aerosandbox.numpy.typing import ArrayLike, Scalar
 
 
 class Wing(AeroSandboxObject):

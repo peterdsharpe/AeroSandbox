@@ -3,7 +3,7 @@ from aerosandbox.dynamics.point_mass.common_point_mass import (
 )
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
-from aerosandbox.numpy.typing import Vectorizable, Scalar
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):

@@ -5,7 +5,7 @@ from aerosandbox.modeling.splines.hermite import (
     cosine_hermite_patch,
 )
 import warnings
-from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Scalar, Vector
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Scalar
 
 
 class KulfanAirfoil(Airfoil):
