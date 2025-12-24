@@ -20,6 +20,7 @@ from aerosandbox.tools.pretty_plots.colors import (
     adjust_lightness,
     get_last_line_color,
     mpl,
+    plt,
 )
 from aerosandbox.tools.pretty_plots.annotation import hline, vline
 from aerosandbox.tools.pretty_plots.threedim import (
