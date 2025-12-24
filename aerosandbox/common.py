@@ -128,7 +128,7 @@ class AeroSandboxObject(ABC):
     def substitute_solution(
         self,
         sol: cas.OptiSol,
-        inplace: bool = None,
+        inplace: bool | None = None,
     ):
         """
         Substitutes a solution from CasADi's solver recursively as an in-place operation.

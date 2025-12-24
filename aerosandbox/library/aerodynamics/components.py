@@ -76,8 +76,8 @@ def CDA_control_surface_gaps(
     local_thickness_over_chord: float = 0.12,
     control_surface_hinge_x: float = 0.75,
     n_side_gaps: int = 2,
-    side_gap_width: float = None,
-    hinge_gap_width: float = None,
+    side_gap_width: float | None = None,
+    hinge_gap_width: float | None = None,
 ) -> float:
     """
     Computes the drag area (CDA) of the gaps associated with a typical wing control surface.

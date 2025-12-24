@@ -87,11 +87,11 @@ class AVL(ExplicitAnalysis):
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: List[float] = None,
+        xyz_ref: list[float] | None = None,
         avl_command: str = "avl",
         verbose: bool = False,
-        timeout: Union[float, int, None] = 5,
-        working_directory: str = None,
+        timeout: float | int | None = 5,
+        working_directory: Path | str | None = None,
         ground_effect: bool = False,
         ground_effect_height: float = 0,
     ):
@@ -203,7 +203,7 @@ class AVL(ExplicitAnalysis):
 
     def run(
         self,
-        run_command: str = None,
+        run_command: str | None = None,
     ) -> Dict[str, float]:
         """
         Private function to run AVL.
@@ -393,7 +393,7 @@ class AVL(ExplicitAnalysis):
 
     def write_avl(
         self,
-        filepath: Union[Path, str] = None,
+        filepath: Path | str | None = None,
     ) -> None:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
@@ -607,7 +607,7 @@ class AVL(ExplicitAnalysis):
     @staticmethod
     def write_avl_bfile(
         fuselage,
-        filepath: Union[Path, str] = None,
+        filepath: Path | str | None = None,
         include_name: bool = True,
     ) -> str:
         """
@@ -663,7 +663,7 @@ class AVL(ExplicitAnalysis):
         s: str,
         data_identifier: str = " = ",
         cast_outputs_to_float: bool = True,
-        overwrite: bool = None,
+        overwrite: bool | None = None,
     ) -> Dict[str, float]:
         """
         Parses a (multiline) string of unformatted data into a nice and tidy dictionary.

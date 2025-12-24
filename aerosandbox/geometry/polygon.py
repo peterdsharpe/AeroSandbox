@@ -1,6 +1,7 @@
 import aerosandbox.numpy as np
 from matplotlib import path
 from aerosandbox.common import AeroSandboxObject
+from pathlib import Path
 
 
 class Polygon(AeroSandboxObject):
@@ -266,7 +267,7 @@ class Polygon(AeroSandboxObject):
 
         return J
 
-    def write_sldcrv(self, filepath: str = None):
+    def write_sldcrv(self, filepath: Path | str | None = None):
         """
         Writes a .sldcrv (SolidWorks curve) file corresponding to this Polygon to a filepath.
 

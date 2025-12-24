@@ -118,7 +118,7 @@ class Fuselage(AeroSandboxObject):
         self,
         kind: str,
         to_xsec: "FuselageXSec",
-        from_xsec: "FuselageXSec" = None,
+        from_xsec: "FuselageXSec | None" = None,
         n_points: int = 5,
         spacing: Callable[[float, float, int], np.ndarray] = np.cosspace,
     ) -> "Fuselage":

@@ -54,8 +54,8 @@ class XFoil(ExplicitAnalysis):
         xfoil_repanel_n_points: int = 279,
         include_bl_data: bool = False,
         verbose: bool = False,
-        timeout: Union[float, int, None] = 30,
-        working_directory: Union[Path, str] = None,
+        timeout: float | int | None = 30,
+        working_directory: Path | str | None = None,
     ):
         """
         Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
@@ -265,7 +265,7 @@ class XFoil(ExplicitAnalysis):
     def _run_xfoil(
         self,
         run_command: str,
-        read_bl_data_from: str = None,
+        read_bl_data_from: str | None = None,
     ) -> Dict[str, np.ndarray]:
         """
         Private function to run XFoil.

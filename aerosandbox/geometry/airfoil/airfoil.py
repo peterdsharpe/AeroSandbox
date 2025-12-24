@@ -231,9 +231,9 @@ class Airfoil(Polygon):
         self,
         alphas=np.linspace(-13, 13, 27),
         Res=np.geomspace(1e3, 1e8, 12),
-        cache_filename: str = None,
-        xfoil_kwargs: Dict[str, Any] = None,
-        unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
+        cache_filename: str | None = None,
+        xfoil_kwargs: dict[str, Any] | None = None,
+        unstructured_interpolated_model_kwargs: dict[str, Any] | None = None,
         include_compressibility_effects: bool = True,
         transonic_buffet_lift_knockdown: float = 0.3,
         make_symmetric_polars: bool = False,
@@ -652,7 +652,7 @@ class Airfoil(Polygon):
         xtr_upper: Union[float, np.ndarray] = 1.0,
         xtr_lower: Union[float, np.ndarray] = 1.0,
         model_size: str = "large",
-        control_surfaces: List["ControlSurface"] = None,
+        control_surfaces: list["ControlSurface"] | None = None,
         include_360_deg_effects: bool = True,
     ) -> Dict[str, Union[float, np.ndarray]]:
         ### Normalize the inputs and evaluate
@@ -1503,7 +1503,7 @@ class Airfoil(Polygon):
 
     def write_dat(
         self,
-        filepath: Union[str, Path] = None,
+        filepath: Path | str | None = None,
         include_name: bool = True,
     ) -> str:
         """

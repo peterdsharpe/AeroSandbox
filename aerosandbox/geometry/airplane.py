@@ -226,12 +226,12 @@ class Airplane(AeroSandboxObject):
         backend: str = "pyvista",
         thin_wings: bool = False,
         ax=None,
-        use_preset_view_angle: str = None,
-        set_background_pane_color: (str | tuple[float, float, float]) | None = None,
-        set_background_pane_alpha: float = None,
+        use_preset_view_angle: str | None = None,
+        set_background_pane_color: str | tuple[float, float, float] | None = None,
+        set_background_pane_alpha: float | None = None,
         set_lims: bool = True,
         set_equal: bool = True,
-        set_axis_visibility: bool = None,
+        set_axis_visibility: bool | None = None,
         show: bool = True,
         show_kwargs: dict | None = None,
     ):
@@ -386,12 +386,12 @@ class Airplane(AeroSandboxObject):
         thin_linewidth=0.2,
         thick_linewidth=0.5,
         fuselage_longeron_theta=None,
-        use_preset_view_angle: str = None,
-        set_background_pane_color: (str | tuple[float, float, float]) | None = None,
-        set_background_pane_alpha: float = None,
+        use_preset_view_angle: str | None = None,
+        set_background_pane_color: str | tuple[float, float, float] | None = None,
+        set_background_pane_alpha: float | None = None,
         set_lims: bool = True,
         set_equal: bool = True,
-        set_axis_visibility: bool = None,
+        set_axis_visibility: bool | None = None,
         show: bool = True,
     ) -> "matplotlib.axes.Axes":
         """
@@ -1030,11 +1030,11 @@ class Airplane(AeroSandboxObject):
     def export_XFLR5_xml(
         self,
         filename: Path | str,
-        mass_props: MassProperties = None,
+        mass_props: MassProperties | None = None,
         include_fuselages: bool = False,
-        mainwing: Wing = None,
-        elevator: Wing = None,
-        fin: Wing = None,
+        mainwing: Wing | None = None,
+        elevator: Wing | None = None,
+        fin: Wing | None = None,
     ) -> str:
         """
         Exports the airplane geometry to an XFLR5 `.xml` file. To import the `.xml` file into XFLR5, go to File ->

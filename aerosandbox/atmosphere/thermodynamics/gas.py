@@ -148,12 +148,12 @@ class PerfectGas:
             "polytropic",
             "isenthalpic",
         ] = "isentropic",
-        new_pressure: float = None,
-        new_temperature: float = None,
-        new_density: float = None,
-        enthalpy_addition_at_constant_pressure: float = None,
-        enthalpy_addition_at_constant_volume: float = None,
-        polytropic_n: float = None,
+        new_pressure: float | None = None,
+        new_temperature: float | None = None,
+        new_density: float | None = None,
+        enthalpy_addition_at_constant_pressure: float | None = None,
+        enthalpy_addition_at_constant_volume: float | None = None,
+        polytropic_n: float | None = None,
         inplace=False,
     ) -> "PerfectGas":
         """

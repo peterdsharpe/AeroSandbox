@@ -9,11 +9,11 @@ _default_n_points_per_side = 200
 
 
 def get_NACA_coordinates(
-    name: str = None,
+    name: str | None = None,
     n_points_per_side: int = _default_n_points_per_side,
-    max_camber: float = None,
-    camber_loc: float = None,
-    thickness: float = None,
+    max_camber: float | None = None,
+    camber_loc: float | None = None,
+    thickness: float | None = None,
 ) -> np.ndarray:
     """
     Returns the coordinates of a 4-series NACA airfoil.

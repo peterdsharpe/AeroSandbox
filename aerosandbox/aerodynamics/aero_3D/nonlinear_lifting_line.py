@@ -48,7 +48,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: List[float] = None,
+        xyz_ref: list[float] | None = None,
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution=8,  # TODO document
@@ -575,7 +575,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         }
 
     def get_induced_velocity_at_points(
-        self, points: np.ndarray, vortex_strengths: np.ndarray = None
+        self, points: np.ndarray, vortex_strengths: np.ndarray | None = None
     ) -> np.ndarray:
         """
         Computes the induced velocity at a set of points in the flowfield.
@@ -623,7 +623,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
     def get_velocity_at_points(
         self,
         points: np.ndarray,
-        vortex_strengths: np.ndarray = None,
+        vortex_strengths: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         Computes the velocity at a set of points in the flowfield.
@@ -715,7 +715,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         return fuselage_influences
 
     def calculate_streamlines(
-        self, seed_points: np.ndarray = None, n_steps: int = 300, length: float = None
+        self, seed_points: np.ndarray | None = None, n_steps: int = 300, length: float | None = None
     ) -> np.ndarray:
         """
         Computes streamlines, starting at specific seed points.
@@ -784,11 +784,11 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
     def draw(
         self,
-        c: np.ndarray = None,
-        cmap: str = None,
-        colorbar_label: str = None,
+        c: np.ndarray | None = None,
+        cmap: str | None = None,
+        colorbar_label: str | None = None,
         show: bool = True,
-        show_kwargs: Dict = None,
+        show_kwargs: dict | None = None,
         draw_streamlines=True,
         recalculate_streamlines=False,
         backend: str = "pyvista",

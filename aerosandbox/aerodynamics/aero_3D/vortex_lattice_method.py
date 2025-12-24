@@ -43,7 +43,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: List[float] = None,
+        xyz_ref: list[float] | None = None,
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution: int = 10,
@@ -595,9 +595,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def calculate_streamlines(
         self,
-        seed_points: np.ndarray = None,
+        seed_points: np.ndarray | None = None,
         n_steps: int = 300,
-        length: float = None,
+        length: float | None = None,
     ) -> np.ndarray:
         """
         Computes streamlines, starting at specific seed points.
@@ -670,11 +670,11 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def draw(
         self,
-        c: np.ndarray = None,
-        cmap: str = None,
-        colorbar_label: str = None,
+        c: np.ndarray | None = None,
+        cmap: str | None = None,
+        colorbar_label: str | None = None,
         show: bool = True,
-        show_kwargs: Dict = None,
+        show_kwargs: dict | None = None,
         draw_streamlines=True,
         recalculate_streamlines=False,
         backend: str = "pyvista",

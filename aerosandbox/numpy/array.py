@@ -174,7 +174,7 @@ def diag(v, k=0):
             )
 
 
-def roll(a, shift, axis: int = None):
+def roll(a, shift, axis: int | None = None):
     """
     Roll array elements along a given axis.
 

@@ -1,6 +1,6 @@
 import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti
-from typing import Callable, Literal
+from typing import Callable, Literal, Sequence
 from aerosandbox.modeling.surrogate_model import SurrogateModel
 import copy
 
@@ -40,10 +40,10 @@ class FittedModel(SurrogateModel):
         x_data: np.ndarray | dict[str, np.ndarray],
         y_data: np.ndarray,
         parameter_guesses: dict[str, float],
-        parameter_bounds: dict[str, tuple] | None = None,
+        parameter_bounds: dict[str, Sequence[float]] | None = None,
         residual_norm_type: Literal["L1", "L2", "Linf"] = "L2",
         fit_type: Literal["best", "upper bound", "lower bound"] = "best",
-        weights: np.ndarray = None,
+        weights: np.ndarray | None = None,
         put_residuals_in_logspace: bool = False,
         verbose=True,
     ):

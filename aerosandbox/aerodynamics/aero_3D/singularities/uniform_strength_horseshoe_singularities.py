@@ -3,19 +3,19 @@ from typing import Union
 
 
 def calculate_induced_velocity_horseshoe(
-    x_field: Union[float, np.ndarray],
-    y_field: Union[float, np.ndarray],
-    z_field: Union[float, np.ndarray],
-    x_left: Union[float, np.ndarray],
-    y_left: Union[float, np.ndarray],
-    z_left: Union[float, np.ndarray],
-    x_right: Union[float, np.ndarray],
-    y_right: Union[float, np.ndarray],
-    z_right: Union[float, np.ndarray],
-    gamma: Union[float, np.ndarray] = 1,
-    trailing_vortex_direction: np.ndarray = None,
+    x_field: float | np.ndarray,
+    y_field: float | np.ndarray,
+    z_field: float | np.ndarray,
+    x_left: float | np.ndarray,
+    y_left: float | np.ndarray,
+    z_left: float | np.ndarray,
+    x_right: float | np.ndarray,
+    y_right: float | np.ndarray,
+    z_right: float | np.ndarray,
+    gamma: float | np.ndarray = 1,
+    trailing_vortex_direction: np.ndarray | None = None,
     vortex_core_radius: float = 0,
-) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
+) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
     """
     Calculates the induced velocity at a point:
         [x_field, y_field, z_field]

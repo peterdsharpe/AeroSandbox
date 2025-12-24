@@ -193,7 +193,7 @@ class KulfanAirfoil(Airfoil):
         xtr_upper: Union[float, np.ndarray] = 1.0,
         xtr_lower: Union[float, np.ndarray] = 1.0,
         model_size: str = "large",
-        control_surfaces: List["ControlSurface"] = None,
+        control_surfaces: list["ControlSurface"] | None = None,
         include_360_deg_effects: bool = True,
     ) -> Dict[str, Union[float, np.ndarray]]:
         ### Validate inputs

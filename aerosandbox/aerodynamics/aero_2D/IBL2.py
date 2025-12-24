@@ -25,6 +25,6 @@ class IBL2(ImplicitAnalysis):
         viscosity: float,
         theta_0: float,
         H_0: float = 2.6,
-        opti: Opti = None,
+        opti: Opti | None = None,
     ):
         pass
