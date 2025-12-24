@@ -45,8 +45,8 @@ weights = np.tile(weights_1d, (93, 1)).flatten()
 
 
 def model(x, p):
-    l = x["lats_scaled"]
-    a = x["alts_scaled"]
+    latitude_scaled = x["lats_scaled"]
+    altitude_scaled = x["alts_scaled"]
 
     agc = p["agc"]
     agh = p["agh"]
@@ -69,20 +69,20 @@ def model(x, p):
 
     return (
         c0  # Constant
-        + cql * (l - lqc) ** 2  # Quadratic in latitude
-        + cqa * (a - aqc) ** 2  # Quadratic in altitude
-        + cqla * a * l  # Quadratic cross-term
+        + cql * (latitude_scaled - lqc) ** 2  # Quadratic in latitude
+        + cqa * (altitude_scaled - aqc) ** 2  # Quadratic in altitude
+        + cqla * altitude_scaled * latitude_scaled  # Quadratic cross-term
         + cg
         * np.exp(
             -(  # Gaussian bump
-                np.fabs(l - lgc) ** lgh / (2 * lgs**2)  # Center/Spread in latitude
-                + np.fabs(a - agc) ** agh / (2 * ags**2)  # Center/Spread in altitude
-                + cgc * a * l  # Gaussian cross-term
+                np.fabs(latitude_scaled - lgc) ** lgh / (2 * lgs**2)  # Center/Spread in latitude
+                + np.fabs(altitude_scaled - agc) ** agh / (2 * ags**2)  # Center/Spread in altitude
+                + cgc * altitude_scaled * latitude_scaled  # Gaussian cross-term
             )
         )
-        + c4a * (a - c4c) ** 4  # Altitude quartic
-        + c12 * l * a**2  # Altitude linear-quadratic
-        + c21 * l**2 * a  # Latitude linear-quadratic
+        + c4a * (altitude_scaled - c4c) ** 4  # Altitude quartic
+        + c12 * latitude_scaled * altitude_scaled**2  # Altitude linear-quadratic
+        + c21 * latitude_scaled**2 * altitude_scaled  # Latitude linear-quadratic
     )
 
 

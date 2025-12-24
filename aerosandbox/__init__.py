@@ -1,7 +1,4 @@
 from pathlib import Path
-
-_asb_root = Path(__file__).parent
-
 from aerosandbox.common import (
     AeroSandboxObject,
     ExplicitAnalysis,
@@ -28,7 +25,10 @@ from aerosandbox.geometry import (
     Propulsor,
 )
 from aerosandbox.atmosphere import Atmosphere
-from aerosandbox.weights import MassProperties, mass_properties_from_radius_of_gyration
+from aerosandbox.weights import (
+    MassProperties,
+    mass_properties_from_radius_of_gyration,
+)
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.dynamics import (
     DynamicsPointMass1DHorizontal,
@@ -50,6 +50,8 @@ from aerosandbox.aerodynamics import (
     AeroBuildup,
     AVL,
 )
+
+_asb_root = Path(__file__).parent
 
 try:
     from importlib.metadata import version

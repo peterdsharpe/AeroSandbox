@@ -12,7 +12,7 @@ x = np.linspace(0, L, N)  # m, node locations
 
 opti = asb.Opti()
 h = opti.variable(init_guess=np.ones(N), lower_bound=1e-2)
-I = b * h**3 / 12
+moment_of_inertia = b * h**3 / 12
 
 V = np.ones(N) * -tip_load
 M = opti.variable(init_guess=np.zeros(N))  # N*m, moment
@@ -22,7 +22,7 @@ w = opti.variable(init_guess=np.zeros(N))  # m, displacement
 opti.subject_to(
     [
         np.diff(M) == np.trapz(V) * np.diff(x),
-        np.diff(th) == np.trapz(M / (E * I), modify_endpoints=True) * np.diff(x),
+        np.diff(th) == np.trapz(M / (E * moment_of_inertia), modify_endpoints=True) * np.diff(x),
         np.diff(w) == np.trapz(th) * np.diff(x),
     ]
 )

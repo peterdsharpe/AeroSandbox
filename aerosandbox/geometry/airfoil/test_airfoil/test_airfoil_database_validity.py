@@ -107,14 +107,11 @@ def check_validity(af: asb.Airfoil) -> None:
             )
 
     ### See if Shapely has any complaints
-    try:
-        import shapely
+    import importlib.util
 
+    if importlib.util.find_spec("shapely") is not None:
         if not af.as_shapely_polygon().is_valid:
             raise ValueError(f"Airfoil {af.name} is not a valid Shapely polygon!")
-
-    except ImportError:
-        pass
 
 
 def test_airfoil_database_validity():

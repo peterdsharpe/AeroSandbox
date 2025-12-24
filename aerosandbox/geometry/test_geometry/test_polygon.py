@@ -61,11 +61,7 @@ def test_translate_scale_rotate():
 
 
 def test_jaccard_similarity():
-    try:
-        import shapely
-    except ImportError:
-        print("Shapely (optional) not installed; skipping test_jaccard_similarity.")
-        return
+    pytest.importorskip("shapely")
 
     p1 = Polygon(coordinates=np.array([[0, 0], [1, 0], [1, 1], [0, 1]]))
     p2 = p1.copy()

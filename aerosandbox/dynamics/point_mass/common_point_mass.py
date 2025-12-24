@@ -8,7 +8,6 @@ from aerosandbox import (
     OperatingPoint,
     Atmosphere,
     Airplane,
-    _asb_root,
 )
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
@@ -449,6 +448,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             import aerosandbox.tools.pretty_plots as p
 
             if vehicle_model is None:
+                from aerosandbox import _asb_root
+
                 default_vehicle_stl = (
                     _asb_root / "dynamics/visualization/default_assets/talon.stl"
                 )
