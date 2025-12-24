@@ -1,3 +1,8 @@
+"""Surrogate model tools for smooth optimization.
+
+This module provides differentiable approximations to non-smooth functions
+(like max/min) that are useful for gradient-based optimization.
+"""
 import aerosandbox.numpy as _np
 import casadi as _cas
 from typing import Literal
@@ -8,32 +13,40 @@ def softmax(
     softness: float | None = None,
     hardness: float | None = None,
 ) -> float | _np.ndarray:
-    """
-    An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
+    """Compute element-wise soft maximum of two or more arrays.
 
-    Useful for optimization because it's differentiable and preserves convexity!
+    Also known as the log-sum-exp (LSE) function. Useful for optimization
+    because it's differentiable and preserves convexity.
 
-    Great writeup by John D Cook here:
-        https://www.johndcook.com/soft_maximum.pdf
+    Parameters
+    ----------
+    *args : float | ndarray
+        Two or more values or arrays to take the softmax of.
+    softness : float, optional
+        Softness parameter. Lower values make the result closer to
+        ``max(*args)``. Has the same units as the inputs, representing
+        "an amount of discrepancy between input values that would be
+        considered physically significant".
+    hardness : float, optional
+        Hardness parameter (inverse of softness). Higher values make the
+        result closer to ``max(*args)``. Must not specify both ``softness``
+        and ``hardness``.
 
-    Notes: Can provide either `hardness` or `softness`, not both. These are the inverse of each other. If neither is
-    provided, `hardness` is set to 1.
+    Returns
+    -------
+    float | ndarray
+        The soft maximum of the supplied values.
 
-    Args:
+    Raises
+    ------
+    ValueError
+        If both ``softness`` and ``hardness`` are specified, or if fewer
+        than 2 arguments are provided.
 
-        *args: Provide any number of arguments as values to take the softmax of.
-
-        hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
-
-        softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to max(x1, x2).
-
-            - Setting `softness` is particularly useful, because it has the same units as each of the function's
-            inputs. For example, if you're taking the softmax of two values that are lengths in units of meters,
-            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
-            of discrepancy between the input values that would be considered physically significant".
-
-    Returns:
-        Soft maximum of the supplied values.
+    References
+    ----------
+    .. [1] John D. Cook, "Soft Maximum"
+           https://www.johndcook.com/soft_maximum.pdf
     """
     ### Set defaults for hardness/softness
     n_specified_arguments = (hardness is not None) + (softness is not None)
@@ -79,32 +92,36 @@ def softmin(
     softness: float | None = None,
     hardness: float | None = None,
 ) -> float | _np.ndarray:
-    """
-    An element-wise softmin between two or more arrays. Related to the logsumexp() function.
+    """Compute element-wise soft minimum of two or more arrays.
 
-    Useful for optimization because it's differentiable and preserves convexity!
+    Related to the log-sum-exp function. Useful for optimization because
+    it's differentiable and preserves convexity.
 
-    Great writeup by John D Cook here:
-        https://www.johndcook.com/soft_maximum.pdf
+    Parameters
+    ----------
+    *args : float | ndarray
+        Two or more values or arrays to take the softmin of.
+    softness : float, optional
+        Softness parameter. Lower values make the result closer to
+        ``min(*args)``. Has the same units as the inputs.
+    hardness : float, optional
+        Hardness parameter (inverse of softness). Higher values make the
+        result closer to ``min(*args)``. Must not specify both ``softness``
+        and ``hardness``.
 
-    Notes: Can provide either `hardness` or `softness`, not both. These are the inverse of each other. If neither is
-    provided, `hardness` is set to 1.
+    Returns
+    -------
+    float | ndarray
+        The soft minimum of the supplied values.
 
-    Args:
+    See Also
+    --------
+    softmax : The corresponding soft maximum function.
 
-        *args: Provide any number of arguments as values to take the softmin of.
-
-        hardness: Hardness parameter. Higher values make this closer to min(x1, x2).
-
-        softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to min(x1, x2).
-
-            - Setting `softness` is particularly useful, because it has the same units as each of the function's
-            inputs. For example, if you're taking the softmin of two values that are lengths in units of meters,
-            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
-            of discrepancy between the input values that would be considered physically significant".
-
-    Returns:
-        Soft minimum of the supplied values.
+    References
+    ----------
+    .. [1] John D. Cook, "Soft Maximum"
+           https://www.johndcook.com/soft_maximum.pdf
     """
     return -softmax(
         *[-arg for arg in args],
@@ -118,6 +135,29 @@ def softmax_scalefree(
     relative_softness: float | None = None,
     relative_hardness: float | None = None,
 ) -> float | _np.ndarray:
+    """Compute scale-free soft maximum of two or more arrays.
+
+    Like ``softmax``, but the softness is automatically scaled based on
+    the norm of the input arguments, making it scale-invariant.
+
+    Parameters
+    ----------
+    *args : float | ndarray
+        Two or more values or arrays to take the softmax of.
+    relative_softness : float, optional
+        Softness relative to the norm of inputs. Default is 0.01.
+    relative_hardness : float, optional
+        Hardness relative to the norm of inputs (inverse of relative_softness).
+
+    Returns
+    -------
+    float | ndarray
+        The scale-free soft maximum of the supplied values.
+
+    See Also
+    --------
+    softmax : Fixed-scale soft maximum.
+    """
     n_specified_arguments = (relative_hardness is not None) + (
         relative_softness is not None
     )
@@ -139,6 +179,30 @@ def softmin_scalefree(
     relative_softness: float | None = None,
     relative_hardness: float | None = None,
 ) -> float | _np.ndarray:
+    """Compute scale-free soft minimum of two or more arrays.
+
+    Like ``softmin``, but the softness is automatically scaled based on
+    the norm of the input arguments, making it scale-invariant.
+
+    Parameters
+    ----------
+    *args : float | ndarray
+        Two or more values or arrays to take the softmin of.
+    relative_softness : float, optional
+        Softness relative to the norm of inputs. Default is 0.01.
+    relative_hardness : float, optional
+        Hardness relative to the norm of inputs (inverse of relative_softness).
+
+    Returns
+    -------
+    float | ndarray
+        The scale-free soft minimum of the supplied values.
+
+    See Also
+    --------
+    softmin : Fixed-scale soft minimum.
+    softmax_scalefree : The corresponding soft maximum function.
+    """
     return -softmax_scalefree(
         *[-arg for arg in args],
         relative_softness=relative_softness,
@@ -151,20 +215,29 @@ def softplus(
     beta=1,
     threshold=40,
 ):
-    """
-    A smooth approximation of the ReLU function, applied elementwise to an array `x`.
+    """Compute the softplus function element-wise.
 
-    Softplus(x) = 1/beta * log(1 + exp(beta * x))
+    A smooth approximation of the ReLU function::
+
+        softplus(x) = (1/beta) * log(1 + exp(beta * x))
 
     Often used as an activation function in neural networks.
 
-    Args:
-        x: The input
-        beta: A parameter that controls the "softness" of the function. Higher values of beta make the function
-            approach ReLU.
-        threshold: Values above this threshold are approximated as linear.
+    Parameters
+    ----------
+    x : float | ndarray
+        The input value(s).
+    beta : float, optional
+        Controls the "softness" of the function. Higher values make the
+        function approach ReLU. Default is 1.
+    threshold : float, optional
+        Values of ``beta * x`` above this threshold are approximated as
+        linear to avoid numerical overflow. Default is 40.
 
-    Returns: The value of the softplus function.
+    Returns
+    -------
+    float | ndarray
+        The softplus function applied element-wise to ``x``.
     """
     if _np.is_casadi_type(x, recursive=False):
         return _np.where(

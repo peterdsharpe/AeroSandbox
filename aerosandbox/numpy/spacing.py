@@ -1,14 +1,39 @@
+"""Spacing functions for creating evenly or non-uniformly spaced arrays.
+
+This module provides functions for generating arrays with various spacing
+patterns (linear, logarithmic, cosine, sine), working with both NumPy and
+CasADi backends.
+"""
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
-from aerosandbox.numpy.typing import Vectorizable
+from aerosandbox.numpy.typing import Vectorizable, Array
 
 
-def linspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50):
-    """
-    Returns evenly spaced numbers over a specified interval.
+def linspace(
+    start: Vectorizable = 0.0,
+    stop: Vectorizable = 1.0,
+    num: int = 50,
+) -> Array:
+    """Return evenly spaced numbers over a specified interval.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.linspace.html
+    Parameters
+    ----------
+    start : Vectorizable, optional
+        The starting value of the sequence. Default is 0.0.
+    stop : Vectorizable, optional
+        The end value of the sequence. Default is 1.0.
+    num : int, optional
+        Number of samples to generate. Default is 50.
+
+    Returns
+    -------
+    Array
+        ``num`` evenly spaced samples in the closed interval [start, stop].
+
+    See Also
+    --------
+    numpy.linspace : https://numpy.org/doc/stable/reference/generated/numpy.linspace.html
     """
     if not is_casadi_type([start, stop, num], recursive=True):
         return _onp.linspace(start, stop, num)
@@ -16,18 +41,34 @@ def linspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50)
         return _cas.linspace(start, stop, num)
 
 
-def cosspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50):
-    """
-    Makes a cosine-spaced vector.
+def cosspace(
+    start: Vectorizable = 0.0,
+    stop: Vectorizable = 1.0,
+    num: int = 50,
+) -> Array:
+    """Return cosine-spaced numbers over a specified interval.
 
-    Cosine spacing is useful because these correspond to Chebyshev nodes: https://en.wikipedia.org/wiki/Chebyshev_nodes
+    Cosine spacing bunches points near both endpoints and is useful for
+    polynomial interpolation because these correspond to Chebyshev nodes.
 
-    To learn more about cosine spacing, see this: https://youtu.be/VSvsVgGbN7I
+    Parameters
+    ----------
+    start : Vectorizable, optional
+        The starting value of the sequence. Default is 0.0.
+    stop : Vectorizable, optional
+        The end value of the sequence. Default is 1.0.
+    num : int, optional
+        Number of samples to generate. Default is 50.
 
-    Args:
-        start: Value to start at.
-        end: Value to end at.
-        num: Number of points in the vector.
+    Returns
+    -------
+    Array
+        ``num`` cosine-spaced samples in the closed interval [start, stop].
+
+    References
+    ----------
+    .. [1] Chebyshev nodes: https://en.wikipedia.org/wiki/Chebyshev_nodes
+    .. [2] Explanation video: https://youtu.be/VSvsVgGbN7I
     """
     mean = (stop + start) / 2
     amp = (stop - start) / 2
@@ -46,27 +87,32 @@ def sinspace(
     stop: Vectorizable = 1.0,
     num: int = 50,
     reverse_spacing: bool = False,
-):
-    """
-    Makes a sine-spaced vector. By default, bunches points near the start.
+) -> Array:
+    """Return sine-spaced numbers over a specified interval.
 
-    Sine spacing is exactly identical to half of a cosine-spaced distrubution, in terms of relative separations.
+    Sine spacing bunches points near the start of the interval by default.
+    This is equivalent to half of a cosine-spaced distribution.
 
-    To learn more about sine spacing and cosine spacing, see this: https://youtu.be/VSvsVgGbN7I
+    Parameters
+    ----------
+    start : Vectorizable, optional
+        The starting value of the sequence. Default is 0.0.
+    stop : Vectorizable, optional
+        The end value of the sequence. Default is 1.0.
+    num : int, optional
+        Number of samples to generate. Default is 50.
+    reverse_spacing : bool, optional
+        If True, bunch points near ``stop`` instead of ``start``.
+        Default is False.
 
-    Args:
+    Returns
+    -------
+    Array
+        ``num`` sine-spaced samples in the closed interval [start, stop].
 
-        start: Value to start at.
-
-        end: Value to end at.
-
-        num: Number of points in the vector.
-
-        reverse_spacing: Does negative-sine spacing. In other words, if this is True, the points will be bunched near
-        the `stop` rather than at the `start`.
-
-    Points are bunched up near the `start` of the interval by default. To reverse this, use the `reverse_spacing`
-    parameter.
+    References
+    ----------
+    .. [1] Explanation video: https://youtu.be/VSvsVgGbN7I
     """
     if reverse_spacing:
         return sinspace(stop, start, num)[::-1]
@@ -81,11 +127,33 @@ def sinspace(
     return spaced_array
 
 
-def logspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50):
-    """
-    Return numbers spaced evenly on a log scale.
+def logspace(
+    start: Vectorizable = 0.0,
+    stop: Vectorizable = 1.0,
+    num: int = 50,
+) -> Array:
+    """Return numbers spaced evenly on a log scale.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.logspace.html
+    In linear space, the sequence starts at ``10**start`` and ends at
+    ``10**stop``.
+
+    Parameters
+    ----------
+    start : Vectorizable, optional
+        The starting exponent (base 10). Default is 0.0.
+    stop : Vectorizable, optional
+        The ending exponent (base 10). Default is 1.0.
+    num : int, optional
+        Number of samples to generate. Default is 50.
+
+    Returns
+    -------
+    Array
+        ``num`` samples, evenly spaced on a log scale.
+
+    See Also
+    --------
+    numpy.logspace : https://numpy.org/doc/stable/reference/generated/numpy.logspace.html
     """
     if not is_casadi_type([start, stop, num], recursive=True):
         return _onp.logspace(start, stop, num)
@@ -93,13 +161,38 @@ def logspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50)
         return 10 ** linspace(start, stop, num)
 
 
-def geomspace(start: Vectorizable = 1.0, stop: Vectorizable = 10.0, num: int = 50):
-    """
-    Return numbers spaced evenly on a log scale (a geometric progression).
+def geomspace(
+    start: Vectorizable = 1.0,
+    stop: Vectorizable = 10.0,
+    num: int = 50,
+) -> Array:
+    """Return numbers spaced evenly on a log scale (geometric progression).
 
-    This is similar to logspace, but with endpoints specified directly.
+    This is similar to ``logspace``, but with endpoints specified directly
+    rather than as exponents.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.geomspace.html
+    Parameters
+    ----------
+    start : Vectorizable, optional
+        The starting value of the sequence. Must be positive. Default is 1.0.
+    stop : Vectorizable, optional
+        The end value of the sequence. Must be positive. Default is 10.0.
+    num : int, optional
+        Number of samples to generate. Default is 50.
+
+    Returns
+    -------
+    Array
+        ``num`` samples, evenly spaced on a log scale.
+
+    Raises
+    ------
+    ValueError
+        If ``start`` or ``stop`` is not positive.
+
+    See Also
+    --------
+    numpy.geomspace : https://numpy.org/doc/stable/reference/generated/numpy.geomspace.html
     """
     if not is_casadi_type([start, stop, num], recursive=True):
         return _onp.geomspace(start, stop, num)

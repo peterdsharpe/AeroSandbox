@@ -1,13 +1,38 @@
+"""Monadic (single-operand) arithmetic functions for AeroSandbox.
+
+This module provides reduction and aggregation functions that work with both
+NumPy arrays and CasADi symbolic arrays.
+"""
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.typing import Array, ArrayLike, Scalar
 
 
-def sum(x, axis: int | None = None):
-    """
-    Sum of array elements over a given axis.
+def sum(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Compute the sum of array elements over a given axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.sum.html
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to sum. By default (None), sum over all elements.
+        For CasADi arrays, only None, 0, or 1 are valid.
+
+    Returns
+    -------
+    Scalar | Array
+        Sum of the elements. If ``axis`` is None, a scalar is returned.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an invalid axis.
+
+    See Also
+    --------
+    numpy.sum : https://numpy.org/doc/stable/reference/generated/numpy.sum.html
     """
     if not is_casadi_type(x):
         return _onp.sum(x, axis=axis)
@@ -26,11 +51,30 @@ def sum(x, axis: int | None = None):
             )
 
 
-def mean(x, axis: int | None = None):
-    """
-    Compute the arithmetic mean along the specified axis.
+def mean(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Compute the arithmetic mean along the specified axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.mean.html
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to compute the mean. By default (None), compute over
+        all elements. For CasADi arrays, only None, 0, or 1 are valid.
+
+    Returns
+    -------
+    Scalar | Array
+        Mean of the elements. If ``axis`` is None, a scalar is returned.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an invalid axis.
+
+    See Also
+    --------
+    numpy.mean : https://numpy.org/doc/stable/reference/generated/numpy.mean.html
     """
     if not is_casadi_type(x):
         return _onp.mean(x, axis=axis)
@@ -48,7 +92,23 @@ def mean(x, axis: int | None = None):
             )
 
 
-def abs(x):
+def abs(x: ArrayLike) -> Array:
+    """Compute the absolute value element-wise.
+
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+
+    Returns
+    -------
+    Array
+        An array containing the absolute value of each element in ``x``.
+
+    See Also
+    --------
+    numpy.abs : https://numpy.org/doc/stable/reference/generated/numpy.absolute.html
+    """
     if not is_casadi_type(x):
         return _onp.abs(x)
 
@@ -74,24 +134,42 @@ def abs(x):
 #             return _cas.cumsum(_onp.flatten(x))
 
 
-def prod(x, axis: int | None = None):
-    """
-    Return the product of array elements over a given axis.
+def prod(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Compute the product of array elements over a given axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.prod.html
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to compute the product. By default (None), compute
+        over all elements. For CasADi arrays, only None, 0, or 1 are valid.
 
-    Note: For CasADi types, this uses a sign-magnitude decomposition to handle negative
-    numbers correctly while maintaining O(1) graph complexity. Specifically:
+    Returns
+    -------
+    Scalar | Array
+        Product of the elements. If ``axis`` is None, a scalar is returned.
+
+    Notes
+    -----
+    For CasADi types, this uses a sign-magnitude decomposition to handle
+    negative numbers correctly while maintaining O(1) graph complexity::
 
         prod(x) = exp(sum(log(|x|))) * cos(π * num_negatives)
 
-    where num_negatives counts elements with negative sign. This correctly handles:
+    where ``num_negatives`` counts elements with negative sign. This correctly
+    handles:
+
     - Positive numbers: standard exp-log identity
     - Negative numbers: sign tracked via cosine of count
     - Zeros: exp(log(0)) = exp(-inf) = 0
 
-    Gradients at x=0 are not well-defined (discontinuous), which is mathematically
-    inherent to the product function.
+    Gradients at x=0 are not well-defined (discontinuous), which is
+    mathematically inherent to the product function.
+
+    See Also
+    --------
+    numpy.prod : https://numpy.org/doc/stable/reference/generated/numpy.prod.html
     """
     if not is_casadi_type(x):
         return _onp.prod(x, axis=axis)

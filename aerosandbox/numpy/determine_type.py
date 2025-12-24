@@ -1,22 +1,40 @@
+"""Type detection utilities for NumPy/CasADi dual-backend support.
+
+This module provides functions to determine whether objects are CasADi symbolic
+types, enabling runtime dispatch between NumPy and CasADi backends.
+"""
 import numpy as _onp
 import casadi as _cas
 from typing import Any
 
 
 def is_casadi_type(object: Any, recursive: bool = True) -> bool:
-    """
-    Returns a boolean of whether an object is a CasADi data type or not. If the recursive flag is True,
-    iterates recursively, returning True if any subelement (at any depth) is a CasADi type.
+    """Check whether an object is or contains a CasADi data type.
 
-    Args:
+    Parameters
+    ----------
+    object : Any
+        The object to evaluate.
+    recursive : bool, optional
+        If True and the object is a list, tuple, set, or dict, recursively
+        iterate through every subelement. Return True if any subelement (at
+        any depth) is a CasADi type. Default is True.
 
-        object: The object to evaluate.
+    Returns
+    -------
+    bool
+        True if the object is (or contains, if ``recursive=True``) a CasADi
+        data type (MX, DM, or SX). False otherwise.
 
-        recursive: If the object is a list or tuple, recursively iterate through every subelement. If any of the
-        subelements (at any depth) are a CasADi type, return True. Otherwise, returns False.
-
-    Returns: A boolean if the object is (or contains, if recursive=True) a CasADi data type.
-
+    Examples
+    --------
+    >>> import casadi as cas
+    >>> is_casadi_type(cas.MX.sym("x"))
+    True
+    >>> is_casadi_type([1, 2, cas.MX.sym("x")], recursive=True)
+    True
+    >>> is_casadi_type([1, 2, 3], recursive=True)
+    False
     """
     t = type(object)
 
@@ -68,14 +86,19 @@ def is_casadi_type(object: Any, recursive: bool = True) -> bool:
         return False
 
 
-def is_iterable(x):
-    """
-    Returns a boolean of whether an object is iterable or not.
-    Args:
-        x:
+def is_iterable(x: Any) -> bool:
+    """Check whether an object is iterable.
 
-    Returns:
+    Parameters
+    ----------
+    x : Any
+        The object to evaluate.
 
+    Returns
+    -------
+    bool
+        True if the object is iterable (has an ``__iter__`` method),
+        False otherwise.
     """
     try:
         iter(x)

@@ -4,7 +4,7 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
-from aerosandbox.numpy.typing import Vectorizable
+from aerosandbox.numpy.typing import Vectorizable, ConcreteVector, ConcreteArray, Vector
 from typing import Literal, Sequence
 from scipy import interpolate as _interpolate
 
@@ -76,7 +76,7 @@ def interp(
 
 
 def is_data_structured(
-    x_data_coordinates: Sequence[_onp.ndarray], y_data_structured: _onp.ndarray
+    x_data_coordinates: Sequence[ConcreteVector], y_data_structured: ConcreteArray
 ) -> bool:
     """
     Determines if the shapes of a given dataset are consistent with "structured" (i.e. gridded) data.
@@ -110,13 +110,13 @@ def is_data_structured(
 
 
 def interpn(
-    points: Sequence[_onp.ndarray],
-    values: _onp.ndarray,
-    xi: int | float | _onp.ndarray | _cas.MX,
+    points: Sequence[ConcreteVector],
+    values: ConcreteArray,
+    xi: Vectorizable,
     method: Literal["linear", "bspline", "nearest"] = "linear",
     bounds_error: bool = True,
     fill_value: float | None = _onp.nan,
-) -> float | _onp.ndarray | _cas.MX:
+) -> Vectorizable:
     """
     Performs multidimensional interpolation on regular grids. Analogue to scipy.interpolate.interpn().
 

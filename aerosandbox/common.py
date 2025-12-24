@@ -1,9 +1,15 @@
+"""Core base classes for AeroSandbox.
+
+This module defines the fundamental abstract base classes that all AeroSandbox
+objects inherit from, including `AeroSandboxObject`, `ExplicitAnalysis`, and
+`ImplicitAnalysis`. It also provides utility functions for saving and loading
+these objects.
+"""
 import aerosandbox.numpy as np
-from aerosandbox.optimization.opti import Opti
+from aerosandbox.optimization.opti import Opti, OptiSol
 from abc import abstractmethod, ABC
 import copy
 from typing import Any
-import casadi as cas
 import dill
 from pathlib import Path
 import sys
@@ -11,28 +17,48 @@ import warnings
 
 
 class AeroSandboxObject(ABC):
+    """Abstract base class for all AeroSandbox objects.
+
+    This class provides common functionality for AeroSandbox objects, including:
+
+    - Value-based equality comparison (via ``__eq__``)
+    - Serialization to/from disk (via ``save`` method and ``load`` function)
+    - Shallow and deep copying (via ``copy`` and ``deepcopy`` methods)
+
+    All geometry objects (Airplane, Wing, Airfoil, etc.) and analysis objects
+    inherit from this class.
+
+    Notes
+    -----
+    This is an abstract class and cannot be instantiated directly. Subclasses
+    must implement the ``__init__`` method.
+    """
+
     _asb_metadata: dict[str, str] = None
 
     @abstractmethod
     def __init__(self):
-        """
-        Denotes AeroSandboxObject as an abstract class, meaning you can't instantiate it directly - you must subclass
-        (extend) it instead.
-        """
+        """Initialize the AeroSandboxObject (abstract method)."""
         pass
 
     def __eq__(self, other):
-        """
-        Checks if two AeroSandbox objects are value-equivalent. A more sensible default for classes that represent
-        physical objects than checking for memory equivalence.
+        """Check if two AeroSandbox objects are value-equivalent.
 
-        This is done by checking if the two objects are of the same type and have the same __dict__.
+        This provides a more sensible default for classes that represent
+        physical objects than checking for memory equivalence. Comparison is
+        done by checking if the two objects are of the same type and have
+        identical ``__dict__`` contents.
 
-        Args:
-            other: Another object.
+        Parameters
+        ----------
+        other : object
+            Another object to compare against.
 
-        Returns:
-            bool: True if the objects are equal, False otherwise.
+        Returns
+        -------
+        bool
+            True if the objects are equal (same type and identical attribute
+            values), False otherwise.
         """
         if self is other:  # If they point to the same object in memory, they're equal
             return True
@@ -61,26 +87,30 @@ class AeroSandboxObject(ABC):
         verbose: bool = True,
         automatically_add_extension: bool = True,
     ) -> None:
+        """Save the object to a binary file using the ``dill`` library.
+
+        Create a ``.asb`` file that can be loaded with ``aerosandbox.load()``.
+        The saved object can be loaded into memory in a different Python
+        session or on a different computer, preserving its exact state.
+
+        Parameters
+        ----------
+        filename : str | Path | None, optional
+            The filename to save this object to. Should be a ``.asb`` file.
+            If None, uses the object's ``name`` attribute if available,
+            otherwise defaults to "untitled".
+        verbose : bool, optional
+            If True, print a message to the console on successful save.
+            Default is True.
+        automatically_add_extension : bool, optional
+            If True, automatically add the ``.asb`` extension to the filename
+            if it doesn't already have it. Default is True.
+
+        Returns
+        -------
+        None
+            Writes the object to disk.
         """
-        Saves the object to a binary file, using the `dill` library.
-
-        Creates a .asb file, which is a binary file that can be loaded with `aerosandbox.load()`. This can be loaded
-            into memory in a different Python session or a different computer, and it will be exactly the same as when it
-            was saved.
-
-        Args:
-
-            filename: The filename to save this object to. Should be a .asb file.
-
-            verbose: If True, prints messages to console on successful save.
-
-            automatically_add_extension: If True, automatically adds the .asb extension to the filename if it doesn't
-                already have it. If False, does not add the extension.
-
-        Returns: None (writes to file)
-
-        """
-
         if filename is None:
             try:
                 filename = self.name
@@ -114,28 +144,37 @@ class AeroSandboxObject(ABC):
             )
 
     def copy(self):
-        """
-        Returns a shallow copy of the object.
-        """
+        """Return a shallow copy of the object."""
         return copy.copy(self)
 
     def deepcopy(self):
-        """
-        Returns a deep copy of the object.
-        """
+        """Return a deep copy of the object."""
         return copy.deepcopy(self)
 
     def substitute_solution(
         self,
-        sol: cas.OptiSol,
+        sol: OptiSol,
         inplace: bool | None = None,
     ):
-        """
-        Substitutes a solution from CasADi's solver recursively as an in-place operation.
+        """Substitute a solution from CasADi's solver recursively.
 
-        In-place operation. To make it not in-place, do `y = copy.deepcopy(x)` or similar first.
-        :param sol: OptiSol object.
-        :return:
+        .. deprecated::
+            This function is deprecated and will be removed in a future version.
+            Use ``sol(x)``, which now works recursively on complex data structures.
+
+        Parameters
+        ----------
+        sol : OptiSol
+            The solution object from a solved optimization problem.
+        inplace : bool | None, optional
+            If True, modify this object in-place. If False, return a modified
+            copy. Default is True.
+
+        Returns
+        -------
+        None or AeroSandboxObject
+            If ``inplace=True``, returns None (modifies self in-place).
+            If ``inplace=False``, returns a new object with substituted values.
         """
         import warnings
 
@@ -150,16 +189,7 @@ class AeroSandboxObject(ABC):
             inplace = True
 
         def convert(item):
-            """
-            This is essentially a supercharged version of sol(), which works for more iterable types.
-
-            Args:
-                item:
-
-            Returns:
-
-            """
-
+            """Convert CasADi symbolic types to numeric values recursively."""
             # If it can be converted, do the conversion.
             if np.is_casadi_type(item, recursive=False):
                 return sol(item)
@@ -192,8 +222,8 @@ class AeroSandboxObject(ABC):
                 if issubclass(t, type_to_skip):
                     return item
 
-            # Skip certain CasADi types
-            for type_to_skip in (cas.Opti, cas.OptiSol):
+            # Skip Opti and OptiSol types
+            for type_to_skip in (Opti, OptiSol):
                 if issubclass(t, type_to_skip):
                     return item
 
@@ -245,20 +275,30 @@ def load(
     filename: str | Path,
     verbose: bool = True,
 ) -> AeroSandboxObject:
-    """
-    Loads an AeroSandboxObject from a file.
+    """Load an AeroSandboxObject from a file.
 
-    Upon load, will compare metadata from the file to the current Python version and AeroSandbox version. If there are
-    any discrepancies, will raise a warning.
+    Upon loading, compare metadata from the file to the current Python version
+    and AeroSandbox version. If there are any discrepancies, raise a warning.
 
-    Args:
+    Parameters
+    ----------
+    filename : str | Path
+        The filename to load from. Should be a ``.asb`` file.
+    verbose : bool, optional
+        If True, print a message to the console on successful load.
+        Default is True.
 
-        filename: The filename to load from. Should be a .asb file.
+    Returns
+    -------
+    AeroSandboxObject
+        The deserialized object loaded from the file.
 
-        verbose: If True, prints messages to console on successful load.
-
-    Returns: An AeroSandboxObject.
-
+    Warnings
+    --------
+    UserWarning
+        If the Python version or AeroSandbox version used to save the file
+        differs from the current versions, a warning is raised about potential
+        compatibility issues.
     """
     filename = Path(filename)
 
@@ -334,85 +374,74 @@ def load(
 
 
 class ExplicitAnalysis(AeroSandboxObject):
-    default_analysis_specific_options: dict[type, dict[str, Any]] = {}
-    """This is part of AeroSandbox's "analysis-specific options" feature, which lets you "tag" geometry objects with 
-    flags that change how different analyses act on them. 
-    
-    This variable, `default_analysis_specific_options`, allows you to specify default values for options that can be used for 
-    specific problems. 
-    
-    This should be a dictionary, where: * keys are the geometry-like types that you might be interested in defining 
-    parameters for. * values are dictionaries, where: * keys are strings that label a given option * values are 
-    anything. These are used as the default values, in the event that the associated geometry doesn't override those. 
-    
-    An example of what this variable might look like, for a vortex-lattice method aerodynamic analysis:
-    
+    """Base class for explicitly-solved analyses.
+
+    An explicit analysis is one that can be computed directly from its inputs
+    without requiring iteration or solving a system of equations. Examples
+    include simple aerodynamic panel methods or lookup-table-based models.
+
+    This class provides the "analysis-specific options" feature, which allows
+    geometry objects to be tagged with flags that change how different analyses
+    act on them.
+
+    Attributes
+    ----------
+    default_analysis_specific_options : dict[type, dict[str, Any]]
+        Default values for analysis-specific options, keyed by geometry type.
+        Subclasses should override this to specify their default options.
+
+    Examples
+    --------
+    An example of what ``default_analysis_specific_options`` might look like
+    for a vortex-lattice method aerodynamic analysis:
+
     >>> default_analysis_specific_options = {
-    >>>     Airplane: dict(
-    >>>         profile_drag_coefficient=0
-    >>>     ),
-    >>>     Wing    : dict(
-    >>>         wing_level_spanwise_spacing=True,
-    >>>         spanwise_resolution=12,
-    >>>         spanwise_spacing="cosine",
-    >>>         chordwise_resolution=12,
-    >>>         chordwise_spacing="cosine",
-    >>>         component: int | None = None,
-    >>>         no_wake=False,
-    >>>         no_alpha_beta=False,
-    >>>         no_load=False,
-    >>>         drag_polar=dict(
-    >>>             CL1=0,
-    >>>             CD1=0,
-    >>>             CL2=0,
-    >>>             CD2=0,
-    >>>             CL3=0,
-    >>>             CD3=0,
-    >>>         ),
-    >>>     )
-    >>> }
-    
+    ...     Airplane: dict(
+    ...         profile_drag_coefficient=0
+    ...     ),
+    ...     Wing: dict(
+    ...         spanwise_resolution=12,
+    ...         spanwise_spacing="cosine",
+    ...         chordwise_resolution=12,
+    ...         chordwise_spacing="cosine",
+    ...     )
+    ... }
     """
+
+    default_analysis_specific_options: dict[type, dict[str, Any]] = {}
 
     def get_options(
         self,
         geometry_object: AeroSandboxObject,
     ) -> dict[str, Any]:
+        """Retrieve analysis-specific options for a geometry object.
+
+        Combine this analysis's default options for the given geometry type
+        with any options declared on the geometry object itself. Geometry
+        options override the analysis defaults.
+
+        Parameters
+        ----------
+        geometry_object : AeroSandboxObject
+            An instance of an AeroSandbox geometry object, such as an Airplane,
+            Wing, etc. For this function to be useful, the geometry object
+            should have ``analysis_specific_options`` defined. See the
+            ``asb.Airplane`` constructor for an example.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary combining this analysis's default options with the
+            geometry's declared options. Keys are option names (strings),
+            and values are the option values.
+
+        Warnings
+        --------
+        UserWarning
+            If the geometry object declares an analysis-specific option that
+            is not in this analysis's defaults, a warning is raised (this
+            potentially indicates a typo).
         """
-        Retrieves the analysis-specific options that correspond to both:
-
-            * An analysis type (which is this object, "self"), and
-
-            * A specific geometry object, such as an Airplane or Wing.
-
-        Args:
-            geometry_object: An instance of an AeroSandbox geometry object, such as an Airplane, Wing, etc.
-
-                * In order for this function to do something useful, you probably want this option to have
-                `analysis_specific_options` defined. See the asb.Airplane constructor for an example of this.
-
-        Returns: A dictionary that combines:
-
-            * This analysis's default options for this geometry, if any exist.
-
-            * The geometry's declared analysis-specific-options for this analysis, if it exists. These geometry
-            options will override the defaults from the analysis.
-
-            This dictionary has the format:
-
-                * keys are strings, listing specific options
-
-                * values can be any type, and simply state the value of the analysis-specific option following the
-                logic above.
-
-        Note: if this analysis defines a set of default options for the geometry type in question (by using
-        `self.default_analysis_specific_options`), all keys from the geometry object's `analysis_specific_options`
-        will be validated against those in the default options set. A warning will be raised if keys do not
-        correspond to those in the defaults, as this (potentially) indicates a typo, which would otherwise be
-        difficult to debug.
-
-        """
-
         ### Determine the types of both this analysis and the geometry object.
         analysis_type: type = self.__class__
         geometry_type: type = geometry_object.__class__
@@ -465,49 +494,63 @@ class ExplicitAnalysis(AeroSandboxObject):
 
 
 class ImplicitAnalysis(AeroSandboxObject):
+    """Base class for implicitly-solved analyses.
+
+    An implicit analysis requires solving a system of equations (e.g., via
+    iteration or numerical optimization) to determine the solution. Examples
+    include nonlinear aerodynamic solvers or coupled aerostructural analyses.
+
+    This class provides infrastructure for working with AeroSandbox's ``Opti``
+    optimization environment. Subclasses should use the ``@ImplicitAnalysis.initialize``
+    decorator on their ``__init__`` methods.
+
+    Notes
+    -----
+    The key difference from ``ExplicitAnalysis`` is that implicit analyses
+    require an optimization environment (``asb.Opti``) to solve. If the user
+    doesn't provide one, a new one is created and the problem is solved
+    automatically. If the user provides an existing ``Opti`` environment, the
+    analysis is added to it but not solved (allowing multi-disciplinary coupling).
+    """
+
     @staticmethod
     def initialize(init_method):
-        """
-        A decorator that should be applied to the __init__ method of ImplicitAnalysis or any subclass of it.
+        """Decorate the ``__init__`` method of ImplicitAnalysis subclasses.
 
-        Usage example:
+        This decorator ensures that every ImplicitAnalysis has an ``opti``
+        property pointing to an optimization environment (``asb.Opti``).
 
+        Parameters
+        ----------
+        init_method : callable
+            The ``__init__`` method to be decorated.
+
+        Returns
+        -------
+        callable
+            The wrapped ``__init__`` method with ``opti`` parameter handling.
+
+        Examples
+        --------
         >>> class MyAnalysis(ImplicitAnalysis):
-        >>>
-        >>>     @ImplicitAnalysis.initialize
-        >>>     def __init__(self):
-        >>>         self.a = self.opti.variable(init_guess = 1)
-        >>>         self.b = self.opti.variable(init_guess = 2)
-        >>>
-        >>>         self.opti.subject_to(
-        >>>             self.a == self.b ** 2
-        >>>         ) # Add a nonlinear governing equation
+        ...
+        ...     @ImplicitAnalysis.initialize
+        ...     def __init__(self):
+        ...         self.a = self.opti.variable(init_guess=1)
+        ...         self.b = self.opti.variable(init_guess=2)
+        ...         self.opti.subject_to(self.a == self.b ** 2)
 
-        Functionality:
+        Notes
+        -----
+        The decorator adds an optional ``opti`` parameter to the ``__init__``
+        method:
 
-        The basic purpose of this wrapper is to ensure that every ImplicitAnalysis has an `opti` property that points to
-        an optimization environment (asb.Opti type) that it can work in.
+        - If ``opti`` is not provided, a new ``asb.Opti`` environment is
+          created, the analysis is solved, and results are substituted in-place.
+        - If ``opti`` is provided, the analysis is added to that environment
+          but not solved (user must call ``opti.solve()`` later).
 
-        How do we obtain an asb.Opti environment to work in? Well, this decorator adds an optional `opti` parameter to
-        the __init__ method that it is applied to.
-
-            1. If this `opti` parameter is not provided, then a new empty `asb.Opti` environment is created and stored as
-            `ImplicitAnalysis.opti`.
-
-            2. If the `opti` parameter is provided, then we simply assign the given `asb.Opti` environment (which may
-            already contain other variables/constraints/objective) to `ImplicitAnalysis.opti`.
-
-        In addition, a property called `ImplicitAnalysis.opti_provided` is stored, which records whether the user
-        provided an Opti environment or if one was instead created for them.
-
-        If the user did not provide an Opti environment (Option 1 from our list above), we assume that the user basically
-        just wants to perform a normal, single-disciplinary analysis. So, in this case, we proceed to solve the analysis as-is
-        and do an in-place substitution of the solution.
-
-        If the user did provide an Opti environment (Option 2 from our list above), we assume that the user might potentially want
-        to add other implicit analyses to the problem. So, in this case, we don't solve the analysis, and the user must later
-        solve the analysis by calling `sol = opti.solve()` or similar.
-
+        A property ``opti_provided`` is also set to indicate which case applies.
         """
 
         def init_wrapped(self, *args, opti=None, **kwargs):
@@ -527,6 +570,12 @@ class ImplicitAnalysis(AeroSandboxObject):
         return init_wrapped
 
     class ImplicitAnalysisInitError(Exception):
+        """Exception raised when an ImplicitAnalysis is not properly initialized.
+
+        This error occurs when an ImplicitAnalysis subclass's ``__init__`` method
+        was not decorated with ``@ImplicitAnalysis.initialize``.
+        """
+
         def __init__(
             self,
             message="""
@@ -540,6 +589,19 @@ class ImplicitAnalysis(AeroSandboxObject):
 
     @property
     def opti(self):
+        """Return the optimization environment for this analysis.
+
+        Returns
+        -------
+        Opti
+            The ``asb.Opti`` optimization environment.
+
+        Raises
+        ------
+        ImplicitAnalysisInitError
+            If the ``__init__`` method was not decorated with
+            ``@ImplicitAnalysis.initialize``.
+        """
         try:
             return self._opti
         except AttributeError:
@@ -551,6 +613,20 @@ class ImplicitAnalysis(AeroSandboxObject):
 
     @property
     def opti_provided(self):
+        """Return whether an ``Opti`` environment was provided by the user.
+
+        Returns
+        -------
+        bool
+            True if the user provided an ``Opti`` environment, False if one
+            was created automatically.
+
+        Raises
+        ------
+        ImplicitAnalysisInitError
+            If the ``__init__`` method was not decorated with
+            ``@ImplicitAnalysis.initialize``.
+        """
         try:
             return self._opti_provided
         except AttributeError:
