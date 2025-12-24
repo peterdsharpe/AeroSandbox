@@ -1,10 +1,9 @@
 import aerosandbox.numpy as np
 from potentialflowvisualizer.objects import Singularity
-from typing import List
 
 
 class Flowfield:
-    def __init__(self, objects: List[Singularity] = None):
+    def __init__(self, objects: list[Singularity] | None = None):
         if objects is None:
             objects = []
 

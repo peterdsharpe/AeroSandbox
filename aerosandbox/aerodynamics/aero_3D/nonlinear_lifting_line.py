@@ -895,11 +895,11 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             raise ValueError("Bad value of `backend`!")
             # # Fuselages
             # for fuse_id in range(len(self.airplane.fuselages)):
-            #     fuse = self.airplane.fuselages[fuse_id]  # type: Fuselage
+            #     fuse: Fuselage = self.airplane.fuselages[fuse_id]
             #
             #     for xsec_id in range(len(fuse.xsecs) - 1):
-            #         xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
-            #         xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
+            #         xsec_1: FuselageXSec = fuse.xsecs[xsec_id]
+            #         xsec_2: FuselageXSec = fuse.xsecs[xsec_id + 1]
             #
             #         r1 = xsec_1.equivalent_radius(preserve="area")
             #         r2 = xsec_2.equivalent_radius(preserve="area")

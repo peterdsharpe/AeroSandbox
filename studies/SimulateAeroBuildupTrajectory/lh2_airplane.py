@@ -1,7 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.tools import units as u
-from typing import Union
 
 ##### Section: Initialize Optimization
 
@@ -101,12 +100,12 @@ r_fuse_sections = []
 
 
 def linear_map(
-    f_in: Union[float, np.ndarray],
-    min_in: Union[float, np.ndarray],
-    max_in: Union[float, np.ndarray],
-    min_out: Union[float, np.ndarray],
-    max_out: Union[float, np.ndarray],
-) -> Union[float, np.ndarray]:
+    f_in: float | np.ndarray,
+    min_in: float | np.ndarray,
+    max_in: float | np.ndarray,
+    min_out: float | np.ndarray,
+    max_out: float | np.ndarray,
+) -> float | np.ndarray:
     """
     Linearly maps an input `f_in` from range (`min_in`, `max_in`) to (`min_out`, `max_out`).
 

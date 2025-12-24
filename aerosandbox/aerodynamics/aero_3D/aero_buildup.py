@@ -30,8 +30,8 @@ class AeroBuildup(ExplicitAnalysis):
 
     >>> import aerosandbox as asb
     >>> ab = asb.AeroBuildup(  # This sets up the analysis, but doesn't execute calculation
-    >>>     airplane=my_airplane,  # type: asb.Airplane
-    >>>     op_point=my_operating_point,  # type: asb.OperatingPoint
+    >>>     airplane=my_airplane,  # asb.Airplane
+    >>>     op_point=my_operating_point,  # asb.OperatingPoint
     >>>     xyz_ref=[0.1, 0.2, 0.3],  # Moment reference and center of rotation.
     >>> )
     >>> aero = ab.run()  # This executes the actual aero analysis.
