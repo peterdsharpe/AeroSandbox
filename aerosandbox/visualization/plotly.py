@@ -61,7 +61,7 @@ def spy(
 
 
 def plot_point_cloud(
-    p,  # type: np.ndarray
+    p: np.ndarray,
 ):
     """
     Plots an Nx3 point cloud with Plotly

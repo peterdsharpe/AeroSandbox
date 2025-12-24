@@ -1542,18 +1542,18 @@ class Airfoil(Polygon):
         return string
 
     # def get_xfoil_data(self,
-    #                    a_start=-6,  # type: float
-    #                    a_end=12,  # type: float
-    #                    a_step=0.5,  # type: float
-    #                    a_init=0,  # type: float
-    #                    Re_start=1e4,  # type: float
-    #                    Re_end=1e7,  # type: float
-    #                    n_Res=30,  # type: int
-    #                    mach=0,  # type: float
-    #                    max_iter=20,  # type: int
-    #                    repanel=False,  # type: bool
-    #                    parallel=True,  # type: bool
-    #                    verbose=True,  # type: bool
+    #                    a_start: float = -6,
+    #                    a_end: float = 12,
+    #                    a_step: float = 0.5,
+    #                    a_init: float = 0,
+    #                    Re_start: float = 1e4,
+    #                    Re_end: float = 1e7,
+    #                    n_Res: int = 30,
+    #                    mach: float = 0,
+    #                    max_iter: int = 20,
+    #                    repanel: bool = False,
+    #                    parallel: bool = True,
+    #                    verbose: bool = True,
     #                    ):
     #     """ # TODO finish docstring
     #     Calculates aerodynamic performance data for a particular airfoil with XFoil.
@@ -1824,7 +1824,7 @@ class Airfoil(Polygon):
     #     return self
     #
     # def plot_xfoil_data_polar(self,
-    #                           Res,  # type: list
+    #                           Res: list,
     #                           Cd_plot_max=0.04,
     #                           repanel=False,
     #                           parallel=True,

@@ -89,7 +89,7 @@ if __name__ == "__main__":
     plt.legend()
 
     def draw(
-        airfoil,  # type: Airfoil
+        airfoil: Airfoil,
     ):
         """
         Updates the "current airfoil" line on the plot with the given airfoil.

@@ -143,11 +143,11 @@ class FittedModel(SurrogateModel):
             return np.array(input).flatten()
 
         try:
-            x_data = {k: flatten(v) for k, v in x_data.items()}  # type: dict
+            x_data: dict = {k: flatten(v) for k, v in x_data.items()}
         except (
             AttributeError
         ):  # If it's not a dict or dict-like, assume it's a 1D ndarray dataset
-            x_data = flatten(x_data)  # type: np.ndarray
+            x_data: np.ndarray = flatten(x_data)
         y_data = flatten(y_data)
         n_datapoints = np.length(y_data)
 

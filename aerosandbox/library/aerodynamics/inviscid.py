@@ -180,7 +180,7 @@ def CL_over_Cl(
 
 
 def induced_drag_ratio_from_ground_effect(
-    h_over_b,  # type: float
+    h_over_b: float,
 ):
     """
     Gives the ratio of actual induced drag to free-flight induced drag experienced by a wing in ground effect.

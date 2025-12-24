@@ -6,7 +6,7 @@ from aerosandbox.common import AeroSandboxObject
 class TubeBeam1(AeroSandboxObject):
     def __init__(
         self,
-        opti,  # type: cas.Opti
+        opti: cas.Opti,
         length,
         points_per_point_load=100,
         E=228e9,  # Pa
@@ -45,7 +45,7 @@ class TubeBeam1(AeroSandboxObject):
             * J is the polar moment of inertia
             * ()' is a derivative w.r.t. x.
 
-        :param opti: An optimization environment. # type: cas.Opti
+        :param opti: An optimization environment.
         :param length: Length of the beam [m]
         :param points_per_point_load: Number of discretization points to use per point load
         :param E: Elastic modulus [Pa]

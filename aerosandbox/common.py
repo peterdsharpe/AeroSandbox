@@ -357,7 +357,7 @@ class ExplicitAnalysis(AeroSandboxObject):
     >>>         spanwise_spacing="cosine",
     >>>         chordwise_resolution=12,
     >>>         chordwise_spacing="cosine",
-    >>>         component=None,  # type: int
+    >>>         component: int | None = None,
     >>>         no_wake=False,
     >>>         no_alpha_beta=False,
     >>>         no_load=False,

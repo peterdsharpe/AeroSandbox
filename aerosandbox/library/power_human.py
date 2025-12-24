@@ -2,8 +2,8 @@ import aerosandbox.numpy as np
 
 
 def power_human(
-    duration,  # type: float
-    dataset="Healthy Men",  # type: str
+    duration: float,
+    dataset: str = "Healthy Men",
 ):
     """
     Finds the power output that a human can sustain for a given duration.
