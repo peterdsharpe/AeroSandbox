@@ -45,6 +45,7 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 
 #### 4.2.9
+- Fixed over 1500 ruff errors and warnings.
 - Modernized type hints throughout the codebase
 - Better error handling and messages throughout
 - Minor change in CadQuery exports to export via assemblies rathr than individual parts
