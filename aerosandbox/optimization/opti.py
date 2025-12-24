@@ -564,7 +564,7 @@ class Opti(cas.Opti):
         parameter_mapping: dict[cas.MX, float] | None = None,
         max_iter: int = 1000,
         max_runtime: float = 1e20,
-        callback: Callable[[int], Any] = None,
+        callback: Callable[[int], Any] | None = None,
         verbose: bool = True,
         jit: bool = False,  # TODO document, add unit tests for jit
         detect_simple_bounds: bool = False,  # TODO document
@@ -1143,7 +1143,7 @@ class Opti(cas.Opti):
         with_respect_to: np.ndarray | cas.MX,
         method: str = "trapezoidal",
         _stacklevel: int = 1,
-    ) -> None:
+    ) -> cas.MX | None | list[cas.MX]:
         """
         Adds a constraint to the optimization problem such that:
 
