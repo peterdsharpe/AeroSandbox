@@ -151,9 +151,7 @@ def test_airplane_analysis_specific_options():
     airplane = Airplane(wings=[wing], analysis_specific_options=options)
 
     assert asb.AeroBuildup in airplane.analysis_specific_options
-    assert (
-        not airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"]
-    )
+    assert not airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"]
 
 
 def test_airplane_no_wings_no_fuselages_raises_error():
@@ -271,9 +269,7 @@ def test_airplane_multiple_analysis_options():
     airplane = Airplane(wings=[wing], analysis_specific_options=options)
 
     assert len(airplane.analysis_specific_options) == 2
-    assert (
-        airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"]
-    )
+    assert airplane.analysis_specific_options[asb.AeroBuildup]["include_wave_drag"]
 
 
 def test_airplane_realistic_configuration():

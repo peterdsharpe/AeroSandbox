@@ -6,4 +6,7 @@ from aerosandbox.dynamics.point_mass import (
     DynamicsPointMass3DCartesian,
     DynamicsPointMass3DSpeedGammaTrack,
 )
-from aerosandbox.dynamics.rigid_body import DynamicsRigidBody2DBody, DynamicsRigidBody3DBodyEuler
+from aerosandbox.dynamics.rigid_body import (
+    DynamicsRigidBody2DBody,
+    DynamicsRigidBody3DBodyEuler,
+)

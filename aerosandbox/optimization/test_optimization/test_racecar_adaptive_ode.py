@@ -5,7 +5,6 @@ import pytest
 
 
 def test_racecar_adaptive_ode(plot=False):
-
     opti = asb.Opti()  # Optimization problem
 
     t_final = opti.variable(init_guess=1, lower_bound=1e-2)

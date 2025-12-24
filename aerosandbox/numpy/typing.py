@@ -11,7 +11,7 @@ CasADi should be directly imported for typing purposes.
 ## Type Semantics:
 
 - **Scalar**: A single numeric value (int, float, or 0-d CasADi type)
-- **Vector**: A 1D array (ndarray or CasADi type with vector shape)  
+- **Vector**: A 1D array (ndarray or CasADi type with vector shape)
 - **Array**: Any-dimensional array (ndarray or CasADi type)
 - **Vectorizable**: For parameters that accept EITHER scalar OR array,
   where the function will broadcast/vectorize element-wise.
@@ -74,4 +74,3 @@ VectorLike = Sequence[float] | Sequence[int] | _onp.ndarray | CasADiType
 
 ArrayLike = Sequence[float] | Sequence[int] | _onp.ndarray | CasADiType
 """Input for array parameters: sequence, ndarray, or CasADi array."""
-

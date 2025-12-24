@@ -155,7 +155,17 @@ def CDA_control_surface_gaps(
     return CDA_side_gaps + CDA_hinge_gap
 
 
-def CDA_protruding_bolt_or_rivet(diameter: float, kind: Literal["flush_rivet", "round_rivet", "flat_head_bolt", "round_head_bolt", "cylindrical_bolt", "hex_bolt"] = "flush_rivet"):
+def CDA_protruding_bolt_or_rivet(
+    diameter: float,
+    kind: Literal[
+        "flush_rivet",
+        "round_rivet",
+        "flat_head_bolt",
+        "round_head_bolt",
+        "cylindrical_bolt",
+        "hex_bolt",
+    ] = "flush_rivet",
+):
     """
     Computes the drag area (CDA) of a protruding bolt or rivet.
 

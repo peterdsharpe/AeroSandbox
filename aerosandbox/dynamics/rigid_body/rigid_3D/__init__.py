@@ -1,1 +1,3 @@
-from aerosandbox.dynamics.rigid_body.rigid_3D.body_euler import DynamicsRigidBody3DBodyEuler
+from aerosandbox.dynamics.rigid_body.rigid_3D.body_euler import (
+    DynamicsRigidBody3DBodyEuler,
+)

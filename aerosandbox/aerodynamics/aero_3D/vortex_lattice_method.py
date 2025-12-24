@@ -47,9 +47,13 @@ class VortexLatticeMethod(ExplicitAnalysis):
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution: int = 10,
-        spanwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
+        spanwise_spacing_function: Callable[
+            [float, float, int], np.ndarray
+        ] = np.cosspace,
         chordwise_resolution: int = 10,
-        chordwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
+        chordwise_spacing_function: Callable[
+            [float, float, int], np.ndarray
+        ] = np.cosspace,
         vortex_core_radius: float = 1e-8,
         align_trailing_vortices_with_wind: bool = False,
     ):

@@ -137,7 +137,9 @@ class Wing(AeroSandboxObject):
 
     def span(
         self,
-        type: Literal["xyz", "xy", "top", "yz", "front", "xz", "side", "x", "y", "z"] = "yz",
+        type: Literal[
+            "xyz", "xy", "top", "yz", "front", "xz", "side", "x", "y", "z"
+        ] = "yz",
         include_centerline_distance=False,
         _sectional: bool = False,
     ) -> float | list[float]:
@@ -286,7 +288,9 @@ class Wing(AeroSandboxObject):
 
     def area(
         self,
-        type: Literal["planform", "wetted", "xy", "projected", "top", "xz", "side", "yz"] = "planform",
+        type: Literal[
+            "planform", "wetted", "xy", "projected", "top", "xz", "side", "yz"
+        ] = "planform",
         include_centerline_distance=False,
         _sectional: bool = False,
     ) -> float | list[float]:
@@ -764,7 +768,8 @@ class Wing(AeroSandboxObject):
     def control_surface_area(
         self,
         by_name: str | None = None,
-        type: Literal["planform", "wetted", "xy", "projected", "top", "xz", "side"] | None = "planform",
+        type: Literal["planform", "wetted", "xy", "projected", "top", "xz", "side"]
+        | None = "planform",
     ) -> float:
         """
         Computes the total area of all control surfaces on this wing, optionally filtered by their name.
@@ -831,7 +836,9 @@ class Wing(AeroSandboxObject):
         self,
         method: Literal["tri", "quad"] = "quad",
         chordwise_resolution: int = 36,
-        chordwise_spacing_function_per_side: Callable[[float, float, int], np.ndarray] = np.cosspace,
+        chordwise_spacing_function_per_side: Callable[
+            [float, float, int], np.ndarray
+        ] = np.cosspace,
         mesh_surface: bool = True,
         mesh_tips: bool = True,
         mesh_trailing_edge: bool = True,
@@ -995,7 +1002,9 @@ class Wing(AeroSandboxObject):
         self,
         method: Literal["tri", "quad"] = "tri",
         chordwise_resolution: int = 36,
-        chordwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
+        chordwise_spacing_function: Callable[
+            [float, float, int], np.ndarray
+        ] = np.cosspace,
         add_camber: bool = True,
     ) -> tuple[np.ndarray, np.ndarray]:
         """

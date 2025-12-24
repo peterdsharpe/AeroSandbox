@@ -225,7 +225,10 @@ class Airplane(AeroSandboxObject):
         backend: Literal["matplotlib", "pyvista", "plotly", "trimesh"] = "pyvista",
         thin_wings: bool = False,
         ax=None,
-        use_preset_view_angle: Literal["XY", "-XY", "XZ", "-XZ", "YZ", "-YZ", "left_isometric", "right_isometric"] | None = None,
+        use_preset_view_angle: Literal[
+            "XY", "-XY", "XZ", "-XZ", "YZ", "-YZ", "left_isometric", "right_isometric"
+        ]
+        | None = None,
         set_background_pane_color: str | tuple[float, float, float] | None = None,
         set_background_pane_alpha: float | None = None,
         set_lims: bool = True,
@@ -385,7 +388,10 @@ class Airplane(AeroSandboxObject):
         thin_linewidth=0.2,
         thick_linewidth=0.5,
         fuselage_longeron_theta=None,
-        use_preset_view_angle: Literal["XY", "-XY", "XZ", "-XZ", "YZ", "-YZ", "left_isometric", "right_isometric"] | None = None,
+        use_preset_view_angle: Literal[
+            "XY", "-XY", "XZ", "-XZ", "YZ", "-YZ", "left_isometric", "right_isometric"
+        ]
+        | None = None,
         set_background_pane_color: str | tuple[float, float, float] | None = None,
         set_background_pane_alpha: float | None = None,
         set_lims: bool = True,

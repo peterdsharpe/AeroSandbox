@@ -1,2 +1,6 @@
 from aerosandbox.modeling.splines.bezier import quadratic_bezier_patch_from_tangents
-from aerosandbox.modeling.splines.hermite import linear_hermite_patch, cubic_hermite_patch, cosine_hermite_patch
+from aerosandbox.modeling.splines.hermite import (
+    linear_hermite_patch,
+    cubic_hermite_patch,
+    cosine_hermite_patch,
+)

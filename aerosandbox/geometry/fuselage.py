@@ -903,7 +903,9 @@ class FuselageXSec(AeroSandboxObject):
             self.xyz_c[2] + y * yg_local[2] + z * zg_local[2],
         )
 
-    def equivalent_radius(self, preserve: Literal["area", "perimeter"] = "area") -> float:
+    def equivalent_radius(
+        self, preserve: Literal["area", "perimeter"] = "area"
+    ) -> float:
         """
         Computes an equivalent radius for non-circular cross-sections. This may be necessary when doing analysis that
         uses axisymmetric assumptions.

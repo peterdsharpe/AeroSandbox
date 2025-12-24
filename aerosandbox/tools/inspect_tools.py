@@ -383,7 +383,6 @@ def codegen(
     if _required_imports is None:
         _required_imports = set()
 
-
     indent = indent_str * _recursion_depth
     next_indent = indent_str * (_recursion_depth + 1)
 

@@ -95,7 +95,21 @@ def ax_is_3d(ax: matplotlib.axes.Axes = None) -> bool:
     return hasattr(ax, "zaxis")
 
 
-def set_preset_3d_view_angle(preset_view: Literal["XY", "XZ", "YZ", "-XY", "-XZ", "-YZ", "left_isometric", "right_isometric", "front", "top", "side"]) -> None:
+def set_preset_3d_view_angle(
+    preset_view: Literal[
+        "XY",
+        "XZ",
+        "YZ",
+        "-XY",
+        "-XZ",
+        "-YZ",
+        "left_isometric",
+        "right_isometric",
+        "front",
+        "top",
+        "side",
+    ],
+) -> None:
     ax = plt.gca()
 
     if not ax_is_3d(ax):

@@ -37,8 +37,10 @@ if __name__ == "__main__":
     ### Packing/Unpacking functions
     n_lower = len(lower_guess)
     n_upper = len(upper_guess)
+
     def pack(lower, upper):
         return np.concatenate((lower, upper))
+
     def unpack(pack):
         return (pack[:n_lower], pack[n_lower:])
 

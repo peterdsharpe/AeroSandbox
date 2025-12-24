@@ -1,4 +1,7 @@
-from aerosandbox.geometry.airfoil.airfoil_families import get_NACA_coordinates, get_UIUC_coordinates
+from aerosandbox.geometry.airfoil.airfoil_families import (
+    get_NACA_coordinates,
+    get_UIUC_coordinates,
+)
 import pytest
 
 

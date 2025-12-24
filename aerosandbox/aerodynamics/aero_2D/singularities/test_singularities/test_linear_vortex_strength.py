@@ -1,4 +1,6 @@
-from aerosandbox.aerodynamics.aero_2D.singularities import calculate_induced_velocity_line_singularities
+from aerosandbox.aerodynamics.aero_2D.singularities import (
+    calculate_induced_velocity_line_singularities,
+)
 import aerosandbox.numpy as np
 from numpy import pi
 import pytest

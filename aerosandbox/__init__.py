@@ -2,9 +2,19 @@ from pathlib import Path
 
 _asb_root = Path(__file__).parent
 
-from aerosandbox.common import AeroSandboxObject, ExplicitAnalysis, ImplicitAnalysis, load
+from aerosandbox.common import (
+    AeroSandboxObject,
+    ExplicitAnalysis,
+    ImplicitAnalysis,
+    load,
+)
 from aerosandbox.optimization import Opti, OptiSol
-from aerosandbox.modeling import FittedModel, InterpolatedModel, UnstructuredInterpolatedModel, black_box
+from aerosandbox.modeling import (
+    FittedModel,
+    InterpolatedModel,
+    UnstructuredInterpolatedModel,
+    black_box,
+)
 from aerosandbox.geometry import (
     reflect_over_XZ_plane,
     Airfoil,
@@ -30,7 +40,16 @@ from aerosandbox.dynamics import (
     DynamicsRigidBody2DBody,
     DynamicsRigidBody3DBodyEuler,
 )
-from aerosandbox.aerodynamics import AirfoilInviscid, XFoil, MSES, VortexLatticeMethod, LiftingLine, NonlinearLiftingLine, AeroBuildup, AVL
+from aerosandbox.aerodynamics import (
+    AirfoilInviscid,
+    XFoil,
+    MSES,
+    VortexLatticeMethod,
+    LiftingLine,
+    NonlinearLiftingLine,
+    AeroBuildup,
+    AVL,
+)
 
 try:
     from importlib.metadata import version

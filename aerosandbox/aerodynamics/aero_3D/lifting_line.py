@@ -55,7 +55,9 @@ class LiftingLine(ExplicitAnalysis):
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution: int = 4,
-        spanwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
+        spanwise_spacing_function: Callable[
+            [float, float, int], np.ndarray
+        ] = np.cosspace,
         vortex_core_radius: float = 1e-8,
         align_trailing_vortices_with_wind: bool = False,
     ):
@@ -1033,7 +1035,10 @@ class LiftingLine(ExplicitAnalysis):
         return fuselage_influences
 
     def calculate_streamlines(
-        self, seed_points: np.ndarray | None = None, n_steps: int = 300, length: float | None = None
+        self,
+        seed_points: np.ndarray | None = None,
+        n_steps: int = 300,
+        length: float | None = None,
     ) -> np.ndarray:
         """
         Computes streamlines, starting at specific seed points.
