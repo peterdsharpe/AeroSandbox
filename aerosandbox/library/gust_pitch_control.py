@@ -1,7 +1,12 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from aerosandbox.common import *
-from aerosandbox.library.aerodynamics.unsteady import *
+from aerosandbox.common import ImplicitAnalysis
+from aerosandbox.library.aerodynamics.unsteady import (
+    wagners_function,
+    kussners_function,
+    calculate_lift_due_to_pitching_profile,
+    calculate_lift_due_to_transverse_gust,
+)
 
 
 class TransverseGustPitchControl(ImplicitAnalysis):

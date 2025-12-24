@@ -1,4 +1,4 @@
-from aerosandbox.geometry.airfoil import *
+from aerosandbox.geometry.airfoil import Airfoil
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest

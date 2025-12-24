@@ -1,4 +1,5 @@
-from aerosandbox import *
+from aerosandbox import Wing, WingXSec, Airfoil, ControlSurface
+import aerosandbox.numpy as np
 import pytest
 
 

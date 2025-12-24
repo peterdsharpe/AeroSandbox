@@ -1,4 +1,4 @@
-from aerosandbox.geometry.common import *
+from aerosandbox.geometry.common import reflect_over_XZ_plane
 from aerosandbox.geometry.airfoil import Airfoil, KulfanAirfoil
 from aerosandbox.geometry.wing import Wing, WingXSec, ControlSurface
 from aerosandbox.geometry.fuselage import Fuselage, FuselageXSec

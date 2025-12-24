@@ -1,10 +1,13 @@
 from aerosandbox import ExplicitAnalysis
-from aerosandbox.geometry import *
+from aerosandbox.geometry import Airplane, Wing, Fuselage
 from aerosandbox.performance import OperatingPoint
 import aerosandbox.library.aerodynamics as aero
 import aerosandbox.numpy as np
 from aerosandbox.numpy.typing import Vectorizable
-from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.fuselage_aerodynamics_utilities import *
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.fuselage_aerodynamics_utilities import (
+    critical_mach,
+    jorgensen_eta,
+)
 from aerosandbox.library.aerodynamics import transonic
 import aerosandbox.library.aerodynamics as aerolib
 from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree import (

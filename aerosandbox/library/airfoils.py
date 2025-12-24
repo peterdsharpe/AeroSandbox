@@ -1,6 +1,6 @@
 ### This file contains an assortment of random airfoils to use
 from aerosandbox.geometry.airfoil import Airfoil
-from aerosandbox.library.aerodynamics.viscous import *
+import aerosandbox.numpy as np
 
 
 def diamond_airfoil(

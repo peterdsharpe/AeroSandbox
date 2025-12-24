@@ -1,6 +1,6 @@
 from aerosandbox import AeroSandboxObject
-from aerosandbox.geometry.common import *
 from typing import Any, Sequence
+import aerosandbox.numpy as np
 import copy
 
 

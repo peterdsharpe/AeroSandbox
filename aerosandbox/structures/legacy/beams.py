@@ -1,6 +1,5 @@
 import casadi as cas
 import aerosandbox.numpy as np
-from aerosandbox.geometry import *
 from aerosandbox.common import AeroSandboxObject
 
 

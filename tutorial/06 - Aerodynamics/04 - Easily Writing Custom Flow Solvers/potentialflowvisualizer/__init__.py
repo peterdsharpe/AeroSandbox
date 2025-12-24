@@ -1,2 +1,2 @@
-from .objects import *
-from .flowfield import *
+from potentialflowvisualizer.objects import *
+from potentialflowvisualizer.flowfield import *

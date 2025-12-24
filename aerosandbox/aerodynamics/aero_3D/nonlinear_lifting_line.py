@@ -1,5 +1,5 @@
 from aerosandbox import ImplicitAnalysis
-from aerosandbox.geometry import *
+from aerosandbox.geometry import Airplane
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
     calculate_induced_velocity_horseshoe,

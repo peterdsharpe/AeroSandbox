@@ -1,4 +1,4 @@
-from aerosandbox.common import *
+from aerosandbox.common import ImplicitAnalysis
 from aerosandbox.geometry import Airfoil
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_2D.singularities import (

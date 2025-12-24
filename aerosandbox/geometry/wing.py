@@ -1,5 +1,4 @@
 from aerosandbox.common import AeroSandboxObject
-from aerosandbox.geometry.common import *
 from typing import Any, Callable, Literal, Sequence
 from aerosandbox.geometry.airfoil import Airfoil
 from numpy import pi

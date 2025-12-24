@@ -1,2 +1,2 @@
-from .cartesian import DynamicsPointMass2DCartesian
-from .speed_gamma import DynamicsPointMass2DSpeedGamma
+from aerosandbox.dynamics.point_mass.point_2D.cartesian import DynamicsPointMass2DCartesian
+from aerosandbox.dynamics.point_mass.point_2D.speed_gamma import DynamicsPointMass2DSpeedGamma

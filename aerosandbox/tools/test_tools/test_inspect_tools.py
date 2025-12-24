@@ -1,4 +1,4 @@
-from aerosandbox.tools.inspect_tools import *
+from aerosandbox.tools.inspect_tools import get_function_argument_names_from_source_code, codegen
 import pytest
 import inspect
 

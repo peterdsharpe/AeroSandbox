@@ -1,8 +1,6 @@
-import numpy as np
-
 from aerosandbox import AeroSandboxObject
-from aerosandbox.geometry.common import *
 from typing import Any, Callable, Literal, Sequence
+import aerosandbox.numpy as np
 import copy
 from aerosandbox.numpy.typing import Scalar  # Type alias including CasADi types
 

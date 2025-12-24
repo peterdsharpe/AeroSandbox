@@ -1,7 +1,7 @@
 import itertools
 from aerosandbox import AeroSandboxObject
-from aerosandbox.geometry.common import *
 from typing import Any, Literal, Sequence
+import aerosandbox.numpy as np
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
