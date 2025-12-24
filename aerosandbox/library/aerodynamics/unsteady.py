@@ -185,8 +185,8 @@ def calculate_lift_due_to_transverse_gust(
 
     lift_coefficient = np.zeros_like(reduced_time)
     for i, s in enumerate(reduced_time):
-        I = quad(integrand, 0, s, args=(s, chord))[0]
-        lift_coefficient[i] = 2 * np.pi * I / plate_velocity
+        integrated_value = quad(integrand, 0, s, args=(s, chord))[0]
+        lift_coefficient[i] = 2 * np.pi * integrated_value / plate_velocity
 
     return lift_coefficient
 
@@ -235,9 +235,9 @@ def calculate_lift_due_to_pitching_profile(
     lift_coefficient = np.zeros_like(reduced_time)
 
     for i, s in enumerate(reduced_time):
-        I = quad(integrand, 0, s, args=s)[0]
-        # print(I)
-        lift_coefficient[i] = 2 * np.pi * (AoA_function(s) * wagners_function(0) + I)
+        integrated_value = quad(integrand, 0, s, args=s)[0]
+        # print(integrated_value)
+        lift_coefficient[i] = 2 * np.pi * (AoA_function(s) * wagners_function(0) + integrated_value)
 
     return lift_coefficient
 
@@ -414,7 +414,7 @@ if __name__ == "__main__":
     )
     ax2.set_ylabel("Angle of Attack, degrees")
     lns = ln1 + ln2 + ln3
-    labs = [l.get_label() for l in lns]
+    labs = [line.get_label() for line in lns]
     ax2.legend(lns, labs, loc="lower right")
     plt.title("Gust and pitch example profiles")
 

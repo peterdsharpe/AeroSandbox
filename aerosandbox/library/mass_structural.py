@@ -183,10 +183,10 @@ def mass_hpa_tail_boom(
     :param mean_tail_surface_area: mean of the areas of the tail surfaces (elevator, rudder)
     :return: mass of the tail boom [m]
     """
-    l = length_tail_boom
+    length = length_tail_boom
     q = dynamic_pressure_at_manuever_speed
     area = mean_tail_surface_area
-    w_tb = (l * 1.14e-1 + l**2 * 1.96e-2) * (1 + ((q * area) / 78.5 - 1) / 2)
+    w_tb = (length * 1.14e-1 + length**2 * 1.96e-2) * (1 + ((q * area) / 78.5 - 1) / 2)
 
     return w_tb
 

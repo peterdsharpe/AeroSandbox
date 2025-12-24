@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
 from typing import Literal
+import warnings
 
 
 def Cd_cylinder(
@@ -196,9 +197,6 @@ def Cd_flat_plate_normal():
     return 2.202
 
 
-import warnings
-
-
 def Cl_2412(alpha, Re_c):
     # A curve fit I did to a NACA 2412 airfoil, 2D XFoil data
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9892
@@ -337,24 +335,18 @@ def Cd_wave_e216(Cl, mach, sweep=0.0):
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
-
-    # Coeffs
-    c0 = 7.2685945744797997e-01
-    c1 = -1.5483144040727698e-01
-    c3 = 2.1305118052118968e-01
-    c4 = 7.8812272501525316e-01
-    c5 = 3.3888938102072169e-03
-    l0 = 1.5298928303149546e00
-    l1 = 5.2389999717540392e-01
-
-    m = mach_perpendicular
-    l = Cl_perpendicular
-
-    Cd_wave = (
-        np.fmax(m - (c0 + c1 * np.sqrt(c3 + (l - c4) ** 2) + c5 * l), 0) * (l0 + l1 * l)
+    return (
+        np.fmax(
+            mach_perpendicular
+            - (
+                7.2685945744797997e-01
+                + -1.5483144040727698e-01 * np.sqrt(2.1305118052118968e-01 + (Cl_perpendicular - 7.8812272501525316e-01) ** 2)
+                + 3.3888938102072169e-03 * Cl_perpendicular
+            ),
+            0
+        )
+        * (1.5298928303149546e00 + 5.2389999717540392e-01 * Cl_perpendicular)
     ) ** 2
-
-    return Cd_wave
 
 
 def Cl_rae2822(alpha, Re_c):
@@ -451,20 +443,14 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.0):
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
-
-    # Coeffs
-    c2 = 4.5776476424519119e00
-    mc0 = 9.5623337929607111e-01
-    mc1 = 2.0552787101770234e-01
-    mc2 = 1.1259268018737063e00
-    mc3 = 1.9538856688443659e-01
-
-    m = mach_perpendicular
-    l = Cl_perpendicular
-
-    Cd_wave = np.fmax(m - (mc0 - mc1 * np.sqrt(mc2 + (l - mc3) ** 2)), 0) ** 2 * c2
-
-    return Cd_wave
+    return np.fmax(
+        mach_perpendicular
+        - (
+            9.5623337929607111e-01
+            - 2.0552787101770234e-01 * np.sqrt(1.1259268018737063e00 + (Cl_perpendicular - 1.9538856688443659e-01) ** 2)
+        ),
+        0
+    ) ** 2 * 4.5776476424519119e00
 
 
 def fuselage_upsweep_drag_area(

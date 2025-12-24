@@ -3,6 +3,7 @@ from aerosandbox.geometry import Airfoil
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_coordinates
 from scipy import optimize
 import matplotlib.pyplot as plt
+from dataclasses import dataclass, field
 
 if __name__ == "__main__":
     ### Design Conditions
@@ -101,9 +102,14 @@ if __name__ == "__main__":
         plt.pause(0.001)
 
     ### Utilities for tracking the design vector and objective throughout the optimization run
-    iteration = 0
-    xs = []
-    fs = []
+    @dataclass
+    class OptimizationState:
+        """Holds state for the optimization to avoid globals."""
+        iteration: int = 0
+        xs: list = field(default_factory=list)
+        fs: list = field(default_factory=list)
+
+    state = OptimizationState()
 
     def augmented_objective(x):
         """
@@ -140,19 +146,18 @@ if __name__ == "__main__":
             np.minimum(0, (airfoil.local_thickness(0.30) - 0.12) / 0.005) ** 2
         )  # Spar thickness constraint
 
-        xs.append(x)
-        fs.append(objective)
+        state.xs.append(x)
+        state.fs.append(objective)
 
         return objective * (1 + penalty)
 
     def callback(x):
-        global iteration
-        iteration += 1
-        print(f"Iteration {iteration}: Cd = {fs[-1]:.6f}")
-        if iteration % 1 == 0:
+        state.iteration += 1
+        print(f"Iteration {state.iteration}: Cd = {state.fs[-1]:.6f}")
+        if state.iteration % 1 == 0:
             airfoil = make_airfoil(x)
             draw(airfoil)
-            ax.set_title(f"Airfoil Optimization: Iteration {iteration}")
+            ax.set_title(f"Airfoil Optimization: Iteration {state.iteration}")
             airfoil.write_dat("optimized_airfoil.dat")
 
     draw(initial_airfoil)

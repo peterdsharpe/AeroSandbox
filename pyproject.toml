@@ -101,4 +101,17 @@ dev = [
 ]
 
 [tool.ruff]
-per-file-ignores = { "*.ipynb" = ["E402"] }
+
+[tool.ruff.lint.per-file-ignores]
+# Notebooks may have imports not at top
+"*.ipynb" = ["E402"]
+# Allow wildcard imports only in numpy wrapper (intentional numpy-like API)
+"aerosandbox/numpy/__init__.py" = ["F403", "F405"]
+"aerosandbox/numpy/linalg.py" = ["F403", "F405"]
+# Allow unused imports in __init__.py files (re-exports for public API)
+"**/__init__.py" = ["F401"]
+# Allow imports not at top in studies/tutorials/ignore (may need setup before imports)
+"studies/**/*.py" = ["E402"]
+"tutorial/**/*.py" = ["E402"]
+"aerosandbox/**/ignore/**/*.py" = ["E402"]
+"aerosandbox/**/*_derivations/**/*.py" = ["E402"]

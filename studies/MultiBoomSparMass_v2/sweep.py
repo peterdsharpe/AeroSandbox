@@ -3,7 +3,9 @@ This script generates data used to estimate spar mass as a function of lift forc
 """
 
 ### Imports
-from aerosandbox.structures.legacy.beams import *
+import aerosandbox.numpy as np
+import casadi as cas
+from aerosandbox.structures.legacy.beams import TubeBeam1
 
 ### Set up sweep variables
 # n_booms = 1

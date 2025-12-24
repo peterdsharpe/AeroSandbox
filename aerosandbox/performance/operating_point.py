@@ -196,13 +196,13 @@ class OperatingPoint(AeroSandboxObject):
         Returns: A new OperatingPoint instance, where each attribute is subscripted at the given value, if possible.
 
         """
-        l = len(self)
+        self_length = len(self)
 
         def get_item_of_attribute(a):
             if hasattr(a, "__len__") and hasattr(a, "__getitem__"):
                 if len(a) == 1:
                     return a[0]
-                elif len(a) == l:
+                elif len(a) == self_length:
                     return a[index]
                 else:
                     try:
@@ -210,7 +210,7 @@ class OperatingPoint(AeroSandboxObject):
                     except IndexError:
                         raise IndexError(
                             f"A state variable could not be indexed; it has length {len(a)} while the"
-                            f"parent has length {l}."
+                            f"parent has length {self_length}."
                         )
             else:
                 return a

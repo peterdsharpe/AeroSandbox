@@ -1,4 +1,5 @@
-from aerosandbox.structures.legacy.beams import *
+import casadi as cas
+from aerosandbox.structures.legacy.beams import TubeBeam1
 import matplotlib.pyplot as plt
 import seaborn as sns
 

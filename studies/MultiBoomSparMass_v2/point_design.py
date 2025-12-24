@@ -1,7 +1,10 @@
 ### Imports
-from aerosandbox.structures.legacy.beams import *
+import aerosandbox.numpy as np
+import casadi as cas
+from aerosandbox.structures.legacy.beams import TubeBeam1
 
 n_booms = 1
+load_location_fraction = 0.50  # Default value, only used if n_booms > 1
 
 # n_booms = 2
 # load_location_fraction = 0.50

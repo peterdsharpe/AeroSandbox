@@ -1,7 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import neuralfoil as nf
-from typing import Union, List, Dict
+from typing import TYPE_CHECKING
 from aerosandbox.modeling.splines.hermite import cubic_hermite_patch
 from aerosandbox.geometry.airfoil.airfoil_families import (
     get_kulfan_coordinates,
@@ -9,18 +9,21 @@ from aerosandbox.geometry.airfoil.airfoil_families import (
 )
 from pprint import pprint
 
+if TYPE_CHECKING:
+    from aerosandbox.geometry import ControlSurface
+
 
 def get_aero(
     kulfan_parameters,
-    alpha: Union[float, np.ndarray],
-    Re: Union[float, np.ndarray],
-    mach: Union[float, np.ndarray] = 0.0,
+    alpha: float | np.ndarray,
+    Re: float | np.ndarray,
+    mach: float | np.ndarray = 0.0,
     model_size: str = "large",
-    control_surfaces: List["ControlSurface"] = None,
+    control_surfaces: list["ControlSurface"] | None = None,
     control_surface_strategy="polar_modification",
     transonic_buffet_lift_knockdown: float = 0.3,
     include_360_deg_effects: bool = True,
-) -> Dict[str, Union[float, np.ndarray]]:
+) -> dict[str, float | np.ndarray]:
     if control_surfaces is None:
         control_surfaces = []
 

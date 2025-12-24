@@ -72,12 +72,12 @@ if __name__ == "__main__":
     mass = volume * 1600
 
     # Bending loads
-    I = (
+    moment_of_inertia = (
         cas.pi
         / 64
         * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
     )
-    EI = E * I
+    EI = E * moment_of_inertia
     total_lift_force = 9.81 * (mass_total - mass) / 2  # 9.81 * 292 / 2
     lift_distribution = "elliptical"
     if lift_distribution == "rectangular":

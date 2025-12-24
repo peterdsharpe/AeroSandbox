@@ -12,7 +12,7 @@ def wind_speed_conus_summer_99(altitude, latitude):
     :param latitude: latitude, in degrees North [deg]
     :return: 99th-percentile wind speed over the continental United States in the summertime. [m/s]
     """
-    l = (latitude - 37.5) / 11.5
+    latitude_norm = (latitude - 37.5) / 11.5
     a = (altitude - 24200) / 24200
 
     agc = -0.5363486000267786
@@ -36,20 +36,20 @@ def wind_speed_conus_summer_99(altitude, latitude):
 
     s = (
         c0
-        + cql * (l - lqc) ** 2
+        + cql * (latitude_norm - lqc) ** 2
         + cqa * (a - aqc) ** 2
-        + cqla * a * l
+        + cqla * a * latitude_norm
         + cg
         * np.exp(
             -(
-                np.fabs(l - lgc) ** lgh / (2 * lgs**2)
+                np.fabs(latitude_norm - lgc) ** lgh / (2 * lgs**2)
                 + np.fabs(a - agc) ** agh / (2 * ags**2)
-                + cgc * a * l
+                + cgc * a * latitude_norm
             )
         )
         + c4a * (a - c4c) ** 4
-        + c12 * l * a**2
-        + c21 * l**2 * a
+        + c12 * latitude_norm * a**2
+        + c21 * latitude_norm**2 * a
     )
 
     speed = s * 56 + 7

@@ -3,7 +3,8 @@ This script generates data used to estimate spar mass as a function of lift forc
 """
 
 ### Imports
-from aerosandbox.structures.legacy.beams import *
+import casadi as cas
+from aerosandbox.structures.legacy.beams import TubeBeam1
 
 ### Set up problem
 opti = cas.Opti()

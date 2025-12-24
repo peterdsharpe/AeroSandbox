@@ -4,53 +4,57 @@ from aerosandbox.geometry.airfoil import airfoil_families
 from tqdm import tqdm
 
 
-@np.vectorize
-def get_dalpha(
-    alpha=0.0,
-    deflection=0.0,
-    hinge_x=0.75,
-    Re=1e6,
-    camber=0.0,
-    thickness=0.12,
-):
-    global pbar
-    pbar.update(1)
+def make_get_dalpha_with_progress(progress_bar):
+    """Factory function that creates get_dalpha with progress tracking via closure."""
 
-    try:
-        af = asb.Airfoil(
-            name="testaf",
-            coordinates=airfoil_families.get_NACA_coordinates(
-                n_points_per_side=80,
-                max_camber=camber,
-                camber_loc=0.40,
-                thickness=thickness,
-            ),
-        )
-        res_deflected = asb.XFoil(
-            airfoil=af.add_control_surface(
-                deflection=deflection, hinge_point_x=hinge_x
-            ),
-            Re=Re,
-            max_iter=20,
-            timeout=0.5,
-        ).alpha(alpha=alpha)
+    @np.vectorize
+    def get_dalpha(
+        alpha=0.0,
+        deflection=0.0,
+        hinge_x=0.75,
+        Re=1e6,
+        camber=0.0,
+        thickness=0.12,
+    ):
+        progress_bar.update(1)
 
-        if any(np.isnan(res_deflected["CL"])):
+        try:
+            af = asb.Airfoil(
+                name="testaf",
+                coordinates=airfoil_families.get_NACA_coordinates(
+                    n_points_per_side=80,
+                    max_camber=camber,
+                    camber_loc=0.40,
+                    thickness=thickness,
+                ),
+            )
+            res_deflected = asb.XFoil(
+                airfoil=af.add_control_surface(
+                    deflection=deflection, hinge_point_x=hinge_x
+                ),
+                Re=Re,
+                max_iter=20,
+                timeout=0.5,
+            ).alpha(alpha=alpha)
+
+            if any(np.isnan(res_deflected["CL"])):
+                return np.nan
+
+            res_undeflected = asb.XFoil(
+                airfoil=af,
+                Re=Re,
+                max_iter=20,
+                timeout=0.5,
+            ).cl(cl=res_deflected["CL"])
+
+            delta_alpha = float(res_undeflected["alpha"] - res_deflected["alpha"])
+
+            return delta_alpha
+
+        except (FileNotFoundError, TypeError):
             return np.nan
 
-        res_undeflected = asb.XFoil(
-            airfoil=af,
-            Re=Re,
-            max_iter=20,
-            timeout=0.5,
-        ).cl(cl=res_deflected["CL"])
-
-        delta_alpha = float(res_undeflected["alpha"] - res_deflected["alpha"])
-
-        return delta_alpha
-
-    except (FileNotFoundError, TypeError):
-        return np.nan
+    return get_dalpha
 
 
 Alpha, Deflection, Hinge_x, Re, Camber, Thickness = np.meshgrid(
@@ -62,8 +66,8 @@ Alpha, Deflection, Hinge_x, Re, Camber, Thickness = np.meshgrid(
     0.10,
 )
 
-global pbar
 with tqdm(total=Alpha.size) as pbar:
+    get_dalpha = make_get_dalpha_with_progress(pbar)
     Dalpha = get_dalpha(Alpha, Deflection, Hinge_x, Re, Camber, Thickness)
 
 data = {

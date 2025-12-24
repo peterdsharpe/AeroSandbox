@@ -245,14 +245,14 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
 
         ### Evaluate the beam properties
         if assume_thin_tube:
-            I = np.pi / 8 * diameter**3 * wall_thickness
+            moment_of_inertia = np.pi / 8 * diameter**3 * wall_thickness
         else:
-            I = (
+            moment_of_inertia = (
                 np.pi
                 / 64
                 * ((diameter + wall_thickness) ** 4 - (diameter - wall_thickness) ** 4)
             )
-        EI = elastic_modulus * I
+        EI = elastic_modulus * moment_of_inertia
 
         ### Compute the initial guess
         u = self.opti.variable(
@@ -297,7 +297,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.wall_thickness = wall_thickness
         self.distributed_force = distributed_force
         self.elastic_modulus = elastic_modulus
-        self.I = I
+        self.I = moment_of_inertia
         self.u = u
         self.du = du
         self.ddu = ddu

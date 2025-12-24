@@ -51,9 +51,9 @@ def oswalds_efficiency(
     sweep = np.clip(sweep, 0, 90)  # TODO input proper analytic continuation
 
     def f(
-        l,
+        taper,
     ):  # f(lambda), given as Eq. 36 in the Nita and Scholz paper (see parent docstring).
-        return 0.0524 * l**4 - 0.15 * l**3 + 0.1659 * l**2 - 0.0706 * l + 0.0119
+        return 0.0524 * taper**4 - 0.15 * taper**3 + 0.1659 * taper**2 - 0.0706 * taper + 0.0119
 
     delta_lambda = -0.357 + 0.45 * np.exp(-0.0375 * sweep)
     # Eq. 37 in Nita & Scholz.

@@ -266,7 +266,7 @@ def test_fuselage_with_base_drag(
     # TODO add assertions
 
     ##### Slender body theory
-    l = 1  # length of fuselage
+    length = 1  # length of fuselage
     alpha_rad = np.radians(analysis.op_point.alpha)
 
     from scipy import integrate
@@ -274,7 +274,7 @@ def test_fuselage_with_base_drag(
     def alpha_tilde(x):
         return alpha_rad - dzdx(x)
 
-    CL = 2 / airplane.s_ref * A(l) * alpha_tilde(l)
+    CL = 2 / airplane.s_ref * A(length) * alpha_tilde(length)
     print(f"CL_slb: {CL}")
     assert aero["CL"] == pytest.approx(CL, abs=0.01)
 
@@ -283,9 +283,9 @@ def test_fuselage_with_base_drag(
         / airplane.s_ref
         / airplane.c_ref
         * (
-            (fuselage.volume() - l * A(l)) * alpha_rad
-            + l * A(l) * dzdx(l)
-            - integrate.quad(lambda xi: A(xi) * dzdx(xi), 0, l)[0]
+            (fuselage.volume() - length * A(length)) * alpha_rad
+            + length * A(length) * dzdx(length)
+            - integrate.quad(lambda xi: A(xi) * dzdx(xi), 0, length)[0]
         )
     )
 

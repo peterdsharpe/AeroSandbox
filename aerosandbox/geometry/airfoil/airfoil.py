@@ -1337,40 +1337,40 @@ class Airfoil(Polygon):
             y_adjustment = s_adjustment
 
         ### Decompose the existing airfoil coordinates to upper and lower sides, and x and y.
-        u = self.upper_coordinates()
-        ux = u[:, 0]
-        uy = u[:, 1]
+        upper = self.upper_coordinates()
+        upper_x = upper[:, 0]
+        upper_y = upper[:, 1]
 
-        le_x = ux[-1]
+        le_x = upper_x[-1]
 
-        l = self.lower_coordinates()[1:]
-        lx = l[:, 0]
-        ly = l[:, 1]
+        lower = self.lower_coordinates()[1:]
+        lower_x = lower[:, 0]
+        lower_y = lower[:, 1]
 
-        te_x = (ux[0] + lx[-1]) / 2
+        te_x = (upper_x[0] + lower_x[-1]) / 2
 
         ### Create modified versions of the upper and lower coordinates
-        new_u = np.stack(
+        new_upper = np.stack(
             arrays=[
-                ux + x_adjustment * (ux - le_x) / (te_x - le_x),
-                uy + y_adjustment * (ux - le_x) / (te_x - le_x),
+                upper_x + x_adjustment * (upper_x - le_x) / (te_x - le_x),
+                upper_y + y_adjustment * (upper_x - le_x) / (te_x - le_x),
             ],
             axis=1,
         )
-        new_l = np.stack(
+        new_lower = np.stack(
             arrays=[
-                lx - x_adjustment * (lx - le_x) / (te_x - le_x),
-                ly - y_adjustment * (lx - le_x) / (te_x - le_x),
+                lower_x - x_adjustment * (lower_x - le_x) / (te_x - le_x),
+                lower_y - y_adjustment * (lower_x - le_x) / (te_x - le_x),
             ],
             axis=1,
         )
 
         ### If the desired thickness is zero, ensure that is precisely reached.
         if thickness == 0:
-            new_l[-1] = new_u[0]
+            new_lower[-1] = new_upper[0]
 
         ### Combine the upper and lower surface coordinates into a single array.
-        new_coordinates = np.concatenate([new_u, new_l], axis=0)
+        new_coordinates = np.concatenate([new_upper, new_lower], axis=0)
 
         ### Return a new Airfoil with the desired coordinates.
         return Airfoil(name=self.name, coordinates=new_coordinates)

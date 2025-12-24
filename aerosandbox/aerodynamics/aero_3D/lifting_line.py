@@ -1275,9 +1275,6 @@ class LiftingLine(ExplicitAnalysis):
 if __name__ == "__main__":
     import aerosandbox as asb
     import aerosandbox.numpy as np
-    from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import (
-        airplane,
-    )
     import matplotlib.pyplot as plt
     import aerosandbox.tools.pretty_plots as p
 
