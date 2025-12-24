@@ -1,6 +1,6 @@
 ### Imports
+import aerosandbox as asb
 import aerosandbox.numpy as np
-import casadi as cas
 from aerosandbox.structures.legacy.beams import TubeBeam1
 
 n_booms = 1
@@ -16,7 +16,7 @@ mass = 300
 span = 30
 
 ### Set up problem
-opti = cas.Opti()
+opti = asb.Opti()
 beam = TubeBeam1(
     opti=opti,
     length=span / 2,
@@ -46,15 +46,15 @@ opti.subject_to(
     [
         # beam.u[-1] < 2,  # tip deflection. Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
         # beam.u[-1] > -2  # tip deflection. Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        beam.du * 180 / cas.pi < 10,  # local dihedral constraint
-        beam.du * 180 / cas.pi > -10,  # local anhedral constraint
-        cas.diff(beam.nominal_diameter) < 0,  # manufacturability
+        beam.du * 180 / np.pi < 10,  # local dihedral constraint
+        beam.du * 180 / np.pi > -10,  # local anhedral constraint
+        np.diff(beam.nominal_diameter) < 0,  # manufacturability
     ]
 )
 
 # # Zero-curvature constraint (restrict to conical tube spars only)
 # opti.subject_to([
-#     cas.diff(cas.diff(beam.nominal_diameter)) == 0
+#     np.diff(np.diff(beam.nominal_diameter)) == 0
 # ])
 
 opti.minimize(beam.mass)

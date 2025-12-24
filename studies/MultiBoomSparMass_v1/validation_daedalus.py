@@ -1,11 +1,12 @@
-import casadi as cas
+import aerosandbox as asb
+import aerosandbox.numpy as np
 from aerosandbox.structures.legacy.beams import TubeBeam1
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set(font_scale=1)
 
-opti = cas.Opti()
+opti = asb.Opti()
 beam = TubeBeam1(
     opti=opti,
     length=34 / 2,
@@ -30,7 +31,7 @@ opti.subject_to(
 objective = beam.mass / 5
 
 penalty = (
-    cas.sum1((cas.diff(cas.diff(beam.nominal_diameter)) / 0.01) ** 2)
+    np.sum((np.diff(np.diff(beam.nominal_diameter)) / 0.01) ** 2, axis=0)
     / beam.n  # soft stabilizer
 )
 

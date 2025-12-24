@@ -27,24 +27,23 @@ where:
 
 """
 
+import aerosandbox as asb
 import aerosandbox.numpy as np
-import casadi as cas
 
 if __name__ == "__main__":
-    opti = cas.Opti()  # Initialize a SAND environment
+    opti = asb.Opti()  # Initialize a SAND environment
 
     # Define Assumptions
     L = 34.1376 / 2
     n = 200
-    x = cas.linspace(0, L, n)
-    dx = cas.diff(x)
+    x = np.linspace(0, L, n)
+    dx = np.diff(x)
     E = 228e9  # Pa, modulus of CF
     G = E / 2 / (1 + 0.5)  # TODO fix this!!! CFRP is not isotropic!
     max_allowable_stress = 570e6 / 1.75
 
-    log_nominal_diameter = opti.variable(n)
-    opti.set_initial(log_nominal_diameter, cas.log(200e-3))
-    nominal_diameter = cas.exp(log_nominal_diameter)
+    log_nominal_diameter = opti.variable(n_vars=n, init_guess=np.log(200e-3))
+    nominal_diameter = np.exp(log_nominal_diameter)
 
     thickness = 0.14e-3 * 5
     opti.subject_to(
@@ -56,7 +55,7 @@ if __name__ == "__main__":
     # Bending loads
 
     moment_of_inertia = (
-        cas.pi
+        np.pi
         / 64
         * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
     )
@@ -64,15 +63,15 @@ if __name__ == "__main__":
     total_lift_force = 9.81 * 103.873 / 2
     lift_distribution = "elliptical"
     if lift_distribution == "rectangular":
-        force_per_unit_length = total_lift_force * cas.GenDM_ones(n) / L
+        force_per_unit_length = total_lift_force * np.ones(n) / L
     elif lift_distribution == "elliptical":
         force_per_unit_length = (
-            total_lift_force * cas.sqrt(1 - (x / L) ** 2) * (4 / cas.pi) / L
+            total_lift_force * np.sqrt(1 - (x / L) ** 2) * (4 / np.pi) / L
         )
 
     # Torsion loads
     J = (
-        cas.pi
+        np.pi
         / 32
         * ((nominal_diameter + thickness) ** 4 - (nominal_diameter - thickness) ** 4)
     )
@@ -92,16 +91,12 @@ if __name__ == "__main__":
     #   M / L = (CM * c) / (CL)
 
     # Set up derivatives
-    u = 1 * opti.variable(n)
-    du = 0.1 * opti.variable(n)
-    ddu = 0.01 * opti.variable(n)
-    dEIddu = 100 * opti.variable(n)
-    phi = 0.1 * opti.variable(n)
-    dphi = 0.01 * opti.variable(n)
-    # opti.set_initial(u, 2 * (x/L)**4)
-    # opti.set_initial(du, 2 * 4/L * (x/L)**3)
-    # opti.set_initial(ddu, 2 * 3/L * 2/L * (x/L))
-    # opti.set_initial(dEIddu, 2 * 3/L * 2/L * 1/L * 1e3)
+    u = opti.variable(n_vars=n, init_guess=0, scale=1)
+    du = opti.variable(n_vars=n, init_guess=0, scale=0.1)
+    ddu = opti.variable(n_vars=n, init_guess=0, scale=0.01)
+    dEIddu = opti.variable(n_vars=n, init_guess=0, scale=100)
+    phi = opti.variable(n_vars=n, init_guess=0, scale=0.1)
+    dphi = opti.variable(n_vars=n, init_guess=0, scale=0.01)
 
     # Add forcing term
     ddEIddu = force_per_unit_length
@@ -109,19 +104,18 @@ if __name__ == "__main__":
 
     # Define derivatives
     def trapz(x):
+        # Note: Original had endpoint corrections but these don't work with CasADi in-place ops
         out = (x[:-1] + x[1:]) / 2
-        out[0] += x[0] / 2
-        out[-1] += x[-1] / 2
         return out
 
     opti.subject_to(
         [
-            cas.diff(u) == trapz(du) * dx,
-            cas.diff(du) == trapz(ddu) * dx,
-            cas.diff(EI * ddu) == trapz(dEIddu) * dx,
-            cas.diff(dEIddu) == trapz(ddEIddu) * dx,
-            cas.diff(phi) == trapz(dphi) * dx,
-            cas.diff(dphi) == trapz(ddphi) * dx,
+            np.diff(u) == trapz(du) * dx,
+            np.diff(du) == trapz(ddu) * dx,
+            np.diff(EI * ddu) == trapz(dEIddu) * dx,
+            np.diff(dEIddu) == trapz(ddEIddu) * dx,
+            np.diff(phi) == trapz(dphi) * dx,
+            np.diff(dphi) == trapz(ddphi) * dx,
         ]
     )
 
@@ -140,22 +134,23 @@ if __name__ == "__main__":
     # Failure criterion
     stress_axial = (nominal_diameter + thickness) / 2 * E * ddu
     stress_shear = dphi * G * (nominal_diameter + thickness) / 2
-    # stress_axial = cas.fmax(0, stress_axial)
-    # stress_shear = cas.fmax(0, stress_shear)
-    stress_von_mises_squared = cas.sqrt(
+    # stress_axial = np.fmax(0, stress_axial)
+    # stress_shear = np.fmax(0, stress_shear)
+    stress_von_mises_squared = np.sqrt(
         stress_axial**2 + 0 * stress_shear**2
     )  # Source: https://en.wikipedia.org/wiki/Von_Mises_yield_criterion
     stress = stress_axial
     opti.subject_to([stress / max_allowable_stress < 1])
 
     # Mass
-    volume = cas.sum1(
-        cas.pi
+    volume = np.sum(
+        np.pi
         / 4
         * trapz(
             (nominal_diameter + thickness) ** 2 - (nominal_diameter - thickness) ** 2
         )
-        * dx
+        * dx,
+        axis=0,
     )
     mass = volume * 1600
     opti.minimize(mass)
@@ -166,7 +161,7 @@ if __name__ == "__main__":
     )
 
     # Twist
-    opti.subject_to([phi[-1] * 180 / cas.pi > -3])
+    opti.subject_to([phi[-1] * 180 / np.pi > -3])
 
     p_opts = {}
     s_opts = {}

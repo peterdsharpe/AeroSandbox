@@ -3,11 +3,12 @@ This script generates data used to estimate spar mass as a function of lift forc
 """
 
 ### Imports
-import casadi as cas
+import aerosandbox as asb
+import aerosandbox.numpy as np
 from aerosandbox.structures.legacy.beams import TubeBeam1
 
 ### Set up problem
-opti = cas.Opti()
+opti = asb.Opti()
 mass = opti.parameter()
 span = opti.parameter()
 beam = TubeBeam1(
@@ -40,17 +41,17 @@ opti.subject_to(
     [
         # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
         # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-        beam.du * 180 / cas.pi < 10,
-        beam.du * 180 / cas.pi > -10,
+        beam.du * 180 / np.pi < 10,
+        beam.du * 180 / np.pi > -10,
     ]
 )
 # opti.subject_to([
-#     cas.diff(cas.diff(beam.nominal_diameter)) < 0.002,
-#     cas.diff(cas.diff(beam.nominal_diameter)) > -0.002,
+#     np.diff(np.diff(beam.nominal_diameter)) < 0.002,
+#     np.diff(np.diff(beam.nominal_diameter)) > -0.002,
 # ])
 
 # Manufacturability
-opti.subject_to([cas.diff(beam.nominal_diameter) < 0])
+opti.subject_to([np.diff(beam.nominal_diameter) < 0])
 
 opti.minimize(beam.mass)
 

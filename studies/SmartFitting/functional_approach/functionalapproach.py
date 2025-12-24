@@ -8,7 +8,7 @@ Created on Tue Apr 20 15:02:28 2021
 
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import Callable, List
+from typing import Callable
 from functions import add, multiply, square, ln, sin
 
 """
@@ -54,7 +54,7 @@ my_node.evaluate() = 5
 
 
 class Node:
-    def __init__(self, oper: Callable, inputs: List):
+    def __init__(self, oper: Callable, inputs: list):
         """
         Takes in an operation and a list
         List contains Nodes, IndependentVariable, constants, and opti variables
@@ -141,7 +141,7 @@ class IndependentVariable:
 
 
 def generate_trees(
-    opers: List[Callable],
+    opers: list[Callable],
     size: int,
 ):
     if size <= 0:
@@ -155,8 +155,8 @@ def generate_trees(
         if input_size[i] == 2:
             for j in range(size):
                 for k in generate_trees(opers, j):
-                    for l in generate_trees(opers, (size - 1 - j)):
-                        yield Node(i, (k, l))
+                    for tree_node in generate_trees(opers, (size - 1 - j)):
+                        yield Node(i, (k, tree_node))
 
 
 def best_tree_of_size(x_data, y_data, loss, opers, size):

@@ -57,6 +57,10 @@ def black_box(
     if fd_step_iter is not None:
         fd_options["h_iter"] = fd_step_iter
 
+    # NOTE: This is the ONLY place outside of aerosandbox.numpy where CasADi is directly
+    # imported. This exception is necessary because cas.Callback is a CasADi-specific
+    # feature for creating custom callback functions with finite-difference gradients.
+    # There is no backend-agnostic abstraction for this functionality.
     import casadi as cas
 
     class BlackBox(cas.Callback):

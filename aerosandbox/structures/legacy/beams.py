@@ -1,4 +1,4 @@
-import casadi as cas
+import aerosandbox as asb
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 
@@ -6,7 +6,7 @@ from aerosandbox.common import AeroSandboxObject
 class TubeBeam1(AeroSandboxObject):
     def __init__(
         self,
-        opti: cas.Opti,
+        opti: asb.Opti,
         length,
         points_per_point_load=100,
         E=228e9,  # Pa
@@ -168,30 +168,31 @@ class TubeBeam1(AeroSandboxObject):
         point_load_locations = [load["location"] for load in self.point_loads]
         point_load_locations.insert(0, 0)
         point_load_locations.append(self.length)
-        self.x = cas.vertcat(
-            *[
-                cas.linspace(
+        self.x = np.concatenate(
+            [
+                np.linspace(
                     point_load_locations[i],
                     point_load_locations[i + 1],
                     self.points_per_point_load,
                 )
                 for i in range(len(point_load_locations) - 1)
-            ]
+            ],
+            axis=0,
         )
 
         # Post-process the discretization
         self.n = self.x.shape[0]
-        dx = cas.diff(self.x)
+        dx = np.diff(self.x)
 
         # Add point forces
-        self.point_forces = cas.GenMX_zeros(self.n - 1)
+        self.point_forces = np.zeros(self.n - 1)
         for i in range(len(self.point_loads)):
             load = self.point_loads[i]
             self.point_forces[self.points_per_point_load * (i + 1) - 1] = load["force"]
 
         # Add distributed loads
-        self.force_per_unit_length = cas.GenMX_zeros(self.n)
-        self.moment_per_unit_length = cas.GenMX_zeros(self.n)
+        self.force_per_unit_length = np.zeros(self.n)
+        self.moment_per_unit_length = np.zeros(self.n)
         for load in self.distributed_loads:
             if load["type"] == "uniform":
                 self.force_per_unit_length += load["force"] / self.length
@@ -199,7 +200,7 @@ class TubeBeam1(AeroSandboxObject):
                 load_to_add = (
                     load["force"]
                     / self.length
-                    * (4 / cas.pi * cas.sqrt(1 - (self.x / self.length) ** 2))
+                    * (4 / np.pi * np.sqrt(1 - (self.x / self.length) ** 2))
                 )
                 self.force_per_unit_length += load_to_add
             else:
@@ -208,11 +209,12 @@ class TubeBeam1(AeroSandboxObject):
                 )
 
         # Initialize optimization variables
-        log_nominal_diameter = self.opti.variable(self.n)
-        self.opti.set_initial(log_nominal_diameter, cas.log(self.diameter_guess))
-        self.nominal_diameter = cas.exp(log_nominal_diameter)
+        log_nominal_diameter = self.opti.variable(
+            n_vars=self.n, init_guess=np.log(self.diameter_guess)
+        )
+        self.nominal_diameter = np.exp(log_nominal_diameter)
 
-        self.opti.subject_to([log_nominal_diameter > cas.log(self.thickness)])
+        self.opti.subject_to([log_nominal_diameter > np.log(self.thickness)])
 
         def trapz(x):
             out = (x[:-1] + x[1:]) / 2
@@ -221,8 +223,8 @@ class TubeBeam1(AeroSandboxObject):
             return out
 
         # Mass
-        self.volume = cas.sum1(
-            cas.pi
+        self.volume = np.sum(
+            np.pi
             / 4
             * trapz(
                 (self.nominal_diameter + self.thickness) ** 2
@@ -233,14 +235,14 @@ class TubeBeam1(AeroSandboxObject):
         self.mass = self.volume * self.density
 
         # Mass proxy
-        self.volume_proxy = cas.sum1(
-            cas.pi * trapz(self.nominal_diameter) * dx * self.thickness
+        self.volume_proxy = np.sum(
+            np.pi * trapz(self.nominal_diameter) * dx * self.thickness
         )
         self.mass_proxy = self.volume_proxy * self.density
 
         # Find moments of inertia
         self.I = (
-            cas.pi
+            np.pi
             / 64
             * (  # bending
                 (self.nominal_diameter + self.thickness) ** 4
@@ -248,7 +250,7 @@ class TubeBeam1(AeroSandboxObject):
             )
         )
         self.J = (
-            cas.pi
+            np.pi
             / 32
             * (  # torsion
                 (self.nominal_diameter + self.thickness) ** 4
@@ -258,22 +260,18 @@ class TubeBeam1(AeroSandboxObject):
 
         if self.bending:
             # Set up derivatives
-            self.u = 1 * self.opti.variable(self.n)
-            self.du = 0.1 * self.opti.variable(self.n)
-            self.ddu = 0.01 * self.opti.variable(self.n)
-            self.dEIddu = 1 * self.opti.variable(self.n)
-            self.opti.set_initial(self.u, 0)
-            self.opti.set_initial(self.du, 0)
-            self.opti.set_initial(self.ddu, 0)
-            self.opti.set_initial(self.dEIddu, 0)
+            self.u = self.opti.variable(n_vars=self.n, init_guess=0, scale=1)
+            self.du = self.opti.variable(n_vars=self.n, init_guess=0, scale=0.1)
+            self.ddu = self.opti.variable(n_vars=self.n, init_guess=0, scale=0.01)
+            self.dEIddu = self.opti.variable(n_vars=self.n, init_guess=0, scale=1)
 
             # Define derivatives
             self.opti.subject_to(
                 [
-                    cas.diff(self.u) == trapz(self.du) * dx,
-                    cas.diff(self.du) == trapz(self.ddu) * dx,
-                    cas.diff(self.E * self.I * self.ddu) == trapz(self.dEIddu) * dx,
-                    cas.diff(self.dEIddu)
+                    np.diff(self.u) == trapz(self.du) * dx,
+                    np.diff(self.du) == trapz(self.ddu) * dx,
+                    np.diff(self.E * self.I * self.ddu) == trapz(self.dEIddu) * dx,
+                    np.diff(self.dEIddu)
                     == trapz(self.force_per_unit_length) * dx + self.point_forces,
                 ]
             )
@@ -381,7 +379,7 @@ class TubeBeam1(AeroSandboxObject):
 
 
 if __name__ == "__main__":
-    opti = cas.Opti()
+    opti = asb.Opti()
     beam = TubeBeam1(
         opti=opti,
         length=60 / 2,
@@ -409,18 +407,18 @@ if __name__ == "__main__":
         [
             # beam.u[-1] < 2,  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
             # beam.u[-1] > -2  # Source: http://web.mit.edu/drela/Public/web/hpa/hpa_structure.pdf
-            beam.du * 180 / cas.pi < 10,
-            beam.du * 180 / cas.pi > -10,
+            beam.du * 180 / np.pi < 10,
+            beam.du * 180 / np.pi > -10,
         ]
     )
     opti.subject_to(
         [
-            cas.diff(cas.diff(beam.nominal_diameter)) < 0.001,
-            cas.diff(cas.diff(beam.nominal_diameter)) > -0.001,
+            np.diff(np.diff(beam.nominal_diameter)) < 0.001,
+            np.diff(np.diff(beam.nominal_diameter)) > -0.001,
         ]
     )
 
-    # opti.minimize(cas.sqrt(beam.mass))
+    # opti.minimize(np.sqrt(beam.mass))
     opti.minimize(beam.mass)
     # opti.minimize(beam.mass ** 2)
     # opti.minimize(beam.mass_proxy)
