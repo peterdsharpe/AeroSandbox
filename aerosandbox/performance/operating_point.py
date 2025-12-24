@@ -4,18 +4,19 @@ import aerosandbox.numpy as np
 from typing import Sequence
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class OperatingPoint(AeroSandboxObject):
     def __init__(
         self,
         atmosphere: Atmosphere = Atmosphere(altitude=0),
-        velocity: float = 1.0,
-        alpha: float = 0.0,
-        beta: float = 0.0,
-        p: float = 0.0,
-        q: float = 0.0,
-        r: float = 0.0,
+        velocity: Vectorizable = 1.0,
+        alpha: Vectorizable = 0.0,
+        beta: Vectorizable = 0.0,
+        p: Vectorizable = 0.0,
+        q: Vectorizable = 0.0,
+        r: Vectorizable = 0.0,
     ):
         """
         An object that represents the instantaneous aerodynamic flight conditions of an aircraft.

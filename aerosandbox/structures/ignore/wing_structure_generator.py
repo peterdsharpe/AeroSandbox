@@ -1,7 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import cadquery as cq
-from typing import List, Union
 from sortedcontainers import SortedDict
 
 
@@ -17,7 +16,7 @@ class WingStructureGenerator:
         self.minimum_airfoil_TE_thickness_rel = minimum_airfoil_TE_thickness_rel
 
         ### Compute some span properties which are used for locating ribs
-        self._sectional_spans: List[float] = wing.span(_sectional=True)
+        self._sectional_spans: list[float] = wing.span(_sectional=True)
         self._cumulative_spans_up_to_section = np.concatenate(
             ([0], np.cumsum(self._sectional_spans))
         )
@@ -30,7 +29,7 @@ class WingStructureGenerator:
 
         ### Set up data structures for geometry
         self.ribs: SortedDict[cq.Workplane] = SortedDict()
-        self.spars: List[cq.Workplane] = []
+        self.spars: list[cq.Workplane] = []
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.wing})"
@@ -40,7 +39,7 @@ class WingStructureGenerator:
     def add_ribs_from_section_span_fractions(
         self,
         section_index: int,
-        section_span_fractions: Union[float, int, List[float], np.ndarray],
+        section_span_fractions: float | int | list[float] | np.ndarray,
         rib_thickness: float = None,
     ):
         if rib_thickness is None:
@@ -82,7 +81,7 @@ class WingStructureGenerator:
             )
 
     def add_ribs_from_xsecs(
-        self, indexes: List[int] = None, rib_thickness: float = None
+        self, indexes: list[int] = None, rib_thickness: float = None
     ):
         if rib_thickness is None:
             rib_thickness = self.default_rib_thickness
@@ -117,7 +116,7 @@ class WingStructureGenerator:
 
     def add_ribs_from_span_fractions(
         self,
-        span_fractions: Union[float, List[float], np.ndarray] = np.linspace(0, 1, 10),
+        span_fractions: float | list[float] | np.ndarray = np.linspace(0, 1, 10),
         rib_thickness: float = None,
     ):
         ### Handle span_fractions if it's not an iterable

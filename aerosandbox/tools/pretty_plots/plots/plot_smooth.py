@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from typing import Tuple
 from scipy import interpolate
 
 
@@ -12,7 +11,7 @@ def plot_smooth(
     resample_resolution: int = 500,
     drop_nans: bool = False,
     **kwargs,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Plots a curve that interpolates a 2D dataset. Same as matplotlib.pyplot.plot(), with the following changes:
         * uses B-splines to draw a smooth curve rather than a jagged polyline

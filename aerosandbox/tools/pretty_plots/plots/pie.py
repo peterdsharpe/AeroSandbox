@@ -1,18 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import Union, Callable, List
+from typing import Callable
 from aerosandbox.tools.string_formatting import eng_string
 import seaborn as sns
 
 
 def pie(
-    values: Union[np.ndarray, List[float]],
-    names: List[str],
-    colors: Union[np.ndarray, List[str]] = None,
+    values: np.ndarray | list[float],
+    names: list[str],
+    colors: np.ndarray | list[str] = None,
     label_format: Callable[[str, float, float], str] = lambda name,
     value,
     percentage: name,
-    sort_by: Union[np.ndarray, List[float], str, None] = None,
+    sort_by: np.ndarray | list[float] | str | None = None,
     startangle: float = 0.0,
     center_text: str = None,
     x_labels: float = 1.25,

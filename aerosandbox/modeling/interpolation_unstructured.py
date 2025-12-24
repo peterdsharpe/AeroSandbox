@@ -139,7 +139,7 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
                     np.min(x_data[k]), np.max(x_data[k]), v
                 )
 
-        x_data_coordinates: Dict = x_data_resample
+        x_data_coordinates: dict = x_data_resample
 
         x_data_structured_values = [
             xi.flatten()

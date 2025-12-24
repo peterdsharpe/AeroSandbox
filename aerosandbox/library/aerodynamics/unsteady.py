@@ -1,5 +1,5 @@
 import aerosandbox.numpy as np
-from typing import Union, Callable
+from typing import Callable
 from scipy.integrate import quad
 
 
@@ -27,8 +27,8 @@ from scipy.integrate import quad
 
 
 def calculate_reduced_time(
-    time: Union[float, np.ndarray], velocity: Union[float, np.ndarray], chord: float
-) -> Union[float, np.ndarray]:
+    time: float | np.ndarray, velocity: float | np.ndarray, chord: float
+) -> float | np.ndarray:
     """
     Calculates reduced time from time in seconds and velocity history in m/s.
     For constant velocity it reduces to s = 2*U*t/c
@@ -58,7 +58,7 @@ def calculate_reduced_time(
         return 2 / chord * reduced_time
 
 
-def wagners_function(reduced_time: Union[float, np.ndarray]):
+def wagners_function(reduced_time: float | np.ndarray):
     """
     A commonly used approximation to Wagner's function
     (Jones, R.T. The Unsteady Lift of a Finite Wing; Technical Report NACA TN-682; NACA: Washington, DC, USA, 1939)
@@ -72,7 +72,7 @@ def wagners_function(reduced_time: Union[float, np.ndarray]):
     return wagner
 
 
-def kussners_function(reduced_time: Union[float, np.ndarray]):
+def kussners_function(reduced_time: float | np.ndarray):
     """
     A commonly used approximation to Kussner's function (Sears and Sparks 1941)
 
@@ -86,7 +86,7 @@ def kussners_function(reduced_time: Union[float, np.ndarray]):
 
 
 def indicial_pitch_response(
-    reduced_time: Union[float, np.ndarray],
+    reduced_time: float | np.ndarray,
     angle_of_attack: float,  # In degrees
 ):
     """
@@ -106,7 +106,7 @@ def indicial_pitch_response(
 
 
 def indicial_gust_response(
-    reduced_time: Union[float, np.ndarray],
+    reduced_time: float | np.ndarray,
     gust_velocity: float,
     plate_velocity: float,
     angle_of_attack: float = 0,  # In degrees
@@ -142,7 +142,7 @@ def calculate_lift_due_to_transverse_gust(
     reduced_time: np.ndarray,
     gust_velocity_profile: Callable[[float], float],
     plate_velocity: float,
-    angle_of_attack: Union[float, Callable[[float], float]] = 0,  # In Degrees
+    angle_of_attack: float | Callable[[float], float] = 0,  # In Degrees
     chord: float = 1,
 ):
     """
@@ -153,7 +153,7 @@ def calculate_lift_due_to_transverse_gust(
         reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
         gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
         plate_velocity (float) :The velocity by which the flat plate enters the gust
-        angle_of_attack (Union[float,Callable[[float],float]]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
+        angle_of_attack (float | Callable[[float], float]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
         chord (float) : The chord of the plate in meters
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
@@ -193,7 +193,7 @@ def calculate_lift_due_to_transverse_gust(
 
 def calculate_lift_due_to_pitching_profile(
     reduced_time: np.ndarray,
-    angle_of_attack: Union[Callable[[float], float], float],  # In degrees
+    angle_of_attack: Callable[[float] | float, float],  # In degrees
 ):
     """
     Calculates the duhamel superposition integral of Wagner's problem.
@@ -269,7 +269,7 @@ def pitching_through_transverse_gust(
     reduced_time: np.ndarray,
     gust_velocity_profile: Callable[[float], float],
     plate_velocity: float,
-    angle_of_attack: Union[Callable[[float], float], float],  # In degrees
+    angle_of_attack: Callable[[float] | float, float],  # In degrees
     chord: float = 1,
 ):
     """
@@ -292,7 +292,7 @@ def pitching_through_transverse_gust(
         reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
         gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
         plate_velocity (float) :The velocity by which the flat plate enters the gust
-        angle_of_attack (Union[float,Callable[[float],float]]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
+        angle_of_attack (float | Callable[[float], float]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
         chord (float) : The chord of the plate in meters
 
     Returns:

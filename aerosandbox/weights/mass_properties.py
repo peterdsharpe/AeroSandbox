@@ -2,6 +2,7 @@ import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from typing import Any
 from aerosandbox.tools.string_formatting import trim_string
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class MassProperties(AeroSandboxObject):
@@ -32,16 +33,16 @@ class MassProperties(AeroSandboxObject):
 
     def __init__(
         self,
-        mass: float | np.ndarray | None = None,
-        x_cg: float | np.ndarray = 0.0,
-        y_cg: float | np.ndarray = 0.0,
-        z_cg: float | np.ndarray = 0.0,
-        Ixx: float | np.ndarray = 0.0,
-        Iyy: float | np.ndarray = 0.0,
-        Izz: float | np.ndarray = 0.0,
-        Ixy: float | np.ndarray = 0.0,
-        Iyz: float | np.ndarray = 0.0,
-        Ixz: float | np.ndarray = 0.0,
+        mass: Vectorizable | None = None,
+        x_cg: Vectorizable = 0.0,
+        y_cg: Vectorizable = 0.0,
+        z_cg: Vectorizable = 0.0,
+        Ixx: Vectorizable = 0.0,
+        Iyy: Vectorizable = 0.0,
+        Izz: Vectorizable = 0.0,
+        Ixy: Vectorizable = 0.0,
+        Iyz: Vectorizable = 0.0,
+        Ixz: Vectorizable = 0.0,
     ):
         """
         Initializes a new MassProperties object.

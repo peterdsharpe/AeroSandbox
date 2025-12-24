@@ -1,5 +1,5 @@
 import warnings
-from typing import Union, Iterable, List, Tuple
+from typing import Iterable
 
 from tqdm import tqdm
 
@@ -82,13 +82,13 @@ def estimate_noise_standard_deviation(
 def bootstrap_fits(
     x: np.ndarray,
     y: np.ndarray,
-    x_noise_stdev: Union[None, float] = 0.0,
-    y_noise_stdev: Union[None, float] = None,
+    x_noise_stdev: None | float = 0.0,
+    y_noise_stdev: None | float = None,
     n_bootstraps: int = 2000,
-    fit_points: Union[int, Iterable[float], None] = 300,
+    fit_points: int | Iterable[float] | None = 300,
     spline_degree: int = 3,
     normalize: bool = None,
-) -> Union[Tuple[np.ndarray, np.ndarray], List[Spline]]:
+) -> tuple[np.ndarray, np.ndarray] | list[Spline]:
     """
     Bootstraps a time-series dataset and fits splines to each bootstrap resample.
 

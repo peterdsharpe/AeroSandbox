@@ -1,14 +1,13 @@
 from aerosandbox.tools import inspect_tools
-from typing import Union, Tuple, List
 import aerosandbox.numpy as np
 import warnings
 
 
 def qp(
-    *args: Tuple[Union[np.ndarray, List]],
+    *args: tuple[np.ndarray | list],
     backend="plotly",
     show=True,
-    plotly_renderer: Union[str, None] = "browser",
+    plotly_renderer: str | None = "browser",
     orthographic=True,
     stacklevel=1,
 ) -> None:

@@ -4,18 +4,18 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
 from aerosandbox.modeling.splines.hermite import (
     cosine_hermite_patch,
 )
-from typing import Union, Dict, List
 import warnings
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Scalar, Vector
 
 
 class KulfanAirfoil(Airfoil):
     def __init__(
         self,
         name: str = "Untitled",
-        lower_weights: np.ndarray = None,
-        upper_weights: np.ndarray = None,
-        leading_edge_weight: float = 0.0,
-        TE_thickness: float = 0.0,
+        lower_weights: ArrayLike | None = None,
+        upper_weights: ArrayLike | None = None,
+        leading_edge_weight: Scalar = 0.0,
+        TE_thickness: Scalar = 0.0,
         N1: float = 0.5,
         N2: float = 1.0,
     ):
@@ -120,7 +120,7 @@ class KulfanAirfoil(Airfoil):
     def normalize(
         self,
         return_dict: bool = False,
-    ) -> Union["KulfanAirfoil", Dict[str, Union["KulfanAirfoil", float]]]:
+    ) -> "KulfanAirfoil | dict[str, KulfanAirfoil | float]":
         """
         Returns a copy of the Airfoil with a new set of `coordinates`, such that:
             - The leading edge (LE) is at (0, 0)
@@ -186,16 +186,16 @@ class KulfanAirfoil(Airfoil):
 
     def get_aero_from_neuralfoil(
         self,
-        alpha: Union[float, np.ndarray],
-        Re: Union[float, np.ndarray],
-        mach: Union[float, np.ndarray] = 0.0,
-        n_crit: Union[float, np.ndarray] = 9.0,
-        xtr_upper: Union[float, np.ndarray] = 1.0,
-        xtr_lower: Union[float, np.ndarray] = 1.0,
+        alpha: Vectorizable,
+        Re: Vectorizable,
+        mach: Vectorizable = 0.0,
+        n_crit: Vectorizable = 9.0,
+        xtr_upper: Vectorizable = 1.0,
+        xtr_lower: Vectorizable = 1.0,
         model_size: str = "large",
         control_surfaces: list["ControlSurface"] | None = None,
         include_360_deg_effects: bool = True,
-    ) -> Dict[str, Union[float, np.ndarray]]:
+    ) -> dict[str, Vectorizable]:
         ### Validate inputs
         if (np.length(self.lower_weights) != 8) or (np.length(self.upper_weights) != 8):
             raise NotImplementedError(
@@ -469,7 +469,7 @@ class KulfanAirfoil(Airfoil):
 
     def upper_coordinates(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(1, 0, 101),
+        x_over_c: float | np.ndarray = np.linspace(1, 0, 101),
     ) -> np.ndarray:
         x_over_c = np.array(x_over_c)
 
@@ -525,7 +525,7 @@ class KulfanAirfoil(Airfoil):
 
     def lower_coordinates(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+        x_over_c: float | np.ndarray = np.linspace(0, 1, 101),
     ) -> np.ndarray:
         x_over_c = np.array(x_over_c)
 
@@ -575,8 +575,8 @@ class KulfanAirfoil(Airfoil):
 
     def local_camber(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-    ) -> Union[float, np.ndarray]:
+        x_over_c: float | np.ndarray = np.linspace(0, 1, 101),
+    ) -> float | np.ndarray:
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
@@ -587,8 +587,8 @@ class KulfanAirfoil(Airfoil):
 
     def local_thickness(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-    ) -> Union[float, np.ndarray]:
+        x_over_c: float | np.ndarray = np.linspace(0, 1, 101),
+    ) -> float | np.ndarray:
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
@@ -720,7 +720,7 @@ class KulfanAirfoil(Airfoil):
 
     def blend_with_another_airfoil(
         self,
-        airfoil: Union["KulfanAirfoil", Airfoil],
+        airfoil: "KulfanAirfoil | Airfoil",
         blend_fraction: float = 0.5,
     ) -> "KulfanAirfoil":
         if not isinstance(airfoil, KulfanAirfoil):

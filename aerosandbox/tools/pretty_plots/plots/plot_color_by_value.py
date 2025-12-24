@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from typing import Tuple
 
 
 def plot_color_by_value(
@@ -12,7 +11,7 @@ def plot_color_by_value(
     cmap="turbo",
     colorbar: bool = False,
     colorbar_label: str = None,
-    clim: Tuple[float, float] = None,
+    clim: tuple[float, float] = None,
     **kwargs,
 ):
     """

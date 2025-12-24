@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from typing import Dict, Union, Callable, List
+from typing import Callable
 from aerosandbox.tools.string_formatting import eng_string
 
 
 def contour(
     *args,
-    levels: Union[int, List, np.ndarray] = 31,
+    levels: int | list | np.ndarray = 31,
     colorbar: bool = True,
     linelabels: bool = True,
     cmap=None,
@@ -16,7 +16,7 @@ def contour(
     linecolor="k",
     linewidths: float = 0.5,
     extendrect: bool = True,
-    linelabels_format: Union[str, Callable[[float], str]] = eng_string,
+    linelabels_format: str | Callable[[float], str] = eng_string,
     linelabels_fontsize: float = 8,
     max_side_length_nondim: float = np.inf,
     colorbar_label: str = None,
@@ -25,11 +25,11 @@ def contour(
     z_log_scale: bool = False,
     mask: np.ndarray = None,
     drop_nans: bool = None,
-    # smooth: Union[bool, int] = False, # TODO implement
-    contour_kwargs: Dict = None,
-    contourf_kwargs: Dict = None,
-    colorbar_kwargs: Dict = None,
-    linelabels_kwargs: Dict = None,
+    # smooth: bool | int = False, # TODO implement
+    contour_kwargs: dict = None,
+    contourf_kwargs: dict = None,
+    colorbar_kwargs: dict = None,
+    linelabels_kwargs: dict = None,
     **kwargs,
 ):
     """

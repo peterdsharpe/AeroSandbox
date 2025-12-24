@@ -1,4 +1,4 @@
-from typing import Union, Iterable, Tuple, Optional, Callable
+from typing import Iterable, Callable
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -8,14 +8,14 @@ from aerosandbox.tools.statistics import time_series_uncertainty_quantification 
 def plot_with_bootstrapped_uncertainty(
     x: np.ndarray,
     y: np.ndarray,
-    ci: Optional[Union[float, Iterable[float], np.ndarray]] = 0.95,
-    x_stdev: Union[None, float] = 0.0,
-    y_stdev: Union[None, float] = None,
-    color: Optional[Union[str, Tuple[float]]] = None,
+    ci: float | Iterable[float] | np.ndarray | None = 0.95,
+    x_stdev: None | float = 0.0,
+    y_stdev: None | float = None,
+    color: str | tuple[float] | None = None,
     draw_data: bool = True,
-    label_line: Union[bool, str] = "Best Estimate",
+    label_line: bool | str = "Best Estimate",
     label_ci: bool = True,
-    label_data: Union[bool, str] = "Raw Data",
+    label_data: bool | str = "Raw Data",
     line_alpha: float = 0.9,
     ci_to_alpha_mapping: Callable[[float], float] = lambda ci: 0.8 * (1 - ci) ** 0.4,
     n_bootstraps=2000,

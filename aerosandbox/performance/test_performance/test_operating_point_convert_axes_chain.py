@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import List
 import copy
 import pytest
 
@@ -8,7 +7,7 @@ vector = [1, 2, 3]
 op_point = asb.OperatingPoint(alpha=10, beta=5)
 
 
-def chain_conversion(axes: List[str] = None):
+def chain_conversion(axes: list[str] = None):
     if axes is None:
         axes = ["geometry", "body", "geometry"]
 

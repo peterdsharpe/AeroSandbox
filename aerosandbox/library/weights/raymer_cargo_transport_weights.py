@@ -2,7 +2,6 @@ import aerosandbox as asb
 import aerosandbox.numpy as np
 import aerosandbox.tools.units as u
 from .raymer_fudge_factors import advanced_composites
-from typing import Union
 
 
 # From Raymer, Aircraft Design: A Conceptual Approach, 5th Ed.
@@ -546,7 +545,7 @@ def mass_instruments(
     fuselage: asb.Fuselage,
     main_wing: asb.Wing,
     n_engines: int,
-    n_crew: Union[int, float],
+    n_crew: int | float,
     engine_is_reciprocating: bool = False,
     engine_is_turboprop: bool = False,
 ):
@@ -665,7 +664,7 @@ def mass_avionics(
 
 
 def mass_furnishings(
-    n_crew: Union[int, float],
+    n_crew: int | float,
     mass_cargo: float,
     fuselage: asb.Fuselage,
 ):

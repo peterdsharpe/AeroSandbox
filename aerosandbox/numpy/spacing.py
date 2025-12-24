@@ -1,9 +1,10 @@
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.typing import Vectorizable
 
 
-def linspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
+def linspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50):
     """
     Returns evenly spaced numbers over a specified interval.
 
@@ -15,7 +16,7 @@ def linspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
         return _cas.linspace(start, stop, num)
 
 
-def cosspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
+def cosspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50):
     """
     Makes a cosine-spaced vector.
 
@@ -41,8 +42,8 @@ def cosspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
 
 
 def sinspace(
-    start: float = 0.0,
-    stop: float = 1.0,
+    start: Vectorizable = 0.0,
+    stop: Vectorizable = 1.0,
     num: int = 50,
     reverse_spacing: bool = False,
 ):
@@ -80,7 +81,7 @@ def sinspace(
     return spaced_array
 
 
-def logspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
+def logspace(start: Vectorizable = 0.0, stop: Vectorizable = 1.0, num: int = 50):
     """
     Return numbers spaced evenly on a log scale.
 
@@ -92,7 +93,7 @@ def logspace(start: float = 0.0, stop: float = 1.0, num: int = 50):
         return 10 ** linspace(start, stop, num)
 
 
-def geomspace(start: float = 1.0, stop: float = 10.0, num: int = 50):
+def geomspace(start: Vectorizable = 1.0, stop: Vectorizable = 10.0, num: int = 50):
     """
     Return numbers spaced evenly on a log scale (a geometric progression).
 

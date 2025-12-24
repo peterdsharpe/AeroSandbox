@@ -2,7 +2,6 @@ import matplotlib
 import mpl_toolkits
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from typing import Dict, Tuple
 
 preset_view_angles = {
     # Given in the form:
@@ -26,12 +25,12 @@ def figure3d(
     nrows: int = 1,
     ncols: int = 1,
     orthographic: bool = True,
-    box_aspect: Tuple[float] = None,
+    box_aspect: tuple[float] = None,
     adjust_colors: bool = True,
     computed_zorder: bool = True,
-    ax_kwargs: Dict = None,
+    ax_kwargs: dict = None,
     **fig_kwargs,
-) -> Tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
+) -> tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
     """
     Creates a new 3D figure. Args and kwargs are passed into matplotlib.pyplot.figure().
 
