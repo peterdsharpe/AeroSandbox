@@ -1,5 +1,6 @@
 from aerosandbox.common import ExplicitAnalysis
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import ConcreteVectorizable, ConcreteArray
 import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
@@ -265,7 +266,7 @@ class XFoil(ExplicitAnalysis):
         self,
         run_command: str,
         read_bl_data_from: str | None = None,
-    ) -> dict[str, np.ndarray]:
+    ) -> dict[str, ConcreteArray]:
         """
         Private function to run XFoil.
 
@@ -597,9 +598,9 @@ class XFoil(ExplicitAnalysis):
 
     def alpha(
         self,
-        alpha: float | np.ndarray,
+        alpha: ConcreteVectorizable,
         start_at: float | None = 0,
-    ) -> dict[str, np.ndarray]:
+    ) -> dict[str, ConcreteArray]:
         """
         Execute XFoil at a given angle of attack, or at a sequence of angles of attack.
 
@@ -675,9 +676,9 @@ class XFoil(ExplicitAnalysis):
 
     def cl(
         self,
-        cl: float | np.ndarray,
+        cl: ConcreteVectorizable,
         start_at: float | None = 0,
-    ) -> dict[str, np.ndarray]:
+    ) -> dict[str, ConcreteArray]:
         """
         Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
 

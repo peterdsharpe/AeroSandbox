@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from typing import Callable
 from scipy.integrate import quad
 
@@ -27,8 +28,8 @@ from scipy.integrate import quad
 
 
 def calculate_reduced_time(
-    time: float | np.ndarray, velocity: float | np.ndarray, chord: float
-) -> float | np.ndarray:
+    time: Vectorizable, velocity: Vectorizable, chord: float
+) -> Vectorizable:
     """
     Calculates reduced time from time in seconds and velocity history in m/s.
     For constant velocity it reduces to s = 2*U*t/c
@@ -58,7 +59,7 @@ def calculate_reduced_time(
         return 2 / chord * reduced_time
 
 
-def wagners_function(reduced_time: float | np.ndarray):
+def wagners_function(reduced_time: Vectorizable):
     """
     A commonly used approximation to Wagner's function
     (Jones, R.T. The Unsteady Lift of a Finite Wing; Technical Report NACA TN-682; NACA: Washington, DC, USA, 1939)
@@ -72,7 +73,7 @@ def wagners_function(reduced_time: float | np.ndarray):
     return wagner
 
 
-def kussners_function(reduced_time: float | np.ndarray):
+def kussners_function(reduced_time: Vectorizable):
     """
     A commonly used approximation to Kussner's function (Sears and Sparks 1941)
 
@@ -86,7 +87,7 @@ def kussners_function(reduced_time: float | np.ndarray):
 
 
 def indicial_pitch_response(
-    reduced_time: float | np.ndarray,
+    reduced_time: Vectorizable,
     angle_of_attack: float,  # In degrees
 ):
     """
@@ -106,7 +107,7 @@ def indicial_pitch_response(
 
 
 def indicial_gust_response(
-    reduced_time: float | np.ndarray,
+    reduced_time: Vectorizable,
     gust_velocity: float,
     plate_velocity: float,
     angle_of_attack: float = 0,  # In degrees

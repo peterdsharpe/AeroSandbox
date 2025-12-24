@@ -1,13 +1,14 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from typing import Literal
 
 
 def CDA_control_linkage(
-    Re_l: float | np.ndarray,
-    linkage_length: float | np.ndarray,
+    Re_l: Vectorizable,
+    linkage_length: Vectorizable,
     is_covered: bool | np.ndarray = False,
     is_top: bool | np.ndarray = False,
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
     Computes the drag area (CDA) of a typical control usage as used on a well-manufactured RC airplane.
 

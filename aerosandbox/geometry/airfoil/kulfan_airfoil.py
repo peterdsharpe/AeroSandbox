@@ -472,7 +472,7 @@ class KulfanAirfoil(Airfoil):
 
     def upper_coordinates(
         self,
-        x_over_c: float | np.ndarray = np.linspace(1, 0, 101),
+        x_over_c: Vectorizable = np.linspace(1, 0, 101),
     ) -> np.ndarray:
         x_over_c = np.array(x_over_c)
 
@@ -528,7 +528,7 @@ class KulfanAirfoil(Airfoil):
 
     def lower_coordinates(
         self,
-        x_over_c: float | np.ndarray = np.linspace(0, 1, 101),
+        x_over_c: Vectorizable = np.linspace(0, 1, 101),
     ) -> np.ndarray:
         x_over_c = np.array(x_over_c)
 
@@ -578,8 +578,8 @@ class KulfanAirfoil(Airfoil):
 
     def local_camber(
         self,
-        x_over_c: float | np.ndarray = np.linspace(0, 1, 101),
-    ) -> float | np.ndarray:
+        x_over_c: Vectorizable = np.linspace(0, 1, 101),
+    ) -> Vectorizable:
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
@@ -590,8 +590,8 @@ class KulfanAirfoil(Airfoil):
 
     def local_thickness(
         self,
-        x_over_c: float | np.ndarray = np.linspace(0, 1, 101),
-    ) -> float | np.ndarray:
+        x_over_c: Vectorizable = np.linspace(0, 1, 101),
+    ) -> Vectorizable:
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 

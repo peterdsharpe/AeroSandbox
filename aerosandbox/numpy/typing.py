@@ -1,22 +1,31 @@
 """
 Type aliases for AeroSandbox's numpy-like interface.
 
-These types account for the fact that AeroSandbox functions can accept both
-standard numeric types (int, float, np.ndarray) and CasADi symbolic types
-(MX, DM, SX) for use in optimization.
+## Design Philosophy
 
-This module is the ONLY place outside of aerosandbox.numpy internals where
-CasADi should be directly imported for typing purposes.
+AeroSandbox operates in two computational modes:
 
-## Type Semantics:
+1. **Hybrid Mode**: Functions that work with either NumPy or CasADi,
+   dispatched at runtime based on input types. Use "hybrid types" here.
 
-- **Scalar**: A single numeric value (int, float, or 0-d CasADi type)
-- **Vector**: A 1D array (ndarray or CasADi type with vector shape)
-- **Array**: Any-dimensional array (ndarray or CasADi type)
-- **Vectorizable**: For parameters that accept EITHER scalar OR array,
-  where the function will broadcast/vectorize element-wise.
-  Example: OperatingPoint.velocity can be a single value or an array
-  of values that broadcast with other parameters.
+2. **Concrete Mode**: Functions that require actual numeric values
+   (external tools like XFoil/AVL, file I/O, plotting). Use "concrete types" here.
+
+## Type Naming Conventions
+
+- Types WITHOUT prefix: Hybrid (NumPy OR CasADi)
+  - `Scalar`, `Vector`, `Array`, `Vectorizable`
+
+- Types WITH `Concrete` prefix: NumPy-only (for I/O, external tools)
+  - `ConcreteScalar`, `ConcreteVector`, `ConcreteArray`
+
+- Types WITH `Like` suffix: Permissive input types (accept sequences)
+  - `ArrayLike`, `VectorLike`, `PointLike`
+
+## Internal Types
+
+- `CasADiType`: Internal only - should not be used outside aerosandbox.numpy.
+  This exists to keep the library backend-agnostic at the API level.
 """
 
 from typing import Sequence
@@ -24,38 +33,43 @@ import numpy as _onp
 import casadi as _cas
 
 # =============================================================================
-# Core CasADi types
+# Core CasADi types (internal use only)
 # =============================================================================
 CasADiType = _cas.MX | _cas.DM | _cas.SX
-"""Any CasADi array type (MX, DM, or SX)."""
+"""Any CasADi array type (MX, DM, or SX). Internal use only."""
 
 # =============================================================================
-# Scalar types - for truly scalar values
+# HYBRID TYPES - For bridge-layer functions (NumPy OR CasADi)
 # =============================================================================
-Scalar = int | float | _onp.floating | CasADiType
-"""A scalar numeric value: int, float, numpy scalar, or CasADi scalar."""
 
-# =============================================================================
-# Array types - for array values
-# =============================================================================
+Scalar = int | float | _onp.integer | _onp.floating | CasADiType
+"""A scalar numeric value: Python int/float, numpy scalar, or CasADi scalar.
+
+Use when a single numeric value is expected, but may be symbolic in optimization.
+"""
+
 Vector = _onp.ndarray | CasADiType
-"""A 1D array: NumPy ndarray or CasADi array. Semantically a vector."""
+"""A 1D numeric array (vector): NumPy 1D ndarray or CasADi column vector.
+
+Semantically indicates 1D data. Note that both NumPy and CasADi arrays
+are the underlying type; this alias communicates dimensional intent.
+"""
 
 Array = _onp.ndarray | CasADiType
-"""An N-dimensional array: NumPy ndarray or CasADi array."""
+"""An N-dimensional numeric array: NumPy ndarray or CasADi array.
 
-# =============================================================================
-# Vectorizable types - for element-wise broadcasting parameters
-# =============================================================================
-# Use these for parameters that can be EITHER scalar OR array,
-# where the function broadcasts/vectorizes element-wise.
-Vectorizable = int | float | _onp.floating | _onp.ndarray | CasADiType
+Use when an array of any dimensionality is expected.
+Note: CasADi is limited to 2D arrays; NumPy can be N-dimensional.
 """
-A value that can be scalar or array for element-wise vectorization.
 
-Use for parameters like:
+Vectorizable = int | float | _onp.integer | _onp.floating | _onp.ndarray | CasADiType
+"""A value that broadcasts element-wise: scalar OR array, NumPy OR CasADi.
+
+Use for parameters that accept EITHER scalar OR array, where the function
+will broadcast/vectorize element-wise. Examples:
+
 - OperatingPoint: velocity, alpha, beta, p, q, r
-- Atmosphere: altitude  
+- Atmosphere: altitude
 - MassProperties: mass, x_cg, y_cg, z_cg, Ixx, etc.
 - Dynamics state variables: x_e, z_e, speed, gamma, etc.
 
@@ -64,13 +78,74 @@ or arrays of the same shape for vectorized/broadcast calculations.
 """
 
 # =============================================================================
-# Input types for list/sequence parameters
+# CONCRETE TYPES - For external tools, I/O, plotting (NumPy only)
 # =============================================================================
-PointLike = Sequence[float] | _onp.ndarray | CasADiType
-"""A 3D point: [x, y, z] as sequence, ndarray, or CasADi array."""
+
+ConcreteScalar = int | float | _onp.integer | _onp.floating
+"""A concrete scalar value: Python int/float or numpy scalar. No CasADi.
+
+Use for:
+- External tool inputs (XFoil, AVL, MSES)
+- File I/O
+- Matplotlib plotting
+- Anywhere concrete numeric values are required
+"""
+
+ConcreteVector = _onp.ndarray
+"""A concrete 1D NumPy array. No CasADi.
+
+Semantically indicates 1D data in concrete-only contexts.
+"""
+
+ConcreteArray = _onp.ndarray
+"""A concrete NumPy array. No CasADi.
+
+Use for:
+- External tool inputs/outputs
+- Interpolation lookup tables (points, values in interpn)
+- File I/O
+- Matplotlib plotting
+"""
+
+ConcreteVectorizable = int | float | _onp.integer | _onp.floating | _onp.ndarray
+"""A concrete value that broadcasts element-wise: scalar OR array, NumPy only.
+
+The NumPy-only equivalent of Vectorizable. Use for external tool parameters
+that accept either scalars or arrays but cannot accept CasADi types.
+
+Examples:
+- MSES: alpha, Re, mach parameters
+- Any external tool that broadcasts over multiple operating points
+"""
+
+# =============================================================================
+# INPUT TYPES - Permissive types for function parameters (hybrid)
+# =============================================================================
 
 VectorLike = Sequence[float] | Sequence[int] | _onp.ndarray | CasADiType
-"""Input for vector parameters: sequence, ndarray, or CasADi array."""
+"""Permissive input for vector parameters: sequence, ndarray, or CasADi.
+
+Use for function INPUTS that will be converted to Vector internally.
+"""
 
 ArrayLike = Sequence[float] | Sequence[int] | _onp.ndarray | CasADiType
-"""Input for array parameters: sequence, ndarray, or CasADi array."""
+"""Permissive input for array parameters: sequence, ndarray, or CasADi.
+
+Use for function INPUTS that will be converted to Array internally.
+"""
+
+PointLike = Sequence[float] | _onp.ndarray | CasADiType
+"""A 3D point [x, y, z] as sequence, ndarray, or CasADi array.
+
+Use for spatial point inputs in geometry functions.
+"""
+
+# =============================================================================
+# INPUT TYPES - Permissive types for function parameters (concrete only)
+# =============================================================================
+
+ConcreteArrayLike = Sequence[float] | Sequence[int] | _onp.ndarray
+"""Permissive input for concrete array parameters. No CasADi.
+
+Use for function INPUTS to external tools that accept sequences but not CasADi.
+"""

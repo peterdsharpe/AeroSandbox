@@ -1,4 +1,5 @@
 from aerosandbox import AeroSandboxObject
+from aerosandbox.numpy.typing import Vectorizable
 from typing import Any, Sequence
 import aerosandbox.numpy as np
 import copy
@@ -92,9 +93,9 @@ class Propulsor(AeroSandboxObject):
 
     def get_disk_3D_coordinates(
         self,
-        theta: float | np.ndarray | None = None,
-        l_over_length: float | np.ndarray | None = None,
-    ) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
+        theta: Vectorizable | None = None,
+        l_over_length: Vectorizable | None = None,
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         ### Set defaults
         if theta is None:
             theta = np.linspace(0, 2 * np.pi, 60 + 1)[:-1]

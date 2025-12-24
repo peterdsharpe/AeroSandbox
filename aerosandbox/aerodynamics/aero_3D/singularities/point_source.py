@@ -1,16 +1,17 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def calculate_induced_velocity_point_source(
-    x_field: float | np.ndarray,
-    y_field: float | np.ndarray,
-    z_field: float | np.ndarray,
-    x_source: float | np.ndarray,
-    y_source: float | np.ndarray,
-    z_source: float | np.ndarray,
-    sigma: float | np.ndarray = 1,
+    x_field: Vectorizable,
+    y_field: Vectorizable,
+    z_field: Vectorizable,
+    x_source: Vectorizable,
+    y_source: Vectorizable,
+    z_source: Vectorizable,
+    sigma: Vectorizable = 1,
     viscous_radius=0,
-) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
+) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
     """
     Calculates the induced velocity at a point:
         [x_field, y_field, z_field]

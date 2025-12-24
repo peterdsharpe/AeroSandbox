@@ -2,7 +2,7 @@ from aerosandbox import AeroSandboxObject
 from typing import Any, Callable, Literal, Sequence
 import aerosandbox.numpy as np
 import copy
-from aerosandbox.numpy.typing import Scalar  # Type alias including CasADi types
+from aerosandbox.numpy.typing import Scalar, Vectorizable
 
 
 class Fuselage(AeroSandboxObject):
@@ -858,8 +858,8 @@ class FuselageXSec(AeroSandboxObject):
         return xg_local, yg_local, zg_local
 
     def get_3D_coordinates(
-        self, theta: float | np.ndarray | None = None
-    ) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
+        self, theta: Vectorizable | None = None
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
         Samples points from the perimeter of this FuselageXSec.
 

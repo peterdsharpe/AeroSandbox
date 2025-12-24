@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from typing import Literal
 from aerosandbox.atmosphere import Atmosphere
 
@@ -10,7 +11,7 @@ realized solar flux on a given surface as a function of many different parameter
 """
 
 
-def _prepare_for_inverse_trig(x: float | np.ndarray) -> float | np.ndarray:
+def _prepare_for_inverse_trig(x: Vectorizable) -> Vectorizable:
     """
     Ensures that a value is within the open interval (-1, 1), so that if you call an inverse trig function
     on it (e.g., arcsin, arccos), you won't get an infinity or NaN.
@@ -24,8 +25,8 @@ def _prepare_for_inverse_trig(x: float | np.ndarray) -> float | np.ndarray:
 
 
 def solar_flux_outside_atmosphere_normal(
-    day_of_year: int | float | np.ndarray,
-) -> float | np.ndarray:
+    day_of_year: Vectorizable,
+) -> Vectorizable:
     """
     Computes the normal solar flux at the top of the atmosphere ("Airmass 0").
     This varies due to Earth's orbital eccentricity (elliptical orbit).
@@ -42,8 +43,8 @@ def solar_flux_outside_atmosphere_normal(
 
 
 def declination_angle(
-    day_of_year: int | float | np.ndarray,
-) -> float | np.ndarray:
+    day_of_year: Vectorizable,
+) -> Vectorizable:
     """
     Computes the solar declination angle, in degrees, as a function of day of year.
 
@@ -61,10 +62,10 @@ def declination_angle(
 
 
 def solar_elevation_angle(
-    latitude: float | np.ndarray,
-    day_of_year: int | float | np.ndarray,
-    time: float | np.ndarray,
-) -> float | np.ndarray:
+    latitude: Vectorizable,
+    day_of_year: Vectorizable,
+    time: Vectorizable,
+) -> Vectorizable:
     """
     Elevation angle of the sun [degrees] for a local observer.
 
@@ -95,10 +96,10 @@ def solar_elevation_angle(
 
 
 def solar_azimuth_angle(
-    latitude: float | np.ndarray,
-    day_of_year: int | float | np.ndarray,
-    time: float | np.ndarray,
-) -> float | np.ndarray:
+    latitude: Vectorizable,
+    day_of_year: Vectorizable,
+    time: Vectorizable,
+) -> Vectorizable:
     """
     Azimuth angle of the sun [degrees] for a local observer.
 
@@ -136,10 +137,10 @@ def solar_azimuth_angle(
 
 
 def airmass(
-    solar_elevation_angle: float | np.ndarray,
-    altitude: float | np.ndarray = 0.0,
+    solar_elevation_angle: Vectorizable,
+    altitude: Vectorizable = 0.0,
     method="Young",
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
     Computes the (relative) airmass as a function of the (true) solar elevation angle and observer altitude.
     Includes refractive (e.g. curving) effects due to atmospheric density gradient.
@@ -220,16 +221,16 @@ def airmass(
 
 
 def solar_flux(
-    latitude: float | np.ndarray,
-    day_of_year: int | float | np.ndarray,
-    time: float | np.ndarray,
-    altitude: float | np.ndarray = 0.0,
-    panel_azimuth_angle: float | np.ndarray = 0.0,
-    panel_tilt_angle: float | np.ndarray = 0.0,
+    latitude: Vectorizable,
+    day_of_year: Vectorizable,
+    time: Vectorizable,
+    altitude: Vectorizable = 0.0,
+    panel_azimuth_angle: Vectorizable = 0.0,
+    panel_tilt_angle: Vectorizable = 0.0,
     air_quality: Literal["typical", "clean", "polluted"] = "typical",
-    albedo: float | np.ndarray = 0.2,
+    albedo: Vectorizable = 0.2,
     **deprecated_kwargs,
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
     Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel. Accounts for atmospheric
     absorption, scattering, and re-scattering (e.g. diffuse illumination), all as a function of panel altitude.
@@ -396,8 +397,8 @@ def solar_flux(
 
 
 def peak_sun_hours_per_day_on_horizontal(
-    latitude: float | np.ndarray, day_of_year: int | float | np.ndarray
-) -> float | np.ndarray:
+    latitude: Vectorizable, day_of_year: Vectorizable
+) -> Vectorizable:
     """
     How many hours of equivalent peak sun do you get per day?
     :param latitude: Latitude [degrees]
@@ -425,8 +426,8 @@ def peak_sun_hours_per_day_on_horizontal(
 
 
 def length_day(
-    latitude: float | np.ndarray, day_of_year: int | float | np.ndarray
-) -> float | np.ndarray:
+    latitude: Vectorizable, day_of_year: Vectorizable
+) -> Vectorizable:
     """
     Gives the duration where the sun is above the horizon on a given day.
 
@@ -449,7 +450,7 @@ def length_day(
     return sun_time
 
 
-def mass_MPPT(power: float | np.ndarray) -> float | np.ndarray:
+def mass_MPPT(power: Vectorizable) -> Vectorizable:
     """
     Gives the estimated mass of a Maximum Power Point Tracking (MPPT) unit for solar energy
     collection. Based on regressions at AeroSandbox/studies/SolarMPPTMasses.

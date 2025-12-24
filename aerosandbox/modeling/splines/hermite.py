@@ -1,14 +1,15 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from typing import Literal
 
 
 def linear_hermite_patch(
-    x: float | np.ndarray,
+    x: Vectorizable,
     x_a: float,
     x_b: float,
     f_a: float,
     f_b: float,
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
     Computes the linear Hermite polynomial patch that passes through the given endpoints f_a and f_b.
 
@@ -26,7 +27,7 @@ def linear_hermite_patch(
 
 
 def cubic_hermite_patch(
-    x: float | np.ndarray,
+    x: Vectorizable,
     x_a: float,
     x_b: float,
     f_a: float,
@@ -34,7 +35,7 @@ def cubic_hermite_patch(
     dfdx_a: float,
     dfdx_b: float,
     extrapolation: Literal["continue", "clip"] = "continue",
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
     Computes the cubic Hermite polynomial patch that passes through the given endpoints and endpoint derivatives.
 
@@ -74,7 +75,7 @@ def cubic_hermite_patch(
 
 
 def cosine_hermite_patch(
-    x: float | np.ndarray,
+    x: Vectorizable,
     x_a: float,
     x_b: float,
     f_a: float,
@@ -82,7 +83,7 @@ def cosine_hermite_patch(
     dfdx_a: float,
     dfdx_b: float,
     extrapolation: Literal["continue", "linear"] = "continue",
-) -> float | np.ndarray:
+) -> Vectorizable:
     r"""
     Computes a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine function to blend between
     linear segments.

@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import ConcreteVectorizable
 from matplotlib import path
 from aerosandbox.common import AeroSandboxObject
 from pathlib import Path
@@ -286,9 +287,9 @@ class Polygon(AeroSandboxObject):
 
     def contains_points(
         self,
-        x: float | np.ndarray,
-        y: float | np.ndarray,
-    ) -> float | np.ndarray:
+        x: ConcreteVectorizable,
+        y: ConcreteVectorizable,
+    ) -> ConcreteVectorizable:
         """
         Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
 

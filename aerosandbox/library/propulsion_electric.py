@@ -1,17 +1,18 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.tools import units as u
 from aerosandbox.performance.operating_point import OperatingPoint
 
 
 def motor_electric_performance(
-    voltage: float | np.ndarray | None = None,
-    current: float | np.ndarray | None = None,
-    rpm: float | np.ndarray | None = None,
-    torque: float | np.ndarray | None = None,
+    voltage: Vectorizable | None = None,
+    current: Vectorizable | None = None,
+    rpm: Vectorizable | None = None,
+    torque: Vectorizable | None = None,
     kv: float = 1000.0,  # rpm/volt
     resistance: float = 0.1,  # ohms
     no_load_current: float = 0.4,  # amps
-) -> dict[str, float | np.ndarray]:
+) -> dict[str, Vectorizable]:
     """
     A function for predicting the performance of an electric motor.
 

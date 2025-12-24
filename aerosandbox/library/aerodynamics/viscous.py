@@ -1,14 +1,15 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from typing import Literal
 import warnings
 
 
 def Cd_cylinder(
-    Re_D: float | np.ndarray,
-    mach: float | np.ndarray = 0.0,
+    Re_D: Vectorizable,
+    mach: Vectorizable = 0.0,
     include_mach_effects: bool = True,
     subcritical_only: bool = False,
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
     Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number and Mach.
 
@@ -81,7 +82,7 @@ def Cd_cylinder(
 
 
 def Cf_flat_plate(
-    Re_L: float | np.ndarray,
+    Re_L: Vectorizable,
     method: Literal[
         "blasius",
         "turbulent",
@@ -90,7 +91,7 @@ def Cf_flat_plate(
         "hybrid-sharpe-convex",
         "hybrid-sharpe-nonconvex",
     ] = "hybrid-sharpe-convex",
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
     Returns the mean skin friction coefficient over a flat plate.
 

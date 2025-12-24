@@ -1,20 +1,21 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def calculate_induced_velocity_horseshoe(
-    x_field: float | np.ndarray,
-    y_field: float | np.ndarray,
-    z_field: float | np.ndarray,
-    x_left: float | np.ndarray,
-    y_left: float | np.ndarray,
-    z_left: float | np.ndarray,
-    x_right: float | np.ndarray,
-    y_right: float | np.ndarray,
-    z_right: float | np.ndarray,
-    gamma: float | np.ndarray = 1,
+    x_field: Vectorizable,
+    y_field: Vectorizable,
+    z_field: Vectorizable,
+    x_left: Vectorizable,
+    y_left: Vectorizable,
+    z_left: Vectorizable,
+    x_right: Vectorizable,
+    y_right: Vectorizable,
+    z_right: Vectorizable,
+    gamma: Vectorizable = 1,
     trailing_vortex_direction: np.ndarray | None = None,
     vortex_core_radius: float = 0,
-) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
+) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
     """
     Calculates the induced velocity at a point:
         [x_field, y_field, z_field]

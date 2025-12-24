@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.tools.string_formatting import eng_string
 from typing import Literal
 
@@ -19,8 +20,8 @@ class PerfectGas:
 
     def __init__(
         self,
-        pressure: float | np.ndarray = 101325,
-        temperature: float | np.ndarray = 273.15 + 15,
+        pressure: Vectorizable = 101325,
+        temperature: Vectorizable = 273.15 + 15,
         specific_heat_constant_pressure: float = 1006,
         specific_heat_constant_volume: float = 717,
         molecular_mass: float = 28.9644e-3,

@@ -1,6 +1,7 @@
 import plotly.graph_objects
 import matplotlib.figure
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.geometry.airfoil.airfoil_families import (
     get_NACA_coordinates,
@@ -779,8 +780,8 @@ class Airfoil(Polygon):
             )
 
     def local_camber(
-        self, x_over_c: float | np.ndarray = np.linspace(0, 1, 101)
-    ) -> float | np.ndarray:
+        self, x_over_c: Vectorizable = np.linspace(0, 1, 101)
+    ) -> Vectorizable:
         """
         Returns the local camber of the airfoil at a given point or points.
 
@@ -807,8 +808,8 @@ class Airfoil(Polygon):
         return (upper_interpolated + lower_interpolated) / 2
 
     def local_thickness(
-        self, x_over_c: float | np.ndarray = np.linspace(0, 1, 101)
-    ) -> float | np.ndarray:
+        self, x_over_c: Vectorizable = np.linspace(0, 1, 101)
+    ) -> Vectorizable:
         """
         Returns the local thickness of the airfoil at a given point or points.
 

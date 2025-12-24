@@ -1,5 +1,6 @@
 from aerosandbox.common import ExplicitAnalysis
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import ConcreteVectorizable
 import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
@@ -184,9 +185,9 @@ class MSES(ExplicitAnalysis):
 
     def run(
         self,
-        alpha: float | np.ndarray | list = 0.0,
-        Re: float | np.ndarray | list = 0.0,
-        mach: float | np.ndarray | list = 0.01,
+        alpha: ConcreteVectorizable = 0.0,
+        Re: ConcreteVectorizable = 0.0,
+        mach: ConcreteVectorizable = 0.01,
     ):
         ### Make all inputs iterables:
         alphas, Res, machs = np.broadcast_arrays(

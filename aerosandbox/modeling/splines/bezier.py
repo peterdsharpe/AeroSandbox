@@ -1,15 +1,16 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def quadratic_bezier_patch_from_tangents(
-    t: float | np.ndarray,
+    t: Vectorizable,
     x_a: float,
     x_b: float,
     y_a: float,
     y_b: float,
     dydx_a: float,
     dydx_b: float,
-) -> tuple[float | np.ndarray, float | np.ndarray]:
+) -> tuple[Vectorizable, Vectorizable]:
     """
     Computes sampled points in 2D space from a quadratic Bezier spline defined by endpoints and end-tangents.
 

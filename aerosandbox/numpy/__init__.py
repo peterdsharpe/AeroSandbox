@@ -2,6 +2,22 @@
 
 from numpy import *
 
+### Export type aliases for hybrid (NumPy/CasADi) and concrete (NumPy-only) types
+from aerosandbox.numpy.typing import (
+    Scalar,
+    Vector,
+    Array,
+    Vectorizable,
+    ConcreteScalar,
+    ConcreteVector,
+    ConcreteArray,
+    ConcreteVectorizable,
+    VectorLike,
+    ArrayLike,
+    PointLike,
+    ConcreteArrayLike,
+)
+
 ### Overwrite some functions
 from aerosandbox.numpy.array import *
 from aerosandbox.numpy.arithmetic_monadic import *

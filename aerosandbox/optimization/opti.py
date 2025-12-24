@@ -6,7 +6,7 @@ import aerosandbox.numpy as np
 from aerosandbox.tools import inspect_tools
 from sortedcontainers import SortedDict
 import copy
-from aerosandbox.numpy.typing import ArrayLike
+from aerosandbox.numpy.typing import ArrayLike, Vectorizable
 
 
 class Opti(cas.Opti):
@@ -1003,9 +1003,9 @@ class Opti(cas.Opti):
     def derivative_of(
         self,
         variable: cas.MX,
-        with_respect_to: np.ndarray | cas.MX,
-        derivative_init_guess: float | np.ndarray,  # TODO add default
-        derivative_scale: float | np.ndarray | None = None,
+        with_respect_to: ArrayLike,
+        derivative_init_guess: Vectorizable,  # TODO add default
+        derivative_scale: Vectorizable | None = None,
         method: str = "trapezoidal",
         explicit: bool = False,  # TODO implement explicit
         _stacklevel: int = 1,
