@@ -12,7 +12,22 @@ def test_opti_simple_unconstrained():
 
     sol = opti.solve(verbose=False)
 
+    assert np.isclose(sol(x), 3, atol=1e-4)
+
+
+def test_opti_backward_compatibility_value_method():
+    """Test that sol.value() method still works for backward compatibility."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=10)
+    opti.minimize((x - 3) ** 2)
+
+    sol = opti.solve(verbose=False)
+
+    ### Test that the legacy .value() method still works
     assert np.isclose(sol.value(x), 3, atol=1e-4)
+    ### Test that it gives the same result as the __call__ method
+    assert np.isclose(sol.value(x), sol(x), atol=1e-10)
 
 
 def test_opti_with_lower_bound():
@@ -24,7 +39,7 @@ def test_opti_with_lower_bound():
 
     sol = opti.solve(verbose=False)
 
-    assert np.isclose(sol.value(x), 5, atol=1e-4)
+    assert np.isclose(sol(x), 5, atol=1e-4)
 
 
 def test_opti_with_upper_bound():
@@ -36,7 +51,7 @@ def test_opti_with_upper_bound():
 
     sol = opti.solve(verbose=False)
 
-    assert np.isclose(sol.value(x), 3, atol=1e-4)
+    assert np.isclose(sol(x), 3, atol=1e-4)
 
 
 def test_opti_with_bounds():
@@ -49,7 +64,7 @@ def test_opti_with_bounds():
     sol = opti.solve(verbose=False)
 
     ### Minimum would be at x=10, but constrained to x<=5
-    assert np.isclose(sol.value(x), 5, atol=1e-4)
+    assert np.isclose(sol(x), 5, atol=1e-4)
 
 
 def test_opti_equality_constraint():
@@ -65,8 +80,8 @@ def test_opti_equality_constraint():
     sol = opti.solve(verbose=False)
 
     ### Minimum of x^2 + y^2 subject to x + y = 10 is at x = y = 5
-    assert np.isclose(sol.value(x), 5, atol=1e-3)
-    assert np.isclose(sol.value(y), 5, atol=1e-3)
+    assert np.isclose(sol(x), 5, atol=1e-3)
+    assert np.isclose(sol(y), 5, atol=1e-3)
 
 
 def test_opti_inequality_constraint():
@@ -80,7 +95,7 @@ def test_opti_inequality_constraint():
 
     sol = opti.solve(verbose=False)
 
-    assert np.isclose(sol.value(x), 3, atol=1e-4)
+    assert np.isclose(sol(x), 3, atol=1e-4)
 
 
 def test_opti_multiple_variables():
@@ -95,9 +110,9 @@ def test_opti_multiple_variables():
 
     sol = opti.solve(verbose=False)
 
-    assert np.isclose(sol.value(x), 1, atol=1e-4)
-    assert np.isclose(sol.value(y), 2, atol=1e-4)
-    assert np.isclose(sol.value(z), 3, atol=1e-4)
+    assert np.isclose(sol(x), 1, atol=1e-4)
+    assert np.isclose(sol(y), 2, atol=1e-4)
+    assert np.isclose(sol(z), 3, atol=1e-4)
 
 
 def test_opti_vector_variable():
@@ -111,7 +126,7 @@ def test_opti_vector_variable():
 
     sol = opti.solve(verbose=False)
 
-    assert np.allclose(sol.value(x), target, atol=1e-4)
+    assert np.allclose(sol(x), target, atol=1e-4)
 
 
 def test_opti_parameter():
@@ -125,7 +140,7 @@ def test_opti_parameter():
 
     sol = opti.solve(verbose=False)
 
-    assert np.isclose(sol.value(x), 5, atol=1e-4)
+    assert np.isclose(sol(x), 5, atol=1e-4)
 
 
 def test_opti_parameter_update():
@@ -138,13 +153,13 @@ def test_opti_parameter_update():
     opti.minimize((x - p) ** 2)
 
     sol1 = opti.solve(verbose=False)
-    assert np.isclose(sol1.value(x), 5, atol=1e-4)
+    assert np.isclose(sol1(x), 5, atol=1e-4)
 
     ### Update parameter
     opti.set_value(p, 10)
     sol2 = opti.solve(verbose=False)
 
-    assert np.isclose(sol2.value(x), 10, atol=1e-4)
+    assert np.isclose(sol2(x), 10, atol=1e-4)
 
 
 def test_opti_quadratic_program():
@@ -163,7 +178,7 @@ def test_opti_quadratic_program():
 
     ### Solution should be -Q^(-1) @ c / 2 = [1, 1.5]
     expected = np.array([1, 1.5])
-    assert np.allclose(sol.value(x).flatten(), expected, atol=1e-3)
+    assert np.allclose(sol(x).flatten(), expected, atol=1e-3)
 
 
 def test_opti_rosenbrock():
@@ -178,8 +193,8 @@ def test_opti_rosenbrock():
     sol = opti.solve(verbose=False)
 
     ### Rosenbrock minimum is at (1, 1)
-    assert np.isclose(sol.value(x), 1, atol=0.01)
-    assert np.isclose(sol.value(y), 1, atol=0.01)
+    assert np.isclose(sol(x), 1, atol=0.01)
+    assert np.isclose(sol(y), 1, atol=0.01)
 
 
 def test_opti_subject_to_list():
@@ -195,8 +210,8 @@ def test_opti_subject_to_list():
     sol = opti.solve(verbose=False)
 
     ### Minimum is at x=2, y=3
-    assert np.isclose(sol.value(x), 2, atol=1e-3)
-    assert np.isclose(sol.value(y), 3, atol=1e-3)
+    assert np.isclose(sol(x), 2, atol=1e-3)
+    assert np.isclose(sol(y), 3, atol=1e-3)
 
 
 def test_opti_linear_program():
@@ -215,11 +230,11 @@ def test_opti_linear_program():
 
     ### Should push y as high as possible while satisfying constraints
     ### Optimal solution is at the intersection of active constraints
-    assert sol.value(x) >= -0.1  ### Allow small numerical error
-    assert sol.value(y) >= -0.1
+    assert sol(x) >= -0.1  ### Allow small numerical error
+    assert sol(y) >= -0.1
     ### Check that constraints are satisfied
-    assert sol.value(x + y) <= 10.1
-    assert sol.value(2 * x + y) <= 15.1
+    assert sol(x + y) <= 10.1
+    assert sol(2 * x + y) <= 15.1
 
 
 def test_opti_constraint_violation_detection():
@@ -249,8 +264,8 @@ def test_opti_freeze_variable():
 
     sol = opti.solve(verbose=False)
 
-    assert np.isclose(sol.value(x), 5, atol=1e-4)
-    assert np.isclose(sol.value(y), 1, atol=1e-4)
+    assert np.isclose(sol(x), 5, atol=1e-4)
+    assert np.isclose(sol(y), 1, atol=1e-4)
 
 
 def test_opti_nonlinear_constraint():
@@ -266,7 +281,7 @@ def test_opti_nonlinear_constraint():
     sol = opti.solve(verbose=False)
 
     ### Minimum should be on the circle boundary
-    assert np.isclose(sol.value(x) ** 2 + sol.value(y) ** 2, 4, atol=0.1)
+    assert np.isclose(sol(x) ** 2 + sol(y) ** 2, 4, atol=0.1)
 
 
 def test_opti_minimize_absolute_value():
@@ -281,7 +296,7 @@ def test_opti_minimize_absolute_value():
 
     sol = opti.solve(verbose=False)
 
-    assert np.allclose(sol.value(x), target, atol=0.01)
+    assert np.allclose(sol(x), target, atol=0.01)
 
 
 def test_opti_matrix_variable():
@@ -297,7 +312,7 @@ def test_opti_matrix_variable():
 
     sol = opti.solve(verbose=False)
 
-    assert np.allclose(sol.value(X), target, atol=1e-4)
+    assert np.allclose(sol(X), target, atol=1e-4)
 
 
 def test_opti_callback_function():
@@ -330,7 +345,7 @@ def test_opti_initial_guess_influence():
     sol = opti.solve(verbose=False)
 
     ### Should still converge to correct solution
-    assert np.isclose(sol.value(x), 3, atol=1e-4)
+    assert np.isclose(sol(x), 3, atol=1e-4)
 
 
 def test_opti_bounded_optimization_tight_bounds():
@@ -344,7 +359,7 @@ def test_opti_bounded_optimization_tight_bounds():
     sol = opti.solve(verbose=False)
 
     ### Should hit upper bound
-    assert np.isclose(sol.value(x), 5.01, atol=1e-4)
+    assert np.isclose(sol(x), 5.01, atol=1e-4)
 
 
 def test_opti_scale_dependent_optimization():
@@ -358,7 +373,7 @@ def test_opti_scale_dependent_optimization():
 
     sol = opti.solve(verbose=False)
 
-    assert np.isclose(sol.value(x), 1, atol=1e-3)
+    assert np.isclose(sol(x), 1, atol=1e-3)
 
 
 if __name__ == "__main__":

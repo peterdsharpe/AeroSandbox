@@ -199,42 +199,42 @@ if __name__ == "__main__":
     plt.axis("equal")
 
     # plt.subplot(232)
-    # plt.plot(sol.value(x), np.arctan(sol.value(du))*180/np.pi, '.-')
+    # plt.plot(sol(x), np.arctan(sol(du))*180/np.pi, '.-')
     # plt.xlabel("x [m]")
     # plt.ylabel(r"Local Slope [deg]")
     # plt.title("Slope")
 
     plt.subplot(232)
-    plt.plot(sol.value(x), sol.value(phi) * 180 / np.pi, ".-")
+    plt.plot(sol(x), sol(phi) * 180 / np.pi, ".-")
     plt.xlabel("x [m]")
     plt.ylabel("Twist angle [deg]")
     plt.title("Twist Angle (Torsion)")
 
     plt.subplot(233)
-    plt.plot(sol.value(x), sol.value(force_per_unit_length), ".-")
+    plt.plot(sol(x), sol(force_per_unit_length), ".-")
     plt.xlabel("x [m]")
     plt.ylabel(r"$F$ [N/m]")
     plt.title("Local Load per Unit Span")
 
     plt.subplot(234)
-    plt.plot(sol.value(x), sol.value(stress / 1e6), ".-")
+    plt.plot(sol(x), sol(stress / 1e6), ".-")
     plt.xlabel("x [m]")
     plt.ylabel("Stress [MPa]")
     plt.title("Peak Stress at Section")
 
     plt.subplot(235)
-    plt.plot(sol.value(x), sol.value(dEIddu), ".-")
+    plt.plot(sol(x), sol(dEIddu), ".-")
     plt.xlabel("x [m]")
     plt.ylabel("F [N]")
     plt.title("Shear Force")
 
     plt.subplot(236)
-    plt.plot(sol.value(x), sol.value(nominal_diameter), ".-")
+    plt.plot(sol(x), sol(nominal_diameter), ".-")
     plt.xlabel("x [m]")
     plt.ylabel("t [m]")
     plt.title("Optimal Spar Diameter")
 
-    plt.suptitle(f"Beam Modeling (Total Spar Mass: {2 * sol.value(mass):.2f} kg)")
+    plt.suptitle(f"Beam Modeling (Total Spar Mass: {2 * sol(mass):.2f} kg)")
 
     plt.subplots_adjust(hspace=0.4)
 
@@ -242,5 +242,5 @@ if __name__ == "__main__":
     # plt.legend()
     plt.show()
 
-    print("Mass (half-wing) [kg]:", sol.value(mass))
-    print("Mass (full-wing) [kg]:", 2 * sol.value(mass))
+    print("Mass (half-wing) [kg]:", sol(mass))
+    print("Mass (full-wing) [kg]:", 2 * sol(mass))

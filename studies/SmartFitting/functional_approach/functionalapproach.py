@@ -126,7 +126,7 @@ class Node:
             sol = opti.solve(max_iter=500, verbose=False)
         except RuntimeError:
             sol = opti.debug
-        return sol.value(error), sol, L
+        return sol(error), sol, L
 
 
 class IndependentVariable:
@@ -175,7 +175,7 @@ def best_tree_of_size(x_data, y_data, loss, opers, size):
 
     paramvalues = []
     for i in bestparams:
-        paramvalues.append(bestsol.value(i))
+        paramvalues.append(bestsol(i))
     return besttree, paramvalues, bestvalue
 
 
@@ -195,7 +195,7 @@ def best_tree_dynamic(x_data, y_data, loss, opers, size):
             bestparams = L
     paramvalues = []
     for i in bestparams:
-        paramvalues.append(bestsol.value(i))
+        paramvalues.append(bestsol(i))
     return besttree, paramvalues, bestvalue
 
 

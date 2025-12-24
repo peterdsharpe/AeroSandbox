@@ -49,7 +49,7 @@ def test_black_box_with_optimization():
     sol = opti.solve(verbose=False)
 
     ### Minimum should be at x = 3
-    assert np.isclose(sol.value(x), 3, atol=0.1)
+    assert np.isclose(sol(x), 3, atol=0.1)
 
 
 def test_black_box_with_constraints():
@@ -68,7 +68,7 @@ def test_black_box_with_constraints():
     sol = opti.solve(verbose=False)
 
     ### Should find x = 2 (minimum positive value satisfying constraint)
-    assert np.isclose(sol.value(x), 2, atol=0.1)
+    assert np.isclose(sol(x), 2, atol=0.1)
 
 
 def test_black_box_keyword_arguments():
@@ -114,7 +114,7 @@ def test_black_box_fd_method_central():
     sol = opti.solve(verbose=False)
 
     ### Some reasonable solution should be found
-    assert np.isfinite(sol.value(x))
+    assert np.isfinite(sol(x))
 
 
 def test_black_box_fd_method_forward():
@@ -134,7 +134,7 @@ def test_black_box_fd_method_forward():
     try:
         sol = opti.solve(verbose=False)
         ### Minimum of x^2 + 2x is at x = -1
-        assert np.isclose(sol.value(x), -1, atol=0.3)
+        assert np.isclose(sol(x), -1, atol=0.3)
     except RuntimeError:
         ### If solver fails (which can happen with FD methods), just check it doesn't crash
         pass
@@ -157,7 +157,7 @@ def test_black_box_fd_method_backward():
     try:
         sol = opti.solve(verbose=False)
         ### Minimum should be at x = 2
-        assert np.isclose(sol.value(x), 2, atol=0.3)
+        assert np.isclose(sol(x), 2, atol=0.3)
     except RuntimeError:
         ### If solver fails (which can happen with FD methods), just check it doesn't crash
         pass
@@ -181,8 +181,8 @@ def test_black_box_multiple_optimization_calls():
     sol = opti.solve(verbose=False)
 
     ### With x + y = 10 and minimizing x^2 + y^2, solution is x = y = 5
-    assert np.isclose(sol.value(x), 5, atol=0.2)
-    assert np.isclose(sol.value(y), 5, atol=0.2)
+    assert np.isclose(sol(x), 5, atol=0.2)
+    assert np.isclose(sol(y), 5, atol=0.2)
 
 
 def test_black_box_nonsmooth_function():
@@ -200,7 +200,7 @@ def test_black_box_nonsmooth_function():
     sol = opti.solve(verbose=False)
 
     ### Minimum should be at x = 3
-    assert np.isclose(sol.value(x), 3, atol=0.2)
+    assert np.isclose(sol(x), 3, atol=0.2)
 
 
 def test_black_box_trigonometric_function():
@@ -218,7 +218,7 @@ def test_black_box_trigonometric_function():
     sol = opti.solve(verbose=False)
 
     ### Solution should be reasonable
-    assert -np.pi <= sol.value(x) <= np.pi
+    assert -np.pi <= sol(x) <= np.pi
 
 
 def test_black_box_exponential_function():
@@ -236,7 +236,7 @@ def test_black_box_exponential_function():
     sol = opti.solve(verbose=False)
 
     ### Should find some minimum (around x ~ -0.7)
-    assert -5 <= sol.value(x) <= 5
+    assert -5 <= sol(x) <= 5
 
 
 def test_black_box_with_external_library():
@@ -332,8 +332,8 @@ def test_black_box_complex_objective():
     sol = opti.solve(verbose=False)
 
     ### Rosenbrock minimum is at (1, 1)
-    assert np.isclose(sol.value(x), 1, atol=0.3)
-    assert np.isclose(sol.value(y), 1, atol=0.3)
+    assert np.isclose(sol(x), 1, atol=0.3)
+    assert np.isclose(sol(y), 1, atol=0.3)
 
 
 if __name__ == "__main__":
