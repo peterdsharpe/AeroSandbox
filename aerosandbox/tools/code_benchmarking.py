@@ -38,7 +38,7 @@ class Timer(object):
 
     def __init__(
         self,
-        name: str = None,
+        name: str | None = None,
         verbose: bool = True,
     ):
         self.name: str = name
@@ -96,8 +96,8 @@ class Timer(object):
 
 def time_function(
     func: Callable,
-    repeats: int = None,
-    desired_runtime: float = None,
+    repeats: int | None = None,
+    desired_runtime: float | None = None,
     runtime_reduction=np.min,
     warmup: bool = True,
 ) -> tuple[float, Any]:

@@ -7,7 +7,7 @@ def eng_string(
     unit: str = "",
     format="%.3g",
     si=True,
-    add_space_after_number: bool = None,
+    add_space_after_number: bool | None = None,
 ) -> str:
     """
     Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220

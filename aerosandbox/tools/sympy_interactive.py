@@ -10,7 +10,7 @@ def simp(x):
 
 def show(
     rhs: s.Symbol,
-    lhs: str = None,
+    lhs: str | None = None,
     simplify=True,
 ):  # Display an equation
     if simplify:

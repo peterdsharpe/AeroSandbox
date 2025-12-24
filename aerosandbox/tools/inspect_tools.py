@@ -83,7 +83,7 @@ def get_caller_source_location(
 def get_source_code_from_location(
     filename: Path | str,
     lineno: int,
-    code_context: str = None,
+    code_context: str | None = None,
     strip_lines: bool = False,
 ) -> str:
     """

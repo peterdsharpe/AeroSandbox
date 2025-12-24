@@ -25,10 +25,10 @@ def figure3d(
     nrows: int = 1,
     ncols: int = 1,
     orthographic: bool = True,
-    box_aspect: tuple[float] = None,
+    box_aspect: tuple[float] | None = None,
     adjust_colors: bool = True,
     computed_zorder: bool = True,
-    ax_kwargs: dict = None,
+    ax_kwargs: dict | None = None,
     **fig_kwargs,
 ) -> tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
     """

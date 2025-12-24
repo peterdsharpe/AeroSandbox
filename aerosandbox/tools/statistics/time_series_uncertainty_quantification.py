@@ -12,7 +12,7 @@ from scipy import signal
 
 def estimate_noise_standard_deviation(
     data: np.ndarray,
-    estimator_order: int = None,
+    estimator_order: int | None = None,
 ) -> float:
     """
     Estimates the standard deviation of the random noise in a time-series dataset.
@@ -87,7 +87,7 @@ def bootstrap_fits(
     n_bootstraps: int = 2000,
     fit_points: int | Iterable[float] | None = 300,
     spline_degree: int = 3,
-    normalize: bool = None,
+    normalize: bool | None = None,
 ) -> tuple[np.ndarray, np.ndarray] | list[Spline]:
     """
     Bootstraps a time-series dataset and fits splines to each bootstrap resample.
