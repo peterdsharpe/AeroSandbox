@@ -94,7 +94,7 @@ class Propulsor(AeroSandboxObject):
         self,
         theta: float | np.ndarray | None = None,
         l_over_length: float | np.ndarray | None = None,
-    ) -> tuple[float | np.ndarray]:
+    ) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
         ### Set defaults
         if theta is None:
             theta = np.linspace(0, 2 * np.pi, 60 + 1)[:-1]

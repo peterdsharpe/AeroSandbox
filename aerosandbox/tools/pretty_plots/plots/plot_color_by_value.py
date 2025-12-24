@@ -10,8 +10,8 @@ def plot_color_by_value(
     c: np.ndarray,
     cmap="turbo",
     colorbar: bool = False,
-    colorbar_label: str = None,
-    clim: tuple[float, float] = None,
+    colorbar_label: str | None = None,
+    clim: tuple[float, float] | None = None,
     **kwargs,
 ):
     """

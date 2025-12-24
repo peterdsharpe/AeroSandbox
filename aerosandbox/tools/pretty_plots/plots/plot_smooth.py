@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
 from scipy import interpolate
+from typing import Literal
 
 
 def plot_smooth(
     *args,
     color=None,
     label=None,
-    function_of: str = None,
+    function_of: Literal["x", "y"] | None = None,
     resample_resolution: int = 500,
     drop_nans: bool = False,
     **kwargs,

@@ -3,7 +3,7 @@ import aerosandbox.tools.units as u
 
 def tire_size(
     mass_supported_by_each_tire: float, aircraft_type="general_aviation"
-) -> float:
+) -> tuple[float, float]:
     """
     Computes the required diameter and width of a tire for an airplane, from statistical regression to historical data.
 

@@ -14,7 +14,7 @@ the vertex locations of that face are found.
 
 
 def stack_meshes(
-    *meshes: tuple[tuple[np.ndarray, np.ndarray]],
+    *meshes: tuple[np.ndarray, np.ndarray],
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Takes in a series of tuples (points, faces) and merges them into a single tuple (points, faces). All (points,

@@ -47,7 +47,7 @@ class OperatingPoint(AeroSandboxObject):
         self.r = r
 
     @property
-    def state(self) -> dict[str, float | np.ndarray]:
+    def state(self) -> dict[str, Atmosphere | Vectorizable]:
         """
         Returns the state variables of this OperatingPoint instance as a Dict.
 
@@ -124,8 +124,8 @@ class OperatingPoint(AeroSandboxObject):
             )  # Pack the iterable into a dict-like, then do the same thing as above.
 
     def unpack_state(
-        self, dict_like_state: dict[str, float | np.ndarray] | None = None
-    ) -> tuple[float | np.ndarray]:
+        self, dict_like_state: dict[str, Atmosphere | Vectorizable] | None = None
+    ) -> tuple[Atmosphere | Vectorizable, ...]:
         """
         'Unpacks' a Dict-like state into an array-like that represents the state of the OperatingPoint.
 
@@ -141,7 +141,7 @@ class OperatingPoint(AeroSandboxObject):
 
     def pack_state(
         self, array_like_state: Sequence | np.ndarray | None = None
-    ) -> dict[str, float | np.ndarray]:
+    ) -> dict[str, Atmosphere | Vectorizable]:
         """
         'Packs' an array into a Dict that represents the state of the OperatingPoint.
 
@@ -331,12 +331,12 @@ class OperatingPoint(AeroSandboxObject):
 
     def convert_axes(
         self,
-        x_from: float | np.ndarray,
-        y_from: float | np.ndarray,
-        z_from: float | np.ndarray,
+        x_from: Vectorizable,
+        y_from: Vectorizable,
+        z_from: Vectorizable,
         from_axes: str,
         to_axes: str,
-    ) -> tuple[float, float, float]:
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.

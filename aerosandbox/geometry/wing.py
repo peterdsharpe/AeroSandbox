@@ -600,7 +600,7 @@ class Wing(AeroSandboxObject):
 
     def aerodynamic_center(
         self, chord_fraction: float = 0.25, _sectional=False
-    ) -> np.ndarray:
+    ) -> np.ndarray | list[np.ndarray]:
         """
         Computes the location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:

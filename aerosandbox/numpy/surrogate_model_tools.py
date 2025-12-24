@@ -5,8 +5,8 @@ from typing import Literal
 
 def softmax(
     *args: float | _np.ndarray,
-    softness: float = None,
-    hardness: float = None,
+    softness: float | None = None,
+    hardness: float | None = None,
 ) -> float | _np.ndarray:
     """
     An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
@@ -76,8 +76,8 @@ def softmax(
 
 def softmin(
     *args: float | _np.ndarray,
-    softness: float = None,
-    hardness: float = None,
+    softness: float | None = None,
+    hardness: float | None = None,
 ) -> float | _np.ndarray:
     """
     An element-wise softmin between two or more arrays. Related to the logsumexp() function.
@@ -115,8 +115,8 @@ def softmin(
 
 def softmax_scalefree(
     *args: float | _np.ndarray,
-    relative_softness: float = None,
-    relative_hardness: float = None,
+    relative_softness: float | None = None,
+    relative_hardness: float | None = None,
 ) -> float | _np.ndarray:
     n_specified_arguments = (relative_hardness is not None) + (
         relative_softness is not None
@@ -136,8 +136,8 @@ def softmax_scalefree(
 
 def softmin_scalefree(
     *args: float | _np.ndarray,
-    relative_softness: float = None,
-    relative_hardness: float = None,
+    relative_softness: float | None = None,
+    relative_hardness: float | None = None,
 ) -> float | _np.ndarray:
     return -softmax_scalefree(
         *[-arg for arg in args],

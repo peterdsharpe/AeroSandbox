@@ -258,6 +258,8 @@ class Fuselage(AeroSandboxObject):
 
             r_max = np.sqrt(self.volume() / length / (3 * np.pi**2 / 16))
             return length / r_max
+        else:
+            raise ValueError(f"Invalid assumed_shape {assumed_shape!r}")
 
     def length(self) -> float:
         """
@@ -860,7 +862,7 @@ class FuselageXSec(AeroSandboxObject):
 
     def get_3D_coordinates(
         self, theta: float | np.ndarray | None = None
-    ) -> tuple[float | np.ndarray]:
+    ) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
         """
         Samples points from the perimeter of this FuselageXSec.
 

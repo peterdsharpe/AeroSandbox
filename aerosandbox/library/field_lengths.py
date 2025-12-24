@@ -20,7 +20,7 @@ def field_length_analysis_torenbeek(
     maximum_braking_deceleration_g: float = 0.37,
     inertia_time: float = 4.5,
     approach_angle_deg: float = 3,
-) -> dict[str, float]:
+) -> dict[str, float | np.ndarray]:
     """
     Performs a field length analysis on an aircraft, returning a dictionary of field length parameters.
 
@@ -287,7 +287,7 @@ def field_length_analysis(
     maximum_braking_deceleration_g: float = 0.37,
     inertia_time: float = 2,
     approach_angle_deg: float = 3,
-) -> dict[str, float]:
+) -> dict[str, float | np.ndarray]:
     ### Set defaults
     if atmosphere is None:
         atmosphere = asb.Atmosphere(altitude=0)

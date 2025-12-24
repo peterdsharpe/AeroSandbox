@@ -7,7 +7,7 @@ vector = [1, 2, 3]
 op_point = asb.OperatingPoint(alpha=10, beta=5)
 
 
-def chain_conversion(axes: list[str] = None):
+def chain_conversion(axes: list[str] | None = None):
     if axes is None:
         axes = ["geometry", "body", "geometry"]
 

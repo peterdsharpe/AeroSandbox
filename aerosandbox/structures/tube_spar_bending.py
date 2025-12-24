@@ -18,7 +18,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         points_per_point_load: int = 20,
         elastic_modulus_function: float
         | Callable[[np.ndarray], np.ndarray] = 175e9,  # Pa
-        EI_guess: float = None,
+        EI_guess: float | None = None,
         assume_thin_tube=True,
     ):
         """
