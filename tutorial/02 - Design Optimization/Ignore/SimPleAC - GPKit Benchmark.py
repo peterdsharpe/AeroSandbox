@@ -27,7 +27,6 @@ class SimPleAC(Model):
         W_W_coeff2 = Variable(
             "W_{W_{coeff2}}", 60.0, "Pa", "wing weight coefficent 2", pr=10.0
         )
-        p_labor = Variable("p_{labor}", 1.0, "1/min", "cost of labor", pr=20.0)
 
         # Dimensional constants
         Range = Variable("Range", 1000, "km", "aircraft range")

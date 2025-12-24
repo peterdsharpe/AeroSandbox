@@ -46,7 +46,7 @@ class LocalStiffnessMatrixComp(om.ExplicitComponent):
         coeffs[3, :] = [6 * L0, 2 * L0**2, -6 * L0, 4 * L0**2]
         coeffs *= E / L0**3
 
-        self.mtx = mtx = np.zeros((num_elements, 4, 4, num_elements))
+        self.mtx = np.zeros((num_elements, 4, 4, num_elements))
         for ind in range(num_elements):
             self.mtx[ind, :, :, ind] = coeffs
 

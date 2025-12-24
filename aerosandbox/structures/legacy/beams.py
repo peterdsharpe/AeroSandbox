@@ -296,13 +296,14 @@ class TubeBeam1(AeroSandboxObject):
                 (self.nominal_diameter + self.thickness) / 2 * self.E * self.ddu
             )
 
-        if self.torsion:
-            # Set up derivatives
-            phi = 0.1 * self.opti.variable(self.n)
-            dphi = 0.01 * self.opti.variable(self.n)
-
-            # Add forcing term
-            ddphi = -self.moment_per_unit_length / (self.G * self.J)
+        # Note: torsion feature is not yet implemented
+        # if self.torsion:
+        #     # Set up derivatives
+        #     phi = 0.1 * self.opti.variable(self.n)
+        #     dphi = 0.01 * self.opti.variable(self.n)
+        #
+        #     # Add forcing term
+        #     ddphi = -self.moment_per_unit_length / (self.G * self.J)
 
         self.stress = self.stress_axial
         self.opti.subject_to(

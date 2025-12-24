@@ -278,10 +278,6 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         )
         # Nx3, represents the freestream velocity at each panel collocation point (c)
 
-        freestream_influences = np.sum(
-            freestream_velocities * normal_directions, axis=1
-        )
-
         ### Save things to the instance for later access
         self.steady_freestream_velocity = steady_freestream_velocity
         self.steady_freestream_direction = steady_freestream_direction

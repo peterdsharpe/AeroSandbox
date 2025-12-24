@@ -233,7 +233,7 @@ def test_opti_constraint_violation_detection():
 
     ### This should fail or raise exception
     with pytest.raises(Exception):
-        sol = opti.solve(verbose=False)
+        opti.solve(verbose=False)
 
 
 def test_opti_freeze_variable():
@@ -313,7 +313,7 @@ def test_opti_callback_function():
         iteration_count[0] += 1
 
     try:
-        sol = opti.solve(verbose=False, callback=callback)
+        opti.solve(verbose=False, callback=callback)
         ### Callback might not be supported, that's ok
     except (TypeError, AttributeError):
         pass

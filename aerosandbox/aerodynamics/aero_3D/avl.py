@@ -260,7 +260,7 @@ class AVL(ExplicitAnalysis):
                     # check=True
                 )
                 outs, errs = proc.communicate(input=keystrokes, timeout=self.timeout)
-                return_code = proc.poll()
+                proc.poll()
 
             except subprocess.TimeoutExpired:
                 proc.kill()
@@ -436,7 +436,6 @@ class AVL(ExplicitAnalysis):
         """
         )
 
-        control_surface_counter = 0
         airfoil_counter = 0
 
         for wing in airplane.wings:

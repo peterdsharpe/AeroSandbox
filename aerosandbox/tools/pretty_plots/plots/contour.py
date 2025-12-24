@@ -148,8 +148,6 @@ def contour(
             )
 
         Z_ratio = np.nanmax(Z) / np.nanmin(Z)
-        log10_ceil_z_max = np.ceil(np.log10(np.nanmax(Z)))
-        log10_floor_z_min = np.floor(np.log10(np.nanmin(Z)))
 
         try:
             default_levels = int(levels)

@@ -6,7 +6,6 @@ from aerosandbox.tools import units as u
 def a() -> asb.Airplane:
     fuselage_cabin_diameter = 20.4 * u.foot
     fuselage_cabin_radius = fuselage_cabin_diameter / 2
-    fuselage_cabin_xsec_area = np.pi * fuselage_cabin_radius**2
 
     fuselage_cabin_length = 123.2 * u.foot
     fwd_fuel_tank_length = 6

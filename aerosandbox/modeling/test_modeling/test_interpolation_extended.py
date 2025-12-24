@@ -237,7 +237,7 @@ def test_interpolation_vector_output():
 
     ### InterpolatedModel only supports scalar outputs
     with pytest.raises(ValueError):
-        model = InterpolatedModel(
+        InterpolatedModel(
             x_data_coordinates={"x": x_data},
             y_data_structured=y_data,
         )

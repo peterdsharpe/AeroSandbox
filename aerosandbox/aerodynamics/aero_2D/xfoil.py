@@ -321,7 +321,7 @@ class XFoil(ExplicitAnalysis):
                 outs, errs = proc.communicate(
                     input="\n".join(keystrokes), timeout=self.timeout
                 )
-                return_code = proc.poll()
+                proc.poll()
 
             except subprocess.TimeoutExpired:
                 proc.kill()

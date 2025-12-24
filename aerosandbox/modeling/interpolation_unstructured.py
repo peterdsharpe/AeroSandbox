@@ -145,9 +145,6 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
             xi.flatten()
             for xi in np.meshgrid(*x_data_coordinates.values(), indexing="ij")
         ]
-        x_data_structured = {
-            k: xi for k, xi in zip(x_data.keys(), x_data_structured_values)
-        }
 
         y_data_structured = interpolator(
             np.stack(tuple(x_data_structured_values), axis=1)

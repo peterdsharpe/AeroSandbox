@@ -215,8 +215,6 @@ def field_length_analysis_torenbeek(
             flight_path_angle_climb_one_engine_out - minimum_allowable_flight_path_angle
         )
 
-        air_density_ratio = atmosphere.density() / asb.Atmosphere(altitude=0).density()
-
         balanced_field_length = (  # From Torenbeek, Eq. 5-89, modified to have inertia distance scale with V_liftoff
             (
                 V_liftoff**2
@@ -309,7 +307,6 @@ def field_length_analysis(
     acceleration_engines = thrust_at_liftoff / design_mass_TOGW
 
     acceleration_takeoff = acceleration_engines + acceleration_friction_and_drag
-    acceleration_coasting = acceleration_friction_and_drag
     acceleration_landing = acceleration_braking
 
     ##### Normal takeoff analysis #####

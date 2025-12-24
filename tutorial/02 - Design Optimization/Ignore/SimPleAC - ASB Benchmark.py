@@ -93,7 +93,7 @@ def solve():
 
     opti.minimize(W_f)
 
-    sol = opti.solve(verbose=False)
+    opti.solve(verbose=False)
 
 
 def timeit():

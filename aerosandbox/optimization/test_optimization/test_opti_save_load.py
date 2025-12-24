@@ -44,7 +44,7 @@ def test_save_opti(tmp_path):
     opti.minimize(f)
 
     # Optimize
-    sol = opti.solve()
+    opti.solve()
 
     opti.save_solution()
 

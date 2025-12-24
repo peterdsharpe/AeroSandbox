@@ -146,7 +146,6 @@ def get_aero(
     # Relation taken from W.H. Mason's Korn Equation
 
     ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
-    gamma = 1.4  # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
     beta_squared_ideal = 1 - mach**2
     beta = (
         np.softmax(

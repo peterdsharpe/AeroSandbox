@@ -244,7 +244,7 @@ class MSES(ExplicitAnalysis):
                 )
 
             try:
-                mset_run = mset(mset_alpha=alphas[0])
+                mset(mset_alpha=alphas[0])
             except subprocess.CalledProcessError as e:
                 print(e.stdout)
                 print(e.stderr)
@@ -313,7 +313,7 @@ class MSES(ExplicitAnalysis):
                             next_alpha = alphas[i + 1]
                         except IndexError:
                             break
-                        mset_run = mset(mset_alpha=next_alpha)
+                        mset(mset_alpha=next_alpha)
                     elif self.behavior_after_unconverged_run == "terminate":
                         if self.verbosity >= 1:
                             print(

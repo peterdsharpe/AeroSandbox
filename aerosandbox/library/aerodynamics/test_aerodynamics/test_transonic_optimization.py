@@ -17,7 +17,7 @@ def test_simple_scalar_optimization():
     )
     CD = CD_induced + CD_wave
     opti.minimize(CD)
-    sol = opti.solve()
+    opti.solve()
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import aerosandbox.numpy as np
 from scipy.special import comb
 import re
 import os
+from typing import Literal
 
 _default_n_points_per_side = 200
 

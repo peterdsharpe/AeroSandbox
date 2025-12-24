@@ -148,7 +148,6 @@ def test_method_endpoints_lower_order():
     result = integrate_discrete_intervals(
         f, x, method="cubic", method_endpoints="lower_order"
     )
-    integral = np.sum(result)
 
     assert len(result) == len(x) - 1
     assert not np.any(np.isnan(result))

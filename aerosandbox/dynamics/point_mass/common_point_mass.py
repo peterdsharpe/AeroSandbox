@@ -481,14 +481,6 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             if np.length(z_e) == 1:
                 z_e = z_e * np.ones(len(self))
 
-            trajectory_bounds = np.array(
-                [
-                    [x_e.min(), x_e.max()],
-                    [y_e.min(), y_e.max()],
-                    [z_e.min(), z_e.max()],
-                ]
-            )
-
             vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
 
             # trajectory_size = np.max(np.diff(trajectory_bounds, axis=1))  # Max dimension

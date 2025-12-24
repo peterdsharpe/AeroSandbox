@@ -253,11 +253,7 @@ class Polygon(AeroSandboxObject):
             x * y_n - x_n * y
         )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
 
-        A = 0.5 * np.sum(a)  # area
-
-        # Centroid location
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
+        0.5 * np.sum(a)  # area
 
         Ixx = 1 / 12 * np.sum(a * (y**2 + y * y_n + y_n**2))
 

@@ -329,7 +329,6 @@ def test_reshape_2D():
 
 def test_assert_equal_shape():
     a = np.array([1, 2, 3])
-    b = cas.DM(a)
 
     np.assert_equal_shape([a, a])
     np.assert_equal_shape(

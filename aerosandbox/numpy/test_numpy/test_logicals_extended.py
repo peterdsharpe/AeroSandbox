@@ -138,22 +138,22 @@ def test_logical_not_casadi():
 
 def test_logical_not_scalar():
     """Test logical NOT with scalar values."""
-    assert logical_not(True) == False
-    assert logical_not(False) == True
+    assert not logical_not(True)
+    assert logical_not(False)
 
 
 def test_all_true_numpy():
     """Test all() with all True values (NumPy)."""
     a = np.array([True, True, True])
     result = all(a)
-    assert result == True
+    assert result
 
 
 def test_all_false_numpy():
     """Test all() with at least one False (NumPy)."""
     a = np.array([True, False, True])
     result = all(a)
-    assert result == False
+    assert not result
 
 
 def test_all_casadi_true():
@@ -168,14 +168,14 @@ def test_any_true_numpy():
     """Test any() with at least one True (NumPy)."""
     a = np.array([False, True, False])
     result = any(a)
-    assert result == True
+    assert result
 
 
 def test_any_false_numpy():
     """Test any() with all False (NumPy)."""
     a = np.array([False, False, False])
     result = any(a)
-    assert result == False
+    assert not result
 
 
 def test_any_casadi():
@@ -244,14 +244,14 @@ def test_all_empty_array():
     """Test all() with empty array."""
     a = np.array([])
     result = all(a)
-    assert result == True  ### all() of empty array is True by convention
+    assert result  ### all() of empty array is True by convention
 
 
 def test_any_empty_array():
     """Test any() with empty array."""
     a = np.array([])
     result = any(a)
-    assert result == False  ### any() of empty array is False by convention
+    assert not result  ### any() of empty array is False by convention
 
 
 def test_clip_equal_bounds():

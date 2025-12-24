@@ -31,7 +31,7 @@ def test_airfoil_without_TE_gap():
 
 
 def test_airfoil_multielement():
-    a = asb.AirfoilInviscid(
+    asb.AirfoilInviscid(
         airfoil=[
             asb.Airfoil("e423").repanel(n_points_per_side=50),
             asb.Airfoil("naca6408")

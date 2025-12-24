@@ -383,11 +383,6 @@ def codegen(
     if _required_imports is None:
         _required_imports = set()
 
-    import_aliases = {
-        "aerosandbox": "asb",
-        "aerosandbox.numpy": "np",
-        "numpy": "np",
-    }
 
     indent = indent_str * _recursion_depth
     next_indent = indent_str * (_recursion_depth + 1)
@@ -490,7 +485,7 @@ def codegen(
         package_name = module_name.split(".")[0]
 
         if package_name == "builtins":
-            pre_string = ""
+            pass
         # elif package_name in import_aliases:
         #     pre_string = import_aliases[package_name] + "."
         else:

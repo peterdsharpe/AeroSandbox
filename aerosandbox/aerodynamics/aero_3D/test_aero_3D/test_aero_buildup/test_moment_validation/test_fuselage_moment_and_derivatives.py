@@ -295,8 +295,6 @@ def test_fuselage_with_base_drag(
     )  # this is not-strictly-speaking exact, hence the large tolerance
     assert aero["Cn"] == pytest.approx(0, abs=1e-3)
 
-    Cma = 2 / airplane.s_ref / airplane.c_ref * (fuselage.volume() - l * A(l))
-
     # print(f"Cma_slb: {Cma}")
     # assert aero["Cma"] == pytest.approx(
     #     Cma,

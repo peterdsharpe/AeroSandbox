@@ -1,4 +1,5 @@
 from aerosandbox import ExplicitAnalysis
+import aerosandbox.numpy as np
 from aerosandbox.geometry import Airplane
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
@@ -806,7 +807,6 @@ class LiftingLine(ExplicitAnalysis):
             )
             for i, af in enumerate(airfoils)
         ]
-        CLs = np.array([aero["CL"] for aero in aeros])
         CDs = np.array([aero["CD"] for aero in aeros])
         CMs = np.array([aero["CM"] for aero in aeros])
 
