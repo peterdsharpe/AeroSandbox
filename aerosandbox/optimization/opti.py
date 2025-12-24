@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Callable, Any, Literal, Sequence
 import json
 import casadi as cas
@@ -5,6 +6,7 @@ import aerosandbox.numpy as np
 from aerosandbox.tools import inspect_tools
 from sortedcontainers import SortedDict
 import copy
+from aerosandbox.numpy.typing import ArrayLike
 
 
 class Opti(cas.Opti):
@@ -71,14 +73,14 @@ class Opti(cas.Opti):
 
     def variable(
         self,
-        init_guess: float | np.ndarray | None = None,
-        n_vars: int = None,
-        scale: float = None,
+        init_guess: float | int | np.ndarray | None = None,
+        n_vars: int | None = None,
+        scale: float | int | np.ndarray | None = None,
         freeze: bool = False,
         log_transform: bool = False,
         category: str = "Uncategorized",
-        lower_bound: float = None,
-        upper_bound: float = None,
+        lower_bound: float | int | np.ndarray | None = None,
+        upper_bound: float | int | np.ndarray | None = None,
         _stacklevel: int = 1,
     ) -> cas.MX | float | np.ndarray:
         """
@@ -369,7 +371,7 @@ class Opti(cas.Opti):
         self,
         constraint: cas.MX | bool | list,  # TODO add scale
         _stacklevel: int = 1,
-    ) -> cas.MX | None | list[cas.MX]:
+    ) -> cas.MX | None | list[cas.MX | None]:
         """
         Initialize a new equality or inequality constraint(s).
 
@@ -1007,7 +1009,7 @@ class Opti(cas.Opti):
         method: str = "trapezoidal",
         explicit: bool = False,  # TODO implement explicit
         _stacklevel: int = 1,
-    ) -> cas.MX:
+    ) -> cas.MX | float | np.ndarray:
         """
         Returns a quantity that is either defined or constrained to be a derivative of an existing variable.
 
@@ -1138,9 +1140,9 @@ class Opti(cas.Opti):
 
     def constrain_derivative(
         self,
-        derivative: cas.MX,
-        variable: cas.MX,
-        with_respect_to: np.ndarray | cas.MX,
+        derivative: ArrayLike,
+        variable: ArrayLike,
+        with_respect_to: ArrayLike,
         method: str = "trapezoidal",
         _stacklevel: int = 1,
     ) -> cas.MX | None | list[cas.MX]:
