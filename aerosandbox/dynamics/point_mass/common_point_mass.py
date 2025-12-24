@@ -13,13 +13,14 @@ from aerosandbox import (
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 import copy
+from aerosandbox.numpy.typing import Vectorizable, Scalar, Vector
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
     def __init__(
         self,
-        mass_props: MassProperties = None,
+        mass_props: MassProperties | None = None,
         **state_variables_and_indirect_control_variables,
     ):
         self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
@@ -254,7 +255,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def constrain_derivatives(
         self,
         opti: Opti,
-        time: np.ndarray,
+        time: Vector,
         method: str = "trapezoidal",
         which: str | Sequence[str] = "all",
         _stacklevel=1,
@@ -319,12 +320,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
     def convert_axes(
         self,
-        x_from: float,
-        y_from: float,
-        z_from: float,
+        x_from: Vectorizable,
+        y_from: Vectorizable,
+        z_from: Vectorizable,
         from_axes: str,
         to_axes: str,
-    ) -> tuple[float, float, float]:
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.

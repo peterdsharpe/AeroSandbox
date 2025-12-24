@@ -193,7 +193,7 @@ def calculate_lift_due_to_transverse_gust(
 
 def calculate_lift_due_to_pitching_profile(
     reduced_time: np.ndarray,
-    angle_of_attack: Callable[[float] | float, float],  # In degrees
+    angle_of_attack: Callable[[float], float] | float,  # In degrees
 ):
     """
     Calculates the duhamel superposition integral of Wagner's problem.
@@ -269,7 +269,7 @@ def pitching_through_transverse_gust(
     reduced_time: np.ndarray,
     gust_velocity_profile: Callable[[float], float],
     plate_velocity: float,
-    angle_of_attack: Callable[[float] | float, float],  # In degrees
+    angle_of_attack: Callable[[float], float] | float,  # In degrees
     chord: float = 1,
 ):
     """

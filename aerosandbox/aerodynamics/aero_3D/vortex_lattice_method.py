@@ -5,7 +5,7 @@ from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
     calculate_induced_velocity_horseshoe,
 )
-from typing import Dict, Any, List, Callable
+from typing import Any, Callable
 import copy
 
 
@@ -47,13 +47,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution: int = 10,
-        spanwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
-        ] = np.cosspace,
+        spanwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
         chordwise_resolution: int = 10,
-        chordwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
-        ] = np.cosspace,
+        chordwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
         vortex_core_radius: float = 1e-8,
         align_trailing_vortices_with_wind: bool = False,
     ):
@@ -105,7 +101,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
             + "\n)"
         )
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
         Computes the aerodynamic forces.
 

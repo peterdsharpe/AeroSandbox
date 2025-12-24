@@ -3,8 +3,8 @@ from aerosandbox.dynamics.point_mass.common_point_mass import (
     _DynamicsPointMassBaseClass,
 )
 from abc import ABC, abstractmethod
-from typing import Union
 from aerosandbox import OperatingPoint, Atmosphere
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
@@ -13,9 +13,9 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
     @abstractmethod
     def add_moment(
         self,
-        Mx: Union[float, np.ndarray] = 0,
-        My: Union[float, np.ndarray] = 0,
-        Mz: Union[float, np.ndarray] = 0,
+        Mx: Vectorizable = 0,
+        My: Vectorizable = 0,
+        Mz: Vectorizable = 0,
         axes="body",
     ) -> None:
         """

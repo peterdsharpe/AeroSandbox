@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import List
 import copy
 import pytest
 
@@ -21,7 +20,7 @@ dyn = asb.DynamicsRigidBody3DBodyEuler(
 )
 
 
-def chain_conversion(axes: List[str] = None):
+def chain_conversion(axes: list[str] | None = None):
     if axes is None:
         axes = ["geometry", "body", "geometry"]
 

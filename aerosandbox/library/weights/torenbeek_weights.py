@@ -136,7 +136,7 @@ def mass_wing_basic_structure(
     suspended_mass: float,
     never_exceed_airspeed: float,
     main_gear_mounted_to_wing: bool = True,
-    strut_y_location: float = None,
+    strut_y_location: float | None = None,
     k_e: float = 0.95,
     return_dict: bool = False,
 ) -> float | dict[str, float]:
@@ -281,7 +281,7 @@ def mass_wing(
     max_airspeed_for_flaps: float,
     main_gear_mounted_to_wing: bool = True,
     flap_deflection_angle: float = 30,
-    strut_y_location: float = None,
+    strut_y_location: float | None = None,
     return_dict: bool = False,
 ) -> float | dict[str, float]:
     """

@@ -7,6 +7,7 @@ from aerosandbox.atmosphere._diff_atmo_functions import (
 )
 import aerosandbox.tools.units as u
 from typing import Literal
+from aerosandbox.numpy.typing import Vectorizable
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
@@ -29,9 +30,9 @@ class Atmosphere(AeroSandboxObject):
 
     def __init__(
         self,
-        altitude: float = 0.0,  # meters
+        altitude: Vectorizable = 0.0,  # meters
         method: Literal["differentiable", "isa"] = "differentiable",
-        temperature_deviation: float = 0.0,  # Kelvin
+        temperature_deviation: Vectorizable = 0.0,  # Kelvin
     ):
         """
         Initialize a new Atmosphere.

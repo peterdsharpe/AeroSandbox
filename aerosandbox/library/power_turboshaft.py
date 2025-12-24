@@ -33,7 +33,7 @@ def overall_pressure_ratio_turboshaft_technology_limit(mass_turboshaft: float) -
 
 def power_turboshaft(
     mass_turboshaft: float,
-    overall_pressure_ratio: float = None,
+    overall_pressure_ratio: float | None = None,
 ) -> float:
     """
     Estimates the maximum rated power of a turboshaft engine, given its mass. A regression to historical data.
@@ -74,7 +74,7 @@ def power_turboshaft(
 
 def thermal_efficiency_turboshaft(
     mass_turboshaft: float,
-    overall_pressure_ratio: float = None,
+    overall_pressure_ratio: float | None = None,
     throttle_setting: float = 1,
 ) -> float:
     """

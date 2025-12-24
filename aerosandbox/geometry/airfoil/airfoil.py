@@ -10,10 +10,11 @@ from aerosandbox.modeling.splines.hermite import (
     cubic_hermite_patch,
 )
 from scipy import interpolate
-from typing import Union, Any, Dict, List
+from typing import Any
 import json
 from pathlib import Path
 import os
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike
 
 
 class Airfoil(Polygon):
@@ -24,7 +25,7 @@ class Airfoil(Polygon):
     def __init__(
         self,
         name: str = "Untitled",
-        coordinates: Union[None, str, Path, np.ndarray] = None,
+        coordinates: None | str | Path | np.ndarray = None,
         **deprecated_keyword_arguments,
     ):
         """
@@ -645,16 +646,16 @@ class Airfoil(Polygon):
 
     def get_aero_from_neuralfoil(
         self,
-        alpha: Union[float, np.ndarray],
-        Re: Union[float, np.ndarray],
-        mach: Union[float, np.ndarray] = 0.0,
-        n_crit: Union[float, np.ndarray] = 9.0,
-        xtr_upper: Union[float, np.ndarray] = 1.0,
-        xtr_lower: Union[float, np.ndarray] = 1.0,
+        alpha: Vectorizable,
+        Re: Vectorizable,
+        mach: Vectorizable = 0.0,
+        n_crit: Vectorizable = 9.0,
+        xtr_upper: Vectorizable = 1.0,
+        xtr_lower: Vectorizable = 1.0,
         model_size: str = "large",
         control_surfaces: list["ControlSurface"] | None = None,
         include_360_deg_effects: bool = True,
-    ) -> Dict[str, Union[float, np.ndarray]]:
+    ) -> dict[str, Vectorizable]:
         ### Normalize the inputs and evaluate
         normalization_outputs = self.normalize(return_dict=True)
         normalized_airfoil = normalization_outputs["airfoil"].to_kulfan_airfoil(
@@ -695,8 +696,8 @@ class Airfoil(Polygon):
 
     def plot_polars(
         self,
-        alphas: Union[np.ndarray, List[float]] = np.linspace(-20, 20, 500),
-        Res: Union[np.ndarray, List[float]] = 10 ** np.arange(3, 9),
+        alphas: np.ndarray | list[float] = np.linspace(-20, 20, 500),
+        Res: np.ndarray | list[float] = 10 ** np.arange(3, 9),
         mach: float = 0.0,
         show: bool = True,
         Re_colors=None,
@@ -771,8 +772,8 @@ class Airfoil(Polygon):
             )
 
     def local_camber(
-        self, x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
-    ) -> Union[float, np.ndarray]:
+        self, x_over_c: float | np.ndarray = np.linspace(0, 1, 101)
+    ) -> float | np.ndarray:
         """
         Returns the local camber of the airfoil at a given point or points.
 
@@ -799,8 +800,8 @@ class Airfoil(Polygon):
         return (upper_interpolated + lower_interpolated) / 2
 
     def local_thickness(
-        self, x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
-    ) -> Union[float, np.ndarray]:
+        self, x_over_c: float | np.ndarray = np.linspace(0, 1, 101)
+    ) -> float | np.ndarray:
         """
         Returns the local thickness of the airfoil at a given point or points.
 
@@ -1094,7 +1095,7 @@ class Airfoil(Polygon):
     def normalize(
         self,
         return_dict: bool = False,
-    ) -> Union["Airfoil", Dict[str, Union["Airfoil", float]]]:
+    ) -> "Airfoil | dict[str, Airfoil | float]":
         """
         Returns a copy of the Airfoil with a new set of `coordinates`, such that:
             - The leading edge (LE) is at (0, 0)

@@ -5,6 +5,7 @@ from aerosandbox.geometry.common import *
 from typing import Any, Callable
 from typing import Sequence
 import copy
+from aerosandbox.numpy.typing import Scalar  # Type alias including CasADi types
 
 
 class Fuselage(AeroSandboxObject):
@@ -522,7 +523,7 @@ class Fuselage(AeroSandboxObject):
     def subdivide_sections(
         self,
         ratio: int,
-        spacing_function: Callable[[float, float, float], np.ndarray] = np.linspace,
+        spacing_function: Callable[[float, float, int], np.ndarray] = np.linspace,
     ) -> "Fuselage":
         """
         Generates a new Fuselage that subdivides the existing sections of this Fuselage into several smaller ones. Splits
@@ -606,9 +607,9 @@ class FuselageXSec(AeroSandboxObject):
         self,
         xyz_c: np.ndarray | Sequence[float] | None = None,
         xyz_normal: np.ndarray | Sequence[float] | None = None,
-        radius: float = None,
-        width: float = None,
-        height: float = None,
+        radius: Scalar | None = None,
+        width: Scalar | None = None,
+        height: Scalar | None = None,
         shape: float = 2.0,
         analysis_specific_options: dict[type, dict[str, Any]] | None = None,
     ):

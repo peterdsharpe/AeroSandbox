@@ -3,7 +3,7 @@ from aerosandbox.dynamics.rigid_body.common_rigid_body import (
 )
 import aerosandbox.numpy as np
 from aerosandbox.weights.mass_properties import MassProperties
-from typing import Union
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
@@ -43,19 +43,19 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def __init__(
         self,
-        mass_props: MassProperties = None,
-        x_e: Union[float, np.ndarray] = 0,
-        y_e: Union[float, np.ndarray] = 0,
-        z_e: Union[float, np.ndarray] = 0,
-        u_b: Union[float, np.ndarray] = 0,
-        v_b: Union[float, np.ndarray] = 0,
-        w_b: Union[float, np.ndarray] = 0,
-        phi: Union[float, np.ndarray] = 0,
-        theta: Union[float, np.ndarray] = 0,
-        psi: Union[float, np.ndarray] = 0,
-        p: Union[float, np.ndarray] = 0,
-        q: Union[float, np.ndarray] = 0,
-        r: Union[float, np.ndarray] = 0,
+        mass_props: MassProperties | None = None,
+        x_e: Vectorizable = 0,
+        y_e: Vectorizable = 0,
+        z_e: Vectorizable = 0,
+        u_b: Vectorizable = 0,
+        v_b: Vectorizable = 0,
+        w_b: Vectorizable = 0,
+        phi: Vectorizable = 0,
+        theta: Vectorizable = 0,
+        psi: Vectorizable = 0,
+        p: Vectorizable = 0,
+        q: Vectorizable = 0,
+        r: Vectorizable = 0,
     ):
         # Initialize state variables
         self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
@@ -279,12 +279,12 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def convert_axes(
         self,
-        x_from,
-        y_from,
-        z_from,
+        x_from: Vectorizable,
+        y_from: Vectorizable,
+        z_from: Vectorizable,
         from_axes: str,
         to_axes: str,
-    ):
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
         y_to, z_to], as given in the `to_axes` frame.
@@ -383,9 +383,9 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def add_force(
         self,
-        Fx: Union[float, np.ndarray] = 0,
-        Fy: Union[float, np.ndarray] = 0,
-        Fz: Union[float, np.ndarray] = 0,
+        Fx: Vectorizable = 0,
+        Fy: Vectorizable = 0,
+        Fz: Vectorizable = 0,
         axes="body",
     ):
         Fx_b, Fy_b, Fz_b = self.convert_axes(
@@ -397,9 +397,9 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def add_moment(
         self,
-        Mx: Union[float, np.ndarray] = 0,
-        My: Union[float, np.ndarray] = 0,
-        Mz: Union[float, np.ndarray] = 0,
+        Mx: Vectorizable = 0,
+        My: Vectorizable = 0,
+        Mz: Vectorizable = 0,
         axes="body",
     ):
         Mx_b, My_b, Mz_b = self.convert_axes(

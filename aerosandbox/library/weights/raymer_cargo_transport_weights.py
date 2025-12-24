@@ -57,7 +57,7 @@ def mass_hstab(
     ultimate_load_factor: float,
     wing_to_hstab_distance: float,
     fuselage_width_at_hstab_intersection: float,
-    aircraft_y_radius_of_gyration: float = None,
+    aircraft_y_radius_of_gyration: float | None = None,
     use_advanced_composites: bool = False,
 ) -> float:
     """
@@ -122,7 +122,7 @@ def mass_vstab(
     ultimate_load_factor: float,
     wing_to_vstab_distance: float,
     is_t_tail: bool = False,
-    aircraft_z_radius_of_gyration: float = None,
+    aircraft_z_radius_of_gyration: float | None = None,
     use_advanced_composites: bool = False,
 ) -> float:
     """

@@ -3,7 +3,7 @@ from aerosandbox.dynamics.point_mass.common_point_mass import (
 )
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
-from typing import Union, Dict, Tuple
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
@@ -35,16 +35,16 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
 
     def __init__(
         self,
-        mass_props: MassProperties = None,
-        x_e: Union[float, np.ndarray] = 0,
-        y_e: Union[float, np.ndarray] = 0,
-        z_e: Union[float, np.ndarray] = 0,
-        u_e: Union[float, np.ndarray] = 0,
-        v_e: Union[float, np.ndarray] = 0,
-        w_e: Union[float, np.ndarray] = 0,
-        alpha: Union[float, np.ndarray] = 0,
-        beta: Union[float, np.ndarray] = 0,
-        bank: Union[float, np.ndarray] = 0,
+        mass_props: MassProperties | None = None,
+        x_e: Vectorizable = 0,
+        y_e: Vectorizable = 0,
+        z_e: Vectorizable = 0,
+        u_e: Vectorizable = 0,
+        v_e: Vectorizable = 0,
+        w_e: Vectorizable = 0,
+        alpha: Vectorizable = 0,
+        beta: Vectorizable = 0,
+        bank: Vectorizable = 0,
     ):
         # Initialize state variables
         self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
@@ -66,7 +66,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         self.Fz_e = 0
 
     @property
-    def state(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state(self) -> dict[str, Vectorizable]:
         return {
             "x_e": self.x_e,
             "y_e": self.y_e,
@@ -77,7 +77,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         }
 
     @property
-    def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
+    def control_variables(self) -> dict[str, Vectorizable]:
         return {
             "alpha": self.alpha,
             "beta": self.beta,
@@ -87,7 +87,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
             "Fz_e": self.Fz_e,
         }
 
-    def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state_derivatives(self) -> dict[str, Vectorizable]:
         return {
             "x_e": self.u_e,
             "y_e": self.v_e,
@@ -136,12 +136,12 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
 
     def convert_axes(
         self,
-        x_from: float,
-        y_from: float,
-        z_from: float,
+        x_from: Vectorizable,
+        y_from: Vectorizable,
+        z_from: Vectorizable,
         from_axes: str,
         to_axes: str,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         if from_axes == to_axes:
             return x_from, y_from, z_from
 
@@ -219,9 +219,9 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
 
     def add_force(
         self,
-        Fx: Union[float, np.ndarray] = 0,
-        Fy: Union[float, np.ndarray] = 0,
-        Fz: Union[float, np.ndarray] = 0,
+        Fx: Vectorizable = 0,
+        Fy: Vectorizable = 0,
+        Fz: Vectorizable = 0,
         axes="earth",
     ) -> None:
         Fx_e, Fy_e, Fz_e = self.convert_axes(

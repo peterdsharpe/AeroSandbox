@@ -6,6 +6,7 @@ from numpy import pi
 import aerosandbox.numpy as np
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 import copy
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Scalar
 
 
 class Wing(AeroSandboxObject):
@@ -631,13 +632,33 @@ class Wing(AeroSandboxObject):
             section_MAC_le = inner_xsec.xyz_le + (
                 outer_xsec.xyz_le - inner_xsec.xyz_le
             ) * (1 + 2 * section_taper_ratio) / (3 + 3 * section_taper_ratio)
-            section_AC = section_MAC_le + np.array(
-                [  # TODO rotate this vector by the local twist angle
+
+            ### Compute the AC offset vector and rotate it by the local twist angle
+            ac_offset_unrotated = np.array(
+                [
                     chord_fraction * section_MAC_length,
                     0,
                     0,
                 ]
             )
+
+            # Compute the average twist for this section
+            section_twist = (inner_xsec.twist + outer_xsec.twist) / 2
+
+            # Compute the twist axis: YZ-projected span direction, normalized
+            span_vector = outer_xsec.xyz_le - inner_xsec.xyz_le
+            span_yz = np.array([0, span_vector[1], span_vector[2]])
+            span_yz_norm = np.linalg.norm(span_yz)
+
+            if span_yz_norm > 1e-8:  # Only rotate if there's a valid twist axis
+                twist_axis = span_yz / span_yz_norm
+                rot = np.rotation_matrix_3D(section_twist * pi / 180, twist_axis)
+                ac_offset = rot @ ac_offset_unrotated
+            else:
+                # Degenerate case: span is purely in X direction, no twist axis defined
+                ac_offset = ac_offset_unrotated
+
+            section_AC = section_MAC_le + ac_offset
 
             sectional_ACs.append(section_AC)
 
@@ -811,9 +832,7 @@ class Wing(AeroSandboxObject):
         self,
         method="quad",
         chordwise_resolution: int = 36,
-        chordwise_spacing_function_per_side: Callable[
-            [float, float, float], np.ndarray
-        ] = np.cosspace,
+        chordwise_spacing_function_per_side: Callable[[float, float, int], np.ndarray] = np.cosspace,
         mesh_surface: bool = True,
         mesh_tips: bool = True,
         mesh_trailing_edge: bool = True,
@@ -977,9 +996,7 @@ class Wing(AeroSandboxObject):
         self,
         method="tri",
         chordwise_resolution: int = 36,
-        chordwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
-        ] = np.cosspace,
+        chordwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
         add_camber: bool = True,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -1220,7 +1237,7 @@ class Wing(AeroSandboxObject):
     def subdivide_sections(
         self,
         ratio: int,
-        spacing_function: Callable[[float, float, float], np.ndarray] = np.linspace,
+        spacing_function: Callable[[float, float, int], np.ndarray] = np.linspace,
     ) -> "Wing":
         """
         Generates a new Wing that subdivides the existing sections of this Wing into several smaller ones. Splits
@@ -1409,10 +1426,10 @@ class WingXSec(AeroSandboxObject):
 
     def __init__(
         self,
-        xyz_le: np.ndarray | Sequence[float] | None = None,
-        chord: float = 1.0,
-        twist: float = 0.0,
-        airfoil: Airfoil = None,
+        xyz_le: ArrayLike | None = None,
+        chord: Scalar = 1.0,
+        twist: Scalar = 0.0,
+        airfoil: Airfoil | None = None,
         control_surfaces: list["ControlSurface"] | None = None,
         analysis_specific_options: dict[type, dict[str, Any]] | None = None,
         **deprecated_kwargs,

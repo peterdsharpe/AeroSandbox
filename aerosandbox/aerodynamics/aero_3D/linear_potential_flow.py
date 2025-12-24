@@ -5,7 +5,7 @@ from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
     calculate_induced_velocity_horseshoe,
 )
-from typing import Dict, Any, List, Union, Tuple
+from typing import Any
 from functools import cached_property, partial
 from dataclasses import dataclass
 from abc import abstractmethod, ABC
@@ -68,8 +68,8 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 fuselage: fuselage_model for fuselage in self.airplane.fuselages
             }
 
-        self.wing_model: Dict[Wing, str] = wing_model
-        self.fuselage_model: Dict[Fuselage, str] = fuselage_model
+        self.wing_model: dict[Wing, str] = wing_model
+        self.fuselage_model: dict[Fuselage, str] = fuselage_model
 
         ##### Set up the modeling options
         ### Check the format of the wing options
@@ -101,8 +101,8 @@ class LinearPotentialFlow(ExplicitAnalysis):
             }
 
         ### Set user-specified values
-        self.wing_options: Dict[Wing, Dict[str, Any]] = wing_options
-        self.fuselage_options: Dict[Fuselage, Dict[str, Any]] = fuselage_options
+        self.wing_options: dict[Wing, dict[str, Any]] = wing_options
+        self.fuselage_options: dict[Fuselage, dict[str, Any]] = fuselage_options
 
         ### Set default values
         wing_model_default_options = {
@@ -283,7 +283,7 @@ class LinearPotentialFlow(ExplicitAnalysis):
             points: np.ndarray,
             vortex_strengths: np.ndarray,
             sum_across_elements: bool = True,
-        ) -> Tuple[np.ndarray]:
+        ) -> tuple[np.ndarray]:
             u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
                 x_field=tall(points[:, 0]),
                 y_field=tall(points[:, 1]),
@@ -436,7 +436,7 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
         return A
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
         Computes the aerodynamic forces.
 

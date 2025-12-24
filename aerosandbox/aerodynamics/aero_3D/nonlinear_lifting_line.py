@@ -8,7 +8,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
     calculate_induced_velocity_point_source,
 )
 import aerosandbox.numpy as np
-from typing import Dict, Any, Callable, List
+from typing import Any, Callable
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
@@ -52,9 +52,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution=8,  # TODO document
-        spanwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
-        ] = np.cosspace,
+        spanwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
         vortex_core_radius: float = 1e-8,
         align_trailing_vortices_with_wind: bool = False,
     ):
@@ -122,7 +120,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             + "\n)"
         )
 
-    def run(self, solve: bool = True) -> Dict[str, Any]:
+    def run(self, solve: bool = True) -> dict[str, Any]:
         """
         Computes the aerodynamic forces.
 
@@ -163,8 +161,8 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         back_left_vertices = []
         back_right_vertices = []
         front_right_vertices = []
-        airfoils: List[Airfoil] = []
-        control_surfaces: List[List[ControlSurface]] = []
+        airfoils: list[Airfoil] = []
+        control_surfaces: list[list[ControlSurface]] = []
 
         for wing in self.airplane.wings:  # subdivide the wing in more spanwise sections
             if self.spanwise_resolution > 1:
@@ -250,8 +248,8 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
-        self.airfoils: List[Airfoil] = airfoils
-        self.control_surfaces: List[List[ControlSurface]] = control_surfaces
+        self.airfoils: list[Airfoil] = airfoils
+        self.control_surfaces: list[list[ControlSurface]] = control_surfaces
         self.normal_directions = normal_directions
         self.areas = areas
         self.left_vortex_vertices = left_vortex_vertices

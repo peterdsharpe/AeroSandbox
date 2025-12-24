@@ -1,9 +1,8 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import List
 
 
-def get_airfoil_database() -> List[asb.Airfoil]:
+def get_airfoil_database() -> list[asb.Airfoil]:
     airfoil_database_root = asb._asb_root / "geometry" / "airfoil" / "airfoil_database"
 
     afs = [

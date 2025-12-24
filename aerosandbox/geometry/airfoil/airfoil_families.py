@@ -1,9 +1,7 @@
 import aerosandbox.numpy as np
 from scipy.special import comb
 import re
-from typing import Union
 import os
-from typing import List, Optional, Dict
 
 _default_n_points_per_side = 200
 
@@ -283,7 +281,7 @@ def get_kulfan_parameters(
     normalize_coordinates: bool = True,
     use_leading_edge_modification: bool = True,
     method: str = "least_squares",
-) -> Dict[str, Union[np.ndarray, float]]:
+) -> dict[str, np.ndarray | float]:
     """
     Given a set of airfoil coordinates, reconstructs the Kulfan parameters that would recreate that airfoil. Uses a
     curve fitting (optimization) process.
@@ -555,7 +553,7 @@ def get_kulfan_parameters(
         raise ValueError(f"Invalid method '{method}'.")
 
 
-def get_coordinates_from_raw_dat(raw_text: List[str]) -> np.ndarray:
+def get_coordinates_from_raw_dat(raw_text: list[str]) -> np.ndarray:
     """
     Returns a Nx2 ndarray of airfoil coordinates from the raw text of a airfoil *.dat file.
 
@@ -577,7 +575,7 @@ def get_coordinates_from_raw_dat(raw_text: List[str]) -> np.ndarray:
             return False
         return True
 
-    def parse_line(line: str) -> Optional[List[float]]:
+    def parse_line(line: str) -> list[float] | None:
         # Given a single line of a `*.dat` file, tries to parse it into a list of two floats [x, y].
         # If not possible, returns None.
         line_split = re.split(r"[;|,|\s|\t]", line)
@@ -600,7 +598,7 @@ def get_coordinates_from_raw_dat(raw_text: List[str]) -> np.ndarray:
     return coordinates
 
 
-def get_file_coordinates(filepath: Union[str, os.PathLike]):
+def get_file_coordinates(filepath: str | os.PathLike):
     possible_errors = (FileNotFoundError, UnicodeDecodeError)
 
     if isinstance(filepath, np.ndarray):

@@ -279,7 +279,7 @@ def field_length_analysis(
     s_ref: float,
     n_engines: int,
     V_engine_failure_balanced_field_length: float,
-    atmosphere: asb.Atmosphere = None,
+    atmosphere: asb.Atmosphere | None = None,
     CD_zero_lift: float = 0.03,
     obstacle_height: float = 35 * u.foot,
     friction_coefficient: float = 0.02,

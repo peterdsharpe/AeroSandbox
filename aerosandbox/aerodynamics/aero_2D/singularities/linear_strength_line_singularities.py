@@ -1,17 +1,16 @@
 import aerosandbox.numpy as np
-from typing import Union
 import casadi as cas
 
 
 def _calculate_induced_velocity_line_singularity_panel_coordinates(
-    xp_field: Union[float, np.ndarray],
-    yp_field: Union[float, np.ndarray],
+    xp_field: float | np.ndarray,
+    yp_field: float | np.ndarray,
     gamma_start: float = 0.0,
     gamma_end: float = 0.0,
     sigma_start: float = 0.0,
     sigma_end: float = 0.0,
     xp_panel_end: float = 1.0,
-) -> [Union[float, np.ndarray], Union[float, np.ndarray]]:
+) -> tuple[float | np.ndarray, float | np.ndarray]:
     """
     Calculates the induced velocity at a point (xp_field, yp_field) in a 2D potential-flow flowfield.
 
@@ -156,8 +155,8 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
 
 
 def _calculate_induced_velocity_line_singularity(
-    x_field: Union[float, np.ndarray],
-    y_field: Union[float, np.ndarray],
+    x_field: float | np.ndarray,
+    y_field: float | np.ndarray,
     x_panel_start: float,
     y_panel_start: float,
     x_panel_end: float,
@@ -166,7 +165,7 @@ def _calculate_induced_velocity_line_singularity(
     gamma_end: float = 0.0,
     sigma_start: float = 0.0,
     sigma_end: float = 0.0,
-) -> [Union[float, np.ndarray], Union[float, np.ndarray]]:
+) -> tuple[float | np.ndarray, float | np.ndarray]:
     """
     Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
 
@@ -228,13 +227,13 @@ def _calculate_induced_velocity_line_singularity(
 
 
 def calculate_induced_velocity_line_singularities(
-    x_field: Union[float, np.ndarray],
-    y_field: Union[float, np.ndarray],
+    x_field: float | np.ndarray,
+    y_field: float | np.ndarray,
     x_panels: np.ndarray,
     y_panels: np.ndarray,
     gamma: np.ndarray,
     sigma: np.ndarray,
-) -> [Union[float, np.ndarray], Union[float, np.ndarray]]:
+) -> tuple[float | np.ndarray, float | np.ndarray]:
     """
     Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
 

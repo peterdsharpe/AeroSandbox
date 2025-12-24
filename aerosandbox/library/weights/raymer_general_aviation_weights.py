@@ -348,8 +348,8 @@ def mass_flight_controls(
     airplane: asb.Airplane,
     design_mass_TOGW: float,
     ultimate_load_factor: float,
-    fuselage: asb.Fuselage = None,
-    main_wing: asb.Wing = None,
+    fuselage: asb.Fuselage | None = None,
+    main_wing: asb.Wing | None = None,
 ) -> float:
     """
     Computes the mass of the flight controls for a general aviation aircraft, according to Raymer's Aircraft Design:
