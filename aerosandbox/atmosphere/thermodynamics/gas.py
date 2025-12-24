@@ -326,6 +326,7 @@ class PerfectGas:
         if inplace:
             self.pressure = new_pressure
             self.temperature = new_temperature
+            return self
 
         else:
             return PerfectGas(

@@ -150,7 +150,7 @@ def gradient(
             dx_shape[axis] = shape[axis] - 1
             dx = reshape(dx, dx_shape)
 
-            def get_slice(slice_obj: slice) -> tuple[slice]:
+            def get_slice(slice_obj: slice) -> tuple[slice, ...]:
                 slices = [slice(None)] * len(shape)
                 slices[axis] = slice_obj
                 return tuple(slices)

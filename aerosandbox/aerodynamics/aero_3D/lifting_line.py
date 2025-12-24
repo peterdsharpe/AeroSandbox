@@ -9,6 +9,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
 )
 from typing import Callable
 from aerosandbox.aerodynamics.aero_3D.aero_buildup import AeroBuildup
+from aerosandbox.numpy.typing import Vectorizable
 from dataclasses import dataclass
 
 
@@ -157,78 +158,78 @@ class LiftingLine(ExplicitAnalysis):
             )
 
         @property
-        def F_b(self) -> list[float | np.ndarray]:
+        def F_b(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of forces in body axes [N]
+            An (x, y, z) tuple of forces in body axes [N]
             """
             return self.op_point.convert_axes(
                 *self.F_g, from_axes="geometry", to_axes="body"
             )
 
         @property
-        def F_w(self) -> list[float | np.ndarray]:
+        def F_w(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of forces in wind axes [N]
+            An (x, y, z) tuple of forces in wind axes [N]
             """
             return self.op_point.convert_axes(
                 *self.F_g, from_axes="geometry", to_axes="wind"
             )
 
         @property
-        def M_b(self) -> list[float | np.ndarray]:
+        def M_b(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of moments about body axes [Nm]
+            An (x, y, z) tuple of moments about body axes [Nm]
             """
             return self.op_point.convert_axes(
                 *self.M_g, from_axes="geometry", to_axes="body"
             )
 
         @property
-        def M_w(self) -> list[float | np.ndarray]:
+        def M_w(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of moments about wind axes [Nm]
+            An (x, y, z) tuple of moments about wind axes [Nm]
             """
             return self.op_point.convert_axes(
                 *self.M_g, from_axes="geometry", to_axes="wind"
             )
 
         @property
-        def L(self) -> float | np.ndarray:
+        def L(self) -> Vectorizable:
             """
             The lift force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[2]
 
         @property
-        def Y(self) -> float | np.ndarray:
+        def Y(self) -> Vectorizable:
             """
             The side force [N]. Definitionally, this is in wind axes.
             """
             return self.F_w[1]
 
         @property
-        def D(self) -> float | np.ndarray:
+        def D(self) -> Vectorizable:
             """
             The drag force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[0]
 
         @property
-        def l_b(self) -> float | np.ndarray:
+        def l_b(self) -> Vectorizable:
             """
             The rolling moment [Nm] in body axes. Positive is roll-right.
             """
             return self.M_b[0]
 
         @property
-        def m_b(self) -> float | np.ndarray:
+        def m_b(self) -> Vectorizable:
             """
             The pitching moment [Nm] in body axes. Positive is nose-up.
             """
             return self.M_b[1]
 
         @property
-        def n_b(self) -> float | np.ndarray:
+        def n_b(self) -> Vectorizable:
             """
             The yawing moment [Nm] in body axes. Positive is nose-right.
             """

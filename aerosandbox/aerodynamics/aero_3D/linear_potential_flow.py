@@ -283,7 +283,7 @@ class LinearPotentialFlow(ExplicitAnalysis):
             points: np.ndarray,
             vortex_strengths: np.ndarray,
             sum_across_elements: bool = True,
-        ) -> tuple[np.ndarray]:
+        ) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
             u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
                 x_field=tall(points[:, 0]),
                 y_field=tall(points[:, 1]),

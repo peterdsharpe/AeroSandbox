@@ -40,7 +40,7 @@ class WingStructureGenerator:
         self,
         section_index: int,
         section_span_fractions: float | int | list[float] | np.ndarray,
-        rib_thickness: float = None,
+        rib_thickness: float | None = None,
     ):
         if rib_thickness is None:
             rib_thickness = self.default_rib_thickness
@@ -81,7 +81,7 @@ class WingStructureGenerator:
             )
 
     def add_ribs_from_xsecs(
-        self, indexes: list[int] = None, rib_thickness: float = None
+        self, indexes: list[int] | None = None, rib_thickness: float | None = None
     ):
         if rib_thickness is None:
             rib_thickness = self.default_rib_thickness
@@ -117,7 +117,7 @@ class WingStructureGenerator:
     def add_ribs_from_span_fractions(
         self,
         span_fractions: float | list[float] | np.ndarray = np.linspace(0, 1, 10),
-        rib_thickness: float = None,
+        rib_thickness: float | None = None,
     ):
         ### Handle span_fractions if it's not an iterable
         try:
@@ -164,7 +164,7 @@ class WingStructureGenerator:
         y_over_c_location_root=None,
         x_over_c_location_tip=None,
         y_over_c_location_tip=None,
-        diameter_tip: float = None,
+        diameter_tip: float | None = None,
         cut_ribs: bool = True,
     ):
         if diameter_tip is None:

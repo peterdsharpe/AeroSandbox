@@ -111,8 +111,8 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             )  # Pack the iterable into a dict-like, then do the same thing as above.
 
     def unpack_state(
-        self, dict_like_state: dict[str, float | np.ndarray] | None = None
-    ) -> tuple[float | np.ndarray]:
+        self, dict_like_state: dict[str, Vectorizable] | None = None
+    ) -> tuple[Vectorizable, ...]:
         """
         'Unpacks' a Dict-like state into an array-like that represents the state of the dynamical system.
 

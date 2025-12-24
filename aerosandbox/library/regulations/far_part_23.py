@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.tools import units as u
 from typing import Literal
 
@@ -8,9 +9,9 @@ from typing import Literal
 
 
 def limit_load_factors(
-    design_mass_TOGW: float,
+    design_mass_TOGW: Vectorizable,
     category: Literal["normal", "utility", "acrobatic", "commuter"] = "normal",
-) -> tuple[float, float]:
+) -> tuple[Vectorizable, Vectorizable]:
     """
     Computes the required limit load factors for FAR Part 23 certification.
 

@@ -565,24 +565,17 @@ def get_coordinates_from_raw_dat(raw_text: list[str]) -> np.ndarray:
     Returns: A Nx2 ndarray of airfoil coordinates [x, y].
 
     """
-    raw_coordinates = []
-
-    def is_number(s: str) -> bool:
-        # Determines whether a string is representable as a float
-        try:
-            float(s)
-        except ValueError:
-            return False
-        return True
+    raw_coordinates: list[list[float]] = []
 
     def parse_line(line: str) -> list[float] | None:
-        # Given a single line of a `*.dat` file, tries to parse it into a list of two floats [x, y].
-        # If not possible, returns None.
+        """Parse a single line of a *.dat file into [x, y] floats, or None if not parseable."""
         line_split = re.split(r"[;|,|\s|\t]", line)
         line_items = [s for s in line_split if s != ""]
-        if len(line_items) == 2 and all([is_number(item) for item in line_items]):
-            return line_items
-        else:
+        if len(line_items) != 2:
+            return None
+        try:
+            return [float(line_items[0]), float(line_items[1])]
+        except ValueError:
             return None
 
     for line in raw_text:
@@ -593,12 +586,10 @@ def get_coordinates_from_raw_dat(raw_text: list[str]) -> np.ndarray:
     if len(raw_coordinates) == 0:
         raise ValueError("Could not read any coordinates from the `raw_text` input!")
 
-    coordinates = np.array(raw_coordinates, dtype=float)
-
-    return coordinates
+    return np.array(raw_coordinates)
 
 
-def get_file_coordinates(filepath: str | os.PathLike):
+def get_file_coordinates(filepath: str | os.PathLike) -> np.ndarray:
     possible_errors = (FileNotFoundError, UnicodeDecodeError)
 
     if isinstance(filepath, np.ndarray):

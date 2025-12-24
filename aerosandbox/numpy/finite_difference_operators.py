@@ -53,10 +53,10 @@ def finite_difference_coefficients(
     """
     ### Check inputs
     if derivative_degree < 1:
-        return ValueError("The parameter derivative_degree must be an integer >= 1.")
+        raise ValueError("The parameter derivative_degree must be an integer >= 1.")
     expected_order_of_accuracy = length(x) - derivative_degree
     if expected_order_of_accuracy < 1:
-        return ValueError(
+        raise ValueError(
             "You need to provide at least (derivative_degree+1) grid points in the x vector."
         )
 
