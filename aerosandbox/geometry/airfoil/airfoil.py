@@ -1,5 +1,5 @@
-import plotly
-import matplotlib
+import plotly.graph_objects
+import matplotlib.figure
 import aerosandbox.numpy as np
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.geometry.airfoil.airfoil_families import (
