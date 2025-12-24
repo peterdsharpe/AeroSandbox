@@ -1,7 +1,8 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 
 
-def softmax_scalefree(x: list[float]) -> float:
+def softmax_scalefree(x: list[Vectorizable]) -> Vectorizable:
     if len(x) == 1:
         return x[0]
     else:
