@@ -2,7 +2,6 @@ import subprocess
 import tempfile
 import warnings
 from pathlib import Path
-from typing import Dict, List, Union
 
 import aerosandbox.numpy as np
 from aerosandbox.common import ExplicitAnalysis
@@ -204,7 +203,7 @@ class AVL(ExplicitAnalysis):
     def run(
         self,
         run_command: str | None = None,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Private function to run AVL.
 
@@ -341,7 +340,7 @@ class AVL(ExplicitAnalysis):
 
             return res
 
-    def _default_keystroke_file_contents(self) -> List[str]:
+    def _default_keystroke_file_contents(self) -> list[str]:
         run_file_contents = []
 
         # Disable graphics
@@ -511,7 +510,7 @@ class AVL(ExplicitAnalysis):
             )
 
             ### Build up a buffer of the control surface strings to write to each section
-            control_surface_commands: List[List[str]] = [[] for _ in wing.xsecs]
+            control_surface_commands: list[list[str]] = [[] for _ in wing.xsecs]
             for i, xsec in enumerate(wing.xsecs[:-1]):
                 for surf in xsec.control_surfaces:
                     xhinge = (
@@ -664,7 +663,7 @@ class AVL(ExplicitAnalysis):
         data_identifier: str = " = ",
         cast_outputs_to_float: bool = True,
         overwrite: bool | None = None,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Parses a (multiline) string of unformatted data into a nice and tidy dictionary.
 

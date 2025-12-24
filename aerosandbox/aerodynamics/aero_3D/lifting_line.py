@@ -7,7 +7,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
 from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
     calculate_induced_velocity_point_source,
 )
-from typing import Dict, List, Callable, Union
+from typing import Callable
 from aerosandbox.aerodynamics.aero_3D.aero_buildup import AeroBuildup
 from dataclasses import dataclass
 
@@ -53,9 +53,7 @@ class LiftingLine(ExplicitAnalysis):
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution: int = 4,
-        spanwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
-        ] = np.cosspace,
+        spanwise_spacing_function: Callable[[float, float, int], np.ndarray] = np.cosspace,
         vortex_core_radius: float = 1e-8,
         align_trailing_vortices_with_wind: bool = False,
     ):
@@ -132,11 +130,11 @@ class LiftingLine(ExplicitAnalysis):
         c_ref: float  # Reference chord [m]
         b_ref: float  # Reference span [m]
         op_point: OperatingPoint
-        F_g: List[
-            Union[float, np.ndarray]
+        F_g: list[
+            float | np.ndarray
         ]  # An [x, y, z] list of forces in geometry axes [N]
-        M_g: List[
-            Union[float, np.ndarray]
+        M_g: list[
+            float | np.ndarray
         ]  # An [x, y, z] list of moments about geometry axes [Nm]
 
         def __repr__(self):
@@ -159,7 +157,7 @@ class LiftingLine(ExplicitAnalysis):
             )
 
         @property
-        def F_b(self) -> List[Union[float, np.ndarray]]:
+        def F_b(self) -> list[float | np.ndarray]:
             """
             An [x, y, z] list of forces in body axes [N]
             """
@@ -168,7 +166,7 @@ class LiftingLine(ExplicitAnalysis):
             )
 
         @property
-        def F_w(self) -> List[Union[float, np.ndarray]]:
+        def F_w(self) -> list[float | np.ndarray]:
             """
             An [x, y, z] list of forces in wind axes [N]
             """
@@ -177,7 +175,7 @@ class LiftingLine(ExplicitAnalysis):
             )
 
         @property
-        def M_b(self) -> List[Union[float, np.ndarray]]:
+        def M_b(self) -> list[float | np.ndarray]:
             """
             An [x, y, z] list of moments about body axes [Nm]
             """
@@ -186,7 +184,7 @@ class LiftingLine(ExplicitAnalysis):
             )
 
         @property
-        def M_w(self) -> List[Union[float, np.ndarray]]:
+        def M_w(self) -> list[float | np.ndarray]:
             """
             An [x, y, z] list of moments about wind axes [Nm]
             """
@@ -195,48 +193,48 @@ class LiftingLine(ExplicitAnalysis):
             )
 
         @property
-        def L(self) -> Union[float, np.ndarray]:
+        def L(self) -> float | np.ndarray:
             """
             The lift force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[2]
 
         @property
-        def Y(self) -> Union[float, np.ndarray]:
+        def Y(self) -> float | np.ndarray:
             """
             The side force [N]. Definitionally, this is in wind axes.
             """
             return self.F_w[1]
 
         @property
-        def D(self) -> Union[float, np.ndarray]:
+        def D(self) -> float | np.ndarray:
             """
             The drag force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[0]
 
         @property
-        def l_b(self) -> Union[float, np.ndarray]:
+        def l_b(self) -> float | np.ndarray:
             """
             The rolling moment [Nm] in body axes. Positive is roll-right.
             """
             return self.M_b[0]
 
         @property
-        def m_b(self) -> Union[float, np.ndarray]:
+        def m_b(self) -> float | np.ndarray:
             """
             The pitching moment [Nm] in body axes. Positive is nose-up.
             """
             return self.M_b[1]
 
         @property
-        def n_b(self) -> Union[float, np.ndarray]:
+        def n_b(self) -> float | np.ndarray:
             """
             The yawing moment [Nm] in body axes. Positive is nose-right.
             """
             return self.M_b[2]
 
-    def run(self) -> Dict:
+    def run(self) -> dict:
         """
         Computes the aerodynamic forces.
 
@@ -356,7 +354,7 @@ class LiftingLine(ExplicitAnalysis):
         p=True,
         q=True,
         r=True,
-    ) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
+    ) -> dict[str, float | np.ndarray | list[float | np.ndarray]]:
         """
         Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
 
@@ -365,7 +363,8 @@ class LiftingLine(ExplicitAnalysis):
 
         Args:
 
-            - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
+            - alp
+            ha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
             - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
             - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
             - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
@@ -418,7 +417,7 @@ class LiftingLine(ExplicitAnalysis):
                 floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
 
         """
-        do_analysis: Dict[str, bool] = {
+        do_analysis: dict[str, bool] = {
             "alpha": alpha,
             "beta": beta,
             "p": p,
@@ -426,21 +425,21 @@ class LiftingLine(ExplicitAnalysis):
             "r": r,
         }
 
-        abbreviations: Dict[str, str] = {
+        abbreviations: dict[str, str] = {
             "alpha": "a",
             "beta": "b",
             "p": "p",
             "q": "q",
             "r": "r",
         }
-        finite_difference_amounts: Dict[str, float] = {
+        finite_difference_amounts: dict[str, float] = {
             "alpha": 0.001,
             "beta": 0.001,
             "p": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
             "q": 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
             "r": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
-        scaling_factors: Dict[str, float] = {
+        scaling_factors: dict[str, float] = {
             "alpha": np.degrees(1),
             "beta": np.degrees(1),
             "p": (2 * self.op_point.velocity) / self.airplane.b_ref,
@@ -538,8 +537,8 @@ class LiftingLine(ExplicitAnalysis):
         back_left_vertices = []
         back_right_vertices = []
         front_right_vertices = []
-        airfoils: List[Airfoil] = []
-        control_surfaces: List[List[ControlSurface]] = []
+        airfoils: list[Airfoil] = []
+        control_surfaces: list[list[ControlSurface]] = []
 
         for wing in self.airplane.wings:  # subdivide the wing in more spanwise sections
             if self.spanwise_resolution > 1:
@@ -625,8 +624,8 @@ class LiftingLine(ExplicitAnalysis):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
-        self.airfoils: List[Airfoil] = airfoils
-        self.control_surfaces: List[List[ControlSurface]] = control_surfaces
+        self.airfoils: list[Airfoil] = airfoils
+        self.control_surfaces: list[list[ControlSurface]] = control_surfaces
         self.normal_directions = normal_directions
         self.areas = areas
         self.left_vortex_vertices = left_vortex_vertices

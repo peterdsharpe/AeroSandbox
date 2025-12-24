@@ -1,17 +1,16 @@
 import aerosandbox.numpy as np
-from typing import Union
 
 
 def calculate_induced_velocity_point_source(
-    x_field: Union[float, np.ndarray],
-    y_field: Union[float, np.ndarray],
-    z_field: Union[float, np.ndarray],
-    x_source: Union[float, np.ndarray],
-    y_source: Union[float, np.ndarray],
-    z_source: Union[float, np.ndarray],
-    sigma: Union[float, np.ndarray] = 1,
+    x_field: float | np.ndarray,
+    y_field: float | np.ndarray,
+    z_field: float | np.ndarray,
+    x_source: float | np.ndarray,
+    y_source: float | np.ndarray,
+    z_source: float | np.ndarray,
+    sigma: float | np.ndarray = 1,
     viscous_radius=0,
-) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
+) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
     """
     Calculates the induced velocity at a point:
         [x_field, y_field, z_field]

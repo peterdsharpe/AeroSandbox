@@ -5,7 +5,6 @@ from aerosandbox.aerodynamics.aero_2D.singularities import (
     calculate_induced_velocity_line_singularities,
 )
 import aerosandbox.numpy as np
-from typing import Union, List
 
 
 class AirfoilInviscid(ImplicitAnalysis):
@@ -21,7 +20,7 @@ class AirfoilInviscid(ImplicitAnalysis):
     @ImplicitAnalysis.initialize
     def __init__(
         self,
-        airfoil: Union[Airfoil, List[Airfoil]],
+        airfoil: Airfoil | list[Airfoil],
         op_point: OperatingPoint,
         ground_effect: bool = False,
     ):
@@ -62,7 +61,7 @@ class AirfoilInviscid(ImplicitAnalysis):
         self,
         x_field,
         y_field,
-    ) -> [np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         ### Analyze the freestream
         u_freestream = self.op_point.velocity * np.cosd(self.op_point.alpha)
         v_freestream = self.op_point.velocity * np.sind(self.op_point.alpha)

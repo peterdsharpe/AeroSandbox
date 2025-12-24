@@ -1,5 +1,4 @@
 import aerosandbox.numpy as np
-from typing import Union
 
 
 def calculate_induced_velocity_horseshoe(

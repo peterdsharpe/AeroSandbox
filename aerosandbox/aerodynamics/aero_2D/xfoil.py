@@ -3,7 +3,6 @@ import aerosandbox.numpy as np
 import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
-from typing import Union, List, Dict
 import tempfile
 import warnings
 import os
@@ -173,7 +172,7 @@ class XFoil(ExplicitAnalysis):
         self,
         airfoil_filename: str,
         output_filename: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Returns a list of XFoil keystrokes that are common to all XFoil runs.
 
@@ -266,7 +265,7 @@ class XFoil(ExplicitAnalysis):
         self,
         run_command: str,
         read_bl_data_from: str | None = None,
-    ) -> Dict[str, np.ndarray]:
+    ) -> dict[str, np.ndarray]:
         """
         Private function to run XFoil.
 
@@ -468,7 +467,7 @@ class XFoil(ExplicitAnalysis):
             if read_bl_data_from is not None:
                 import pandas as pd
 
-                bl_datas: List[pd.DataFrame] = []
+                bl_datas: list[pd.DataFrame] = []
 
                 if read_bl_data_from == "alpha":
                     alpha_to_dump_mapping = {
@@ -598,9 +597,9 @@ class XFoil(ExplicitAnalysis):
 
     def alpha(
         self,
-        alpha: Union[float, np.ndarray],
-        start_at: Union[float, None] = 0,
-    ) -> Dict[str, np.ndarray]:
+        alpha: float | np.ndarray,
+        start_at: float | None = 0,
+    ) -> dict[str, np.ndarray]:
         """
         Execute XFoil at a given angle of attack, or at a sequence of angles of attack.
 
@@ -676,9 +675,9 @@ class XFoil(ExplicitAnalysis):
 
     def cl(
         self,
-        cl: Union[float, np.ndarray],
-        start_at: Union[float, None] = 0,
-    ) -> Dict[str, np.ndarray]:
+        cl: float | np.ndarray,
+        start_at: float | None = 0,
+    ) -> dict[str, np.ndarray]:
         """
         Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
 

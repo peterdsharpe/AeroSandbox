@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
 from aerosandbox.aerodynamics.aero_3D.avl import AVL
-from typing import Union, List
 import tempfile
 from textwrap import dedent
 
@@ -185,9 +184,9 @@ class MSES(ExplicitAnalysis):
 
     def run(
         self,
-        alpha: Union[float, np.ndarray, List] = 0.0,
-        Re: Union[float, np.ndarray, List] = 0.0,
-        mach: Union[float, np.ndarray, List] = 0.01,
+        alpha: float | np.ndarray | list = 0.0,
+        Re: float | np.ndarray | list = 0.0,
+        mach: float | np.ndarray | list = 0.01,
     ):
         ### Make all inputs iterables:
         alphas, Res, machs = np.broadcast_arrays(
