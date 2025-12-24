@@ -1,7 +1,7 @@
 from aerosandbox.common import AeroSandboxObject
 from aerosandbox import Atmosphere
 import aerosandbox.numpy as np
-from typing import Sequence
+from typing import Literal, Sequence
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 from aerosandbox.numpy.typing import Vectorizable
@@ -334,8 +334,8 @@ class OperatingPoint(AeroSandboxObject):
         x_from: Vectorizable,
         y_from: Vectorizable,
         z_from: Vectorizable,
-        from_axes: str,
-        to_axes: str,
+        from_axes: Literal["geometry", "body", "wind", "stability"],
+        to_axes: Literal["geometry", "body", "wind", "stability"],
     ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
         Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,

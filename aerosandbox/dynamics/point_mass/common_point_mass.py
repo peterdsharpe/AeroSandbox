@@ -1,7 +1,7 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod
-from typing import Sequence
+from typing import Literal, Sequence
 from aerosandbox import (
     MassProperties,
     Opti,
@@ -13,7 +13,7 @@ from aerosandbox import (
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 import copy
-from aerosandbox.numpy.typing import Vectorizable, Scalar, Vector
+from aerosandbox.numpy.typing import Vectorizable, Vector
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
@@ -363,7 +363,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         Fx: float | np.ndarray = 0,
         Fy: float | np.ndarray = 0,
         Fz: float | np.ndarray = 0,
-        axes: str = "wind",
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "wind",
     ) -> None:
         """
         Adds a force (in whichever axis system you choose) to this Dynamics instance.
@@ -423,14 +423,14 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     def draw(
         self,
         vehicle_model: "Airplane | PolyData | None" = None,
-        backend: str = "pyvista",
+        backend: Literal["pyvista"] = "pyvista",
         plotter=None,
         draw_axes: bool = True,
         draw_global_axes: bool = True,
         draw_global_grid: bool = True,
         scale_vehicle_model: float | None = None,
         n_vehicles_to_draw: int = 10,
-        cg_axes: str = "geometry",
+        cg_axes: Literal["geometry", "body", "wind", "stability"] = "geometry",
         draw_trajectory_line: bool = True,
         trajectory_line_color=None,
         draw_altitude_drape: bool = True,

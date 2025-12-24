@@ -33,7 +33,7 @@ def cubic_hermite_patch(
     f_b: float,
     dfdx_a: float,
     dfdx_b: float,
-    extrapolation: str = "continue",
+    extrapolation: Literal["continue", "clip"] = "continue",
 ) -> float | np.ndarray:
     """
     Computes the cubic Hermite polynomial patch that passes through the given endpoints and endpoint derivatives.

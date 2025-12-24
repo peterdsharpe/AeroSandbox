@@ -1,8 +1,7 @@
 import itertools
 from aerosandbox import AeroSandboxObject
 from aerosandbox.geometry.common import *
-from typing import Any
-from typing import Sequence
+from typing import Any, Literal, Sequence
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
 from aerosandbox.geometry.fuselage import Fuselage
@@ -223,10 +222,10 @@ class Airplane(AeroSandboxObject):
 
     def draw(
         self,
-        backend: str = "pyvista",
+        backend: Literal["matplotlib", "pyvista", "plotly", "trimesh"] = "pyvista",
         thin_wings: bool = False,
         ax=None,
-        use_preset_view_angle: str | None = None,
+        use_preset_view_angle: Literal["XY", "-XY", "XZ", "-XZ", "YZ", "-YZ", "left_isometric", "right_isometric"] | None = None,
         set_background_pane_color: str | tuple[float, float, float] | None = None,
         set_background_pane_alpha: float | None = None,
         set_lims: bool = True,
@@ -386,7 +385,7 @@ class Airplane(AeroSandboxObject):
         thin_linewidth=0.2,
         thick_linewidth=0.5,
         fuselage_longeron_theta=None,
-        use_preset_view_angle: str | None = None,
+        use_preset_view_angle: Literal["XY", "-XY", "XZ", "-XZ", "YZ", "-YZ", "left_isometric", "right_isometric"] | None = None,
         set_background_pane_color: str | tuple[float, float, float] | None = None,
         set_background_pane_alpha: float | None = None,
         set_lims: bool = True,
@@ -649,7 +648,7 @@ class Airplane(AeroSandboxObject):
     def draw_three_view(
         self,
         axs=None,
-        style: str = "shaded",
+        style: Literal["shaded", "wireframe"] = "shaded",
         show: bool = True,
     ) -> np.ndarray:
         """

@@ -280,7 +280,7 @@ def get_kulfan_parameters(
     n_points_per_side: int = _default_n_points_per_side,
     normalize_coordinates: bool = True,
     use_leading_edge_modification: bool = True,
-    method: str = "least_squares",
+    method: Literal["least_squares", "opti"] = "least_squares",
 ) -> dict[str, np.ndarray | float]:
     """
     Given a set of airfoil coordinates, reconstructs the Kulfan parameters that would recreate that airfoil. Uses a

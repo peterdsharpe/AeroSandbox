@@ -2,6 +2,7 @@ import matplotlib
 import mpl_toolkits
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
+from typing import Literal
 
 preset_view_angles = {
     # Given in the form:
@@ -94,7 +95,7 @@ def ax_is_3d(ax: matplotlib.axes.Axes = None) -> bool:
     return hasattr(ax, "zaxis")
 
 
-def set_preset_3d_view_angle(preset_view: str) -> None:
+def set_preset_3d_view_angle(preset_view: Literal["XY", "XZ", "YZ", "-XY", "-XZ", "-YZ", "left_isometric", "right_isometric", "front", "top", "side"]) -> None:
     ax = plt.gca()
 
     if not ax_is_3d(ax):
