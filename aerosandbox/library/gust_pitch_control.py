@@ -4,6 +4,8 @@ from aerosandbox.common import ImplicitAnalysis
 from aerosandbox.library.aerodynamics.unsteady import (
     wagners_function,
     kussners_function,
+    calculate_reduced_time,
+    top_hat_gust,
 )
 
 

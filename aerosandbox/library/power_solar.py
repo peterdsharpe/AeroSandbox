@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
 from typing import Literal
+from aerosandbox.atmosphere import Atmosphere
 
 """
 Welcome to the AeroSandbox solar energy library!

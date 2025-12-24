@@ -1,6 +1,6 @@
 import itertools
 from aerosandbox import AeroSandboxObject
-from typing import Any, Literal, Sequence
+from typing import Any, Literal, Sequence, TYPE_CHECKING
 import aerosandbox.numpy as np
 import aerosandbox.geometry.mesh_utilities as mesh_utils
 from aerosandbox.geometry.wing import Wing
@@ -9,6 +9,10 @@ from aerosandbox.geometry.propulsor import Propulsor
 from aerosandbox.weights.mass_properties import MassProperties
 import copy
 from pathlib import Path
+
+if TYPE_CHECKING:
+    import matplotlib.axes
+    from cadquery import Workplane
 
 
 class Airplane(AeroSandboxObject):

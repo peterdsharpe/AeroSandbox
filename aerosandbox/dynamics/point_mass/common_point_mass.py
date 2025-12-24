@@ -1,7 +1,7 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod
-from typing import Literal, Sequence
+from typing import Literal, Sequence, TYPE_CHECKING
 from aerosandbox import (
     MassProperties,
     Opti,
@@ -14,6 +14,9 @@ from aerosandbox.tools.string_formatting import trim_string
 import inspect
 import copy
 from aerosandbox.numpy.typing import Vectorizable, Vector
+
+if TYPE_CHECKING:
+    from pyvista import PolyData
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):

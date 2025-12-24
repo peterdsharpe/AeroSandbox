@@ -8,6 +8,11 @@ from aerosandbox.geometry.airfoil.airfoil_families import (
     get_file_coordinates,
 )
 from aerosandbox.library.aerodynamics import transonic
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
+    from aerosandbox.geometry import ControlSurface
 from aerosandbox.modeling.splines.hermite import (
     cubic_hermite_patch,
 )

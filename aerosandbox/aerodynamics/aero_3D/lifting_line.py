@@ -8,10 +8,14 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
 from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
     calculate_induced_velocity_point_source,
 )
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 from aerosandbox.aerodynamics.aero_3D.aero_buildup import AeroBuildup
 from aerosandbox.numpy.typing import Vectorizable
 from dataclasses import dataclass
+import aerosandbox.geometry.mesh_utilities as mesh_utils
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry import Airfoil, ControlSurface
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.

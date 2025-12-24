@@ -1,4 +1,4 @@
-from aerosandbox.numpy.array import array, length
+from aerosandbox.numpy.array import array, length, concatenate, stack
 import pytest
 import aerosandbox.numpy as np
 import casadi as cas

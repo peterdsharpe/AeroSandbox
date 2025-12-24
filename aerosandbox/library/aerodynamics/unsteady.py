@@ -44,7 +44,7 @@ def calculate_reduced_time(
     Returns:
         The reduced time as an ndarray or float similar to the input. The first element is 0.
     """
-    if type(velocity) == float or type(velocity) == int:
+    if isinstance(velocity, (float, int)):
         return 2 * velocity * time / chord
     else:
         assert np.size(velocity) == np.size(time), (
@@ -158,7 +158,7 @@ def calculate_lift_due_to_transverse_gust(
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
     """
-    assert type(angle_of_attack) != np.ndarray, (
+    assert not isinstance(angle_of_attack, np.ndarray), (
         "Please provide either a Callable or a float for the angle of attack"
     )
 

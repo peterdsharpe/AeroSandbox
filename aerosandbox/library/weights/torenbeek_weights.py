@@ -423,11 +423,12 @@ def mass_fuselage(
 
     k_lambda = np.softmin(0.56 * fuselage.fineness_ratio(assumed_shape="sears_haack"))
 
-    W_sk = 0.05428 * k_lambda * S_g**1.07 * never_exceed_airspeed**0.743
+    # W_sk = 0.05428 * k_lambda * S_g**1.07 * never_exceed_airspeed**0.743
+    # W_sk + W_str + W_fr
 
-    W_sk + W_str + W_fr
-
-    raise NotImplementedError()
+    raise NotImplementedError(
+        "This function is incomplete - S_g, W_str, and W_fr are not yet defined."
+    )
 
 
 def mass_propeller(

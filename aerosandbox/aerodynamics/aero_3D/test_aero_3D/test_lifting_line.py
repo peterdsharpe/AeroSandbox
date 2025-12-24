@@ -6,5 +6,6 @@
 #     return analysis.run()
 
 if __name__ == "__main__":
-    test_lifting_line()
+    # test_lifting_line()  # Function is commented out above
     # pytest.main()
+    pass

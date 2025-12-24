@@ -7,6 +7,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
 )
 from typing import Any, Callable
 import copy
+import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.

@@ -99,14 +99,14 @@ class Fuselage(AeroSandboxObject):
                 "The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!"
             )
 
-        if "xyz_le" in locals():
+        if "xyz_le" in kwargs:
             import warnings
 
             warnings.warn(
                 "The `xyz_le` input for Fuselage is pending deprecation and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
                 stacklevel=2,
             )
-            self.xsecs = [xsec.translate(xyz_le) for xsec in self.xsecs]
+            self.xsecs = [xsec.translate(kwargs["xyz_le"]) for xsec in self.xsecs]
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)

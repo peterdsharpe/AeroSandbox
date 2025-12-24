@@ -6,6 +6,10 @@ from aerosandbox.modeling.splines.hermite import (
 )
 import warnings
 from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Scalar
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry import ControlSurface
 
 
 class KulfanAirfoil(Airfoil):

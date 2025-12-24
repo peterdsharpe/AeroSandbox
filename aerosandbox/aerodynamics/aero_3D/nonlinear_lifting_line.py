@@ -8,7 +8,11 @@ from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
     calculate_induced_velocity_point_source,
 )
 import aerosandbox.numpy as np
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
+import aerosandbox.geometry.mesh_utilities as mesh_utils
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry import Airfoil, ControlSurface
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.

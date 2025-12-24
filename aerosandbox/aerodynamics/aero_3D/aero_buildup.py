@@ -7,6 +7,8 @@ from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.fuselage_aerodynamics_utilities import (
     critical_mach,
     jorgensen_eta,
+    fuselage_base_drag_coefficient,
+    fuselage_form_factor,
 )
 from aerosandbox.library.aerodynamics import transonic
 import aerosandbox.library.aerodynamics as aerolib
@@ -14,7 +16,10 @@ from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree i
     softmax_scalefree,
 )
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry import ControlSurface
 
 
 class AeroBuildup(ExplicitAnalysis):

@@ -107,14 +107,14 @@ class Wing(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated parameters
-        if "xyz_le" in locals():
+        if "xyz_le" in kwargs:
             import warnings
 
             warnings.warn(
                 "The `xyz_le` input for Wing is pending deprecation and will be removed in a future version. Use Wing().translate(xyz) instead.",
                 stacklevel=2,
             )
-            self.xsecs = [xsec.translate(xyz_le) for xsec in self.xsecs]
+            self.xsecs = [xsec.translate(kwargs["xyz_le"]) for xsec in self.xsecs]
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
