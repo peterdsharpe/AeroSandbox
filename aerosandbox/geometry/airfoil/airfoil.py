@@ -22,7 +22,6 @@ from typing import Any
 import json
 from pathlib import Path
 import os
-from aerosandbox.numpy.typing import Vectorizable
 
 
 class Airfoil(Polygon):

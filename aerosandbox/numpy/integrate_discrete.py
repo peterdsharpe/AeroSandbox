@@ -1,5 +1,4 @@
 from typing import Literal
-import casadi as _cas
 import numpy as _onp
 from aerosandbox.numpy.array import length, concatenate, asarray
 from aerosandbox.numpy.typing import ArrayLike

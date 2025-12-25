@@ -6,7 +6,6 @@ with both NumPy arrays and CasADi symbolic arrays, with proper broadcasting.
 
 import numpy as _onp
 import casadi as _cas
-from typing import Iterable
 from aerosandbox.numpy.conditionals import where
 
 from aerosandbox.numpy.determine_type import is_casadi_type

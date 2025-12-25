@@ -4,7 +4,7 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
-from aerosandbox.numpy.typing import Vectorizable, ConcreteVector, ConcreteArray, Vector
+from aerosandbox.numpy.typing import Vectorizable, ConcreteVector, ConcreteArray
 from typing import Literal, Sequence
 from scipy import interpolate as _interpolate
 

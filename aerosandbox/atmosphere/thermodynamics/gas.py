@@ -1,4 +1,3 @@
-import aerosandbox.numpy as np
 from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.tools.string_formatting import eng_string
 from typing import Literal
