@@ -58,8 +58,13 @@ _SequenceOfScalars = Sequence[int | float]
 # CasADi types (internal use only)
 # =============================================================================
 
-_CasADiType = _cas.MX | _cas.DM | _cas.SX
-"""Any CasADi array type (MX, DM, or SX). Internal use only."""
+_CasADiType = _cas.MX | _cas.DM
+"""CasADi array types compatible with AeroSandbox's Opti class. Internal use only.
+
+Note: cas.SX is intentionally excluded. While aerosandbox.numpy operations support SX
+at runtime, the Opti class is MX-based and incompatible with SX. Type hints using
+_CasADiType reflect what works in the optimization context.
+"""
 
 # =============================================================================
 # CONCRETE TYPES - For external tools, I/O, plotting (NumPy only)
