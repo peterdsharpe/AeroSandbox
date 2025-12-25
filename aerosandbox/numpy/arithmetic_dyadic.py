@@ -3,6 +3,7 @@
 This module provides element-wise binary arithmetic operations that work
 with both NumPy arrays and CasADi symbolic arrays, with proper broadcasting.
 """
+
 import numpy as _onp
 import casadi as _cas
 from typing import Iterable
@@ -29,6 +30,7 @@ def _make_casadi_types_broadcastable(
     tuple[Array, Array]
         Both arrays tiled to have the same (broadcast) shape.
     """
+
     def shape_2D(object: Vectorizable) -> tuple:
         shape = _onp.shape(object)
         if len(shape) == 0:

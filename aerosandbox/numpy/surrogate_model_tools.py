@@ -3,6 +3,7 @@
 This module provides differentiable approximations to non-smooth functions
 (like max/min) that are useful for gradient-based optimization.
 """
+
 import aerosandbox.numpy as _np
 import casadi as _cas
 from typing import Literal

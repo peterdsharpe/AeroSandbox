@@ -152,8 +152,11 @@ class AeroBuildup(ExplicitAnalysis):
             An (x, y, z) tuple of forces in body axes [N]
             """
             return self.op_point.convert_axes(
-                self.F_g[0], self.F_g[1], self.F_g[2],
-                from_axes="geometry", to_axes="body"
+                self.F_g[0],
+                self.F_g[1],
+                self.F_g[2],
+                from_axes="geometry",
+                to_axes="body",
             )
 
         @property
@@ -162,8 +165,11 @@ class AeroBuildup(ExplicitAnalysis):
             An (x, y, z) tuple of forces in wind axes [N]
             """
             return self.op_point.convert_axes(
-                self.F_g[0], self.F_g[1], self.F_g[2],
-                from_axes="geometry", to_axes="wind"
+                self.F_g[0],
+                self.F_g[1],
+                self.F_g[2],
+                from_axes="geometry",
+                to_axes="wind",
             )
 
         @property
@@ -172,8 +178,11 @@ class AeroBuildup(ExplicitAnalysis):
             An (x, y, z) tuple of moments about body axes [Nm]
             """
             return self.op_point.convert_axes(
-                self.M_g[0], self.M_g[1], self.M_g[2],
-                from_axes="geometry", to_axes="body"
+                self.M_g[0],
+                self.M_g[1],
+                self.M_g[2],
+                from_axes="geometry",
+                to_axes="body",
             )
 
         @property
@@ -182,8 +191,11 @@ class AeroBuildup(ExplicitAnalysis):
             An (x, y, z) tuple of moments about wind axes [Nm]
             """
             return self.op_point.convert_axes(
-                self.M_g[0], self.M_g[1], self.M_g[2],
-                from_axes="geometry", to_axes="wind"
+                self.M_g[0],
+                self.M_g[1],
+                self.M_g[2],
+                from_axes="geometry",
+                to_axes="wind",
             )
 
         @property
@@ -297,8 +309,11 @@ class AeroBuildup(ExplicitAnalysis):
         )
 
         _, sideforce, lift = self.op_point.convert_axes(
-            F_g_total[0], F_g_total[1], F_g_total[2],
-            from_axes="geometry", to_axes="wind"
+            F_g_total[0],
+            F_g_total[1],
+            F_g_total[2],
+            from_axes="geometry",
+            to_axes="wind",
         )
 
         D_induced = (lift**2 + sideforce**2) / (Q * np.pi * span_effective_squared)
@@ -318,20 +333,32 @@ class AeroBuildup(ExplicitAnalysis):
 
         ##### Add in other metrics
         output["F_b"] = self.op_point.convert_axes(
-            F_g_total[0], F_g_total[1], F_g_total[2],
-            from_axes="geometry", to_axes="body"
+            F_g_total[0],
+            F_g_total[1],
+            F_g_total[2],
+            from_axes="geometry",
+            to_axes="body",
         )
         output["F_w"] = self.op_point.convert_axes(
-            F_g_total[0], F_g_total[1], F_g_total[2],
-            from_axes="geometry", to_axes="wind"
+            F_g_total[0],
+            F_g_total[1],
+            F_g_total[2],
+            from_axes="geometry",
+            to_axes="wind",
         )
         output["M_b"] = self.op_point.convert_axes(
-            M_g_total[0], M_g_total[1], M_g_total[2],
-            from_axes="geometry", to_axes="body"
+            M_g_total[0],
+            M_g_total[1],
+            M_g_total[2],
+            from_axes="geometry",
+            to_axes="body",
         )
         output["M_w"] = self.op_point.convert_axes(
-            M_g_total[0], M_g_total[1], M_g_total[2],
-            from_axes="geometry", to_axes="wind"
+            M_g_total[0],
+            M_g_total[1],
+            M_g_total[2],
+            from_axes="geometry",
+            to_axes="wind",
         )
 
         output["L"] = -output["F_w"][2]
@@ -1210,8 +1237,7 @@ class AeroBuildup(ExplicitAnalysis):
         ### Compute the induced drag, if relevant
         if include_induced_drag:
             _, sideforce, lift = op_point.convert_axes(
-                F_g[0], F_g[1], F_g[2],
-                from_axes="geometry", to_axes="wind"
+                F_g[0], F_g[1], F_g[2], from_axes="geometry", to_axes="wind"
             )
 
             D_induced = (lift**2 + sideforce**2) / (

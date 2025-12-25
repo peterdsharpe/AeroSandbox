@@ -3,6 +3,7 @@
 This module provides linear algebra functions that work with both NumPy
 arrays and CasADi symbolic arrays.
 """
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.arithmetic_monadic import sum, abs

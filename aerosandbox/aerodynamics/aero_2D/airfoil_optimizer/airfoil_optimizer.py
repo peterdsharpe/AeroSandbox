@@ -105,6 +105,7 @@ if __name__ == "__main__":
     @dataclass
     class OptimizationState:
         """Holds state for the optimization to avoid globals."""
+
         iteration: int = 0
         xs: list = field(default_factory=list)
         fs: list = field(default_factory=list)

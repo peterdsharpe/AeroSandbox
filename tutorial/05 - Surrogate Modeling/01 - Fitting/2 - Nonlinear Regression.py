@@ -75,8 +75,10 @@ def model(x, p):
         + cg
         * np.exp(
             -(  # Gaussian bump
-                np.fabs(latitude_scaled - lgc) ** lgh / (2 * lgs**2)  # Center/Spread in latitude
-                + np.fabs(altitude_scaled - agc) ** agh / (2 * ags**2)  # Center/Spread in altitude
+                np.fabs(latitude_scaled - lgc) ** lgh
+                / (2 * lgs**2)  # Center/Spread in latitude
+                + np.fabs(altitude_scaled - agc) ** agh
+                / (2 * ags**2)  # Center/Spread in altitude
                 + cgc * altitude_scaled * latitude_scaled  # Gaussian cross-term
             )
         )

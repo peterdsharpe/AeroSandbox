@@ -341,10 +341,14 @@ def Cd_wave_e216(Cl, mach, sweep=0.0):
             mach_perpendicular
             - (
                 7.2685945744797997e-01
-                + -1.5483144040727698e-01 * np.sqrt(2.1305118052118968e-01 + (Cl_perpendicular - 7.8812272501525316e-01) ** 2)
+                + -1.5483144040727698e-01
+                * np.sqrt(
+                    2.1305118052118968e-01
+                    + (Cl_perpendicular - 7.8812272501525316e-01) ** 2
+                )
                 + 3.3888938102072169e-03 * Cl_perpendicular
             ),
-            0
+            0,
         )
         * (1.5298928303149546e00 + 5.2389999717540392e-01 * Cl_perpendicular)
     ) ** 2
@@ -444,14 +448,22 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.0):
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
-    return np.fmax(
-        mach_perpendicular
-        - (
-            9.5623337929607111e-01
-            - 2.0552787101770234e-01 * np.sqrt(1.1259268018737063e00 + (Cl_perpendicular - 1.9538856688443659e-01) ** 2)
-        ),
-        0
-    ) ** 2 * 4.5776476424519119e00
+    return (
+        np.fmax(
+            mach_perpendicular
+            - (
+                9.5623337929607111e-01
+                - 2.0552787101770234e-01
+                * np.sqrt(
+                    1.1259268018737063e00
+                    + (Cl_perpendicular - 1.9538856688443659e-01) ** 2
+                )
+            ),
+            0,
+        )
+        ** 2
+        * 4.5776476424519119e00
+    )
 
 
 def fuselage_upsweep_drag_area(

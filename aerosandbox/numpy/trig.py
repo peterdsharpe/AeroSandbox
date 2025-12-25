@@ -3,6 +3,7 @@
 This module provides degree-based trigonometric functions as a convenience
 wrapper around NumPy's radian-based functions.
 """
+
 import numpy as _onp
 from numpy import pi as _pi
 from aerosandbox.numpy.typing import Vectorizable, Array

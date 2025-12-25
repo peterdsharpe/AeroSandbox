@@ -34,7 +34,9 @@ def solve_aerosandbox(N=10):
         [
             np.diff(M) == np.trapz(V) * np.diff(x),
             np.diff(th) * EI_typical
-            == np.trapz(M / (E * moment_of_inertia), modify_endpoints=True) * np.diff(x) * EI_typical,
+            == np.trapz(M / (E * moment_of_inertia), modify_endpoints=True)
+            * np.diff(x)
+            * EI_typical,
             np.diff(w) * EI_typical == np.trapz(th) * np.diff(x) * EI_typical,
         ]
     )

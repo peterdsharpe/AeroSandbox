@@ -53,7 +53,13 @@ def oswalds_efficiency(
     def f(
         taper,
     ):  # f(lambda), given as Eq. 36 in the Nita and Scholz paper (see parent docstring).
-        return 0.0524 * taper**4 - 0.15 * taper**3 + 0.1659 * taper**2 - 0.0706 * taper + 0.0119
+        return (
+            0.0524 * taper**4
+            - 0.15 * taper**3
+            + 0.1659 * taper**2
+            - 0.0706 * taper
+            + 0.0119
+        )
 
     delta_lambda = -0.357 + 0.45 * np.exp(-0.0375 * sweep)
     # Eq. 37 in Nita & Scholz.

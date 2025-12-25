@@ -238,7 +238,9 @@ def calculate_lift_due_to_pitching_profile(
     for i, s in enumerate(reduced_time):
         integrated_value = quad(integrand, 0, s, args=s)[0]
         # print(integrated_value)
-        lift_coefficient[i] = 2 * np.pi * (AoA_function(s) * wagners_function(0) + integrated_value)
+        lift_coefficient[i] = (
+            2 * np.pi * (AoA_function(s) * wagners_function(0) + integrated_value)
+        )
 
     return lift_coefficient
 

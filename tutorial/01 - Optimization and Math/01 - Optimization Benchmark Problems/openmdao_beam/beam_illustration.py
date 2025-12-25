@@ -22,7 +22,8 @@ w = opti.variable(init_guess=np.zeros(N))  # m, displacement
 opti.subject_to(
     [
         np.diff(M) == np.trapz(V) * np.diff(x),
-        np.diff(th) == np.trapz(M / (E * moment_of_inertia), modify_endpoints=True) * np.diff(x),
+        np.diff(th)
+        == np.trapz(M / (E * moment_of_inertia), modify_endpoints=True) * np.diff(x),
         np.diff(w) == np.trapz(th) * np.diff(x),
     ]
 )

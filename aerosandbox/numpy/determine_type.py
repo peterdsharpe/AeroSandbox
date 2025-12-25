@@ -3,6 +3,7 @@
 This module provides functions to determine whether objects are CasADi symbolic
 types, enabling runtime dispatch between NumPy and CasADi backends.
 """
+
 import numpy as _onp
 import casadi as _cas
 from typing import Any

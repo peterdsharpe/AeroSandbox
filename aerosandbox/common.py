@@ -5,6 +5,7 @@ objects inherit from, including `AeroSandboxObject`, `ExplicitAnalysis`, and
 `ImplicitAnalysis`. It also provides utility functions for saving and loading
 these objects.
 """
+
 import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti, OptiSol
 from abc import abstractmethod, ABC

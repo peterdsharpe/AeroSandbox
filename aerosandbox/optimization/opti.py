@@ -369,7 +369,9 @@ class Opti(cas.Opti):
 
     def subject_to(
         self,
-        constraint: Vectorizable | bool | Sequence["Vectorizable | bool"],  # TODO add scale
+        constraint: Vectorizable
+        | bool
+        | Sequence["Vectorizable | bool"],  # TODO add scale
         _stacklevel: int = 1,
     ) -> cas.MX | None | list[cas.MX | None]:
         """
@@ -410,9 +412,8 @@ class Opti(cas.Opti):
         ### Handle sequences of constraints by recursively applying each one
         # Exclude str (iterable but not a constraint list) and array-like types
         # (np.ndarray, cas.MX, etc.) which represent single vectorized constraints.
-        is_constraint_sequence = (
-            isinstance(constraint, Sequence)
-            and not isinstance(constraint, (str, np.ndarray, cas.MX, cas.DM, cas.SX))
+        is_constraint_sequence = isinstance(constraint, Sequence) and not isinstance(
+            constraint, (str, np.ndarray, cas.MX, cas.DM, cas.SX)
         )
         if is_constraint_sequence:
             return [

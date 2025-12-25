@@ -425,9 +425,7 @@ def peak_sun_hours_per_day_on_horizontal(
     return sun_hours
 
 
-def length_day(
-    latitude: Vectorizable, day_of_year: Vectorizable
-) -> Vectorizable:
+def length_day(latitude: Vectorizable, day_of_year: Vectorizable) -> Vectorizable:
     """
     Gives the duration where the sun is above the horizon on a given day.
 

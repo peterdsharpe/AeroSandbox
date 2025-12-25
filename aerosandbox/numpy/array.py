@@ -4,6 +4,7 @@ This module provides array creation and manipulation functions that work with
 both NumPy arrays and CasADi symbolic arrays, dispatching to the appropriate
 backend at runtime based on input types.
 """
+
 import numpy as _onp
 import casadi as _cas
 from typing import Any, Sequence
@@ -392,7 +393,11 @@ def diag(v: ArrayLike, k: int = 0) -> Array:
             )
 
 
-def roll(a: ArrayLike, shift: int | tuple[int, ...], axis: int | tuple[int, ...] | None = None) -> Array:
+def roll(
+    a: ArrayLike,
+    shift: int | tuple[int, ...],
+    axis: int | tuple[int, ...] | None = None,
+) -> Array:
     """Roll array elements along a given axis.
 
     Elements that roll beyond the last position are re-introduced at the first.

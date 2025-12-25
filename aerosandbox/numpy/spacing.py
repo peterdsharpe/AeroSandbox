@@ -4,6 +4,7 @@ This module provides functions for generating arrays with various spacing
 patterns (linear, logarithmic, cosine, sine), working with both NumPy and
 CasADi backends.
 """
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type

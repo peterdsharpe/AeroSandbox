@@ -3,6 +3,7 @@
 This module provides reduction and aggregation functions that work with both
 NumPy arrays and CasADi symbolic arrays.
 """
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
