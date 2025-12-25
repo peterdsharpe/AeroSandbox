@@ -325,17 +325,21 @@ class AVL(ExplicitAnalysis):
 
             res["F_w"] = [-res["D"], res["Y"], -res["L"]]
             res["F_b"] = self.op_point.convert_axes(
-                *res["F_w"], from_axes="wind", to_axes="body"
+                res["F_w"][0], res["F_w"][1], res["F_w"][2],
+                from_axes="wind", to_axes="body"
             )
             res["F_g"] = self.op_point.convert_axes(
-                *res["F_b"], from_axes="body", to_axes="geometry"
+                res["F_b"][0], res["F_b"][1], res["F_b"][2],
+                from_axes="body", to_axes="geometry"
             )
             res["M_b"] = [res["l_b"], res["m_b"], res["n_b"]]
             res["M_g"] = self.op_point.convert_axes(
-                *res["M_b"], from_axes="body", to_axes="geometry"
+                res["M_b"][0], res["M_b"][1], res["M_b"][2],
+                from_axes="body", to_axes="geometry"
             )
             res["M_w"] = self.op_point.convert_axes(
-                *res["M_b"], from_axes="body", to_axes="wind"
+                res["M_b"][0], res["M_b"][1], res["M_b"][2],
+                from_axes="body", to_axes="wind"
             )
 
             return res
