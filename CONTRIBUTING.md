@@ -184,6 +184,52 @@ This is all pretty standard across all scientific computing in Python:
         return 0.5 * density * velocity ** 2
     ```
 
+  **AeroSandbox Type Aliases:**
+  
+  AeroSandbox provides type aliases in `aerosandbox.numpy.typing` for common patterns. These handle the dual NumPy/CasADi nature of the library.
+  
+  *Naming Conventions:*
+  - Types WITHOUT prefix: **Hybrid** (NumPy OR CasADi) - `Scalar`, `Array`, `Vectorizable`
+  - Types WITH `Concrete` prefix: **NumPy-only** (for external tools, I/O, plotting) - `ConcreteScalar`, `ConcreteArray`
+  - Types WITH `Like` suffix: **Permissive inputs** (accept scalars, sequences, arrays) - `ArrayLike`, `VectorLike`
+  
+  *Type Hierarchy:*
+  
+  Hybrid types extend their Concrete counterparts by adding CasADi support:
+  ```
+  ConcreteScalar → Scalar (adds CasADi)
+  ConcreteArray → Array (adds CasADi)
+  ConcreteVectorizable → Vectorizable (adds CasADi)
+  ConcreteArrayLike → ArrayLike (adds CasADi)
+  ```
+  
+  *When to Use Each Type:*
+  
+  | Type | Use For | Example |
+  |------|---------|---------|
+  | `Scalar` | Single numeric value (may be symbolic) | Function returning a single result |
+  | `Array` | N-dimensional array output | `np.linspace(...)` return type |
+  | `Vectorizable` | Parameters that broadcast element-wise | `OperatingPoint(velocity=..., alpha=...)` |
+  | `ArrayLike` | Permissive array input (converted via `asarray()`) | `np.sum(x)` input |
+  | `ConcreteScalar` | External tool numeric input | XFoil alpha parameter |
+  | `ConcreteArray` | External tool array I/O | Interpolation lookup table |
+  
+  *Example Usage:*
+  ```python
+  from aerosandbox.numpy.typing import ArrayLike, Array, Vectorizable
+  
+  def my_function(
+      data: ArrayLike,           # Accepts scalars, lists, arrays, CasADi
+      scale: Vectorizable = 1.0, # Broadcasts element-wise
+  ) -> Array:
+      """Process data with optional scaling."""
+      from aerosandbox.numpy import asarray
+      data = asarray(data)       # Convert permissive input to array
+      return data * scale
+  ```
+  
+  For the full type definitions and documentation, see `aerosandbox/numpy/typing.py`.
+
 * With rare exceptions, do not type the same sequence of characters more than twice. For example:
 
     ``` python
