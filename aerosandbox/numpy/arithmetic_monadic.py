@@ -6,6 +6,7 @@ NumPy arrays and CasADi symbolic arrays.
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.array import asarray
 from aerosandbox.numpy.typing import Array, ArrayLike, Scalar
 
 
@@ -80,6 +81,7 @@ def mean(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
         return _onp.mean(x, axis=axis)
 
     else:
+        x = asarray(x)  # Ensure x is Array for .shape access
         if axis == 0:
             return sum(x, axis=0) / x.shape[0]
         elif axis == 1:

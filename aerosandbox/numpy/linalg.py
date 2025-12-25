@@ -7,6 +7,7 @@ import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.arithmetic_monadic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.array import asarray
 from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, VectorLike
 from numpy.linalg import *
 
@@ -71,6 +72,7 @@ def outer(x: VectorLike, y: VectorLike, manual: bool = False) -> Array:
         return _onp.outer(x, y)
 
     else:
+        y = asarray(y)  # Ensure y is Array for .shape access
         if len(y.shape) == 1:  # Force y to be transposable if it's not.
             y = _onp.expand_dims(y, 1)
         return x @ y.T
@@ -214,6 +216,7 @@ def norm(
         return _onp.linalg.norm(x, ord=ord, axis=axis, keepdims=keepdims)
 
     else:
+        x = asarray(x)  # Ensure x is Array for .shape access
         # Figure out which axis, if any, to take a vector norm about.
         if axis is not None:
             if not (axis == 0 or axis == 1 or axis == -1):

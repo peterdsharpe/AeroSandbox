@@ -251,6 +251,7 @@ def solve_ivp(
         * `t_variable` is a CasADi variable (cas.MX)
         * `y_variables` is a CasADi variable (cas.MX), possibly a vector of variables
         """
+        assert y_variables is not None  # Type narrowing for type checker
 
         t0 = t_span[0]
         tf = t_span[1]

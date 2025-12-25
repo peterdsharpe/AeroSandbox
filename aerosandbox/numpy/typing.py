@@ -122,16 +122,18 @@ Examples:
 # INPUT TYPES - Permissive types for function parameters (hybrid)
 # =============================================================================
 
-VectorLike = Sequence[float] | Sequence[int] | _onp.ndarray | CasADiType
-"""Permissive input for vector parameters: sequence, ndarray, or CasADi.
+VectorLike = int | float | _onp.integer | _onp.floating | Sequence[int | float] | _onp.ndarray | CasADiType
+"""Permissive input for vector parameters: scalar, sequence, ndarray, or CasADi.
 
 Use for function INPUTS that will be converted to Vector internally.
+Includes scalars so that `Scalar | Array` return values can be passed directly.
 """
 
-ArrayLike = Sequence[float] | Sequence[int] | _onp.ndarray | CasADiType
-"""Permissive input for array parameters: sequence, ndarray, or CasADi.
+ArrayLike = int | float | _onp.integer | _onp.floating | Sequence[int | float] | _onp.ndarray | CasADiType
+"""Permissive input for array parameters: scalar, sequence, ndarray, or CasADi.
 
 Use for function INPUTS that will be converted to Array internally.
+Includes scalars so that `Scalar | Array` return values can be passed directly.
 """
 
 PointLike = Sequence[float] | _onp.ndarray | CasADiType

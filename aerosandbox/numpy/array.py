@@ -320,6 +320,7 @@ def length(array: ArrayLike | Scalar) -> int:
             return 1
 
     else:
+        array = asarray(array)  # Ensure array is Array for .shape access
         if array.shape[0] != 1:
             return array.shape[0]
         else:
@@ -359,6 +360,7 @@ def diag(v: ArrayLike, k: int = 0) -> Array:
         return _onp.diag(v, k=k)
 
     else:
+        v = asarray(v)  # Ensure v is Array for .shape access
         if 1 in v.shape:  # If v is a 1D array, construct a diagonal matrix
             if v.shape[0] == 1:
                 v = v.T
@@ -421,6 +423,7 @@ def roll(a: ArrayLike, shift: int | tuple[int, ...], axis: int | tuple[int, ...]
     if not is_casadi_type(a, recursive=False):
         return _onp.roll(a, shift, axis=axis)
     else:
+        a = asarray(a)  # Ensure a is Array for .shape access
         if axis is None:
             a_flat = reshape(a, -1)
             result = roll(a_flat, shift, axis=0)
@@ -480,6 +483,7 @@ def max(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
         )
 
     else:
+        a = asarray(a)  # Ensure a is Array for .shape access
         if axis is None:
             return _cas.mmax(a)
 
@@ -532,6 +536,7 @@ def min(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
         )
 
     else:
+        a = asarray(a)  # Ensure a is Array for .shape access
         if axis is None:
             return _cas.mmin(a)
 

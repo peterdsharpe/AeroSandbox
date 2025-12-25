@@ -10,7 +10,7 @@ from aerosandbox.numpy.typing import Array, Vectorizable
 
 
 def where(
-    condition: Array,
+    condition: Array | bool | _onp.bool_,
     value_if_true: Vectorizable,
     value_if_false: Vectorizable,
 ) -> Array:
@@ -18,7 +18,7 @@ def where(
 
     Parameters
     ----------
-    condition : Array
+    condition : Array | bool
         Where True, yield ``value_if_true``, otherwise yield ``value_if_false``.
     value_if_true : Vectorizable
         Values from which to choose where ``condition`` is True.

@@ -290,6 +290,7 @@ def trapz(x: ArrayLike, modify_endpoints: bool = False) -> Array:
     integrate_discrete_intervals : Preferred alternative.
     """
     import warnings
+    from aerosandbox.numpy.array import asarray
 
     warnings.warn(
         "trapz() will eventually be deprecated, since NumPy plans to remove it in the upcoming NumPy 2.0 release (2024). \n"
@@ -297,6 +298,7 @@ def trapz(x: ArrayLike, modify_endpoints: bool = False) -> Array:
         PendingDeprecationWarning,
     )
 
+    x = asarray(x)  # Convert to Array for subscripting
     integral = (x[1:] + x[:-1]) / 2
     if modify_endpoints:
         integral[0] = integral[0] + x[0] * 0.5

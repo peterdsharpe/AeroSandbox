@@ -1,12 +1,13 @@
 from typing import Literal
 import casadi as _cas
 import numpy as _onp
-from aerosandbox.numpy.array import length, concatenate
+from aerosandbox.numpy.array import length, concatenate, asarray
+from aerosandbox.numpy.typing import ArrayLike
 
 
 def integrate_discrete_intervals(
-    f: _onp.ndarray | _cas.MX,
-    x: _onp.ndarray | _cas.MX | None = None,
+    f: ArrayLike,
+    x: ArrayLike | None = None,
     multiply_by_dx: bool = True,
     method: Literal[
         "forward_euler",
@@ -50,10 +51,15 @@ def integrate_discrete_intervals(
             - "periodic"
 
     """
+    # Convert inputs to arrays for subscripting
+    f = asarray(f)
+
     # Determine if an x-array was specified, and calculate dx.
     x_is_specified = x is not None
     if not x_is_specified:
         x = _onp.arange(length(f))
+    else:
+        x = asarray(x)
 
     dx = x[1:] - x[:-1]
 
@@ -266,8 +272,8 @@ def integrate_discrete_intervals(
 
 
 def integrate_discrete_squared_curvature(
-    f: _onp.ndarray | _cas.MX,
-    x: _onp.ndarray | _cas.MX | None = None,
+    f: ArrayLike,
+    x: ArrayLike | None = None,
     method: Literal[
         "cubic", "simpson", "hybrid_simpson_cubic"
     ] = "hybrid_simpson_cubic",
@@ -325,10 +331,15 @@ def integrate_discrete_squared_curvature(
             well as a regularization strategy. (It is still convergent to the true value in the high-sample-rate limit.)
 
     """
+    # Convert inputs to arrays for subscripting
+    f = asarray(f)
+
     # Determine if an x-array was specified, and calculate dx.
     x_is_specified = x is not None
     if not x_is_specified:
         x = _onp.arange(length(f))
+    else:
+        x = asarray(x)
 
     if method in ["cubic", "cubic_spline"]:
         x1 = x[:-3]
