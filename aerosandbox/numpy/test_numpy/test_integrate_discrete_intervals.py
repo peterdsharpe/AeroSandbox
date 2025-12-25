@@ -106,7 +106,7 @@ def test_nonuniform_spacing():
 
     ### Compute expected via manual trapezoidal rule
     expected = 0.0
-    for i in range(len(x) - 1):
+    for i in range(np.length(x) - 1):
         expected += (f[i] + f[i + 1]) / 2 * (x[i + 1] - x[i])
 
     assert np.isclose(integral, expected, rtol=1e-10)
@@ -134,7 +134,7 @@ def test_no_x_specified():
 
     result = integrate_discrete_intervals(f, method="trapezoidal")
     expected = integrate_discrete_intervals(
-        f, x=np.arange(len(f)), method="trapezoidal"
+        f, x=np.arange(np.length(f)), method="trapezoidal"
     )
 
     assert np.allclose(result, expected)
@@ -149,7 +149,7 @@ def test_method_endpoints_lower_order():
         f, x, method="cubic", method_endpoints="lower_order"
     )
 
-    assert len(result) == len(x) - 1
+    assert np.length(result) == np.length(x) - 1
     assert not np.any(np.isnan(result))
 
 
@@ -174,9 +174,9 @@ def test_method_endpoints_ignore():
 
     ### With 'ignore', forward_simpson gives N-2 intervals (missing last interval due to endpoint)
     ### With 'lower_order', all N-1 intervals are returned
-    assert len(result_ignore_no_dx) == len(x) - 2
-    assert len(result_ignore_with_dx) == len(x) - 2
-    assert len(result_lower) == len(x) - 1
+    assert np.length(result_ignore_no_dx) == np.length(x) - 2
+    assert np.length(result_ignore_with_dx) == np.length(x) - 2
+    assert np.length(result_lower) == np.length(x) - 1
 
     ### Verify the bug fix: result_ignore_with_dx should be result_ignore_no_dx * dx
     dx = np.diff(x)

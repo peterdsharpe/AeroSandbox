@@ -180,7 +180,7 @@ def rotation_matrix_from_euler_angles(
         return rot
 
 
-def is_valid_rotation_matrix(a: _onp.ndarray, tol: float = 1e-9) -> bool:
+def is_valid_rotation_matrix(a: Array, tol: float = 1e-9) -> bool:
     """Check whether a matrix satisfies the properties of a rotation matrix.
 
     Tests for:
@@ -191,7 +191,7 @@ def is_valid_rotation_matrix(a: _onp.ndarray, tol: float = 1e-9) -> bool:
 
     Parameters
     ----------
-    a : ndarray
+    a : Array
         The matrix to test.
     tol : float, optional
         Tolerance for floating-point comparisons. Default is 1e-9.

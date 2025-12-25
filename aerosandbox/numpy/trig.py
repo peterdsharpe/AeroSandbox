@@ -6,6 +6,7 @@ wrapper around NumPy's radian-based functions.
 
 import numpy as _onp
 from numpy import pi as _pi
+from aerosandbox.numpy.array import asarray
 from aerosandbox.numpy.typing import Vectorizable, Array
 
 _deg2rad = 180.0 / _pi
@@ -29,7 +30,7 @@ def degrees(x: Vectorizable) -> Array:
     --------
     numpy.degrees : https://numpy.org/doc/stable/reference/generated/numpy.degrees.html
     """
-    return x * _deg2rad
+    return asarray(x * _deg2rad)
 
 
 def radians(x: Vectorizable) -> Array:
@@ -49,7 +50,7 @@ def radians(x: Vectorizable) -> Array:
     --------
     numpy.radians : https://numpy.org/doc/stable/reference/generated/numpy.radians.html
     """
-    return x * _rad2deg
+    return asarray(x * _rad2deg)
 
 
 def sind(x: Vectorizable) -> Array:

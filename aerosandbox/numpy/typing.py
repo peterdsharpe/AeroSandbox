@@ -108,11 +108,12 @@ Examples:
 - Any external tool that broadcasts over multiple operating points
 """
 
-ConcreteArrayLike = ConcreteScalar | _SequenceOfScalars | ConcreteArray
+ConcreteArrayLike = ConcreteScalar | Sequence["ConcreteScalar | ConcreteArrayLike"] | ConcreteArray
 """Permissive input for concrete array parameters. No CasADi.
 
-Accepts scalars, sequences, or ndarrays. Use for function INPUTS to external
-tools that accept array-like values but not CasADi.
+Accepts scalars, sequences (including nested sequences), or ndarrays.
+Use for function INPUTS to external tools that accept array-like values
+but not CasADi.
 """
 
 ConcreteVectorLike = ConcreteArrayLike

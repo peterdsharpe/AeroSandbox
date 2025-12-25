@@ -4,7 +4,7 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
-from aerosandbox.numpy.typing import Vectorizable, ConcreteVector, ConcreteArray
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike, ConcreteVector, ConcreteArray
 from typing import Literal, Sequence
 from scipy import interpolate as _interpolate
 
@@ -110,11 +110,11 @@ def is_data_structured(
 
 
 def interpn(
-    points: Sequence[ConcreteVector],
+    points: Sequence[ArrayLike],
     values: ConcreteArray,
     xi: Vectorizable,
     method: Literal["linear", "bspline", "nearest"] = "linear",
-    bounds_error: bool = True,
+    bounds_error: bool | None = True,
     fill_value: float | None = _onp.nan,
 ) -> Vectorizable:
     """

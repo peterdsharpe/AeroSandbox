@@ -7,13 +7,14 @@ This module provides differentiable approximations to non-smooth functions
 import aerosandbox.numpy as _np
 import casadi as _cas
 from typing import Literal
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def softmax(
-    *args: float | _np.ndarray,
+    *args: Vectorizable,
     softness: float | None = None,
     hardness: float | None = None,
-) -> float | _np.ndarray:
+) -> Vectorizable:
     """Compute element-wise soft maximum of two or more arrays.
 
     Also known as the log-sum-exp (LSE) function. Useful for optimization
@@ -89,10 +90,10 @@ def softmax(
 
 
 def softmin(
-    *args: float | _np.ndarray,
+    *args: Vectorizable,
     softness: float | None = None,
     hardness: float | None = None,
-) -> float | _np.ndarray:
+) -> Vectorizable:
     """Compute element-wise soft minimum of two or more arrays.
 
     Related to the log-sum-exp function. Useful for optimization because
@@ -132,10 +133,10 @@ def softmin(
 
 
 def softmax_scalefree(
-    *args: float | _np.ndarray,
+    *args: Vectorizable,
     relative_softness: float | None = None,
     relative_hardness: float | None = None,
-) -> float | _np.ndarray:
+) -> Vectorizable:
     """Compute scale-free soft maximum of two or more arrays.
 
     Like ``softmax``, but the softness is automatically scaled based on
@@ -176,10 +177,10 @@ def softmax_scalefree(
 
 
 def softmin_scalefree(
-    *args: float | _np.ndarray,
+    *args: Vectorizable,
     relative_softness: float | None = None,
     relative_hardness: float | None = None,
-) -> float | _np.ndarray:
+) -> Vectorizable:
     """Compute scale-free soft minimum of two or more arrays.
 
     Like ``softmin``, but the softness is automatically scaled based on

@@ -839,13 +839,13 @@ def full_like(
 
 
 def assert_equal_shape(
-    arrays: list[_onp.ndarray] | dict[str, _onp.ndarray],
+    arrays: list[Array] | dict[str, Array],
 ) -> None:
     """Assert that all of the given arrays have the same shape.
 
     Parameters
     ----------
-    arrays : list of ndarray, or dict of str to ndarray
+    arrays : list of Array, or dict of str to Array
         The arrays to be evaluated. Can be provided as:
 
         - A list, in which case a generic ValueError is thrown on mismatch.

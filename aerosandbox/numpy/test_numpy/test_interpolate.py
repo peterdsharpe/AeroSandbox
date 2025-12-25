@@ -59,7 +59,7 @@ def test_interpn_linear_multiple_samples():
         value
         == pytest.approx(value_func_3d(*[point[:, i] for i in range(point.shape[1])]))
     )
-    assert len(value) == 2
+    assert np.length(value) == 2
 
     ### CasADi test
     point = cas.DM(point)
@@ -67,7 +67,7 @@ def test_interpn_linear_multiple_samples():
     value_actual = value_func_3d(
         *[np.array(point[:, i]) for i in range(point.shape[1])]
     )
-    for i in range(len(value)):
+    for i in range(np.length(value)):
         assert value[i] == pytest.approx(float(value_actual[i]))
     assert value.shape == (2,)
 

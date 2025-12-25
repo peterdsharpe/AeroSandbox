@@ -1,12 +1,13 @@
-from aerosandbox.numpy.array import array, length
+from aerosandbox.numpy.array import array, asarray, length
+from aerosandbox.numpy.typing import ArrayLike, Array
 import numpy as _onp
 
 
 def finite_difference_coefficients(
-    x: _onp.ndarray,
+    x: ArrayLike,
     x0: float = 0,
     derivative_degree: int = 1,
-) -> _onp.ndarray:
+) -> Array:
     """
     Computes the weights (coefficients) in compact finite differece formulas for any order of derivative
     and to any order of accuracy on one-dimensional grids with arbitrary spacing.
@@ -51,6 +52,8 @@ def finite_difference_coefficients(
     grid points `x`.
 
     """
+    x = asarray(x)
+
     ### Check inputs
     if derivative_degree < 1:
         raise ValueError("The parameter derivative_degree must be an integer >= 1.")
