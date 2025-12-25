@@ -1,16 +1,16 @@
 import aerosandbox.numpy as np
-import casadi as cas
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def _calculate_induced_velocity_line_singularity_panel_coordinates(
-    xp_field: float | np.ndarray,
-    yp_field: float | np.ndarray,
+    xp_field: Vectorizable,
+    yp_field: Vectorizable,
     gamma_start: float = 0.0,
     gamma_end: float = 0.0,
     sigma_start: float = 0.0,
     sigma_end: float = 0.0,
     xp_panel_end: float = 1.0,
-) -> tuple[float | np.ndarray, float | np.ndarray]:
+) -> tuple[Vectorizable, Vectorizable]:
     """
     Calculates the induced velocity at a point (xp_field, yp_field) in a 2D potential-flow flowfield.
 
@@ -46,14 +46,16 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
     if isinstance(yp_field, (float, int)):
         yp_field = np.array([yp_field])
 
-    ### Determine if you can skip either the vortex or source parts
+    ### Skip vortex/source math if strengths are known to be zero (only check for scalar types)
     skip_vortex_math = (
-        not (isinstance(gamma_start, cas.MX) or isinstance(gamma_end, cas.MX))
+        isinstance(gamma_start, (float, int))
+        and isinstance(gamma_end, (float, int))
         and gamma_start == 0
         and gamma_end == 0
     )
     skip_source_math = (
-        not (isinstance(sigma_start, cas.MX) or isinstance(sigma_end, cas.MX))
+        isinstance(sigma_start, (float, int))
+        and isinstance(sigma_end, (float, int))
         and sigma_start == 0
         and sigma_end == 0
     )
@@ -155,8 +157,8 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
 
 
 def _calculate_induced_velocity_line_singularity(
-    x_field: float | np.ndarray,
-    y_field: float | np.ndarray,
+    x_field: Vectorizable,
+    y_field: Vectorizable,
     x_panel_start: float,
     y_panel_start: float,
     x_panel_end: float,
@@ -165,7 +167,7 @@ def _calculate_induced_velocity_line_singularity(
     gamma_end: float = 0.0,
     sigma_start: float = 0.0,
     sigma_end: float = 0.0,
-) -> tuple[float | np.ndarray, float | np.ndarray]:
+) -> tuple[Vectorizable, Vectorizable]:
     """
     Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
 
@@ -227,13 +229,13 @@ def _calculate_induced_velocity_line_singularity(
 
 
 def calculate_induced_velocity_line_singularities(
-    x_field: float | np.ndarray,
-    y_field: float | np.ndarray,
+    x_field: Vectorizable,
+    y_field: Vectorizable,
     x_panels: np.ndarray,
     y_panels: np.ndarray,
     gamma: np.ndarray,
     sigma: np.ndarray,
-) -> tuple[float | np.ndarray, float | np.ndarray]:
+) -> tuple[Vectorizable, Vectorizable]:
     """
     Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
 
