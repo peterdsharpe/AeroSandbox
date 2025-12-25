@@ -63,8 +63,8 @@ class AeroSandboxObject(ABC):
         if self is other:  # If they point to the same object in memory, they're equal
             return True
 
-        if not isinstance(
-            other, type(self)
+        if type(self) is not type(
+            other
         ):  # If they are of different types, they cannot be equal
             return False
 
