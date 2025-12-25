@@ -209,7 +209,7 @@ This is all pretty standard across all scientific computing in Python:
   |------|---------|---------|
   | `Scalar` | Single numeric value (may be symbolic) | Function returning a single result |
   | `Array` | N-dimensional array output | `np.linspace(...)` return type |
-  | `Vectorizable` | Parameters that broadcast element-wise | `OperatingPoint(velocity=..., alpha=...)` |
+  | `Vectorizable` | Parameters that optionally broadcast element-wise along 1 dimension | `OperatingPoint(velocity=..., alpha=...)` |
   | `ArrayLike` | Permissive array input (converted via `asarray()`) | `np.sum(x)` input |
   | `ConcreteScalar` | External tool numeric input | XFoil alpha parameter |
   | `ConcreteArray` | External tool array I/O | Interpolation lookup table |
