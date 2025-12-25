@@ -6,7 +6,7 @@ import aerosandbox.numpy as np
 from aerosandbox.tools import inspect_tools
 from sortedcontainers import SortedDict
 import copy
-from aerosandbox.numpy.typing import ArrayLike, Vectorizable
+from aerosandbox.numpy.typing import ArrayLike, Scalar, Vectorizable
 
 
 class Opti(cas.Opti):
@@ -73,14 +73,14 @@ class Opti(cas.Opti):
 
     def variable(
         self,
-        init_guess: float | int | np.ndarray | None = None,
+        init_guess: Vectorizable | None = None,
         n_vars: int | None = None,
-        scale: float | int | np.ndarray | None = None,
+        scale: Vectorizable | None = None,
         freeze: bool = False,
         log_transform: bool = False,
         category: str = "Uncategorized",
-        lower_bound: float | int | np.ndarray | None = None,
-        upper_bound: float | int | np.ndarray | None = None,
+        lower_bound: Vectorizable | None = None,
+        upper_bound: Vectorizable | None = None,
         _stacklevel: int = 1,
     ) -> cas.MX | float | np.ndarray:
         """
@@ -369,7 +369,7 @@ class Opti(cas.Opti):
 
     def subject_to(
         self,
-        constraint: cas.MX | bool | list,  # TODO add scale
+        constraint: Vectorizable | bool | Sequence["Vectorizable | bool"],  # TODO add scale
         _stacklevel: int = 1,
     ) -> cas.MX | None | list[cas.MX | None]:
         """
@@ -389,7 +389,7 @@ class Opti(cas.Opti):
                 >>> f = np.sin(x)
                 >>> opti.subject_to(f == 0.5)
 
-                You can also pass in a list of multiple constraints using list syntax. For example:
+                You can also pass in multiple constraints as a sequence (list, tuple, etc.):
 
                 >>> x = opti.variable()
                 >>> opti.subject_to([
@@ -407,9 +407,14 @@ class Opti(cas.Opti):
             a list of dual variables.
 
         """
-        # Determine whether you're dealing with a single (possibly vectorized) constraint or a list of constraints.
-        # If the latter, recursively apply them.
-        if type(constraint) in (list, tuple):
+        ### Handle sequences of constraints by recursively applying each one
+        # Exclude str (iterable but not a constraint list) and array-like types
+        # (np.ndarray, cas.MX, etc.) which represent single vectorized constraints.
+        is_constraint_sequence = (
+            isinstance(constraint, Sequence)
+            and not isinstance(constraint, (str, np.ndarray, cas.MX, cas.DM, cas.SX))
+        )
+        if is_constraint_sequence:
             return [
                 self.subject_to(
                     each_constraint, _stacklevel=_stacklevel + 2
@@ -485,14 +490,14 @@ class Opti(cas.Opti):
 
     def minimize(
         self,
-        f: cas.MX,
+        f: Scalar,
     ) -> None:
         # f = cas.cse(f)
         super().minimize(f)
 
     def maximize(
         self,
-        f: cas.MX,
+        f: Scalar,
     ) -> None:
         # f = cas.cse(f)
         super().minimize(-1 * f)

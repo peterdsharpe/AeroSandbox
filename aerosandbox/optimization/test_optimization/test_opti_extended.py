@@ -214,6 +214,39 @@ def test_opti_subject_to_list():
     assert np.isclose(sol(y), 3, atol=1e-3)
 
 
+def test_opti_subject_to_tuple():
+    """Test adding multiple constraints as a tuple."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    y = opti.variable(init_guess=0)
+
+    opti.minimize(x + y)
+    opti.subject_to((x >= 2, y >= 3, x + y <= 10))
+
+    sol = opti.solve(verbose=False)
+
+    ### Minimum is at x=2, y=3
+    assert np.isclose(sol(x), 2, atol=1e-3)
+    assert np.isclose(sol(y), 3, atol=1e-3)
+
+
+def test_opti_subject_to_generator():
+    """Test adding multiple constraints from a generator expression."""
+    opti = asb.Opti()
+
+    x = opti.variable(n_vars=3, init_guess=0)
+
+    opti.minimize(np.sum(x))
+    # Generator expression - should work since generators are iterable sequences
+    opti.subject_to(list(x[i] >= i + 1 for i in range(3)))
+
+    sol = opti.solve(verbose=False)
+
+    ### Minimum is at x = [1, 2, 3]
+    assert np.allclose(sol(x), [1, 2, 3], atol=1e-3)
+
+
 def test_opti_linear_program():
     """Test linear programming problem."""
     opti = asb.Opti()
