@@ -8,7 +8,7 @@ import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.arithmetic_dyadic import centered_mod as _centered_mod
-from aerosandbox.numpy.array import array, concatenate, reshape
+from aerosandbox.numpy.array import array, asarray, concatenate, reshape
 from aerosandbox.numpy.typing import ArrayLike, Array, Scalar
 
 
@@ -46,6 +46,7 @@ def diff(
     --------
     numpy.diff : https://numpy.org/doc/stable/reference/generated/numpy.diff.html
     """
+    a = asarray(a)
     if period is not None:
         return _centered_mod(diff(a, n=n, axis=axis), period)
 

@@ -34,6 +34,8 @@ def inner(x: VectorLike, y: VectorLike, manual: bool = False) -> Scalar:
     --------
     numpy.inner : https://numpy.org/doc/stable/reference/generated/numpy.inner.html
     """
+    x = asarray(x)
+    y = asarray(y)
     if manual:
         return sum([xi * yi for xi, yi in zip(x, y)])
 
@@ -66,6 +68,8 @@ def outer(x: VectorLike, y: VectorLike, manual: bool = False) -> Array:
     --------
     numpy.outer : https://numpy.org/doc/stable/reference/generated/numpy.outer.html
     """
+    x = asarray(x)
+    y = asarray(y)
     if manual:
         return [[xi * yi for yi in y] for xi in x]
 
@@ -73,7 +77,6 @@ def outer(x: VectorLike, y: VectorLike, manual: bool = False) -> Array:
         return _onp.outer(x, y)
 
     else:
-        y = asarray(y)  # Ensure y is Array for .shape access
         if len(y.shape) == 1:  # Force y to be transposable if it's not.
             y = _onp.expand_dims(y, 1)
         return x @ y.T
@@ -98,6 +101,8 @@ def solve(A: ArrayLike, b: ArrayLike) -> Array:
     --------
     numpy.linalg.solve : https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html
     """
+    A = asarray(A)
+    b = asarray(b)
     if not is_casadi_type([A, b]):
         return _onp.linalg.solve(A, b)
 
@@ -122,6 +127,7 @@ def inv(A: ArrayLike) -> Array:
     --------
     numpy.linalg.inv : https://numpy.org/doc/stable/reference/generated/numpy.linalg.inv.html
     """
+    A = asarray(A)
     if not is_casadi_type(A):
         return _onp.linalg.inv(A)
 
@@ -146,6 +152,7 @@ def pinv(A: ArrayLike) -> Array:
     --------
     numpy.linalg.pinv : https://numpy.org/doc/stable/reference/generated/numpy.linalg.pinv.html
     """
+    A = asarray(A)
     if not is_casadi_type(A):
         return _onp.linalg.pinv(A)
 
@@ -170,6 +177,7 @@ def det(A: ArrayLike) -> Scalar:
     --------
     numpy.linalg.det : https://numpy.org/doc/stable/reference/generated/numpy.linalg.det.html
     """
+    A = asarray(A)
     if not is_casadi_type(A):
         return _onp.linalg.det(A)
 
@@ -213,11 +221,11 @@ def norm(
     --------
     numpy.linalg.norm : https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
     """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.linalg.norm(x, ord=ord, axis=axis, keepdims=keepdims)
 
     else:
-        x = asarray(x)  # Ensure x is Array for .shape access
         # Figure out which axis, if any, to take a vector norm about.
         if axis is not None:
             if not (axis == 0 or axis == 1 or axis == -1):

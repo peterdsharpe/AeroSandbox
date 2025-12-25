@@ -297,7 +297,7 @@ def dstack(arrays: Sequence[ArrayLike]) -> _onp.ndarray:
         )
 
 
-def length(array: ArrayLike | Scalar) -> int:
+def length(a: ArrayLike | Scalar) -> int:
     """Return the length of a 1D-array-like object.
 
     An extension of ``len()`` that handles both NumPy arrays and CasADi arrays,
@@ -305,7 +305,7 @@ def length(array: ArrayLike | Scalar) -> int:
 
     Parameters
     ----------
-    array : ArrayLike | Scalar
+    a : ArrayLike | Scalar
         Input array or scalar.
 
     Returns
@@ -314,18 +314,19 @@ def length(array: ArrayLike | Scalar) -> int:
         The length of the array. Returns 1 for scalars. For CasADi arrays,
         returns the larger of the two dimensions (assuming column vectors).
     """
-    if not is_casadi_type(array, recursive=False):
+    if not is_casadi_type(a, recursive=False):
+        a = asarray(a)
         try:
-            return len(array)
+            return len(a)
         except TypeError:
             return 1
 
     else:
-        array = asarray(array)  # Ensure array is Array for .shape access
-        if array.shape[0] != 1:
-            return array.shape[0]
+        a = asarray(a)  # Ensure a is Array for .shape access
+        if a.shape[0] != 1:
+            return a.shape[0]
         else:
-            return array.shape[1]
+            return a.shape[1]
 
 
 def diag(v: ArrayLike, k: int = 0) -> Array:
@@ -358,6 +359,7 @@ def diag(v: ArrayLike, k: int = 0) -> Array:
     numpy.diag : https://numpy.org/doc/stable/reference/generated/numpy.diag.html
     """
     if not is_casadi_type(v, recursive=False):
+        v = asarray(v)
         return _onp.diag(v, k=k)
 
     else:
@@ -425,10 +427,10 @@ def roll(
     --------
     numpy.roll : https://numpy.org/doc/stable/reference/generated/numpy.roll.html
     """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
         return _onp.roll(a, shift, axis=axis)
     else:
-        a = asarray(a)  # Ensure a is Array for .shape access
         if axis is None:
             a_flat = reshape(a, -1)
             result = roll(a_flat, shift, axis=0)
@@ -481,14 +483,11 @@ def max(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
     --------
     numpy.max : https://numpy.org/doc/stable/reference/generated/numpy.max.html
     """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.max(
-            a,
-            axis=axis,
-        )
+        return _onp.max(a, axis=axis)
 
     else:
-        a = asarray(a)  # Ensure a is Array for .shape access
         if axis is None:
             return _cas.mmax(a)
 
@@ -534,14 +533,11 @@ def min(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
     --------
     numpy.min : https://numpy.org/doc/stable/reference/generated/numpy.min.html
     """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.min(
-            a=a,
-            axis=axis,
-        )
+        return _onp.min(a, axis=axis)
 
     else:
-        a = asarray(a)  # Ensure a is Array for .shape access
         if axis is None:
             return _cas.mmin(a)
 
@@ -592,6 +588,7 @@ def reshape(a: ArrayLike, newshape: int | tuple[int, ...], order: str = "C") -> 
     --------
     numpy.reshape : https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
     """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
         return _onp.reshape(a, newshape, order=order)
     else:
@@ -637,6 +634,7 @@ def ravel(a: ArrayLike, order: str = "C") -> Array:
     --------
     numpy.ravel : https://numpy.org/doc/stable/reference/generated/numpy.ravel.html
     """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
         return _onp.ravel(a, order=order)
     else:
@@ -667,6 +665,7 @@ def tile(A: ArrayLike, reps: tuple[int, ...]) -> Array:
     --------
     numpy.tile : https://numpy.org/doc/stable/reference/generated/numpy.tile.html
     """
+    A = asarray(A)
     if not is_casadi_type(A, recursive=False):
         return _onp.tile(A, reps)
     else:

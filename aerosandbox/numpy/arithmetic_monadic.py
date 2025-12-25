@@ -36,6 +36,7 @@ def sum(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
     --------
     numpy.sum : https://numpy.org/doc/stable/reference/generated/numpy.sum.html
     """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.sum(x, axis=axis)
 
@@ -78,11 +79,11 @@ def mean(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
     --------
     numpy.mean : https://numpy.org/doc/stable/reference/generated/numpy.mean.html
     """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.mean(x, axis=axis)
 
     else:
-        x = asarray(x)  # Ensure x is Array for .shape access
         if axis == 0:
             return sum(x, axis=0) / x.shape[0]
         elif axis == 1:
@@ -112,6 +113,7 @@ def abs(x: ArrayLike) -> Array:
     --------
     numpy.abs : https://numpy.org/doc/stable/reference/generated/numpy.absolute.html
     """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.abs(x)
 
@@ -174,6 +176,7 @@ def prod(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
     --------
     numpy.prod : https://numpy.org/doc/stable/reference/generated/numpy.prod.html
     """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.prod(x, axis=axis)
 

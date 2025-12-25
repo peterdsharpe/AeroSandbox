@@ -1,21 +1,32 @@
+"""Rotation matrix utilities for the AeroSandbox NumPy-like interface.
+
+This module provides functions for generating rotation matrices in 2D and 3D,
+working with both NumPy arrays and CasADi symbolic arrays.
+"""
+
 from aerosandbox.numpy import sin, cos, linalg
 from aerosandbox.numpy.array import array
-from typing import Sequence
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Array
 import numpy as _onp
 
 
 def rotation_matrix_2D(
-    angle,
+    angle: Vectorizable,
     as_array: bool = True,
-):
-    """
-    Gives the 2D rotation matrix associated with a counterclockwise rotation about an angle.
-    Args:
-        angle: Angle by which to rotate. Given in radians.
-        as_array: Determines whether to return an array-like or just a simple list of lists.
+) -> Array | list[list]:
+    """Give the 2D rotation matrix for a counterclockwise rotation.
 
-    Returns: The 2D rotation matrix
+    Parameters
+    ----------
+    angle : Vectorizable
+        Angle by which to rotate, in radians.
+    as_array : bool, optional
+        If True (default), return an array. If False, return a list of lists.
 
+    Returns
+    -------
+    Array | list[list]
+        The 2x2 rotation matrix.
     """
     s = sin(angle)
     c = cos(angle)
@@ -27,34 +38,41 @@ def rotation_matrix_2D(
 
 
 def rotation_matrix_3D(
-    angle: float | _onp.ndarray,
-    axis: _onp.ndarray | Sequence[float] | str,
+    angle: Vectorizable,
+    axis: ArrayLike | str,
     as_array: bool = True,
     axis_already_normalized: bool = False,
-):
-    """
-    Yields the rotation matrix that corresponds to a rotation by a specified amount about a given axis.
+) -> Array | list[list[list]]:
+    """Give the 3D rotation matrix for a rotation about a given axis.
 
-    An implementation of https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+    An implementation of the axis-angle rotation matrix formula.
 
-    Args:
+    Parameters
+    ----------
+    angle : Vectorizable
+        The angle to rotate by, in radians. Direction of rotation corresponds
+        to the right-hand rule. Can be vectorized.
+    axis : ArrayLike | str
+        The axis to rotate about. Can be:
 
-        angle: The angle to rotate by. [radians]
-        Direction of rotation corresponds to the right-hand rule.
-        Can be vectorized.
+        - A string: 'x', 'y', or 'z' for principal axes
+        - An array-like of shape (3,) or (3, N) for arbitrary axes
 
-        axis: The axis to rotate about. [ndarray]
-        Can be vectorized; be sure axis[0] yields all the x-components, etc.
+        Can be vectorized; if so, axis[0] yields all the x-components, etc.
+    as_array : bool, optional
+        If True (default), return an array. If False, return a list of lists.
+        If vectorizing, it is recommended to set this to False.
+    axis_already_normalized : bool, optional
+        If True, skip axis normalization for speed. Default is False.
 
-        as_array: boolean, returns a 3x3 array-like if True, and a list-of-lists otherwise.
+    Returns
+    -------
+    Array | list[list[list]]
+        The 3x3 rotation matrix.
 
-            If you are intending to use this function vectorized, it is recommended you flag this False. (Or test before
-            proceeding.)
-
-        axis_already_normalized: boolean, skips axis normalization for speed if you flag this true.
-
-    Returns:
-        The rotation matrix, with type according to the parameter `as_array`.
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
     """
     s = sin(angle)
     c = cos(angle)
@@ -104,36 +122,44 @@ def rotation_matrix_3D(
 
 
 def rotation_matrix_from_euler_angles(
-    roll_angle: float | _onp.ndarray = 0,
-    pitch_angle: float | _onp.ndarray = 0,
-    yaw_angle: float | _onp.ndarray = 0,
+    roll_angle: Vectorizable = 0,
+    pitch_angle: Vectorizable = 0,
+    yaw_angle: Vectorizable = 0,
     as_array: bool = True,
-):
-    """
-    Yields the rotation matrix that corresponds to a given Euler angle rotation.
+) -> Array | list[list[list]]:
+    """Give the rotation matrix corresponding to Euler angle rotations.
 
-    Note: This uses the standard (yaw, pitch, roll) Euler angle rotation, where:
-    * First, a rotation about x is applied (roll)
-    * Second, a rotation about y is applied (pitch)
-    * Third, a rotation about z is applied (yaw)
+    Uses the standard (yaw, pitch, roll) Euler angle convention where:
 
-    In other words: R = R_z(yaw) @ R_y(pitch) @ R_x(roll).
+    1. First, a rotation about x is applied (roll)
+    2. Second, a rotation about y is applied (pitch)
+    3. Third, a rotation about z is applied (yaw)
 
-    Note: To use this, pre-multiply your vector to go from body axes to earth axes.
-        Example:
-            >>> vector_earth = rotation_matrix_from_euler_angles(np.pi / 4, np.pi / 4, np.pi / 4) @ vector_body
+    In matrix form: R = R_z(yaw) @ R_y(pitch) @ R_x(roll).
 
-    See notes:
-    http://planning.cs.uiuc.edu/node102.html
+    To transform from body axes to earth axes, pre-multiply your vector::
 
-    Args:
-        roll_angle: The roll angle, which is a rotation about the x-axis. [radians]
-        pitch_angle: The pitch angle, which is a rotation about the y-axis. [radians]
-        yaw_angle: The yaw angle, which is a rotation about the z-axis. [radians]
-        as_array: If True, returns a 3x3 array-like. If False, returns a list-of-lists.
+        vector_earth = rotation_matrix_from_euler_angles(...) @ vector_body
 
-    Returns:
+    Parameters
+    ----------
+    roll_angle : Vectorizable, optional
+        Rotation about the x-axis, in radians. Default is 0.
+    pitch_angle : Vectorizable, optional
+        Rotation about the y-axis, in radians. Default is 0.
+    yaw_angle : Vectorizable, optional
+        Rotation about the z-axis, in radians. Default is 0.
+    as_array : bool, optional
+        If True (default), return an array. If False, return a list of lists.
 
+    Returns
+    -------
+    Array | list[list[list]]
+        The 3x3 rotation matrix.
+
+    References
+    ----------
+    .. [1] http://planning.cs.uiuc.edu/node102.html
     """
     sa = sin(yaw_angle)
     ca = cos(yaw_angle)
@@ -154,21 +180,26 @@ def rotation_matrix_from_euler_angles(
         return rot
 
 
-def is_valid_rotation_matrix(a: _onp.ndarray, tol=1e-9) -> bool:
-    """
-    Returns a boolean of whether the given matrix satisfies the properties of a rotation matrix.
+def is_valid_rotation_matrix(a: _onp.ndarray, tol: float = 1e-9) -> bool:
+    """Check whether a matrix satisfies the properties of a rotation matrix.
 
-    Specifically, tests for:
-        * Volume-preserving
-        * Handedness of output reference frame
-        * Orthogonality of output reference frame
+    Tests for:
 
-    Args:
-        a: The array-like to be tested
-        tol: A tolerance to use for truthiness; accounts for floating-point error.
+    - Volume-preserving (determinant = 1)
+    - Right-handedness of output reference frame
+    - Orthogonality of output reference frame
 
-    Returns: A boolean of whether the array-like is a valid rotation matrix.
+    Parameters
+    ----------
+    a : ndarray
+        The matrix to test.
+    tol : float, optional
+        Tolerance for floating-point comparisons. Default is 1e-9.
 
+    Returns
+    -------
+    bool
+        True if the matrix is a valid rotation matrix, False otherwise.
     """
 
     def approx_equal(x, y):
