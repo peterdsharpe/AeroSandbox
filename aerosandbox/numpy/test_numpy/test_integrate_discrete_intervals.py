@@ -4,6 +4,7 @@ from aerosandbox.numpy.integrate_discrete import (
     integrate_discrete_squared_curvature,
 )
 import pytest
+from typing import Literal
 
 
 def test_forward_euler_uniform_spacing():
@@ -191,6 +192,7 @@ def test_sinusoidal_integration_accuracy():
     ### Exact integral of sin(x) from 0 to 2*pi is 0
     expected = 0.0
 
+    method: Literal["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]
     for method in ["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]:
         result = integrate_discrete_intervals(f, x, method=method)
         integral = np.sum(result)
@@ -220,6 +222,7 @@ def test_squared_curvature_sine_wave():
     ### Integral of sin^2(x) from 0 to 2*pi is pi
     expected = np.pi
 
+    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"]
     for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
@@ -237,6 +240,7 @@ def test_squared_curvature_parabola():
     ### Integral of 4 from 0 to 10 is 40
     expected = 40.0
 
+    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"]
     for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
@@ -254,6 +258,7 @@ def test_squared_curvature_cubic():
     ### Integral of 36x^2 from 0 to 5 is 36 * [x^3/3]_0^5 = 36 * 125/3 = 1500
     expected = 1500.0
 
+    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"]
     for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
@@ -268,7 +273,7 @@ def test_invalid_method_raises_error():
     f = x**2
 
     with pytest.raises(ValueError):
-        integrate_discrete_intervals(f, x, method="invalid_method")
+        integrate_discrete_intervals(f, x, method="invalid_method")  # type: ignore[arg-type]
 
 
 def test_invalid_method_endpoints_raises_error():
@@ -278,7 +283,7 @@ def test_invalid_method_endpoints_raises_error():
 
     with pytest.raises(ValueError):
         integrate_discrete_intervals(
-            f, x, method="cubic", method_endpoints="invalid_endpoint_method"
+            f, x, method="cubic", method_endpoints="invalid_endpoint_method"  # type: ignore[arg-type]
         )
 
 
@@ -297,7 +302,7 @@ def test_invalid_squared_curvature_method():
     f = x**2
 
     with pytest.raises(ValueError):
-        integrate_discrete_squared_curvature(f, x, method="invalid_method")
+        integrate_discrete_squared_curvature(f, x, method="invalid_method")  # type: ignore[arg-type]
 
 
 def test_midpoint_deprecation_warning():
@@ -306,7 +311,7 @@ def test_midpoint_deprecation_warning():
     f = x**2
 
     with pytest.raises(PendingDeprecationWarning):
-        integrate_discrete_intervals(f, x, method="midpoint")
+        integrate_discrete_intervals(f, x, method="midpoint")  # type: ignore[arg-type]
 
 
 def test_all_method_aliases():
@@ -317,25 +322,25 @@ def test_all_method_aliases():
     ### Test forward Euler aliases
     result_forward = integrate_discrete_intervals(f, x, method="forward_euler")
     for alias in ["forward", "euler_forward", "left", "left_riemann"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_forward, result_alias)
 
     ### Test backward Euler aliases
     result_backward = integrate_discrete_intervals(f, x, method="backward_euler")
     for alias in ["backward", "euler_backward", "right", "right_riemann"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_backward, result_alias)
 
     ### Test trapezoidal aliases
     result_trapz = integrate_discrete_intervals(f, x, method="trapezoidal")
     for alias in ["trapezoid", "trapz"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_trapz, result_alias)
 
     ### Test Simpson aliases
     result_simpson = integrate_discrete_intervals(f, x, method="forward_simpson")
     for alias in ["simpson_forward", "simpson"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_simpson, result_alias)
 
 
@@ -344,6 +349,7 @@ def test_zero_function():
     x = np.linspace(0, 10, 50)
     f = np.zeros_like(x)
 
+    method: Literal["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]
     for method in ["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]:
         result = integrate_discrete_intervals(f, x, method=method)
         assert np.allclose(result, 0.0)
