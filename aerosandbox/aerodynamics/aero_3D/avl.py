@@ -557,7 +557,7 @@ class AVL(ExplicitAnalysis):
                 {xsec_def_line}
                 
                 AFIL
-                {af_filepath}
+                {af_filepath.as_posix()}
                 
                 CLAF
                 {claf_line}
