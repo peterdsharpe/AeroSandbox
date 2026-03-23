@@ -463,6 +463,7 @@ class XFoil(ExplicitAnalysis):
                     output[columns[i]].append(data[i])
 
             output = {k: np.array(v, dtype=float) for k, v in output.items()}
+            output = {k: v for k, v in output.items() if len(v) > 0}
 
             # Read the BL data
             if read_bl_data_from is not None:
