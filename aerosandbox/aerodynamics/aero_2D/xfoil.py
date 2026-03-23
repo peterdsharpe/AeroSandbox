@@ -444,6 +444,22 @@ class XFoil(ExplicitAnalysis):
                         "Bot_Xtr",
                     ]
 
+
+                elif len(data) == 9 and len(columns) == 8:
+                    # XFoil 6.97 with cinc active adds Cpmin to data rows but not to the
+                    # header line (unlike 6.99 which adds both Cpmin and Xcpmin).
+                    columns = [
+                        "alpha",
+                        "CL",
+                        "CD",
+                        "CDp",
+                        "CM",
+                        "Cpmin",
+                        "Chinge",
+                        "Top_Xtr",
+                        "Bot_Xtr",
+                    ]
+
                 if not len(data) == len(columns):
                     raise self.XFoilError(
                         "XFoil output file is malformed; the header and data have different numbers of columns.\n"
