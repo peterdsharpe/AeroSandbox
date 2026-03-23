@@ -652,7 +652,7 @@ class XFoil(ExplicitAnalysis):
             and (np.min(alphas) < start_at < np.max(alphas))
         ):
             alphas_upper = alphas[alphas > start_at]
-            alphas_lower = alphas[alpha <= start_at][::-1]
+            alphas_lower = alphas[alphas <= start_at][::-1]
 
             for a in alphas_upper:
                 schedule_run(a)
