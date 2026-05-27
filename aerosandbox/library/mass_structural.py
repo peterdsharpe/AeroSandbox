@@ -78,7 +78,7 @@ def mass_wing_spar(
     ultimate_load_factor=1.75,  # default taken from Daedalus design
     n_booms=1,
 ):
-    """
+    r"""
     Finds the mass of the spar for a wing on a single- or multi-boom lightweight aircraft. Model originally designed for solar aircraft.
     Data was fit to the range 3 < wing_span < 120 [m] and 5 < supported_mass < 3000 [kg], but validity should extend somewhat beyond that.
     Extremely accurate fits within this range; R^2 > 0.995 for all fits.

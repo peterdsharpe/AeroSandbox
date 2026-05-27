@@ -340,7 +340,7 @@ def mass_motor_electric(
     voltage=20,
     method="hobbyking",
 ):
-    """
+    r"""
     Estimates the mass of a brushless DC electric motor.
     Curve fit to scraped Hobbyking BLDC motor data as of 2/24/2020.
     Estimated range of validity: 50 < max_power < 10000
