@@ -143,6 +143,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         back_right_vertices = []
         front_right_vertices = []
         is_trailing_edge = []
+        control_surface_deflections = []
 
         for wing in self.airplane.wings:
             if self.spanwise_resolution > 1:
@@ -164,12 +165,16 @@ class VortexLatticeMethod(ExplicitAnalysis):
             is_trailing_edge.append(
                 (np.arange(len(faces)) + 1) % self.chordwise_resolution == 0
             )
+            control_surface_deflections.append(
+                self._compute_control_surface_deflections(wing)
+            )
 
         front_left_vertices = np.concatenate(front_left_vertices)
         back_left_vertices = np.concatenate(back_left_vertices)
         back_right_vertices = np.concatenate(back_right_vertices)
         front_right_vertices = np.concatenate(front_right_vertices)
         is_trailing_edge = np.concatenate(is_trailing_edge)
+        control_surface_deflections = np.concatenate(control_surface_deflections)
 
         ### Compute panel statistics
         diag1 = front_right_vertices - back_left_vertices
@@ -178,6 +183,39 @@ class VortexLatticeMethod(ExplicitAnalysis):
         cross_norm = np.linalg.norm(cross, axis=1)
         normal_directions = cross / tall(cross_norm)
         areas = cross_norm / 2
+
+        ### Apply control-surface deflections
+        # In a thin-surface VLM, a control-surface deflection enters the problem only through the
+        # flow-tangency boundary condition -- i.e., by rotating the affected panels' normal vectors
+        # about their local (spanwise) hinge axis. The vortex lattice itself is held fixed; this is
+        # the standard linearization used for control surfaces in vortex-lattice methods. Each
+        # affected normal is rotated toward the panel's aft chordwise direction by its deflection
+        # angle (positive deflection = trailing edge down).
+        #
+        # The guard below is purely structural (it checks whether any control surface exists at
+        # all, not the deflection values) so that this branch is skipped entirely for airplanes
+        # without control surfaces -- leaving their results bit-for-bit unchanged -- while still
+        # supporting symbolic (e.g. `Opti`-variable) deflections for differentiable optimization.
+        has_control_surfaces = any(
+            len(xsec.control_surfaces) > 0
+            for wing in self.airplane.wings
+            for xsec in wing.xsecs
+        )
+        if has_control_surfaces:
+            chord_directions = 0.5 * (
+                back_left_vertices + back_right_vertices
+            ) - 0.5 * (front_left_vertices + front_right_vertices)
+            # Take the component of the (aft-pointing) chordwise direction that is perpendicular to
+            # the panel normal, so that the rotated normal remains a unit vector.
+            chord_directions = chord_directions - normal_directions * tall(
+                np.sum(chord_directions * normal_directions, axis=1)
+            )
+            chord_directions = chord_directions / tall(
+                np.linalg.norm(chord_directions, axis=1)
+            )
+            normal_directions = normal_directions * tall(
+                np.cos(control_surface_deflections)
+            ) + chord_directions * tall(np.sin(control_surface_deflections))
 
         # Compute the location of points of interest on each panel
         left_vortex_vertices = 0.75 * front_left_vertices + 0.25 * back_left_vertices
@@ -194,6 +232,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
         self.is_trailing_edge = is_trailing_edge
+        self.control_surface_deflections = control_surface_deflections
         self.normal_directions = normal_directions
         self.areas = areas
         self.left_vortex_vertices = left_vortex_vertices
@@ -374,6 +413,66 @@ class VortexLatticeMethod(ExplicitAnalysis):
             "Cm": Cm,
             "Cn": Cn,
         }
+
+    def _compute_control_surface_deflections(self, wing) -> np.ndarray:
+        """
+        Computes the control-surface deflection angle applied to each panel of a (possibly
+        already-subdivided) wing.
+
+        Returns a 1D array with one entry per panel [radians], in the same panel order that
+        ``Wing.mesh_thin_surface`` produces (spanwise-strip-major, chordwise-minor; right side
+        first, then the mirrored left side if the wing is symmetric). Panels not covered by any
+        control surface get an angle of 0.
+
+        A trailing-edge control surface deflects every panel whose chordwise center lies aft of its
+        ``hinge_point`` (a fraction of local chord); a leading-edge control surface (``trailing_edge
+        =False``) deflects every panel forward of it. As in the AVL and LiftingLine backends, a
+        control surface is associated with the inboard cross-section of each spanwise strip; on a
+        symmetric wing, symmetric surfaces deflect both sides identically while antisymmetric
+        surfaces (e.g. ailerons) deflect the mirrored side oppositely. Deflection magnitudes may be
+        symbolic (e.g. ``Opti`` variables), which keeps the analysis differentiable.
+        """
+        n_chord = self.chordwise_resolution
+        x_nondim = self.chordwise_spacing_function(0, 1, n_chord + 1)
+        # Chordwise fraction at the center of each chordwise panel:
+        chord_fractions = (np.array(x_nondim)[:-1] + np.array(x_nondim)[1:]) / 2
+
+        # Per-spanwise-strip list of control surfaces. A strip spans from its inboard cross-section
+        # to the next one outboard, so the control surfaces come from `wing.xsecs[:-1]`.
+        strip_control_surfaces = [xsec.control_surfaces for xsec in wing.xsecs[:-1]]
+
+        if (
+            wing.symmetric
+        ):  # Append the mirrored left side, matching mesh_thin_surface's ordering.
+
+            def mirror(surf):
+                if surf.symmetric:
+                    return surf
+                surf = surf.copy()
+                surf.deflection = -surf.deflection
+                return surf
+
+            strip_control_surfaces = strip_control_surfaces + [
+                [mirror(surf) for surf in surfs] for surfs in strip_control_surfaces
+            ]
+
+        deflections = []
+        for surfs in strip_control_surfaces:
+            strip_deflection = np.zeros(n_chord)
+            for surf in surfs:
+                if surf.trailing_edge:
+                    affected = chord_fractions >= surf.hinge_point
+                else:
+                    affected = chord_fractions <= surf.hinge_point
+                strip_deflection = strip_deflection + np.where(
+                    affected, 1.0, 0.0
+                ) * np.radians(surf.deflection)
+            deflections.append(strip_deflection)
+
+        if len(deflections) == 0:
+            return np.zeros(0)
+
+        return np.concatenate(deflections)
 
     def run_with_stability_derivatives(
         self,
