@@ -1,5 +1,6 @@
 import aerosandbox.numpy as np
 import casadi as _cas
+import numpy as _onp
 from typing import Callable, Literal, Sequence
 from scipy import integrate as _scipy_integrate
 
@@ -316,7 +317,23 @@ def solve_ivp(
             *[var for var in all_vars if not variable_is_t_or_y(var)]
         )
 
-        simtime_eval = np.linspace(0, 1, 100)
+        if t_eval is None:
+            simtime_eval = np.linspace(0, 1, 100)
+        else:
+            # Map the requested times onto normalized time in [0, 1].
+            if np.is_casadi_type(t_eval, recursive=True) or np.is_casadi_type(
+                [t0, tf], recursive=True
+            ):
+                raise NotImplementedError(
+                    "For the CasADi backend, `t_eval` is only supported when both "
+                    "`t_eval` and `t_span` are numeric (not CasADi types). "
+                    "Leave `t_eval` as None to get the solution at 100 evenly-spaced points."
+                )
+            simtime_eval = (_onp.asarray(t_eval, dtype=float).reshape(-1) - t0) / (
+                tf - t0
+            )
+            if _onp.any(simtime_eval < 0) or _onp.any(simtime_eval > 1):
+                raise ValueError("Values in `t_eval` are not within `t_span`.")
 
         # Define the integrator
         integrator = _cas.integrator(

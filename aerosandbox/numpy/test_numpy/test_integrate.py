@@ -72,5 +72,41 @@ def test_solve_ivp_numpy_backend_scipy_style_call():
         assert sol.y[0, -1] == pytest.approx(2.5 * np.exp(-0.5 * 10), rel=1e-2)
 
 
+def test_solve_ivp_casadi_backend_honors_t_eval():
+    """solve_ivp's CasADi backend should return the solution at the requested
+    t_eval points (regression test: t_eval used to be silently ignored, and
+    100 evenly-spaced points were always returned)."""
+
+    def decay(t, y):
+        return -0.5 * cas.MX(y)
+
+    t_eval = np.linspace(0, 10, 7)
+    sol = np.integrate.solve_ivp(decay, t_span=(0, 10), y0=[2.5], t_eval=t_eval)
+    t = cas.evalf(sol.t).full().flatten()
+    y = cas.evalf(sol.y).full().flatten()
+    assert t == pytest.approx(t_eval)
+    assert y == pytest.approx(2.5 * np.exp(-0.5 * t_eval), rel=1e-3)
+
+    ### If t_eval is None, the default of 100 evenly-spaced points remains.
+    sol = np.integrate.solve_ivp(decay, t_span=(0, 10), y0=[2.5])
+    assert cas.evalf(sol.t).full().size == 100
+
+    ### t_eval outside t_span should raise, as in scipy.
+    with pytest.raises(ValueError):
+        np.integrate.solve_ivp(
+            decay, t_span=(0, 10), y0=[2.5], t_eval=np.linspace(0, 20, 5)
+        )
+
+    ### Symbolic t_span combined with t_eval is not supported -> clear error.
+    tf = cas.MX.sym("tf")
+    with pytest.raises(NotImplementedError):
+        np.integrate.solve_ivp(decay, t_span=(0, tf), y0=[2.5], t_eval=t_eval)
+
+    ### ...but symbolic t_span without t_eval keeps working.
+    sol = np.integrate.solve_ivp(decay, t_span=(0, tf), y0=[2.5])
+    t_end = float(cas.evalf(cas.substitute(sol.t[-1], tf, 10.0)))
+    assert t_end == pytest.approx(10.0)
+
+
 if __name__ == "__main__":
     pytest.main()
