@@ -143,15 +143,16 @@ def thrust_coefficient(chamber_pressure, exit_pressure, gamma, p_a=None, er=None
         exit_pressure (scalar): Nozzle exit static pressure [units: pascal].
         gamma (scalar): Exhaust gas ratio of specific heats [units: dimensionless].
         p_a (scalar, optional): Ambient pressure [units: pascal]. If None,
-            then p_a = exit_pressure.
-        er (scalar, optional): Nozzle area expansion ratio [units: dimensionless]. If None,
-            then p_a = exit_pressure.
+            then p_a = exit_pressure (i.e. matched expansion) is assumed, and the
+            pressure-thrust term is zero.
+        er (scalar, optional): Nozzle area expansion ratio [units: dimensionless].
+            Must be provided if p_a is provided.
 
     Returns:
         scalar: The thrust coefficient, :math:`C_F` [units: dimensionless].
     """
-    # if (p_a is None and er is not None) or (er is None and p_a is not None):
-    #     raise ValueError('Both p_a and er must be provided.')
+    if (p_a is None and er is not None) or (er is None and p_a is not None):
+        raise ValueError("Both p_a and er must be provided.")
     C_F = (
         2
         * gamma**2
@@ -159,8 +160,8 @@ def thrust_coefficient(chamber_pressure, exit_pressure, gamma, p_a=None, er=None
         * (2 / (gamma + 1)) ** ((gamma + 1) / (gamma - 1))
         * (1 - (exit_pressure / chamber_pressure) ** ((gamma - 1) / gamma))
     ) ** 0.5
-    # if p_a is not None and er is not None:
-    C_F += er * (exit_pressure - p_a) / chamber_pressure
+    if p_a is not None and er is not None:
+        C_F += er * (exit_pressure - p_a) / chamber_pressure
 
     return C_F
 
