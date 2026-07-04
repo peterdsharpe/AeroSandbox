@@ -19,6 +19,25 @@ def test_interp():
         assert np.interp(5, x, y, period=4) == pytest.approx(11)
 
 
+def test_interp_period_negative_x():
+    """interp() with `period` should wrap negative query points into the
+    period, matching numpy.interp (regression test: the CasADi branch used
+    fmod(), which is negative for negative x, causing extrapolation)."""
+    xp = np.linspace(0, 360, 361)
+    fp = np.sin(np.radians(xp))
+
+    for x in [-90, -90.0, -450.0, -360.0, 270.0]:
+        expected = np.interp(x, xp, fp, period=360)
+        result = np.interp(cas.DM(x), xp, fp, period=360)
+        assert float(result) == pytest.approx(expected, abs=1e-10), f"{x=}"
+
+    # Same check with the breakpoint data given as CasADi types:
+    for x in [-90.0, 270.0]:
+        expected = np.interp(x, xp, fp, period=360)
+        result = np.interp(x, cas.DM(xp), cas.DM(fp), period=360)
+        assert float(result) == pytest.approx(expected, abs=1e-10), f"{x=}"
+
+
 def test_interpn_linear():
     ### NumPy test
 

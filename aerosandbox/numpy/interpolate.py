@@ -2,6 +2,7 @@ import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
+from aerosandbox.numpy.arithmetic_dyadic import mod as _mod
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
 from aerosandbox.numpy.typing import Vectorizable, ArrayLike, ConcreteVector, ConcreteArray
@@ -38,7 +39,13 @@ def interp(
                     "Haven't yet implemented handling for if xp is outside the period."
                 )  # Not easy to implement because casadi doesn't have a sort feature.
 
-            x = _cas.fmod(x, period)
+            # Wrap x into [0, period). (Note: _cas.fmod() alone would return
+            # negative values for negative x, which would then be wrongly
+            # extrapolated rather than wrapped.)
+            x = _mod(x, period)
+            if not is_casadi_type(x, recursive=False):
+                # Match the type that _cas.fmod() would have returned here.
+                x = _cas.DM(x)
 
         ### Make sure x isn't an int
         if isinstance(x, int):
