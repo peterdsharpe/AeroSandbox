@@ -111,6 +111,40 @@ def test_interpn_bspline_casadi():
     assert value == pytest.approx(func(*point))
 
 
+def test_interpn_bspline_all_zero_values_shape():
+    """The all-zeros-`values` workaround for the CasADi bspline bug should
+    return the same shape as a nonzero table would (regression test: it used
+    to return zeros with the shape of xi, i.e. (n_points, n_dimensions))."""
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 6)
+    points = (x, y)
+    values_zero = np.zeros((5, 6))
+    values_nonzero = np.ones((5, 6))
+
+    ### Multiple query points
+    xi = np.stack([np.linspace(0.1, 0.9, 7), np.linspace(0.2, 0.8, 7)], axis=1)
+    result_zero = np.interpn(points, values_zero, xi, method="bspline")
+    result_nonzero = np.interpn(points, values_nonzero, xi, method="bspline")
+    assert result_zero.shape == result_nonzero.shape == (7,)
+    assert result_zero == pytest.approx(0)
+
+    ### Single (scalar-like) query point: both should return a float
+    point = np.array([0.5, 0.5])
+    result_zero = np.interpn(points, values_zero, point, method="bspline")
+    result_nonzero = np.interpn(points, values_nonzero, point, method="bspline")
+    assert isinstance(result_zero, float)
+    assert isinstance(result_nonzero, float)
+    assert result_zero == pytest.approx(0)
+
+    ### CasADi symbolic query points: check that it runs and is zero
+    xi_sym = cas.MX.sym("xi", 7, 2)
+    result_sym = np.interpn(
+        points, values_zero, xi_sym, method="bspline", bounds_error=False
+    )
+    assert np.length(result_sym) == 7
+    assert np.all(cas.DM(np.array(result_sym, dtype=float)) == 0)
+
+
 def test_interpn_bounds_error_one_sample():
     def value_func_3d(x, y, z):
         return 2 * x + 3 * y - z

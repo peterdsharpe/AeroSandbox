@@ -194,11 +194,6 @@ def interpn(
         )
 
     elif (method == "linear") or (method == "bspline"):  ### CasADi implementation
-        ### Add handling to patch a specific bug in CasADi that occurs when `values` is all zeros.
-        ### For more information, see: https://github.com/casadi/casadi/issues/2837
-        if method == "bspline" and all(values == 0):
-            return zeros_like(xi)
-
         ### If xi is an int or float, promote it to an array
         if isinstance(xi, int) or isinstance(xi, float):
             xi = array([xi])
@@ -219,6 +214,18 @@ def interpn(
         if not xi.shape[1] == n_dimensions:
             xi = xi.T
             assert xi.shape[1] == n_dimensions
+
+        ### Add handling to patch a specific bug in CasADi that occurs when `values` is all zeros.
+        ### For more information, see: https://github.com/casadi/casadi/issues/2837
+        if method == "bspline" and all(values == 0):
+            ### The result is identically zero; return it with the same shape
+            ### that the normal code path below would produce.
+            if isinstance(xi, (_cas.MX, _cas.SX)):
+                return zeros_like(xi[:, 0])
+            elif xi.shape[0] == 1:  # Single query point: normal path returns a float.
+                return 0.0
+            else:
+                return _onp.zeros(xi.shape[0])
 
         ### Calculate the minimum and maximum values along each axis.
         axis_values_min = [_onp.min(axis_values) for axis_values in points]
