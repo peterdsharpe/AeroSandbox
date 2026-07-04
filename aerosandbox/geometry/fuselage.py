@@ -94,7 +94,7 @@ class Fuselage(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated parameters
-        if "symmetric" in locals():
+        if "symmetric" in kwargs:
             raise DeprecationWarning(
                 "The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!"
             )
@@ -106,7 +106,13 @@ class Fuselage(AeroSandboxObject):
                 "The `xyz_le` input for Fuselage is pending deprecation and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
                 stacklevel=2,
             )
-            self.xsecs = [xsec.translate(kwargs["xyz_le"]) for xsec in self.xsecs]
+            xyz_le = kwargs.pop("xyz_le")
+            self.xsecs = [xsec.translate(xyz_le) for xsec in self.xsecs]
+
+        if kwargs:
+            raise TypeError(
+                f"Fuselage got unexpected keyword argument(s): {list(kwargs.keys())}"
+            )
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
