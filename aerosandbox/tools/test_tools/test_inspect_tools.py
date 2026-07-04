@@ -67,9 +67,10 @@ def test_codegen_builtins():
         [1, 2, [3, 4, [5, 6]]],
     ]:
         code, imports = codegen(x)
+        namespace: dict = {}
         for import_str in imports:
-            exec(import_str)
-        assert eval(code) == x
+            exec(import_str, namespace)
+        assert eval(code, namespace) == x
 
 
 def test_codegen_numpy():
@@ -81,9 +82,10 @@ def test_codegen_numpy():
         _np.arange(12).reshape(3, 4),
     ]:
         code, imports = codegen(x)
+        namespace: dict = {}
         for import_str in imports:
-            exec(import_str)
-        assert (eval(code) == x).all()
+            exec(import_str, namespace)
+        assert (eval(code, namespace) == x).all()
 
 
 if __name__ == "__main__":
