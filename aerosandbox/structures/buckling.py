@@ -177,12 +177,16 @@ def plate_buckling_critical_load(
 
     """
 
+    ### Buckling coefficients `K` are the bare coefficients k_c for infinitely-long plates, for use in the
+    ### buckling-stress equation sigma_cr = k_c * pi^2 * E / (12 * (1 - nu^2)) * (t/b)^2.
+    ### [NACA TN3781, Eq. (1) and Table 7]
     if side_boundary_condition_type == "clamp-clamp":
-        K = 6.35  # From NACA TN3781
+        K = 6.98  # From NACA TN3781, Table 7 (clamped on all edges)
     elif side_boundary_condition_type == "pin-pin":
-        K = 3.62  # From NACA TN3781
+        K = 4.00  # From NACA TN3781, Table 7 (simply supported on all edges)
     elif side_boundary_condition_type == "free-free":
-        K = 0.385  # From NACA TN3781
+        K = 0.425  # From NACA TN3781, Eq. (18) in the long-plate limit at nu_e = 0.3
+        # (one unloaded edge simply supported, the other free); Table 7 rounds this to 0.43.
     else:
         raise ValueError(
             f"{side_boundary_condition_type=!r} is not a valid option. "
