@@ -492,7 +492,7 @@ class ExplicitAnalysis(AeroSandboxObject):
 
         else:
             if geometry_options_for_this_analysis is not None:
-                options = geometry_options_for_this_analysis
+                options = copy.deepcopy(geometry_options_for_this_analysis)
             else:
                 options = {}
 
