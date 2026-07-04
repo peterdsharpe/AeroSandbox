@@ -60,7 +60,7 @@ def mass_gearbox(
     rpm_in,
     rpm_out,
 ):
-    """
+    r"""
     Estimates the mass of a gearbox.
 
     Based on data from NASA/TM-2009-215680, available here:
