@@ -10,6 +10,7 @@ import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti, OptiSol
 from abc import abstractmethod, ABC
 import copy
+import functools
 from typing import Any
 import dill
 from pathlib import Path
@@ -559,6 +560,7 @@ class ImplicitAnalysis(AeroSandboxObject):
         A property ``opti_provided`` is also set to indicate which case applies.
         """
 
+        @functools.wraps(init_method)
         def init_wrapped(self, *args, opti=None, **kwargs):
             if opti is None:
                 self.opti = Opti()

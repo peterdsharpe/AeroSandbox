@@ -37,5 +37,33 @@ def test_get_options_returns_a_copy_of_geometry_options():
     assert wing.analysis_specific_options[MyExplicitAnalysis]["foo"] == 1
 
 
+def test_implicit_analysis_initialize_preserves_signature_and_docstring():
+    """
+    The @ImplicitAnalysis.initialize decorator should preserve the wrapped
+    __init__'s signature and docstring (for help(), autodoc, and IDEs).
+    """
+
+    class MyImplicitAnalysis(asb.ImplicitAnalysis):
+        @asb.ImplicitAnalysis.initialize
+        def __init__(self, alpha: float = 5.0):
+            """MyImplicitAnalysis docstring."""
+            self.alpha = alpha
+
+    parameters = inspect.signature(MyImplicitAnalysis.__init__).parameters
+    assert "alpha" in parameters
+    assert MyImplicitAnalysis.__init__.__doc__ == "MyImplicitAnalysis docstring."
+
+    ### The decorator's injected behavior should be unchanged:
+    analysis = MyImplicitAnalysis(alpha=2.0)
+    assert analysis.alpha == 2.0
+    assert analysis.opti_provided is False
+
+    opti = asb.Opti()
+    analysis = MyImplicitAnalysis(alpha=3.0, opti=opti)
+    assert analysis.alpha == 3.0
+    assert analysis.opti_provided is True
+    assert analysis.opti is opti
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
