@@ -1184,7 +1184,7 @@ class Wing(AeroSandboxObject):
 
             if add_camber:
                 xsec_z_nondim = xsec_z_nondim + xsec.airfoil.local_camber(
-                    x_over_c=x_nondim
+                    x_over_c=xsec_x_nondim
                 )
 
             points_on_line.append(
