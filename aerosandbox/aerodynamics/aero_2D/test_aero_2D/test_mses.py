@@ -61,6 +61,29 @@ def make_mses(**kwargs) -> asb.MSES:
     )
 
 
+def test_terminate_behavior_stops_sweep_even_when_silent(monkeypatch):
+    """
+    With behavior_after_unconverged_run="terminate" and verbosity=0, an unconverged run
+    must stop the sweep. (Regression test for a `break` that was misindented under a
+    verbosity check, causing 'terminate' to be silently ignored when verbosity=0.)
+    """
+    call_log = []
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        make_fake_subprocess_run(
+            call_log,
+            mses_stdout="Some MSES output without the convergence marker",
+        ),
+    )
+
+    ms = make_mses(behavior_after_unconverged_run="terminate")
+    result = ms.run(alpha=[1, 2, 3])
+
+    assert call_log.count("mses") == 1  # Should have terminated after the first run
+    assert result == {}
+
+
 def test_no_converged_runs_returns_empty_dict(monkeypatch):
     """
     If zero runs converge, MSES.run() should return an empty dictionary rather than

@@ -322,7 +322,7 @@ class MSES(ExplicitAnalysis):
                             print(
                                 "Run did not converge. Skipping all subsequent runs..."
                             )
-                            break
+                        break
 
                     continue
 
