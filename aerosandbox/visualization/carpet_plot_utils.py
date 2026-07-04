@@ -21,11 +21,11 @@ def time_limit(seconds):
         >>> try:
         >>>     with time_limit(5):
         >>>         x = complicated_function()
-        >>> except TimeoutException:
+        >>> except TimeoutError:
         >>>     x = np.nan
 
     Args:
-        seconds: Duration of timeout [seconds]
+        seconds: Duration of timeout [seconds]. May be a float.
 
     Returns:
 
@@ -35,16 +35,18 @@ def time_limit(seconds):
         raise TimeoutError()
 
     try:
-        signal.signal(signal.SIGALRM, signal_handler)
+        old_handler = signal.signal(signal.SIGALRM, signal_handler)
     except AttributeError:
         raise OSError(
             "signal.SIGALRM could not be found. This is probably because you're not using Linux."
         )
-    signal.alarm(seconds)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
     try:
         yield
     finally:
-        signal.alarm(0)
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        if old_handler is not None:
+            signal.signal(signal.SIGALRM, old_handler)
 
 
 def remove_nans(array):
