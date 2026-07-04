@@ -61,6 +61,27 @@ def make_mses(**kwargs) -> asb.MSES:
     )
 
 
+def test_no_converged_runs_returns_empty_dict(monkeypatch):
+    """
+    If zero runs converge, MSES.run() should return an empty dictionary rather than
+    raising a confusing KeyError('Ma'). (Regression test.)
+    """
+    call_log = []
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        make_fake_subprocess_run(
+            call_log,
+            mses_stdout="Some MSES output without the convergence marker",
+        ),
+    )
+
+    ms = make_mses(behavior_after_unconverged_run="reinitialize")
+    result = ms.run(alpha=[1, 2])
+
+    assert result == {}
+
+
 def test_mset_failure_is_reraised(monkeypatch):
     """
     A non-X11-related MSET failure must propagate, rather than being silently swallowed

@@ -366,6 +366,10 @@ class MSES(ExplicitAnalysis):
 
             # Clean up the dictionary
             runs_output = {k: np.array(v) for k, v in runs_output.items()}
+
+            if len(runs_output) == 0:  # No runs converged
+                return runs_output
+
             # runs_output["mach"] = runs_output.pop("Ma")
             runs_output = {"mach": runs_output.pop("Ma"), **runs_output}
 
