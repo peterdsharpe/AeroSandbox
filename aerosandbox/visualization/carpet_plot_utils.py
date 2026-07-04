@@ -61,12 +61,17 @@ def remove_nans(array):
     return array[~np.isnan(array)]
 
 
-def patch_nans(array):  # TODO remove modification on incoming values; only patch nans
+def patch_nans(array, verbose: bool = True):
     """
     Patches NaN values in a 2D array. Can patch holes or entire regions. Uses Laplacian smoothing.
-    :param array:
-    :return:
+
+    The input array is not modified; a patched copy is returned.
+
+    :param array: The 2D array to patch.
+    :param verbose: Should we print the patching progress to the console? [boolean]
+    :return: A copy of the array with all NaN values patched.
     """
+    array = np.copy(array)
     original_nans = np.isnan(array)
 
     def nanfrac(array):
@@ -81,10 +86,12 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
             return np.nan
 
     def print_title(name):
-        return print(f"{name}\nIter | NaN Fraction")
+        if verbose:
+            print(f"{name}\nIter | NaN Fraction")
 
     def print_progress(iter):
-        return print(f"{iter:4} | {nanfrac(array):.6f}")
+        if verbose:
+            print(f"{iter:4} | {nanfrac(array):.6f}")
 
     # Bridging
     print_title("Bridging")
@@ -111,7 +118,7 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
 
                     if not (np.isnan(a) or np.isnan(b)):
                         array[i, j] = (a + b) / 2
-                        continue
+                        break  # Bridge with the first valid pair (pairs are in priority order)
         print_progress(iter)
         making_progress = nanfrac(array) != last_nanfrac
         last_nanfrac = nanfrac(array)
@@ -161,7 +168,8 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
         "Diffusing"
     )  # TODO Perhaps use skimage gaussian blur kernel or similar instead of "+" stencil?
     for iter in range(50):
-        print(f"{iter + 1:4}")
+        if verbose:
+            print(f"{iter + 1:4}")
         for i in range(array.shape[0]):
             for j in range(array.shape[1]):
                 if original_nans[i, j]:
