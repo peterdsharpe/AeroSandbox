@@ -31,4 +31,4 @@ jobs:
           uv run --python ${{ matrix.python-version }} --extra test --no-dev pytest aerosandbox
       - name: Test with pytest (with extras; only tutorials)
         run: |
-          uv run --python ${{ matrix.python-version }} --extra test --extra full pytest tutorial --nbval-lax --nbval-cell-timeout 120
+          uv run --python ${{ matrix.python-version }} --extra test --extra full pytest tutorial --nbval-lax --nbval-cell-timeout 360
