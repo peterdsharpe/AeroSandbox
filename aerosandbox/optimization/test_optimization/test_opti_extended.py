@@ -433,7 +433,9 @@ def test_show_infeasibilities_single_scalar_constraint(capsys):
 
     sol = opti.solve(verbose=False)
 
-    sol.show_infeasibilities(tol=1e-3)  # Feasible solve: should print nothing, and not crash
+    sol.show_infeasibilities(
+        tol=1e-3
+    )  # Feasible solve: should print nothing, and not crash
     assert capsys.readouterr().out == ""
 
 
