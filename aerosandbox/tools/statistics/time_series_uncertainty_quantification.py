@@ -178,7 +178,6 @@ def bootstrap_fits(
         def y_unnormalize(y_n):
             return y_n * y_rng + y_min
 
-        x_noise_stdev / x_rng
         y_stdev_normalized = y_noise_stdev / y_rng
 
     else:
@@ -245,11 +244,7 @@ def bootstrap_fits(
 
     else:
         ### Determine which x-points to resample at
-        if fit_points is None:
-            x_fit = None
-            if normalize:
-                raise ValueError("If `fit_points` is None, `normalize` must be False.")
-        elif isinstance(fit_points, int):
+        if isinstance(fit_points, int):
             x_fit = np.linspace(np.min(x), np.max(x), fit_points)
         else:
             x_fit = np.array(fit_points)
