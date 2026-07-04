@@ -300,6 +300,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         state_derivatives = self.state_derivatives()
 
         for state_var_name in which:
+            if state_var_name not in self.state:
+                raise ValueError(
+                    f"This dynamics instance does not have a state named '{state_var_name}'!"
+                )
+
             # If a state derivative has a None value, skip it.
             if state_derivatives[state_var_name] is None:
                 continue
@@ -313,14 +318,14 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     method=method,
                     _stacklevel=_stacklevel + 1,
                 )
-            except KeyError:
+            except KeyError as e:
                 raise ValueError(
                     f"This dynamics instance does not have a state named '{state_var_name}'!"
-                )
+                ) from e
             except Exception as e:
                 raise ValueError(
                     f"Error while constraining state variable '{state_var_name}': \n{e}"
-                )
+                ) from e
 
     @abstractmethod
     def convert_axes(
