@@ -498,7 +498,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                         (np.diff(x_e) ** 2 + np.diff(y_e) ** 2 + np.diff(z_e) ** 2)
                         ** 0.5
                     )
-                    vehicle_length = np.diff(vehicle_bounds[0, :])
+                    vehicle_length = np.diff(vehicle_bounds[0, :]).item()
                     scale_vehicle_model = float(
                         0.5 * path_length / vehicle_length / n_vehicles_to_draw
                     )
