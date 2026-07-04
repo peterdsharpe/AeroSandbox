@@ -134,5 +134,79 @@ def test_cargo_transport_mass_hydraulics():
     assert mass == pytest.approx(91.587 * u.lbm, rel=1e-3)
 
 
+def test_general_aviation_mass_main_landing_gear():
+    """
+    Raymer Eq. 15.50: W_main_landing_gear = 0.095 (N_l W_l)^0.768 (L_m / 12)^0.409
+
+    where "L_m = extended length of main landing gear, in." - so (L_m / 12) is
+    the gear length in feet. Regression test for the length being divided by
+    12 twice (i.e., inches / 144).
+
+    C172-class inputs: W = 2450 lb, L_m = 26 in. Note that the current code
+    computes N_l = n_gear * 1.5 = 3 (with the default n_gear=2) and uses the
+    design TOGW for W_l; the hand computation below uses those same values.
+    """
+    mass = raymer_ga.mass_main_landing_gear(
+        main_gear_length=26 * u.inch,
+        design_mass_TOGW=2450 * u.lbm,
+    )
+
+    ### Hand computation, in Raymer's units (lb, in):
+    # W_main_landing_gear = 0.095 * (3 * 2450)^0.768 * (26 / 12)^0.409
+    #                     = 121.44 lb = 55.09 kg
+    assert mass == pytest.approx(121.443 * u.lbm, rel=1e-3)
+
+
+def test_general_aviation_mass_nose_landing_gear():
+    """
+    Raymer Eq. 15.51: W_nose_landing_gear = 0.125 (N_l W_l)^0.566 (L_n / 12)^0.845
+
+    where "L_n = extended nose gear length, in." - so (L_n / 12) is the gear
+    length in feet. Regression test for the length being divided by 12 twice.
+
+    C172-class inputs: W = 2450 lb, L_n = 20 in. Note that the current code
+    computes N_l = n_gear * 1.5 = 1.5 (with the default n_gear=1) and uses the
+    design TOGW for W_l; the hand computation below uses those same values.
+    """
+    mass = raymer_ga.mass_nose_landing_gear(
+        nose_gear_length=20 * u.inch,
+        design_mass_TOGW=2450 * u.lbm,
+    )
+
+    ### Hand computation, in Raymer's units (lb, in):
+    # W_nose_landing_gear = 0.125 * (1.5 * 2450)^0.566 * (20 / 12)^0.845
+    #                     = 20.059 lb = 9.099 kg
+    assert mass == pytest.approx(20.059 * u.lbm, rel=1e-3)
+
+
+def test_general_aviation_landing_gear_casadi():
+    """
+    Checks that the GA landing-gear mass models also evaluate correctly when
+    given CasADi symbolic inputs (dual-backend check).
+    """
+    import casadi
+
+    opti = asb.Opti()
+    main_gear_length = opti.variable(init_guess=26 * u.inch)
+    nose_gear_length = opti.variable(init_guess=20 * u.inch)
+    opti.subject_to(main_gear_length == 26 * u.inch)
+    opti.subject_to(nose_gear_length == 20 * u.inch)
+
+    mass_main = raymer_ga.mass_main_landing_gear(
+        main_gear_length=main_gear_length,
+        design_mass_TOGW=2450 * u.lbm,
+    )
+    mass_nose = raymer_ga.mass_nose_landing_gear(
+        nose_gear_length=nose_gear_length,
+        design_mass_TOGW=2450 * u.lbm,
+    )
+    assert isinstance(mass_main, casadi.MX)
+
+    sol = opti.solve(verbose=False)
+
+    assert sol(mass_main) == pytest.approx(121.443 * u.lbm, rel=1e-3)
+    assert sol(mass_nose) == pytest.approx(20.059 * u.lbm, rel=1e-3)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
