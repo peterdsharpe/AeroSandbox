@@ -2,6 +2,7 @@ from aerosandbox.geometry.airfoil.airfoil_families import (
     get_NACA_coordinates,
     get_UIUC_coordinates,
     get_kulfan_coordinates,
+    get_kulfan_parameters,
 )
 import aerosandbox.numpy as np
 import pytest
@@ -49,6 +50,35 @@ def test_get_kulfan_coordinates_caller_array_not_mutated():
         )
 
     assert np.allclose(lower_weights, lower_weights_original)
+
+
+def test_get_kulfan_parameters_opti_method():
+    """
+    get_kulfan_parameters(method="opti") used to crash with NameError (unimported `asb`).
+    Check that it runs, and that the fitted parameters reconstruct the original airfoil closely.
+    """
+    from aerosandbox.geometry.airfoil import Airfoil
+
+    af = Airfoil("naca2412").normalize()
+
+    parameters = get_kulfan_parameters(
+        coordinates=af.coordinates,
+        method="opti",
+    )
+
+    af_reconstructed = Airfoil(
+        name="Reconstructed",
+        coordinates=get_kulfan_coordinates(**parameters),
+    )
+
+    x = np.linspace(0.01, 0.99, 21)
+    assert (
+        np.max(np.abs(af_reconstructed.local_thickness(x) - af.local_thickness(x)))
+        < 5e-3
+    )
+    assert (
+        np.max(np.abs(af_reconstructed.local_camber(x) - af.local_camber(x))) < 5e-3
+    )
 
 
 if __name__ == "__main__":

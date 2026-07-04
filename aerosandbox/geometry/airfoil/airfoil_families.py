@@ -374,6 +374,8 @@ def get_kulfan_parameters(
     from aerosandbox.geometry.airfoil import Airfoil
 
     if method == "opti":
+        from aerosandbox.optimization import Opti
+
         target_airfoil = Airfoil(
             name="Target Airfoil", coordinates=coordinates
         ).repanel(n_points_per_side=n_points_per_side)
@@ -416,7 +418,7 @@ def get_kulfan_parameters(
             y = C * S_x
             return y
 
-        opti = asb.Opti()
+        opti = Opti()
         lower_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
         upper_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
         TE_thickness = opti.variable(init_guess=0, lower_bound=0)
