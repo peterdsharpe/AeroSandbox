@@ -409,7 +409,7 @@ class AVL(ExplicitAnalysis):
     def write_avl(
         self,
         filepath: Path | str | None = None,
-    ) -> None:
+    ) -> str:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
 
@@ -418,11 +418,15 @@ class AVL(ExplicitAnalysis):
 
         Args:
             filepath: filepath (including the filename and .avl extension) [string]
-                If None, this function returns the .avl file as a string.
+                If None, no files are written to disk (including the sidecar airfoil and
+                fuselage files that would normally accompany the .avl file), and the
+                would-be contents of the .avl file are only returned as a string.
 
-        Returns: None
+        Returns: The would-be contents of the .avl file as a string.
 
         """
+        if filepath is not None:
+            filepath = Path(filepath)
 
         def clean(s):
             """
@@ -559,9 +563,10 @@ class AVL(ExplicitAnalysis):
 
                 af_filepath = Path(str(filepath) + f".af{airfoil_counter}")
                 airfoil_counter += 1
-                xsec.airfoil.repanel(50).write_dat(
-                    filepath=af_filepath, include_name=True
-                )
+                if filepath is not None:
+                    xsec.airfoil.repanel(50).write_dat(
+                        filepath=af_filepath, include_name=True
+                    )
 
                 avl_file += clean(
                     f"""\
@@ -592,10 +597,10 @@ class AVL(ExplicitAnalysis):
                 for control_surface_command in control_surface_commands[i]:
                     avl_file += control_surface_command
 
-        filepath = Path(filepath)
         for i, fuse in enumerate(airplane.fuselages):
             fuse_filepath = Path(str(filepath) + f".fuse{i}")
-            self.write_avl_bfile(fuselage=fuse, filepath=fuse_filepath)
+            if filepath is not None:
+                self.write_avl_bfile(fuselage=fuse, filepath=fuse_filepath)
             fuse_options = self.get_options(fuse)
 
             avl_file += clean(
@@ -618,6 +623,8 @@ class AVL(ExplicitAnalysis):
             with open(filepath, "w+") as f:
                 f.write(avl_file)
 
+        return avl_file
+
     @staticmethod
     def write_avl_bfile(
         fuselage,
@@ -636,10 +643,11 @@ class AVL(ExplicitAnalysis):
 
             include_name: Should the name of the fuselage be included in the .dat file? (This should be True for use with AVL.)
 
-        Returns:
+        Returns: The would-be contents of the BFILE as a string.
 
         """
-        filepath = Path(filepath)
+        if filepath is not None:
+            filepath = Path(filepath)
 
         contents = []
 

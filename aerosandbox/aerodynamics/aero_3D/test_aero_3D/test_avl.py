@@ -70,6 +70,46 @@ def test_flat_plate_mirrored():
     return analysis.run()
 
 
+def test_write_avl_string_mode(tmp_path):
+    """
+    Regression test: write_avl(filepath=None) used to raise TypeError (from
+    Path(None)) despite the docstring promising a string return, and wrote
+    airfoil sidecar files to literal 'None.af0' paths in the current directory.
+    """
+    import os
+
+    from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.vanilla import (
+        airplane,
+    )
+
+    analysis = asb.AVL(
+        airplane=airplane,
+        op_point=asb.OperatingPoint(alpha=10),
+    )
+
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)  # So any (undesired) sidecar file writes are detectable
+    try:
+        avl_string = analysis.write_avl()  # filepath=None -> string mode
+        assert isinstance(avl_string, str)
+        assert "SURFACE" in avl_string
+        assert airplane.name in avl_string
+        assert os.listdir(tmp_path) == []  # String mode must not write any files
+    finally:
+        os.chdir(original_cwd)
+
+    # File mode should write the same contents, and also return them
+    filepath = tmp_path / "airplane.avl"
+    returned_string = analysis.write_avl(filepath)
+    assert filepath.is_file()
+    assert filepath.read_text() == returned_string
+
+    # write_avl_bfile has the same string-mode contract
+    bfile_string = asb.AVL.write_avl_bfile(fuselage=airplane.fuselages[0])
+    assert isinstance(bfile_string, str)
+    assert airplane.fuselages[0].name in bfile_string
+
+
 def test_parse_unformatted_data_output_at_end_of_string():
     """
     Regression test: values (or trailing blanks) that end exactly at the end of
