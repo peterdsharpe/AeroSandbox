@@ -125,7 +125,9 @@ class InterpolatedModel(SurrogateModel):
                 for k, v in zip(x_data_coordinates.keys(), x_data_values)
             }
         self.x_data = x_data
-        self.y_data = np.ravel(y_data_structured, order="F")
+        self.y_data = np.ravel(
+            y_data_structured
+        )  # C-order, to match the flattening of `x_data` above.
 
     def __call__(self, x):
         if isinstance(self.x_data_coordinates, dict):
