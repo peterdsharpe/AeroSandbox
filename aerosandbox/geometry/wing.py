@@ -653,7 +653,11 @@ class Wing(AeroSandboxObject):
             span_yz = np.array([0, span_vector[1], span_vector[2]])
             span_yz_norm = np.linalg.norm(span_yz)
 
-            if span_yz_norm > 1e-8:  # Only rotate if there's a valid twist axis
+            from aerosandbox.numpy.determine_type import is_casadi_type
+
+            if is_casadi_type(span_yz_norm) or span_yz_norm > 1e-8:
+                # Rotate if there's a valid twist axis. (For symbolic geometry, we
+                # assume the twist axis is valid, since we can't branch on values.)
                 twist_axis = span_yz / span_yz_norm
                 rot = np.rotation_matrix_3D(section_twist * pi / 180, twist_axis)
                 ac_offset = rot @ ac_offset_unrotated

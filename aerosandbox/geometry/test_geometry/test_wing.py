@@ -103,5 +103,36 @@ def test_mesh_line_with_iterable_x_nondim():
         wing.mesh_line(x_nondim=[0.25, 0.3], add_camber=True)
 
 
+def test_aerodynamic_center_with_symbolic_geometry():
+    """Wing.aerodynamic_center() should work when the geometry itself is made of
+    optimization variables (regression test: the twist-axis validity check used
+    a numeric branch, which raised 'Can only determine truth value of a numeric
+    MX' for symbolic spans)."""
+    import aerosandbox as asb
+
+    opti = asb.Opti()
+    half_span = opti.variable(init_guess=3, lower_bound=1)
+    wing = asb.Wing(
+        xsecs=[
+            asb.WingXSec(
+                xyz_le=[0, 0, 0], chord=1, twist=2, airfoil=asb.Airfoil("naca0012")
+            ),
+            asb.WingXSec(
+                xyz_le=[0.2, half_span, 0.2],
+                chord=0.6,
+                twist=0,
+                airfoil=asb.Airfoil("naca0012"),
+            ),
+        ],
+        symmetric=True,
+    )
+
+    ac = wing.aerodynamic_center()  # should not raise
+    opti.minimize(ac[0])
+    sol = opti.solve(verbose=False)
+
+    assert np.all(np.isfinite(sol(ac)))
+
+
 if __name__ == "__main__":
     pytest.main()
