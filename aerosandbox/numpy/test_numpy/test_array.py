@@ -27,6 +27,27 @@ def test_array_casadi_1D_shape():
     assert length(a) == 2
 
 
+def test_array_casadi_contents_with_dtype():
+    """array() with CasADi contents and a (numeric) dtype should ignore the
+    dtype and build a CasADi array, as documented (regression test: it used
+    to route to numpy.array() and crash with ValueError). An explicit object
+    dtype keeps returning a NumPy object-array."""
+    x = cas.MX.sym("x")
+
+    a = array([x, 2], dtype=float)
+    assert isinstance(a, cas.MX)
+    assert a.shape == (2, 1)
+
+    obj = array([x, x], dtype="O")
+    assert isinstance(obj, np.ndarray)
+    assert obj.dtype == object
+
+    # Pure-numeric inputs still honor dtype:
+    b = array([1, 2], dtype=float)
+    assert isinstance(b, np.ndarray)
+    assert b.dtype == float
+
+
 def test_can_convert_DM_to_ndarray():
     c = cas.DM([1, 2, 3])
     n = np.array(c)

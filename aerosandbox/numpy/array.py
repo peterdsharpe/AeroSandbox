@@ -28,7 +28,9 @@ def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
         Input data (list, tuple, ndarray, or CasADi array).
     dtype : type, optional
         The desired data-type for the array. If provided and input contains
-        CasADi types, this is ignored (CasADi determines its own dtype).
+        CasADi types, this is ignored (CasADi determines its own dtype),
+        unless an object dtype is explicitly requested, in which case a
+        NumPy object-array is created.
 
     Returns
     -------
@@ -46,8 +48,11 @@ def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
         # Handles inputs like cas.DM([1, 2, 3])
         return cast(_CasADiType, array_like)
 
-    elif not is_casadi_type(array_like, recursive=True) or dtype is not None:
-        # If you were given a list of iterables that don't have CasADi types:
+    elif not is_casadi_type(array_like, recursive=True) or (
+        dtype is not None and _onp.dtype(dtype) == object
+    ):
+        # If you were given a list of iterables that don't have CasADi types
+        # (or you explicitly asked for a NumPy object-array):
         # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
 
