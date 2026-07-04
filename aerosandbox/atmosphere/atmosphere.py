@@ -50,6 +50,11 @@ class Atmosphere(AeroSandboxObject):
                 the impact of temperature on density altitude, for example.
 
         """
+        if method.lower() not in ("differentiable", "isa"):
+            raise ValueError(
+                f"Bad value of `method`: {method!r}. Valid options are 'differentiable' or 'isa'."
+            )
+
         self.altitude = altitude
         self.method = method
         self.temperature_deviation = temperature_deviation
@@ -90,7 +95,7 @@ class Atmosphere(AeroSandboxObject):
                         return a[index]
                     except IndexError:
                         raise IndexError(
-                            f"A state variable could not be indexed; it has length {len(a)} while the"
+                            f"A state variable could not be indexed; it has length {len(a)} while the "
                             f"parent has length {self_length}."
                         )
             else:
@@ -112,20 +117,16 @@ class Atmosphere(AeroSandboxObject):
             self.altitude,
             self.temperature_deviation,
         ]:
-            if np.length(v) == 1:
-                try:
-                    v[0]
-                    length = 1
-                except (TypeError, IndexError, KeyError):
+            lv = np.length(v)
+            if lv != 1:
+                if length == 1:
+                    length = lv
+                elif length == lv:
                     pass
-            elif length == 0 or length == 1:
-                length = np.length(v)
-            elif length == np.length(v):
-                pass
-            else:
-                raise ValueError(
-                    "State variables are appear vectorized, but of different lengths!"
-                )
+                else:
+                    raise ValueError(
+                        "State variables are appear vectorized, but of different lengths!"
+                    )
         return length
 
     def __array__(self, dtype="O"):
@@ -136,7 +137,7 @@ class Atmosphere(AeroSandboxObject):
 
     ### The two primary state variables, pressure and temperature, go here!
 
-    def pressure(self):
+    def pressure(self) -> Vectorizable:
         """
         Returns the pressure, in Pascals.
         """
@@ -145,9 +146,11 @@ class Atmosphere(AeroSandboxObject):
         elif self.method.lower() == "differentiable":
             return pressure_differentiable(self.altitude)
         else:
-            raise ValueError("Bad value of 'type'!")
+            raise ValueError(
+                f"Bad value of `method`: {self.method!r}. Valid options are 'differentiable' or 'isa'."
+            )
 
-    def temperature(self):
+    def temperature(self) -> Vectorizable:
         """
         Returns the temperature, in Kelvin.
         """
@@ -158,11 +161,13 @@ class Atmosphere(AeroSandboxObject):
                 temperature_differentiable(self.altitude) + self.temperature_deviation
             )
         else:
-            raise ValueError("Bad value of 'type'!")
+            raise ValueError(
+                f"Bad value of `method`: {self.method!r}. Valid options are 'differentiable' or 'isa'."
+            )
 
     ### Everything else in this class is a derived quantity; all models of derived quantities go here.
 
-    def density(self):
+    def density(self) -> Vectorizable:
         """
         Returns the density, in kg/m^3.
         """
@@ -170,11 +175,24 @@ class Atmosphere(AeroSandboxObject):
 
         return rho
 
-    def density_altitude(self, method: Literal["approximate", "exact"] = "approximate"):
+    def density_altitude(
+        self, method: Literal["approximate", "exact"] = "approximate"
+    ) -> Vectorizable:
         """
         Returns the density altitude, in meters.
 
         See https://en.wikipedia.org/wiki/Density_altitude
+
+        Args:
+            method: Method to use for the calculation. One of:
+
+                * "approximate" (default): Uses the National Weather Service approximation
+                    formula (see the Wikipedia link above), which assumes ISA-troposphere
+                    conditions.
+
+                * "exact": Not yet implemented; raises NotImplementedError.
+
+        Returns: The density altitude, in meters.
         """
         if method.lower() == "approximate":
             temperature_sea_level = 288.15
@@ -197,14 +215,14 @@ class Atmosphere(AeroSandboxObject):
         else:
             raise ValueError("Bad value of 'method'!")
 
-    def speed_of_sound(self):
+    def speed_of_sound(self) -> Vectorizable:
         """
         Returns the speed of sound, in m/s.
         """
         temperature = self.temperature()
         return (self.ratio_of_specific_heats() * gas_constant_air * temperature) ** 0.5
 
-    def dynamic_viscosity(self):
+    def dynamic_viscosity(self) -> Vectorizable:
         """
         Returns the dynamic viscosity (mu), in kg/(m*s).
 
@@ -227,7 +245,7 @@ class Atmosphere(AeroSandboxObject):
 
         return mu
 
-    def kinematic_viscosity(self):
+    def kinematic_viscosity(self) -> Vectorizable:
         """
         Returns the kinematic viscosity (nu), in m^2/s.
 
@@ -235,7 +253,13 @@ class Atmosphere(AeroSandboxObject):
         """
         return self.dynamic_viscosity() / self.density()
 
-    def ratio_of_specific_heats(self):
+    def ratio_of_specific_heats(self) -> float:
+        """
+        Returns the ratio of specific heats (gamma) of air, unitless.
+
+        Currently modeled as a constant 1.4, which is a good approximation near
+        standard temperatures. (Its temperature dependence is not yet modeled.)
+        """
         return 1.4  # TODO model temperature variation
 
     # def thermal_velocity(self):
@@ -245,7 +269,7 @@ class Atmosphere(AeroSandboxObject):
     #
     #     """
     #
-    def mean_free_path(self):
+    def mean_free_path(self) -> Vectorizable:
         """
         Returns the mean free path of an air molecule, in meters.
 
@@ -265,9 +289,9 @@ class Atmosphere(AeroSandboxObject):
             )
         )
 
-    def knudsen(self, length):
+    def knudsen(self, length: Vectorizable) -> Vectorizable:
         """
-        Computes the Knudsen number for a given length.
+        Computes the Knudsen number for a given reference length, in meters.
         """
         return self.mean_free_path() / length
 

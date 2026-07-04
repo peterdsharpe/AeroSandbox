@@ -223,6 +223,12 @@ def CDA_perpendicular_sheet_metal_joint(
         "butt_joint_with_outside_weld",
         "lap_joint_forward_facing_step",
         "lap_joint_backward_facing_step",
+        "lap_joint_forward_facing_step_with_bevel",
+        "lap_joint_backward_facing_step_with_bevel",
+        "lap_joint_forward_facing_step_with_rounded_bevel",
+        "lap_joint_backward_facing_step_with_rounded_bevel",
+        "flush_lap_joint_forward_facing_step",
+        "flush_lap_joint_backward_facing_step",
     ] = "butt_joint_with_inside_joiner",
 ):
     """
@@ -282,7 +288,8 @@ def CDA_perpendicular_sheet_metal_joint(
         "lap_joint_backward_facing_step": 0.22,
         "lap_joint_forward_facing_step_with_bevel": 0.11,
         "lap_joint_backward_facing_step_with_bevel": 0.24,
-        "lap joint_forward_facing_step_with_rounded_bevel": 0.04,
+        "lap_joint_forward_facing_step_with_rounded_bevel": 0.04,
+        "lap joint_forward_facing_step_with_rounded_bevel": 0.04,  # Deprecated alias (typo, kept for backwards-compatibility)
         "lap_joint_backward_facing_step_with_rounded_bevel": 0.16,
         "flush_lap_joint_forward_facing_step": 0.13,
         "flush_lap_joint_backward_facing_step": 0.07,

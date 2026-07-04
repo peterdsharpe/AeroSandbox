@@ -144,7 +144,7 @@ def contour(
     if z_log_scale:
         if np.any(Z <= 0):
             raise ValueError(
-                "All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!"
+                "All values of the `Z` input to `contour()` should be positive if `z_log_scale` is True!"
             )
 
         Z_ratio = np.nanmax(Z) / np.nanmin(Z)
@@ -153,11 +153,17 @@ def contour(
             default_levels = int(levels)
         except TypeError:
             default_levels = 31
-        divisions_per_decade = np.ceil(default_levels / np.log10(Z_ratio)).astype(int)
 
-        if Z_ratio > 1e8:
+        if Z_ratio <= 1 or Z_ratio > 1e8:
+            # If Z is constant (Z_ratio == 1), the subdivision computation
+            # below is undefined (division by log10(1) == 0), and for very
+            # large ranges it would be too dense - so fall back to the
+            # default LogLocator in both cases.
             locator = mpl.ticker.LogLocator()
         else:
+            divisions_per_decade = np.ceil(
+                default_levels / np.log10(Z_ratio)
+            ).astype(int)
             locator = mpl.ticker.LogLocator(
                 subs=np.geomspace(1, 10, divisions_per_decade + 1)[:-1]
             )

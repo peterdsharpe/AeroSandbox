@@ -223,6 +223,9 @@ def get_kulfan_coordinates(
         )
 
         if deprecated_kwargs.get("enforce_continuous_LE_radius", False):
+            lower_weights = np.array(
+                lower_weights
+            )  # Copy, so we don't mutate the caller's array or the shared default array.
             lower_weights[0] = -1 * upper_weights[0]
 
     x = np.cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
@@ -371,6 +374,8 @@ def get_kulfan_parameters(
     from aerosandbox.geometry.airfoil import Airfoil
 
     if method == "opti":
+        from aerosandbox.optimization import Opti
+
         target_airfoil = Airfoil(
             name="Target Airfoil", coordinates=coordinates
         ).repanel(n_points_per_side=n_points_per_side)
@@ -413,7 +418,7 @@ def get_kulfan_parameters(
             y = C * S_x
             return y
 
-        opti = asb.Opti()
+        opti = Opti()
         lower_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
         upper_weights = opti.variable(init_guess=0, n_vars=n_weights_per_side)
         TE_thickness = opti.variable(init_guess=0, lower_bound=0)
@@ -459,8 +464,8 @@ def get_kulfan_parameters(
         not be square.
 
         The columns of the A matrix will correspond to our unknowns, which are going to be a 1D vector `x` packed in as:
-            * upper_weights from 0 to n_weights_per_side - 1
             * lower_weights from 0 to n_weights_per_side - 1
+            * upper_weights from 0 to n_weights_per_side - 1
             * leading_edge_weight
             * trailing_edge_thickness
 

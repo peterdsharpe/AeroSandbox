@@ -10,6 +10,7 @@ import aerosandbox.numpy as np
 from aerosandbox.optimization.opti import Opti, OptiSol
 from abc import abstractmethod, ABC
 import copy
+import functools
 from typing import Any
 import dill
 from pathlib import Path
@@ -35,7 +36,7 @@ class AeroSandboxObject(ABC):
     must implement the ``__init__`` method.
     """
 
-    _asb_metadata: dict[str, str] = None
+    _asb_metadata: dict[str, str] | None = None
 
     @abstractmethod
     def __init__(self):
@@ -75,9 +76,13 @@ class AeroSandboxObject(ABC):
             return False
 
         for key in self.__dict__.keys():  # Check equality of all values
-            if np.all(self.__dict__[key] == other.__dict__[key]):
-                continue
-            else:
+            try:
+                values_equal = np.all(self.__dict__[key] == other.__dict__[key])
+            except (ValueError, TypeError):
+                # For example, NumPy raises a ValueError when comparing arrays
+                # with non-broadcastable shapes; such attributes are not equal.
+                return False
+            if not values_equal:
                 return False
 
         return True
@@ -183,6 +188,7 @@ class AeroSandboxObject(ABC):
             "This function is deprecated and will break at some future point.\n"
             "Use `sol(x)`, which now works recursively on complex data structures.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         # Set defaults
@@ -487,7 +493,7 @@ class ExplicitAnalysis(AeroSandboxObject):
 
         else:
             if geometry_options_for_this_analysis is not None:
-                options = geometry_options_for_this_analysis
+                options = copy.deepcopy(geometry_options_for_this_analysis)
             else:
                 options = {}
 
@@ -554,6 +560,7 @@ class ImplicitAnalysis(AeroSandboxObject):
         A property ``opti_provided`` is also set to indicate which case applies.
         """
 
+        @functools.wraps(init_method)
         def init_wrapped(self, *args, opti=None, **kwargs):
             if opti is None:
                 self.opti = Opti()

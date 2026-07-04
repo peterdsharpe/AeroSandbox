@@ -21,7 +21,11 @@ class TubeBeam1(AeroSandboxObject):
         torsion=True,  # Should we consider beam torsion?
     ):
         """
-        A beam model (static, linear elasticity) that simulates both bending and torsion.
+        A beam model (static, linear elasticity) that simulates bending.
+
+        NOTE: Torsion is not yet implemented. Setting `torsion=True` (the default)
+        currently has no effect: no torsion analysis is performed, and no torsion
+        results (e.g., twist angle or shear stress) are computed.
 
         Governing equation for bending:
         Euler-Bernoulli beam theory.
@@ -35,7 +39,7 @@ class TubeBeam1(AeroSandboxObject):
             * q(x) is the force-per-unit-length at x. (In other words, a dirac delta is a point load.)
             * ()' is a derivative w.r.t. x.
 
-        Governing equation for torsion:
+        Governing equation for torsion (not yet implemented; see note above):
         phi(x)'' = -T / (G * J)
 
         where:
@@ -57,7 +61,8 @@ class TubeBeam1(AeroSandboxObject):
         :param density: Density of the material [kg/m^3]
         :param G: Shear modulus (if isotropic, can't set both poisson_ratio and shear modulus - one must be None)
         :param bending: Should we consider bending? [boolean]
-        :param torsion: Should we consider torsion? [boolean]
+        :param torsion: Should we consider torsion? [boolean] NOTE: Torsion is not yet implemented, so this option
+            currently has no effect on results.
         """
         # Transfer inputs
         self.opti = opti
@@ -98,6 +103,14 @@ class TubeBeam1(AeroSandboxObject):
     ):
         """
         Adds a point force and/or moment.
+
+        WARNING: Point loads must be added in ascending order of `location`. setup()
+        builds the discretization mesh by chaining segments between consecutive
+        point-load locations in insertion order, so adding loads out of order
+        silently produces a non-monotonic (overlapping) mesh and wrong results, with
+        no error raised. (Locations may be symbolic optimization variables, so they
+        cannot be sorted automatically at setup time.)
+
         :param location: Location of the point force along the beam [m]
         :param force: Force to add [N]
         :param bending_moment: Bending moment to add [N-m] # TODO make this work
@@ -160,6 +173,10 @@ class TubeBeam1(AeroSandboxObject):
     def setup(self, bending_BC_type="cantilevered"):
         """
         Sets up the problem. Run this last.
+
+        WARNING: Assumes that any point loads were added (via add_point_load) in
+        ascending order of location; see the warning in add_point_load().
+
         :return: None (in-place)
         """
         ### Discretize and assign loads
@@ -303,13 +320,15 @@ class TubeBeam1(AeroSandboxObject):
         #     # Add forcing term
         #     ddphi = -self.moment_per_unit_length / (self.G * self.J)
 
-        self.stress = self.stress_axial
-        self.opti.subject_to(
-            [
-                self.stress / self.max_allowable_stress < 1,
-                self.stress / self.max_allowable_stress > -1,
-            ]
-        )
+        if self.bending:  # Stress is only computed by the bending analysis;
+            # without it, there is nothing to constrain.
+            self.stress = self.stress_axial
+            self.opti.subject_to(
+                [
+                    self.stress / self.max_allowable_stress < 1,
+                    self.stress / self.max_allowable_stress > -1,
+                ]
+            )
 
     def draw_bending(
         self,

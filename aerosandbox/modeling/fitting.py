@@ -54,7 +54,7 @@ class FittedModel(SurrogateModel):
 
             model: The model that you want to fit your dataset to. This is a callable with syntax f(x, p) where:
 
-                * x is a dict of dependent variables. Same format as x_data [dict of 1D ndarrays of length n].
+                * x is a dict of independent variables. Same format as x_data [dict of 1D ndarrays of length n].
 
                     * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead interpret x
                     as a 1D ndarray. (If you do this, just give `x_data` as an array.)
@@ -75,13 +75,13 @@ class FittedModel(SurrogateModel):
                 manifests itself is if someone writes something to the effect of `x += 3` or similar. Instead, write `x =
                 x + 3`.
 
-            x_data: Values of the dependent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
+            x_data: Values of the independent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
             var_name:var_data}.
 
                 * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead supply x_data
                 as a 1D ndarray. (If you do this, just treat `x` as an array in your model, not a dict.)
 
-            y_data: Values of the independent variable in the dataset to be fitted. [1D ndarray of length n]
+            y_data: Values of the dependent variable in the dataset to be fitted. [1D ndarray of length n]
 
             parameter_guesses: a dict of fit parameters. Syntax is {param_name:param_initial_guess}.
 
@@ -128,9 +128,10 @@ class FittedModel(SurrogateModel):
             `aerosandbox.Opti.solve(verbose=)` syntax for more details.
 
         Returns: A model in the form of a FittedModel object. Some things you can do:
-            >>> y = FittedModel(x) # evaluate the FittedModel at new x points
-            >>> FittedModel.parameters # directly examine the optimal values of the parameters that were found
-            >>> FittedModel.plot() # plot the fit
+            >>> my_fitted_model = FittedModel(...)
+            >>> y = my_fitted_model(x) # evaluate the FittedModel at new x points
+            >>> my_fitted_model.parameters # directly examine the optimal values of the parameters that were found
+            >>> my_fitted_model.plot() # plot the fit
 
 
         """
@@ -230,7 +231,7 @@ class FittedModel(SurrogateModel):
 
         try:
             y_model = model(x_data, params)  # Evaluate the model
-        except Exception:
+        except Exception as e:
             raise Exception(
                 """
             There was an error when evaluating the model you supplied with the x_data you supplied.
@@ -240,17 +241,27 @@ class FittedModel(SurrogateModel):
                 * Your model assumes x is an array-like but you provided x_data as a dict, or vice versa.
             See the docstring of FittedModel() if you have other usage questions or would like to see examples.
             """
-            )
+            ) from e
 
         try:  ### If the model did in-place operations on x_data, throw an error
             x_data_is_unchanged = np.all(x_data == x_data_original)
-        except ValueError:
-            x_data_is_unchanged = np.all(
-                [
-                    x_series == x_series_original
-                    for x_series, x_series_original in zip(x_data, x_data_original)
-                ]
-            )
+        except ValueError:  # A ValueError is raised when comparing dicts of arrays; compare series-by-series instead.
+            if isinstance(x_data, dict):
+                x_data_is_unchanged = np.all(
+                    [
+                        np.all(x_series == x_series_original)
+                        for x_series, x_series_original in zip(
+                            x_data.values(), x_data_original.values()
+                        )
+                    ]
+                )
+            else:
+                x_data_is_unchanged = np.all(
+                    [
+                        x_series == x_series_original
+                        for x_series, x_series_original in zip(x_data, x_data_original)
+                    ]
+                )
         if not x_data_is_unchanged:
             raise TypeError(
                 "model(x_data, parameter_guesses) did in-place operations on x, which is not allowed!"
@@ -338,7 +349,20 @@ class FittedModel(SurrogateModel):
         super().__call__(x)
         return self.model(x, self.parameters)
 
-    def goodness_of_fit(self, type="R^2"):
+    def goodness_of_fit(
+        self,
+        type: Literal[
+            "R^2",
+            "mean_absolute_error",
+            "mae",
+            "L1",
+            "root_mean_squared_error",
+            "rms",
+            "L2",
+            "max_absolute_error",
+            "Linf",
+        ] = "R^2",
+    ) -> float:
         """
         Returns a metric of the goodness of the fit.
 

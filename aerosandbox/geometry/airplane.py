@@ -347,6 +347,7 @@ class Airplane(AeroSandboxObject):
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
 
             fig = Figure3D()
+            show_kwargs = {"show": show, **show_kwargs}
             for f in faces:
                 fig.add_quad(
                     (
@@ -357,7 +358,6 @@ class Airplane(AeroSandboxObject):
                     ),
                     outline=True,
                 )
-                show_kwargs = {"show": show, **show_kwargs}
             return fig.draw(**show_kwargs)
 
         elif backend == "pyvista":
@@ -1014,6 +1014,23 @@ class Airplane(AeroSandboxObject):
         assembly.export(filename)
 
     def export_AVL(self, filename, include_fuselages: bool = True):
+        """
+        Exports this airplane's geometry to an AVL input file.
+
+        Args:
+
+            filename: The filepath to write the AVL input file to. Auxiliary files (airfoil
+                files, and fuselage geometry "BFILEs", if any) are written alongside it as
+                `<filename>.af0`, `<filename>.fuse0`, etc.
+
+            include_fuselages: Note: this parameter currently has no effect. The AVL writer
+                unconditionally includes all of `Airplane.fuselages` in the export (as AVL
+                BODYs, via BFILEs), regardless of this value. The parameter is retained for
+                backwards compatibility only.
+
+        Returns: None (writes the file(s) to disk).
+
+        """
         # TODO include option for mass file export as well
         # Use MassProperties.export_AVL_mass...
 

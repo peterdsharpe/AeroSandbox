@@ -2,6 +2,7 @@ import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
+from aerosandbox.numpy.arithmetic_dyadic import mod as _mod
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
 from aerosandbox.numpy.typing import Vectorizable, ArrayLike, ConcreteVector, ConcreteArray
@@ -38,7 +39,13 @@ def interp(
                     "Haven't yet implemented handling for if xp is outside the period."
                 )  # Not easy to implement because casadi doesn't have a sort feature.
 
-            x = _cas.fmod(x, period)
+            # Wrap x into [0, period). (Note: _cas.fmod() alone would return
+            # negative values for negative x, which would then be wrongly
+            # extrapolated rather than wrapped.)
+            x = _mod(x, period)
+            if not is_casadi_type(x, recursive=False):
+                # Match the type that _cas.fmod() would have returned here.
+                x = _cas.DM(x)
 
         ### Make sure x isn't an int
         if isinstance(x, int):
@@ -187,11 +194,6 @@ def interpn(
         )
 
     elif (method == "linear") or (method == "bspline"):  ### CasADi implementation
-        ### Add handling to patch a specific bug in CasADi that occurs when `values` is all zeros.
-        ### For more information, see: https://github.com/casadi/casadi/issues/2837
-        if method == "bspline" and all(values == 0):
-            return zeros_like(xi)
-
         ### If xi is an int or float, promote it to an array
         if isinstance(xi, int) or isinstance(xi, float):
             xi = array([xi])
@@ -213,23 +215,44 @@ def interpn(
             xi = xi.T
             assert xi.shape[1] == n_dimensions
 
+        ### Add handling to patch a specific bug in CasADi that occurs when `values` is all zeros.
+        ### For more information, see: https://github.com/casadi/casadi/issues/2837
+        if method == "bspline" and all(values == 0):
+            ### The result is identically zero; return it with the same shape
+            ### that the normal code path below would produce.
+            if isinstance(xi, (_cas.MX, _cas.SX)):
+                return zeros_like(xi[:, 0])
+            elif xi.shape[0] == 1:  # Single query point: normal path returns a float.
+                return 0.0
+            else:
+                return _onp.zeros(xi.shape[0])
+
         ### Calculate the minimum and maximum values along each axis.
         axis_values_min = [_onp.min(axis_values) for axis_values in points]
         axis_values_max = [_onp.max(axis_values) for axis_values in points]
 
         ### If fill_value is None, project the xi back onto the nearest point in the domain.
         if fill_value is None:
+            ### Build a clamped copy of xi, rather than assigning into it, so
+            ### that the caller's array is not mutated in-place.
+            clamped_columns = []
             for axis in range(n_dimensions):
-                xi[:, axis] = where(
-                    xi[:, axis] > axis_values_max[axis],
+                column = xi[:, axis]
+                column = where(
+                    column > axis_values_max[axis],
                     axis_values_max[axis],
-                    xi[:, axis],
+                    column,
                 )
-                xi[:, axis] = where(
-                    xi[:, axis] < axis_values_min[axis],
+                column = where(
+                    column < axis_values_min[axis],
                     axis_values_min[axis],
-                    xi[:, axis],
+                    column,
                 )
+                clamped_columns.append(column)
+            if is_casadi_type(xi, recursive=False):
+                xi = _cas.horzcat(*clamped_columns)
+            else:
+                xi = _onp.stack(clamped_columns, axis=1)
 
         ### Check bounds_error
         if bounds_error:

@@ -55,7 +55,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         xyz_ref: list[float] | None = None,
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
-        spanwise_resolution=8,  # TODO document
+        spanwise_resolution: int = 8,
         spanwise_spacing_function: Callable[
             [float, float, int], np.ndarray
         ] = np.cosspace,
@@ -71,8 +71,22 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
             op_point: The OperatingPoint that you want to analyze the Airplane at.
 
-            run_symmetric_if_possible: If this flag is True and the problem fomulation is XZ-symmetric, the solver will
+            xyz_ref: The moment reference point, in geometry axes. Defaults to `airplane.xyz_ref`.
+
+            run_symmetric_if_possible: If this flag is True and the problem formulation is XZ-symmetric, the solver will
             attempt to exploit the symmetry. This results in roughly half the number of governing equations.
+
+            verbose: If True, prints progress messages during the analysis.
+
+            spanwise_resolution: The number of spanwise panels that each wing section is subdivided into.
+
+            spanwise_spacing_function: A function (e.g., `np.linspace` or `np.cosspace`) that determines how the
+            spanwise panels are spaced within each wing section.
+
+            vortex_core_radius: The regularization radius of each vortex core [m].
+
+            align_trailing_vortices_with_wind: If True, trailing vortex legs are aligned with the freestream
+            direction; if False, they extend in the +x (geometry axes) direction.
 
             opti: An asb.Opti environment.
 
@@ -153,7 +167,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-        Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
+        Nondimensional values are nondimensionalized using reference values in the NonlinearLiftingLine.airplane object.
         """
 
         self.solve = solve  # is it is True (default), NL_lifting_line is a standalone solver. If False, it
@@ -208,7 +222,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             if wing.symmetric:  # Do the left side, if applicable
                 airfoils.extend(wing_airfoils)
 
-                def mirror_control_surface(surf: ControlSurface) -> ControlSurface:
+                def mirror_control_surface(surf: "ControlSurface") -> "ControlSurface":
                     if surf.symmetric:
                         return surf
                     else:
@@ -466,8 +480,13 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
         # Compute pitching moment
 
-        bound_leg_YZ = vortex_bound_leg
-        bound_leg_YZ[:, 0] = 0
+        bound_leg_YZ = np.concatenate(  # Same as vortex_bound_leg, but with x-components zeroed out.
+            [
+                np.zeros((self.n_panels, 1)),
+                vortex_bound_leg[:, 1:],
+            ],
+            axis=1,
+        )  # Note: a copy, so that we don't modify `self.vortex_bound_leg` in-place.
         moments_pitching_geometry = (
             (0.5 * self.op_point.atmosphere.density() * tall(velocity_magnitudes**2))
             * tall(CMs)
@@ -723,7 +742,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         """
         Computes streamlines, starting at specific seed points.
 
-        After running this function, a new instance variable `VortexLatticeFilaments.streamlines` is computed
+        After running this function, a new instance variable `NonlinearLiftingLine.streamlines` is computed
 
         Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity vectors are normalized
         before ODE integration). After investigation, it's not worth doing fancier ODE integration methods (adaptive
@@ -743,7 +762,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             streamlines: a 3D array with dimensions: (n_seed_points) x (3) x (n_steps).
             Consists of streamlines data.
 
-            Result is also saved as an instance variable, VortexLatticeMethod.streamlines.
+            Result is also saved as an instance variable, NonlinearLiftingLine.streamlines.
 
         """
         if self.verbose:

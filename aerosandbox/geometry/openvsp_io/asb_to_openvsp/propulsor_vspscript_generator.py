@@ -5,10 +5,10 @@ from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 def generate_propulsor(propulsor: Propulsor, include_main=True) -> str:
     """
-    Generates a VSPScript file for a Wing object.
+    Generates a VSPScript file for a Propulsor object.
 
     Args:
-        wing: The Wing object to generate a VSPScript file for.
+        propulsor: The Propulsor object to generate a VSPScript file for.
 
     Returns: A VSPScript file as a string.
 
@@ -30,21 +30,17 @@ string pid = AddGeom("PROP");
         y_rot_deg = 180
         z_rot_deg = 0
     else:
-        import aerosandbox as asb
-
-        opti = asb.Opti()
-        y_rot = opti.variable(init_guess=0, lower_bound=-np.pi, upper_bound=np.pi)
-        z_rot = opti.variable(init_guess=0, lower_bound=-np.pi, upper_bound=np.pi)
-
-        rot = np.rotation_matrix_3D(angle=y_rot, axis="y") @ np.rotation_matrix_3D(
-            angle=z_rot, axis="z"
-        )
-        normal = rot @ np.array([-1, 0, 0])
-
-        opti.maximize(np.dot(normal, desired_normal))
-        sol = opti.solve(verbose=False)
-        y_rot_deg = np.degrees(sol(y_rot))
-        z_rot_deg = np.degrees(sol(z_rot))
+        ### Solve, in closed form, for the rotation angles that align the
+        ### propulsor's default normal [-1, 0, 0] with the desired normal.
+        # The rotation `R_y(y_rot) @ R_z(z_rot)` maps [-1, 0, 0] to:
+        #   [-cos(y_rot) * cos(z_rot), -sin(z_rot), sin(y_rot) * cos(z_rot)]
+        # Setting this equal to `desired_normal` = [nx, ny, nz] and solving
+        # gives the expressions below. (Since z_rot is restricted to
+        # [-90, 90] deg, cos(z_rot) >= 0, which makes the atan2 form valid.)
+        nx, ny, nz = desired_normal
+        # `+ 0.` canonicalizes -0.0 to 0.0
+        z_rot_deg = np.degrees(-np.arcsin(np.clip(ny, -1, 1))) + 0.0
+        y_rot_deg = np.degrees(np.arctan2(nz, -nx)) + 0.0
 
     script += f"""\
 //==== Set Overall Propulsor Options and First Section ====//

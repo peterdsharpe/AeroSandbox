@@ -1,7 +1,30 @@
 import aerosandbox.numpy as np
 import casadi as _cas
+import numpy as _onp
 from typing import Callable, Literal, Sequence
-from scipy import integrate
+from scipy import integrate as _scipy_integrate
+
+
+def __getattr__(name: str):
+    """
+    Module-level fallback: any attribute not defined by this module is looked
+    up on scipy.integrate.
+
+    Historically, `aerosandbox.numpy.integrate` leaked the name `integrate`
+    (bound to scipy.integrate) into the `aerosandbox.numpy` namespace via the
+    star-import in aerosandbox/numpy/__init__.py, shadowing this submodule.
+    This fallback keeps access patterns like `np.integrate.trapezoid` or
+    `np.integrate.odeint` working, while `np.integrate.quad` and
+    `np.integrate.solve_ivp` now resolve to the dual-backend (NumPy + CasADi)
+    implementations defined here.
+    """
+    try:
+        return getattr(_scipy_integrate, name)
+    except AttributeError:
+        raise AttributeError(
+            f"module {__name__!r} has no attribute {name!r} "
+            f"(also tried scipy.integrate)"
+        ) from None
 
 
 def quad(
@@ -10,8 +33,15 @@ def quad(
     b: float,
     full_output: bool = False,
     variable_of_integration: _cas.MX | None = None,
+    **kwargs,
 ) -> tuple[float, float] | tuple[float, float, dict]:
     if np.is_casadi_type(func):
+        if kwargs:
+            raise TypeError(
+                f"Got unexpected keyword arguments for a CasADi-type `func`: {list(kwargs.keys())}\n"
+                f"(Extra keyword arguments are only passed through to scipy.integrate.quad, "
+                f"which handles the non-CasADi case.)"
+            )
         all_vars = _cas.symvar(func)  # All variables found in the expression graph
 
         if variable_of_integration is None:
@@ -54,11 +84,12 @@ def quad(
             return res["xf"], tol
 
     else:
-        return integrate.quad(
+        return _scipy_integrate.quad(
             func=func,
             a=a,
             b=b,
             full_output=full_output,
+            **kwargs,
         )
 
 
@@ -168,7 +199,10 @@ def solve_ivp(
         backend = "casadi_expr"
     else:
         try:
-            f = np.array(fun(t_span[0], y0))
+            # Probe `fun` with an array-converted y0 (scipy also converts y0
+            # before calling fun, so e.g. a plain-list y0 must work here) and
+            # with `args`, if given.
+            f = np.array(fun(t_span[0], np.array(y0), *(args or ())))
             if np.is_casadi_type(f):
                 backend = "casadi_func"
             else:
@@ -210,7 +244,7 @@ def solve_ivp(
             )
 
     if backend == "numpy_func":
-        return integrate.solve_ivp(
+        return _scipy_integrate.solve_ivp(
             fun=fun,
             t_span=t_span,
             y0=y0,
@@ -283,7 +317,23 @@ def solve_ivp(
             *[var for var in all_vars if not variable_is_t_or_y(var)]
         )
 
-        simtime_eval = np.linspace(0, 1, 100)
+        if t_eval is None:
+            simtime_eval = np.linspace(0, 1, 100)
+        else:
+            # Map the requested times onto normalized time in [0, 1].
+            if np.is_casadi_type(t_eval, recursive=True) or np.is_casadi_type(
+                [t0, tf], recursive=True
+            ):
+                raise NotImplementedError(
+                    "For the CasADi backend, `t_eval` is only supported when both "
+                    "`t_eval` and `t_span` are numeric (not CasADi types). "
+                    "Leave `t_eval` as None to get the solution at 100 evenly-spaced points."
+                )
+            simtime_eval = (_onp.asarray(t_eval, dtype=float).reshape(-1) - t0) / (
+                tf - t0
+            )
+            if _onp.any(simtime_eval < 0) or _onp.any(simtime_eval > 1):
+                raise ValueError("Values in `t_eval` are not within `t_span`.")
 
         # Define the integrator
         integrator = _cas.integrator(
@@ -309,7 +359,7 @@ def solve_ivp(
             p=parameters,
         )
 
-        return integrate._ivp.ivp.OdeResult(
+        return _scipy_integrate._ivp.ivp.OdeResult(
             t=t0 + (tf - t0) * res["qf"],
             y=res["xf"],
             t_events=None,

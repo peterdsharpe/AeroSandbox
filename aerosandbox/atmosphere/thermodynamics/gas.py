@@ -54,7 +54,14 @@ class PerfectGas:
         def f(val, unit):
             return eng_string(val, unit=unit, format="%.6g")
 
-        return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume**self.ratio_of_specific_heats: .6g})"
+        try:
+            return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume**self.ratio_of_specific_heats: .6g})"
+        except (
+            ValueError,
+            TypeError,
+            RuntimeError,
+        ):  # Occurs for array-valued or symbolic (CasADi) gas states
+            return f"Gas (P = {self.pressure} Pa, T = {self.temperature} K)"
 
     @property
     def density(self):
@@ -170,6 +177,7 @@ class PerfectGas:
                 * "isothermal"
                 * "isentropic"
                 * "polytropic"
+                * "isenthalpic" (accepted, but not yet implemented; raises NotImplementedError)
 
                 The `process` must be specified.
 
@@ -190,7 +198,7 @@ class PerfectGas:
 
             If `inplace` is False (default), returns a new PerfectGas object that represents the gas after the change.
 
-            If `inplace` is True, nothing is returned.
+            If `inplace` is True, this gas object is modified in-place, and it (`self`) is returned.
 
         """
 
@@ -236,6 +244,11 @@ class PerfectGas:
                 + enthalpy_addition_at_constant_volume
                 / self.specific_heat_constant_volume
             )
+
+        if enthalpy_at_pressure_specified or enthalpy_at_volume_specified:
+            ### An enthalpy addition to a calorically perfect gas is equivalent to
+            ### specifying the new temperature, so treat it as such from here on.
+            temperature_specified = True
 
         if pressure_specified:
             P_ratio = new_pressure / self.pressure

@@ -19,6 +19,11 @@ def quadratic_bezier_patch_from_tangents(
     either endpoint might cause this curvature to flip, which would result in the curve "going backwards" at one
     endpoint.
 
+    Note also that the end tangents may not be parallel (i.e., `dydx_a != dydx_b` is required), since the curve's
+    control point is placed at the intersection of the two end-tangent lines. This includes the straight-line case
+    `dydx_a == dydx_b == (y_b - y_a) / (x_b - x_a)`; for that case, interpolate between the endpoints directly
+    instead.
+
     Also, note that, in general, points will not be spaced evenly in x, y, or arc length s.
 
     Args:
@@ -51,6 +56,19 @@ def quadratic_bezier_patch_from_tangents(
         >>> )
 
     """
+    ### Guard against parallel end tangents, which would put the intercept at infinity (division by zero).
+    ### (Only checkable for numeric inputs; symbolic CasADi inputs pass through unchecked.)
+    if not (
+        np.is_casadi_type(dydx_a, recursive=False)
+        or np.is_casadi_type(dydx_b, recursive=False)
+    ):
+        if np.any(dydx_a == dydx_b):
+            raise ValueError(
+                "The end tangents `dydx_a` and `dydx_b` may not be parallel (equal), since the quadratic Bezier "
+                "control point is placed at the intersection of the two end-tangent lines. "
+                "For the straight-line case, interpolate between the endpoints directly instead."
+            )
+
     ### Compute intercept of tangent lines
     x_P1 = ((y_b - y_a) + (dydx_a * x_a - dydx_b * x_b)) / (dydx_a - dydx_b)
     y_P1 = y_a + dydx_a * (x_P1 - x_a)

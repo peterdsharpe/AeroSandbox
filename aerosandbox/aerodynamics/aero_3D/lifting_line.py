@@ -8,7 +8,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
 from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
     calculate_induced_velocity_point_source,
 )
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, Literal, TYPE_CHECKING
 from aerosandbox.aerodynamics.aero_3D.aero_buildup import AeroBuildup
 from aerosandbox.numpy.typing import Vectorizable
 from dataclasses import dataclass
@@ -55,7 +55,16 @@ class LiftingLine(ExplicitAnalysis):
         airplane: Airplane,
         op_point: OperatingPoint,
         xyz_ref: list[float] | None = None,
-        model_size: str = "medium",
+        model_size: Literal[
+            "xxsmall",
+            "xsmall",
+            "small",
+            "medium",
+            "large",
+            "xlarge",
+            "xxlarge",
+            "xxxlarge",
+        ] = "medium",
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution: int = 4,
@@ -74,15 +83,24 @@ class LiftingLine(ExplicitAnalysis):
 
             op_point: The OperatingPoint that you want to analyze the Airplane at.
 
-            run_symmetric_if_possible: If this flag is True and the problem fomulation is XZ-symmetric, the solver will
+            xyz_ref: The moment reference point, in geometry axes. Defaults to `airplane.xyz_ref`.
+
+            model_size: The size of the NeuralFoil model to use for 2D airfoil aerodynamics.
+
+            run_symmetric_if_possible: If this flag is True and the problem formulation is XZ-symmetric, the solver will
             attempt to exploit the symmetry. This results in roughly half the number of governing equations.
 
-            opti: An asb.Opti environment.
+            verbose: If True, prints progress messages during the analysis.
 
-                If provided, adds the governing equations to that instance. Does not solve the equations (you need to
-                call `sol = opti.solve()` to do that).
+            spanwise_resolution: The number of spanwise panels that each wing section is subdivided into.
 
-                If not provided, creates and solves the governing equations in a new instance.
+            spanwise_spacing_function: A function (e.g., `np.linspace` or `np.cosspace`) that determines how the
+            spanwise panels are spaced within each wing section.
+
+            vortex_core_radius: The regularization radius of each vortex core [m].
+
+            align_trailing_vortices_with_wind: If True, trailing vortex legs are aligned with the freestream
+            direction; if False, they extend in the +x (geometry axes) direction.
 
         """
         super().__init__()
@@ -371,8 +389,7 @@ class LiftingLine(ExplicitAnalysis):
 
         Args:
 
-            - alp
-            ha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
+            - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
             - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
             - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
             - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
@@ -410,7 +427,7 @@ class LiftingLine(ExplicitAnalysis):
                 - 'Cna' : the yawing moment coefficient derivative with respect to alpha [1/rad]
                 - 'x_np': the neutral point location in the x direction [m]
 
-            Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the LiftingLine.airplane object.
 
             Data types:
                 - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
@@ -586,7 +603,7 @@ class LiftingLine(ExplicitAnalysis):
             if wing.symmetric:  # Do the left side, if applicable
                 airfoils.extend(wing_airfoils)
 
-                def mirror_control_surface(surf: ControlSurface) -> ControlSurface:
+                def mirror_control_surface(surf: "ControlSurface") -> "ControlSurface":
                     if surf.symmetric:
                         return surf
                     else:
@@ -870,8 +887,13 @@ class LiftingLine(ExplicitAnalysis):
 
         # Compute pitching moment
 
-        bound_leg_YZ = vortex_bound_leg
-        bound_leg_YZ[:, 0] = 0
+        bound_leg_YZ = np.concatenate(  # Same as vortex_bound_leg, but with x-components zeroed out.
+            [
+                np.zeros((self.n_panels, 1)),
+                vortex_bound_leg[:, 1:],
+            ],
+            axis=1,
+        )  # Note: a copy, so that we don't modify `self.vortex_bound_leg` in-place.
         moments_pitching_geometry = (
             (0.5 * self.op_point.atmosphere.density() * tall(velocity_magnitudes**2))
             * tall(CMs)
@@ -1047,7 +1069,7 @@ class LiftingLine(ExplicitAnalysis):
         """
         Computes streamlines, starting at specific seed points.
 
-        After running this function, a new instance variable `VortexLatticeFilaments.streamlines` is computed
+        After running this function, a new instance variable `LiftingLine.streamlines` is computed
 
         Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity vectors are normalized
         before ODE integration). After investigation, it's not worth doing fancier ODE integration methods (adaptive
@@ -1067,7 +1089,7 @@ class LiftingLine(ExplicitAnalysis):
             streamlines: a 3D array with dimensions: (n_seed_points) x (3) x (n_steps).
             Consists of streamlines data.
 
-            Result is also saved as an instance variable, VortexLatticeMethod.streamlines.
+            Result is also saved as an instance variable, LiftingLine.streamlines.
 
         """
         if self.verbose:

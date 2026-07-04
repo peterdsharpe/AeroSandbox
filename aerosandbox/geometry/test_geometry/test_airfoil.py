@@ -16,6 +16,43 @@ def e216():
     return a
 
 
+def test_import_aerosandbox_without_plotly():
+    """
+    plotly is an optional dependency (only included in the `[full]` extra), so importing aerosandbox must succeed
+    even when plotly is not installed. This runs in a subprocess with an import hook that simulates a missing plotly.
+    """
+    import os
+    import subprocess
+    import sys
+    import textwrap
+
+    script = textwrap.dedent(
+        """
+        import sys
+        import importlib.abc
+
+        class BlockPlotly(importlib.abc.MetaPathFinder):
+            def find_spec(self, name, path=None, target=None):
+                if name == "plotly" or name.startswith("plotly."):
+                    raise ModuleNotFoundError(f"No module named {name!r} (simulated)")
+
+        sys.meta_path.insert(0, BlockPlotly())
+
+        import aerosandbox  # Should not require plotly
+        """
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        env=os.environ,
+    )
+    assert result.returncode == 0, (
+        f"`import aerosandbox` failed when plotly was unavailable:\n{result.stderr}"
+    )
+
+
 def test_fake_airfoil():
     """
     Tests what happens when you create an airfoil that's not in the UIUC database, and you don't supply coordinates.
@@ -26,8 +63,57 @@ def test_fake_airfoil():
     assert a.n_points() == 0
 
 
+def test_coordinates_2xN_input(naca4412):
+    """
+    A 2xN coordinate array should be transposed into the Nx2 convention (not silently corrupted).
+    """
+    af = Airfoil("transposed", coordinates=naca4412.coordinates.T)
+    assert np.all(af.coordinates == naca4412.coordinates)
+
+
+def test_coordinates_list_input(naca4412):
+    """
+    A list of [x, y] pairs is a natural array-like input, and should be accepted (not silently discarded).
+    """
+    af = Airfoil("from_list", coordinates=naca4412.coordinates.tolist())
+    assert af.coordinates is not None
+    assert np.allclose(af.coordinates, naca4412.coordinates)
+
+
+def test_coordinates_invalid_shape_input():
+    """
+    Arrays that can't be interpreted as [x, y] coordinates should raise an explicit ValueError.
+    """
+    with pytest.raises(ValueError):
+        Airfoil("bad", coordinates=np.array([1.0, 2.0, 3.0]))
+    with pytest.raises(ValueError):
+        Airfoil("bad", coordinates=np.ones((5, 3)))
+
+
 def test_TE_angle(naca4412):
-    assert naca4412.TE_angle() == pytest.approx(14.74635802332286, abs=1)
+    # Reference value computed independently via arccos(u . l / (|u| |l|)) on the two trailing-edge vectors.
+    assert naca4412.TE_angle() == pytest.approx(15.83513080570146, abs=1e-6)
+
+
+def test_TE_angle_hand_computed():
+    """
+    Builds a wedge-like "airfoil" whose trailing-edge half-angles are arctan(0.1 / 0.5) each, so the total TE angle
+    is exactly 2 * atan2(0.1, 0.5). (Regression test for a dot-product typo in TE_angle().)
+    """
+    af = Airfoil(
+        name="wedge",
+        coordinates=np.array(
+            [
+                [1.0, 0.0],
+                [0.5, 0.1],
+                [0.0, 0.0],
+                [0.5, -0.1],
+                [1.0, 0.0],
+            ]
+        ),
+    )
+    expected_TE_angle = 2 * np.degrees(np.arctan2(0.1, 0.5))
+    assert af.TE_angle() == pytest.approx(expected_TE_angle, abs=1e-12)
 
 
 def test_local_thickness(e216):
@@ -54,6 +140,59 @@ def test_containts_points(naca4412):
     y_points = np.random.randn(*shape)
     contains = naca4412.contains_points(x_points, y_points)
     assert shape == contains.shape
+
+
+def test_add_control_surface_on_normal_airfoil(naca4412):
+    """
+    add_control_surface() should work on a normally-constructed Airfoil (which has no CL/CD/CM_function
+    attributes), without raising AttributeError or emitting a spurious DeprecationWarning.
+    """
+    import warnings
+
+    for modify_polars in [True, False]:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            afd = naca4412.add_control_surface(
+                deflection=10, modify_polars=modify_polars
+            )
+        assert afd.coordinates is not None
+        # The trailing edge should have moved down for a positive (downward) deflection:
+        assert afd.coordinates[0, 1] < naca4412.coordinates[0, 1]
+
+
+def test_add_control_surface_with_polar_functions():
+    """
+    If the Airfoil has polar functions (deprecated constructor path), add_control_surface() should carry them
+    over, shifted by the deflection-induced effective alpha change.
+    """
+    import warnings
+
+    with pytest.warns(DeprecationWarning):
+        af = Airfoil(
+            "naca0012",
+            CL_function=lambda alpha, Re, mach=0, deflection=0: 0.1 * alpha,
+            CD_function=lambda alpha, Re, mach=0, deflection=0: 0.01,
+            CM_function=lambda alpha, Re, mach=0, deflection=0: 0.001 * alpha,
+        )
+
+    deflection = 10
+    hinge_point_x = 0.75
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        afd = af.add_control_surface(
+            deflection=deflection, hinge_point_x=hinge_point_x
+        )
+
+    dalpha = deflection * (1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291)
+    assert afd.CL_function(alpha=2, Re=1e6, mach=0) == pytest.approx(0.1 * (2 + dalpha))
+    assert afd.CM_function(alpha=2, Re=1e6, mach=0) == pytest.approx(
+        0.001 * (2 + dalpha)
+    )
+
+    # With modify_polars=False, the polar functions should be carried over unmodified.
+    afd2 = af.add_control_surface(deflection=deflection, modify_polars=False)
+    assert afd2.CL_function(alpha=2, Re=1e6, mach=0) == pytest.approx(0.1 * 2)
 
 
 def test_optimize_through_control_surface_deflections():

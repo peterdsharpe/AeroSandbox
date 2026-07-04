@@ -8,7 +8,7 @@ molecular_mass_air = 28.9644e-3  # kg/mol; molecular mass of air
 gas_constant_air = (
     gas_constant_universal / molecular_mass_air
 )  # J/(kg*K); gas constant of air
-g = 9.81  # m/s^2, gravitational acceleration on earth
+g = 9.80665  # m/s^2, standard gravitational acceleration (g_0 per U.S. Standard Atmosphere 1976 / ISO 2533)
 
 ### Read ISA table data
 isa_table = pd.read_csv(Path(__file__).parent.absolute() / "isa_data/isa_table.csv")

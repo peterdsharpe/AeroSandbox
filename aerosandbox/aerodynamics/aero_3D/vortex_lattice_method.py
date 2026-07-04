@@ -445,6 +445,14 @@ class VortexLatticeMethod(ExplicitAnalysis):
                 floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
 
         """
+        do_analysis: dict[str, bool] = {
+            "alpha": alpha,
+            "beta": beta,
+            "p": p,
+            "q": q,
+            "r": r,
+        }
+
         abbreviations = {
             "alpha": "a",
             "beta": "b",
@@ -480,7 +488,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         # of integration".)
 
         for derivative_denominator in abbreviations.keys():
-            if not locals()[
+            if not do_analysis[
                 derivative_denominator
             ]:  # Basically, if the parameter from the function input is not True,
                 continue  # Skip this run.
@@ -522,12 +530,22 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
             ### Try to compute and append neutral point, if possible
             if derivative_denominator == "alpha":
+                CLa = np.where(  # Guard against divide-by-zero for degenerate configurations
+                    run_base["CLa"] == 0,
+                    np.nan,
+                    run_base["CLa"],
+                )
                 run_base["x_np"] = self.xyz_ref[0] - (
-                    run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
+                    run_base["Cma"] * (self.airplane.c_ref / CLa)
                 )
             if derivative_denominator == "beta":
+                CYb = np.where(  # Guard against divide-by-zero for degenerate configurations
+                    run_base["CYb"] == 0,
+                    np.nan,
+                    run_base["CYb"],
+                )
                 run_base["x_np_lateral"] = self.xyz_ref[0] - (
-                    run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
+                    run_base["Cnb"] * (self.airplane.b_ref / CYb)
                 )
 
         return run_base

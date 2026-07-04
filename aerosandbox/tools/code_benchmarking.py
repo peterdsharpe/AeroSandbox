@@ -82,6 +82,7 @@ class Timer(object):
 
     def __enter__(self):
         self.tic()
+        return self
 
     def toc(self) -> float:
         self.t_end = time.perf_counter_ns()

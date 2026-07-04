@@ -185,17 +185,31 @@ def electric_propeller_propulsion_analysis(
             Defaults to 0.985, which is a reasonable value for a high-quality lithium-polymer battery. Other battery
             chemistries will have different values.
 
-    Returns: A dictionary of various parameters of the propulsion analysis. Of particular note are the following keys:
+    Returns: A dictionary of all the local variables of the analysis (i.e., `locals()`), keyed by name. This
+        includes every input argument (e.g., "total_thrust", "op_point") as well as every intermediate quantity
+        computed during the analysis. Note that a few values are not floats: "op_point" is the given
+        OperatingPoint object, "motor_parameters_per_motor" is the dictionary returned by
+        `motor_electric_performance()`, and "propeller_shaft_power_from_thrust" is an (internal) function
+        reference.
+
+        Of particular note are the following keys:
 
         * "air_power": The power delivered to the air (thrust * velocity) [W]
         * "shaft_power": The power at the propeller shaft (after the gearbox; rotational speed * torque) [W]
         * "motor_electrical_power": The electrical power input to the motor [W]
         * "esc_electrical_power": The electrical power input to the ESC [W]
-        * "battery_power": The power draw from the battery [W].
+        * "battery_power": The power draw from the battery [W]
+        * "battery_current": The current draw from the battery [A]
 
         * "propeller_efficiency": The propulsive efficiency of the propeller, defined as (air_power / shaft_power).
         * "motor_efficiency": The efficiency of the motor, defined as (shaft_power / motor_electrical_power).
+        * "wire_efficiency": The efficiency of the ESC-to-battery wiring, accounting for resistive losses.
         * "overall_efficiency": The overall efficiency of the propulsion system, defined as (air_power / battery_power).
+
+        Other intermediate keys include "propulsive_area_per_propeller", "propulsive_area_total",
+        "propeller_wake_dynamic_pressure", "propeller_wake_velocity", "propeller_tip_speed",
+        "propeller_rads_per_sec", "propeller_rpm", "propeller_advance_ratio", "motor_rpm",
+        "motor_rads_per_sec", "motor_torque_per_motor", and "wire_power_loss".
 
     """
 
@@ -340,7 +354,7 @@ def mass_motor_electric(
     voltage=20,
     method="hobbyking",
 ):
-    """
+    r"""
     Estimates the mass of a brushless DC electric motor.
     Curve fit to scraped Hobbyking BLDC motor data as of 2/24/2020.
     Estimated range of validity: 50 < max_power < 10000
@@ -377,6 +391,8 @@ def mass_motor_electric(
         return (
             2.464 * max_current / kv_rpm_volt + 0.368
         )  # Even more sophisticated model
+    else:
+        raise ValueError(f"Bad value of `method`: {method!r}")
 
 
 def mass_wires(

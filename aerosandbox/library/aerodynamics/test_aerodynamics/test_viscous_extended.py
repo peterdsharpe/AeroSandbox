@@ -252,5 +252,23 @@ def test_Cd_cylinder_critical_reynolds_region():
     assert all(Cd > 0 for Cd in [Cd_before, Cd_during, Cd_after])
 
 
+def test_Cl_flat_plate_Re_c_deprecation_warning():
+    """The Re_c deprecation should be a DeprecationWarning pointing at the caller."""
+    from aerosandbox.library.aerodynamics.viscous import Cl_flat_plate
+
+    with pytest.warns(DeprecationWarning, match="Re_c"):
+        Cl_flat_plate(5, Re_c=1e6)
+
+
+def test_Cl_flat_plate_no_warning_without_Re_c():
+    import warnings
+    from aerosandbox.library.aerodynamics.viscous import Cl_flat_plate
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Cl = Cl_flat_plate(5)
+    assert Cl == pytest.approx(2 * np.pi * np.deg2rad(5))
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

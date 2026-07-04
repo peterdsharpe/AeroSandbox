@@ -244,6 +244,60 @@ def test_norm_custom_order():
     assert np.isclose(result, expected)
 
 
+def test_norm_matrix_casadi_matches_numpy():
+    """Matrix norms of CasADi matrices should match numpy.linalg.norm
+    (regression test: ord=1 used to return the sum of all |entries| and
+    ord=inf returned the max |entry| instead of the max row sum)."""
+    A = np.array([[1.0, 2.0], [3.0, 4.0]])
+    cas_A = cas.DM(A)
+
+    assert float(norm(cas_A, ord=1)) == pytest.approx(norm(A, ord=1))  # 6.0
+    assert float(norm(cas_A, ord=np.inf)) == pytest.approx(norm(A, ord=np.inf))  # 7.0
+    assert float(norm(cas_A, ord="fro")) == pytest.approx(norm(A, ord="fro"))
+    assert float(norm(cas_A)) == pytest.approx(norm(A))  # default: Frobenius
+
+    ### The spectral norm is not implemented for CasADi types; it should raise
+    ### rather than silently return the (different) Frobenius norm.
+    with pytest.raises(NotImplementedError):
+        norm(cas_A, ord=2)
+
+
+def test_norm_vector_casadi_matches_numpy():
+    """Vector norms (explicit axis, or 1D-like CasADi vectors) should match
+    numpy.linalg.norm (regression test: axis was ignored for ord=inf)."""
+    A = np.array([[1.0, 2.0], [3.0, 4.0]])
+    cas_A = cas.DM(A)
+    v = np.array([1.0, -2.0, 3.0])
+    cas_v = cas.DM(v)
+
+    for axis in [0, 1, -1]:
+        for order in [1, 2, np.inf, 3]:
+            expected = norm(A, ord=order, axis=axis)
+            result = cas.DM(norm(cas_A, ord=order, axis=axis)).full().flatten()
+            assert result == pytest.approx(expected), f"{axis=}, {order=}"
+
+    for order in [1, 2, np.inf, 3]:
+        assert float(norm(cas_v, ord=order)) == pytest.approx(norm(v, ord=order))
+
+
+def test_norm_keepdims_casadi():
+    """norm(..., keepdims=True) should work for CasADi types (regression
+    test: it used to raise for matrix input, and passed CasADi's reshape() a
+    list, which it rejects, for vector input)."""
+    A = np.array([[1.0, 2.0], [3.0, 4.0]])
+    cas_A = cas.DM(A)
+
+    result = norm(cas_A, keepdims=True)
+    assert result.shape == (1, 1)
+    assert float(result) == pytest.approx(norm(A))
+
+    for axis in [0, 1]:
+        expected = norm(A, ord=2, axis=axis, keepdims=True)
+        result = norm(cas_A, ord=2, axis=axis, keepdims=True)
+        assert tuple(result.shape) == expected.shape
+        assert cas.DM(result).full() == pytest.approx(expected)
+
+
 def test_inv_symmetric_3x3_identity():
     """Test inverse of 3x3 identity matrix."""
     ### Identity matrix has all diagonal elements = 1, off-diagonal = 0

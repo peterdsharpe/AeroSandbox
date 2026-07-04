@@ -193,16 +193,27 @@ def labelLines(
     kwargs : dict, optional
        Optional arguments passed to ax.text
     """
+    if len(lines) == 0:
+        return []
+
     ax = lines[0].axes
 
-    handles, allLabels = ax.get_legend_handles_labels()
+    handles, labels_of_handles = ax.get_legend_handles_labels()
 
-    all_lines = []
-    for h in handles:
+    all_lines, allLabels = [], []
+    for h, label in zip(handles, labels_of_handles):
         if isinstance(h, ErrorbarContainer):
-            all_lines.append(h.lines[0])
+            line = h.lines[0]
         else:
-            all_lines.append(h)
+            line = h
+
+        # Only label the lines that the user asked for (matching upstream
+        # matplotlib-label-lines semantics).
+        if line not in lines:
+            continue
+
+        all_lines.append(line)
+        allLabels.append(label)
 
     # In case no x location was provided, we need to use some heuristics
     # to generate them.
@@ -269,7 +280,11 @@ def labelLines(
             xvals[i] = new_xv
 
     # Convert float values back to datetime in case of datetime axis
-    if isinstance(ax.xaxis.converter, DateConverter):
+    if hasattr(ax.xaxis, "get_converter"):  # Matplotlib >= 3.10
+        converter = ax.xaxis.get_converter()
+    else:  # `Axis.converter` was deprecated in Matplotlib 3.10, removed in 3.12
+        converter = ax.xaxis.converter
+    if isinstance(converter, DateConverter):
         xvals = [num2date(x).replace(tzinfo=ax.xaxis.get_units()) for x in xvals]
 
     txts = []

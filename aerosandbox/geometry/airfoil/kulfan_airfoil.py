@@ -31,14 +31,8 @@ class KulfanAirfoil(Airfoil):
             lower_weights is None and upper_weights is None
         ):  # Try to fall back on parameters from the coordinate airfoil, if it's something from the UIUC database
 
-            class IgnoreUserWarnings:  # A context manager to ignore UserWarnings
-                def __enter__(self):
-                    warnings.filterwarnings("ignore", category=UserWarning)
-
-                def __exit__(self, exc_type, exc_val, exc_tb):
-                    warnings.resetwarnings()
-
-            with IgnoreUserWarnings():
+            with warnings.catch_warnings():  # Restores the caller's warning filters on exit.
+                warnings.simplefilter("ignore", category=UserWarning)
                 coordinate_airfoil = Airfoil(name)
 
             if coordinate_airfoil.coordinates is None:

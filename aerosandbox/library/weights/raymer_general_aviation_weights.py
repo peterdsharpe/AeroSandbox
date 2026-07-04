@@ -248,7 +248,7 @@ def mass_main_landing_gear(
     return (
         0.095
         * (ultimate_landing_load_factor * design_mass_TOGW / u.lbm) ** 0.768
-        * (main_gear_length / u.foot / 12) ** 0.409
+        * (main_gear_length / u.inch / 12) ** 0.409
         * (advanced_composites["landing_gear"] if use_advanced_composites else 1)
         * (
             ((5.7 - 1.4 / 2) / 5.7) if not is_retractable else 1
@@ -287,7 +287,7 @@ def mass_nose_landing_gear(
     return (
         0.125
         * (ultimate_landing_load_factor * design_mass_TOGW / u.lbm) ** 0.566
-        * (nose_gear_length / u.foot / 12) ** 0.845
+        * (nose_gear_length / u.inch / 12) ** 0.845
         * (advanced_composites["landing_gear"] if use_advanced_composites else 1)
         * (
             ((5.7 - 1.4 / 2) / 5.7) if not is_retractable else 1

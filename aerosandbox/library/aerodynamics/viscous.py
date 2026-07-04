@@ -17,14 +17,14 @@ def Cd_cylinder(
         Re_D: Reynolds number, referenced to diameter
         mach: Mach number
         include_mach_effects: If this is set False, it assumes Mach = 0, which simplifies the computation.
-        subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows. Useful, since
-    this model is now convex and can be more well-behaved.
+        subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows.
+            Useful, since this model is then convex and can be more well-behaved.
 
     Returns:
-
-    # TODO rework this function to use tanh blending, which will mitigate overflows
+        The drag coefficient of the cylinder, referenced to the cylinder diameter and unit length.
 
     """
+    # TODO rework this function to use tanh blending, which will mitigate overflows
 
     ##### Do the viscous part of the computation
     csigc = 5.5766722118597247
@@ -174,9 +174,11 @@ def Cl_flat_plate(alpha, Re_c=None):
     :return: Approximate lift coefficient.
     """
     if Re_c is not None:
-        from warnings import warn
-
-        warn("`Re_c` input will be deprecated in a future version.")
+        warnings.warn(
+            "`Re_c` input will be deprecated in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
@@ -205,6 +207,7 @@ def Cl_2412(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     return 0.2568 + 0.1206 * alpha - 0.002018 * alpha**2
 
@@ -216,6 +219,7 @@ def Cd_profile_2412(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.maximum(Re_c, 1)
     log_Re = np.log(Re_c)
@@ -249,6 +253,7 @@ def Cl_e216(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -288,6 +293,7 @@ def Cd_profile_e216(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -332,6 +338,7 @@ def Cd_wave_e216(Cl, mach, sweep=0.0):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
@@ -363,6 +370,7 @@ def Cl_rae2822(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -400,6 +408,7 @@ def Cd_profile_rae2822(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -444,6 +453,7 @@ def Cd_wave_rae2822(Cl, mach, sweep=0.0):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176

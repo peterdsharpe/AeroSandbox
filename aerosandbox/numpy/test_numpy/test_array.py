@@ -27,6 +27,27 @@ def test_array_casadi_1D_shape():
     assert length(a) == 2
 
 
+def test_array_casadi_contents_with_dtype():
+    """array() with CasADi contents and a (numeric) dtype should ignore the
+    dtype and build a CasADi array, as documented (regression test: it used
+    to route to numpy.array() and crash with ValueError). An explicit object
+    dtype keeps returning a NumPy object-array."""
+    x = cas.MX.sym("x")
+
+    a = array([x, 2], dtype=float)
+    assert isinstance(a, cas.MX)
+    assert a.shape == (2, 1)
+
+    obj = array([x, x], dtype="O")
+    assert isinstance(obj, np.ndarray)
+    assert obj.dtype == object
+
+    # Pure-numeric inputs still honor dtype:
+    b = array([1, 2], dtype=float)
+    assert isinstance(b, np.ndarray)
+    assert b.dtype == float
+
+
 def test_can_convert_DM_to_ndarray():
     c = cas.DM([1, 2, 3])
     n = np.array(c)
@@ -45,6 +66,53 @@ def test_length():
     assert length(np.ones((3, 2))) == 3
 
     assert length(cas.MX(np.ones(5))) == 5
+
+
+def test_length_of_list_of_casadi_types():
+    """length() of a Python list of CasADi expressions must be the list
+    length. (Guards against the regression from commit f45b11a4, where an
+    asarray()-based length() raised TypeError internally and returned 1,
+    giving Wing.mesh_body() empty face arrays and crashing the VLM with an
+    IndexError.)"""
+    x = cas.MX.sym("x")
+
+    assert length([x, x, x]) == 3
+    assert length([x]) == 1
+    assert length([x * 2, x**2]) == 2
+    assert length((x, x)) == 2
+    assert length([cas.DM(1), cas.DM(2)]) == 2
+    assert length([cas.SX.sym("y"), cas.SX.sym("z")]) == 2
+    assert length([x, 2.0, np.array(3)]) == 3
+
+    # CasADi arrays themselves (always 2D internally):
+    assert length(x) == 1
+    assert length(cas.MX.sym("v", 4)) == 4
+    assert length(cas.MX.sym("r", 1, 4)) == 4
+
+    # A list of CasADi matrices has the length of the *list* (like len()).
+    # Wing.mesh_thin_surface() relies on this to count spanwise strips.
+    strips = [cas.MX.sym(f"s{i}", 7, 3) for i in range(5)]
+    assert length(strips) == 5
+
+
+def test_zeros_like_and_friends_casadi_2D():
+    """zeros_like/ones_like/full_like/empty_like on a 2D CasADi matrix should
+    preserve the 2D shape (regression test: they used to return a 1D array of
+    length shape[0]). Row/column vectors keep returning 1D arrays."""
+    matrix = cas.DM(np.ones((3, 2)))
+    assert np.zeros_like(matrix).shape == (3, 2)
+    assert np.ones_like(matrix).shape == (3, 2)
+    assert np.empty_like(matrix).shape == (3, 2)
+    assert np.full_like(matrix, 7.0).shape == (3, 2)
+    assert np.all(np.full_like(matrix, 7.0) == 7.0)
+
+    column = cas.DM(np.ones(3))  # 3x1 CasADi column: treated as a 1D array
+    assert np.zeros_like(column).shape == (3,)
+    assert np.ones_like(column).shape == (3,)
+
+    row = cas.DM(np.ones(3)).T  # 1x3 CasADi row: treated as a 1D array
+    assert np.zeros_like(row).shape == (3,)
+    assert np.ones_like(row).shape == (3,)
 
 
 def test_concatenate():

@@ -89,7 +89,7 @@ def mean(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
         elif axis == 1:
             return sum(x, axis=1) / x.shape[1]
         elif axis is None:
-            return mean(mean(x, axis=0), axis=1)
+            return sum(x, axis=None) / (x.shape[0] * x.shape[1])
         else:
             raise ValueError(
                 "CasADi types can only be up to 2D, so `axis` must be None, 0, or 1."
@@ -119,6 +119,48 @@ def abs(x: ArrayLike) -> Array:
 
     else:
         return _cas.fabs(x)
+
+
+def round(a: ArrayLike, decimals: int = 0, out: _onp.ndarray | None = None) -> Array:
+    """Evenly round to the given number of decimals.
+
+    Parameters
+    ----------
+    a : ArrayLike
+        Input array.
+    decimals : int, optional
+        Number of decimal places to round to. Default is 0.
+    out : ndarray, optional
+        Alternative output array (NumPy backend only).
+
+    Returns
+    -------
+    Array
+        An array of the same type as ``a``, containing the rounded values.
+
+    Notes
+    -----
+    For CasADi types, halfway values are rounded towards positive infinity
+    (CasADi has no round-half-to-even primitive), whereas NumPy rounds
+    halfway values to the nearest even integer.
+
+    See Also
+    --------
+    numpy.round : https://numpy.org/doc/stable/reference/generated/numpy.round.html
+    """
+    if not is_casadi_type(a):
+        return _onp.round(a, decimals=decimals, out=out)
+
+    else:
+        if out is not None:
+            raise NotImplementedError(
+                "`out` is not supported for CasADi types; use the return value instead."
+            )
+        if decimals != 0:
+            factor = 10.0**decimals
+            return _cas.floor(a * factor + 0.5) / factor
+        else:
+            return _cas.floor(a + 0.5)
 
 
 # TODO trace()

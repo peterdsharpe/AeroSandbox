@@ -94,7 +94,7 @@ class Fuselage(AeroSandboxObject):
         self.analysis_specific_options = analysis_specific_options
 
         ### Handle deprecated parameters
-        if "symmetric" in locals():
+        if "symmetric" in kwargs:
             raise DeprecationWarning(
                 "The `symmetric` argument for Fuselage objects is deprecated. Make your fuselages separate instead!"
             )
@@ -106,7 +106,13 @@ class Fuselage(AeroSandboxObject):
                 "The `xyz_le` input for Fuselage is pending deprecation and will be removed in a future version. Use Fuselage().translate(xyz) instead.",
                 stacklevel=2,
             )
-            self.xsecs = [xsec.translate(kwargs["xyz_le"]) for xsec in self.xsecs]
+            xyz_le = kwargs.pop("xyz_le")
+            self.xsecs = [xsec.translate(xyz_le) for xsec in self.xsecs]
+
+        if kwargs:
+            raise TypeError(
+                f"Fuselage got unexpected keyword argument(s): {list(kwargs.keys())}"
+            )
 
     def __repr__(self) -> str:
         n_xsecs = len(self.xsecs)
@@ -250,11 +256,11 @@ class Fuselage(AeroSandboxObject):
         """
         if assumed_shape == "cylinder":
             return np.sqrt(self.length() ** 3 / self.volume() * np.pi / 4)
-        elif assumed_shape == "sears-haack":
+        elif assumed_shape in ("sears-haack", "sears_haack"):
             length = self.length()
 
             r_max = np.sqrt(self.volume() / length / (3 * np.pi**2 / 16))
-            return length / r_max
+            return length / (2 * r_max)
         else:
             raise ValueError(f"Invalid assumed_shape {assumed_shape!r}")
 
@@ -621,9 +627,11 @@ class FuselageXSec(AeroSandboxObject):
 
             * The cross-section is a superellipse shape, which is a generalization of a circle and a square.
 
-                It is mathematically defined by three parameters, using `y` and `z` as the two axes:
+                It is mathematically defined by three parameters, using `y` and `z` as the two axes. Note that
+                `width` and `height` are the full extents of the cross-section (i.e., the cross-section spans from
+                -width/2 to +width/2 in y, and from -height/2 to +height/2 in z):
 
-                    abs(y / width) ^ shape + abs(z / height) ^ shape = 1
+                    abs(y / (width / 2)) ^ shape + abs(z / (height / 2)) ^ shape = 1
 
                 See also: https://en.wikipedia.org/wiki/Superellipse
 

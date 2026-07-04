@@ -215,5 +215,67 @@ def test_type_errors():
         fitted_model(5)
 
 
+def test_in_place_mutation_detected_with_dict_x_data():
+    """
+    Regression test: in-place mutation of dict x_data by the model used to go undetected
+    (the fallback comparison zipped dict *keys*, which always compare equal), so the fit
+    silently ran on mutated data.
+    """
+    x_data = {"x1": np.linspace(0, 10, 21)}
+    y_data = 2 * x_data["x1"] + 1
+
+    def mutating_model(x, p):
+        x["x1"] *= 2  # In-place mutation: not allowed!
+        return p["m"] * x["x1"] + p["b"]
+
+    with pytest.raises(TypeError, match="in-place"):
+        FittedModel(
+            model=mutating_model,
+            x_data=x_data,
+            y_data=y_data,
+            parameter_guesses={"m": 0, "b": 0},
+            verbose=False,
+        )
+
+
+def test_in_place_mutation_detected_with_array_x_data():
+    x_data = np.linspace(0, 10, 21)
+    y_data = 2 * x_data + 1
+
+    def mutating_model(x, p):
+        x *= 2  # In-place mutation: not allowed!
+        return p["m"] * x + p["b"]
+
+    with pytest.raises(TypeError, match="in-place"):
+        FittedModel(
+            model=mutating_model,
+            x_data=x_data,
+            y_data=y_data,
+            parameter_guesses={"m": 0, "b": 0},
+            verbose=False,
+        )
+
+
+def test_model_evaluation_error_preserves_cause():
+    """
+    Regression test: an error raised inside the user-supplied model used to be re-raised
+    as a bare Exception with no __cause__, hiding the original error from the user.
+    """
+
+    def broken_model(x, p):
+        raise KeyError("some_missing_key")
+
+    with pytest.raises(Exception) as exc_info:
+        FittedModel(
+            model=broken_model,
+            x_data=np.linspace(0, 1, 5),
+            y_data=np.linspace(0, 1, 5),
+            parameter_guesses={"m": 0},
+            verbose=False,
+        )
+
+    assert isinstance(exc_info.value.__cause__, KeyError)
+
+
 if __name__ == "__main__":
     pytest.main()

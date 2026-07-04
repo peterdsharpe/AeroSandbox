@@ -314,6 +314,33 @@ def test_black_box_missing_required_arg():
         wrapped(x=1)  ### Missing y
 
 
+def test_black_box_too_many_positional_args_message():
+    """
+    Regression test: the "Takes from X to Y positional arguments" TypeError always
+    reported X=0, since X was computed as len(parameters) - len(parameters.values()),
+    which is identically zero. X should be the number of required (no-default) arguments.
+    """
+
+    def my_func(a1, a2, k1=4, k2=5, k3=6):
+        return a1 + a2 + k1 + k2 + k3
+
+    wrapped = black_box(my_func)
+
+    with pytest.raises(TypeError, match="from 2 to 5"):
+        wrapped(1, 2, 3, 4, 5, 6)
+
+
+def test_black_box_required_args_passable_as_keywords():
+    """Required arguments must remain passable as keyword arguments."""
+
+    def my_func(a1, a2, k1=4):
+        return a1 + 10 * a2 + 100 * k1
+
+    wrapped = black_box(my_func)
+
+    assert np.isclose(float(wrapped(1, a2=2)), 421)
+
+
 def test_black_box_complex_objective():
     """Test black box with more complex objective function."""
 

@@ -409,5 +409,121 @@ def test_opti_scale_dependent_optimization():
     assert np.isclose(sol(x), 1, atol=1e-3)
 
 
+def test_opti_invalid_behavior_on_failure_raises():
+    """An invalid `behavior_on_failure` should raise a clear ValueError (was: UnboundLocalError)."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    opti.minimize((x - 1) ** 2)
+
+    with pytest.raises(ValueError, match="behavior_on_failure"):
+        opti.solve(
+            verbose=False, behavior_on_failure="return-last"
+        )  # note the typo'd value
+
+
+def test_show_infeasibilities_single_scalar_constraint(capsys):
+    """show_infeasibilities() used to crash with TypeError (object of type 'float' has no len())
+    on problems with exactly one scalar constraint."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    opti.subject_to(x >= 1)  # The one and only (scalar) constraint
+    opti.minimize(x**2)
+
+    sol = opti.solve(verbose=False)
+
+    sol.show_infeasibilities(
+        tol=1e-3
+    )  # Feasible solve: should print nothing, and not crash
+    assert capsys.readouterr().out == ""
+
+
+def test_show_infeasibilities_single_scalar_constraint_violated(capsys):
+    """Same as above, but with the single scalar constraint actually violated."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    opti.subject_to(x**2 <= -1)  # Infeasible by construction
+    opti.minimize(x**2)
+
+    with pytest.warns(UserWarning):
+        sol = opti.solve(
+            verbose=False,
+            max_iter=50,
+            behavior_on_failure="return_last",
+        )
+
+    sol.show_infeasibilities(tol=1e-3)
+    out = capsys.readouterr().out
+    assert "violation" in out
+
+
+def test_optisol_value_preserves_frozenset():
+    """sol.value(frozenset) should return a frozenset (used to silently return a mutable set)."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=1)
+    opti.minimize((x - 3) ** 2)
+    sol = opti.solve(verbose=False)
+
+    result = sol.value(frozenset([x]))
+    assert isinstance(result, frozenset)
+    (element,) = result
+    assert element == pytest.approx(3)
+
+    result = sol.value({x})  # Plain sets should still come back as plain sets
+    assert type(result) is set
+
+
+def test_optisol_value_propagates_warn_on_unknown_types():
+    """The warn_on_unknown_types flag should also apply to nested items (it used to be dropped
+    in recursive calls, so nested unconvertible objects never warned)."""
+
+    class Unconvertible:
+        __slots__ = ()  # No __dict__, and not convertible by CasADi
+
+    opti = asb.Opti()
+    x = opti.variable(init_guess=1)
+    opti.minimize((x - 3) ** 2)
+    sol = opti.solve(verbose=False)
+
+    with pytest.warns(UserWarning, match="could not convert"):
+        sol.value([Unconvertible()], warn_on_unknown_types=True)
+
+
+def test_parameter_mapping_size_mismatch_error():
+    """A direct parameter_mapping with mismatched sizes should raise an error describing the
+    size mismatch (it used to only talk about cached solutions, even with no cache involved)."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    p = opti.parameter(value=np.ones(3), n_params=3)
+    opti.subject_to(x >= p[0])
+    opti.minimize(x**2)
+
+    with pytest.raises(RuntimeError, match="element"):
+        opti.solve(verbose=False, parameter_mapping={p: np.ones(5)})
+
+
+def test_solve_sweep():
+    """solve_sweep() used to crash with TypeError at its internal `def run` line, since the
+    annotation `"OptiSol" | None` (str | None) is evaluated at function-definition time."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=1)
+    p = opti.parameter(value=1)
+    opti.subject_to(x >= p)
+    opti.minimize(x**2)
+
+    sols = opti.solve_sweep({p: np.linspace(1, 3, 3)}, verbose=False)
+    assert [sol(x) for sol in sols] == pytest.approx([1, 2, 3])
+
+    get_vals = opti.solve_sweep(
+        {p: np.linspace(1, 3, 3)}, verbose=False, return_callable=True
+    )
+    assert get_vals(x) == pytest.approx([1, 2, 3])
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

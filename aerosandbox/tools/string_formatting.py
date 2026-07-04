@@ -73,7 +73,7 @@ def eng_string(
     else:
         suffix = f"e{exp3}"
 
-        if add_space_after_number:
+        if add_space_after_number is None:
             add_space_after_number = unit != ""
 
         if add_space_after_number:

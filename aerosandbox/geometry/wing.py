@@ -607,7 +607,7 @@ class Wing(AeroSandboxObject):
         """
         Computes the location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:
-            https://core.ac.uk/downloattttd/pdf/79175663.pdf
+            https://core.ac.uk/download/pdf/79175663.pdf
 
         Args: chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
 
@@ -1184,7 +1184,7 @@ class Wing(AeroSandboxObject):
 
             if add_camber:
                 xsec_z_nondim = xsec_z_nondim + xsec.airfoil.local_camber(
-                    x_over_c=x_nondim
+                    x_over_c=xsec_x_nondim
                 )
 
             points_on_line.append(
@@ -1561,11 +1561,11 @@ class WingXSec(AeroSandboxObject):
                 "DEPRECATED: 'twist_angle' has been renamed 'twist', and will break in future versions.",
                 stacklevel=2,
             )
-            self.twist = deprecated_kwargs["twist_angle"]
+            self.twist = deprecated_kwargs.pop("twist_angle")
         if (
-            "control_surface_is_symmetric" in locals()
-            or "control_surface_hinge_point" in locals()
-            or "control_surface_deflection" in locals()
+            "control_surface_is_symmetric" in deprecated_kwargs
+            or "control_surface_hinge_point" in deprecated_kwargs
+            or "control_surface_deflection" in deprecated_kwargs
         ):
             import warnings
 
@@ -1573,12 +1573,15 @@ class WingXSec(AeroSandboxObject):
                 "DEPRECATED: Define control surfaces using the `control_surfaces` parameter, which takes in a list of asb.ControlSurface objects.",
                 stacklevel=2,
             )
-            if "control_surface_is_symmetric" not in locals():
-                control_surface_is_symmetric = True
-            if "control_surface_hinge_point" not in locals():
-                control_surface_hinge_point = 0.75
-            if "control_surface_deflection" not in locals():
-                control_surface_deflection = 0
+            control_surface_is_symmetric = deprecated_kwargs.pop(
+                "control_surface_is_symmetric", True
+            )
+            control_surface_hinge_point = deprecated_kwargs.pop(
+                "control_surface_hinge_point", 0.75
+            )
+            control_surface_deflection = deprecated_kwargs.pop(
+                "control_surface_deflection", 0
+            )
 
             self.control_surfaces.append(
                 ControlSurface(
@@ -1586,6 +1589,11 @@ class WingXSec(AeroSandboxObject):
                     symmetric=control_surface_is_symmetric,
                     deflection=control_surface_deflection,
                 )
+            )
+
+        if deprecated_kwargs:
+            raise TypeError(
+                f"WingXSec got unexpected keyword argument(s): {list(deprecated_kwargs.keys())}"
             )
 
     def __repr__(self) -> str:

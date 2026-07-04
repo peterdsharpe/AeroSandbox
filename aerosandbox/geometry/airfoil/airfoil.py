@@ -1,4 +1,3 @@
-import plotly.graph_objects
 import matplotlib.figure
 import aerosandbox.numpy as np
 from aerosandbox.numpy.typing import Vectorizable
@@ -12,6 +11,8 @@ from aerosandbox.library.aerodynamics import transonic
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import plotly.graph_objects  # An optional dependency; import only for type-checking.
+
     from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
     from aerosandbox.geometry import ControlSurface
 from aerosandbox.modeling.splines.hermite import (
@@ -98,16 +99,27 @@ class Airfoil(Polygon):
             try:  # If coordinates is a string, assume it's a filepath to a .dat file
                 self.coordinates = get_file_coordinates(filepath=coordinates)
             except (OSError, FileNotFoundError, TypeError, UnicodeDecodeError):
-                try:
-                    shape = coordinates.shape
-                    assert len(shape) == 2
-                    assert shape[0] == 2 or shape[1] == 2
-                    if not shape[1] == 2:
-                        coordinates = np.transpose(shape)
+                if hasattr(
+                    coordinates, "shape"
+                ):  # Handles NumPy arrays, CasADi types, etc.
+                    array = coordinates
+                else:  # Try to coerce other array-likes (e.g., a list of [x, y] pairs) to an array.
+                    try:
+                        array = np.asarray(coordinates, dtype=float)
+                    except (TypeError, ValueError):
+                        array = None  # Couldn't be interpreted as coordinates; warns below.
 
-                    self.coordinates = coordinates
-                except AttributeError:
-                    pass
+                if array is not None:
+                    shape = array.shape
+                    if not (len(shape) == 2 and (shape[0] == 2 or shape[1] == 2)):
+                        raise ValueError(
+                            "The `coordinates` input should be an Nx2 (or 2xN) array of [x, y] coordinates, "
+                            f"but instead it has shape {tuple(shape)}."
+                        )
+                    if not shape[1] == 2:
+                        array = np.transpose(array)
+
+                    self.coordinates = array
 
         if self.coordinates is None:
             import warnings
@@ -334,7 +346,9 @@ class Airfoil(Polygon):
         if data is None:
             ### If a cache filename is given, ensure that the directory exists.
             if cache_filename is not None:
-                os.makedirs(os.path.dirname(cache_filename), exist_ok=True)
+                cache_directory = os.path.dirname(cache_filename)
+                if cache_directory:  # Empty for a bare filename (current directory).
+                    os.makedirs(cache_directory, exist_ok=True)
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
@@ -364,14 +378,25 @@ class Airfoil(Polygon):
                     "CD",
                     "CDp",
                     "Re",
-                ]  # Assumes the rest are antisymmetric
-
-                data = {
-                    k: np.concatenate(
-                        [v, v if k in keys_symmetric_across_alpha else -v]
-                    )
-                    for k, v in data.items()
+                    "Cpmin",
+                    "Xcpmin",
+                ]
+                # Top-/bottom-surface quantities swap with each other when mirrored across alpha;
+                # all remaining keys (e.g., alpha, CL, CM, Chinge) are antisymmetric.
+                keys_swapped_across_alpha = {
+                    "Top_Xtr": "Bot_Xtr",
+                    "Bot_Xtr": "Top_Xtr",
                 }
+
+                def mirrored(k):
+                    if k in keys_symmetric_across_alpha:
+                        return data[k]
+                    elif k in keys_swapped_across_alpha:
+                        return data[keys_swapped_across_alpha[k]]
+                    else:
+                        return -data[k]
+
+                data = {k: np.concatenate([v, mirrored(k)]) for k, v in data.items()}
 
             if (
                 cache_filename is not None
@@ -862,18 +887,20 @@ class Airfoil(Polygon):
 
     def draw(
         self, draw_mcl=False, draw_markers=True, backend="matplotlib", show=True
-    ) -> matplotlib.figure.Figure | plotly.graph_objects.Figure | None:
+    ) -> "matplotlib.figure.Figure | plotly.graph_objects.Figure | None":
         """
         Draw the airfoil object.
 
         Args:
             draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
 
+            draw_markers: Should we draw a marker at each vertex? [boolean]
+
             backend: Which backend should we use? "plotly" or "matplotlib"
 
             show: Should we show the plot? [boolean]
 
-        Returns: None
+        Returns: With the "plotly" backend and show=False, returns the plotly Figure; otherwise returns None.
         """
         x = np.reshape(np.array(self.x()), -1)
         y = np.reshape(np.array(self.y()), -1)
@@ -1000,7 +1027,7 @@ class Airfoil(Polygon):
 
         return np.arctan2d(
             upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
-            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1],
+            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * lower_TE_vec[1],
         )
 
     # def LE_radius(self) -> float:
@@ -1082,8 +1109,8 @@ class Airfoil(Polygon):
 
         except ValueError as e:
             if not (
-                (np.all(np.diff(upper_distances_from_TE)) > 0)
-                and (np.all(np.diff(lower_distances_from_LE)) > 0)
+                np.all(np.diff(upper_distances_from_TE) > 0)
+                and np.all(np.diff(lower_distances_from_LE) > 0)
             ):
                 raise ValueError(
                     "It looks like your Airfoil has a duplicate point. Try removing the duplicate point and "
@@ -1265,45 +1292,56 @@ class Airfoil(Polygon):
         else:
             coordinates = self.coordinates
 
-        if modify_polars:
-            effectiveness = (
-                1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291
-            )
-            dalpha = deflection * effectiveness
-
-            def CL_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CL_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-            def CD_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CD_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-            def CM_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CM_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-        else:
-            CL_function = self.CL_function
-            CD_function = self.CD_function
-            CM_function = self.CM_function
-
-        return Airfoil(
+        new_airfoil = Airfoil(
             name=self.name,
             coordinates=coordinates,
-            CL_function=CL_function,
-            CD_function=CD_function,
-            CM_function=CM_function,
         )
+
+        ### Polar functions only exist on Airfoils created via the deprecated constructor keyword arguments (or via
+        ### Airfoil.generate_polars()); carry them over only if they exist.
+        has_polar_functions = all(
+            hasattr(self, f"{coefficient}_function")
+            for coefficient in ["CL", "CD", "CM"]
+        )
+
+        if has_polar_functions:
+            if modify_polars:
+                effectiveness = (
+                    1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291
+                )
+                dalpha = deflection * effectiveness
+
+                def CL_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CL_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+                def CD_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CD_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+                def CM_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CM_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+            else:
+                CL_function = self.CL_function
+                CD_function = self.CD_function
+                CM_function = self.CM_function
+
+            new_airfoil.CL_function = CL_function
+            new_airfoil.CD_function = CD_function
+            new_airfoil.CM_function = CM_function
+
+        return new_airfoil
 
     def set_TE_thickness(
         self,
@@ -1436,7 +1474,7 @@ class Airfoil(Polygon):
         self, angle: float, x_center: float = 0.0, y_center: float = 0.0
     ) -> "Airfoil":
         """
-        Rotates the airfoil clockwise by the specified amount, in radians.
+        Rotates the airfoil counterclockwise by the specified angle, in radians.
 
         Rotates about the point (x_center, y_center), which is (0, 0) by default.
 
@@ -1523,7 +1561,7 @@ class Airfoil(Polygon):
 
             include_name: Should the name be included in the .dat file? (In a standard *.dat file, it usually is.)
 
-        Returns: None
+        Returns: The .dat file contents, as a string. (If `filepath` is given, the contents are also written to disk.)
 
         """
         contents = []

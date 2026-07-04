@@ -2,8 +2,12 @@ from aerosandbox import Opti
 import pytest
 import aerosandbox.numpy as np
 
-### Cause all NumPy warnings to raise exceptions, to make this bulletproof
-np.seterr(all="raise")
+@pytest.fixture(autouse=True)
+def raise_on_numpy_warnings():
+    ### Cause all NumPy warnings to raise exceptions, to make this bulletproof.
+    ### (Scoped per-test so the strict error state doesn't leak into other test files.)
+    with np.errstate(all="raise"):
+        yield
 
 
 @pytest.fixture

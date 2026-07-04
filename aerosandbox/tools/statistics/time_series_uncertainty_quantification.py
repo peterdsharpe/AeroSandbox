@@ -178,7 +178,6 @@ def bootstrap_fits(
         def y_unnormalize(y_n):
             return y_n * y_rng + y_min
 
-        x_noise_stdev / x_rng
         y_stdev_normalized = y_noise_stdev / y_rng
 
     else:
@@ -201,8 +200,16 @@ def bootstrap_fits(
         splines = []
         n_valid_splines = 0
         n_attempted_splines = 0
+        max_attempted_splines = max(10 * n_bootstraps, 100)
 
         while n_valid_splines < n_bootstraps:
+            if n_attempted_splines >= max_attempted_splines:
+                raise ValueError(
+                    f"Spline fitting is failing to produce enough valid (non-NaN) fits: "
+                    f"got {n_valid_splines} valid fit(s) in {n_attempted_splines} attempts, "
+                    f"with {n_bootstraps} valid fits requested. "
+                    f"This is likely due to a poor choice of `spline_degree` for the given data."
+                )
             n_attempted_splines += 1
 
             ### Obtain a bootstrap resample
@@ -237,11 +244,7 @@ def bootstrap_fits(
 
     else:
         ### Determine which x-points to resample at
-        if fit_points is None:
-            x_fit = None
-            if normalize:
-                raise ValueError("If `fit_points` is None, `normalize` must be False.")
-        elif isinstance(fit_points, int):
+        if isinstance(fit_points, int):
             x_fit = np.linspace(np.min(x), np.max(x), fit_points)
         else:
             x_fit = np.array(fit_points)

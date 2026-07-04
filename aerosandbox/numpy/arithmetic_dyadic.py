@@ -134,7 +134,10 @@ def mod(x1: Vectorizable, x2: Vectorizable) -> Array:
 
     else:
         out = _cas.fmod(x1, x2)
-        out = where(x1 < 0, out + x2, out)
+        # `fmod` returns a remainder with the sign of x1; NumPy's `mod` returns a
+        # remainder with the sign of x2. Correct nonzero remainders of the wrong
+        # sign (keying on the remainder itself, so that exact multiples map to 0).
+        out = where(out * _cas.sign(x2) < 0, out + x2, out)
         return out
 
 

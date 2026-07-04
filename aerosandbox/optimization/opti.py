@@ -35,8 +35,50 @@ class Opti(cas.Opti):
         load_frozen_variables_from_cache: bool = False,
         save_to_cache_on_solve: bool = False,
         ignore_violated_parametric_constraints: bool = False,
-        freeze_style: Literal["parameter", "frozen"] = "parameter",
-    ):  # TODO document
+        freeze_style: Literal["parameter", "float"] = "parameter",
+    ):
+        """
+        Initializes a new optimization environment. For more usage information, see the docstrings of the key
+        methods listed in the class docstring above.
+
+        Args:
+
+            variable_categories_to_freeze: A list of variable categories (as named via the `category` argument of
+                `Opti.variable()`) that should be "frozen" (i.e., fixed rather than optimized). You can also pass a
+                single category as a bare string, or the special string "all" to freeze every category.
+
+                Frozen variables take on the value of their `init_guess` - unless
+                `load_frozen_variables_from_cache` is True, in which case their values are loaded from the cache
+                file at solve time. For more information on freezing, see the docstring of `Opti.variable()`.
+
+            cache_filename: A path to a JSON file used to save and load solved values of variables (by category).
+                Required if you use `load_frozen_variables_from_cache` or `save_to_cache_on_solve`; also used by
+                `Opti.save_solution()` and `Opti.get_solution_dict_from_cache()`.
+
+            load_frozen_variables_from_cache: If True, then upon calling `Opti.solve()`, the values of all frozen
+                variables (in the categories given by `variable_categories_to_freeze`) will be loaded from the
+                cache file at `cache_filename`, rather than using their `init_guess`. (Variables manually frozen
+                with `Opti.variable(freeze=True)` keep their `init_guess` value.)
+
+            save_to_cache_on_solve: If True, then upon a successful `Opti.solve()`, the solved values of all
+                variables will be saved to the cache file at `cache_filename` (equivalent to calling
+                `Opti.save_solution()` after solving).
+
+            ignore_violated_parametric_constraints: Determines what happens when a constraint that contains no
+                decision variables (e.g., one between frozen variables only) evaluates False. If False (default),
+                a RuntimeError is raised at `Opti.subject_to()`, since the problem is infeasible as-written. If
+                True, such constraints are silently ignored - useful when freezing variables would otherwise
+                make some constraints trivially violated.
+
+            freeze_style: Determines how frozen variables are implemented under the hood. Options are:
+
+                * "parameter" (default): frozen variables become CasADi parameters. Their values can then be
+                    swapped after declaration (e.g., when loading from a cache, or via `parameter_mapping`).
+
+                * "float": frozen variables become literal floats (or arrays). This simplifies the resulting
+                    expression graphs, but their values are baked in permanently at declaration - so this is
+                    incompatible with `load_frozen_variables_from_cache`.
+        """
         # Default arguments
         if variable_categories_to_freeze is None:
             variable_categories_to_freeze = []
@@ -355,11 +397,29 @@ class Opti(cas.Opti):
                     )
             else:
                 if lower_bound is not None:
+                    if not np.is_casadi_type(lower_bound, recursive=False) and np.any(
+                        np.array(lower_bound) < 0
+                    ):
+                        raise ValueError(
+                            "You can't give a negative `lower_bound` to a log-transformed variable, since a "
+                            "log-transformed variable is always positive. (Taking the log of this bound would "
+                            "create an invalid constraint.)\n"
+                            "Either remove the `lower_bound`, or don't log-transform this variable."
+                        )
                     self.subject_to(
                         log_var / log_scale >= np.log(lower_bound) / log_scale,
                         _stacklevel=_stacklevel + 1,
                     )
                 if upper_bound is not None:
+                    if not np.is_casadi_type(upper_bound, recursive=False) and np.any(
+                        np.array(upper_bound) <= 0
+                    ):
+                        raise ValueError(
+                            "You can't give a non-positive `upper_bound` to a log-transformed variable, since a "
+                            "log-transformed variable is always positive. (This constraint could never be "
+                            "satisfied.)\n"
+                            "Either change the `upper_bound`, or don't log-transform this variable."
+                        )
                     self.subject_to(
                         log_var / log_scale <= np.log(upper_bound) / log_scale,
                         _stacklevel=_stacklevel + 1,
@@ -416,12 +476,15 @@ class Opti(cas.Opti):
             constraint, (str, np.ndarray, cas.MX, cas.DM, cas.SX)
         )
         if is_constraint_sequence:
-            return [
-                self.subject_to(
-                    each_constraint, _stacklevel=_stacklevel + 2
-                )  # return the dual of each constraint
-                for each_constraint in constraint
-            ]
+            # Note: use a plain for-loop rather than a list comprehension here, so that the number of
+            # stack frames between this call and the recursive `subject_to` call is the same on all
+            # Python versions. (PEP 709, in Python 3.12, inlined comprehensions, removing their stack frame.)
+            duals = []
+            for each_constraint in constraint:
+                duals.append(  # return the dual of each constraint
+                    self.subject_to(each_constraint, _stacklevel=_stacklevel + 1)
+                )
+            return duals
 
         # If it's a proper constraint (MX-type and non-parametric),
         # pass it into the parent class Opti formulation and be done with it.
@@ -493,6 +556,17 @@ class Opti(cas.Opti):
         self,
         f: Scalar,
     ) -> None:
+        """
+        Sets the objective function that the optimizer will attempt to minimize upon `Opti.solve()`.
+
+        Args:
+            f: The objective: a scalar expression, typically a function of the optimization variables.
+
+                For best solver performance, scale the objective so that it is of order ~1 at the optimum
+                (analogous to the guidance for the `scale` argument of `Opti.variable()`).
+
+        Returns: None (sets the objective in-place)
+        """
         # f = cas.cse(f)
         super().minimize(f)
 
@@ -500,6 +574,16 @@ class Opti(cas.Opti):
         self,
         f: Scalar,
     ) -> None:
+        """
+        Sets the objective function that the optimizer will attempt to maximize upon `Opti.solve()`.
+
+        This is syntactic sugar for `opti.minimize(-f)`; see `Opti.minimize()` for details.
+
+        Args:
+            f: The objective: a scalar expression, typically a function of the optimization variables.
+
+        Returns: None (sets the objective in-place)
+        """
         # f = cas.cse(f)
         super().minimize(-1 * f)
 
@@ -642,7 +726,18 @@ class Opti(cas.Opti):
         ### If you're loading frozen variables from cache, do it here:
         if self.load_frozen_variables_from_cache:
             solution_dict = self.get_solution_dict_from_cache()
-            for category in self.variable_categories_to_freeze:
+
+            # Normalize `variable_categories_to_freeze` to a list of category names. (A bare string is
+            # allowed - `Opti.variable()` handles that case too - and "all" means every category.)
+            if isinstance(self.variable_categories_to_freeze, str):
+                if self.variable_categories_to_freeze == "all":
+                    categories_to_freeze = list(self.variables_categorized.keys())
+                else:
+                    categories_to_freeze = [self.variable_categories_to_freeze]
+            else:
+                categories_to_freeze = self.variable_categories_to_freeze
+
+            for category in categories_to_freeze:
                 category_variables = self.variables_categorized[category]
                 category_values = solution_dict[category]
 
@@ -655,6 +750,17 @@ class Opti(cas.Opti):
                     )
 
                 for var, val in zip(category_variables, category_values):
+                    if not np.is_casadi_type(var, recursive=False):
+                        # This happens when `freeze_style="float"`: frozen variables are stored as
+                        # literal floats/arrays, whose values are baked in at declaration and cannot
+                        # be overridden here. (Previously, this crashed with an opaque AttributeError.)
+                        raise RuntimeError(
+                            f'Cannot load frozen variables from the cache, since `freeze_style="float"` was used: '
+                            f'variables in category "{category}" were frozen as literal constants at declaration, '
+                            f"so their values can no longer be replaced with cached ones.\n"
+                            f'Use `freeze_style="parameter"` (the default) if you want to load frozen variables '
+                            f"from a cache file."
+                        )
                     if not var.is_manually_frozen:
                         parameter_mapping = {**parameter_mapping, var: val}
 
@@ -672,12 +778,18 @@ class Opti(cas.Opti):
             except AttributeError:
                 size_v = 1
             if size_k != size_v:
-                raise RuntimeError(
-                    """Problem with loading cached solution: it looks like the length of a vectorized 
-                variable has changed since the cached solution was saved (or variables were defined in a different order). 
-                Because of this, the cache cannot be loaded. 
-                Re-run the original optimization study to regenerate the cached solution."""
+                message = (
+                    f"Problem with a parameter mapping: a parameter has {size_k} element(s), "
+                    f"but the value given for it has {size_v} element(s)."
                 )
+                if self.load_frozen_variables_from_cache:
+                    message += (
+                        "\nSince frozen variables are being loaded from a cache, it looks like the length of a "
+                        "vectorized variable has changed since the cached solution was saved (or variables were "
+                        "defined in a different order). Because of this, the cache cannot be loaded. "
+                        "Re-run the original optimization study to regenerate the cached solution."
+                    )
+                raise RuntimeError(message)
 
             self.set_value(k, v)
 
@@ -733,6 +845,11 @@ class Opti(cas.Opti):
                 warnings.warn("Optimization failed. Returning last solution.")
 
                 sol = OptiSol(opti=self, cas_optisol=self.debug)
+        else:
+            raise ValueError(
+                f"Invalid value of `behavior_on_failure`: got {behavior_on_failure!r}, "
+                f'but it must be one of "raise" or "return_last".'
+            )
 
         if self.save_to_cache_on_solve:
             self.save_solution()
@@ -742,12 +859,47 @@ class Opti(cas.Opti):
     def solve_sweep(
         self,
         parameter_mapping: dict[cas.MX, np.ndarray],
-        update_initial_guesses_between_solves=False,
-        verbose=True,
+        update_initial_guesses_between_solves: bool = False,
+        verbose: bool = True,
         solve_kwargs: dict | None = None,
         return_callable: bool = False,
         garbage_collect_between_runs: bool = False,
     ) -> np.ndarray | Callable[[cas.MX], np.ndarray]:
+        """
+        Solves the optimization problem repeatedly, once for each combination of parameter values given, and
+        returns the resulting solutions. Useful for parameter sweeps (e.g., a drag polar over a range of lift
+        coefficients).
+
+        Args:
+            parameter_mapping: A dictionary where each key is a parameter (created via `Opti.parameter()`) and
+                each value is an array of values to sweep that parameter over. If multiple parameters are given,
+                the value arrays are broadcast against each other (using NumPy broadcasting rules), and one solve
+                is performed for each element of the broadcasted result.
+
+            update_initial_guesses_between_solves: If True, each successful solve is used to warm-start the next
+                one (via `Opti.set_initial_from_sol()`). Useful for continuation of a sweep along a parameter.
+
+            verbose: If True, prints a progress line for each run, along with its parameter values and whether it
+                succeeded or failed.
+
+            solve_kwargs: A dictionary of keyword arguments to pass through to each underlying `Opti.solve()`
+                call. (Defaults to `dict(verbose=False, max_iter=200)`; any options you provide are merged on
+                top of these.)
+
+            return_callable: Changes the return type of this method; see below.
+
+            garbage_collect_between_runs: If True, runs a garbage-collection pass (`gc.collect()`) before each
+                solve, which can mitigate memory buildup during large sweeps.
+
+        Returns:
+            If `return_callable` is False (default): a NumPy object-array of `OptiSol` objects, with the same
+                shape as the broadcasted parameter value arrays. Runs where the solver failed contain None
+                instead of an `OptiSol`.
+
+            If `return_callable` is True: a function which, given any expression `x` (e.g., a variable or a
+                function of variables), returns an array of that expression's value in each solution (i.e.,
+                elementwise `sol.value(x)`), with NaN entries for runs where the solver failed.
+        """
         # Handle defaults
         if solve_kwargs is None:
             solve_kwargs = {}
@@ -770,7 +922,7 @@ class Opti(cas.Opti):
         n_runs = np.broadcast(*values).size
         run_number = 1
 
-        def run(*args: tuple[float]) -> "OptiSol" | None:
+        def run(*args: tuple[float]) -> "OptiSol | None":
             # Collect garbage before each run, to avoid memory issues.
             if garbage_collect_between_runs:
                 import gc
@@ -1045,36 +1197,32 @@ class Opti(cas.Opti):
             derivative_scale: Scale factor for the value of the derivative. For more info, look at the docstring of
             opti.variable()'s `scale` parameter.
 
-            method: The type of integrator to use to define this derivative. Options are:
+            method: The type of integrator to use to define this derivative. (Method names are case-insensitive,
+            and spaces may equivalently be given as underscores.) Options are:
+
+                * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal method
+
+                    Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
 
                 * "forward euler" - a first-order-accurate forward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Euler_method
 
-                * "backwards euler" - a first-order-accurate backwards Euler method
+                * "backward euler" - a first-order-accurate backward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
 
-                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
-
-                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
-
-                * "simpson" - Simpson's rule for integration
+                * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods based on
+                Simpson's rule, using a parabolic fit over each interval plus its forward (respectively,
+                backward) neighboring point
 
                     Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
 
-                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
-                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
+                * "cubic" or "cubic spline" - a method based on a cubic fit over each interval plus its two
+                neighboring points
 
-                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
-
-                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
-                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
-                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
-                as the Butcher tableau is more dense (i.e. not banded).
-
-                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
-                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
+                See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative list of supported
+                methods.
 
             explicit: If true, returns an explicit derivative rather than an implicit one. In other words,
             this *defines* the output to be a derivative of the input rather than *constraining* the output to the a
@@ -1119,6 +1267,7 @@ class Opti(cas.Opti):
                 init_guess=derivative_init_guess,
                 n_vars=N,
                 scale=derivative_scale,
+                _stacklevel=_stacklevel + 1,
             )
 
             self.constrain_derivative(
@@ -1171,36 +1320,32 @@ class Opti(cas.Opti):
                 In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
                 value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
 
-            method: The type of integrator to use to define this derivative. Options are:
+            method: The type of integrator to use to define this derivative. (Method names are case-insensitive,
+            and spaces may equivalently be given as underscores.) Options are:
+
+                * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal method
+
+                    Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
 
                 * "forward euler" - a first-order-accurate forward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Euler_method
 
-                * "backwards euler" - a first-order-accurate backwards Euler method
+                * "backward euler" - a first-order-accurate backward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
 
-                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
-
-                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
-
-                * "simpson" - Simpson's rule for integration
+                * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods based on
+                Simpson's rule, using a parabolic fit over each interval plus its forward (respectively,
+                backward) neighboring point
 
                     Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
 
-                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
-                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
+                * "cubic" or "cubic spline" - a method based on a cubic fit over each interval plus its two
+                neighboring points
 
-                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
-
-                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
-                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
-                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
-                as the Butcher tableau is more dense (i.e. not banded).
-
-                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
-                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
+                See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative list of supported
+                methods.
 
             Note that all methods are expressed as integrators rather than differentiators; this prevents
             singularities from forming in the limit of timestep approaching zero. (For those coming from the PDE
@@ -1352,15 +1497,25 @@ class OptiSol:
 
         t = type(x)
 
+        # Shorthand for recursive calls, propagating the keyword arguments given to this call.
+        def _value(item):
+            return self.value(
+                item,
+                recursive=recursive,
+                warn_on_unknown_types=warn_on_unknown_types,
+            )
+
         # If it's a Python iterable, recursively convert it, and preserve the type as best as possible.
         if issubclass(t, list):
-            return [self.value(i) for i in x]
+            return [_value(i) for i in x]
         if issubclass(t, tuple):
-            return tuple([self.value(i) for i in x])
-        if issubclass(t, (set, frozenset)):
-            return {self.value(i) for i in x}
+            return tuple([_value(i) for i in x])
+        if issubclass(t, frozenset):
+            return frozenset(_value(i) for i in x)
+        if issubclass(t, set):
+            return {_value(i) for i in x}
         if issubclass(t, dict):
-            return {self.value(k): self.value(v) for k, v in x.items()}
+            return {_value(k): _value(v) for k, v in x.items()}
 
         # Skip certain Python types
         if issubclass(
@@ -1396,7 +1551,7 @@ class OptiSol:
             new_x = copy.copy(x)
 
             for k, v in x.__dict__.items():
-                setattr(new_x, k, self.value(v))
+                setattr(new_x, k, _value(v))
 
             return new_x
 
@@ -1442,10 +1597,11 @@ class OptiSol:
 
         Returns: None (prints to console)
         """
-        lbg = self(self.opti.lbg)
-        ubg = self(self.opti.ubg)
+        # Note: atleast_1d is needed since evaluating a single scalar constraint yields a plain float.
+        lbg = np.atleast_1d(self(self.opti.lbg))
+        ubg = np.atleast_1d(self(self.opti.ubg))
 
-        g = self(self.opti.g)
+        g = np.atleast_1d(self(self.opti.g))
 
         constraint_violated = np.logical_or(g + tol < lbg, g - tol > ubg)
 

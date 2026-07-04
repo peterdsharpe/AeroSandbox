@@ -4,6 +4,7 @@ from aerosandbox.dynamics.point_mass.common_point_mass import (
 from aerosandbox.weights.mass_properties import MassProperties
 import aerosandbox.numpy as np
 from aerosandbox.numpy.typing import Vectorizable
+from typing import Literal
 
 
 class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
@@ -201,8 +202,15 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
         Fx: Vectorizable = 0,
         Fy: Vectorizable = 0,
         Fz: Vectorizable = 0,
-        axes="wind",
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "wind",
     ) -> None:
+        """
+        Adds a force (in whichever axis system you choose) to this Dynamics instance.
+
+        Note that, for this class, the default axis system is `axes="wind"` (this class's native axis system),
+        which differs from other Dynamics classes. See `_DynamicsPointMassBaseClass.add_force()` for full
+        documentation.
+        """
         Fx_w, Fy_w, Fz_w = self.convert_axes(
             x_from=Fx, y_from=Fy, z_from=Fz, from_axes=axes, to_axes="wind"
         )

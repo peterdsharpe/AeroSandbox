@@ -89,7 +89,7 @@ class Polygon(AeroSandboxObject):
         self, angle: float, x_center: float = 0.0, y_center: float = 0.0
     ) -> "Polygon":
         """
-        Rotates a Polygon clockwise by the specified amount, in radians.
+        Rotates a Polygon counterclockwise by the specified amount, in radians.
 
         Rotates about the point (x_center, y_center), which is (0, 0) by default.
 
@@ -138,9 +138,16 @@ class Polygon(AeroSandboxObject):
     def perimeter(self) -> float:
         """
         Returns the perimeter of the polygon.
+
+        The polygon is treated as closed (consistent with `area()`, `centroid()`, etc.),
+        so the edge connecting the last point back to the first point is included. (If the
+        coordinate list already repeats the first point at the end, this closing edge has
+        zero length, so it makes no difference.)
         """
-        dx = np.diff(self.x())
-        dy = np.diff(self.y())
+        x = self.x()
+        y = self.y()
+        dx = np.roll(x, -1) - x  # Includes the closing edge (last point -> first point)
+        dy = np.roll(y, -1) - y
         ds = (dx**2 + dy**2) ** 0.5
 
         return np.sum(ds)
@@ -245,24 +252,7 @@ class Polygon(AeroSandboxObject):
         """
         Returns the nondimensionalized polar moment of inertia, taken about the centroid.
         """
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = (
-            x * y_n - x_n * y
-        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        0.5 * np.sum(a)  # area
-
-        Ixx = 1 / 12 * np.sum(a * (y**2 + y * y_n + y_n**2))
-
-        Iyy = 1 / 12 * np.sum(a * (x**2 + x * x_n + x_n**2))
-
-        J = Ixx + Iyy
-
-        return J
+        return self.Ixx() + self.Iyy()
 
     def write_sldcrv(self, filepath: Path | str | None = None):
         """

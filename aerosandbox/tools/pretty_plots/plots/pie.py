@@ -38,14 +38,15 @@ def pie(
 
     if sort_by is None:
         sort_by = np.arange(n_wedges)
-    elif sort_by == "values":
-        sort_by = values
-    elif sort_by == "names":
-        sort_by = names
-    elif sort_by == "colors":
-        sort_by = colors  # this might not make sense, depending on
     elif isinstance(sort_by, str):
-        raise sort_by_error
+        if sort_by == "values":
+            sort_by = values
+        elif sort_by == "names":
+            sort_by = names
+        elif sort_by == "colors":
+            sort_by = colors  # this might not make sense, depending on
+        else:
+            raise sort_by_error
 
     order = np.argsort(sort_by)
     names = np.array(names)[order]

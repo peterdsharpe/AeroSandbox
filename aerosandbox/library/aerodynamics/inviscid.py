@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from typing import Literal
 
 
 def induced_drag(
@@ -27,7 +28,7 @@ def oswalds_efficiency(
     aspect_ratio: float,
     sweep: float = 0.0,
     fuselage_diameter_to_span_ratio: float = 0.0,
-    method="nita_scholz",
+    method: Literal["nita_scholz", "kroo"] = "nita_scholz",
 ) -> float:
     """
     Computes the Oswald's efficiency factor for a planar, tapered, swept wing.
@@ -44,6 +45,9 @@ def oswalds_efficiency(
         taper_ratio: Taper ratio of the wing (tip_chord / root_chord) [-]
         aspect_ratio: Aspect ratio of the wing (b^2 / S) [-]
         sweep: Wing quarter-chord sweep angle [deg]
+        fuselage_diameter_to_span_ratio: Ratio of the fuselage diameter to the wingspan; used for a
+            fuselage-interference correction factor [-]
+        method: The estimation method to use. One of "nita_scholz" (default) or "kroo".
 
     Returns: Oswald's efficiency factor [-]
 
@@ -93,6 +97,12 @@ def oswalds_efficiency(
         P = 0.38 * Cf_flat_plate(Re_L=1e6)
 
         e = mach_correction_factor / (Q + P * np.pi * aspect_ratio)
+
+    else:
+        raise ValueError(
+            f"{method=!r} is not a valid method for oswalds_efficiency(). "
+            f"Valid options are: 'nita_scholz', 'kroo'."
+        )
 
     return e
 

@@ -28,7 +28,9 @@ def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
         Input data (list, tuple, ndarray, or CasADi array).
     dtype : type, optional
         The desired data-type for the array. If provided and input contains
-        CasADi types, this is ignored (CasADi determines its own dtype).
+        CasADi types, this is ignored (CasADi determines its own dtype),
+        unless an object dtype is explicitly requested, in which case a
+        NumPy object-array is created.
 
     Returns
     -------
@@ -46,8 +48,11 @@ def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
         # Handles inputs like cas.DM([1, 2, 3])
         return cast(_CasADiType, array_like)
 
-    elif not is_casadi_type(array_like, recursive=True) or dtype is not None:
-        # If you were given a list of iterables that don't have CasADi types:
+    elif not is_casadi_type(array_like, recursive=True) or (
+        dtype is not None and _onp.dtype(dtype) == object
+    ):
+        # If you were given a list of iterables that don't have CasADi types
+        # (or you explicitly asked for a NumPy object-array):
         # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
 
@@ -321,14 +326,16 @@ def length(a: ArrayLike | Scalar) -> int:
         returns the larger of the two dimensions (assuming column vectors).
     """
     if not is_casadi_type(a, recursive=False):
-        a_arr = cast(_onp.ndarray, asarray(a))
+        # Take len() of the original input, not of asarray(a): a Python list
+        # of CasADi expressions would become a CasADi array (which has no
+        # len()), yet its length is simply the list length.
         try:
-            return len(a_arr)
+            return len(cast(Sequence[Any], a))
         except TypeError:
             return 1
 
     else:
-        a_cas = cast(_CasADiType, asarray(a))
+        a_cas = cast(_CasADiType, a)
         if a_cas.shape[0] != 1:
             return a_cas.shape[0]
         else:
@@ -738,7 +745,11 @@ def zeros_like(
         a_np = cast(_onp.ndarray, asarray(a))
         return _onp.zeros_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.zeros(shape=length(a))
+        a_cas = cast(_CasADiType, a)
+        if 1 in a_cas.shape:  # CasADi row/column vectors are treated as 1D arrays.
+            return _onp.zeros(shape=length(a_cas))
+        else:  # For true (2D) matrices, preserve the 2D shape.
+            return _onp.zeros(shape=a_cas.shape)
 
 
 def ones_like(
@@ -777,7 +788,11 @@ def ones_like(
         a_np = cast(_onp.ndarray, asarray(a))
         return _onp.ones_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.ones(shape=length(a))
+        a_cas = cast(_CasADiType, a)
+        if 1 in a_cas.shape:  # CasADi row/column vectors are treated as 1D arrays.
+            return _onp.ones(shape=length(a_cas))
+        else:  # For true (2D) matrices, preserve the 2D shape.
+            return _onp.ones(shape=a_cas.shape)
 
 
 def empty_like(

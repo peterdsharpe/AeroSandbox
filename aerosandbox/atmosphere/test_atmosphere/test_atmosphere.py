@@ -38,6 +38,56 @@ def test_isa_atmosphere():
             )
 
 
+def test_isa_atmosphere_against_ussa1976_layer_bases():
+    """
+    Regression test: the ISA implementation should reproduce the official
+    U.S. Standard Atmosphere 1976 (NASA-TM-X-74335) pressures at the layer
+    base altitudes essentially exactly. This requires using the standard's
+    g_0 = 9.80665 m/s^2 in the hydrostatic relation; a previous version used
+    g = 9.81, which gave pressures up to ~0.4% low at high altitudes.
+
+    Reference values are geopotential altitudes and pressures from the
+    USSA1976 tables (which the ISA shares below 32 km, per ISO 2533).
+    """
+    ussa1976_pressures = {  # Geopotential altitude [m] -> Pressure [Pa]
+        0: 101325.0,
+        11000: 22632.06,
+        20000: 5474.889,
+        32000: 868.0187,
+        47000: 110.9063,
+        51000: 66.93887,
+        71000: 3.956420,
+    }
+    for altitude, pressure in ussa1976_pressures.items():
+        atmo = Atmosphere(altitude=altitude, method="isa")
+        assert atmo.pressure() == pytest.approx(pressure, rel=1e-5), (
+            f"FAILED @ {altitude} m"
+        )
+
+
+def test_isa_atmosphere_casadi_matches_numpy():
+    """
+    The ISA functions are dual-backend (NumPy + CasADi); both backends
+    should produce identical numerics.
+    """
+    import casadi as cas
+    from aerosandbox.atmosphere._isa_atmo_functions import (
+        pressure_isa,
+        temperature_isa,
+    )
+
+    altitudes_test = np.array([0.0, 5e3, 11e3, 32e3, 71e3])
+
+    pressure_numpy = pressure_isa(altitudes_test)
+    temperature_numpy = temperature_isa(altitudes_test)
+
+    pressure_casadi = pressure_isa(cas.DM(altitudes_test)).full().flatten()
+    temperature_casadi = temperature_isa(cas.DM(altitudes_test)).full().flatten()
+
+    assert pressure_casadi == pytest.approx(pressure_numpy, rel=1e-12)
+    assert temperature_casadi == pytest.approx(temperature_numpy, rel=1e-12)
+
+
 def test_diff_atmosphere():
     altitudes = np.linspace(-50e2, 150e3, 1000)
     atmo_isa = Atmosphere(altitude=altitudes, method="isa")
@@ -52,6 +102,26 @@ def test_diff_atmosphere():
     assert max(abs((pressure_isa - pressure_diff) / pressure_isa)) < 0.01, (
         "pressure failed for differentiable model"
     )
+
+
+def test_method_is_case_insensitive():
+    assert Atmosphere(altitude=0, method="ISA").pressure() == pytest.approx(
+        101325, abs=1
+    )
+
+
+def test_bad_method_raises_at_construction():
+    with pytest.raises(ValueError, match="method"):
+        Atmosphere(altitude=0, method="nonsense")
+
+
+def test_bad_method_raises_lazily_if_mutated_after_construction():
+    atmo = Atmosphere(altitude=0)
+    atmo.method = "nonsense"
+    with pytest.raises(ValueError, match="method"):
+        atmo.pressure()
+    with pytest.raises(ValueError, match="method"):
+        atmo.temperature()
 
 
 def plot_isa_residuals():

@@ -1,3 +1,5 @@
+import warnings
+
 import aerosandbox.numpy as np
 from aerosandbox.numpy.typing import Vectorizable
 from typing import Literal
@@ -318,6 +320,25 @@ def solar_flux(
         * Note: does not account for any potential reflectivity of the solar panel's coating itself.
 
     """
+    if deprecated_kwargs:
+        deprecated_kwarg_names = {
+            "scattering",  # Scattering is now always modeled; this old on/off switch is ignored.
+        }
+        unrecognized_kwargs = [
+            key for key in deprecated_kwargs if key not in deprecated_kwarg_names
+        ]
+        if unrecognized_kwargs:
+            raise TypeError(
+                f"solar_flux() got unexpected keyword argument(s): "
+                f"{', '.join(repr(key) for key in unrecognized_kwargs)}"
+            )
+        warnings.warn(
+            f"solar_flux() received deprecated keyword argument(s) "
+            f"{', '.join(repr(key) for key in deprecated_kwargs)}, which are ignored.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     flux_outside_atmosphere = solar_flux_outside_atmosphere_normal(
         day_of_year=day_of_year
     )

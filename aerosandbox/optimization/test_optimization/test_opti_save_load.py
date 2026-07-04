@@ -191,6 +191,95 @@ def test_save_and_load_opti_vectorized(tmp_path):
     assert sol(f) == pytest.approx(12)
 
 
+def test_save_and_load_opti_categories_as_str(tmp_path):
+    ### `variable_categories_to_freeze` may be given as a bare string; the cache-loading path used
+    ### to iterate over its characters (raising KeyError) instead of treating it as one category.
+    temp_filename = tmp_path / "temp.json"
+
+    ### Round 1 optimization: free optimization
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        save_to_cache_on_solve=True,
+    )
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
+    opti.minimize((x - 1) ** 2 + (y - 1) ** 2)
+    opti.solve()
+
+    ### Round 2 optimization: Cat 1 is fixed from before, specified as a bare string
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        variable_categories_to_freeze="Cat 1",  # Note: str, not list
+        load_frozen_variables_from_cache=True,
+    )
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
+    opti.minimize((x - 2) ** 2 + (y - 2) ** 2)
+    sol = opti.solve()
+
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(2)
+
+
+def test_save_and_load_opti_categories_all(tmp_path):
+    ### The "all" sentinel should freeze every category and load all of them from cache.
+    temp_filename = tmp_path / "temp.json"
+
+    ### Round 1 optimization: free optimization
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        save_to_cache_on_solve=True,
+    )
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
+    opti.minimize((x - 1) ** 2 + (y - 1) ** 2)
+    opti.solve()
+
+    ### Round 2 optimization: everything is frozen at cached values
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        variable_categories_to_freeze="all",
+        load_frozen_variables_from_cache=True,
+    )
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
+    opti.minimize((x - 2) ** 2 + (y - 2) ** 2)
+    sol = opti.solve()
+
+    assert sol(x) == pytest.approx(1)
+    assert sol(y) == pytest.approx(1)
+
+
+def test_load_opti_freeze_style_float_raises_clear_error(tmp_path):
+    ### `freeze_style="float"` freezes variables as literal constants, so their values cannot be
+    ### replaced with cached ones in solve(). This used to crash with an opaque AttributeError
+    ### ('float' object has no attribute 'is_manually_frozen'); it should be a clear error instead.
+    temp_filename = tmp_path / "temp.json"
+
+    ### Round 1 optimization: free optimization
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        save_to_cache_on_solve=True,
+    )
+    x = opti.variable(init_guess=0, category="Cat 1")
+    opti.minimize((x - 1) ** 2)
+    opti.solve()
+
+    ### Round 2 optimization: attempt to load the frozen category with freeze_style="float"
+    opti = asb.Opti(
+        cache_filename=temp_filename,
+        variable_categories_to_freeze=["Cat 1"],
+        load_frozen_variables_from_cache=True,
+        freeze_style="float",
+    )
+    x = opti.variable(init_guess=0, category="Cat 1")
+    y = opti.variable(init_guess=0, category="Cat 2")
+    opti.minimize((x - 2) ** 2 + (y - 2) ** 2)
+
+    with pytest.raises(RuntimeError, match="freeze_style"):
+        opti.solve()
+
+
 def test_save_and_load_opti_freeze_override(tmp_path):
     temp_filename = tmp_path / "temp.json"
 

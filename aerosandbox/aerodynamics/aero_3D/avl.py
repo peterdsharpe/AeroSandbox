@@ -103,6 +103,9 @@ class AVL(ExplicitAnalysis):
 
             op_point: The operating point you wish to analyze at.
 
+            xyz_ref: The moment reference point, given as a [x, y, z] location in geometry axes. If left as None
+            (default), this will default to the `xyz_ref` of the airplane object.
+
             avl_command: The command-line argument to call AVL.
 
                 * If AVL is on your system PATH, then you can just leave this as "avl".
@@ -128,6 +131,12 @@ class AVL(ExplicitAnalysis):
             working_directory: Controls which working directory is used for the AVL input and output files. By
             default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
             somewhere local for debugging purposes.
+
+            ground_effect: If True, models ground effect by mirroring the airplane about a ground plane (using
+            AVL's Z-symmetry), located at a z-location given by `ground_effect_height`.
+
+            ground_effect_height: The z-location of the ground plane, in geometry axes. Only used if
+            `ground_effect` is True.
         """
         super().__init__()
 
@@ -205,7 +214,7 @@ class AVL(ExplicitAnalysis):
         run_command: str | None = None,
     ) -> dict[str, float]:
         """
-        Private function to run AVL.
+        Runs AVL on the airplane and operating point that this analysis was constructed with.
 
         Args: run_command: A string with any AVL keystroke inputs that you'd like. By default, you start off within the OPER
         menu. All of the inputs indicated in the constructor have been set already, but you can override them here (
@@ -401,7 +410,11 @@ class AVL(ExplicitAnalysis):
             f"y y {float(r_bar)}",
         ]
 
-        # Set control surface deflections
+        # Set control surface deflections.
+        # All control surfaces are lumped into the single AVL control variable d1
+        # ("all_deflections"), with each surface's own deflection encoded as its
+        # CONTROL-card gain in the .avl file (see write_avl()); setting d1 = 1 here
+        # hence deflects every surface by its user-specified amount.
         run_file_contents += ["d1 d1 1"]
 
         return run_file_contents
@@ -409,7 +422,7 @@ class AVL(ExplicitAnalysis):
     def write_avl(
         self,
         filepath: Path | str | None = None,
-    ) -> None:
+    ) -> str:
         """
         Writes a .avl file corresponding to this airplane to a filepath.
 
@@ -418,11 +431,15 @@ class AVL(ExplicitAnalysis):
 
         Args:
             filepath: filepath (including the filename and .avl extension) [string]
-                If None, this function returns the .avl file as a string.
+                If None, no files are written to disk (including the sidecar airfoil and
+                fuselage files that would normally accompany the .avl file), and the
+                would-be contents of the .avl file are only returned as a string.
 
-        Returns: None
+        Returns: The would-be contents of the .avl file as a string.
 
         """
+        if filepath is not None:
+            filepath = Path(filepath)
 
         def clean(s):
             """
@@ -533,11 +550,16 @@ class AVL(ExplicitAnalysis):
                     )
                     sign_dup = 1 if surf.symmetric else -1
 
+                    # All control surfaces are attached to a single AVL control variable
+                    # ("all_deflections"), with each surface's deflection encoded as its
+                    # gain [deg deflection / unit control variable]. The run keystrokes
+                    # then set this control variable to 1, so that each surface deflects
+                    # by its own user-specified `deflection`.
                     command = clean(
                         f"""\
                         CONTROL
                         #name, gain, Xhinge, XYZhvec, SgnDup
-                        {surf.name} 1 {xhinge:.8g} 0 0 0 {sign_dup}
+                        all_deflections {surf.deflection:.8g} {xhinge:.8g} 0 0 0 {sign_dup}
                         """
                     )
 
@@ -559,9 +581,10 @@ class AVL(ExplicitAnalysis):
 
                 af_filepath = Path(str(filepath) + f".af{airfoil_counter}")
                 airfoil_counter += 1
-                xsec.airfoil.repanel(50).write_dat(
-                    filepath=af_filepath, include_name=True
-                )
+                if filepath is not None:
+                    xsec.airfoil.repanel(50).write_dat(
+                        filepath=af_filepath, include_name=True
+                    )
 
                 avl_file += clean(
                     f"""\
@@ -592,10 +615,10 @@ class AVL(ExplicitAnalysis):
                 for control_surface_command in control_surface_commands[i]:
                     avl_file += control_surface_command
 
-        filepath = Path(filepath)
         for i, fuse in enumerate(airplane.fuselages):
             fuse_filepath = Path(str(filepath) + f".fuse{i}")
-            self.write_avl_bfile(fuselage=fuse, filepath=fuse_filepath)
+            if filepath is not None:
+                self.write_avl_bfile(fuselage=fuse, filepath=fuse_filepath)
             fuse_options = self.get_options(fuse)
 
             avl_file += clean(
@@ -618,6 +641,8 @@ class AVL(ExplicitAnalysis):
             with open(filepath, "w+") as f:
                 f.write(avl_file)
 
+        return avl_file
+
     @staticmethod
     def write_avl_bfile(
         fuselage,
@@ -636,10 +661,11 @@ class AVL(ExplicitAnalysis):
 
             include_name: Should the name of the fuselage be included in the .dat file? (This should be True for use with AVL.)
 
-        Returns:
+        Returns: The would-be contents of the BFILE as a string.
 
         """
-        filepath = Path(filepath)
+        if filepath is not None:
+            filepath = Path(filepath)
 
         contents = []
 
@@ -758,10 +784,10 @@ class AVL(ExplicitAnalysis):
             key = ""  # start with a blank key, which we will build up as we read
 
             i = index - 1  # Starting from the left of the identifier
-            while s[i] == " " and i >= 0:
+            while i >= 0 and s[i] == " ":
                 # First, skip any blanks
                 i -= 1
-            while s[i] != " " and s[i] != "\n" and i >= 0:
+            while i >= 0 and s[i] != " " and s[i] != "\n":
                 # Then, read the key in backwards order until you get to a blank or newline
                 key = s[i] + key
                 i -= 1
@@ -771,10 +797,10 @@ class AVL(ExplicitAnalysis):
             i = index + len(
                 data_identifier
             )  # Starting from the right of the identifier
-            while s[i] == " " and i <= len(s):
+            while i < len(s) and s[i] == " ":
                 # First, skip any blanks
                 i += 1
-            while s[i] != " " and s[i] != "\n" and i <= len(s):
+            while i < len(s) and s[i] != " " and s[i] != "\n":
                 # Then, read the key in forward order until you get to a blank or newline
                 value += s[i]
                 i += 1

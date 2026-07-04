@@ -28,6 +28,10 @@ from aerosandbox.atmosphere import Atmosphere
 from aerosandbox.weights import (
     MassProperties,
     mass_properties_from_radius_of_gyration,
+    mass_properties_of_ellipsoid,
+    mass_properties_of_sphere,
+    mass_properties_of_rectangular_prism,
+    mass_properties_of_cube,
 )
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.dynamics import (
@@ -67,9 +71,7 @@ def docs():
     """
     import webbrowser
 
-    webbrowser.open_new(
-        "https://github.com/peterdsharpe/AeroSandbox/tree/master/aerosandbox"
-    )  # TODO: make this redirect to a hosted ReadTheDocs, or similar.
+    webbrowser.open_new("https://peterdsharpe.github.io/AeroSandbox/")
 
 
 def run_tests():

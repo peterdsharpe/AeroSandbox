@@ -147,7 +147,7 @@ class MassProperties(AeroSandboxObject):
                         return a[index]
                     except IndexError:
                         raise IndexError(
-                            f"A state variable could not be indexed; it has length {len(a)} while the"
+                            f"A state variable could not be indexed; it has length {len(a)} while the "
                             f"parent has length {self_length}."
                         )
             else:
@@ -192,15 +192,23 @@ class MassProperties(AeroSandboxObject):
                     pass
                 else:
                     raise ValueError(
-                        "State variables are appear vectorized, but of different lengths!"
+                        "State variables appear vectorized, but with different lengths!"
                     )
         return length
 
-    def __array__(self, dtype="O"):
+    def __array__(self, dtype=None, copy=None):
         """
         Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+
+        The `dtype` and `copy` arguments follow the NumPy 2.0 `__array__` protocol. A
+        newly-created (object-dtype, by default) array is always returned, so
+        `copy=False` raises a ValueError.
         """
-        return np.fromiter([self], dtype=dtype).reshape(())
+        if copy is False:
+            raise ValueError(
+                "Unable to avoid copy: converting a MassProperties object to a NumPy array always creates a new array."
+            )
+        return np.fromiter([self], dtype="O" if dtype is None else dtype).reshape(())
 
     def __neg__(self) -> "MassProperties":
         return -1 * self
@@ -494,9 +502,11 @@ class MassProperties(AeroSandboxObject):
 
             opti = Opti()
 
+            # Radius of gyration, from the trace of the inertia tensor. (Note
+            # that a length scale from mass and inertia is sqrt(I / m).)
             approximate_radius = (
-                self.Ixx + self.Iyy + self.Izz
-            ) ** 0.5 / self.mass + 1e-16
+                (self.Ixx + self.Iyy + self.Izz) / self.mass
+            ) ** 0.5 + 1e-16
 
             point_masses = [
                 MassProperties(

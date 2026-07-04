@@ -46,7 +46,7 @@ class XFoil(ExplicitAnalysis):
         n_crit: float = 9.0,
         xtr_upper: float = 1.0,
         xtr_lower: float = 1.0,
-        hinge_point_x: float = 0.75,
+        hinge_point_x: float | None = 0.75,
         full_potential: bool = False,
         max_iter: int = 100,
         xfoil_command: str = "xfoil",
@@ -222,11 +222,12 @@ class XFoil(ExplicitAnalysis):
         ]
 
         # Handle hinge moment
-        run_file_contents += [
-            "hinc",
-            f"fnew {float(self.hinge_point_x):.8g} {float(self.airfoil.local_camber(self.hinge_point_x)):.8g}",
-            "fmom",
-        ]
+        if self.hinge_point_x is not None:
+            run_file_contents += [
+                "hinc",
+                f"fnew {float(self.hinge_point_x):.8g} {float(self.airfoil.local_camber(self.hinge_point_x)):.8g}",
+                "fmom",
+            ]
 
         if self.full_potential:
             run_file_contents += [
@@ -319,11 +320,17 @@ class XFoil(ExplicitAnalysis):
                     # timeout=self.timeout,
                     # check=True
                 )
+            except FileNotFoundError as e:
+                raise self.XFoilError(
+                    f"Could not launch XFoil with the command '{self.xfoil_command}'.\n"
+                    f"This is likely because AeroSandbox does not see XFoil on PATH with the given command.\n"
+                    f"Provide the correct path to the XFoil executable in the asb.XFoil constructor via `xfoil_command=`."
+                ) from e
+
+            try:
                 outs, errs = proc.communicate(
                     input="\n".join(keystrokes), timeout=self.timeout
                 )
-                proc.poll()
-
             except subprocess.TimeoutExpired:
                 proc.kill()
                 outs, errs = proc.communicate()
@@ -334,29 +341,24 @@ class XFoil(ExplicitAnalysis):
                     "when you create this AeroSandbox XFoil instance.",
                     stacklevel=2,
                 )
-            except subprocess.CalledProcessError as e:
-                if e.returncode == 11:
-                    raise self.XFoilError(
-                        "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
-                        "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
-                        "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance."
-                    )
-                elif e.returncode == 8 or e.returncode == 136:
-                    raise self.XFoilError(
-                        "XFoil returned a floating point exception. This is probably because you are trying to start\n"
-                        "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
-                        "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
-                        "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point."
-                    )
-                elif e.returncode == 1:
-                    raise self.XFoilError(
-                        f"Command '{self.xfoil_command}' returned non-zero exit status 1.\n"
-                        f"This is likely because AeroSandbox does not see XFoil on PATH with the given command.\n"
-                        f"Check the logs (`asb.XFoil(..., verbose=True)`) to verify that this is the case, and if so,\n"
-                        f"provide the correct path to the XFoil executable in the asb.XFoil constructor via `xfoil_command=`."
-                    )
-                else:
-                    raise e
+
+            return_code = proc.returncode
+
+            if return_code in (11, -11, 139, 3221225477):
+                # SIGSEGV: raw signal (POSIX), shell-style 128+11, or Windows access violation
+                raise self.XFoilError(
+                    "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
+                    "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
+                    "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance."
+                )
+            elif return_code in (8, -8, 136):
+                # SIGFPE: raw signal (POSIX) or shell-style 128+8
+                raise self.XFoilError(
+                    "XFoil returned a floating point exception. This is probably because you are trying to start\n"
+                    "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
+                    "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
+                    "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point."
+                )
 
             ### Parse the polar
             try:
@@ -374,32 +376,24 @@ class XFoil(ExplicitAnalysis):
                     "\t - Try allowing XFoil to repanel the airfoil by setting `xfoil_repanel=True` in the XFoil constructor.\n"
                 )
 
-            try:
-                separator_line = None
-                for i, line in enumerate(lines):
-                    # The first line with at least 30 "-" in it is the separator line.
-                    if line.count("-") >= 30:
-                        separator_line = i
-                        break
+            separator_line = None
+            for i, line in enumerate(lines):
+                # The first line with at least 30 "-" in it is the separator line.
+                if line.count("-") >= 30:
+                    separator_line = i
+                    break
 
-                if separator_line is None:
-                    raise IndexError
-
-                title_line = lines[i - 1]
-                columns = title_line.split()
-
-                data_lines = lines[i + 1 :]
-
-            except IndexError:
+            if separator_line is None:
                 raise self.XFoilError(
                     "XFoil output file is malformed; it doesn't have the expected number of lines.\n"
                     "For debugging, the raw output file from XFoil is printed below:\n"
                     + "\n".join(lines)
-                    + "\nTitle line: "
-                    + title_line
-                    + "\nColumns: "
-                    + str(columns)
                 )
+
+            title_line = lines[separator_line - 1]
+            columns = title_line.split()
+
+            data_lines = lines[separator_line + 1 :]
 
             def str_to_float(s: str) -> float:
                 try:
@@ -623,7 +617,6 @@ class XFoil(ExplicitAnalysis):
 
         """
         alphas = np.reshape(np.array(alpha), -1)
-        alphas = np.sort(alphas)
 
         commands = []
 
@@ -651,6 +644,7 @@ class XFoil(ExplicitAnalysis):
             and (start_at is not None)
             and (np.min(alphas) < start_at < np.max(alphas))
         ):
+            alphas = np.sort(alphas)
             alphas_upper = alphas[alphas > start_at]
             alphas_lower = alphas[alphas <= start_at][::-1]
 
@@ -671,7 +665,11 @@ class XFoil(ExplicitAnalysis):
         )
 
         sort_order = np.argsort(output["alpha"])
-        output = {k: v[sort_order] for k, v in output.items()}
+        output = {
+            k: v[sort_order] if len(v) == len(sort_order) else v
+            for k, v in output.items()
+        }  # Columns not present in the XFoil output (e.g., "Chinge" if the hinge moment
+        # calculation is disabled) are left as empty arrays.
         return output
 
     def cl(
@@ -701,7 +699,6 @@ class XFoil(ExplicitAnalysis):
 
         """
         cls = np.reshape(np.array(cl), -1)
-        cls = np.sort(cls)
 
         commands = []
 
@@ -729,6 +726,7 @@ class XFoil(ExplicitAnalysis):
             and (start_at is not None)
             and (np.min(cls) < start_at < np.max(cls))
         ):
+            cls = np.sort(cls)
             cls_upper = cls[cls > start_at]
             cls_lower = cls[cls <= start_at][::-1]
 
@@ -749,7 +747,11 @@ class XFoil(ExplicitAnalysis):
         )
 
         sort_order = np.argsort(output["alpha"])
-        output = {k: v[sort_order] for k, v in output.items()}
+        output = {
+            k: v[sort_order] if len(v) == len(sort_order) else v
+            for k, v in output.items()
+        }  # Columns not present in the XFoil output (e.g., "Chinge" if the hinge moment
+        # calculation is disabled) are left as empty arrays.
         return output
 
 

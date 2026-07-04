@@ -239,9 +239,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     )
         return length
 
-    def __array__(self, dtype="O"):
+    def __array__(self, dtype="O", copy=None):
         """
         Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+
+        The `copy` argument is accepted for compatibility with the NumPy 2.x `__array__` protocol; since a new
+        array is always created here, any requested copy semantics are trivially satisfied.
         """
         return np.fromiter([self], dtype=dtype).reshape(())
 
@@ -297,6 +300,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         state_derivatives = self.state_derivatives()
 
         for state_var_name in which:
+            if state_var_name not in self.state:
+                raise ValueError(
+                    f"This dynamics instance does not have a state named '{state_var_name}'!"
+                )
+
             # If a state derivative has a None value, skip it.
             if state_derivatives[state_var_name] is None:
                 continue
@@ -310,14 +318,14 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     method=method,
                     _stacklevel=_stacklevel + 1,
                 )
-            except KeyError:
+            except KeyError as e:
                 raise ValueError(
                     f"This dynamics instance does not have a state named '{state_var_name}'!"
-                )
+                ) from e
             except Exception as e:
                 raise ValueError(
                     f"Error while constraining state variable '{state_var_name}': \n{e}"
-                )
+                ) from e
 
     @abstractmethod
     def convert_axes(
@@ -384,15 +392,20 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 * "stability"
                 * "earth"
 
+                Note: the default value of `axes` differs between Dynamics subclasses; each uses its own native
+                axis system (e.g., "earth" for Cartesian point-mass classes, "wind" for speed-gamma-track
+                point-mass classes, and "body" for rigid-body classes). If you are writing code that should work
+                across different Dynamics classes, pass `axes` explicitly.
+
         Returns: None (in-place)
 
         """
         pass
 
-    def add_gravity_force(self, g=9.81) -> None:
+    def add_gravity_force(self, g: float = 9.81) -> None:
         """
-        In-place modifies the forces associated with this Dynamics instance: adds a force in the -z direction,
-        equal to the weight of the aircraft.
+        In-place modifies the forces associated with this Dynamics instance: adds a downward force (i.e., in the +z
+        direction in Earth axes, which are NED: North-East-Down), equal to the weight of the aircraft.
 
         Args:
             g: The gravitational acceleration. [m/s^2]
@@ -424,7 +437,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     def draw(
         self,
-        vehicle_model: "Airplane | PolyData | None" = None,
+        vehicle_model: "Airplane | PolyData | str | None" = None,
         backend: Literal["pyvista"] = "pyvista",
         plotter=None,
         draw_axes: bool = True,
@@ -467,12 +480,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 vehicle_model, str
             ):  # Interpret the string as a filepath to a .stl or similar
                 try:
-                    pv.read(filename=vehicle_model)
+                    vehicle_model = pv.read(filename=vehicle_model)
                 except Exception:
                     raise ValueError("Could not parse `vehicle_model`!")
             else:
                 raise TypeError(
-                    "`vehicle_model` should be an Airplane or PolyData object."
+                    "`vehicle_model` should be an Airplane or PolyData object, or a str filepath to a mesh file."
                 )
 
             x_e = np.array(self.x_e)
@@ -498,7 +511,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                         (np.diff(x_e) ** 2 + np.diff(y_e) ** 2 + np.diff(z_e) ** 2)
                         ** 0.5
                     )
-                    vehicle_length = np.diff(vehicle_bounds[0, :])
+                    vehicle_length = np.diff(vehicle_bounds[0, :]).item()
                     scale_vehicle_model = float(
                         0.5 * path_length / vehicle_length / n_vehicles_to_draw
                     )
@@ -532,23 +545,25 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             ### Set up interpolators for dynamics instances
             from scipy import interpolate
 
-            state_interpolators = {
-                k: interpolate.InterpolatedUnivariateSpline(
+            def make_interpolator(v):
+                values = v * np.ones(len(self))
+                if len(self) == 1:
+                    # A spline can't be fit through a single point; return a constant function instead.
+                    return lambda i: values[0]
+                return interpolate.InterpolatedUnivariateSpline(
                     x=np.arange(len(self)),
-                    y=v * np.ones(len(self)),
-                    k=np.clip(len(self), 1, 3),
+                    y=values,
+                    k=int(
+                        np.clip(len(self) - 1, 1, 3)
+                    ),  # Spline degree must be < number of points
                     check_finite=True,
                 )
-                for k, v in self.state.items()
+
+            state_interpolators = {
+                k: make_interpolator(v) for k, v in self.state.items()
             }
             control_interpolators = {
-                k: interpolate.InterpolatedUnivariateSpline(
-                    x=np.arange(len(self)),
-                    y=v * np.ones(len(self)),
-                    k=np.clip(len(self), 1, 3),
-                    check_finite=True,
-                )
-                for k, v in self.control_variables.items()
+                k: make_interpolator(v) for k, v in self.control_variables.items()
             }
 
             ### Draw the vehicle
@@ -770,16 +785,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         """
         Computes the kinetic energy [J] from rotational motion.
 
-        KE = 0.5 * I * w^2
+        A point mass has no rotational degrees of freedom, so this is always zero. (Rigid-body dynamics classes
+        override this with an inertia-based formula.)
 
         Returns:
             Kinetic energy [J]
         """
-        return 0.5 * (
-            self.mass_props.Ixx * self.p**2
-            + self.mass_props.Iyy * self.q**2
-            + self.mass_props.Izz * self.r**2
-        )
+        return 0.0
 
     @property
     def kinetic_energy(self):
@@ -800,8 +812,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         PE = mgh
 
-        Args:
-            g: Acceleration due to gravity [m/s^2]
+        The gravitational acceleration is fixed at g = 9.81 m/s^2; because this is a property, it cannot be
+        overridden by the caller. For a different value of `g`, compute
+        `dyn.mass_props.mass * g * dyn.altitude` directly.
 
         Returns:
             Potential energy [J]

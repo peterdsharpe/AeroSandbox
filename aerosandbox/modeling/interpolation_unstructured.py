@@ -43,13 +43,13 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
 
         Args:
 
-            x_data: Values of the dependent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
+            x_data: Values of the independent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
             var_name:var_data}.
 
                 * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead supply x_data
                 as a 1D ndarray. (If you do this, just treat `x` as an array in your model, not a dict.)
 
-            y_data: Values of the independent variable in the dataset to be fitted. [1D ndarray of length n]
+            y_data: Values of the dependent variable in the dataset to be fitted. [1D ndarray of length n]
 
             x_data_resample: A parameter that guides how the x_data should be resampled onto a structured grid.
 
@@ -89,11 +89,58 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
         if interpolated_model_kwargs is None:
             interpolated_model_kwargs = {}
 
+        interpolated_model_kwargs = (
+            {  # Add in the fill_value, unless the user overrode it.
+                "fill_value": fill_value,
+                **interpolated_model_kwargs,
+            }
+        )
+
+        ### If `x_data` describes a 1D dataset (either as a 1D array, or as a dict with a
+        ### single 1D-array value), sort the data by x. (The underlying InterpolatedModel
+        ### requires strictly-increasing coordinates, and unstructured point-cloud data is
+        ### generally unsorted.)
+        def _sorted_by_x(x, y):
+            """
+            Sorts a point-paired 1D dataset (x, y) by x, if it is one.
+
+            Returns (x_sorted, y_sorted), or None if (x, y) is not a 1D point-paired dataset.
+            """
+            x = np.array(x)
+            y = np.array(y)
+            if not (
+                np.ndim(x) == 1 and np.ndim(y) == 1 and np.length(x) == np.length(y)
+            ):
+                return None
+            sort_order = np.argsort(x)
+            x = x[sort_order]
+            y = y[sort_order]
+            if np.any(np.diff(x) == 0):
+                raise ValueError(
+                    "Duplicate values were found in the 1D `x_data`; x-coordinates must be unique in order to interpolate."
+                )
+            return x, y
+
+        if isinstance(x_data, dict):
+            if len(x_data) == 1:
+                x_data_key = next(iter(x_data.keys()))
+                sorted_data = _sorted_by_x(x_data[x_data_key], y_data)
+                if sorted_data is not None:
+                    x_data = {x_data_key: sorted_data[0]}
+                    y_data = sorted_data[1]
+        else:
+            sorted_data = _sorted_by_x(x_data, y_data)
+            if sorted_data is not None:
+                x_data, y_data = sorted_data
+
         try:  # Try to use the InterpolatedModel initializer. If it doesn't work, then move on.
             super().__init__(
                 x_data_coordinates=x_data,
                 y_data_structured=y_data,
+                **interpolated_model_kwargs,
             )
+            self.x_data_raw_unstructured = x_data
+            self.y_data_raw = y_data
             return
         except ValueError:
             pass
@@ -133,6 +180,8 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
             raise TypeError("`x_data_resample` must be a dict-like object!")
 
         # Go through x_data_resample, and replace any values that are ints with linspaced arrays.
+        # (Copy the dict first, so that the caller's dict is not mutated in-place.)
+        x_data_resample = dict(x_data_resample)
         for k, v in x_data_resample.items():
             if isinstance(v, int):
                 x_data_resample[k] = np.linspace(
@@ -152,11 +201,6 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
         y_data_structured = y_data_structured.reshape(
             [np.length(xi) for xi in x_data_coordinates.values()]
         )
-
-        interpolated_model_kwargs = {
-            "fill_value": fill_value,
-            **interpolated_model_kwargs,
-        }
 
         super().__init__(
             x_data_coordinates=x_data_coordinates,

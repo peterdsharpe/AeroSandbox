@@ -1,6 +1,26 @@
+import warnings
+
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
+
+
+def test_no_trapz_deprecation_warning():
+    """
+    AirfoilInviscid internally used asb.numpy.trapz (as a midpoint average), which
+    emits a PendingDeprecationWarning on every call. It now computes panel midpoints
+    explicitly (bit-identical result). (Regression test.)
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "error",
+            message=".*trapz.*",
+            category=PendingDeprecationWarning,
+        )
+        asb.AirfoilInviscid(
+            airfoil=asb.Airfoil("naca0012").repanel(50),
+            op_point=asb.OperatingPoint(velocity=1, alpha=0),
+        )
 
 
 def test_airfoil_with_TE_gap():

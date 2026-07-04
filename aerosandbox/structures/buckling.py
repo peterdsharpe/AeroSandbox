@@ -10,7 +10,7 @@ def column_buckling_critical_load(
         "pin-pin", "pin-clamp", "clamp-pin", "clamp-clamp", "clamp-free", "free-clamp"
     ] = "pin-pin",
     use_recommended_design_values: bool = True,
-):
+) -> float:
     """
     Computes the critical load (in N) for a column or tube in compression to buckle via primary buckling. Uses Euler's classical critical
     load formula.
@@ -68,7 +68,7 @@ def thin_walled_tube_crippling_buckling_critical_load(
     wall_thickness: float,
     radius: float,
     use_recommended_design_values: bool = True,
-):
+) -> float:
     """
     Computes the critical load for a thin-walled tube in compression to fail in the crippling mode. (Note: you should also check for
     failure by primary buckling using the `column_buckling_critical_load()` function.)
@@ -140,7 +140,7 @@ def plate_buckling_critical_load(
     side_boundary_condition_type: Literal[
         "clamp-clamp", "pin-pin", "free-free"
     ] = "clamp-clamp",
-):
+) -> float:
     """
     Computes the critical compressive load (in N) for a plate to buckle via plate buckling.
 
@@ -151,6 +151,11 @@ def plate_buckling_critical_load(
 
     A compressive force is applied such that it is aligned with the length dimension of the plate.
 
+    Note: this function uses the buckling coefficients for infinitely-long plates (i.e., the long-plate
+    assumption, length >> width). Because of this, the returned critical load does not actually depend on
+    the `length` argument. For short plates (length less than a few times the width), these coefficients
+    are conservative (the true critical load is higher).
+
     Uses constants from NACA TN3781.
 
     Methdology taken from "Stress Analysis Manual," Air Force Flight Dynamic Laboratory, Oct. 1986.
@@ -159,13 +164,16 @@ def plate_buckling_critical_load(
     https://engineeringlibrary.org/reference/analysis-of-plates-axial-compression-air-force-stress-manual
 
     Args:
-        length: The length of the plate, in m.
+        length: The length of the plate, in m. (Unused; the long-plate assumption is made, so the result
+            is independent of length. See note above.)
 
         width: The width of the plate, in m.
 
         wall_thickness: The wall thickness of the plate, in m.
 
         elastic_modulus: The elastic modulus of the material, in Pa.
+
+        poissons_ratio: The Poisson's ratio of the material [dimensionless].
 
         side_boundary_condition_type: The boundary condition type at the sides of the plate. Options are:
             - "clamp-clamp"
@@ -177,12 +185,16 @@ def plate_buckling_critical_load(
 
     """
 
+    ### Buckling coefficients `K` are the bare coefficients k_c for infinitely-long plates, for use in the
+    ### buckling-stress equation sigma_cr = k_c * pi^2 * E / (12 * (1 - nu^2)) * (t/b)^2.
+    ### [NACA TN3781, Eq. (1) and Table 7]
     if side_boundary_condition_type == "clamp-clamp":
-        K = 6.35  # From NACA TN3781
+        K = 6.98  # From NACA TN3781, Table 7 (clamped on all edges)
     elif side_boundary_condition_type == "pin-pin":
-        K = 3.62  # From NACA TN3781
+        K = 4.00  # From NACA TN3781, Table 7 (simply supported on all edges)
     elif side_boundary_condition_type == "free-free":
-        K = 0.385  # From NACA TN3781
+        K = 0.425  # From NACA TN3781, Eq. (18) in the long-plate limit at nu_e = 0.3
+        # (one unloaded edge simply supported, the other free); Table 7 rounds this to 0.43.
     else:
         raise ValueError(
             f"{side_boundary_condition_type=!r} is not a valid option. "

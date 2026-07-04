@@ -19,6 +19,25 @@ def test_interp():
         assert np.interp(5, x, y, period=4) == pytest.approx(11)
 
 
+def test_interp_period_negative_x():
+    """interp() with `period` should wrap negative query points into the
+    period, matching numpy.interp (regression test: the CasADi branch used
+    fmod(), which is negative for negative x, causing extrapolation)."""
+    xp = np.linspace(0, 360, 361)
+    fp = np.sin(np.radians(xp))
+
+    for x in [-90, -90.0, -450.0, -360.0, 270.0]:
+        expected = np.interp(x, xp, fp, period=360)
+        result = np.interp(cas.DM(x), xp, fp, period=360)
+        assert float(result) == pytest.approx(expected, abs=1e-10), f"{x=}"
+
+    # Same check with the breakpoint data given as CasADi types:
+    for x in [-90.0, 270.0]:
+        expected = np.interp(x, xp, fp, period=360)
+        result = np.interp(x, cas.DM(xp), cas.DM(fp), period=360)
+        assert float(result) == pytest.approx(expected, abs=1e-10), f"{x=}"
+
+
 def test_interpn_linear():
     ### NumPy test
 
@@ -90,6 +109,75 @@ def test_interpn_bspline_casadi():
     value = np.interpn(points, values, point, method="bspline")
 
     assert value == pytest.approx(func(*point))
+
+
+def test_interpn_bspline_all_zero_values_shape():
+    """The all-zeros-`values` workaround for the CasADi bspline bug should
+    return the same shape as a nonzero table would (regression test: it used
+    to return zeros with the shape of xi, i.e. (n_points, n_dimensions))."""
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 6)
+    points = (x, y)
+    values_zero = np.zeros((5, 6))
+    values_nonzero = np.ones((5, 6))
+
+    ### Multiple query points
+    xi = np.stack([np.linspace(0.1, 0.9, 7), np.linspace(0.2, 0.8, 7)], axis=1)
+    result_zero = np.interpn(points, values_zero, xi, method="bspline")
+    result_nonzero = np.interpn(points, values_nonzero, xi, method="bspline")
+    assert result_zero.shape == result_nonzero.shape == (7,)
+    assert result_zero == pytest.approx(0)
+
+    ### Single (scalar-like) query point: both should return a float
+    point = np.array([0.5, 0.5])
+    result_zero = np.interpn(points, values_zero, point, method="bspline")
+    result_nonzero = np.interpn(points, values_nonzero, point, method="bspline")
+    assert isinstance(result_zero, float)
+    assert isinstance(result_nonzero, float)
+    assert result_zero == pytest.approx(0)
+
+    ### CasADi symbolic query points: check that it runs and is zero
+    xi_sym = cas.MX.sym("xi", 7, 2)
+    result_sym = np.interpn(
+        points, values_zero, xi_sym, method="bspline", bounds_error=False
+    )
+    assert np.length(result_sym) == 7
+    assert np.all(cas.DM(np.array(result_sym, dtype=float)) == 0)
+
+
+def test_interpn_fill_value_None_does_not_mutate_xi():
+    """interpn() with fill_value=None used to clamp out-of-bounds points by
+    assigning into the caller's xi array in-place (regression test)."""
+    x = np.linspace(0, 1, 5)
+    points = (x,)
+    values = 2 * x
+
+    ### 2D NumPy xi
+    xi = np.array([[-0.5], [0.5], [1.5]])
+    xi_snapshot = xi.copy()
+    result = np.interpn(
+        points, values, xi, method="bspline", fill_value=None, bounds_error=False
+    )
+    assert np.all(xi == xi_snapshot)  # Caller's array must be unchanged
+    assert result == pytest.approx([0.0, 1.0, 2.0])  # Clamped extrapolation
+
+    ### 1D NumPy xi (goes through a reshaped view internally)
+    xi = np.array([-0.5, 0.5, 1.5])
+    xi_snapshot = xi.copy()
+    result = np.interpn(
+        points, values, xi, method="bspline", fill_value=None, bounds_error=False
+    )
+    assert np.all(xi == xi_snapshot)
+    assert result == pytest.approx([0.0, 1.0, 2.0])
+
+    ### CasADi DM xi
+    xi = cas.DM([-0.5, 0.5, 1.5])
+    xi_snapshot = cas.DM(xi)
+    result = np.interpn(
+        points, values, xi, method="bspline", fill_value=None, bounds_error=False
+    )
+    assert np.all(cas.DM(xi) == xi_snapshot)
+    assert result == pytest.approx([0.0, 1.0, 2.0])
 
 
 def test_interpn_bounds_error_one_sample():

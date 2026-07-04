@@ -1,6 +1,9 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+from aerosandbox.numpy.integrate_discrete import integrate_discrete_intervals
 from typing import Callable
+
+import casadi as cas
 
 
 class TubeSparBendingStructure(asb.ImplicitAnalysis):
@@ -19,7 +22,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         elastic_modulus_function: float
         | Callable[[np.ndarray], np.ndarray] = 175e9,  # Pa
         EI_guess: float | None = None,
-        assume_thin_tube=True,
+        assume_thin_tube: bool = True,
     ):
         """
         A structural spar model that simulates bending of a cantilever tube spar based on beam theory (static,
@@ -117,9 +120,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 as a function of the distance along the spar y. Should be in units of force per unit length. In terms of
                 data types, this can be one of:
 
-                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
-                can freely vary along the length of the spar.
-
                 * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
                 instance to this analysis), in which case it's interpreted as a design variable to optimize over
                 that's uniform along the length of the spar.
@@ -134,9 +134,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
 
             elastic_modulus_function: The elastic modulus [Pa] of the spar as a function of the distance along the
                 spar y. In terms of data types, can be one of:
-
-                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
-                can freely vary along the length of the spar.
 
                 * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
                 instance to this analysis), in which case it's interpreted as a design variable to optimize over
@@ -214,7 +211,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         y = np.linspace(0, length, points_per_point_load)
 
         N = np.length(y)
-        dy = np.diff(y)
 
         ### Evaluate the beam properties
         if isinstance(diameter_function, Callable):
@@ -254,32 +250,46 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             )
         EI = elastic_modulus * moment_of_inertia
 
+        ### Compute the characteristic force magnitude, for use in variable scaling.
+        # This is the magnitude of the net distributed load [N]. Since Opti requires
+        # strictly-positive scale values, we take the absolute value (so that
+        # net-downward loads work) and fall back to a positive value if the net load
+        # is zero (e.g., the default no-load case).
+        force_scale = np.abs(
+            np.sum(
+                integrate_discrete_intervals(
+                    distributed_force, x=y, method="trapezoidal"
+                )
+            )
+        )
+        try:
+            if float(force_scale) == 0:
+                force_scale = 1.0
+        except (TypeError, RuntimeError):  # Symbolic (e.g., CasADi) input; leave as-is.
+            pass
+
         ### Compute the initial guess
         u = self.opti.variable(
             init_guess=np.zeros_like(y),
-            scale=np.sum(np.trapz(distributed_force) * dy) * length**4 / EI_guess,
+            scale=force_scale * length**4 / EI_guess,
         )
         du = self.opti.derivative_of(
             u,
             with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy)
-            * length**3
-            / EI_guess,
+            derivative_scale=force_scale * length**3 / EI_guess,
         )
         ddu = self.opti.derivative_of(
             du,
             with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy)
-            * length**2
-            / EI_guess,
+            derivative_scale=force_scale * length**2 / EI_guess,
         )
         dEIddu = self.opti.derivative_of(
             EI * ddu,
             with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy) * length,
+            derivative_scale=force_scale * length,
         )
         self.opti.constrain_derivative(
             variable=dEIddu, with_respect_to=y, derivative=distributed_force
@@ -306,29 +316,43 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.shear_force = shear_force
         self.stress_axial = stress_axial
 
-    def volume(self):
+    def volume(self) -> float | cas.MX:
         if self.assume_thin_tube:
             return np.sum(
-                np.pi * np.trapz(self.diameter * self.wall_thickness) * np.diff(self.y)
+                np.pi
+                * integrate_discrete_intervals(
+                    self.diameter * self.wall_thickness,
+                    multiply_by_dx=False,
+                    method="trapezoidal",
+                )
+                * np.diff(self.y)
             )
         else:
             return np.sum(
                 np.pi
                 / 4
-                * np.trapz(
+                * integrate_discrete_intervals(
                     (self.diameter + self.wall_thickness) ** 2
-                    - (self.diameter - self.wall_thickness) ** 2
+                    - (self.diameter - self.wall_thickness) ** 2,
+                    multiply_by_dx=False,
+                    method="trapezoidal",
                 )
                 * np.diff(self.y)
             )
 
-    def total_force(self):
+    def total_force(self) -> float | cas.MX:
         if len(self.bending_point_forces) != 0:
             raise NotImplementedError
 
-        return np.sum(np.trapz(self.distributed_force) * np.diff(self.y))
+        return np.sum(
+            integrate_discrete_intervals(
+                self.distributed_force,
+                x=self.y,
+                method="trapezoidal",
+            )
+        )
 
-    def draw(self, show=True):
+    def draw(self, show: bool = True) -> None:
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 

@@ -5,6 +5,7 @@ from aerosandbox.dynamics.point_mass.common_point_mass import (
 from abc import ABC, abstractmethod
 from aerosandbox import OperatingPoint, Atmosphere
 from aerosandbox.numpy.typing import Vectorizable
+from typing import Literal
 
 
 class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
@@ -16,7 +17,7 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
         Mx: Vectorizable = 0,
         My: Vectorizable = 0,
         Mz: Vectorizable = 0,
-        axes="body",
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ) -> None:
         """
         Adds a moment (in whichever axis system you choose) to this Dynamics instance.
@@ -61,10 +62,26 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
 
     @property
     def rotational_kinetic_energy(self):
+        """
+        Computes the kinetic energy [J] from rotational motion:
+
+            KE = 0.5 * omega^T @ I @ omega
+
+        where `omega = [p, q, r]` is the angular velocity vector and `I` is the inertia tensor (about the center of
+        mass), including the products of inertia. Note that `MassProperties.Ixy`, `.Iyz`, and `.Ixz` are the
+        inertia-tensor *elements* (i.e., I12 = -sum(m * x * y), etc.); see the `MassProperties` docstring.
+
+        Returns:
+            Kinetic energy [J]
+        """
         return 0.5 * (
             self.mass_props.Ixx * self.p**2
             + self.mass_props.Iyy * self.q**2
             + self.mass_props.Izz * self.r**2
+        ) + (
+            self.mass_props.Ixy * self.p * self.q
+            + self.mass_props.Iyz * self.q * self.r
+            + self.mass_props.Ixz * self.p * self.r
         )
 
     @property

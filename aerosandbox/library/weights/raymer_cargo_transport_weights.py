@@ -410,7 +410,7 @@ def mass_nacelles(
         * (n_engines) ** 0.984
         * (nacelle_wetted_area / u.foot**2) ** 0.224
         * (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
-    )
+    ) * u.lbm
 
 
 def mass_engine_controls(
@@ -579,7 +579,7 @@ def mass_instruments(
         * K_tp
         * n_crew**0.541
         * n_engines
-        * (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.5
+        * (fuselage.length() / u.foot + main_wing.span() / u.foot) ** 0.5
     ) * u.lbm
 
 
@@ -609,7 +609,7 @@ def mass_hydraulics(
     return (
         0.2673
         * N_functions_performed_by_controls
-        * (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.937
+        * (fuselage.length() / u.foot + main_wing.span() / u.foot) ** 0.937
     ) * u.lbm
 
 
