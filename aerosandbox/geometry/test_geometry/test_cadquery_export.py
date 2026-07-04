@@ -1,5 +1,7 @@
 import tempfile
 import aerosandbox as asb
+import aerosandbox.numpy as np
+import pytest
 
 
 def w(name: str, x0: float, twist: float) -> asb.Wing:
@@ -19,14 +21,14 @@ def w(name: str, x0: float, twist: float) -> asb.Wing:
         name=name,
         xsecs=[
             asb.WingXSec(
-                xyz_le=asb.np.array([0, 0, 0]),
+                xyz_le=np.array([0, 0, 0]),
                 chord=0.5,
                 twist=twist - 5,
                 airfoil=asb.Airfoil("mh60"),
                 control_surfaces=[asb.ControlSurface(symmetric=True)],
             ),
             asb.WingXSec(
-                xyz_le=asb.np.array([0, 2, 0]),
+                xyz_le=np.array([0, 2, 0]),
                 chord=0.4,
                 twist=twist,
                 airfoil=asb.Airfoil("mh60"),
@@ -34,7 +36,7 @@ def w(name: str, x0: float, twist: float) -> asb.Wing:
             ),
         ],
         symmetric=True,
-    ).translate(asb.np.array([x0, 0, 0]))
+    ).translate(np.array([x0, 0, 0]))
 
 
 def f(name: str, x0: float) -> asb.Fuselage:
@@ -67,6 +69,10 @@ def test_cadquery_export() -> None:
     This ensures that the CadQuery export pipeline correctly maintains component identity
     for downstream CAD/CAM workflows.
     """
+    pytest.importorskip(
+        "cadquery",
+        reason="cadquery (an optional dependency) is not installed; skipping CAD export test.",
+    )
     with tempfile.TemporaryDirectory() as tmpdirname:
         fname = f"{tmpdirname}/test.step"
         airplane = asb.Airplane(
