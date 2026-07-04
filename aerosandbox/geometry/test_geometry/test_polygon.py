@@ -60,6 +60,36 @@ def test_translate_scale_rotate():
     assert np.allclose(p1.coordinates, p2.coordinates)
 
 
+def test_section_properties_rectangle():
+    """
+    Checks area, centroid, and moments of inertia against analytic values for
+    a b x h rectangle that is offset from the origin. All moments of inertia
+    are documented to be taken about the centroid, so the offset should not
+    affect them (parallel-axis correction).
+    """
+    b = 3.0  # width (x)
+    h = 2.0  # height (y)
+    x0, y0 = 10.0, -5.0  # offset of the lower-left corner from the origin
+
+    p = Polygon(
+        coordinates=np.array(
+            [
+                [x0, y0],
+                [x0 + b, y0],
+                [x0 + b, y0 + h],
+                [x0, y0 + h],
+            ]
+        )
+    )
+
+    assert p.area() == pytest.approx(b * h)
+    assert np.allclose(p.centroid(), [x0 + b / 2, y0 + h / 2])
+    assert p.Ixx() == pytest.approx(b * h**3 / 12)
+    assert p.Iyy() == pytest.approx(h * b**3 / 12)
+    assert p.Ixy() == pytest.approx(0)
+    assert p.J() == pytest.approx(b * h**3 / 12 + h * b**3 / 12)
+
+
 def test_jaccard_similarity():
     pytest.importorskip("shapely")
 

@@ -245,24 +245,7 @@ class Polygon(AeroSandboxObject):
         """
         Returns the nondimensionalized polar moment of inertia, taken about the centroid.
         """
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
-
-        a = (
-            x * y_n - x_n * y
-        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        0.5 * np.sum(a)  # area
-
-        Ixx = 1 / 12 * np.sum(a * (y**2 + y * y_n + y_n**2))
-
-        Iyy = 1 / 12 * np.sum(a * (x**2 + x * x_n + x_n**2))
-
-        J = Ixx + Iyy
-
-        return J
+        return self.Ixx() + self.Iyy()
 
     def write_sldcrv(self, filepath: Path | str | None = None):
         """
