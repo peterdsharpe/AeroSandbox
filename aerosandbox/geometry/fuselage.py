@@ -256,11 +256,11 @@ class Fuselage(AeroSandboxObject):
         """
         if assumed_shape == "cylinder":
             return np.sqrt(self.length() ** 3 / self.volume() * np.pi / 4)
-        elif assumed_shape == "sears-haack":
+        elif assumed_shape in ("sears-haack", "sears_haack"):
             length = self.length()
 
             r_max = np.sqrt(self.volume() / length / (3 * np.pi**2 / 16))
-            return length / r_max
+            return length / (2 * r_max)
         else:
             raise ValueError(f"Invalid assumed_shape {assumed_shape!r}")
 

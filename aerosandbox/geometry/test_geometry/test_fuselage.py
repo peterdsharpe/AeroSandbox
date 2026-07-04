@@ -46,5 +46,46 @@ def test_unrecognized_kwarg_raises():
         asb.Fuselage(not_a_real_kwarg=42)
 
 
+def test_fineness_ratio():
+    """
+    Builds an exact Sears-Haack body of known fineness ratio and checks
+    Fuselage.fineness_ratio() against it. The fineness ratio is defined as
+    length / max_diameter (not length / max_radius).
+    """
+    length = 10
+    r_max = 1.0
+    true_fineness_ratio = length / (2 * r_max)
+
+    x = np.sinspace(0, length, 501)
+    x_nondim = x / length
+    r = r_max * (4 * x_nondim * (1 - x_nondim)) ** (3 / 4)  # Sears-Haack shape
+    fuselage = asb.Fuselage(
+        xsecs=[
+            asb.FuselageXSec(xyz_c=[xi, 0, 0], radius=ri) for xi, ri in zip(x, r)
+        ]
+    )
+
+    assert fuselage.fineness_ratio(assumed_shape="sears-haack") == pytest.approx(
+        true_fineness_ratio, rel=1e-3
+    )
+    ### Alternate spelling used by callers elsewhere in the codebase:
+    assert fuselage.fineness_ratio(assumed_shape="sears_haack") == pytest.approx(
+        true_fineness_ratio, rel=1e-3
+    )
+    ### The cylinder assumption should not depend on the radius distribution:
+    cylinder = asb.Fuselage(
+        xsecs=[
+            asb.FuselageXSec(xyz_c=[0, 0, 0], radius=r_max),
+            asb.FuselageXSec(xyz_c=[length, 0, 0], radius=r_max),
+        ]
+    )
+    assert cylinder.fineness_ratio(assumed_shape="cylinder") == pytest.approx(
+        true_fineness_ratio
+    )
+
+    with pytest.raises(ValueError):
+        fuselage.fineness_ratio(assumed_shape="not-a-shape")
+
+
 if __name__ == "__main__":
     pytest.main()
