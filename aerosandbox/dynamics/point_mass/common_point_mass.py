@@ -239,9 +239,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     )
         return length
 
-    def __array__(self, dtype="O"):
+    def __array__(self, dtype="O", copy=None):
         """
         Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+
+        The `copy` argument is accepted for compatibility with the NumPy 2.x `__array__` protocol; since a new
+        array is always created here, any requested copy semantics are trivially satisfied.
         """
         return np.fromiter([self], dtype=dtype).reshape(())
 
