@@ -745,7 +745,9 @@ class AeroBuildup(ExplicitAnalysis):
             ##### Compute the moment arm from the section AC
             sect_AC_raw = aerodynamic_centers[sect_id]
             if mirror_across_XZ:
-                sect_AC_raw[1] *= -1
+                # Build a new object rather than mutating the (shared) array in `aerodynamic_centers` in-place,
+                # so that repeated or reordered calls to this function remain correct.
+                sect_AC_raw = [sect_AC_raw[0], -sect_AC_raw[1], sect_AC_raw[2]]
 
             sect_AC = [sect_AC_raw[i] - self.xyz_ref[i] for i in range(3)]
 
