@@ -40,5 +40,38 @@ def test_lazy_import_standalone():
     assert result.returncode == 0, result.stderr
 
 
+def test_convert_ipynb_to_py_non_ascii(tmp_path):
+    """
+    .ipynb files are UTF-8 by specification; conversion should handle
+    non-ASCII content regardless of the platform's default encoding.
+    """
+    import json
+
+    from aerosandbox.tools.python.io import convert_ipynb_to_py
+
+    notebook = {
+        "cells": [
+            {
+                "cell_type": "code",
+                "source": ["alpha_deg = 5  # Angle of attack α [°]\n"],
+            },
+            {
+                "cell_type": "markdown",
+                "source": ["# Some text\n"],
+            },
+        ]
+    }
+
+    input_file = tmp_path / "notebook.ipynb"
+    output_file = tmp_path / "notebook.py"
+    input_file.write_text(json.dumps(notebook), encoding="utf-8")
+
+    convert_ipynb_to_py(input_file, output_file)
+
+    output = output_file.read_text(encoding="utf-8")
+    assert "α [°]" in output
+    assert "Some text" not in output  # Markdown cells are skipped
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

@@ -19,9 +19,9 @@ def convert_ipynb_to_py(
     Returns: None
 
     """
-    with open(input_file, "r") as f:
+    with open(input_file, "r", encoding="utf-8") as f:
         ipynb_contents = json.load(f)
-    with open(output_file, "w+") as f:
+    with open(output_file, "w+", encoding="utf-8") as f:
         for cell in ipynb_contents["cells"]:
             if cell["cell_type"] == "code":
                 f.writelines(cell["source"])
