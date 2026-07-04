@@ -230,8 +230,6 @@ def calculate_lift_due_to_pitching_profile(
         )
 
     def integrand(sigma, s):
-        if dW_ds(sigma) < 0:
-            dW_ds(sigma)
         return dW_ds(sigma) * AoA_function(s - sigma)
 
     lift_coefficient = np.zeros_like(reduced_time)
