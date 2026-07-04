@@ -663,7 +663,18 @@ class Opti(cas.Opti):
         ### If you're loading frozen variables from cache, do it here:
         if self.load_frozen_variables_from_cache:
             solution_dict = self.get_solution_dict_from_cache()
-            for category in self.variable_categories_to_freeze:
+
+            # Normalize `variable_categories_to_freeze` to a list of category names. (A bare string is
+            # allowed - `Opti.variable()` handles that case too - and "all" means every category.)
+            if isinstance(self.variable_categories_to_freeze, str):
+                if self.variable_categories_to_freeze == "all":
+                    categories_to_freeze = list(self.variables_categorized.keys())
+                else:
+                    categories_to_freeze = [self.variable_categories_to_freeze]
+            else:
+                categories_to_freeze = self.variable_categories_to_freeze
+
+            for category in categories_to_freeze:
                 category_variables = self.variables_categorized[category]
                 category_values = solution_dict[category]
 
