@@ -579,7 +579,7 @@ def mass_instruments(
         * K_tp
         * n_crew**0.541
         * n_engines
-        * (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.5
+        * (fuselage.length() / u.foot + main_wing.span() / u.foot) ** 0.5
     ) * u.lbm
 
 
@@ -609,7 +609,7 @@ def mass_hydraulics(
     return (
         0.2673
         * N_functions_performed_by_controls
-        * (fuselage.length() / u.foot * main_wing.span() / u.foot) ** 0.937
+        * (fuselage.length() / u.foot + main_wing.span() / u.foot) ** 0.937
     ) * u.lbm
 
 

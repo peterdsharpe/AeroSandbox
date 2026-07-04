@@ -91,5 +91,48 @@ def test_cargo_transport_mass_nacelles_returns_kg():
     assert mass == pytest.approx(2464.8 * u.lbm, rel=0.02)
 
 
+def test_cargo_transport_mass_instruments():
+    """
+    Raymer Eq. 15.37: W_instruments = 4.509 K_r K_tp N_c^0.541 N_en (L_f + B_w)^0.5
+
+    Regression test for (L_f + B_w) mistyped as (L_f * B_w).
+    """
+    fuselage, main_wing = make_transport_geometry()
+
+    mass = raymer_ct.mass_instruments(
+        fuselage=fuselage,
+        main_wing=main_wing,
+        n_engines=2,
+        n_crew=2,
+    )
+
+    ### Hand computation, in Raymer's units (lb, ft):
+    # W_instruments = 4.509 * 1 * 1 * 2^0.541 * 2 * (129.5 + 112.6)^0.5
+    #               = 204.16 lb = 92.60 kg
+    assert mass == pytest.approx(204.157 * u.lbm, rel=1e-3)
+
+
+def test_cargo_transport_mass_hydraulics():
+    """
+    Raymer Eq. 15.38: W_hydraulics = 0.2673 N_f (L_f + B_w)^0.937
+
+    Regression test for (L_f + B_w) mistyped as (L_f * B_w).
+    """
+    fuselage, main_wing = make_transport_geometry()
+    airplane = asb.Airplane(wings=[main_wing], fuselages=[fuselage])
+
+    mass = raymer_ct.mass_hydraulics(
+        airplane=airplane,
+        fuselage=fuselage,
+        main_wing=main_wing,
+    )
+
+    ### Hand computation, in Raymer's units (lb, ft), with
+    ### N_f = 2 control-surface functions (aileron, flap):
+    # W_hydraulics = 0.2673 * 2 * (129.5 + 112.6)^0.937
+    #              = 91.59 lb = 41.54 kg
+    assert mass == pytest.approx(91.587 * u.lbm, rel=1e-3)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
