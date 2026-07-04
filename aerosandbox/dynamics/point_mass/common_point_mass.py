@@ -559,7 +559,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     check_finite=True,
                 )
 
-            state_interpolators = {k: make_interpolator(v) for k, v in self.state.items()}
+            state_interpolators = {
+                k: make_interpolator(v) for k, v in self.state.items()
+            }
             control_interpolators = {
                 k: make_interpolator(v) for k, v in self.control_variables.items()
             }
