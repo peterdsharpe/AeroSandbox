@@ -770,16 +770,13 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         """
         Computes the kinetic energy [J] from rotational motion.
 
-        KE = 0.5 * I * w^2
+        A point mass has no rotational degrees of freedom, so this is always zero. (Rigid-body dynamics classes
+        override this with an inertia-based formula.)
 
         Returns:
             Kinetic energy [J]
         """
-        return 0.5 * (
-            self.mass_props.Ixx * self.p**2
-            + self.mass_props.Iyy * self.q**2
-            + self.mass_props.Izz * self.r**2
-        )
+        return 0.0
 
     @property
     def kinetic_energy(self):
