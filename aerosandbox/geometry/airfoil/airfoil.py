@@ -894,11 +894,13 @@ class Airfoil(Polygon):
         Args:
             draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
 
+            draw_markers: Should we draw a marker at each vertex? [boolean]
+
             backend: Which backend should we use? "plotly" or "matplotlib"
 
             show: Should we show the plot? [boolean]
 
-        Returns: None
+        Returns: With the "plotly" backend and show=False, returns the plotly Figure; otherwise returns None.
         """
         x = np.reshape(np.array(self.x()), -1)
         y = np.reshape(np.array(self.y()), -1)
@@ -1472,7 +1474,7 @@ class Airfoil(Polygon):
         self, angle: float, x_center: float = 0.0, y_center: float = 0.0
     ) -> "Airfoil":
         """
-        Rotates the airfoil clockwise by the specified amount, in radians.
+        Rotates the airfoil counterclockwise by the specified angle, in radians.
 
         Rotates about the point (x_center, y_center), which is (0, 0) by default.
 
@@ -1559,7 +1561,7 @@ class Airfoil(Polygon):
 
             include_name: Should the name be included in the .dat file? (In a standard *.dat file, it usually is.)
 
-        Returns: None
+        Returns: The .dat file contents, as a string. (If `filepath` is given, the contents are also written to disk.)
 
         """
         contents = []
