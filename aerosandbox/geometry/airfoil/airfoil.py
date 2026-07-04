@@ -1012,7 +1012,7 @@ class Airfoil(Polygon):
 
         return np.arctan2d(
             upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
-            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1],
+            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * lower_TE_vec[1],
         )
 
     # def LE_radius(self) -> float:

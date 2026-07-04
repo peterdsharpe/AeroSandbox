@@ -91,7 +91,29 @@ def test_coordinates_invalid_shape_input():
 
 
 def test_TE_angle(naca4412):
-    assert naca4412.TE_angle() == pytest.approx(14.74635802332286, abs=1)
+    # Reference value computed independently via arccos(u . l / (|u| |l|)) on the two trailing-edge vectors.
+    assert naca4412.TE_angle() == pytest.approx(15.83513080570146, abs=1e-6)
+
+
+def test_TE_angle_hand_computed():
+    """
+    Builds a wedge-like "airfoil" whose trailing-edge half-angles are arctan(0.1 / 0.5) each, so the total TE angle
+    is exactly 2 * atan2(0.1, 0.5). (Regression test for a dot-product typo in TE_angle().)
+    """
+    af = Airfoil(
+        name="wedge",
+        coordinates=np.array(
+            [
+                [1.0, 0.0],
+                [0.5, 0.1],
+                [0.0, 0.0],
+                [0.5, -0.1],
+                [1.0, 0.0],
+            ]
+        ),
+    )
+    expected_TE_angle = 2 * np.degrees(np.arctan2(0.1, 0.5))
+    assert af.TE_angle() == pytest.approx(expected_TE_angle, abs=1e-12)
 
 
 def test_local_thickness(e216):
