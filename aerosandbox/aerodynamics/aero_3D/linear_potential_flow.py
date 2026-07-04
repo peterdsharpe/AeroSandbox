@@ -6,6 +6,7 @@ from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_s
     calculate_induced_velocity_horseshoe,
 )
 from typing import Any
+from collections.abc import MutableMapping
 from functools import cached_property, partial
 from dataclasses import dataclass
 from abc import abstractmethod, ABC
@@ -22,6 +23,41 @@ def wide(array):
 
 
 immutable_dataclass = partial(dataclass, frozen=True, repr=False)
+
+
+class _IdentityDict(MutableMapping):
+    """
+    A minimal dict-like container that keys entries by object identity (`id(key)`) rather than by hash/equality.
+
+    This allows unhashable objects to be used as keys. (AeroSandbox geometry objects, like Wing and Fuselage,
+    are unhashable, since they define `__eq__` without `__hash__`.)
+    """
+
+    def __init__(self, items=()):
+        self._data = {}
+        for key, value in items:
+            self[key] = value
+
+    def __getitem__(self, key):
+        try:
+            return self._data[id(key)][1]
+        except KeyError:
+            raise KeyError(key) from None
+
+    def __setitem__(self, key, value):
+        self._data[id(key)] = (key, value)
+
+    def __delitem__(self, key):
+        try:
+            del self._data[id(key)]
+        except KeyError:
+            raise KeyError(key) from None
+
+    def __iter__(self):
+        return iter([key for key, value in self._data.values()])
+
+    def __len__(self):
+        return len(self._data)
 
 
 class LinearPotentialFlow(ExplicitAnalysis):
@@ -61,12 +97,15 @@ class LinearPotentialFlow(ExplicitAnalysis):
         self.verbose = verbose
 
         ##### Set up the modeling methods
+        # Note: `_IdentityDict` is used rather than a plain dict, since Wing/Fuselage objects are unhashable.
         if isinstance(wing_model, str):
-            wing_model = {wing: wing_model for wing in self.airplane.wings}
+            wing_model = _IdentityDict(
+                (wing, wing_model) for wing in self.airplane.wings
+            )
         if isinstance(fuselage_model, str):
-            fuselage_model = {
-                fuselage: fuselage_model for fuselage in self.airplane.fuselages
-            }
+            fuselage_model = _IdentityDict(
+                (fuselage, fuselage_model) for fuselage in self.airplane.fuselages
+            )
 
         self.wing_model: dict[Wing, str] = wing_model
         self.fuselage_model: dict[Fuselage, str] = fuselage_model
@@ -75,7 +114,7 @@ class LinearPotentialFlow(ExplicitAnalysis):
         ### Check the format of the wing options
         if not (
             all([isinstance(k, str) for k in wing_options.keys()])
-            or all([issubclass(k, Wing) for k in wing_options.keys()])
+            or all([isinstance(k, Wing) for k in wing_options.keys()])
         ):
             raise ValueError(
                 "`wing_options` must be either:\n"
@@ -83,12 +122,14 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 "    - A nested dictionary of the form `{Wing: {str: value}}`, which is applied to the corresponding Wings\n"
             )
         elif all([isinstance(k, str) for k in wing_options.keys()]):
-            wing_options = {wing: wing_options for wing in self.airplane.wings}
+            wing_options = _IdentityDict(
+                (wing, wing_options) for wing in self.airplane.wings
+            )
 
         ### Check the format of the fuselage options
         if not (
             all([isinstance(k, str) for k in fuselage_options.keys()])
-            or all([issubclass(k, Fuselage) for k in fuselage_options.keys()])
+            or all([isinstance(k, Fuselage) for k in fuselage_options.keys()])
         ):
             raise ValueError(
                 "`fuselage_options` must be either:\n"
@@ -96,9 +137,9 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 "    - A nested dictionary of the form `{Fuselage: {str: value}}`, which is applied to the corresponding Fuselages\n"
             )
         elif all([isinstance(k, str) for k in fuselage_options.keys()]):
-            fuselage_options = {
-                fuselage: fuselage_options for fuselage in self.airplane.fuselages
-            }
+            fuselage_options = _IdentityDict(
+                (fuselage, fuselage_options) for fuselage in self.airplane.fuselages
+            )
 
         ### Set user-specified values
         self.wing_options: dict[Wing, dict[str, Any]] = wing_options
