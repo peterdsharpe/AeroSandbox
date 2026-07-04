@@ -124,12 +124,13 @@ def indicial_gust_response(
     Args:
         reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
         gust_velocity (float) : velocity in m/s of the top hat gust
-        velocity (float) : velocity of the thin airfoil entering the gust
+        plate_velocity (float) : velocity of the thin airfoil entering the gust
         angle_of_attack (float) : The angle of attack, in degrees
-        chord (float) : The chord of the plate in meters
+        chord (float) : The chord of the plate in meters. Note that the gust response,
+            expressed in reduced time, is independent of the chord.
     """
     angle_of_attack_radians = np.deg2rad(angle_of_attack)
-    offset = chord / 2 * (1 - np.cos(angle_of_attack_radians))
+    offset = 1 - np.cos(angle_of_attack_radians)  # Gust entry delay, in semichords
     return (
         2
         * np.pi
@@ -155,7 +156,8 @@ def calculate_lift_due_to_transverse_gust(
         gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
         plate_velocity (float) :The velocity by which the flat plate enters the gust
         angle_of_attack (float | Callable[[float], float]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
-        chord (float) : The chord of the plate in meters
+        chord (float) : The chord of the plate in meters. Note that the gust response,
+            expressed in reduced time, is independent of the chord.
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
     """
@@ -176,8 +178,8 @@ def calculate_lift_due_to_transverse_gust(
     def dK_ds(reduced_time):
         return 0.065 * np.exp(-0.13 * reduced_time) + 0.5 * np.exp(-reduced_time)
 
-    def integrand(sigma, s, chord):
-        offset = chord / 2 * (1 - np.cos(AoA_function(s - sigma)))
+    def integrand(sigma, s):
+        offset = 1 - np.cos(AoA_function(s - sigma))  # Gust entry delay, in semichords
         return (
             dK_ds(sigma)
             * gust_velocity_profile(s - sigma - offset)
@@ -186,7 +188,7 @@ def calculate_lift_due_to_transverse_gust(
 
     lift_coefficient = np.zeros_like(reduced_time)
     for i, s in enumerate(reduced_time):
-        integrated_value = quad(integrand, 0, s, args=(s, chord))[0]
+        integrated_value = quad(integrand, 0, s, args=(s,))[0]
         lift_coefficient[i] = 2 * np.pi * integrated_value / plate_velocity
 
     return lift_coefficient
