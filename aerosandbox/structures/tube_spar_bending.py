@@ -3,6 +3,8 @@ import aerosandbox.numpy as np
 from aerosandbox.numpy.integrate_discrete import integrate_discrete_intervals
 from typing import Callable
 
+import casadi as cas
+
 
 class TubeSparBendingStructure(asb.ImplicitAnalysis):
     @asb.ImplicitAnalysis.initialize
@@ -20,7 +22,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         elastic_modulus_function: float
         | Callable[[np.ndarray], np.ndarray] = 175e9,  # Pa
         EI_guess: float | None = None,
-        assume_thin_tube=True,
+        assume_thin_tube: bool = True,
     ):
         """
         A structural spar model that simulates bending of a cantilever tube spar based on beam theory (static,
@@ -314,7 +316,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.shear_force = shear_force
         self.stress_axial = stress_axial
 
-    def volume(self):
+    def volume(self) -> float | cas.MX:
         if self.assume_thin_tube:
             return np.sum(
                 np.pi
@@ -338,7 +340,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 * np.diff(self.y)
             )
 
-    def total_force(self):
+    def total_force(self) -> float | cas.MX:
         if len(self.bending_point_forces) != 0:
             raise NotImplementedError
 
@@ -350,7 +352,7 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             )
         )
 
-    def draw(self, show=True):
+    def draw(self, show: bool = True) -> None:
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
