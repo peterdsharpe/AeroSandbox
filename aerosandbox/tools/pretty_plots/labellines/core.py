@@ -193,16 +193,27 @@ def labelLines(
     kwargs : dict, optional
        Optional arguments passed to ax.text
     """
+    if len(lines) == 0:
+        return []
+
     ax = lines[0].axes
 
-    handles, allLabels = ax.get_legend_handles_labels()
+    handles, labels_of_handles = ax.get_legend_handles_labels()
 
-    all_lines = []
-    for h in handles:
+    all_lines, allLabels = [], []
+    for h, label in zip(handles, labels_of_handles):
         if isinstance(h, ErrorbarContainer):
-            all_lines.append(h.lines[0])
+            line = h.lines[0]
         else:
-            all_lines.append(h)
+            line = h
+
+        # Only label the lines that the user asked for (matching upstream
+        # matplotlib-label-lines semantics).
+        if line not in lines:
+            continue
+
+        all_lines.append(line)
+        allLabels.append(label)
 
     # In case no x location was provided, we need to use some heuristics
     # to generate them.

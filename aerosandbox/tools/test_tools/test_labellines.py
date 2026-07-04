@@ -18,6 +18,46 @@ def test_star_import():
     assert callable(namespace["labelLines"])
 
 
+def test_labellines_labels_only_given_lines():
+    """labelLines(lines=...) should label only the lines passed in."""
+    from aerosandbox.tools.pretty_plots.labellines import labelLines
+
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 1, 100)
+    (l1,) = ax.plot(x, x, label="line1")
+    (l2,) = ax.plot(x, x**2, label="line2")
+
+    txts = labelLines(lines=[l1])
+    assert [t.get_text() for t in txts] == ["line1"]
+
+    plt.close(fig)
+
+
+def test_labellines_all_lines():
+    """Passing all lines labels all of them."""
+    from aerosandbox.tools.pretty_plots.labellines import labelLines
+
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 1, 100)
+    ax.plot(x, x, label="line1")
+    ax.plot(x, x**2, label="line2")
+
+    txts = labelLines(lines=ax.get_lines())
+    assert sorted(t.get_text() for t in txts) == ["line1", "line2"]
+
+    plt.close(fig)
+
+
+def test_labellines_empty_lines_list():
+    """An empty list of lines should be a no-op, not an IndexError."""
+    from aerosandbox.tools.pretty_plots.labellines import labelLines
+
+    fig, ax = plt.subplots()
+    txts = labelLines(lines=ax.get_lines())
+    assert txts == []
+    plt.close(fig)
+
+
 def test_labellines_datetime_axis_no_deprecated_converter_access():
     """
     labelLines should work on a datetime x-axis without touching the
