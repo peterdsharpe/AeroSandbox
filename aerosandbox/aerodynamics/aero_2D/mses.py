@@ -251,10 +251,12 @@ class MSES(ExplicitAnalysis):
                 print(e.stderr)
                 if "BadName (named color or font does not exist)" in e.stderr:
                     raise RuntimeError(
-                        "MSET via AeroSandbox errored becausee it couldn't launch an X11 window.\n"
+                        "MSET via AeroSandbox errored because it couldn't launch an X11 window.\n"
                         "Try either installing a typical X11 client, or install Xvfb, which is\n"
                         "a virtual X11 server. More details in the AeroSandbox MSES docstring."
                     )
+                else:
+                    raise
 
             runs_output = {}
 
