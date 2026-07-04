@@ -377,6 +377,8 @@ def mass_motor_electric(
         return (
             2.464 * max_current / kv_rpm_volt + 0.368
         )  # Even more sophisticated model
+    else:
+        raise ValueError(f"Bad value of `method`: {method!r}")
 
 
 def mass_wires(
