@@ -346,7 +346,9 @@ class Airfoil(Polygon):
         if data is None:
             ### If a cache filename is given, ensure that the directory exists.
             if cache_filename is not None:
-                os.makedirs(os.path.dirname(cache_filename), exist_ok=True)
+                cache_directory = os.path.dirname(cache_filename)
+                if cache_directory:  # Empty for a bare filename (current directory).
+                    os.makedirs(cache_directory, exist_ok=True)
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
