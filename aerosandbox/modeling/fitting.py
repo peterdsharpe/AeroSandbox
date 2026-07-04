@@ -349,7 +349,20 @@ class FittedModel(SurrogateModel):
         super().__call__(x)
         return self.model(x, self.parameters)
 
-    def goodness_of_fit(self, type="R^2"):
+    def goodness_of_fit(
+        self,
+        type: Literal[
+            "R^2",
+            "mean_absolute_error",
+            "mae",
+            "L1",
+            "root_mean_squared_error",
+            "rms",
+            "L2",
+            "max_absolute_error",
+            "Linf",
+        ] = "R^2",
+    ) -> float:
         """
         Returns a metric of the goodness of the fit.
 
