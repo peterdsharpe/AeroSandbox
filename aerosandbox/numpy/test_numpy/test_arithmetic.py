@@ -39,6 +39,26 @@ def test_mean_2D_casadi_axis_None_returns_scalar():
     assert np.all(cas.DM(np.mean(cas_a, axis=1)) == np.mean(a, axis=1))
 
 
+def test_round_dual_backend():
+    """np.round() should support CasADi types (regression test: it used to be
+    NumPy's round, which raises TypeError on cas.MX)."""
+    # NumPy backend: identical to numpy.round
+    a = np.array([1.4, 1.6, -1.4, -1.6])
+    assert np.all(np.round(a) == np.array([1.0, 2.0, -1.0, -2.0]))
+    assert np.round(1.2345, 2) == pytest.approx(1.23)
+
+    # CasADi numeric backend
+    assert float(np.round(cas.DM(1.6))) == pytest.approx(2.0)
+    assert float(np.round(cas.DM(-1.4))) == pytest.approx(-1.0)
+    assert float(np.round(cas.DM(1.2345), decimals=2)) == pytest.approx(1.23)
+
+    # CasADi symbolic backend
+    x = cas.MX.sym("x")
+    f = cas.Function("f", [x], [np.round(x)])
+    assert float(f(3.7)) == pytest.approx(4.0)
+    assert float(f(-2.2)) == pytest.approx(-2.0)
+
+
 def test_cumsum():
     n = np.arange(6).reshape((3, 2))
 

@@ -68,4 +68,6 @@ from aerosandbox.numpy.trig import *
 
 ### Force-overwrite built-in Python functions.
 
-from numpy import round  # TODO check that min, max are properly imported
+from aerosandbox.numpy.arithmetic_monadic import (
+    round,
+)  # TODO check that min, max are properly imported
