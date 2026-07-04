@@ -72,6 +72,26 @@ def test_1D_shortcut_path_respects_fill_value_and_kwargs():
     )
 
 
+def test_x_data_resample_dict_not_mutated():
+    """
+    Regression test: the constructor used to replace int entries of the user-supplied
+    x_data_resample dict with linspaced arrays, mutating the caller's dict in-place.
+    """
+    np.random.seed(0)
+    X = np.random.rand(50) * 10
+    Y = np.random.rand(50) * 10
+    F = X + Y
+
+    x_data_resample = {"x": 5, "y": 7}
+    UnstructuredInterpolatedModel(
+        x_data={"x": X, "y": Y},
+        y_data=F,
+        x_data_resample=x_data_resample,
+    )
+
+    assert x_data_resample == {"x": 5, "y": 7}
+
+
 def test_ND_point_cloud_still_works():
     """Sanity check that the N-dimensional (resampling) code path is unaffected."""
     np.random.seed(0)

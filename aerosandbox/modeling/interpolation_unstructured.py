@@ -180,6 +180,8 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
             raise TypeError("`x_data_resample` must be a dict-like object!")
 
         # Go through x_data_resample, and replace any values that are ints with linspaced arrays.
+        # (Copy the dict first, so that the caller's dict is not mutated in-place.)
+        x_data_resample = dict(x_data_resample)
         for k, v in x_data_resample.items():
             if isinstance(v, int):
                 x_data_resample[k] = np.linspace(
