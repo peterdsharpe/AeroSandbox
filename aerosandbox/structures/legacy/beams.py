@@ -21,7 +21,11 @@ class TubeBeam1(AeroSandboxObject):
         torsion=True,  # Should we consider beam torsion?
     ):
         """
-        A beam model (static, linear elasticity) that simulates both bending and torsion.
+        A beam model (static, linear elasticity) that simulates bending.
+
+        NOTE: Torsion is not yet implemented. Setting `torsion=True` (the default)
+        currently has no effect: no torsion analysis is performed, and no torsion
+        results (e.g., twist angle or shear stress) are computed.
 
         Governing equation for bending:
         Euler-Bernoulli beam theory.
@@ -35,7 +39,7 @@ class TubeBeam1(AeroSandboxObject):
             * q(x) is the force-per-unit-length at x. (In other words, a dirac delta is a point load.)
             * ()' is a derivative w.r.t. x.
 
-        Governing equation for torsion:
+        Governing equation for torsion (not yet implemented; see note above):
         phi(x)'' = -T / (G * J)
 
         where:
@@ -57,7 +61,8 @@ class TubeBeam1(AeroSandboxObject):
         :param density: Density of the material [kg/m^3]
         :param G: Shear modulus (if isotropic, can't set both poisson_ratio and shear modulus - one must be None)
         :param bending: Should we consider bending? [boolean]
-        :param torsion: Should we consider torsion? [boolean]
+        :param torsion: Should we consider torsion? [boolean] NOTE: Torsion is not yet implemented, so this option
+            currently has no effect on results.
         """
         # Transfer inputs
         self.opti = opti
