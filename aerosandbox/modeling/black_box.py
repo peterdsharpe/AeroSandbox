@@ -3,13 +3,13 @@ from typing import Callable, Any, Literal
 
 
 def black_box(
-    function: Callable[[Any], float],
+    function: Callable[..., float],
     n_in: int | None = None,
     n_out: int = 1,
     fd_method: Literal["forward", "backward", "central", "smoothed"] = "central",
     fd_step: float | None = None,
     fd_step_iter: bool | None = None,
-) -> Callable[[Any], float]:
+) -> Callable[..., float]:
     """
     Wraps a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization problems.
 
@@ -17,19 +17,30 @@ def black_box(
 
     Args:
 
-        function:
+        function: The function to wrap as a black box. Should accept scalar inputs (one scalar per
+            argument, positional or keyword) and return a single scalar output.
 
-        n_in:
+        n_in: The number of (scalar) inputs that the function takes. If not specified, this is inferred
+            from the function's signature (i.e., its number of parameters).
 
-        n_out:
+        n_out: The number of (scalar) outputs that the function returns. Currently, only single-output
+            functions (`n_out=1`) are supported.
 
-        fd_method: One of:
+        fd_method: The finite-differencing method used to compute gradients. One of:
             - 'forward'
             - 'backward'
             - 'central'
             - 'smoothed'
 
+        fd_step: The step size used for finite-differencing. Maps to the CasADi `fd_options["h"]`
+            option; if not specified, CasADi's default is used.
+
+        fd_step_iter: Whether the finite-differencing step size should be iteratively refined. Maps to
+            the CasADi `fd_options["h_iter"]` option; if not specified, CasADi's default is used.
+
     Returns:
+        A wrapped version of the function with the same call signature (both positional and keyword
+        arguments are supported), which can be used inside AeroSandbox / CasADi optimization problems.
 
     """
     ### Grab the signature of the function to be wrapped - we'll need it.
