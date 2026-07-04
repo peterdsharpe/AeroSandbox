@@ -259,6 +259,48 @@ def test_polar_parsing_without_binary(tmp_path):
     assert result["CD"] == pytest.approx([0.00612, 0.00800])
 
 
+FAKE_POLAR_NO_HINGE = """\
+       XFOIL         Version 6.99
+
+ Calculated polar for: NACA 2412
+
+ 1 1 Reynolds number fixed          Mach number fixed
+
+ xtrf =   1.000 (top)        1.000 (bottom)
+ Mach =   0.000     Re =     1.000 e 6     Ncrit =   9.000
+
+   alpha    CL        CD       CDp       CM      Cpmin    Xcpmin   Top_Xtr  Bot_Xtr
+  ------ -------- --------- --------- -------- -------- -------- -------- --------
+   3.000   0.7010   0.00612   0.00098  -0.0525  -1.1000   0.0400   0.5715   0.9457
+"""
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Uses a POSIX shell script.")
+def test_polar_parsing_with_hinge_moment_disabled(tmp_path):
+    """
+    When the hinge-moment calculation is disabled (hinge_point_x=None), XFoil's polar
+    lacks the Chinge column. The empty Chinge entry previously broke the final
+    sort-by-alpha reindexing with an IndexError. (Regression test.)
+    """
+    polar_file = tmp_path / "polar.txt"
+    polar_file.write_text(FAKE_POLAR_NO_HINGE)
+
+    xf = asb.XFoil(
+        airfoil=make_airfoil(),
+        Re=1e6,
+        hinge_point_x=None,
+        xfoil_command=make_fake_xfoil_executable(
+            tmp_path,
+            f"cp '{polar_file}' output.txt",
+        ),
+    )
+    result = xf.alpha(3)
+
+    assert result["alpha"] == pytest.approx([3])
+    assert result["CL"] == pytest.approx([0.7010])
+    assert len(result["Chinge"]) == 0
+
+
 ### Tests requiring the XFoil binary
 
 

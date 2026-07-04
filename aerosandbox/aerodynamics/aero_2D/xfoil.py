@@ -665,7 +665,11 @@ class XFoil(ExplicitAnalysis):
         )
 
         sort_order = np.argsort(output["alpha"])
-        output = {k: v[sort_order] for k, v in output.items()}
+        output = {
+            k: v[sort_order] if len(v) == len(sort_order) else v
+            for k, v in output.items()
+        }  # Columns not present in the XFoil output (e.g., "Chinge" if the hinge moment
+        # calculation is disabled) are left as empty arrays.
         return output
 
     def cl(
@@ -743,7 +747,11 @@ class XFoil(ExplicitAnalysis):
         )
 
         sort_order = np.argsort(output["alpha"])
-        output = {k: v[sort_order] for k, v in output.items()}
+        output = {
+            k: v[sort_order] if len(v) == len(sort_order) else v
+            for k, v in output.items()
+        }  # Columns not present in the XFoil output (e.g., "Chinge" if the hinge moment
+        # calculation is disabled) are left as empty arrays.
         return output
 
 
