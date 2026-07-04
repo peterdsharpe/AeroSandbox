@@ -46,7 +46,7 @@ class XFoil(ExplicitAnalysis):
         n_crit: float = 9.0,
         xtr_upper: float = 1.0,
         xtr_lower: float = 1.0,
-        hinge_point_x: float = 0.75,
+        hinge_point_x: float | None = 0.75,
         full_potential: bool = False,
         max_iter: int = 100,
         xfoil_command: str = "xfoil",
@@ -222,11 +222,12 @@ class XFoil(ExplicitAnalysis):
         ]
 
         # Handle hinge moment
-        run_file_contents += [
-            "hinc",
-            f"fnew {float(self.hinge_point_x):.8g} {float(self.airfoil.local_camber(self.hinge_point_x)):.8g}",
-            "fmom",
-        ]
+        if self.hinge_point_x is not None:
+            run_file_contents += [
+                "hinc",
+                f"fnew {float(self.hinge_point_x):.8g} {float(self.airfoil.local_camber(self.hinge_point_x)):.8g}",
+                "fmom",
+            ]
 
         if self.full_potential:
             run_file_contents += [
