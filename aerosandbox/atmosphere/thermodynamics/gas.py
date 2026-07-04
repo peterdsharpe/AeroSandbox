@@ -237,6 +237,11 @@ class PerfectGas:
                 / self.specific_heat_constant_volume
             )
 
+        if enthalpy_at_pressure_specified or enthalpy_at_volume_specified:
+            ### An enthalpy addition to a calorically perfect gas is equivalent to
+            ### specifying the new temperature, so treat it as such from here on.
+            temperature_specified = True
+
         if pressure_specified:
             P_ratio = new_pressure / self.pressure
         elif temperature_specified:
