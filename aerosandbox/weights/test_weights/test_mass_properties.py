@@ -52,5 +52,14 @@ def test_array_protocol_accepts_copy_keyword():
         onp.asarray(mp, copy=False)
 
 
+def test_len_error_message_for_mismatched_vectorized_lengths():
+    mp = asb.MassProperties(
+        mass=onp.array([1.0, 2.0, 3.0]),
+        x_cg=onp.array([0.0, 1.0]),
+    )
+    with pytest.raises(ValueError, match="State variables appear vectorized"):
+        len(mp)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

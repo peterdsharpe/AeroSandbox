@@ -147,7 +147,7 @@ class MassProperties(AeroSandboxObject):
                         return a[index]
                     except IndexError:
                         raise IndexError(
-                            f"A state variable could not be indexed; it has length {len(a)} while the"
+                            f"A state variable could not be indexed; it has length {len(a)} while the "
                             f"parent has length {self_length}."
                         )
             else:
@@ -192,7 +192,7 @@ class MassProperties(AeroSandboxObject):
                     pass
                 else:
                     raise ValueError(
-                        "State variables are appear vectorized, but of different lengths!"
+                        "State variables appear vectorized, but with different lengths!"
                     )
         return length
 
