@@ -50,8 +50,8 @@ def test_construct_and_solve_with_net_downward_load():
     sol = opti.solve(verbose=False)
     beam = sol(beam)
 
-    I = np.pi / 8 * diameter**3 * wall_thickness  # Thin-walled tube
-    u_tip_analytic = q * length**4 / (8 * elastic_modulus * I)
+    moment_of_inertia = np.pi / 8 * diameter**3 * wall_thickness  # Thin-walled tube
+    u_tip_analytic = q * length**4 / (8 * elastic_modulus * moment_of_inertia)
 
     assert beam.u[-1] == pytest.approx(u_tip_analytic, rel=0.01)
 
@@ -80,8 +80,8 @@ def test_solve_with_uniform_upward_load():
     sol = opti.solve(verbose=False)
     beam = sol(beam)
 
-    I = np.pi / 8 * diameter**3 * wall_thickness  # Thin-walled tube
-    u_tip_analytic = q * length**4 / (8 * elastic_modulus * I)
+    moment_of_inertia = np.pi / 8 * diameter**3 * wall_thickness  # Thin-walled tube
+    u_tip_analytic = q * length**4 / (8 * elastic_modulus * moment_of_inertia)
 
     assert beam.u[-1] == pytest.approx(u_tip_analytic, rel=0.01)
 
@@ -108,10 +108,9 @@ def test_integrate_discrete_intervals_equivalent_to_legacy_trapz():
         ### NumPy backend
         legacy = np.trapz(f) * np.diff(y)
         new = integrate_discrete_intervals(f, x=y, method="trapezoidal")
-        new_no_dx = (
-            integrate_discrete_intervals(f, multiply_by_dx=False, method="trapezoidal")
-            * np.diff(y)
-        )
+        new_no_dx = integrate_discrete_intervals(
+            f, multiply_by_dx=False, method="trapezoidal"
+        ) * np.diff(y)
         assert onp.array_equal(legacy, new)
         assert onp.array_equal(legacy, new_no_dx)
 
@@ -174,9 +173,7 @@ def test_volume_and_total_force_match_legacy_trapz_formulation():
             )
 
         assert beam.volume() == pytest.approx(manual_integral(section_area), rel=1e-12)
-        assert beam.volume() == pytest.approx(
-            section_area_analytic * length, rel=1e-12
-        )
+        assert beam.volume() == pytest.approx(section_area_analytic * length, rel=1e-12)
 
         assert beam.total_force() == pytest.approx(
             manual_integral(beam.distributed_force), rel=1e-12
