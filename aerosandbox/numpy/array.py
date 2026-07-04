@@ -740,7 +740,11 @@ def zeros_like(
         a_np = cast(_onp.ndarray, asarray(a))
         return _onp.zeros_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.zeros(shape=length(a))
+        a_cas = cast(_CasADiType, a)
+        if 1 in a_cas.shape:  # CasADi row/column vectors are treated as 1D arrays.
+            return _onp.zeros(shape=length(a_cas))
+        else:  # For true (2D) matrices, preserve the 2D shape.
+            return _onp.zeros(shape=a_cas.shape)
 
 
 def ones_like(
@@ -779,7 +783,11 @@ def ones_like(
         a_np = cast(_onp.ndarray, asarray(a))
         return _onp.ones_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.ones(shape=length(a))
+        a_cas = cast(_CasADiType, a)
+        if 1 in a_cas.shape:  # CasADi row/column vectors are treated as 1D arrays.
+            return _onp.ones(shape=length(a_cas))
+        else:  # For true (2D) matrices, preserve the 2D shape.
+            return _onp.ones(shape=a_cas.shape)
 
 
 def empty_like(

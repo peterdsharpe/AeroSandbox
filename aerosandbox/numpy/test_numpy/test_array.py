@@ -74,6 +74,26 @@ def test_length_of_list_of_casadi_types():
     assert length(strips) == 5
 
 
+def test_zeros_like_and_friends_casadi_2D():
+    """zeros_like/ones_like/full_like/empty_like on a 2D CasADi matrix should
+    preserve the 2D shape (regression test: they used to return a 1D array of
+    length shape[0]). Row/column vectors keep returning 1D arrays."""
+    matrix = cas.DM(np.ones((3, 2)))
+    assert np.zeros_like(matrix).shape == (3, 2)
+    assert np.ones_like(matrix).shape == (3, 2)
+    assert np.empty_like(matrix).shape == (3, 2)
+    assert np.full_like(matrix, 7.0).shape == (3, 2)
+    assert np.all(np.full_like(matrix, 7.0) == 7.0)
+
+    column = cas.DM(np.ones(3))  # 3x1 CasADi column: treated as a 1D array
+    assert np.zeros_like(column).shape == (3,)
+    assert np.ones_like(column).shape == (3,)
+
+    row = cas.DM(np.ones(3)).T  # 1x3 CasADi row: treated as a 1D array
+    assert np.zeros_like(row).shape == (3,)
+    assert np.ones_like(row).shape == (3,)
+
+
 def test_concatenate():
     n = np.arange(10)
     c = cas.DM(n)
