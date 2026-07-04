@@ -9,14 +9,14 @@ class DynamicsPointMass1DVertical(DynamicsPointMass3DCartesian):
     """
     Dynamics instance:
     * simulating a point mass
-    * in 1D, oriented vertically (i.e., the .add_gravity() method will have an effect)
+    * in 1D, oriented vertically (i.e., the .add_gravity_force() method will have an effect)
 
     State variables:
         z_e: z-position, in Earth axes. [meters]
         w_e: z-velocity, in Earth axes. [m/s]
 
     Control variables:
-        Fz_e: Force along the Earth-x axis. [N]
+        Fz_e: Force along the Earth-z axis. [N]
 
     """
 

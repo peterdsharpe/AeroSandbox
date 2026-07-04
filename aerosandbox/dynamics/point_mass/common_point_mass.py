@@ -397,10 +397,10 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         """
         pass
 
-    def add_gravity_force(self, g=9.81) -> None:
+    def add_gravity_force(self, g: float = 9.81) -> None:
         """
-        In-place modifies the forces associated with this Dynamics instance: adds a force in the -z direction,
-        equal to the weight of the aircraft.
+        In-place modifies the forces associated with this Dynamics instance: adds a downward force (i.e., in the +z
+        direction in Earth axes, which are NED: North-East-Down), equal to the weight of the aircraft.
 
         Args:
             g: The gravitational acceleration. [m/s^2]
@@ -805,8 +805,9 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
         PE = mgh
 
-        Args:
-            g: Acceleration due to gravity [m/s^2]
+        The gravitational acceleration is fixed at g = 9.81 m/s^2; because this is a property, it cannot be
+        overridden by the caller. For a different value of `g`, compute
+        `dyn.mass_props.mass * g * dyn.altitude` directly.
 
         Returns:
             Potential energy [J]

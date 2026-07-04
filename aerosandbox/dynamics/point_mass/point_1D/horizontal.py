@@ -9,7 +9,7 @@ class DynamicsPointMass1DHorizontal(DynamicsPointMass3DCartesian):
     """
     Dynamics instance:
     * simulating a point mass
-    * in 1D, oriented horizontally (i.e., the .add_gravity() method will have no effect)
+    * in 1D, oriented horizontally (i.e., the .add_gravity_force() method will have no effect)
 
     State variables:
         x_e: x-position, in Earth axes. [meters]

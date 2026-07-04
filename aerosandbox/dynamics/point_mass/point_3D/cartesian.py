@@ -18,7 +18,7 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         y_e: y-position, in Earth axes. [meters]
         z_e: z-position, in Earth axes. [meters]
         u_e: x-velocity, in Earth axes. [m/s]
-        v_e: v-velocity, in Earth axes. [m/s]
+        v_e: y-velocity, in Earth axes. [m/s]
         w_e: z-velocity, in Earth axes. [m/s]
 
     Indirect control variables:
