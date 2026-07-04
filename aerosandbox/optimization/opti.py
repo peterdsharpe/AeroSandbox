@@ -1140,6 +1140,7 @@ class Opti(cas.Opti):
                 init_guess=derivative_init_guess,
                 n_vars=N,
                 scale=derivative_scale,
+                _stacklevel=_stacklevel + 1,
             )
 
             self.constrain_derivative(

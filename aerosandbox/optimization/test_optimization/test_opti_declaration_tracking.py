@@ -84,5 +84,27 @@ def test_variable_declaration():
     assert lineno == expected_lineno
 
 
+def test_derivative_of_variable_declaration():
+    ### The derivative variable created inside `Opti.derivative_of()` should be attributed to the
+    ### user's `derivative_of()` call, not to a line inside aerosandbox/optimization/opti.py.
+    opti = asb.Opti()
+    position = opti.variable(init_guess=0, n_vars=10)
+    time = np.linspace(0, 1, 10)
+
+    def declare(opti):
+        lineno = inspect.currentframe().f_lineno + 1
+        opti.derivative_of(position, with_respect_to=time, derivative_init_guess=0)
+        return lineno
+
+    expected_lineno = declare(opti)
+
+    # The derivative variable's indices start right after `position`'s 10 entries.
+    filename, lineno = get_reported_location(
+        opti.find_variable_declaration(index=10, return_string=True)
+    )
+    assert filename == THIS_FILE
+    assert lineno == expected_lineno
+
+
 if __name__ == "__main__":
     pytest.main()
