@@ -758,10 +758,10 @@ class AVL(ExplicitAnalysis):
             key = ""  # start with a blank key, which we will build up as we read
 
             i = index - 1  # Starting from the left of the identifier
-            while s[i] == " " and i >= 0:
+            while i >= 0 and s[i] == " ":
                 # First, skip any blanks
                 i -= 1
-            while s[i] != " " and s[i] != "\n" and i >= 0:
+            while i >= 0 and s[i] != " " and s[i] != "\n":
                 # Then, read the key in backwards order until you get to a blank or newline
                 key = s[i] + key
                 i -= 1
@@ -771,10 +771,10 @@ class AVL(ExplicitAnalysis):
             i = index + len(
                 data_identifier
             )  # Starting from the right of the identifier
-            while s[i] == " " and i <= len(s):
+            while i < len(s) and s[i] == " ":
                 # First, skip any blanks
                 i += 1
-            while s[i] != " " and s[i] != "\n" and i <= len(s):
+            while i < len(s) and s[i] != " " and s[i] != "\n":
                 # Then, read the key in forward order until you get to a blank or newline
                 value += s[i]
                 i += 1
