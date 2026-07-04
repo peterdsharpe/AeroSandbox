@@ -61,10 +61,26 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
 
     @property
     def rotational_kinetic_energy(self):
+        """
+        Computes the kinetic energy [J] from rotational motion:
+
+            KE = 0.5 * omega^T @ I @ omega
+
+        where `omega = [p, q, r]` is the angular velocity vector and `I` is the inertia tensor (about the center of
+        mass), including the products of inertia. Note that `MassProperties.Ixy`, `.Iyz`, and `.Ixz` are the
+        inertia-tensor *elements* (i.e., I12 = -sum(m * x * y), etc.); see the `MassProperties` docstring.
+
+        Returns:
+            Kinetic energy [J]
+        """
         return 0.5 * (
             self.mass_props.Ixx * self.p**2
             + self.mass_props.Iyy * self.q**2
             + self.mass_props.Izz * self.r**2
+        ) + (
+            self.mass_props.Ixy * self.p * self.q
+            + self.mass_props.Iyz * self.q * self.r
+            + self.mass_props.Ixz * self.p * self.r
         )
 
     @property
