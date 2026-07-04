@@ -586,7 +586,7 @@ class LiftingLine(ExplicitAnalysis):
             if wing.symmetric:  # Do the left side, if applicable
                 airfoils.extend(wing_airfoils)
 
-                def mirror_control_surface(surf: ControlSurface) -> ControlSurface:
+                def mirror_control_surface(surf: "ControlSurface") -> "ControlSurface":
                     if surf.symmetric:
                         return surf
                     else:
