@@ -409,5 +409,18 @@ def test_opti_scale_dependent_optimization():
     assert np.isclose(sol(x), 1, atol=1e-3)
 
 
+def test_opti_invalid_behavior_on_failure_raises():
+    """An invalid `behavior_on_failure` should raise a clear ValueError (was: UnboundLocalError)."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    opti.minimize((x - 1) ** 2)
+
+    with pytest.raises(ValueError, match="behavior_on_failure"):
+        opti.solve(
+            verbose=False, behavior_on_failure="return-last"
+        )  # note the typo'd value
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

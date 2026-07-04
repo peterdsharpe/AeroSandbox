@@ -776,6 +776,11 @@ class Opti(cas.Opti):
                 warnings.warn("Optimization failed. Returning last solution.")
 
                 sol = OptiSol(opti=self, cas_optisol=self.debug)
+        else:
+            raise ValueError(
+                f"Invalid value of `behavior_on_failure`: got {behavior_on_failure!r}, "
+                f'but it must be one of "raise" or "return_last".'
+            )
 
         if self.save_to_cache_on_solve:
             self.save_solution()
