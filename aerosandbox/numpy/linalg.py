@@ -8,7 +8,7 @@ import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.arithmetic_monadic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
-from aerosandbox.numpy.array import asarray
+from aerosandbox.numpy.array import asarray, max
 from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, VectorLike, _CasADiType
 from numpy.linalg import *
 from typing import cast
@@ -237,13 +237,17 @@ def norm(
 
     else:
         # Figure out which axis, if any, to take a vector norm about.
+        axis_specified_by_user = axis is not None
         if axis is not None:
             if not (axis == 0 or axis == 1 or axis == -1):
                 raise ValueError("`axis` must be -1, 0, or 1 for CasADi types.")
+            if axis == -1:
+                axis = 1
         elif x.shape[0] == 1:
             axis = 1
         elif x.shape[1] == 1:
             axis = 0
+        # If axis is still None here, x is a true (2D) matrix -> matrix norms.
 
         if ord is None:
             if axis is not None:
@@ -251,30 +255,62 @@ def norm(
             else:
                 ord = "fro"
 
-        if ord == 1:
-            # norm = _cas.norm_1(x)
-            norm = sum(abs(x), axis=axis)
-        elif ord == 2:
-            # norm = _cas.norm_2(x)
-            norm = sum(x**2, axis=axis) ** 0.5
-        elif ord == "fro" or ord == "frobenius":
-            norm = _cas.norm_fro(x)
-        elif ord == "inf" or _onp.isinf(ord):
-            norm = _cas.norm_inf(x)
-        else:
-            try:
-                norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
-            except Exception as e:
-                print(e)
-                raise ValueError(
-                    "Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
-                    "as a last-ditch effort, but that didn't work."
+        is_inf_ord = ord == "inf" or (not isinstance(ord, str) and _onp.isinf(ord))
+
+        if axis is None:
+            ### Matrix norms, matching numpy.linalg.norm() conventions.
+            if ord == "fro" or ord == "frobenius":
+                norm = _cas.norm_fro(x)
+            elif ord == 1:  # Maximum column sum
+                norm = _cas.mmax(sum(abs(x), axis=0))
+            elif is_inf_ord:  # Maximum row sum
+                norm = _cas.mmax(sum(abs(x), axis=1))
+            elif ord == 2:
+                raise NotImplementedError(
+                    "The spectral norm (`ord=2`) of a matrix is not implemented for CasADi types.\n"
+                    "For the Frobenius norm, use `ord='fro'`; for vector norms, specify `axis`."
                 )
+            else:
+                try:
+                    norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
+                except Exception as e:
+                    print(e)
+                    raise ValueError(
+                        "Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
+                        "as a last-ditch effort, but that didn't work."
+                    )
+        else:
+            ### Vector norms (either of a 1D-like array, or along the given axis).
+            if ord == 1:
+                # norm = _cas.norm_1(x)
+                norm = sum(abs(x), axis=axis)
+            elif ord == 2:
+                # norm = _cas.norm_2(x)
+                norm = sum(x**2, axis=axis) ** 0.5
+            elif is_inf_ord:
+                norm = max(abs(x), axis=axis)
+            elif ord == "fro" or ord == "frobenius":
+                if axis_specified_by_user:
+                    raise ValueError(
+                        "Frobenius norm is a matrix norm; it is not defined along an `axis`."
+                    )
+                norm = _cas.norm_fro(x)
+            else:
+                try:
+                    norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
+                except Exception as e:
+                    print(e)
+                    raise ValueError(
+                        "Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
+                        "as a last-ditch effort, but that didn't work."
+                    )
 
         if keepdims:
+            if axis is None:
+                return _cas.reshape(norm, (1, 1))
             new_shape = list(x.shape)
             new_shape[axis] = 1
-            return _cas.reshape(norm, new_shape)
+            return _cas.reshape(norm, tuple(new_shape))
         else:
             return norm
 
