@@ -35,8 +35,50 @@ class Opti(cas.Opti):
         load_frozen_variables_from_cache: bool = False,
         save_to_cache_on_solve: bool = False,
         ignore_violated_parametric_constraints: bool = False,
-        freeze_style: Literal["parameter", "frozen"] = "parameter",
-    ):  # TODO document
+        freeze_style: Literal["parameter", "float"] = "parameter",
+    ):
+        """
+        Initializes a new optimization environment. For more usage information, see the docstrings of the key
+        methods listed in the class docstring above.
+
+        Args:
+
+            variable_categories_to_freeze: A list of variable categories (as named via the `category` argument of
+                `Opti.variable()`) that should be "frozen" (i.e., fixed rather than optimized). You can also pass a
+                single category as a bare string, or the special string "all" to freeze every category.
+
+                Frozen variables take on the value of their `init_guess` - unless
+                `load_frozen_variables_from_cache` is True, in which case their values are loaded from the cache
+                file at solve time. For more information on freezing, see the docstring of `Opti.variable()`.
+
+            cache_filename: A path to a JSON file used to save and load solved values of variables (by category).
+                Required if you use `load_frozen_variables_from_cache` or `save_to_cache_on_solve`; also used by
+                `Opti.save_solution()` and `Opti.get_solution_dict_from_cache()`.
+
+            load_frozen_variables_from_cache: If True, then upon calling `Opti.solve()`, the values of all frozen
+                variables (in the categories given by `variable_categories_to_freeze`) will be loaded from the
+                cache file at `cache_filename`, rather than using their `init_guess`. (Variables manually frozen
+                with `Opti.variable(freeze=True)` keep their `init_guess` value.)
+
+            save_to_cache_on_solve: If True, then upon a successful `Opti.solve()`, the solved values of all
+                variables will be saved to the cache file at `cache_filename` (equivalent to calling
+                `Opti.save_solution()` after solving).
+
+            ignore_violated_parametric_constraints: Determines what happens when a constraint that contains no
+                decision variables (e.g., one between frozen variables only) evaluates False. If False (default),
+                a RuntimeError is raised at `Opti.subject_to()`, since the problem is infeasible as-written. If
+                True, such constraints are silently ignored - useful when freezing variables would otherwise
+                make some constraints trivially violated.
+
+            freeze_style: Determines how frozen variables are implemented under the hood. Options are:
+
+                * "parameter" (default): frozen variables become CasADi parameters. Their values can then be
+                    swapped after declaration (e.g., when loading from a cache, or via `parameter_mapping`).
+
+                * "float": frozen variables become literal floats (or arrays). This simplifies the resulting
+                    expression graphs, but their values are baked in permanently at declaration - so this is
+                    incompatible with `load_frozen_variables_from_cache`.
+        """
         # Default arguments
         if variable_categories_to_freeze is None:
             variable_categories_to_freeze = []
