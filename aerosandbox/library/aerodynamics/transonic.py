@@ -39,7 +39,7 @@ def sears_haack_drag_from_volume(volume: float, length: float) -> float:
 
 def mach_crit_Korn(CL, t_over_c, sweep=0, kappa_A=0.95):
     """
-        Wave drag_force coefficient prediction using the low-fidelity Korn Equation method;
+    Critical Mach number prediction using the low-fidelity Korn Equation method;
     derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
 
     Args:
@@ -49,6 +49,7 @@ def mach_crit_Korn(CL, t_over_c, sweep=0, kappa_A=0.95):
         kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
 
     Returns:
+        The critical Mach number, above which wave drag starts to appear.
 
     """
     smooth_abs_CL = np.softmax(CL, -CL, hardness=10)
@@ -69,6 +70,7 @@ def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
 
     :param Cl: Sectional lift coefficient
     :param t_over_c: thickness-to-chord ratio
+    :param mach: Freestream Mach number
     :param sweep: sweep angle, in degrees
     :param kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
     :return: Wave drag coefficient

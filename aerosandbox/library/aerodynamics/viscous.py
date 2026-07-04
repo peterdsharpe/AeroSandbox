@@ -17,14 +17,14 @@ def Cd_cylinder(
         Re_D: Reynolds number, referenced to diameter
         mach: Mach number
         include_mach_effects: If this is set False, it assumes Mach = 0, which simplifies the computation.
-        subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows. Useful, since
-    this model is now convex and can be more well-behaved.
+        subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows.
+            Useful, since this model is then convex and can be more well-behaved.
 
     Returns:
-
-    # TODO rework this function to use tanh blending, which will mitigate overflows
+        The drag coefficient of the cylinder, referenced to the cylinder diameter and unit length.
 
     """
+    # TODO rework this function to use tanh blending, which will mitigate overflows
 
     ##### Do the viscous part of the computation
     csigc = 5.5766722118597247
