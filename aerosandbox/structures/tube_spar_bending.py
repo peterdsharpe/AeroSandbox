@@ -254,32 +254,40 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             )
         EI = elastic_modulus * moment_of_inertia
 
+        ### Compute the characteristic force magnitude, for use in variable scaling.
+        # This is the magnitude of the net distributed load [N]. Since Opti requires
+        # strictly-positive scale values, we take the absolute value (so that
+        # net-downward loads work) and fall back to a positive value if the net load
+        # is zero (e.g., the default no-load case).
+        force_scale = np.abs(np.sum(np.trapz(distributed_force) * dy))
+        try:
+            if float(force_scale) == 0:
+                force_scale = 1.0
+        except (TypeError, RuntimeError):  # Symbolic (e.g., CasADi) input; leave as-is.
+            pass
+
         ### Compute the initial guess
         u = self.opti.variable(
             init_guess=np.zeros_like(y),
-            scale=np.sum(np.trapz(distributed_force) * dy) * length**4 / EI_guess,
+            scale=force_scale * length**4 / EI_guess,
         )
         du = self.opti.derivative_of(
             u,
             with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy)
-            * length**3
-            / EI_guess,
+            derivative_scale=force_scale * length**3 / EI_guess,
         )
         ddu = self.opti.derivative_of(
             du,
             with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy)
-            * length**2
-            / EI_guess,
+            derivative_scale=force_scale * length**2 / EI_guess,
         )
         dEIddu = self.opti.derivative_of(
             EI * ddu,
             with_respect_to=y,
             derivative_init_guess=np.zeros_like(y),
-            derivative_scale=np.sum(np.trapz(distributed_force) * dy) * length,
+            derivative_scale=force_scale * length,
         )
         self.opti.constrain_derivative(
             variable=dEIddu, with_respect_to=y, derivative=distributed_force
