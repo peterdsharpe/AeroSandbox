@@ -99,7 +99,7 @@ def mass_gearbox(
 if __name__ == "__main__":
     import matplotlib.style as style
 
-    style.use("seaborn")
+    style.use("seaborn-v0_8")
 
     # Daedalus propeller
     print(
