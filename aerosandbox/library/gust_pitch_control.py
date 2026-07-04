@@ -49,7 +49,7 @@ class TransverseGustPitchControl(ImplicitAnalysis):
         da_ds = (self.angles_of_attack[1:] - self.angles_of_attack[:-1]) / ds
         init_term = self.angles_of_attack[0] * wagner[:-1]
         for i in range(self.timesteps - 1):
-            integral_term = np.sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
+            integral_term = sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
             self.lift_coefficients[i] = 2 * np.pi * (integral_term + init_term[i])
 
         # Calculate unsteady lift due to transverse gust
@@ -93,7 +93,7 @@ class TransverseGustPitchControl(ImplicitAnalysis):
         ) / ds
         init_term = self.optimal_pitching_profile_rad[0] * wagner[:-1]
         for i in range(self.timesteps - 1):
-            integral_term = np.sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
+            integral_term = sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
             self.pitching_lift[i] = 2 * np.pi * (integral_term + init_term[i])
 
         self.gust_lift = np.zeros(self.timesteps - 1)
