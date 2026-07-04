@@ -104,6 +104,26 @@ def test_diff_atmosphere():
     )
 
 
+def test_method_is_case_insensitive():
+    assert Atmosphere(altitude=0, method="ISA").pressure() == pytest.approx(
+        101325, abs=1
+    )
+
+
+def test_bad_method_raises_at_construction():
+    with pytest.raises(ValueError, match="method"):
+        Atmosphere(altitude=0, method="nonsense")
+
+
+def test_bad_method_raises_lazily_if_mutated_after_construction():
+    atmo = Atmosphere(altitude=0)
+    atmo.method = "nonsense"
+    with pytest.raises(ValueError, match="method"):
+        atmo.pressure()
+    with pytest.raises(ValueError, match="method"):
+        atmo.temperature()
+
+
 def plot_isa_residuals():
     atmo = Atmosphere(altitude=altitudes, method="isa")
 

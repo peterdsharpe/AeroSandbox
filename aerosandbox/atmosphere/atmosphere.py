@@ -50,6 +50,11 @@ class Atmosphere(AeroSandboxObject):
                 the impact of temperature on density altitude, for example.
 
         """
+        if method.lower() not in ("differentiable", "isa"):
+            raise ValueError(
+                f"Bad value of `method`: {method!r}. Valid options are 'differentiable' or 'isa'."
+            )
+
         self.altitude = altitude
         self.method = method
         self.temperature_deviation = temperature_deviation
@@ -141,7 +146,9 @@ class Atmosphere(AeroSandboxObject):
         elif self.method.lower() == "differentiable":
             return pressure_differentiable(self.altitude)
         else:
-            raise ValueError("Bad value of 'type'!")
+            raise ValueError(
+                f"Bad value of `method`: {self.method!r}. Valid options are 'differentiable' or 'isa'."
+            )
 
     def temperature(self):
         """
@@ -154,7 +161,9 @@ class Atmosphere(AeroSandboxObject):
                 temperature_differentiable(self.altitude) + self.temperature_deviation
             )
         else:
-            raise ValueError("Bad value of 'type'!")
+            raise ValueError(
+                f"Bad value of `method`: {self.method!r}. Valid options are 'differentiable' or 'isa'."
+            )
 
     ### Everything else in this class is a derived quantity; all models of derived quantities go here.
 
