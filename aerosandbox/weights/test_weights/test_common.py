@@ -8,6 +8,7 @@ concrete AeroSandboxObject used elsewhere to exercise base-class behavior.
 """
 
 import inspect
+import warnings
 
 import aerosandbox as asb
 import pytest
@@ -64,6 +65,23 @@ def test_implicit_analysis_initialize_preserves_signature_and_docstring():
     assert analysis.alpha == 3.0
     assert analysis.opti_provided is True
     assert analysis.opti is opti
+
+
+def test_substitute_solution_deprecation_warning_points_at_caller():
+    """
+    substitute_solution's DeprecationWarning should carry stacklevel=2, so
+    that it is attributed to the calling code (this file), not to
+    aerosandbox/common.py.
+    """
+    mp = asb.MassProperties(mass=1.0)
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        mp.substitute_solution(sol=None)
+
+    deprecations = [wi for wi in w if issubclass(wi.category, DeprecationWarning)]
+    assert len(deprecations) == 1
+    assert deprecations[0].filename == __file__
 
 
 def test_docs_opens_hosted_documentation(monkeypatch):
