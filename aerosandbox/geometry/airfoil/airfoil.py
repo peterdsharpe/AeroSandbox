@@ -99,16 +99,27 @@ class Airfoil(Polygon):
             try:  # If coordinates is a string, assume it's a filepath to a .dat file
                 self.coordinates = get_file_coordinates(filepath=coordinates)
             except (OSError, FileNotFoundError, TypeError, UnicodeDecodeError):
-                try:
-                    shape = coordinates.shape
-                    assert len(shape) == 2
-                    assert shape[0] == 2 or shape[1] == 2
-                    if not shape[1] == 2:
-                        coordinates = np.transpose(shape)
+                if hasattr(
+                    coordinates, "shape"
+                ):  # Handles NumPy arrays, CasADi types, etc.
+                    array = coordinates
+                else:  # Try to coerce other array-likes (e.g., a list of [x, y] pairs) to an array.
+                    try:
+                        array = np.asarray(coordinates, dtype=float)
+                    except (TypeError, ValueError):
+                        array = None  # Couldn't be interpreted as coordinates; warns below.
 
-                    self.coordinates = coordinates
-                except AttributeError:
-                    pass
+                if array is not None:
+                    shape = array.shape
+                    if not (len(shape) == 2 and (shape[0] == 2 or shape[1] == 2)):
+                        raise ValueError(
+                            "The `coordinates` input should be an Nx2 (or 2xN) array of [x, y] coordinates, "
+                            f"but instead it has shape {tuple(shape)}."
+                        )
+                    if not shape[1] == 2:
+                        array = np.transpose(array)
+
+                    self.coordinates = array
 
         if self.coordinates is None:
             import warnings

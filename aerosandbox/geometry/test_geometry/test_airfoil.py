@@ -63,6 +63,33 @@ def test_fake_airfoil():
     assert a.n_points() == 0
 
 
+def test_coordinates_2xN_input(naca4412):
+    """
+    A 2xN coordinate array should be transposed into the Nx2 convention (not silently corrupted).
+    """
+    af = Airfoil("transposed", coordinates=naca4412.coordinates.T)
+    assert np.all(af.coordinates == naca4412.coordinates)
+
+
+def test_coordinates_list_input(naca4412):
+    """
+    A list of [x, y] pairs is a natural array-like input, and should be accepted (not silently discarded).
+    """
+    af = Airfoil("from_list", coordinates=naca4412.coordinates.tolist())
+    assert af.coordinates is not None
+    assert np.allclose(af.coordinates, naca4412.coordinates)
+
+
+def test_coordinates_invalid_shape_input():
+    """
+    Arrays that can't be interpreted as [x, y] coordinates should raise an explicit ValueError.
+    """
+    with pytest.raises(ValueError):
+        Airfoil("bad", coordinates=np.array([1.0, 2.0, 3.0]))
+    with pytest.raises(ValueError):
+        Airfoil("bad", coordinates=np.ones((5, 3)))
+
+
 def test_TE_angle(naca4412):
     assert naca4412.TE_angle() == pytest.approx(14.74635802332286, abs=1)
 
