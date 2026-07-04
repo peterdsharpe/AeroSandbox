@@ -46,6 +46,19 @@ Floors like numpy>=2.2.6, matplotlib>=3.10.7, pandas>=2.3.3, scipy>=1.15.3, casa
 
 #### Bugs (wrong results or crashes)
 
+### NEW. thrust_turbofan() fit coefficient appears unit-inconsistent (~150x high)
+
+`aerosandbox/library/propulsion_turbofan.py` · bug · found during docs build (2026-07-04) · backwards-compat risk: low
+
+While writing the propulsion chapter of the docs book, the author found `thrust_turbofan()`'s
+regression coefficient inconsistent with a refit of the bundled dataset: the leading coefficient
+should be ~71.9 rather than 12050.7 (~150x discrepancy, consistent with a lbf/N or kg/ton unit slip
+in the original fit). `mass_turbofan` and the TSFC models were verified consistent and are used in
+the book instead.
+
+**Fix:** Refit the thrust regression against `studies/` source data and pin with a test; until then
+treat `thrust_turbofan()` outputs as suspect.
+
 ### 2. FuselageXSec.compute_frame() returns non-unit axes for tilted normals, shrinking cross-sections
 
 `aerosandbox/geometry/fuselage.py:854` · bug · verified · backwards-compat risk: none
