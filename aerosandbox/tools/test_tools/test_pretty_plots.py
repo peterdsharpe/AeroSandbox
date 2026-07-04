@@ -63,5 +63,21 @@ def test_pie_sort_by_invalid_string():
     plt.close(fig)
 
 
+def test_get_last_line_color():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1], color="darkorchid")
+    (line,) = ax.plot([0, 1], [1, 0], color="crimson")
+    assert p.get_last_line_color() == line.get_color() == "crimson"
+    plt.close(fig)
+
+
+def test_get_last_line_color_no_lines():
+    """With no lines on the axes, falls back to a palette color without crashing."""
+    fig, ax = plt.subplots()
+    color = p.get_last_line_color()
+    assert color is not None
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

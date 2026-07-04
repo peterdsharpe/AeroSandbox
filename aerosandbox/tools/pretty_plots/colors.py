@@ -75,7 +75,7 @@ def get_last_line_color():
     lines = plt.gca().lines
     try:
         line = lines[-1]
-        return line._color
+        return line.get_color()
     except IndexError:
         return palettes["categorical"][
             0
