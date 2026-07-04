@@ -103,6 +103,14 @@ class TubeBeam1(AeroSandboxObject):
     ):
         """
         Adds a point force and/or moment.
+
+        WARNING: Point loads must be added in ascending order of `location`. setup()
+        builds the discretization mesh by chaining segments between consecutive
+        point-load locations in insertion order, so adding loads out of order
+        silently produces a non-monotonic (overlapping) mesh and wrong results, with
+        no error raised. (Locations may be symbolic optimization variables, so they
+        cannot be sorted automatically at setup time.)
+
         :param location: Location of the point force along the beam [m]
         :param force: Force to add [N]
         :param bending_moment: Bending moment to add [N-m] # TODO make this work
@@ -165,6 +173,10 @@ class TubeBeam1(AeroSandboxObject):
     def setup(self, bending_BC_type="cantilevered"):
         """
         Sets up the problem. Run this last.
+
+        WARNING: Assumes that any point loads were added (via add_point_load) in
+        ascending order of location; see the warning in add_point_load().
+
         :return: None (in-place)
         """
         ### Discretize and assign loads
