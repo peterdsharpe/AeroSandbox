@@ -112,13 +112,18 @@ def black_box(
         inputs = []
 
         # Check number of positional arguments in the signature
-        n_positional_args = len(signature.parameters) - len(
-            signature.parameters.values()
+        n_required_args = sum(
+            1
+            for parameter in signature.parameters.values()
+            if parameter.default is parameter.empty
         )
         n_args = len(signature.parameters)
-        if len(args) < n_positional_args or len(args) > n_args:
+        if len(args) > n_args:
+            # Note: required arguments may legally be passed as keyword arguments, so only
+            # an upper-bound check applies here. (Missing required arguments are caught,
+            # per-argument, in the loop below.)
             raise TypeError(
-                f"Takes from {n_positional_args} to {n_args} positional arguments but {len(args)} were given"
+                f"Takes from {n_required_args} to {n_args} positional arguments but {len(args)} were given"
             )
 
         for i, (name, parameter) in enumerate(signature.parameters.items()):
