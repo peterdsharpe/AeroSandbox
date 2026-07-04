@@ -376,32 +376,24 @@ class XFoil(ExplicitAnalysis):
                     "\t - Try allowing XFoil to repanel the airfoil by setting `xfoil_repanel=True` in the XFoil constructor.\n"
                 )
 
-            try:
-                separator_line = None
-                for i, line in enumerate(lines):
-                    # The first line with at least 30 "-" in it is the separator line.
-                    if line.count("-") >= 30:
-                        separator_line = i
-                        break
+            separator_line = None
+            for i, line in enumerate(lines):
+                # The first line with at least 30 "-" in it is the separator line.
+                if line.count("-") >= 30:
+                    separator_line = i
+                    break
 
-                if separator_line is None:
-                    raise IndexError
-
-                title_line = lines[i - 1]
-                columns = title_line.split()
-
-                data_lines = lines[i + 1 :]
-
-            except IndexError:
+            if separator_line is None:
                 raise self.XFoilError(
                     "XFoil output file is malformed; it doesn't have the expected number of lines.\n"
                     "For debugging, the raw output file from XFoil is printed below:\n"
                     + "\n".join(lines)
-                    + "\nTitle line: "
-                    + title_line
-                    + "\nColumns: "
-                    + str(columns)
                 )
+
+            title_line = lines[separator_line - 1]
+            columns = title_line.split()
+
+            data_lines = lines[separator_line + 1 :]
 
             def str_to_float(s: str) -> float:
                 try:

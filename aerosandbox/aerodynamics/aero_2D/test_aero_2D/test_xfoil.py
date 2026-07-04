@@ -198,6 +198,67 @@ def test_floating_point_exception_return_code_raises_descriptive_error(tmp_path)
         xf.alpha(5)
 
 
+### Output-parsing logic
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Uses a POSIX shell script.")
+def test_malformed_output_file_raises_xfoil_error(tmp_path):
+    """
+    An output file with no separator line (e.g., truncated output) should raise the
+    intended XFoilError; previously it raised UnboundLocalError instead.
+    (Regression test.)
+    """
+    xf = asb.XFoil(
+        airfoil=make_airfoil(),
+        xfoil_command=make_fake_xfoil_executable(
+            tmp_path,
+            "printf 'garbage\\nno separator here\\n' > output.txt",
+        ),
+    )
+    with pytest.raises(asb.XFoil.XFoilError, match="malformed"):
+        xf.alpha(5)
+
+
+FAKE_POLAR = """\
+       XFOIL         Version 6.99
+
+ Calculated polar for: NACA 2412
+
+ 1 1 Reynolds number fixed          Mach number fixed
+
+ xtrf =   1.000 (top)        1.000 (bottom)
+ Mach =   0.000     Re =     1.000 e 6     Ncrit =   9.000
+
+   alpha    CL        CD       CDp       CM      Cpmin    Xcpmin   Chinge   Top_Xtr  Bot_Xtr
+  ------ -------- --------- --------- -------- -------- -------- -------- -------- --------
+   5.000   0.9200   0.00800   0.00150  -0.0500  -1.5000   0.0300  -0.0100   0.4500   0.9000
+   3.000   0.7010   0.00612   0.00098  -0.0525  -1.1000   0.0400  -0.0080   0.5715   0.9457
+"""
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Uses a POSIX shell script.")
+def test_polar_parsing_without_binary(tmp_path):
+    """
+    Parses a realistic (fixture) XFoil polar file, without needing the XFoil binary.
+    Also checks that results are returned sorted by alpha, as documented.
+    """
+    polar_file = tmp_path / "polar.txt"
+    polar_file.write_text(FAKE_POLAR)
+
+    xf = asb.XFoil(
+        airfoil=make_airfoil(),
+        xfoil_command=make_fake_xfoil_executable(
+            tmp_path,
+            f"cp '{polar_file}' output.txt",
+        ),
+    )
+    result = xf.alpha([3, 5])
+
+    assert result["alpha"] == pytest.approx([3, 5])
+    assert result["CL"] == pytest.approx([0.7010, 0.9200])
+    assert result["CD"] == pytest.approx([0.00612, 0.00800])
+
+
 ### Tests requiring the XFoil binary
 
 
