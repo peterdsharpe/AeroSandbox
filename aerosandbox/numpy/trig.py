@@ -9,8 +9,8 @@ from numpy import pi as _pi
 from aerosandbox.numpy.array import asarray
 from aerosandbox.numpy.typing import Vectorizable, Array
 
-_deg2rad = 180.0 / _pi
-_rad2deg = _pi / 180.0
+_deg2rad = _pi / 180.0
+_rad2deg = 180.0 / _pi
 
 
 def degrees(x: Vectorizable) -> Array:
@@ -30,7 +30,7 @@ def degrees(x: Vectorizable) -> Array:
     --------
     numpy.degrees : https://numpy.org/doc/stable/reference/generated/numpy.degrees.html
     """
-    return asarray(x * _deg2rad)
+    return asarray(x * _rad2deg)
 
 
 def radians(x: Vectorizable) -> Array:
@@ -50,7 +50,7 @@ def radians(x: Vectorizable) -> Array:
     --------
     numpy.radians : https://numpy.org/doc/stable/reference/generated/numpy.radians.html
     """
-    return asarray(x * _rad2deg)
+    return asarray(x * _deg2rad)
 
 
 def sind(x: Vectorizable) -> Array:
