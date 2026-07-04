@@ -256,5 +256,26 @@ def test_in_place_mutation_detected_with_array_x_data():
         )
 
 
+def test_model_evaluation_error_preserves_cause():
+    """
+    Regression test: an error raised inside the user-supplied model used to be re-raised
+    as a bare Exception with no __cause__, hiding the original error from the user.
+    """
+
+    def broken_model(x, p):
+        raise KeyError("some_missing_key")
+
+    with pytest.raises(Exception) as exc_info:
+        FittedModel(
+            model=broken_model,
+            x_data=np.linspace(0, 1, 5),
+            y_data=np.linspace(0, 1, 5),
+            parameter_guesses={"m": 0},
+            verbose=False,
+        )
+
+    assert isinstance(exc_info.value.__cause__, KeyError)
+
+
 if __name__ == "__main__":
     pytest.main()

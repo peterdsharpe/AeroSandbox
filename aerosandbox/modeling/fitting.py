@@ -230,7 +230,7 @@ class FittedModel(SurrogateModel):
 
         try:
             y_model = model(x_data, params)  # Evaluate the model
-        except Exception:
+        except Exception as e:
             raise Exception(
                 """
             There was an error when evaluating the model you supplied with the x_data you supplied.
@@ -240,7 +240,7 @@ class FittedModel(SurrogateModel):
                 * Your model assumes x is an array-like but you provided x_data as a dict, or vice versa.
             See the docstring of FittedModel() if you have other usage questions or would like to see examples.
             """
-            )
+            ) from e
 
         try:  ### If the model did in-place operations on x_data, throw an error
             x_data_is_unchanged = np.all(x_data == x_data_original)
