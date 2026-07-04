@@ -83,6 +83,131 @@ def test_flat_plate_mirrored():
     sanity_check_results(analysis.run())
 
 
+def make_flapped_wing_airplane(
+    aileron_deflection: float = 0.0,
+    elevator_deflection: float = 0.0,
+) -> asb.Airplane:
+    """
+    A simple two-surface airplane with an antisymmetric aileron on the wing and a
+    symmetric elevator on the horizontal tail.
+    """
+    wing = asb.Wing(
+        name="Main Wing",
+        symmetric=True,
+        xsecs=[
+            asb.WingXSec(
+                xyz_le=[0, 0, 0],
+                chord=1,
+                airfoil=asb.Airfoil("naca0012"),
+                control_surfaces=[
+                    asb.ControlSurface(
+                        name="Aileron",
+                        symmetric=False,
+                        hinge_point=0.75,
+                        deflection=aileron_deflection,
+                    )
+                ],
+            ),
+            asb.WingXSec(xyz_le=[0, 4, 0], chord=1, airfoil=asb.Airfoil("naca0012")),
+        ],
+    )
+    htail = asb.Wing(
+        name="H Tail",
+        symmetric=True,
+        xsecs=[
+            asb.WingXSec(
+                xyz_le=[0, 0, 0],
+                chord=0.5,
+                airfoil=asb.Airfoil("naca0012"),
+                control_surfaces=[
+                    asb.ControlSurface(
+                        name="Elevator",
+                        symmetric=True,
+                        hinge_point=0.75,
+                        deflection=elevator_deflection,
+                    )
+                ],
+            ),
+            asb.WingXSec(
+                xyz_le=[0, 1.5, 0], chord=0.5, airfoil=asb.Airfoil("naca0012")
+            ),
+        ],
+    ).translate([4, 0, 0])
+    return asb.Airplane(
+        name="TwoSurf",
+        wings=[wing, htail],
+        s_ref=8,
+        c_ref=1,
+        b_ref=8,
+    )
+
+
+def test_control_surface_deflections_written_to_avl_file():
+    """
+    Regression test for https://github.com/peterdsharpe/AeroSandbox/issues/134:
+
+    Control surface deflections are passed to AVL by attaching every control surface
+    to a single AVL control variable ("all_deflections"), with each surface's
+    user-specified deflection written as that surface's CONTROL-card gain
+    [deg deflection / unit control variable]. The run keystrokes then set that
+    control variable to 1 ('d1 d1 1'), deflecting each surface by its own amount.
+
+    Commit 8704f5df accidentally changed the CONTROL cards to per-surface names with
+    gain = 1 (without updating the keystrokes), which made AVL silently ignore all
+    user-specified deflections and instead deflect the first control surface by
+    exactly 1 degree.
+    """
+    analysis = asb.AVL(
+        airplane=make_flapped_wing_airplane(
+            aileron_deflection=5,
+            elevator_deflection=-10.5,
+        ),
+        op_point=asb.OperatingPoint(velocity=10, alpha=3),
+    )
+
+    avl_string = analysis.write_avl()  # String mode; no files written
+
+    control_lines = [
+        line
+        for line in avl_string.split("\n")
+        if line.startswith("all_deflections")
+    ]
+
+    # Each control surface writes its CONTROL card to both bounding sections.
+    # Aileron: gain = 5, antisymmetric (SgnDup = -1)
+    assert control_lines.count("all_deflections 5 0.75 0 0 0 -1") == 2
+    # Elevator: gain = -10.5, symmetric (SgnDup = +1)
+    assert control_lines.count("all_deflections -10.5 0.75 0 0 0 1") == 2
+    assert len(control_lines) == 4
+
+    # The keystrokes must set the shared control variable to exactly 1, so that
+    # each surface deflects by (gain * 1) = its own user-specified deflection.
+    assert "d1 d1 1" in analysis._default_keystroke_file_contents()
+
+
+@requires_avl
+def test_control_surface_deflection_changes_avl_results():
+    """
+    Regression test (behavioral) for
+    https://github.com/peterdsharpe/AeroSandbox/issues/134: deflecting a symmetric
+    trailing-edge elevator downwards must increase lift and pitch the airplane
+    nose-down, relative to the undeflected airplane at the same operating point.
+    """
+    op_point = asb.OperatingPoint(velocity=10, alpha=3)
+
+    res_undeflected = asb.AVL(
+        airplane=make_flapped_wing_airplane(elevator_deflection=0),
+        op_point=op_point,
+    ).run()
+    res_deflected = asb.AVL(
+        airplane=make_flapped_wing_airplane(elevator_deflection=10),
+        op_point=op_point,
+    ).run()
+
+    assert res_deflected["CL"] > res_undeflected["CL"] + 0.01
+    assert res_deflected["Cm"] < res_undeflected["Cm"] - 0.01
+
+
 def test_write_avl_string_mode(tmp_path):
     """
     Regression test: write_avl(filepath=None) used to raise TypeError (from

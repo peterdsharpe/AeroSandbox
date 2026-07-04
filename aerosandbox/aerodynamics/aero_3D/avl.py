@@ -410,7 +410,11 @@ class AVL(ExplicitAnalysis):
             f"y y {float(r_bar)}",
         ]
 
-        # Set control surface deflections
+        # Set control surface deflections.
+        # All control surfaces are lumped into the single AVL control variable d1
+        # ("all_deflections"), with each surface's own deflection encoded as its
+        # CONTROL-card gain in the .avl file (see write_avl()); setting d1 = 1 here
+        # hence deflects every surface by its user-specified amount.
         run_file_contents += ["d1 d1 1"]
 
         return run_file_contents
@@ -546,11 +550,16 @@ class AVL(ExplicitAnalysis):
                     )
                     sign_dup = 1 if surf.symmetric else -1
 
+                    # All control surfaces are attached to a single AVL control variable
+                    # ("all_deflections"), with each surface's deflection encoded as its
+                    # gain [deg deflection / unit control variable]. The run keystrokes
+                    # then set this control variable to 1, so that each surface deflects
+                    # by its own user-specified `deflection`.
                     command = clean(
                         f"""\
                         CONTROL
                         #name, gain, Xhinge, XYZhvec, SgnDup
-                        {surf.name} 1 {xhinge:.8g} 0 0 0 {sign_dup}
+                        all_deflections {surf.deflection:.8g} {xhinge:.8g} 0 0 0 {sign_dup}
                         """
                     )
 
