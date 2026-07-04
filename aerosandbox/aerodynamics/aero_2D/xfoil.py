@@ -624,7 +624,6 @@ class XFoil(ExplicitAnalysis):
 
         """
         alphas = np.reshape(np.array(alpha), -1)
-        alphas = np.sort(alphas)
 
         commands = []
 
@@ -652,6 +651,7 @@ class XFoil(ExplicitAnalysis):
             and (start_at is not None)
             and (np.min(alphas) < start_at < np.max(alphas))
         ):
+            alphas = np.sort(alphas)
             alphas_upper = alphas[alphas > start_at]
             alphas_lower = alphas[alphas <= start_at][::-1]
 
@@ -702,7 +702,6 @@ class XFoil(ExplicitAnalysis):
 
         """
         cls = np.reshape(np.array(cl), -1)
-        cls = np.sort(cls)
 
         commands = []
 
@@ -730,6 +729,7 @@ class XFoil(ExplicitAnalysis):
             and (start_at is not None)
             and (np.min(cls) < start_at < np.max(cls))
         ):
+            cls = np.sort(cls)
             cls_upper = cls[cls > start_at]
             cls_lower = cls[cls <= start_at][::-1]
 

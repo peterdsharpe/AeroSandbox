@@ -74,6 +74,78 @@ def test_alpha_with_hinge_point_none_schedules_no_fmom():
     assert "fmom" not in commands
 
 
+### Run-scheduling / ordering logic
+
+
+def scheduled_values(commands, prefix: str):
+    """
+    Extracts the numeric values of scheduled runs (e.g., "a 5.0" -> 5.0) from a
+    list of keystroke lines.
+    """
+    return [
+        float(line[len(prefix) :])
+        for line in commands
+        if line.startswith(prefix) and line != "init"
+    ]
+
+
+def test_alpha_order_preserved_when_start_at_is_none():
+    """
+    The docstring promises that with start_at=None, 'the alpha inputs are run as a
+    single sequence in the order given'. Previously, inputs were always sorted first.
+    (Regression test.)
+    """
+    xf = asb.XFoil(airfoil=make_airfoil())
+    commands = capture_run_commands(xf)
+
+    xf.alpha([5, 3, 4], start_at=None)
+
+    assert scheduled_values(commands, "a ") == [5, 3, 4]
+
+
+def test_cl_order_preserved_when_start_at_is_none():
+    xf = asb.XFoil(airfoil=make_airfoil())
+    commands = capture_run_commands(xf)
+
+    xf.cl([0.9, 0.5, 0.7], start_at=None)
+
+    assert scheduled_values(commands, "cl ") == [0.9, 0.5, 0.7]
+
+
+def test_alpha_start_at_split_with_list_input():
+    xf = asb.XFoil(airfoil=make_airfoil())
+    commands = capture_run_commands(xf)
+
+    xf.alpha([-5, 5, -10, 10], start_at=0)
+
+    # Two sweeps diverging from start_at=0: upward first, then (after re-init) downward.
+    assert scheduled_values(commands, "a ") == [5, 10, -5, -10]
+    assert "init" in commands
+
+
+def test_alpha_start_at_split_with_unsorted_array_input():
+    """
+    Points crossing start_at must be split into two diverging sweeps, each run exactly
+    once, regardless of the input ordering.
+    """
+    xf = asb.XFoil(airfoil=make_airfoil())
+    commands = capture_run_commands(xf)
+
+    xf.alpha(np.array([5, -5, 10, -10]), start_at=0)
+
+    assert scheduled_values(commands, "a ") == [5, 10, -5, -10]
+
+
+def test_cl_start_at_split():
+    xf = asb.XFoil(airfoil=make_airfoil())
+    commands = capture_run_commands(xf)
+
+    xf.cl([-0.5, 0.25, 0.75], start_at=0)
+
+    assert scheduled_values(commands, "cl ") == [0.25, 0.75, -0.5]
+    assert "init" in commands
+
+
 ### Tests requiring the XFoil binary
 
 
