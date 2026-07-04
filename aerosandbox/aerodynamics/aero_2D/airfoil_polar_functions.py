@@ -1,10 +1,11 @@
 from aerosandbox.geometry import Airfoil
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def airfoil_coefficients_post_stall(
     airfoil: Airfoil,
-    alpha: float,
+    alpha: Vectorizable,
 ):
     """
     Estimates post-stall aerodynamics of an airfoil.
@@ -15,10 +16,12 @@ def airfoil_coefficients_post_stall(
     range". J. Renewable Sustainable Energy. 2020. doi: 10.1063/1.5126055
 
     Args:
-        airfoil:
-        op_point:
+        airfoil: The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+
+        alpha: The angle of attack [degrees]. Can be either a float or an array of floats.
 
     Returns:
+        A tuple of (CL, CD, CM), the lift, drag, and moment coefficients. Each has the same shape as `alpha`.
 
     """
     sina = np.sind(alpha)
