@@ -24,8 +24,19 @@ def calculate_induced_velocity_horseshoe(
     In this flowfield, the following singularity elements are assumed:
         * A single horseshoe vortex consisting of a bound leg and two trailing legs
 
-    This function consists entirely of scalar, elementwise NumPy ufunc operations - so it can be vectorized as
-    desired assuming input dimensions/broadcasting are compatible.
+    This function is vectorized, with the following shape requirements:
+
+        * The field-point coordinates (`x_field`, `y_field`, `z_field`) must all have the same shape as each
+        other (e.g., all scalars, or all arrays of the same shape). Mixing scalars and arrays within this
+        group raises a ValueError.
+
+        * Likewise, the vortex-vertex coordinates (`x_left` ... `z_right`) must all have the same shape as
+        each other.
+
+        * The field-point group and the vortex-vertex group are then combined following standard NumPy
+        broadcasting rules. For example, to compute the velocity induced by M horseshoe vortices at each of
+        N field points, pass field coordinates with shape (N, 1) and vertex coordinates with shape (M,),
+        yielding outputs of shape (N, M).
 
     Args:
         x_field: x-coordinate of the field point
@@ -48,8 +59,9 @@ def calculate_induced_velocity_horseshoe(
 
         gamma: The strength of the horseshoe vortex filament.
 
-        trailing_vortex_direction: The direction that the trailing legs of the horseshoe vortex extend. Usually,
-        this is modeled as the direction of the freestream.
+        trailing_vortex_direction: The direction that the trailing legs of the horseshoe vortex extend. Given
+        as a single 3-element vector, shared by all horseshoe vortices. Usually, this is modeled as the
+        direction of the freestream.
 
         vortex_core_radius: To prevent a vortex singularity, here we use a Kaufmann vortex model. This parameter
         governs the radius of this vortex model. It should be significantly smaller (e.g., at least an order of
