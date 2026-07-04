@@ -556,6 +556,17 @@ class Opti(cas.Opti):
         self,
         f: Scalar,
     ) -> None:
+        """
+        Sets the objective function that the optimizer will attempt to minimize upon `Opti.solve()`.
+
+        Args:
+            f: The objective: a scalar expression, typically a function of the optimization variables.
+
+                For best solver performance, scale the objective so that it is of order ~1 at the optimum
+                (analogous to the guidance for the `scale` argument of `Opti.variable()`).
+
+        Returns: None (sets the objective in-place)
+        """
         # f = cas.cse(f)
         super().minimize(f)
 
@@ -563,6 +574,16 @@ class Opti(cas.Opti):
         self,
         f: Scalar,
     ) -> None:
+        """
+        Sets the objective function that the optimizer will attempt to maximize upon `Opti.solve()`.
+
+        This is syntactic sugar for `opti.minimize(-f)`; see `Opti.minimize()` for details.
+
+        Args:
+            f: The objective: a scalar expression, typically a function of the optimization variables.
+
+        Returns: None (sets the objective in-place)
+        """
         # f = cas.cse(f)
         super().minimize(-1 * f)
 
@@ -838,12 +859,47 @@ class Opti(cas.Opti):
     def solve_sweep(
         self,
         parameter_mapping: dict[cas.MX, np.ndarray],
-        update_initial_guesses_between_solves=False,
-        verbose=True,
+        update_initial_guesses_between_solves: bool = False,
+        verbose: bool = True,
         solve_kwargs: dict | None = None,
         return_callable: bool = False,
         garbage_collect_between_runs: bool = False,
     ) -> np.ndarray | Callable[[cas.MX], np.ndarray]:
+        """
+        Solves the optimization problem repeatedly, once for each combination of parameter values given, and
+        returns the resulting solutions. Useful for parameter sweeps (e.g., a drag polar over a range of lift
+        coefficients).
+
+        Args:
+            parameter_mapping: A dictionary where each key is a parameter (created via `Opti.parameter()`) and
+                each value is an array of values to sweep that parameter over. If multiple parameters are given,
+                the value arrays are broadcast against each other (using NumPy broadcasting rules), and one solve
+                is performed for each element of the broadcasted result.
+
+            update_initial_guesses_between_solves: If True, each successful solve is used to warm-start the next
+                one (via `Opti.set_initial_from_sol()`). Useful for continuation of a sweep along a parameter.
+
+            verbose: If True, prints a progress line for each run, along with its parameter values and whether it
+                succeeded or failed.
+
+            solve_kwargs: A dictionary of keyword arguments to pass through to each underlying `Opti.solve()`
+                call. (Defaults to `dict(verbose=False, max_iter=200)`; any options you provide are merged on
+                top of these.)
+
+            return_callable: Changes the return type of this method; see below.
+
+            garbage_collect_between_runs: If True, runs a garbage-collection pass (`gc.collect()`) before each
+                solve, which can mitigate memory buildup during large sweeps.
+
+        Returns:
+            If `return_callable` is False (default): a NumPy object-array of `OptiSol` objects, with the same
+                shape as the broadcasted parameter value arrays. Runs where the solver failed contain None
+                instead of an `OptiSol`.
+
+            If `return_callable` is True: a function which, given any expression `x` (e.g., a variable or a
+                function of variables), returns an array of that expression's value in each solution (i.e.,
+                elementwise `sol.value(x)`), with NaN entries for runs where the solver failed.
+        """
         # Handle defaults
         if solve_kwargs is None:
             solve_kwargs = {}
