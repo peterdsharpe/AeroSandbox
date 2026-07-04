@@ -870,8 +870,13 @@ class LiftingLine(ExplicitAnalysis):
 
         # Compute pitching moment
 
-        bound_leg_YZ = vortex_bound_leg
-        bound_leg_YZ[:, 0] = 0
+        bound_leg_YZ = np.concatenate(  # Same as vortex_bound_leg, but with x-components zeroed out.
+            [
+                np.zeros((self.n_panels, 1)),
+                vortex_bound_leg[:, 1:],
+            ],
+            axis=1,
+        )  # Note: a copy, so that we don't modify `self.vortex_bound_leg` in-place.
         moments_pitching_geometry = (
             (0.5 * self.op_point.atmosphere.density() * tall(velocity_magnitudes**2))
             * tall(CMs)

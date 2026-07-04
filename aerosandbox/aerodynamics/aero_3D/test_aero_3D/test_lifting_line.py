@@ -153,5 +153,44 @@ def test_symmetric_wing_with_asymmetric_control_surface(AnalysisClass):
     assert aero_deflected["Cl"] < -0.05
 
 
+@pytest.mark.parametrize(
+    "AnalysisClass",
+    [asb.LiftingLine, asb.NonlinearLiftingLine],
+)
+def test_run_does_not_mutate_vortex_bound_leg(AnalysisClass):
+    """
+    Regression test: while computing pitching moments, run() used to zero out the
+    x-components of `self.vortex_bound_leg` in-place (via an un-copied alias), so any
+    post-run consumer of that attribute silently saw corrupted data on swept wings.
+    """
+    airplane = asb.Airplane(
+        wings=[
+            asb.Wing(
+                symmetric=True,
+                xsecs=[
+                    asb.WingXSec(xyz_le=[0, 0, 0], chord=1, airfoil=airfoil),
+                    asb.WingXSec(
+                        xyz_le=[1, 5, 0.2],  # Swept and dihedraled, so that the
+                        # bound legs have nonzero x-components.
+                        chord=0.6,
+                        airfoil=airfoil,
+                    ),
+                ],
+            )
+        ],
+    )
+
+    analysis = AnalysisClass(
+        airplane=airplane,
+        op_point=asb.OperatingPoint(velocity=25, alpha=3),
+    )
+    analysis.run()
+
+    expected_bound_legs = analysis.right_vortex_vertices - analysis.left_vortex_vertices
+
+    assert np.max(np.abs(expected_bound_legs[:, 0])) > 0  # Sanity check: sweep present
+    assert np.allclose(analysis.vortex_bound_leg, expected_bound_legs)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
