@@ -378,14 +378,25 @@ class Airfoil(Polygon):
                     "CD",
                     "CDp",
                     "Re",
-                ]  # Assumes the rest are antisymmetric
-
-                data = {
-                    k: np.concatenate(
-                        [v, v if k in keys_symmetric_across_alpha else -v]
-                    )
-                    for k, v in data.items()
+                    "Cpmin",
+                    "Xcpmin",
+                ]
+                # Top-/bottom-surface quantities swap with each other when mirrored across alpha;
+                # all remaining keys (e.g., alpha, CL, CM, Chinge) are antisymmetric.
+                keys_swapped_across_alpha = {
+                    "Top_Xtr": "Bot_Xtr",
+                    "Bot_Xtr": "Top_Xtr",
                 }
+
+                def mirrored(k):
+                    if k in keys_symmetric_across_alpha:
+                        return data[k]
+                    elif k in keys_swapped_across_alpha:
+                        return data[keys_swapped_across_alpha[k]]
+                    else:
+                        return -data[k]
+
+                data = {k: np.concatenate([v, mirrored(k)]) for k, v in data.items()}
 
             if (
                 cache_filename is not None

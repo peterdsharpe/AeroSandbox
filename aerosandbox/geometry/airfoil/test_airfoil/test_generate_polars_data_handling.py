@@ -40,6 +40,39 @@ def fake_xfoil(monkeypatch):
     monkeypatch.setattr(aero_2D, "XFoil", FakeXFoil)
 
 
+def test_generate_polars_symmetric_data_mirroring(fake_xfoil):
+    """
+    With make_symmetric_polars=True, sign-sensitive columns must be mirrored correctly:
+    alpha/CL/CM/Chinge are antisymmetric, CD/CDp/Re/Cpmin/Xcpmin are symmetric, and
+    Top_Xtr/Bot_Xtr swap with each other.
+    """
+    af = asb.Airfoil("naca0012")
+    af.generate_polars(
+        alphas=np.linspace(0, 10, 6),
+        Res=np.geomspace(1e5, 1e6, 2),
+        make_symmetric_polars=True,
+    )
+    data = af.xfoil_data
+
+    n = len(data["alpha"]) // 2
+    first = {k: v[:n] for k, v in data.items()}
+    second = {k: v[n:] for k, v in data.items()}
+
+    for key in ["alpha", "CL", "CM", "Chinge"]:  # Antisymmetric quantities
+        assert second[key] == pytest.approx(-first[key])
+
+    for key in ["CD", "CDp", "Re", "Cpmin", "Xcpmin"]:  # Symmetric quantities
+        assert second[key] == pytest.approx(first[key])
+
+    # Top- and bottom-surface transition locations swap when mirrored:
+    assert second["Top_Xtr"] == pytest.approx(first["Bot_Xtr"])
+    assert second["Bot_Xtr"] == pytest.approx(first["Top_Xtr"])
+
+    # Physical sanity: transition locations are x/c values, so they must be non-negative.
+    assert onp.all(onp.array(data["Top_Xtr"]) >= 0)
+    assert onp.all(onp.array(data["Bot_Xtr"]) >= 0)
+
+
 def test_generate_polars_cache_filename_without_directory(
     fake_xfoil, tmp_path, monkeypatch
 ):
