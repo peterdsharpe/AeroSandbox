@@ -89,7 +89,7 @@ def mean(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
         elif axis == 1:
             return sum(x, axis=1) / x.shape[1]
         elif axis is None:
-            return mean(mean(x, axis=0), axis=1)
+            return sum(x, axis=None) / (x.shape[0] * x.shape[1])
         else:
             raise ValueError(
                 "CasADi types can only be up to 2D, so `axis` must be None, 0, or 1."
