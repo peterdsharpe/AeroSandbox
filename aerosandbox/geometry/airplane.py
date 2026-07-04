@@ -347,6 +347,7 @@ class Airplane(AeroSandboxObject):
             from aerosandbox.visualization.plotly_Figure3D import Figure3D
 
             fig = Figure3D()
+            show_kwargs = {"show": show, **show_kwargs}
             for f in faces:
                 fig.add_quad(
                     (
@@ -357,7 +358,6 @@ class Airplane(AeroSandboxObject):
                     ),
                     outline=True,
                 )
-                show_kwargs = {"show": show, **show_kwargs}
             return fig.draw(**show_kwargs)
 
         elif backend == "pyvista":
