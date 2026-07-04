@@ -223,6 +223,9 @@ def get_kulfan_coordinates(
         )
 
         if deprecated_kwargs.get("enforce_continuous_LE_radius", False):
+            lower_weights = np.array(
+                lower_weights
+            )  # Copy, so we don't mutate the caller's array or the shared default array.
             lower_weights[0] = -1 * upper_weights[0]
 
     x = np.cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
