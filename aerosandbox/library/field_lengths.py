@@ -149,6 +149,16 @@ def field_length_analysis_torenbeek(
 
     flight_path_angle_climb = thrust_over_weight_takeoff - 1 / lift_over_drag_climb
 
+    if not np.is_casadi_type(flight_path_angle_climb, recursive=False):
+        if np.any(flight_path_angle_climb <= 0):
+            raise ValueError(
+                "The computed climb flight path angle is non-positive "
+                f"(flight_path_angle_climb = {flight_path_angle_climb}), meaning the aircraft cannot "
+                "climb over the obstacle after liftoff. This happens when the takeoff thrust-to-weight "
+                "ratio is not greater than 1 / lift_over_drag_climb; the takeoff airborne distance "
+                "would be undefined. Increase `thrust_at_liftoff` or `lift_over_drag_climb`."
+            )
+
     ### V_stall is the stall speed of the airplane.
     V_stall = np.sqrt(
         2 * design_mass_TOGW * g / (atmosphere.density() * s_ref * CL_max)
