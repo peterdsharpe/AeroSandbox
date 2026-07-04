@@ -464,8 +464,8 @@ def get_kulfan_parameters(
         not be square.
 
         The columns of the A matrix will correspond to our unknowns, which are going to be a 1D vector `x` packed in as:
-            * upper_weights from 0 to n_weights_per_side - 1
             * lower_weights from 0 to n_weights_per_side - 1
+            * upper_weights from 0 to n_weights_per_side - 1
             * leading_edge_weight
             * trailing_edge_thickness
 
