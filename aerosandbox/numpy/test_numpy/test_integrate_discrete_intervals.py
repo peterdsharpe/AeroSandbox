@@ -340,6 +340,17 @@ def test_all_method_aliases():
         assert np.allclose(result_simpson, result_alias)
 
 
+def test_available_in_np_namespace():
+    """The trapz() deprecation message tells users to migrate to
+    asb.numpy.integrate_discrete_intervals, so that name (and its sibling)
+    must be importable from the aerosandbox.numpy namespace (regression
+    test: they used to raise AttributeError)."""
+    assert np.integrate_discrete_intervals is integrate_discrete_intervals
+    assert (
+        np.integrate_discrete_squared_curvature is integrate_discrete_squared_curvature
+    )
+
+
 def test_zero_function():
     """Test integration of zero function returns zeros."""
     x = np.linspace(0, 10, 50)

@@ -53,6 +53,10 @@ from aerosandbox.numpy.calculus import *
 from aerosandbox.numpy.conditionals import *
 from aerosandbox.numpy.finite_difference_operators import *
 from aerosandbox.numpy.integrate import *
+from aerosandbox.numpy.integrate_discrete import (
+    integrate_discrete_intervals,
+    integrate_discrete_squared_curvature,
+)
 from aerosandbox.numpy.interpolate import *
 from aerosandbox.numpy.linalg_top_level import *
 import aerosandbox.numpy.linalg as linalg
