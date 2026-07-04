@@ -424,7 +424,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     def draw(
         self,
-        vehicle_model: "Airplane | PolyData | None" = None,
+        vehicle_model: "Airplane | PolyData | str | None" = None,
         backend: Literal["pyvista"] = "pyvista",
         plotter=None,
         draw_axes: bool = True,
@@ -467,12 +467,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 vehicle_model, str
             ):  # Interpret the string as a filepath to a .stl or similar
                 try:
-                    pv.read(filename=vehicle_model)
+                    vehicle_model = pv.read(filename=vehicle_model)
                 except Exception:
                     raise ValueError("Could not parse `vehicle_model`!")
             else:
                 raise TypeError(
-                    "`vehicle_model` should be an Airplane or PolyData object."
+                    "`vehicle_model` should be an Airplane or PolyData object, or a str filepath to a mesh file."
                 )
 
             x_e = np.array(self.x_e)

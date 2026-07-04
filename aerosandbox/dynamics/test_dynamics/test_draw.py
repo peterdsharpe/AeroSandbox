@@ -28,5 +28,25 @@ def test_draw_autoscales_vehicle_on_multipoint_trajectory():
     assert plotter is not None
 
 
+def test_draw_with_str_filepath_vehicle_model():
+    """
+    Passing `vehicle_model` as a str filepath used to discard the `pv.read()`
+    result, then crash with AttributeError ('str' object has no attribute
+    'bounds').
+    """
+    stl_path = str(
+        asb._asb_root / "dynamics" / "visualization" / "default_assets" / "talon.stl"
+    )
+    dyn = make_dyn(10)
+    plotter = dyn.draw(vehicle_model=stl_path, show=False)
+    assert plotter is not None
+
+
+def test_draw_with_invalid_str_vehicle_model_raises_valueerror():
+    dyn = make_dyn(10)
+    with pytest.raises(ValueError):
+        dyn.draw(vehicle_model="not_a_real_file.stl", show=False)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
