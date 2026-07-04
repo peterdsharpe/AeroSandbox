@@ -103,6 +103,9 @@ class AVL(ExplicitAnalysis):
 
             op_point: The operating point you wish to analyze at.
 
+            xyz_ref: The moment reference point, given as a [x, y, z] location in geometry axes. If left as None
+            (default), this will default to the `xyz_ref` of the airplane object.
+
             avl_command: The command-line argument to call AVL.
 
                 * If AVL is on your system PATH, then you can just leave this as "avl".
@@ -128,6 +131,12 @@ class AVL(ExplicitAnalysis):
             working_directory: Controls which working directory is used for the AVL input and output files. By
             default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
             somewhere local for debugging purposes.
+
+            ground_effect: If True, models ground effect by mirroring the airplane about a ground plane (using
+            AVL's Z-symmetry), located at a z-location given by `ground_effect_height`.
+
+            ground_effect_height: The z-location of the ground plane, in geometry axes. Only used if
+            `ground_effect` is True.
         """
         super().__init__()
 
@@ -205,7 +214,7 @@ class AVL(ExplicitAnalysis):
         run_command: str | None = None,
     ) -> dict[str, float]:
         """
-        Private function to run AVL.
+        Runs AVL on the airplane and operating point that this analysis was constructed with.
 
         Args: run_command: A string with any AVL keystroke inputs that you'd like. By default, you start off within the OPER
         menu. All of the inputs indicated in the constructor have been set already, but you can override them here (
