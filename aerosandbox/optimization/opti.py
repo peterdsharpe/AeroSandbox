@@ -866,7 +866,7 @@ class Opti(cas.Opti):
         n_runs = np.broadcast(*values).size
         run_number = 1
 
-        def run(*args: tuple[float]) -> "OptiSol" | None:
+        def run(*args: tuple[float]) -> "OptiSol | None":
             # Collect garbage before each run, to avoid memory issues.
             if garbage_collect_between_runs:
                 import gc

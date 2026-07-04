@@ -504,5 +504,24 @@ def test_parameter_mapping_size_mismatch_error():
         opti.solve(verbose=False, parameter_mapping={p: np.ones(5)})
 
 
+def test_solve_sweep():
+    """solve_sweep() used to crash with TypeError at its internal `def run` line, since the
+    annotation `"OptiSol" | None` (str | None) is evaluated at function-definition time."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=1)
+    p = opti.parameter(value=1)
+    opti.subject_to(x >= p)
+    opti.minimize(x**2)
+
+    sols = opti.solve_sweep({p: np.linspace(1, 3, 3)}, verbose=False)
+    assert [sol(x) for sol in sols] == pytest.approx([1, 2, 3])
+
+    get_vals = opti.solve_sweep(
+        {p: np.linspace(1, 3, 3)}, verbose=False, return_callable=True
+    )
+    assert get_vals(x) == pytest.approx([1, 2, 3])
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
