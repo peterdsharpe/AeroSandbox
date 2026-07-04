@@ -59,7 +59,7 @@ class SurrogateModel(AeroSandboxObject):
 
             if input_is_dict and not x_data_is_dict:
                 raise TypeError("The input to this model should be a float or array.")
-        except NameError:  # If x_data does not exist
+        except AttributeError:  # If x_data does not exist
             pass
 
     def __repr__(self) -> str:
@@ -118,13 +118,13 @@ class SurrogateModel(AeroSandboxObject):
         if self.input_dimensionality() == 1:
             ### Parse the x_data
             if self.input_names() is not None:
-                x_name = self.x_data.keys()[0]
-                x_data = self.x_data.values()[0]
+                x_name = next(iter(self.x_data.keys()))
+                x_data = next(iter(self.x_data.values()))
 
                 minval, maxval = axis_range(x_data)
 
-                x_fit = {x_name: np.linspace(minval, maxval, resolution)}
-                y_fit = self(x_fit)
+                x_fit = np.linspace(minval, maxval, resolution)
+                y_fit = self({x_name: x_fit})
             else:
                 x_name = "x"
                 x_data = self.x_data
