@@ -177,6 +177,7 @@ class PerfectGas:
                 * "isothermal"
                 * "isentropic"
                 * "polytropic"
+                * "isenthalpic" (accepted, but not yet implemented; raises NotImplementedError)
 
                 The `process` must be specified.
 
@@ -197,7 +198,7 @@ class PerfectGas:
 
             If `inplace` is False (default), returns a new PerfectGas object that represents the gas after the change.
 
-            If `inplace` is True, nothing is returned.
+            If `inplace` is True, this gas object is modified in-place, and it (`self`) is returned.
 
         """
 
