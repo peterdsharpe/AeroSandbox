@@ -79,12 +79,12 @@ class Figure3D:
         mirror=False,
     ):
         """
-        Adds a line (or series of lines) to draw.
+        Adds a streamline (or series of streamlines) to draw.
         :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
         :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
         :return: None
 
-        E.g. add_line([(0, 0, 0), (1, 0, 0)])
+        E.g. add_streamline([(0, 0, 0), (1, 0, 0)])
         """
         for p in points:
             self.x_streamline.append(float(p[0]))
@@ -112,7 +112,7 @@ class Figure3D:
         :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
         :return: None
 
-        E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
+        E.g. add_tri([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
         """
         if not len(points) == 3:
             raise ValueError("'points' must have exactly 3 items!")
@@ -151,7 +151,7 @@ class Figure3D:
         :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
         :return: None
 
-        E.g. add_face([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
+        E.g. add_quad([(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)])
         """
         if not len(points) == 4:
             raise ValueError("'points' must have exactly 4 items!")
