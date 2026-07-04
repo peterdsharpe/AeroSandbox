@@ -81,5 +81,29 @@ def test_transverse_gust_lift_is_chord_invariant():
     assert cl_chord_1 == pytest.approx(cl_chord_4)
 
 
+def test_pitching_through_transverse_gust_accepts_float_angle_of_attack():
+    """
+    The docstring advertises `angle_of_attack: Callable | float`, but float
+    input used to crash with `TypeError: 'float' object is not callable`.
+    """
+    reduced_time = np.linspace(0, 10, 5)
+
+    cl_float = pitching_through_transverse_gust(
+        reduced_time,
+        gust_velocity_profile=top_hat_gust,
+        plate_velocity=10.0,
+        angle_of_attack=5.0,
+    )
+
+    ### Should be identical to passing an equivalent constant Callable
+    cl_callable = pitching_through_transverse_gust(
+        reduced_time,
+        gust_velocity_profile=top_hat_gust,
+        plate_velocity=10.0,
+        angle_of_attack=lambda s: 5.0,
+    )
+    assert cl_float == pytest.approx(cl_callable)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

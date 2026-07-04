@@ -303,6 +303,12 @@ def pitching_through_transverse_gust(
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
     """
+    if isinstance(angle_of_attack, (float, int)):
+        constant_angle_of_attack = angle_of_attack
+
+        def angle_of_attack(reduced_time):
+            return constant_angle_of_attack
+
     gust_lift = calculate_lift_due_to_transverse_gust(
         reduced_time, gust_velocity_profile, plate_velocity, angle_of_attack, chord
     )
