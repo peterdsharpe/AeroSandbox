@@ -200,7 +200,7 @@ def geomspace(
     else:
         if start <= 0 or stop <= 0:
             raise ValueError("Both start and stop must be positive!")
-        spaced_array = _onp.log10(10 ** linspace(start, stop, num))
+        spaced_array = 10 ** linspace(_cas.log10(start), _cas.log10(stop), num)
 
         # Fix the endpoints, which might not be exactly right due to floating-point error.
         spaced_array[0] = start
