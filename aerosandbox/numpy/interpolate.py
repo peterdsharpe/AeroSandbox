@@ -233,17 +233,26 @@ def interpn(
 
         ### If fill_value is None, project the xi back onto the nearest point in the domain.
         if fill_value is None:
+            ### Build a clamped copy of xi, rather than assigning into it, so
+            ### that the caller's array is not mutated in-place.
+            clamped_columns = []
             for axis in range(n_dimensions):
-                xi[:, axis] = where(
-                    xi[:, axis] > axis_values_max[axis],
+                column = xi[:, axis]
+                column = where(
+                    column > axis_values_max[axis],
                     axis_values_max[axis],
-                    xi[:, axis],
+                    column,
                 )
-                xi[:, axis] = where(
-                    xi[:, axis] < axis_values_min[axis],
+                column = where(
+                    column < axis_values_min[axis],
                     axis_values_min[axis],
-                    xi[:, axis],
+                    column,
                 )
+                clamped_columns.append(column)
+            if is_casadi_type(xi, recursive=False):
+                xi = _cas.horzcat(*clamped_columns)
+            else:
+                xi = _onp.stack(clamped_columns, axis=1)
 
         ### Check bounds_error
         if bounds_error:

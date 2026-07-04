@@ -145,6 +145,41 @@ def test_interpn_bspline_all_zero_values_shape():
     assert np.all(cas.DM(np.array(result_sym, dtype=float)) == 0)
 
 
+def test_interpn_fill_value_None_does_not_mutate_xi():
+    """interpn() with fill_value=None used to clamp out-of-bounds points by
+    assigning into the caller's xi array in-place (regression test)."""
+    x = np.linspace(0, 1, 5)
+    points = (x,)
+    values = 2 * x
+
+    ### 2D NumPy xi
+    xi = np.array([[-0.5], [0.5], [1.5]])
+    xi_snapshot = xi.copy()
+    result = np.interpn(
+        points, values, xi, method="bspline", fill_value=None, bounds_error=False
+    )
+    assert np.all(xi == xi_snapshot)  # Caller's array must be unchanged
+    assert result == pytest.approx([0.0, 1.0, 2.0])  # Clamped extrapolation
+
+    ### 1D NumPy xi (goes through a reshaped view internally)
+    xi = np.array([-0.5, 0.5, 1.5])
+    xi_snapshot = xi.copy()
+    result = np.interpn(
+        points, values, xi, method="bspline", fill_value=None, bounds_error=False
+    )
+    assert np.all(xi == xi_snapshot)
+    assert result == pytest.approx([0.0, 1.0, 2.0])
+
+    ### CasADi DM xi
+    xi = cas.DM([-0.5, 0.5, 1.5])
+    xi_snapshot = cas.DM(xi)
+    result = np.interpn(
+        points, values, xi, method="bspline", fill_value=None, bounds_error=False
+    )
+    assert np.all(cas.DM(xi) == xi_snapshot)
+    assert result == pytest.approx([0.0, 1.0, 2.0])
+
+
 def test_interpn_bounds_error_one_sample():
     def value_func_3d(x, y, z):
         return 2 * x + 3 * y - z
