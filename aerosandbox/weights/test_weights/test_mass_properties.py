@@ -88,5 +88,27 @@ def test_generate_possible_set_of_point_masses_roundtrip():
     assert mp.allclose(sum(point_masses), rtol=1e-4, atol=1e-6)
 
 
+def test_shape_mass_properties_helpers_are_exported():
+    """
+    The mass_properties_of_* helpers should be importable from
+    aerosandbox.weights and from the top-level aerosandbox namespace,
+    just like their sibling mass_properties_from_radius_of_gyration.
+    """
+    import aerosandbox.weights
+
+    for name in [
+        "mass_properties_from_radius_of_gyration",
+        "mass_properties_of_ellipsoid",
+        "mass_properties_of_sphere",
+        "mass_properties_of_rectangular_prism",
+        "mass_properties_of_cube",
+    ]:
+        assert callable(getattr(asb, name))
+        assert callable(getattr(aerosandbox.weights, name))
+
+    mp = asb.mass_properties_of_sphere(mass=2.0, radius=3.0)
+    assert mp.Ixx == pytest.approx(0.4 * 2.0 * 3.0**2)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

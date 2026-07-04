@@ -28,6 +28,10 @@ from aerosandbox.atmosphere import Atmosphere
 from aerosandbox.weights import (
     MassProperties,
     mass_properties_from_radius_of_gyration,
+    mass_properties_of_ellipsoid,
+    mass_properties_of_sphere,
+    mass_properties_of_rectangular_prism,
+    mass_properties_of_cube,
 )
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.dynamics import (
