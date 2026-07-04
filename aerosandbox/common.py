@@ -35,7 +35,7 @@ class AeroSandboxObject(ABC):
     must implement the ``__init__`` method.
     """
 
-    _asb_metadata: dict[str, str] = None
+    _asb_metadata: dict[str, str] | None = None
 
     @abstractmethod
     def __init__(self):
@@ -187,6 +187,7 @@ class AeroSandboxObject(ABC):
             "This function is deprecated and will break at some future point.\n"
             "Use `sol(x)`, which now works recursively on complex data structures.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         # Set defaults
