@@ -1491,10 +1491,11 @@ class OptiSol:
 
         Returns: None (prints to console)
         """
-        lbg = self(self.opti.lbg)
-        ubg = self(self.opti.ubg)
+        # Note: atleast_1d is needed since evaluating a single scalar constraint yields a plain float.
+        lbg = np.atleast_1d(self(self.opti.lbg))
+        ubg = np.atleast_1d(self(self.opti.ubg))
 
-        g = self(self.opti.g)
+        g = np.atleast_1d(self(self.opti.g))
 
         constraint_violated = np.logical_or(g + tol < lbg, g - tol > ubg)
 

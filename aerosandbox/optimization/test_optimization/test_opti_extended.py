@@ -422,5 +422,40 @@ def test_opti_invalid_behavior_on_failure_raises():
         )  # note the typo'd value
 
 
+def test_show_infeasibilities_single_scalar_constraint(capsys):
+    """show_infeasibilities() used to crash with TypeError (object of type 'float' has no len())
+    on problems with exactly one scalar constraint."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    opti.subject_to(x >= 1)  # The one and only (scalar) constraint
+    opti.minimize(x**2)
+
+    sol = opti.solve(verbose=False)
+
+    sol.show_infeasibilities(tol=1e-3)  # Feasible solve: should print nothing, and not crash
+    assert capsys.readouterr().out == ""
+
+
+def test_show_infeasibilities_single_scalar_constraint_violated(capsys):
+    """Same as above, but with the single scalar constraint actually violated."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    opti.subject_to(x**2 <= -1)  # Infeasible by construction
+    opti.minimize(x**2)
+
+    with pytest.warns(UserWarning):
+        sol = opti.solve(
+            verbose=False,
+            max_iter=50,
+            behavior_on_failure="return_last",
+        )
+
+    sol.show_infeasibilities(tol=1e-3)
+    out = capsys.readouterr().out
+    assert "violation" in out
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
