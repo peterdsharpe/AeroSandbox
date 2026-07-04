@@ -75,9 +75,13 @@ class AeroSandboxObject(ABC):
             return False
 
         for key in self.__dict__.keys():  # Check equality of all values
-            if np.all(self.__dict__[key] == other.__dict__[key]):
-                continue
-            else:
+            try:
+                values_equal = np.all(self.__dict__[key] == other.__dict__[key])
+            except (ValueError, TypeError):
+                # For example, NumPy raises a ValueError when comparing arrays
+                # with non-broadcastable shapes; such attributes are not equal.
+                return False
+            if not values_equal:
                 return False
 
         return True
