@@ -89,7 +89,7 @@ class Polygon(AeroSandboxObject):
         self, angle: float, x_center: float = 0.0, y_center: float = 0.0
     ) -> "Polygon":
         """
-        Rotates a Polygon clockwise by the specified amount, in radians.
+        Rotates a Polygon counterclockwise by the specified amount, in radians.
 
         Rotates about the point (x_center, y_center), which is (0, 0) by default.
 

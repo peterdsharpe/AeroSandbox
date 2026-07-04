@@ -627,9 +627,11 @@ class FuselageXSec(AeroSandboxObject):
 
             * The cross-section is a superellipse shape, which is a generalization of a circle and a square.
 
-                It is mathematically defined by three parameters, using `y` and `z` as the two axes:
+                It is mathematically defined by three parameters, using `y` and `z` as the two axes. Note that
+                `width` and `height` are the full extents of the cross-section (i.e., the cross-section spans from
+                -width/2 to +width/2 in y, and from -height/2 to +height/2 in z):
 
-                    abs(y / width) ^ shape + abs(z / height) ^ shape = 1
+                    abs(y / (width / 2)) ^ shape + abs(z / (height / 2)) ^ shape = 1
 
                 See also: https://en.wikipedia.org/wiki/Superellipse
 

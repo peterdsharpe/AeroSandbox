@@ -25,7 +25,57 @@ class Propulsor(AeroSandboxObject):
         """
         Defines a new propulsor object.
 
-        TODO add docs
+        Args:
+
+            name: Name of the propulsor [optional]. It can help when debugging to give each propulsor a sensible name.
+
+            xyz_c: An array-like that represents the xyz-coordinates of the center of the propulsor disk (in the case
+                of a disk-shaped propulsor, where `length == 0`), or the center of one end face of the cylinder (in
+                the case of a cylinder-shaped propulsor, where `length > 0`). Given in geometry axes, in meters.
+
+            xyz_normal: An array-like that represents the normal vector of the propulsor disk, in geometry axes.
+                (Geometry axes: +x is back/aft, +y is out the right wing, +z is up.) It does not need to be a unit
+                vector; it is normalized internally. Defaults to [-1, 0, 0], i.e., pointing in the -x direction
+                (towards the airplane's nose). For a cylinder-shaped propulsor, the cylinder extends from `xyz_c` in
+                this direction.
+
+            radius: Radius of the propulsor disk (or cylinder), in meters.
+
+            length: Length of the propulsor along its normal direction, in meters. If 0 (the default), the propulsor
+                is treated as an infinitely-thin disk (e.g., an actuator disk representing a propeller or rotor); if
+                positive, it is treated as a cylinder (e.g., roughly representing a jet engine or ducted fan).
+
+            color: Determines what color to use for this component when drawing the airplane. Optional,
+                and for visualization purposes only. If left as None, a default color will be chosen at the time of
+                drawing (usually, black). Can be any color format recognized by MatPlotLib, namely:
+
+                * A RGB or RGBA tuple of floats in the interval [0, 1], e.g., (0.1, 0.2, 0.5, 0.3)
+
+                * Case-insensitive hex RGB or RGBA string, e.g., '#0f0f0f80'
+
+                * String representation of float value in closed interval [0, 1] for grayscale values, e.g.,
+                    '0.8' for light gray
+
+                * Single character shorthand notation for basic colors, e.g., 'k' -> black, 'r' -> red
+
+                See also: https://matplotlib.org/stable/tutorials/colors/colors.html
+
+            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
+            that should be passed on to specific analyses and associated with this specific geometry object.
+
+                This should be a dictionary where:
+
+                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
+                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
+                    something else (like a string), that's totally fine - it's just a unique identifier for the
+                    specific analysis you're running.
+
+                    * Values are a dictionary of key:value pairs, where:
+
+                        * Keys are strings.
+
+                        * Values are some value you want to assign.
+
         """
         ### Set defaults
         if xyz_c is None:
@@ -96,6 +146,21 @@ class Propulsor(AeroSandboxObject):
         theta: Vectorizable | None = None,
         l_over_length: Vectorizable | None = None,
     ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
+        """
+        Samples points on the perimeter of the propulsor disk (or cylinder), in aircraft geometry axes.
+
+        Args:
+
+            theta: The angular coordinate(s) around the disk perimeter to sample, in radians. If None (default),
+                uses 60 points evenly spaced around the full circle.
+
+            l_over_length: The fractional position(s) along the propulsor's length (from 0 at `xyz_c` to 1 at the
+                other end, along the normal direction) at which to sample. If None (default), uses 0 for a
+                disk-shaped propulsor (`length == 0`), or 4 evenly-spaced stations for a cylinder-shaped one.
+
+        Returns: A tuple of (x, y, z) coordinates of the sampled points, in aircraft geometry axes. Each element
+            has the (broadcast) shape of `theta` and `l_over_length`.
+        """
         ### Set defaults
         if theta is None:
             theta = np.linspace(0, 2 * np.pi, 60 + 1)[:-1]

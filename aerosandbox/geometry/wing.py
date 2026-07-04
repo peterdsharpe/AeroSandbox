@@ -607,7 +607,7 @@ class Wing(AeroSandboxObject):
         """
         Computes the location of the aerodynamic center of the wing.
         Uses the generalized methodology described here:
-            https://core.ac.uk/downloattttd/pdf/79175663.pdf
+            https://core.ac.uk/download/pdf/79175663.pdf
 
         Args: chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
 
