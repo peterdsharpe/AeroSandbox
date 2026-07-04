@@ -60,6 +60,20 @@ def test_translate_scale_rotate():
     assert np.allclose(p1.coordinates, p2.coordinates)
 
 
+def test_perimeter():
+    """
+    perimeter() should treat the polygon as closed (like area(), centroid(),
+    etc. do), including the edge connecting the last point back to the first,
+    whether or not the coordinate list explicitly repeats the first point.
+    """
+    triangle_open = Polygon(coordinates=np.array([[0, 0], [1, 0], [0, 1]]))
+    triangle_closed = Polygon(coordinates=np.array([[0, 0], [1, 0], [0, 1], [0, 0]]))
+    expected_perimeter = 2 + 2**0.5
+
+    assert triangle_open.perimeter() == pytest.approx(expected_perimeter)
+    assert triangle_closed.perimeter() == pytest.approx(expected_perimeter)
+
+
 def test_section_properties_rectangle():
     """
     Checks area, centroid, and moments of inertia against analytic values for

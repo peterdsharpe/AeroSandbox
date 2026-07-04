@@ -138,9 +138,16 @@ class Polygon(AeroSandboxObject):
     def perimeter(self) -> float:
         """
         Returns the perimeter of the polygon.
+
+        The polygon is treated as closed (consistent with `area()`, `centroid()`, etc.),
+        so the edge connecting the last point back to the first point is included. (If the
+        coordinate list already repeats the first point at the end, this closing edge has
+        zero length, so it makes no difference.)
         """
-        dx = np.diff(self.x())
-        dy = np.diff(self.y())
+        x = self.x()
+        y = self.y()
+        dx = np.roll(x, -1) - x  # Includes the closing edge (last point -> first point)
+        dy = np.roll(y, -1) - y
         ds = (dx**2 + dy**2) ** 0.5
 
         return np.sum(ds)
