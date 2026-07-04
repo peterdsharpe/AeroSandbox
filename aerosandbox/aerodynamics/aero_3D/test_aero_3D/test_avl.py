@@ -1,5 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+import pytest
 
 
 def is_tool(name):
@@ -13,10 +14,25 @@ def is_tool(name):
 
 avl_present = is_tool("avl")
 
+requires_avl = pytest.mark.skipif(
+    not avl_present,
+    reason="The AVL executable is not on PATH; try installing AVL from https://web.mit.edu/drela/Public/web/avl/",
+)
 
+
+def sanity_check_results(res: dict) -> None:
+    """
+    Basic sanity checks on AVL results for a lifting airplane at alpha = 10 deg.
+    """
+    assert res["alpha"] == pytest.approx(10, abs=1e-3)
+    assert res["CL"] > 0
+    assert res["CD"] > 0
+    for key in ["CL", "CD", "Cm", "L", "D"]:
+        assert np.isfinite(res[key])
+
+
+@requires_avl
 def test_conventional():
-    if not avl_present:
-        return
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.conventional import (
         airplane,
     )
@@ -25,12 +41,11 @@ def test_conventional():
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
     )
-    return analysis.run()
+    sanity_check_results(analysis.run())
 
 
+@requires_avl
 def test_vanilla():
-    if not avl_present:
-        return
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.vanilla import (
         airplane,
     )
@@ -39,12 +54,11 @@ def test_vanilla():
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
     )
-    return analysis.run()
+    sanity_check_results(analysis.run())
 
 
+@requires_avl
 def test_flat_plate():
-    if not avl_present:
-        return
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.flat_plate import (
         airplane,
     )
@@ -53,12 +67,11 @@ def test_flat_plate():
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
     )
-    return analysis.run()
+    sanity_check_results(analysis.run())
 
 
+@requires_avl
 def test_flat_plate_mirrored():
-    if not avl_present:
-        return
     from aerosandbox.aerodynamics.aero_3D.test_aero_3D.geometries.flat_plate_mirrored import (
         airplane,
     )
@@ -67,7 +80,7 @@ def test_flat_plate_mirrored():
         airplane=airplane,
         op_point=asb.OperatingPoint(alpha=10),
     )
-    return analysis.run()
+    sanity_check_results(analysis.run())
 
 
 def test_write_avl_string_mode(tmp_path):
@@ -146,8 +159,4 @@ def test_parse_unformatted_data_output_at_end_of_string():
 
 
 if __name__ == "__main__":
-    # test_conventional()
-    # test_vanilla()
-
-    print(test_flat_plate()["CL"])
-    # pytest.main()
+    pytest.main()
