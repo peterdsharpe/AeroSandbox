@@ -146,6 +146,58 @@ def test_cl_start_at_split():
     assert "init" in commands
 
 
+### Process-failure diagnostics
+
+
+def make_fake_xfoil_executable(tmp_path, body: str):
+    """
+    Creates a small POSIX shell script that stands in for the XFoil executable.
+    The script consumes stdin (the keystrokes), then executes `body`.
+    """
+    script = tmp_path / "fake_xfoil.sh"
+    script.write_text("#!/bin/sh\ncat > /dev/null\n" + body + "\n")
+    script.chmod(0o755)
+    return str(script)
+
+
+def test_missing_executable_raises_xfoil_error():
+    """
+    A nonexistent XFoil executable should raise a descriptive XFoilError, not a raw
+    FileNotFoundError. (Regression test.)
+    """
+    xf = asb.XFoil(
+        airfoil=make_airfoil(),
+        xfoil_command="nonexistent_xfoil_binary_a8f3b2",
+    )
+    with pytest.raises(asb.XFoil.XFoilError, match="PATH"):
+        xf.alpha(5)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Uses a POSIX shell script.")
+def test_segfault_return_code_raises_descriptive_error(tmp_path):
+    """
+    A segfault-style return code should produce the curated XFoilError message.
+    Previously this diagnostic was dead code (guarded by an except clause that could
+    never fire), so users got a generic 'no output file' error. (Regression test.)
+    """
+    xf = asb.XFoil(
+        airfoil=make_airfoil(),
+        xfoil_command=make_fake_xfoil_executable(tmp_path, "exit 139"),
+    )
+    with pytest.raises(asb.XFoil.XFoilError, match="segmentation"):
+        xf.alpha(5)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Uses a POSIX shell script.")
+def test_floating_point_exception_return_code_raises_descriptive_error(tmp_path):
+    xf = asb.XFoil(
+        airfoil=make_airfoil(),
+        xfoil_command=make_fake_xfoil_executable(tmp_path, "exit 136"),
+    )
+    with pytest.raises(asb.XFoil.XFoilError, match="floating point"):
+        xf.alpha(5)
+
+
 ### Tests requiring the XFoil binary
 
 

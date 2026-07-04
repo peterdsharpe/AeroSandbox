@@ -320,11 +320,17 @@ class XFoil(ExplicitAnalysis):
                     # timeout=self.timeout,
                     # check=True
                 )
+            except FileNotFoundError as e:
+                raise self.XFoilError(
+                    f"Could not launch XFoil with the command '{self.xfoil_command}'.\n"
+                    f"This is likely because AeroSandbox does not see XFoil on PATH with the given command.\n"
+                    f"Provide the correct path to the XFoil executable in the asb.XFoil constructor via `xfoil_command=`."
+                ) from e
+
+            try:
                 outs, errs = proc.communicate(
                     input="\n".join(keystrokes), timeout=self.timeout
                 )
-                proc.poll()
-
             except subprocess.TimeoutExpired:
                 proc.kill()
                 outs, errs = proc.communicate()
@@ -335,29 +341,24 @@ class XFoil(ExplicitAnalysis):
                     "when you create this AeroSandbox XFoil instance.",
                     stacklevel=2,
                 )
-            except subprocess.CalledProcessError as e:
-                if e.returncode == 11:
-                    raise self.XFoilError(
-                        "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
-                        "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
-                        "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance."
-                    )
-                elif e.returncode == 8 or e.returncode == 136:
-                    raise self.XFoilError(
-                        "XFoil returned a floating point exception. This is probably because you are trying to start\n"
-                        "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
-                        "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
-                        "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point."
-                    )
-                elif e.returncode == 1:
-                    raise self.XFoilError(
-                        f"Command '{self.xfoil_command}' returned non-zero exit status 1.\n"
-                        f"This is likely because AeroSandbox does not see XFoil on PATH with the given command.\n"
-                        f"Check the logs (`asb.XFoil(..., verbose=True)`) to verify that this is the case, and if so,\n"
-                        f"provide the correct path to the XFoil executable in the asb.XFoil constructor via `xfoil_command=`."
-                    )
-                else:
-                    raise e
+
+            return_code = proc.returncode
+
+            if return_code in (11, -11, 139, 3221225477):
+                # SIGSEGV: raw signal (POSIX), shell-style 128+11, or Windows access violation
+                raise self.XFoilError(
+                    "XFoil segmentation-faulted. This is likely because your input airfoil has too many points.\n"
+                    "Try repaneling your airfoil with `Airfoil.repanel()` before passing it into XFoil.\n"
+                    "For further debugging, turn on the `verbose` flag when creating this AeroSandbox XFoil instance."
+                )
+            elif return_code in (8, -8, 136):
+                # SIGFPE: raw signal (POSIX) or shell-style 128+8
+                raise self.XFoilError(
+                    "XFoil returned a floating point exception. This is probably because you are trying to start\n"
+                    "your analysis at an operating point where the viscous boundary layer can't be initialized based\n"
+                    "on the computed inviscid flow. (You're probably hitting a Goldstein singularity.) Try starting\n"
+                    "your XFoil run at a less-aggressive (alpha closer to 0, higher Re) operating point."
+                )
 
             ### Parse the polar
             try:
