@@ -286,7 +286,7 @@ def sigmoid(
     Returns: The value of the sigmoid.
     """
     ### Sigmoid equations given here under the (-1, 1) normalization:
-    if sigmoid_type == ("tanh" or "logistic"):
+    if sigmoid_type in ("tanh", "logistic"):
         # Note: tanh(x) is simply a scaled and shifted version of a logistic curve.
         s = _np.tanh(x)
     elif sigmoid_type == "arctan":
