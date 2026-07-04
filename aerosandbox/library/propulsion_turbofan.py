@@ -136,7 +136,7 @@ def mass_turbofan(
 
     W_inlet_lbm = A_inlet_sqft * (2.5 + 0.0238 * d_fan_in)
     W_fan_lbm = A_fan_sqft * 1.9
-    W_exit_lbm = A_exit_sqft * (2.5 * 0.0363 * d_fan_in)
+    W_exit_lbm = A_exit_sqft * (2.5 + 0.0363 * d_fan_in)
     W_core_lbm = A_core_sqft * 1.9
 
     W_nace_lbm = W_inlet_lbm + W_fan_lbm + W_exit_lbm + W_core_lbm
