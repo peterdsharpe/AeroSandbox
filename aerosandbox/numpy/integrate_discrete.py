@@ -1,3 +1,4 @@
+import warnings
 from typing import Literal
 import numpy as _onp
 from aerosandbox.numpy.array import length, concatenate, asarray
@@ -107,8 +108,10 @@ def integrate_discrete_intervals(
 
     elif method in ["trapezoidal", "trapezoid", "trapz", "midpoint"]:
         if method == "midpoint":
-            raise PendingDeprecationWarning(
-                "The 'midpoint' method will be deprecated at a future point, since 'trapezoidal' is the more accurate term here."
+            warnings.warn(
+                "The 'midpoint' method will be deprecated at a future point, since 'trapezoidal' is the more accurate term here.",
+                PendingDeprecationWarning,
+                stacklevel=2,
             )
 
         avg_f = (f[1:] + f[:-1]) / 2

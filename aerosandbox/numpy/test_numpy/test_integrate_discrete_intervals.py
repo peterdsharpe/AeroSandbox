@@ -302,12 +302,17 @@ def test_invalid_squared_curvature_method():
 
 
 def test_midpoint_deprecation_warning():
-    """Test that 'midpoint' method raises PendingDeprecationWarning."""
+    """The accepted (soon-to-be-deprecated) 'midpoint' alias should emit a
+    PendingDeprecationWarning and compute the trapezoidal result (regression
+    test: it used to raise the warning class as an exception)."""
     x = np.linspace(0, 10, 11)
     f = x**2
 
-    with pytest.raises(PendingDeprecationWarning):
-        integrate_discrete_intervals(f, x, method="midpoint")  # type: ignore[arg-type]
+    with pytest.warns(PendingDeprecationWarning):
+        result = integrate_discrete_intervals(f, x, method="midpoint")
+
+    expected = integrate_discrete_intervals(f, x, method="trapezoidal")
+    assert np.allclose(result, expected)
 
 
 def test_all_method_aliases():
