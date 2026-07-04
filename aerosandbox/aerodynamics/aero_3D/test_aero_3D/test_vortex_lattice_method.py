@@ -39,7 +39,19 @@ def test_flat_plate():
         op_point=asb.OperatingPoint(alpha=10),
     )
     aero = analysis.run()
-    assert aero is not None  ### Verify analysis produces results
+
+    ### Check lift against a documented analytic reference:
+    # For a thin flat plate of aspect ratio 10, the Helmbold finite-wing correction to thin-airfoil
+    # theory (see e.g. Anderson, "Fundamentals of Aerodynamics", low-AR wing lift slope estimates)
+    # gives CL_alpha ~= 2 * pi / (1 + 2 / AR), so CL(10 deg) ~= 0.914. The VLM solution is expected
+    # to be close to (within several percent of) this estimate.
+    aspect_ratio = 10
+    CL_helmbold = 2 * onp.pi / (1 + 2 / aspect_ratio) * onp.radians(10)
+    assert aero["CL"] == pytest.approx(CL_helmbold, rel=0.1)
+
+    # Pin the current computed value (0.87012, which is 4.8% below the Helmbold estimate) tightly,
+    # so that unintended changes to the VLM solver's numerics are caught:
+    assert aero["CL"] == pytest.approx(0.870116, rel=1e-3)
 
 
 def test_flat_plate_mirrored():
