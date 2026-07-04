@@ -81,6 +81,36 @@ def test_transverse_gust_lift_is_chord_invariant():
     assert cl_chord_1 == pytest.approx(cl_chord_4)
 
 
+def test_calculate_reduced_time_int_array_does_not_truncate():
+    """
+    An integer `time` array used to make the trapezoidal accumulation happen
+    in integer arithmetic, silently truncating the result.
+    """
+    time_int = np.arange(0, 10)
+    time_float = time_int.astype(float)
+    velocity = np.linspace(3, 10, 10)
+    chord = 2.0
+
+    s_int = calculate_reduced_time(time_int, velocity, chord)
+    s_float = calculate_reduced_time(time_float, velocity, chord)
+
+    assert s_int == pytest.approx(s_float)
+
+
+def test_calculate_reduced_time_constant_velocity():
+    """For constant velocity, reduced time is s = 2 * U * t / c."""
+    time = np.linspace(0, 10, 11)
+    velocity = 4.0
+    chord = 2.0
+    assert calculate_reduced_time(time, velocity, chord) == pytest.approx(
+        2 * velocity * time / chord
+    )
+    ### Array-velocity path should agree with the constant-velocity path
+    assert calculate_reduced_time(
+        time, velocity * np.ones_like(time), chord
+    ) == pytest.approx(2 * velocity * time / chord)
+
+
 def test_pitching_through_transverse_gust_accepts_float_angle_of_attack():
     """
     The docstring advertises `angle_of_attack: Callable | float`, but float

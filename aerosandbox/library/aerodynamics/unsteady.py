@@ -51,7 +51,7 @@ def calculate_reduced_time(
         assert np.size(velocity) == np.size(time), (
             "The velocity history and time must have the same length"
         )
-        reduced_time = np.zeros_like(time)
+        reduced_time = np.zeros_like(time, dtype=float)
         for i in range(len(time) - 1):
             reduced_time[i + 1] = reduced_time[i] + (
                 velocity[i + 1] + velocity[i]
