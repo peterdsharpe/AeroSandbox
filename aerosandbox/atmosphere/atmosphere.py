@@ -90,7 +90,7 @@ class Atmosphere(AeroSandboxObject):
                         return a[index]
                     except IndexError:
                         raise IndexError(
-                            f"A state variable could not be indexed; it has length {len(a)} while the"
+                            f"A state variable could not be indexed; it has length {len(a)} while the "
                             f"parent has length {self_length}."
                         )
             else:
