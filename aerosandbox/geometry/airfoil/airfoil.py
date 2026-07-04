@@ -1107,8 +1107,8 @@ class Airfoil(Polygon):
 
         except ValueError as e:
             if not (
-                (np.all(np.diff(upper_distances_from_TE)) > 0)
-                and (np.all(np.diff(lower_distances_from_LE)) > 0)
+                np.all(np.diff(upper_distances_from_TE) > 0)
+                and np.all(np.diff(lower_distances_from_LE) > 0)
             ):
                 raise ValueError(
                     "It looks like your Airfoil has a duplicate point. Try removing the duplicate point and "

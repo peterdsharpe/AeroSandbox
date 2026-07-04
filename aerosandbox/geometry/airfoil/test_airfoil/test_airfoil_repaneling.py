@@ -34,6 +34,27 @@ def test_repaneling_validity():
         )
 
 
+def test_repaneling_duplicate_point_error_message():
+    """
+    Repaneling an airfoil with a duplicated point should raise the friendly "duplicate point" ValueError
+    (regression test for a misparenthesized strict-monotonicity check).
+    """
+    import numpy as np
+
+    af = asb.Airfoil("naca2412")
+    duplicated_coordinates = np.concatenate(
+        [
+            af.coordinates[:50],
+            af.coordinates[49:],  # Repeats point 49
+        ],
+        axis=0,
+    )
+    af_duplicated = asb.Airfoil("naca2412_with_duplicate", duplicated_coordinates)
+
+    with pytest.raises(ValueError, match="duplicate point"):
+        af_duplicated.repanel()
+
+
 def debug_draw(af: asb.Airfoil):
     if isinstance(af, str):
         af = asb.Airfoil(af)
