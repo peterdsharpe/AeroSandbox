@@ -142,6 +142,59 @@ def test_containts_points(naca4412):
     assert shape == contains.shape
 
 
+def test_add_control_surface_on_normal_airfoil(naca4412):
+    """
+    add_control_surface() should work on a normally-constructed Airfoil (which has no CL/CD/CM_function
+    attributes), without raising AttributeError or emitting a spurious DeprecationWarning.
+    """
+    import warnings
+
+    for modify_polars in [True, False]:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            afd = naca4412.add_control_surface(
+                deflection=10, modify_polars=modify_polars
+            )
+        assert afd.coordinates is not None
+        # The trailing edge should have moved down for a positive (downward) deflection:
+        assert afd.coordinates[0, 1] < naca4412.coordinates[0, 1]
+
+
+def test_add_control_surface_with_polar_functions():
+    """
+    If the Airfoil has polar functions (deprecated constructor path), add_control_surface() should carry them
+    over, shifted by the deflection-induced effective alpha change.
+    """
+    import warnings
+
+    with pytest.warns(DeprecationWarning):
+        af = Airfoil(
+            "naca0012",
+            CL_function=lambda alpha, Re, mach=0, deflection=0: 0.1 * alpha,
+            CD_function=lambda alpha, Re, mach=0, deflection=0: 0.01,
+            CM_function=lambda alpha, Re, mach=0, deflection=0: 0.001 * alpha,
+        )
+
+    deflection = 10
+    hinge_point_x = 0.75
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        afd = af.add_control_surface(
+            deflection=deflection, hinge_point_x=hinge_point_x
+        )
+
+    dalpha = deflection * (1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291)
+    assert afd.CL_function(alpha=2, Re=1e6, mach=0) == pytest.approx(0.1 * (2 + dalpha))
+    assert afd.CM_function(alpha=2, Re=1e6, mach=0) == pytest.approx(
+        0.001 * (2 + dalpha)
+    )
+
+    # With modify_polars=False, the polar functions should be carried over unmodified.
+    afd2 = af.add_control_surface(deflection=deflection, modify_polars=False)
+    assert afd2.CL_function(alpha=2, Re=1e6, mach=0) == pytest.approx(0.1 * 2)
+
+
 def test_optimize_through_control_surface_deflections():
     af = Airfoil("naca0001")
 

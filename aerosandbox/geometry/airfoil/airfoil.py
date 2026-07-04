@@ -1277,45 +1277,56 @@ class Airfoil(Polygon):
         else:
             coordinates = self.coordinates
 
-        if modify_polars:
-            effectiveness = (
-                1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291
-            )
-            dalpha = deflection * effectiveness
-
-            def CL_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CL_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-            def CD_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CD_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-            def CM_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CM_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-        else:
-            CL_function = self.CL_function
-            CD_function = self.CD_function
-            CM_function = self.CM_function
-
-        return Airfoil(
+        new_airfoil = Airfoil(
             name=self.name,
             coordinates=coordinates,
-            CL_function=CL_function,
-            CD_function=CD_function,
-            CM_function=CM_function,
         )
+
+        ### Polar functions only exist on Airfoils created via the deprecated constructor keyword arguments (or via
+        ### Airfoil.generate_polars()); carry them over only if they exist.
+        has_polar_functions = all(
+            hasattr(self, f"{coefficient}_function")
+            for coefficient in ["CL", "CD", "CM"]
+        )
+
+        if has_polar_functions:
+            if modify_polars:
+                effectiveness = (
+                    1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291
+                )
+                dalpha = deflection * effectiveness
+
+                def CL_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CL_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+                def CD_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CD_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+                def CM_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CM_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+            else:
+                CL_function = self.CL_function
+                CD_function = self.CD_function
+                CM_function = self.CM_function
+
+            new_airfoil.CL_function = CL_function
+            new_airfoil.CD_function = CD_function
+            new_airfoil.CM_function = CM_function
+
+        return new_airfoil
 
     def set_TE_thickness(
         self,
