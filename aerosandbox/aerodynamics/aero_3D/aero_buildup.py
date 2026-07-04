@@ -579,13 +579,11 @@ class AeroBuildup(ExplicitAnalysis):
         """
         Estimates the aerodynamic forces, moments, and derivatives on a wing in isolation.
 
-        Moments are given with the reference at Wing [0, 0, 0].
+        Moments are computed about `AeroBuildup.xyz_ref`, the moment reference point of this analysis.
 
         Args:
 
             wing: A Wing object that you wish to analyze.
-
-            op_point: The OperatingPoint that you wish to analyze the fuselage at.
 
         Returns:
 
@@ -957,7 +955,7 @@ class AeroBuildup(ExplicitAnalysis):
             * The fuselage is a body of revolution aligned with the x_b axis.
             * The angle between the nose and the freestream is less than 90 degrees.
 
-        Moments are given with the reference at Fuselage [0, 0, 0].
+        Moments are computed about `AeroBuildup.xyz_ref`, the moment reference point of this analysis.
 
         Uses methods from Jorgensen, Leland Howard. "Prediction of Static Aerodynamic Characteristics for Slender Bodies
         Alone and with Lifting Surfaces to Very High Angles of Attack". NASA TR R-474. 1977.
