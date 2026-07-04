@@ -1443,15 +1443,25 @@ class OptiSol:
 
         t = type(x)
 
+        # Shorthand for recursive calls, propagating the keyword arguments given to this call.
+        def _value(item):
+            return self.value(
+                item,
+                recursive=recursive,
+                warn_on_unknown_types=warn_on_unknown_types,
+            )
+
         # If it's a Python iterable, recursively convert it, and preserve the type as best as possible.
         if issubclass(t, list):
-            return [self.value(i) for i in x]
+            return [_value(i) for i in x]
         if issubclass(t, tuple):
-            return tuple([self.value(i) for i in x])
-        if issubclass(t, (set, frozenset)):
-            return {self.value(i) for i in x}
+            return tuple([_value(i) for i in x])
+        if issubclass(t, frozenset):
+            return frozenset(_value(i) for i in x)
+        if issubclass(t, set):
+            return {_value(i) for i in x}
         if issubclass(t, dict):
-            return {self.value(k): self.value(v) for k, v in x.items()}
+            return {_value(k): _value(v) for k, v in x.items()}
 
         # Skip certain Python types
         if issubclass(
@@ -1487,7 +1497,7 @@ class OptiSol:
             new_x = copy.copy(x)
 
             for k, v in x.__dict__.items():
-                setattr(new_x, k, self.value(v))
+                setattr(new_x, k, _value(v))
 
             return new_x
 

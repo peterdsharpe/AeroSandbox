@@ -457,5 +457,38 @@ def test_show_infeasibilities_single_scalar_constraint_violated(capsys):
     assert "violation" in out
 
 
+def test_optisol_value_preserves_frozenset():
+    """sol.value(frozenset) should return a frozenset (used to silently return a mutable set)."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=1)
+    opti.minimize((x - 3) ** 2)
+    sol = opti.solve(verbose=False)
+
+    result = sol.value(frozenset([x]))
+    assert isinstance(result, frozenset)
+    (element,) = result
+    assert element == pytest.approx(3)
+
+    result = sol.value({x})  # Plain sets should still come back as plain sets
+    assert type(result) is set
+
+
+def test_optisol_value_propagates_warn_on_unknown_types():
+    """The warn_on_unknown_types flag should also apply to nested items (it used to be dropped
+    in recursive calls, so nested unconvertible objects never warned)."""
+
+    class Unconvertible:
+        __slots__ = ()  # No __dict__, and not convertible by CasADi
+
+    opti = asb.Opti()
+    x = opti.variable(init_guess=1)
+    opti.minimize((x - 3) ** 2)
+    sol = opti.solve(verbose=False)
+
+    with pytest.warns(UserWarning, match="could not convert"):
+        sol.value([Unconvertible()], warn_on_unknown_types=True)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
