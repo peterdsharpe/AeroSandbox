@@ -135,5 +135,28 @@ def test_pitching_through_transverse_gust_accepts_float_angle_of_attack():
     assert cl_float == pytest.approx(cl_callable)
 
 
+def test_calculate_reduced_time_mismatched_lengths_raises():
+    with pytest.raises(ValueError):
+        calculate_reduced_time(np.linspace(0, 10, 11), np.linspace(3, 10, 10), chord=2.0)
+
+
+def test_transverse_gust_ndarray_angle_of_attack_raises():
+    reduced_time = np.linspace(0, 10, 5)
+    with pytest.raises(TypeError):
+        calculate_lift_due_to_transverse_gust(
+            reduced_time,
+            gust_velocity_profile=top_hat_gust,
+            plate_velocity=10.0,
+            angle_of_attack=np.ones(5),
+        )
+
+
+def test_pitching_profile_negative_reduced_time_raises():
+    with pytest.raises(ValueError):
+        calculate_lift_due_to_pitching_profile(
+            np.linspace(-5, 5, 11), angle_of_attack=5.0
+        )
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

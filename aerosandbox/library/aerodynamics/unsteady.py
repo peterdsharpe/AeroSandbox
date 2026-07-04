@@ -48,9 +48,8 @@ def calculate_reduced_time(
     if isinstance(velocity, (float, int)):
         return 2 * velocity * time / chord
     else:
-        assert np.size(velocity) == np.size(time), (
-            "The velocity history and time must have the same length"
-        )
+        if np.size(velocity) != np.size(time):
+            raise ValueError("The velocity history and time must have the same length")
         reduced_time = np.zeros_like(time, dtype=float)
         for i in range(len(time) - 1):
             reduced_time[i + 1] = reduced_time[i] + (
@@ -161,9 +160,10 @@ def calculate_lift_due_to_transverse_gust(
     Returns:
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
     """
-    assert not isinstance(angle_of_attack, np.ndarray), (
-        "Please provide either a Callable or a float for the angle of attack"
-    )
+    if isinstance(angle_of_attack, np.ndarray):
+        raise TypeError(
+            "Please provide either a Callable or a float for the angle of attack"
+        )
 
     if isinstance(angle_of_attack, float) or isinstance(angle_of_attack, int):
 
@@ -211,9 +211,8 @@ def calculate_lift_due_to_pitching_profile(
         lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
     """
 
-    assert (reduced_time >= 0).all(), (
-        "Please use positive time. Negative time not supported"
-    )
+    if not (reduced_time >= 0).all():
+        raise ValueError("Please use positive time. Negative time not supported")
 
     if isinstance(angle_of_attack, float) or isinstance(angle_of_attack, int):
 
