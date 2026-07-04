@@ -1,5 +1,6 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+from aerosandbox.numpy.integrate_discrete import integrate_discrete_intervals
 from typing import Callable
 
 
@@ -208,7 +209,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         y = np.linspace(0, length, points_per_point_load)
 
         N = np.length(y)
-        dy = np.diff(y)
 
         ### Evaluate the beam properties
         if isinstance(diameter_function, Callable):
@@ -253,7 +253,13 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         # strictly-positive scale values, we take the absolute value (so that
         # net-downward loads work) and fall back to a positive value if the net load
         # is zero (e.g., the default no-load case).
-        force_scale = np.abs(np.sum(np.trapz(distributed_force) * dy))
+        force_scale = np.abs(
+            np.sum(
+                integrate_discrete_intervals(
+                    distributed_force, x=y, method="trapezoidal"
+                )
+            )
+        )
         try:
             if float(force_scale) == 0:
                 force_scale = 1.0
@@ -311,15 +317,23 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
     def volume(self):
         if self.assume_thin_tube:
             return np.sum(
-                np.pi * np.trapz(self.diameter * self.wall_thickness) * np.diff(self.y)
+                np.pi
+                * integrate_discrete_intervals(
+                    self.diameter * self.wall_thickness,
+                    multiply_by_dx=False,
+                    method="trapezoidal",
+                )
+                * np.diff(self.y)
             )
         else:
             return np.sum(
                 np.pi
                 / 4
-                * np.trapz(
+                * integrate_discrete_intervals(
                     (self.diameter + self.wall_thickness) ** 2
-                    - (self.diameter - self.wall_thickness) ** 2
+                    - (self.diameter - self.wall_thickness) ** 2,
+                    multiply_by_dx=False,
+                    method="trapezoidal",
                 )
                 * np.diff(self.y)
             )
@@ -328,7 +342,13 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         if len(self.bending_point_forces) != 0:
             raise NotImplementedError
 
-        return np.sum(np.trapz(self.distributed_force) * np.diff(self.y))
+        return np.sum(
+            integrate_discrete_intervals(
+                self.distributed_force,
+                x=self.y,
+                method="trapezoidal",
+            )
+        )
 
     def draw(self, show=True):
         import matplotlib.pyplot as plt
