@@ -321,14 +321,16 @@ def length(a: ArrayLike | Scalar) -> int:
         returns the larger of the two dimensions (assuming column vectors).
     """
     if not is_casadi_type(a, recursive=False):
-        a_arr = cast(_onp.ndarray, asarray(a))
+        # Take len() of the original input, not of asarray(a): a Python list
+        # of CasADi expressions would become a CasADi array (which has no
+        # len()), yet its length is simply the list length.
         try:
-            return len(a_arr)
+            return len(cast(Sequence[Any], a))
         except TypeError:
             return 1
 
     else:
-        a_cas = cast(_CasADiType, asarray(a))
+        a_cas = cast(_CasADiType, a)
         if a_cas.shape[0] != 1:
             return a_cas.shape[0]
         else:

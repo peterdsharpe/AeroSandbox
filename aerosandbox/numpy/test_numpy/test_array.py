@@ -47,6 +47,33 @@ def test_length():
     assert length(cas.MX(np.ones(5))) == 5
 
 
+def test_length_of_list_of_casadi_types():
+    """length() of a Python list of CasADi expressions must be the list
+    length. (Guards against the regression from commit f45b11a4, where an
+    asarray()-based length() raised TypeError internally and returned 1,
+    giving Wing.mesh_body() empty face arrays and crashing the VLM with an
+    IndexError.)"""
+    x = cas.MX.sym("x")
+
+    assert length([x, x, x]) == 3
+    assert length([x]) == 1
+    assert length([x * 2, x**2]) == 2
+    assert length((x, x)) == 2
+    assert length([cas.DM(1), cas.DM(2)]) == 2
+    assert length([cas.SX.sym("y"), cas.SX.sym("z")]) == 2
+    assert length([x, 2.0, np.array(3)]) == 3
+
+    # CasADi arrays themselves (always 2D internally):
+    assert length(x) == 1
+    assert length(cas.MX.sym("v", 4)) == 4
+    assert length(cas.MX.sym("r", 1, 4)) == 4
+
+    # A list of CasADi matrices has the length of the *list* (like len()).
+    # Wing.mesh_thin_surface() relies on this to count spanwise strips.
+    strips = [cas.MX.sym(f"s{i}", 7, 3) for i in range(5)]
+    assert length(strips) == 5
+
+
 def test_concatenate():
     n = np.arange(10)
     c = cas.DM(n)
