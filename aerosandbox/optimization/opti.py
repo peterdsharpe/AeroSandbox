@@ -1141,36 +1141,32 @@ class Opti(cas.Opti):
             derivative_scale: Scale factor for the value of the derivative. For more info, look at the docstring of
             opti.variable()'s `scale` parameter.
 
-            method: The type of integrator to use to define this derivative. Options are:
+            method: The type of integrator to use to define this derivative. (Method names are case-insensitive,
+            and spaces may equivalently be given as underscores.) Options are:
+
+                * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal method
+
+                    Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
 
                 * "forward euler" - a first-order-accurate forward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Euler_method
 
-                * "backwards euler" - a first-order-accurate backwards Euler method
+                * "backward euler" - a first-order-accurate backward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
 
-                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
-
-                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
-
-                * "simpson" - Simpson's rule for integration
+                * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods based on
+                Simpson's rule, using a parabolic fit over each interval plus its forward (respectively,
+                backward) neighboring point
 
                     Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
 
-                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
-                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
+                * "cubic" or "cubic spline" - a method based on a cubic fit over each interval plus its two
+                neighboring points
 
-                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
-
-                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
-                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
-                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
-                as the Butcher tableau is more dense (i.e. not banded).
-
-                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
-                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
+                See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative list of supported
+                methods.
 
             explicit: If true, returns an explicit derivative rather than an implicit one. In other words,
             this *defines* the output to be a derivative of the input rather than *constraining* the output to the a
@@ -1268,36 +1264,32 @@ class Opti(cas.Opti):
                 In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
                 value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
 
-            method: The type of integrator to use to define this derivative. Options are:
+            method: The type of integrator to use to define this derivative. (Method names are case-insensitive,
+            and spaces may equivalently be given as underscores.) Options are:
+
+                * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal method
+
+                    Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
 
                 * "forward euler" - a first-order-accurate forward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Euler_method
 
-                * "backwards euler" - a first-order-accurate backwards Euler method
+                * "backward euler" - a first-order-accurate backward Euler method
 
                     Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
 
-                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
-
-                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
-
-                * "simpson" - Simpson's rule for integration
+                * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods based on
+                Simpson's rule, using a parabolic fit over each interval plus its forward (respectively,
+                backward) neighboring point
 
                     Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
 
-                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
-                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
+                * "cubic" or "cubic spline" - a method based on a cubic fit over each interval plus its two
+                neighboring points
 
-                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
-
-                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
-                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
-                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
-                as the Butcher tableau is more dense (i.e. not banded).
-
-                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
-                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
+                See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative list of supported
+                methods.
 
             Note that all methods are expressed as integrators rather than differentiators; this prevents
             singularities from forming in the limit of timestep approaching zero. (For those coming from the PDE
