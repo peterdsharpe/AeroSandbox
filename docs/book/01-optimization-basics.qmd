@@ -1,0 +1,394 @@
+---
+title: "Optimization Basics"
+---
+
+Everything in AeroSandbox — every airfoil polar, every weight buildup, every trajectory — is designed to sit inside an optimization problem. So before any wings appear, this chapter teaches the machinery that the rest of the book is built on. You will learn the `asb.Opti` lifecycle (declare variables, add constraints, set an objective, solve, extract values) by working a classic nonconvex benchmark; how to scale from 2 design variables to hundreds using vectorized variables; and why AeroSandbox ships its own drop-in replacement for NumPy. If you internalize this one chapter, every later chapter is "just" writing physics models inside this same five-call pattern.
+
+## The shape of an engineering design problem {#sec-optimization-basics}
+
+Most engineering design problems, reduced to their mathematical skeleton, look surprisingly alike. They are:
+
+* **Continuous** — the design variables (a wingspan, a cruise altitude) vary smoothly, rather than being discrete choices.
+* **Nonlinear** — the sensitivity of performance to each input changes as you move through the design space.
+* **Nonconvex** — the objective is not always "curving up", so local information alone can't certify a global optimum.
+* **Poorly scaled** — variables and their couplings span many orders of magnitude, so the Hessian is ill-conditioned.
+* **Constrained** — the interesting designs live on the boundary of what's allowed: a structure at its stress limit, a wing at its stall margin.
+
+The classic miniature of the first four properties is the [Rosenbrock function](https://en.wikipedia.org/wiki/Rosenbrock_function) — the "Hello, World!" of optimization. Physically, picture a shallow, banana-shaped valley: falling *into* the valley is easy, but the valley floor is nearly flat along its length and curves as it goes, so following it to the true bottom is hard. In code, it's one line:
+
+```{python}
+def rosenbrock(x, y):
+    return (1 - x) ** 2 + 100 * (y - x**2) ** 2
+```
+
+Here's what that landscape looks like:
+
+```{python}
+#| echo: false
+#| label: fig-01-rosenbrock
+#| fig-cap: "Contours of the Rosenbrock function, log-spaced. The minimum hides at the far end of a nearly-flat, curving valley."
+#| fig-alt: "Contour plot of the Rosenbrock function on the domain x in [-2, 2], y in [-1, 3], with log-spaced contour levels shown as gray lines and the global minimum at (1, 1) marked with a star."
+import _common
+import matplotlib.pyplot as plt
+import numpy as onp
+
+X, Y = onp.meshgrid(onp.linspace(-2, 2, 400), onp.linspace(-1, 3, 400))
+Z = rosenbrock(X, Y)
+
+fig, ax = plt.subplots(figsize=(6.5, 5.5))
+cs = ax.contour(
+    X, Y, Z,
+    levels=[0.3, 1, 3, 10, 30, 100, 300, 1000],
+    colors=_common.TEXT_SECONDARY, linewidths=0.7,
+)
+ax.clabel(cs, fmt=lambda v: f"{v:g}", fontsize=7, colors=_common.TEXT_SECONDARY)
+ax.plot(1, 1, "*", color=_common.SERIES[3], markersize=14, zorder=5)
+ax.annotate(
+    "minimum at (1, 1)", xy=(1, 1), xytext=(1.05, 0.55),
+    color=_common.SERIES[3], fontweight="bold", fontsize=9,
+)
+ax.set_xlabel("$x$ [–]")
+ax.set_ylabel("$y$ [–]")
+ax.set_title("The Rosenbrock valley")
+ax.set_aspect("equal")
+plt.show()
+```
+
+With the picture in mind, the problem statement is simply:
+
+$$ \underset{x,\ y}{\text{minimize}} \quad (1-x)^2 + 100\,(y-x^2)^2 $$
+
+The minimum sits at $(1, 1)$, where the function value is exactly zero — a fact we can verify by hand, which makes this a good first test of the machinery.
+
+## The `Opti` lifecycle {#sec-optimization-basics-lifecycle}
+
+The core of AeroSandbox is the `Opti` class: an optimization environment where you state a problem in natural mathematical syntax, and a modern gradient-based solver ([IPOPT](https://coin-or.github.io/Ipopt/), with derivatives supplied automatically by [CasADi](https://web.casadi.org/)) finds the optimum. Under the hood, `asb.Opti` extends CasADi's `Opti` class with engineering-design conveniences — variable scaling, log-transforms, frozen variables — that later chapters will use heavily.
+
+Every `Opti` problem in this book, from 2 variables to thousands, follows the same five-call lifecycle:
+
+1. `opti = asb.Opti()` — create an optimization environment.
+2. `opti.variable(init_guess=...)` — declare each design variable, with an initial guess.
+3. `opti.subject_to(...)` — declare constraints (we'll add one in a moment).
+4. `opti.minimize(...)` — declare the objective.
+5. `sol = opti.solve()`, then `sol(...)` — solve, and evaluate any expression at the optimum.
+
+Here is the whole lifecycle applied to the Rosenbrock problem:
+
+```{python}
+import aerosandbox as asb  # The standard AeroSandbox import convention
+
+opti = asb.Opti()  # 1. Create an optimization environment
+
+x = opti.variable(init_guess=0)  # 2. Declare variables. Initial guesses are required.
+y = opti.variable(init_guess=0)
+
+opti.minimize(rosenbrock(x, y))  # 4. Declare the objective (no constraints yet)
+
+sol = opti.solve()  # 5. Solve.
+```
+
+```{python}
+#| echo: false
+import time
+
+_opti = asb.Opti()
+_x = _opti.variable(init_guess=0)
+_y = _opti.variable(init_guess=0)
+_opti.minimize(rosenbrock(_x, _y))
+_t0 = time.perf_counter()
+_sol = _opti.solve(verbose=False)
+solve_ms = (time.perf_counter() - _t0) * 1e3
+n_iter_rosen = sol.stats()["iter_count"]
+```
+
+The solver prints a progress log as it works. For now, only the last lines matter: `EXIT: Optimal Solution Found` means the solver converged to a point satisfying the optimality conditions, and the timing table shows the entire solve took milliseconds (re-timing this solve on this machine gives about `{python} f"{solve_ms:.0f}"` ms, in `{python} f"{n_iter_rosen}"` iterations). We'll learn to read the rest of this log — and what to do when it *doesn't* say "Optimal Solution Found" — in @sec-solvers-and-solutions.
+
+Note two things about the code. First, `rosenbrock()` is an ordinary Python function, written before `opti` existed — you can organize your models with functions and classes as usual, and pass optimization variables through them. Second, extracting answers uses `sol(...)`, which evaluates *any* expression at the optimum, not just bare variables:
+
+```{python}
+print(f"x = {sol(x)}")
+print(f"y = {sol(y)}")
+print(f"objective = {sol(rosenbrock(x, y))}")
+```
+
+The solver lands on $(1, 1)$ to machine precision, matching the hand calculation.
+
+::: {.callout-note}
+## Initial guesses
+
+`init_guess` tells the optimizer where to start looking. For this small problem almost any start works, but for large nonconvex problems the quality of your initial guess strongly affects both solve time and *which* local optimum you find. Get in the habit of providing physically-sensible guesses.
+:::
+
+## Adding a constraint {#sec-optimization-basics-constraints}
+
+Real design problems are constrained, so let's constrain this one: **find the lowest point of the Rosenbrock valley that lies within the unit circle**, i.e. subject to $x^2 + y^2 \le 1$. The unconstrained minimum at $(1, 1)$ has a radius of $\sqrt{2}$, so it's no longer feasible — we expect the new optimum to sit *on* the circle, somewhere down-valley of $(1, 1)$.
+
+Constraints are declared with `opti.subject_to()`, using natural comparison syntax. We'll also start the solver at $(-1.5, 1.5)$ — deliberately *outside* the feasible circle — to make a point: **initial guesses do not need to be feasible.** IPOPT drives infeasibility to zero as it converges.
+
+One new trick here: `opti.solve()` accepts a `callback` function that runs at every solver iteration. Inside it, `opti.debug.value(...)` reads the current (not-yet-converged) value of any expression — ideal for recording the optimizer's path so we can watch it think:
+
+```{python}
+opti = asb.Opti()
+
+x = opti.variable(init_guess=-1.5)
+y = opti.variable(init_guess=1.5)  # Note: (-1.5, 1.5) is infeasible. That's fine.
+
+opti.minimize(rosenbrock(x, y))
+
+opti.subject_to(x**2 + y**2 <= 1)  # Constrain the design to the unit disk
+
+iterates = []  # Record the optimizer's path, for plotting
+
+sol = opti.solve(
+    callback=lambda iteration: iterates.append(
+        (opti.debug.value(x), opti.debug.value(y))
+    ),
+    verbose=False,  # Suppresses the IPOPT log we saw earlier
+)
+
+x_star, y_star = sol(x), sol(y)
+r_star = sol((x**2 + y**2) ** 0.5)
+print(f"Optimum: x = {x_star:.6f}, y = {y_star:.6f}, radius = {r_star:.6f}")
+```
+
+```{python}
+#| echo: false
+#| label: fig-01-constrained-path
+#| fig-cap: "The optimizer's path on the constrained Rosenbrock problem. Starting from an infeasible guess, IPOPT steps into the feasible disk, finds the valley floor, and follows it until the constraint stops it."
+#| fig-alt: "Contour plot of the Rosenbrock function with the feasible unit disk shaded gray. A blue line with dots traces the optimizer iterates from the infeasible initial guess at (-1.5, 1.5) into the disk and along the valley to the constrained optimum on the circle boundary, marked with a star. The unconstrained minimum at (1, 1) is shown grayed out outside the circle."
+import _common
+import matplotlib.pyplot as plt
+import numpy as onp
+
+path = onp.array(iterates)
+
+fig, ax = plt.subplots(figsize=(6.5, 5.5))
+
+# Context: the objective landscape...
+cs = ax.contour(
+    X, Y, Z,
+    levels=[0.3, 1, 3, 10, 30, 100, 300, 1000],
+    colors=_common.GRID, linewidths=0.7,
+)
+# ...and the feasible region.
+theta = onp.linspace(0, 2 * onp.pi, 200)
+ax.fill(
+    onp.cos(theta), onp.sin(theta),
+    color=_common.TEXT_SECONDARY, alpha=0.12, linewidth=0, zorder=0,
+)
+ax.plot(onp.cos(theta), onp.sin(theta), color=_common.TEXT_SECONDARY, linewidth=1)
+ax.text(-0.35, -0.55, "feasible region\n$x^2 + y^2 \\leq 1$",
+        color=_common.TEXT_SECONDARY, fontsize=8, ha="center")
+
+# The old, now-infeasible minimum, for reference:
+ax.plot(1, 1, "*", color=_common.TEXT_SECONDARY, markersize=11)
+ax.annotate("unconstrained minimum\n(now infeasible)", xy=(1, 1), xytext=(1.1, 0.75),
+            color=_common.TEXT_SECONDARY, fontsize=8)
+
+# Focus: the optimizer's path.
+ax.plot(path[:, 0], path[:, 1], ".-", color=_common.SERIES[0],
+        linewidth=1.5, markersize=5, zorder=4)
+ax.annotate("initial guess\n(infeasible)", xy=tuple(path[0]), xytext=(-1.95, 1.75),
+            color=_common.SERIES[0], fontweight="bold", fontsize=9)
+ax.plot(x_star, y_star, "*", color=_common.SERIES[3], markersize=14, zorder=5)
+ax.annotate(f"constrained optimum\n({x_star:.3f}, {y_star:.3f})",
+            xy=(x_star + 0.03, y_star - 0.04), xytext=(1.12, 0.05),
+            color=_common.SERIES[3], fontweight="bold", fontsize=9,
+            arrowprops=dict(arrowstyle="-", color=_common.TEXT_SECONDARY, linewidth=0.7))
+
+ax.set_xlabel("$x$ [–]")
+ax.set_ylabel("$y$ [–]")
+ax.set_title("Watching IPOPT solve the constrained problem")
+ax.set_aspect("equal")
+ax.set_xlim(-2, 2)
+ax.set_ylim(-1.1, 2)
+plt.show()
+```
+
+The optimum lands at (`{python} f"{x_star:.3f}"`, `{python} f"{y_star:.3f}"`), and its radius is `{python} f"{r_star:.6f}"` — the constraint is *active* (tight) at the solution, exactly as the geometry suggested. The whole `{python} f"{len(iterates) - 1}"`-iteration solve, path recording included, still takes milliseconds. (If you wanted to certify this optimum by hand, you'd verify the [KKT conditions](https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions); for now, we'll trust the optimizer's convergence test, which checks exactly that.)
+
+A few practical notes on constraints:
+
+* **Strict vs. non-strict inequalities are the same thing here.** Numerically, there's no difference between `<` and `<=` (or `>` and `>=`) — use whichever reads better.
+* **Equality constraints use `==`.** For example, `opti.subject_to(lift == weight)` is the standard way to close a steady-flight force balance — you'll see this constantly from @sec-wing-design onward.
+* **You can pass a list.** `opti.subject_to([x >= 0, x <= 5])` declares both constraints at once; this often makes model code read like a specification.
+* **Declaration order is free.** Variables, constraints, and the objective can be declared in any order, as long as everything is in place before `opti.solve()`.
+* **`opti.maximize(f)` exists too** — it's simply sugar for `opti.minimize(-f)`.
+
+## Vectorized variables {#sec-optimization-basics-vectorized}
+
+Declaring variables one at a time stops scaling long before real problems do — a trajectory optimization might need the aircraft's altitude at 100 points in time. Rule #1 of scientific Python applies to optimization too: **vectorize everything.** `opti.variable()` creates a whole vector of decision variables when you hand it a vector initial guess.
+
+The standard benchmark here is the $N$-dimensional sphere problem — words first: find the point closest to the origin, where "closeness" is the sum of squared coordinates. As math:
+
+$$ \underset{\vec{x}}{\text{minimize}} \quad \sum_{i=1}^{N} x_i^2 $$
+
+Let's solve it in 100-dimensional space:
+
+```{python}
+import aerosandbox.numpy as np  # More on this import in the next section!
+
+N = 100
+
+opti = asb.Opti()
+
+x = opti.variable(init_guess=np.ones(N))  # A vector variable: length inferred
+                                          # from the initial guess.
+opti.minimize(np.sum(x**2))
+
+sol = opti.solve(verbose=False)
+
+print(f"Number of variables:  {N}")
+print(f"Solver iterations:    {sol.stats()['iter_count']}")
+print(f"Max |x_i| at optimum: {np.max(np.abs(sol(x))):.2e}")
+```
+
+All 100 components go to zero — in a *single* solver iteration. That's no accident: the sphere problem is an unconstrained quadratic, and IPOPT is a second-order (Newton-type) method, so one full Newton step lands exactly on the optimum. This is a recurring theme: modern solvers exploit curvature information, and (as we'll see next) AeroSandbox supplies exact second derivatives automatically.
+
+Vector variables really shine because **constraints broadcast element-wise**, just like NumPy arithmetic. One `subject_to()` call below creates 100 constraints — a per-element lower bound $x_i \ge b_i$:
+
+```{python}
+b = np.linspace(-1, 1, N)  # A different lower bound for each element
+
+opti = asb.Opti()
+x = opti.variable(init_guess=np.ones(N))
+opti.subject_to(x >= b)  # 100 constraints in one line
+opti.minimize(np.sum(x**2))
+
+sol = opti.solve(verbose=False)
+x_opt = sol(x)
+```
+
+```{python}
+#| echo: false
+#| label: fig-01-vector-bounds
+#| fig-cap: "Solution of the bounded sphere problem. Where the lower bound is negative, the optimizer parks each element at its unconstrained optimum of zero; where the bound is positive, the constraint is active and the element sits exactly on it."
+#| fig-alt: "Line plot versus variable index from 0 to 99. A gray dashed line shows the lower bound rising linearly from -1 to 1. A blue line shows the optimal solution: zero for the first half of indices, then following the bound exactly for the second half."
+import _common
+import matplotlib.pyplot as plt
+import numpy as onp
+
+idx = onp.arange(N)
+
+fig, ax = plt.subplots(figsize=(7, 3.2))
+ax.plot(idx, b, "--", color=_common.TEXT_SECONDARY, linewidth=1.2)
+ax.plot(idx, x_opt, color=_common.SERIES[0], linewidth=2.2)
+_common.label_line(ax, 30, -0.52, "lower bound $b_i$", _common.TEXT_SECONDARY)
+_common.label_line(ax, 20, 0.12, "optimum $x_i^*$", _common.SERIES[0])
+ax.annotate(
+    "bound inactive\n($x_i^* = 0$)", xy=(10, 0.02), xytext=(2, 0.5),
+    color=_common.TEXT_SECONDARY, fontsize=8,
+    arrowprops=dict(arrowstyle="-", color=_common.TEXT_SECONDARY, linewidth=0.7),
+)
+ax.annotate(
+    "bound active\n($x_i^* = b_i$)", xy=(80, 0.62), xytext=(85, 0.15),
+    color=_common.TEXT_SECONDARY, fontsize=8,
+    arrowprops=dict(arrowstyle="-", color=_common.TEXT_SECONDARY, linewidth=0.7),
+)
+ax.set_xlabel("Variable index $i$ [–]")
+ax.set_ylabel("Value [–]")
+ax.set_title("Element-wise constraints: active where they must be, silent where they needn't be")
+plt.show()
+```
+
+The result reads like a textbook illustration of constrained optimality: each element independently settles at $\max(b_i,\, 0)$. Where the bound doesn't bind, the optimizer ignores it; where it does, the solution sits exactly on it.
+
+More syntax you'll use constantly:
+
+* **Scalar guess, explicit length:** `opti.variable(init_guess=1, n_vars=N)` is shorthand for a length-`N` vector with every element initialized to 1. Use the array form (`init_guess=np.linspace(...)`) when elements should start at different values — for trajectory problems, a straight-line guess between endpoints is a great default.
+* **Indexing works:** `x[3]`, `x[10:20]`, and friends behave as you'd expect, so you can constrain, say, boundary conditions: `opti.subject_to(x[0] == 0)`.
+* **Dimensionality:** scalars and 1D vectors cover nearly all engineering design problems; 2D matrix variables are supported, but higher-dimensional arrays of *decision variables* are not (plain `aerosandbox.numpy` math on numeric arrays has no such limit).
+
+## Why `aerosandbox.numpy` exists {#sec-optimization-basics-numpy}
+
+You may have noticed the import `import aerosandbox.numpy as np` above and wondered why we don't just use NumPy. The short answer: **so that the solver can differentiate your code.**
+
+Here's the chain of reasoning. IPOPT is a gradient-based optimizer: at every iteration it needs derivatives of the objective and every constraint with respect to every variable — including exact second derivatives, which is how the sphere problem solved in one Newton step. Computing those by finite differences would be slow and noisy; deriving them by hand, for an entire aircraft model, would be unthinkable. Instead, CasADi uses [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (AD): when you write `rosenbrock(x, y)` with opti variables, no arithmetic actually happens — instead, a symbolic *trace* (a directed graph of every `+`, `*`, `cos`, `exp`, ...) is recorded, and exact derivatives of the whole graph come almost for free. This is why an `opti` variable prints as a symbolic `MX` object rather than a number.
+
+The catch: every operation between variable and objective must be *traceable*. Plain NumPy functions don't know what a CasADi `MX` object is, so they would break the trace (or crash). Rewriting your math in CasADi's own syntax would work, but then your model code couldn't be run on ordinary numbers. AeroSandbox resolves this with a **dual-backend NumPy**: `aerosandbox.numpy` re-exports all of NumPy, and re-implements the functions that need it so that each one dispatches on its input type —
+
+* **NumPy arrays in → NumPy arrays out**, with identical behavior and speed to stock NumPy;
+* **Optimization variables in → traced symbolic expressions out**, keeping the AD graph intact.
+
+So the practice is simply: **in any code that might ever touch an optimization variable, write `import aerosandbox.numpy as np` instead of `import numpy as np`** — and then write your engineering models once, use them everywhere. Let's see the dispatch in action with `np.where`, the vectorized if/else:
+
+```{python}
+import aerosandbox.numpy as np
+
+# Numeric inputs: behaves exactly like numpy.where...
+values = np.linspace(0, 4, 5)
+print(np.where(values > 2, values, 0.0))
+print(type(np.where(values > 2, values, 0.0)))
+```
+
+```{python}
+# ...symbolic inputs: builds a traceable expression instead.
+opti = asb.Opti()
+v = opti.variable(init_guess=1)
+
+expression = np.where(v > 2, v, 0.0)
+print(type(expression))
+```
+
+Same function, same call signature — a NumPy `ndarray` in the first case, a symbolic CasADi `MX` node in the second. Every AeroSandbox physics model is built out of functions like this, which is why the same drag model can be evaluated on a plain float for a quick check *and* optimized through with exact gradients.
+
+`aerosandbox.numpy` also adds functions stock NumPy doesn't have, purpose-built for optimization. A favorite is `np.softmax` — a smooth, differentiable stand-in for `max()`. It's worth a picture: the hard maximum has a kink where the two arguments cross, and gradient-based optimizers handle kinks badly. `softmax` rounds the kink off, with a `softness` parameter (in the same units as the inputs) setting how much discrepancy between the inputs is "physically significant":
+
+```{python}
+t = np.linspace(-2, 2, 300)
+hard = np.maximum(t, 0)
+soft = np.softmax(t, 0, softness=0.4)  # Works on arrays...
+print(f"softmax(3, 4) = {np.softmax(3, 4, softness=0.4):.4f}")  # ...and scalars.
+```
+
+```{python}
+#| echo: false
+#| label: fig-01-softmax
+#| fig-cap: "The hard maximum has a kink at the crossover; softmax rounds it off so gradient-based optimizers always see smooth curvature."
+#| fig-alt: "Line plot of f(x) versus x from -2 to 2. A gray line shows max(x, 0) with a sharp corner at the origin. A blue line shows softmax(x, 0) with softness 0.4, which follows the same asymptotes but curves smoothly through the corner region."
+import _common
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(7, 3.2))
+ax.plot(t, hard, color=_common.TEXT_SECONDARY, linewidth=1.5)
+ax.plot(t, soft, color=_common.SERIES[0], linewidth=2.2)
+ax.annotate(
+    "$\\max(x,\\ 0)$: kinked", xy=(0.85, 0.85), xytext=(1.1, 0.45),
+    color=_common.TEXT_SECONDARY, fontweight="bold", fontsize=9,
+    arrowprops=dict(arrowstyle="-", color=_common.TEXT_SECONDARY, linewidth=0.7),
+)
+ax.annotate(
+    "softmax$(x,\\ 0)$: smooth", xy=(-0.35, 0.21), xytext=(-1.7, 0.55),
+    color=_common.SERIES[0], fontweight="bold", fontsize=9,
+    arrowprops=dict(arrowstyle="-", color=_common.TEXT_SECONDARY, linewidth=0.7),
+)
+ax.set_xlabel("$x$ [–]")
+ax.set_ylabel("$f(x)$ [–]")
+ax.set_title("A differentiable maximum")
+plt.show()
+```
+
+And because `np.softmax` is smooth and traceable, you can optimize straight through it — here, finding the point where two crossing lines have the lowest "soft-maximum", a miniature of the min-max problems that appear constantly in design (e.g., minimizing the *worst-case* drag across flight conditions):
+
+```{python}
+opti = asb.Opti()
+v = opti.variable(init_guess=3)
+
+worst_case = np.softmax(v, 2 - v, softness=0.5)  # Smooth max of two functions
+opti.minimize(worst_case)
+
+sol = opti.solve(verbose=False)
+print(f"v = {sol(v):.4f}, worst-case value = {sol(worst_case):.4f}")
+```
+
+The optimizer settles at `{python} f"v = {sol(v):.2f}"`, right at the crossover — precisely where a hard `max()` would have a non-differentiable kink and stall a naive formulation. (The full playbook of such reformulation tricks — and the sharp edges of `np.where`, which is traceable but still kinked — is the subject of @sec-robust-optimization-models.)
+
+The catalog of traceable operations is extensive: trigonometry, logarithms, interpolation, norms, linear solves, and more. Not every obscure NumPy function has been overloaded, though — if something you need is missing, check `aerosandbox/numpy/test_numpy/test_all_operations_run.py` for what's supported, and [open an issue](https://github.com/peterdsharpe/AeroSandbox/issues) for what isn't.
+
+## Where to go next {#sec-optimization-basics-next}
+
+You now have the complete `Opti` vocabulary: `variable` / `subject_to` / `minimize` / `solve` / `sol()`, vectorized, with `aerosandbox.numpy` keeping everything differentiable. Three good directions from here:
+
+* @sec-robust-optimization-models teaches the modeling patterns that keep real problems solvable — continuity and differentiability tricks, NaN-proofing, and problem scaling. Read it before writing your first serious model; it's the difference between solves that converge and solves that mysteriously don't.
+* @sec-solvers-and-solutions goes deeper on the solve itself: reading IPOPT's output, solver options, parameter sweeps, and extracting sensitivities (dual variables) from a converged solution.
+* Impatient for airplanes? @sec-wing-design applies exactly the machinery from this chapter to a real wing design problem — including a cautionary tale about what optimizers do to under-constrained models.
