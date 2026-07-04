@@ -54,7 +54,7 @@ class FittedModel(SurrogateModel):
 
             model: The model that you want to fit your dataset to. This is a callable with syntax f(x, p) where:
 
-                * x is a dict of dependent variables. Same format as x_data [dict of 1D ndarrays of length n].
+                * x is a dict of independent variables. Same format as x_data [dict of 1D ndarrays of length n].
 
                     * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead interpret x
                     as a 1D ndarray. (If you do this, just give `x_data` as an array.)
@@ -75,13 +75,13 @@ class FittedModel(SurrogateModel):
                 manifests itself is if someone writes something to the effect of `x += 3` or similar. Instead, write `x =
                 x + 3`.
 
-            x_data: Values of the dependent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
+            x_data: Values of the independent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
             var_name:var_data}.
 
                 * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead supply x_data
                 as a 1D ndarray. (If you do this, just treat `x` as an array in your model, not a dict.)
 
-            y_data: Values of the independent variable in the dataset to be fitted. [1D ndarray of length n]
+            y_data: Values of the dependent variable in the dataset to be fitted. [1D ndarray of length n]
 
             parameter_guesses: a dict of fit parameters. Syntax is {param_name:param_initial_guess}.
 
@@ -128,9 +128,10 @@ class FittedModel(SurrogateModel):
             `aerosandbox.Opti.solve(verbose=)` syntax for more details.
 
         Returns: A model in the form of a FittedModel object. Some things you can do:
-            >>> y = FittedModel(x) # evaluate the FittedModel at new x points
-            >>> FittedModel.parameters # directly examine the optimal values of the parameters that were found
-            >>> FittedModel.plot() # plot the fit
+            >>> my_fitted_model = FittedModel(...)
+            >>> y = my_fitted_model(x) # evaluate the FittedModel at new x points
+            >>> my_fitted_model.parameters # directly examine the optimal values of the parameters that were found
+            >>> my_fitted_model.plot() # plot the fit
 
 
         """

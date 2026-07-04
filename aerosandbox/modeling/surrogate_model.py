@@ -44,7 +44,7 @@ class SurrogateModel(AeroSandboxObject):
 
         The input `x` is of the type:
             * in the general N-dimensional case, a dictionary where keys are variable names and values are float/array.
-            * in the case of a 1-dimensional input (R^1 -> R^2), a float/array.
+            * in the case of a 1-dimensional input (R^1 -> R^1), a float/array.
 
         """
         ### Perform basic type checking on x, if x_data exists as a reference.
@@ -104,9 +104,9 @@ class SurrogateModel(AeroSandboxObject):
 
         def axis_range(x_data_axis: np.ndarray) -> tuple[float, float]:
             """
-            Given the entries of one axis of the dependent variable, determine a min/max range over which to plot the fit.
+            Given the entries of one axis of the independent variable, determine a min/max range over which to plot the fit.
             Args:
-                x_data_axis: The entries of one axis of the dependent variable, i.e. x_data["x1"].
+                x_data_axis: The entries of one axis of the independent variable, i.e. x_data["x1"].
 
             Returns: A tuple representing the (min, max) value over which to plot that axis.
             """

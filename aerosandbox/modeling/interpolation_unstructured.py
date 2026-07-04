@@ -43,13 +43,13 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
 
         Args:
 
-            x_data: Values of the dependent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
+            x_data: Values of the independent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
             var_name:var_data}.
 
                 * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead supply x_data
                 as a 1D ndarray. (If you do this, just treat `x` as an array in your model, not a dict.)
 
-            y_data: Values of the independent variable in the dataset to be fitted. [1D ndarray of length n]
+            y_data: Values of the dependent variable in the dataset to be fitted. [1D ndarray of length n]
 
             x_data_resample: A parameter that guides how the x_data should be resampled onto a structured grid.
 
