@@ -8,6 +8,7 @@ def reflect_over_XZ_plane(input_vector):
     :param input_vector: A vector or list of vectors to flip.
     :return: Vector with flipped sign on y-coordinate.
     """
+    input_vector = np.array(input_vector)
     shape = input_vector.shape
     if len(shape) == 1:
         return input_vector * np.array([1, -1, 1])
