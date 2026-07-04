@@ -12,12 +12,15 @@ def critical_mach(fineness_ratio_nose: float) -> float:
 
         fineness_ratio_nose: The fineness ratio of the nose section of the fuselage.
 
-            Specifically, fineness_ratio_nose = 2 * L_n / d, where:
+            Specifically, fineness_ratio_nose = L_n / d, where:
 
                 * L_n is the length from the nose to the longitudinal location at which the fuselage cross section
                 becomes essentially constant, and:
 
                 * d is the body diameter at that location.
+
+            (The factor of 2 relative to the x-axis of Raymer Fig. 12.28, which plots against 2 * L_n / d,
+            is applied internally.)
 
     Returns: The critical Mach number
 
