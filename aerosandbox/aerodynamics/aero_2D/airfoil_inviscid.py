@@ -138,8 +138,8 @@ class AirfoilInviscid(ImplicitAnalysis):
     def _enforce_governing_equations(self):
         for airfoil in self.airfoils:
             ### Compute normal velocities at the middle of each panel
-            x_midpoints = np.trapz(airfoil.x())
-            y_midpoints = np.trapz(airfoil.y())
+            x_midpoints = (airfoil.x()[1:] + airfoil.x()[:-1]) / 2
+            y_midpoints = (airfoil.y()[1:] + airfoil.y()[:-1]) / 2
 
             u_midpoints, v_midpoints = self.calculate_velocity(
                 x_field=x_midpoints,
