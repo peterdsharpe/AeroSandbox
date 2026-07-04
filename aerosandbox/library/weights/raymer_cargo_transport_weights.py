@@ -410,7 +410,7 @@ def mass_nacelles(
         * (n_engines) ** 0.984
         * (nacelle_wetted_area / u.foot**2) ** 0.224
         * (advanced_composites["fuselage/nacelle"] if use_advanced_composites else 1)
-    )
+    ) * u.lbm
 
 
 def mass_engine_controls(
