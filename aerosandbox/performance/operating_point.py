@@ -10,7 +10,7 @@ from aerosandbox.numpy.typing import Vectorizable
 class OperatingPoint(AeroSandboxObject):
     def __init__(
         self,
-        atmosphere: Atmosphere = Atmosphere(altitude=0),
+        atmosphere: Atmosphere | None = None,
         velocity: Vectorizable = 1.0,
         alpha: Vectorizable = 0.0,
         beta: Vectorizable = 0.0,
@@ -22,7 +22,8 @@ class OperatingPoint(AeroSandboxObject):
         An object that represents the instantaneous aerodynamic flight conditions of an aircraft.
 
         Args:
-            atmosphere: The atmosphere object (of type asb.Atmosphere). Defaults to sea level conditions.
+            atmosphere: The atmosphere object (of type asb.Atmosphere). Defaults to sea level conditions
+            (`Atmosphere(altitude=0)`) if not specified.
 
             velocity: The flight velocity, expressed as a true airspeed. [m/s]
 
@@ -38,6 +39,9 @@ class OperatingPoint(AeroSandboxObject):
             r: The yaw rate about the z_b axis. [rad/sec]
 
         """
+        if atmosphere is None:
+            atmosphere = Atmosphere(altitude=0)
+
         self.atmosphere = atmosphere
         self.velocity = velocity
         self.alpha = alpha
