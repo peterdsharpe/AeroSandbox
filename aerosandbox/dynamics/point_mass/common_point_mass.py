@@ -532,23 +532,23 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             ### Set up interpolators for dynamics instances
             from scipy import interpolate
 
-            state_interpolators = {
-                k: interpolate.InterpolatedUnivariateSpline(
+            def make_interpolator(v):
+                values = v * np.ones(len(self))
+                if len(self) == 1:
+                    # A spline can't be fit through a single point; return a constant function instead.
+                    return lambda i: values[0]
+                return interpolate.InterpolatedUnivariateSpline(
                     x=np.arange(len(self)),
-                    y=v * np.ones(len(self)),
-                    k=np.clip(len(self), 1, 3),
+                    y=values,
+                    k=int(
+                        np.clip(len(self) - 1, 1, 3)
+                    ),  # Spline degree must be < number of points
                     check_finite=True,
                 )
-                for k, v in self.state.items()
-            }
+
+            state_interpolators = {k: make_interpolator(v) for k, v in self.state.items()}
             control_interpolators = {
-                k: interpolate.InterpolatedUnivariateSpline(
-                    x=np.arange(len(self)),
-                    y=v * np.ones(len(self)),
-                    k=np.clip(len(self), 1, 3),
-                    check_finite=True,
-                )
-                for k, v in self.control_variables.items()
+                k: make_interpolator(v) for k, v in self.control_variables.items()
             }
 
             ### Draw the vehicle

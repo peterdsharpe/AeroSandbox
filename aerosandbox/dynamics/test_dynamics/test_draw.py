@@ -42,6 +42,18 @@ def test_draw_with_str_filepath_vehicle_model():
     assert plotter is not None
 
 
+@pytest.mark.parametrize("n_points", [1, 2, 3, 4])
+def test_draw_short_trajectories(n_points):
+    """
+    Trajectories with 1-3 time points used to crash in draw(): the spline
+    degree k was set equal to the number of points, but scipy's
+    InterpolatedUnivariateSpline requires (number of points) > k.
+    """
+    dyn = make_dyn(n_points)
+    plotter = dyn.draw(show=False)
+    assert plotter is not None
+
+
 def test_draw_with_invalid_str_vehicle_model_raises_valueerror():
     dyn = make_dyn(10)
     with pytest.raises(ValueError):
