@@ -17,9 +17,9 @@ If you're developing, install AeroSandbox in editable mode. In other words:
 	* For developers that have been officially added as collaborators to the ASB repository on GitHub:
 		1. Clone the AeroSandbox repository from GitHub to your computer.
 2. Then, do these steps:
-	1. On your computer, open up a terminal in the AeroSandbox root directory. (To check that you're in the right place, view your current directory with either `dir` or `ls` depending on your OS; you should see a file called `setup.py`.)
+	1. On your computer, open up a terminal in the AeroSandbox root directory. (To check that you're in the right place, view your current directory with either `dir` or `ls` depending on your OS; you should see a file called `pyproject.toml`.)
 	2. If you already have an AeroSandbox installation on your computer, first uninstall that (`pip uninstall aerosandbox`).
-	3. Install the cloned copy of your repository in editable mode (`-e`), and with all optional dependencies (`pip install -e .[full,test,docs]`).
+	3. Install the cloned copy of your repository in editable mode (`-e`), and with all optional dependencies (`pip install -e ".[full,test,docs]"`). Alternatively, if you use [uv](https://docs.astral.sh/uv/), run `uv sync --all-extras` to create a `.venv` with an editable install and all optional dependencies.
 	4. Switch to the develop branch for normal use (`git checkout develop`)
 	5. *While on the develop branch*, create a new branch if you want to make changes (`git checkout -b feature/insert-your-feature-name-here`)
 3. From here, you can make your changes. After you are finished:
