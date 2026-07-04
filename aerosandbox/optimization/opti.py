@@ -757,12 +757,18 @@ class Opti(cas.Opti):
             except AttributeError:
                 size_v = 1
             if size_k != size_v:
-                raise RuntimeError(
-                    """Problem with loading cached solution: it looks like the length of a vectorized 
-                variable has changed since the cached solution was saved (or variables were defined in a different order). 
-                Because of this, the cache cannot be loaded. 
-                Re-run the original optimization study to regenerate the cached solution."""
+                message = (
+                    f"Problem with a parameter mapping: a parameter has {size_k} element(s), "
+                    f"but the value given for it has {size_v} element(s)."
                 )
+                if self.load_frozen_variables_from_cache:
+                    message += (
+                        "\nSince frozen variables are being loaded from a cache, it looks like the length of a "
+                        "vectorized variable has changed since the cached solution was saved (or variables were "
+                        "defined in a different order). Because of this, the cache cannot be loaded. "
+                        "Re-run the original optimization study to regenerate the cached solution."
+                    )
+                raise RuntimeError(message)
 
             self.set_value(k, v)
 

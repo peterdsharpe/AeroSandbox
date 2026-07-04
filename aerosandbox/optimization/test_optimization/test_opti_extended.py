@@ -490,5 +490,19 @@ def test_optisol_value_propagates_warn_on_unknown_types():
         sol.value([Unconvertible()], warn_on_unknown_types=True)
 
 
+def test_parameter_mapping_size_mismatch_error():
+    """A direct parameter_mapping with mismatched sizes should raise an error describing the
+    size mismatch (it used to only talk about cached solutions, even with no cache involved)."""
+    opti = asb.Opti()
+
+    x = opti.variable(init_guess=0)
+    p = opti.parameter(value=np.ones(3), n_params=3)
+    opti.subject_to(x >= p[0])
+    opti.minimize(x**2)
+
+    with pytest.raises(RuntimeError, match="element"):
+        opti.solve(verbose=False, parameter_mapping={p: np.ones(5)})
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
