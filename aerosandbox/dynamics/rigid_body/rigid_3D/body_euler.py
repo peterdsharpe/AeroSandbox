@@ -4,6 +4,7 @@ from aerosandbox.dynamics.rigid_body.common_rigid_body import (
 import aerosandbox.numpy as np
 from aerosandbox.weights.mass_properties import MassProperties
 from aerosandbox.numpy.typing import Vectorizable
+from typing import Literal
 
 
 def _sincos(x):
@@ -366,8 +367,15 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         Fx: Vectorizable = 0,
         Fy: Vectorizable = 0,
         Fz: Vectorizable = 0,
-        axes="body",
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ):
+        """
+        Adds a force (in whichever axis system you choose) to this Dynamics instance.
+
+        Note that, for this class, the default axis system is `axes="body"` (this class's native axis system),
+        which differs from other Dynamics classes. See `_DynamicsPointMassBaseClass.add_force()` for full
+        documentation.
+        """
         Fx_b, Fy_b, Fz_b = self.convert_axes(
             x_from=Fx, y_from=Fy, z_from=Fz, from_axes=axes, to_axes="body"
         )
@@ -380,7 +388,7 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         Mx: Vectorizable = 0,
         My: Vectorizable = 0,
         Mz: Vectorizable = 0,
-        axes="body",
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ):
         Mx_b, My_b, Mz_b = self.convert_axes(
             x_from=Mx, y_from=My, z_from=Mz, from_axes=axes, to_axes="body"

@@ -392,6 +392,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 * "stability"
                 * "earth"
 
+                Note: the default value of `axes` differs between Dynamics subclasses; each uses its own native
+                axis system (e.g., "earth" for Cartesian point-mass classes, "wind" for speed-gamma-track
+                point-mass classes, and "body" for rigid-body classes). If you are writing code that should work
+                across different Dynamics classes, pass `axes` explicitly.
+
         Returns: None (in-place)
 
         """

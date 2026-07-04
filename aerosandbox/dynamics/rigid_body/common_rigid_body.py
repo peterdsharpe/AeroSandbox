@@ -5,6 +5,7 @@ from aerosandbox.dynamics.point_mass.common_point_mass import (
 from abc import ABC, abstractmethod
 from aerosandbox import OperatingPoint, Atmosphere
 from aerosandbox.numpy.typing import Vectorizable
+from typing import Literal
 
 
 class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
@@ -16,7 +17,7 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
         Mx: Vectorizable = 0,
         My: Vectorizable = 0,
         Mz: Vectorizable = 0,
-        axes="body",
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ) -> None:
         """
         Adds a moment (in whichever axis system you choose) to this Dynamics instance.
