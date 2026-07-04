@@ -273,6 +273,34 @@ def test_process_with_enthalpy_addition_casadi():
     assert temperature == pytest.approx(reference.temperature, rel=1e-10)
 
 
+def test_repr():
+    import casadi
+    import numpy as np
+
+    ### Scalar-valued state: fully-formatted repr
+    scalar_repr = repr(make_air())
+    assert "Gas (P = " in scalar_repr
+    assert "kg/m^3" in scalar_repr
+
+    ### Regression test: array-valued states used to raise ValueError here.
+    array_repr = repr(
+        PerfectGas(
+            pressure=np.array([1e5, 2e5]),
+            temperature=np.array([300.0, 400.0]),
+        )
+    )
+    assert "Gas (P = " in array_repr
+
+    ### Regression test: symbolic (CasADi) states used to raise RuntimeError here.
+    symbolic_repr = repr(
+        PerfectGas(
+            pressure=casadi.MX.sym("p"),
+            temperature=casadi.MX.sym("T"),
+        )
+    )
+    assert "Gas (P = " in symbolic_repr
+
+
 def test_process_invalid_inputs():
     air = make_air()
 

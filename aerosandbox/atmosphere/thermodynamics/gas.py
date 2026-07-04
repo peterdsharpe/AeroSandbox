@@ -54,7 +54,14 @@ class PerfectGas:
         def f(val, unit):
             return eng_string(val, unit=unit, format="%.6g")
 
-        return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume**self.ratio_of_specific_heats: .6g})"
+        try:
+            return f"Gas (P = {f(self.pressure, 'Pa')}, T = {self.temperature:.6g} K, ρ = {self.density:.6g} kg/m^3, Pv^gamma = {self.pressure * self.specific_volume**self.ratio_of_specific_heats: .6g})"
+        except (
+            ValueError,
+            TypeError,
+            RuntimeError,
+        ):  # Occurs for array-valued or symbolic (CasADi) gas states
+            return f"Gas (P = {self.pressure} Pa, T = {self.temperature} K)"
 
     @property
     def density(self):
