@@ -434,12 +434,15 @@ class Opti(cas.Opti):
             constraint, (str, np.ndarray, cas.MX, cas.DM, cas.SX)
         )
         if is_constraint_sequence:
-            return [
-                self.subject_to(
-                    each_constraint, _stacklevel=_stacklevel + 2
-                )  # return the dual of each constraint
-                for each_constraint in constraint
-            ]
+            # Note: use a plain for-loop rather than a list comprehension here, so that the number of
+            # stack frames between this call and the recursive `subject_to` call is the same on all
+            # Python versions. (PEP 709, in Python 3.12, inlined comprehensions, removing their stack frame.)
+            duals = []
+            for each_constraint in constraint:
+                duals.append(  # return the dual of each constraint
+                    self.subject_to(each_constraint, _stacklevel=_stacklevel + 1)
+                )
+            return duals
 
         # If it's a proper constraint (MX-type and non-parametric),
         # pass it into the parent class Opti formulation and be done with it.
