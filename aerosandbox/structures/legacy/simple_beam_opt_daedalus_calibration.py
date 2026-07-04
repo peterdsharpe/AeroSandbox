@@ -228,7 +228,13 @@ if __name__ == "__main__":
     plt.suptitle(f"Beam Modeling (Total Spar Mass: {2 * sol(mass):.2f} kg)")
 
     plt.subplots_adjust(hspace=0.4)
-    plt.savefig("C:/Users/User/Downloads/beam.png")
+
+    import tempfile
+    from pathlib import Path
+
+    savefig_path = Path(tempfile.gettempdir()) / "beam.png"
+    plt.savefig(savefig_path)
+    print(f"Saved figure to: {savefig_path}")
 
     # plt.tight_layout()
     # plt.legend()
