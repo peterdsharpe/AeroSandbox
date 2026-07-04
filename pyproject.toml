@@ -38,6 +38,10 @@ dependencies = [
     "casadi>=3.7.2",
     "dill>=0.4.0",
     "matplotlib>=3.10.7",
+    # NeuralFoil minor releases can change network weights and API surface
+    # (e.g., AeroSandbox 4.2.7 needed explicit compatibility work for
+    # NeuralFoil 0.3.0 - see CHANGELOG.md), so cap below the next minor
+    # until compatibility is verified.
     "neuralfoil>=0.3.0,<0.4.0",
     "numpy>=2.2.6",
     "pandas>=2.3.3",
