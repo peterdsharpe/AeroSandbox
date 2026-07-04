@@ -61,5 +61,32 @@ def test_len_error_message_for_mismatched_vectorized_lengths():
         len(mp)
 
 
+def test_generate_possible_set_of_point_masses_roundtrip():
+    """
+    Regression test for the internal length-scale estimate (radius of
+    gyration is sqrt(I / m), not sqrt(I) / m): the generated point masses
+    must recombine into the original mass properties, including for masses
+    far from 1 kg.
+    """
+    mp = asb.MassProperties(
+        mass=500.0,
+        x_cg=1.0,
+        y_cg=-0.5,
+        z_cg=0.25,
+        Ixx=20.0,
+        Iyy=30.0,
+        Izz=40.0,
+        Ixy=1.0,
+        Iyz=-2.0,
+        Ixz=3.0,
+    )
+    point_masses = mp.generate_possible_set_of_point_masses()
+
+    for pm in point_masses:
+        assert pm.is_point_mass()
+
+    assert mp.allclose(sum(point_masses), rtol=1e-4, atol=1e-6)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

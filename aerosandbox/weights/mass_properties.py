@@ -502,9 +502,11 @@ class MassProperties(AeroSandboxObject):
 
             opti = Opti()
 
+            # Radius of gyration, from the trace of the inertia tensor. (Note
+            # that a length scale from mass and inertia is sqrt(I / m).)
             approximate_radius = (
-                self.Ixx + self.Iyy + self.Izz
-            ) ** 0.5 / self.mass + 1e-16
+                (self.Ixx + self.Iyy + self.Izz) / self.mass
+            ) ** 0.5 + 1e-16
 
             point_masses = [
                 MassProperties(
