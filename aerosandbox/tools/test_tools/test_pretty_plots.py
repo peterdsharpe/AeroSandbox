@@ -63,6 +63,32 @@ def test_pie_sort_by_invalid_string():
     plt.close(fig)
 
 
+def test_contour_z_log_scale_constant_z():
+    """contour(z_log_scale=True) should not crash when Z is constant."""
+    fig, ax = plt.subplots()
+    X, Y = np.meshgrid(np.linspace(0, 1, 10), np.linspace(0, 1, 10))
+    Z = 5.0 * np.ones_like(X)
+    p.contour(X, Y, Z, z_log_scale=True)
+    plt.close(fig)
+
+
+def test_contour_z_log_scale_normal():
+    fig, ax = plt.subplots()
+    X, Y = np.meshgrid(np.linspace(0, 1, 10), np.linspace(0, 1, 10))
+    Z = 10 ** (X + Y)
+    p.contour(X, Y, Z, z_log_scale=True)
+    plt.close(fig)
+
+
+def test_contour_z_log_scale_nonpositive_z_raises():
+    fig, ax = plt.subplots()
+    X, Y = np.meshgrid(np.linspace(0, 1, 10), np.linspace(0, 1, 10))
+    Z = X - 0.5  # Contains nonpositive values
+    with pytest.raises(ValueError, match="positive"):
+        p.contour(X, Y, Z, z_log_scale=True)
+    plt.close(fig)
+
+
 def test_get_last_line_color():
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1], color="darkorchid")
