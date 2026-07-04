@@ -16,6 +16,43 @@ def e216():
     return a
 
 
+def test_import_aerosandbox_without_plotly():
+    """
+    plotly is an optional dependency (only included in the `[full]` extra), so importing aerosandbox must succeed
+    even when plotly is not installed. This runs in a subprocess with an import hook that simulates a missing plotly.
+    """
+    import os
+    import subprocess
+    import sys
+    import textwrap
+
+    script = textwrap.dedent(
+        """
+        import sys
+        import importlib.abc
+
+        class BlockPlotly(importlib.abc.MetaPathFinder):
+            def find_spec(self, name, path=None, target=None):
+                if name == "plotly" or name.startswith("plotly."):
+                    raise ModuleNotFoundError(f"No module named {name!r} (simulated)")
+
+        sys.meta_path.insert(0, BlockPlotly())
+
+        import aerosandbox  # Should not require plotly
+        """
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        env=os.environ,
+    )
+    assert result.returncode == 0, (
+        f"`import aerosandbox` failed when plotly was unavailable:\n{result.stderr}"
+    )
+
+
 def test_fake_airfoil():
     """
     Tests what happens when you create an airfoil that's not in the UIUC database, and you don't supply coordinates.

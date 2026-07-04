@@ -1,4 +1,3 @@
-import plotly.graph_objects
 import matplotlib.figure
 import aerosandbox.numpy as np
 from aerosandbox.numpy.typing import Vectorizable
@@ -12,6 +11,8 @@ from aerosandbox.library.aerodynamics import transonic
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import plotly.graph_objects  # An optional dependency; import only for type-checking.
+
     from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
     from aerosandbox.geometry import ControlSurface
 from aerosandbox.modeling.splines.hermite import (
@@ -862,7 +863,7 @@ class Airfoil(Polygon):
 
     def draw(
         self, draw_mcl=False, draw_markers=True, backend="matplotlib", show=True
-    ) -> matplotlib.figure.Figure | plotly.graph_objects.Figure | None:
+    ) -> "matplotlib.figure.Figure | plotly.graph_objects.Figure | None":
         """
         Draw the airfoil object.
 
