@@ -68,8 +68,8 @@ def test_interpn_linear_multiple_samples():
         *[np.array(point[:, i]) for i in range(point.shape[1])]
     )
     for i in range(np.length(value)):
-        assert value[i] == pytest.approx(float(value_actual[i]))
-    assert value.shape == (2,)
+        assert value[i] == pytest.approx(float(value_actual[i]))  # type: ignore[index]
+    assert value.shape == (2,)  # type: ignore[union-attr]
 
 
 def test_interpn_bspline_casadi():

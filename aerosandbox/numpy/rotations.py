@@ -4,16 +4,31 @@ This module provides functions for generating rotation matrices in 2D and 3D,
 working with both NumPy arrays and CasADi symbolic arrays.
 """
 
+from typing import Literal, overload
 from aerosandbox.numpy import sin, cos, linalg
 from aerosandbox.numpy.array import array
 from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Array
 import numpy as _onp
 
 
+@overload
+def rotation_matrix_2D(
+    angle: Vectorizable,
+    as_array: Literal[True] = True,
+) -> Array: ...
+
+
+@overload
+def rotation_matrix_2D(
+    angle: Vectorizable,
+    as_array: Literal[False],
+) -> list[list[Vectorizable]]: ...
+
+
 def rotation_matrix_2D(
     angle: Vectorizable,
     as_array: bool = True,
-) -> Array | list[list]:
+) -> Array | list[list[Vectorizable]]:
     """Give the 2D rotation matrix for a counterclockwise rotation.
 
     Parameters
@@ -25,16 +40,34 @@ def rotation_matrix_2D(
 
     Returns
     -------
-    Array | list[list]
-        The 2x2 rotation matrix.
+    Array | list[list[Vectorizable]]
+        The 2x2 rotation matrix. Elements are Vectorizable when angle is.
     """
     s = sin(angle)
     c = cos(angle)
-    rot = [[c, -s], [s, c]]
+    rot: list[list[Vectorizable]] = [[c, -s], [s, c]]
     if as_array:
         return array(rot)
     else:
         return rot
+
+
+@overload
+def rotation_matrix_3D(
+    angle: Vectorizable,
+    axis: ArrayLike | str,
+    as_array: Literal[True] = True,
+    axis_already_normalized: bool = False,
+) -> Array: ...
+
+
+@overload
+def rotation_matrix_3D(
+    angle: Vectorizable,
+    axis: ArrayLike | str,
+    as_array: Literal[False],
+    axis_already_normalized: bool = False,
+) -> list[list[Vectorizable]]: ...
 
 
 def rotation_matrix_3D(
@@ -42,7 +75,7 @@ def rotation_matrix_3D(
     axis: ArrayLike | str,
     as_array: bool = True,
     axis_already_normalized: bool = False,
-) -> Array | list[list[list]]:
+) -> Array | list[list[Vectorizable]]:
     """Give the 3D rotation matrix for a rotation about a given axis.
 
     An implementation of the axis-angle rotation matrix formula.
@@ -67,8 +100,8 @@ def rotation_matrix_3D(
 
     Returns
     -------
-    Array | list[list[list]]
-        The 3x3 rotation matrix.
+    Array | list[list[Vectorizable]]
+        The 3x3 rotation matrix. Elements are Vectorizable when angle is.
 
     References
     ----------
@@ -121,12 +154,30 @@ def rotation_matrix_3D(
         return rot
 
 
+@overload
+def rotation_matrix_from_euler_angles(
+    roll_angle: Vectorizable = 0,
+    pitch_angle: Vectorizable = 0,
+    yaw_angle: Vectorizable = 0,
+    as_array: Literal[True] = True,
+) -> Array: ...
+
+
+@overload
+def rotation_matrix_from_euler_angles(
+    roll_angle: Vectorizable = 0,
+    pitch_angle: Vectorizable = 0,
+    yaw_angle: Vectorizable = 0,
+    as_array: Literal[False] = ...,
+) -> list[list[Vectorizable]]: ...
+
+
 def rotation_matrix_from_euler_angles(
     roll_angle: Vectorizable = 0,
     pitch_angle: Vectorizable = 0,
     yaw_angle: Vectorizable = 0,
     as_array: bool = True,
-) -> Array | list[list[list]]:
+) -> Array | list[list[Vectorizable]]:
     """Give the rotation matrix corresponding to Euler angle rotations.
 
     Uses the standard (yaw, pitch, roll) Euler angle convention where:
@@ -154,8 +205,8 @@ def rotation_matrix_from_euler_angles(
 
     Returns
     -------
-    Array | list[list[list]]
-        The 3x3 rotation matrix.
+    Array | list[list[Vectorizable]]
+        The 3x3 rotation matrix. Elements are Vectorizable when angles are.
 
     References
     ----------

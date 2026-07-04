@@ -9,8 +9,9 @@ import casadi as _cas
 from aerosandbox.numpy.arithmetic_monadic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import asarray
-from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, VectorLike
+from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, VectorLike, _CasADiType
 from numpy.linalg import *
+from typing import cast
 
 
 def inner(x: VectorLike, y: VectorLike, manual: bool = False) -> Scalar:
@@ -46,8 +47,11 @@ def inner(x: VectorLike, y: VectorLike, manual: bool = False) -> Scalar:
         return _cas.dot(x, y)
 
 
-def outer(x: VectorLike, y: VectorLike, manual: bool = False) -> Array:
+def outer(x: VectorLike, y: VectorLike, manual: bool = False) -> Array:  # type: ignore[no-redef]
     """Compute the outer product of two vectors.
+
+    This function intentionally shadows numpy.outer to add CasADi support
+    and a manual computation option.
 
     Parameters
     ----------
@@ -104,7 +108,9 @@ def solve(A: ArrayLike, b: ArrayLike) -> Array:
     A = asarray(A)
     b = asarray(b)
     if not is_casadi_type([A, b]):
-        return _onp.linalg.solve(A, b)
+        A_np = cast(_onp.ndarray, A)
+        b_np = cast(_onp.ndarray, b)
+        return _onp.linalg.solve(A_np, b_np)
 
     else:
         return _cas.solve(A, b)
@@ -129,7 +135,8 @@ def inv(A: ArrayLike) -> Array:
     """
     A = asarray(A)
     if not is_casadi_type(A):
-        return _onp.linalg.inv(A)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.linalg.inv(A_np)
 
     else:
         return _cas.inv(A)
@@ -154,7 +161,8 @@ def pinv(A: ArrayLike) -> Array:
     """
     A = asarray(A)
     if not is_casadi_type(A):
-        return _onp.linalg.pinv(A)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.linalg.pinv(A_np)
 
     else:
         return _cas.pinv(A)
@@ -179,7 +187,8 @@ def det(A: ArrayLike) -> Scalar:
     """
     A = asarray(A)
     if not is_casadi_type(A):
-        return _onp.linalg.det(A)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.linalg.det(A_np)
 
     else:
         return _cas.det(A)
@@ -223,7 +232,8 @@ def norm(
     """
     x = asarray(x)
     if not is_casadi_type(x):
-        return _onp.linalg.norm(x, ord=ord, axis=axis, keepdims=keepdims)
+        x_np = cast(_onp.ndarray, x)
+        return _onp.linalg.norm(x_np, ord=ord, axis=axis, keepdims=keepdims)
 
     else:
         # Figure out which axis, if any, to take a vector norm about.

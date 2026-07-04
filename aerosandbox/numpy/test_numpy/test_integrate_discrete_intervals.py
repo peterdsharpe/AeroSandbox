@@ -192,8 +192,7 @@ def test_sinusoidal_integration_accuracy():
     ### Exact integral of sin(x) from 0 to 2*pi is 0
     expected = 0.0
 
-    method: Literal["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]
-    for method in ["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]:
+    for method in ("trapezoidal", "forward_simpson", "backward_simpson", "cubic"):
         result = integrate_discrete_intervals(f, x, method=method)
         integral = np.sum(result)
         assert np.abs(integral - expected) < 0.01, f"Method {method} failed"
@@ -222,8 +221,7 @@ def test_squared_curvature_sine_wave():
     ### Integral of sin^2(x) from 0 to 2*pi is pi
     expected = np.pi
 
-    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"]
-    for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
+    for method in ("cubic", "simpson", "hybrid_simpson_cubic"):
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
         assert np.isclose(integral, expected, rtol=0.1), (
@@ -240,8 +238,7 @@ def test_squared_curvature_parabola():
     ### Integral of 4 from 0 to 10 is 40
     expected = 40.0
 
-    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"]
-    for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
+    for method in ("cubic", "simpson", "hybrid_simpson_cubic"):
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
         assert np.isclose(integral, expected, rtol=0.05), (
@@ -258,8 +255,7 @@ def test_squared_curvature_cubic():
     ### Integral of 36x^2 from 0 to 5 is 36 * [x^3/3]_0^5 = 36 * 125/3 = 1500
     expected = 1500.0
 
-    method: Literal["cubic", "simpson", "hybrid_simpson_cubic"]
-    for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
+    for method in ("cubic", "simpson", "hybrid_simpson_cubic"):
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
         assert np.isclose(integral, expected, rtol=0.05), (
@@ -349,8 +345,7 @@ def test_zero_function():
     x = np.linspace(0, 10, 50)
     f = np.zeros_like(x)
 
-    method: Literal["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]
-    for method in ["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]:
+    for method in ("trapezoidal", "forward_simpson", "backward_simpson", "cubic"):
         result = integrate_discrete_intervals(f, x, method=method)
         assert np.allclose(result, 0.0)
 

@@ -9,12 +9,34 @@ def integrate_discrete_intervals(
     x: ArrayLike | None = None,
     multiply_by_dx: bool = True,
     method: Literal[
+        # Primary method names
         "forward_euler",
         "backward_euler",
         "trapezoidal",
         "forward_simpson",
         "backward_simpson",
         "cubic",
+        # Aliases for forward_euler
+        "forward",
+        "euler_forward",
+        "left",
+        "left_riemann",
+        # Aliases for backward_euler
+        "backward",
+        "euler_backward",
+        "right",
+        "right_riemann",
+        # Aliases for trapezoidal
+        "trapezoid",
+        "trapz",
+        "midpoint",
+        # Aliases for forward_simpson
+        "simpson_forward",
+        "simpson",
+        # Aliases for backward_simpson
+        "simpson_backward",
+        # Aliases for cubic
+        "cubic_spline",
     ] = "trapezoidal",
     method_endpoints: Literal["lower_order", "ignore", "periodic"] = "lower_order",
 ):

@@ -7,9 +7,13 @@ backend at runtime based on input types.
 
 import numpy as _onp
 import casadi as _cas
-from typing import Any, Sequence
+from typing import Any, Literal, Sequence, cast
 from aerosandbox.numpy.determine_type import is_casadi_type
-from aerosandbox.numpy.typing import ArrayLike, Array, Scalar
+from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, _CasADiType
+
+# Type alias for order parameter (matches numpy's expected types)
+OrderACF = Literal["A", "C", "F"] | None
+OrderKACF = Literal["K", "A", "C", "F"] | None
 
 
 def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
@@ -40,7 +44,7 @@ def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
         array_like, recursive=False
     ):  # If you were literally given a CasADi array, just return it
         # Handles inputs like cas.DM([1, 2, 3])
-        return array_like
+        return cast(_CasADiType, array_like)
 
     elif not is_casadi_type(array_like, recursive=True) or dtype is not None:
         # If you were given a list of iterables that don't have CasADi types:
@@ -49,13 +53,15 @@ def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
 
     else:
         # Handles inputs like [[opti_var_1, opti_var_2], [opti_var_3, opti_var_4]]
+        array_like_seq = cast(Sequence[Any], array_like)  # Must be a nested sequence
+
         def make_row(contents: Sequence[Any]):
             try:
                 return _cas.horzcat(*contents)
             except (TypeError, Exception):
                 return contents
 
-        return _cas.vertcat(*[make_row(row) for row in array_like])
+        return _cas.vertcat(*[make_row(row) for row in array_like_seq])
 
 
 def asarray(a: ArrayLike, dtype: type | None = None) -> Array:
@@ -86,7 +92,7 @@ def asarray(a: ArrayLike, dtype: type | None = None) -> Array:
     """
     if is_casadi_type(a, recursive=False):
         # CasADi array: no-op, return as-is
-        return a
+        return cast(_CasADiType, a)
     elif not is_casadi_type(a, recursive=True):
         # Pure NumPy/Python: use numpy.asarray (no-copy if already ndarray)
         return _onp.asarray(a, dtype=dtype)
@@ -315,18 +321,18 @@ def length(a: ArrayLike | Scalar) -> int:
         returns the larger of the two dimensions (assuming column vectors).
     """
     if not is_casadi_type(a, recursive=False):
-        a = asarray(a)
+        a_arr = cast(_onp.ndarray, asarray(a))
         try:
-            return len(a)
+            return len(a_arr)
         except TypeError:
             return 1
 
     else:
-        a = asarray(a)  # Ensure a is Array for .shape access
-        if a.shape[0] != 1:
-            return a.shape[0]
+        a_cas = cast(_CasADiType, asarray(a))
+        if a_cas.shape[0] != 1:
+            return a_cas.shape[0]
         else:
-            return a.shape[1]
+            return a_cas.shape[1]
 
 
 def diag(v: ArrayLike, k: int = 0) -> Array:
@@ -359,35 +365,41 @@ def diag(v: ArrayLike, k: int = 0) -> Array:
     numpy.diag : https://numpy.org/doc/stable/reference/generated/numpy.diag.html
     """
     if not is_casadi_type(v, recursive=False):
-        v = asarray(v)
-        return _onp.diag(v, k=k)
+        v_np = cast(_onp.ndarray, asarray(v))
+        return _onp.diag(v_np, k=k)
 
     else:
-        v = asarray(v)  # Ensure v is Array for .shape access
-        if 1 in v.shape:  # If v is a 1D array, construct a diagonal matrix
-            if v.shape[0] == 1:
-                v = v.T
+        v_cas = cast(_CasADiType, asarray(v))
+        if 1 in v_cas.shape:  # If v is a 1D array, construct a diagonal matrix
+            if v_cas.shape[0] == 1:
+                v_cas = v_cas.T
 
             if k == 0:
-                return _cas.diag(v)
+                return _cas.diag(v_cas)
 
             else:
-                n = v.shape[0]
-                res = type(v).zeros(n + abs(k), n + abs(k))
+                n = v_cas.shape[0]
+                # Use isinstance to determine which zeros method to call
+                if isinstance(v_cas, _cas.MX):
+                    res = _cas.MX.zeros(n + abs(k), n + abs(k))
+                elif isinstance(v_cas, _cas.SX):
+                    res = _cas.SX.zeros(n + abs(k), n + abs(k))
+                else:  # DM
+                    res = _cas.DM.zeros(n + abs(k), n + abs(k))
                 for i in range(n):
                     if k >= 0:
-                        res[i, i + k] = v[i]
+                        res[i, i + k] = v_cas[i]
                     else:
-                        res[i - k, i] = v[i]
+                        res[i - k, i] = v_cas[i]
                 return res
 
-        elif v.shape[0] == v.shape[1]:  # If v is a square matrix, extract the diagonal
-            n = v.shape[0]
+        elif v_cas.shape[0] == v_cas.shape[1]:  # If v is a square matrix, extract the diagonal
+            n = v_cas.shape[0]
 
             if k >= 0:
-                return array([v[i, i + k] for i in range(n - k)])
+                return array([v_cas[i, i + k] for i in range(n - k)])
             else:
-                return array([v[i - k, i] for i in range(n + k)])
+                return array([v_cas[i - k, i] for i in range(n + k)])
 
         else:
             raise NotImplementedError(
@@ -429,25 +441,27 @@ def roll(
     """
     a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.roll(a, shift, axis=axis)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.roll(a_np, shift, axis=axis)
     else:
+        a_cas = cast(_CasADiType, a)
         if axis is None:
-            a_flat = reshape(a, -1)
+            a_flat = reshape(a_cas, -1)
             result = roll(a_flat, shift, axis=0)
-            return reshape(result, a.shape)
+            return reshape(result, a_cas.shape)
         elif isinstance(axis, int):
-            shift = shift % a.shape[axis]  # shift can be negative
+            shift = shift % a_cas.shape[axis]  # shift can be negative
             if shift != 0:
                 slice1 = [slice(None)] * 2
                 slice1[axis] = slice(-shift, None)
                 slice2 = [slice(None)] * 2
                 slice2[axis] = slice(-shift)
-                result = concatenate([a[tuple(slice1)], a[tuple(slice2)]], axis=axis)
+                result = concatenate([a_cas[tuple(slice1)], a_cas[tuple(slice2)]], axis=axis)
             else:
-                result = a
+                result = a_cas
             return result
         elif isinstance(axis, tuple):
-            result = a
+            result = a_cas
             if not isinstance(shift, tuple):
                 shift = (shift,) * len(axis)
             for ax, sh in zip(axis, shift):
@@ -485,23 +499,25 @@ def max(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
     """
     a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.max(a, axis=axis)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.max(a_np, axis=axis)
 
     else:
+        a_cas = cast(_CasADiType, a)
         if axis is None:
-            return _cas.mmax(a)
+            return _cas.mmax(a_cas)
 
         if axis == 0:
-            if a.shape[1] == 1:
-                return _cas.mmax(a)
+            if a_cas.shape[1] == 1:
+                return _cas.mmax(a_cas)
             else:
-                return array([_cas.mmax(a[:, i]) for i in range(a.shape[1])])
+                return array([_cas.mmax(a_cas[:, i]) for i in range(a_cas.shape[1])])
 
         elif axis == 1:
-            if a.shape[0] == 1:
-                return _cas.mmax(a)
+            if a_cas.shape[0] == 1:
+                return _cas.mmax(a_cas)
             else:
-                return array([_cas.mmax(a[i, :]) for i in range(a.shape[0])])
+                return array([_cas.mmax(a_cas[i, :]) for i in range(a_cas.shape[0])])
 
         else:
             raise ValueError(f"Invalid axis {axis} for CasADi array.")
@@ -535,29 +551,31 @@ def min(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
     """
     a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.min(a, axis=axis)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.min(a_np, axis=axis)
 
     else:
+        a_cas = cast(_CasADiType, a)
         if axis is None:
-            return _cas.mmin(a)
+            return _cas.mmin(a_cas)
 
         if axis == 0:
-            if a.shape[1] == 1:
-                return _cas.mmin(a)
+            if a_cas.shape[1] == 1:
+                return _cas.mmin(a_cas)
             else:
-                return array([_cas.mmin(a[:, i]) for i in range(a.shape[1])])
+                return array([_cas.mmin(a_cas[:, i]) for i in range(a_cas.shape[1])])
 
         elif axis == 1:
-            if a.shape[0] == 1:
-                return _cas.mmin(a)
+            if a_cas.shape[0] == 1:
+                return _cas.mmin(a_cas)
             else:
-                return array([_cas.mmin(a[i, :]) for i in range(a.shape[0])])
+                return array([_cas.mmin(a_cas[i, :]) for i in range(a_cas.shape[0])])
 
         else:
             raise ValueError(f"Invalid axis {axis} for CasADi array.")
 
 
-def reshape(a: ArrayLike, newshape: int | tuple[int, ...], order: str = "C") -> Array:
+def reshape(a: ArrayLike, newshape: int | tuple[int, ...], order: OrderACF = "C") -> Array:
     """Give a new shape to an array without changing its data.
 
     Parameters
@@ -590,8 +608,10 @@ def reshape(a: ArrayLike, newshape: int | tuple[int, ...], order: str = "C") -> 
     """
     a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.reshape(a, newshape, order=order)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.reshape(a_np, newshape, order=order)
     else:
+        a_cas = cast(_CasADiType, a)
         if isinstance(newshape, int):
             newshape = (newshape, 1)
 
@@ -607,14 +627,14 @@ def reshape(a: ArrayLike, newshape: int | tuple[int, ...], order: str = "C") -> 
             )
 
         if order == "C":
-            return _cas.reshape(a.T, newshape[::-1]).T
+            return _cas.reshape(a_cas.T, newshape[::-1]).T
         elif order == "F":
-            return _cas.reshape(a, newshape)
+            return _cas.reshape(a_cas, newshape)
         else:
             raise NotImplementedError("Only C and F orders are supported.")
 
 
-def ravel(a: ArrayLike, order: str = "C") -> Array:
+def ravel(a: ArrayLike, order: OrderKACF = "C") -> Array:
     """Return a contiguous flattened array.
 
     Parameters
@@ -636,7 +656,8 @@ def ravel(a: ArrayLike, order: str = "C") -> Array:
     """
     a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.ravel(a, order=order)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.ravel(a_np, order=order)
     else:
         return reshape(a, -1, order=order)
 
@@ -667,12 +688,14 @@ def tile(A: ArrayLike, reps: tuple[int, ...]) -> Array:
     """
     A = asarray(A)
     if not is_casadi_type(A, recursive=False):
-        return _onp.tile(A, reps)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.tile(A_np, reps)
     else:
+        A_cas = cast(_CasADiType, A)
         if len(reps) == 1:
-            return _cas.repmat(A, reps[0], 1)
+            return _cas.repmat(A_cas, reps[0], 1)
         elif len(reps) == 2:
-            return _cas.repmat(A, reps[0], reps[1])
+            return _cas.repmat(A_cas, reps[0], reps[1])
         else:
             raise ValueError(
                 "Cannot have >2D arrays when using CasADi numeric backend!"
@@ -682,7 +705,7 @@ def tile(A: ArrayLike, reps: tuple[int, ...]) -> Array:
 def zeros_like(
     a: ArrayLike,
     dtype: type | None = None,
-    order: str = "K",
+    order: OrderKACF = "K",
     subok: bool = True,
     shape: int | tuple[int, ...] | None = None,
 ) -> _onp.ndarray:
@@ -712,7 +735,8 @@ def zeros_like(
     numpy.zeros_like : https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html
     """
     if not is_casadi_type(a, recursive=False):
-        return _onp.zeros_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+        a_np = cast(_onp.ndarray, asarray(a))
+        return _onp.zeros_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
         return _onp.zeros(shape=length(a))
 
@@ -720,7 +744,7 @@ def zeros_like(
 def ones_like(
     a: ArrayLike,
     dtype: type | None = None,
-    order: str = "K",
+    order: OrderKACF = "K",
     subok: bool = True,
     shape: int | tuple[int, ...] | None = None,
 ) -> _onp.ndarray:
@@ -750,7 +774,8 @@ def ones_like(
     numpy.ones_like : https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html
     """
     if not is_casadi_type(a, recursive=False):
-        return _onp.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+        a_np = cast(_onp.ndarray, asarray(a))
+        return _onp.ones_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
         return _onp.ones(shape=length(a))
 
@@ -758,7 +783,7 @@ def ones_like(
 def empty_like(
     prototype: ArrayLike,
     dtype: type | None = None,
-    order: str = "K",
+    order: OrderKACF = "K",
     subok: bool = True,
     shape: int | tuple[int, ...] | None = None,
 ) -> _onp.ndarray:
@@ -788,8 +813,9 @@ def empty_like(
     numpy.empty_like : https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html
     """
     if not is_casadi_type(prototype, recursive=False):
+        proto_np = cast(_onp.ndarray, asarray(prototype))
         return _onp.empty_like(
-            prototype, dtype=dtype, order=order, subok=subok, shape=shape
+            proto_np, dtype=dtype, order=order, subok=subok, shape=shape
         )
     else:
         return zeros_like(prototype)
@@ -799,7 +825,7 @@ def full_like(
     a: ArrayLike,
     fill_value: Scalar,
     dtype: type | None = None,
-    order: str = "K",
+    order: OrderKACF = "K",
     subok: bool = True,
     shape: int | tuple[int, ...] | None = None,
 ) -> _onp.ndarray:
@@ -831,8 +857,9 @@ def full_like(
     numpy.full_like : https://numpy.org/doc/stable/reference/generated/numpy.full_like.html
     """
     if not is_casadi_type(a, recursive=False):
+        a_np = cast(_onp.ndarray, asarray(a))
         return _onp.full_like(
-            a, fill_value, dtype=dtype, order=order, subok=subok, shape=shape
+            a_np, fill_value, dtype=dtype, order=order, subok=subok, shape=shape
         )
     else:
         return fill_value * ones_like(a)
@@ -857,22 +884,23 @@ def assert_equal_shape(
     ValueError
         If the arrays do not all have the same shape.
     """
-    try:
-        names = arrays.keys()
-        arrays = list(arrays.values())
-    except AttributeError:
+    if isinstance(arrays, dict):
+        names: list[str] | None = list(arrays.keys())
+        arrays_list: list[Array] = list(arrays.values())
+    else:
         names = None
+        arrays_list = arrays
 
-    def get_shape(array):
+    def get_shape(arr: Array) -> tuple[int, ...]:
         try:
-            return array.shape
+            return arr.shape
         except AttributeError:  # If it's a float/int
             return ()
 
-    shape = get_shape(arrays[0])
+    shape = get_shape(arrays_list[0])
 
-    for array in arrays[1:]:
-        if not get_shape(array) == shape:
+    for arr in arrays_list[1:]:
+        if not get_shape(arr) == shape:
             if names is None:
                 raise ValueError("The given arrays do not have the same shape!")
             else:

@@ -10,6 +10,7 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.arithmetic_dyadic import centered_mod as _centered_mod
 from aerosandbox.numpy.array import array, asarray, concatenate, reshape
 from aerosandbox.numpy.typing import ArrayLike, Array, Scalar
+from typing import Any, cast
 
 
 def diff(
@@ -121,76 +122,77 @@ def gradient(
         f = array(f)
         shape = f.shape
 
-        # Handle the varargs argument
+        # Handle the varargs argument - use a separate list variable
+        varargs_list: list[Any]
         if len(varargs) == 0:
-            varargs = (1.0,)
+            varargs_list = [1.0 for _ in range(len(shape))]
+        elif len(varargs) == 1:
+            varargs_list = [varargs[0] for _ in range(len(shape))]
+        else:
+            varargs_list = list(varargs)
 
-        if len(varargs) == 1:
-            varargs = [varargs[0] for i in range(len(shape))]
-
-        if len(varargs) != len(shape):
+        if len(varargs_list) != len(shape):
             raise ValueError(
                 "You must specify either 0, 1, or N varargs, where N is the number of dimensions of f."
             )
-        else:
-            dxes = []
 
-            for i, vararg in enumerate(varargs):
-                if (
-                    _onp.prod(array(vararg).shape) == 1
-                ):  # If it's a scalar, you have dx values
-                    dxes.append(vararg * _onp.ones(shape[i] - 1))
-                else:
-                    dxes.append(
-                        diff(
-                            vararg,
-                        )
+        dxes: list[Any] = []
+        for i, vararg in enumerate(varargs_list):
+            if (
+                _onp.prod(array(vararg).shape) == 1
+            ):  # If it's a scalar, you have dx values
+                dxes.append(vararg * _onp.ones(shape[i] - 1))
+            else:
+                dxes.append(
+                    diff(
+                        vararg,
                     )
+                )
 
-        # Handle the axis argument, with the edge case the CasADi arrays are always 2D
+        # Handle the axis argument - use a separate variable for processed axis
+        axis_processed: int | tuple[int, ...]
         if axis is None:
             if is_casadi_type(f, recursive=False) and shape[1] == 1:
-                axis = 0
+                axis_processed = 0
             elif len(shape) <= 1:
-                axis = 0
+                axis_processed = 0
             else:
-                axis = tuple(_onp.arange(len(shape)))
+                axis_processed = tuple(int(i) for i in _onp.arange(len(shape)))
+        else:
+            axis_processed = axis
 
-        try:
-            tuple(axis)  # See if axis is iterable
-            axis_is_iterable = True
-        except TypeError:
-            axis_is_iterable = False
-
-        if axis_is_iterable:
+        # Use isinstance check instead of try/except
+        if isinstance(axis_processed, tuple):
             return [
                 gradient(
                     f,
-                    varargs[axis_i],
+                    varargs_list[axis_i],
                     axis=axis_i,
                     edge_order=edge_order,
                     n=n,
                     period=period,
                 )
-                for axis_i in axis
+                for axis_i in axis_processed
             ]
 
         else:
+            # axis_processed is an int
+            axis_int: int = axis_processed
             # Check validity of axis
-            if axis < 0:
-                axis = len(shape) + axis
+            if axis_int < 0:
+                axis_int = len(shape) + axis_int
             if is_casadi_type(f, recursive=False):
-                if axis not in [0, 1]:
+                if axis_int not in [0, 1]:
                     raise ValueError("axis must be 0 or 1 for CasADi arrays.")
 
-            dx = dxes[axis]
-            dx_shape = [1] * len(shape)
-            dx_shape[axis] = shape[axis] - 1
-            dx = reshape(dx, dx_shape)
+            dx = dxes[axis_int]
+            dx_shape: list[int] = [1] * len(shape)
+            dx_shape[axis_int] = shape[axis_int] - 1
+            dx = reshape(dx, tuple(dx_shape))
 
             def get_slice(slice_obj: slice) -> tuple[slice, ...]:
-                slices = [slice(None)] * len(shape)
-                slices[axis] = slice_obj
+                slices: list[slice] = [slice(None)] * len(shape)
+                slices[axis_int] = slice_obj
                 return tuple(slices)
 
             hm = dx[get_slice(slice(None, -1))]
@@ -239,7 +241,7 @@ def gradient(
                 else:
                     raise ValueError("Invalid edge_order.")
 
-                grad_f = concatenate((grad_f_first, grad_f, grad_f_last), axis=axis)
+                grad_f = concatenate((grad_f_first, grad_f, grad_f_last), axis=axis_int)
 
                 return grad_f
 
@@ -250,7 +252,7 @@ def gradient(
                 grad_grad_f_last = grad_grad_f[get_slice(slice(-1, None))]
 
                 grad_grad_f = concatenate(
-                    (grad_grad_f_first, grad_grad_f, grad_grad_f_last), axis=axis
+                    (grad_grad_f_first, grad_grad_f, grad_grad_f_last), axis=axis_int
                 )
 
                 return grad_grad_f
