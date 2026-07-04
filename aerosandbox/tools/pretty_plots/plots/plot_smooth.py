@@ -159,6 +159,11 @@ def plot_smooth(
             y=x[order],
         )(y_resample)
 
+    else:
+        raise ValueError(
+            f"Invalid value for `function_of`: {function_of!r}. Must be None, 'x', or 'y'."
+        )
+
     ### Plot
 
     scatter_kwargs = {

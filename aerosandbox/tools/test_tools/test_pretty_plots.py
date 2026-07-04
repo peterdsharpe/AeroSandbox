@@ -63,6 +63,25 @@ def test_pie_sort_by_invalid_string():
     plt.close(fig)
 
 
+def test_plot_smooth_invalid_function_of():
+    """An invalid `function_of` should raise ValueError, not UnboundLocalError."""
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 1, 10)
+    with pytest.raises(ValueError, match="function_of"):
+        p.plot_smooth(x, x**2, function_of="z")
+    plt.close(fig)
+
+
+def test_plot_smooth_valid_function_of():
+    for function_of in [None, "x", "y"]:
+        fig, ax = plt.subplots()
+        x = np.linspace(0, 1, 10)
+        x_resample, y_resample = p.plot_smooth(x, x**2, function_of=function_of)
+        assert np.all(np.isfinite(x_resample))
+        assert np.all(np.isfinite(y_resample))
+        plt.close(fig)
+
+
 def test_contour_z_log_scale_constant_z():
     """contour(z_log_scale=True) should not crash when Z is constant."""
     fig, ax = plt.subplots()
