@@ -406,7 +406,8 @@ def test_airplane_construction():
     main_wing = airplane.wings[0]
     assert main_wing.symmetric
     assert main_wing.span() == pytest.approx(
-        214 * u.foot, rel=0.01  # Slightly longer than nominal, due to dihedral
+        214 * u.foot,
+        rel=0.01,  # Slightly longer than nominal, due to dihedral
     )
     assert main_wing.area() > 0
 

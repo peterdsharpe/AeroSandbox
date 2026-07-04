@@ -60,9 +60,7 @@ def test_fineness_ratio():
     x_nondim = x / length
     r = r_max * (4 * x_nondim * (1 - x_nondim)) ** (3 / 4)  # Sears-Haack shape
     fuselage = asb.Fuselage(
-        xsecs=[
-            asb.FuselageXSec(xyz_c=[xi, 0, 0], radius=ri) for xi, ri in zip(x, r)
-        ]
+        xsecs=[asb.FuselageXSec(xyz_c=[xi, 0, 0], radius=ri) for xi, ri in zip(x, r)]
     )
 
     assert fuselage.fineness_ratio(assumed_shape="sears-haack") == pytest.approx(
