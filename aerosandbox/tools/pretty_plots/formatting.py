@@ -430,8 +430,11 @@ def show_plot(
     if legend:
         if legend_inline:  # Display an inline (matplotlib-label-lines) legend instead
             for ax in axes:
+                lines = ax.get_lines()
+                if len(lines) == 0:
+                    continue  # Skip axes with no lines (e.g., colorbar axes)
                 labelLines(
-                    lines=ax.get_lines(),
+                    lines=lines,
                 )
         else:  # Display a traditional legend on the last axis
             plt.legend(frameon=legend_frame)
