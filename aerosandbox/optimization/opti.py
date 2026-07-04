@@ -687,6 +687,17 @@ class Opti(cas.Opti):
                     )
 
                 for var, val in zip(category_variables, category_values):
+                    if not np.is_casadi_type(var, recursive=False):
+                        # This happens when `freeze_style="float"`: frozen variables are stored as
+                        # literal floats/arrays, whose values are baked in at declaration and cannot
+                        # be overridden here. (Previously, this crashed with an opaque AttributeError.)
+                        raise RuntimeError(
+                            f'Cannot load frozen variables from the cache, since `freeze_style="float"` was used: '
+                            f'variables in category "{category}" were frozen as literal constants at declaration, '
+                            f"so their values can no longer be replaced with cached ones.\n"
+                            f'Use `freeze_style="parameter"` (the default) if you want to load frozen variables '
+                            f"from a cache file."
+                        )
                     if not var.is_manually_frozen:
                         parameter_mapping = {**parameter_mapping, var: val}
 
