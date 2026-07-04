@@ -244,13 +244,23 @@ class FittedModel(SurrogateModel):
 
         try:  ### If the model did in-place operations on x_data, throw an error
             x_data_is_unchanged = np.all(x_data == x_data_original)
-        except ValueError:
-            x_data_is_unchanged = np.all(
-                [
-                    x_series == x_series_original
-                    for x_series, x_series_original in zip(x_data, x_data_original)
-                ]
-            )
+        except ValueError:  # A ValueError is raised when comparing dicts of arrays; compare series-by-series instead.
+            if isinstance(x_data, dict):
+                x_data_is_unchanged = np.all(
+                    [
+                        np.all(x_series == x_series_original)
+                        for x_series, x_series_original in zip(
+                            x_data.values(), x_data_original.values()
+                        )
+                    ]
+                )
+            else:
+                x_data_is_unchanged = np.all(
+                    [
+                        x_series == x_series_original
+                        for x_series, x_series_original in zip(x_data, x_data_original)
+                    ]
+                )
         if not x_data_is_unchanged:
             raise TypeError(
                 "model(x_data, parameter_guesses) did in-place operations on x, which is not allowed!"

@@ -215,5 +215,46 @@ def test_type_errors():
         fitted_model(5)
 
 
+def test_in_place_mutation_detected_with_dict_x_data():
+    """
+    Regression test: in-place mutation of dict x_data by the model used to go undetected
+    (the fallback comparison zipped dict *keys*, which always compare equal), so the fit
+    silently ran on mutated data.
+    """
+    x_data = {"x1": np.linspace(0, 10, 21)}
+    y_data = 2 * x_data["x1"] + 1
+
+    def mutating_model(x, p):
+        x["x1"] *= 2  # In-place mutation: not allowed!
+        return p["m"] * x["x1"] + p["b"]
+
+    with pytest.raises(TypeError, match="in-place"):
+        FittedModel(
+            model=mutating_model,
+            x_data=x_data,
+            y_data=y_data,
+            parameter_guesses={"m": 0, "b": 0},
+            verbose=False,
+        )
+
+
+def test_in_place_mutation_detected_with_array_x_data():
+    x_data = np.linspace(0, 10, 21)
+    y_data = 2 * x_data + 1
+
+    def mutating_model(x, p):
+        x *= 2  # In-place mutation: not allowed!
+        return p["m"] * x + p["b"]
+
+    with pytest.raises(TypeError, match="in-place"):
+        FittedModel(
+            model=mutating_model,
+            x_data=x_data,
+            y_data=y_data,
+            parameter_guesses={"m": 0, "b": 0},
+            verbose=False,
+        )
+
+
 if __name__ == "__main__":
     pytest.main()
