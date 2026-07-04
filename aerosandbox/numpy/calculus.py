@@ -62,7 +62,7 @@ def diff(
 
         result = a
         for i in range(n):
-            result = _cas.diff(a)
+            result = _cas.diff(result)
         return result
 
 
