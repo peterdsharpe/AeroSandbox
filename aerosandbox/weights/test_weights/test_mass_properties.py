@@ -1,3 +1,5 @@
+import warnings
+
 import aerosandbox as asb
 import numpy as onp
 import pytest
@@ -25,6 +27,29 @@ def test_eq_with_equal_and_unequal_array_attributes():
 
     assert mp1 == mp2
     assert mp1 != mp3
+
+
+def test_array_protocol_accepts_copy_keyword():
+    """
+    NumPy 2.0's `__array__` protocol requires `dtype` and `copy` keyword
+    arguments; without them, NumPy emits a DeprecationWarning (which will
+    eventually become a TypeError).
+    """
+    mp = asb.MassProperties(mass=1.0)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # Any DeprecationWarning -> failure
+        arr = onp.asarray(mp)
+        arr_copied = onp.asarray(mp, copy=True)
+
+    for a in [arr, arr_copied]:
+        assert a.shape == ()
+        assert a.dtype == onp.dtype("O")
+        assert a[()] is mp
+
+    ### A no-copy conversion is impossible, and should say so per the protocol:
+    with pytest.raises(ValueError):
+        onp.asarray(mp, copy=False)
 
 
 if __name__ == "__main__":

@@ -196,11 +196,19 @@ class MassProperties(AeroSandboxObject):
                     )
         return length
 
-    def __array__(self, dtype="O"):
+    def __array__(self, dtype=None, copy=None):
         """
         Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+
+        The `dtype` and `copy` arguments follow the NumPy 2.0 `__array__` protocol. A
+        newly-created (object-dtype, by default) array is always returned, so
+        `copy=False` raises a ValueError.
         """
-        return np.fromiter([self], dtype=dtype).reshape(())
+        if copy is False:
+            raise ValueError(
+                "Unable to avoid copy: converting a MassProperties object to a NumPy array always creates a new array."
+            )
+        return np.fromiter([self], dtype="O" if dtype is None else dtype).reshape(())
 
     def __neg__(self) -> "MassProperties":
         return -1 * self
