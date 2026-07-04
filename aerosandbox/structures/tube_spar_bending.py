@@ -117,9 +117,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
                 as a function of the distance along the spar y. Should be in units of force per unit length. In terms of
                 data types, this can be one of:
 
-                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
-                can freely vary along the length of the spar.
-
                 * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
                 instance to this analysis), in which case it's interpreted as a design variable to optimize over
                 that's uniform along the length of the spar.
@@ -134,9 +131,6 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
 
             elastic_modulus_function: The elastic modulus [Pa] of the spar as a function of the distance along the
                 spar y. In terms of data types, can be one of:
-
-                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
-                can freely vary along the length of the spar.
 
                 * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
                 instance to this analysis), in which case it's interpreted as a design variable to optimize over
