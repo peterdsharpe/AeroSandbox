@@ -1,4 +1,5 @@
 import inspect
+import re
 from typing import Any
 from pathlib import Path
 from aerosandbox.tools.string_formatting import has_balanced_parentheses
@@ -242,6 +243,9 @@ def get_function_argument_names_from_source_code(source_code: str) -> list[str]:
         "f(a(b,c), d)"           -> ['a(b,c)', 'd']
         "f({a:b}, c)"            -> ['{a:b}', 'c']
         "f(a[b], c)"             -> ['a[b]', 'c']
+        "f(a[1:2], b)"           -> ['a[1:2]', 'b']
+        "f(a[i, j], b)"          -> ['a[i, j]', 'b']
+        "f(lambda t: t**2, b)"   -> ['lambda t: t**2', 'b']
         "f({a:b, c:d}, e)"       -> ['{a:b, c:d}', 'e']
         "f({a:b,\nc:d}, e)"      -> ['{a:b,c:d}', 'e']
         "f(dict(a=b,c=d), e)"    -> ['dict(a=b,c=d)', 'e']
@@ -288,6 +292,7 @@ def get_function_argument_names_from_source_code(source_code: str) -> list[str]:
     arg_names: list[str] = []
     current_arg = ""
     in_type_hinting_block = False
+    brackets_level = 0
 
     while parenthesis_level != 0:
         i += 1
@@ -305,12 +310,25 @@ def get_function_argument_names_from_source_code(source_code: str) -> list[str]:
             braces_level += 1
         elif char == "}":
             braces_level -= 1
+        elif char == "[":
+            brackets_level += 1
+        elif char == "]":
+            brackets_level -= 1
 
-        if char == "," and parenthesis_level == 1 and braces_level == 0:
+        at_top_level = (
+            parenthesis_level == 1 and braces_level == 0 and brackets_level == 0
+        )
+
+        if char == "," and at_top_level:
             arg_names.append(current_arg)
             current_arg = ""
             in_type_hinting_block = False
-        elif char == ":" and parenthesis_level == 1 and braces_level == 0:
+        elif (
+            char == ":"
+            and at_top_level
+            and not re.search(r"\blambda\b", current_arg)
+            # A ':' after a `lambda` is its body separator, not a type hint.
+        ):
             in_type_hinting_block = True
         elif parenthesis_level >= 1 and not in_type_hinting_block:
             current_arg += char
