@@ -303,13 +303,15 @@ class TubeBeam1(AeroSandboxObject):
         #     # Add forcing term
         #     ddphi = -self.moment_per_unit_length / (self.G * self.J)
 
-        self.stress = self.stress_axial
-        self.opti.subject_to(
-            [
-                self.stress / self.max_allowable_stress < 1,
-                self.stress / self.max_allowable_stress > -1,
-            ]
-        )
+        if self.bending:  # Stress is only computed by the bending analysis;
+            # without it, there is nothing to constrain.
+            self.stress = self.stress_axial
+            self.opti.subject_to(
+                [
+                    self.stress / self.max_allowable_stress < 1,
+                    self.stress / self.max_allowable_stress > -1,
+                ]
+            )
 
     def draw_bending(
         self,
