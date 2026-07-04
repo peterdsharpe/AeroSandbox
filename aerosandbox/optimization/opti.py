@@ -355,11 +355,29 @@ class Opti(cas.Opti):
                     )
             else:
                 if lower_bound is not None:
+                    if not np.is_casadi_type(lower_bound, recursive=False) and np.any(
+                        np.array(lower_bound) < 0
+                    ):
+                        raise ValueError(
+                            "You can't give a negative `lower_bound` to a log-transformed variable, since a "
+                            "log-transformed variable is always positive. (Taking the log of this bound would "
+                            "create an invalid constraint.)\n"
+                            "Either remove the `lower_bound`, or don't log-transform this variable."
+                        )
                     self.subject_to(
                         log_var / log_scale >= np.log(lower_bound) / log_scale,
                         _stacklevel=_stacklevel + 1,
                     )
                 if upper_bound is not None:
+                    if not np.is_casadi_type(upper_bound, recursive=False) and np.any(
+                        np.array(upper_bound) <= 0
+                    ):
+                        raise ValueError(
+                            "You can't give a non-positive `upper_bound` to a log-transformed variable, since a "
+                            "log-transformed variable is always positive. (This constraint could never be "
+                            "satisfied.)\n"
+                            "Either change the `upper_bound`, or don't log-transform this variable."
+                        )
                     self.subject_to(
                         log_var / log_scale <= np.log(upper_bound) / log_scale,
                         _stacklevel=_stacklevel + 1,
