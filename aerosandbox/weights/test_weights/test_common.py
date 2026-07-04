@@ -1,5 +1,6 @@
 """
-Tests for base-class behavior defined in aerosandbox/common.py.
+Tests for base-class and package-level behavior defined in
+aerosandbox/common.py and aerosandbox/__init__.py.
 
 These are placed here since there is no dedicated test folder for
 aerosandbox/common.py; MassProperties (in this folder) is the canonical
@@ -63,6 +64,21 @@ def test_implicit_analysis_initialize_preserves_signature_and_docstring():
     assert analysis.alpha == 3.0
     assert analysis.opti_provided is True
     assert analysis.opti is opti
+
+
+def test_docs_opens_hosted_documentation(monkeypatch):
+    """
+    asb.docs() should open the hosted documentation site (the Homepage
+    declared in pyproject.toml), not the GitHub source tree.
+    """
+    import webbrowser
+
+    opened_urls = []
+    monkeypatch.setattr(webbrowser, "open_new", opened_urls.append)
+
+    asb.docs()
+
+    assert opened_urls == ["https://peterdsharpe.github.io/AeroSandbox/"]
 
 
 if __name__ == "__main__":

@@ -71,9 +71,7 @@ def docs():
     """
     import webbrowser
 
-    webbrowser.open_new(
-        "https://github.com/peterdsharpe/AeroSandbox/tree/master/aerosandbox"
-    )  # TODO: make this redirect to a hosted ReadTheDocs, or similar.
+    webbrowser.open_new("https://peterdsharpe.github.io/AeroSandbox/")
 
 
 def run_tests():
