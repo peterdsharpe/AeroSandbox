@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Any, Literal
+from typing import Callable, Literal
 
 
 def black_box(

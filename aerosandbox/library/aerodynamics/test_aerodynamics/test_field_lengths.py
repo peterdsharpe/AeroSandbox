@@ -1,5 +1,4 @@
 import aerosandbox as asb
-import aerosandbox.numpy as np
 import pytest
 from aerosandbox.tools import units as u
 

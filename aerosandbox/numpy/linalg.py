@@ -9,7 +9,7 @@ import casadi as _cas
 from aerosandbox.numpy.arithmetic_monadic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import asarray, max
-from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, VectorLike, _CasADiType
+from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, VectorLike
 from numpy.linalg import *
 from typing import cast
 

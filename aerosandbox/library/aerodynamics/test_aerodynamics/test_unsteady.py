@@ -3,7 +3,6 @@ import pytest
 
 from aerosandbox.library.aerodynamics.unsteady import (
     calculate_reduced_time,
-    wagners_function,
     kussners_function,
     indicial_gust_response,
     calculate_lift_due_to_transverse_gust,

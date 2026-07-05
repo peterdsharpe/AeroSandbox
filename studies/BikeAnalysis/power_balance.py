@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-import casadi as cas
 import aerosandbox.library.power_human as ph
 import aerosandbox.tools.units as u
 

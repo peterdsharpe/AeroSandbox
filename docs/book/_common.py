@@ -16,7 +16,7 @@ context, and saturated color spent only on the mark the eye should land on.
 from __future__ import annotations
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: F401  (re-exported for convenience in cells)
 import numpy as np  # noqa: F401  (re-exported for convenience in cells)
 
 # If the project uses JAX and you want deterministic float64 CPU renders, enable:

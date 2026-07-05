@@ -10,7 +10,7 @@ from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.arithmetic_dyadic import centered_mod as _centered_mod
 from aerosandbox.numpy.array import array, asarray, concatenate, reshape
 from aerosandbox.numpy.typing import ArrayLike, Array, Scalar
-from typing import Any, cast
+from typing import Any
 
 
 def diff(

@@ -4,7 +4,6 @@ from aerosandbox.numpy.integrate_discrete import (
     integrate_discrete_squared_curvature,
 )
 import pytest
-from typing import Literal
 
 
 def test_forward_euler_uniform_spacing():
