@@ -6,15 +6,13 @@ class IBL2(ImplicitAnalysis):
     """
     An implicit analysis for a 2-dimensional integral boundary layer model.
 
-    Implements a 2-equation dissipation-based model, partly based on:
+    Implements a 2-equation dissipation-based model, partly based on [1]_.
 
-        * Drela, Mark. "Aerodynamics of Viscous Fluids" textbook. Currently unpublished at the
-        time of writing; contact Mark Drela (drela@mit.edu) to request a copy of the draft. References in the code
-        here to "AVF Eq. XX" refer to equations in this book.
-
-
-
-
+    References
+    ----------
+    .. [1] Drela, Mark. "Aerodynamics of Viscous Fluids" textbook. Currently unpublished at
+       the time of writing; contact Mark Drela (drela@mit.edu) to request a copy of the
+       draft. References in the code here to "AVF Eq. XX" refer to equations in this book.
     """
 
     @ImplicitAnalysis.initialize

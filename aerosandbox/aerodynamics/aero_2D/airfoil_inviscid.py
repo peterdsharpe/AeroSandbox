@@ -13,8 +13,7 @@ class AirfoilInviscid(ImplicitAnalysis):
 
     Key outputs:
 
-        * AirfoilInviscid.Cl
-
+    * AirfoilInviscid.Cl
     """
 
     @ImplicitAnalysis.initialize
@@ -24,6 +23,19 @@ class AirfoilInviscid(ImplicitAnalysis):
         op_point: OperatingPoint,
         ground_effect: bool = False,
     ):
+        """
+        Initialize and set up the inviscid airfoil analysis.
+
+        Parameters
+        ----------
+        airfoil : Airfoil | list[Airfoil]
+            The airfoil(s) to analyze.
+        op_point : OperatingPoint
+            The operating point (e.g., velocity and angle of attack) to analyze at.
+        ground_effect : bool
+            Whether to model ground effect by adding a mirror image of the singularity
+            elements, mirrored about the y=0 line.
+        """
         if isinstance(airfoil, Airfoil):
             self.airfoils = [airfoil]
         else:
@@ -62,6 +74,24 @@ class AirfoilInviscid(ImplicitAnalysis):
         x_field,
         y_field,
     ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Calculate the flowfield velocity at the given field points.
+
+        Sums the freestream velocity with the velocities induced by the singularity elements
+        on each airfoil surface (plus their mirror images, if `ground_effect` is True).
+
+        Parameters
+        ----------
+        x_field
+            x-coordinates of the field points where the velocity is evaluated.
+        y_field
+            y-coordinates of the field points where the velocity is evaluated.
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            The x- and y-components (u, v) of the velocity at each field point.
+        """
         ### Analyze the freestream
         u_freestream = self.op_point.velocity * np.cosd(self.op_point.alpha)
         v_freestream = self.op_point.velocity * np.sind(self.op_point.alpha)
@@ -183,6 +213,17 @@ class AirfoilInviscid(ImplicitAnalysis):
         self.Cl = 2 * self.total_vorticity
 
     def draw_streamlines(self, res=200, show=True):
+        """
+        Draw the streamlines of the flowfield around the airfoil(s) using matplotlib.
+
+        Parameters
+        ----------
+        res
+            Resolution, given as the number of gridpoints in the y-direction. The number of
+            x-direction gridpoints is scaled to match the plot's aspect ratio.
+        show
+            Whether to show the plot after drawing it (via `plt.show()`).
+        """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
@@ -247,6 +288,14 @@ class AirfoilInviscid(ImplicitAnalysis):
             plt.show()
 
     def draw_cp(self, show=True):
+        """
+        Draw the surface pressure coefficient distribution of the airfoil(s) using matplotlib.
+
+        Parameters
+        ----------
+        show
+            Whether to show the plot after drawing it (via `plt.show()`).
+        """
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8), dpi=200)

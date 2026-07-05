@@ -12,33 +12,64 @@ def _calculate_induced_velocity_line_singularity_panel_coordinates(
     xp_panel_end: float = 1.0,
 ) -> tuple[Vectorizable, Vectorizable]:
     """
-    Calculates the induced velocity at a point (xp_field, yp_field) in a 2D potential-flow flowfield.
+    Calculate the induced velocity at a point (xp_field, yp_field) in a 2D potential flowfield.
 
-    The `p` suffix in `xp...` and `yp...` denotes the use of the panel coordinate system, where:
-        * xp_hat is along the length of the panel
-        * yp_hat is orthogonal (90 deg. counterclockwise) to it.
+    The `p` suffix in `xp...` and `yp...` denotes the use of the panel coordinate system,
+    where:
 
-    In this flowfield, there is only one singularity element: A line vortex going from (0, 0) to (xp_panel_end, 0).
-    The strength of this vortex varies linearly from:
-        * gamma_start at (0, 0), to:
-        * gamma_end at (xp_panel_end, 0). # TODO update paragraph
+    * xp_hat is along the length of the panel
+
+    * yp_hat is orthogonal (90 deg. counterclockwise) to it.
+
+    In this flowfield, there is only one singularity element: a line vortex going from (0, 0)
+    to (xp_panel_end, 0). The strength of this vortex varies linearly from:
+
+    * gamma_start at (0, 0), to:
+
+    * gamma_end at (xp_panel_end, 0). # TODO update paragraph
 
     By convention here, positive gamma induces clockwise swirl in the flow field.
 
-    Function returns the 2D velocity u, v in the local coordinate system of the panel.
+    Inputs xp_field and yp_field can be 1D ndarrays representing various field points, in
+    which case the resulting velocities u and v have corresponding dimensionality.
 
-    Inputs x and y can be 1D ndarrays representing various field points,
-    in which case the resulting velocities u and v have corresponding dimensionality.
+    Parameters
+    ----------
+    xp_field : Vectorizable
+        x-coordinate(s) of the field point(s), in panel coordinates.
+    yp_field : Vectorizable
+        y-coordinate(s) of the field point(s), in panel coordinates.
+    gamma_start : float
+        Vortex strength per unit length at the panel start point (0, 0).
+    gamma_end : float
+        Vortex strength per unit length at the panel end point (xp_panel_end, 0).
+    sigma_start : float
+        Source strength per unit length at the panel start point (0, 0).
+    sigma_end : float
+        Source strength per unit length at the panel end point (xp_panel_end, 0).
+    xp_panel_end : float
+        x-coordinate of the panel end point, in panel coordinates.
 
+    Returns
+    -------
+    tuple[Vectorizable, Vectorizable]
+        The 2D velocity components (u, v) in the local coordinate system of the panel.
+
+    Notes
+    -----
     Equations from the seminal textbook "Low Speed Aerodynamics" by Katz and Plotkin.
     Vortex equations are Eq. 11.99 and Eq. 11.100.
-        * Note: there is an error in equation 11.100 in Katz and Plotkin, at least in the 2nd ed:
-        The last term of equation 11.100, which is given as:
-            (x_{j+1} - x_j) / z + (theta_{j+1} - theta_j)
-        has a sign error and should instead be written as:
-            (x_{j+1} - x_j) / z - (theta_{j+1} - theta_j)
-    Source equations are Eq. 11.89 and Eq. 11.90.
 
+    * Note: there is an error in equation 11.100 in Katz and Plotkin, at least in the 2nd ed:
+      The last term of equation 11.100, which is given as:
+
+          (x_{j+1} - x_j) / z + (theta_{j+1} - theta_j)
+
+      has a sign error and should instead be written as:
+
+          (x_{j+1} - x_j) / z - (theta_{j+1} - theta_j)
+
+    Source equations are Eq. 11.89 and Eq. 11.90.
     """
     ### Modify any incoming floats
     if isinstance(xp_field, (float, int)):
@@ -169,21 +200,48 @@ def _calculate_induced_velocity_line_singularity(
     sigma_end: float = 0.0,
 ) -> tuple[Vectorizable, Vectorizable]:
     """
-    Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
+    Calculate the induced velocity at a point (x_field, y_field) in a 2D potential flowfield.
 
     In this flowfield, there is only one singularity element: # TODO update paragraph
-    A line vortex going from (x_panel_start, y_panel_start) to (x_panel_end, y_panel_end).
+    a line vortex going from (x_panel_start, y_panel_start) to (x_panel_end, y_panel_end).
     The strength of this vortex varies linearly from:
-        * gamma_start at (x_panel_start, y_panel_start), to:
-        * gamma_end at (x_panel_end, y_panel_end).
+
+    * gamma_start at (x_panel_start, y_panel_start), to:
+
+    * gamma_end at (x_panel_end, y_panel_end).
 
     By convention here, positive gamma induces clockwise swirl in the flow field.
 
-    Function returns the 2D velocity u, v in the global coordinate system (x, y).
+    Inputs x_field and y_field can be 1D ndarrays representing various field points, in which
+    case the resulting velocities u and v have the corresponding dimensionality.
 
-    Inputs x and y can be 1D ndarrays representing various field points,
-    in which case the resulting velocities u and v have the corresponding dimensionality.
+    Parameters
+    ----------
+    x_field : Vectorizable
+        x-coordinate(s) of the field point(s).
+    y_field : Vectorizable
+        y-coordinate(s) of the field point(s).
+    x_panel_start : float
+        x-coordinate of the panel start point.
+    y_panel_start : float
+        y-coordinate of the panel start point.
+    x_panel_end : float
+        x-coordinate of the panel end point.
+    y_panel_end : float
+        y-coordinate of the panel end point.
+    gamma_start : float
+        Vortex strength per unit length at the panel start point.
+    gamma_end : float
+        Vortex strength per unit length at the panel end point.
+    sigma_start : float
+        Source strength per unit length at the panel start point.
+    sigma_end : float
+        Source strength per unit length at the panel end point.
 
+    Returns
+    -------
+    tuple[Vectorizable, Vectorizable]
+        The 2D velocity components (u, v) in the global coordinate system (x, y).
     """
     ### Calculate the panel coordinate transform (x -> xp, y -> yp), where
     panel_dx = x_panel_end - x_panel_start
@@ -237,21 +295,42 @@ def calculate_induced_velocity_line_singularities(
     sigma: np.ndarray,
 ) -> tuple[Vectorizable, Vectorizable]:
     """
-    Calculates the induced velocity at a point (x_field, y_field) in a 2D potential-flow flowfield.
+    Calculate the induced velocity at a point (x_field, y_field) in a 2D potential flowfield.
 
     In this flowfield, the following singularity elements are assumed: # TODO update paragraph
-        * A line vortex that passes through the coordinates specified in (x_panel, y_panel). Each of these vertices is
-        called a "node".
-        * The vorticity of this line vortex per unit length varies linearly between subsequent nodes.
-        * The vorticity at each node is specified by the parameter gamma.
+
+    * A line vortex that passes through the coordinates specified in (x_panels, y_panels).
+      Each of these vertices is called a "node".
+
+    * The vorticity of this line vortex per unit length varies linearly between subsequent
+      nodes.
+
+    * The vorticity at each node is specified by the parameter gamma.
 
     By convention here, positive gamma induces clockwise swirl in the flow field.
 
-    Function returns the 2D velocity u, v in the global coordinate system (x, y).
+    Inputs x_field and y_field can be 1D ndarrays representing various field points, in which
+    case the resulting velocities u and v have the corresponding dimensionality.
 
-    Inputs x_field and y_field can be 1D ndarrays representing various field points,
-    in which case the resulting velocities u and v have the corresponding dimensionality.
+    Parameters
+    ----------
+    x_field : Vectorizable
+        x-coordinate(s) of the field point(s).
+    y_field : Vectorizable
+        y-coordinate(s) of the field point(s).
+    x_panels : np.ndarray
+        x-coordinates of the nodes that the line singularity passes through.
+    y_panels : np.ndarray
+        y-coordinates of the nodes that the line singularity passes through.
+    gamma : np.ndarray
+        Vortex strength per unit length at each node.
+    sigma : np.ndarray
+        Source strength per unit length at each node.
 
+    Returns
+    -------
+    tuple[Vectorizable, Vectorizable]
+        The 2D velocity components (u, v) in the global coordinate system (x, y).
     """
     try:
         N = len(x_panels)
