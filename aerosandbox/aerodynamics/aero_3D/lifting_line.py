@@ -21,33 +21,41 @@ if TYPE_CHECKING:
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
 def tall(array):
+    """
+    Reshape an array into a tall (Nx1) column vector.
+    """
     return np.reshape(array, (-1, 1))
 
 
 def wide(array):
+    """
+    Reshape an array into a wide (1xN) row vector.
+    """
     return np.reshape(array, (1, -1))
 
 
 class LiftingLine(ExplicitAnalysis):
     """
-    An implicit aerodynamics analysis based on lifting line theory, with modifications for nonzero sweep
-    and dihedral + multiple wings.
+    An implicit aerodynamics analysis based on lifting line theory.
+
+    Includes modifications for nonzero sweep and dihedral + multiple wings.
 
     Nonlinear, and includes viscous effects based on 2D data.
 
-    Usage example:
-        >>> analysis = asb.LiftingLine(
-        >>>     airplane=my_airplane,
-        >>>     op_point=asb.OperatingPoint(
-        >>>         velocity=100, # m/s
-        >>>         alpha=5, # deg
-        >>>         beta=4, # deg
-        >>>         p=0.01, # rad/sec
-        >>>         q=0.02, # rad/sec
-        >>>         r=0.03, # rad/sec
-        >>>     )
-        >>> )
-        >>> outputs = analysis.run()
+    Examples
+    --------
+    >>> analysis = asb.LiftingLine(
+    >>>     airplane=my_airplane,
+    >>>     op_point=asb.OperatingPoint(
+    >>>         velocity=100, # m/s
+    >>>         alpha=5, # deg
+    >>>         beta=4, # deg
+    >>>         p=0.01, # rad/sec
+    >>>         q=0.02, # rad/sec
+    >>>         r=0.03, # rad/sec
+    >>>     )
+    >>> )
+    >>> outputs = analysis.run()
     """
 
     def __init__(
@@ -75,33 +83,35 @@ class LiftingLine(ExplicitAnalysis):
         align_trailing_vortices_with_wind: bool = False,
     ):
         """
-        Initializes and conducts a LiftingLine analysis.
+        Initialize and conduct a LiftingLine analysis.
 
-        Args:
-
-            airplane: An Airplane object that you want to analyze.
-
-            op_point: The OperatingPoint that you want to analyze the Airplane at.
-
-            xyz_ref: The moment reference point, in geometry axes. Defaults to `airplane.xyz_ref`.
-
-            model_size: The size of the NeuralFoil model to use for 2D airfoil aerodynamics.
-
-            run_symmetric_if_possible: If this flag is True and the problem formulation is XZ-symmetric, the solver will
-            attempt to exploit the symmetry. This results in roughly half the number of governing equations.
-
-            verbose: If True, prints progress messages during the analysis.
-
-            spanwise_resolution: The number of spanwise panels that each wing section is subdivided into.
-
-            spanwise_spacing_function: A function (e.g., `np.linspace` or `np.cosspace`) that determines how the
-            spanwise panels are spaced within each wing section.
-
-            vortex_core_radius: The regularization radius of each vortex core [m].
-
-            align_trailing_vortices_with_wind: If True, trailing vortex legs are aligned with the freestream
-            direction; if False, they extend in the +x (geometry axes) direction.
-
+        Parameters
+        ----------
+        airplane : Airplane
+            An Airplane object that you want to analyze.
+        op_point : OperatingPoint
+            The OperatingPoint that you want to analyze the Airplane at.
+        xyz_ref : list[float] | None
+            The moment reference point, in geometry axes. Defaults to `airplane.xyz_ref`.
+        model_size : str
+            The size of the NeuralFoil model to use for 2D airfoil aerodynamics. One of
+            "xxsmall", "xsmall", "small", "medium", "large", "xlarge", "xxlarge", or "xxxlarge".
+        run_symmetric_if_possible : bool
+            If this flag is True and the problem formulation is XZ-symmetric, the solver will
+            attempt to exploit the symmetry. This results in roughly half the number of governing
+            equations.
+        verbose : bool
+            If True, prints progress messages during the analysis.
+        spanwise_resolution : int
+            The number of spanwise panels that each wing section is subdivided into.
+        spanwise_spacing_function : Callable[[float, float, int], np.ndarray]
+            A function (e.g., `np.linspace` or `np.cosspace`) that determines how the spanwise
+            panels are spaced within each wing section.
+        vortex_core_radius : float
+            The regularization radius of each vortex core [m].
+        align_trailing_vortices_with_wind : bool
+            If True, trailing vortex legs are aligned with the freestream direction; if False,
+            they extend in the +x (geometry axes) direction.
         """
         super().__init__()
 
@@ -152,6 +162,10 @@ class LiftingLine(ExplicitAnalysis):
 
     @dataclass
     class AeroComponentResults:
+        """
+        Hold the aerodynamic forces and moments computed on a single airplane component.
+        """
+
         s_ref: float  # Reference area [m^2]
         c_ref: float  # Reference chord [m]
         b_ref: float  # Reference span [m]
@@ -185,7 +199,7 @@ class LiftingLine(ExplicitAnalysis):
         @property
         def F_b(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An (x, y, z) tuple of forces in body axes [N]
+            An (x, y, z) tuple of forces in body axes [N].
             """
             return self.op_point.convert_axes(
                 *self.F_g, from_axes="geometry", to_axes="body"
@@ -194,7 +208,7 @@ class LiftingLine(ExplicitAnalysis):
         @property
         def F_w(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An (x, y, z) tuple of forces in wind axes [N]
+            An (x, y, z) tuple of forces in wind axes [N].
             """
             return self.op_point.convert_axes(
                 *self.F_g, from_axes="geometry", to_axes="wind"
@@ -203,7 +217,7 @@ class LiftingLine(ExplicitAnalysis):
         @property
         def M_b(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An (x, y, z) tuple of moments about body axes [Nm]
+            An (x, y, z) tuple of moments about body axes [Nm].
             """
             return self.op_point.convert_axes(
                 *self.M_g, from_axes="geometry", to_axes="body"
@@ -212,7 +226,7 @@ class LiftingLine(ExplicitAnalysis):
         @property
         def M_w(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An (x, y, z) tuple of moments about wind axes [Nm]
+            An (x, y, z) tuple of moments about wind axes [Nm].
             """
             return self.op_point.convert_axes(
                 *self.M_g, from_axes="geometry", to_axes="wind"
@@ -262,9 +276,12 @@ class LiftingLine(ExplicitAnalysis):
 
     def run(self) -> dict:
         """
-        Computes the aerodynamic forces.
+        Compute the aerodynamic forces.
 
-        Returns a dictionary with keys:
+        Returns
+        -------
+        dict
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -285,19 +302,23 @@ class LiftingLine(ExplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-        Nondimensional values are nondimensionalized using reference values in the LiftingLine.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            LiftingLine.airplane object.
 
-        Data types:
-            - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
+            Data types:
 
-                - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
-                are floats, not arrays).
+            - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn"
+              keys are:
 
-                - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
-                array).
+                - floats if the OperatingPoint object is not vectorized (i.e., if all
+                  attributes of OperatingPoint are floats, not arrays).
 
-            - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
-            floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
+                - arrays if the OperatingPoint object is vectorized (i.e., if any attribute
+                  of OperatingPoint is an array).
+
+            - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which
+              will contain either floats or arrays, again depending on whether the
+              OperatingPoint object is vectorized or not.
         """
         aerobuildup = AeroBuildup(
             airplane=self.airplane,
@@ -382,20 +403,32 @@ class LiftingLine(ExplicitAnalysis):
         r=True,
     ) -> dict[str, float | np.ndarray | list[float | np.ndarray]]:
         """
-        Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
+        Compute the aerodynamic forces and moments on the airplane, and the stability derivatives.
 
-        Arguments essentially determine which stability derivatives are computed. If a stability derivative is not
-        needed, leaving it False will speed up the computation.
+        Arguments essentially determine which stability derivatives are computed. If a stability
+        derivative is not needed, leaving it False will speed up the computation.
 
-        Args:
+        Parameters
+        ----------
+        alpha : bool
+            If True, compute the stability derivatives with respect to the angle of attack
+            (alpha).
+        beta : bool
+            If True, compute the stability derivatives with respect to the sideslip angle (beta).
+        p : bool
+            If True, compute the stability derivatives with respect to the body-axis roll rate
+            (p).
+        q : bool
+            If True, compute the stability derivatives with respect to the body-axis pitch rate
+            (q).
+        r : bool
+            If True, compute the stability derivatives with respect to the body-axis yaw rate
+            (r).
 
-            - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
-            - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
-            - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
-            - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
-            - r (bool): If True, compute the stability derivatives with respect to the body-axis yaw rate (r).
-
-        Returns: a dictionary with keys:
+        Returns
+        -------
+        dict[str, float | np.ndarray | list[float | np.ndarray]]
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -416,8 +449,9 @@ class LiftingLine(ExplicitAnalysis):
             - 'Cm'  : the pitching coefficient [-], in body axes
             - 'Cn'  : the yawing coefficient [-], in body axes
 
-            Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`, and `r` arguments. For
-            example, if `alpha=True`, then the following additional keys will be present:
+            Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`,
+            and `r` arguments. For example, if `alpha=True`, then the following additional keys
+            will be present:
 
                 - 'CLa' : the lift coefficient derivative with respect to alpha [1/rad]
                 - 'CDa' : the drag coefficient derivative with respect to alpha [1/rad]
@@ -427,20 +461,23 @@ class LiftingLine(ExplicitAnalysis):
                 - 'Cna' : the yawing moment coefficient derivative with respect to alpha [1/rad]
                 - 'x_np': the neutral point location in the x direction [m]
 
-            Nondimensional values are nondimensionalized using reference values in the LiftingLine.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            LiftingLine.airplane object.
 
             Data types:
-                - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
 
-                    - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
-                    are floats, not arrays).
+            - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn"
+              keys are:
 
-                    - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
-                    array).
+                - floats if the OperatingPoint object is not vectorized (i.e., if all
+                  attributes of OperatingPoint are floats, not arrays).
 
-                - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
-                floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
+                - arrays if the OperatingPoint object is vectorized (i.e., if any attribute
+                  of OperatingPoint is an array).
 
+            - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which
+              will contain either floats or arrays, again depending on whether the
+              OperatingPoint object is vectorized or not.
         """
         do_analysis: dict[str, bool] = {
             "alpha": alpha,
@@ -554,6 +591,14 @@ class LiftingLine(ExplicitAnalysis):
         return run_base
 
     def wing_aerodynamics(self) -> AeroComponentResults:
+        """
+        Compute the aerodynamic forces and moments on the wings, using the lifting-line model.
+
+        Returns
+        -------
+        AeroComponentResults
+            The aerodynamic forces and moments on the wings.
+        """
         if self.verbose:
             print("Meshing...")
 
@@ -924,13 +969,21 @@ class LiftingLine(ExplicitAnalysis):
         self, points: np.ndarray, vortex_strengths: np.ndarray | None = None
     ) -> np.ndarray:
         """
-        Computes the induced velocity at a set of points in the flowfield.
+        Compute the induced velocity at a set of points in the flowfield.
 
-        Args:
-            points: A Nx3 array of points that you would like to know the induced velocities at. Given in geometry axes.
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the induced velocities at. Given in
+            geometry axes.
+        vortex_strengths : np.ndarray | None
+            The strength of each horseshoe vortex. If None, uses `LiftingLine.vortex_strengths`
+            (which requires that the analysis has already been run).
 
-        Returns: A Nx3 of the induced velocity at those points. Given in geometry axes.
-
+        Returns
+        -------
+        np.ndarray
+            A Nx3 of the induced velocity at those points. Given in geometry axes.
         """
         if vortex_strengths is None:
             try:
@@ -972,13 +1025,21 @@ class LiftingLine(ExplicitAnalysis):
         vortex_strengths: np.ndarray | None = None,
     ) -> np.ndarray:
         """
-        Computes the velocity at a set of points in the flowfield.
+        Compute the velocity at a set of points in the flowfield.
 
-        Args:
-            points: A Nx3 array of points that you would like to know the velocities at. Given in geometry axes.
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the velocities at. Given in
+            geometry axes.
+        vortex_strengths : np.ndarray | None
+            The strength of each horseshoe vortex. If None, uses `LiftingLine.vortex_strengths`
+            (which requires that the analysis has already been run).
 
-        Returns: A Nx3 of the velocity at those points. Given in geometry axes.
-
+        Returns
+        -------
+        np.ndarray
+            A Nx3 of the velocity at those points. Given in geometry axes.
         """
         V_induced = self.get_induced_velocity_at_points(
             points=points,
@@ -1004,6 +1065,22 @@ class LiftingLine(ExplicitAnalysis):
         return V
 
     def calculate_fuselage_influences(self, points: np.ndarray) -> np.ndarray:
+        """
+        Compute the velocity influence of the fuselages at a set of points in the flowfield.
+
+        Models each fuselage as a series of point sources along its centerline.
+
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the fuselage influences at. Given
+            in geometry axes.
+
+        Returns
+        -------
+        np.ndarray
+            A Nx3 array of the fuselage-induced velocity at those points. Given in geometry axes.
+        """
         this_fuse_centerline_points = []  # fuselage sections centres
         this_fuse_radii = []
 
@@ -1067,30 +1144,34 @@ class LiftingLine(ExplicitAnalysis):
         length: float | None = None,
     ) -> np.ndarray:
         """
-        Computes streamlines, starting at specific seed points.
+        Compute streamlines, starting at specific seed points.
 
-        After running this function, a new instance variable `LiftingLine.streamlines` is computed
+        After running this function, a new instance variable `LiftingLine.streamlines` is
+        computed.
 
-        Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity vectors are normalized
-        before ODE integration). After investigation, it's not worth doing fancier ODE integration methods (adaptive
-        schemes, RK substepping, etc.), due to the near-singular conditions near vortex filaments.
+        Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity
+        vectors are normalized before ODE integration). After investigation, it's not worth doing
+        fancier ODE integration methods (adaptive schemes, RK substepping, etc.), due to the
+        near-singular conditions near vortex filaments.
 
-        Args:
-
-            seed_points: A Nx3 ndarray that contains a list of points where streamlines are started. Will be
+        Parameters
+        ----------
+        seed_points : np.ndarray | None
+            A Nx3 ndarray that contains a list of points where streamlines are started. Will be
+            auto-calculated if not specified.
+        n_steps : int
+            The number of individual streamline steps to trace. Minimum of 2.
+        length : float | None
+            The approximate total length of the streamlines desired, in meters. Will be
             auto-calculated if not specified.
 
-            n_steps: The number of individual streamline steps to trace. Minimum of 2.
-
-            length: The approximate total length of the streamlines desired, in meters. Will be auto-calculated if
-            not specified.
-
-        Returns:
-            streamlines: a 3D array with dimensions: (n_seed_points) x (3) x (n_steps).
-            Consists of streamlines data.
+        Returns
+        -------
+        streamlines : np.ndarray
+            A 3D array with dimensions: (n_seed_points) x (3) x (n_steps). Consists of
+            streamlines data.
 
             Result is also saved as an instance variable, LiftingLine.streamlines.
-
         """
         if self.verbose:
             print("Calculating streamlines...")
@@ -1143,9 +1224,10 @@ class LiftingLine(ExplicitAnalysis):
         backend: str = "pyvista",
     ):
         """
-        Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
-        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = sol(ap).
-        :return:
+        Draw the solution.
+
+        Note: Must be called on a SOLVED AeroProblem object. To solve an AeroProblem, use
+        opti.solve(). To substitute a solved solution, use ap = sol(ap).
         """
         if show_kwargs is None:
             show_kwargs = {}

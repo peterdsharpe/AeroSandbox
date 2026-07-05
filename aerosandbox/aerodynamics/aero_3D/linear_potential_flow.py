@@ -15,10 +15,16 @@ from abc import abstractmethod, ABC
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
 def tall(array):
+    """
+    Reshape an array into a tall (Nx1) column vector.
+    """
     return np.reshape(array, (-1, 1))
 
 
 def wide(array):
+    """
+    Reshape an array into a wide (1xN) row vector.
+    """
     return np.reshape(array, (1, -1))
 
 
@@ -27,10 +33,11 @@ immutable_dataclass = partial(dataclass, frozen=True, repr=False)
 
 class _IdentityDict(MutableMapping):
     """
-    A minimal dict-like container that keys entries by object identity (`id(key)`) rather than by hash/equality.
+    A minimal dict-like container that keys entries by object identity rather than hash/equality.
 
-    This allows unhashable objects to be used as keys. (AeroSandbox geometry objects, like Wing and Fuselage,
-    are unhashable, since they define `__eq__` without `__hash__`.)
+    Entries are keyed by `id(key)`. This allows unhashable objects to be used as keys.
+    (AeroSandbox geometry objects, like Wing and Fuselage, are unhashable, since they define
+    `__eq__` without `__hash__`.)
     """
 
     def __init__(self, items=()):
@@ -368,15 +375,19 @@ class LinearPotentialFlow(ExplicitAnalysis):
     @cached_property
     def discretization(self):
         """
+        Discretize the airplane into a list of singularity elements.
 
-        Returns: A list of dictionaries, where each item in the list represents a single element.
+        Returns
+        -------
+        list
+            A list of dictionaries, where each item in the list represents a single element.
 
-            Each item in the list is a namedtuple (effectively, a dictionary), and one of the following types:
+            Each item in the list is a namedtuple (effectively, a dictionary), and one of the
+            following types:
 
-                    * `wing_vlm_element`
-                    * `wing_lifting_line_element`
-                    * `fuselage_prescribed_source_line`
-
+                * `wing_vlm_element`
+                * `wing_lifting_line_element`
+                * `fuselage_prescribed_source_line`
         """
         ### Initialize
         discretization = []
@@ -479,9 +490,12 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
     def run(self) -> dict[str, Any]:
         """
-        Computes the aerodynamic forces.
+        Compute the aerodynamic forces.
 
-        Returns a dictionary with keys:
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -502,7 +516,8 @@ class LinearPotentialFlow(ExplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-        Nondimensional values are nondimensionalized using reference values in the LinearPotentialFlow.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            LinearPotentialFlow.airplane object.
         """
 
         raise NotImplementedError
