@@ -19,25 +19,29 @@ class OperatingPoint(AeroSandboxObject):
         r: Vectorizable = 0.0,
     ):
         """
-        An object that represents the instantaneous aerodynamic flight conditions of an aircraft.
+        Initialize a new OperatingPoint.
 
-        Args:
-            atmosphere: The atmosphere object (of type asb.Atmosphere). Defaults to sea level conditions
+        An OperatingPoint is an object that represents the instantaneous aerodynamic flight
+        conditions of an aircraft.
+
+        Parameters
+        ----------
+        atmosphere : Atmosphere | None
+            The atmosphere object (of type asb.Atmosphere). Defaults to sea level conditions
             (`Atmosphere(altitude=0)`) if not specified.
-
-            velocity: The flight velocity, expressed as a true airspeed. [m/s]
-
-            alpha: The angle of attack. [degrees]
-
-            beta: The sideslip angle. (Reminder: convention that a positive beta implies that the oncoming air comes
-            from the pilot's right-hand side.) [degrees]
-
-            p: The roll rate about the x_b axis. [rad/sec]
-
-            q: The pitch rate about the y_b axis. [rad/sec]
-
-            r: The yaw rate about the z_b axis. [rad/sec]
-
+        velocity : Vectorizable
+            The flight velocity, expressed as a true airspeed. [m/s]
+        alpha : Vectorizable
+            The angle of attack. [degrees]
+        beta : Vectorizable
+            The sideslip angle. (Reminder: convention that a positive beta implies that the
+            oncoming air comes from the pilot's right-hand side.) [degrees]
+        p : Vectorizable
+            The roll rate about the x_b axis. [rad/sec]
+        q : Vectorizable
+            The pitch rate about the y_b axis. [rad/sec]
+        r : Vectorizable
+            The yaw rate about the z_b axis. [rad/sec]
         """
         if atmosphere is None:
             atmosphere = Atmosphere(altitude=0)
@@ -53,11 +57,10 @@ class OperatingPoint(AeroSandboxObject):
     @property
     def state(self) -> dict[str, Atmosphere | Vectorizable]:
         """
-        Returns the state variables of this OperatingPoint instance as a Dict.
+        Return the state variables of this OperatingPoint instance as a Dict.
 
         Keys are strings that give the name of the variables.
         Values are the variables themselves.
-
         """
         return {
             "atmosphere": self.atmosphere,
@@ -74,13 +77,17 @@ class OperatingPoint(AeroSandboxObject):
         new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
-        Creates a new instance of the OperatingPoint class from the given state.
+        Create a new instance of the OperatingPoint class from the given state.
 
-        Args:
-            new_state: The new state to be used for the new instance. Ideally, this is represented as a Dict in identical format to the `state` of a OperatingPoint instance.
+        Parameters
+        ----------
+        new_state : dict[str, float | np.ndarray] | Sequence | np.ndarray | None
+            The new state to be used for the new instance. Ideally, this is represented as a
+            Dict in identical format to the `state` of a OperatingPoint instance.
 
-        Returns: A new instance of this same OperatingPoint class.
-
+        Returns
+        -------
+        A new instance of this same OperatingPoint class.
         """
 
         ### Get a list of all the inputs that the class constructor wants to see
@@ -103,14 +110,20 @@ class OperatingPoint(AeroSandboxObject):
         new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
-        Force-overwrites all state variables with a new set (either partial or complete) of state variables.
+        Force-overwrite all state variables with a new set (partial or complete) of state variables.
 
         Warning: this is *not* the intended public usage of OperatingPoint instances.
         If you want a new state yourself, you should instantiate a new one either:
-            a) manually, or
-            b) by using OperatingPoint.get_new_instance_with_state()
+
+        a) manually, or
+        b) by using OperatingPoint.get_new_instance_with_state()
 
         Hence, this function is meant for PRIVATE use only - be careful how you use this!
+
+        Parameters
+        ----------
+        new_state : dict[str, float | np.ndarray] | Sequence | np.ndarray | None
+            The new state variables (either partial or complete) to overwrite with.
         """
         ### Set the default parameters
         if new_state is None:
@@ -131,13 +144,17 @@ class OperatingPoint(AeroSandboxObject):
         self, dict_like_state: dict[str, Atmosphere | Vectorizable] | None = None
     ) -> tuple[Atmosphere | Vectorizable, ...]:
         """
-        'Unpacks' a Dict-like state into an array-like that represents the state of the OperatingPoint.
+        'Unpack' a Dict-like state into an array-like that represents the OperatingPoint state.
 
-        Args:
-            dict_like_state: Takes in a dict-like representation of the state.
+        Parameters
+        ----------
+        dict_like_state : dict[str, Atmosphere | Vectorizable] | None
+            Takes in a dict-like representation of the state.
 
-        Returns: The array representation of the state that you gave.
-
+        Returns
+        -------
+        tuple[Atmosphere | Vectorizable, ...]
+            The array representation of the state that you gave.
         """
         if dict_like_state is None:
             dict_like_state = self.state
@@ -147,13 +164,18 @@ class OperatingPoint(AeroSandboxObject):
         self, array_like_state: Sequence | np.ndarray | None = None
     ) -> dict[str, Atmosphere | Vectorizable]:
         """
-        'Packs' an array into a Dict that represents the state of the OperatingPoint.
+        'Pack' an array into a Dict that represents the state of the OperatingPoint.
 
-        Args:
-            array_like_state: Takes in an iterable that must have the same number of entries as the state vector of the OperatingPoint.
+        Parameters
+        ----------
+        array_like_state : Sequence | np.ndarray | None
+            Takes in an iterable that must have the same number of entries as the state
+            vector of the OperatingPoint.
 
-        Returns: The Dict representation of the state that you gave.
-
+        Returns
+        -------
+        dict[str, Atmosphere | Vectorizable]
+            The Dict representation of the state that you gave.
         """
         if array_like_state is None:
             return self.state
@@ -190,15 +212,21 @@ class OperatingPoint(AeroSandboxObject):
 
     def __getitem__(self, index: int | slice):
         """
-        Indexes one item from each attribute of an OperatingPoint instance.
+        Index one item from each attribute of an OperatingPoint instance.
+
         Returns a new OperatingPoint instance.
 
-        Args:
-            index: The index that is being called; e.g.,:
-                >>> first_op_point = op_point[0]
+        Parameters
+        ----------
+        index : int | slice
+            The index that is being called; e.g.,:
 
-        Returns: A new OperatingPoint instance, where each attribute is subscripted at the given value, if possible.
+            >>> first_op_point = op_point[0]
 
+        Returns
+        -------
+        A new OperatingPoint instance, where each attribute is subscripted at the given
+        value, if possible.
         """
         self_length = len(self)
 
@@ -243,28 +271,34 @@ class OperatingPoint(AeroSandboxObject):
 
     def __array__(self, dtype="O"):
         """
-        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        Allow NumPy array creation without infinite recursion in __len__ and __getitem__.
         """
         return np.fromiter([self], dtype=dtype).reshape(())
 
     def dynamic_pressure(self):
         """
-        Dynamic pressure of the working fluid
-        Returns:
-            float: Dynamic pressure of the working fluid. [Pa]
+        Return the dynamic pressure of the working fluid.
+
+        Returns
+        -------
+        float
+            Dynamic pressure of the working fluid. [Pa]
         """
         return 0.5 * self.atmosphere.density() * self.velocity**2
 
     def total_pressure(self):
         """
-        Total (stagnation) pressure of the working fluid.
+        Return the total (stagnation) pressure of the working fluid.
 
-        Assumes a calorically perfect gas (i.e. specific heats do not change across the isentropic deceleration).
+        Assumes a calorically perfect gas (i.e. specific heats do not change across the
+        isentropic deceleration).
 
-        Note that `total pressure != static pressure + dynamic pressure`, due to compressibility effects.
+        Note that `total pressure != static pressure + dynamic pressure`, due to
+        compressibility effects.
 
-        Returns: Total pressure of the working fluid. [Pa]
-
+        Returns
+        -------
+        Total pressure of the working fluid. [Pa]
         """
         gamma = self.atmosphere.ratio_of_specific_heats()
         return self.atmosphere.pressure() * (
@@ -273,12 +307,14 @@ class OperatingPoint(AeroSandboxObject):
 
     def total_temperature(self):
         """
-        Total (stagnation) temperature of the working fluid.
+        Return the total (stagnation) temperature of the working fluid.
 
-        Assumes a calorically perfect gas (i.e. specific heats do not change across the isentropic deceleration).
+        Assumes a calorically perfect gas (i.e. specific heats do not change across the
+        isentropic deceleration).
 
-        Returns: Total temperature of the working fluid [K]
-
+        Returns
+        -------
+        Total temperature of the working fluid [K]
         """
         gamma = self.atmosphere.ratio_of_specific_heats()
         # return self.atmosphere.temperature() * (
@@ -290,9 +326,16 @@ class OperatingPoint(AeroSandboxObject):
 
     def reynolds(self, reference_length):
         """
-        Computes a Reynolds number with respect to a given reference length.
-        :param reference_length: A reference length you choose [m]
-        :return: Reynolds number [unitless]
+        Compute a Reynolds number with respect to a given reference length.
+
+        Parameters
+        ----------
+        reference_length
+            A reference length you choose [m]
+
+        Returns
+        -------
+        Reynolds number [unitless]
         """
         density = self.atmosphere.density()
         viscosity = self.atmosphere.dynamic_viscosity()
@@ -301,13 +344,13 @@ class OperatingPoint(AeroSandboxObject):
 
     def mach(self):
         """
-        Returns the Mach number associated with the current flight condition.
+        Return the Mach number associated with the current flight condition.
         """
         return self.velocity / self.atmosphere.speed_of_sound()
 
     def indicated_airspeed(self):
         """
-        Returns the indicated airspeed associated with the current flight condition, in meters per second.
+        Return the indicated airspeed of the current flight condition, in meters per second.
         """
         return np.sqrt(
             2
@@ -317,7 +360,7 @@ class OperatingPoint(AeroSandboxObject):
 
     def equivalent_airspeed(self):
         """
-        Returns the equivalent airspeed associated with the current flight condition, in meters per second.
+        Return the equivalent airspeed of the current flight condition, in meters per second.
         """
         return self.velocity * np.sqrt(
             self.atmosphere.density() / Atmosphere(altitude=0, method="isa").density()
@@ -325,11 +368,11 @@ class OperatingPoint(AeroSandboxObject):
 
     def energy_altitude(self):
         """
-        Returns the energy altitude associated with the current flight condition, in meters.
+        Return the energy altitude associated with the current flight condition, in meters.
 
-        The energy altitude is the altitude at which a stationary aircraft would have the same total energy (kinetic
-        + gravitational potential) as the aircraft at the current flight condition.
-
+        The energy altitude is the altitude at which a stationary aircraft would have the same
+        total energy (kinetic + gravitational potential) as the aircraft at the current flight
+        condition.
         """
         return self.atmosphere.altitude + 1 / (2 * 9.81) * self.velocity**2
 
@@ -342,30 +385,42 @@ class OperatingPoint(AeroSandboxObject):
         to_axes: Literal["geometry", "body", "wind", "stability"],
     ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
-        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
-        y_to, z_to], as given in the `to_axes` frame.
+        Convert a vector from one axis frame to another.
+
+        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an
+        equivalent vector [x_to, y_to, z_to], as given in the `to_axes` frame.
 
         Both `from_axes` and `to_axes` should be a string, one of:
-            * "geometry"
-            * "body"
-            * "wind"
-            * "stability"
 
-        This whole function is vectorized, both over the vector and the OperatingPoint (e.g., a vector of
-        `OperatingPoint.alpha` values)
+        * "geometry"
+        * "body"
+        * "wind"
+        * "stability"
 
-        Wind axes rotations are taken from Eq. 6.7 in Sect. 6.2.2 of Drela's Flight Vehicle Aerodynamics textbook,
-        with axes corrections to go from [D, Y, L] to true wind axes (and same for geometry to body axes).
+        This whole function is vectorized, both over the vector and the OperatingPoint (e.g.,
+        a vector of `OperatingPoint.alpha` values).
 
-        Args:
-            x_from: x-component of the vector, in `from_axes` frame.
-            y_from: y-component of the vector, in `from_axes` frame.
-            z_from: z-component of the vector, in `from_axes` frame.
-            from_axes: The axes to convert from.
-            to_axes: The axes to convert to.
+        Wind axes rotations are taken from Eq. 6.7 in Sect. 6.2.2 of Drela's Flight Vehicle
+        Aerodynamics textbook, with axes corrections to go from [D, Y, L] to true wind axes
+        (and same for geometry to body axes).
 
-        Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
+        Parameters
+        ----------
+        x_from : Vectorizable
+            x-component of the vector, in `from_axes` frame.
+        y_from : Vectorizable
+            y-component of the vector, in `from_axes` frame.
+        z_from : Vectorizable
+            z-component of the vector, in `from_axes` frame.
+        from_axes : Literal["geometry", "body", "wind", "stability"]
+            The axes to convert from.
+        to_axes : Literal["geometry", "body", "wind", "stability"]
+            The axes to convert to.
 
+        Returns
+        -------
+        tuple[Vectorizable, Vectorizable, Vectorizable]
+            The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
         """
         if from_axes == to_axes:
             return x_from, y_from, z_from
@@ -424,10 +479,12 @@ class OperatingPoint(AeroSandboxObject):
 
     def compute_rotation_matrix_wind_to_geometry(self) -> np.ndarray:
         """
-        Computes the 3x3 rotation matrix that transforms from wind axes to geometry axes.
+        Compute the 3x3 rotation matrix that transforms from wind axes to geometry axes.
 
-        Returns: a 3x3 rotation matrix.
-
+        Returns
+        -------
+        np.ndarray
+            A 3x3 rotation matrix.
         """
 
         alpha_rotation = np.rotation_matrix_3D(
@@ -452,14 +509,32 @@ class OperatingPoint(AeroSandboxObject):
         return r
 
     def compute_freestream_direction_geometry_axes(self):
+        """
+        Compute the freestream direction (direction the wind is GOING TO) in geometry axes.
+        """
         # Computes the freestream direction (direction the wind is GOING TO) in the geometry axes
         return self.compute_rotation_matrix_wind_to_geometry() @ np.array([-1, 0, 0])
 
     def compute_freestream_velocity_geometry_axes(self):
+        """
+        Compute the freestream velocity vector (direction the wind is GOING TO) in geometry axes.
+        """
         # Computes the freestream velocity vector (direction the wind is GOING TO) in geometry axes
         return self.compute_freestream_direction_geometry_axes() * self.velocity
 
     def compute_rotation_velocity_geometry_axes(self, points):
+        """
+        Compute the effective velocity-due-to-rotation at a set of points.
+
+        Parameters
+        ----------
+        points
+            An Nx3 array of points.
+
+        Returns
+        -------
+        An Nx3 array of effective velocities.
+        """
         # Computes the effective velocity-due-to-rotation at a set of points.
         # Input: a Nx3 array of points
         # Output: a Nx3 array of effective velocities
