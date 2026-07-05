@@ -17,21 +17,28 @@ def stack_meshes(
     *meshes: tuple[np.ndarray, np.ndarray],
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Takes in a series of tuples (points, faces) and merges them into a single tuple (points, faces). All (points,
-    faces) tuples are meshes given in standard format.
+    Take in a series of tuples (points, faces) and merge them into a single tuple (points, faces).
 
-    Args:
-        *meshes: Any number of mesh tuples in standard (points, faces) format.
+    All (points, faces) tuples are meshes given in standard format.
 
-    Returns: Points and faces of the combined mesh. Standard unstructured mesh format: A tuple of `points` and
-    `faces`, where:
+    Parameters
+    ----------
+    *meshes : tuple[np.ndarray, np.ndarray]
+        Any number of mesh tuples in standard (points, faces) format.
 
-        * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        Points and faces of the combined mesh. Standard unstructured mesh format: A tuple of
+        `points` and `faces`, where:
 
-        * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
+        * `points` is a `n x 3` array of points, where `n` is the number of points in the
+          mesh.
+
+        * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of
+          faces if `method` is "quad".
 
             * Each row of `faces` is a list of indices into `points`, which specifies a face.
-
     """
     if len(meshes) == 1:
         return meshes[0]
@@ -54,22 +61,28 @@ def convert_mesh_to_polydata_format(
     points: np.ndarray, faces: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    PyVista uses a slightly different convention for the standard (points, faces) format as described above. They
-    give `faces` as a single 1D vector of roughly length (M*3), or (M*4) in the case of quadrilateral meshing.
-    Basically, the mesh displayer goes down the `faces` array, and when it sees a number N, it interprets that as the
-    number of vertices in the following face. Then, the next N entries are interpreted as integer references to the
-    vertices of the face.
+    Convert a standard-format mesh to the format expected by PyVista.
+
+    PyVista uses a slightly different convention for the standard (points, faces) format as
+    described above. They give `faces` as a single 1D vector of roughly length (M*3), or
+    (M*4) in the case of quadrilateral meshing. Basically, the mesh displayer goes down the
+    `faces` array, and when it sees a number N, it interprets that as the number of vertices
+    in the following face. Then, the next N entries are interpreted as integer references to
+    the vertices of the face.
 
     This has the benefit of allowing for mixed tri/quad meshes.
 
-    Args:
-        points: `points` array of the original standard-format mesh
-        faces: `faces` array of the original standard-format mesh
+    Parameters
+    ----------
+    points : np.ndarray
+        `points` array of the original standard-format mesh.
+    faces : np.ndarray
+        `faces` array of the original standard-format mesh.
 
-    Returns:
-
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
         (points, faces), except that `faces` is now in a pyvista.PolyData compatible format.
-
     """
     faces = [[len(face), *face] for face in faces]
     faces = np.reshape(np.array(faces), -1)
