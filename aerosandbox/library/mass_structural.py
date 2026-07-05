@@ -11,18 +11,35 @@ def mass_hpa_wing(
     # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
 ):
     """
-    Finds the mass of the wing structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
-    http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718
-    :param span: wing span [m]
-    :param chord: wing mean chord [m]
-    :param vehicle_mass: aircraft gross weight [kg]
-    :param n_ribs: number of ribs in the wing
-    :param n_wing_sections: number of wing sections or panels (for disassembly?)
-    :param ultimate_load_factor: ultimate load factor [unitless]
-    :param type: Type of bracing: "cantilevered", "one-wire", "multi-wire"
-    :param t_over_c: wing airfoil thickness-to-chord ratio
-    :param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations. [boolean]
-    :return: Wing structure mass [kg]
+    Find the mass of the wing structure of a human powered aircraft (HPA), following Juan Cruz's
+    correlations in http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718
+
+    Parameters
+    ----------
+    span
+        Wing span [m].
+    chord
+        Wing mean chord [m].
+    vehicle_mass
+        Aircraft gross weight [kg].
+    n_ribs
+        Number of ribs in the wing.
+    n_wing_sections
+        Number of wing sections or panels (for disassembly?).
+    ultimate_load_factor
+        Ultimate load factor [unitless].
+    type
+        Type of bracing: "cantilevered", "one-wire", "multi-wire".
+    t_over_c
+        Wing airfoil thickness-to-chord ratio.
+    include_spar : bool
+        Should we include the mass of the spar? Useful if you want to do your own primary
+        structure calculations.
+
+    Returns
+    -------
+    float
+        Wing structure mass [kg].
     """
     ### Primary structure
     if include_spar:
@@ -79,19 +96,40 @@ def mass_wing_spar(
     n_booms=1,
 ):
     r"""
-    Finds the mass of the spar for a wing on a single- or multi-boom lightweight aircraft. Model originally designed for solar aircraft.
-    Data was fit to the range 3 < wing_span < 120 [m] and 5 < supported_mass < 3000 [kg], but validity should extend somewhat beyond that.
-    Extremely accurate fits within this range; R^2 > 0.995 for all fits.
+    Find the mass of the spar for a wing on a single- or multi-boom lightweight aircraft.
+
+    Model originally designed for solar aircraft. Data was fit to the range
+    3 < wing_span < 120 [m] and 5 < supported_mass < 3000 [kg], but validity should extend
+    somewhat beyond that. Extremely accurate fits within this range; R^2 > 0.995 for all fits.
+
     Source: AeroSandbox\studies\MultiBoomSparMass_v2
+
     Assumptions:
+
         * Elliptical lift distribution
-        * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere in the ultimate load case.
-        * If multi-boom, assumes roughly static-aerostructurally-optimal placement of the outer booms and equal boom weights.
-    :param span: Wing span [m]
-    :param mass_supported: Total mass of all fuselages + tails
-    :param ultimate_load_factor: Design load factor. Default taken from Daedalus design.
-    :param n_booms: Number of booms on the design. Can be 1, 2, or 3. Assumes optimal placement of the outer booms.
-    :return:
+
+        * Constraint that local wing dihedral/anhedral angle must not exceed 10 degrees anywhere
+          in the ultimate load case.
+
+        * If multi-boom, assumes roughly static-aerostructurally-optimal placement of the outer
+          booms and equal boom weights.
+
+    Parameters
+    ----------
+    span
+        Wing span [m].
+    mass_supported
+        Total mass of all fuselages + tails.
+    ultimate_load_factor
+        Design load factor. Default taken from Daedalus design.
+    n_booms
+        Number of booms on the design. Can be 1, 2, or 3. Assumes optimal placement of the
+        outer booms.
+
+    Returns
+    -------
+    float
+        Mass of the wing spar [kg].
     """
     if n_booms == 1:
         c = 20.7100792220283090
@@ -125,16 +163,31 @@ def mass_hpa_stabilizer(
     # Should we include the mass of the spar? Useful if you want to do your own primary structure calculations.
 ):
     """
-    Finds the mass of a stabilizer structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
-    http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718
+    Find the mass of a stabilizer structure of a human powered aircraft (HPA), following Juan
+    Cruz's correlations in http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718
+
     Note: apply this once to BOTH the rudder and elevator!!!
-    :param span: stabilizer span [m]
-    :param chord: stabilizer mean chord [m]
-    :param dynamic_pressure_at_manuever_speed: dynamic pressure at maneuvering speed [Pa]
-    :param n_ribs: number of ribs in the wing
-    :param t_over_c: wing airfoil thickness-to-chord ratio
-    :param include_spar: Should we include the mass of the spar? Useful if you want to do your own primary structure calculations. [boolean]
-    :return: Stabilizer structure mass [kg]
+
+    Parameters
+    ----------
+    span
+        Stabilizer span [m].
+    chord
+        Stabilizer mean chord [m].
+    dynamic_pressure_at_manuever_speed
+        Dynamic pressure at maneuvering speed [Pa].
+    n_ribs
+        Number of ribs in the wing.
+    t_over_c
+        Wing airfoil thickness-to-chord ratio.
+    include_spar : bool
+        Should we include the mass of the spar? Useful if you want to do your own primary
+        structure calculations.
+
+    Returns
+    -------
+    float
+        Stabilizer structure mass [kg].
     """
     ### Primary structure
     area = span * chord
@@ -175,13 +228,25 @@ def mass_hpa_tail_boom(
     mean_tail_surface_area,
 ):
     """
-    Finds the mass of a tail boom structure of a human powered aircraft (HPA), following Juan Cruz's correlations in
-    http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718
-    Assumes a tubular tail boom of high modules (E > 228 GPa) graphite/epoxy
-    :param length_tail_boom: length of the tail boom [m]. Calculated as distance from the wing 1/4 chord to the furthest tail surface.
-    :param dynamic_pressure_at_manuever_speed: dynamic pressure at maneuvering speed [Pa]
-    :param mean_tail_surface_area: mean of the areas of the tail surfaces (elevator, rudder)
-    :return: mass of the tail boom [m]
+    Find the mass of a tail boom structure of a human powered aircraft (HPA), following Juan
+    Cruz's correlations in http://journals.sfu.ca/ts/index.php/ts/article/viewFile/760/718
+
+    Assumes a tubular tail boom of high-modulus (E > 228 GPa) graphite/epoxy.
+
+    Parameters
+    ----------
+    length_tail_boom
+        Length of the tail boom [m]. Calculated as distance from the wing 1/4 chord to the
+        furthest tail surface.
+    dynamic_pressure_at_manuever_speed
+        Dynamic pressure at maneuvering speed [Pa].
+    mean_tail_surface_area
+        Mean of the areas of the tail surfaces (elevator, rudder).
+
+    Returns
+    -------
+    float
+        Mass of the tail boom [kg].
     """
     length = length_tail_boom
     q = dynamic_pressure_at_manuever_speed
@@ -193,12 +258,25 @@ def mass_hpa_tail_boom(
 
 def mass_surface_balsa_monokote_cf(chord, span, mean_t_over_c=0.08):
     """
-    Estimates the mass of a lifting surface constructed with balsa-monokote-carbon-fiber construction techniques.
-    Warning: Not well validated; spar sizing is a guessed scaling and not based on structural analysis.
-    :param chord: wing mean chord [m]
-    :param span: wing span [m]
-    :param mean_t_over_c: wing thickness-to-chord ratio [unitless]
-    :return: estimated surface mass [kg]
+    Estimate the mass of a lifting surface constructed with balsa-monokote-carbon-fiber
+    construction techniques.
+
+    Warning: Not well validated; spar sizing is a guessed scaling and not based on structural
+    analysis.
+
+    Parameters
+    ----------
+    chord
+        Wing mean chord [m].
+    span
+        Wing span [m].
+    mean_t_over_c
+        Wing thickness-to-chord ratio [unitless].
+
+    Returns
+    -------
+    float
+        Estimated surface mass [kg].
     """
     mean_t = chord * mean_t_over_c
     ### Balsa wood + Monokote + a 1" dia CF tube spar.
@@ -228,12 +306,26 @@ def mass_surface_solid(
     mean_t_over_c=0.08,
 ):
     """
-    Estimates the mass of a lifting surface constructed out of a solid piece of material.
-    Warning: Not well validated; spar sizing is a guessed scaling and not based on structural analysis.
-    :param chord: wing mean chord [m]
-    :param span: wing span [m]
-    :param mean_t_over_c: wing thickness-to-chord ratio [unitless]
-    :return: estimated surface mass [kg]
+    Estimate the mass of a lifting surface constructed out of a solid piece of material.
+
+    Warning: Not well validated; spar sizing is a guessed scaling and not based on structural
+    analysis.
+
+    Parameters
+    ----------
+    chord
+        Wing mean chord [m].
+    span
+        Wing span [m].
+    density
+        Density of the material [kg/m^3]. Defaults to that of aluminum.
+    mean_t_over_c
+        Wing thickness-to-chord ratio [unitless].
+
+    Returns
+    -------
+    float
+        Estimated surface mass [kg].
     """
     mean_t = chord * mean_t_over_c
     volume = chord * span * mean_t

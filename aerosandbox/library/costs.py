@@ -26,100 +26,111 @@ def modified_DAPCA_IV_production_cost_analysis(
     manufacturing_wrap_rate_2012_dollars: float = 98.0,
 ) -> dict[str, float]:
     """
-    Computes the cost of an aircraft in present-day dollars, using the Modified DAPCA IV cost model.
+    Compute the cost of an aircraft in present-day dollars, using the Modified DAPCA IV cost
+    model.
 
-    Be sure to adjust `cpi_relative_to_2012_dollars` to the current values in order to accurately model inflation.
+    Be sure to adjust `cpi_relative_to_2012_dollars` to the current values in order to accurately
+    model inflation.
 
-    The DAPCA IV cost model is a statistical regression of historical aircraft cost data. It provides reasonable
-    results for most classes of aircraft, including transports, fighters, bombers, and even GA and UAV aircraft with
-    suitable adjustments.
+    The DAPCA IV cost model is a statistical regression of historical aircraft cost data. It
+    provides reasonable results for most classes of aircraft, including transports, fighters,
+    bombers, and even GA and UAV aircraft with suitable adjustments.
 
     It was created by the RAND Corporation.
 
-    The Modified DAPCA IV cost model is a modification of the DAPCA IV cost model that includes additional cost
-    estimates for engine cost (as the original DAPCA model assumes that this is known).
+    The Modified DAPCA IV cost model is a modification of the DAPCA IV cost model that includes
+    additional cost estimates for engine cost (as the original DAPCA model assumes that this is
+    known).
 
-    See Raymer, Aircraft Design: A Conceptual Approach, 5th Edition, Section 18.4.2 pg. 711 for more information.
+    See Raymer, Aircraft Design: A Conceptual Approach, 5th Edition, Section 18.4.2 pg. 711 for
+    more information.
 
-    Args:
-        design_empty_weight: The design empty weight of the entire aircraft, in kg.
+    Parameters
+    ----------
+    design_empty_weight : float
+        The design empty weight of the entire aircraft, in kg.
+    design_maximum_airspeed : float
+        The design maximum airspeed of the aircraft, in m/s.
+    n_airplanes_produced : int
+        The number of airplanes to be produced.
+    n_engines_per_aircraft : int
+        The number of engines per aircraft.
+    cost_per_engine : float
+        The cost of each engine, in present-day dollars.
+    cost_avionics_per_airplane : float
+        The cost of avionics per airplane, in present-day dollars.
+    n_pax : int
+        The number of passengers.
+    cpi_relative_to_2012_dollars : float
+        The consumer price index at the present day divided by the consumer price index in 2012,
+        seasonally-adjusted.
 
-        design_maximum_airspeed: The design maximum airspeed of the aircraft, in m/s.
+        To quickly find this, use data from the St. Louis Federal Reserve. Below is the CPI,
+        normalized to 2012. https://fred.stlouisfed.org/graph/?g=10PU0
 
-        n_airplanes_produced: The number of airplanes to be produced.
+        For example, in 2022, one would use 1.275.
+    n_flight_test_aircraft : int
+        The number of flight test aircraft. Typically 2 to 6.
+    is_cargo_airplane : bool
+        Whether the airplane is a cargo airplane. If so, the quality control cost is lower.
+    primary_structure_material : Literal["aluminum", "carbon_fiber", "fiberglass", "steel", "titanium"]
+        The primary structure material. Options are:
 
-        n_engines_per_aircraft: The number of engines per aircraft.
+        - "aluminum"
+        - "carbon_fiber"
+        - "fiberglass"
+        - "steel"
+        - "titanium"
+    per_passenger_cost_model : Literal["general_aviation", "jet_transport", "regional_transport"]
+        The per-passenger cost model. Options are:
 
-        cost_per_engine: The cost of each engine, in present-day dollars.
+        - "general_aviation": General aviation aircraft, such as Cessna 172s.
+        - "jet_transport": Jet transport aircraft, such as Boeing 737s.
+        - "regional_transport": Regional transport aircraft, such as Embraer E175s.
+    engineering_wrap_rate_2012_dollars : float
+        The engineering wrap rate in 2012 dollars.
+    tooling_wrap_rate_2012_dollars : float
+        The tooling wrap rate in 2012 dollars.
+    quality_control_wrap_rate_2012_dollars : float
+        The quality control wrap rate in 2012 dollars.
+    manufacturing_wrap_rate_2012_dollars : float
+        The manufacturing wrap rate in 2012 dollars.
 
-        cost_avionics_per_airplane: The cost of avionics per airplane, in present-day dollars.
-
-        n_pax: The number of passengers.
-
-        cpi_relative_to_2012_dollars: The consumer price index at the present day divided by the consumer price index
-        in 2012, seasonally-adjusted.
-
-            To quickly find this, use data from the St. Louis Federal Reserve. Below is the CPI, normalized to 2012.
-            https://fred.stlouisfed.org/graph/?g=10PU0
-
-            For example, in 2022, one would use 1.275.
-
-        n_flight_test_aircraft: The number of flight test aircraft. Typically 2 to 6.
-
-        is_cargo_airplane: Whether the airplane is a cargo airplane. If so, the quality control cost is lower.
-
-        primary_structure_material: The primary structure material. Options are:
-            - "aluminum"
-            - "carbon_fiber"
-            - "fiberglass"
-            - "steel"
-            - "titanium"
-
-        per_passenger_cost_model: The per-passenger cost model. Options are:
-            - "general_aviation": General aviation aircraft, such as Cessna 172s.
-            - "jet_transport": Jet transport aircraft, such as Boeing 737s.
-            - "regional_transport": Regional transport aircraft, such as Embraer E175s.
-
-        engineering_wrap_rate_2012_dollars: The engineering wrap rate in 2012 dollars.
-
-        tooling_wrap_rate_2012_dollars: The tooling wrap rate in 2012 dollars.
-
-        quality_control_wrap_rate_2012_dollars: The quality control wrap rate in 2012 dollars.
-
-        manufacturing_wrap_rate_2012_dollars: The manufacturing wrap rate in 2012 dollars.
-
-    Returns:
-
-        A dictionary of costs required to produce all `n_airplanes_produced` airplanes, in present-day dollars.
+    Returns
+    -------
+    dict[str, float]
+        A dictionary of costs required to produce all `n_airplanes_produced` airplanes,
+        in present-day dollars.
 
         Keys and values are as follows:
 
-            - "engineering_labor": Engineering labor cost.
+        - "engineering_labor": Engineering labor cost.
 
-            - "tooling_labor": Tooling labor cost.
+        - "tooling_labor": Tooling labor cost.
 
-            - "manufacturing_labor": Manufacturing labor cost.
+        - "manufacturing_labor": Manufacturing labor cost.
 
-            - "quality_control_labor": Quality control labor cost.
+        - "quality_control_labor": Quality control labor cost.
 
-            - "development_support": Development support cost. From Raymer: "Includes fabrication of mockups, iron-bird subsystem
-            simulators, structural test articles, and other test articles."
+        - "development_support": Development support cost. From Raymer: "Includes fabrication of
+          mockups, iron-bird subsystem simulators, structural test articles, and other test
+          articles."
 
-            - "flight_test": Flight test cost. From Raymer: "Includes all costs incurred to demonstrate airworthiness
-            for civil certification or Mil-Spec compliance except for the costs of the flight-test aircraft
-            themselves. Costs for the flight-test aircraft are included in the total production-run cost estimation.
-            Includes planning, instrumentation, flight operations, data reduction, and engineering and manufacturing
-            support of flight testing."
+        - "flight_test": Flight test cost. From Raymer: "Includes all costs incurred to
+          demonstrate airworthiness for civil certification or Mil-Spec compliance except for
+          the costs of the flight-test aircraft themselves. Costs for the flight-test aircraft
+          are included in the total production-run cost estimation. Includes planning,
+          instrumentation, flight operations, data reduction, and engineering and manufacturing
+          support of flight testing."
 
-            - "manufacturing_materials": Manufacturing materials cost. From Raymer: "Includes all raw materials and
-            purchased hardware and equipment."
+        - "manufacturing_materials": Manufacturing materials cost. From Raymer: "Includes all
+          raw materials and purchased hardware and equipment."
 
-            - "engines": Engine cost.
+        - "engines": Engine cost.
 
-            - "avionics": Avionics cost.
+        - "avionics": Avionics cost.
 
-            - "total": Total cost. (Sum of all other costs above.)
-
+        - "total": Total cost. (Sum of all other costs above.)
     """
     # Abbreviated constants for readability
     W = design_empty_weight  # kg
@@ -228,7 +239,8 @@ def electric_aircraft_direct_operating_cost_analysis(
     descent_time: float = 0.2 * u.hour,
 ) -> dict[str, float]:
     """
-    Estimates the overall operating cost of an electric aircraft. Includes both direct and indirect operating costs.
+    Estimate the overall operating cost of an electric aircraft. Includes both direct and
+    indirect operating costs.
 
     Here, direct operating costs (DOC) are taken to include the following costs:
 
@@ -241,65 +253,71 @@ def electric_aircraft_direct_operating_cost_analysis(
     - Cockpit and cabin crew costs
     - Airport landing, terminal, and handling fees
 
-    Any costs that are not included here are considered indirect costs. These indirect costs would include,
-    but are not limited to: advertisement, administrative costs, depreciation of non-airframe assets, and taxes.
+    Any costs that are not included here are considered indirect costs. These indirect costs
+    would include, but are not limited to: advertisement, administrative costs, depreciation of
+    non-airframe assets, and taxes.
 
     Airframe maintenance costs are estimated from:
         Moore, et al., "Unlocking Low-Cost Regional Air Mobility through...", AIAA Aviation 2023.
 
-    Airport fees estimated for the Phoenix-Mesa Gateway Airport, due to public availability of the fee schedule:
+    Airport fees estimated for the Phoenix-Mesa Gateway Airport, due to public availability of
+    the fee schedule:
     https://www.gatewayairport.com/documents/documentlibrary/wgaa%20organizational%20documents/airport%20rates%20charges%20-%20effective%20march%201,%202017.pdf
 
-    Args:
+    Parameters
+    ----------
+    production_cost_per_airframe : float
+        The cost to produce a single airframe, in present-day dollars. May be estimated using
+        the `modified_DAPCA_IV_production_cost_analysis()` function.
+    nominal_cruise_airspeed : float
+        The nominal cruise airspeed of the aircraft, in m/s.
+    nominal_mission_range : float
+        The nominal mission range of the aircraft, in meters.
+    battery_capacity : float
+        The total capacity of the battery, in Joules.
+    num_passengers_nominal : int
+        The number of passengers that the aircraft is designed to carry.
+    num_crew : int
+        The number of crew members required to operate the aircraft.
+    battery_fraction_used_on_nominal_mission : float
+        The fraction of the battery's capacity that is used on the nominal mission.
+    typical_passenger_utilization : float
+        The fraction of the aircraft's passenger capacity that is typically utilized.
+    flight_hours_per_year : float
+        The number of flight hours per year that the aircraft is expected to fly.
+    airframe_lifetime_years : float
+        The number of years that the airframe is expected to last. After this time, the airframe
+        is assumed to be sold at some lower resale value.
+    airframe_eol_resale_value_fraction : float
+        The expected resale value of the airframe at the end of its lifetime, expressed as a
+        fraction of the airframe's production cost.
+    battery_cost_per_kWh_capacity : float
+        The replacement cost of the battery pack, per kWh of capacity, in present-day dollars.
+        Note that this is a pack-level cost (as opposed to cell-level), so includes the cost of
+        the battery management system, cooling system, fire-suppressing foam, etc. Should
+        include the labor cost to replace the battery pack as well.
+    battery_cycle_life : float
+        The number of charge/discharge cycles that the battery is expected to last before full
+        replacement is required.
+    real_interest_rate : float
+        The real interest rate per year. This is the interest rate minus the inflation rate.
+        This is used to calculate the present-day value of future costs (e.g., airframe
+        financing).
+    electricity_cost_per_kWh : float
+        The cost of electricity, per kWh, in present-day dollars.
+    annual_expenses_per_crew : float
+        The annual expenses per crew member, in present-day dollars. Should include the total
+        burdened cost of the crew member, including salary, benefits, and other expenses.
+    ascent_time : float
+        The time required to ascend to cruise altitude, in seconds.
+    descent_time : float
+        The time required to descend from cruise altitude, in seconds.
 
-        production_cost_per_airframe: The cost to produce a single airframe, in present-day dollars. May be estimated
-            using the `modified_DAPCA_IV_production_cost_analysis()` function.
-
-        nominal_cruise_airspeed: The nominal cruise airspeed of the aircraft, in m/s.
-
-        nominal_mission_range: The nominal mission range of the aircraft, in meters.
-
-        battery_capacity: The total capacity of the battery, in Joules.
-
-        num_passengers_nominal: The number of passengers that the aircraft is designed to carry.
-
-        num_crew: The number of crew members required to operate the aircraft.
-
-        battery_fraction_used_on_nominal_mission: The fraction of the battery's capacity that is used on the nominal
-            mission.
-
-        typical_passenger_utilization: The fraction of the aircraft's passenger capacity that is typically utilized.
-
-        flight_hours_per_year: The number of flight hours per year that the aircraft is expected to fly.
-
-        airframe_lifetime_years: The number of years that the airframe is expected to last. After this time, the airframe
-            is assumed to be sold at some lower reasle value.
-
-        airframe_eol_resale_value_fraction: The expect resale value of the airframe at the end of its lifetime,
-            expressed as a fraction of the airframe's production cost.
-
-        battery_cost_per_kWh_capacity: The replacement cost of the battery pack, per kWh of capacity, in present-day
-            dollars. Note that this is a pack-level cost (as opposed to cell-level), so includes the cost of the
-            battery management system, cooling system, fire-suppressing foam, etc. Should include the labor cost to
-            replace the battery pack as well.
-
-        battery_cycle_life: The number of charge/discharge cycles that the battery is expected to last before full
-            replacement is required.
-
-        real_interest_rate: The real interest rate per year. This is the interest rate minus the inflation rate. This is
-            used to calculate the present-day value of future costs (e.g., airframe financing).
-
-        electricity_cost_per_kWh: The cost of electricity, per kWh, in present-day dollars.
-
-        annual_expenses_per_crew: The annual expenses per crew member, in present-day dollars. Should include the total
-            burdened cost of the crew member, including salary, benefits, and other expenses.
-
-        ascent_time: The time required to ascend to cruise altitude, in seconds.
-
-        descent_time: The time required to descend from cruise altitude, in seconds.
-
-    Returns:
-        A dictionary of operating costs per passenger-mile, in present-day dollars, with the following keys:
+    Returns
+    -------
+    dict[str, float]
+        A dictionary of operating costs per passenger-mile, in present-day dollars, with the
+        following keys:
 
             * "airframe_depreciation"
             * "airframe_financing"
@@ -315,9 +333,8 @@ def electric_aircraft_direct_operating_cost_analysis(
             * "airport_passenger_facility_charge"
             * "indirect"
 
-        One key, "total", is also included, which is the sum of all of the above costs. Once again, this is
-            expressed in units of present-day dollars per passenger-mile.
-
+        One key, "total", is also included, which is the sum of all of the above costs. Once
+        again, this is expressed in units of present-day dollars per passenger-mile.
     """
 
     ### Calculate per-mission parameters

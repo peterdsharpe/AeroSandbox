@@ -5,20 +5,27 @@ def tire_size(
     mass_supported_by_each_tire: float, aircraft_type="general_aviation"
 ) -> tuple[float, float]:
     """
-    Computes the required diameter and width of a tire for an airplane, from statistical regression to historical data.
+    Compute the required diameter and width of a tire for an airplane, from statistical
+    regression to historical data.
 
-    Methodology and constants from Raymer: Aircraft Design: A Conceptual Approach, 5th Edition, Table 11.1, pg. 358.
+    Methodology and constants from Raymer: Aircraft Design: A Conceptual Approach, 5th Edition,
+    Table 11.1, pg. 358.
 
-    Args:
-        mass_supported_by_each_tire: The mass supported by each tire, in kg.
+    Parameters
+    ----------
+    mass_supported_by_each_tire : float
+        The mass supported by each tire, in kg.
+    aircraft_type
+        The type of aircraft. Options are:
 
-        aircraft_type: The type of aircraft. Options are:
-            - "general_aviation"
-            - "business_twin"
-            - "transport/bomber"
-            - "fighter/trainer"
+        - "general_aviation"
+        - "business_twin"
+        - "transport/bomber"
+        - "fighter/trainer"
 
-    Returns:
+    Returns
+    -------
+    tuple[float, float]
         The required diameter and width of the tire, in meters.
     """
     mass_supported_by_tire_lbm = mass_supported_by_each_tire / u.lbm

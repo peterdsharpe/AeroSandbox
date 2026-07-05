@@ -11,17 +11,21 @@ from aerosandbox.library.aerodynamics.unsteady import (
 
 class TransverseGustPitchControl(ImplicitAnalysis):
     """
-    An implicit analysis that calculates the optimal pitching maneuver
-    through a specified transverse gust, with the goal of minimzing the
-    deviation from a specified lift coefficient. It utilizes differentiable
-    duhamel superposition integrals for Kussner's gust model and Wagner's
-    pitching model, as well as any additional lift from the added mass.
+    Calculate the optimal pitching maneuver through a specified transverse gust.
 
-    Args:
-        reduced_time (np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time in the unsteady aero library
-        gust_profile (np.ndarray) : An array that specifies the gust velocity at each reduced time
-        velocity (float) : The velocity of the aircraft
+    An implicit analysis with the goal of minimizing the deviation from a specified lift
+    coefficient. It utilizes differentiable Duhamel superposition integrals for Kussner's gust
+    model and Wagner's pitching model, as well as any additional lift from the added mass.
 
+    Parameters
+    ----------
+    reduced_time : np.ndarray
+        Reduced time, equal to the number of semichords travelled. See the function
+        `calculate_reduced_time` in the unsteady aero library.
+    gust_profile : np.ndarray
+        An array that specifies the gust velocity at each reduced time.
+    velocity : float
+        The velocity of the aircraft.
     """
 
     @ImplicitAnalysis.initialize
@@ -77,6 +81,12 @@ class TransverseGustPitchControl(ImplicitAnalysis):
         self.opti.minimize(lift_squared_integral)
 
     def calculate_transients(self):
+        """
+        Compute and store the transient lift histories of the optimized pitching maneuver.
+
+        Populates the `optimal_pitching_profile_rad`, `optimal_pitching_profile_deg`,
+        `optimal_lift_history`, `pitching_lift`, `gust_lift`, and `added_mass_lift` attributes.
+        """
         self.optimal_pitching_profile_rad = self.opti.value(self.angles_of_attack)
         self.optimal_pitching_profile_deg = np.rad2deg(
             self.optimal_pitching_profile_rad
