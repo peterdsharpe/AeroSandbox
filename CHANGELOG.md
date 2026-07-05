@@ -34,15 +34,47 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
-- **Bugfix:** Fixed `aerosandbox.numpy.prod()` which incorrectly returned `nan` for arrays containing negative numbers. The previous implementation used `exp(sum(log(x)))`, which fails for non-positive values. Now uses a sign-magnitude decomposition (`exp(sum(log(|x|))) * cos(π * num_negatives)`) that correctly handles negative numbers while maintaining O(1) graph complexity for CasADi.
-- Fixes to `aerosandbox.tools.pretty_plots.formatting.show_plot()`, to allow for more flexible labeling of axes.
-- Dependency pin updates
 <!-- - **Bugfix:** Fixed `Wing.aerodynamic_center()` to properly account for twist angle when computing the AC location. Previously, the AC offset vector was not rotated by the local twist, causing incorrect AC positions for twisted wings. -->
 
 -----
 
 # Latest (master / release), and previous versions
 
+#### 4.2.10
+
+This release includes the results of a systematic, test-verified audit of the whole library (~200 fixes, each with a regression test), plus all-new documentation. Highlights that practical users should know about:
+
+**Removed:** `aerosandbox.structures.legacy` (the old `beams.py` / `simple_beam_opt` modules, unmaintained for years) is deleted. It was never exported through the public namespace; use `aerosandbox.structures.tube_spar_bending.TubeSparBendingStructure` and `aerosandbox.structures.buckling` instead.
+
+**New documentation.** [The AeroSandbox Book](https://peterdsharpe.github.io/AeroSandbox/) is the new canonical documentation: a 20-chapter executable guide covering optimization foundations through complete multidisciplinary design studies (coupled aerostructural wing, 777-class transport sizing with an LH2 conversion, solar HALE sizing). It supersedes (and greatly extends) the tutorial notebooks, which remain available as runnable companions.
+
+**Fixes that change numeric outputs** (if you've calibrated against previous values, re-check):
+
+- Raymer weight buildups, verified line-by-line against the Raymer text: `mass_instruments` and `mass_hydraulics` (transport) used $L_f \cdot B_w$ where Raymer specifies $(L_f + B_w)$ — previously ~7.5× / ~45× too heavy for a 737-class aircraft; `mass_nacelles` returned lbm while documented as kg (~2.2× heavy); general-aviation landing-gear terms divided length by 12 twice (~2.8–8× too light).
+- TASOPT turbofan nacelle weight: exit-cowl unit-weight term multiplied where the source adds (verified against the TASOPT documentation).
+- The ISA atmosphere now uses standard gravity $g_0 = 9.80665$ m/s² (was 9.81), matching the US Standard Atmosphere 1976 to <2e-7 relative in layer-base pressures. Outputs shift by up to ~0.03%.
+- `plate_buckling_critical_load()` double-counted the $\pi^2 / (12(1-\nu^2))$ factor, giving loads ~9.5% low.
+- **AVL interface: `ControlSurface.deflection` values are now actually applied.** Since early 2024, all user deflections were silently ignored (the first control surface was always deflected exactly 1°, all others 0°) — this restores the intended behavior discussed in issue #134. Output dictionary keys for control derivatives revert to the `all_deflections` form.
+- `Polygon.J()` now computes the polar moment about the centroid, as documented (was about the origin). `Fuselage.fineness_ratio(assumed_shape="sears-haack")` was 2× too large.
+- Deprecated arguments that were silently *ignored* now work and emit proper `DeprecationWarning`s: `WingXSec(control_surface_*=...)` and `Fuselage(symmetric=...)`.
+- `aerosandbox.numpy` CasADi-backend corrections: `geomspace()` returned *linearly*-spaced values; `linalg.norm()` matrix norms (`ord=1`/`inf`), `axis`, and `keepdims` handling; `mod()` sign convention; `mean(axis=None)`; `diff(n=...)`; periodic `interp()` with negative inputs; `solve_ivp` now honors `t_eval`; `np.round()` now works on CasADi types; `asb.numpy.integrate` now resolves to the AeroSandbox submodule (scipy names still work via fallback).
+- `patch_nans()` now returns a patched copy instead of mutating its input array.
+
+**Crash fixes:**
+
+- `LiftingLine` and `NonlinearLiftingLine` crashed with `NameError` on any symmetric wing; both fixed and now under test.
+- A base `pip install aerosandbox` (without `[full]`) failed to import due to an eager plotly import; imports are now lazy.
+- `Wing.aerodynamic_center()` crashed when wing geometry was built from optimization variables.
+- XFoil interface: `hinge_point_x=None` works as documented; alpha/CL inputs are no longer force-sorted when `start_at=None` (order matters for XFoil convergence); crash diagnostics (segfault, not-on-PATH, etc.) are now actually reachable.
+- NumPy 2.x compatibility: `dyn.draw()`, `MassProperties.__array__`, and friends.
+- `asb.Opti`: clear error messages for invalid `log_transform` bounds, invalid `behavior_on_failure`, string-valued `variable_categories_to_freeze`, and `show_infeasibilities()` with a single scalar constraint.
+- `aerosandbox.numpy.prod()` returned `nan` for arrays containing negative numbers; now uses a sign-magnitude decomposition correct for negative values with O(1) CasADi graph complexity.
+
+**Packaging and infrastructure:**
+
+- CI now tests Python 3.10–3.13 (with a fix for a Python 3.13 incompatibility); PyPI publishing is gated on passing tests; the stale `requirements.txt` is removed (`pyproject.toml` + `uv.lock` are canonical).
+- Fixes to `aerosandbox.tools.pretty_plots.formatting.show_plot()`, to allow for more flexible labeling of axes; assorted `pretty_plots` fixes (matplotlib ≥3.12 compatibility, `legend_inline`, `pie`).
+- Dependency pin updates.
 
 #### 4.2.9
 - Fixed over 1500 ruff errors and warnings.
