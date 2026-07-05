@@ -1087,6 +1087,26 @@ class Opti(cas.Opti):
         use_full_filename: bool = False,
         return_string: bool = False,
     ) -> str | None:
+        """
+        Find where in code the decision variable at a given index was declared.
+
+        Parameters
+        ----------
+        index : int
+            The index of the variable (i.e., its position within the vector of all declared
+            decision variables) to look up.
+        use_full_filename : bool
+            If True, shows the full path of the file containing the declaration; otherwise,
+            shows only its filename.
+        return_string : bool
+            If True, returns the resulting description as a string rather than printing it.
+
+        Returns
+        -------
+        str | None
+            The description string if `return_string` is True; otherwise None (the
+            description is printed to the console).
+        """
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -1130,6 +1150,26 @@ class Opti(cas.Opti):
     def find_constraint_declaration(
         self, index: int, use_full_filename: bool = False, return_string: bool = False
     ) -> str | None:
+        """
+        Find where in code the constraint at a given index was declared.
+
+        Parameters
+        ----------
+        index : int
+            The index of the constraint (i.e., its position within the vector of all
+            declared constraints) to look up.
+        use_full_filename : bool
+            If True, shows the full path of the file containing the declaration; otherwise,
+            shows only its filename.
+        return_string : bool
+            If True, returns the resulting description as a string rather than printing it.
+
+        Returns
+        -------
+        str | None
+            The description string if `return_string` is True; otherwise None (the
+            description is printed to the console).
+        """
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -1179,14 +1219,25 @@ class Opti(cas.Opti):
         initialize_duals=True,
     ) -> None:
         """
-        Sets the initial value of all variables in the Opti object to the solution of another Opti instance. Useful
-        for warm-starting an Opti instance based on the result of another instance.
+        Set the initial value of all variables to the solution of another Opti instance.
 
-        Args: sol: Takes in the solution object. Assumes that sol corresponds to exactly the same optimization
-        problem as this Opti instance, perhaps with different parameter values.
+        Useful for warm-starting an Opti instance based on the result of another instance.
 
-        Returns: None (in-place)
+        Parameters
+        ----------
+        sol : cas.OptiSol
+            Takes in the solution object. Assumes that `sol` corresponds to exactly the same
+            optimization problem as this Opti instance, perhaps with different parameter
+            values.
+        initialize_primals : bool
+            If True, sets the initial values of the primal (decision) variables.
+        initialize_duals : bool
+            If True, sets the initial values of the dual variables.
 
+        Returns
+        -------
+        None
+            Modifies this Opti instance in-place.
         """
         if initialize_primals:
             self.set_initial(self.x, sol.value(self.x))
@@ -1194,6 +1245,17 @@ class Opti(cas.Opti):
             self.set_initial(self.lam_g, sol.value(self.lam_g))
 
     def save_solution(self):
+        """
+        Save the solved values of all variables (grouped by category) to the cache file.
+
+        Requires that a `cache_filename` was provided when initializing this Opti instance.
+
+        Returns
+        -------
+        dict
+            A dictionary mapping each category name [str] to a list of the solved values of
+            the variables in that category.
+        """
         if self.cache_filename is None:
             raise ValueError(
                 """In order to use the save feature, you need to supply a filepath for the cache upon
@@ -1224,6 +1286,18 @@ class Opti(cas.Opti):
         return solution_dict
 
     def get_solution_dict_from_cache(self):
+        """
+        Load a dictionary of solved variable values (grouped by category) from the cache file.
+
+        Requires that a `cache_filename` was provided when initializing this Opti instance.
+
+        Returns
+        -------
+        dict
+            A dictionary mapping each category name [str] to a list of the values of the
+            variables in that category, with vectorized variables converted back into NumPy
+            arrays.
+        """
         if self.cache_filename is None:
             raise ValueError(
                 """In order to use the load feature, you need to supply a filepath for the cache upon
@@ -1253,81 +1327,90 @@ class Opti(cas.Opti):
         _stacklevel: int = 1,
     ) -> cas.MX | float | np.ndarray:
         """
-        Returns a quantity that is either defined or constrained to be a derivative of an existing variable.
+        Return a quantity that is either defined or constrained to be a derivative of a variable.
 
-        For example:
+        Parameters
+        ----------
+        variable : cas.MX
+            The variable or quantity that you are taking the derivative of. The "numerator"
+            of the derivative, in colloquial parlance.
+        with_respect_to : ArrayLike
+            The variable or quantity that you are taking the derivative with respect to. The
+            "denominator" of the derivative, in colloquial parlance.
 
+            In a typical example case, this `with_respect_to` parameter would be time. Please
+            make sure that the value of this parameter is monotonically increasing, otherwise
+            you may get nonsensical answers.
+        derivative_init_guess : Vectorizable
+            Initial guess for the value of the derivative. Should be either a float (in
+            which case the initial guess will be a vector equal to this value) or a vector
+            of initial guesses with the same length as `variable`. For more info, look at
+            the docstring of `Opti.variable()`'s `init_guess` parameter.
+        derivative_scale : Vectorizable | None
+            Scale factor for the value of the derivative. For more info, look at the
+            docstring of `Opti.variable()`'s `scale` parameter.
+        method : str
+            The type of integrator to use to define this derivative. (Method names are
+            case-insensitive, and spaces may equivalently be given as underscores.) Options
+            are:
+
+            * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal
+              method
+
+              Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
+
+            * "forward euler" - a first-order-accurate forward Euler method
+
+              Citation: https://en.wikipedia.org/wiki/Euler_method
+
+            * "backward euler" - a first-order-accurate backward Euler method
+
+              Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
+
+            * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods
+              based on Simpson's rule, using a parabolic fit over each interval plus its
+              forward (respectively, backward) neighboring point
+
+              Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
+
+            * "cubic" or "cubic spline" - a method based on a cubic fit over each interval
+              plus its two neighboring points
+
+            See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative
+            list of supported methods.
+        explicit : bool
+            If True, returns an explicit derivative rather than an implicit one. In other
+            words, this *defines* the output to be a derivative of the input rather than
+            *constraining* the output to be a derivative of the input.
+
+            Explicit derivatives result in smaller, denser systems of equations that are
+            more akin to shooting-type methods. Implicit derivatives result in larger,
+            sparser systems of equations that are more akin to collocation methods. Explicit
+            derivatives are better for simple, stable systems with few states, while
+            implicit derivatives are better for complex, potentially-unstable systems with
+            many states.
+
+            # TODO implement explicit
+        _stacklevel : int
+            Optional and advanced, purely used for debugging. Allows users to correctly track
+            where constraints are declared in the event that they are subclassing
+            `aerosandbox.Opti`. Modifies the stacklevel of the declaration tracked, which is
+            then presented using `aerosandbox.Opti.variable_declaration()` and
+            `aerosandbox.Opti.constraint_declaration()`.
+
+        Returns
+        -------
+        cas.MX | float | np.ndarray
+            A vector consisting of the derivative of the parameter `variable` with respect
+            to `with_respect_to`.
+
+        Examples
+        --------
         >>> opti = Opti()
         >>> position = opti.variable(init_guess=0, n_vars=100)
         >>> time = np.linspace(0, 1, 100)
         >>> velocity = opti.derivative_of(position, with_respect_to=time)
         >>> acceleration = opti.derivative_of(velocity, with_respect_to=time)
-
-        Args:
-
-            variable: The variable or quantity that you are taking the derivative of. The "numerator" of the
-            derivative, in colloquial parlance.
-
-            with_respect_to: The variable or quantity that you are taking the derivative with respect to. The
-            "denominator" of the derivative, in colloquial parlance.
-
-                In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
-                value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
-
-            derivative_init_guess: Initial guess for the value of the derivative. Should be either a float (in which
-            case the initial guess will be a vector equal to this value) or a vector of initial guesses with the same
-            length as `variable`. For more info, look at the docstring of opti.variable()'s `init_guess` parameter.
-
-            derivative_scale: Scale factor for the value of the derivative. For more info, look at the docstring of
-            opti.variable()'s `scale` parameter.
-
-            method: The type of integrator to use to define this derivative. (Method names are case-insensitive,
-            and spaces may equivalently be given as underscores.) Options are:
-
-                * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal method
-
-                    Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
-
-                * "forward euler" - a first-order-accurate forward Euler method
-
-                    Citation: https://en.wikipedia.org/wiki/Euler_method
-
-                * "backward euler" - a first-order-accurate backward Euler method
-
-                    Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
-
-                * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods based on
-                Simpson's rule, using a parabolic fit over each interval plus its forward (respectively,
-                backward) neighboring point
-
-                    Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
-
-                * "cubic" or "cubic spline" - a method based on a cubic fit over each interval plus its two
-                neighboring points
-
-                See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative list of supported
-                methods.
-
-            explicit: If true, returns an explicit derivative rather than an implicit one. In other words,
-            this *defines* the output to be a derivative of the input rather than *constraining* the output to the a
-            derivative of the input.
-
-                Explicit derivatives result in smaller, denser systems of equations that are more akin to
-                shooting-type methods. Implicit derivatives result in larger, sparser systems of equations that are
-                more akin to collocation methods. Explicit derivatives are better for simple, stable systems with few
-                states, while implicit derivatives are better for complex, potentially-unstable systems with many
-                states.
-
-                # TODO implement explicit
-
-            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-            stacklevel of the declaration tracked, which is then presented using
-            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
-
-
-        Returns: A vector consisting of the derivative of the parameter `variable` with respect to `with_respect_to`.
-
         """
         ### Set defaults
         # if with_respect_to is None:
@@ -1386,63 +1469,71 @@ class Opti(cas.Opti):
         _stacklevel: int = 1,
     ) -> cas.MX | None | list[cas.MX]:
         """
-        Adds a constraint to the optimization problem such that:
+        Add a constraint such that `d(variable) / d(with_respect_to) == derivative`.
 
-            d(variable) / d(with_respect_to) == derivative
+        Can be used directly; also called indirectly by `Opti.derivative_of()` for implicit
+        derivative creation.
 
-        Can be used directly; also called indirectly by opti.derivative_of() for implicit derivative creation.
-
-        Args:
-            derivative: The derivative that is to be constrained here.
-
-            variable: The variable or quantity that you are taking the derivative of. The "numerator" of the
-            derivative, in colloquial parlance.
-
-            with_respect_to: The variable or quantity that you are taking the derivative with respect to. The
+        Parameters
+        ----------
+        derivative : ArrayLike
+            The derivative that is to be constrained here.
+        variable : ArrayLike
+            The variable or quantity that you are taking the derivative of. The "numerator"
+            of the derivative, in colloquial parlance.
+        with_respect_to : ArrayLike
+            The variable or quantity that you are taking the derivative with respect to. The
             "denominator" of the derivative, in colloquial parlance.
 
-                In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
-                value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
+            In a typical example case, this `with_respect_to` parameter would be time. Please
+            make sure that the value of this parameter is monotonically increasing, otherwise
+            you may get nonsensical answers.
+        method : str
+            The type of integrator to use to define this derivative. (Method names are
+            case-insensitive, and spaces may equivalently be given as underscores.) Options
+            are:
 
-            method: The type of integrator to use to define this derivative. (Method names are case-insensitive,
-            and spaces may equivalently be given as underscores.) Options are:
+            * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal
+              method
 
-                * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal method
+              Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
 
-                    Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
+            * "forward euler" - a first-order-accurate forward Euler method
 
-                * "forward euler" - a first-order-accurate forward Euler method
+              Citation: https://en.wikipedia.org/wiki/Euler_method
 
-                    Citation: https://en.wikipedia.org/wiki/Euler_method
+            * "backward euler" - a first-order-accurate backward Euler method
 
-                * "backward euler" - a first-order-accurate backward Euler method
+              Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
 
-                    Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
+            * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods
+              based on Simpson's rule, using a parabolic fit over each interval plus its
+              forward (respectively, backward) neighboring point
 
-                * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods based on
-                Simpson's rule, using a parabolic fit over each interval plus its forward (respectively,
-                backward) neighboring point
+              Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
 
-                    Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
+            * "cubic" or "cubic spline" - a method based on a cubic fit over each interval
+              plus its two neighboring points
 
-                * "cubic" or "cubic spline" - a method based on a cubic fit over each interval plus its two
-                neighboring points
+            See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative
+            list of supported methods.
 
-                See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative list of supported
-                methods.
+            Note that all methods are expressed as integrators rather than differentiators;
+            this prevents singularities from forming in the limit of timestep approaching
+            zero. (For those coming from the PDE world, this is analogous to using finite
+            volume methods rather than finite difference methods to allow shock capturing.)
+        _stacklevel : int
+            Optional and advanced, purely used for debugging. Allows users to correctly track
+            where constraints are declared in the event that they are subclassing
+            `aerosandbox.Opti`. Modifies the stacklevel of the declaration tracked, which is
+            then presented using `aerosandbox.Opti.variable_declaration()` and
+            `aerosandbox.Opti.constraint_declaration()`.
 
-            Note that all methods are expressed as integrators rather than differentiators; this prevents
-            singularities from forming in the limit of timestep approaching zero. (For those coming from the PDE
-            world, this is analogous to using finite volume methods rather than finite difference methods to allow
-            shock capturing.)
-
-            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-            stacklevel of the declaration tracked, which is then presented using
-            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
-
-        Returns: None (adds constraint in-place).
-
+        Returns
+        -------
+        cas.MX | None | list[cas.MX]
+            The dual variable(s) associated with the newly added constraint(s). (The
+            constraint itself is added to the optimization problem in-place.)
         """
         try:
             derivative[0]
