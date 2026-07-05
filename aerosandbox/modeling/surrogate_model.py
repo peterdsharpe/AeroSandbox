@@ -5,32 +5,36 @@ import aerosandbox.numpy as np
 
 class SurrogateModel(AeroSandboxObject):
     """
-    A SurrogateModel is effectively a callable; it only has the __call__ method, and all subclasses must explicitly
-    overwrite this. The only reason it is not a callable is that you want to be able to save it to disk (via
-    pickling) while also having the capability to save associated data (for example, constants associated with a
-    particular model, or underlying data).
+    An abstract class for a surrogate model, which is effectively a callable.
+
+    A SurrogateModel only has the __call__ method, and all subclasses must explicitly overwrite
+    this. The only reason it is not a callable is that you want to be able to save it to disk
+    (via pickling) while also having the capability to save associated data (for example,
+    constants associated with a particular model, or underlying data).
 
     If data is used to generate the SurrogateModel, it should be stored as follows:
 
-        * The independent variable(s) should be stored as SurrogateModel.x_data
+    * The independent variable(s) should be stored as SurrogateModel.x_data
 
-            * in the general N-dimensional case, x_data should be a dictionary where: keys are variable names and
-            values are float/array
+      * in the general N-dimensional case, x_data should be a dictionary where keys are variable
+        names and values are float/array.
 
-            * in the case of a 1-dimensional input (R^1 -> R^1), x-data should be a float/array.
+      * in the case of a 1-dimensional input (R^1 -> R^1), x_data should be a float/array.
 
-        * The dependent variable should be stored as SurrogateModel.y_data
+    * The dependent variable should be stored as SurrogateModel.y_data
 
-            * The type of this variable should be a float or an np.ndarray.
+      * The type of this variable should be a float or an np.ndarray.
 
-    Even if you don't have any real x_data or y_data to add as SurrogateModel.x_data or SurrogateModel.y_data,
-        it's recommended (but not required) that you add values here as examples that users can inspect in order to see
-        the data types and array shapes required.
+    Even if you don't have any real x_data or y_data to add as SurrogateModel.x_data or
+    SurrogateModel.y_data, it's recommended (but not required) that you add values here as
+    examples that users can inspect in order to see the data types and array shapes required.
     """
 
     @abstractmethod
     def __init__(self):
         """
+        Initialize the surrogate model.
+
         SurrogateModel is an abstract class; you should not instantiate it directly.
         """
         pass
@@ -40,12 +44,21 @@ class SurrogateModel(AeroSandboxObject):
         self, x: int | float | np.ndarray | dict[str, np.ndarray]
     ) -> float | np.ndarray:
         """
-        Evaluates the surrogate model at some given input x.
+        Evaluate the surrogate model at some given input x.
 
-        The input `x` is of the type:
-            * in the general N-dimensional case, a dictionary where keys are variable names and values are float/array.
+        Parameters
+        ----------
+        x : int | float | np.ndarray | dict[str, np.ndarray]
+            The input to the model. The input `x` is of the type:
+
+            * in the general N-dimensional case, a dictionary where keys are variable names and
+              values are float/array.
             * in the case of a 1-dimensional input (R^1 -> R^1), a float/array.
 
+        Returns
+        -------
+        float | np.ndarray
+            The output of the model, evaluated at the given input x.
         """
         ### Perform basic type checking on x, if x_data exists as a reference.
         try:
@@ -80,7 +93,13 @@ class SurrogateModel(AeroSandboxObject):
 
     def input_dimensionality(self) -> int:
         """
-        Returns the number of inputs that should be supplied in x, where x is the input to the SurrogateModel.
+        Return the number of inputs that should be supplied in x, where x is the input to the
+        SurrogateModel.
+
+        Returns
+        -------
+        int
+            The number of inputs that should be supplied in x.
         """
         input_names = self.input_names()
         if input_names is not None:
@@ -90,9 +109,15 @@ class SurrogateModel(AeroSandboxObject):
 
     def input_names(self) -> list | None:
         """
-        If x (the input to this model) is supposed to be a dict, this method returns the keys that should be part of x.
+        Return the keys that should be part of x, if x (the input to this model) is supposed to
+        be a dict.
 
         If x is 1D and simply takes in floats or arrays, or if no x_data exists, returns None.
+
+        Returns
+        -------
+        list | None
+            The keys that should be part of x, or None if x is not a dict.
         """
         try:
             return list(self.x_data.keys())
@@ -100,6 +125,16 @@ class SurrogateModel(AeroSandboxObject):
             return None
 
     def plot(self, resolution=250):
+        """
+        Plot the model's fit alongside its underlying data.
+
+        Only implemented for 1-dimensional models (i.e., models with a single input).
+
+        Parameters
+        ----------
+        resolution : int
+            The number of points at which to sample the model when plotting the fit.
+        """
         import matplotlib.pyplot as plt
 
         def axis_range(x_data_axis: np.ndarray) -> tuple[float, float]:

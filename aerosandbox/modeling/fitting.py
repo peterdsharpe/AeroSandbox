@@ -15,21 +15,27 @@ class FittedModel(SurrogateModel):
     >>> y = my_fitted_model(x)
 
     The input to the model (`x` in the example above) is of the type:
-        * in the general N-dimensional case, a dictionary where: keys are variable names and values are float/array
-        * in the case of a 1-dimensional input (R^1 -> R^1), a float/array.
+
+    * in the general N-dimensional case, a dictionary where keys are variable names and values
+      are float/array.
+    * in the case of a 1-dimensional input (R^1 -> R^1), a float/array.
+
     If you're not sure what the input type of `my_fitted_model` should be, just do:
 
-    >>> print(my_fitted_model) # Displays the valid input type to the model
+    >>> print(my_fitted_model)  # Displays the valid input type to the model
 
     The output of the model (`y` in the example above) is always a float or array.
 
-    See the docstring __init__ method of FittedModel for more details of how to instantiate and use FittedModel.
+    See the docstring of the __init__ method of FittedModel for more details on how to
+    instantiate and use FittedModel.
 
-    One might have expected a fitted model to be a literal Python function rather than a Python class - the
-    benefit of having FittedModel as a class rather than a function is that you can easily save (pickle) classes
-    including data (e.g. parameters, x_data, y_data), but you can't do that with functions. And, because the
-    FittedModel class has a __call__ method, you can basically still just think of it like a function.
-
+    Notes
+    -----
+    One might have expected a fitted model to be a literal Python function rather than a Python
+    class - the benefit of having FittedModel as a class rather than a function is that you can
+    easily save (pickle) classes including data (e.g. parameters, x_data, y_data), but you can't
+    do that with functions. And, because the FittedModel class has a __call__ method, you can
+    basically still just think of it like a function.
     """
 
     def __init__(
@@ -48,92 +54,108 @@ class FittedModel(SurrogateModel):
         verbose=True,
     ):
         """
-        Fits an analytical model to n-dimensional unstructured data using an automatic-differentiable optimization approach.
+        Fit an analytical model to n-dimensional unstructured data using an
+        automatic-differentiable optimization approach.
 
-        Args:
+        Parameters
+        ----------
+        model : Callable[[np.ndarray | dict[str, np.ndarray], dict[str, float]], np.ndarray]
+            The model that you want to fit your dataset to. This is a callable with syntax
+            f(x, p) where:
 
-            model: The model that you want to fit your dataset to. This is a callable with syntax f(x, p) where:
+            * x is a dict of independent variables. Same format as x_data [dict of 1D ndarrays
+              of length n].
 
-                * x is a dict of independent variables. Same format as x_data [dict of 1D ndarrays of length n].
+              * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can
+                instead interpret x as a 1D ndarray. (If you do this, just give `x_data` as an
+                array.)
 
-                    * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead interpret x
-                    as a 1D ndarray. (If you do this, just give `x_data` as an array.)
+            * p is a dict of parameters. Same format as param_guesses [dict with syntax
+              param_name:param_value].
 
-                * p is a dict of parameters. Same format as param_guesses [dict with syntax param_name:param_value].
+            Model should return a 1D ndarray of length n.
 
-                Model should return a 1D ndarray of length n.
+            Basically, if you've done it right:
 
-                Basically, if you've done it right:
-                >>> model(x_data, parameter_guesses)
-                should evaluate to a 1D ndarray where each x_data is mapped to something analogous to y_data. (The fit
-                will likely be bad at this point, because we haven't yet optimized on param_guesses - but the types
-                should be happy.)
+            >>> model(x_data, parameter_guesses)
 
-                Model should use aerosandbox.numpy operators.
+            should evaluate to a 1D ndarray where each x_data is mapped to something analogous
+            to y_data. (The fit will likely be bad at this point, because we haven't yet
+            optimized on param_guesses - but the types should be happy.)
 
-                The model is not allowed to make any in-place changes to the input `x`. The most common way this
-                manifests itself is if someone writes something to the effect of `x += 3` or similar. Instead, write `x =
-                x + 3`.
+            Model should use aerosandbox.numpy operators.
 
-            x_data: Values of the independent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
-            var_name:var_data}.
+            The model is not allowed to make any in-place changes to the input `x`. The most
+            common way this manifests itself is if someone writes something to the effect of
+            `x += 3` or similar. Instead, write `x = x + 3`.
+        x_data : np.ndarray | dict[str, np.ndarray]
+            Values of the independent variable(s) in the dataset to be fitted. This is a
+            dictionary; syntax is {var_name:var_data}.
 
-                * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead supply x_data
-                as a 1D ndarray. (If you do this, just treat `x` as an array in your model, not a dict.)
+            * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can
+              instead supply x_data as a 1D ndarray. (If you do this, just treat `x` as an array
+              in your model, not a dict.)
+        y_data : np.ndarray
+            Values of the dependent variable in the dataset to be fitted. [1D ndarray of
+            length n]
+        parameter_guesses : dict[str, float]
+            A dict of fit parameters. Syntax is {param_name:param_initial_guess}.
 
-            y_data: Values of the dependent variable in the dataset to be fitted. [1D ndarray of length n]
+            * Parameters will be initialized to the values set here; all parameters need an
+              initial guess.
 
-            parameter_guesses: a dict of fit parameters. Syntax is {param_name:param_initial_guess}.
+            * param_initial_guess is a float; note that only scalar parameters are allowed.
+        parameter_bounds : dict[str, Sequence[float]] | None, optional
+            A dict of bounds on fit parameters. Syntax is {"param_name":(min, max)}.
 
-                * Parameters will be initialized to the values set here; all parameters need an initial guess.
+            * May contain only a subset of param_guesses if desired.
 
-                * param_initial_guess is a float; note that only scalar parameters are allowed.
+            * Use None to represent one-sided constraints (i.e. (None, 5)).
+        residual_norm_type : Literal["L1", "L2", "Linf"], optional
+            What error norm should we minimize to optimize the fit parameters? Options:
 
-            parameter_bounds: Optional: a dict of bounds on fit parameters. Syntax is {"param_name":(min, max)}.
+            * "L1": minimize the L1 norm or sum(abs(error)). Less sensitive to outliers.
 
-                * May contain only a subset of param_guesses if desired.
+            * "L2": minimize the L2 norm, also known as the Euclidean norm, or
+              sqrt(sum(error ** 2)). The default.
 
-                * Use None to represent one-sided constraints (i.e. (None, 5)).
+            * "Linf": minimize the L_infinity norm or max(abs(error)). More sensitive to
+              outliers.
+        fit_type : Literal["best", "upper bound", "lower bound"], optional
+            Should we find the model of best fit (i.e. the model that minimizes the specified
+            residual norm), or should we look for a model that represents an upper/lower bound
+            on the data (useful for robust surrogate modeling, so that you can put bounds on
+            modeling error):
 
-            residual_norm_type: What error norm should we minimize to optimize the fit parameters? Options:
+            * "best": finds the model of best fit. Usually, this is what you want.
 
-                * "L1": minimize the L1 norm or sum(abs(error)). Less sensitive to outliers.
+            * "upper bound": finds a model that represents an upper bound on the data (while
+              still trying to minimize the specified residual norm).
 
-                * "L2": minimize the L2 norm, also known as the Euclidian norm, or sqrt(sum(error ** 2)). The default.
+            * "lower bound": finds a model that represents a lower bound on the data (while
+              still trying to minimize the specified residual norm).
+        weights : np.ndarray | None, optional
+            Weights for data points. If not supplied, weights are assumed to be uniform.
 
-                * "Linf": minimize the L_infinty norm or max(abs(error)). More sensitive to outliers.
-
-            fit_type: Should we find the model of best fit (i.e. the model that minimizes the specified residual norm),
-            or should we look for a model that represents an upper/lower bound on the data (useful for robust surrogate
-            modeling, so that you can put bounds on modeling error):
-
-                * "best": finds the model of best fit. Usually, this is what you want.
-
-                * "upper bound": finds a model that represents an upper bound on the data (while still trying to minimize
-                the specified residual norm).
-
-                * "lower bound": finds a model that represents a lower bound on the data (while still trying to minimize
-                the specified residual norm).
-
-            weights: Optional: weights for data points. If not supplied, weights are assumed to be uniform.
-
-                * Weights are automatically normalized. [1D ndarray of length n]
-
-            put_residuals_in_logspace: Whether to optimize using the logarithmic error as opposed to the absolute error
+            * Weights are automatically normalized. [1D ndarray of length n]
+        put_residuals_in_logspace : bool, optional
+            Whether to optimize using the logarithmic error as opposed to the absolute error
             (useful for minimizing percent error).
 
             Note: If any model outputs or data are negative, this will raise an error!
+        verbose : bool, optional
+            Should the progress of the optimization solve that is part of the fitting be
+            displayed? See `aerosandbox.Opti.solve(verbose=)` syntax for more details.
 
-            verbose: Should the progress of the optimization solve that is part of the fitting be displayed? See
-            `aerosandbox.Opti.solve(verbose=)` syntax for more details.
+        Returns
+        -------
+        FittedModel
+            A model in the form of a FittedModel object. Some things you can do:
 
-        Returns: A model in the form of a FittedModel object. Some things you can do:
             >>> my_fitted_model = FittedModel(...)
-            >>> y = my_fitted_model(x) # evaluate the FittedModel at new x points
-            >>> my_fitted_model.parameters # directly examine the optimal values of the parameters that were found
-            >>> my_fitted_model.plot() # plot the fit
-
-
+            >>> y = my_fitted_model(x)  # evaluate the FittedModel at new x points
+            >>> my_fitted_model.parameters  # directly examine the optimal parameter values found
+            >>> my_fitted_model.plot()  # plot the fit
         """
         super().__init__()
 
@@ -364,25 +386,30 @@ class FittedModel(SurrogateModel):
         ] = "R^2",
     ) -> float:
         """
-        Returns a metric of the goodness of the fit.
+        Return a metric of the goodness of the fit.
 
-        Args:
+        Parameters
+        ----------
+        type : str, optional
+            Type of metric to use for goodness of fit. One of:
 
-            type: Type of metric to use for goodness of fit. One of:
+            * "R^2": The coefficient of determination. Strictly speaking, only mathematically
+              rigorous to use this for linear fits.
 
-                * "R^2": The coefficient of determination. Strictly speaking only mathematically rigorous to use this
-                for linear fits.
+              https://en.wikipedia.org/wiki/Coefficient_of_determination
 
-                    https://en.wikipedia.org/wiki/Coefficient_of_determination
+            * "mean_absolute_error" or "mae" or "L1": The mean absolute error of the fit.
 
-                * "mean_absolute_error" or "mae" or "L1": The mean absolute error of the fit.
+            * "root_mean_squared_error" or "rms" or "L2": The root mean squared error of the
+              fit.
 
-                * "root_mean_squared_error" or "rms" or "L2": The root mean squared error of the fit.
+            * "max_absolute_error" or "Linf": The maximum deviation of the fit from any of the
+              data points.
 
-                * "max_absolute_error" or "Linf": The maximum deviation of the fit from any of the data points.
-
-        Returns: The metric of the goodness of the fit.
-
+        Returns
+        -------
+        float
+            The metric of the goodness of the fit.
         """
         if type == "R^2":
             y_mean = np.mean(self.y_data)

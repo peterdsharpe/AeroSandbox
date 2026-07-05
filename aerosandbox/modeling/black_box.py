@@ -11,37 +11,43 @@ def black_box(
     fd_step_iter: bool | None = None,
 ) -> Callable[..., float]:
     """
-    Wraps a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization problems.
+    Wrap a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization
+    problems.
 
-    Obtains gradients via finite differences. Assumes that the function's Jacobian is fully dense, always.
+    Obtains gradients via finite differences. Assumes that the function's Jacobian is fully dense,
+    always.
 
-    Args:
+    Parameters
+    ----------
+    function : Callable[..., float]
+        The function to wrap as a black box. Should accept scalar inputs (one scalar per argument,
+        positional or keyword) and return a single scalar output.
+    n_in : int | None, optional
+        The number of (scalar) inputs that the function takes. If not specified, this is inferred
+        from the function's signature (i.e., its number of parameters).
+    n_out : int, optional
+        The number of (scalar) outputs that the function returns. Currently, only single-output
+        functions (`n_out=1`) are supported.
+    fd_method : Literal["forward", "backward", "central", "smoothed"], optional
+        The finite-differencing method used to compute gradients. One of:
 
-        function: The function to wrap as a black box. Should accept scalar inputs (one scalar per
-            argument, positional or keyword) and return a single scalar output.
+        - "forward"
+        - "backward"
+        - "central"
+        - "smoothed"
+    fd_step : float | None, optional
+        The step size used for finite-differencing. Maps to the CasADi `fd_options["h"]` option;
+        if not specified, CasADi's default is used.
+    fd_step_iter : bool | None, optional
+        Whether the finite-differencing step size should be iteratively refined. Maps to the
+        CasADi `fd_options["h_iter"]` option; if not specified, CasADi's default is used.
 
-        n_in: The number of (scalar) inputs that the function takes. If not specified, this is inferred
-            from the function's signature (i.e., its number of parameters).
-
-        n_out: The number of (scalar) outputs that the function returns. Currently, only single-output
-            functions (`n_out=1`) are supported.
-
-        fd_method: The finite-differencing method used to compute gradients. One of:
-            - 'forward'
-            - 'backward'
-            - 'central'
-            - 'smoothed'
-
-        fd_step: The step size used for finite-differencing. Maps to the CasADi `fd_options["h"]`
-            option; if not specified, CasADi's default is used.
-
-        fd_step_iter: Whether the finite-differencing step size should be iteratively refined. Maps to
-            the CasADi `fd_options["h_iter"]` option; if not specified, CasADi's default is used.
-
-    Returns:
-        A wrapped version of the function with the same call signature (both positional and keyword
-        arguments are supported), which can be used inside AeroSandbox / CasADi optimization problems.
-
+    Returns
+    -------
+    Callable[..., float]
+        A wrapped version of the function with the same call signature (both positional and
+        keyword arguments are supported), which can be used inside AeroSandbox / CasADi
+        optimization problems.
     """
     ### Grab the signature of the function to be wrapped - we'll need it.
     signature = inspect.signature(function)
