@@ -15,30 +15,30 @@ def get_NACA_coordinates(
     thickness: float | None = None,
 ) -> np.ndarray:
     """
-    Returns the coordinates of a 4-series NACA airfoil.
+    Return the coordinates of a 4-series NACA airfoil.
 
-    Can EITHER specify `name`, or all three of `max_camber`, `camber_loc`, and `thickness` - not both.
+    Can EITHER specify `name`, or all three of `max_camber`, `camber_loc`, and `thickness` - not
+    both.
 
-    Args:
+    Parameters
+    ----------
+    name : str | None
+        Name of the NACA airfoil, as a string (e.g., "naca2412"). If this is given, do not
+        specify `max_camber`, `camber_loc`, or `thickness`.
+    n_points_per_side : int
+        Number of points per side of the airfoil (top/bottom).
+    max_camber : float | None
+        Maximum camber of the airfoil, as a fraction of chord (e.g., 0.02). If this is given,
+        `camber_loc` and `thickness` must also be given, and `name` must not be.
+    camber_loc : float | None
+        The location of maximum camber, as a fraction of chord (e.g., 0.40).
+    thickness : float | None
+        The maximum thickness of the airfoil, as a fraction of chord (e.g., 0.12).
 
-        Either:
-
-            * name: Name of the NACA airfoil, as a string (e.g., "naca2412")
-
-        Or:
-
-            * All three of:
-
-                max_camber: Maximum camber of the airfoil, as a fraction of chord (e.g., 0.02)
-
-                camber_loc: The location of maximum camber, as a fraction of chord (e.g., 0.40)
-
-                thickness: The maximum thickness of the airfoil, as a fraction of chord (e.g., 0.12)
-
-        n_points_per_side: Number of points per side of the airfoil (top/bottom).
-
-    Returns: The coordinates of the airfoil as a Nx2 ndarray [x, y]
-
+    Returns
+    -------
+    np.ndarray
+        The coordinates of the airfoil as an Nx2 ndarray [x, y].
     """
     ### Validate inputs
     name_specified = name is not None
@@ -145,73 +145,90 @@ def get_kulfan_coordinates(
     **deprecated_kwargs,
 ) -> np.ndarray:
     """
-    Given a set of Kulfan parameters, computes the coordinates of the resulting airfoil.
+    Given a set of Kulfan parameters, compute the coordinates of the resulting airfoil.
 
     This function is the inverse of `get_kulfan_parameters()`.
 
-    Kulfan parameters are a highly-efficient and flexible way to parameterize the shape of an airfoil. The particular
-    flavor of Kulfan parameterization used in AeroSandbox is the "CST with LEM" method, which is described in various
-    papers linked below. In total, the Kulfan parameterization consists of:
+    Kulfan parameters are a highly-efficient and flexible way to parameterize the shape of an
+    airfoil. The particular flavor of Kulfan parameterization used in AeroSandbox is the "CST
+    with LEM" method, which is described in various papers linked in the References section
+    below. In total, the Kulfan parameterization consists of:
 
     * A vector of weights corresponding to the lower surface of the airfoil
     * A vector of weights corresponding to the upper surface of the airfoil
-    * A scalar weight corresponding to the strength of a leading-edge camber mode shape of the airfoil (optional)
+    * A scalar weight corresponding to the strength of a leading-edge camber mode shape of the
+      airfoil (optional)
     * The trailing-edge (TE) thickness of the airfoil (optional)
 
     These Kulfan parameters are also referred to as CST (Class/Shape Transformation) parameters.
 
+    Parameters
+    ----------
+    lower_weights : np.ndarray
+        The Kulfan weights to use for the lower surface.
+    upper_weights : np.ndarray
+        The Kulfan weights to use for the upper surface.
+    leading_edge_weight : float
+        The strength of the leading-edge camber mode shape of the airfoil.
+    TE_thickness : float
+        The trailing-edge thickness to add, in terms of y/c.
+    n_points_per_side : int
+        The number of points to discretize with, when generating the coordinates.
+    N1 : float
+        The shape factor corresponding to the leading edge of the airfoil. See Notes for
+        example values.
+    N2 : float
+        The shape factor corresponding to the trailing edge of the airfoil. See Notes for
+        example values.
+
+    Returns
+    -------
+    np.ndarray
+        The coordinates of the airfoil as an Nx2 array.
+
+    Notes
+    -----
+    Notes on N1, N2 (shape factor) combinations:
+
+    * 0.5, 1: Conventional airfoil
+    * 0.5, 0.5: Elliptic airfoil
+    * 1, 1: Biconvex airfoil
+    * 0.75, 0.75: Sears-Haack body (radius distribution)
+    * 0.75, 0.25: Low-drag projectile
+    * 1, 0.001: Cone or wedge airfoil
+    * 0.001, 0.001: Rectangle, circular duct, or circular rod.
+
+    References
+    ----------
     References on Kulfan (CST) airfoils:
 
-    * Kulfan, Brenda "Universal Parametric Geometry Representation Method" (2008). AIAA Journal of Aircraft.
-        Describes the basic Kulfan (CST) airfoil parameterization.
-        Mirrors:
-            * https://arc.aiaa.org/doi/10.2514/1.29958
-            * https://www.brendakulfan.com/_files/ugd/169bff_6738e0f8d9074610942c53dfaea8e30c.pdf
-            * https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
+    * Kulfan, Brenda "Universal Parametric Geometry Representation Method" (2008). AIAA Journal
+      of Aircraft. Describes the basic Kulfan (CST) airfoil parameterization. Mirrors:
 
-    * Kulfan, Brenda "Modification of CST Airfoil Representation Methodology" (2020). Unpublished note:
-        Describes the optional "Leading-Edge Modification" (LEM) addition to the Kulfan (CST) airfoil parameterization.
-        Mirrors:
-            * https://www.brendakulfan.com/_files/ugd/169bff_16a868ad06af4fea946d299c6028fb13.pdf
-            * https://www.researchgate.net/publication/343615711_Modification_of_CST_Airfoil_Representation_Methodology
+        * https://arc.aiaa.org/doi/10.2514/1.29958
+        * https://www.brendakulfan.com/_files/ugd/169bff_6738e0f8d9074610942c53dfaea8e30c.pdf
+        * https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
 
-    * Masters, D.A. "Geometric Comparison of Aerofoil Shape Parameterization Methods" (2017). AIAA Journal.
-        Compares the Kulfan (CST) airfoil parameterization to other airfoil parameterizations. Also has further notes
-        on the LEM addition.
-        Mirrors:
-            * https://arc.aiaa.org/doi/10.2514/1.J054943
-            * https://research-information.bris.ac.uk/ws/portalfiles/portal/91793513/SP_Journal_RED.pdf
+    * Kulfan, Brenda "Modification of CST Airfoil Representation Methodology" (2020). Unpublished
+      note. Describes the optional "Leading-Edge Modification" (LEM) addition to the Kulfan (CST)
+      airfoil parameterization. Mirrors:
 
-    Notes on N1, N2 (shape factor) combinations:
-        * 0.5, 1: Conventional airfoil
-        * 0.5, 0.5: Elliptic airfoil
-        * 1, 1: Biconvex airfoil
-        * 0.75, 0.75: Sears-Haack body (radius distribution)
-        * 0.75, 0.25: Low-drag projectile
-        * 1, 0.001: Cone or wedge airfoil
-        * 0.001, 0.001: Rectangle, circular duct, or circular rod.
+        * https://www.brendakulfan.com/_files/ugd/169bff_16a868ad06af4fea946d299c6028fb13.pdf
+        * https://www.researchgate.net/publication/343615711_Modification_of_CST_Airfoil_Representation_Methodology
 
+    * Masters, D.A. "Geometric Comparison of Aerofoil Shape Parameterization Methods" (2017).
+      AIAA Journal. Compares the Kulfan (CST) airfoil parameterization to other airfoil
+      parameterizations. Also has further notes on the LEM addition. Mirrors:
+
+        * https://arc.aiaa.org/doi/10.2514/1.J054943
+        * https://research-information.bris.ac.uk/ws/portalfiles/portal/91793513/SP_Journal_RED.pdf
+
+    Examples
+    --------
     To make a Kulfan (CST) airfoil, use the following syntax:
 
     >>> import aerosandbox as asb
     >>> asb.Airfoil("My Airfoil Name", coordinates=asb.get_kulfan_coordinates(*args))
-
-    Args:
-
-        lower_weights (iterable): The Kulfan weights to use for the lower surface.
-
-        upper_weights (iterable): The Kulfan weights to use for the upper surface.
-
-        TE_thickness (float): The trailing-edge thickness to add, in terms of y/c.
-
-        n_points_per_side (int): The number of points to discretize with, when generating the coordinates.
-
-        N1 (float): The shape factor corresponding to the leading edge of the airfoil. See above for examples.
-
-        N2 (float): The shape factor corresponding to the trailing edge of the airfoil. See above for examples.
-
-    Returns:
-        np.ndarray: The coordinates of the airfoil as a Nx2 array.
     """
     if len(deprecated_kwargs) > 0:
         import warnings
@@ -287,53 +304,100 @@ def get_kulfan_parameters(
     method: Literal["least_squares", "opti"] = "least_squares",
 ) -> dict[str, np.ndarray | float]:
     """
-    Given a set of airfoil coordinates, reconstructs the Kulfan parameters that would recreate that airfoil. Uses a
-    curve fitting (optimization) process.
+    Given a set of airfoil coordinates, reconstruct the Kulfan parameters for that airfoil.
 
-    This function is the inverse of `get_kulfan_coordinates()`.
+    This is done via a curve fitting (optimization) process, and this function is the inverse of
+    `get_kulfan_coordinates()`.
 
-    Kulfan parameters are a highly-efficient and flexible way to parameterize the shape of an airfoil. The particular
-    flavor of Kulfan parameterization used in AeroSandbox is the "CST with LEM" method, which is described in various
-    papers linked below. In total, the Kulfan parameterization consists of:
+    Kulfan parameters are a highly-efficient and flexible way to parameterize the shape of an
+    airfoil. The particular flavor of Kulfan parameterization used in AeroSandbox is the "CST
+    with LEM" method, which is described in various papers linked in the References section
+    below. In total, the Kulfan parameterization consists of:
 
     * A vector of weights corresponding to the lower surface of the airfoil
     * A vector of weights corresponding to the upper surface of the airfoil
-    * A scalar weight corresponding to the strength of a leading-edge camber mode shape of the airfoil (optional)
+    * A scalar weight corresponding to the strength of a leading-edge camber mode shape of the
+      airfoil (optional)
     * The trailing-edge (TE) thickness of the airfoil (optional)
 
     These Kulfan parameters are also referred to as CST (Class/Shape Transformation) parameters.
 
+    Parameters
+    ----------
+    coordinates : np.ndarray
+        The coordinates of the airfoil as an Nx2 array.
+    n_weights_per_side : int
+        The number of Kulfan weights to use per side of the airfoil.
+    N1 : float
+        The shape factor corresponding to the leading edge of the airfoil. See Notes for
+        example values.
+    N2 : float
+        The shape factor corresponding to the trailing edge of the airfoil. See Notes for
+        example values.
+    n_points_per_side : int
+        The number of points to discretize with, when formulating the curve-fitting optimization
+        problem.
+    normalize_coordinates : bool
+        Whether to normalize the coordinates (via `Airfoil.normalize()`) before fitting.
+    use_leading_edge_modification : bool
+        Whether to include Kulfan's leading-edge modification (LEM) term in the fit.
+    method : Literal["least_squares", "opti"]
+        The fitting method to use, either "least_squares" or "opti".
+
+    Returns
+    -------
+    dict[str, np.ndarray | float]
+        A dictionary containing the Kulfan parameters. The keys are:
+
+        * "lower_weights" (np.ndarray): The weights corresponding to the lower surface of the
+          airfoil.
+        * "upper_weights" (np.ndarray): The weights corresponding to the upper surface of the
+          airfoil.
+        * "TE_thickness" (float): The trailing-edge thickness of the airfoil.
+        * "leading_edge_weight" (float): The strength of the leading-edge camber mode shape of
+          the airfoil.
+
+        These can be passed directly into `get_kulfan_coordinates()` to reconstruct the airfoil.
+
+    Notes
+    -----
+    Notes on N1, N2 (shape factor) combinations:
+
+    * 0.5, 1: Conventional airfoil
+    * 0.5, 0.5: Elliptic airfoil
+    * 1, 1: Biconvex airfoil
+    * 0.75, 0.75: Sears-Haack body (radius distribution)
+    * 0.75, 0.25: Low-drag projectile
+    * 1, 0.001: Cone or wedge airfoil
+    * 0.001, 0.001: Rectangle, circular duct, or circular rod.
+
+    References
+    ----------
     References on Kulfan (CST) airfoils:
 
-    * Kulfan, Brenda "Universal Parametric Geometry Representation Method" (2008). AIAA Journal of Aircraft.
-        Describes the basic Kulfan (CST) airfoil parameterization.
-        Mirrors:
-            * https://arc.aiaa.org/doi/10.2514/1.29958
-            * https://www.brendakulfan.com/_files/ugd/169bff_6738e0f8d9074610942c53dfaea8e30c.pdf
-            * https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
+    * Kulfan, Brenda "Universal Parametric Geometry Representation Method" (2008). AIAA Journal
+      of Aircraft. Describes the basic Kulfan (CST) airfoil parameterization. Mirrors:
 
-    * Kulfan, Brenda "Modification of CST Airfoil Representation Methodology" (2020). Unpublished note:
-        Describes the optional "Leading-Edge Modification" (LEM) addition to the Kulfan (CST) airfoil parameterization.
-        Mirrors:
-            * https://www.brendakulfan.com/_files/ugd/169bff_16a868ad06af4fea946d299c6028fb13.pdf
-            * https://www.researchgate.net/publication/343615711_Modification_of_CST_Airfoil_Representation_Methodology
+        * https://arc.aiaa.org/doi/10.2514/1.29958
+        * https://www.brendakulfan.com/_files/ugd/169bff_6738e0f8d9074610942c53dfaea8e30c.pdf
+        * https://www.researchgate.net/publication/245430684_Universal_Parametric_Geometry_Representation_Method
 
-    * Masters, D.A. "Geometric Comparison of Aerofoil Shape Parameterization Methods" (2017). AIAA Journal.
-        Compares the Kulfan (CST) airfoil parameterization to other airfoil parameterizations. Also has further notes
-        on the LEM addition.
-        Mirrors:
-            * https://arc.aiaa.org/doi/10.2514/1.J054943
-            * https://research-information.bris.ac.uk/ws/portalfiles/portal/91793513/SP_Journal_RED.pdf
+    * Kulfan, Brenda "Modification of CST Airfoil Representation Methodology" (2020). Unpublished
+      note. Describes the optional "Leading-Edge Modification" (LEM) addition to the Kulfan (CST)
+      airfoil parameterization. Mirrors:
 
-    Notes on N1, N2 (shape factor) combinations:
-        * 0.5, 1: Conventional airfoil
-        * 0.5, 0.5: Elliptic airfoil
-        * 1, 1: Biconvex airfoil
-        * 0.75, 0.75: Sears-Haack body (radius distribution)
-        * 0.75, 0.25: Low-drag projectile
-        * 1, 0.001: Cone or wedge airfoil
-        * 0.001, 0.001: Rectangle, circular duct, or circular rod.
+        * https://www.brendakulfan.com/_files/ugd/169bff_16a868ad06af4fea946d299c6028fb13.pdf
+        * https://www.researchgate.net/publication/343615711_Modification_of_CST_Airfoil_Representation_Methodology
 
+    * Masters, D.A. "Geometric Comparison of Aerofoil Shape Parameterization Methods" (2017).
+      AIAA Journal. Compares the Kulfan (CST) airfoil parameterization to other airfoil
+      parameterizations. Also has further notes on the LEM addition. Mirrors:
+
+        * https://arc.aiaa.org/doi/10.2514/1.J054943
+        * https://research-information.bris.ac.uk/ws/portalfiles/portal/91793513/SP_Journal_RED.pdf
+
+    Examples
+    --------
     The following demonstrates the reversibility of this function:
 
     >>> import aerosandbox as asb
@@ -348,28 +412,7 @@ def get_kulfan_parameters(
     >>>     coordinates=get_kulfan_coordinates(
     >>>         **params
     >>>     )
-
-    Args:
-
-        coordinates (np.ndarray): The coordinates of the airfoil as a Nx2 array.
-
-        n_weights_per_side (int): The number of Kulfan weights to use per side of the airfoil.
-
-        N1 (float): The shape factor corresponding to the leading edge of the airfoil. See above for examples.
-
-        N2 (float): The shape factor corresponding to the trailing edge of the airfoil. See above for examples.
-
-        n_points_per_side (int): The number of points to discretize with, when formulating the curve-fitting
-            optimization problem.
-
-    Returns:
-        A dictionary containing the Kulfan parameters. The keys are:
-            * "lower_weights" (np.ndarray): The weights corresponding to the lower surface of the airfoil.
-            * "upper_weights" (np.ndarray): The weights corresponding to the upper surface of the airfoil.
-            * "TE_thickness" (float): The trailing-edge thickness of the airfoil.
-            * "leading_edge_weight" (float): The strength of the leading-edge camber mode shape of the airfoil.
-
-        These can be passed directly into `get_kulfan_coordinates()` to reconstruct the airfoil.
+    >>> )
     """
     from aerosandbox.geometry.airfoil import Airfoil
 
@@ -561,15 +604,19 @@ def get_kulfan_parameters(
 
 def get_coordinates_from_raw_dat(raw_text: list[str]) -> np.ndarray:
     """
-    Returns a Nx2 ndarray of airfoil coordinates from the raw text of a airfoil *.dat file.
+    Return an Nx2 ndarray of airfoil coordinates from the raw text of an airfoil *.dat file.
 
-    Args:
+    Parameters
+    ----------
+    raw_text : list[str]
+        A list of strings, where each string is one line of the *.dat file. One good way to get
+        this input is to read the file via the `with open(file, "r") as file:`,
+        `file.readlines()` interface.
 
-        raw_text: A list of strings, where each string is one line of the *.dat file. One good way to get this input
-            is to read the file via the `with open(file, "r") as file:`, `file.readlines()` interface.
-
-    Returns: A Nx2 ndarray of airfoil coordinates [x, y].
-
+    Returns
+    -------
+    np.ndarray
+        An Nx2 ndarray of airfoil coordinates [x, y].
     """
     raw_coordinates: list[list[float]] = []
 
@@ -596,6 +643,27 @@ def get_coordinates_from_raw_dat(raw_text: list[str]) -> np.ndarray:
 
 
 def get_file_coordinates(filepath: str | os.PathLike) -> np.ndarray:
+    """
+    Load airfoil coordinates from a *.dat file on disk.
+
+    Parameters
+    ----------
+    filepath : str | os.PathLike
+        The filepath to read the coordinates from. If this file is not found, `{filepath}.dat`
+        is also tried.
+
+    Returns
+    -------
+    np.ndarray
+        The coordinates of the airfoil as an Nx2 ndarray [x, y].
+
+    Raises
+    ------
+    FileNotFoundError
+        If neither `filepath` nor `{filepath}.dat` are found and readable.
+    ValueError
+        If a file was found, but no coordinates could be read from it.
+    """
     possible_errors = (FileNotFoundError, UnicodeDecodeError)
 
     if isinstance(filepath, np.ndarray):
@@ -621,11 +689,17 @@ def get_file_coordinates(filepath: str | os.PathLike) -> np.ndarray:
 
 def get_UIUC_coordinates(name: str = "dae11") -> np.ndarray:
     """
-    Returns the coordinates of a specified airfoil in the UIUC airfoil database.
-    Args:
-        name: Name of the airfoil to retrieve from the UIUC database.
+    Return the coordinates of a specified airfoil in the UIUC airfoil database.
 
-    Returns: The coordinates of the airfoil as a Nx2 ndarray [x, y]
+    Parameters
+    ----------
+    name : str
+        Name of the airfoil to retrieve from the UIUC database.
+
+    Returns
+    -------
+    np.ndarray
+        The coordinates of the airfoil as an Nx2 ndarray [x, y].
     """
     from aerosandbox import _asb_root
 

@@ -12,7 +12,7 @@ warnings.warn(
 
 def default_CL_function(alpha, Re, mach=0, deflection=0):
     """
-    Lift coefficient.
+    Compute the lift coefficient.
     """
     Cl_inc = np.pi * np.sind(2 * alpha)
     beta = (1 - mach) ** 2
@@ -23,7 +23,7 @@ def default_CL_function(alpha, Re, mach=0, deflection=0):
 
 def default_CD_function(alpha, Re, mach=0, deflection=0):
     """
-    Drag coefficient.
+    Compute the drag coefficient.
     """
     Cf = Cf_flat_plate(Re_L=Re, method="hybrid-sharpe-convex")
 
@@ -40,6 +40,6 @@ def default_CD_function(alpha, Re, mach=0, deflection=0):
 
 def default_CM_function(alpha, Re, mach=0, deflection=0):
     """
-    Pitching moment coefficient, as measured about quarter-chord.
+    Compute the pitching moment coefficient, as measured about the quarter-chord.
     """
     return np.zeros_like(alpha)
