@@ -20,21 +20,32 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
         axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ) -> None:
         """
-        Adds a moment (in whichever axis system you choose) to this Dynamics instance.
+        Add a moment (in whichever axis system you choose) to this Dynamics instance.
 
-        Args:
-            Mx: Moment about the x-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            My: Moment about the y-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            Mz: Moment about the z-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            axes: The axis system that the specified moment is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
+        Parameters
+        ----------
+        Mx : Vectorizable
+            Moment about the x-axis in the axis system chosen. Assumed these moments are applied
+            about the center of mass. [Nm]
+        My : Vectorizable
+            Moment about the y-axis in the axis system chosen. Assumed these moments are applied
+            about the center of mass. [Nm]
+        Mz : Vectorizable
+            Moment about the z-axis in the axis system chosen. Assumed these moments are applied
+            about the center of mass. [Nm]
+        axes : Literal["geometry", "body", "wind", "stability", "earth"]
+            The axis system that the specified moment is in. One of:
 
-        Returns: None (in-place)
+            * "geometry"
+            * "body"
+            * "wind"
+            * "stability"
+            * "earth"
 
+        Returns
+        -------
+        None
+            (Operates in-place.)
         """
         pass
 
@@ -52,26 +63,29 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
 
     @property
     def alpha(self):
-        """The angle of attack, in degrees."""
+        """Return the angle of attack, in degrees."""
         return np.arctan2d(self.w_b, self.u_b)
 
     @property
     def beta(self):
-        """The sideslip angle, in degrees."""
+        """Return the sideslip angle, in degrees."""
         return np.arctan2d(self.v_b, (self.u_b**2 + self.w_b**2) ** 0.5)
 
     @property
     def rotational_kinetic_energy(self):
         """
-        Computes the kinetic energy [J] from rotational motion:
+        Compute the kinetic energy [J] from rotational motion.
 
             KE = 0.5 * omega^T @ I @ omega
 
-        where `omega = [p, q, r]` is the angular velocity vector and `I` is the inertia tensor (about the center of
-        mass), including the products of inertia. Note that `MassProperties.Ixy`, `.Iyz`, and `.Ixz` are the
-        inertia-tensor *elements* (i.e., I12 = -sum(m * x * y), etc.); see the `MassProperties` docstring.
+        where `omega = [p, q, r]` is the angular velocity vector and `I` is the inertia tensor
+        (about the center of mass), including the products of inertia. Note that
+        `MassProperties.Ixy`, `.Iyz`, and `.Ixz` are the inertia-tensor *elements* (i.e.,
+        I12 = -sum(m * x * y), etc.); see the `MassProperties` docstring.
 
-        Returns:
+        Returns
+        -------
+        float
             Kinetic energy [J]
         """
         return 0.5 * (

@@ -7,7 +7,10 @@ from aerosandbox.numpy.typing import Vectorizable
 
 class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
     """
+    Simulate rigid-body dynamics in 2D, with velocity parameterized in body axes.
+
     Dynamics instance:
+
     * simulating a rigid body
     * in 2D
     * with velocity parameterized in body axes
@@ -24,7 +27,6 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
         Fx_b: Force along the body-x axis. [N]
         Fz_b: Force along the body-z axis. [N]
         My_b: Moment about the body-y axis. [Nm]
-
     """
 
     def __init__(
