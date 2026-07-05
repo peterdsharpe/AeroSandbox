@@ -1,3 +1,9 @@
+"""Interpolation functions for the AeroSandbox NumPy-like interface.
+
+This module provides 1D and multidimensional interpolation functions that
+work with both NumPy arrays and CasADi symbolic arrays.
+"""
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
@@ -18,15 +24,37 @@ def interp(
     right: float | None = None,
     period: float | None = None,
 ) -> Vectorizable:
-    """
-    One-dimensional linear interpolation, analogous to numpy.interp().
+    """Perform one-dimensional linear interpolation, analogous to numpy.interp().
 
-    Returns the one-dimensional piecewise linear interpolant to a function with given discrete data points (xp, fp),
-    evaluated at x.
+    Returns the one-dimensional piecewise linear interpolant to a function with
+    given discrete data points (xp, fp), evaluated at x.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.interp.html
+    Specific notes: ``xp`` is assumed to be sorted.
 
-    Specific notes: xp is assumed to be sorted.
+    Parameters
+    ----------
+    x : Vectorizable
+        The x-coordinates at which to evaluate the interpolated values.
+    xp : Vectorizable
+        The x-coordinates of the data points; assumed to be sorted.
+    fp : Vectorizable
+        The y-coordinates of the data points, same length as ``xp``.
+    left : float, optional
+        Value to return for ``x < xp[0]``. Default is ``fp[0]``.
+    right : float, optional
+        Value to return for ``x > xp[-1]``. Default is ``fp[-1]``.
+    period : float, optional
+        A period for the x-coordinates. If given, values of ``x`` are wrapped
+        into the periodic domain before interpolating.
+
+    Returns
+    -------
+    Vectorizable
+        The interpolated values.
+
+    See Also
+    --------
+    numpy.interp : https://numpy.org/doc/stable/reference/generated/numpy.interp.html
     """
     if not is_casadi_type([x, xp, fp], recursive=True):
         return _onp.interp(x=x, xp=xp, fp=fp, left=left, right=right, period=period)
@@ -85,18 +113,24 @@ def interp(
 def is_data_structured(
     x_data_coordinates: Sequence[ConcreteVector], y_data_structured: ConcreteArray
 ) -> bool:
-    """
-    Determines if the shapes of a given dataset are consistent with "structured" (i.e. gridded) data.
+    """Determine if a dataset's shapes are consistent with "structured" (gridded) data.
 
-    For this to evaluate True, the inputs should be:
+    For this to evaluate True, the inputs should match the descriptions below.
 
-        x_data_coordinates: A tuple or list of 1D ndarrays that represent coordinates along each axis of a N-dimensional hypercube.
+    Parameters
+    ----------
+    x_data_coordinates : Sequence[ConcreteVector]
+        A tuple or list of 1D ndarrays that represent coordinates along each axis
+        of an N-dimensional hypercube.
+    y_data_structured : ConcreteArray
+        The values of some scalar defined on that N-dimensional hypercube,
+        expressed as an N-dimensional array. In other words, ``y_data_structured``
+        is evaluated at ``np.meshgrid(*x_data_coordinates, indexing="ij")``.
 
-        y_data_structured: The values of some scalar defined on that N-dimensional hypercube, expressed as an
-        N-dimesional array. In other words, y_data_structured is evaluated at `np.meshgrid(*x_data_coordinates,
-        indexing="ij")`.
-
-    Returns: Boolean of whether the above description is true.
+    Returns
+    -------
+    bool
+        Whether the above description is true.
     """
     try:
         for coordinates in x_data_coordinates:
@@ -124,38 +158,44 @@ def interpn(
     bounds_error: bool | None = True,
     fill_value: float | None = _onp.nan,
 ) -> Vectorizable:
-    """
-    Performs multidimensional interpolation on regular grids. Analogue to scipy.interpolate.interpn().
+    """Perform multidimensional interpolation on regular grids.
 
-    See syntax here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interpn.html
+    Analogous to scipy.interpolate.interpn().
 
-    Args:
+    Parameters
+    ----------
+    points : Sequence[ArrayLike]
+        The points defining the regular grid in n dimensions. Tuple of coordinates
+        of each axis. Shapes (m1,), ..., (mn,).
+    values : ConcreteArray
+        The data on the regular grid in n dimensions. Shape (m1, ..., mn).
+    xi : Vectorizable
+        The coordinates to sample the gridded data at. Shape (..., ndim).
+    method : {"linear", "bspline", "nearest"}, optional
+        The method of interpolation to perform. One of:
 
-        points: The points defining the regular grid in n dimensions. Tuple of coordinates of each axis. Shapes (m1,
-        ), ..., (mn,)
+        - "bspline" (Note: differentiable and suitable for optimization - made of
+          piecewise-cubics. For other applications, other interpolators may be
+          faster. Not monotonicity-preserving - may overshoot.)
+        - "linear" (Note: differentiable, but not suitable for use in optimization
+          w/o subgradient treatment due to C1-discontinuity.)
+        - "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
+    bounds_error : bool, optional
+        If True, when interpolated values are requested outside of the domain of
+        the input data, a ValueError is raised. If False, then ``fill_value`` is
+        used.
+    fill_value : float, optional
+        If provided, the value to use for points outside of the interpolation
+        domain. If None, values outside the domain are extrapolated.
 
-        values: The data on the regular grid in n dimensions. Shape (m1, ..., mn)
+    Returns
+    -------
+    Vectorizable
+        Interpolated values at input coordinates.
 
-        xi: The coordinates to sample the gridded data at. (..., ndim)
-
-        method: The method of interpolation to perform. one of:
-
-            * "bspline" (Note: differentiable and suitable for optimization - made of piecewise-cubics. For other
-            applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot.)
-
-            * "linear" (Note: differentiable, but not suitable for use in optimization w/o subgradient treatment due
-            to C1-discontinuity)
-
-            * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
-
-        bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
-        a ValueError is raised. If False, then fill_value is used.
-
-        fill_value: If provided, the value to use for points outside of the interpolation domain. If None,
-        values outside the domain are extrapolated.
-
-    Returns: Interpolated values at input coordinates.
-
+    See Also
+    --------
+    scipy.interpolate.interpn : https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interpn.html
     """
     ### Check input types for points and values
     if is_casadi_type([points, values], recursive=True):
