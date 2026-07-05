@@ -12,10 +12,19 @@ def spy(
     show=True,
 ):
     """
-    Plots the sparsity pattern of a matrix.
-    :param matrix: The matrix to plot the sparsity pattern of. [2D ndarray or CasADi array]
-    :param show: Whether or not to show the sparsity plot. [boolean]
-    :return: The figure to be plotted [go.Figure]
+    Plot the sparsity pattern of a matrix.
+
+    Parameters
+    ----------
+    matrix
+        The matrix to plot the sparsity pattern of. [2D ndarray or CasADi array]
+    show : bool
+        Whether or not to show the sparsity plot.
+
+    Returns
+    -------
+    go.Figure
+        The figure to be plotted.
     """
     try:
         matrix = matrix.toarray()
@@ -64,9 +73,16 @@ def plot_point_cloud(
     p: np.ndarray,
 ):
     """
-    Plots an Nx3 point cloud with Plotly
-    :param p: An Nx3 array of points to be plotted.
-    :return: None
+    Plot an Nx3 point cloud with Plotly.
+
+    Parameters
+    ----------
+    p : np.ndarray
+        An Nx3 array of points to be plotted.
+
+    Returns
+    -------
+    None
     """
     p = np.array(p)
     px.scatter_3d(x=p[:, 0], y=p[:, 1], z=p[:, 2]).show()

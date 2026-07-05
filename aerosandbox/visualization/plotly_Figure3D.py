@@ -4,9 +4,17 @@ import aerosandbox.numpy as np
 
 def reflect_over_XZ_plane(input_vector):
     """
-    Takes in a vector or an array and flips the y-coordinates.
-    :param input_vector: A vector or list of vectors to flip.
-    :return: Vector with flipped sign on y-coordinate.
+    Take in a vector or an array and flip the y-coordinates.
+
+    Parameters
+    ----------
+    input_vector
+        A vector or list of vectors to flip.
+
+    Returns
+    -------
+    ndarray
+        Vector with flipped sign on y-coordinate.
     """
     input_vector = np.array(input_vector)
     shape = input_vector.shape
@@ -25,6 +33,10 @@ def reflect_over_XZ_plane(input_vector):
 
 
 class Figure3D:
+    """
+    Build up a 3D Plotly figure from faces, lines, and streamlines, then draw it.
+    """
+
     def __init__(self):
         self.fig = go.Figure()
 
@@ -55,12 +67,23 @@ class Figure3D:
         mirror=False,
     ):
         """
-        Adds a line (or series of lines) to draw.
-        :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
-        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
-        :return: None
+        Add a line (or series of lines) to draw.
 
-        E.g. add_line([(0, 0, 0), (1, 0, 0)])
+        Parameters
+        ----------
+        points
+            An iterable with an arbitrary number of items. Each item is a 3D point, represented
+            as an iterable of length 3.
+        mirror : bool
+            Should we also draw a version that's mirrored over the XZ plane?
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> add_line([(0, 0, 0), (1, 0, 0)])
         """
         for p in points:
             self.x_line.append(float(p[0]))
@@ -79,12 +102,23 @@ class Figure3D:
         mirror=False,
     ):
         """
-        Adds a streamline (or series of streamlines) to draw.
-        :param points: an iterable with an arbitrary number of items. Each item is a 3D point, represented as an iterable of length 3.
-        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
-        :return: None
+        Add a streamline (or series of streamlines) to draw.
 
-        E.g. add_streamline([(0, 0, 0), (1, 0, 0)])
+        Parameters
+        ----------
+        points
+            An iterable with an arbitrary number of items. Each item is a 3D point, represented
+            as an iterable of length 3.
+        mirror : bool
+            Should we also draw a version that's mirrored over the XZ plane?
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> add_streamline([(0, 0, 0), (1, 0, 0)])
         """
         for p in points:
             self.x_streamline.append(float(p[0]))
@@ -105,14 +139,27 @@ class Figure3D:
         mirror=False,
     ):
         """
-        Adds a triangular face to draw.
-        :param points: an iterable with 3 items. Each item is a 3D point, represented as an iterable of length 3.
-        :param intensity: Intensity associated with this face
-        :param outline: Do you want to outline this triangle? [boolean]
-        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
-        :return: None
+        Add a triangular face to draw.
 
-        E.g. add_tri([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
+        Parameters
+        ----------
+        points
+            An iterable with 3 items. Each item is a 3D point, represented as an iterable of
+            length 3.
+        intensity
+            Intensity associated with this face.
+        outline : bool
+            Do you want to outline this triangle?
+        mirror : bool
+            Should we also draw a version that's mirrored over the XZ plane?
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> add_tri([(0, 0, 0), (1, 0, 0), (0, 1, 0)])
         """
         if not len(points) == 3:
             raise ValueError("'points' must have exactly 3 items!")
@@ -144,14 +191,29 @@ class Figure3D:
         mirror=False,
     ):
         """
-        Adds a quadrilateral face to draw. All points should be (approximately) coplanar if you want it to look right.
-        :param points: an iterable with 4 items. Each item is a 3D point, represented as an iterable of length 3. Points should be given in sequential order.
-        :param intensity: Intensity associated with this face
-        :param outline: Do you want to outline this quad? [boolean]
-        :param mirror: Should we also draw a version that's mirrored over the XZ plane? [boolean]
-        :return: None
+        Add a quadrilateral face to draw.
 
-        E.g. add_quad([(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)])
+        All points should be (approximately) coplanar if you want it to look right.
+
+        Parameters
+        ----------
+        points
+            An iterable with 4 items. Each item is a 3D point, represented as an iterable of
+            length 3. Points should be given in sequential order.
+        intensity
+            Intensity associated with this face.
+        outline : bool
+            Do you want to outline this quad?
+        mirror : bool
+            Should we also draw a version that's mirrored over the XZ plane?
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> add_quad([(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)])
         """
         if not len(points) == 4:
             raise ValueError("'points' must have exactly 4 items!")
@@ -188,6 +250,25 @@ class Figure3D:
         colorbar_title="",
         colorscale="viridis",
     ):
+        """
+        Assemble the figure from all added elements, optionally show it, and return it.
+
+        Parameters
+        ----------
+        show : bool
+            Whether to show the figure after assembling it.
+        title : str
+            Title of the figure.
+        colorbar_title : str
+            Title of the colorbar (for face intensities).
+        colorscale : str
+            Colorscale to use for face intensities.
+
+        Returns
+        -------
+        go.Figure
+            The assembled figure.
+        """
         # Draw faces
         self.fig.add_trace(
             go.Mesh3d(

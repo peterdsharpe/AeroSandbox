@@ -1,5 +1,5 @@
 """
-Utilities for making better carpet plots
+Provide utilities for making better carpet plots.
 """
 
 import aerosandbox.numpy as np
@@ -11,24 +11,28 @@ from contextlib import contextmanager
 @contextmanager
 def time_limit(seconds):
     """
-    Allows you to run a block of code with a timeout. This way, you can sweep through points to make a carpet plot
-        without getting stuck on a particular point that may not terminate in a reasonable amount of time.
+    Run a block of code with a timeout.
+
+    This way, you can sweep through points to make a carpet plot without getting stuck on a
+    particular point that may not terminate in a reasonable amount of time.
 
     Only runs on Linux!
 
-    Usage:
-        Attempt to set x equal to the value of a complicated function. If it takes longer than 5 seconds, skip it.
-        >>> try:
-        >>>     with time_limit(5):
-        >>>         x = complicated_function()
-        >>> except TimeoutError:
-        >>>     x = np.nan
+    Parameters
+    ----------
+    seconds : float
+        Duration of timeout [seconds]. May be a float.
 
-    Args:
-        seconds: Duration of timeout [seconds]. May be a float.
+    Examples
+    --------
+    Attempt to set x equal to the value of a complicated function. If it takes longer than 5
+    seconds, skip it.
 
-    Returns:
-
+    >>> try:
+    >>>     with time_limit(5):
+    >>>         x = complicated_function()
+    >>> except TimeoutError:
+    >>>     x = np.nan
     """
 
     def signal_handler(signum, frame):
@@ -51,25 +55,40 @@ def time_limit(seconds):
 
 def remove_nans(array):
     """
-    Removes NaN values in a 1D array.
-    Args:
-        array: a 1D array of data.
+    Remove NaN values from a 1D array.
 
-    Returns: The array with all NaN values stripped.
+    Parameters
+    ----------
+    array
+        A 1D array of data.
 
+    Returns
+    -------
+    ndarray
+        The array with all NaN values stripped.
     """
     return array[~np.isnan(array)]
 
 
 def patch_nans(array, verbose: bool = True):
     """
-    Patches NaN values in a 2D array. Can patch holes or entire regions. Uses Laplacian smoothing.
+    Patch NaN values in a 2D array.
+
+    Can patch holes or entire regions. Uses Laplacian smoothing.
 
     The input array is not modified; a patched copy is returned.
 
-    :param array: The 2D array to patch.
-    :param verbose: Should we print the patching progress to the console? [boolean]
-    :return: A copy of the array with all NaN values patched.
+    Parameters
+    ----------
+    array
+        The 2D array to patch.
+    verbose : bool
+        Should we print the patching progress to the console?
+
+    Returns
+    -------
+    ndarray
+        A copy of the array with all NaN values patched.
     """
     array = np.copy(array)
     original_nans = np.isnan(array)

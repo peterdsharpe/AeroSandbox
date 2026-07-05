@@ -1,3 +1,5 @@
+"""AeroSandbox: a Python package for design optimization of engineered systems such as aircraft."""
+
 from pathlib import Path
 from aerosandbox.common import (
     AeroSandboxObject,
@@ -67,7 +69,7 @@ except Exception:
 
 def docs():
     """
-    Opens the AeroSandbox documentation.
+    Open the AeroSandbox documentation in a web browser.
     """
     import webbrowser
 
@@ -76,7 +78,7 @@ def docs():
 
 def run_tests():
     """
-    Runs all of the AeroSandbox internal unit tests on this computer.
+    Run all of the AeroSandbox internal unit tests on this computer.
     """
     try:
         import pytest
