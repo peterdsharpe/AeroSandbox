@@ -16,8 +16,11 @@ docs/build
 .cursor/
 
 # Quarto render artifacts (book source + _freeze/ are committed; rendered output is not)
-/docs/book/_book/
-/docs/book/*.html
-/docs/book/*_files/
-/docs/book/site_libs/
+_book/
 .quarto/
+*.html
+*_files/
+*.quarto_ipynb
+site_libs/
+!**/_freeze/site_libs/
+!**/_freeze/site_libs/**
