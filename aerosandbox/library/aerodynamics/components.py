@@ -10,35 +10,42 @@ def CDA_control_linkage(
     is_top: bool | np.ndarray = False,
 ) -> Vectorizable:
     """
-    Computes the drag area (CDA) of a typical control usage as used on a well-manufactured RC airplane.
+    Compute the drag area (CDA) of a typical control linkage on a well-manufactured RC airplane.
 
     The drag area (CDA) is defined as: CDA == D / q, where:
 
-        - D is the drag force (dimensionalized, e.g., in Newtons)
+    - D is the drag force (dimensionalized, e.g., in Newtons)
 
-        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
+    - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
     See study with original data at `AeroSandbox/studies/LinkageDrag`.
 
+    Parameters
+    ----------
+    Re_l : Vectorizable
+        Reynolds number, with reference length as the length of the linkage.
+    linkage_length : Vectorizable
+        The length of the linkage. [m]
+    is_covered : bool | np.ndarray
+        A boolean of whether an aerodynamic fairing is placed around the linkage.
+    is_top : bool | np.ndarray
+        A boolean of whether the linkage is on the top surface of the wing (True) or the bottom
+        surface (False). Differences in local boundary layer and inviscid effects cause local
+        velocity changes.
+
+    Returns
+    -------
+    Vectorizable
+        The drag area [m^2] of the control linkage.
+
+    References
+    ----------
     Data from:
 
-        * Hepperle, Martin. "Drag of Linkages". https://www.mh-aerotools.de/airfoils/linkage.htm
+    * Hepperle, Martin. "Drag of Linkages". https://www.mh-aerotools.de/airfoils/linkage.htm
 
-        * Summarizes data from "Werner Würz, published in the papers of the ISF-Seminar in December 1989 in Baden, Switzerland."
-
-    Args:
-
-        Re_l: Reynolds number, with reference length as the length of the linkage.
-
-        linkage_length: The length of the linkage. [m]
-
-        is_covered: A boolean of whether an aerodynamic fairing is placed around the linkage.
-
-        is_top: A boolean of whether the linkage is on the top surface of the wing (True) or the bottom surface (
-            False). Differences in local boundary layer and inviscid effects cause local velocity changes.
-
-    Returns: The drag area [m^2] of the control linkage.
-
+    * Summarizes data from "Werner Würz, published in the papers of the ISF-Seminar in
+      December 1989 in Baden, Switzerland."
     """
     x = dict(
         Re_l=Re_l, linkage_length=linkage_length, is_covered=is_covered, is_top=is_top
@@ -81,52 +88,59 @@ def CDA_control_surface_gaps(
     hinge_gap_width: float | None = None,
 ) -> float:
     """
-    Computes the drag area (CDA) of the gaps associated with a typical wing control surface.
-    (E.g., aileron, flap, elevator, rudder).
+    Compute the drag area (CDA) of the gaps associated with a typical wing control surface.
+
+    (E.g., aileron, flap, elevator, rudder.)
 
     The drag area (CDA) is defined as: CDA == D / q, where:
 
-        - D is the drag force (dimensionalized, e.g., in Newtons)
+    - D is the drag force (dimensionalized, e.g., in Newtons)
 
-        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
+    - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
     This drag area consists of two sources:
 
-        1. Chordwise gaps at the side edges of the control surface ("side gaps")
+    1. Chordwise gaps at the side edges of the control surface ("side gaps")
 
-        2. Spanwise gaps at the hinge line of the control surface ("hinge gap")
+    2. Spanwise gaps at the hinge line of the control surface ("hinge gap")
 
-    Args:
+    Parameters
+    ----------
+    local_chord : float
+        The local chord of the wing at the midpoint of the control surface. [meters]
+    control_surface_span : float
+        The span of the control surface. [meters]
+    local_thickness_over_chord : float
+        The local thickness-to-chord ratio of the wing at the midpoint of the control surface.
+        [nondimensional] For example, this is 0.12 for a NACA0012 airfoil.
+    control_surface_hinge_x : float
+        The x-location of the hinge line of the control surface, as a fraction of the local
+        chord. [nondimensional] Defaults to x_hinge / c = 0.75, which is typical for an aileron.
+    n_side_gaps : int
+        The number of "side gaps" to count on this control surface when computing drag.
+        Defaults to 2 (i.e., one inboard gap, one outboard gap), which is the simplest case of
+        a wing with a single partial-span aileron. However, there may be cases where it is best
+        to reduce this to 1 or 0. For example:
 
-        local_chord: The local chord of the wing at the midpoint of the control surface. [meters]
+        * A wing with a single full-span aileron would have 1 side gap (at the wing root, but
+          not at the tip).
 
-        control_surface_span: The span of the control surface. [meters]
+        * A wing with a flap and aileron that share a chordwise gap would be best modeled by
+          setting n_side_gaps = 1 (so that no double-counting occurs).
+    side_gap_width : float | None
+        The width of the chordwise gaps at the side edges of the control surface [meters]. If
+        this is left as the default (None), then a typical value will be computed based on the
+        local chord and control surface span.
+    hinge_gap_width : float | None
+        The width of the spanwise gap at the hinge line of the control surface [meters]. If
+        this is left as the default (None), then a typical value will be computed based on the
+        local chord.
 
-        local_thickness_over_chord: The local thickness-to-chord ratio of the wing at the midpoint of the control
-            surface. [nondimensional] For example, this is 0.12 for a NACA0012 airfoil.
-
-        control_surface_hinge_x: The x-location of the hinge line of the control surface, as a fraction of the local
-            chord. [nondimensional] Defaults to x_hinge / c = 0.75, which is typical for an aileron.
-
-        n_side_gaps: The number of "side gaps" to count on this control surface when computing drag. Defaults to 2 (
-            i.e., one inboard gap, one outboard gap), which is the simplest case of a wing with a single partial-span
-            aileron. However, there may be cases where it is best to reduce this to 1 or 0. For example:
-
-                * A wing with a single full-span aileron would have 1 side gap (at the wing root, but not at the tip).
-
-                * A wing with a flap and aileron that share a chordwise gap would be best modeled by setting
-                    n_side_gaps = 1 ( so that no double-counting occurs).
-
-        side_gap_width: The width of the chordwise gaps at the side edges of the control surface [meters]. If this is
-            left as the default (None), then a typical value will be computed based on the local chord and control surface
-            span.
-
-        hinge_gap_width: The width of the spanwise gap at the hinge line of the control surface [meters]. If this is
-            left as the default (None), then a typical value will be computed based on the local chord.
-
-    Returns: The drag area [m^2] of the gaps associated with the control surface. This should be added to the "clean"
-        wing drag to get a more realistic drag estimate.
-
+    Returns
+    -------
+    float
+        The drag area [m^2] of the gaps associated with the control surface. This should be
+        added to the "clean" wing drag to get a more realistic drag estimate.
     """
     if side_gap_width is None:
         side_gap_width = np.maximum(
@@ -168,31 +182,42 @@ def CDA_protruding_bolt_or_rivet(
     ] = "flush_rivet",
 ):
     """
-    Computes the drag area (CDA) of a protruding bolt or rivet.
+    Compute the drag area (CDA) of a protruding bolt or rivet.
 
     The drag area (CDA) is defined as: CDA == D / q, where:
-        - D is the drag force (dimensionalized, e.g., in Newtons)
-        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
-    Args:
+    - D is the drag force (dimensionalized, e.g., in Newtons)
 
-        diameter: The diameter of the bolt or rivet. [meters]
+    - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
-        kind: The type of bolt or rivet. Valid options are:
+    Parameters
+    ----------
+    diameter : float
+        The diameter of the bolt or rivet. [meters]
+    kind : str
+        The type of bolt or rivet. Valid options are:
 
-            - "flush_rivet"
+        - "flush_rivet"
 
-            - "round_rivet"
+        - "round_rivet"
 
-            - "flat_head_bolt"
+        - "flat_head_bolt"
 
-            - "round_head_bolt"
+        - "round_head_bolt"
 
-            - "cylindrical_bolt"
+        - "cylindrical_bolt"
 
-            - "hex_bolt"
+        - "hex_bolt"
 
-    Returns: The drag area [m^2] of the bolt or rivet.
+    Returns
+    -------
+    float
+        The drag area [m^2] of the bolt or rivet.
+
+    Raises
+    ------
+    ValueError
+        If an invalid `kind` of bolt or rivet is given.
     """
     S_ref = np.pi * diameter**2 / 4
 
@@ -232,50 +257,59 @@ def CDA_perpendicular_sheet_metal_joint(
     ] = "butt_joint_with_inside_joiner",
 ):
     """
-    Computes the drag area (CDA) of a sheet metal joint that is perpendicular to the flow.
-        (E.g., spanwise on the wing, or circumferential on the fuselage).
+    Compute the drag area (CDA) of a sheet metal joint that is perpendicular to the flow.
+
+    (E.g., spanwise on the wing, or circumferential on the fuselage.)
 
     The drag area (CDA) is defined as: CDA == D / q, where:
 
-        - D is the drag force (dimensionalized, e.g., in Newtons)
+    - D is the drag force (dimensionalized, e.g., in Newtons)
 
-        - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
+    - q is the freestream dynamic pressure (dimensionalized, e.g., in Pascals)
 
-    Args:
+    Parameters
+    ----------
+    joint_width : float
+        The width of the joint (perpendicular to the airflow, e.g., spanwise on a wing).
+        [meters]
+    sheet_metal_thickness : float
+        The thickness of the sheet metal. [meters]
+    kind : str
+        The type of joint. Valid options are:
 
-        joint_width: The width of the joint (perpendicular to the airflow, e.g., spanwise on a wing). [meters]
+        - "butt_joint_with_inside_joiner"
 
-        sheet_metal_thickness: The thickness of the sheet metal. [meters]
+        - "butt_joint_with_inside_weld"
 
-        kind: The type of joint. Valid options are:
+        - "butt_joint_with_outside_joiner"
 
-            - "butt_joint_with_inside_joiner"
+        - "butt_joint_with_outside_weld"
 
-            - "butt_joint_with_inside_weld"
+        - "lap_joint_forward_facing_step"
 
-            - "butt_joint_with_outside_joiner"
+        - "lap_joint_backward_facing_step"
 
-            - "butt_joint_with_outside_weld"
+        - "lap_joint_forward_facing_step_with_bevel"
 
-            - "lap_joint_forward_facing_step"
+        - "lap_joint_backward_facing_step_with_bevel"
 
-            - "lap_joint_backward_facing_step"
+        - "lap_joint_forward_facing_step_with_rounded_bevel"
 
-            - "lap_joint_forward_facing_step_with_bevel"
+        - "lap_joint_backward_facing_step_with_rounded_bevel"
 
-            - "lap_joint_backward_facing_step_with_bevel"
+        - "flush_lap_joint_forward_facing_step"
 
-            - "lap_joint_forward_facing_step_with_rounded_bevel"
+        - "flush_lap_joint_backward_facing_step"
 
-            - "lap_joint_backward_facing_step_with_rounded_bevel"
+    Returns
+    -------
+    float
+        The drag area [m^2] of the sheet metal joint.
 
-            - "flush_lap_joint_forward_facing_step"
-
-            - "flush_lap_joint_backward_facing_step"
-
-
-    Returns: The drag area [m^2] of the sheet metal joint.
-
+    Raises
+    ------
+    ValueError
+        If an invalid `kind` of sheet metal joint is given.
     """
     S_ref = joint_width * sheet_metal_thickness
 

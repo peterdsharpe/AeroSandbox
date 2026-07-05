@@ -6,20 +6,27 @@ from aerosandbox.modeling.splines.hermite import (
 
 def sears_haack_drag(radius_max: float, length: float) -> float:
     """
-    Yields the idealized drag area (denoted CDA, or equivalently, D/q) of a Sears-Haack body.
+    Compute the idealized drag area (denoted CDA, or equivalently, D/q) of a Sears-Haack body.
 
     Assumes linearized supersonic (Prandtl-Glauert) flow.
 
     https://en.wikipedia.org/wiki/Sears%E2%80%93Haack_body
 
-    Note that drag coefficient and drag area are independent of Mach number for this case (assuming linearized supersonic aero).
+    Note that drag coefficient and drag area are independent of Mach number for this case
+    (assuming linearized supersonic aero).
 
-    Args:
-        radius_max: The maximum radius of the Sears-Haack body.
-        length: The length of the Sears-Haack body.
+    Parameters
+    ----------
+    radius_max : float
+        The maximum radius of the Sears-Haack body.
+    length : float
+        The length of the Sears-Haack body.
 
-    Returns: The drag area (CDA, or D/q) of the body. To get the drag force, multiply by the dynamic pressure.
-
+    Returns
+    -------
+    float
+        The drag area (CDA, or D/q) of the body. To get the drag force, multiply by the
+        dynamic pressure.
     """
     CDA = 9 * np.pi**2 * radius_max**2 / (2 * length**2)
     return CDA
@@ -27,11 +34,25 @@ def sears_haack_drag(radius_max: float, length: float) -> float:
 
 def sears_haack_drag_from_volume(volume: float, length: float) -> float:
     """
+    Compute the idealized drag area of a Sears-Haack body, given its volume.
+
     See documentation for sears_haack_drag() in this same file.
 
     Identical, except takes volume as an input rather than max radius.
 
     Also returns a drag area (denoted CDA, or equivalently, D/q).
+
+    Parameters
+    ----------
+    volume : float
+        The volume of the Sears-Haack body.
+    length : float
+        The length of the Sears-Haack body.
+
+    Returns
+    -------
+    float
+        The drag area (CDA, or D/q) of the body.
     """
     CDA = 128 * volume**2 / (np.pi * length**4)
     return CDA
@@ -39,18 +60,24 @@ def sears_haack_drag_from_volume(volume: float, length: float) -> float:
 
 def mach_crit_Korn(CL, t_over_c, sweep=0, kappa_A=0.95):
     """
-    Critical Mach number prediction using the low-fidelity Korn Equation method;
-    derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
+    Predict the critical Mach number using the low-fidelity Korn Equation method.
 
-    Args:
-        CL: Sectional lift coefficient
-        t_over_c: thickness-to-chord ratio
-        sweep: sweep angle, in degrees
-        kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
+    Derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18.
 
-    Returns:
-        The critical Mach number, above which wave drag starts to appear.
+    Parameters
+    ----------
+    CL
+        Sectional lift coefficient
+    t_over_c
+        Thickness-to-chord ratio
+    sweep
+        Sweep angle, in degrees
+    kappa_A
+        Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
 
+    Returns
+    -------
+    The critical Mach number, above which wave drag starts to appear.
     """
     smooth_abs_CL = np.softmax(CL, -CL, hardness=10)
 
@@ -65,15 +92,26 @@ def mach_crit_Korn(CL, t_over_c, sweep=0, kappa_A=0.95):
 
 def Cd_wave_Korn(Cl, t_over_c, mach, sweep=0, kappa_A=0.95):
     """
-    Wave drag_force coefficient prediction using the low-fidelity Korn Equation method;
-    derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18
+    Predict the wave drag coefficient using the low-fidelity Korn Equation method.
 
-    :param Cl: Sectional lift coefficient
-    :param t_over_c: thickness-to-chord ratio
-    :param mach: Freestream Mach number
-    :param sweep: sweep angle, in degrees
-    :param kappa_A: Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
-    :return: Wave drag coefficient
+    Derived in "Configuration Aerodynamics" by W.H. Mason, Sect. 7.5.2, pg. 7-18.
+
+    Parameters
+    ----------
+    Cl
+        Sectional lift coefficient
+    t_over_c
+        Thickness-to-chord ratio
+    mach
+        Freestream Mach number
+    sweep
+        Sweep angle, in degrees
+    kappa_A
+        Airfoil technology factor (0.95 for supercritical section, 0.87 for NACA 6-series)
+
+    Returns
+    -------
+    Wave drag coefficient
     """
     smooth_abs_Cl = np.softmax(Cl, -Cl, hardness=10)
 
@@ -95,43 +133,50 @@ def approximate_CD_wave(
     CD_wave_at_fully_supersonic,
 ):
     """
-    An approximate relation for computing transonic wave drag, based on an object's Mach number.
+    Compute transonic wave drag with an approximate relation, based on an object's Mach number.
 
     Considered reasonably valid from Mach 0 up to around Mach 2 or 3-ish.
 
     Methodology is a combination of:
 
-        * The methodology described in Raymer, "Aircraft Design: A Conceptual Approach", Section 12.5.10 Transonic Parasite Drag (pg. 449 in Ed. 2)
+    * The methodology described in Raymer, "Aircraft Design: A Conceptual Approach",
+      Section 12.5.10 Transonic Parasite Drag (pg. 449 in Ed. 2)
 
-        and
+    and
 
-        * The methodology described in W.H. Mason's Configuration Aerodynamics, Chapter 7. Transonic Aerodynamics of Airfoils and Wings.
+    * The methodology described in W.H. Mason's Configuration Aerodynamics, Chapter 7.
+      Transonic Aerodynamics of Airfoils and Wings.
 
-    Args:
+    Parameters
+    ----------
+    mach
+        Mach number at the operating point to be evaluated
+    mach_crit
+        Critical mach number, a function of the body geometry
+    CD_wave_at_fully_supersonic
+        The wave drag coefficient of the body at the speed that it first goes (effectively)
+        fully supersonic.
 
-        mach: Mach number at the operating point to be evaluated
+        Here, that is taken to mean at the Mach 1.2 case.
 
-        mach_crit: Critical mach number, a function of the body geometry
+        This value should probably be derived using something similar to a Sears-Haack
+        relation for the body in question, with a markup depending on geometry smoothness.
 
-        CD_wave_at_fully_supersonic: The wave drag coefficient of the body at the speed that it first goes (
-        effectively) fully supersonic.
+        The CD_wave predicted by this function will match this value exactly at M=1.2 and
+        M=1.05.
 
-            Here, that is taken to mean at the Mach 1.2 case.
+        The peak CD_wave that is predicted is ~1.23 * this value, which occurs at M=1.10.
 
-            This value should probably be derived using something similar to a Sears-Haack relation for the body in
-            question, with a markup depending on geometry smoothness.
+        In the high-Mach limit, this function asymptotes at 0.80 * this value, as empirically
+        stated by Raymer. However, this model is only approximate and is likely not valid for
+        high-supersonic flows.
 
-            The CD_wave predicted by this function will match this value exactly at M=1.2 and M=1.05.
+    Returns
+    -------
+    The approximate wave drag coefficient at the specified Mach number.
 
-            The peak CD_wave that is predicted is ~1.23 * this value, which occurs at M=1.10.
-
-            In the high-Mach limit, this function asymptotes at 0.80 * this value, as empirically stated by Raymer.
-            However, this model is only approximate and is likely not valid for high-supersonic flows.
-
-    Returns: The approximate wave drag coefficient at the specified Mach number.
-
-        The reference area is whatever the reference area used in the `CD_wave_at_fully_supersonic` parameter is.
-
+        The reference area is whatever the reference area used in the
+        `CD_wave_at_fully_supersonic` parameter is.
     """
     mach_crit_max = 1 - (0.1 / 80) ** (1 / 3)
 

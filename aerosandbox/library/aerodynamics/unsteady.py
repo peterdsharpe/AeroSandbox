@@ -31,18 +31,24 @@ def calculate_reduced_time(
     time: Vectorizable, velocity: Vectorizable, chord: float
 ) -> Vectorizable:
     """
-    Calculates reduced time from time in seconds and velocity history in m/s.
-    For constant velocity it reduces to s = 2*U*t/c
-    The reduced time is the number of semichords travelled by the airfoil/aircaft
-    i.e. 2 / chord * integral from t0 to t of velocity dt
+    Calculate reduced time from time in seconds and velocity history in m/s.
 
+    For constant velocity it reduces to s = 2*U*t/c. The reduced time is the number of
+    semichords travelled by the airfoil/aircraft, i.e. 2 / chord * integral from t0 to t of
+    velocity dt.
 
-    Args:
-        time (float,np.ndarray) : Time in seconds
-        velocity (float,np.ndarray): Either a constant velocity or array of velocities at corresponding reduced times
-        chord (float) : The chord of the airfoil
+    Parameters
+    ----------
+    time : Vectorizable
+        Time in seconds
+    velocity : Vectorizable
+        Either a constant velocity or array of velocities at corresponding reduced times
+    chord : float
+        The chord of the airfoil
 
-    Returns:
+    Returns
+    -------
+    Vectorizable
         The reduced time as an ndarray or float similar to the input. The first element is 0.
     """
     if isinstance(velocity, (float, int)):
@@ -60,11 +66,15 @@ def calculate_reduced_time(
 
 def wagners_function(reduced_time: Vectorizable):
     """
-    A commonly used approximation to Wagner's function
-    (Jones, R.T. The Unsteady Lift of a Finite Wing; Technical Report NACA TN-682; NACA: Washington, DC, USA, 1939)
+    Compute a commonly used approximation to Wagner's function.
 
-    Args:
-        reduced_time (float,np.ndarray) : Equal to the number of semichords travelled. See function calculate_reduced_time
+    (Jones, R.T. The Unsteady Lift of a Finite Wing; Technical Report NACA TN-682; NACA:
+    Washington, DC, USA, 1939)
+
+    Parameters
+    ----------
+    reduced_time : Vectorizable
+        Equal to the number of semichords travelled. See function calculate_reduced_time.
     """
     wagner = (
         1 - 0.165 * np.exp(-0.0455 * reduced_time) - 0.335 * np.exp(-0.3 * reduced_time)
@@ -74,10 +84,13 @@ def wagners_function(reduced_time: Vectorizable):
 
 def kussners_function(reduced_time: Vectorizable):
     """
-    A commonly used approximation to Kussner's function (Sears and Sparks 1941)
+    Compute a commonly used approximation to Kussner's function (Sears and Sparks 1941).
 
-    Args:
-        reduced_time (float,np.ndarray) : This is equal to the number of semichords travelled. See function calculate_reduced_time
+    Parameters
+    ----------
+    reduced_time : Vectorizable
+        This is equal to the number of semichords travelled. See function
+        calculate_reduced_time.
     """
     kussner = (
         1 - 0.5 * np.exp(-0.13 * reduced_time) - 0.5 * np.exp(-reduced_time)
@@ -90,17 +103,24 @@ def indicial_pitch_response(
     angle_of_attack: float,  # In degrees
 ):
     """
-    Computes the evolution of the lift coefficient in Wagner's problem which can be interpreted as follows
+    Compute the evolution of the lift coefficient in Wagner's problem.
+
+    Wagner's problem can be interpreted as follows:
+
     1) An impulsively started flat plate at constant angle of attack
-    2) An impuslive change in the angle of attack of a flat plate at constant velocity
 
-    The model predicts infinite added mass at the first instant due to the infinite acceleration
-    The delta function term (and therefore added mass) has been ommited in this case.
-    Reduced_time = 0 corresponds to the instance the airfoil pitches/accelerates
+    2) An impulsive change in the angle of attack of a flat plate at constant velocity
 
-        Args:
-        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        angle_of_attack (float) : The angle of attack, in degrees
+    The model predicts infinite added mass at the first instant due to the infinite
+    acceleration. The delta function term (and therefore added mass) has been omitted in this
+    case. Reduced_time = 0 corresponds to the instance the airfoil pitches/accelerates.
+
+    Parameters
+    ----------
+    reduced_time : Vectorizable
+        Reduced time, equal to the number of semichords travelled. See function reduced_time.
+    angle_of_attack : float
+        The angle of attack, in degrees.
     """
     return 2 * np.pi * np.deg2rad(angle_of_attack) * wagners_function(reduced_time)
 
@@ -113,20 +133,27 @@ def indicial_gust_response(
     chord: float = 1,
 ):
     """
-    Computes the evolution of the lift coefficient of a flat plate entering a
-    an infinitely long, sharp step gust (Heaveside function) at a constant angle of attack.
-    Reduced_time = 0 corresponds to the instance the gust is entered
+    Compute the evolution of the lift coefficient of a flat plate entering a sharp step gust.
 
+    The gust is infinitely long and sharp-edged (a Heaviside function), and the plate enters it
+    at a constant angle of attack. Reduced_time = 0 corresponds to the instance the gust is
+    entered.
 
     (Leishman, Principles of Helicopter Aerodynamics, S8.10,S8.11)
 
-    Args:
-        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        gust_velocity (float) : velocity in m/s of the top hat gust
-        plate_velocity (float) : velocity of the thin airfoil entering the gust
-        angle_of_attack (float) : The angle of attack, in degrees
-        chord (float) : The chord of the plate in meters. Note that the gust response,
-            expressed in reduced time, is independent of the chord.
+    Parameters
+    ----------
+    reduced_time : Vectorizable
+        Reduced time, equal to the number of semichords travelled. See function reduced_time.
+    gust_velocity : float
+        Velocity in m/s of the top hat gust.
+    plate_velocity : float
+        Velocity of the thin airfoil entering the gust.
+    angle_of_attack : float
+        The angle of attack, in degrees.
+    chord : float
+        The chord of the plate in meters. Note that the gust response, expressed in reduced
+        time, is independent of the chord.
     """
     angle_of_attack_radians = np.deg2rad(angle_of_attack)
     offset = 1 - np.cos(angle_of_attack_radians)  # Gust entry delay, in semichords
@@ -147,18 +174,31 @@ def calculate_lift_due_to_transverse_gust(
     chord: float = 1,
 ):
     """
-    Calculates the lift (as a function of reduced time) caused by an arbitrary transverse gust profile
-    by computing duhamel superposition integral of Kussner's problem at a constant angle of attack
+    Calculate the lift (as a function of reduced time) caused by an arbitrary transverse gust.
 
-    Args:
-        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
-        plate_velocity (float) :The velocity by which the flat plate enters the gust
-        angle_of_attack (float | Callable[[float], float]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
-        chord (float) : The chord of the plate in meters. Note that the gust response,
-            expressed in reduced time, is independent of the chord.
-    Returns:
-        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
+    Computed by evaluating the Duhamel superposition integral of Kussner's problem at a
+    constant angle of attack.
+
+    Parameters
+    ----------
+    reduced_time : np.ndarray
+        Reduced time, equal to the number of semichords travelled. See function reduced_time.
+    gust_velocity_profile : Callable[[float], float]
+        The transverse velocity profile that the flat plate experiences. Must be a function
+        that takes reduced time and returns a velocity.
+    plate_velocity : float
+        The velocity by which the flat plate enters the gust.
+    angle_of_attack : float | Callable[[float], float]
+        The angle of attack, in degrees. Can either be a float for constant angle of attack or
+        a Callable that takes reduced time and returns angle of attack.
+    chord : float
+        The chord of the plate in meters. Note that the gust response, expressed in reduced
+        time, is independent of the chord.
+
+    Returns
+    -------
+    lift_coefficient : np.ndarray
+        The lift coefficient history of the flat plate.
     """
     if isinstance(angle_of_attack, np.ndarray):
         raise TypeError(
@@ -199,16 +239,23 @@ def calculate_lift_due_to_pitching_profile(
     angle_of_attack: Callable[[float], float] | float,  # In degrees
 ):
     """
-    Calculates the duhamel superposition integral of Wagner's problem.
-    Given some arbitrary pitching profile. The lift coefficient as a function
-    of reduced time of a flat plate can be computed using this function
+    Calculate the Duhamel superposition integral of Wagner's problem.
 
+    Given some arbitrary pitching profile, the lift coefficient as a function of reduced time
+    of a flat plate can be computed using this function.
 
-    Args:
-        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        angle_of_attack (Callable[[float],float]) : The angle of attack as a function of reduced time of the flat plate. Must be a Callable that takes reduced time and returns angle of attack
-    Returns:
-        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
+    Parameters
+    ----------
+    reduced_time : np.ndarray
+        Reduced time, equal to the number of semichords travelled. See function reduced_time.
+    angle_of_attack : Callable[[float], float] | float
+        The angle of attack as a function of reduced time of the flat plate. Must be a
+        Callable that takes reduced time and returns angle of attack.
+
+    Returns
+    -------
+    lift_coefficient : np.ndarray
+        The lift coefficient history of the flat plate.
     """
 
     if not (reduced_time >= 0).all():
@@ -249,14 +296,21 @@ def added_mass_due_to_pitching(
     angle_of_attack: Callable[[float], float],  # In degrees
 ):
     """
-    This function calculate the lift coefficient due to the added mass of a flat plate
-    pitching about its midchord while moving at constant velocity.
+    Calculate the lift coefficient due to the added mass of a flat plate.
 
-    Args:
-        reduced_time (np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        angle_of_attack (Callable[[float],float]) : The angle of attack as a function of reduced time of the flat plate
-    Returns:
-        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
+    The plate is pitching about its midchord while moving at constant velocity.
+
+    Parameters
+    ----------
+    reduced_time : np.ndarray
+        Reduced time, equal to the number of semichords travelled. See function reduced_time.
+    angle_of_attack : Callable[[float], float]
+        The angle of attack as a function of reduced time of the flat plate.
+
+    Returns
+    -------
+    lift_coefficient : np.ndarray
+        The lift coefficient history of the flat plate.
     """
 
     AoA = np.array([np.deg2rad(angle_of_attack(s)) for s in reduced_time])
@@ -275,30 +329,46 @@ def pitching_through_transverse_gust(
     chord: float = 1,
 ):
     """
-    This function calculates the lift as a function of time of a flat plate pitching
-    about its midchord through an arbitrary transverse gust. It combines Kussner's gust response with
-    wagners pitch response as well as added mass.
+    Calculate the lift history of a flat plate pitching through an arbitrary transverse gust.
 
-    The following physics are accounted for
+    The plate pitches about its midchord. This function combines Kussner's gust response with
+    Wagner's pitch response, as well as added mass.
+
+    The following physics are accounted for:
+
     1) Vorticity shed from the trailing edge due to gust profile
+
     2) Vorticity shed from the trailing edge due to pitching profile
+
     3) Added mass (non-circulatory force) due to pitching about midchord
 
-    The following physics are NOT taken accounted for
+    The following physics are NOT taken accounted for:
+
     1) Any type of flow separation
+
     2) Leading edge vorticity shedding
+
     3) Deflected wake due to gust (flat wake assumption)
 
+    Parameters
+    ----------
+    reduced_time : np.ndarray
+        Reduced time, equal to the number of semichords travelled. See function reduced_time.
+    gust_velocity_profile : Callable[[float], float]
+        The transverse velocity profile that the flat plate experiences. Must be a function
+        that takes reduced time and returns a velocity.
+    plate_velocity : float
+        The velocity by which the flat plate enters the gust.
+    angle_of_attack : Callable[[float], float] | float
+        The angle of attack, in degrees. Can either be a float for constant angle of attack or
+        a Callable that takes reduced time and returns angle of attack.
+    chord : float
+        The chord of the plate in meters.
 
-    Args:
-        reduced_time (float,np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time
-        gust_velocity_profile (Callable[[float],float]) : The transverse velocity profile that the flate plate experiences. Must be a function that takes reduced time and returns a velocity
-        plate_velocity (float) :The velocity by which the flat plate enters the gust
-        angle_of_attack (float | Callable[[float], float]) : The angle of attack, in degrees. Can either be a float for constant angle of attack or a Callable that takes reduced time and returns angle of attack
-        chord (float) : The chord of the plate in meters
-
-    Returns:
-        lift_coefficient (np.ndarray) : The lift coefficient history of the flat plate
+    Returns
+    -------
+    lift_coefficient : np.ndarray
+        The lift coefficient history of the flat plate.
     """
     if isinstance(angle_of_attack, (float, int)):
         constant_angle_of_attack = angle_of_attack
@@ -317,11 +387,15 @@ def pitching_through_transverse_gust(
 
 def top_hat_gust(reduced_time: float) -> float:
     """
-    A canonical example gust.
-    Args:
-        reduced_time (float)
-    Returns:
-        gust_velocity (float)
+    Compute the velocity of a canonical example gust, as a function of reduced time.
+
+    Parameters
+    ----------
+    reduced_time : float
+
+    Returns
+    -------
+    gust_velocity : float
     """
     if 5 <= reduced_time <= 10:
         gust_velocity = 1
@@ -333,15 +407,20 @@ def top_hat_gust(reduced_time: float) -> float:
 
 def sine_squared_gust(reduced_time: float) -> float:
     """
-    A canonical gust of used by the FAA to show 'compliance with the
-    requirements of Title 14, Code of Federal Regulations (14 CFR) 25.341,
-    Gust and turbulence loads. Section 25.341 specifies the discrete gust
-    and continuous turbulence dynamic load conditions that apply to the
-    airplane and engines.'
-    Args:
-        reduced_time (float)
-    Returns:
-        gust_velocity (float)
+    Compute the velocity of a canonical gust used by the FAA, as a function of reduced time.
+
+    This gust is used by the FAA to show 'compliance with the requirements of Title 14, Code
+    of Federal Regulations (14 CFR) 25.341, Gust and turbulence loads. Section 25.341
+    specifies the discrete gust and continuous turbulence dynamic load conditions that apply
+    to the airplane and engines.'
+
+    Parameters
+    ----------
+    reduced_time : float
+
+    Returns
+    -------
+    gust_velocity : float
     """
     gust_strength = 1
     start = 5
@@ -360,22 +439,32 @@ def sine_squared_gust(reduced_time: float) -> float:
 
 def gaussian_pitch(reduced_time: float) -> float:
     """
-    A pitch maneuver resembling a guassian curve
-    Args:
-        reduced_time (float)
-    Returns:
-        angle_of_attack (float) : in degrees
+    Compute the angle of attack of a pitch maneuver resembling a Gaussian curve.
+
+    Parameters
+    ----------
+    reduced_time : float
+
+    Returns
+    -------
+    angle_of_attack : float
+        In degrees.
     """
     return -25 * np.exp(-(((reduced_time - 7.5) / 3) ** 2))
 
 
 def linear_ramp_pitch(reduced_time: float) -> float:
     """
-    A pitch maneuver resembling a linear ramp
-    Args:
-        reduced_time (float)
-    Returns:
-        angle_of_attack (float) : in degrees
+    Compute the angle of attack of a pitch maneuver resembling a linear ramp.
+
+    Parameters
+    ----------
+    reduced_time : float
+
+    Returns
+    -------
+    angle_of_attack : float
+        In degrees.
     """
     if reduced_time < 7.5:
         angle_of_attack = -3.3 * reduced_time
