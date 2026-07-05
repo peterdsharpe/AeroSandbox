@@ -7,6 +7,12 @@ import casadi as cas
 
 
 class TubeSparBendingStructure(asb.ImplicitAnalysis):
+    """
+    Model the bending of a cantilever tube spar using Euler-Bernoulli beam theory.
+
+    See the `__init__` method for details and usage examples.
+    """
+
     @asb.ImplicitAnalysis.initialize
     def __init__(
         self,
@@ -25,137 +31,147 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         assume_thin_tube: bool = True,
     ):
         """
-        A structural spar model that simulates bending of a cantilever tube spar based on beam theory (static,
-        linear elasticity). This tube spar is assumed to have uniform wall thickness in the azimuthal direction,
-        but not necessarily along its length. The diameter of the tube spar and elastic modulus may vary along its
-        length.
+        Initialize a structural model that simulates bending of a cantilever tube spar.
+
+        Based on beam theory (static, linear elasticity). This tube spar is assumed to have
+        uniform wall thickness in the azimuthal direction, but not necessarily along its length.
+        The diameter of the tube spar and elastic modulus may vary along its length.
 
         Governing equation is Euler-Bernoulli beam theory:
 
-        (E * I * u(y)'')'' = q(y)
+            (E * I * u(y)'')'' = q(y)
 
         where:
-            * y is the distance along the spar, with a cantilever support at y=0 and a free tip at y=length.
-            * E is the elastic modulus
-            * I is the bending moment of inertia
-            * u(y) is the local displacement at y.
-            * q(y) is the force-per-unit-length at y. (In other words, a dirac delta is a point load.)
-            * ()' is a derivative w.r.t. y.
 
-        Any applicable constraints relating to stress, buckling, ovalization, gauge limits, displacement, etc. should
-        be applied after initialization of this class.
+        * y is the distance along the spar, with a cantilever support at y=0 and a free tip at
+          y=length.
+        * E is the elastic modulus
+        * I is the bending moment of inertia
+        * u(y) is the local displacement at y.
+        * q(y) is the force-per-unit-length at y. (In other words, a Dirac delta is a point load.)
+        * ()' is a derivative w.r.t. y.
 
-        Example:
+        Any applicable constraints relating to stress, buckling, ovalization, gauge limits,
+        displacement, etc. should be applied after initialization of this class.
 
-            >>> opti = asb.Opti()
-            >>>
-            >>> span = 34
-            >>> half_span = span / 2
-            >>> lift = 200 * 9.81
-            >>>
-            >>> beam = TubeSparBendingStructure(
-            >>>     opti=opti,
-            >>>     length=half_span,
-            >>>     diameter_function=0.12,
-            >>>     points_per_point_load=100,
-            >>>     bending_distributed_force_function=lambda y: (lift / span) * (
-            >>>             4 / np.pi * (1 - (y / half_span) ** 2) ** 0.5
-            >>>     ),  # Elliptical
-            >>>     # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform
-            >>> )
-            >>> opti.subject_to([
-            >>>     beam.stress_axial <= 500e6,  # Stress constraint
-            >>>     beam.u[-1] <= 3,  # Tip displacement constraint
-            >>>     beam.wall_thickness > 1e-3  # Gauge constraint
-            >>> ])
-            >>> mass = beam.volume() * 1600  # Density of carbon fiber [kg/m^3]
-            >>>
-            >>> opti.minimize(mass / 100)
-            >>> sol = opti.solve()
-            >>>
-            >>> beam = sol(beam)
-            >>>
-            >>> print(f"{sol(mass)} kg")
-            >>>
-            >>> beam.draw()
+        Parameters
+        ----------
+        length : float
+            Length of the spar [m]. Spar is assumed to go from y=0 (cantilever support) to
+            y=length (free tip).
+        diameter_function : float | Callable[[np.ndarray], np.ndarray] | None
+            The diameter of the tube as a function of the distance along the spar y. Refers to
+            the nominal diameter (e.g., the arithmetic mean of the inner diameter and outer
+            diameter of the tube; the "centerline" diameter). In terms of data types, this can be
+            one of:
 
-        Args:
+            * None, in which case it's interpreted as a design variable to optimize over. Assumes
+              that the value can freely vary along the length of the spar.
 
-            length: Length of the spar [m]. Spar is assumed to go from y=0 (cantilever support) to y=length (free tip).
+            * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how
+              to link an Opti instance to this analysis), in which case it's interpreted as a
+              design variable to optimize over that's uniform along the length of the spar.
 
-            diameter_function: The diameter of the tube as a function of the distance along the spar y. Refers to the
-                nominal diameter (e.g., the arithmetic mean of the inner diameter and outer diameter of the tube; the
-                "centerline" diameter). In terms of data types, this can be one of:
+            * a float, in which case it's interpreted as a uniform value along the spar
 
-                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
-                can freely vary along the length of the spar.
+            * a function (or other callable) in the form f(y), where y is the coordinate along
+              the length of the spar. This function should be vectorized (e.g., a vector input of
+              y values produces a vector output).
+        wall_thickness_function : float | Callable[[np.ndarray], np.ndarray] | None
+            The wall thickness of the tube as a function of the distance along the spar y. In
+            terms of data types, this can be one of:
 
-                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
-                instance to this analysis), in which case it's interpreted as a design variable to optimize over
-                that's uniform along the length of the spar.
+            * None, in which case it's interpreted as a design variable to optimize over. Assumes
+              that the value can freely vary along the length of the spar.
 
-                * a float, in which case it's interpreted as a uniform value along the spar
+            * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how
+              to link an Opti instance to this analysis), in which case it's interpreted as a
+              design variable to optimize over that's uniform along the length of the spar.
 
-                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
-                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
+            * a float, in which case it's interpreted as a uniform value along the spar
 
-            wall_thickness_function: The wall thickness of the tube as a function of the distance along the spar y. In
-                terms of data types, this can be one of:
+            * a function (or other callable) in the form f(y), where y is the coordinate along
+              the length of the spar. This function should be vectorized (e.g., a vector input of
+              y values produces a vector output).
+        bending_point_forces : dict[float, float] | None
+            Not yet implemented; will allow for inclusion of point loads in the future.
+        bending_distributed_force_function : float | Callable[[np.ndarray], np.ndarray]
+            The (distributed) load per unit span applied to the spar, as a function of the
+            distance along the spar y. Should be in units of force per unit length. In terms of
+            data types, this can be one of:
 
-                * None, in which case it's interpreted as a design variable to optimize over. Assumes that the value
-                can freely vary along the length of the spar.
+            * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how
+              to link an Opti instance to this analysis), in which case it's interpreted as a
+              design variable to optimize over that's uniform along the length of the spar.
 
-                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
-                instance to this analysis), in which case it's interpreted as a design variable to optimize over
-                that's uniform along the length of the spar.
+            * a float, in which case it's interpreted as a uniform value along the spar
 
-                * a float, in which case it's interpreted as a uniform value along the spar
+            * a function (or other callable) in the form f(y), where y is the coordinate along
+              the length of the spar. This function should be vectorized (e.g., a vector input of
+              y values produces a vector output).
+        points_per_point_load : int
+            Controls the discretization resolution of the beam. When point load support is added,
+            this will be the number of nodes between each individual point load.
+        elastic_modulus_function : float | Callable[[np.ndarray], np.ndarray]
+            The elastic modulus [Pa] of the spar as a function of the distance along the spar y.
+            In terms of data types, can be one of:
 
-                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
-                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
+            * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how
+              to link an Opti instance to this analysis), in which case it's interpreted as a
+              design variable to optimize over that's uniform along the length of the spar.
 
-            bending_point_forces: Not yet implemented; will allow for inclusion of point loads in the future.
+            * a float, in which case it's interpreted as a uniform value along the spar
 
-            bending_distributed_force_function: The (distributed) load per unit span applied to the spar,
-                as a function of the distance along the spar y. Should be in units of force per unit length. In terms of
-                data types, this can be one of:
+            * a function (or other callable) in the form f(y), where y is the coordinate along
+              the length of the spar. This function should be vectorized (e.g., a vector input of
+              y values produces a vector output).
+        EI_guess : float | None
+            Provides an initial guess for the bending stiffness EI, which is used in problems
+            where spar diameter and thickness is not known at the outset. If not provided, a
+            heuristic will be used to calculate this.
+        assume_thin_tube : bool
+            Makes assumptions that are applicable in the limit of a thin-walled
+            (wall_thickness << diameter) tube. This greatly increases numerical stability.
 
-                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
-                instance to this analysis), in which case it's interpreted as a design variable to optimize over
-                that's uniform along the length of the spar.
+            Relative error of this assumption in the thin-walled limit is:
 
-                * a float, in which case it's interpreted as a uniform value along the spar
+                (wall_thickness / diameter) ^ 2
 
-                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
-                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
+            So, for t/d = 0.1, the relative error is roughly 1%.
 
-            points_per_point_load: Controls the discretization resolution of the beam. [int] When point load support
-                is added, this will be the number of nodes between each individual point load.
-
-            elastic_modulus_function: The elastic modulus [Pa] of the spar as a function of the distance along the
-                spar y. In terms of data types, can be one of:
-
-                * a scalar optimization variable (see asb.ImplicitAnalysis documentation to see how to link an Opti
-                instance to this analysis), in which case it's interpreted as a design variable to optimize over
-                that's uniform along the length of the spar.
-
-                * a float, in which case it's interpreted as a uniform value along the spar
-
-                * a function (or other callable) in the form f(y), where y is the coordinate along the length of the
-                spar. This function should be vectorized (e.g., a vector input of y values produces a vector output).
-
-            EI_guess: Provides an initial guess for the bending stiffness EI, which is used in problems where spar
-                diameter and thickness is not known at the outset. If not provided, a heuristic will be used to calculate this.
-
-            assume_thin_tube: Makes assumptions that are applicable in the limit of a thin-walled (wall_thickness <<
-                diameter) tube. This greatly increases numerical stability.
-
-                Relative error of this assumption in the thin-walled limit is:
-
-                    (wall_thickness / diameter) ^ 2
-
-                So, for t/d = 0.1, the relative error is roughly 1%.
-
+        Examples
+        --------
+        >>> opti = asb.Opti()
+        >>>
+        >>> span = 34
+        >>> half_span = span / 2
+        >>> lift = 200 * 9.81
+        >>>
+        >>> beam = TubeSparBendingStructure(
+        >>>     opti=opti,
+        >>>     length=half_span,
+        >>>     diameter_function=0.12,
+        >>>     points_per_point_load=100,
+        >>>     bending_distributed_force_function=lambda y: (lift / span) * (
+        >>>             4 / np.pi * (1 - (y / half_span) ** 2) ** 0.5
+        >>>     ),  # Elliptical
+        >>>     # bending_distributed_force_function=lambda y: lift / span * np.ones_like(y) # Uniform
+        >>> )
+        >>> opti.subject_to([
+        >>>     beam.stress_axial <= 500e6,  # Stress constraint
+        >>>     beam.u[-1] <= 3,  # Tip displacement constraint
+        >>>     beam.wall_thickness > 1e-3  # Gauge constraint
+        >>> ])
+        >>> mass = beam.volume() * 1600  # Density of carbon fiber [kg/m^3]
+        >>>
+        >>> opti.minimize(mass / 100)
+        >>> sol = opti.solve()
+        >>>
+        >>> beam = sol(beam)
+        >>>
+        >>> print(f"{sol(mass)} kg")
+        >>>
+        >>> beam.draw()
         """
         ### Parse the inputs
         self.length = length
@@ -317,6 +333,14 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         self.stress_axial = stress_axial
 
     def volume(self) -> float | cas.MX:
+        """
+        Compute the volume of structural material in the tube spar.
+
+        Returns
+        -------
+        float | cas.MX
+            The volume of the tube spar's material [m^3].
+        """
         if self.assume_thin_tube:
             return np.sum(
                 np.pi
@@ -341,6 +365,16 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
             )
 
     def total_force(self) -> float | cas.MX:
+        """
+        Compute the total force applied to the spar.
+
+        Obtained by integrating the distributed force along the length of the spar.
+
+        Returns
+        -------
+        float | cas.MX
+            The total applied force [N].
+        """
         if len(self.bending_point_forces) != 0:
             raise NotImplementedError
 
@@ -353,6 +387,17 @@ class TubeSparBendingStructure(asb.ImplicitAnalysis):
         )
 
     def draw(self, show: bool = True) -> None:
+        """
+        Plot the spanwise distributions of the beam's key quantities.
+
+        Plots displacement, local load, axial stress, bending stiffness, tube diameter, and wall
+        thickness against the spanwise coordinate y.
+
+        Parameters
+        ----------
+        show : bool
+            Whether to show the plot after creating it.
+        """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 

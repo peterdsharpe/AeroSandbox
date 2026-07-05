@@ -12,34 +12,39 @@ def column_buckling_critical_load(
     use_recommended_design_values: bool = True,
 ) -> float:
     """
-    Computes the critical load (in N) for a column or tube in compression to buckle via primary buckling. Uses Euler's classical critical
-    load formula.
+    Compute the critical load for a column or tube in compression to buckle via primary buckling.
 
-    Args:
-        elastic_modulus: The elastic modulus of the material, in Pa.
+    Uses Euler's classical critical load formula.
 
-        moment_of_inertia: The moment of inertia of the cross-section, in m^4.
+    Parameters
+    ----------
+    elastic_modulus : float
+        The elastic modulus of the material [Pa].
+    moment_of_inertia : float
+        The moment of inertia of the cross-section [m^4].
+    length : float
+        The length of the column [m].
+    boundary_condition_type : {"pin-pin", "pin-clamp", "clamp-pin", "clamp-clamp", "clamp-free", "free-clamp"}
+        The boundary condition type. Options are:
 
-        length: The length of the column, in m.
+        - "pin-pin"
+        - "pin-clamp"
+        - "clamp-clamp"
+        - "clamp-pin"
+        - "clamp-free"
+        - "free-clamp"
+    use_recommended_design_values : bool
+        Whether to use the recommended design value of K for a given boundary condition (True) or
+        to use the less-conservative theoretical value (False).
 
-        boundary_condition_type: The boundary condition type. Options are:
-            - "pin-pin"
-            - "pin-clamp"
-            - "clamp-clamp"
-            - "clamp-pin"
-            - "clamp-free"
-            - "free-clamp"
+        Recommended values are from Table C.1.8.1 in Steel Construction Manual, 8th edition,
+        2nd revised printing, American Institute of Steel Construction, 1987 via WikiMedia:
+        https://commons.wikimedia.org/wiki/File:ColumnEffectiveLength.png
 
-        use_recommended_design_values: Whether to use the recommended design value of K for a given boundary condition (True)
-        or to use the less-conservative theoretical value (False).
-
-            * Recommended values are from Table C.1.8.1 in Steel Construction Manual, 8th edition, 2nd revised
-            printing, American Institute of Steel Construction, 1987 via WikiMedia:
-            https://commons.wikimedia.org/wiki/File:ColumnEffectiveLength.png
-
-    Returns:
-        The critical compressive load (in N) for the column or tube to buckle via primary buckling.
-
+    Returns
+    -------
+    float
+        The critical compressive load [N] for the column or tube to buckle via primary buckling.
     """
     if boundary_condition_type == "pin-pin":
         K = 1.00 if use_recommended_design_values else 1.00
@@ -70,22 +75,25 @@ def thin_walled_tube_crippling_buckling_critical_load(
     use_recommended_design_values: bool = True,
 ) -> float:
     """
-    Computes the critical load for a thin-walled tube in compression to fail in the crippling mode. (Note: you should also check for
-    failure by primary buckling using the `column_buckling_critical_load()` function.)
+    Compute the critical load for a thin-walled tube in compression to fail in the crippling mode.
 
-    The crippling mode is a specific instability mode for tubes with thin walls when loaded in compression. It can be
-    seen when you step on a soda can and it buckles inwards. The critical load for this mode is given by the
-    following formula:
+    (Note: you should also check for failure by primary buckling using the
+    `column_buckling_critical_load()` function.)
+
+    The crippling mode is a specific instability mode for tubes with thin walls when loaded in
+    compression. It can be seen when you step on a soda can and it buckles inwards. The critical
+    load for this mode is given by the following formula:
 
         stress_crippling = crippling_constant * (E * t / r)
 
     where:
 
-        A recommended value of crippling_constant = 0.3 is given in Raymer: Aircraft Design: A Conceptual Approach,
-        5th Edition, Eq. 14.33, pg. 554.
+        A recommended value of crippling_constant = 0.3 is given in Raymer: Aircraft Design: A
+        Conceptual Approach, 5th Edition, Eq. 14.33, pg. 554.
 
-        A theoretically more accurate value of crippling_constant = 0.605 is given in the Air Force Stress Manual,
-        Section 2.3.2.1, Eq. 2-20. This value assumes mu = 0.3, which is a good assumption for most metals.
+        A theoretically more accurate value of crippling_constant = 0.605 is given in the Air
+        Force Stress Manual, Section 2.3.2.1, Eq. 2-20. This value assumes mu = 0.3, which is a
+        good assumption for most metals.
 
         and E is the elastic modulus, t is the wall thickness, and r is the radius.
 
@@ -94,19 +102,22 @@ def thin_walled_tube_crippling_buckling_critical_load(
 
     And see Raymer: Aircraft Design: A Conceptual Approach, 5th Edition, pg. 554.
 
-    Args:
-        elastic_modulus: The elastic modulus of the material, in Pa.
+    Parameters
+    ----------
+    elastic_modulus : float
+        The elastic modulus of the material [Pa].
+    wall_thickness : float
+        The wall thickness of the tube [m].
+    radius : float
+        The radius of the tube [m].
+    use_recommended_design_values : bool
+        Whether to use the recommended design value of crippling_constant (True) or to use the
+        less-conservative theoretical value (False).
 
-        wall_thickness: The wall thickness of the tube, in m.
-
-        radius: The radius of the tube, in m.
-
-        use_recommended_design_values: Whether to use the recommended design value of crippling_constant (True)
-        or to use the less-conservative theoretical value (False).
-
-    Returns:
-        The critical compressive load (in N) for the tube to buckle in the crippling mode.
-
+    Returns
+    -------
+    float
+        The critical compressive load [N] for the tube to buckle in the crippling mode.
     """
     if use_recommended_design_values:
         crippling_stress_constant = 0.3
@@ -142,47 +153,52 @@ def plate_buckling_critical_load(
     ] = "clamp-clamp",
 ) -> float:
     """
-    Computes the critical compressive load (in N) for a plate to buckle via plate buckling.
+    Compute the critical compressive load for a plate to buckle via plate buckling.
 
     Assumes a rectangular plate with dimensions:
+
     - length
     - width
     - wall_thickness
 
     A compressive force is applied such that it is aligned with the length dimension of the plate.
 
-    Note: this function uses the buckling coefficients for infinitely-long plates (i.e., the long-plate
-    assumption, length >> width). Because of this, the returned critical load does not actually depend on
-    the `length` argument. For short plates (length less than a few times the width), these coefficients
-    are conservative (the true critical load is higher).
+    Note: this function uses the buckling coefficients for infinitely-long plates (i.e., the
+    long-plate assumption, length >> width). Because of this, the returned critical load does not
+    actually depend on the `length` argument. For short plates (length less than a few times the
+    width), these coefficients are conservative (the true critical load is higher).
 
     Uses constants from NACA TN3781.
 
-    Methdology taken from "Stress Analysis Manual," Air Force Flight Dynamic Laboratory, Oct. 1986.
-    Section 6.3: Axial Compression of Flat Plates
+    Methodology taken from "Stress Analysis Manual," Air Force Flight Dynamic Laboratory,
+    Oct. 1986. Section 6.3: Axial Compression of Flat Plates.
     Reproduced at "Engineering Library":
     https://engineeringlibrary.org/reference/analysis-of-plates-axial-compression-air-force-stress-manual
 
-    Args:
-        length: The length of the plate, in m. (Unused; the long-plate assumption is made, so the result
-            is independent of length. See note above.)
+    Parameters
+    ----------
+    length : float
+        The length of the plate [m]. (Unused; the long-plate assumption is made, so the result is
+        independent of length. See note above.)
+    width : float
+        The width of the plate [m].
+    wall_thickness : float
+        The wall thickness of the plate [m].
+    elastic_modulus : float
+        The elastic modulus of the material [Pa].
+    poissons_ratio : float
+        The Poisson's ratio of the material [dimensionless].
+    side_boundary_condition_type : {"clamp-clamp", "pin-pin", "free-free"}
+        The boundary condition type at the sides of the plate. Options are:
 
-        width: The width of the plate, in m.
+        - "clamp-clamp"
+        - "pin-pin"
+        - "free-free"
 
-        wall_thickness: The wall thickness of the plate, in m.
-
-        elastic_modulus: The elastic modulus of the material, in Pa.
-
-        poissons_ratio: The Poisson's ratio of the material [dimensionless].
-
-        side_boundary_condition_type: The boundary condition type at the sides of the plate. Options are:
-            - "clamp-clamp"
-            - "pin-pin"
-            - "free-free"
-
-    Returns:
-        The critical compressive load (in N) for the plate to buckle via plate buckling.
-
+    Returns
+    -------
+    float
+        The critical compressive load [N] for the plate to buckle via plate buckling.
     """
 
     ### Buckling coefficients `K` are the bare coefficients k_c for infinitely-long plates, for use in the
