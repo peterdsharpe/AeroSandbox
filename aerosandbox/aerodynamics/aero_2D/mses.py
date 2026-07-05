@@ -12,28 +12,31 @@ from textwrap import dedent
 
 class MSES(ExplicitAnalysis):
     """
+    An interface to MSES, MSET, and MPLOT, a 2D airfoil analysis system.
 
-    An interface to MSES, MSET, and MPLOT, a 2D airfoil analysis system developed by Mark Drela at MIT.
+    MSES, MSET, and MPLOT were developed by Mark Drela at MIT. Requires compiled binaries for
+    all the programs to be on your computer; MSES is available here:
+    https://web.mit.edu/drela/Public/web/mses/
+    Academics can get a copy by emailing the MIT Tech. Licensing Office; MIT affiliates can
+    find a copy on Athena.
 
-    Requires compiled binaries for all the programs to be on your computer;
-    MSES is available here: https://web.mit.edu/drela/Public/web/mses/
-    Academics can get a copy by emailing the MIT Tech. Licensing Office;
-    MIT affiliates can find a copy on Athena.
+    It is recommended (but not required) that you add MSES, MSET, and MPLOT to your system
+    PATH environment variable such that they can be called with the commands `mses`, `mset`,
+    and `mplot`. If this is not the case, you need to specify the path to these executables
+    using the command arguments of the constructor.
 
-    It is recommended (but not required) that you add MSES, MSET, and MPLOT to your system PATH environment variable
-    such that they can be called with the commands `mses`, `mset`, and `mplot`. If this is not the case, you need to
-    specify the path to these executables using the command arguments of the constructor.
-
+    Notes
     -----
     X11 Notes:
 
-    Note that MSES, MSET, and MPLOT by default open up X11 windows on your computer. If you prefer that this doesn't
-    happen (for extra speed), or if you cannot have this happen (e.g., you are computing in an environment without
-    proper X11 support, like Windows Subsystem for Linux), you should use XVFB. https://en.wikipedia.org/wiki/Xvfb
+    Note that MSES, MSET, and MPLOT by default open up X11 windows on your computer. If you
+    prefer that this doesn't happen (for extra speed), or if you cannot have this happen
+    (e.g., you are computing in an environment without proper X11 support, like Windows
+    Subsystem for Linux), you should use XVFB. https://en.wikipedia.org/wiki/Xvfb
 
-    XVFB is a virtual "display" server that can receive X11 output and safely dump it. (If you don't use XVFB and you
-    don't have proper X11 support on your computer, this AeroSandbox MSES module will simply error out during the
-    MSET call - probably not what you want.)
+    XVFB is a virtual "display" server that can receive X11 output and safely dump it. (If you
+    don't use XVFB and you don't have proper X11 support on your computer, this AeroSandbox
+    MSES module will simply error out during the MSET call - probably not what you want.)
 
     To install XVFB on a Linux machine, use:
 
@@ -41,22 +44,22 @@ class MSES(ExplicitAnalysis):
     sudo apt-get install xvfb
     ```
 
-    Then, when instantiating this MSES instance in AeroSandbox, pass the `use_xvfb` flag to be True. Default behavior
-    here is that this class will look for the XVFB executable, `xvfb-run`, on your machine. If it finds it,
-    it will run with XVFB enabled. If it does not, it will run without XVFB.
+    Then, when instantiating this MSES instance in AeroSandbox, pass the `use_xvfb` flag to be
+    True. Default behavior here is that this class will look for the XVFB executable,
+    `xvfb-run`, on your machine. If it finds it, it will run with XVFB enabled. If it does
+    not, it will run without XVFB.
 
-    -----
-
-    Usage example:
-
+    Examples
+    --------
     >>> ms = MSES(
     >>>     airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
     >>> )
     >>>
     >>> result_at_single_operating_point = ms.run(alpha=5, Re=1e6, mach=0.2)
     >>> result_at_multiple_alphas = ms.run(alpha=[3, 5, 60], Re=1e6, mach=0.2)
-    >>> # Note: if a run does not converge (such as the 60 degree case here), it will not be included in the results.
 
+    Note: if a run does not converge (such as the 60 degree case in the example above), it
+    will not be included in the results.
     """
 
     def __init__(
@@ -88,80 +91,93 @@ class MSES(ExplicitAnalysis):
         mses_mucon: float = -1.0,
     ):
         """
-        Interface to MSES, MSET, and MPLOT, a 2D airfoil analysis system developed by Mark Drela at MIT.
+        Initialize an interface to MSES, MSET, and MPLOT.
 
-        Args:
-            airfoil: The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+        MSES, MSET, and MPLOT are a 2D airfoil analysis system developed by Mark Drela at MIT.
 
-            n_crit: The critical Tollmein-Schlichting wave amplification factor, as part of the "e^n" transition
-                criterion. This is a measure of freestream turbulence and surface roughness.
+        Parameters
+        ----------
+        airfoil : Airfoil
+            The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+        n_crit : float
+            The critical Tollmein-Schlichting wave amplification factor, as part of the "e^n"
+            transition criterion. This is a measure of freestream turbulence and surface
+            roughness.
+        xtr_upper : float
+            The upper-surface forced transition location [x/c], where the boundary layer will
+            be automatically tripped to turbulent. Set to 1 to disable forced transition
+            (default).
+        xtr_lower : float
+            The lower-surface forced transition location [x/c], where the boundary layer will
+            be automatically tripped to turbulent. Set to 1 to disable forced transition
+            (default).
+        max_iter : int
+            How many iterations should we let MSES do?
+        mset_command : str
+            The command-line argument to call MSET.
 
-            xtr_upper: The upper-surface forced transition location [x/c], where the boundary layer will be
-                automatically tripped to turbulent. Set to 1 to disable forced transition (default).
+            * If MSET is on your system PATH, then you can just leave this as "mset".
 
-            xtr_lower: The lower-surface forced transition location [x/c], where the boundary layer will be
-                automatically tripped to turbulent. Set to 1 to disable forced transition (default).
+            * If MSET is not on your system PATH, then you should provide a filepath to the
+              MSET executable.
+        mses_command : str
+            The command-line argument to call MSES. (Same rules as `mset_command`.)
+        mplot_command : str
+            The command-line argument to call MPLOT. (Same rules as `mset_command`.)
+        use_xvfb : bool | None
+            Controls whether Xvfb is used to soak up the X11 windows opened by MSET, MSES, and
+            MPLOT. (See the "X11 Notes" in the class docstring above.) If this is None
+            (default), Xvfb is used if and only if the `xvfb_command` executable appears to be
+            available on this machine.
+        xvfb_command : str
+            The command-line argument to call Xvfb, if it is used.
+        verbosity : int
+            Controls the amount of printout. Set to 0 for silent operation; 1 (default)
+            prints high-level progress; 2 also prints the raw MSET / MSES / MPLOT outputs.
+        timeout_mset : float | int | None
+            Controls how long any individual MSET run is allowed to take before the process
+            is killed. Given in units of seconds [s]. To disable the timeout, set this to
+            None.
+        timeout_mses : float | int | None
+            Controls how long any individual MSES run is allowed to take before the process
+            is killed. Given in units of seconds [s]. To disable the timeout, set this to
+            None.
+        timeout_mplot : float | int | None
+            Controls how long any individual MPLOT run is allowed to take before the process
+            is killed. Given in units of seconds [s]. To disable the timeout, set this to
+            None.
+        working_directory : str | None
+            Controls which working directory is used for the input and output files. By
+            default, this is set to a TemporaryDirectory that is deleted after the run.
+            However, you can set it to somewhere local for debugging purposes.
+        behavior_after_unconverged_run : Literal["reinitialize", "terminate"]
+            Controls what happens when a run in a (multipoint) sweep does not converge.
+            Options are:
 
-            max_iter: How many iterations should we let MSES do?
+            * "reinitialize" (default): Reinitializes the mesh at the next operating point
+              and continues the sweep.
 
-            mset_command: The command-line argument to call MSET.
-
-                * If MSET is on your system PATH, then you can just leave this as "mset".
-
-                * If MSET is not on your system PATH, then you should provide a filepath to the MSET executable.
-
-            mses_command: The command-line argument to call MSES. (Same rules as `mset_command`.)
-
-            mplot_command: The command-line argument to call MPLOT. (Same rules as `mset_command`.)
-
-            use_xvfb: Controls whether Xvfb is used to soak up the X11 windows opened by MSET, MSES, and MPLOT.
-                (See the "X11 Notes" in the class docstring above.) If this is None (default), Xvfb is used if
-                and only if the `xvfb_command` executable appears to be available on this machine.
-
-            xvfb_command: The command-line argument to call Xvfb, if it is used.
-
-            verbosity: Controls the amount of printout. Set to 0 for silent operation; 1 (default) prints
-                high-level progress; 2 also prints the raw MSET / MSES / MPLOT outputs.
-
-            timeout_mset: Controls how long any individual MSET run is allowed to take before the process is
-                killed. Given in units of seconds. To disable the timeout, set this to None.
-
-            timeout_mses: Controls how long any individual MSES run is allowed to take before the process is
-                killed. Given in units of seconds. To disable the timeout, set this to None.
-
-            timeout_mplot: Controls how long any individual MPLOT run is allowed to take before the process is
-                killed. Given in units of seconds. To disable the timeout, set this to None.
-
-            working_directory: Controls which working directory is used for the input and output files. By
-                default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set
-                it to somewhere local for debugging purposes.
-
-            behavior_after_unconverged_run: Controls what happens when a run in a (multipoint) sweep does not
-                converge. Options are:
-
-                * "reinitialize" (default): Reinitializes the mesh at the next operating point and continues the
-                    sweep.
-
-                * "terminate": Skips all subsequent runs; any already-converged results are still returned.
-
-            mset_alpha: The angle of attack [degrees] used when generating the initial mesh with MSET. (Currently
-                unused; the mesh is instead initialized at the first angle of attack in the run sweep.)
-
-            mset_n: The number of airfoil-surface gridpoints; the value passed to option "n" of MSET's
-                grid-parameter menu.
-
-            mset_e: The value passed to option "e" (grid exponent) of MSET's grid-parameter menu.
-
-            mset_io: The value passed to options "i" and "o" (inlet/outlet streamwise gridpoints) of MSET's
-                grid-parameter menu.
-
-            mset_x: The value passed to option "x" of MSET's grid-parameter menu.
-
-            mses_mcrit: The critical Mach number ("MCRIT") written to the MSES case file. Governs where MSES
-                begins to add artificial dissipation.
-
-            mses_mucon: The artificial dissipation constant ("MUCON") written to the MSES case file.
-
+            * "terminate": Skips all subsequent runs; any already-converged results are still
+              returned.
+        mset_alpha : float
+            The angle of attack [degrees] used when generating the initial mesh with MSET.
+            (Currently unused; the mesh is instead initialized at the first angle of attack
+            in the run sweep.)
+        mset_n : int
+            The number of airfoil-surface gridpoints; the value passed to option "n" of
+            MSET's grid-parameter menu.
+        mset_e : float
+            The value passed to option "e" (grid exponent) of MSET's grid-parameter menu.
+        mset_io : int
+            The value passed to options "i" and "o" (inlet/outlet streamwise gridpoints) of
+            MSET's grid-parameter menu.
+        mset_x : float
+            The value passed to option "x" of MSET's grid-parameter menu.
+        mses_mcrit : float
+            The critical Mach number ("MCRIT") written to the MSES case file. Governs where
+            MSES begins to add artificial dissipation.
+        mses_mucon : float
+            The artificial dissipation constant ("MUCON") written to the MSES case file.
         """
         if use_xvfb is None:
             trial_run = subprocess.run(
@@ -210,24 +226,30 @@ class MSES(ExplicitAnalysis):
         mach: ConcreteVectorizable = 0.01,
     ):
         """
-        Runs MSES at one or more operating points and returns the results.
+        Run MSES at one or more operating points and return the results.
 
-        The `alpha`, `Re`, and `mach` inputs are broadcast against each other (in the NumPy sense) to form the
-        sequence of operating points, which are then run in order.
+        The `alpha`, `Re`, and `mach` inputs are broadcast against each other (in the NumPy
+        sense) to form the sequence of operating points, which are then run in order.
 
-        Args:
-            alpha: The angle of attack [degrees]. Can be either a float or an iterable of floats, such as an array.
+        Parameters
+        ----------
+        alpha : ConcreteVectorizable
+            The angle of attack [degrees]. Can be either a float or an iterable of floats,
+            such as an array.
+        Re : ConcreteVectorizable
+            The chord-referenced Reynolds number. Can be either a float or an iterable of
+            floats, such as an array.
+        mach : ConcreteVectorizable
+            The freestream Mach number. Can be either a float or an iterable of floats, such
+            as an array.
 
-            Re: The chord-referenced Reynolds number. Can be either a float or an iterable of floats, such as an
-                array.
-
-            mach: The freestream Mach number. Can be either a float or an iterable of floats, such as an array.
-
-        Returns:
-            A dictionary with the MSES results, where each value is a numpy array with one entry per converged
-            run. Keys are parsed from the MPLOT output and include "mach", "alpha", "CL", "CD", etc. Runs that do
-            not converge are not included. If no runs converge, an empty dictionary is returned.
-
+        Returns
+        -------
+        dict
+            A dictionary with the MSES results, where each value is a numpy array with one
+            entry per converged run. Keys are parsed from the MPLOT output and include "mach",
+            "alpha", "CL", "CD", etc. Runs that do not converge are not included. If no runs
+            converge, an empty dictionary is returned.
         """
         ### Make all inputs iterables:
         alphas, Res, machs = np.broadcast_arrays(

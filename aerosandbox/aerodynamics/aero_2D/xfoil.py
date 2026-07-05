@@ -12,17 +12,18 @@ import re
 
 class XFoil(ExplicitAnalysis):
     """
-
     An interface to XFoil, a 2D airfoil analysis tool developed by Mark Drela at MIT.
 
-    Requires XFoil to be on your computer; XFoil is available here: https://web.mit.edu/drela/Public/web/xfoil/
+    Requires XFoil to be on your computer; XFoil is available here:
+    https://web.mit.edu/drela/Public/web/xfoil/
 
-    It is recommended (but not required) that you add XFoil to your system PATH environment variable such that it can
-    be called with the command `xfoil`. If this is not the case, you need to specify the path to your XFoil
-    executable using the `xfoil_command` argument of the constructor.
+    It is recommended (but not required) that you add XFoil to your system PATH environment
+    variable such that it can be called with the command `xfoil`. If this is not the case, you
+    need to specify the path to your XFoil executable using the `xfoil_command` argument of the
+    constructor.
 
-    Usage example:
-
+    Examples
+    --------
     >>> xf = XFoil(
     >>>     airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
     >>>     Re=1e6,
@@ -30,8 +31,10 @@ class XFoil(ExplicitAnalysis):
     >>>
     >>> result_at_single_alpha = xf.alpha(5)
     >>> result_at_several_CLs = xf.cl([0.5, 0.7, 0.8, 0.9])
-    >>> result_at_multiple_alphas = xf.alpha([3, 5, 60]) # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
+    >>> result_at_multiple_alphas = xf.alpha([3, 5, 60])
 
+    Note: if a result does not converge (such as the 60 degree case in the example above), it
+    will not be included in the results.
     """
 
     # Defines an exception to throw if XFoil fails externally
@@ -58,87 +61,99 @@ class XFoil(ExplicitAnalysis):
         working_directory: Path | str | None = None,
     ):
         """
-        Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
-        MIT for a copy.)
+        Initialize an interface to XFoil.
 
-        Args:
+        Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private; contact Mark Drela
+        at MIT for a copy).
 
-            airfoil: The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+        Parameters
+        ----------
+        airfoil : Airfoil
+            The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+        Re : float
+            The chord-referenced Reynolds number. Set this to 0 to run in inviscid mode.
+        mach : float
+            The freestream Mach number. Note that XFoil 6.xx uses the Karman-Tsien
+            compressibility correction, which breaks down once supersonic flow is present
+            (i.e., past M_crit). XFoil 7.xx has a full-potential solver that is
+            theoretically-valid for weak shocks (perhaps up to M_crit + 0.05 or so).
+        n_crit : float
+            The critical Tollmein-Schlichting wave amplification factor, as part of the "e^n"
+            transition criterion. This is a measure of freestream turbulence and surface
+            roughness. The following reference conditions are given in the XFoil
+            documentation:
 
-            Re: The chord-referenced Reynolds number. Set this to 0 to run in inviscid mode.
+            - sailplane:                12-14
+            - motorglider:              11-13
+            - clean wind tunnel:        10-12
+            - average wind tunnel:      9 (default)
+            - dirty wind tunnel:        4-8
+        xtr_upper : float
+            The upper-surface forced transition location [x/c], where the boundary layer will
+            be automatically tripped to turbulent. Set to 1 to disable forced transition
+            (default). Note that if the Reynolds number is sufficiently low, it is possible
+            for the flow to re-laminarize after being tripped.
+        xtr_lower : float
+            The lower-surface forced transition location [x/c], where the boundary layer will
+            be automatically tripped to turbulent. Set to 1 to disable forced transition
+            (default). Note that if the Reynolds number is sufficiently low, it is possible
+            for the flow to re-laminarize after being tripped.
+        hinge_point_x : float | None
+            The x/c location of the hinge point. This is used to calculate the hinge moment.
+            If this is None, the hinge moment is not calculated.
+        full_potential : bool
+            If this is set True, it will turn full-potential mode on. Note that
+            full-potential mode is only available in XFoil v7.xx or higher. (Unless you have
+            specifically gone through the trouble of acquiring a copy of XFoil v7.xx, you
+            likely have v6.xx. Version 7.xx is not publicly distributed as of 2023; contact
+            Mark Drela at MIT for a copy.) Note that if you enable this flag with XFoil v6.xx,
+            you'll likely get an error (no output file generated).
+        max_iter : int
+            How many iterations should we let XFoil do?
+        xfoil_command : str
+            The command-line argument to call XFoil, given as a string or a Path-like object.
 
-            mach: The freestream Mach number. Note that XFoil 6.xx uses the Karman-Tsien compressibility correction,
-                which breaks down once supersonic flow is present (i.e., past M_crit). XFoil 7.xx has a full-potential
-                solver that is theoretically-valid for weak shocks (perhaps up to M_crit + 0.05 or so).
+            * If XFoil is on your system PATH, then you can just leave this as "xfoil".
 
-            n_crit: The critical Tollmein-Schlichting wave amplification factor, as part of the "e^n" transition
-                criterion. This is a measure of freestream turbulence and surface roughness. The following reference conditions
-                are given in the XFoil documentation:
+            * If XFoil is not on your system PATH, then you should provide a filepath to the
+              XFoil executable.
 
-                - sailplane:                12-14
-                - motorglider:              11-13
-                - clean wind tunnel:        10-12
-                - average wind tunnel:      9 (default)
-                - dirty wind tunnel:        4-8
+            Note that XFoil is not on your PATH by default. To tell if XFoil is not on your
+            system PATH, open up a terminal and type "xfoil".
 
-            xtr_upper: The upper-surface forced transition location [x/c], where the boundary layer will be
-                automatically tripped to turbulent. Set to 1 to disable forced transition (default). Note that if the
-                Reynolds number is sufficiently low, it is possible for the flow to re-laminarize after being tripped.
+            * If the XFoil menu appears, it's on your PATH.
 
-            xtr_lower: The lower-surface forced transition location [x/c], where the boundary layer will be
-                automatically tripped to turbulent. Set to 1 to disable forced transition (default). Note that if the
-                Reynolds number is sufficiently low, it is possible for the flow to re-laminarize after being tripped.
+            * If you get something like "'xfoil' is not recognized as an internal or external
+              command..." or "Command 'xfoil' not found, did you mean...", then it is not on
+              your PATH and you'll need to specify the location of your XFoil executable as a
+              string.
 
-            hinge_point_x: The x/c location of the hinge point. This is used to calculate the hinge moment. If this is
-                None, the hinge moment is not calculated.
-
-            full_potential: If this is set True, it will turn full-potential mode on. Note that full-potential mode
-                is only available in XFoil v7.xx or higher. (Unless you have specifically gone through the trouble of
-                acquiring a copy of XFoil v7.xx you likely have v6.xx. Version 7.xx is not publicly distributed as of
-                2023; contact Mark Drela at MIT for a copy.) Note that if you enable this flag with XFoil v6.xx,
-                you'll likely get an error (no output file generated).
-
-            max_iter: How many iterations should we let XFoil do?
-
-            xfoil_command: The command-line argument to call XFoil, given as a string or a Path-like object.
-
-                * If XFoil is on your system PATH, then you can just leave this as "xfoil".
-
-                * If XFoil is not on your system PATH, then you should provide a filepath to the XFoil executable.
-
-                Note that XFoil is not on your PATH by default. To tell if XFoil is not on your system PATH,
-                open up a terminal and type "xfoil".
-
-                    * If the XFoil menu appears, it's on your PATH.
-
-                    * If you get something like "'xfoil' is not recognized as an internal or external command..." or
-                    "Command 'xfoil' not found, did you mean...", then it is not on your PATH and you'll need to
-                    specify the location of your XFoil executable as a string.
-
-                To add XFoil to your path, modify your system's environment variables. (Google how to do this for
-                your OS.)
-
-            xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE,
-                with default settings, 160 nodes). Boolean, defaults to True.
-
-            xfoil_repanel_n_points: If `xfoil_repanel` is True, this controls the number of points to repanel the
-                airfoil to within XFoil. Defaults to 279, which is the highest number of panel points before XFoil's
-                `IWX` array overfills and starts trimming wake points.
-
-            include_bl_data: Controls whether or not to include boundary layer data in the output. If this is True,
-                the functions `alpha()` and `cl()` will return a dictionary with an additional key, "bl_data",
-                which contains the boundary layer data in the form of a pandas DataFrame. Results in slightly higher
-                runtime, mostly due to file I/O bottleneck. Defaults to False.
-
-            verbose: Controls whether or not XFoil output is printed to command line. Defaults to False.
-
-            timeout: Controls how long any individual XFoil run (i.e. alpha sweep) is allowed to run before the
-                process is killed. Given in units of seconds. To disable timeout, set this to None.
-
-            working_directory: Controls which working directory is used for the XFoil input and output files. By
-                default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
-                somewhere local for debugging purposes.
-
+            To add XFoil to your path, modify your system's environment variables. (Google how
+            to do this for your OS.)
+        xfoil_repanel : bool
+            Controls whether to allow XFoil to repanel your airfoil using its internal methods
+            (PANE, with default settings, 160 nodes). Boolean, defaults to True.
+        xfoil_repanel_n_points : int
+            If `xfoil_repanel` is True, this controls the number of points to repanel the
+            airfoil to within XFoil. Defaults to 279, which is the highest number of panel
+            points before XFoil's `IWX` array overfills and starts trimming wake points.
+        include_bl_data : bool
+            Controls whether or not to include boundary layer data in the output. If this is
+            True, the functions `alpha()` and `cl()` will return a dictionary with an
+            additional key, "bl_data", which contains the boundary layer data in the form of a
+            pandas DataFrame. Results in slightly higher runtime, mostly due to file I/O
+            bottleneck. Defaults to False.
+        verbose : bool
+            Controls whether or not XFoil output is printed to the command line. Defaults to
+            False.
+        timeout : float | int | None
+            Controls how long any individual XFoil run (i.e., alpha sweep) is allowed to run
+            before the process is killed. Given in units of seconds [s]. To disable the
+            timeout, set this to None.
+        working_directory : Path | str | None
+            Controls which working directory is used for the XFoil input and output files. By
+            default, this is set to a TemporaryDirectory that is deleted after the run.
+            However, you can set it to somewhere local for debugging purposes.
         """
         if mach >= 1:
             raise ValueError(
@@ -175,10 +190,20 @@ class XFoil(ExplicitAnalysis):
         output_filename: str,
     ) -> list[str]:
         """
-        Returns a list of XFoil keystrokes that are common to all XFoil runs.
+        Return a list of XFoil keystrokes that are common to all XFoil runs.
 
-        Returns:
-            A list of strings, each of which is a single XFoil keystroke to be followed by <enter>.
+        Parameters
+        ----------
+        airfoil_filename : str
+            Filename of the airfoil coordinate file that XFoil should load.
+        output_filename : str
+            Filename that XFoil should save the polar output to.
+
+        Returns
+        -------
+        list[str]
+            A list of strings, each of which is a single XFoil keystroke to be followed by
+            <enter>.
         """
         run_file_contents = []
 
@@ -269,14 +294,22 @@ class XFoil(ExplicitAnalysis):
         read_bl_data_from: str | None = None,
     ) -> dict[str, ConcreteArray]:
         """
-        Private function to run XFoil.
+        Run XFoil. (Private function.)
 
-        Args: run_command: A string with any XFoil keystroke inputs that you'd like. By default, you start off within the OPER
-        menu. All of the inputs indicated in the constructor have been set already, but you can override them here (for
-        this run only) if you want.
+        Parameters
+        ----------
+        run_command : str
+            A string with any XFoil keystroke inputs that you'd like. By default, you start
+            off within the OPER menu. All of the inputs indicated in the constructor have been
+            set already, but you can override them here (for this run only) if you want.
+        read_bl_data_from : str | None
+            Which set of boundary-layer dump files to read: 'alpha', 'cl', or None (do not
+            read boundary-layer data).
 
-        Returns: A dictionary containing all converged solutions obtained with your inputs.
-
+        Returns
+        -------
+        dict[str, ConcreteArray]
+            A dictionary containing all converged solutions obtained with your inputs.
         """
         # Set up a temporary directory
         with tempfile.TemporaryDirectory() as directory:
@@ -554,9 +587,13 @@ class XFoil(ExplicitAnalysis):
 
     def open_interactive(self) -> None:
         """
-        Opens a new terminal window and runs XFoil interactively. This is useful for detailed analysis or debugging.
+        Open a new terminal window and run XFoil interactively.
 
-        Returns: None
+        This is useful for detailed analysis or debugging.
+
+        Returns
+        -------
+        None
         """
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
@@ -598,23 +635,29 @@ class XFoil(ExplicitAnalysis):
         """
         Execute XFoil at a given angle of attack, or at a sequence of angles of attack.
 
-        Args:
+        Parameters
+        ----------
+        alpha : ConcreteVectorizable
+            The angle of attack [degrees]. Can be either a float or an iterable of floats,
+            such as an array.
+        start_at : float | None
+            Chooses whether to split a large sweep into two runs that diverge away from some
+            central value, to improve convergence. As an example, if you wanted to sweep from
+            alpha=-20 to alpha=20, you might want to instead do two sweeps and stitch them
+            together: 0 to 20, and 0 to -20. `start_at` can be either:
 
-            alpha: The angle of attack [degrees]. Can be either a float or an iterable of floats, such as an array.
+            * None, in which case the alpha inputs are run as a single sequence in the order
+              given.
 
-            start_at: Chooses whether to split a large sweep into two runs that diverge away from some central value,
-            to improve convergence. As an example, if you wanted to sweep from alpha=-20 to alpha=20, you might want
-            to instead do two sweeps and stitch them together: 0 to 20, and 0 to -20. `start_at` can be either:
+            * A float that corresponds to an angle of attack (in degrees), in which case the
+              alpha inputs are split into two sequences that diverge from the `start_at`
+              value. Successful runs are then sorted by `alpha` before returning.
 
-                * None, in which case the alpha inputs are run as a single sequence in the order given.
-
-                * A float that corresponds to an angle of attack (in degrees), in which case the alpha inputs are
-                split into two sequences that diverge from the `start_at` value. Successful runs are then sorted by
-                `alpha` before returning.
-
-        Returns: A dictionary with the XFoil results. Dictionary values are arrays; they may not be the same shape as
-        your input array if some points did not converge.
-
+        Returns
+        -------
+        dict[str, ConcreteArray]
+            A dictionary with the XFoil results. Dictionary values are arrays; they may not be
+            the same shape as your input array if some points did not converge.
         """
         alphas = np.reshape(np.array(alpha), -1)
 
@@ -680,23 +723,29 @@ class XFoil(ExplicitAnalysis):
         """
         Execute XFoil at a given lift coefficient, or at a sequence of lift coefficients.
 
-        Args:
-            cl: The lift coefficient [-]. Can be either a float or an iterable of floats, such as an array.
+        Parameters
+        ----------
+        cl : ConcreteVectorizable
+            The lift coefficient [-]. Can be either a float or an iterable of floats, such as
+            an array.
+        start_at : float | None
+            Chooses whether to split a large sweep into two runs that diverge away from some
+            central value, to improve convergence. As an example, if you wanted to sweep from
+            cl=-1.5 to cl=1.5, you might want to instead do two sweeps and stitch them
+            together: 0 to 1.5, and 0 to -1.5. `start_at` can be either:
 
-            start_at: Chooses whether to split a large sweep into two runs that diverge away from some central value,
-            to improve convergence. As an example, if you wanted to sweep from cl=-1.5 to cl=1.5, you might want to
-            instead do two sweeps and stitch them together: 0 to 1.5, and 0 to -1.5. `start_at` can be either:
+            * None, in which case the cl inputs are run as a single sequence in the order
+              given.
 
-                * None, in which case the cl inputs are run as a single sequence in the order given.
+            * A float that corresponds to a lift coefficient, in which case the cl inputs are
+              split into two sequences that diverge from the `start_at` value. Successful runs
+              are then sorted by `alpha` before returning.
 
-                * A float that corresponds to an lift coefficient, in which case the cl inputs are
-                split into two sequences that diverge from the `start_at` value. Successful runs are then sorted by
-                `alpha` before returning.
-
-
-        Returns: A dictionary with the XFoil results. Dictionary values are arrays; they may not be the same shape as
-        your input array if some points did not converge.
-
+        Returns
+        -------
+        dict[str, ConcreteArray]
+            A dictionary with the XFoil results. Dictionary values are arrays; they may not be
+            the same shape as your input array if some points did not converge.
         """
         cls = np.reshape(np.array(cl), -1)
 
