@@ -38,14 +38,14 @@ def diff(
     Array
         The n-th differences. The shape along the given axis is reduced by n.
 
+    See Also
+    --------
+    numpy.diff : https://numpy.org/doc/stable/reference/generated/numpy.diff.html
+
     Examples
     --------
     >>> diff([345, 355, 5, 15], period=360)
     array([10, 10, 10])
-
-    See Also
-    --------
-    numpy.diff : https://numpy.org/doc/stable/reference/generated/numpy.diff.html
     """
     a = asarray(a)
     if period is not None:
