@@ -14,3 +14,10 @@ docs/build
 *.vspscript
 .coverage
 .cursor/
+
+# Quarto render artifacts (book source + _freeze/ are committed; rendered output is not)
+/docs/book/_book/
+/docs/book/*.html
+/docs/book/*_files/
+/docs/book/site_libs/
+.quarto/
