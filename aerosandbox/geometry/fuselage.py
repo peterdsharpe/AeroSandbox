@@ -11,18 +11,19 @@ class Fuselage(AeroSandboxObject):
 
     Anatomy of a Fuselage:
 
-        A fuselage consists chiefly of a collection of cross-sections, or "xsecs". A cross-section is a 2D "slice" of
-        a fuselage. These can be accessed with `Fuselage.xsecs`, which gives a list of xsecs in the Fuselage. Each
-        xsec is a FuselageXSec object, a class that is defined separately.
+        A fuselage consists chiefly of a collection of cross-sections, or "xsecs". A
+        cross-section is a 2D "slice" of a fuselage. These can be accessed with
+        `Fuselage.xsecs`, which gives a list of xsecs in the Fuselage. Each xsec is a
+        FuselageXSec object, a class that is defined separately.
 
-        You may also see references to fuselage "sections", which are different from cross-sections (xsecs)! Sections
-        are the portions of the fuselage that are in between xsecs. In other words, a fuselage with N cross-sections
-        (xsecs, FuselageXSec objects) will always have N-1 sections. Sections are never explicitly defined,
-        since you can get all needed information by lofting from the adjacent cross-sections. For example,
+        You may also see references to fuselage "sections", which are different from
+        cross-sections (xsecs)! Sections are the portions of the fuselage that are in between
+        xsecs. In other words, a fuselage with N cross-sections (xsecs, FuselageXSec objects)
+        will always have N-1 sections. Sections are never explicitly defined, since you can get
+        all needed information by lofting from the adjacent cross-sections. For example,
         section 0 (the first one) is a loft between cross-sections 0 and 1.
 
         Fuselages are lofted linearly between cross-sections.
-
     """
 
     def __init__(
@@ -34,52 +35,57 @@ class Fuselage(AeroSandboxObject):
         **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
     ):
         """
-        Defines a new fuselage object.
+        Define a new fuselage object.
 
-        Args:
+        Parameters
+        ----------
+        name : str | None
+            Name of the fuselage [optional]. It can help when debugging to give each fuselage a
+            sensible name.
+        xsecs : Sequence["FuselageXSec"] | None
+            A list of fuselage cross-sections ("xsecs") in the form of FuselageXSec objects.
+        color : (str | tuple[float]) | None
+            Determines what color to use for this component when drawing the airplane.
+            Optional, and for visualization purposes only. If left as None, a default color
+            will be chosen at the time of drawing (usually, black). Can be any color format
+            recognized by MatPlotLib, namely:
 
-            name: Name of the fuselage [optional]. It can help when debugging to give each fuselage a sensible name.
+            * A RGB or RGBA tuple of floats in the interval [0, 1], e.g., (0.1, 0.2, 0.5, 0.3)
 
-            xsecs: A list of fuselage cross-sections ("xsecs") in the form of FuselageXSec objects.
+            * Case-insensitive hex RGB or RGBA string, e.g., '#0f0f0f80'
 
-            color: Determines what color to use for this component when drawing the airplane. Optional,
-                and for visualization purposes only. If left as None, a default color will be chosen at the time of
-                drawing (usually, black). Can be any color format recognized by MatPlotLib, namely:
+            * String representation of float value in closed interval [0, 1] for grayscale
+              values, e.g., '0.8' for light gray
 
-                * A RGB or RGBA tuple of floats in the interval [0, 1], e.g., (0.1, 0.2, 0.5, 0.3)
+            * Single character shorthand notation for basic colors, e.g., 'k' -> black,
+              'r' -> red
 
-                * Case-insensitive hex RGB or RGBA string, e.g., '#0f0f0f80'
+            See also: https://matplotlib.org/stable/tutorials/colors/colors.html
+        analysis_specific_options : dict[type, dict[str, Any]] | None
+            Analysis-specific options are additional constants or modeling assumptions that
+            should be passed on to specific analyses and associated with this specific
+            geometry object.
 
-                * String representation of float value in closed interval [0, 1] for grayscale values, e.g.,
-                    '0.8' for light gray
+            This should be a dictionary where:
 
-                * Single character shorthand notation for basic colors, e.g., 'k' -> black, 'r' -> red
+            * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis
+              or asb.ImplicitAnalysis), but if you decide to write your own analysis and want
+              to make this key something else (like a string), that's totally fine - it's just
+              a unique identifier for the specific analysis you're running.
 
-                See also: https://matplotlib.org/stable/tutorials/colors/colors.html
+            * Values are a dictionary of key:value pairs, where:
 
-            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
-            that should be passed on to specific analyses and associated with this specific geometry object.
+                * Keys are strings.
 
-                This should be a dictionary where:
+                * Values are some value you want to assign.
 
-                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
-                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
-                    something else (like a string), that's totally fine - it's just a unique identifier for the
-                    specific analysis you're running.
+            This is more easily demonstrated / understood with an example:
 
-                    * Values are a dictionary of key:value pairs, where:
-
-                        * Keys are strings.
-
-                        * Values are some value you want to assign.
-
-                This is more easily demonstrated / understood with an example:
-
-                >>> analysis_specific_options = {
-                >>>     asb.AeroBuildup: dict(
-                >>>         include_wave_drag=True,
-                >>>     )
-                >>> }
+            >>> analysis_specific_options = {
+            >>>     asb.AeroBuildup: dict(
+            >>>         include_wave_drag=True,
+            >>>     )
+            >>> }
         """
         ### Set defaults
         if xsecs is None:
@@ -164,13 +170,17 @@ class Fuselage(AeroSandboxObject):
 
     def translate(self, xyz: np.ndarray | Sequence[float]) -> "Fuselage":
         """
-        Translates the entire Fuselage by a certain amount.
+        Translate the entire Fuselage by a certain amount.
 
-        Args:
-            xyz:
+        Parameters
+        ----------
+        xyz : np.ndarray | Sequence[float]
+            The amount to translate the Fuselage. Given as a 3-element vector.
 
-        Returns: self
-
+        Returns
+        -------
+        Fuselage
+            The new Fuselage object.
         """
         new_fuse = copy.copy(self)
         new_fuse.xsecs = [xsec.translate(xyz) for xsec in new_fuse.xsecs]
@@ -178,9 +188,12 @@ class Fuselage(AeroSandboxObject):
 
     def area_wetted(self) -> float:
         """
-        Returns the wetted area of the fuselage.
+        Return the wetted area of the fuselage.
 
-        :return:
+        Returns
+        -------
+        float
+            The wetted area of the fuselage.
         """
         area = 0
 
@@ -197,16 +210,21 @@ class Fuselage(AeroSandboxObject):
         type: Literal["XY", "XZ"] = "XY",
     ) -> float:
         """
-        Returns the area of the fuselage as projected onto one of the principal planes.
+        Return the area of the fuselage as projected onto one of the principal planes.
 
-        Args:
-            type: A string, which determines which principal plane to use for projection. One of:
+        Parameters
+        ----------
+        type : Literal["XY", "XZ"]
+            A string, which determines which principal plane to use for projection. One of:
 
-                * "XY", in which case the projected area is onto the XY plane (i.e., top-down)
+            * "XY", in which case the projected area is onto the XY plane (i.e., top-down)
 
-                * "XZ", in which case the projected area is onto the XZ plane (i.e., side-view)
+            * "XZ", in which case the projected area is onto the XZ plane (i.e., side-view)
 
-        Returns: The projected area.
+        Returns
+        -------
+        float
+            The projected area.
         """
         area = 0
         for i in range(len(self.xsecs) - 1):
@@ -227,10 +245,14 @@ class Fuselage(AeroSandboxObject):
 
     def area_base(self) -> float:
         """
-        Returns the area of the base (i.e. "trailing edge") of the fuselage. Useful for certain types of drag
-        calculation.
+        Return the area of the base (i.e. "trailing edge") of the fuselage.
 
-        Returns:
+        Useful for certain types of drag calculation.
+
+        Returns
+        -------
+        float
+            The area of the base of the fuselage.
         """
         return self.xsecs[-1].xsec_area()
 
@@ -239,20 +261,27 @@ class Fuselage(AeroSandboxObject):
         assumed_shape: Literal["cylinder", "sears-haack"] = "cylinder",
     ) -> float:
         """
-        Approximates the fineness ratio using the volume and length. The fineness ratio of a fuselage is defined as:
+        Approximate the fineness ratio using the volume and length.
+
+        The fineness ratio of a fuselage is defined as:
 
             FR = length / max_diameter
 
-        Args:
+        Parameters
+        ----------
+        assumed_shape : Literal["cylinder", "sears-haack"]
+            A string, which determines the assumed shape of the fuselage for the
+            approximation. One of:
 
-            assumed_shape: A string, which determines the assumed shape of the fuselage for the approximation. One of:
+            * "cylinder", in which case the fuselage is assumed to have a cylindrical shape.
 
-                * "cylinder", in which case the fuselage is assumed to have a cylindrical shape.
+            * "sears-haack", in which case the fuselage is assumed to have Sears-Haack
+              fuselage shape.
 
-                * "sears-haack", in which case the fuselage is assumed to have Sears-Haack fuselage shape.
-
-        Returns: An approximate value of the fuselage's fineness ratio.
-
+        Returns
+        -------
+        float
+            An approximate value of the fuselage's fineness ratio.
         """
         if assumed_shape == "cylinder":
             return np.sqrt(self.length() ** 3 / self.volume() * np.pi / 4)
@@ -266,23 +295,32 @@ class Fuselage(AeroSandboxObject):
 
     def length(self) -> float:
         """
-        Returns the total front-to-back length of the fuselage. Measured as the difference between the x-coordinates
-        of the leading and trailing cross-sections.
-        :return:
+        Return the total front-to-back length of the fuselage.
+
+        Measured as the difference between the x-coordinates of the leading and trailing
+        cross-sections.
+
+        Returns
+        -------
+        float
+            The total front-to-back length of the fuselage.
         """
         return np.fabs(self.xsecs[-1].xyz_c[0] - self.xsecs[0].xyz_c[0])
 
     def volume(self, _sectional: bool = False) -> float | list[float]:
         """
-        Computes the volume of the Fuselage.
+        Compute the volume of the Fuselage.
 
-        Args:
+        Parameters
+        ----------
+        _sectional : bool
+            A boolean. If False, returns the total volume. If True, returns a list of volumes
+            for each of the `n-1` lofted sections (between the `n` fuselage cross-sections in
+            fuselage.xsec).
 
-            _sectional: A boolean. If False, returns the total volume. If True, returns a list of volumes for each of
-            the `n-1` lofted sections (between the `n` fuselage cross-sections in fuselage.xsec).
-
-        Returns:
-
+        Returns
+        -------
+        float | list[float]
             The computed volume.
         """
         xsec_areas = [xsec.xsec_area() for xsec in self.xsecs]
@@ -311,16 +349,21 @@ class Fuselage(AeroSandboxObject):
         type: Literal["XY", "XZ"] = "XY",
     ) -> float:
         """
-        Returns the x_g coordinate of the centroid of the planform area.
+        Return the x_g coordinate of the centroid of the planform area.
 
-        Args:
-            type: A string, which determines which principal plane to use for projection. One of:
+        Parameters
+        ----------
+        type : Literal["XY", "XZ"]
+            A string, which determines which principal plane to use for projection. One of:
 
-                * "XY", in which case the projected area is onto the XY plane (i.e., top-down)
+            * "XY", in which case the projected area is onto the XY plane (i.e., top-down)
 
-                * "XZ", in which case the projected area is onto the XZ plane (i.e., side-view)
+            * "XZ", in which case the projected area is onto the XZ plane (i.e., side-view)
 
-        Returns: The x_g coordinate of the centroid.
+        Returns
+        -------
+        float
+            The x_g coordinate of the centroid.
         """
 
         total_x_area_product = 0
@@ -356,29 +399,37 @@ class Fuselage(AeroSandboxObject):
         tangential_resolution: int = 36,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Meshes the fuselage as a solid (thickened) body.
+        Mesh the fuselage as a solid (thickened) body.
 
-        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
-        `aerosandbox.geometry.mesh_utilities`.
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the
+        documentation in `aerosandbox.geometry.mesh_utilities`.
 
-        Args:
+        Parameters
+        ----------
+        method : Literal["quad", "tri"]
+            A string, which determines whether to mesh the fuselage as a series of
+            quadrilaterals or triangles.
 
-            method: A string, which determines whether to mesh the fuselage as a series of quadrilaterals or triangles.
+            * "quad" meshes the fuselage as a series of quadrilaterals.
 
-                * "quad" meshes the fuselage as a series of quadrilaterals.
+            * "tri" meshes the fuselage as a series of triangles.
+        tangential_resolution : int
+            An integer, which determines the number of points to use to mesh each
+            cross-section.
 
-                * "tri" meshes the fuselage as a series of triangles.
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            Standard unstructured mesh format: A tuple of `points` and `faces`, where:
 
-            tangential_resolution: An integer, which determines the number of points to use to mesh each cross-section.
+            * `points` is a `n x 3` array of points, where `n` is the number of points in the
+              mesh.
 
-        Returns: Standard unstructured mesh format: A tuple of`points` and `faces`, where:
+            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of
+              faces if `method` is "quad".
 
-            * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
-
-            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
-
-                * Each row of `faces` is a list of indices into `points`, which specifies a face.
-
+                * Each row of `faces` is a list of indices into `points`, which specifies a
+                  face.
         """
 
         t = np.linspace(0, 2 * np.pi, tangential_resolution + 1)[:-1]
@@ -423,21 +474,24 @@ class Fuselage(AeroSandboxObject):
         z_nondim: float | Sequence[float] = 0.0,
     ) -> list[np.ndarray]:
         """
-        Returns points along a line that goes through each of the FuselageXSec objects in this Fuselage.
+        Return points along a line that goes through each FuselageXSec object in this Fuselage.
 
-        Args:
+        Parameters
+        ----------
+        y_nondim : float | Sequence[float]
+            The nondimensional (width-normalized) y-coordinate that the line should go through.
+            Can either be a single value used at all cross-sections, or can be an iterable of
+            values to be used at the respective cross-sections.
+        z_nondim : float | Sequence[float]
+            The nondimensional (height-normalized) z-coordinate that the line should go
+            through. Can either be a single value used at all cross-sections, or can be an
+            iterable of values to be used at the respective cross-sections.
 
-            y_nondim: The nondimensional (width-normalized) y-coordinate that the line should go through. Can either
-            be a single value used at all cross-sections, or can be an iterable of values to be used at the
-            respective cross-sections.
-
-            z_nondim: The nondimensional (height-normalized) z-coordinate that the line should go through. Can either
-            be a single value used at all cross-sections, or can be an iterable of values to be used at the
-            respective cross-sections.
-
-        Returns: A list of points, where each point is a 3-element array of the form `[x, y, z]`. Goes from the nose
-        to the tail.
-
+        Returns
+        -------
+        list[np.ndarray]
+            A list of points, where each point is a 3-element array of the form `[x, y, z]`.
+            Goes from the nose to the tail.
         """
 
         points_on_line: list[np.ndarray] = []
@@ -482,14 +536,20 @@ class Fuselage(AeroSandboxObject):
 
     def draw(self, *args, **kwargs):
         """
-        An alias to the more general Airplane.draw() method. See there for documentation.
+        Draw the fuselage; an alias for Airplane.draw().
 
-        Args:
-            *args: Arguments to pass through to Airplane.draw()
-            **kwargs: Keyword arguments to pass through to Airplane.draw()
+        See the more general Airplane.draw() method for documentation.
 
-        Returns: Same return as Airplane.draw()
+        Parameters
+        ----------
+        *args
+            Arguments to pass through to Airplane.draw().
+        **kwargs
+            Keyword arguments to pass through to Airplane.draw().
 
+        Returns
+        -------
+        Same return as Airplane.draw().
         """
         from aerosandbox.geometry.airplane import Airplane
 
@@ -497,14 +557,20 @@ class Fuselage(AeroSandboxObject):
 
     def draw_wireframe(self, *args, **kwargs):
         """
-        An alias to the more general Airplane.draw_wireframe() method. See there for documentation.
+        Draw a wireframe of the fuselage; an alias for Airplane.draw_wireframe().
 
-        Args:
-            *args: Arguments to pass through to Airplane.draw_wireframe()
-            **kwargs: Keyword arguments to pass through to Airplane.draw_wireframe()
+        See the more general Airplane.draw_wireframe() method for documentation.
 
-        Returns: Same return as Airplane.draw_wireframe()
+        Parameters
+        ----------
+        *args
+            Arguments to pass through to Airplane.draw_wireframe().
+        **kwargs
+            Keyword arguments to pass through to Airplane.draw_wireframe().
 
+        Returns
+        -------
+        Same return as Airplane.draw_wireframe().
         """
         from aerosandbox.geometry.airplane import Airplane
 
@@ -512,14 +578,20 @@ class Fuselage(AeroSandboxObject):
 
     def draw_three_view(self, *args, **kwargs):
         """
-        An alias to the more general Airplane.draw_three_view() method. See there for documentation.
+        Draw a three-view of the fuselage; an alias for Airplane.draw_three_view().
 
-        Args:
-            *args: Arguments to pass through to Airplane.draw_three_view()
-            **kwargs: Keyword arguments to pass through to Airplane.draw_three_view()
+        See the more general Airplane.draw_three_view() method for documentation.
 
-        Returns: Same return as Airplane.draw_three_view()
+        Parameters
+        ----------
+        *args
+            Arguments to pass through to Airplane.draw_three_view().
+        **kwargs
+            Keyword arguments to pass through to Airplane.draw_three_view().
 
+        Returns
+        -------
+        Same return as Airplane.draw_three_view().
         """
         from aerosandbox.geometry.airplane import Airplane
 
@@ -531,23 +603,31 @@ class Fuselage(AeroSandboxObject):
         spacing_function: Callable[[float, float, int], np.ndarray] = np.linspace,
     ) -> "Fuselage":
         """
-        Generates a new Fuselage that subdivides the existing sections of this Fuselage into several smaller ones. Splits
-        each section into N=`ratio` smaller subsections by inserting new cross-sections (xsecs) as needed.
+        Generate a new Fuselage that subdivides the existing sections into smaller ones.
 
-        This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
+        Splits each section into N=`ratio` smaller subsections by inserting new cross-sections
+        (xsecs) as needed.
 
-        Args:
+        This can allow for finer aerodynamic resolution of sectional properties in certain
+        analyses.
 
-            ratio: The number of new sections to split each old section into.
+        Parameters
+        ----------
+        ratio : int
+            The number of new sections to split each old section into.
+        spacing_function : Callable[[float, float, int], np.ndarray]
+            A function that takes in three arguments: the start, end, and number of points to
+            generate.
 
-            spacing_function: A function that takes in three arguments: the start, end, and number of points to generate.
+            The default is `np.linspace`, which generates a linearly-spaced array of points.
 
-                The default is `np.linspace`, which generates a linearly-spaced array of points.
+            Other options include `np.cosspace`, which generates a cosine-spaced array of
+            points.
 
-                Other options include `np.cosspace`, which generates a cosine-spaced array of points.
-
-        Returns: A new Fuselage object with subdivided sections.
-
+        Returns
+        -------
+        Fuselage
+            A new Fuselage object with subdivided sections.
         """
         if not (ratio >= 2 and isinstance(ratio, int)):
             raise ValueError("`ratio` must be an integer greater than or equal to 2.")
@@ -582,15 +662,21 @@ class Fuselage(AeroSandboxObject):
         self, index: int
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Computes the local frame of a FuselageXSec, given the index of the FuselageXSec in the Fuselage.xsecs list.
+        Compute the local frame of a FuselageXSec, given its index in the Fuselage.xsecs list.
 
-        Args:
-            index: The index of the FuselageXSec in the Fuselage.xsecs list.
+        Parameters
+        ----------
+        index : int
+            The index of the FuselageXSec in the Fuselage.xsecs list.
 
-        Returns:  A tuple:
-            xg_local: The x-axis of the local coordinate frame, in aircraft geometry axes.
-            yg_local: The y-axis of the local coordinate frame, in aircraft geometry axes.
-            zg_local: The z-axis of the local coordinate frame, in aircraft geometry axes.
+        Returns
+        -------
+        xg_local : np.ndarray
+            The x-axis of the local coordinate frame, in aircraft geometry axes.
+        yg_local : np.ndarray
+            The y-axis of the local coordinate frame, in aircraft geometry axes.
+        zg_local : np.ndarray
+            The z-axis of the local coordinate frame, in aircraft geometry axes.
         """
         import warnings
 
@@ -619,88 +705,97 @@ class FuselageXSec(AeroSandboxObject):
         analysis_specific_options: dict[type, dict[str, Any]] | None = None,
     ):
         """
-        Defines a new Fuselage cross-section.
+        Define a new Fuselage cross-section.
 
         Fuselage cross-sections are essentially a sketch on a 2D plane.
 
-            * This plane is defined by a center point (`xyz_c`) and a normal vector (`xyz_normal`).
+        * This plane is defined by a center point (`xyz_c`) and a normal vector
+          (`xyz_normal`).
 
-            * The cross-section is a superellipse shape, which is a generalization of a circle and a square.
+        * The cross-section is a superellipse shape, which is a generalization of a circle
+          and a square.
 
-                It is mathematically defined by three parameters, using `y` and `z` as the two axes. Note that
-                `width` and `height` are the full extents of the cross-section (i.e., the cross-section spans from
-                -width/2 to +width/2 in y, and from -height/2 to +height/2 in z):
+            It is mathematically defined by three parameters, using `y` and `z` as the two
+            axes. Note that `width` and `height` are the full extents of the cross-section
+            (i.e., the cross-section spans from -width/2 to +width/2 in y, and from -height/2
+            to +height/2 in z):
 
-                    abs(y / (width / 2)) ^ shape + abs(z / (height / 2)) ^ shape = 1
+                abs(y / (width / 2)) ^ shape + abs(z / (height / 2)) ^ shape = 1
 
-                See also: https://en.wikipedia.org/wiki/Superellipse
+            See also: https://en.wikipedia.org/wiki/Superellipse
 
-                There are some notable special cases:
+            There are some notable special cases:
 
-                    * A circle is a special case of a superellipse, where `shape = 2`.
+            * A circle is a special case of a superellipse, where `shape = 2`.
 
-                    * A square is a special case of a superellipse, where `shape = Inf` (in practice, set this to some
-                    high value like 1000).
+            * A square is a special case of a superellipse, where `shape = Inf` (in practice,
+              set this to some high value like 1000).
 
-                    * A diamond is a special case of a superellipse, where `shape = 1`.
+            * A diamond is a special case of a superellipse, where `shape = 1`.
 
         Must specify either `radius` or both `width` and `height`. Cannot specify both.
 
-        Args:
-
-            xyz_c: An array-like that represents the xyz-coordinates of the center of this fuselage cross-section,
-            in geometry axes.
-
-            xyz_normal: An array-like that represents the xyz-coordinates of the normal vector of this fuselage
+        Parameters
+        ----------
+        xyz_c : np.ndarray | Sequence[float] | None
+            An array-like that represents the xyz-coordinates of the center of this fuselage
             cross-section, in geometry axes.
+        xyz_normal : np.ndarray | Sequence[float] | None
+            An array-like that represents the xyz-coordinates of the normal vector of this
+            fuselage cross-section, in geometry axes.
+        radius : Scalar | None
+            Radius of the fuselage cross-section.
+        width : Scalar | None
+            Width of the fuselage cross-section.
+        height : Scalar | None
+            Height of the fuselage cross-section.
+        shape : float
+            A parameter that determines what shape the cross-section is. Should be in the
+            range 1 < shape < infinity.
 
-            radius: Radius of the fuselage cross-section.
+            In short, here's how to interpret this value:
 
-            width: Width of the fuselage cross-section.
+            * shape=2 is a circle.
 
-            height: Height of the fuselage cross-section.
+            * shape=1 is a diamond shape.
 
-            shape: A parameter that determines what shape the cross-section is. Should be in the range 1 < shape < infinity.
+            * A high value of, say, 10, will get you a square-ish shape.
 
-                In short, here's how to interpret this value:
+            To be more precise:
 
-                    * shape=2 is a circle.
+            * If the `shape` parameter is `s`, then the corresponding shape is the same as a
+              level-set of a L^s norm in R^2.
 
-                    * shape=1 is a diamond shape.
+            * Defined another way, if the `shape` parameter is `s`, then the shape is the
+              solution to the equation:
 
-                    * A high value of, say, 10, will get you a square-ish shape.
+                * x^s + y^s = 1 in the first quadrant (x>0, y>0); then mirrored for all four
+                  quadrants.
+        analysis_specific_options : dict[type, dict[str, Any]] | None
+            Analysis-specific options are additional constants or modeling assumptions that
+            should be passed on to specific analyses and associated with this specific
+            geometry object.
 
-                To be more precise:
+            This should be a dictionary where:
 
-                    * If the `shape` parameter is `s`, then the corresponding shape is the same as a level-set of a L^s norm in R^2.
+            * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis
+              or asb.ImplicitAnalysis), but if you decide to write your own analysis and want
+              to make this key something else (like a string), that's totally fine - it's just
+              a unique identifier for the specific analysis you're running.
 
-                    * Defined another way, if the `shape` parameter is `s`, then the shape is the solution to the equation:
+            * Values are a dictionary of key:value pairs, where:
 
-                        * x^s + y^s = 1 in the first quadrant (x>0, y>0); then mirrored for all four quadrants.
+                * Keys are strings.
 
-            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
-            that should be passed on to specific analyses and associated with this specific geometry object.
+                * Values are some value you want to assign.
 
-                This should be a dictionary where:
+            This is more easily demonstrated / understood with an example:
 
-                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
-                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
-                    something else (like a string), that's totally fine - it's just a unique identifier for the
-                    specific analysis you're running.
-
-                    * Values are a dictionary of key:value pairs, where:
-
-                        * Keys are strings.
-
-                        * Values are some value you want to assign.
-
-                This is more easily demonstrated / understood with an example:
-
-                >>> analysis_specific_options = {
-                >>>     asb.AeroBuildup: dict(
-                >>>         include_wave_drag=True,
-                >>>     )
-                >>> }
+            >>> analysis_specific_options = {
+            >>>     asb.AeroBuildup: dict(
+            >>>         include_wave_drag=True,
+            >>>     )
+            >>> }
         """
         ### Set defaults
         if xyz_c is None:
@@ -742,38 +837,40 @@ class FuselageXSec(AeroSandboxObject):
 
     def xsec_area(self):
         """
-        Computes the FuselageXSec's cross-sectional (xsec) area.
+        Compute the FuselageXSec's cross-sectional (xsec) area.
 
-        The computation method is a closed-form approximation for the area of a superellipse. The exact equation for
-        the area of a superellipse with shape parameter `s` is:
+        The computation method is a closed-form approximation for the area of a superellipse.
+        The exact equation for the area of a superellipse with shape parameter `s` is:
 
             area = width * height * (gamma(1 + 1/n))^2 / gamma(1 + 2/n)
 
-        where gamma() is the gamma function. The gamma function is (relatively) computationally expensive to evaluate
-        and differentiate, so we replace this area calculation with a closed-form approximation (with essentially no
-        loss in accuracy):
+        where gamma() is the gamma function. The gamma function is (relatively) computationally
+        expensive to evaluate and differentiate, so we replace this area calculation with a
+        closed-form approximation (with essentially no loss in accuracy):
 
             area = width * height / (s^-1.8717618013591173 + 1)
 
         This approximation has the following properties:
 
-            * It is numerically exact for the case of s = 1 (a diamond)
+        * It is numerically exact for the case of s = 1 (a diamond)
 
-            * It is numerically exact for the case of s = 2 (a circle)
+        * It is numerically exact for the case of s = 2 (a circle)
 
-            * It is correct in the asymptotic limit where s -> infinity (a square)
+        * It is correct in the asymptotic limit where s -> infinity (a square)
 
-            * In the range of sensible s values (1 < s < infinity), its error is less than 0.6%.
+        * In the range of sensible s values (1 < s < infinity), its error is less than 0.6%.
 
-            * It always produces a positive area for any physically-meaningful value of s (s > 0). In the range of s
-            values where s is physically-meaningful but not in a sensible range (0 < s < 1), this equation will
-            over-predict area.
+        * It always produces a positive area for any physically-meaningful value of s
+          (s > 0). In the range of s values where s is physically-meaningful but not in a
+          sensible range (0 < s < 1), this equation will over-predict area.
 
-        The value of the constant seen in this expression (1.872...) is given by log(4/pi - 1) / log(2), and it is
-        chosen as such so that the expression is exactly correct in the s=2 (circle) case.
+        The value of the constant seen in this expression (1.872...) is given by
+        log(4/pi - 1) / log(2), and it is chosen as such so that the expression is exactly
+        correct in the s=2 (circle) case.
 
-        Returns:
-
+        Returns
+        -------
+        The cross-sectional area of the FuselageXSec.
         """
         area = self.width * self.height / (self.shape**-1.8717618013591173 + 1)
 
@@ -781,37 +878,46 @@ class FuselageXSec(AeroSandboxObject):
 
     def xsec_perimeter(self):
         """
-        Computes the FuselageXSec's perimeter. ("Circumference" in the case of a circular cross-section.)
+        Compute the FuselageXSec's perimeter.
 
-        The computation method is a closed-form approximation for the perimeter of a superellipse. The exact equation
-        for the perimeter of a superellipse is quite long and is not repeated here for brevity; a Google search will
-        bring it up. More importantly, this exact equation can only be represented as an infinite sum - not
-        particularly useful for fast computation.
+        ("Circumference" in the case of a circular cross-section.)
 
-        We replace this exact equation with the following closed-form approximation obtained from symbolic regression:
+        The computation method is a closed-form approximation for the perimeter of a
+        superellipse. The exact equation for the perimeter of a superellipse is quite long and
+        is not repeated here for brevity; a Google search will bring it up. More importantly,
+        this exact equation can only be represented as an infinite sum - not particularly
+        useful for fast computation.
 
-            Imagine a superellipse centered on the origin of a 2D plane. Now, imagine that the superellipse is
-            stretched such that the first quadrant (e.g., x>0, y>0) goes from (1, 0) to (0, h). Assume it has shape
-            parameter s (where, as a reminder, s=1 is a diamond, s=2 is a circle, s=Inf is a square).
+        We replace this exact equation with the following closed-form approximation obtained
+        from symbolic regression:
+
+            Imagine a superellipse centered on the origin of a 2D plane. Now, imagine that the
+            superellipse is stretched such that the first quadrant (e.g., x>0, y>0) goes from
+            (1, 0) to (0, h). Assume it has shape parameter s (where, as a reminder, s=1 is a
+            diamond, s=2 is a circle, s=Inf is a square).
 
             Then, the perimeter of that single quadrant is:
 
-            h + (((((s-0.88487077) * h + 0.2588574 / h) ^ exp(s / -0.90069205)) + h) + 0.09919785) ^ (-1.4812293 / s)
+            h + (((((s-0.88487077) * h + 0.2588574 / h) ^ exp(s / -0.90069205)) + h)
+            + 0.09919785) ^ (-1.4812293 / s)
 
-            See `AeroSandbox/studies/SuperellipseProperties` for details about how this was obtained.
+            See `AeroSandbox/studies/SuperellipseProperties` for details about how this was
+            obtained.
 
-        We can extrapolate from here to the general case of a superellipse, as shown in the code below.
+        We can extrapolate from here to the general case of a superellipse, as shown in the
+        code below.
 
         This approximation has the following properties:
 
-            * For the s=1 case (diamond), the error is +0.2%.
+        * For the s=1 case (diamond), the error is +0.2%.
 
-            * For the s=2 case (circle), the error is -0.1%.
+        * For the s=2 case (circle), the error is -0.1%.
 
-            * In the s -> infinity limit (square), the error is +0.1%.
+        * In the s -> infinity limit (square), the error is +0.1%.
 
-        Returns:
-
+        Returns
+        -------
+        The perimeter of the FuselageXSec.
         """
         try:
             if self.width == 0:
@@ -840,19 +946,23 @@ class FuselageXSec(AeroSandboxObject):
 
     def compute_frame(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Computes the local coordinate frame of the FuselageXSec, in aircraft geometry axes.
+        Compute the local coordinate frame of the FuselageXSec, in aircraft geometry axes.
 
         xg_local is aligned with the FuselageXSec's normal vector.
 
-        zg_local is roughly aligned with the z-axis of the aircraft geometry axes, but projected onto the FuselageXSec's plane.
+        zg_local is roughly aligned with the z-axis of the aircraft geometry axes, but
+        projected onto the FuselageXSec's plane.
 
         yg_local is the cross product of zg_local and xg_local.
 
-        Returns: A tuple:
-            xg_local: The x-axis of the local coordinate frame, in aircraft geometry axes.
-            yg_local: The y-axis of the local coordinate frame, in aircraft geometry axes.
-            zg_local: The z-axis of the local coordinate frame, in aircraft geometry axes.
-
+        Returns
+        -------
+        xg_local : np.ndarray
+            The x-axis of the local coordinate frame, in aircraft geometry axes.
+        yg_local : np.ndarray
+            The y-axis of the local coordinate frame, in aircraft geometry axes.
+        zg_local : np.ndarray
+            The z-axis of the local coordinate frame, in aircraft geometry axes.
         """
         xyz_normal = self.xyz_normal / np.linalg.norm(self.xyz_normal)
 
@@ -869,29 +979,32 @@ class FuselageXSec(AeroSandboxObject):
         self, theta: Vectorizable | None = None
     ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
-        Samples points from the perimeter of this FuselageXSec.
+        Sample points from the perimeter of this FuselageXSec.
 
-        Args:
+        Parameters
+        ----------
+        theta : Vectorizable | None
+            Coordinate in the tangential-ish direction to sample points at. Given in the 2D
+            FuselageXSec coordinate system, where:
 
-            theta: Coordinate in the tangential-ish direction to sample points at. Given in the 2D FuselageXSec
-            coordinate system, where:
+            * y_2D points along the (global) y_g
+            * z_2D points along the (global) z_g
 
-                * y_2D points along the (global) y_g
-                * z_2D points along the (global) z_g
+            In other words, a value of:
 
-                In other words, a value of:
+            * theta=0     -> samples points from the right side of the FuselageXSec
+            * theta=pi/2  -> samples points from the top of the FuselageXSec
+            * theta=pi    -> samples points from the left side of the FuselageXSec
+            * theta=3pi/2 -> samples points from the bottom of the FuselageXSec
 
-                    * theta=0     -> samples points from the right side of the FuselageXSec
-                    * theta=pi/2  -> samples points from the top of the FuselageXSec
-                    * theta=pi    -> samples points from the left side of the FuselageXSec
-                    * theta=3pi/2 -> samples points from the bottom of the FuselageXSec
-
-        Returns: Points sampled from the perimeter of the FuselageXSec, as a [x, y, z] tuple.
+        Returns
+        -------
+        tuple[Vectorizable, Vectorizable, Vectorizable]
+            Points sampled from the perimeter of the FuselageXSec, as a [x, y, z] tuple.
 
             If theta is a float, then each of x, y, and z will be floats.
 
             If theta is an array, then x, y, and z will also be arrays of the same size.
-
         """
         ### Set defaults
         if theta is None:
@@ -915,22 +1028,27 @@ class FuselageXSec(AeroSandboxObject):
         self, preserve: Literal["area", "perimeter"] = "area"
     ) -> float:
         """
-        Computes an equivalent radius for non-circular cross-sections. This may be necessary when doing analysis that
-        uses axisymmetric assumptions.
+        Compute an equivalent radius for non-circular cross-sections.
 
-        Can either hold area or perimeter fixed, depending on whether cross-sectional area or wetted area is more
-        important.
+        This may be necessary when doing analysis that uses axisymmetric assumptions.
 
-        Args:
+        Can either hold area or perimeter fixed, depending on whether cross-sectional area or
+        wetted area is more important.
 
-            preserve: One of:
+        Parameters
+        ----------
+        preserve : Literal["area", "perimeter"]
+            One of:
 
-                * "area": holds the cross-sectional area constant
+            * "area": holds the cross-sectional area constant
 
-                * "perimeter": holds the cross-sectional perimeter (i.e., the wetted area of the Fuselage) constant
+            * "perimeter": holds the cross-sectional perimeter (i.e., the wetted area of the
+              Fuselage) constant
 
-        Returns: An equivalent radius value.
-
+        Returns
+        -------
+        float
+            An equivalent radius value.
         """
         if preserve == "area":
             return (self.xsec_area() / np.pi + 1e-16) ** 0.5
@@ -941,13 +1059,17 @@ class FuselageXSec(AeroSandboxObject):
 
     def translate(self, xyz: np.ndarray | Sequence[float]) -> "FuselageXSec":
         """
-        Returns a copy of this FuselageXSec that has been translated by `xyz`.
+        Return a copy of this FuselageXSec that has been translated by `xyz`.
 
-        Args:
-            xyz: The amount to translate the FuselageXSec. Given as a 3-element NumPy vector.
+        Parameters
+        ----------
+        xyz : np.ndarray | Sequence[float]
+            The amount to translate the FuselageXSec. Given as a 3-element NumPy vector.
 
-        Returns: A copy of this FuselageXSec, translated by `xyz`.
-
+        Returns
+        -------
+        FuselageXSec
+            A copy of this FuselageXSec, translated by `xyz`.
         """
         new_xsec = copy.copy(self)
         new_xsec.xyz_c = new_xsec.xyz_c + np.array(xyz)

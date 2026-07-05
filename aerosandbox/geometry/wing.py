@@ -14,22 +14,25 @@ class Wing(AeroSandboxObject):
 
     Anatomy of a Wing:
 
-        A wing consists chiefly of a collection of cross-sections, or "xsecs". A cross-section is a 2D "slice" of a
-        wing. These can be accessed with `Wing.xsecs`, which gives a list of xsecs in the Wing. Each xsec is a
-        WingXSec object, a class that is defined separately.
+        A wing consists chiefly of a collection of cross-sections, or "xsecs". A cross-section
+        is a 2D "slice" of a wing. These can be accessed with `Wing.xsecs`, which gives a list
+        of xsecs in the Wing. Each xsec is a WingXSec object, a class that is defined
+        separately.
 
-        You may also see references to wing "sections", which are different than cross-sections (xsecs)! Sections are
-        the portions of the wing that are in between xsecs. In other words, a wing with N cross-sections (xsecs,
-        WingXSec objects) will always have N-1 sections. Sections are never explicitly defined, since you can get all
-        needed information by lofting from the adjacent cross-sections. For example, section 0 (the first one) is a
-        loft between cross-sections 0 and 1.
+        You may also see references to wing "sections", which are different than
+        cross-sections (xsecs)! Sections are the portions of the wing that are in between
+        xsecs. In other words, a wing with N cross-sections (xsecs, WingXSec objects) will
+        always have N-1 sections. Sections are never explicitly defined, since you can get all
+        needed information by lofting from the adjacent cross-sections. For example, section 0
+        (the first one) is a loft between cross-sections 0 and 1.
 
         Wings are lofted linearly between cross-sections.
 
-    If the wing is symmetric across the XZ plane, just define the right half and supply `symmetric=True` in the
-    constructor.
+    If the wing is symmetric across the XZ plane, just define the right half and supply
+    `symmetric=True` in the constructor.
 
-    If the wing is not symmetric across the XZ plane (e.g., a single vertical stabilizer), just define the wing.
+    If the wing is not symmetric across the XZ plane (e.g., a single vertical stabilizer),
+    just define the wing.
     """
 
     def __init__(
@@ -42,54 +45,59 @@ class Wing(AeroSandboxObject):
         **kwargs,  # Only to allow for capturing of deprecated arguments, don't use this.
     ):
         """
-        Defines a new wing object.
+        Define a new wing object.
 
-        Args:
+        Parameters
+        ----------
+        name : str | None
+            Name of the wing [optional]. It can help when debugging to give each wing a
+            sensible name.
+        xsecs : list["WingXSec"] | None
+            A list of wing cross-sections ("xsecs") in the form of WingXSec objects.
+        symmetric : bool
+            Is the wing symmetric across the XZ plane?
+        color : (str | tuple[float]) | None
+            Determines what color to use for this component when drawing the airplane.
+            Optional, and for visualization purposes only. If left as None, a default color
+            will be chosen at the time of drawing (usually, black). Can be any color format
+            recognized by MatPlotLib, namely:
 
-            name: Name of the wing [optional]. It can help when debugging to give each wing a sensible name.
+            * A RGB or RGBA tuple of floats in the interval [0, 1], e.g., (0.1, 0.2, 0.5, 0.3)
 
-            xsecs: A list of wing cross-sections ("xsecs") in the form of WingXSec objects.
+            * Case-insensitive hex RGB or RGBA string, e.g., '#0f0f0f80'
 
-            symmetric: Is the wing symmetric across the XZ plane?
+            * String representation of float value in closed interval [0, 1] for grayscale
+              values, e.g., '0.8' for light gray
 
-            color: Determines what color to use for this component when drawing the airplane. Optional,
-                and for visualization purposes only. If left as None, a default color will be chosen at the time of
-                drawing (usually, black). Can be any color format recognized by MatPlotLib, namely:
+            * Single character shorthand notation for basic colors, e.g., 'k' -> black,
+              'r' -> red
 
-                * A RGB or RGBA tuple of floats in the interval [0, 1], e.g., (0.1, 0.2, 0.5, 0.3)
+            See also: https://matplotlib.org/stable/tutorials/colors/colors.html
+        analysis_specific_options : dict[type, dict[str, Any]] | None
+            Analysis-specific options are additional constants or modeling assumptions that
+            should be passed on to specific analyses and associated with this specific
+            geometry object.
 
-                * Case-insensitive hex RGB or RGBA string, e.g., '#0f0f0f80'
+            This should be a dictionary where:
 
-                * String representation of float value in closed interval [0, 1] for grayscale values, e.g.,
-                    '0.8' for light gray
+            * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis
+              or asb.ImplicitAnalysis), but if you decide to write your own analysis and want
+              to make this key something else (like a string), that's totally fine - it's just
+              a unique identifier for the specific analysis you're running.
 
-                * Single character shorthand notation for basic colors, e.g., 'k' -> black, 'r' -> red
+            * Values are a dictionary of key:value pairs, where:
 
-                See also: https://matplotlib.org/stable/tutorials/colors/colors.html
+                * Keys are strings.
 
-            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
-                that should be passed on to specific analyses and associated with this specific geometry object.
+                * Values are some value you want to assign.
 
-                This should be a dictionary where:
+            This is more easily demonstrated / understood with an example:
 
-                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
-                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
-                    something else (like a string), that's totally fine - it's just a unique identifier for the
-                    specific analysis you're running.
-
-                    * Values are a dictionary of key:value pairs, where:
-
-                        * Keys are strings.
-
-                        * Values are some value you want to assign.
-
-                This is more easily demonstrated / understood with an example:
-
-                >>> analysis_specific_options = {
-                >>>     asb.AeroBuildup: dict(
-                >>>         include_wave_drag=True,
-                >>>     )
-                >>> }
+            >>> analysis_specific_options = {
+            >>>     asb.AeroBuildup: dict(
+            >>>         include_wave_drag=True,
+            >>>     )
+            >>> }
         """
         ### Set defaults
         if name is None:
@@ -123,13 +131,17 @@ class Wing(AeroSandboxObject):
 
     def translate(self, xyz: np.ndarray | Sequence[float]) -> "Wing":
         """
-        Translates the entire Wing by a certain amount.
+        Translate the entire Wing by a certain amount.
 
-        Args:
-            xyz:
+        Parameters
+        ----------
+        xyz : np.ndarray | Sequence[float]
+            The amount to translate the Wing. Given as a 3-element vector.
 
-        Returns: The new wing object.
-
+        Returns
+        -------
+        Wing
+            The new wing object.
         """
         new_wing = copy.copy(self)
         new_wing.xsecs = [xsec.translate(xyz) for xsec in new_wing.xsecs]
@@ -144,55 +156,66 @@ class Wing(AeroSandboxObject):
         _sectional: bool = False,
     ) -> float | list[float]:
         """
-        Computes the span, with options for various ways of measuring this (see `type` argument).
+        Compute the span, with options for various ways of measuring this (see `type` argument).
 
-        If the wing is symmetric, both left/right sides are included in order to obtain the full span. In the case
-        where the root cross-section is not coincident with the center plane (e.g., XZ plane), this function's
-        behavior depends on the `include_centerline_distance` argument.
+        If the wing is symmetric, both left/right sides are included in order to obtain the full
+        span. In the case where the root cross-section is not coincident with the center plane
+        (e.g., XZ plane), this function's behavior depends on the `include_centerline_distance`
+        argument.
 
-        Args:
+        Parameters
+        ----------
+        type : Literal["xyz", "xy", "top", "yz", "front", "xz", "side", "x", "y", "z"]
+            One of the following options, as a string:
 
-            type: One of the following options, as a string:
+            * "xyz": First, computes the quarter-chord point of each WingXSec. Then, connects
+              these with straight lines. Then, adds up the lengths of these lines.
 
-                * "xyz": First, computes the quarter-chord point of each WingXSec. Then, connects these with
-                straight lines. Then, adds up the lengths of these lines.
+            * "xy" or "top": Same as "xyz", except it projects each line segment onto the XY
+              plane before adding up the lengths.
 
-                * "xy" or "top": Same as "xyz", except it projects each line segment onto the XY plane before adding up the
-                lengths.
+            * "yz" (default) or "front": Same as "xyz", except it projects each line segment
+              onto the YZ plane (i.e., front view) before adding up the lengths.
 
-                * "yz" (default) or "front": Same as "xyz", except it projects each line segment onto the YZ plane (i.e., front view)
-                before adding up the lengths.
+            * "xz" or "side": Same as "xyz", except it projects each line segment onto the XZ
+              plane before adding up the lengths. Rarely needed.
 
-                * "xz" or "side": Same as "xyz", except it projects each line segment onto the XZ plane before adding up the
-                lengths. Rarely needed.
+            * "x": Same as "xyz", except it only counts the x-components of each line segment
+              when adding up the lengths.
 
-                * "x": Same as "xyz", except it only counts the x-components of each line segment when adding up the
-                lengths.
+            * "y": Same as "xyz", except it only counts the y-components of each line segment
+              when adding up the lengths.
 
-                * "y": Same as "xyz", except it only counts the y-components of each line segment when adding up the
-                lengths.
-
-                * "z": Same as "xyz", except it only counts the z-components of each line segment when adding up the
-                lengths.
-
-            include_centerline_distance: A boolean flag that tells the function what to do if a wing's root is not
+            * "z": Same as "xyz", except it only counts the z-components of each line segment
+              when adding up the lengths.
+        include_centerline_distance : bool
+            A boolean flag that tells the function what to do if a wing's root is not
             coincident with the centerline plane (i.e., XZ plane).
 
-                * If True, we first figure out which WingXSec has its quarter-chord point closest to the centerline
-                plane (i.e., XZ plane). Then, we compute the distance from that quarter-chord point directly to the
-                centerline plane (along Y). We then add that distance to the span calculation. In other words,
-                the fictitious span connecting the left and right root cross-sections is included.
+            * If True, we first figure out which WingXSec has its quarter-chord point closest
+              to the centerline plane (i.e., XZ plane). Then, we compute the distance from that
+              quarter-chord point directly to the centerline plane (along Y). We then add that
+              distance to the span calculation. In other words, the fictitious span connecting
+              the left and right root cross-sections is included.
 
-                * If False, this distance is ignored. In other words, the fictitious span connecting the left and
-                right root cross-sections is not included. This is the default behavior.
+            * If False, this distance is ignored. In other words, the fictitious span
+              connecting the left and right root cross-sections is not included. This is the
+              default behavior.
 
-                Note: For computation, either the root WingXSec (i.e., index=0) or the tip WingXSec (i.e., index=-1)
-                is used, whichever is closer to the centerline plane. This will almost-always be the root WingXSec,
-                but some weird edge cases (e.g., a half-wing defined on the left-hand-side of the airplane,
-                rather than the conventional right-hand side) will result in the tip WingXSec being used.
+            Note: For computation, either the root WingXSec (i.e., index=0) or the tip WingXSec
+            (i.e., index=-1) is used, whichever is closer to the centerline plane. This will
+            almost-always be the root WingXSec, but some weird edge cases (e.g., a half-wing
+            defined on the left-hand-side of the airplane, rather than the conventional
+            right-hand side) will result in the tip WingXSec being used.
+        _sectional : bool
+            A boolean. If False, returns the total span. If True, returns a list of spans for
+            each of the `n-1` lofted sections (between the `n` wing cross-sections in
+            wing.xsec).
 
-            _sectional: A boolean. If False, returns the total span. If True, returns a list of spans for each of the
-                `n-1` lofted sections (between the `n` wing cross-sections in wing.xsec).
+        Returns
+        -------
+        float | list[float]
+            The span. If `_sectional` is True, returns a list of sectional spans instead.
         """
         # Check inputs
         if include_centerline_distance and _sectional:
@@ -295,46 +318,57 @@ class Wing(AeroSandboxObject):
         _sectional: bool = False,
     ) -> float | list[float]:
         """
-        Computes the wing area, with options for various ways of measuring this (see `type` argument):
+        Compute the wing area, with options for various measurement methods (see `type` argument).
 
-        If the wing is symmetric, both left/right sides are included in order to obtain the full area. In the case
-        where the root cross-section is not coincident with the center plane (e.g., XZ plane), this function's
-        behavior depends on the `include_centerline_distance` argument.
+        If the wing is symmetric, both left/right sides are included in order to obtain the full
+        area. In the case where the root cross-section is not coincident with the center plane
+        (e.g., XZ plane), this function's behavior depends on the `include_centerline_distance`
+        argument.
 
-        Args:
+        Parameters
+        ----------
+        type : Literal["planform", "wetted", "xy", "projected", "top", "xz", "side", "yz"]
+            One of the following options, as a string:
 
-            type: One of the following options, as a string:
+            * "planform" (default): First, lofts a quadrilateral mean camber surface between
+              each WingXSec. Then, computes the area of each of these sectional surfaces. Then,
+              sums up all the areas and returns it. When airplane designers refer to "wing
+              area" (in the absence of any other qualifiers), this is typically what they mean.
 
-                * "planform" (default): First, lofts a quadrilateral mean camber surface between each WingXSec. Then,
-                computes the area of each of these sectional surfaces. Then, sums up all the areas and returns it.
-                When airplane designers refer to "wing area" (in the absence of any other qualifiers),
-                this is typically what they mean.
+            * "wetted": Computes the actual surface area of the wing that is in contact with
+              the air. Will typically be a little more than double the "planform" area above;
+              intuitively, this is because it adds both the "top" and "bottom" surface areas.
+              Accounts for airfoil thickness/shape effects.
 
-                * "wetted": Computes the actual surface area of the wing that is in contact with the air. Will
-                typically be a little more than double the "planform" area above; intuitively, this is because it
-                adds both the "top" and "bottom" surface areas. Accounts for airfoil thickness/shape effects.
+            * "xy" or "projected" or "top": Same as "planform", but each sectional surface is
+              projected onto the XY plane (i.e., top-down view) before computing the areas.
+              Note that if you try to use this method with a vertically-oriented wing, like
+              most vertical stabilizers, you will get an area near zero.
 
-                * "xy" or "projected" or "top": Same as "planform", but each sectional surface is projected onto the XY plane
-                (i.e., top-down view) before computing the areas. Note that if you try to use this method with a
-                vertically-oriented wing, like most vertical stabilizers, you will get an area near zero.
+            * "xz" or "side": Same as "planform", but each sectional surface is projected onto
+              the XZ plane before computing the areas.
+        include_centerline_distance : bool
+            A boolean flag that tells the function what to do if a wing's root chord is not
+            coincident with the centerline plane (i.e., XZ plane).
 
-                * "xz" or "side": Same as "planform", but each sectional surface is projected onto the XZ plane before
-                computing the areas.
+            * If True, we first figure out which WingXSec is closest to the centerline plane
+              (i.e., XZ plane). Then, we imagine that this WingXSec is extruded along the Y
+              axis to the centerline plane (assuming a straight extrusion to produce a
+              rectangular mid-camber surface). In doing so, we use the wing geometric chord as
+              the extrusion width. We then add the area of this fictitious surface to the area
+              calculation.
 
-            include_centerline_distance: A boolean flag that tells the function what to do if a wing's root chord is
-            not coincident with the centerline plane (i.e., XZ plane).
+            * If False, this function will simply ignore this fictitious wing area. This is
+              the default behavior.
+        _sectional : bool
+            A boolean. If False, returns the total area. If True, returns a list of areas for
+            each of the `n-1` lofted sections (between the `n` wing cross-sections in
+            wing.xsec).
 
-                * If True, we first figure out which WingXSec is closest to the centerline plane (i.e., XZ plane).
-                Then, we imagine that this WingXSec is extruded along the Y axis to the centerline plane (assuming a
-                straight extrusion to produce a rectangular mid-camber surface). In doing so, we use the wing
-                geometric chord as the extrusion width. We then add the area of this fictitious surface to the area
-                calculation.
-
-                * If False, this function will simply ignore this fictitious wing area. This is the default behavior.
-
-            _sectional: A boolean. If False, returns the total area. If True, returns a list of areas for each of the
-                `n-1` lofted sections (between the `n` wing cross-sections in wing.xsec).
-
+        Returns
+        -------
+        float | list[float]
+            The wing area. If `_sectional` is True, returns a list of sectional areas instead.
         """
         # Check inputs
         if include_centerline_distance and _sectional:
@@ -419,17 +453,23 @@ class Wing(AeroSandboxObject):
         type: Literal["geometric", "effective"] = "geometric",
     ) -> float:
         """
-        Computes the aspect ratio of the wing, with options for various ways of measuring this.
+        Compute the aspect ratio of the wing, with options for various ways of measuring this.
 
-         * geometric: geometric aspect ratio, computed in the typical fashion (b^2 / S).
+        * geometric: geometric aspect ratio, computed in the typical fashion (b^2 / S).
 
-         * effective: Differs from the geometric aspect ratio only in the case of symmetric wings whose root
-         cross-section is not on the centerline. In these cases, it includes the span and area of the fictitious wing
-         center when computing aspect ratio.
+        * effective: Differs from the geometric aspect ratio only in the case of symmetric
+          wings whose root cross-section is not on the centerline. In these cases, it includes
+          the span and area of the fictitious wing center when computing aspect ratio.
 
-        Args:
-            type: One of the above options, as a string.
+        Parameters
+        ----------
+        type : Literal["geometric", "effective"]
+            One of the above options, as a string.
 
+        Returns
+        -------
+        float
+            The aspect ratio of the wing.
         """
         if type == "geometric":
             return self.span() ** 2 / self.area()
@@ -443,6 +483,18 @@ class Wing(AeroSandboxObject):
             raise ValueError("Bad value of `type`!")
 
     def is_entirely_symmetric(self) -> bool:
+        """
+        Return whether the wing is totally symmetric.
+
+        To be totally symmetric, every xsec must have symmetric (or undeflected) control
+        surfaces. If the wing itself is not mirrored (e.g., a vertical stabilizer), it must
+        also lie on the centerline, be untwisted, and have symmetric airfoils.
+
+        Returns
+        -------
+        bool
+            Whether the wing is totally symmetric.
+        """
         # Returns a boolean of whether the wing is totally symmetric (i.e.), every xsec has symmetric control surfaces.
         for xsec in self.xsecs:  # To be symmetric, all
             for surf in xsec.control_surfaces:
@@ -464,18 +516,26 @@ class Wing(AeroSandboxObject):
 
     def mean_geometric_chord(self) -> float:
         """
-        Returns the mean geometric chord of the wing (S/b).
-        :return:
+        Return the mean geometric chord of the wing (S/b).
+
+        Returns
+        -------
+        float
+            The mean geometric chord of the wing (S/b).
         """
         return self.area() / self.span()
 
     def mean_aerodynamic_chord(self) -> float:
         """
-        Computes the length of the mean aerodynamic chord of the wing.
-        Uses the generalized methodology described here:
-            https://core.ac.uk/download/pdf/79175663.pdf
+        Compute the length of the mean aerodynamic chord of the wing.
 
-        Returns: The length of the mean aerodynamic chord.
+        Uses the generalized methodology described here:
+        https://core.ac.uk/download/pdf/79175663.pdf
+
+        Returns
+        -------
+        float
+            The length of the mean aerodynamic chord.
         """
         sectional_areas = self.area(_sectional=True)
         sectional_MAC_lengths = []
@@ -506,9 +566,13 @@ class Wing(AeroSandboxObject):
         return MAC_length
 
     def mean_twist_angle(self) -> float:
-        r"""
-        Returns the mean twist angle (in degrees) of the wing, weighted by area.
-        :return: mean twist angle (in degrees)
+        """
+        Return the mean twist angle (in degrees) of the wing, weighted by area.
+
+        Returns
+        -------
+        float
+            Mean twist angle (in degrees).
         """
 
         sectional_twists = [
@@ -527,24 +591,28 @@ class Wing(AeroSandboxObject):
 
     def mean_sweep_angle(self, x_nondim=0.25) -> float:
         """
-        Returns the mean sweep angle (in degrees) of the wing, relative to the x-axis.
+        Return the mean sweep angle (in degrees) of the wing, relative to the x-axis.
+
         Positive sweep is backwards, negative sweep is forward.
 
-        This is purely measured from root to tip, with no consideration for the sweep of the individual
-        cross-sections in between.
+        This is purely measured from root to tip, with no consideration for the sweep of the
+        individual cross-sections in between.
 
-        Args:
+        Parameters
+        ----------
+        x_nondim : float
+            The nondimensional x-coordinate of the cross-section to use for sweep angle
+            computation.
 
-            x_nondim: The nondimensional x-coordinate of the cross-section to use for sweep angle computation.
+            * If you provide 0, it will use the leading edge of the cross-section.
 
-                * If you provide 0, it will use the leading edge of the cross-section.
+            * If you provide 0.25, it will use the quarter-chord point of the cross-section.
 
-                * If you provide 0.25, it will use the quarter-chord point of the cross-section.
+            * If you provide 1, it will use the trailing edge of the cross-section.
 
-                * If you provide 1, it will use the trailing edge of the cross-section.
-
-        Returns:
-
+        Returns
+        -------
+        float
             The mean sweep angle, in degrees.
         """
         root_quarter_chord = self._compute_xyz_of_WingXSec(
@@ -565,26 +633,29 @@ class Wing(AeroSandboxObject):
 
     def mean_dihedral_angle(self, x_nondim=0.25) -> float:
         """
-        Returns the mean dihedral angle (in degrees) of the wing, relative to the XY plane.
+        Return the mean dihedral angle (in degrees) of the wing, relative to the XY plane.
+
         Positive dihedral is bending up, negative dihedral is bending down.
 
-        This is purely measured from root to tip, with no consideration for the dihedral of the individual
-        cross-sections in between.
+        This is purely measured from root to tip, with no consideration for the dihedral of the
+        individual cross-sections in between.
 
-        Args:
+        Parameters
+        ----------
+        x_nondim : float
+            The nondimensional x-coordinate of the cross-section to use for sweep angle
+            computation.
 
-            x_nondim: The nondimensional x-coordinate of the cross-section to use for sweep angle computation.
+            * If you provide 0, it will use the leading edge of the cross-section.
 
-                * If you provide 0, it will use the leading edge of the cross-section.
+            * If you provide 0.25, it will use the quarter-chord point of the cross-section.
 
-                * If you provide 0.25, it will use the quarter-chord point of the cross-section.
+            * If you provide 1, it will use the trailing edge of the cross-section.
 
-                * If you provide 1, it will use the trailing edge of the cross-section.
-
-        Returns:
-
-            The mean dihedral angle, in degrees
-
+        Returns
+        -------
+        float
+            The mean dihedral angle, in degrees.
         """
         root_quarter_chord = self._compute_xyz_of_WingXSec(
             0, x_nondim=x_nondim, z_nondim=0
@@ -605,19 +676,30 @@ class Wing(AeroSandboxObject):
         self, chord_fraction: float = 0.25, _sectional=False
     ) -> np.ndarray | list[np.ndarray]:
         """
-        Computes the location of the aerodynamic center of the wing.
+        Compute the location of the aerodynamic center of the wing.
+
         Uses the generalized methodology described here:
-            https://core.ac.uk/download/pdf/79175663.pdf
+        https://core.ac.uk/download/pdf/79175663.pdf
 
-        Args: chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
+        Parameters
+        ----------
+        chord_fraction : float
+            The position of the aerodynamic center along the MAC, as a fraction of MAC length.
 
-            Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing. However,
-            wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less. Citing Cook,
-            Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability". PDF:
+            Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic
+            wing. However, wing-fuselage interactions can cause a forward shift to a value more
+            like 0.1 or less. Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed.,
+            Sect. 3.5.3 "Controls-fixed static stability". PDF:
             https://www.sciencedirect.com/science/article/pii/B9780080982427000031
+        _sectional : bool
+            A boolean. If False, returns the overall aerodynamic center. If True, returns a
+            list of the aerodynamic centers of each of the `n-1` lofted sections (between the
+            `n` wing cross-sections in wing.xsec).
 
-        Returns: The (x, y, z) coordinates of the aerodynamic center of the wing.
-
+        Returns
+        -------
+        np.ndarray | list[np.ndarray]
+            The (x, y, z) coordinates of the aerodynamic center of the wing.
         """
         sectional_areas = self.area(_sectional=True)
         sectional_ACs = []
@@ -689,25 +771,31 @@ class Wing(AeroSandboxObject):
 
     def taper_ratio(self) -> float:
         """
-        Gives the taper ratio of the Wing. Strictly speaking, only valid for trapezoidal wings.
+        Compute the taper ratio of the Wing.
 
-        Returns:
+        Strictly speaking, only valid for trapezoidal wings.
+
+        Returns
+        -------
+        float
             Taper ratio of the Wing.
-
         """
         return self.xsecs[-1].chord / self.xsecs[0].chord
 
     def volume(self, _sectional: bool = False) -> float | list[float]:
         """
-        Computes the volume of the Wing.
+        Compute the volume of the Wing.
 
-        Args:
+        Parameters
+        ----------
+        _sectional : bool
+            A boolean. If False, returns the total volume. If True, returns a list of volumes
+            for each of the `n-1` lofted sections (between the `n` wing cross-sections in
+            wing.xsec).
 
-            _sectional: A boolean. If False, returns the total volume. If True, returns a list of volumes for each of
-            the `n-1` lofted sections (between the `n` wing cross-sections in wing.xsec).
-
-        Returns:
-
+        Returns
+        -------
+        float | list[float]
             The computed volume.
         """
         xsec_areas = [xsec.xsec_area() for xsec in self.xsecs]
@@ -732,12 +820,12 @@ class Wing(AeroSandboxObject):
 
     def get_control_surface_names(self) -> list[str]:
         """
-        Gets the names of all control surfaces on this wing.
+        Get the names of all control surfaces on this wing.
 
-        Returns:
-
+        Returns
+        -------
+        list[str]
             A list of control surface names.
-
         """
         control_surface_names = []
         for xsec in self.xsecs:
@@ -751,16 +839,19 @@ class Wing(AeroSandboxObject):
         control_surface_mappings: dict[str, float],
     ) -> None:
         """
-        Sets the deflection of all control surfaces on this wing, based on the provided mapping.
+        Set the deflection of all control surfaces on this wing, based on the provided mapping.
 
-        Args:
-            control_surface_mappings: A dictionary mapping control surface names to their deflection angles, in degrees.
+        Parameters
+        ----------
+        control_surface_mappings : dict[str, float]
+            A dictionary mapping control surface names to their deflection angles, in degrees.
 
-                Note: control surface names are set in the asb.ControlSurface constructor.
+            Note: control surface names are set in the asb.ControlSurface constructor.
 
-        Returns:
-
-            None. (in-place)
+        Returns
+        -------
+        None
+            Modifies the control surfaces in-place.
         """
         for xsec in self.xsecs:
             for control_surface in xsec.control_surfaces:
@@ -776,40 +867,50 @@ class Wing(AeroSandboxObject):
         | None = "planform",
     ) -> float:
         """
-        Computes the total area of all control surfaces on this wing, optionally filtered by their name.
+        Compute the total area of all control surfaces on this wing, optionally filtered by name.
 
-        Control surfaces are defined on a section-by-section basis, and are defined in the WingXSec constructor using
-        its `control_surfaces` argument.
+        Control surfaces are defined on a section-by-section basis, and are defined in the
+        WingXSec constructor using its `control_surfaces` argument.
 
-        Note: If redundant control surfaces are defined (e.g., elevons, as defined by separate ailerons + elevator),
-        the area will be duplicated.
+        Note: If redundant control surfaces are defined (e.g., elevons, as defined by separate
+        ailerons + elevator), the area will be duplicated.
 
-        If the wing is symmetric, control surfaces on both left/right sides are included in order to obtain the full area.
+        If the wing is symmetric, control surfaces on both left/right sides are included in
+        order to obtain the full area.
 
-        Args:
+        Parameters
+        ----------
+        by_name : str | None
+            If not None, only control surfaces with this name will be included in the area
+            calculation.
 
-            by_name: If not None, only control surfaces with this name will be included in the area calculation.
+            Note: control surface names are set in the asb.ControlSurface constructor.
+        type : Literal["planform", "wetted", "xy", "projected", "top", "xz", "side"] | None
+            One of the following options, as a string:
 
-                Note: control surface names are set in the asb.ControlSurface constructor.
+            * "planform" (default): First, lofts a quadrilateral mean camber surface between
+              each WingXSec. Then, computes the area of each of these sectional surfaces.
+              Then, computes what fraction of this area is control surface. Then, sums up all
+              the areas and returns it. When airplane designers refer to "control surface
+              area" (in the absence of any other qualifiers), this is typically what they mean.
 
-            type: One of the following options, as a string:
+            * "wetted": Computes the actual surface area of the control surface that is in
+              contact with the air. Will typically be a little more than double the "planform"
+              area above; intuitively, this is because it adds both the "top" and "bottom"
+              surface areas. Accounts for airfoil thickness/shape effects.
 
-                * "planform" (default): First, lofts a quadrilateral mean camber surface between each WingXSec. Then,
-                computes the area of each of these sectional surfaces. Then, computes what fraction of this area is
-                control surface. Then, sums up all the areas and returns it. When airplane designers refer to
-                "control surface area" (in the absence of any other qualifiers), this is typically what they mean.
+            * "xy" or "projected" or "top": Same as "planform", but each sectional surface is
+              projected onto the XY plane (i.e., top-down view) before computing the areas.
+              Note that if you try to use this method with a vertically-oriented wing, like
+              most vertical stabilizers, you will get an area near zero.
 
-                * "wetted": Computes the actual surface area of the control surface that is in contact with the air.
-                Will typically be a little more than double the "planform" area above; intuitively, this is because
-                it adds both the "top" and "bottom" surface areas. Accounts for airfoil thickness/shape effects.
+            * "xz" or "side": Same as "planform", but each sectional surface is projected onto
+              the XZ plane before computing the areas.
 
-                * "xy" or "projected" or "top": Same as "planform", but each sectional surface is projected onto the XY plane
-                (i.e., top-down view) before computing the areas. Note that if you try to use this method with a
-                vertically-oriented wing, like most vertical stabilizers, you will get an area near zero.
-
-                * "xz" or "side": Same as "planform", but each sectional surface is projected onto the XZ plane before
-                computing the areas.
-
+        Returns
+        -------
+        float
+            The total control surface area.
         """
         sectional_areas = self.area(
             type=type, include_centerline_distance=False, _sectional=True
@@ -849,69 +950,79 @@ class Wing(AeroSandboxObject):
         mesh_symmetric: bool = True,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Meshes the outer mold line surface of the wing.
+        Mesh the outer mold line surface of the wing.
 
-        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
-        `aerosandbox.geometry.mesh_utilities`.
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the
+        documentation in `aerosandbox.geometry.mesh_utilities`.
 
         Order of faces:
 
-            * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
+        * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
 
-                * If `mesh_surface` is `True`:
+            * If `mesh_surface` is `True`:
 
-                    * First face is nearest the top-side trailing edge of the wing root.
+                * First face is nearest the top-side trailing edge of the wing root.
 
-                    * Proceeds chordwise, along the upper surface of the wing from back to front. Upon reaching the
-                    leading edge, continues along the lower surface of the wing from front to back.
+                * Proceeds chordwise, along the upper surface of the wing from back to front.
+                  Upon reaching the leading edge, continues along the lower surface of the wing
+                  from front to back.
 
-                    * Then, repeats this process for the next spanwise slice of the wing, and so on.
+                * Then, repeats this process for the next spanwise slice of the wing, and so
+                  on.
 
-                * If `mesh_trailing_edge` is `True`:
+            * If `mesh_trailing_edge` is `True`:
 
-                    * Continues by meshing the trailing edge of the wing. Meshes the inboard trailing edge first, then
-                    proceeds spanwise to the outboard trailing edge.
+                * Continues by meshing the trailing edge of the wing. Meshes the inboard
+                  trailing edge first, then proceeds spanwise to the outboard trailing edge.
 
-                * If `mesh_tips` is `True`:
+            * If `mesh_tips` is `True`:
 
-                    * Continues by meshing the wing tips. Meshes the inboard tip first, then meshes the outboard tip.
+                * Continues by meshing the wing tips. Meshes the inboard tip first, then meshes
+                  the outboard tip.
 
-                    * Within each tip, meshes from the
+                * Within each tip, meshes from the
 
-        Args:
+        Parameters
+        ----------
+        method : Literal["tri", "quad"]
+            One of the following options, as a string:
 
-            method: One of the following options, as a string:
+            * "tri": Triangular mesh.
 
-                * "tri": Triangular mesh.
+            * "quad": Quadrilateral mesh.
+        chordwise_resolution : int
+            Number of points to use per wing chord, per wing section.
+        chordwise_spacing_function_per_side : Callable[[float, float, int], np.ndarray]
+            A function that determines how to space points in the chordwise direction along the
+            top and bottom surfaces. Common values would be `np.linspace` or `np.cosspace`, but
+            it can be any function with the call signature `f(a, b, n)` that returns a spaced
+            array of `n` points between `a` and `b`. [function]
+        mesh_surface : bool
+            If True, includes the actual wing surface in the mesh.
+        mesh_tips : bool
+            If True, includes the wing tips (both on the inboard-most section and on the
+            outboard-most section) in the mesh.
+        mesh_trailing_edge : bool
+            If True, includes the wing trailing edge in the mesh, if the trailing-edge
+            thickness is nonzero.
+        mesh_symmetric : bool
+            Has no effect if the wing is not symmetric. If the wing is symmetric, this
+            determines whether the generated mesh is also symmetric, or if only one side of the
+            wing (right side) is meshed.
 
-                * "quad": Quadrilateral mesh.
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            Standard unstructured mesh format: A tuple of `points` and `faces`, where:
 
-            chordwise_resolution: Number of points to use per wing chord, per wing section.
+            * `points` is a `n x 3` array of points, where `n` is the number of points in the
+              mesh.
 
-            chordwise_spacing_function_per_side: A function that determines how to space points in the chordwise
-            direction along the top and bottom surfaces. Common values would be `np.linspace` or `np.cosspace`,
-            but it can be any function with the call signature `f(a, b, n)` that returns a spaced array of `n` points
-            between `a` and `b`. [function]
+            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of
+              faces if `method` is "quad".
 
-            mesh_surface: If True, includes the actual wing surface in the mesh.
-
-            mesh_tips: If True, includes the wing tips (both on the inboard-most section and on the outboard-most
-            section) in the mesh.
-
-            mesh_trailing_edge: If True, includes the wing trailing edge in the mesh, if the trailing-edge thickness
-            is nonzero.
-
-            mesh_symmetric: Has no effect if the wing is not symmetric. If the wing is symmetric this determines whether
-            the generated mesh is also symmetric, or if if only one side of the wing (right side) is meshed.
-
-        Returns: Standard unstructured mesh format: A tuple of `points` and `faces`, where:
-
-            * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
-
-            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
-
-                * Each row of `faces` is a list of indices into `points`, which specifies a face.
-
+                * Each row of `faces` is a list of indices into `points`, which specifies a
+                  face.
         """
 
         airfoil_nondim_coordinates = np.array(
@@ -1012,58 +1123,72 @@ class Wing(AeroSandboxObject):
         add_camber: bool = True,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Meshes the mean camber line of the wing as a thin-sheet body.
+        Mesh the mean camber line of the wing as a thin-sheet body.
 
-        Uses the `(points, faces)` standard mesh format. For reference on this format, see the documentation in
-        `aerosandbox.geometry.mesh_utilities`.
+        Uses the `(points, faces)` standard mesh format. For reference on this format, see the
+        documentation in `aerosandbox.geometry.mesh_utilities`.
 
         Order of faces:
-            * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
-                * First face is the face nearest the leading edge of the wing root.
-                * Proceeds along a chordwise strip to the trailing edge.
-                * Then, goes to the subsequent spanwise location and does another chordwise strip, et cetera until
-                  we get to the wing tip.
-            * On the left wing (applicable only if `Wing.symmetric` is `True`):
-                * Same order: Starts at the root leading edge, goes in chordwise strips.
+
+        * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
+
+            * First face is the face nearest the leading edge of the wing root.
+            * Proceeds along a chordwise strip to the trailing edge.
+            * Then, goes to the subsequent spanwise location and does another chordwise strip,
+              et cetera until we get to the wing tip.
+
+        * On the left wing (applicable only if `Wing.symmetric` is `True`):
+
+            * Same order: Starts at the root leading edge, goes in chordwise strips.
 
         Order of vertices within each face:
-            * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
-                * Front-left
-                * Back-left
-                * Back-right
-                * Front-right
-            * On the left wing (applicable only if `Wing.symmetric` is `True`):
-                * Front-left
-                * Back-left
-                * Back-right
-                * Front-right
 
-        Args:
+        * On the right wing (or, if `Wing.symmetric` is `False`, just the wing itself):
 
-            method: A string, which determines whether to mesh the fuselage as a series of quadrilaterals or triangles.
+            * Front-left
+            * Back-left
+            * Back-right
+            * Front-right
 
-                * "quad" meshes the fuselage as a series of quadrilaterals.
+        * On the left wing (applicable only if `Wing.symmetric` is `True`):
 
-                * "tri" meshes the fuselage as a series of triangles.
+            * Front-left
+            * Back-left
+            * Back-right
+            * Front-right
 
-            chordwise_resolution: Determines the number of chordwise panels to use in the meshing. [int]
+        Parameters
+        ----------
+        method : Literal["tri", "quad"]
+            A string, which determines whether to mesh the wing as a series of quadrilaterals
+            or triangles.
 
-            chordwise_spacing_function: Determines how to space the chordwise panels. Can be `np.linspace` or
-            `np.cosspace`, or any other function of the call signature `f(a, b, n)` that returns a spaced array of
-            `n` points between `a` and `b`. [function]
+            * "quad" meshes the wing as a series of quadrilaterals.
 
-            add_camber: Controls whether to mesh the thin surface with camber (i.e., mean camber line), or to just
-            mesh the flat planform. [bool]
+            * "tri" meshes the wing as a series of triangles.
+        chordwise_resolution : int
+            Determines the number of chordwise panels to use in the meshing. [int]
+        chordwise_spacing_function : Callable[[float, float, int], np.ndarray]
+            Determines how to space the chordwise panels. Can be `np.linspace` or
+            `np.cosspace`, or any other function of the call signature `f(a, b, n)` that
+            returns a spaced array of `n` points between `a` and `b`. [function]
+        add_camber : bool
+            Controls whether to mesh the thin surface with camber (i.e., mean camber line), or
+            to just mesh the flat planform. [bool]
 
-        Returns: Standard unstructured mesh format: A tuple of `points` and `faces`, where:
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            Standard unstructured mesh format: A tuple of `points` and `faces`, where:
 
-            * `points` is a `n x 3` array of points, where `n` is the number of points in the mesh.
+            * `points` is a `n x 3` array of points, where `n` is the number of points in the
+              mesh.
 
-            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of faces if `method` is "quad".
+            * `faces` is a `m x 3` array of faces if `method` is "tri", or a `m x 4` array of
+              faces if `method` is "quad".
 
-                * Each row of `faces` is a list of indices into `points`, which specifies a face.
-
-
+                * Each row of `faces` is a list of indices into `points`, which specifies a
+                  face.
         """
         x_nondim = chordwise_spacing_function(0, 1, chordwise_resolution + 1)
 
@@ -1137,25 +1262,29 @@ class Wing(AeroSandboxObject):
         add_camber: bool = True,
     ) -> list[np.ndarray]:
         """
-        Meshes a line that goes through each of the WingXSec objects in this wing.
+        Mesh a line that goes through each of the WingXSec objects in this wing.
 
-        Args:
+        Parameters
+        ----------
+        x_nondim : float | Sequence[float]
+            The nondimensional (chord-normalized) x-coordinate that the line should go through.
+            Can either be a single value used at all cross-sections, or can be an iterable of
+            values to be used at the respective cross-sections.
+        z_nondim : float | Sequence[float]
+            The nondimensional (chord-normalized) y-coordinate that the line should go through.
+            Here, y-coordinate means the "vertical" component (think standard 2D airfoil axes).
+            Can either be a single value used at all cross-sections, or can be an iterable of
+            values to be used at the respective cross sections.
+        add_camber : bool
+            Controls whether the camber of each cross-section's airfoil should be added to the
+            line or not. Essentially modifies `z_nondim` to be `z_nondim + camber`.
 
-            x_nondim: The nondimensional (chord-normalized) x-coordinate that the line should go through. Can either
-            be a single value used at all cross-sections, or can be an iterable of values to be used at the
-            respective cross-sections.
-
-            z_nondim: The nondimensional (chord-normalized) y-coordinate that the line should go through. Here,
-            y-coordinate means the "vertical" component (think standard 2D airfoil axes). Can either be a single
-            value used at all cross-sections, or can be an iterable of values to be used at the respective cross
-            sections.
-
-            add_camber: Controls whether the camber of each cross-section's airfoil should be added to the line or
-            not. Essentially modifies `z_nondim` to be `z_nondim + camber`.
-
-        Returns: A list of points, where each point is a 3-element array of the form `[x, y, z]`. Goes from the root
-        to the tip. Ignores any wing symmetry (e.g., only gives one side).
-
+        Returns
+        -------
+        list[np.ndarray]
+            A list of points, where each point is a 3-element array of the form `[x, y, z]`.
+            Goes from the root to the tip. Ignores any wing symmetry (e.g., only gives one
+            side).
         """
         points_on_line: list[np.ndarray] = []
 
@@ -1203,14 +1332,20 @@ class Wing(AeroSandboxObject):
 
     def draw(self, *args, **kwargs):
         """
-        An alias to the more general Airplane.draw() method. See there for documentation.
+        Draw the wing; an alias for Airplane.draw().
 
-        Args:
-            *args: Arguments to pass through to Airplane.draw()
-            **kwargs: Keyword arguments to pass through to Airplane.draw()
+        See the more general Airplane.draw() method for documentation.
 
-        Returns: Same return as Airplane.draw()
+        Parameters
+        ----------
+        *args
+            Arguments to pass through to Airplane.draw().
+        **kwargs
+            Keyword arguments to pass through to Airplane.draw().
 
+        Returns
+        -------
+        Same return as Airplane.draw().
         """
         from aerosandbox.geometry.airplane import Airplane
 
@@ -1218,14 +1353,20 @@ class Wing(AeroSandboxObject):
 
     def draw_wireframe(self, *args, **kwargs):
         """
-        An alias to the more general Airplane.draw_wireframe() method. See there for documentation.
+        Draw a wireframe of the wing; an alias for Airplane.draw_wireframe().
 
-        Args:
-            *args: Arguments to pass through to Airplane.draw_wireframe()
-            **kwargs: Keyword arguments to pass through to Airplane.draw_wireframe()
+        See the more general Airplane.draw_wireframe() method for documentation.
 
-        Returns: Same return as Airplane.draw_wireframe()
+        Parameters
+        ----------
+        *args
+            Arguments to pass through to Airplane.draw_wireframe().
+        **kwargs
+            Keyword arguments to pass through to Airplane.draw_wireframe().
 
+        Returns
+        -------
+        Same return as Airplane.draw_wireframe().
         """
         from aerosandbox.geometry.airplane import Airplane
 
@@ -1233,14 +1374,20 @@ class Wing(AeroSandboxObject):
 
     def draw_three_view(self, *args, **kwargs):
         """
-        An alias to the more general Airplane.draw_three_view() method. See there for documentation.
+        Draw a three-view of the wing; an alias for Airplane.draw_three_view().
 
-        Args:
-            *args: Arguments to pass through to Airplane.draw_three_view()
-            **kwargs: Keyword arguments to pass through to Airplane.draw_three_view()
+        See the more general Airplane.draw_three_view() method for documentation.
 
-        Returns: Same return as Airplane.draw_three_view()
+        Parameters
+        ----------
+        *args
+            Arguments to pass through to Airplane.draw_three_view().
+        **kwargs
+            Keyword arguments to pass through to Airplane.draw_three_view().
 
+        Returns
+        -------
+        Same return as Airplane.draw_three_view().
         """
         from aerosandbox.geometry.airplane import Airplane
 
@@ -1252,23 +1399,31 @@ class Wing(AeroSandboxObject):
         spacing_function: Callable[[float, float, int], np.ndarray] = np.linspace,
     ) -> "Wing":
         """
-        Generates a new Wing that subdivides the existing sections of this Wing into several smaller ones. Splits
-        each section into N=`ratio` smaller sub-sections by inserting new cross-sections (xsecs) as needed.
+        Generate a new Wing that subdivides the existing sections of this Wing into smaller ones.
 
-        This can allow for finer aerodynamic resolution of sectional properties in certain analyses.
+        Splits each section into N=`ratio` smaller sub-sections by inserting new cross-sections
+        (xsecs) as needed.
 
-        Args:
+        This can allow for finer aerodynamic resolution of sectional properties in certain
+        analyses.
 
-            ratio: The number of new sections to split each old section into.
+        Parameters
+        ----------
+        ratio : int
+            The number of new sections to split each old section into.
+        spacing_function : Callable[[float, float, int], np.ndarray]
+            A function that takes in three arguments: the start, end, and number of points to
+            generate.
 
-            spacing_function: A function that takes in three arguments: the start, end, and number of points to generate.
+            The default is `np.linspace`, which generates a linearly-spaced array of points.
 
-                The default is `np.linspace`, which generates a linearly-spaced array of points.
+            Other options include `np.cosspace`, which generates a cosine-spaced array of
+            points.
 
-                Other options include `np.cosspace`, which generates a cosine-spaced array of points.
-
-        Returns: A new Wing object with subdivided sections.
-
+        Returns
+        -------
+        Wing
+            A new Wing object with subdivided sections.
         """
         if not (ratio >= 2 and isinstance(ratio, int)):
             raise ValueError("`ratio` must be an integer greater than or equal to 2.")
@@ -1339,17 +1494,19 @@ class Wing(AeroSandboxObject):
         self, index: int
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Computes the local reference frame associated with a particular cross-section (XSec) of this wing.
+        Compute the local reference frame of a particular cross-section (XSec) of this wing.
 
-        Args:
+        Parameters
+        ----------
+        index : int
+            Which cross-section (as indexed in Wing.xsecs) should we get the frame of?
 
-            index: Which cross-section (as indexed in Wing.xsecs) should we get the frame of?
-
-        Returns:
-
-            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis of
-            the local reference frame of the WingXSec. Given in geometry axes.
-
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray, np.ndarray]
+            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the
+            respective (normalized) axis of the local reference frame of the WingXSec. Given
+            in geometry axes.
         """
 
         def project_to_YZ_plane_and_normalize(vector):
@@ -1393,20 +1550,24 @@ class Wing(AeroSandboxObject):
         self, index: int
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Computes the local reference frame associated with a particular section. (Note that sections and cross
-        sections are different! cross-sections, or xsecs, are the vertices, and sections are the parts in between. In
-        other words, a wing with N cross-sections (xsecs) will always have N-1 sections.
+        Compute the local reference frame associated with a particular section.
 
-        Args:
+        (Note that sections and cross-sections are different! Cross-sections, or xsecs, are
+        the vertices, and sections are the parts in between. In other words, a wing with N
+        cross-sections (xsecs) will always have N-1 sections.)
 
-            index: Which section should we get the frame of? If given `i`, this retrieves the frame of the section
-            between xsecs `i` and `i+1`.
+        Parameters
+        ----------
+        index : int
+            Which section should we get the frame of? If given `i`, this retrieves the frame
+            of the section between xsecs `i` and `i+1`.
 
-        Returns:
-
-            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the respective (normalized) axis
-            of the local reference frame of the section. Given in geometry axes.
-
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray, np.ndarray]
+            A tuple of (xg_local, yg_local, zg_local), where each entry refers to the
+            respective (normalized) axis of the local reference frame of the section. Given in
+            geometry axes.
         """
         in_front = self._compute_xyz_le_of_WingXSec(index)
         in_back = self._compute_xyz_te_of_WingXSec(index)
@@ -1447,92 +1608,103 @@ class WingXSec(AeroSandboxObject):
         **deprecated_kwargs,
     ):
         """
-        Defines a new wing cross-section.
+        Define a new wing cross-section.
 
-        Args:
+        Parameters
+        ----------
+        xyz_le : ArrayLike | None
+            An array-like that represents the xyz-coordinates of the leading edge of the
+            cross-section, in geometry axes.
+        chord : Scalar
+            Chord of the wing at this cross-section.
+        twist : Scalar
+            Twist angle, in degrees, as defined about the leading edge.
 
-            xyz_le: An array-like that represents the xyz-coordinates of the leading edge of the cross-section, in
-            geometry axes.
+            The twist axis is computed with the following procedure:
 
-            chord: Chord of the wing at this cross-section.
+            * The quarter-chord point of this WingXSec and the following one are identified.
 
-            twist: Twist angle, in degrees, as defined about the leading edge.
+            * A line is drawn connecting them, and it is normalized to a unit direction
+              vector.
 
-                The twist axis is computed with the following procedure:
+            * That direction vector is projected onto the geometry Y-Z plane.
 
-                    * The quarter-chord point of this WingXSec and the following one are identified.
+            * That direction vector is now the twist axis.
+        airfoil : Airfoil | None
+            Airfoil associated with this cross-section. [aerosandbox.Airfoil]
+        control_surfaces : list["ControlSurface"] | None
+            A list of control surfaces in the form of ControlSurface objects.
+        analysis_specific_options : dict[type, dict[str, Any]] | None
+            Analysis-specific options are additional constants or modeling assumptions that
+            should be passed on to specific analyses and associated with this specific
+            geometry object.
 
-                    * A line is drawn connecting them, and it is normalized to a unit direction vector.
+            This should be a dictionary where:
 
-                    * That direction vector is projected onto the geometry Y-Z plane.
+            * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis
+              or asb.ImplicitAnalysis), but if you decide to write your own analysis and want
+              to make this key something else (like a string), that's totally fine - it's just
+              a unique identifier for the specific analysis you're running.
 
-                    * That direction vector is now the twist axis.
+            * Values are a dictionary of key:value pairs, where:
 
-            airfoil: Airfoil associated with this cross-section. [aerosandbox.Airfoil]
+                * Keys are strings.
 
-            control_surfaces: A list of control surfaces in the form of ControlSurface objects.
+                * Values are some value you want to assign.
 
-            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
-            that should be passed on to specific analyses and associated with this specific geometry object.
+            This is more easily demonstrated / understood with an example:
 
-                This should be a dictionary where:
+            >>> analysis_specific_options = {
+            >>>     asb.AeroBuildup: dict(
+            >>>         include_wave_drag=True,
+            >>>     )
+            >>> }
 
-                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
-                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
-                    something else (like a string), that's totally fine - it's just a unique identifier for the
-                    specific analysis you're running.
+        Notes
+        -----
+        Control surface definition through WingXSec properties
+        (control_surface_is_symmetric, control_surface_hinge_point,
+        control_surface_deflection) is deprecated. Control surfaces should be handled
+        according to the following protocol:
 
-                    * Values are a dictionary of key:value pairs, where:
+        1. If control_surfaces is an empty list (default, user does not specify any control
+           surfaces), use deprecated WingXSec control surface definition properties. This will
+           result in 1 control surface at this xsec.
 
-                        * Keys are strings.
+           Usage example:
 
-                        * Values are some value you want to assign.
+           >>> xsecs = asb.WingXSec(
+           >>>     chord = 2
+           >>> )
 
-                This is more easily demonstrated / understood with an example:
+        2. If control_surfaces is a list of ControlSurface instances, use ControlSurface
+           properties to define control surfaces. This will result in as many control surfaces
+           at this xsec as there are entries in the control_surfaces list (an arbitrary
+           number >= 1).
 
-                >>> analysis_specific_options = {
-                >>>     asb.AeroBuildup: dict(
-                >>>         include_wave_drag=True,
-                >>>     )
-                >>> }
+           Usage example:
 
-            Note: Control surface definition through WingXSec properties (control_surface_is_symmetric, control_surface_hinge_point, control_surface_deflection)
-            is deprecated. Control surfaces should be handled according to the following protocol:
+           >>> xsecs = asb.WingXSec(
+           >>>     chord = 2,
+           >>>     control_surfaces = [
+           >>>         ControlSurface(
+           >>>             trailing_edge = False
+           >>>         )
+           >>>     ]
+           >>> )
 
-                1. If control_surfaces is an empty list (default, user does not specify any control surfaces), use deprecated WingXSec control surface definition properties.
-                This will result in 1 control surface at this xsec.
+        3. If control_surfaces is None, override deprecated control surface definition
+           properties and do not define a control surface at this xsec. This will result in
+           0 control surfaces at this xsec.
 
-                Usage example:
+           Usage example:
 
-                >>> xsecs = asb.WingXSec(
-                >>>     chord = 2
-                >>> )
+           >>> xsecs = asb.WingXSec(
+           >>>     chord = 2,
+           >>>     control_surfaces = None
+           >>> )
 
-                2. If control_surfaces is a list of ControlSurface instances, use ControlSurface properties to define control surfaces. This will result in as many
-                control surfaces at this xsec as there are entries in the control_surfaces list (an arbitrary number >= 1).
-
-                Usage example:
-
-                >>>xsecs = asb.WingXSec(
-                >>>    chord = 2,
-                >>>    control_surfaces = [
-                >>>        ControlSurface(
-                >>>            trailing_edge = False
-                >>>        )
-                >>>    ]
-                >>>)
-
-                3. If control_surfaces is None, override deprecated control surface definition properties and do not define a control surface at this xsec. This will
-                result in 0 control surfaces at this xsec.
-
-                Usage example:
-
-                >>>xsecs = asb.WingXSec(
-                >>>    chord = 2,
-                >>>    control_surfaces = None
-                >>>)
-
-            See avl.py for example of control_surface handling using this protocol.
+        See avl.py for an example of control_surface handling using this protocol.
         """
         ### Set defaults
         if xyz_le is None:
@@ -1605,13 +1777,17 @@ class WingXSec(AeroSandboxObject):
 
     def translate(self, xyz: np.ndarray | Sequence[float]) -> "WingXSec":
         """
-        Returns a copy of this WingXSec that has been translated by `xyz`.
+        Return a copy of this WingXSec that has been translated by `xyz`.
 
-        Args:
-            xyz: The amount to translate the WingXSec. Given as a 3-element NumPy vector.
+        Parameters
+        ----------
+        xyz : np.ndarray | Sequence[float]
+            The amount to translate the WingXSec. Given as a 3-element NumPy vector.
 
-        Returns: A new WingXSec object.
-
+        Returns
+        -------
+        WingXSec
+            A new WingXSec object.
         """
         new_xsec = copy.copy(self)
         new_xsec.xyz_le = new_xsec.xyz_le + np.array(xyz)
@@ -1619,16 +1795,21 @@ class WingXSec(AeroSandboxObject):
 
     def xsec_area(self):
         """
-        Computes the WingXSec's cross-sectional (xsec) area.
+        Compute the WingXSec's cross-sectional (xsec) area.
 
-        Returns: The (dimensional) cross-sectional area of the WingXSec.
+        Returns
+        -------
+        The (dimensional) cross-sectional area of the WingXSec.
         """
         return self.airfoil.area() * self.chord**2
 
 
 class ControlSurface(AeroSandboxObject):
     """
-    Definition for a control surface, which is attached to a particular WingXSec via WingXSec's `control_surfaces=[]` parameter.
+    Definition for a control surface.
+
+    A control surface is attached to a particular WingXSec via WingXSec's
+    `control_surfaces=[]` parameter.
     """
 
     def __init__(
@@ -1643,46 +1824,49 @@ class ControlSurface(AeroSandboxObject):
         """
         Define a new control surface.
 
-        Args:
+        Parameters
+        ----------
+        name : str
+            Name of the control surface [optional]. It can help when debugging to give each
+            control surface a sensible name.
+        symmetric : bool
+            Is the control surface symmetric? If False, control surface is anti-symmetric.
+            (e.g., True for flaps, False for ailerons.)
+        deflection : float
+            Control deflection, in degrees. Downwards-positive.
+        hinge_point : float
+            The location of the control surface hinge, as a fraction of chord. A float in the
+            range of 0 to 1.
+        trailing_edge : bool
+            Is the control surface on the trailing edge? If False, control surface is on the
+            leading edge. (e.g., True for flaps, False for slats.) Support is experimental for
+            leading-edge control surfaces; be aware that not all modules may treat this
+            correctly.
+        analysis_specific_options : dict[type, dict[str, Any]] | None
+            Analysis-specific options are additional constants or modeling assumptions that
+            should be passed on to specific analyses and associated with this specific
+            geometry object.
 
-            name: Name of the control surface [optional]. It can help when debugging to give each control surface a
-            sensible name.
+            This should be a dictionary where:
 
-            symmetric: Is the control surface symmetric? If False, control surface is anti-symmetric. (e.g.,
-            True for flaps, False for ailerons.)
+            * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis
+              or asb.ImplicitAnalysis), but if you decide to write your own analysis and want
+              to make this key something else (like a string), that's totally fine - it's just
+              a unique identifier for the specific analysis you're running.
 
-            hinge_point: The location of the control surface hinge, as a fraction of chord. A float in the range of 0 to 1.
+            * Values are a dictionary of key:value pairs, where:
 
-            deflection: Control deflection, in degrees. Downwards-positive.
+                * Keys are strings.
 
-            trailing_edge: Is the control surface on the trailing edge? If False, control surface is on the leading
-            edge. (e.g., True for flaps, False for slats.). Support is experimental for leading-edge control
-            surfaces, be aware that not all modules may treat this correctly.
+                * Values are some value you want to assign.
 
-            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
-            that should be passed on to specific analyses and associated with this specific geometry object.
+            This is more easily demonstrated / understood with an example:
 
-                This should be a dictionary where:
-
-                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
-                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
-                    something else (like a string), that's totally fine - it's just a unique identifier for the
-                    specific analysis you're running.
-
-                    * Values are a dictionary of key:value pairs, where:
-
-                        * Keys are strings.
-
-                        * Values are some value you want to assign.
-
-                This is more easily demonstrated / understood with an example:
-
-                >>> analysis_specific_options = {
-                >>>     asb.AeroBuildup: dict(
-                >>>         include_wave_drag=True,
-                >>>     )
-                >>> }
-
+            >>> analysis_specific_options = {
+            >>>     asb.AeroBuildup: dict(
+            >>>         include_wave_drag=True,
+            >>>     )
+            >>> }
         """
         ### Set defaults
         if analysis_specific_options is None:
