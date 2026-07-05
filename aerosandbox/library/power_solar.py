@@ -15,13 +15,20 @@ realized solar flux on a given surface as a function of many different parameter
 
 def _prepare_for_inverse_trig(x: Vectorizable) -> Vectorizable:
     """
-    Ensures that a value is within the open interval (-1, 1), so that if you call an inverse trig function
-    on it (e.g., arcsin, arccos), you won't get an infinity or NaN.
+    Ensure that a value is within the open interval (-1, 1), for use with inverse trig functions.
 
-    Args:
-        x: A floating-point number or an array of such. If an array, this function acts elementwise.
+    This is so that if you call an inverse trig function on the result (e.g., arcsin, arccos),
+    you won't get an infinity or NaN.
 
-    Returns: A clipped version of the number, constrained to be in the open interval (-1, 1).
+    Parameters
+    ----------
+    x : Vectorizable
+        A floating-point number or an array of such. If an array, this function acts elementwise.
+
+    Returns
+    -------
+    Vectorizable
+        A clipped version of the number, constrained to be in the open interval (-1, 1).
     """
     return np.nextafter(1, -1) * np.clip(x, -1, 1)
 
@@ -30,16 +37,22 @@ def solar_flux_outside_atmosphere_normal(
     day_of_year: Vectorizable,
 ) -> Vectorizable:
     """
-    Computes the normal solar flux at the top of the atmosphere ("Airmass 0").
+    Compute the normal solar flux at the top of the atmosphere ("Airmass 0").
+
     This varies due to Earth's orbital eccentricity (elliptical orbit).
 
-    Source: https://www.itacanet.org/the-sun-as-a-source-of-energy/part-2-solar-energy-reaching-the-earths-surface/#2.1.-The-Solar-Constant
+    Source:
+    https://www.itacanet.org/the-sun-as-a-source-of-energy/part-2-solar-energy-reaching-the-earths-surface/#2.1.-The-Solar-Constant
 
-    Args:
-        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    Parameters
+    ----------
+    day_of_year : Vectorizable
+        Julian day (1 == Jan. 1, 365 == Dec. 31).
 
-    Returns: The normal solar flux [W/m^2] at the top of the atmosphere.
-
+    Returns
+    -------
+    Vectorizable
+        The normal solar flux [W/m^2] at the top of the atmosphere.
     """
     return 1367 * (1 + 0.034 * np.cosd(360 * (day_of_year) / 365.25))
 
@@ -48,17 +61,21 @@ def declination_angle(
     day_of_year: Vectorizable,
 ) -> Vectorizable:
     """
-    Computes the solar declination angle, in degrees, as a function of day of year.
+    Compute the solar declination angle, in degrees, as a function of day of year.
 
     Accounts for the Earth's obliquity.
 
     Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/declination-angle
 
-    Args:
-        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
+    Parameters
+    ----------
+    day_of_year : Vectorizable
+        Julian day (1 == Jan. 1, 365 == Dec. 31).
 
-    Returns: Solar declination angle [deg]
-
+    Returns
+    -------
+    Vectorizable
+        Solar declination angle [deg].
     """
     return -23.4398 * np.cosd(360 / 365.25 * (day_of_year + 10))
 
@@ -69,21 +86,27 @@ def solar_elevation_angle(
     time: Vectorizable,
 ) -> Vectorizable:
     """
-    Elevation angle of the sun [degrees] for a local observer.
+    Compute the elevation angle of the sun [degrees] for a local observer.
 
     Solar elevation angle is the angle between the Sun's position and the local horizon plane.
     (Solar elevation angle) = 90 deg - (solar zenith angle)
 
     Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/elevation-angle
 
-    Args:
-        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
-        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-        time: Time after local solar noon [seconds]
+    Parameters
+    ----------
+    latitude : Vectorizable
+        Local geographic latitude [degrees]. Positive for north, negative for south.
+    day_of_year : Vectorizable
+        Julian day (1 == Jan. 1, 365 == Dec. 31).
+    time : Vectorizable
+        Time after local solar noon [seconds].
 
-    Returns: Solar elevation angle [degrees] (angle between horizon and sun). Returns negative values if the sun is
-    below the horizon.
-
+    Returns
+    -------
+    Vectorizable
+        Solar elevation angle [degrees] (angle between horizon and sun). Returns negative values
+        if the sun is below the horizon.
     """
     declination = declination_angle(day_of_year)
 
@@ -103,19 +126,27 @@ def solar_azimuth_angle(
     time: Vectorizable,
 ) -> Vectorizable:
     """
-    Azimuth angle of the sun [degrees] for a local observer.
+    Compute the azimuth angle of the sun [degrees] for a local observer.
 
     Source: https://www.pveducation.org/pvcdrom/properties-of-sunlight/azimuth-angle
 
-    Args:
-        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
-        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-        time: Time after local solar noon [seconds]
+    Parameters
+    ----------
+    latitude : Vectorizable
+        Local geographic latitude [degrees]. Positive for north, negative for south.
+    day_of_year : Vectorizable
+        Julian day (1 == Jan. 1, 365 == Dec. 31).
+    time : Vectorizable
+        Time after local solar noon [seconds].
 
-    Returns: Solar azimuth angle [degrees] (the compass direction from which the sunlight is coming).
+    Returns
+    -------
+    Vectorizable
+        Solar azimuth angle [degrees] (the compass direction from which the sunlight is coming).
+
         * 0 corresponds to North, 90 corresponds to East.
-        * Output ranges from 0 to 360 degrees.
 
+        * Output ranges from 0 to 360 degrees.
     """
     declination = declination_angle(day_of_year)
     sdec = np.sind(declination)
@@ -144,14 +175,16 @@ def airmass(
     method="Young",
 ) -> Vectorizable:
     """
-    Computes the (relative) airmass as a function of the (true) solar elevation angle and observer altitude.
+    Compute the (relative) airmass as a function of the (true) solar elevation angle and altitude.
+
     Includes refractive (e.g. curving) effects due to atmospheric density gradient.
 
-    Airmass is the line integral of air density along an upwards-pointed ray, extended to infinity. As a raw
-    calculation of "absolute airmass", this would have units of kg/m^2. It varies primarily as a function of solar
-    elevation angle and observer altitude. (Higher altitude means less optical absorption.) However,
-    "airmass" usually refers to the "relative airmass", which is the absolute airmass of a given scenario divided by
-    the absolute airmass of a reference scenario. This reference scenario is when the sun is directly overhead (solar
+    Airmass is the line integral of air density along an upwards-pointed ray, extended to
+    infinity. As a raw calculation of "absolute airmass", this would have units of kg/m^2. It
+    varies primarily as a function of solar elevation angle and observer altitude. (Higher
+    altitude means less optical absorption.) However, "airmass" usually refers to the "relative
+    airmass", which is the absolute airmass of a given scenario divided by the absolute airmass
+    of a reference scenario. This reference scenario is when the sun is directly overhead (solar
     elevation angle of 90 degrees) and the observer is at sea level.
 
     Therefore:
@@ -160,42 +193,48 @@ def airmass(
 
         * Sea level with the sun directly overhead has a (relative) airmass of 1.
 
-        * Sea level with the sun at the horizon has a (relative) airmass of ~31.7. (Not infinity, since the Earth is
-        spherical, so the ray eventually reaches outer space.) Some models will say that this relative airmass at the
-        horizon should be ~38; that is only true if one uses the *apparent* solar elevation angle, rather than the
-        *true* (geometric) one. The discrepancy comes from the fact that light refracts (curves) as it passes through
-        the atmosphere's density gradient, with the difference between true and apparent elevation angles reaching a
-        maximum of 0.56 degrees at the horizon.
+        * Sea level with the sun at the horizon has a (relative) airmass of ~31.7. (Not infinity,
+          since the Earth is spherical, so the ray eventually reaches outer space.) Some models
+          will say that this relative airmass at the horizon should be ~38; that is only true if
+          one uses the *apparent* solar elevation angle, rather than the *true* (geometric) one.
+          The discrepancy comes from the fact that light refracts (curves) as it passes through
+          the atmosphere's density gradient, with the difference between true and apparent
+          elevation angles reaching a maximum of 0.56 degrees at the horizon.
 
     Solar elevation angle is the angle between the Sun's position and the horizon.
     (Solar elevation angle) = 90 deg - (solar zenith angle)
 
-    Note that for small negative values of the solar elevation angle (e.g., -0.5 degree), airmass remains finite,
-    due to ray refraction (curving) through the atmosphere.
+    Note that for small negative values of the solar elevation angle (e.g., -0.5 degree),
+    airmass remains finite, due to ray refraction (curving) through the atmosphere.
 
-    For significantly negative values of the solar elevation angle (e.g., -10 degrees), the airmass is theoretically
-    infinite. This function returns 1e100 in lieu of this here.
+    For significantly negative values of the solar elevation angle (e.g., -10 degrees),
+    the airmass is theoretically infinite. This function returns 1e100 in lieu of this here.
 
     Sources:
 
-        Young model: Young, A. T. 1994. Air mass and refraction. Applied Optics. 33:1108–1110. doi:
-        10.1364/AO.33.001108. Reproduced at https://en.wikipedia.org/wiki/Air_mass_(astronomy)
+        Young model: Young, A. T. 1994. Air mass and refraction. Applied Optics. 33:1108–1110.
+        doi: 10.1364/AO.33.001108. Reproduced at https://en.wikipedia.org/wiki/Air_mass_(astronomy)
 
-    Args:
+    Parameters
+    ----------
+    solar_elevation_angle : Vectorizable
+        Solar elevation angle [degrees] (angle between horizon and sun). Note that we use the
+        true solar elevation angle, rather than the apparent one. The discrepancy comes from the
+        fact that light refracts (curves) as it passes through the atmosphere's density gradient,
+        with the difference between true and apparent elevation angles reaching a maximum of
+        0.56 degrees at the horizon.
+    altitude : Vectorizable
+        Altitude of the observer [meters] above sea level.
+    method
+        A string that determines which model to use.
 
-        solar_elevation_angle: Solar elevation angle [degrees] (angle between horizon and sun). Note that we use the
-        true solar elevation angle, rather than the apparent one. The discrepancy comes from the fact that light
-        refracts (curves) as it passes through the atmosphere's density gradient, with the difference between true
-        and apparent elevation angles reaching a maximum of 0.56 degrees at the horizon.
-
-        altitude: Altitude of the observer [meters] above sea level.
-
-        method: A string that determines which model to use.
-
-    Returns: The relative airmass [unitless] as a function of the (true) solar elevation angle and observer altitude.
+    Returns
+    -------
+    Vectorizable
+        The relative airmass [unitless] as a function of the (true) solar elevation angle and
+        observer altitude.
 
         * Always ranges from 0 to Infinity
-
     """
     true_zenith_angle = 90 - solar_elevation_angle
 
@@ -234,91 +273,105 @@ def solar_flux(
     **deprecated_kwargs,
 ) -> Vectorizable:
     """
-    Computes the solar power flux (power per unit area) on a flat (possibly tilted) panel. Accounts for atmospheric
-    absorption, scattering, and re-scattering (e.g. diffuse illumination), all as a function of panel altitude.
+    Compute the solar power flux (power per unit area) on a flat (possibly tilted) panel.
+
+    Accounts for atmospheric absorption, scattering, and re-scattering (e.g. diffuse
+    illumination), all as a function of panel altitude.
 
     Fully vectorizable.
 
     Source for atmospheric absorption:
 
-        * Planning and installing photovoltaic systems: a guide for installers, architects and engineers,
-        2nd Ed. (2008), Table 1.1, Earthscan with the International Institute for Environment and Development,
-        Deutsche Gesellschaft für Sonnenenergie. ISBN 1-84407-442-0., accessed via
-        https://en.wikipedia.org/wiki/Air_mass_(solar_energy)
+        * Planning and installing photovoltaic systems: a guide for installers, architects and
+          engineers, 2nd Ed. (2008), Table 1.1, Earthscan with the International Institute for
+          Environment and Development, Deutsche Gesellschaft für Sonnenenergie.
+          ISBN 1-84407-442-0., accessed via
+          https://en.wikipedia.org/wiki/Air_mass_(solar_energy)
 
-    Args:
+    Parameters
+    ----------
+    latitude : Vectorizable
+        Local geographic latitude [degrees]. Positive for north, negative for south.
+    day_of_year : Vectorizable
+        The day of the year, represented in the Julian day format (i.e., 1 == Jan. 1,
+        365 == Dec. 31). This accounts for seasonal variations in the sun's position in the sky.
+    time : Vectorizable
+        The time of day, measured as the time elapsed after local solar noon [seconds]. Should
+        range from 0 to 86,400 (the number of seconds in a day). Local solar noon is the time of
+        day when the sun is at its highest point in the sky, directly above the observer's local
+        meridian. This is the time when the sun's rays are most directly overhead and solar flux
+        is at its peak for a given location. Solar noon does not necessarily occur at exactly
+        12:00 PM local standard time, as it depends on your longitude, the equation of time,
+        and the time of year. (Also, don't forget to account for Daylight Savings Time, if that's
+        a relevant consideration for your location and season.) Typically, local solar noon is
+        +- 15 minutes from 12:00 PM local standard time.
+    altitude : Vectorizable
+        Altitude of the panel above sea level [meters]. This affects atmospheric absorption and
+        scattering characteristics.
+    panel_azimuth_angle : Vectorizable
+        The azimuth angle of the panel normal [degrees] (the compass direction in which the
+        panel normal is tilted). Irrelevant if the panel tilt angle is 0 (e.g., the panel is
+        horizontal).
 
-        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
+        * 0 corresponds to North, 90 corresponds to East.
 
-        day_of_year: The day of the year, represented in the Julian day format (i.e., 1 == Jan. 1, 365 == Dec. 31). This
-            accounts for seasonal variations in the sun's position in the sky.
+        * Input ranges from 0 to 360 degrees.
+    panel_tilt_angle : Vectorizable
+        The angle between the panel normal and vertical (zenith) [degrees].
 
-        time: The time of day, measured as the time elapsed after local solar noon [seconds]. Should range from 0 to
-            86,400 (the number of seconds in a day). Local solar noon is the time of day when the sun is at its highest
-            point in the sky, directly above the observer's local meridian. This is the time when the sun's rays are most
-            directly overhead and solar flux is at its peak for a given location. Solar noon does not necessarily occur
-            at exactly 12:00 PM local standard time, as it depends on your longitude, the equation of time, and the time
-            of year. (Also, don't forget to account for Daylight Savings Time, if that's a relevant consideration for
-            your location and season.) Typically, local solar noon is +- 15 minutes from 12:00 PM local standard time.
+        * Note: this angle convention is different than the solar elevation angle convention!
 
-        altitude: Altitude of the panel above sea level [meters]. This affects atmospheric absorption and scattering
-            characteristics.
+        * A horizontal panel has a tilt angle of 0, and a vertical panel has a tilt angle of
+          90 degrees.
 
-        panel_azimuth_angle: The azimuth angle of the panel normal [degrees] (the compass direction in which the
-            panel normal is tilted). Irrelevant if the panel tilt angle is 0 (e.g., the panel is horizontal).
+        If the angle between the panel normal and the sun direction is ever more than 90 degrees
+        (e.g. the panel is pointed the wrong way), we assume that the panel receives no direct
+        irradiation. (However, it may still receive minor amounts of power due to diffuse
+        irradiation from re-scattering.)
+    air_quality : Literal["typical", "clean", "polluted"]
+        Indicates the amount of pollution in the air. A string, one of:
 
-            * 0 corresponds to North, 90 corresponds to East.
+        * 'clean': Pristine atmosphere conditions.
 
-            * Input ranges from 0 to 360 degrees.
+        * 'typical': Corresponds to "rural aerosol loading" following ASTM G-173.
 
-        panel_tilt_angle: The angle between the panel normal and vertical (zenith) [degrees].
+        * 'polluted': Urban atmosphere conditions.
 
-            * Note: this angle convention is different than the solar elevation angle convention!
+        Note: in very weird edge cases, a polluted atmosphere can actually result in slightly
+        higher solar flux than clean air, due to increased back-scattering. For example, imagine
+        it's near sunset, with the sun in the west, and your panel normal vector points east.
+        Increased pollution can, in some edge cases, result in enough increased back-scattering
+        (multipathing) that you have a smidge more illumination.
+    albedo : Vectorizable
+        The fraction of light that hits the ground that is reflected. Affects illumination from
+        re-scattering when panels are tilted. Typical values for general terrestrial surfaces
+        are 0.2, which is the default here.
 
-            * A horizontal panel has a tilt angle of 0, and a vertical panel has a tilt angle of 90 degrees.
+        * Other values, taken from the Earthscan source (citation above):
 
-            If the angle between the panel normal and the sun direction is ever more than 90 degrees (e.g. the panel
-            is pointed the wrong way), we assume that the panel receives no direct irradiation. (However,
-            it may still receive minor amounts of power due to diffuse irradiation from re-scattering.)
+            * Grass (July, August): 0.25
+            * Lawn: 0.18 - 0.23
+            * Dry grass: 0.28 - 0.32
+            * Milled fields: 0.26
+            * Barren soil: 0.17
+            * Gravel: 0.18
+            * Clean concrete: 0.30
+            * Eroded concrete: 0.20
+            * Clean cement: 0.55
+            * Asphalt: 0.15
+            * Forests: 0.05 - 0.18
+            * Sandy areas: 0.10 - 0.25
+            * Water: Strongly dependent on incidence angle; 0.05 - 0.22
+            * Fresh snow: 0.80 - 0.90
+            * Old snow: 0.45 - 0.70
 
-        air_quality: Indicates the amount of pollution in the air. A string, one of:
+    Returns
+    -------
+    Vectorizable
+        The solar power flux [W/m^2] on the panel.
 
-            * 'clean': Pristine atmosphere conditions.
-
-            * 'typical': Corresponds to "rural aerosol loading" following ASTM G-173.
-
-            * 'polluted': Urban atmosphere conditions.
-
-            Note: in very weird edge cases, a polluted atmosphere can actually result in slightly higher solar flux
-            than clean air, due to increased back-scattering. For example, imagine it's near sunset, with the sun in
-            the west, and your panel normal vector points east. Increased pollution can, in some edge cases,
-            result in enough increased back-scattering (multipathing) that you have a smidge more illumination.
-
-        albedo: The fraction of light that hits the ground that is reflected. Affects illumination from re-scattering
-            when panels are tilted. Typical values for general terrestrial surfaces are 0.2, which is the default here.
-
-            * Other values, taken from the Earthscan source (citation above):
-
-                * Grass (July, August): 0.25
-                * Lawn: 0.18 - 0.23
-                * Dry grass: 0.28 - 0.32
-                * Milled fields: 0.26
-                * Barren soil: 0.17
-                * Gravel: 0.18
-                * Clean concrete: 0.30
-                * Eroded concrete: 0.20
-                * Clean cement: 0.55
-                * Asphalt: 0.15
-                * Forests: 0.05 - 0.18
-                * Sandy areas: 0.10 - 0.25
-                * Water: Strongly dependent on incidence angle; 0.05 - 0.22
-                * Fresh snow: 0.80 - 0.90
-                * Old snow: 0.45 - 0.70
-
-    Returns: The solar power flux [W/m^2] on the panel.
-
-        * Note: does not account for any potential reflectivity of the solar panel's coating itself.
-
+        * Note: does not account for any potential reflectivity of the solar panel's coating
+          itself.
     """
     if deprecated_kwargs:
         deprecated_kwarg_names = {
@@ -421,11 +474,22 @@ def peak_sun_hours_per_day_on_horizontal(
     latitude: Vectorizable, day_of_year: Vectorizable
 ) -> Vectorizable:
     """
-    How many hours of equivalent peak sun do you get per day?
-    :param latitude: Latitude [degrees]
-    :param day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-    :param time: Time since (local) solar noon [seconds]
-    :return:
+    Compute how many hours of equivalent peak sun you get per day.
+
+    Deprecated: use the `solar_flux()` function from this module instead and integrate,
+    which allows far greater granularity.
+
+    Parameters
+    ----------
+    latitude : Vectorizable
+        Latitude [degrees].
+    day_of_year : Vectorizable
+        Julian day (1 == Jan. 1, 365 == Dec. 31).
+
+    Returns
+    -------
+    Vectorizable
+        Duration of equivalent peak sun per day [hours].
     """
     import warnings
 
@@ -448,16 +512,19 @@ def peak_sun_hours_per_day_on_horizontal(
 
 def length_day(latitude: Vectorizable, day_of_year: Vectorizable) -> Vectorizable:
     """
-    Gives the duration where the sun is above the horizon on a given day.
+    Give the duration where the sun is above the horizon on a given day.
 
-    Args:
+    Parameters
+    ----------
+    latitude : Vectorizable
+        Local geographic latitude [degrees]. Positive for north, negative for south.
+    day_of_year : Vectorizable
+        Julian day (1 == Jan. 1, 365 == Dec. 31).
 
-        latitude: Local geographic latitude [degrees]. Positive for north, negative for south.
-
-        day_of_year: Julian day (1 == Jan. 1, 365 == Dec. 31)
-
-    Returns: The duration where the sun is above the horizon on a given day. [seconds]
-
+    Returns
+    -------
+    Vectorizable
+        The duration where the sun is above the horizon on a given day [seconds].
     """
     dec = declination_angle(day_of_year)
 
@@ -471,14 +538,19 @@ def length_day(latitude: Vectorizable, day_of_year: Vectorizable) -> Vectorizabl
 
 def mass_MPPT(power: Vectorizable) -> Vectorizable:
     """
-    Gives the estimated mass of a Maximum Power Point Tracking (MPPT) unit for solar energy
-    collection. Based on regressions at AeroSandbox/studies/SolarMPPTMasses.
+    Estimate the mass of a Maximum Power Point Tracking (MPPT) unit for solar energy collection.
 
-    Args:
-        power: Power of MPPT [watts]
+    Based on regressions at AeroSandbox/studies/SolarMPPTMasses.
 
-    Returns:
-        Estimated MPPT mass [kg]
+    Parameters
+    ----------
+    power : Vectorizable
+        Power of MPPT [watts].
+
+    Returns
+    -------
+    Vectorizable
+        Estimated MPPT mass [kg].
     """
     constant = 0.066343
     exponent = 0.515140

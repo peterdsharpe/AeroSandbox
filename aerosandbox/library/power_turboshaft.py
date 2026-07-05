@@ -3,21 +3,25 @@ import aerosandbox.numpy as np
 
 def overall_pressure_ratio_turboshaft_technology_limit(mass_turboshaft: float) -> float:
     """
-    Estimates the maximum-practically-achievable overall pressure ratio (OPR) of a turboshaft engine, as a function
-    of its mass. A regression to historical data.
+    Estimate the maximum-practically-achievable overall pressure ratio (OPR) of a turboshaft
+    engine, as a function of its mass. A regression to historical data.
 
-    Based on an envelope of data for both civilian and military turboshafts (including RC-scale turboshafts), available in:
-    `aerosandbox/library/datasets/turbine_engines/data.xlsx`
+    Based on an envelope of data for both civilian and military turboshafts (including RC-scale
+    turboshafts), available in: `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
-    See study in `/AeroSandbox/studies/TurboshaftStudies/make_fit_overall_pressure_ratio.py` for model details.
+    See study in `/AeroSandbox/studies/TurboshaftStudies/make_fit_overall_pressure_ratio.py` for
+    model details.
 
-    Args:
+    Parameters
+    ----------
+    mass_turboshaft : float
+        The mass of the turboshaft engine [kg].
 
-        mass_turboshaft: The mass of the turboshaft engine. [kg]
-
-    Returns:
-
-        The maximum-practically-achievable overall pressure ratio (OPR) of the turboshaft engine. [-]
+    Returns
+    -------
+    float
+        The maximum-practically-achievable overall pressure ratio (OPR) of the turboshaft
+        engine [-].
     """
     p = {
         "scl": 1.0222956615376533,
@@ -36,24 +40,26 @@ def power_turboshaft(
     overall_pressure_ratio: float | None = None,
 ) -> float:
     """
-    Estimates the maximum rated power of a turboshaft engine, given its mass. A regression to historical data.
+    Estimate the maximum rated power of a turboshaft engine, given its mass. A regression to
+    historical data.
 
     Based on data for both civilian and military turboshafts, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
     See studies in `/AeroSandbox/studies/TurboshaftStudies/make_fit_power.py` for model details.
 
-    Args:
+    Parameters
+    ----------
+    mass_turboshaft : float
+        The mass of the turboshaft engine [kg].
+    overall_pressure_ratio : float | None
+        The overall pressure ratio of the turboshaft engine [-]. If unspecified, a sensible
+        default based on the technology envelope (with a 0.7x knockdown) will be used.
 
-        mass_turboshaft: The mass of the turboshaft engine. [kg]
-
-        overall_pressure_ratio: The overall pressure ratio of the turboshaft engine. [-] If unspecified, a sensible
-            default based on the technology envelope (with a 0.7x knockdown) will be used.
-
-    Returns:
-
-        The maximum (rated takeoff) power of the turboshaft engine. [W]
-
+    Returns
+    -------
+    float
+        The maximum (rated takeoff) power of the turboshaft engine [W].
     """
     if overall_pressure_ratio is None:
         overall_pressure_ratio = (
@@ -78,30 +84,32 @@ def thermal_efficiency_turboshaft(
     throttle_setting: float = 1,
 ) -> float:
     """
-    Estimates the thermal efficiency of a turboshaft engine. A regression to historical data.
+    Estimate the thermal efficiency of a turboshaft engine. A regression to historical data.
 
     Based on data for both civilian and military turboshafts, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
-    See studies in `/AeroSandbox/studies/TurboshaftStudies/make_turboshaft_fits.py` for model details.
+    See studies in `/AeroSandbox/studies/TurboshaftStudies/make_turboshaft_fits.py` for model
+    details.
 
     Thermal efficiency knockdown at partial power is based on:
-        Ingmar Geiß, "Sizing of the Series Hybrid-electric Propulsion System of General Aviation Aircraft", 2020.
-        PhD Thesis, University of Stuttgart. Page 18, Figure 3.2.
+        Ingmar Geiß, "Sizing of the Series Hybrid-electric Propulsion System of General Aviation
+        Aircraft", 2020. PhD Thesis, University of Stuttgart. Page 18, Figure 3.2.
 
-    Args:
+    Parameters
+    ----------
+    mass_turboshaft : float
+        The mass of the turboshaft engine [kg].
+    overall_pressure_ratio : float | None
+        The overall pressure ratio of the turboshaft engine [-]. If unspecified, a sensible
+        default based on the technology envelope (with a 0.7x knockdown) will be used.
+    throttle_setting : float
+        The throttle setting of the turboshaft engine [-]. 1 is full throttle, 0 is no throttle.
 
-        mass_turboshaft: The mass of the turboshaft engine. [kg]
-
-        overall_pressure_ratio: The overall pressure ratio of the turboshaft engine. [-] If unspecified, a sensible
-            default based on the technology envelope (with a 0.7x knockdown) will be used.
-
-        throttle_setting: The throttle setting of the turboshaft engine. [-] 1 is full throttle, 0 is no throttle.
-
-    Returns:
-
-        The thermal efficiency of the turboshaft engine. [-]
-
+    Returns
+    -------
+    float
+        The thermal efficiency of the turboshaft engine [-].
     """
     if overall_pressure_ratio is None:
         overall_pressure_ratio = (

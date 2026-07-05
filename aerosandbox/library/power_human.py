@@ -6,22 +6,41 @@ def power_human(
     dataset: str = "Healthy Men",
 ):
     """
-    Finds the power output that a human can sustain for a given duration.
+    Find the power output that a human can sustain for a given duration.
+
     Data was fit for durations in the range of 6 seconds to 60,000 seconds.
+
     Fits are modeled at: AeroSandbox/studies/HumanPower
-    Data Source: Bicycling Science by D. Wilson, 2004. Figure 2.4.
-        Wilson is aggregating many data sources here.
-        The raw data pulls from a variety of sources:
-            * NASA SP-3006, 1964
-            * U.K. amateur trials and time-trials records (Whitt, F.R. 1971 "A note on the estimation of the energy expenditure of sporting cyclists." Ergonomics 14)
-            * Wilsons' own analyses
-    Weight estimates for tests subjects are unfortunately not given.
-    :param duration: Time to sustain power output [seconds]
-    :param dataset: Dataset to pull from. A string that is one of the following:
-        "Healthy Men",
-        "First-Class Athletes",
-        "World-Class Athletes",
-    :return: Sustainable power output for the specified duration [W]
+
+    Data source: Bicycling Science by D. Wilson, 2004. Figure 2.4. Wilson is aggregating many data
+    sources here. The raw data pulls from a variety of sources:
+
+        * NASA SP-3006, 1964
+
+        * U.K. amateur trials and time-trials records (Whitt, F.R. 1971 "A note on the estimation
+          of the energy expenditure of sporting cyclists." Ergonomics 14)
+
+        * Wilson's own analyses
+
+    Weight estimates for test subjects are unfortunately not given.
+
+    Parameters
+    ----------
+    duration : float
+        Time to sustain power output [seconds].
+    dataset : str
+        Dataset to pull from. A string that is one of the following:
+
+        * "Healthy Men"
+
+        * "First-Class Athletes"
+
+        * "World-Class Athletes"
+
+    Returns
+    -------
+    float
+        Sustainable power output for the specified duration [W].
     """
     if dataset == "Healthy Men":
         a = 373.153360

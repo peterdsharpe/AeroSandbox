@@ -38,6 +38,21 @@ c = 299792458  # m/s, speed of light
 def po210_specific_power(
     days_after_formation=0,
 ):
+    """
+    Compute the specific power of a Polonium-210 radioisotope power source.
+
+    Not yet implemented; currently raises NotImplementedError.
+
+    Parameters
+    ----------
+    days_after_formation
+        Time elapsed since the Po-210 was formed [days].
+
+    Raises
+    ------
+    NotImplementedError
+        Always, as this function is not yet implemented.
+    """
     # Source: https://en.wikipedia.org/wiki/Polonium-210
     (
         (po_210_mass_amu - alpha_particle_mass_amu - pb_206_mass_amu)
