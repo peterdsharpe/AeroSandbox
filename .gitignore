@@ -24,3 +24,5 @@ _book/
 site_libs/
 !**/_freeze/site_libs/
 !**/_freeze/site_libs/**
+# Local review-tracking doc (kept in working tree only)
+CODE_REVIEW_MASTER_LIST.md
