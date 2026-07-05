@@ -13,37 +13,43 @@ def calculate_induced_velocity_point_source(
     viscous_radius: float = 0,
 ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
     """
-    Calculates the induced velocity at a point:
-        [x_field, y_field, z_field]
-    in a 3D potential-flow flowfield.
+    Calculate the induced velocity due to a single point source in a 3D potential-flow flowfield.
+
+    The velocity is evaluated at the field point [x_field, y_field, z_field].
 
     In this flowfield, the following singularity elements are assumed:
-        * A single point source
 
-    This function consists entirely of scalar, elementwise NumPy ufunc operations - so it can be vectorized as
-    desired assuming input dimensions/broadcasting are compatible.
+    * A single point source
 
-    Args:
-        x_field: x-coordinate of the field point
+    This function consists entirely of scalar, elementwise NumPy ufunc operations - so it can be
+    vectorized as desired assuming input dimensions/broadcasting are compatible.
 
-        y_field: y-coordinate of the field point
+    Parameters
+    ----------
+    x_field : Vectorizable
+        x-coordinate of the field point.
+    y_field : Vectorizable
+        y-coordinate of the field point.
+    z_field : Vectorizable
+        z-coordinate of the field point.
+    x_source : Vectorizable
+        x-coordinate of the point source.
+    y_source : Vectorizable
+        y-coordinate of the point source.
+    z_source : Vectorizable
+        z-coordinate of the point source.
+    sigma : Vectorizable
+        The strength (volume flux) of the point source.
+    viscous_radius : float
+        A regularization length used to desingularize the velocity field near the source. If
+        nonzero, induced velocities are smoothly attenuated to zero as the field point approaches
+        the source location, rather than blowing up. It should be significantly smaller (e.g., at
+        least an order of magnitude smaller) than the smallest length scale of interest in the
+        analysis in question.
 
-        z_field: z-coordinate of the field point
-
-        x_source: x-coordinate of the point source
-
-        y_source: y-coordinate of the point source
-
-        z_source: z-coordinate of the point source
-
-        sigma: The strength (volume flux) of the point source.
-
-        viscous_radius: A regularization length used to desingularize the velocity field near the source. If
-        nonzero, induced velocities are smoothly attenuated to zero as the field point approaches the source
-        location, rather than blowing up. It should be significantly smaller (e.g., at least an order of
-        magnitude smaller) than the smallest length scale of interest in the analysis in question.
-
-    Returns: u, v, and w:
+    Returns
+    -------
+    u, v, w : tuple[Vectorizable, Vectorizable, Vectorizable]
         The x-, y-, and z-direction induced velocities.
     """
     dx = np.add(x_field, -x_source)
@@ -54,7 +60,7 @@ def calculate_induced_velocity_point_source(
 
     def smoothed_x_15_inv(x):
         """
-        Approximates x^(-1.5) with a function that sharply goes to 0 in the x -> 0 limit.
+        Approximate x^(-1.5) with a function that sharply goes to 0 in the x -> 0 limit.
         """
         if not np.all(viscous_radius == 0):
             return x / (x**2.5 + viscous_radius**2.5)

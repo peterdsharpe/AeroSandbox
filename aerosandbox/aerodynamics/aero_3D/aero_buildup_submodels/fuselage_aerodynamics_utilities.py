@@ -3,27 +3,30 @@ import aerosandbox.numpy as np
 
 def critical_mach(fineness_ratio_nose: float) -> float:
     """
-    Returns the transonic critical Mach number for a streamlined fuselage.
+    Return the transonic critical Mach number for a streamlined fuselage.
 
     Fitted to data from Raymer "Aircraft Design: A Conceptual Approach" 2nd Ed., Fig. 12.28.
     See figure + study + fit in: /studies/FuselageCriticalMach/
 
-    Args:
+    Parameters
+    ----------
+    fineness_ratio_nose : float
+        The fineness ratio of the nose section of the fuselage.
 
-        fineness_ratio_nose: The fineness ratio of the nose section of the fuselage.
+        Specifically, fineness_ratio_nose = L_n / d, where:
 
-            Specifically, fineness_ratio_nose = L_n / d, where:
+        * L_n is the length from the nose to the longitudinal location at which the fuselage
+          cross section becomes essentially constant, and:
 
-                * L_n is the length from the nose to the longitudinal location at which the fuselage cross section
-                becomes essentially constant, and:
+        * d is the body diameter at that location.
 
-                * d is the body diameter at that location.
+        (The factor of 2 relative to the x-axis of Raymer Fig. 12.28, which plots against
+        2 * L_n / d, is applied internally.)
 
-            (The factor of 2 relative to the x-axis of Raymer Fig. 12.28, which plots against 2 * L_n / d,
-            is applied internally.)
-
-    Returns: The critical Mach number
-
+    Returns
+    -------
+    float
+        The critical Mach number.
     """
     p = {"a": 11.087202397070559, "b": 13.469755774708842, "c": 4.034476257077558}
 
@@ -39,18 +42,24 @@ def critical_mach(fineness_ratio_nose: float) -> float:
 
 def jorgensen_eta(fineness_ratio: float) -> float:
     """
-    A fit for the eta parameter (crossflow lift multiplier) of a fuselage, as described in:
+    Estimate the eta parameter (crossflow lift multiplier) of a fuselage.
+
+    A fit for the eta parameter, as described in:
 
     Jorgensen, Leland Howard. "Prediction of Static Aerodynamic Characteristics for Slender Bodies
     Alone and with Lifting Surfaces to Very High Angles of Attack". NASA TR R-474. 1977.
 
     Fits performed in /studies/FuselageJorgensenEtaFitting/
 
-    Args:
-        fineness_ratio: The fineness ratio of the fuselage. (length / diameter)
+    Parameters
+    ----------
+    fineness_ratio : float
+        The fineness ratio of the fuselage. (length / diameter)
 
-    Returns: An estimate of eta.
-
+    Returns
+    -------
+    float
+        An estimate of eta.
     """
     x = fineness_ratio
     p = {
@@ -64,7 +73,9 @@ def jorgensen_eta(fineness_ratio: float) -> float:
 
 def fuselage_base_drag_coefficient(mach: float) -> float:
     """
-    A fit for the fuselage base drag coefficient of a cylindrical fuselage, as described in:
+    Estimate the base drag coefficient of a cylindrical fuselage.
+
+    A fit for the fuselage base drag coefficient, as described in:
 
     MIL-HDBK-762: DESIGN OF AERODYNAMICALLY STABILIZED FREE ROCKETS:
         * Section 5-5.3.1 Body-of-Revolution Base Drag, Rocket Jet Plume-Off
@@ -72,11 +83,15 @@ def fuselage_base_drag_coefficient(mach: float) -> float:
 
     Fits in /studies/FuselageBaseDragCoefficient
 
-    Args:
-        mach: Mach number [-]
+    Parameters
+    ----------
+    mach : float
+        Mach number [-].
 
-    Returns: Fuselage base drag coefficient
-
+    Returns
+    -------
+    float
+        Fuselage base drag coefficient.
     """
 
     m = mach
@@ -101,7 +116,7 @@ def fuselage_form_factor(
     fineness_ratio: float, ratio_of_corner_radius_to_body_width: float = 0.5
 ):
     """
-    Computes the form factor of a fuselage as a function of various geometrical parameters.
+    Compute the form factor of a fuselage as a function of various geometrical parameters.
 
     Assumes the body cross section is a rounded square with constant-radius-of-curvature fillets.
     Body cross section can therefore vary from a true square to a true circle.
@@ -116,25 +131,28 @@ def fuselage_form_factor(
 
     Assumes fully turbulent flow. Coefficient of determination found in the paper above was 0.95.
 
-    Note: the value returned does not account for any base separation (other than minor aft-closure separation). The
-    equations were also fit to relatively-shape-optimized fuselages, and will be overly-optimistic for unoptimized
-    shapes.
+    Note: the value returned does not account for any base separation (other than minor
+    aft-closure separation). The equations were also fit to relatively-shape-optimized fuselages,
+    and will be overly-optimistic for unoptimized shapes.
 
-    Args:
+    Parameters
+    ----------
+    fineness_ratio : float
+        The fineness ratio of the body (length / diameter).
+    ratio_of_corner_radius_to_body_width : float
+        A parameter that describes the cross-sectional shape of the fuselage. Precisely, this is
+        the ratio of corner radius to body width.
 
-        fineness_ratio: The fineness ratio of the body (length / diameter).
+        * A value of 0 corresponds to a true square.
 
-        ratio_of_corner_radius_to_body_width: A parameter that describes the cross-sectional shape of the fuselage.
-        Precisely, this is ratio of corner radius to body width.
+        * A value of 0.5 (default) corresponds to a true circle.
 
-            * A value of 0 corresponds to a true square.
-
-            * A value of 0.5 (default) corresponds to a true circle.
-
-    Returns: The form factor of the body, defined as:
+    Returns
+    -------
+    form_factor
+        The form factor of the body, defined as:
 
         C_D = C_f * form_factor * (S_wet / S_ref)
-
     """
     fr = fineness_ratio
     r = 2 * ratio_of_corner_radius_to_body_width
