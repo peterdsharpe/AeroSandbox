@@ -6,13 +6,19 @@ from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 def generate_wing(wing: Wing, include_main=True) -> str:
     """
-    Generates a VSPScript file for a Wing object.
+    Generate a VSPScript file for a Wing object.
 
-    Args:
-        wing: The Wing object to generate a VSPScript file for.
+    Parameters
+    ----------
+    wing : Wing
+        The Wing object to generate a VSPScript file for.
+    include_main
+        If True, wraps the script in a main() function via `_utilities.wrap_script()`.
 
-    Returns: A VSPScript file as a string.
-
+    Returns
+    -------
+    str
+        A VSPScript file as a string.
     """
     script = ""
 

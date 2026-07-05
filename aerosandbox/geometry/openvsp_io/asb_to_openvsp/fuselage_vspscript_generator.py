@@ -9,13 +9,21 @@ def generate_fuselage(
     continuity_type: str = "C2",
 ) -> str:
     """
-    Generates a VSPScript file for a Fuselage object.
+    Generate a VSPScript file for a Fuselage object.
 
-    Args:
-        fuselage: The Fuselage object to generate a VSPScript file for.
+    Parameters
+    ----------
+    fuselage : Fuselage
+        The Fuselage object to generate a VSPScript file for.
+    include_main
+        If True, wraps the script in a main() function via `_utilities.wrap_script()`.
+    continuity_type : str
+        The curve continuity to enforce at each cross-section. One of "C0", "C1", or "C2".
 
-    Returns: A VSPScript file as a string.
-
+    Returns
+    -------
+    str
+        A VSPScript file as a string.
     """
     script = ""
 

@@ -5,13 +5,19 @@ from aerosandbox.geometry.openvsp_io.asb_to_openvsp import _utilities
 
 def generate_propulsor(propulsor: Propulsor, include_main=True) -> str:
     """
-    Generates a VSPScript file for a Propulsor object.
+    Generate a VSPScript file for a Propulsor object.
 
-    Args:
-        propulsor: The Propulsor object to generate a VSPScript file for.
+    Parameters
+    ----------
+    propulsor : Propulsor
+        The Propulsor object to generate a VSPScript file for.
+    include_main
+        If True, wraps the script in a main() function via `_utilities.wrap_script()`.
 
-    Returns: A VSPScript file as a string.
-
+    Returns
+    -------
+    str
+        A VSPScript file as a string.
     """
     script = ""
 
