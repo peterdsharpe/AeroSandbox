@@ -8,21 +8,28 @@ def airfoil_coefficients_post_stall(
     alpha: Vectorizable,
 ):
     """
-    Estimates post-stall aerodynamics of an airfoil.
+    Estimate post-stall aerodynamics of an airfoil.
 
-    Uses methods given in:
+    Uses methods given in [1]_.
 
-    Truong, V. K. "An analytical model for airfoil aerodynamic characteristics over the entire 360deg angle of attack
-    range". J. Renewable Sustainable Energy. 2020. doi: 10.1063/1.5126055
+    Parameters
+    ----------
+    airfoil : Airfoil
+        The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+    alpha : Vectorizable
+        The angle of attack [degrees]. Can be either a float or an array of floats.
 
-    Args:
-        airfoil: The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+    Returns
+    -------
+    tuple
+        A tuple of (CL, CD, CM), the lift, drag, and moment coefficients. Each has the same
+        shape as `alpha`.
 
-        alpha: The angle of attack [degrees]. Can be either a float or an array of floats.
-
-    Returns:
-        A tuple of (CL, CD, CM), the lift, drag, and moment coefficients. Each has the same shape as `alpha`.
-
+    References
+    ----------
+    .. [1] Truong, V. K. "An analytical model for airfoil aerodynamic characteristics over
+       the entire 360deg angle of attack range". J. Renewable Sustainable Energy. 2020.
+       doi: 10.1063/1.5126055
     """
     sina = np.sind(alpha)
     cosa = np.cosd(alpha)

@@ -47,9 +47,17 @@ if __name__ == "__main__":
 
     def make_airfoil(x):
         """
-        A function that constructs an airfoil from a packed design vector.
-        :param x:
-        :return:
+        Construct an airfoil from a packed design vector.
+
+        Parameters
+        ----------
+        x
+            The packed design vector.
+
+        Returns
+        -------
+        Airfoil
+            The constructed airfoil.
         """
         lower, upper = unpack(x)
         return Airfoil(
@@ -92,9 +100,12 @@ if __name__ == "__main__":
         airfoil: Airfoil,
     ):
         """
-        Updates the "current airfoil" line on the plot with the given airfoil.
-        :param airfoil:
-        :return:
+        Update the "current airfoil" line on the plot with the given airfoil.
+
+        Parameters
+        ----------
+        airfoil : Airfoil
+            The airfoil to draw.
         """
         trace_current.set_xdata(airfoil.coordinates[:, 0])
         trace_current.set_ydata(airfoil.coordinates[:, 1])
@@ -114,9 +125,17 @@ if __name__ == "__main__":
 
     def augmented_objective(x):
         """
-        Objective function with constraints added via a multiplicative external penalty method
-        :param x: Packed design vector
-        :return: Value of the augmented objective
+        Compute the objective with constraints added via a multiplicative external penalty method.
+
+        Parameters
+        ----------
+        x
+            Packed design vector.
+
+        Returns
+        -------
+        float
+            Value of the augmented objective.
         """
         airfoil = make_airfoil(x)
         xfoil = airfoil.xfoil_cseq(
