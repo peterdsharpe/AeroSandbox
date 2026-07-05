@@ -9,7 +9,10 @@ from typing import Literal
 
 class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
     """
+    Simulate point-mass dynamics in 3D, with velocity parameterized in Cartesian coordinates.
+
     Dynamics instance:
+
     * simulating a point mass
     * in 3D
     * with velocity parameterized in Cartesian coordinates
@@ -31,7 +34,6 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         Fx_e: Force along the Earth-x axis. [N]
         Fy_e: Force along the Earth-y axis. [N]
         Fz_e: Force along the Earth-z axis. [N]
-
     """
 
     def __init__(
@@ -100,6 +102,9 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
 
     @property
     def speed(self) -> float:
+        """
+        Return the speed [m/s], computed from the Earth-axes velocity components.
+        """
         return (
             self.u_e**2
             + self.v_e**2
@@ -110,10 +115,9 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
     @property
     def gamma(self):
         """
-        Returns the flight path angle, in radians.
+        Return the flight path angle, in radians.
 
         Positive flight path angle indicates positive vertical speed.
-
         """
         return np.arctan2(
             -self.w_e,
@@ -124,11 +128,10 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
     @property
     def track(self):
         """
-        Returns the track angle, in radians.
+        Return the track angle, in radians.
 
         * Track of 0 == North == aligned with x_e axis
         * Track of np.pi / 2 == East == aligned with y_e axis
-
         """
         return np.arctan2(
             self.v_e,
@@ -226,11 +229,11 @@ class DynamicsPointMass3DCartesian(_DynamicsPointMassBaseClass):
         axes: Literal["geometry", "body", "wind", "stability", "earth"] = "earth",
     ) -> None:
         """
-        Adds a force (in whichever axis system you choose) to this Dynamics instance.
+        Add a force (in whichever axis system you choose) to this Dynamics instance.
 
-        Note that, for this class, the default axis system is `axes="earth"` (this class's native axis system),
-        which differs from other Dynamics classes. See `_DynamicsPointMassBaseClass.add_force()` for full
-        documentation.
+        Note that, for this class, the default axis system is `axes="earth"` (this class's native
+        axis system), which differs from other Dynamics classes. See
+        `_DynamicsPointMassBaseClass.add_force()` for full documentation.
         """
         Fx_e, Fy_e, Fz_e = self.convert_axes(
             x_from=Fx, y_from=Fy, z_from=Fz, from_axes=axes, to_axes="earth"

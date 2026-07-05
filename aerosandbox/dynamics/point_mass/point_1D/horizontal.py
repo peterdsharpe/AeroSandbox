@@ -7,7 +7,10 @@ from aerosandbox.numpy.typing import Vectorizable
 
 class DynamicsPointMass1DHorizontal(DynamicsPointMass3DCartesian):
     """
+    Simulate point-mass dynamics in 1D, oriented horizontally.
+
     Dynamics instance:
+
     * simulating a point mass
     * in 1D, oriented horizontally (i.e., the .add_gravity_force() method will have no effect)
 
@@ -17,7 +20,6 @@ class DynamicsPointMass1DHorizontal(DynamicsPointMass3DCartesian):
 
     Control variables:
         Fx_e: Force along the Earth-x axis. [N]
-
     """
 
     def __init__(

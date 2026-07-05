@@ -7,7 +7,10 @@ from aerosandbox.numpy.typing import Vectorizable
 
 class DynamicsPointMass2DCartesian(DynamicsPointMass3DCartesian):
     """
+    Simulate point-mass dynamics in 2D, with velocity parameterized in Cartesian coordinates.
+
     Dynamics instance:
+
     * simulating a point mass
     * in 2D
     * with velocity parameterized in Cartesian coordinates
@@ -24,7 +27,6 @@ class DynamicsPointMass2DCartesian(DynamicsPointMass3DCartesian):
     Control variables:
         Fx_e: Force along the Earth-x axis. [N]
         Fz_e: Force along the Earth-z axis. [N]
-
     """
 
     def __init__(

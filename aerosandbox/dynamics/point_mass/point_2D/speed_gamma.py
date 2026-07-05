@@ -7,7 +7,10 @@ from aerosandbox.numpy.typing import Vectorizable
 
 class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
     """
+    Simulate point-mass dynamics in 2D, with velocity parameterized in speed-gamma space.
+
     Dynamics instance:
+
     * simulating a point mass
     * in 2D
     * with velocity parameterized in speed-gamma space.
@@ -24,7 +27,6 @@ class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
     Control variables:
         Fx_w: Force along the wind-x axis. [N]
         Fz_w: Force along the wind-z axis. [N]
-
     """
 
     def __init__(

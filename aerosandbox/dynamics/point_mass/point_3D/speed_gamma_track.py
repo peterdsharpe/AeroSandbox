@@ -9,7 +9,10 @@ from typing import Literal
 
 class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
     """
+    Simulate point-mass dynamics in 3D, with velocity parameterized in speed-gamma-track space.
+
     Dynamics instance:
+
     * simulating a point mass
     * in 3D
     * with velocity parameterized in speed-gamma-track space
@@ -33,7 +36,6 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
         Fx_w: Force along the wind-x axis. [N]
         Fy_w: Force along the wind-y axis. [N]
         Fz_w: Force along the wind-z axis. [N]
-
     """
 
     def __init__(
@@ -122,14 +124,23 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
 
     @property
     def u_e(self):
+        """
+        Return the x-velocity in Earth axes [m/s], computed from speed, gamma, and track.
+        """
         return self.speed * np.cos(self.gamma) * np.cos(self.track)
 
     @property
     def v_e(self):
+        """
+        Return the y-velocity in Earth axes [m/s], computed from speed, gamma, and track.
+        """
         return self.speed * np.cos(self.gamma) * np.sin(self.track)
 
     @property
     def w_e(self):
+        """
+        Return the z-velocity in Earth axes [m/s], computed from speed and gamma.
+        """
         return -self.speed * np.sin(self.gamma)
 
     def convert_axes(
@@ -205,11 +216,11 @@ class DynamicsPointMass3DSpeedGammaTrack(_DynamicsPointMassBaseClass):
         axes: Literal["geometry", "body", "wind", "stability", "earth"] = "wind",
     ) -> None:
         """
-        Adds a force (in whichever axis system you choose) to this Dynamics instance.
+        Add a force (in whichever axis system you choose) to this Dynamics instance.
 
-        Note that, for this class, the default axis system is `axes="wind"` (this class's native axis system),
-        which differs from other Dynamics classes. See `_DynamicsPointMassBaseClass.add_force()` for full
-        documentation.
+        Note that, for this class, the default axis system is `axes="wind"` (this class's native
+        axis system), which differs from other Dynamics classes. See
+        `_DynamicsPointMassBaseClass.add_force()` for full documentation.
         """
         Fx_w, Fy_w, Fz_w = self.convert_axes(
             x_from=Fx, y_from=Fy, z_from=Fz, from_axes=axes, to_axes="wind"
