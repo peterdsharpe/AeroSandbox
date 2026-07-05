@@ -46,12 +46,20 @@ OUT_OF_RANGE_ERROR_STRING = (
 
 
 def burn_rate_coefficient(oxamide_fraction):
-    """Burn rate vs oxamide content model.
+    """
+    Model the propellant burn rate coefficient as a function of oxamide content.
+
     Valid from 0% to 15% oxamide. # TODO IMPLEMENT THIS
 
-    Returns:
-        a: propellant burn rate coefficient
-            [units: pascal**(-n) meter second**-1].
+    Parameters
+    ----------
+    oxamide_fraction
+        Oxamide mass fraction of the propellant.
+
+    Returns
+    -------
+    a
+        Propellant burn rate coefficient [units: pascal**(-n) meter second**-1].
     """
     oxamide_fraction = np.fmax(oxamide_fraction, 0)
 
@@ -59,11 +67,20 @@ def burn_rate_coefficient(oxamide_fraction):
 
 
 def c_star(oxamide_fraction):
-    """Characteristic velocity vs. oxamide content model.
+    """
+    Model the characteristic velocity as a function of oxamide content.
+
     Valid from 0% to 20% oxamide. # TODO IMPLEMENT THIS
 
-    Returns:
-        c_star: ideal characteristic velocity [units: meter second**-1].
+    Parameters
+    ----------
+    oxamide_fraction
+        Oxamide mass fraction of the propellant.
+
+    Returns
+    -------
+    c_star
+        Ideal characteristic velocity [units: meter second**-1].
     """
     # oxamide_fraction = cas.fmax(oxamide_fraction, 0)
     coefs = [1380.2, -983.3, -697.1]
@@ -71,9 +88,20 @@ def c_star(oxamide_fraction):
 
 
 def dubious_min_combustion_pressure(oxamide_fraction):
-    """Minimum pressure for stable combustion vs. oxamide content model.
+    """
+    Model the minimum pressure for stable combustion as a function of oxamide content.
 
     Note: this model is of DUBIOUS accuracy. Don't trust it.
+
+    Parameters
+    ----------
+    oxamide_fraction
+        Oxamide mass fraction of the propellant.
+
+    Returns
+    -------
+    p_min
+        Minimum pressure for stable combustion [Pa].
     """
     coefs = [7.73179444e00, 3.60886970e-01, 7.64587936e-03]
     p_min_MPa = coefs[0] * oxamide_fraction**2 + coefs[1] * oxamide_fraction + coefs[2]
@@ -82,10 +110,18 @@ def dubious_min_combustion_pressure(oxamide_fraction):
 
 
 def gamma(oxamide_fraction):
-    """Ratio of specific heats vs. oxamide content model.
+    """
+    Model the ratio of specific heats as a function of oxamide content.
 
-    Returns:
-        gamma: Exhaust gas ratio of specific heats [units: dimensionless].
+    Parameters
+    ----------
+    oxamide_fraction
+        Oxamide mass fraction of the propellant.
+
+    Returns
+    -------
+    gamma
+        Exhaust gas ratio of specific heats [units: dimensionless].
     """
     # oxamide_fraction = cas.fmax(oxamide_fraction, 0)
 
@@ -96,20 +132,30 @@ def gamma(oxamide_fraction):
 def expansion_ratio_from_pressure(
     chamber_pressure, exit_pressure, gamma, oxamide_fraction
 ):
-    """Find the nozzle expansion ratio from the chamber and exit pressures.
+    r"""
+    Find the nozzle expansion ratio from the chamber and exit pressures.
 
     See :ref:`expansion-ratio-tutorial-label` for a physical description of the
     expansion ratio.
 
     Reference: Rocket Propulsion Elements, 8th Edition, Equation 3-25
 
-    Arguments:
-        chamber_pressure (scalar): Nozzle stagnation chamber pressure [units: pascal].
-        exit_pressure (scalar): Nozzle exit static pressure [units: pascal].
-        gamma (scalar): Exhaust gas ratio of specific heats [units: dimensionless].
+    Parameters
+    ----------
+    chamber_pressure : scalar
+        Nozzle stagnation chamber pressure [units: pascal].
+    exit_pressure : scalar
+        Nozzle exit static pressure [units: pascal].
+    gamma : scalar
+        Exhaust gas ratio of specific heats [units: dimensionless].
+    oxamide_fraction : scalar
+        Oxamide mass fraction of the propellant. Used to enforce a minimum stable combustion
+        chamber pressure.
 
-    Returns:
-        scalar: Expansion ratio :math:`\\epsilon = A_e / A_t` [units: dimensionless]
+    Returns
+    -------
+    scalar
+        Expansion ratio :math:`\epsilon = A_e / A_t` [units: dimensionless].
     """
     chamber_pressure = np.fmax(
         chamber_pressure, dubious_min_combustion_pressure(oxamide_fraction)
@@ -130,7 +176,8 @@ def expansion_ratio_from_pressure(
 
 
 def thrust_coefficient(chamber_pressure, exit_pressure, gamma, p_a=None, er=None):
-    """Nozzle thrust coefficient, :math:`C_F`.
+    """
+    Compute the nozzle thrust coefficient, :math:`C_F`.
 
     The thrust coefficient is a figure of merit for the nozzle expansion process.
     See :ref:`thrust-coefficient-label` for a description of the physical meaning of the
@@ -138,18 +185,24 @@ def thrust_coefficient(chamber_pressure, exit_pressure, gamma, p_a=None, er=None
 
     Reference: Equation 1-33a in Huzel and Huang.
 
-    Arguments:
-        chamber_pressure (scalar): Nozzle stagnation chamber pressure [units: pascal].
-        exit_pressure (scalar): Nozzle exit static pressure [units: pascal].
-        gamma (scalar): Exhaust gas ratio of specific heats [units: dimensionless].
-        p_a (scalar, optional): Ambient pressure [units: pascal]. If None,
-            then p_a = exit_pressure (i.e. matched expansion) is assumed, and the
-            pressure-thrust term is zero.
-        er (scalar, optional): Nozzle area expansion ratio [units: dimensionless].
-            Must be provided if p_a is provided.
+    Parameters
+    ----------
+    chamber_pressure : scalar
+        Nozzle stagnation chamber pressure [units: pascal].
+    exit_pressure : scalar
+        Nozzle exit static pressure [units: pascal].
+    gamma : scalar
+        Exhaust gas ratio of specific heats [units: dimensionless].
+    p_a : scalar, optional
+        Ambient pressure [units: pascal]. If None, then p_a = exit_pressure (i.e. matched
+        expansion) is assumed, and the pressure-thrust term is zero.
+    er : scalar, optional
+        Nozzle area expansion ratio [units: dimensionless]. Must be provided if p_a is provided.
 
-    Returns:
-        scalar: The thrust coefficient, :math:`C_F` [units: dimensionless].
+    Returns
+    -------
+    scalar
+        The thrust coefficient, :math:`C_F` [units: dimensionless].
     """
     if (p_a is None and er is not None) or (er is None and p_a is not None):
         raise ValueError("Both p_a and er must be provided.")

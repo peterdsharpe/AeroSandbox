@@ -9,17 +9,28 @@ def propeller_shaft_power_from_thrust(
     propeller_coefficient_of_performance=0.8,
 ):
     """
-    Using dynamic disc actuator theory, gives the shaft power required to generate
-    a certain amount of thrust.
+    Give the shaft power required to generate a certain amount of thrust, using dynamic disc
+    actuator theory.
 
     Source: https://web.mit.edu/16.unified/www/FALL/thermodynamics/notes/node86.html
 
-    :param thrust_force: Thrust force [N]
-    :param area_propulsive: Total disc area of all propulsive surfaces [m^2]
-    :param airspeed: Airspeed [m/s]
-    :param rho: Air density [kg/m^3]
-    :param propeller_coefficient_of_performance: propeller coeff. of performance (due to viscous losses) [unitless]
-    :return: Shaft power [W]
+    Parameters
+    ----------
+    thrust_force
+        Thrust force [N].
+    area_propulsive
+        Total disc area of all propulsive surfaces [m^2].
+    airspeed
+        Airspeed [m/s].
+    rho
+        Air density [kg/m^3].
+    propeller_coefficient_of_performance
+        Propeller coeff. of performance (due to viscous losses) [unitless].
+
+    Returns
+    -------
+    float
+        Shaft power [W].
     """
     return (
         0.5
@@ -32,12 +43,22 @@ def propeller_shaft_power_from_thrust(
 
 def mass_hpa_propeller(diameter, max_power, include_variable_pitch_mechanism=False):
     """
-    Returns the estimated mass of a propeller assembly for low-disc-loading applications (human powered airplane, paramotor, etc.)
+    Return the estimated mass of a propeller assembly for low-disc-loading applications
+    (human powered airplane, paramotor, etc.).
 
-    :param diameter: diameter of the propeller [m]
-    :param max_power: maximum power of the propeller [W]
-    :param include_variable_pitch_mechanism: boolean, does this propeller have a variable pitch mechanism?
-    :return: estimated weight [kg]
+    Parameters
+    ----------
+    diameter
+        Diameter of the propeller [m].
+    max_power
+        Maximum power of the propeller [W].
+    include_variable_pitch_mechanism : bool
+        Does this propeller have a variable pitch mechanism?
+
+    Returns
+    -------
+    float
+        Estimated weight [kg].
     """
 
     mass_propeller = (
@@ -61,10 +82,10 @@ def mass_gearbox(
     rpm_out,
 ):
     r"""
-    Estimates the mass of a gearbox.
+    Estimate the mass of a gearbox.
 
     Based on data from NASA/TM-2009-215680, available here:
-        https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20090042817.pdf
+    https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20090042817.pdf
 
     R^2 = 0.92 to the data.
 
@@ -73,12 +94,22 @@ def mass_gearbox(
         data from over fifty rotorcrafts, tiltrotors, and turboprop
         aircraft."
 
-    Data fits in the NASA document were thrown out and refitted to extrapolate more sensibly; see:
-        C:\Projects\GitHub\AeroSandbox\studies\GearboxMassFits
-    :param power: Shaft power through the gearbox [W]
-    :param rpm_in: RPM of the input to the gearbox [rpm]
-    :param rpm_out: RPM of the output of the gearbox [rpm]
-    :return: Estimated mass of the gearbox [kg]
+    Data fits in the NASA document were thrown out and refitted to extrapolate more sensibly;
+    see: C:\Projects\GitHub\AeroSandbox\studies\GearboxMassFits
+
+    Parameters
+    ----------
+    power
+        Shaft power through the gearbox [W].
+    rpm_in
+        RPM of the input to the gearbox [rpm].
+    rpm_out
+        RPM of the output of the gearbox [rpm].
+
+    Returns
+    -------
+    float
+        Estimated mass of the gearbox [kg].
     """
     power_hp = power / 745.7
 

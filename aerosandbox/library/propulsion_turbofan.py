@@ -5,23 +5,25 @@ def thrust_turbofan(
     mass_turbofan: float,
 ) -> float:
     """
-    Estimates the maximum rated dry thrust of a turbofan engine. A regression to historical data.
+    Estimate the maximum rated dry thrust of a turbofan engine. A regression to historical data.
 
     Based on data for both civilian and military turbofans, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
-    Applicable to both turbojets and turbofans, and with sizes ranging from micro-turbines (<1 kg) to large transport
-    aircraft turbofans.
+    Applicable to both turbojets and turbofans, and with sizes ranging from micro-turbines
+    (<1 kg) to large transport aircraft turbofans.
 
     See studies in `/AeroSandbox/studies/TurbofanStudies/make_fit_thrust.py` for model details.
 
-    Args:
+    Parameters
+    ----------
+    mass_turbofan : float
+        The mass of the turbofan engine [kg].
 
-        mass_turbofan: The mass of the turbofan engine. [kg]
-
-    Returns:
-
-        The maximum (rated takeoff) dry thrust of the turbofan engine. [N]
+    Returns
+    -------
+    float
+        The maximum (rated takeoff) dry thrust of the turbofan engine [N].
     """
     p = {"a": 12050.719283568596, "w": 0.9353861810025565}
 
@@ -33,16 +35,28 @@ def thrust_specific_fuel_consumption_turbofan(
     bypass_ratio: float,
 ) -> float:
     """
-    Estimates the thrust-specific fuel consumption (TSFC) of a turbofan engine. A regression to historical data.
+    Estimate the thrust-specific fuel consumption (TSFC) of a turbofan engine. A regression to
+    historical data.
 
     Based on data for both civilian and military turbofans, available in:
     `aerosandbox/library/datasets/turbine_engines/data.xlsx`
 
-    Applicable to both turbojets and turbofans, and with sizes ranging from micro-turbines (<1 kg) to large transport
-    aircraft turbofans.
+    Applicable to both turbojets and turbofans, and with sizes ranging from micro-turbines
+    (<1 kg) to large transport aircraft turbofans.
 
     See studies in `/AeroSandbox/studies/TurbofanStudies/make_fit_tsfc.py` for model details.
 
+    Parameters
+    ----------
+    mass_turbofan : float
+        The mass of the turbofan engine [kg].
+    bypass_ratio : float
+        The bypass ratio (BPR) of the turbofan engine [-].
+
+    Returns
+    -------
+    float
+        The thrust-specific fuel consumption (TSFC) of the turbofan engine.
     """
     p = {
         "a": 3.2916082331121034e-05,
@@ -65,27 +79,31 @@ def mass_turbofan(
     diameter_fan,
 ):
     """
-    Computes the combined mass of a bare turbofan, nacelle, and accessory and pylon weights.
+    Compute the combined mass of a bare turbofan, nacelle, and accessory and pylon weights.
 
     Bare weight depends on m_dot, OPR, and BPR.
 
     Nacelle weight is a function of various areas and fan diameter.
 
-    From TASOPT documentation by Mark Drela, available here: http://web.mit.edu/drela/Public/web/tasopt/TASOPT_doc.pdf
-        Section: "Turbofan Weight Model from Historical Data"
+    From TASOPT documentation by Mark Drela, available here:
+    http://web.mit.edu/drela/Public/web/tasopt/TASOPT_doc.pdf
+    Section: "Turbofan Weight Model from Historical Data"
 
-    Args:
+    Parameters
+    ----------
+    m_dot_core_corrected
+        The mass flow of the core only, corrected to standard conditions [kg/s].
+    overall_pressure_ratio
+        The overall pressure ratio (OPR) [-].
+    bypass_ratio
+        The bypass ratio (BPR) [-].
+    diameter_fan
+        The diameter of the fan [m].
 
-        m_dot_core_corrected: The mass flow of the core only, corrected to standard conditions. [kg/s]
-
-        overall_pressure_ratio: The overall pressure ratio (OPR) [-]
-
-        bypass_ratio: The bypass ratio (BPR) [-]
-
-        diameter_fan: The diameter of the fan. [m]
-
-    Returns: The total engine mass. [kg]
-
+    Returns
+    -------
+    float
+        The total engine mass [kg].
     """
     kg_to_lbm = 2.20462262
     m_to_ft = 1 / 0.3048
@@ -162,23 +180,27 @@ def m_dot_corrected_over_m_dot(
     pressure_total_2,
 ):
     """
-    Computes the ratio `m_dot_corrected / m_dot`, where:
+    Compute the ratio `m_dot_corrected / m_dot`.
 
-        * `m_dot_corrected` is the corrected mass flow rate, where corrected refers to correction to ISO 3977 standard
-        temperature and pressure conditions (15C, 101325 Pa).
+    Here:
+
+        * `m_dot_corrected` is the corrected mass flow rate, where corrected refers to correction
+          to ISO 3977 standard temperature and pressure conditions (15C, 101325 Pa).
 
         * `m_dot` is the raw mass flow rate, at some other conditions.
 
-    Args:
+    Parameters
+    ----------
+    temperature_total_2
+        The total temperature at the compressor inlet face, at the conditions to be
+        evaluated [K].
+    pressure_total_2
+        The total pressure at the compressor inlet face, at the conditions to be evaluated [Pa].
 
-        temperature_total_2: The total temperature at the compressor inlet face, at the conditions to be evaluated. [K]
-
-        pressure_total_2: The total pressure at the compressor inlet face, at the conditions to be evaluated. [Pa]
-
-    Returns:
-
+    Returns
+    -------
+    float
         The ratio `m_dot_corrected / m_dot`.
-
     """
     temperature_standard = 273.15 + 15
     pressure_standard = 101325

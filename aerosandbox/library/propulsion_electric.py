@@ -14,49 +14,55 @@ def motor_electric_performance(
     no_load_current: float = 0.4,  # amps
 ) -> dict[str, Vectorizable]:
     """
-    A function for predicting the performance of an electric motor.
+    Predict the performance of an electric motor.
 
     Performance equations based on Mark Drela's First Order Motor Model:
     http://web.mit.edu/drela/Public/web/qprop/motor1_theory.pdf
 
     Instructions: Input EXACTLY TWO of the following parameters: voltage, current, rpm, torque.
 
-    Exception: You cannot supply the combination of current and torque - this makes for an ill-posed problem.
+    Exception: You cannot supply the combination of current and torque - this makes for an
+    ill-posed problem.
 
     Note that this function is fully vectorized, so arrays can be supplied to any of the inputs.
 
-    Args:
-        voltage: Voltage across motor terminals [Volts]
+    Parameters
+    ----------
+    voltage : Vectorizable | None
+        Voltage across motor terminals [Volts].
+    current : Vectorizable | None
+        Current through motor [Amps].
+    rpm : Vectorizable | None
+        Motor rotation speed [rpm].
+    torque : Vectorizable | None
+        Motor torque [N m].
+    kv : float
+        Voltage constant [rpm/volt].
+    resistance : float
+        Resistance [ohms].
+    no_load_current : float
+        No-load current [amps].
 
-        current: Current through motor [Amps]
-
-        rpm: Motor rotation speed [rpm]
-
-        torque: Motor torque [N m]
-
-        kv: voltage constant, in rpm/volt
-
-        resistance: resistance, in ohms
-
-        no_load_current: no-load current, in amps
-
-    Returns:
+    Returns
+    -------
+    dict[str, Vectorizable]
         A dictionary where keys are:
+
             "voltage",
             "current",
             "rpm",
             "torque",
             "shaft power",
             "electrical power",
-            "efficiency"
+            "efficiency",
             "waste heat"
 
         And values are corresponding quantities in SI units.
 
-        Note that "efficiency" is just (shaft power) / (electrical power), and hence implicitly assumes that the
-        motor is operating as a motor (electrical -> shaft power), and not a generator (shaft power -> electrical).
-        If you want to know the efficiency of the motor as a generator, you can simply calculate it as (electrical
-        power) / (shaft power).
+        Note that "efficiency" is just (shaft power) / (electrical power), and hence implicitly
+        assumes that the motor is operating as a motor (electrical -> shaft power), and not a
+        generator (shaft power -> electrical). If you want to know the efficiency of the motor as
+        a generator, you can simply calculate it as (electrical power) / (shaft power).
     """
     # Validate inputs
     voltage_known = voltage is not None
@@ -139,78 +145,90 @@ def electric_propeller_propulsion_analysis(
     battery_discharge_efficiency: float = 0.985,
 ) -> dict[str, float]:
     """
-    Performs a propulsion analysis for an electric propeller-driven aircraft.
+    Perform a propulsion analysis for an electric propeller-driven aircraft.
 
-    May be used for single-engine or multi-engine aircraft, so long as all engines / propellers are identical.
+    May be used for single-engine or multi-engine aircraft, so long as all engines / propellers
+    are identical.
 
-    Args:
+    Parameters
+    ----------
+    total_thrust : float
+        Total thrust force produced by all engines at the cruise operating point [N].
+    n_engines : int
+        Number of engines on the aircraft.
+    propeller_diameter : float
+        Diameter of each of the propellers [m].
+    op_point : OperatingPoint
+        The cruise operating point. Must be an AeroSandbox OperatingPoint object.
+    motor_kv : float
+        Motor voltage constant [rpm/volt].
+    motor_no_load_current : float
+        Motor no-load current [amps].
+    motor_resistance : float
+        Motor resistance [ohms].
+    wire_resistance : float
+        Round-trip resistance of the wires connecting the ESC to the battery [ohms].
+    battery_voltage : float
+        Battery voltage [volts].
+    propeller_tip_mach : float
+        Mach number at the propeller tip. Defaults to 0.50. From a propulsive efficiency
+        perspective, you want this to be as high as possible while still keeping the tip speed
+        (hypotenuse of the velocity triangle) below the critical Mach number of the propeller
+        blade airfoil. This is because motor efficiency and specific power tend to be better at
+        high-speed low-torque conditions, and also the propeller aerodynamics tend to be better
+        at low solidity. But there may be reasons to lower this, such as propeller structural
+        considerations or noise considerations (with noise being a *strong* function of tip
+        Mach).
+    gearbox_ratio : float
+        Gearbox reduction ratio. Defaults to 1 (no gearbox). For example, a `gearbox_ratio` of 5
+        is a 5:1 reduction, meaning that the propeller turns 5 times slower than the motor.
+    gearbox_efficiency : float
+        Gearbox efficiency. Defaults to 1, only because the `gearbox_ratio` defaults to 1 (no
+        gearbox), and so this represents no losses. If you have a gearbox, you should probably
+        use a value of 0.98 or so.
+    esc_efficiency : float
+        Efficiency of the electronic speed controller (ESC), sometimes called the inverter.
+        Defaults to 0.98, which is a reasonable value for a high-quality ESC at a large (>5 kW)
+        scale. Small components will have lower efficiencies than this.
+    battery_discharge_efficiency : float
+        Coulombic efficiency of the battery in discharge only (i.e., not round-trip). Defaults to
+        0.985, which is a reasonable value for a high-quality lithium-polymer battery. Other
+        battery chemistries will have different values.
 
-        total_thrust: Total thrust force produced by all engines at the cruise operating point [N].
-
-        n_engines: Number of engines on the aircraft.
-
-        propeller_diameter: Diameter of each of the propellers [m].
-
-        op_point: The cruise operating point. Must be an AeroSandbox OperatingPoint object.
-
-        motor_kv: Motor voltage constant [rpm/volt].
-
-        motor_no_load_current: Motor no-load current [amps].
-
-        motor_resistance: Motor resistance [ohms].
-
-        wire_resistance: Round-trip resistance of the wires connecting the ESC to the battery [ohms].
-
-        battery_voltage: Battery voltage [volts].
-
-        propeller_tip_mach: Mach number at the propeller tip. Defaults to 0.50. From a propulsive efficiency
-            perspective, you want this to be as high as possible while still keeping the tip speed (hypotenuse of the
-            velocity triangle) below the critical Mach number of the propeller blade airfoil. This is because motor
-            efficiency and specific power tend to be better at high-speed low-torque conditions, and also the propeller
-            aerodynamics tend to be better at low solidity. But there may be reasons to lower this, such as propeller
-            structural considerations or noise considerations (with noise being a *strong* function of tip Mach).
-
-        gearbox_ratio: Gearbox reduction ratio. Defaults to 1 (no gearbox). For example, a `gearbox_ratio` of 5 is a 5:1
-            reduction, meaning that the propeller turns 5 times slower than the motor.
-
-        gearbox_efficiency: Gearbox efficiency. Defaults to 1, only because the `gearbox_ratio` defaults to 1 (no
-            gearbox), and so this represents no losses. If you have a gearbox, you should probably use a value of 0.98 or
-            so.
-
-        esc_efficiency: Efficiency of the electronic speed controller (ESC), sometimes called the inverter. Defaults to
-            0.98, which is a reasonable value for a high-quality ESC at a large (>5 kW) scale. Small components will
-            lower efficiencies than this.
-
-        battery_discharge_efficiency: Coulobmic efficiency of the battery in discharge only (i.e., not round-trip).
-            Defaults to 0.985, which is a reasonable value for a high-quality lithium-polymer battery. Other battery
-            chemistries will have different values.
-
-    Returns: A dictionary of all the local variables of the analysis (i.e., `locals()`), keyed by name. This
-        includes every input argument (e.g., "total_thrust", "op_point") as well as every intermediate quantity
-        computed during the analysis. Note that a few values are not floats: "op_point" is the given
-        OperatingPoint object, "motor_parameters_per_motor" is the dictionary returned by
-        `motor_electric_performance()`, and "propeller_shaft_power_from_thrust" is an (internal) function
-        reference.
+    Returns
+    -------
+    dict[str, float]
+        A dictionary of all the local variables of the analysis (i.e., `locals()`), keyed by
+        name. This includes every input argument (e.g., "total_thrust", "op_point") as well as
+        every intermediate quantity computed during the analysis. Note that a few values are not
+        floats: "op_point" is the given OperatingPoint object, "motor_parameters_per_motor" is
+        the dictionary returned by `motor_electric_performance()`, and
+        "propeller_shaft_power_from_thrust" is an (internal) function reference.
 
         Of particular note are the following keys:
 
         * "air_power": The power delivered to the air (thrust * velocity) [W]
-        * "shaft_power": The power at the propeller shaft (after the gearbox; rotational speed * torque) [W]
+        * "shaft_power": The power at the propeller shaft (after the gearbox; rotational speed *
+          torque) [W]
         * "motor_electrical_power": The electrical power input to the motor [W]
         * "esc_electrical_power": The electrical power input to the ESC [W]
         * "battery_power": The power draw from the battery [W]
         * "battery_current": The current draw from the battery [A]
 
-        * "propeller_efficiency": The propulsive efficiency of the propeller, defined as (air_power / shaft_power).
-        * "motor_efficiency": The efficiency of the motor, defined as (shaft_power / motor_electrical_power).
-        * "wire_efficiency": The efficiency of the ESC-to-battery wiring, accounting for resistive losses.
-        * "overall_efficiency": The overall efficiency of the propulsion system, defined as (air_power / battery_power).
+        * "propeller_efficiency": The propulsive efficiency of the propeller, defined as
+          (air_power / shaft_power).
+        * "motor_efficiency": The efficiency of the motor, defined as
+          (shaft_power / motor_electrical_power).
+        * "wire_efficiency": The efficiency of the ESC-to-battery wiring, accounting for
+          resistive losses.
+        * "overall_efficiency": The overall efficiency of the propulsion system, defined as
+          (air_power / battery_power).
 
-        Other intermediate keys include "propulsive_area_per_propeller", "propulsive_area_total",
-        "propeller_wake_dynamic_pressure", "propeller_wake_velocity", "propeller_tip_speed",
-        "propeller_rads_per_sec", "propeller_rpm", "propeller_advance_ratio", "motor_rpm",
-        "motor_rads_per_sec", "motor_torque_per_motor", and "wire_power_loss".
-
+        Other intermediate keys include "propulsive_area_per_propeller",
+        "propulsive_area_total", "propeller_wake_dynamic_pressure", "propeller_wake_velocity",
+        "propeller_tip_speed", "propeller_rads_per_sec", "propeller_rpm",
+        "propeller_advance_ratio", "motor_rpm", "motor_rads_per_sec", "motor_torque_per_motor",
+        and "wire_power_loss".
     """
 
     ### Propeller Analysis
@@ -289,16 +307,23 @@ def electric_propeller_propulsion_analysis(
 
 def motor_resistance_from_no_load_current(no_load_current):
     """
-    Estimates the internal resistance of a motor from its no_load_current. Gates quotes R^2=0.93 for this model.
+    Estimate the internal resistance of a motor from its no-load current.
 
-    Source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass Optimization for Solar-Regen..."
-        https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&context=facpub
+    Gates quotes R^2=0.93 for this model.
 
-    Args:
-        no_load_current: No-load current [amps]
+    Source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass Optimization for
+    Solar-Regen..."
+    https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&context=facpub
 
-    Returns:
-        motor internal resistance [ohms]
+    Parameters
+    ----------
+    no_load_current
+        No-load current [amps].
+
+    Returns
+    -------
+    float
+        Motor internal resistance [ohms].
     """
     return 0.0467 * no_load_current**-1.892
 
@@ -307,15 +332,19 @@ def mass_ESC(
     max_power,
 ):
     """
-    Estimates the mass of an ESC.
+    Estimate the mass of an ESC.
 
-    Informal correlation I did to Hobbyking ESCs in the 8S LiPo, 100A range
+    Informal correlation I did to Hobbyking ESCs in the 8S LiPo, 100A range.
 
-    Args:
-        max_power: maximum power [W]
+    Parameters
+    ----------
+    max_power
+        Maximum power [W].
 
-    Returns:
-        estimated ESC mass [kg]
+    Returns
+    -------
+    float
+        Estimated ESC mass [kg].
     """
     return 2.38e-5 * max_power
 
@@ -326,20 +355,24 @@ def mass_battery_pack(
     battery_pack_cell_fraction=0.7,
 ):
     """
-    Estimates the mass of a lithium-polymer battery.
+    Estimate the mass of a lithium-polymer battery.
 
-    Args:
-        battery_capacity_Wh: Battery capacity, in Watt-hours [W*h]
+    Parameters
+    ----------
+    battery_capacity_Wh
+        Battery capacity, in Watt-hours [W*h].
+    battery_cell_specific_energy_Wh_kg
+        Specific energy of the battery at the CELL level [W*h/kg].
+    battery_pack_cell_fraction
+        Fraction of the battery pack that is cells, by weight.
 
-        battery_cell_specific_energy: Specific energy of the battery at the CELL level [W*h/kg]
+        * Note: Ed Lovelace, a battery engineer for Aurora Flight Sciences, gives this figure as
+          0.70 in a Feb. 2020 presentation for MIT 16.82.
 
-        battery_pack_cell_fraction: Fraction of the battery pack that is cells, by weight.
-
-            * Note: Ed Lovelace, a battery engineer for Aurora Flight Sciences, gives this figure as 0.70 in a Feb.
-            2020 presentation for MIT 16.82
-
-    Returns:
-        Estimated battery mass [kg]
+    Returns
+    -------
+    float
+        Estimated battery mass [kg].
     """
     return (
         battery_capacity_Wh
@@ -355,30 +388,37 @@ def mass_motor_electric(
     method="hobbyking",
 ):
     r"""
-    Estimates the mass of a brushless DC electric motor.
+    Estimate the mass of a brushless DC electric motor.
+
     Curve fit to scraped Hobbyking BLDC motor data as of 2/24/2020.
+
     Estimated range of validity: 50 < max_power < 10000
 
-    Args:
-        max_power (float): maximum power [W]
+    Parameters
+    ----------
+    max_power : float
+        Maximum power [W].
+    kv_rpm_volt : float
+        Voltage constant of the motor, measured in rpm/volt, not rads/sec/volt! [rpm/volt]
+    voltage : float
+        Operating voltage of the motor [V].
+    method : str
+        Method to use. "burton", "hobbyking", or "astroflight" (increasing level of detail).
 
-        kv_rpm_volt (float): Voltage constant of the motor, measured in rpm/volt, not rads/sec/volt! [rpm/volt]
+        * Burton source: https://dspace.mit.edu/handle/1721.1/112414
 
-        voltage (float): Operating voltage of the motor [V]
+        * Hobbyking source: C:\Projects\GitHub\MotorScraper,
 
-        method (str): method to use. "burton", "hobbyking", or "astroflight" (increasing level of detail).
+        * Astroflight source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass
+          Optimization for Solar-Regen..."
+          https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&context=facpub
 
-            * Burton source: https://dspace.mit.edu/handle/1721.1/112414
+            * Validity claimed from 1.5 kW to 15 kW, kv from 32 to 1355.
 
-            * Hobbyking source: C:\Projects\GitHub\MotorScraper,
-
-            * Astroflight source: Gates, et. al., "Combined Trajectory, Propulsion, and Battery Mass Optimization for
-            Solar-Regen..." https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=3932&context=facpub
-
-                * Validity claimed from 1.5 kW to 15 kW, kv from 32 to 1355.
-
-    Returns:
-        Estimated motor mass [kg]
+    Returns
+    -------
+    float
+        Estimated motor mass [kg].
     """
     if method == "burton":
         return (
@@ -409,63 +449,72 @@ def mass_wires(
     return_dict: bool = False,
 ):
     """
-    Estimates the mass of wires used for power transmission.
+    Estimate the mass of wires used for power transmission.
 
-    Materials data from: https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistivity-density_product
-        All data measured at STP; beware, as this data (especially resistivity) can be a strong function of temperature.
+    Materials data from:
+    https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistivity-density_product
+    All data measured at STP; beware, as this data (especially resistivity) can be a strong
+    function of temperature.
 
-    Args:
-        wire_length (float): Length of the wire [m]
+    Parameters
+    ----------
+    wire_length : float
+        Length of the wire [m].
+    max_current : float
+        Max current of the wire [Amps].
+    allowable_voltage_drop : float
+        How much is the voltage allowed to drop along the wire?
+    material : str
+        Conductive material of the wire ("aluminum"). Determines density and resistivity.
+        One of:
 
-        max_current (float): Max current of the wire [Amps]
+        * "sodium"
 
-        allowable_voltage_drop (float): How much is the voltage allowed to drop along the wire?
+        * "lithium"
 
-        material (str): Conductive material of the wire ("aluminum"). Determines density and resistivity. One of:
+        * "calcium"
 
-            * "sodium"
+        * "potassium"
 
-            * "lithium"
+        * "beryllium"
 
-            * "calcium"
+        * "aluminum"
 
-            * "potassium"
+        * "magnesium"
 
-            * "beryllium"
+        * "copper"
 
-            * "aluminum"
+        * "silver"
 
-            * "magnesium"
+        * "gold"
 
-            * "copper"
-
-            * "silver"
-
-            * "gold"
-
-            * "iron"
-
-        insulated (bool): Should we add the mass of the wire's insulator coating? Usually you'll want to leave this True.
-
-        max_voltage (float): Maximum allowable voltage (used for sizing insulator). 600 is a common off-the-shelf rating.
-
-        wire_packing_factor (float): What fraction of the enclosed cross section is conductor? This is 1 for solid wire,
-            and less for stranded wire.
-
-        insulator_density (float): Density of the insulator [kg/m^3]
-
-        insulator_dielectric_strength (float): Dielectric strength of the insulator [V/m]. The default value of 12e6 corresponds
-        to rubber.
-
-        insulator_min_thickness (float): Minimum thickness of the insulator [m]. This is essentially a gauge limit.
-        The default value is 0.2 mm.
-
-        return_dict (bool): If True, returns a dictionary of all local variables. If False, just returns the wire
+        * "iron"
+    insulated : bool
+        Should we add the mass of the wire's insulator coating? Usually you'll want to leave
+        this True.
+    max_voltage : float
+        Maximum allowable voltage (used for sizing insulator). 600 is a common off-the-shelf
+        rating.
+    wire_packing_factor : float
+        What fraction of the enclosed cross section is conductor? This is 1 for solid wire,
+        and less for stranded wire.
+    insulator_density : float
+        Density of the insulator [kg/m^3].
+    insulator_dielectric_strength : float
+        Dielectric strength of the insulator [V/m]. The default value of 12e6 corresponds to
+        rubber.
+    insulator_min_thickness : float
+        Minimum thickness of the insulator [m]. This is essentially a gauge limit. The default
+        value is 0.2 mm.
+    return_dict : bool
+        If True, returns a dictionary of all local variables. If False, just returns the wire
         mass as a float. Defaults to False.
 
-
-    Returns: If `return_dict` is False (default), returns the wire mass as a single number. If `return_dict` is True,
-    returns a dictionary of all local variables.
+    Returns
+    -------
+    float | dict
+        If `return_dict` is False (default), returns the wire mass as a single number. If
+        `return_dict` is True, returns a dictionary of all local variables.
     """
     if (
         material == "sodium"
