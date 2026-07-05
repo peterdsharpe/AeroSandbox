@@ -21,10 +21,10 @@ class Airplane(AeroSandboxObject):
 
     Anatomy of an Airplane:
 
-        An Airplane consists chiefly of a collection of wings and fuselages. These can be accessed with
-        `Airplane.wings` and `Airplane.fuselages`, which gives a list of those respective components. Each wing is a
-        Wing object, and each fuselage is a Fuselage object.
-
+        An Airplane consists chiefly of a collection of wings and fuselages. These can be
+        accessed with `Airplane.wings` and `Airplane.fuselages`, which gives a list of those
+        respective components. Each wing is a Wing object, and each fuselage is a Fuselage
+        object.
     """
 
     def __init__(
@@ -40,53 +40,60 @@ class Airplane(AeroSandboxObject):
         analysis_specific_options: dict[type, dict[str, Any]] | None = None,
     ):
         """
-        Defines a new airplane.
+        Define a new airplane.
 
-        Args:
+        Parameters
+        ----------
+        name : str | None
+            Name of the airplane [optional]. It can help when debugging to give the airplane a
+            sensible name.
+        xyz_ref : np.ndarray | Sequence[float] | None
+            An array-like that gives the x-, y-, and z- reference point of the airplane, used
+            when computing moments and stability derivatives. Generally, this should be the
+            center of gravity.
 
-            name: Name of the airplane [optional]. It can help when debugging to give the airplane a sensible name.
+            # In a future version, this will be deprecated and replaced with
+            asb.MassProperties.
+        wings : Sequence[Wing] | None
+            A list of Wing objects that are a part of the airplane.
+        fuselages : Sequence[Fuselage] | None
+            A list of Fuselage objects that are a part of the airplane.
+        propulsors : Sequence[Propulsor] | None
+            A list of Propulsor objects that are a part of the airplane.
+        s_ref : float | None
+            Reference area. If undefined, it's set from the area of the first Wing object.
+            # Note: will be deprecated
+        c_ref : float | None
+            Reference chord. If undefined, it's set from the mean aerodynamic chord of the
+            first Wing object. # Note: will be deprecated
+        b_ref : float | None
+            Reference span. If undefined, it's set from the span of the first Wing object.
+            # Note: will be deprecated
+        analysis_specific_options : dict[type, dict[str, Any]] | None
+            Analysis-specific options are additional constants or modeling assumptions that
+            should be passed on to specific analyses and associated with this specific
+            geometry object.
 
-            xyz_ref: An array-like that gives the x-, y-, and z- reference point of the airplane, used when computing
-            moments and stability derivatives. Generally, this should be the center of gravity.
+            This should be a dictionary where:
 
-                # In a future version, this will be deprecated and replaced with asb.MassProperties.
+            * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis
+              or asb.ImplicitAnalysis), but if you decide to write your own analysis and want
+              to make this key something else (like a string), that's totally fine - it's just
+              a unique identifier for the specific analysis you're running.
 
-            wings: A list of Wing objects that are a part of the airplane.
+            * Values are a dictionary of key:value pairs, where:
 
-            fuselages: A list of Fuselage objects that are a part of the airplane.
+                * Keys are strings.
 
-            propulsors: A list of Propulsor objects that are a part of the airplane.
+                * Values are some value you want to assign.
 
-            s_ref: Reference area. If undefined, it's set from the area of the first Wing object. # Note: will be deprecated
+            This is more easily demonstrated / understood with an example:
 
-            c_ref: Reference chord. If undefined, it's set from the mean aerodynamic chord of the first Wing object. # Note: will be deprecated
-
-            b_ref: Reference span. If undefined, it's set from the span of the first Wing object. # Note: will be deprecated
-
-            analysis_specific_options: Analysis-specific options are additional constants or modeling assumptions
-            that should be passed on to specific analyses and associated with this specific geometry object.
-
-                This should be a dictionary where:
-
-                    * Keys are specific analysis types (typically a subclass of asb.ExplicitAnalysis or
-                    asb.ImplicitAnalysis), but if you decide to write your own analysis and want to make this key
-                    something else (like a string), that's totally fine - it's just a unique identifier for the
-                    specific analysis you're running.
-
-                    * Values are a dictionary of key:value pairs, where:
-
-                        * Keys are strings.
-
-                        * Values are some value you want to assign.
-
-                This is more easily demonstrated / understood with an example:
-
-                >>> analysis_specific_options = {
-                >>>     asb.AeroBuildup: dict(
-                >>>         include_wave_drag=True,
-                >>>     )
-                >>> }
-
+            >>> analysis_specific_options = {
+            >>>     asb.AeroBuildup: dict(
+            >>>         include_wave_drag=True,
+            >>>     )
+            >>> }
         """
         ### Set defaults
         if name is None:
@@ -181,23 +188,30 @@ class Airplane(AeroSandboxObject):
         stack_meshes=True,
     ):
         """
-        Returns a surface mesh of the Airplane, in (points, faces) format. For reference on this format,
-        see the documentation in `aerosandbox.geometry.mesh_utilities`.
+        Return a surface mesh of the Airplane, in (points, faces) format.
 
-        Args:
+        For reference on this format, see the documentation in
+        `aerosandbox.geometry.mesh_utilities`.
 
-            method:
+        Parameters
+        ----------
+        method
+            The meshing method, passed on to the `mesh_body()` methods of the Wing and
+            Fuselage components. One of "quad" or "tri".
+        thin_wings
+            Controls whether wings should be meshed as thin surfaces, rather than full 3D
+            bodies.
+        stack_meshes
+            Controls whether the meshes should be merged into a single mesh or not.
 
-            thin_wings: Controls whether wings should be meshed as thin surfaces, rather than full 3D bodies.
+            * If True, returns a (points, faces) tuple in standard mesh format.
 
-            stack_meshes: Controls whether the meshes should be merged into a single mesh or not.
+            * If False, returns a list of (points, faces) tuples in standard mesh format.
 
-                * If True, returns a (points, faces) tuple in standard mesh format.
-
-                * If False, returns a list of (points, faces) tuples in standard mesh format.
-
-        Returns:
-
+        Returns
+        -------
+        A (points, faces) tuple in standard mesh format if `stack_meshes` is True; otherwise,
+        a list of (points, faces) tuples in standard mesh format.
         """
         if thin_wings:
             wing_meshes = [
@@ -242,25 +256,32 @@ class Airplane(AeroSandboxObject):
         show_kwargs: dict | None = None,
     ):
         """
-        Produces an interactive 3D visualization of the airplane.
+        Produce an interactive 3D visualization of the airplane.
 
-        Args:
+        Parameters
+        ----------
+        backend : Literal["matplotlib", "pyvista", "plotly", "trimesh"]
+            The visualization backend to use. Options are:
 
-            backend: The visualization backend to use. Options are:
+            * "matplotlib" for a Matplotlib backend
+            * "pyvista" for a PyVista backend
+            * "plotly" for a Plot.ly backend
+            * "trimesh" for a trimesh backend
+        thin_wings : bool
+            A boolean that determines whether to draw the full airplane (i.e. thickened, 3D
+            bodies), or to use a thin-surface representation for any Wing objects.
+        ax
+            The Matplotlib axis to draw on (only used with the "matplotlib" backend). Must be
+            a 3D axis. If None, creates a new axis.
+        show : bool
+            A boolean that determines whether to display the object after plotting it. If
+            False, the object is returned but not displayed. If True, the object is displayed
+            and returned.
 
-                * "matplotlib" for a Matplotlib backend
-                * "pyvista" for a PyVista backend
-                * "plotly" for a Plot.ly backend
-                * "trimesh" for a trimesh backend
-
-            thin_wings: A boolean that determines whether to draw the full airplane (i.e. thickened, 3D bodies), or to use a
-            thin-surface representation for any Wing objects.
-
-            show: A boolean that determines whether to display the object after plotting it. If False, the object is
-            returned but not displayed. If True, the object is displayed and returned.
-
-        Returns: The plotted object, in its associated backend format. Also displays the object if `show` is True.
-
+        Returns
+        -------
+        The plotted object, in its associated backend format. Also displays the object if
+        `show` is True.
         """
         if show_kwargs is None:
             show_kwargs = {}
@@ -404,15 +425,26 @@ class Airplane(AeroSandboxObject):
         show: bool = True,
     ) -> "matplotlib.axes.Axes":
         """
-        Draws a wireframe of the airplane on a Matplotlib 3D axis.
+        Draw a wireframe of the airplane on a Matplotlib 3D axis.
 
-        Args:
+        Parameters
+        ----------
+        ax
+            The axis to draw on. Must be a 3D axis. If None, creates a new axis.
+        color
+            The color of the wireframe.
+        thin_linewidth
+            The linewidth of the thin lines.
+        thick_linewidth
+            The linewidth of the thick lines.
+        fuselage_longeron_theta
+            The angular coordinates (in radians) at which fuselage longerons are drawn. If
+            None, uses 8 evenly-spaced angles.
 
-            ax: The axis to draw on. Must be a 3D axis. If None, creates a new axis.
-
-            color: The color of the wireframe.
-
-            thin_linewidth: The linewidth of the thin lines.
+        Returns
+        -------
+        "matplotlib.axes.Axes"
+            The Matplotlib axis that was drawn on.
         """
         ### Set defaults
         if fuselage_longeron_theta is None:
@@ -662,27 +694,34 @@ class Airplane(AeroSandboxObject):
         show: bool = True,
     ) -> np.ndarray:
         """
-        Draws a standard 4-panel three-view diagram of the airplane using Matplotlib backend. Creates a new figure.
+        Draw a standard 4-panel three-view diagram of the airplane using Matplotlib backend.
 
-        Args:
+        Creates a new figure.
 
-            axs: A 2D numpy array of Matplotlib axes objects, with shape at least (2, 2). Each subplot must be 3D. If
-            None, creates a new figure with the required axes.
+        Parameters
+        ----------
+        axs
+            A 2D numpy array of Matplotlib axes objects, with shape at least (2, 2). Each
+            subplot must be 3D. If None, creates a new figure with the required axes.
+        style : Literal["shaded", "wireframe"]
+            Determines what drawing style to use for the three-view. A string, one of:
 
-            style: Determines what drawing style to use for the three-view. A string, one of:
+            * "shaded"
+            * "wireframe"
+        show : bool
+            A Boolean of whether to show the figure after creating it, or to hold it so that
+            the user can modify the figure further before showing.
 
-                * "shaded"
-                * "wireframe"
+        Returns
+        -------
+        np.ndarray
+            A 2D NumPy array of Matplotlib axes objects, with shape (2, 2). The axes are
+            arranged as follows:
 
-            show: A Boolean of whether to show the figure after creating it, or to hold it so that the user can
-            modify the figure further before showing.
-
-        Returns: A 2D NumPy array of Matplotlib axes objects, with shape (2, 2). The axes are arranged as follows:
-
-                * axs[0, 0]: Top view
-                * axs[0, 1]: Front view
-                * axs[1, 0]: Side view
-                * axs[1, 1]: Isometric view
+            * axs[0, 0]: Top view
+            * axs[0, 1]: Front view
+            * axs[1, 0]: Side view
+            * axs[1, 1]: Isometric view
         """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
@@ -777,8 +816,11 @@ class Airplane(AeroSandboxObject):
 
     def is_entirely_symmetric(self):
         """
-        Returns a boolean describing whether the airplane is geometrically entirely symmetric across the XZ-plane.
-        :return: [boolean]
+        Return whether the airplane is geometrically entirely symmetric across the XZ-plane.
+
+        Returns
+        -------
+        Whether the airplane is entirely symmetric. [boolean]
         """
         for wing in self.wings:
             if not wing.is_entirely_symmetric():
@@ -790,19 +832,24 @@ class Airplane(AeroSandboxObject):
 
     def aerodynamic_center(self, chord_fraction: float = 0.25):
         """
-        Computes the approximate location of the aerodynamic center of the wing.
+        Compute the approximate location of the aerodynamic center of the wing.
+
         Uses the generalized methodology described here:
-            https://core.ac.uk/download/pdf/79175663.pdf
+        https://core.ac.uk/download/pdf/79175663.pdf
 
-        Args:
-
-            chord_fraction: The position of the aerodynamic center along the MAC, as a fraction of MAC length.
-            Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic wing. However,
-            wing-fuselage interactions can cause a forward shift to a value more like 0.1 or less. Citing Cook,
-            Michael V., "Flight Dynamics Principles", 3rd Ed., Sect. 3.5.3 "Controls-fixed static stability". PDF:
+        Parameters
+        ----------
+        chord_fraction : float
+            The position of the aerodynamic center along the MAC, as a fraction of MAC length.
+            Typically, this value (denoted `h_0` in the literature) is 0.25 for a subsonic
+            wing. However, wing-fuselage interactions can cause a forward shift to a value more
+            like 0.1 or less. Citing Cook, Michael V., "Flight Dynamics Principles", 3rd Ed.,
+            Sect. 3.5.3 "Controls-fixed static stability". PDF:
             https://www.sciencedirect.com/science/article/pii/B9780080982427000031
 
-        Returns: The (x, y, z) coordinates of the aerodynamic center of the airplane.
+        Returns
+        -------
+        The (x, y, z) coordinates of the aerodynamic center of the airplane.
         """
         wing_areas = [wing.area(type="projected") for wing in self.wings]
         ACs = [wing.aerodynamic_center() for wing in self.wings]
@@ -817,17 +864,22 @@ class Airplane(AeroSandboxObject):
         self, control_surface_deflection_mappings: dict[str, float]
     ) -> "Airplane":
         """
-        Returns a copy of the airplane with the specified control surface deflections applied.
+        Return a copy of the airplane with the specified control surface deflections applied.
 
-        Args:
-            control_surface_deflection_mappings: A dictionary mapping control surface names to deflections.
+        Parameters
+        ----------
+        control_surface_deflection_mappings : dict[str, float]
+            A dictionary mapping control surface names to deflections.
 
-                * Keys: Control surface names.
+            * Keys: Control surface names.
 
-                * Values: Deflections, in degrees. Downwards-positive, following typical convention.
+            * Values: Deflections, in degrees. Downwards-positive, following typical
+              convention.
 
-        Returns: A copy of the airplane with the specified control surface deflections applied.
-
+        Returns
+        -------
+        Airplane
+            A copy of the airplane with the specified control surface deflections applied.
         """
         deflected_airplane = copy.deepcopy(self)
 
@@ -847,19 +899,28 @@ class Airplane(AeroSandboxObject):
         split_leading_edge: bool = True,
     ) -> "Workplane":
         """
-        Uses the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
+        Use the CADQuery library (OpenCASCADE backend) to generate a 3D CAD model of the airplane.
 
-        Args:
+        Parameters
+        ----------
+        minimum_airfoil_TE_thickness : float
+            The minimum thickness of the trailing edge of the airfoils, as a fraction of each
+            airfoil's chord. This will be enforced by thickening the trailing edge of the
+            airfoils if necessary. This is useful for avoiding numerical issues in CAD
+            software that can arise from extremely thin (i.e., <1e-6 meters) trailing edges.
+        fuselage_tol : float
+            The geometric tolerance (meters) to use when generating the fuselage geometry.
+            Fuselage cross-sections whose width or height is below this value are enlarged to
+            this value, to avoid degenerate (point-like) cross-sections.
+        split_leading_edge : bool
+            Whether to split each airfoil's outline at the leading edge into separate upper
+            and lower splines.
 
-            minimum_airfoil_TE_thickness: The minimum thickness of the trailing edge of the airfoils, as a fraction
-            of each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if
-            necessary. This is useful for avoiding numerical issues in CAD software that can arise from extremely
-            thin (i.e., <1e-6 meters) trailing edges.
-
-            tol: The geometric tolerance (meters) to use when generating the CAD geometry. This is passed directly to the CADQuery
-
-        Returns: A CADQuery Assembly object containing the CAD parts of the airplane as named parts.
-
+        Returns
+        -------
+        "Workplane"
+            A CADQuery Assembly object containing the CAD parts of the airplane as named
+            parts.
         """
         try:
             import cadquery as cq
@@ -995,17 +1056,25 @@ class Airplane(AeroSandboxObject):
         split_leading_edge: bool = True,
     ) -> None:
         """
-        Exports the airplane geometry to a STEP file.
+        Export the airplane geometry to a STEP file.
 
-        Args:
-            filename: The filename to export to. Should include the ".step" extension.
+        Parameters
+        ----------
+        filename : Path | str
+            The filename to export to. Should include the ".step" extension.
+        minimum_airfoil_TE_thickness : float
+            The minimum thickness of the trailing edge of the airfoils, as a fraction of each
+            airfoil's chord. This will be enforced by thickening the trailing edge of the
+            airfoils if necessary. This is useful for avoiding numerical issues in CAD
+            software that can arise from extremely thin (i.e., <1e-6 meters) trailing edges.
+        split_leading_edge : bool
+            Whether to split each airfoil's outline at the leading edge into separate upper
+            and lower splines.
 
-            minimum_airfoil_TE_thickness: The minimum thickness of the trailing edge of the airfoils, as a fraction
-            of each airfoil's chord. This will be enforced by thickening the trailing edge of the airfoils if
-            necessary. This is useful for avoiding numerical issues in CAD software that can arise from extremely
-            thin (i.e., <1e-6 meters) trailing edges.
-
-        Returns: None, but exports the airplane geometry to a STEP file.
+        Returns
+        -------
+        None
+            None, but exports the airplane geometry to a STEP file.
         """
         assembly = self.generate_cadquery_geometry(
             minimum_airfoil_TE_thickness=minimum_airfoil_TE_thickness,
@@ -1015,21 +1084,24 @@ class Airplane(AeroSandboxObject):
 
     def export_AVL(self, filename, include_fuselages: bool = True):
         """
-        Exports this airplane's geometry to an AVL input file.
+        Export this airplane's geometry to an AVL input file.
 
-        Args:
+        Parameters
+        ----------
+        filename
+            The filepath to write the AVL input file to. Auxiliary files (airfoil files, and
+            fuselage geometry "BFILEs", if any) are written alongside it as `<filename>.af0`,
+            `<filename>.fuse0`, etc.
+        include_fuselages : bool
+            Note: this parameter currently has no effect. The AVL writer unconditionally
+            includes all of `Airplane.fuselages` in the export (as AVL BODYs, via BFILEs),
+            regardless of this value. The parameter is retained for backwards compatibility
+            only.
 
-            filename: The filepath to write the AVL input file to. Auxiliary files (airfoil
-                files, and fuselage geometry "BFILEs", if any) are written alongside it as
-                `<filename>.af0`, `<filename>.fuse0`, etc.
-
-            include_fuselages: Note: this parameter currently has no effect. The AVL writer
-                unconditionally includes all of `Airplane.fuselages` in the export (as AVL
-                BODYs, via BFILEs), regardless of this value. The parameter is retained for
-                backwards compatibility only.
-
-        Returns: None (writes the file(s) to disk).
-
+        Returns
+        -------
+        None
+            None (writes the file(s) to disk).
         """
         # TODO include option for mass file export as well
         # Use MassProperties.export_AVL_mass...
@@ -1040,6 +1112,16 @@ class Airplane(AeroSandboxObject):
         avl.write_avl(filepath=filename)
 
     def export_XFLR(self, *args, **kwargs) -> str:
+        """
+        Export the airplane geometry to an XFLR5 `.xml` file.
+
+        Deprecated alias for `Airplane.export_XFLR5_xml()`; see that method for documentation.
+
+        Returns
+        -------
+        str
+            Same return as `Airplane.export_XFLR5_xml()`.
+        """
         import warnings
 
         warnings.warn(
@@ -1063,27 +1145,37 @@ class Airplane(AeroSandboxObject):
         fin: Wing | None = None,
     ) -> str:
         """
-        Exports the airplane geometry to an XFLR5 `.xml` file. To import the `.xml` file into XFLR5, go to File ->
-        Import -> Import from XML.
+        Export the airplane geometry to an XFLR5 `.xml` file.
 
-        Args:
-            filename: The filename to export to. Should include the ".xml" extension.
+        To import the `.xml` file into XFLR5, go to File -> Import -> Import from XML.
 
-            mass_props: The MassProperties object to use when exporting the airplane. If not specified, will default to
-                a 1 kg point mass at the origin.
+        Parameters
+        ----------
+        filename : Path | str
+            The filename to export to. Should include the ".xml" extension.
+        mass_props : MassProperties | None
+            The MassProperties object to use when exporting the airplane. If not specified,
+            will default to a 1 kg point mass at the origin.
 
-                - Note: XFLR5 does not natively support user-defined inertia tensors, so we have to synthesize an equivalent
-                set of point masses to represent the inertia tensor.
+            - Note: XFLR5 does not natively support user-defined inertia tensors, so we have
+              to synthesize an equivalent set of point masses to represent the inertia tensor.
+        include_fuselages : bool
+            Whether to include fuselages in the export.
+        mainwing : Wing | None
+            The main wing of the airplane. If not specified, will default to the first wing in
+            the airplane.
+        elevator : Wing | None
+            The elevator of the airplane. If not specified, will default to the second wing in
+            the airplane.
+        fin : Wing | None
+            The fin of the airplane. If not specified, will default to the third wing in the
+            airplane.
 
-            include_fuselages: Whether to include fuselages in the export.
-
-            mainwing: The main wing of the airplane. If not specified, will default to the first wing in the airplane.
-
-            elevator: The elevator of the airplane. If not specified, will default to the second wing in the airplane.
-
-            fin: The fin of the airplane. If not specified, will default to the third wing in the airplane.
-
-        Returns: None, but exports the airplane geometry to an XFLR5 `.xml` file.
+        Returns
+        -------
+        str
+            The XML file contents, as a string. Also exports the airplane geometry to an
+            XFLR5 `.xml` file.
 
             To import the `.xml` file into XFLR5, go to File -> Import -> Import from XML.
         """
@@ -1368,15 +1460,22 @@ class Airplane(AeroSandboxObject):
         filename: Path | str,
     ) -> str:
         """
-        Exports the airplane geometry to a `*.vspscript` file compatible with OpenVSP. To import the `.vspscript`
-        file into OpenVSP:
+        Export the airplane geometry to a `*.vspscript` file compatible with OpenVSP.
+
+        To import the `.vspscript` file into OpenVSP:
 
         Open OpenVSP, then File -> Run Script -> Select the `.vspscript` file.
 
-        Args:
-            filename: The filename to export to, given as a string or Path. Should include the ".vspscript" extension.
+        Parameters
+        ----------
+        filename : Path | str
+            The filename to export to, given as a string or Path. Should include the
+            ".vspscript" extension.
 
-        Returns: A string of the file contents, and also saves the file to the specified filename
+        Returns
+        -------
+        str
+            A string of the file contents, and also saves the file to the specified filename.
         """
         from aerosandbox.geometry.openvsp_io.asb_to_openvsp.airplane_vspscript_generator import (
             generate_airplane,
