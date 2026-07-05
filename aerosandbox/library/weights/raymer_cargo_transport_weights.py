@@ -15,23 +15,27 @@ def mass_wing(
     use_advanced_composites: bool = False,
 ) -> float:
     """
-    Computes the mass of the wing for a cargo/transport aircraft, according to Raymer's Aircraft Design: A Conceptual
-    Approach.
+    Compute the mass of the wing for a cargo/transport aircraft, according to Raymer's Aircraft
+    Design: A Conceptual Approach.
 
-    Note: Torenbeek's wing mass model is likely more accurate; see `mass_wing()` in `torenbeek_weights.py` (same
-    directory).
+    Note: Torenbeek's wing mass model is likely more accurate; see `mass_wing()` in
+    `torenbeek_weights.py` (same directory).
 
-    Args:
-        wing: The wing object.
-
-        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
-
-        ultimate_load_factor: Ultimate load factor of the airplane.
-
-        use_advanced_composites: Whether to use advanced composites for the wing. If True, the wing mass is modified
+    Parameters
+    ----------
+    wing : asb.Wing
+        The wing object.
+    design_mass_TOGW : float
+        The design take-off gross weight of the entire airplane [kg].
+    ultimate_load_factor : float
+        Ultimate load factor of the airplane.
+    use_advanced_composites : bool
+        Whether to use advanced composites for the wing. If True, the wing mass is modified
         accordingly.
 
-    Returns:
+    Returns
+    -------
+    float
         Wing mass [kg].
     """
     airfoil_thicknesses = [xsec.airfoil.max_thickness() for xsec in wing.xsecs]
@@ -61,28 +65,32 @@ def mass_hstab(
     use_advanced_composites: bool = False,
 ) -> float:
     """
-    Computes the mass of the horizontal stabilizer for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the horizontal stabilizer for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        hstab: The horizontal stabilizer object.
-
-        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
-
-        ultimate_load_factor: Ultimate load factor of the airplane.
-
-        wing_to_hstab_distance: Distance from the wing's root-quarter-chord-point to the hstab's
+    Parameters
+    ----------
+    hstab : asb.Wing
+        The horizontal stabilizer object.
+    design_mass_TOGW : float
+        The design take-off gross weight of the entire airplane [kg].
+    ultimate_load_factor : float
+        Ultimate load factor of the airplane.
+    wing_to_hstab_distance : float
+        Distance from the wing's root-quarter-chord-point to the hstab's
         root-quarter-chord-point [m].
-
-        fuselage_width_at_hstab_intersection: Width of the fuselage at the intersection of the wing and hstab [m].
-
-        aircraft_y_radius_of_gyration: Radius of gyration of the aircraft about the y-axis [m]. If None, estimates
-        this as `0.3 * wing_to_hstab_distance`.
-
-        use_advanced_composites: Whether to use advanced composites for the hstab. If True, the hstab mass is modified
+    fuselage_width_at_hstab_intersection : float
+        Width of the fuselage at the intersection of the wing and hstab [m].
+    aircraft_y_radius_of_gyration : float | None
+        Radius of gyration of the aircraft about the y-axis [m]. If None, estimates this as
+        `0.3 * wing_to_hstab_distance`.
+    use_advanced_composites : bool
+        Whether to use advanced composites for the hstab. If True, the hstab mass is modified
         accordingly.
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the horizontal stabilizer [kg].
     """
     if aircraft_y_radius_of_gyration is None:
@@ -126,30 +134,33 @@ def mass_vstab(
     use_advanced_composites: bool = False,
 ) -> float:
     """
-    Computes the mass of the vertical stabilizer for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the vertical stabilizer for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        vstab: The vertical stabilizer object.
-
-        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
-
-        ultimate_load_factor: Ultimate load factor of the airplane.
-
-        wing_to_vstab_distance: Distance from the wing's root-quarter-chord-point to the vstab's
+    Parameters
+    ----------
+    vstab : asb.Wing
+        The vertical stabilizer object.
+    design_mass_TOGW : float
+        The design take-off gross weight of the entire airplane [kg].
+    ultimate_load_factor : float
+        Ultimate load factor of the airplane.
+    wing_to_vstab_distance : float
+        Distance from the wing's root-quarter-chord-point to the vstab's
         root-quarter-chord-point [m].
-
-        is_t_tail: Whether the airplane is a T-tail or not.
-
-        aircraft_z_radius_of_gyration: The z-radius of gyration of the entire airplane [m]. If None, estimates this
-        as `1 * wing_to_vstab_distance`.
-
-        use_advanced_composites: Whether to use advanced composites for the vstab. If True, the vstab mass is modified
+    is_t_tail : bool
+        Whether the airplane is a T-tail or not.
+    aircraft_z_radius_of_gyration : float | None
+        The z-radius of gyration of the entire airplane [m]. If None, estimates this as
+        `1 * wing_to_vstab_distance`.
+    use_advanced_composites : bool
+        Whether to use advanced composites for the vstab. If True, the vstab mass is modified
         accordingly.
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the vertical stabilizer [kg].
-
     """
     airfoil_thicknesses = [xsec.airfoil.max_thickness() for xsec in vstab.xsecs]
 
@@ -185,34 +196,38 @@ def mass_fuselage(
     use_advanced_composites: bool = False,
 ) -> float:
     """
-    Computes the mass of the fuselage for a cargo/transport aircraft, according to Raymer's Aircraft Design: A
-    Conceptual Approach.
+    Compute the mass of the fuselage for a cargo/transport aircraft, according to Raymer's
+    Aircraft Design: A Conceptual Approach.
 
-    Args:
-        fuselage: The fuselage object.
+    Parameters
+    ----------
+    fuselage : asb.Fuselage
+        The fuselage object.
+    design_mass_TOGW : float
+        The design take-off gross weight of the entire airplane [kg].
+    ultimate_load_factor : float
+        Ultimate load factor of the airplane.
+    L_over_D : float
+        The lift-to-drag ratio of the airplane in cruise.
+    main_wing : asb.Wing
+        The main wing object. Can be:
 
-        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
+        * An instance of an AeroSandbox wing object (`asb.Wing`)
 
-        ultimate_load_factor: Ultimate load factor of the airplane.
-
-        L_over_D: The lift-to-drag ratio of the airplane in cruise.
-
-        main_wing: The main wing object. Can be:
-
-            * An instance of an AeroSandbox wing object (`asb.Wing`)
-
-            * None, if the airplane has no main wing.
-
-        n_cargo_doors: The number of cargo doors on the fuselage.
-
-        has_aft_clamshell_door: Whether or not the fuselage has an aft clamshell door.
-
-        landing_gear_mounted_on_fuselage: Whether or not the landing gear is mounted on the fuselage.
-
-        use_advanced_composites: Whether to use advanced composites for the fuselage. If True, the fuselage mass is
+        * None, if the airplane has no main wing.
+    n_cargo_doors : int
+        The number of cargo doors on the fuselage.
+    has_aft_clamshell_door : bool
+        Whether or not the fuselage has an aft clamshell door.
+    landing_gear_mounted_on_fuselage : bool
+        Whether or not the landing gear is mounted on the fuselage.
+    use_advanced_composites : bool
+        Whether to use advanced composites for the fuselage. If True, the fuselage mass is
         modified accordingly.
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the fuselage [kg].
     """
     K_door = (1 + (0.06 * n_cargo_doors)) * (1.12 if has_aft_clamshell_door else 1)
@@ -258,29 +273,33 @@ def mass_main_landing_gear(
     use_advanced_composites: bool = False,
 ) -> float:
     """
-    Computes the mass of the main landing gear for a cargo/transport aircraft, according to Raymer's Aircraft Design:
-    A Conceptual Approach.
+    Compute the mass of the main landing gear for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        main_gear_length: length of the main landing gear [m].
-
-        landing_speed: landing speed [m/s].
-
-        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
-
-        is_kneeling: whether the main landing gear is capable of kneeling.
-
-        n_gear: number of landing gear.
-
-        n_wheels: number of wheels in total on the main landing gear.
-
-        n_shock_struts: number of shock struts.
-
-        use_advanced_composites: Whether to use advanced composites for the landing gear. If True, the landing gear mass
+    Parameters
+    ----------
+    main_gear_length : float
+        Length of the main landing gear [m].
+    landing_speed : float
+        Landing speed [m/s].
+    design_mass_TOGW : float
+        The design take-off gross weight of the entire airplane [kg].
+    is_kneeling : bool
+        Whether the main landing gear is capable of kneeling.
+    n_gear : int
+        Number of landing gear.
+    n_wheels : int
+        Number of wheels in total on the main landing gear.
+    n_shock_struts : int
+        Number of shock struts.
+    use_advanced_composites : bool
+        Whether to use advanced composites for the landing gear. If True, the landing gear mass
         is modified accordingly.
 
-    Returns:
-        mass of the main landing gear [kg].
+    Returns
+    -------
+    float
+        Mass of the main landing gear [kg].
     """
 
     K_mp = 1.126 if is_kneeling else 1
@@ -309,24 +328,28 @@ def mass_nose_landing_gear(
     use_advanced_composites: bool = False,
 ) -> float:
     """
-    Computes the mass of the nose landing gear for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the nose landing gear for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        nose_gear_length: Length of nose landing gear when fully-extended [m].
-
-        design_mass_TOGW: The design take-off gross weight of the entire airplane [kg].
-
-        is_kneeling: Whether the nose landing gear is capable of kneeling.
-
-        n_gear: Number of nose landing gear.
-
-        n_wheels: Number of wheels in total on the nose landing gear.
-
-        use_advanced_composites: Whether to use advanced composites for the landing gear. If True, the landing gear mass
+    Parameters
+    ----------
+    nose_gear_length : float
+        Length of nose landing gear when fully-extended [m].
+    design_mass_TOGW : float
+        The design take-off gross weight of the entire airplane [kg].
+    is_kneeling : bool
+        Whether the nose landing gear is capable of kneeling.
+    n_gear : int
+        Number of nose landing gear.
+    n_wheels : int
+        Number of wheels in total on the nose landing gear.
+    use_advanced_composites : bool
+        Whether to use advanced composites for the landing gear. If True, the landing gear mass
         is modified accordingly.
 
-    Returns:
+    Returns
+    -------
+    float
         Mass of nose landing gear [kg].
     """
     K_np = 1.15 if is_kneeling else 1
@@ -357,33 +380,38 @@ def mass_nacelles(
     use_advanced_composites: bool = False,
 ) -> float:
     """
-    Computes the mass of the nacelles for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach. Excludes the engine itself and immediate engine peripherals.
+    Compute the mass of the nacelles for a cargo/transport aircraft, according to Raymer's
+    Aircraft Design: A Conceptual Approach. Excludes the engine itself and immediate engine
+    peripherals.
 
-    Args:
-        nacelle_length: length of the nacelle, front to back [m]
+    Parameters
+    ----------
+    nacelle_length : float
+        Length of the nacelle, front to back [m].
+    nacelle_width : float
+        Width of the nacelle [m].
+    nacelle_height : float
+        Height of the nacelle, top to bottom [m].
+    ultimate_load_factor : float
+        Ultimate load factor of the aircraft.
+    mass_per_engine : float
+        Mass of the engine itself [kg].
+    n_engines : int
+        Number of engines.
+    is_pylon_mounted : bool
+        Whether the engine is pylon-mounted or not.
+    engines_have_propellers : bool
+        Whether the engines have propellers or not (e.g., a jet).
+    engines_have_thrust_reversers : bool
+        Whether the engines have thrust reversers or not.
+    use_advanced_composites : bool
+        Whether to use advanced composites for the nacelles. If True, the nacelles mass is
+        modified accordingly.
 
-        nacelle_width: width of the nacelle [m]
-
-        nacelle_height: height of the nacelle, top to bottom [m]
-
-        ultimate_load_factor: ultimate load factor of the aircraft
-
-        mass_per_engine: mass of the engine itself [kg]
-
-        n_engines: number of engines
-
-        is_pylon_mounted: whether the engine is pylon-mounted or not
-
-        engines_have_propellers: whether the engines have propellers or not (e.g., a jet)
-
-        engines_have_thrust_reversers: whether the engines have thrust reversers or not
-
-        use_advanced_composites: Whether to use advanced composites for the nacelles. If True, the nacelles mass
-        is modified accordingly.
-
-    Returns:
-        mass of the nacelles [kg]
+    Returns
+    -------
+    float
+        Mass of the nacelles [kg].
     """
     K_ng = 1.017 if is_pylon_mounted else 1
 
@@ -418,15 +446,19 @@ def mass_engine_controls(
     cockpit_to_engine_length: float,
 ) -> float:
     """
-    Computes the mass of the engine controls for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the engine controls for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        n_engines: The number of engines in the aircraft.
+    Parameters
+    ----------
+    n_engines : int
+        The number of engines in the aircraft.
+    cockpit_to_engine_length : float
+        The distance from the cockpit to the engine [m].
 
-        cockpit_to_engine_length: The distance from the cockpit to the engine [m].
-
-    Returns:
+    Returns
+    -------
+    float
         The mass of the engine controls [kg].
     """
     return (
@@ -439,15 +471,19 @@ def mass_starter(
     mass_per_engine: float,
 ) -> float:
     """
-    Computes the mass of the engine starter for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the engine starter for a cargo/transport aircraft, according to Raymer's
+    Aircraft Design: A Conceptual Approach.
 
-    Args:
-        n_engines: The number of engines in the aircraft.
+    Parameters
+    ----------
+    n_engines : int
+        The number of engines in the aircraft.
+    mass_per_engine : float
+        The mass of the engine [kg].
 
-        mass_per_engine: The mass of the engine [kg].
-
-    Returns:
+    Returns
+    -------
+    float
         The mass of the engine starter [kg].
     """
     return (49.19 * (mass_per_engine / u.lbm * n_engines / 1000) ** 0.541) * u.lbm
@@ -459,18 +495,22 @@ def mass_fuel_system(
     fraction_in_integral_tanks: float = 0.5,
 ) -> float:
     """
-    Computes the mass of the fuel system (e.g., tanks, pumps, but not the fuel itself) for a cargo/transport
-    aircraft, according to Raymer's Aircraft Design: A Conceptual Approach.
+    Compute the mass of the fuel system (e.g., tanks, pumps, but not the fuel itself) for a
+    cargo/transport aircraft, according to Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        fuel_volume: The volume of fuel in the aircraft [m^3].
+    Parameters
+    ----------
+    fuel_volume : float
+        The volume of fuel in the aircraft [m^3].
+    n_tanks : int
+        The number of fuel tanks in the aircraft.
+    fraction_in_integral_tanks : float
+        The fraction of the fuel volume that is in integral tanks, as opposed to protected
+        tanks.
 
-        n_tanks: The number of fuel tanks in the aircraft.
-
-        fraction_in_integral_tanks: The fraction of the fuel volume that is in integral tanks, as opposed to
-        protected tanks.
-
-    Returns:
+    Returns
+    -------
+    float
         The mass of the fuel system [kg].
     """
 
@@ -490,18 +530,22 @@ def mass_flight_controls(
     fraction_of_mechanical_controls: int = 0,
 ) -> float:
     """
-    Computes the added mass of the flight control surfaces (and any applicable linkages, in the case of mechanical
-    controls) for a cargo/transport aircraft, according to Raymer's Aircraft Design: A Conceptual Approach.
+    Compute the added mass of the flight control surfaces (and any applicable linkages, in the
+    case of mechanical controls) for a cargo/transport aircraft, according to Raymer's Aircraft
+    Design: A Conceptual Approach.
 
-    Args:
-        airplane: The airplane to calculate the mass of the flight controls for.
+    Parameters
+    ----------
+    airplane : asb.Airplane
+        The airplane to calculate the mass of the flight controls for.
+    aircraft_Iyy : float
+        The moment of inertia of the aircraft about the y-axis.
+    fraction_of_mechanical_controls : int
+        The fraction of the flight controls that are mechanical, as opposed to hydraulic.
 
-        aircraft_Iyy: The moment of inertia of the aircraft about the y-axis.
-
-        fraction_of_mechanical_controls: The fraction of the flight controls that are mechanical, as opposed to
-        hydraulic.
-
-    Returns:
+    Returns
+    -------
+    float
         The mass of the flight controls [kg].
     """
 
@@ -529,13 +573,17 @@ def mass_APU(
     mass_APU_uninstalled: float,
 ):
     """
-    Computes the mass of the auxiliary power unit (APU) for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the auxiliary power unit (APU) for a cargo/transport aircraft, according
+    to Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        mass_APU_uninstalled: The mass of the APU uninstalled [kg].
+    Parameters
+    ----------
+    mass_APU_uninstalled : float
+        The mass of the APU uninstalled [kg].
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the APU, as installed [kg].
     """
     return 2.2 * mass_APU_uninstalled
@@ -550,24 +598,28 @@ def mass_instruments(
     engine_is_turboprop: bool = False,
 ):
     """
-    Computes the mass of the flight instruments for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the flight instruments for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        fuselage: The fuselage of the airplane.
+    Parameters
+    ----------
+    fuselage : asb.Fuselage
+        The fuselage of the airplane.
+    main_wing : asb.Wing
+        The main wing of the airplane.
+    n_engines : int
+        The number of engines on the airplane.
+    n_crew : int | float
+        The number of crew members on the airplane. Use 0.5 for a UAV.
+    engine_is_reciprocating : bool
+        Whether the engine is reciprocating.
+    engine_is_turboprop : bool
+        Whether the engine is a turboprop.
 
-        main_wing: The main wing of the airplane.
-
-        n_engines: The number of engines on the airplane.
-
-        n_crew: The number of crew members on the airplane. Use 0.5 for a UAV.
-
-        engine_is_reciprocating: Whether the engine is reciprocating.
-
-        engine_is_turboprop: Whether the engine is a turboprop.
-
-    Returns:
-        The mass of the instruments [kg]
+    Returns
+    -------
+    float
+        The mass of the instruments [kg].
     """
     K_r = 1.133 if engine_is_reciprocating else 1
 
@@ -589,17 +641,21 @@ def mass_hydraulics(
     main_wing: asb.Wing,
 ):
     """
-    Computes the mass of the hydraulic system for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the hydraulic system for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        airplane: The airplane to calculate the mass of the hydraulic system for.
+    Parameters
+    ----------
+    airplane : asb.Airplane
+        The airplane to calculate the mass of the hydraulic system for.
+    fuselage : asb.Fuselage
+        The fuselage of the airplane.
+    main_wing : asb.Wing
+        The main wing of the airplane.
 
-        fuselage: The fuselage of the airplane.
-
-        main_wing: The main wing of the airplane.
-
-    Returns:
+    Returns
+    -------
+    float
         The mass of the hydraulic system [kg].
     """
     N_functions_performed_by_controls = 0
@@ -619,24 +675,28 @@ def mass_electrical(
     n_engines: int,
 ):
     """
-    Computes the mass of the electrical system for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the electrical system for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
+    Parameters
+    ----------
+    system_electrical_power_rating : float
+        The total electrical power rating of the aircraft's electrical system [Watts].
 
+        Typical values:
 
-        system_electrical_power_rating: The total electrical power rating of the aircraft's electrical system [Watts].
+            * Transport airplane: 40,000 - 60,000 W
 
-            Typical values:
-                * Transport airplane: 40,000 - 60,000 W
-                * Fighter/bomber airplane: 110,000 - 160,000 W
+            * Fighter/bomber airplane: 110,000 - 160,000 W
+    electrical_routing_distance : float
+        The electrical routing distance, generators to avionics to cockpit [meters].
+    n_engines : int
+        The number of engines on the aircraft.
 
-        electrical_routing_distance: The electrical routing distance, generators to avionics to cockpit. [meters]
-
-    Returns:
-
+    Returns
+    -------
+    float
         The mass of the electrical system [kg].
-
     """
 
     return (
@@ -651,13 +711,17 @@ def mass_avionics(
     mass_uninstalled_avionics: float,
 ):
     """
-    Computes the mass of the avionics for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the avionics for a cargo/transport aircraft, according to Raymer's
+    Aircraft Design: A Conceptual Approach.
 
-    Args:
-        mass_uninstalled_avionics: The mass of the avionics, before installation [kg].
+    Parameters
+    ----------
+    mass_uninstalled_avionics : float
+        The mass of the avionics, before installation [kg].
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the avionics, as installed [kg].
     """
     return (1.73 * (mass_uninstalled_avionics / u.lbm) ** 0.983) * u.lbm
@@ -669,17 +733,21 @@ def mass_furnishings(
     fuselage: asb.Fuselage,
 ):
     """
-    Computes the mass of the furnishings for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach. Does not include cargo handling gear or seats.
+    Compute the mass of the furnishings for a cargo/transport aircraft, according to Raymer's
+    Aircraft Design: A Conceptual Approach. Does not include cargo handling gear or seats.
 
-    Args:
-        n_crew: The number of crew members on the airplane. Use 0.5 for a UAV.
+    Parameters
+    ----------
+    n_crew : int | float
+        The number of crew members on the airplane. Use 0.5 for a UAV.
+    mass_cargo : float
+        The mass of the cargo [kg].
+    fuselage : asb.Fuselage
+        The fuselage of the airplane.
 
-        mass_cargo: The mass of the cargo [kg].
-
-        fuselage: The fuselage of the airplane.
-
-    Returns:
+    Returns
+    -------
+    float
         The mass of the furnishings [kg].
     """
     return (
@@ -697,19 +765,23 @@ def mass_air_conditioning(
     mass_uninstalled_avionics: float,
 ):
     """
-    Computes the mass of the air conditioning system for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the air conditioning system for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        n_crew: The number of crew members on the airplane.
+    Parameters
+    ----------
+    n_crew : int
+        The number of crew members on the airplane.
+    n_pax : int
+        The number of passengers on the airplane.
+    volume_pressurized : float
+        The volume of the pressurized cabin [meters^3].
+    mass_uninstalled_avionics : float
+        The mass of the avionics, before installation [kg].
 
-        n_pax: The number of passengers on the airplane.
-
-        volume_pressurized: The volume of the pressurized cabin [meters^3].
-
-        mass_uninstalled_avionics: The mass of the avionics, before installation [kg].
-
-    Returns:
+    Returns
+    -------
+    float
         The mass of the air conditioning system [kg].
     """
     return (
@@ -724,13 +796,17 @@ def mass_anti_ice(
     design_mass_TOGW: float,
 ):
     """
-    Computes the mass of the anti-ice system for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the anti-ice system for a cargo/transport aircraft, according to
+    Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        design_mass_TOGW: The design takeoff gross weight of the entire airplane [kg].
+    Parameters
+    ----------
+    design_mass_TOGW : float
+        The design takeoff gross weight of the entire airplane [kg].
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the anti-ice system [kg].
     """
     return 0.002 * design_mass_TOGW
@@ -740,13 +816,17 @@ def mass_handling_gear(
     design_mass_TOGW: float,
 ):
     """
-    Computes the mass of the handling gear for a cargo/transport aircraft, according to Raymer's Aircraft
-    Design: A Conceptual Approach.
+    Compute the mass of the handling gear for a cargo/transport aircraft, according to Raymer's
+    Aircraft Design: A Conceptual Approach.
 
-    Args:
-        design_mass_TOGW: The design takeoff gross weight of the entire airplane [kg].
+    Parameters
+    ----------
+    design_mass_TOGW : float
+        The design takeoff gross weight of the entire airplane [kg].
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the handling gear [kg].
     """
     return 3e-4 * design_mass_TOGW
@@ -756,13 +836,17 @@ def mass_military_cargo_handling_system(
     cargo_floor_area: float,
 ):
     """
-    Computes the mass of the military cargo handling system for a cargo/transport aircraft, according to Raymer's
-    Aircraft Design: A Conceptual Approach.
+    Compute the mass of the military cargo handling system for a cargo/transport aircraft,
+    according to Raymer's Aircraft Design: A Conceptual Approach.
 
-    Args:
-        cargo_floor_area: The floor area of the cargo compartment [meters^2].
+    Parameters
+    ----------
+    cargo_floor_area : float
+        The floor area of the cargo compartment [meters^2].
 
-    Returns:
+    Returns
+    -------
+    float
         The mass of the military cargo handling system [kg].
     """
     return (2.4 * (cargo_floor_area / u.foot**2)) * u.lbm

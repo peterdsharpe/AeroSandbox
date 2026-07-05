@@ -13,17 +13,21 @@ def mass_landing_gear(
     ultimate_load_factor: float,
 ):
     """
-    Calculates the mass of the landing gear.
+    Calculate the mass of the landing gear.
 
-    Args:
+    Parameters
+    ----------
+    gear_length : float
+        The length of the landing gear, in meters.
+    design_mass_TOGW : float
+        The design takeoff gross weight of the aircraft, in kg.
+    ultimate_load_factor : float
+        The ultimate load factor of the aircraft.
 
-        gear_length: The length of the landing gear, in meters.
-
-        design_mass_TOGW: The design takeoff gross weight of the aircraft, in kg.
-
-        ultimate_load_factor: The ultimate load factor of the aircraft.
-
-    Returns: The mass of the landing gear, in kg.
+    Returns
+    -------
+    float
+        The mass of the landing gear, in kg.
     """
     return (
         0.054
