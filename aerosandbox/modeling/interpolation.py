@@ -5,28 +5,36 @@ from aerosandbox.modeling.surrogate_model import SurrogateModel
 
 class InterpolatedModel(SurrogateModel):
     """
-    A model that is interpolated to structured (i.e., gridded) N-dimensional data. Maps from R^N -> R^1.
+    A model that is interpolated to structured (i.e., gridded) N-dimensional data. Maps from
+    R^N -> R^1.
 
     You can evaluate this model at a given point by calling it just like a function, e.g.:
 
     >>> y = my_interpolated_model(x)
 
     The input to the model (`x` in the example above) is of the type:
-        * in the general N-dimensional case, a dictionary where: keys are variable names and values are float/array
-        * in the case of a 1-dimensional input (R^1 -> R^1), it can optionally just be a float/array.
+
+    * in the general N-dimensional case, a dictionary where keys are variable names and values
+      are float/array.
+    * in the case of a 1-dimensional input (R^1 -> R^1), it can optionally just be a
+      float/array.
+
     If you're not sure what the input type of `my_interpolated_model` should be, just do:
 
-    >>> print(my_interpolated_model) # Displays the valid input type to the model
+    >>> print(my_interpolated_model)  # Displays the valid input type to the model
 
     The output of the model (`y` in the example above) is always a float or array.
 
-    See the docstring __init__ method of InterpolatedModel for more details of how to instantiate and use InterpolatedModel.
+    See the docstring of the __init__ method of InterpolatedModel for more details on how to
+    instantiate and use InterpolatedModel.
 
-    One might have expected a interpolated model to be a literal Python function rather than a Python class - the
-    benefit of having InterpolatedModel as a class rather than a function is that you can easily save (pickle) classes
-    including data (e.g. parameters, x_data, y_data), but you can't do that with functions. And, because the
-    InterpolatedModel class has a __call__ method, you can basically still just think of it like a function.
-
+    Notes
+    -----
+    One might have expected an interpolated model to be a literal Python function rather than a
+    Python class - the benefit of having InterpolatedModel as a class rather than a function is
+    that you can easily save (pickle) classes including data (e.g. parameters, x_data, y_data),
+    but you can't do that with functions. And, because the InterpolatedModel class has a
+    __call__ method, you can basically still just think of it like a function.
     """
 
     def __init__(
@@ -37,16 +45,21 @@ class InterpolatedModel(SurrogateModel):
         fill_value=np.nan,  # Default behavior: return NaN for all inputs outside data range.
     ):
         """
-        Create the interpolator. Note that data must be structured (i.e., gridded on a hypercube) for general
+        Create the interpolator.
+
+        Note that data must be structured (i.e., gridded on a hypercube) for general
         N-dimensional interpolation.
 
-        Args:
-            x_data_coordinates: The coordinates of each axis of the cube; essentially, the independent variable(s):
+        Parameters
+        ----------
+        x_data_coordinates : np.ndarray | dict[str, np.ndarray]
+            The coordinates of each axis of the cube; essentially, the independent variable(s):
 
-                * For the general N-dimensional case, this should be a dictionary where the keys are axis names [str]
-                and the values are 1D arrays.
+            * For the general N-dimensional case, this should be a dictionary where the keys are
+              axis names [str] and the values are 1D arrays.
 
-                * For the 1D case, you can optionally alternatively supply this as a single 1D array.
+            * For the 1D case, you can optionally alternatively supply this as a single 1D
+              array.
 
             Usage example for how you might generate this data, along with `y_data_structured`:
 
@@ -55,34 +68,35 @@ class InterpolatedModel(SurrogateModel):
             >>> X1, X2 = np.meshgrid(x1, x2, indexing="ij")
             >>>
             >>> x_data_coordinates = {
-            >>>     "x1": x1, # 1D ndarray of length 11
-            >>>     "x2": x2, # 1D ndarray of length 21
+            >>>     "x1": x1,  # 1D ndarray of length 11
+            >>>     "x2": x2,  # 1D ndarray of length 21
             >>> }
-            >>> y_data_structured = function_to_approximate(X1, X2) # 2D ndarray of shape (11, 21)
+            >>> y_data_structured = function_to_approximate(X1, X2)  # 2D array, shape (11, 21)
+        y_data_structured : np.ndarray
+            The dependent variable, expressed as a structured data "cube":
 
-            y_data_structured: The dependent variable, expressed as a structured data "cube":
+            * For the general N-dimensional case, this should be a single N-dimensional array
+              with axis lengths corresponding to the inputs in `x_data_coordinates`. In the
+              1-dimensional case, this naturally reduces down to a single 1D ndarray.
 
-                * For the general N-dimensional case, this should be a single N-dimensional array with axis lengths
-                corresponding to the inputs in `x_data_coordinates`. In the 1-dimensional case, this naturally
-                reduces down to a single 1D ndarray.
+            See usage example along with `x_data_coordinates` above.
+        method : Literal["bspline", "linear", "nearest"], optional
+            The method of interpolation to perform. Options:
 
-                See usage example along with `x_data_coordinates` above.
+            * "bspline" (Note: differentiable and suitable for optimization - made of
+              piecewise-cubics. For other applications, other interpolators may be faster. Not
+              monotonicity-preserving - may overshoot. Watch out for Runge's phenomenon; on that
+              note, if your data is noisy, consider smoothing it first.)
 
-            method: The method of interpolation to perform. Options:
+            * "linear" (Note: differentiable, but not suitable for use in optimization w/o
+              subgradient treatment due to C1-discontinuity)
 
-                * "bspline" (Note: differentiable and suitable for optimization - made of piecewise-cubics. For other
-                applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot. Watch
-                out for Runge's phenomenon; on that note, if your data is noisy, consider smoothing it first.)
-
-                * "linear" (Note: differentiable, but not suitable for use in optimization w/o subgradient treatment due
-                to C1-discontinuity)
-
-                * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
-
-            fill_value: Gives the value that the interpolator should return for points outside of the interpolation
-            domain. The interpolation domain is defined as the hypercube bounded by the coordinates specified in
-            `x_data_coordinates`. If fill_value is None, then the interpolator will attempt to extrapolate if the interpolation method allows.
-
+            * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
+        fill_value : optional
+            Gives the value that the interpolator should return for points outside of the
+            interpolation domain. The interpolation domain is defined as the hypercube bounded
+            by the coordinates specified in `x_data_coordinates`. If fill_value is None, then
+            the interpolator will attempt to extrapolate if the interpolation method allows.
         """
         try:
             x_data_coordinates_values = x_data_coordinates.values()
