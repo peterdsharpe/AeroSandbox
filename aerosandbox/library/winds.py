@@ -6,11 +6,21 @@ import os
 
 def wind_speed_conus_summer_99(altitude, latitude):
     r"""
-    Returns the 99th-percentile wind speed magnitude over the continental United States (CONUS) in July-Aug. Aggregate of data from 1972 to 2019.
-    Fits at C:\Projects\GitHub\Wind_Analysis
-    :param altitude: altitude [m]
-    :param latitude: latitude, in degrees North [deg]
-    :return: 99th-percentile wind speed over the continental United States in the summertime. [m/s]
+    Compute the 99th-percentile wind speed over the continental United States (CONUS) in July-Aug.
+
+    Returns the 99th-percentile wind speed magnitude, using an aggregate of data from 1972 to
+    2019. Fits at C:\Projects\GitHub\Wind_Analysis
+
+    Parameters
+    ----------
+    altitude
+        Altitude [m]
+    latitude
+        Latitude, in degrees North [deg]
+
+    Returns
+    -------
+    99th-percentile wind speed over the continental United States in the summertime. [m/s]
     """
     latitude_norm = (latitude - 37.5) / 11.5
     a = (altitude - 24200) / 24200
@@ -136,14 +146,20 @@ winds_95_world_model = InterpolatedModel(
 
 def wind_speed_world_95(altitude, latitude, day_of_year):
     """
-    Gives the 95th-percentile wind speed as a function of altitude, latitude, and day of year.
-    Args:
-        altitude: Altitude, in meters
-        latitude: Latitude, in degrees north
-        day_of_year: Day of year (Julian day), in range 0 to 365
+    Compute the 95th-percentile wind speed as a function of altitude, latitude, and day of year.
 
-    Returns: The 95th-percentile wind speed, in meters per second.
+    Parameters
+    ----------
+    altitude
+        Altitude, in meters
+    latitude
+        Latitude, in degrees north
+    day_of_year
+        Day of year (Julian day), in range 0 to 365
 
+    Returns
+    -------
+    The 95th-percentile wind speed, in meters per second.
     """
 
     return winds_95_world_model(
@@ -189,15 +205,20 @@ tropopause_altitude_model = InterpolatedModel(
 
 def tropopause_altitude(latitude, day_of_year):
     """
-    Gives the altitude of the tropopause (as determined by the altitude where lapse rate >= 2 C/km) as a function of
-    latitude and day of year.
+    Compute the altitude of the tropopause as a function of latitude and day of year.
 
-    Args:
-        latitude: Latitude, in degrees north
-        day_of_year: Day of year (Julian day), in range 0 to 365
+    The tropopause altitude is determined as the altitude where the lapse rate >= 2 C/km.
 
-    Returns: The tropopause altitude, in meters.
+    Parameters
+    ----------
+    latitude
+        Latitude, in degrees north
+    day_of_year
+        Day of year (Julian day), in range 0 to 365
 
+    Returns
+    -------
+    The tropopause altitude, in meters.
     """
     return tropopause_altitude_model({"latitude": latitude, "day of year": day_of_year})
 

@@ -22,118 +22,129 @@ def field_length_analysis_torenbeek(
     approach_angle_deg: float = 3,
 ) -> dict[str, float | np.ndarray]:
     """
-    Performs a field length analysis on an aircraft, returning a dictionary of field length parameters.
+    Perform a field length analysis on an aircraft.
 
-    Citations:
+    Returns a dictionary of field length parameters.
 
-        * "Torenbeek": Egbert Torenbeek, "Synthesis of Subsonic Airplane Design", 1976. (Generally, section 5.4.5:
-        Takeoff)
-
-    Args:
-
-        design_mass_TOGW: The takeoff gross weight of the entire aircraft [kg].
-
-        thrust_at_liftoff: The thrust of the aircraft at the moment of liftoff [N].
-
-        lift_over_drag_climb: The lift-to-drag ratio of the aircraft during the climb phase of takeoff [dimensionless].
-
-        CL_max: The maximum lift coefficient of the aircraft [dimensionless]. Assumes any lift-augmentation devices (
-        e.g., slats, flaps) are deployed.
-
-        s_ref: The reference area of the aircraft [m^2].
-
-        atmosphere: The atmosphere object to use for the analysis. Defaults to sea level.
-
-        n_engines: The number of engines on the aircraft. Used during balanced field length calculation,
+    Parameters
+    ----------
+    design_mass_TOGW : float
+        The takeoff gross weight of the entire aircraft [kg].
+    thrust_at_liftoff : float
+        The thrust of the aircraft at the moment of liftoff [N].
+    lift_over_drag_climb : float
+        The lift-to-drag ratio of the aircraft during the climb phase of takeoff
+        [dimensionless].
+    CL_max : float
+        The maximum lift coefficient of the aircraft [dimensionless]. Assumes any
+        lift-augmentation devices (e.g., slats, flaps) are deployed.
+    s_ref : float
+        The reference area of the aircraft [m^2].
+    n_engines : int
+        The number of engines on the aircraft. Used during balanced field length calculation,
         which involves a single-engine-failure assumption.
+    atmosphere : asb.Atmosphere | None
+        The atmosphere object to use for the analysis. Defaults to sea level.
+    CD_zero_lift : float
+        The zero-lift drag coefficient of the aircraft [dimensionless].
+    obstacle_height : float
+        The height of the obstacle clearance [m].
 
-        CD_zero_lift: The zero-lift drag coefficient of the aircraft [dimensionless].
+        Note:
 
-        obstacle_height: The height of the obstacle clearance [m].
+        * FAR 23 requires a 50 foot obstacle clearance height.
 
-            Note:
+        * FAR 25 requires a 35 foot obstacle clearance height.
+    friction_coefficient : float
+        The coefficient of friction between the wheels and the runway.
 
-                * FAR 23 requires a 50 foot obstacle clearance height.
+        * 0.02 is a good value for a dry concrete runway.
 
-                * FAR 25 requires a 35 foot obstacle clearance height.
+        * 0.045 is a good value for short grass.
+    V_obstacle_over_V_stall : float
+        The ratio of the airspeed while flying over the obstacle to the stall airspeed.
+    minimum_V_liftoff_over_V_stall : float
+        The minimum-allowable ratio of the liftoff airspeed to the stall airspeed.
+    V_approach_over_V_stall : float
+        The ratio of the approach airspeed to the stall airspeed.
+    maximum_braking_deceleration_g : float
+        The maximum deceleration of the aircraft during braking [G].
 
-        friction_coefficient: The coefficient of friction between the wheels and the runway.
+        This is used when calculating the "brake" portion of the "accelerate-brake" balanced
+        field length, as well as the braking during normal landing.
 
-            * 0.02 is a good value for a dry concrete runway.
+        * Standard brakes are around 0.37 G on dry concrete.
 
-            * 0.045 is a good value for short grass.
+        * Advanced brakes with optimum brake pressure control, lift dumpers, and nosewheel
+          braking can be as high as 0.5 G on dry concrete.
+    inertia_time : float
+        The time it takes for the pilot and aircraft to collectively react to an engine
+        failure during takeoff [seconds]. This is collectively the sum of:
 
-        V_obstacle_over_V_stall: The ratio of the airspeed while flying over the obstacle to the stall airspeed.
+        * The pilot's reaction time
 
-        minimum_V_liftoff_over_V_stall: The minimum-allowable ratio of the liftoff airspeed to the stall airspeed.
+        * The time it takes the other engines to spool down, in the event of a rejected
+          takeoff and deceleration on the ground.
+    approach_angle_deg : float
+        The flight path angle during a normal landing approach [degrees].
 
-        V_approach_over_V_stall: The ratio of the approach airspeed to the stall airspeed.
-
-        maximum_braking_deceleration_g: The maximum deceleration of the aircraft during braking [G].
-
-            This is used when calculating the "brake" portion of the "accelerate-brake" balanced field length, as well
-            as the braking during normal landing.
-
-            * Standard brakes are around 0.37 G on dry concrete.
-
-            * Advanced brakes with optimum brake pressure control, lift dumpers, and nosewheel braking can be as high
-            as 0.5 G on dry concrete.
-
-        inertia_time: The time it takes for the pilot and aircraft to collectively react to an engine failure during
-        takeoff [seconds]. This is collectively the sum of:
-
-            * The pilot's reaction time
-
-            * The time it takes the other engines to spool down, in the event of a rejected takeoff and deceleration
-            on the ground.
-
-    Returns:
+    Returns
+    -------
+    dict[str, float | np.ndarray]
         A dictionary of field length parameters, including:
 
-            * "takeoff_ground_roll_distance": The distance the aircraft will roll on the ground during a normal
-            takeoff before liftoff [meters].
+        * "takeoff_ground_roll_distance": The distance the aircraft will roll on the ground
+          during a normal takeoff before liftoff [meters].
 
-            * "takeoff_airborne_distance": The distance the aircraft will travel in the air during a normal takeoff [
-            meters]. This is after liftoff, but before the aircraft has reached the obstacle clearance height.
+        * "takeoff_airborne_distance": The distance the aircraft will travel in the air
+          during a normal takeoff [meters]. This is after liftoff, but before the aircraft
+          has reached the obstacle clearance height.
 
-            * "takeoff_total_distance": The total field length required during a normal takeoff [meters]. This
-            includes both the ground roll itself, as well as the airborne distance before the obstacle clearance
-            height is reached.
+        * "takeoff_total_distance": The total field length required during a normal takeoff
+          [meters]. This includes both the ground roll itself, as well as the airborne
+          distance before the obstacle clearance height is reached.
 
-            * "balanced_field_length": The field length required for takeoff and obstacle clearance when one engine
-            fails at "decision speed" [meters]. Decision speed is the speed during the ground roll at which,
-            if an engine fails, the aircraft can either continue the takeoff or brake to a complete stop in the same
-            total distance.
+        * "balanced_field_length": The field length required for takeoff and obstacle
+          clearance when one engine fails at "decision speed" [meters]. Decision speed is
+          the speed during the ground roll at which, if an engine fails, the aircraft can
+          either continue the takeoff or brake to a complete stop in the same total distance.
 
-            * "landing_airborne_distance": The distance the aircraft will travel in the air during a normal landing
-            before touchdown [meters]. Note that a normal landing involves passing the runway threshold at the
-            specified obstacle clearance height.
+        * "landing_airborne_distance": The distance the aircraft will travel in the air
+          during a normal landing before touchdown [meters]. Note that a normal landing
+          involves passing the runway threshold at the specified obstacle clearance height.
 
-            * "landing_ground_roll_distance": The distance the aircraft will roll on the ground after touchdown
-            during a normal landing [meters].
+        * "landing_ground_roll_distance": The distance the aircraft will roll on the ground
+          after touchdown during a normal landing [meters].
 
-            * "landing_total_distance": The total field length required during a normal landing [meters]. This
-            includes both the airborne distance beyond the threshold that is required for obstacle clearance,
-            as well as the ground roll distance after touchdown.
+        * "landing_total_distance": The total field length required during a normal landing
+          [meters]. This includes both the airborne distance beyond the threshold that is
+          required for obstacle clearance, as well as the ground roll distance after
+          touchdown.
 
-            * "V_stall": The stall speed of the aircraft at its takeoff gross weight [m/s].
+        * "V_stall": The stall speed of the aircraft at its takeoff gross weight [m/s].
 
-            * "V_liftoff": The airspeed at the moment of liftoff during a normal takeoff [m/s].
+        * "V_liftoff": The airspeed at the moment of liftoff during a normal takeoff [m/s].
 
-            * "V_obstacle": The airspeed when the aircraft reaches the obstacle clearance height during a normal
-            takeoff [m/s].
+        * "V_obstacle": The airspeed when the aircraft reaches the obstacle clearance height
+          during a normal takeoff [m/s].
 
-            * "V_approach": The airspeed when the aircraft reaches the runway threshold during a normal landing.
+        * "V_approach": The airspeed when the aircraft reaches the runway threshold during a
+          normal landing.
 
-            * "V_touchdown": The airspeed when the aircraft touches down during a normal landing.
+        * "V_touchdown": The airspeed when the aircraft touches down during a normal landing.
 
-            * "flight_path_angle_climb": The flight path angle during a normal takeoff at the point when the airplane
-            reaches the obstacle clearance height [radians].
+        * "flight_path_angle_climb": The flight path angle during a normal takeoff at the
+          point when the airplane reaches the obstacle clearance height [radians].
 
-            * "flight_path_angle_climb_one_engine_out": The flight path angle during a critical-engine-out takeoff at
-            the point when the airplane reaches the obstacle clearance height [radians]. If this number is negative,
-            engine failure results in inability to climb.
+        * "flight_path_angle_climb_one_engine_out": The flight path angle during a
+          critical-engine-out takeoff at the point when the airplane reaches the obstacle
+          clearance height [radians]. If this number is negative, engine failure results in
+          inability to climb.
 
+    References
+    ----------
+    * "Torenbeek": Egbert Torenbeek, "Synthesis of Subsonic Airplane Design", 1976.
+      (Generally, section 5.4.5: Takeoff)
     """
     ### Set defaults
     if atmosphere is None:
@@ -297,98 +308,110 @@ def field_length_analysis(
     approach_angle_deg: float = 3,
 ) -> dict[str, float | np.ndarray]:
     """
-    Performs a field length analysis on an aircraft, returning a dictionary of field length parameters.
+    Perform a field length analysis on an aircraft, using simple physics-based kinematics.
 
-    Similar in spirit to `field_length_analysis_torenbeek()` (see that function for citations and for more detailed
-    parameter documentation), but uses simpler physics-based kinematics for each takeoff segment. Instead of
-    directly computing a balanced field length, it computes the field lengths for both possible outcomes
-    ("accept" = continue the takeoff; "reject" = brake to a stop) of an engine failure at a user-specified airspeed
-    `V_engine_failure_balanced_field_length`. The balanced field length can then be found by (e.g., iteratively or
-    in an optimization problem) finding the engine-failure airspeed (the "decision speed") that makes both outcomes
-    require the same distance.
+    Returns a dictionary of field length parameters.
 
-    Args:
+    Similar in spirit to `field_length_analysis_torenbeek()` (see that function for citations
+    and for more detailed parameter documentation), but uses simpler physics-based kinematics
+    for each takeoff segment. Instead of directly computing a balanced field length, it
+    computes the field lengths for both possible outcomes ("accept" = continue the takeoff;
+    "reject" = brake to a stop) of an engine failure at a user-specified airspeed
+    `V_engine_failure_balanced_field_length`. The balanced field length can then be found by
+    (e.g., iteratively or in an optimization problem) finding the engine-failure airspeed
+    (the "decision speed") that makes both outcomes require the same distance.
 
-        design_mass_TOGW: The takeoff gross weight of the entire aircraft [kg].
+    Parameters
+    ----------
+    design_mass_TOGW : float
+        The takeoff gross weight of the entire aircraft [kg].
+    thrust_at_liftoff : float
+        The thrust of the aircraft at the moment of liftoff [N].
+    lift_over_drag_climb : float
+        The lift-to-drag ratio of the aircraft during the climb phase of takeoff
+        [dimensionless].
+    CL_max : float
+        The maximum lift coefficient of the aircraft [dimensionless], with any
+        lift-augmentation devices (e.g., slats, flaps) deployed.
+    s_ref : float
+        The reference area of the aircraft [m^2].
+    n_engines : int
+        The number of engines on the aircraft. Used during the engine-failure ("balanced
+        field length") calculations, which assume a single engine failure.
+    V_engine_failure_balanced_field_length : float
+        The airspeed [m/s] at which the critical engine is assumed to fail during the takeoff
+        ground roll, for the accept/reject ("balanced field length") calculations.
+    atmosphere : asb.Atmosphere | None
+        The atmosphere object to use for the analysis. Defaults to sea level.
+    CD_zero_lift : float
+        The zero-lift drag coefficient of the aircraft [dimensionless].
+    obstacle_height : float
+        The height of the obstacle clearance [m].
+    friction_coefficient : float
+        The coefficient of rolling friction between the wheels and the runway (brakes off).
+    minimum_V_liftoff_over_V_stall : float
+        The ratio of the liftoff airspeed to the stall airspeed.
+    maximum_braking_deceleration_g : float
+        The maximum deceleration of the aircraft during braking [G].
+    inertia_time : float
+        The time it takes for the pilot and aircraft to collectively react to an engine
+        failure during takeoff [seconds].
+    approach_angle_deg : float
+        The flight path angle during a normal landing approach [degrees].
 
-        thrust_at_liftoff: The thrust of the aircraft at the moment of liftoff [N].
-
-        lift_over_drag_climb: The lift-to-drag ratio of the aircraft during the climb phase of takeoff [dimensionless].
-
-        CL_max: The maximum lift coefficient of the aircraft [dimensionless], with any lift-augmentation devices
-        (e.g., slats, flaps) deployed.
-
-        s_ref: The reference area of the aircraft [m^2].
-
-        n_engines: The number of engines on the aircraft. Used during the engine-failure ("balanced field length")
-        calculations, which assume a single engine failure.
-
-        V_engine_failure_balanced_field_length: The airspeed [m/s] at which the critical engine is assumed to fail
-        during the takeoff ground roll, for the accept/reject ("balanced field length") calculations.
-
-        atmosphere: The atmosphere object to use for the analysis. Defaults to sea level.
-
-        CD_zero_lift: The zero-lift drag coefficient of the aircraft [dimensionless].
-
-        obstacle_height: The height of the obstacle clearance [m].
-
-        friction_coefficient: The coefficient of rolling friction between the wheels and the runway (brakes off).
-
-        minimum_V_liftoff_over_V_stall: The ratio of the liftoff airspeed to the stall airspeed.
-
-        maximum_braking_deceleration_g: The maximum deceleration of the aircraft during braking [G].
-
-        inertia_time: The time it takes for the pilot and aircraft to collectively react to an engine failure
-        during takeoff [seconds].
-
-        approach_angle_deg: The flight path angle during a normal landing approach [degrees].
-
-    Returns:
+    Returns
+    -------
+    dict[str, float | np.ndarray]
         A dictionary of field length parameters, including:
 
-            * "takeoff_ground_roll_distance": The distance the aircraft will roll on the ground during a normal
-            takeoff before liftoff [meters].
+        * "takeoff_ground_roll_distance": The distance the aircraft will roll on the ground
+          during a normal takeoff before liftoff [meters].
 
-            * "takeoff_airborne_distance": The distance the aircraft will travel in the air during a normal takeoff
-            [meters]. This is after liftoff, but before the aircraft has reached the obstacle clearance height.
+        * "takeoff_airborne_distance": The distance the aircraft will travel in the air
+          during a normal takeoff [meters]. This is after liftoff, but before the aircraft
+          has reached the obstacle clearance height.
 
-            * "takeoff_total_distance": The total field length required during a normal takeoff [meters]. This
-            includes both the ground roll itself, as well as the airborne distance before the obstacle clearance
-            height is reached.
+        * "takeoff_total_distance": The total field length required during a normal takeoff
+          [meters]. This includes both the ground roll itself, as well as the airborne
+          distance before the obstacle clearance height is reached.
 
-            * "balanced_field_length_accept": The total field length required [meters] if the critical engine fails
-            at `V_engine_failure_balanced_field_length` during the ground roll and the takeoff is *continued*,
-            with the remaining acceleration and obstacle-clearance climb performed with one engine inoperative.
+        * "balanced_field_length_accept": The total field length required [meters] if the
+          critical engine fails at `V_engine_failure_balanced_field_length` during the ground
+          roll and the takeoff is *continued*, with the remaining acceleration and
+          obstacle-clearance climb performed with one engine inoperative.
 
-            * "balanced_field_length_reject": The total field length required [meters] if the critical engine fails
-            at `V_engine_failure_balanced_field_length` during the ground roll and the takeoff is *rejected*,
-            with the aircraft braking to a complete stop.
+        * "balanced_field_length_reject": The total field length required [meters] if the
+          critical engine fails at `V_engine_failure_balanced_field_length` during the ground
+          roll and the takeoff is *rejected*, with the aircraft braking to a complete stop.
 
-            * "landing_airborne_distance": The distance the aircraft will travel in the air during a normal landing
-            before touchdown [meters]. Note that a normal landing involves passing the runway threshold at the
-            specified obstacle clearance height.
+        * "landing_airborne_distance": The distance the aircraft will travel in the air
+          during a normal landing before touchdown [meters]. Note that a normal landing
+          involves passing the runway threshold at the specified obstacle clearance height.
 
-            * "landing_ground_roll_distance": The distance the aircraft will roll on the ground after touchdown
-            during a normal landing [meters].
+        * "landing_ground_roll_distance": The distance the aircraft will roll on the ground
+          after touchdown during a normal landing [meters].
 
-            * "landing_total_distance": The total field length required during a normal landing [meters]. This
-            includes both the airborne distance beyond the threshold that is required for obstacle clearance,
-            as well as the ground roll distance after touchdown.
+        * "landing_total_distance": The total field length required during a normal landing
+          [meters]. This includes both the airborne distance beyond the threshold that is
+          required for obstacle clearance, as well as the ground roll distance after
+          touchdown.
 
-            * "V_stall": The stall speed of the aircraft at its takeoff gross weight [m/s].
+        * "V_stall": The stall speed of the aircraft at its takeoff gross weight [m/s].
 
-            * "V_liftoff": The airspeed at the moment of liftoff during a normal takeoff [m/s].
+        * "V_liftoff": The airspeed at the moment of liftoff during a normal takeoff [m/s].
 
-            * "V_touchdown": The airspeed when the aircraft touches down during a normal landing [m/s].
+        * "V_touchdown": The airspeed when the aircraft touches down during a normal landing
+          [m/s].
 
-            * "flight_path_angle_climb": The flight path angle during a normal takeoff at the point when the
-            airplane reaches the obstacle clearance height [radians]. (Softmax-floored to be non-negative.)
+        * "flight_path_angle_climb": The flight path angle during a normal takeoff at the
+          point when the airplane reaches the obstacle clearance height [radians].
+          (Softmax-floored to be non-negative.)
 
-            * "flight_path_angle_climb_one_engine_out": The flight path angle during a critical-engine-out takeoff
-            at the point when the airplane reaches the obstacle clearance height [radians]. For a single-engine
-            aircraft, this is negative (engine failure results in inability to climb); for multi-engine aircraft,
-            this is softmax-floored to be non-negative.
-
+        * "flight_path_angle_climb_one_engine_out": The flight path angle during a
+          critical-engine-out takeoff at the point when the airplane reaches the obstacle
+          clearance height [radians]. For a single-engine aircraft, this is negative (engine
+          failure results in inability to climb); for multi-engine aircraft, this is
+          softmax-floored to be non-negative.
     """
     ### Set defaults
     if atmosphere is None:

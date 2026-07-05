@@ -7,6 +7,21 @@ def diamond_airfoil(
     t_over_c: float,
     n_points_per_panel=2,
 ) -> Airfoil:
+    """
+    Create a diamond (double-wedge) airfoil with a specified thickness-to-chord ratio.
+
+    Parameters
+    ----------
+    t_over_c : float
+        The thickness-to-chord ratio of the airfoil. [nondimensional]
+    n_points_per_panel
+        The number of coordinate points per face of the diamond.
+
+    Returns
+    -------
+    Airfoil
+        The diamond airfoil, as an AeroSandbox Airfoil object.
+    """
     x_nondim = [1, 0.5, 0, 0.5, 1]
     y_nondim = [0, 1, 0, -1, 0]
 
