@@ -10,24 +10,32 @@ def eng_string(
     add_space_after_number: bool | None = None,
 ) -> str:
     """
-    Taken from: https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
+    Format a float/int value <x> in a simplified engineering format, with a power-of-3 exponent.
 
-    Returns float/int value <x> formatted in a simplified engineering format -
-    using an exponent that is a multiple of 3.
+    Taken from:
+    https://stackoverflow.com/questions/17973278/python-decimal-engineering-notation-for-mili-10e-3-and-micro-10e-6/40691220
 
-    Args:
+    Parameters
+    ----------
+    x : float
+        The value to be formatted. Float or int.
+    unit : str
+        A unit of the quantity to be expressed, given as a string. Example: Newtons -> "N"
+    format
+        A printf-style string used to format the value before the exponent.
+    si
+        If true, use SI suffix for exponent. (k instead of e3, n instead of e-9, etc.)
+    add_space_after_number : bool | None
+        Whether to add a space between the number and the suffix/unit. If None (default), a
+        space is added if and only if `unit` is non-empty.
 
-        x: The value to be formatted. Float or int.
+    Returns
+    -------
+    str
+        The formatted string.
 
-        unit: A unit of the quantity to be expressed, given as a string. Example: Newtons -> "N"
-
-        format: A printf-style string used to format the value before the exponent.
-
-        si: if true, use SI suffix for exponent. (k instead of e3, n instead of
-            e-9, etc.)
-
-    Examples:
-
+    Examples
+    --------
     With format='%.2f':
         1.23e-08 -> 12.30e-9
              123 -> 123.00
@@ -88,14 +96,28 @@ def latex_sci_notation_string(
     x: float,
     format="%.2e",
 ) -> str:
-    """
-    Converts a floating-point number to a LaTeX-style formatted string. Does not include the `$$` wrapping to put you in math mode.
+    r"""
+    Convert a floating-point number to a LaTeX-style formatted string.
 
-    Does not use scientific notation if the base would be zero.
+    Does not include the `$$` wrapping to put you in math mode.
 
-    Examples:
+    Does not use scientific notation if the exponent would be zero.
 
-        latex_sci_notation_string(3000) -> '3 \\times 10^{3}'
+    Parameters
+    ----------
+    x : float
+        The number to be formatted.
+    format
+        A printf-style string used to format the number.
+
+    Returns
+    -------
+    str
+        The formatted string.
+
+    Examples
+    --------
+        latex_sci_notation_string(3000) -> '3 \times 10^{3}'
     """
     float_str = format % x
     base, exponent = float_str.split("e")
@@ -108,9 +130,20 @@ def latex_sci_notation_string(
 
 def hash_string(string: str) -> int:
     """
-    Hashes a string into a quasi-random 32-bit integer! (Based on an MD5 checksum algorithm.)
+    Hash a string into a quasi-random 32-bit integer! (Based on an MD5 checksum algorithm.)
 
-    Usual warnings apply: it's MD5, don't use this for anything intended to be cryptographically secure.
+    Usual warnings apply: it's MD5, don't use this for anything intended to be
+    cryptographically secure.
+
+    Parameters
+    ----------
+    string : str
+        The string to be hashed.
+
+    Returns
+    -------
+    int
+        A quasi-random 32-bit integer.
     """
     md5 = hashlib.md5(string.encode("utf-8"))
     hash_hex = md5.hexdigest()
@@ -121,16 +154,21 @@ def hash_string(string: str) -> int:
 
 def trim_string(string: str, length: int = 80) -> str:
     """
-    Trims a string to be less than a given length. If the string would exceed the length, makes it end in ellipses ("…").
+    Trim a string to be less than a given length.
 
-    Args:
+    If the string would exceed the length, makes it end in ellipses ("…").
 
-        string: The string to be trimmed.
+    Parameters
+    ----------
+    string : str
+        The string to be trimmed.
+    length : int
+        The length to trim the string to, including any ellipses that may be added.
 
-        length: The length to trim the string to, including any ellipses that may be added.
-
-    Returns: The trimmed string, including ellipses if needed.
-
+    Returns
+    -------
+    str
+        The trimmed string, including ellipses if needed.
     """
     if len(string) > length:
         return string[: length - 1] + "…"
@@ -140,24 +178,29 @@ def trim_string(string: str, length: int = 80) -> str:
 
 def has_balanced_parentheses(string: str, left="(", right=")") -> bool:
     """
-    Determines whether a string has matching parentheses or not.
+    Determine whether a string has matching parentheses or not.
 
-    Examples:
+    Parameters
+    ----------
+    string : str
+        The string to be evaluated.
+    left
+        The left parentheses. Can be modified if, for example, you need to check square
+        brackets.
+    right
+        The right parentheses. Can be modified if, for example, you need to check square
+        brackets.
 
-        >>> has_balanced_parentheses("3 * (x + (2 ** 5))") -> True
+    Returns
+    -------
+    bool
+        A boolean of whether or not the string has balanced parentheses.
 
-        >>> has_balanced_parentheses("3 * (x + (2 ** 5)") -> False
+    Examples
+    --------
+    >>> has_balanced_parentheses("3 * (x + (2 ** 5))") -> True
 
-    Args:
-
-        string: The string to be evaluated.
-
-        left: The left parentheses. Can be modified if, for example, you need to check square brackets.
-
-        right: The right parentheses. Can be modified if, for example, you need to check square brackets.
-
-    Returns: A boolean of whether or not the string has balanced parentheses.
-
+    >>> has_balanced_parentheses("3 * (x + (2 ** 5)") -> False
     """
     parenthesis_level = 0
 
@@ -175,26 +218,32 @@ def wrap_text_ignoring_mathtext(
     width: int = 70,
 ) -> str:
     r"""
-    Reformat the single paragraph in 'text' to fit in lines of no more
-    than 'width' columns, and return a new string containing the entire
-    wrapped paragraph.  Tabs are expanded and other
+    Reformat the single paragraph in 'text' to fit in lines of no more than 'width' columns.
+
+    Returns a new string containing the entire wrapped paragraph. Tabs are expanded and other
     whitespace characters converted to space.
 
-    Similar to `textwrap.fill`, but keeps any mathtext blocks contiguous and unaltered. Mathtext blocks are segments of `text` that are between $ markers, to indicate LaTeX-like formatting. Dollar-sign literals (\$) do not trigger Mathtext, and that is respected here as well.
+    Similar to `textwrap.fill`, but keeps any mathtext blocks contiguous and unaltered.
+    Mathtext blocks are segments of `text` that are between $ markers, to indicate LaTeX-like
+    formatting. Dollar-sign literals (\$) do not trigger Mathtext, and that is respected here
+    as well.
 
-    For example:
-        >>> wrap_text_ignoring_mathtext()
+    Parameters
+    ----------
+    text : str
+        The text to be wrapped.
+    width : int
+        The maximum width of wrapped lines (unless break_long_words is false).
 
-    Args:
-
-        text: The text to be wrapped.
-
-        width: The maximum width of wrapped lines (unless break_long_words is false)
-
-    Returns:
-
+    Returns
+    -------
+    str
         A string containing the entire paragraph with line breaks as newline ("\n") characters.
 
+    Examples
+    --------
+    For example:
+        >>> wrap_text_ignoring_mathtext()
     """
     import textwrap
     import re

@@ -5,12 +5,15 @@ import aerosandbox.numpy as np
 
 class Timer(object):
     """
-    A context manager for timing things. Use it like this:
+    Time the execution of a block of code, as a context manager.
 
-    with Timer("My timer"):  # You can optionally give it a name
-        # Do stuff
+    Use it like this:
 
-    Results are printed to stdout. You can access the runtime (in seconds) directly by instantiating the object:
+        with Timer("My timer"):  # You can optionally give it a name
+            # Do stuff
+
+    Results are printed to stdout. You can access the runtime (in seconds) directly by
+    instantiating the object:
 
     >>> t = Timer("My timer")
     >>> t.tic()
@@ -18,6 +21,7 @@ class Timer(object):
     >>> print(t.toc())
 
     Nested timers are also supported. For example, this code:
+
     >>> with Timer("a"):
     >>>     with Timer("b"):
     >>>         with Timer("c"):
@@ -32,6 +36,12 @@ class Timer(object):
                 [b] Elapsed: 100 msec
         [a] Elapsed: 100 msec
 
+    Parameters
+    ----------
+    name : str | None
+        An optional name for the timer, printed alongside its output.
+    verbose : bool
+        If True, prints timing information to stdout.
     """
 
     number_running: int = 0  # The number of Timers currently running
@@ -76,6 +86,7 @@ class Timer(object):
             print(header + s)
 
     def tic(self):
+        """Start the timer."""
         self.__class__.number_running += 1
         self._print("Timing...")
         self.t_start = time.perf_counter_ns()
@@ -85,6 +96,14 @@ class Timer(object):
         return self
 
     def toc(self) -> float:
+        """
+        Stop the timer, print the elapsed time (if verbose), and return it.
+
+        Returns
+        -------
+        float
+            The elapsed time since `tic()` was called [s].
+        """
         self.t_end = time.perf_counter_ns()
         self.__class__.number_running -= 1
         self.runtime = (self.t_end - self.t_start) / 1e9
@@ -103,28 +122,34 @@ def time_function(
     warmup: bool = True,
 ) -> tuple[float, Any]:
     """
-    Runs a given callable and tells you how long it took to run, in seconds. Also returns the result of the function
-        (if any), for good measure.
+    Run a given callable and tell you how long it took to run, in seconds.
 
-    Args:
+    Also returns the result of the function (if any), for good measure.
 
-        func: The function to run. Should take no arguments; use a lambda function or functools.partial if you need
-            to pass arguments.
+    Parameters
+    ----------
+    func : Callable
+        The function to run. Should take no arguments; use a lambda function or
+        functools.partial if you need to pass arguments.
+    repeats : int | None
+        The number of times to run the function. If None, runs until desired_runtime is met.
+    desired_runtime : float | None
+        The desired runtime of the function, in seconds. If None, runs until repeats is met.
+    runtime_reduction
+        A function that takes in a list of runtimes and returns a reduced value. For example,
+        np.min will return the minimum runtime, np.mean will return the mean runtime, etc.
+        Default is np.min.
+    warmup : bool
+        If True, runs the function once before starting the timer. This can be useful for
+        functions with JIT-compilation, with internal imports, or caches.
 
-        repeats: The number of times to run the function. If None, runs until desired_runtime is met.
+    Returns
+    -------
+    tuple[float, Any]
+        A tuple of (time_taken, result).
 
-        desired_runtime: The desired runtime of the function, in seconds. If None, runs until repeats is met.
-
-        runtime_reduction: A function that takes in a list of runtimes and returns a reduced value. For example,
-            np.min will return the minimum runtime, np.mean will return the mean runtime, etc. Default is np.min.
-
-        warmup: If True, runs the function once before starting the timer. This can be useful for functions with JIT-compilation,
-            with internal imports, or caches.
-
-    Returns: A Tuple of (time_taken, result).
         - time_taken is a float of the time taken to run the function, in seconds.
         - result is the result of the function, if any.
-
     """
     if (repeats is not None) and (desired_runtime is not None):
         raise ValueError("You can't specify both repeats and desired_runtime!")

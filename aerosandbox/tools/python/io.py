@@ -7,17 +7,21 @@ def convert_ipynb_to_py(
     output_file: Path,
 ) -> None:
     """
-    Reads an input Jupyter notebook (.ipynb) and converts it to a Python file (.py)
+    Read an input Jupyter notebook (.ipynb) and convert it to a Python file (.py).
 
-    Tried using `jupyter nbconvert`, but that is SO SLOW, like 3 seconds per notebook! It's just json parsing,
-    this should *not* take more than a few milliseconds - come on, Jupyter!
+    Tried using `jupyter nbconvert`, but that is SO SLOW, like 3 seconds per notebook! It's
+    just json parsing, this should *not* take more than a few milliseconds - come on, Jupyter!
 
-    Args:
-        input_file: File path
-        output_file: File path
+    Parameters
+    ----------
+    input_file : Path
+        File path.
+    output_file : Path
+        File path.
 
-    Returns: None
-
+    Returns
+    -------
+    None
     """
     with open(input_file, "r", encoding="utf-8") as f:
         ipynb_contents = json.load(f)

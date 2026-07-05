@@ -4,17 +4,22 @@ import sys
 
 def lazy_import(name):
     """
-    Allows you to lazily import a module.
+    Lazily import a module.
 
-    Usage:
+    Parameters
+    ----------
+    name
+        The package name.
+
+    Returns
+    -------
+    module
+        The module itself, to be loaded on first use.
+
+    Examples
+    --------
     >>> asb = lazy_import("aerosandbox")  # Runs instantly
     >>> asb.Airplane()  # When this is called, ASB will be loaded.
-
-    Args:
-        name: The package name
-
-    Returns: The module itself, to be loaded on first use.
-
     """
     spec = importlib.util.find_spec(name)
     loader = importlib.util.LazyLoader(spec.loader)

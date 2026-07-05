@@ -6,12 +6,16 @@ from aerosandbox.tools.python.io import convert_ipynb_to_py
 
 def run_python_file(path: Path) -> None:
     """
-    Executes a Python file from a path.
-    Args:
-        path: File path
+    Execute a Python file from a path.
 
-    Returns: None
+    Parameters
+    ----------
+    path : Path
+        File path.
 
+    Returns
+    -------
+    None
     """
     sys.path.append(str(path.parent))
     __import__(path.with_suffix("").name)
@@ -19,13 +23,20 @@ def run_python_file(path: Path) -> None:
 
 def run_all_python_files(path: Path, recursive=True, verbose=True) -> None:
     """
-    Executes all Python files and Jupyter Notebooks in a directory.
-    Args:
-        path: A Path-type object (Path from built-in pathlib) representing a filepath
-        recursive: Executes recursively (e.g. searches all subfolders too)
+    Execute all Python files and Jupyter Notebooks in a directory.
 
-    Returns: None
+    Parameters
+    ----------
+    path : Path
+        A Path-type object (Path from built-in pathlib) representing a filepath.
+    recursive
+        Executes recursively (e.g., searches all subfolders too).
+    verbose
+        If True, prints progress as files and directories are processed.
 
+    Returns
+    -------
+    None
     """
     # Exclusions:
     if path == Path(os.path.abspath(__file__)):  # Don't run this file
