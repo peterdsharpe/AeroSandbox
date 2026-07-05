@@ -15,32 +15,39 @@ def estimate_noise_standard_deviation(
     estimator_order: int | None = None,
 ) -> float:
     """
-    Estimates the standard deviation of the random noise in a time-series dataset.
+    Estimate the standard deviation of the random noise in a time-series dataset.
 
     Relies on several assumptions:
 
     - The noise is normally-distributed and independent between samples (i.e. white noise).
 
-    - The noise is stationary and homoscedastic (i.e., the noise standard deviation is constant).
+    - The noise is stationary and homoscedastic (i.e., the noise standard deviation is
+      constant).
 
     - The noise is uncorrelated with the signal.
 
-    - The sample rate of the data is significantly higher than the highest-frequency component of the signal. (In
-        practice, this ratio need not be more than ~5:1, if higher-order estimators are used. At a minimum, however,
-        this ratio must be greater than 2:1, corresponding to the Nyquist frequency.)
+    - The sample rate of the data is significantly higher than the highest-frequency component
+      of the signal. (In practice, this ratio need not be more than ~5:1, if higher-order
+      estimators are used. At a minimum, however, this ratio must be greater than 2:1,
+      corresponding to the Nyquist frequency.)
 
-    The algorithm used in this function is a highly-optimized version of the math described in this repository,
-    part of an upcoming paper: https://github.com/peterdsharpe/aircraft-polar-reconstruction-from-flight-test
+    The algorithm used in this function is a highly-optimized version of the math described in
+    this repository, part of an upcoming paper:
+    https://github.com/peterdsharpe/aircraft-polar-reconstruction-from-flight-test
 
-    Args:
+    Parameters
+    ----------
+    data : np.ndarray
+        A 1D NumPy array of time-series data.
+    estimator_order : int | None
+        The order of the estimator to use. Higher orders are generally more accurate, up to
+        the point where sample error starts to dominate. If None, a reasonable estimator order
+        will be chosen automatically.
 
-        data: A 1D NumPy array of time-series data.
-
-        estimator_order: The order of the estimator to use. Higher orders are generally more accurate, up to the
-            point where sample error starts to dominate. If None, a reasonable estimator order will be chosen automatically.
-
-    Returns: An estimate of the standard deviation of the data's noise component.
-
+    Returns
+    -------
+    float
+        An estimate of the standard deviation of the data's noise component.
     """
     if len(data) < 2:
         raise ValueError("Data must have at least 2 points.")
@@ -90,47 +97,61 @@ def bootstrap_fits(
     normalize: bool | None = None,
 ) -> tuple[np.ndarray, np.ndarray] | list[Spline]:
     """
-    Bootstraps a time-series dataset and fits splines to each bootstrap resample.
+    Bootstrap a time-series dataset and fit splines to each bootstrap resample.
 
-    Args:
+    Parameters
+    ----------
+    x : np.ndarray
+        The independent variable (e.g., time) of the dataset. A 1D NumPy array.
+    y : np.ndarray
+        The dependent variable (e.g., altitude) of the dataset. A 1D NumPy array.
+    x_noise_stdev : None | float
+        The standard deviation of the noise in `x`. If None, it is estimated from the data
+        using `estimate_noise_standard_deviation()`.
+    y_noise_stdev : None | float
+        The standard deviation of the noise in `y`. If None, it is estimated from the data
+        using `estimate_noise_standard_deviation()`.
+    n_bootstraps : int
+        The number of bootstrap resamples to create.
+    fit_points : int | Iterable[float] | None
+        An optional variable that determines what to do with the splines after they are fit:
 
-        x: The independent variable (e.g., time) of the dataset. A 1D NumPy array.
+        - If an integer, the splines will be evaluated at a linearly-spaced vector of points
+          between the minimum and maximum x-values of the dataset, with the number of points
+          equal to `fit_points`. This is the default.
 
-        y: The dependent variable (e.g., altitude) of the dataset. A 1D NumPy array.
+        - If an iterable of floats (e.g. a 1D NumPy array), the splines will be evaluated at
+          those points.
 
-        n_bootstraps: The number of bootstrap resamples to create.
+        - If None, the splines won't be evaluated, and instead the splines are returned
+          directly.
+    spline_degree : int
+        The degree of the splines to fit.
+    normalize : bool | None
+        Whether or not to normalize the data before fitting. If True, the data will be
+        normalized to the range [0, 1] before fitting, and the splines will be un-normalized
+        before being returned. If False, the data will not be normalized before fitting.
 
-        fit_points: An optional variable that determines what to do with the splines after they are fit:
+        - If None (the default), the data will be normalized if and only if `fit_points` is
+          not None.
 
-            - If an integer, the splines will be evaluated at a linearly-spaced vector of points between the minimum
-                and maximum x-values of the dataset, with the number of points equal to `fit_points`. This is the default.
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray] | list[Spline]
+        One of the following, depending on the value of `fit_points`:
 
-            - If an iterable of floats (e.g. a 1D NumPy array), the splines will be evaluated at those points.
-
-            - If None, the splines won't be evaluated, and instead the splines are returned directly.
-
-        spline_degree: The degree of the splines to fit.
-
-        normalize: Whether or not to normalize the data before fitting. If True, the data will be normalized to
-            the range [0, 1] before fitting, and the splines will be un-normalized before being returned. If False,
-            the data will not be normalized before fitting.
-
-            - If None (the default), the data will be normalized if and only if `fit_points` is not None.
-
-
-    Returns: One of the following, depending on the value of `fit_points`:
-
-        - If `fit_points` is an integer or array, then this function returns a tuple of NumPy arrays:
+        - If `fit_points` is an integer or array, then this function returns a tuple of NumPy
+          arrays:
 
             - `x_fit`: A 1D NumPy array with the x-values at which the splines were evaluated.
 
-            - `y_bootstrap_fits`: A 2D NumPy array of shape (n_bootstraps, len(x_fit)) with the y-values of the
-                splines evaluated at each bootstrap resample and at each x-value.
+            - `y_bootstrap_fits`: A 2D NumPy array of shape (n_bootstraps, len(x_fit)) with
+              the y-values of the splines evaluated at each bootstrap resample and at each
+              x-value.
 
-        - If `fit_points` is None, then this function returns a list of `n_bootstraps` splines, each of which is a
-            `NaturalUnivariateSpline`, which is a subclass of `scipy.interpolate.UnivariateSpline` with more sensible
-            extrapolation.
-
+        - If `fit_points` is None, then this function returns a list of `n_bootstraps`
+          splines, each of which is a `NaturalUnivariateSpline`, which is a subclass of
+          `scipy.interpolate.UnivariateSpline` with more sensible extrapolation.
     """
     ### Set defaults
     if normalize is None:
