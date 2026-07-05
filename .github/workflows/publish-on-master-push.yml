@@ -23,7 +23,7 @@ jobs:
           enable-cache: true
       - name: Test with pytest
         run: |
-          uv run --python ${{ matrix.python-version }} --extra test pytest aerosandbox
+          uv run --python ${{ matrix.python-version }} --extra test --no-dev pytest aerosandbox
 
   deploy:
 

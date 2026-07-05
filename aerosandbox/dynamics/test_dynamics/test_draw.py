@@ -5,6 +5,28 @@ import pytest
 pv = pytest.importorskip("pyvista")
 pv.OFF_SCREEN = True  # Ensure no GUI window is needed (headless-safe)
 
+# Off-screen VTK rendering still requires a working GL context; on a headless
+# machine without one, VTK aborts the whole process (SIGABRT) rather than
+# raising, so no in-test guard can catch it. Start a virtual framebuffer if
+# available, and otherwise skip the module entirely.
+import os
+import shutil
+
+if os.name == "posix" and not os.environ.get("DISPLAY"):
+    if shutil.which("Xvfb"):
+        try:
+            pv.start_xvfb()
+        except Exception as e:
+            pytest.skip(
+                f"Could not start Xvfb for pyvista rendering tests: {e}",
+                allow_module_level=True,
+            )
+    else:
+        pytest.skip(
+            "No display and no Xvfb available; skipping pyvista rendering tests.",
+            allow_module_level=True,
+        )
+
 
 def make_dyn(n_points: int) -> asb.DynamicsPointMass3DCartesian:
     return asb.DynamicsPointMass3DCartesian(
