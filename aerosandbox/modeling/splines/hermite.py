@@ -11,17 +11,27 @@ def linear_hermite_patch(
     f_b: float,
 ) -> Vectorizable:
     """
-    Computes the linear Hermite polynomial patch that passes through the given endpoints f_a and f_b.
+    Compute the linear Hermite polynomial patch that passes through the given endpoints f_a and
+    f_b.
 
-    Args:
-        x: Scalar or array of values at which to evaluate the patch.
-        x_a: The x-coordinate of the first endpoint.
-        x_b: The x-coordinate of the second endpoint.
-        f_a: The function value at the first endpoint.
-        f_b: The function value at the second endpoint.
+    Parameters
+    ----------
+    x : Vectorizable
+        Scalar or array of values at which to evaluate the patch.
+    x_a : float
+        The x-coordinate of the first endpoint.
+    x_b : float
+        The x-coordinate of the second endpoint.
+    f_a : float
+        The function value at the first endpoint.
+    f_b : float
+        The function value at the second endpoint.
 
-    Returns:
-        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or an array if x is an array.
+    Returns
+    -------
+    Vectorizable
+        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or
+        an array if x is an array.
     """
     return (x - x_a) * (f_b - f_a) / (x_b - x_a) + f_a
 
@@ -37,22 +47,35 @@ def cubic_hermite_patch(
     extrapolation: Literal["continue", "clip"] = "continue",
 ) -> Vectorizable:
     """
-    Computes the cubic Hermite polynomial patch that passes through the given endpoints and endpoint derivatives.
+    Compute the cubic Hermite polynomial patch that passes through the given endpoints and
+    endpoint derivatives.
 
-    Args:
-        x: Scalar or array of values at which to evaluate the patch.
-        x_a: The x-coordinate of the first endpoint.
-        x_b: The x-coordinate of the second endpoint.
-        f_a: The function value at the first endpoint.
-        f_b: The function value at the second endpoint.
-        dfdx_a: The derivative of the function with respect to x at the first endpoint.
-        dfdx_b: The derivative of the function with respect to x at the second endpoint.
-        extrapolation: A string indicating how to handle extrapolation outside of the domain [x_a, x_b]. Valid values are
-                      "continue", which continues the patch beyond the endpoints, and "clip", which clips the patch at the
-                      endpoints. Default is "continue".
+    Parameters
+    ----------
+    x : Vectorizable
+        Scalar or array of values at which to evaluate the patch.
+    x_a : float
+        The x-coordinate of the first endpoint.
+    x_b : float
+        The x-coordinate of the second endpoint.
+    f_a : float
+        The function value at the first endpoint.
+    f_b : float
+        The function value at the second endpoint.
+    dfdx_a : float
+        The derivative of the function with respect to x at the first endpoint.
+    dfdx_b : float
+        The derivative of the function with respect to x at the second endpoint.
+    extrapolation : Literal["continue", "clip"], optional
+        A string indicating how to handle extrapolation outside of the domain [x_a, x_b]. Valid
+        values are "continue", which continues the patch beyond the endpoints, and "clip", which
+        clips the patch at the endpoints. Default is "continue".
 
-    Returns:
-        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or an array if x is an array.
+    Returns
+    -------
+    Vectorizable
+        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or
+        an array if x is an array.
     """
     dx = x_b - x_a
     t = (x - x_a) / dx  # Nondimensional distance along the patch
@@ -85,26 +108,38 @@ def cosine_hermite_patch(
     extrapolation: Literal["continue", "linear"] = "continue",
 ) -> Vectorizable:
     r"""
-    Computes a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine function to blend between
-    linear segments.
+    Compute a Hermite patch (i.e., values + derivatives at endpoints) that uses a cosine
+    function to blend between linear segments.
 
-    The end result is conceptually similar to a cubic Hermite patch, but computation is faster and the patch is
-    $C^\infty$-continuous.
+    The end result is conceptually similar to a cubic Hermite patch, but computation is faster
+    and the patch is $C^\infty$-continuous.
 
-    Args:
-        x: Scalar or array of values at which to evaluate the patch.
-        x_a: The x-coordinate of the first endpoint.
-        x_b: The x-coordinate of the second endpoint.
-        f_a: The function value at the first endpoint.
-        f_b: The function value at the second endpoint.
-        dfdx_a: The derivative of the function with respect to x at the first endpoint.
-        dfdx_b: The derivative of the function with respect to x at the second endpoint.
-        extrapolation: A string indicating how to handle extrapolation outside of the domain [x_a, x_b]. Valid values are
-                       "continue", which continues the patch beyond the endpoints, and "linear", which extends the patch
-                       linearly at the endpoints. Default is "continue".
+    Parameters
+    ----------
+    x : Vectorizable
+        Scalar or array of values at which to evaluate the patch.
+    x_a : float
+        The x-coordinate of the first endpoint.
+    x_b : float
+        The x-coordinate of the second endpoint.
+    f_a : float
+        The function value at the first endpoint.
+    f_b : float
+        The function value at the second endpoint.
+    dfdx_a : float
+        The derivative of the function with respect to x at the first endpoint.
+    dfdx_b : float
+        The derivative of the function with respect to x at the second endpoint.
+    extrapolation : Literal["continue", "linear"], optional
+        A string indicating how to handle extrapolation outside of the domain [x_a, x_b]. Valid
+        values are "continue", which continues the patch beyond the endpoints, and "linear",
+        which extends the patch linearly at the endpoints. Default is "continue".
 
-    Returns:
-        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or an array if x is an array.
+    Returns
+    -------
+    Vectorizable
+        The value of the patch evaluated at the input x. Returns a scalar if x is a scalar, or
+        an array if x is an array.
     """
     t = (x - x_a) / (x_b - x_a)  # Nondimensional distance along the patch
     if extrapolation == "continue":
