@@ -21,6 +21,38 @@ def pie(
     arm_radius=5,
 ):
     # TODO docs
+    """
+    Draw a "pretty" pie (donut) chart on the current axes, with labels connected by arms.
+
+    Parameters
+    ----------
+    values : np.ndarray | list[float]
+        The value (size) of each pie slice.
+    names : list[str]
+        The name of each pie slice. Must have the same length as `values`.
+    colors : np.ndarray | list[str] | None
+        The color of each pie slice. If None, a default color palette is used.
+    label_format : Callable[[str, float, float], str]
+        A function that maps the (name, value, percentage) of each slice to its label string.
+        By default, labels each slice with its name.
+    sort_by : np.ndarray | list[float] | str | None
+        How to sort the pie slices. Either one of the strings "values", "names", or "colors",
+        or an array of numbers corresponding to each pie slice, which will then be used for
+        sorting. If None, keeps the given order.
+    startangle : float
+        The angle at which the first pie slice starts, in degrees [deg].
+    center_text : str | None
+        If given, text to display at the center of the pie.
+    x_labels : float
+        The x-location of the labels, relative to the pie radius.
+    y_max_labels : float
+        The maximum absolute y-location of the labels, relative to the pie radius.
+    arm_length
+        The length of the arms connecting labels to slices, used in the arrow connection style.
+    arm_radius
+        The corner radius of the arms connecting labels to slices, used in the arrow connection
+        style.
+    """
     ax = plt.gca()
     n_wedges = len(values)
 

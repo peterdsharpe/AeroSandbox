@@ -33,7 +33,7 @@ def contour(
     **kwargs,
 ):
     """
-    An analogue for plt.contour and plt.tricontour and friends that produces a much prettier default graph.
+    Draw an analogue for plt.contour and plt.tricontour and friends with prettier defaults.
 
     Can take inputs with either contour or tricontour syntax.
 
@@ -43,48 +43,68 @@ def contour(
         https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontour.html
         https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontourf.html
 
-    Args:
-        X: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    Parameters
+    ----------
+    X
+        If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    Y
+        If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    Z
+        If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    levels : int | list | np.ndarray
+        See contour docs.
+    colorbar : bool
+        Should we draw a colorbar?
+    linelabels : bool
+        Should we add line labels?
+    cmap
+        What colormap should we use?
+    alpha : float
+        What transparency should all plot elements be?
+    extend : str
+        See contour docs.
+    linecolor
+        What color should the line labels be?
+    linewidths : float
+        See contour docs.
+    extendrect : bool
+        See colorbar docs.
+    linelabels_format : str | Callable[[float], str]
+        See ax.clabel docs.
+    linelabels_fontsize : float
+        See ax.clabel docs.
+    max_side_length_nondim : float
+        When plotting unstructured (tricontour-style) data, any triangles whose
+        nondimensionalized side length exceeds this value are masked out of the triangulation.
+    colorbar_label : str | None
+        If given, a label to add to the colorbar.
+    x_log_scale : bool
+        If True, sets the x-axis to a log scale.
+    y_log_scale : bool
+        If True, sets the y-axis to a log scale.
+    z_log_scale : bool
+        If True, the contour levels and colorbar are log-spaced. Requires all `Z` values to be
+        positive.
+    mask : np.ndarray | None
+        If given, a boolean mask applied to the `X`, `Y`, and `Z` inputs before plotting.
+    drop_nans : bool | None
+        Whether to drop any points where `X`, `Y`, or `Z` is NaN before plotting. If None
+        (default), NaNs are dropped if and only if the data is unstructured (non-gridded).
+    contour_kwargs : dict | None
+        Additional keyword arguments for contour.
+    contourf_kwargs : dict | None
+        Additional keyword arguments for contourf.
+    colorbar_kwargs : dict | None
+        Additional keyword arguments for colorbar.
+    linelabels_kwargs : dict | None
+        Additional keyword arguments for the line labels (ax.clabel).
+    **kwargs
+        Additional keywords, which are passed to both contour and contourf.
 
-        Y: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
-
-        Z: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
-
-        levels: See contour docs.
-
-        colorbar: Should we draw a colorbar?
-
-        linelabels: Should we add line labels?
-
-        cmap: What colormap should we use?
-
-        alpha: What transparency should all plot elements be?
-
-        extend: See contour docs.
-
-        linecolor: What color should the line labels be?
-
-        linewidths: See contour docs.
-
-        extendrect: See colorbar docs.
-
-        linelabels_format: See ax.clabel docs.
-
-        linelabels_fontsize: See ax.clabel docs.
-
-        contour_kwargs: Additional keyword arguments for contour.
-
-        contourf_kwargs: Additional keyword arguments for contourf.
-
-        colorbar_kwargs: Additional keyword arguments for colorbar.
-
-        linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
-
-        **kwargs: Additional keywords, which are passed to both contour and contourf.
-
-
-    Returns: A tuple of (contour, contourf, colorbar) objects.
-
+    Returns
+    -------
+    tuple
+        A tuple of (contour, contourf, colorbar) objects.
     """
     bad_signature_error = ValueError(
         "Call signature should be one of:\n"

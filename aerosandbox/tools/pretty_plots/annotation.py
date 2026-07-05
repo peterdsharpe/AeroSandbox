@@ -13,6 +13,30 @@ def hline(
     text_kwargs=None,
     **kwargs,
 ):  # TODO docs
+    """
+    Draw a horizontal line on the current axes, with an optional text label.
+
+    Parameters
+    ----------
+    y
+        The y-value at which the line is drawn.
+    linestyle
+        The linestyle of the line.
+    color
+        The color of the line (and of the text, if any).
+    text : str | None
+        If given, a text label to draw on the line.
+    text_xloc
+        The x-location of the text, in axes (0 to 1) coordinates.
+    text_ha
+        The horizontal alignment of the text.
+    text_va
+        The vertical alignment of the text.
+    text_kwargs
+        Additional keyword arguments passed to `plt.annotate()`.
+    **kwargs
+        Additional keyword arguments passed to `plt.axhline()`.
+    """
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()
@@ -43,6 +67,30 @@ def vline(
     text_kwargs=None,
     **kwargs,
 ):  # TODO docs
+    """
+    Draw a vertical line on the current axes, with an optional text label.
+
+    Parameters
+    ----------
+    x
+        The x-value at which the line is drawn.
+    linestyle
+        The linestyle of the line.
+    color
+        The color of the line (and of the text, if any).
+    text : str | None
+        If given, a text label to draw on the line.
+    text_yloc
+        The y-location of the text, in axes (0 to 1) coordinates.
+    text_ha
+        The horizontal alignment of the text.
+    text_va
+        The vertical alignment of the text.
+    text_kwargs
+        Additional keyword arguments passed to `plt.annotate()`.
+    **kwargs
+        Additional keyword arguments passed to `plt.axvline()`.
+    """
     if text_kwargs is None:
         text_kwargs = {}
     ax = plt.gca()

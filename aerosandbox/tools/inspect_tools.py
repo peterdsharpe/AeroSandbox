@@ -584,7 +584,9 @@ def codegen(
 if __name__ == "__main__":
 
     def dashes():
-        """A quick macro for drawing some dashes, to make the terminal output clearer to distinguish."""
+        """
+        Draw some dashes, as a quick macro to make the terminal output clearer to distinguish.
+        """
         print("\n" + "-" * 50 + "\n")
 
     dashes()

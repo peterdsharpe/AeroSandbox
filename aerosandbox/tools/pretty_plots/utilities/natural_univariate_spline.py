@@ -4,14 +4,17 @@ from scipy import interpolate
 
 class NaturalUnivariateSpline(interpolate.PPoly):
     """
-    A Natural UnivariateSpline.
+    Construct a Natural UnivariateSpline.
 
-    Identical to a UnivariateSpline, except that extrapolation outside the data range is constrained to be linear.
+    Identical to a UnivariateSpline, except that extrapolation outside the data range is
+    constrained to be linear.
 
+    References
+    ----------
     Based on: https://bobby.gramacy.com/surrogates/splines.html
 
-    Which paraphrases [Hastie, Tibshirani & Friedman (2017)](https://hastie.su.domains/ElemStatLearn/), Chapters 5, 7, & 8.
-
+    Which paraphrases [Hastie, Tibshirani & Friedman
+    (2017)](https://hastie.su.domains/ElemStatLearn/), Chapters 5, 7, & 8.
     """
 
     def __init__(
@@ -26,24 +29,29 @@ class NaturalUnivariateSpline(interpolate.PPoly):
         check_finite=None,
     ):
         """
+        Fit a NaturalUnivariateSpline to data.
 
-
-        Args:
-
-            x: 1-D array of independent input data. Must be increasing; must be strictly increasing if s is 0.
-
-            y: 1-D array of dependent input data, of the same length as x.
-
-            w: Weights for spline fitting. Must be positive. If w is None, weights are all 1. Default is None.
-
-            k: Degree of the smoothing spline. Must be 1 <= k <= 5. k = 3 is a cubic spline. Default is 3.
-
-            s: Positive smoothing factor used to choose the number of knots.
-
-        Returns:
-
-
-
+        Parameters
+        ----------
+        x : np.ndarray
+            1-D array of independent input data. Must be increasing; must be strictly
+            increasing if s is 0.
+        y : np.ndarray
+            1-D array of dependent input data, of the same length as x.
+        w : np.ndarray | None
+            Weights for spline fitting. Must be positive. If w is None, weights are all 1.
+            Default is None.
+        k : int
+            Degree of the smoothing spline. Must be 1 <= k <= 5. k = 3 is a cubic spline.
+            Default is 3.
+        s : float | None
+            Positive smoothing factor used to choose the number of knots.
+        ext
+            Deprecated; do not use.
+        bbox
+            Deprecated; do not use.
+        check_finite
+            Deprecated; do not use.
         """
         if s is None:
             m = len(x)

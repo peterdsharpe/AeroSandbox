@@ -76,17 +76,18 @@ class GFG:
 
 
 def maximum_bipartite_matching(graph: np.ndarray) -> np.ndarray:
-    """Finds the maximum bipartite matching of a graph
+    """
+    Find the maximum bipartite matching of a graph.
 
     Parameters
     ----------
     graph : np.ndarray
-        The graph, represented as a boolean matrix
+        The graph, represented as a boolean matrix.
 
     Returns
     -------
     order : np.ndarray
-        The order in which to traverse the graph to visit a maximum of nodes
+        The order in which to traverse the graph to visit a maximum of nodes.
     """
     g = GFG(graph)
     _, order = g.maxBPM()
@@ -94,7 +95,10 @@ def maximum_bipartite_matching(graph: np.ndarray) -> np.ndarray:
 
 
 def always_iterable(obj, base_type=(str, bytes)):
-    """If *obj* is iterable, return an iterator over its items::
+    """
+    Return an iterator over *obj*'s items if iterable; else, a one-item iterable containing it.
+
+    If *obj* is iterable, return an iterator over its items::
 
         >>> obj = (1, 2, 3)
         >>> list(always_iterable(obj))

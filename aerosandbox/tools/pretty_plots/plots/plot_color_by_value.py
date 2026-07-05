@@ -15,33 +15,43 @@ def plot_color_by_value(
     **kwargs,
 ):
     """
-    Uses same syntax as matplotlib.pyplot.plot, except that `c` is now an array-like that maps to a specific color
-    pulled from `cmap`. Makes lines that are multicolored based on this `c` value.
+    Plot a line that is multicolored based on an array of values.
 
-    Args:
+    Uses the same syntax as matplotlib.pyplot.plot, except that `c` is now an array-like that
+    maps to a specific color pulled from `cmap`. Makes lines that are multicolored based on
+    this `c` value.
 
-        x: Array of x-points.
+    Parameters
+    ----------
+    x : np.ndarray
+        Array of x-points.
+    y : np.ndarray
+        Array of y-points.
+    *args
+        Args that will be passed into matplotlib.pyplot.plot().
+        Example: ".-" for a dotted line.
+    c : np.ndarray
+        Array of values that will map to colors. Must be the same length as x and y.
+    cmap
+        The colormap to use.
+    colorbar : bool
+        Whether or not to display the colormap. [bool]
+    colorbar_label : str | None
+        The label to add to the colorbar. Only applies if the colorbar is created. [str]
+    clim : tuple[float, float] | None
+        A tuple of (min, max) that assigns bounds to the colormap. Computed from the range of
+        `c` if not given.
+    **kwargs
+        Kwargs that will be passed into matplotlib.pyplot.plot().
 
-        y: Array of y-points.
+    Returns
+    -------
+    tuple
+        A tuple of (lines, sm, cbar), where:
 
-        *args: Args that will be passed into matplotlib.pyplot.plot().
-            Example: ".-" for a dotted line.
-
-        c: Array of values that will map to colors. Must be the same length as x and y.
-
-        cmap: The colormap to use.
-
-        colorbar: Whether or not to display the colormap. [bool]
-
-        colorbar_label: The label to add to the colorbar. Only applies if the colorbar is created. [str]
-
-        clim: A tuple of (min, max) that assigns bounds to the colormap. Computed from the range of `c` if not given.
-
-        **kwargs: Kwargs that will be passed into matplotlib.pyplot.plot()
-
-
-    Returns:
-
+        - lines: a list of the matplotlib Line2D objects that were plotted.
+        - sm: the matplotlib ScalarMappable object corresponding to the colormap.
+        - cbar: the colorbar object, if one was created (otherwise None).
     """
     cmap = mpl.colormaps.get_cmap(cmap)
 

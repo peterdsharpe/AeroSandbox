@@ -39,13 +39,23 @@ def get_discrete_colors_from_colormap(
     upper_bound: float = 1,
 ):
     """
-    Returns uniformly-spaced discrete color samples from a (continuous) colormap.
-    Args:
-        cmap: Name of a colormap.
-        N: Number of colors to retrieve from colormap.
+    Return uniformly-spaced discrete color samples from a (continuous) colormap.
 
-    Returns: A Nx4 array of (R, G, B, A) colors.
+    Parameters
+    ----------
+    cmap : str
+        Name of a colormap.
+    N : int
+        Number of colors to retrieve from colormap.
+    lower_bound : float
+        The lower bound of the colormap range to sample, in the interval [0, 1].
+    upper_bound : float
+        The upper bound of the colormap range to sample, in the interval [0, 1].
 
+    Returns
+    -------
+    np.ndarray
+        A Nx4 array of (R, G, B, A) colors.
     """
     cmap = mpl.colormaps.get_cmap(cmap)
     colors = cmap(np.linspace(lower_bound, upper_bound, N))
@@ -54,14 +64,19 @@ def get_discrete_colors_from_colormap(
 
 def adjust_lightness(color, amount=1.0):
     """
-    Converts a color to HLS space, then multiplies the lightness by `amount`, then converts back to RGB.
+    Convert a color to HLS space, multiply the lightness by `amount`, and convert back to RGB.
 
-    Args:
-        color: A color, in any format that matplotlib understands.
-        amount: The amount to multiply the lightness by. Valid range is 0 to infinity.
+    Parameters
+    ----------
+    color
+        A color, in any format that matplotlib understands.
+    amount
+        The amount to multiply the lightness by. Valid range is 0 to infinity.
 
-    Returns: A color, as an RGB tuple.
-
+    Returns
+    -------
+    tuple
+        A color, as an RGB tuple.
     """
     try:
         c = mc.cnames[color]
@@ -72,6 +87,12 @@ def adjust_lightness(color, amount=1.0):
 
 
 def get_last_line_color():
+    """
+    Return the color of the most recently plotted line on the current axes.
+
+    If there are no lines on the current axes, returns the first color of the categorical
+    palette.
+    """
     lines = plt.gca().lines
     try:
         line = lines[-1]

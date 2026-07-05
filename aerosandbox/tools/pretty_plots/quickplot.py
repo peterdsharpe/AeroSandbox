@@ -12,35 +12,44 @@ def qp(
     stacklevel=1,
 ) -> None:
     """
-    Quickly plots ("QP") a 1D, 2D, or 3D dataset as a line plot with markers. Useful for exploratory data analysis.
+    Quickly plot ("QP") a 1D, 2D, or 3D dataset as a line plot with markers.
 
-    Example:
+    Useful for exploratory data analysis.
 
-        >>> import aerosandbox.numpy as np
-        >>>
-        >>> x = np.linspace(0, 10)
-        >>> y = x ** 2
-        >>> z = np.sin(x)
-        >>> qp(x, y, z)
-
-    Args:
-        *args: The arguments that you want to plot. You can provide 1, 2, or 3 arrays, all of which should be 1D and of the same length.
-
-        backend: The backend to use. Current options:
+    Parameters
+    ----------
+    *args : tuple[np.ndarray | list]
+        The arguments that you want to plot. You can provide 1, 2, or 3 arrays, all of which
+        should be 1D and of the same length.
+    backend
+        The backend to use. Current options:
             * "plotly"
+    show
+        A boolean of whether or not to show the plot.
+    plotly_renderer : str | None
+        A string of what to use as the Plotly renderer. If you don't want to overwrite a
+        default that you've already set, set this variable to None.
+    orthographic
+        A boolean of whether or not to use an orthographic (rather than perspective)
+        projection when viewing 3D plots.
+    stacklevel
+        (Advanced) Choose the level of the stack that you want to retrieve plot labels at.
+        Higher integers will get you higher (i.e., more end-user-facing) in the stack. Same
+        behaviour as the `stacklevel` argument in warnings.warn().
 
-        show: A boolean of whether or not to show the plot.
+    Returns
+    -------
+    None
+        (in-place)
 
-        plotly_renderer: A string of what to use as the Plotly renderer. If you don't want to overwrite a default that you've already set, set this variable to None.
-
-        orthographic: A boolean of whether or not to use an orthographic (rather than persepctive) projection when viewing 3D plots.
-
-        stacklevel: (Advanced) Choose the level of the stack that you want to retrieve plot labels at. Higher
-        integers will get you higher (i.e., more end-user-facing) in the stack. Same behaviour as the `stacklevel`
-        argument in warnings.warn().
-
-    Returns: None (in-place)
-
+    Examples
+    --------
+    >>> import aerosandbox.numpy as np
+    >>>
+    >>> x = np.linspace(0, 10)
+    >>> y = x ** 2
+    >>> z = np.sin(x)
+    >>> qp(x, y, z)
     """
     arg_values = args
     n_dimensions = len(arg_values)  # dimensionality

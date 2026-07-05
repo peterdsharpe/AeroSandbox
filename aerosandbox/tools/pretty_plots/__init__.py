@@ -1,6 +1,4 @@
-"""
-A set of tools used for making prettier Matplotlib plots.
-"""
+"""Provide a set of tools used for making prettier Matplotlib plots."""
 
 ### General imports
 import seaborn as sns

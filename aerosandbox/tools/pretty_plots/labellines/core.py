@@ -26,31 +26,35 @@ def labelLine(
     outline_width=8,
     **kwargs,
 ):
-    """Label a single matplotlib line at position x
+    """
+    Label a single matplotlib line at position x.
 
     Parameters
     ----------
     line : matplotlib.lines.Line
-       The line holding the label
+        The line holding the label.
     x : number
-       The location in data unit of the label
+        The location in data unit of the label.
     label : string, optional
-       The label to set. This is inferred from the line by default
+        The label to set. This is inferred from the line by default.
+    align : bool, optional
+        If True, the label is aligned with the slope of the line at the location of the label.
+        If False, it is horizontal.
     drop_label : bool, optional
-       If True, the label is consumed by the function so that subsequent
-       calls to e.g. legend do not use it anymore.
+        If True, the label is consumed by the function so that subsequent
+        calls to e.g. legend do not use it anymore.
     yoffset : double, optional
-        Space to add to label's y position
+        Space to add to label's y position.
     yoffset_logspace : bool, optional
         If True, then yoffset will be added to the label's y position in
-        log10 space
+        log10 space.
     outline_color : None | "auto" | color
         Colour of the outline. If set to "auto", use the background color.
         If set to None, do not draw an outline.
     outline_width : number
-        Width of the outline
+        Width of the outline.
     kwargs : dict, optional
-       Optional arguments passed to ax.text
+        Optional arguments passed to ax.text.
     """
 
     ax = line.axes
@@ -165,33 +169,34 @@ def labelLines(
     outline_width=5,
     **kwargs,
 ):
-    """Label all lines with their respective legends.
+    """
+    Label all lines with their respective legends.
 
     Parameters
     ----------
     lines : list of matplotlib lines
-       The lines to label
+        The lines to label.
     align : boolean, optional
-       If True, the label will be aligned with the slope of the line
-       at the location of the label. If False, they will be horizontal.
+        If True, the label will be aligned with the slope of the line
+        at the location of the label. If False, they will be horizontal.
     xvals : (xfirst, xlast) or array of float, optional
-       The location of the labels. If a tuple, the labels will be
-       evenly spaced between xfirst and xlast (in the axis units).
+        The location of the labels. If a tuple, the labels will be
+        evenly spaced between xfirst and xlast (in the axis units).
     drop_label : bool, optional
-       If True, the label is consumed by the function so that subsequent
-       calls to e.g. legend do not use it anymore.
+        If True, the label is consumed by the function so that subsequent
+        calls to e.g. legend do not use it anymore.
     shrink_factor : double, optional
-       Relative distance from the edges to place closest labels. Defaults to 0.05.
-    yoffsets : number or list, optional.
+        Relative distance from the edges to place closest labels. Defaults to 0.05.
+    yoffsets : number or list, optional
         Distance relative to the line when positioning the labels. If given a number,
         the same value is used for all lines.
     outline_color : None | "auto" | color
         Colour of the outline. If set to "auto", use the background color.
         If set to None, do not draw an outline.
     outline_width : number
-        Width of the outline
+        Width of the outline.
     kwargs : dict, optional
-       Optional arguments passed to ax.text
+        Optional arguments passed to ax.text.
     """
     if len(lines) == 0:
         return []
