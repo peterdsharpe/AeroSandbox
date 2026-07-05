@@ -9,11 +9,13 @@ class MassProperties(AeroSandboxObject):
     """
     Mass properties of a rigid 3D object.
 
-    ## Notes on Inertia Tensor Definition
+    Notes
+    -----
+    **Notes on inertia tensor definition:**
 
-    This class uses the standard mathematical definition of the inertia tensor, which is different from the
-    alternative definition used by some CAD and CAE applications (such as SolidWorks, NX, etc.). These differ by a
-    sign flip in the products of inertia.
+    This class uses the standard mathematical definition of the inertia tensor, which is
+    different from the alternative definition used by some CAD and CAE applications (such as
+    SolidWorks, NX, etc.). These differ by a sign flip in the products of inertia.
 
     Specifically, we define the inertia tensor using the standard convention:
 
@@ -28,7 +30,6 @@ class MassProperties(AeroSandboxObject):
         [ I31  I32  I33 ]   [-Ixz -Iyz  Izz ]   [-sum(m*x*z)       -sum(m*y*z)       sum(m*(x^2+y^2))]
 
     See also: https://en.wikipedia.org/wiki/Moment_of_inertia#Inertia_tensor
-
     """
 
     def __init__(
@@ -45,41 +46,41 @@ class MassProperties(AeroSandboxObject):
         Ixz: Vectorizable = 0.0,
     ):
         """
-        Initializes a new MassProperties object.
+        Initialize a new MassProperties object.
 
-        Axes can be given in any convenient axes system, as long as mass properties are not combined across different
-        axis systems. For aircraft design, the most common axis system is typically geometry axes (x-positive aft,
-        y-positive out the right wingtip, z-positive upwards).
+        Axes can be given in any convenient axes system, as long as mass properties are not
+        combined across different axis systems. For aircraft design, the most common axis system
+        is typically geometry axes (x-positive aft, y-positive out the right wingtip, z-positive
+        upwards).
 
-        Args:
-
-            mass: Mass of the component [kg]
-
-            x_cg: X-location of the center of gravity of the component [m]
-
-            y_cg: Y-location of the center of gravity of the component [m]
-
-            z_cg:  Z-location of the center of gravity of the component [m]
-
-            Ixx: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
-            this is a point mass.
-
-            Iyy: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
-            this is a point mass.
-
-            Izz: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
-            this is a point mass.
-
-            Ixy: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
-            this is symmetric about z.
-
-            Iyz: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
-            this is symmetric about x.
-
-            Ixz: Respective component of the inertia tensor, as measured about the component's center of mass. 0 if
-            this is symmetric about y.
-
-
+        Parameters
+        ----------
+        mass : Vectorizable | None
+            Mass of the component [kg].
+        x_cg : Vectorizable
+            X-location of the center of gravity of the component [m].
+        y_cg : Vectorizable
+            Y-location of the center of gravity of the component [m].
+        z_cg : Vectorizable
+            Z-location of the center of gravity of the component [m].
+        Ixx : Vectorizable
+            Respective component of the inertia tensor, as measured about the component's center
+            of mass. 0 if this is a point mass.
+        Iyy : Vectorizable
+            Respective component of the inertia tensor, as measured about the component's center
+            of mass. 0 if this is a point mass.
+        Izz : Vectorizable
+            Respective component of the inertia tensor, as measured about the component's center
+            of mass. 0 if this is a point mass.
+        Ixy : Vectorizable
+            Respective component of the inertia tensor, as measured about the component's center
+            of mass. 0 if this is symmetric about z.
+        Iyz : Vectorizable
+            Respective component of the inertia tensor, as measured about the component's center
+            of mass. 0 if this is symmetric about x.
+        Ixz : Vectorizable
+            Respective component of the inertia tensor, as measured about the component's center
+            of mass. 0 if this is symmetric about y.
         """
         if mass is None:
             import warnings
@@ -124,15 +125,22 @@ class MassProperties(AeroSandboxObject):
 
     def __getitem__(self, index) -> "MassProperties":
         """
-        Indexes one item from each attribute of an MassProperties instance.
+        Index one item from each attribute of a MassProperties instance.
+
         Returns a new MassProperties instance.
 
-        Args:
-            index: The index that is being called; e.g.,:
-                >>> first_mass_props = mass_props[0]
+        Parameters
+        ----------
+        index
+            The index that is being called; e.g.,:
 
-        Returns: A new MassProperties instance, where each attribute is subscripted at the given value, if possible.
+            >>> first_mass_props = mass_props[0]
 
+        Returns
+        -------
+        MassProperties
+            A new MassProperties instance, where each attribute is subscripted at the given
+            value, if possible.
         """
         self_length = len(self)
 
@@ -198,11 +206,11 @@ class MassProperties(AeroSandboxObject):
 
     def __array__(self, dtype=None, copy=None):
         """
-        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        Allow NumPy array creation without infinite recursion in __len__ and __getitem__.
 
         The `dtype` and `copy` arguments follow the NumPy 2.0 `__array__` protocol. A
-        newly-created (object-dtype, by default) array is always returned, so
-        `copy=False` raises a ValueError.
+        newly-created (object-dtype, by default) array is always returned, so `copy=False`
+        raises a ValueError.
         """
         if copy is False:
             raise ValueError(
@@ -215,7 +223,7 @@ class MassProperties(AeroSandboxObject):
 
     def __add__(self, other: "MassProperties") -> "MassProperties":
         """
-        Combines one MassProperties object with another.
+        Combine one MassProperties object with another.
         """
         if not isinstance(other, MassProperties):
             raise TypeError(
@@ -255,7 +263,7 @@ class MassProperties(AeroSandboxObject):
 
     def __radd__(self, other: "MassProperties") -> "MassProperties":
         """
-        Allows sum() to work with MassProperties objects.
+        Allow sum() to work with MassProperties objects.
 
         Basically, makes addition commutative.
         """
@@ -266,14 +274,16 @@ class MassProperties(AeroSandboxObject):
 
     def __sub__(self, other: "MassProperties") -> "MassProperties":
         """
-        Subtracts one MassProperties object from another. (opposite of __add__() )
+        Subtract one MassProperties object from another. (Opposite of __add__().)
         """
         return self.__add__(-other)
 
     def __mul__(self, other: float) -> "MassProperties":
         """
-        Returns a new MassProperties object that is equivalent to if you had summed together N (with `other`
-        interpreted as N) identical MassProperties objects.
+        Multiply the mass properties by a scalar.
+
+        Returns a new MassProperties object that is equivalent to if you had summed together N
+        (with `other` interpreted as N) identical MassProperties objects.
         """
         return MassProperties(
             mass=self.mass * other,
@@ -290,20 +300,43 @@ class MassProperties(AeroSandboxObject):
 
     def __rmul__(self, other: float) -> "MassProperties":
         """
-        Allows multiplication of a scalar by a MassProperties object. Makes multiplication commutative.
+        Allow multiplication of a scalar by a MassProperties object.
+
+        Makes multiplication commutative.
         """
         return self.__mul__(other)
 
     def __truediv__(self, other: float) -> "MassProperties":
         """
-        Returns a new MassProperties object that is equivalent to if you had divided the mass of the current
-        MassProperties object by a factor.
+        Divide the mass properties by a scalar.
+
+        Returns a new MassProperties object that is equivalent to if you had divided the mass of
+        the current MassProperties object by a factor.
         """
         return self.__mul__(1 / other)
 
     def allclose(
         self, other: "MassProperties", rtol=1e-5, atol=1e-8, equal_nan=False
     ) -> bool:
+        """
+        Check whether all mass properties of this object are close to those of another.
+
+        Parameters
+        ----------
+        other : MassProperties
+            The other MassProperties object to compare against.
+        rtol : float
+            Relative tolerance; passed to `np.allclose()`.
+        atol : float
+            Absolute tolerance; passed to `np.allclose()`.
+        equal_nan : bool
+            Whether to compare NaN values as equal; passed to `np.allclose()`.
+
+        Returns
+        -------
+        bool
+            True if all mass properties are close, False otherwise.
+        """
         return all(
             [
                 np.allclose(
@@ -330,10 +363,12 @@ class MassProperties(AeroSandboxObject):
 
     @property
     def xyz_cg(self):
+        """Return the location of the center of gravity as an (x_cg, y_cg, z_cg) tuple."""
         return self.x_cg, self.y_cg, self.z_cg
 
     @property
     def inertia_tensor(self):
+        """Return the inertia tensor about the component's centroid, as a 3x3 array."""
         # Returns the inertia tensor about the component's centroid.
         return np.array(
             [
@@ -345,10 +380,14 @@ class MassProperties(AeroSandboxObject):
 
     def inv_inertia_tensor(self):
         """
-        Computes the inverse of the inertia tensor, in a slightly more efficient way than raw inversion by exploiting its known structure.
+        Compute the inverse of the inertia tensor.
 
-        If you are effectively using this inertia tensor to solve a linear system, you should use a linear algebra
-        solve() method (ideally via Cholesky decomposition) instead, for best speed.
+        This is done in a slightly more efficient way than raw inversion, by exploiting the
+        tensor's known structure.
+
+        If you are effectively using this inertia tensor to solve a linear system, you should use
+        a linear algebra solve() method (ideally via Cholesky decomposition) instead, for best
+        speed.
         """
         iIxx, iIyy, iIzz, iIxy, iIyz, iIxz = np.linalg.inv_symmetric_3x3(
             m11=self.Ixx,
@@ -368,27 +407,34 @@ class MassProperties(AeroSandboxObject):
         return_tensor: bool = True,
     ):
         """
-        Returns the inertia tensor about an arbitrary point.
-        Using https://en.wikipedia.org/wiki/Parallel_axis_theorem#Tensor_generalization
+        Return the inertia tensor about an arbitrary point.
 
-        Args:
-            x: x-position of the new point, in the same axes as this MassProperties instance is specified in.
+        Uses the parallel axis theorem (tensor generalization):
+        https://en.wikipedia.org/wiki/Parallel_axis_theorem#Tensor_generalization
 
-            y: y-position of the new point, in the same axes as this MassProperties instance is specified in.
+        Parameters
+        ----------
+        x : float
+            x-position of the new point, in the same axes as this MassProperties instance is
+            specified in.
+        y : float
+            y-position of the new point, in the same axes as this MassProperties instance is
+            specified in.
+        z : float
+            z-position of the new point, in the same axes as this MassProperties instance is
+            specified in.
+        return_tensor : bool
+            A switch for the desired return type; see below for details.
 
-            z: z-position of the new point, in the same axes as this MassProperties instance is specified in.
-
-            return_tensor: A switch for the desired return type; see below for details. [boolean]
-
-        Returns:
-
+        Returns
+        -------
+        ndarray or tuple
             If `return_tensor` is True:
                 Returns the new inertia tensor, as a 2D numpy ndarray.
             If `return_tensor` is False:
                 Returns the components of the new inertia tensor, as a tuple.
                 If J is the new inertia tensor, the tuple returned is:
                 (Jxx, Jyy, Jzz, Jxy, Jyz, Jxz)
-
         """
 
         R = [x - self.x_cg, y - self.y_cg, z - self.z_cg]
@@ -414,20 +460,22 @@ class MassProperties(AeroSandboxObject):
 
     def is_physically_possible(self) -> bool:
         """
-        Checks whether it's possible for this MassProperties object to correspond to the mass properties of a real
-        physical object.
+        Check whether this MassProperties object can correspond to a real physical object.
 
         Assumes that all physically-possible objects have a positive mass (or density).
 
         Some special edge cases:
 
-            - A MassProperties object with mass of 0 (i.e., null object) will return True. Note: this will return
-            True even if the inertia tensor is not zero (which would basically be infinitesimal point masses at
-            infinite distance).
+        - A MassProperties object with mass of 0 (i.e., null object) will return True. Note: this
+          will return True even if the inertia tensor is not zero (which would basically be
+          infinitesimal point masses at infinite distance).
 
-            - A MassProperties object that is a point mass (i.e., inertia tensor is all zeros) will return True.
+        - A MassProperties object that is a point mass (i.e., inertia tensor is all zeros) will
+          return True.
 
-        Returns:
+        Returns
+        -------
+        bool
             True if the MassProperties object is physically possible, False otherwise.
         """
 
@@ -465,7 +513,7 @@ class MassProperties(AeroSandboxObject):
 
     def is_point_mass(self) -> bool:
         """
-        Returns True if this MassProperties object corresponds to a point mass, False otherwise.
+        Return True if this MassProperties object corresponds to a point mass, False otherwise.
         """
         return np.allclose(self.inertia_tensor, 0)
 
@@ -475,23 +523,35 @@ class MassProperties(AeroSandboxObject):
         check_if_already_a_point_mass: bool = True,
     ) -> list["MassProperties"]:
         """
-        Generates a set of point masses (represented as MassProperties objects with zero inertia tensors), that, when
-        combined, would yield this MassProperties object.
+        Generate a set of point masses that, when combined, would yield this MassProperties object.
 
-        Note that there are an infinite number of possible sets of point masses that could yield this MassProperties
-        object. This method returns one possible set of point masses, but there are many others.
+        The point masses are represented as MassProperties objects with zero inertia tensors.
 
-        Example:
-            >>> mp = MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1, Ixy=0.1, Iyz=-0.1, Ixz=0.1)
-            >>> point_masses = mp.generate_possible_set_of_point_masses()
-            >>> mp.allclose(sum(point_masses))  # Asserts these are equal, within tolerance
-            True
+        Note that there are an infinite number of possible sets of point masses that could yield
+        this MassProperties object. This method returns one possible set of point masses, but
+        there are many others.
 
-        Args:
-            method: The method to use to generate the set of point masses. Currently, only "optimization" is supported.
+        Parameters
+        ----------
+        method : str
+            The method to use to generate the set of point masses. Currently, only "optimization"
+            is supported.
+        check_if_already_a_point_mass : bool
+            If True, first check whether this object is already a point mass; if it is, return it
+            directly (as a single-element list) instead of generating a new set of point masses.
 
-        Returns:
-            A list of MassProperties objects, each of which is a point mass (i.e., zero inertia tensor).
+        Returns
+        -------
+        list[MassProperties]
+            A list of MassProperties objects, each of which is a point mass (i.e., zero inertia
+            tensor).
+
+        Examples
+        --------
+        >>> mp = MassProperties(mass=1, Ixx=1, Iyy=1, Izz=1, Ixy=0.1, Iyz=-0.1, Ixz=0.1)
+        >>> point_masses = mp.generate_possible_set_of_point_masses()
+        >>> mp.allclose(sum(point_masses))  # Asserts these are equal, within tolerance
+        True
         """
         if check_if_already_a_point_mass:
             if self.is_point_mass():
@@ -580,18 +640,22 @@ class MassProperties(AeroSandboxObject):
         filename,
     ) -> None:
         """
-        Exports this MassProperties object to an AVL mass file.
+        Export this MassProperties object to an AVL mass file.
 
-        Note: AVL uses the SolidWorks convention for inertia tensors, which is different from the typical
-        mathematical convention, and the convention used by this MassProperties class. In short, these differ by a
-        sign flip in the products of inertia. More details available in the MassProperties docstring. See also:
+        Note: AVL uses the SolidWorks convention for inertia tensors, which is different from the
+        typical mathematical convention, and the convention used by this MassProperties class. In
+        short, these differ by a sign flip in the products of inertia. More details available in
+        the MassProperties docstring. See also:
         https://en.wikipedia.org/wiki/Moment_of_inertia#Inertia_tensor
 
-        Args:
-            filename: The filename to export to.
+        Parameters
+        ----------
+        filename
+            The filename to export to.
 
-        Returns: None
-
+        Returns
+        -------
+        None
         """
         lines = [
             "Lunit = 1.0 m",
