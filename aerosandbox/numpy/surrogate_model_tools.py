@@ -22,7 +22,7 @@ def softmax(
 
     Parameters
     ----------
-    *args : float | ndarray
+    *args : Vectorizable
         Two or more values or arrays to take the softmax of.
     softness : float, optional
         Softness parameter. Lower values make the result closer to
@@ -36,7 +36,7 @@ def softmax(
 
     Returns
     -------
-    float | ndarray
+    Vectorizable
         The soft maximum of the supplied values.
 
     Raises
@@ -101,7 +101,7 @@ def softmin(
 
     Parameters
     ----------
-    *args : float | ndarray
+    *args : Vectorizable
         Two or more values or arrays to take the softmin of.
     softness : float, optional
         Softness parameter. Lower values make the result closer to
@@ -113,7 +113,7 @@ def softmin(
 
     Returns
     -------
-    float | ndarray
+    Vectorizable
         The soft minimum of the supplied values.
 
     See Also
@@ -144,7 +144,7 @@ def softmax_scalefree(
 
     Parameters
     ----------
-    *args : float | ndarray
+    *args : Vectorizable
         Two or more values or arrays to take the softmax of.
     relative_softness : float, optional
         Softness relative to the norm of inputs. Default is 0.01.
@@ -153,7 +153,7 @@ def softmax_scalefree(
 
     Returns
     -------
-    float | ndarray
+    Vectorizable
         The scale-free soft maximum of the supplied values.
 
     See Also
@@ -188,7 +188,7 @@ def softmin_scalefree(
 
     Parameters
     ----------
-    *args : float | ndarray
+    *args : Vectorizable
         Two or more values or arrays to take the softmin of.
     relative_softness : float, optional
         Softness relative to the norm of inputs. Default is 0.01.
@@ -197,7 +197,7 @@ def softmin_scalefree(
 
     Returns
     -------
-    float | ndarray
+    Vectorizable
         The scale-free soft minimum of the supplied values.
 
     See Also
@@ -254,36 +254,50 @@ def sigmoid(
     sigmoid_type: Literal["tanh", "logistic", "arctan", "polynomial"] = "tanh",
     normalization_range: tuple[float | int, float | int] = (0, 1),
 ):
-    """
-    A sigmoid function. From Wikipedia (https://en.wikipedia.org/wiki/Sigmoid_function):
-        A sigmoid function is a mathematical function having a characteristic "S"-shaped curve
-        or sigmoid curve.
+    """Compute a sigmoid function.
 
-    Args:
-        x: The input
-        sigmoid_type: Type of sigmoid function to use [str]. Can be one of:
-            * "tanh" or "logistic" (same thing)
-            * "arctan"
-            * "polynomial"
-        normalization_type: Range in which to normalize the sigmoid, shorthanded here in the
-            documentation as "N". This parameter is given as a two-element tuple (min, max).
+    From Wikipedia (https://en.wikipedia.org/wiki/Sigmoid_function):
 
-            After normalization:
-                >>> sigmoid(-Inf) == normalization_range[0]
-                >>> sigmoid(Inf) == normalization_range[1]
+        A sigmoid function is a mathematical function having a characteristic
+        "S"-shaped curve or sigmoid curve.
 
-            * In the special case of N = (0, 1):
-                >>> sigmoid(-Inf) == 0
-                >>> sigmoid(Inf) == 1
-                >>> sigmoid(0) == 0.5
-                >>> d(sigmoid)/dx at x=0 == 0.5
-            * In the special case of N = (-1, 1):
-                >>> sigmoid(-Inf) == -1
-                >>> sigmoid(Inf) == 1
-                >>> sigmoid(0) == 0
-                >>> d(sigmoid)/dx at x=0 == 1
+    Parameters
+    ----------
+    x
+        The input value(s).
+    sigmoid_type : {"tanh", "logistic", "arctan", "polynomial"}, optional
+        Type of sigmoid function to use. Can be one of:
 
-    Returns: The value of the sigmoid.
+        - "tanh" or "logistic" (same thing)
+        - "arctan"
+        - "polynomial"
+    normalization_range : tuple[float | int, float | int], optional
+        Range in which to normalize the sigmoid, shorthanded here in the
+        documentation as "N". This parameter is given as a two-element tuple
+        (min, max).
+
+        After normalization::
+
+            sigmoid(-Inf) == normalization_range[0]
+            sigmoid(Inf) == normalization_range[1]
+
+        In the special case of N = (0, 1)::
+
+            sigmoid(-Inf) == 0
+            sigmoid(Inf) == 1
+            sigmoid(0) == 0.5
+            d(sigmoid)/dx at x=0 == 0.5
+
+        In the special case of N = (-1, 1)::
+
+            sigmoid(-Inf) == -1
+            sigmoid(Inf) == 1
+            sigmoid(0) == 0
+            d(sigmoid)/dx at x=0 == 1
+
+    Returns
+    -------
+    The value of the sigmoid.
     """
     ### Sigmoid equations given here under the (-1, 1) normalization:
     if sigmoid_type in ("tanh", "logistic"):
@@ -311,19 +325,27 @@ def swish(
     x: float | _np.ndarray,
     beta: float = 1.0,
 ):
-    """
-    A smooth approximation of the ReLU function, applied elementwise to an array `x`.
+    """Compute the swish function element-wise.
 
-    Swish(x) = x / (1 + exp(-beta * x)) = x * logistic(x) = x * (0.5 + 0.5 * tanh(x/2))
+    A smooth approximation of the ReLU function, applied element-wise to an
+    array ``x``::
+
+        Swish(x) = x / (1 + exp(-beta * x)) = x * logistic(x) = x * (0.5 + 0.5 * tanh(x/2))
 
     Often used as an activation function in neural networks.
 
-    Args:
-        x: The input
-        beta: A parameter that controls the "softness" of the function. Higher values of beta make the function
-            approach ReLU.
+    Parameters
+    ----------
+    x : float | ndarray
+        The input value(s).
+    beta : float, optional
+        A parameter that controls the "softness" of the function. Higher values
+        of beta make the function approach ReLU. Default is 1.0.
 
-    Returns: The value of the swish function.
+    Returns
+    -------
+    float | ndarray
+        The value of the swish function.
     """
     return x / (1 + _np.exp(-beta * x))
 
@@ -333,30 +355,38 @@ def blend(
     value_switch_high,
     value_switch_low,
 ):
-    """
-    Smoothly blends between two values on the basis of some switch function.
+    """Smoothly blend between two values on the basis of some switch function.
 
     This function is similar in usage to numpy.where (documented here:
-    https://numpy.org/doc/stable/reference/generated/numpy.where.html) , except that
-    instead of using a boolean as to switch between the two values, a float is used to
-    smoothly transition between the two in a differentiable manner.
+    https://numpy.org/doc/stable/reference/generated/numpy.where.html), except
+    that instead of using a boolean to switch between the two values, a float is
+    used to smoothly transition between the two in a differentiable manner.
 
-    Before using this function, be sure to understand the difference between this and
-    smoothmax(), and choose the correct one.
+    Before using this function, be sure to understand the difference between
+    this and smoothmax(), and choose the correct one.
 
-    Args:
-        switch: A value that acts as a "switch" between the two values [float].
-            If switch is -Inf, value_switch_low is returned.
-            If switch is Inf, value_switch_high is returned.
-            If switch is 0, the mean of value_switch_low and value_switch_high is returned.
-            If switch is 1, the return value is roughly (0.88 * value_switch_high + 0.12 * value_switch_low).
-            If switch is -1, the return value is roughly (0.88 * value_switch_low + 0.12 * value_switch_high).
-        value_switch_high: Value to be returned when switch is high. Can be a float or an array.
-        value_switch_low: Value to be returned when switch is low. Can be a float or an array.
+    Parameters
+    ----------
+    switch : float
+        A value that acts as a "switch" between the two values.
 
-    Returns: A value that is a blend between value_switch_low and value_switch_high, with the weighting dependent
-        on the value of the 'switch' parameter.
+        - If switch is -Inf, value_switch_low is returned.
+        - If switch is Inf, value_switch_high is returned.
+        - If switch is 0, the mean of value_switch_low and value_switch_high is
+          returned.
+        - If switch is 1, the return value is roughly
+          (0.88 * value_switch_high + 0.12 * value_switch_low).
+        - If switch is -1, the return value is roughly
+          (0.88 * value_switch_low + 0.12 * value_switch_high).
+    value_switch_high
+        Value to be returned when switch is high. Can be a float or an array.
+    value_switch_low
+        Value to be returned when switch is low. Can be a float or an array.
 
+    Returns
+    -------
+    A value that is a blend between value_switch_low and value_switch_high, with
+    the weighting dependent on the value of the 'switch' parameter.
     """
 
     def blend_function(x):

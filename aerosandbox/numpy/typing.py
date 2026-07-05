@@ -1,8 +1,7 @@
-"""
-Type aliases for AeroSandbox's numpy-like interface.
+"""Type aliases for AeroSandbox's numpy-like interface.
 
-## Design Philosophy
-
+Design Philosophy
+-----------------
 AeroSandbox operates in two computational modes:
 
 1. **Hybrid Mode**: Functions that work with either NumPy or CasADi,
@@ -11,8 +10,8 @@ AeroSandbox operates in two computational modes:
 2. **Concrete Mode**: Functions that require actual numeric values
    (external tools like XFoil/AVL, file I/O, plotting). Use "concrete types" here.
 
-## Type Naming Conventions
-
+Type Naming Conventions
+-----------------------
 - Types WITHOUT prefix: Hybrid (NumPy OR CasADi)
   - `Scalar`, `Vector`, `Array`, `Vectorizable`
 
@@ -22,17 +21,17 @@ AeroSandbox operates in two computational modes:
 - Types WITH `Like` suffix: Permissive input types (accept sequences)
   - `ArrayLike`, `VectorLike`, `PointLike`
 
-## Type Hierarchy
-
-Types are built progressively to ensure consistency:
+Type Hierarchy
+--------------
+Types are built progressively to ensure consistency::
 
     ConcreteScalar → Scalar (adds CasADi)
     ConcreteArray → Array (adds CasADi)
     ConcreteVectorizable → Vectorizable (adds CasADi)
     ConcreteArrayLike → ArrayLike (adds CasADi)
 
-## Internal Types
-
+Internal Types
+--------------
 - `_CasADiType`: Internal only - should not be used outside aerosandbox.numpy.
   This exists to keep the library backend-agnostic at the API level.
 """

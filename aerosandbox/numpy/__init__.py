@@ -11,8 +11,8 @@ Key Features
 - Smooth optimization utilities (softmax, softmin, etc.)
 - Numerical differentiation and integration
 
-Example
--------
+Examples
+--------
 >>> import aerosandbox.numpy as np
 >>> x = np.array([1, 2, 3])  # NumPy array
 >>> np.sum(x)  # Returns NumPy scalar

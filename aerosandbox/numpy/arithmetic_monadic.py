@@ -138,15 +138,15 @@ def round(a: ArrayLike, decimals: int = 0, out: _onp.ndarray | None = None) -> A
     Array
         An array of the same type as ``a``, containing the rounded values.
 
+    See Also
+    --------
+    numpy.round : https://numpy.org/doc/stable/reference/generated/numpy.round.html
+
     Notes
     -----
     For CasADi types, halfway values are rounded towards positive infinity
     (CasADi has no round-half-to-even primitive), whereas NumPy rounds
     halfway values to the nearest even integer.
-
-    See Also
-    --------
-    numpy.round : https://numpy.org/doc/stable/reference/generated/numpy.round.html
     """
     if not is_casadi_type(a):
         return _onp.round(a, decimals=decimals, out=out)
@@ -197,6 +197,10 @@ def prod(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
     Scalar | Array
         Product of the elements. If ``axis`` is None, a scalar is returned.
 
+    See Also
+    --------
+    numpy.prod : https://numpy.org/doc/stable/reference/generated/numpy.prod.html
+
     Notes
     -----
     For CasADi types, this uses a sign-magnitude decomposition to handle
@@ -213,10 +217,6 @@ def prod(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
 
     Gradients at x=0 are not well-defined (discontinuous), which is
     mathematically inherent to the product function.
-
-    See Also
-    --------
-    numpy.prod : https://numpy.org/doc/stable/reference/generated/numpy.prod.html
     """
     x = asarray(x)
     if not is_casadi_type(x):
