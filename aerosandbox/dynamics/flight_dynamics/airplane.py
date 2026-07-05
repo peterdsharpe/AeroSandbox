@@ -12,59 +12,67 @@ def get_modes(
     g: float = 9.81,
 ) -> dict[str, dict[str, float | np.ndarray]]:
     """
-    Estimates the characteristics of the standard rigid-body dynamic modes of an aircraft, using textbook
-    approximations for the linearized dynamics about a trim operating point.
+    Estimate the characteristics of the standard rigid-body dynamic modes of an aircraft.
 
-    Based on approximations given in "Flight Vehicle Aerodynamics" by Mark Drela (MIT Press, 2014),
-    Eqs. 9.55-9.68.
+    Uses textbook approximations for the linearized dynamics about a trim operating point.
 
-    Args:
-        airplane: The airplane to analyze. Its reference quantities (`s_ref`, `c_ref`, `b_ref`) are used.
+    Based on approximations given in "Flight Vehicle Aerodynamics" by Mark Drela (MIT Press,
+    2014), Eqs. 9.55-9.68.
 
-        op_point: The trim operating point. Its velocity and atmosphere are used.
+    Parameters
+    ----------
+    airplane : Airplane
+        The airplane to analyze. Its reference quantities (`s_ref`, `c_ref`, `b_ref`) are used.
+    op_point : OperatingPoint
+        The trim operating point. Its velocity and atmosphere are used.
+    mass_props : MassProperties
+        The aircraft's mass properties. Its `mass`, `Ixx`, `Iyy`, and `Izz` are used.
+    aero : dict[str, float]
+        A dictionary of the aircraft's nondimensional aerodynamic coefficients and stability
+        derivatives at trim. Angle derivatives are with respect to radians; rate derivatives are
+        with respect to the nondimensionalized rates (e.g., p_hat = p * b / (2 * V),
+        q_hat = q * c / (2 * V)). Required keys:
 
-        mass_props: The aircraft's mass properties. Its `mass`, `Ixx`, `Iyy`, and `Izz` are used.
+        * "CL": lift coefficient
+        * "CD": drag coefficient
+        * "Cma": d(Cm)/d(alpha)
+        * "Cmq": d(Cm)/d(q_hat)
+        * "CYb": d(CY)/d(beta)
+        * "CYr": d(CY)/d(r_hat)
+        * "Clb": d(Cl)/d(beta)
+        * "Clp": d(Cl)/d(p_hat)
+        * "Clr": d(Cl)/d(r_hat)
+        * "Cnb": d(Cn)/d(beta)
+        * "Cnr": d(Cn)/d(r_hat)
 
-        aero: A dictionary of the aircraft's nondimensional aerodynamic coefficients and stability derivatives at
-            trim. Angle derivatives are with respect to radians; rate derivatives are with respect to the
-            nondimensionalized rates (e.g., p_hat = p * b / (2 * V), q_hat = q * c / (2 * V)). Required keys:
+        A dictionary in this format is returned by, e.g.,
+        `asb.AeroBuildup(...).run_with_stability_derivatives()`.
+    g : float
+        Gravitational acceleration. [m/s^2]
 
-            * "CL": lift coefficient
-            * "CD": drag coefficient
-            * "Cma": d(Cm)/d(alpha)
-            * "Cmq": d(Cm)/d(q_hat)
-            * "CYb": d(CY)/d(beta)
-            * "CYr": d(CY)/d(r_hat)
-            * "Clb": d(Cl)/d(beta)
-            * "Clp": d(Cl)/d(p_hat)
-            * "Clr": d(Cl)/d(r_hat)
-            * "Cnb": d(Cn)/d(beta)
-            * "Cnr": d(Cn)/d(r_hat)
-
-            A dictionary in this format is returned by, e.g.,
-            `asb.AeroBuildup(...).run_with_stability_derivatives()`.
-
-        g: Gravitational acceleration. [m/s^2]
-
-    Returns:
+    Returns
+    -------
+    dict[str, dict[str, float | np.ndarray]]
         A nested dictionary. The top-level keys are the mode names:
         "phugoid", "short_period", "roll_subsidence", "dutch_roll", and "spiral".
 
         Each value is itself a dictionary with keys:
 
-        * "eigenvalue_real": Real part of the mode's eigenvalue [1/sec]. Negative indicates a stable (damped)
-          mode.
-        * "eigenvalue_imag": Imaginary part of the mode's eigenvalue [rad/sec]. Nonzero indicates an oscillatory
-          mode.
+        * "eigenvalue_real": Real part of the mode's eigenvalue [1/sec]. Negative indicates a
+          stable (damped) mode.
+        * "eigenvalue_imag": Imaginary part of the mode's eigenvalue [rad/sec]. Nonzero indicates
+          an oscillatory mode.
         * "damping_ratio": The mode's damping ratio [nondimensional].
 
-        The "phugoid" entry also includes "eigenvalue_imag_approx" and "damping_ratio_approx", from simpler
-        closed-form approximations.
+        The "phugoid" entry also includes "eigenvalue_imag_approx" and "damping_ratio_approx",
+        from simpler closed-form approximations.
 
-    Note: These are textbook approximations, and some modes' estimates can differ noticeably from
-    higher-fidelity eigenvalue analysis (e.g., AVL) for some aircraft; discrepancies of roughly 1.5-2x have been
-    observed in individual components (e.g., the phugoid eigenvalue's real part). Treat results as
-    conceptual-design-level estimates.
+    Notes
+    -----
+    These are textbook approximations, and some modes' estimates can differ noticeably from
+    higher-fidelity eigenvalue analysis (e.g., AVL) for some aircraft; discrepancies of roughly
+    1.5-2x have been observed in individual components (e.g., the phugoid eigenvalue's real
+    part). Treat results as conceptual-design-level estimates.
     """
     Q = op_point.dynamic_pressure()
     S = airplane.s_ref
