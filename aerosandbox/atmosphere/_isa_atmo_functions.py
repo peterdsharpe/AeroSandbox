@@ -26,16 +26,27 @@ def barometric_formula(
     h_b,
 ):
     """
-    The barometric pressure equation, from here: https://en.wikipedia.org/wiki/Barometric_formula
-    Args:
-        P_b: Pressure at the base of the layer, in Pa
-        T_b: Temperature at the base of the layer, in K
-        L_b: Temperature lapse rate, in K/m
-        h: Altitude, in m
-        h_b:
+    Compute the pressure at altitude `h` within an atmospheric layer of linear temperature lapse.
 
-    Returns:
+    The barometric pressure equation, from here:
+    https://en.wikipedia.org/wiki/Barometric_formula
 
+    Parameters
+    ----------
+    P_b
+        Pressure at the base of the layer, in Pa.
+    T_b
+        Temperature at the base of the layer, in K.
+    L_b
+        Temperature lapse rate, in K/m.
+    h
+        Altitude, in m.
+    h_b
+        Altitude at the base of the layer, in m.
+
+    Returns
+    -------
+    Pressure at altitude `h`, in Pa.
     """
     T = T_b + L_b * (h - h_b)
     T = np.fmax(T, 1)  # Keep temperature nonnegative, no matter the inputs.
@@ -62,15 +73,19 @@ for i in range(len(isa_table) - 1):
 
 def pressure_isa(altitude):
     """
-    Computes the pressure at a given altitude based on the International Standard Atmosphere.
+    Compute the pressure at a given altitude based on the International Standard Atmosphere.
 
-    Uses the Barometric formula, as implemented here: https://en.wikipedia.org/wiki/Barometric_formula
+    Uses the Barometric formula, as implemented here:
+    https://en.wikipedia.org/wiki/Barometric_formula
 
-    Args:
-        altitude: Geopotential altitude [m]
+    Parameters
+    ----------
+    altitude
+        Geopotential altitude [m].
 
-    Returns: Pressure [Pa]
-
+    Returns
+    -------
+    Pressure [Pa].
     """
     pressure = 0 * altitude  # Initialize the pressure to all zeros.
 
@@ -105,13 +120,16 @@ def pressure_isa(altitude):
 
 def temperature_isa(altitude):
     """
-    Computes the temperature at a given altitude based on the International Standard Atmosphere.
+    Compute the temperature at a given altitude based on the International Standard Atmosphere.
 
-    Args:
-        altitude: Geopotential altitude [m]
+    Parameters
+    ----------
+    altitude
+        Geopotential altitude [m].
 
-    Returns: Temperature [K]
-
+    Returns
+    -------
+    Temperature [K].
     """
     temp = 0 * altitude  # Initialize the temperature to all zeros.
 

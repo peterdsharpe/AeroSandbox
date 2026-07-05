@@ -23,9 +23,10 @@ effective_collision_diameter = (
 ### Define the Atmosphere class
 class Atmosphere(AeroSandboxObject):
     r"""
+    Model an atmosphere, computing atmospheric properties as a function of altitude.
+
     All models here are smoothed fits to the 1976 COESA model;
     see AeroSandbox\studies\Atmosphere Fitting for details.
-
     """
 
     def __init__(
@@ -37,18 +38,20 @@ class Atmosphere(AeroSandboxObject):
         """
         Initialize a new Atmosphere.
 
-        Args:
+        Parameters
+        ----------
+        altitude : Vectorizable
+            Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
+        method : Literal["differentiable", "isa"]
+            Method of atmosphere modeling to use. Either:
 
-            altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
-
-            method: Method of atmosphere modeling to use. Either:
-                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere; useful for optimization.
-                    Mean absolute error of pressure relative to the ISA is 0.02% over 0-100 km altitude range.
-                * "isa" - the International Standard Atmosphere, exactly reproduced
-
-            temperature_deviation: A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This is useful for modeling
-                the impact of temperature on density altitude, for example.
-
+            * "differentiable" - a C1-continuous fit to the International Standard Atmosphere;
+              useful for optimization. Mean absolute error of pressure relative to the ISA is
+              0.02% over the 0-100 km altitude range.
+            * "isa" - the International Standard Atmosphere, exactly reproduced.
+        temperature_deviation : Vectorizable
+            A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This
+            is useful for modeling the impact of temperature on density altitude, for example.
         """
         if method.lower() not in ("differentiable", "isa"):
             raise ValueError(
@@ -72,15 +75,22 @@ class Atmosphere(AeroSandboxObject):
 
     def __getitem__(self, index) -> "Atmosphere":
         """
-        Indexes one item from each attribute of an Atmosphere instance.
+        Index one item from each attribute of an Atmosphere instance.
+
         Returns a new Atmosphere instance.
 
-        Args:
-            index: The index that is being called; e.g.,:
-                >>> first_atmosphere = atmosphere[0]
+        Parameters
+        ----------
+        index
+            The index that is being called; e.g.,:
 
-        Returns: A new Atmosphere instance, where each attribute is subscripted at the given value, if possible.
+            >>> first_atmosphere = atmosphere[0]
 
+        Returns
+        -------
+        Atmosphere
+            A new Atmosphere instance, where each attribute is subscripted at the given value,
+            if possible.
         """
         self_length = len(self)
 
@@ -131,7 +141,7 @@ class Atmosphere(AeroSandboxObject):
 
     def __array__(self, dtype="O"):
         """
-        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        Allow NumPy array creation without infinite recursion in __len__ and __getitem__.
         """
         return np.fromiter([self], dtype=dtype).reshape(())
 
@@ -139,7 +149,12 @@ class Atmosphere(AeroSandboxObject):
 
     def pressure(self) -> Vectorizable:
         """
-        Returns the pressure, in Pascals.
+        Return the pressure, in Pascals.
+
+        Returns
+        -------
+        Vectorizable
+            Pressure [Pa].
         """
         if self.method.lower() == "isa":
             return pressure_isa(self.altitude)
@@ -152,7 +167,12 @@ class Atmosphere(AeroSandboxObject):
 
     def temperature(self) -> Vectorizable:
         """
-        Returns the temperature, in Kelvin.
+        Return the temperature, in Kelvin.
+
+        Returns
+        -------
+        Vectorizable
+            Temperature [K].
         """
         if self.method.lower() == "isa":
             return temperature_isa(self.altitude) + self.temperature_deviation
@@ -169,7 +189,12 @@ class Atmosphere(AeroSandboxObject):
 
     def density(self) -> Vectorizable:
         """
-        Returns the density, in kg/m^3.
+        Return the density, in kg/m^3.
+
+        Returns
+        -------
+        Vectorizable
+            Density [kg/m^3].
         """
         rho = self.pressure() / (self.temperature() * gas_constant_air)
 
@@ -179,20 +204,24 @@ class Atmosphere(AeroSandboxObject):
         self, method: Literal["approximate", "exact"] = "approximate"
     ) -> Vectorizable:
         """
-        Returns the density altitude, in meters.
+        Return the density altitude, in meters.
 
         See https://en.wikipedia.org/wiki/Density_altitude
 
-        Args:
-            method: Method to use for the calculation. One of:
+        Parameters
+        ----------
+        method : Literal["approximate", "exact"]
+            Method to use for the calculation. One of:
 
-                * "approximate" (default): Uses the National Weather Service approximation
-                    formula (see the Wikipedia link above), which assumes ISA-troposphere
-                    conditions.
+            * "approximate" (default): Uses the National Weather Service approximation
+              formula (see the Wikipedia link above), which assumes ISA-troposphere
+              conditions.
+            * "exact": Not yet implemented; raises NotImplementedError.
 
-                * "exact": Not yet implemented; raises NotImplementedError.
-
-        Returns: The density altitude, in meters.
+        Returns
+        -------
+        Vectorizable
+            The density altitude [m].
         """
         if method.lower() == "approximate":
             temperature_sea_level = 288.15
@@ -217,21 +246,34 @@ class Atmosphere(AeroSandboxObject):
 
     def speed_of_sound(self) -> Vectorizable:
         """
-        Returns the speed of sound, in m/s.
+        Return the speed of sound, in m/s.
+
+        Returns
+        -------
+        Vectorizable
+            Speed of sound [m/s].
         """
         temperature = self.temperature()
         return (self.ratio_of_specific_heats() * gas_constant_air * temperature) ** 0.5
 
     def dynamic_viscosity(self) -> Vectorizable:
         """
-        Returns the dynamic viscosity (mu), in kg/(m*s).
+        Return the dynamic viscosity (mu), in kg/(m*s).
 
         Based on Sutherland's Law, citing `https://www.cfd-online.com/Wiki/Sutherland's_law`.
 
+        Returns
+        -------
+        Vectorizable
+            Dynamic viscosity [kg/(m*s)].
+
+        Notes
+        -----
         According to Rathakrishnan, E. (2013). Theoretical aerodynamics. John Wiley & Sons.:
         This relationship is valid from 0.01 to 100 atm, and between 0 and 3000K.
 
-        According to White, F. M., & Corfield, I. (2006). Viscous fluid flow (Vol. 3, pp. 433-434). New York: McGraw-Hill.:
+        According to White, F. M., & Corfield, I. (2006). Viscous fluid flow
+        (Vol. 3, pp. 433-434). New York: McGraw-Hill.:
         The error is no more than approximately 2% for air between 170K and 1900K.
         """
 
@@ -247,18 +289,28 @@ class Atmosphere(AeroSandboxObject):
 
     def kinematic_viscosity(self) -> Vectorizable:
         """
-        Returns the kinematic viscosity (nu), in m^2/s.
+        Return the kinematic viscosity (nu), in m^2/s.
 
         Definitional.
+
+        Returns
+        -------
+        Vectorizable
+            Kinematic viscosity [m^2/s].
         """
         return self.dynamic_viscosity() / self.density()
 
     def ratio_of_specific_heats(self) -> float:
         """
-        Returns the ratio of specific heats (gamma) of air, unitless.
+        Return the ratio of specific heats (gamma) of air, unitless.
 
         Currently modeled as a constant 1.4, which is a good approximation near
         standard temperatures. (Its temperature dependence is not yet modeled.)
+
+        Returns
+        -------
+        float
+            Ratio of specific heats (gamma) [unitless].
         """
         return 1.4  # TODO model temperature variation
 
@@ -271,12 +323,20 @@ class Atmosphere(AeroSandboxObject):
     #
     def mean_free_path(self) -> Vectorizable:
         """
-        Returns the mean free path of an air molecule, in meters.
+        Return the mean free path of an air molecule, in meters.
 
-        To find the collision radius, assumes "a hard-sphere gas that has the same viscosity as the actual gas being considered".
+        To find the collision radius, assumes "a hard-sphere gas that has the same viscosity
+        as the actual gas being considered".
 
-        From Vincenti, W. G. and Kruger, C. H. (1965). Introduction to physical gas dynamics. Krieger Publishing Company. p. 414.
+        Returns
+        -------
+        Vectorizable
+            Mean free path [m].
 
+        References
+        ----------
+        Vincenti, W. G. and Kruger, C. H. (1965). Introduction to physical gas dynamics.
+        Krieger Publishing Company. p. 414.
         """
         return (
             self.dynamic_viscosity()
@@ -291,7 +351,17 @@ class Atmosphere(AeroSandboxObject):
 
     def knudsen(self, length: Vectorizable) -> Vectorizable:
         """
-        Computes the Knudsen number for a given reference length, in meters.
+        Compute the Knudsen number for a given reference length.
+
+        Parameters
+        ----------
+        length : Vectorizable
+            Reference length [m].
+
+        Returns
+        -------
+        Vectorizable
+            Knudsen number [unitless].
         """
         return self.mean_free_path() / length
 

@@ -48,25 +48,31 @@ interpolated_log_pressure = InterpolatedModel(
 
 def pressure_differentiable(altitude):
     """
-    Computes the pressure at a given altitude with a differentiable model.
+    Compute the pressure at a given altitude with a differentiable model.
 
-    Args:
-        altitude: Geopotential altitude [m]
+    Parameters
+    ----------
+    altitude
+        Geopotential altitude [m].
 
-    Returns: Pressure [Pa]
-
+    Returns
+    -------
+    Pressure [Pa].
     """
     return np.exp(interpolated_log_pressure(altitude))
 
 
 def temperature_differentiable(altitude):
     """
-    Computes the temperature at a given altitude with a differentiable model.
+    Compute the temperature at a given altitude with a differentiable model.
 
-    Args:
-        altitude: Geopotential altitude [m]
+    Parameters
+    ----------
+    altitude
+        Geopotential altitude [m].
 
-    Returns: Temperature [K]
-
+    Returns
+    -------
+    Temperature [K].
     """
     return interpolated_temperature(altitude)
