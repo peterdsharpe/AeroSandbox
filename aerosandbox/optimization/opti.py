@@ -1555,37 +1555,48 @@ class Opti(cas.Opti):
 
 
 class OptiSol:
+    """
+    A solution to an optimization problem, as produced by `Opti.solve()`.
+    """
+
     def __init__(self, opti: Opti, cas_optisol: cas.OptiSol):
         """
-        An OptiSol object represents a solution to an optimization problem. This class is a wrapper around CasADi's
-        `OptiSol` class that provides convenient solution query utilities for various Python data types.
+        Initialize an OptiSol object, which represents a solution to an optimization problem.
 
-        Args:
-            opti: The `Opti` object that generated this solution.
+        This class is a wrapper around CasADi's `OptiSol` class that provides convenient
+        solution query utilities for various Python data types.
 
-            cas_optisol: The `casadi.OptiSol` object from CasADi's optimization solver.
+        Parameters
+        ----------
+        opti : Opti
+            The `Opti` object that generated this solution.
+        cas_optisol : cas.OptiSol
+            The `casadi.OptiSol` object from CasADi's optimization solver.
 
-        Returns:
+        Returns
+        -------
+        OptiSol
             An `OptiSol` object.
 
-        Usage:
-            >>> # Initialize an Opti object.
-            >>> opti = asb.Opti()
-            >>>
-            >>> # Define a scalar variable.
-            >>> x = opti.variable(init_guess=2.0)
-            >>>
-            >>> # Define an objective function.
-            >>> opti.minimize(x ** 2)
-            >>>
-            >>> # Solve the optimization problem. `sol` is now a
-            >>> sol = opti.solve()
-            >>>
-            >>> # Retrieve the value of the variable x in the solution:
-            >>> x_value = sol(x)
-            >>>
-            >>> # Or, to be more concise:
-            >>> x_value = sol(x)
+        Examples
+        --------
+        >>> # Initialize an Opti object.
+        >>> opti = asb.Opti()
+        >>>
+        >>> # Define a scalar variable.
+        >>> x = opti.variable(init_guess=2.0)
+        >>>
+        >>> # Define an objective function.
+        >>> opti.minimize(x ** 2)
+        >>>
+        >>> # Solve the optimization problem. `sol` is now an `OptiSol` object.
+        >>> sol = opti.solve()
+        >>>
+        >>> # Retrieve the value of the variable x in the solution:
+        >>> x_value = sol(x)
+        >>>
+        >>> # Or, to be more concise:
+        >>> x_value = sol(x)
         """
         self.opti = opti
         self._sol = cas_optisol
@@ -1594,33 +1605,43 @@ class OptiSol:
         self, x: cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any
     ) -> Any:
         """
-        A shorthand alias for `sol.value(x)`. See `OptiSol.value()` documentation for details.
+        Return the value of `x` at the solution point; a shorthand alias for `sol.value(x)`.
 
-        Args:
-            x: A Python data structure to substitute values into, using the solution in this OptiSol object.
+        See `OptiSol.value()` documentation for details.
 
-        Returns:
+        Parameters
+        ----------
+        x : cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any
+            A Python data structure to substitute values into, using the solution in this
+            OptiSol object.
 
-            A copy of `x`, where all symbolic optimization variables (recursively substituted at unlimited depth)
-            have been converted to float or array values.
-
+        Returns
+        -------
+        Any
+            A copy of `x`, where all symbolic optimization variables (recursively
+            substituted at unlimited depth) have been converted to float or array values.
         """
         return self.value(x)
 
     def _value_scalar(self, x: cas.MX | np.ndarray | float | int) -> float | np.ndarray:
         """
-        Gets the value of a variable at the solution point. For developer use - see following paragraph.
+        Get the value of a variable at the solution point. For developer use.
 
         This method is basically a less-powerful version of calling `sol(x)` - if you're a
-            user and not a developer, you almost-certainly want to use that method instead, as those are less
-            fragile with respect to various input data types. This method exists only as an abstraction to make it easier
-            for other developers to subclass OptiSol, if they wish to intercept the variable substitution process.
+        user and not a developer, you almost-certainly want to use that method instead, as
+        those are less fragile with respect to various input data types. This method exists
+        only as an abstraction to make it easier for other developers to subclass OptiSol,
+        if they wish to intercept the variable substitution process.
 
-        Args:
-            x:
+        Parameters
+        ----------
+        x : cas.MX | np.ndarray | float | int
+            The variable or expression to evaluate at the solution point.
 
-        Returns:
-
+        Returns
+        -------
+        float | np.ndarray
+            The value of `x` at the solution point.
         """
         return self._sol.value(x)
 
@@ -1631,37 +1652,43 @@ class OptiSol:
         warn_on_unknown_types: bool = False,
     ) -> Any:
         """
-        Gets the value of a variable (or a data structure) at the solution point. This solution point is the optimum,
-            if the optimization process solved successfully.
+        Get the value of a variable (or a data structure) at the solution point.
 
-        On a computer science level, this method converts a symbolic optimization variable to a concrete float or
-            array value. More generally, it converts any Python data structure (along with any of its contents,
-            recursively, at unlimited depth), replacing any symbolic optimization variables it finds with concrete float
-            or array values.
+        This solution point is the optimum, if the optimization process solved successfully.
+
+        On a computer science level, this method converts a symbolic optimization variable
+        to a concrete float or array value. More generally, it converts any Python data
+        structure (along with any of its contents, recursively, at unlimited depth),
+        replacing any symbolic optimization variables it finds with concrete float or array
+        values.
 
         Note that, for convenience, you can simply call:
+
         >>> sol(x)
+
         if you prefer. This is equivalent to calling this method with the syntax:
+
         >>> sol.value(x)
+
         (these are aliases of each other)
 
-        Args:
-            x: A Python data structure to substitute values into, using the solution in this OptiSol object.
+        Parameters
+        ----------
+        x : cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any
+            A Python data structure to substitute values into, using the solution in this
+            OptiSol object.
+        recursive : bool
+            If True, the substitution will be performed recursively. Otherwise, only the
+            top-level data structure will be converted.
+        warn_on_unknown_types : bool
+            If True, a warning will be issued if a data type that cannot be converted or
+            parsed as definitively un-convertable is encountered.
 
-            recursive: If True, the substitution will be performed recursively. Otherwise, only the top-level data
-                structure will be converted.
-
-            warn_on_unknown_types: If True, a warning will be issued if a data type that cannot be converted or
-                parsed as definitively un-convertable is encountered.
-
-        Returns:
-            A copy of `x`, where all symbolic optimization variables (recursively substituted at unlimited depth)
-                have been converted to float or array values.
-
-        Usage:
-
-
-
+        Returns
+        -------
+        Any
+            A copy of `x`, where all symbolic optimization variables (recursively
+            substituted at unlimited depth) have been converted to float or array values.
         """
         if not recursive:
             return self._value_scalar(x)
@@ -1753,24 +1780,43 @@ class OptiSol:
         return x
 
     def stats(self) -> dict[str, Any]:
+        """
+        Return statistics from the solver run that produced this solution.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of solver statistics (e.g., iteration count), as given by the
+            underlying CasADi `OptiSol.stats()`.
+        """
         return self._sol.stats()
 
     def value_variables(self):
+        """
+        Return the result of `value_variables()` from the underlying CasADi `OptiSol` object.
+        """
         return self._sol.value_variables()
 
     def value_parameters(self):
+        """
+        Return the result of `value_parameters()` from the underlying CasADi `OptiSol` object.
+        """
         return self._sol.value_parameters()
 
     def show_infeasibilities(self, tol: float = 1e-3) -> None:
         """
-        Prints a summary of any violated constraints in the solution.
+        Print a summary of any violated constraints in the solution.
 
-        Args:
+        Parameters
+        ----------
+        tol : float
+            The tolerance for violation. If the constraint is violated by less than this
+            amount, it will not be printed.
 
-            tol: The tolerance for violation. If the constraint is violated by less than this amount, it will not be
-                printed.
-
-        Returns: None (prints to console)
+        Returns
+        -------
+        None
+            Prints to the console.
         """
         # Note: atleast_1d is needed since evaluating a single scalar constraint yields a plain float.
         lbg = np.atleast_1d(self(self.opti.lbg))
