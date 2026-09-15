@@ -18,7 +18,7 @@ This automatic differentiation dramatically improves optimization performance on
 Keeping AeroSandbox easy to learn and use is a top priority. *Complexity is optional* - you can use AeroSandbox's built-in physics models where helpful, or you can drop in arbitrary custom physics models of your own.
 
 ```
-pip install aerosandbox[full]
+pip install "aerosandbox[full]"
 ```
 
 -----
@@ -202,7 +202,7 @@ And much, much more. Best of all, combine these tools arbitrarily without any lo
 
 In short:
 
-* `pip install aerosandbox[full]` for a complete install.
+* `pip install "aerosandbox[full]"` for a complete install.
 
 * `pip install aerosandbox` for a lighter-weight installation. All optimization, numerics, and physics models are included, along with 2D plotting via matplotlib; optional dependencies for 3D visualization, CAD export, and geometry manipulation (e.g., plotly, pyvista, trimesh, cadquery) are skipped.
 
