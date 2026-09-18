@@ -1,0 +1,73 @@
+diff --git a/orrs/src/osmap.f b/orrs/src/osmap.f
+--- a/orrs/src/osmap.f
++++ b/orrs/src/osmap.f
+@@ -98,7 +98,7 @@ C
+ C
+ C---- set OSFILE to match the absolute OS database filename
+       CHARACTER*128 OSFILE
+-      DATA OSFILE / '/home/codes/orrs/osmapDP.dat' /
++      DATA OSFILE / '/xfoil/orrs/osmap.dat' /
+ ccc      DATA OSFILE / '/home/codes/orrs/osmap.dat' /
+ c
+ c      DATA OSFILE
+diff --git a/bin/Makefile b/bin/Makefile
+index cce28cd..2eff7d6 100644
+--- a/bin/Makefile
++++ b/bin/Makefile
+@@ -6,7 +6,7 @@
+ 
+ 
+ SHELL = sh
+-BINDIR = /home/codes/bin/
++BINDIR = /usr/local/bin/
+ #BINDIR = .
+ 
+ PROGS = xfoil pplot pxplot
+@@ -115,15 +115,19 @@ CFLAGS = -O -DUNDERSCORE
+ #FFLAGS = -g -O0 -C
+ ##--------------------------
+ ### Gfortran
+-FC = gfortran
+-CHK = 
+-CHK = -fbounds-check -finit-real=inf -ffpe-trap=invalid,zero
+-DBL = -fdefault-real-8
+-FFLAGS = -O $(CHK) $(DBL)
+-FFLOPT = -O $(CHK) $(DBL)
+-FTNLIB =
+-
+-PLTOBJ = ../plotlib/libPlt_gDP.a 
++#FC = gfortran
++#CHK = 
++#CHK = -fbounds-check -finit-real=inf -ffpe-trap=invalid,zero
++#DBL = -fdefault-real-8
++#FFLAGS = -O $(CHK) $(DBL)
++#FFLOPT = -O $(CHK) $(DBL)
++#FTNLIB =
++### Intel
++FC = ifort
++FLG = -O -fpe0 -CB
++PLTLIB = -L/usr/X11R6/lib -lX11
++
++PLTOBJ = ../plotlib/libPlt_gSP.a
+ 
+ 
+ 
+diff --git a/plotlib/config.make b/plotlib/config.make
+index 5fcf6c1..e3cdf70 100644
+--- a/plotlib/config.make
++++ b/plotlib/config.make
+@@ -13,11 +13,12 @@ PLTLIB = libPlt_gSP.a
+ # This should work for most of the "unix" fortran compilers
+ DEFINE = -DUNDERSCORE
+ 
+-FC = gfortran
++FC = ifort
++FLG = -O -fpe0 -CB
+ CC  = gcc
+ #DP = -fdefault-real-8
+ 
+-FFLAGS  = -m64 -O2 $(DP)
++#FFLAGS  = -m64 -O2 $(DP)
+ CFLAGS  = -m64 -O2 $(DEFINE) -I/usr/X11/include
+ AR = ar r
+ RANLIB = ranlib 
